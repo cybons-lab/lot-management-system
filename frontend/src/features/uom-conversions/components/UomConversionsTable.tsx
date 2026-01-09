@@ -1,134 +1,21 @@
-import { Package, Pencil, Trash2, Check, X, RotateCcw } from "lucide-react";
+/**
+ * UomConversionsTable - Table component for UOM conversions.
+ * Refactored to use DataTable component.
+ */
+import { Check, Package, Pencil, RotateCcw, Trash2, X } from "lucide-react";
+import { useMemo } from "react";
 
 import type { UomConversionResponse } from "../api";
 
 import { Button, Input } from "@/components/ui";
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 
 const isInactive = (validTo?: string) => {
   if (!validTo) return false;
   const today = new Date().toISOString().split("T")[0];
   return validTo <= today;
 };
-
-/** Inline edit cell for conversion factor */
-function FactorCell({
-  conversion,
-  editingId,
-  editValue,
-  setEditValue,
-  isUpdating,
-  onSave,
-  onCancel,
-}: {
-  conversion: UomConversionResponse;
-  editingId: number | null;
-  editValue: string;
-  setEditValue: (v: string) => void;
-  isUpdating: boolean;
-  onSave: (id: number) => void;
-  onCancel: () => void;
-}) {
-  if (editingId !== conversion.conversion_id) {
-    return <>{conversion.conversion_factor}</>;
-  }
-  return (
-    <div className="flex items-center gap-2">
-      <Input
-        type="number"
-        step="0.0001"
-        value={editValue}
-        onChange={(e) => setEditValue(e.target.value)}
-        className="h-8 w-24"
-        disabled={isUpdating}
-      />
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => onSave(conversion.conversion_id)}
-        disabled={isUpdating}
-        className="h-8 w-8 p-0"
-      >
-        <Check className="h-4 w-4 text-green-600" />
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={onCancel}
-        disabled={isUpdating}
-        className="h-8 w-8 p-0"
-      >
-        <X className="h-4 w-4 text-slate-500" />
-      </Button>
-    </div>
-  );
-}
-
-/** Action buttons for each row */
-function ActionButtons({
-  conversion,
-  editingId,
-  onStartEdit,
-  onSoftDelete,
-  onPermanentDelete,
-  onRestore,
-}: {
-  conversion: UomConversionResponse;
-  editingId: number | null;
-  onStartEdit: (c: UomConversionResponse) => void;
-  onSoftDelete: (c: UomConversionResponse) => void;
-  onPermanentDelete: (c: UomConversionResponse) => void;
-  onRestore: (c: UomConversionResponse) => void;
-}) {
-  if (editingId === conversion.conversion_id) return null;
-
-  const inactive = isInactive(conversion.valid_to);
-
-  if (inactive) {
-    return (
-      <div className="flex items-center justify-end gap-1">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => onRestore(conversion)}
-          title="復元"
-          className="h-8 w-8 p-0"
-        >
-          <RotateCcw className="h-4 w-4 text-green-600" />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => onPermanentDelete(conversion)}
-          title="完全に削除"
-          className="h-8 w-8 p-0"
-        >
-          <Trash2 className="h-4 w-4 text-red-600" />
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center justify-end gap-1">
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => onStartEdit(conversion)}
-        className="h-8 w-8 p-0"
-      >
-        <Pencil className="h-4 w-4 text-slate-500" />
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => onSoftDelete(conversion)}
-        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-}
 
 /** Props for UomConversionsTable */
 interface TableProps {
@@ -146,7 +33,6 @@ interface TableProps {
 }
 
 /** UOM conversions table component */
-// eslint-disable-next-line max-lines-per-function
 export function UomConversionsTable({
   conversions,
   editingId,
@@ -160,86 +46,193 @@ export function UomConversionsTable({
   handlePermanentDelete,
   handleRestore,
 }: TableProps) {
-  return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-slate-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-              製品コード
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-              製品名
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-              外部単位
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-              換算係数
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-              備考
-            </th>
-            <th className="px-6 py-3 text-right text-xs font-medium tracking-wider text-slate-700 uppercase">
-              操作
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-200 bg-white">
-          {conversions.map((conversion) => (
-            <tr key={conversion.conversion_id} className="hover:bg-slate-50">
-              <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
-                <div className="flex items-center gap-2">
-                  <Package className="h-4 w-4 text-green-600" />
-                  {conversion.product_code}
-                  {isInactive(conversion.valid_to) && (
-                    <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
-                      削除済
-                    </span>
-                  )}
-                </div>
-              </td>
-              <td className="px-6 py-4 text-sm text-slate-900">
-                <span
-                  className="block max-w-[200px] truncate"
-                  title={conversion.product_name ?? ""}
+  // 列定義
+  const columns = useMemo<Column<UomConversionResponse>[]>(
+    () => [
+      {
+        id: "product_code",
+        header: "製品コード",
+        accessor: (row) => row.product_code,
+        cell: (row) => {
+          const inactive = isInactive(row.valid_to);
+          return (
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-green-600" />
+              <span className="whitespace-nowrap">{row.product_code}</span>
+              {inactive && (
+                <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">削除済</span>
+              )}
+            </div>
+          );
+        },
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "product_name",
+        header: "製品名",
+        accessor: (row) => row.product_name ?? "",
+        cell: (row) => (
+          <span className="block max-w-[200px] truncate" title={row.product_name ?? ""}>
+            {row.product_name}
+          </span>
+        ),
+        width: 200,
+        sortable: true,
+      },
+      {
+        id: "external_unit",
+        header: "外部単位",
+        accessor: (row) => row.external_unit,
+        cell: (row) => <span className="font-medium text-indigo-600 whitespace-nowrap">{row.external_unit}</span>,
+        width: 120,
+        sortable: true,
+      },
+      {
+        id: "conversion_factor",
+        header: "換算係数",
+        accessor: (row) => row.conversion_factor,
+        cell: (row) => {
+          // インライン編集
+          if (editingId === row.conversion_id) {
+            return (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  step="0.0001"
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="h-8 w-24"
+                  disabled={isUpdating}
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSaveEdit(row.conversion_id);
+                  }}
+                  disabled={isUpdating}
+                  className="h-8 w-8 p-0"
                 >
-                  {conversion.product_name}
-                </span>
-              </td>
-              <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-indigo-600">
-                {conversion.external_unit}
-              </td>
-              <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
-                <FactorCell
-                  conversion={conversion}
-                  editingId={editingId}
-                  editValue={editValue}
-                  setEditValue={setEditValue}
-                  isUpdating={isUpdating}
-                  onSave={handleSaveEdit}
-                  onCancel={handleCancelEdit}
-                />
-              </td>
-              <td className="px-6 py-4 text-sm text-slate-600">
-                <span className="block max-w-[150px] truncate" title={conversion.remarks || "-"}>
-                  {conversion.remarks || "-"}
-                </span>
-              </td>
-              <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
-                <ActionButtons
-                  conversion={conversion}
-                  editingId={editingId}
-                  onStartEdit={handleStartEdit}
-                  onSoftDelete={handleSoftDelete}
-                  onPermanentDelete={handlePermanentDelete}
-                  onRestore={handleRestore}
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                  <Check className="h-4 w-4 text-green-600" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancelEdit();
+                  }}
+                  disabled={isUpdating}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4 text-slate-500" />
+                </Button>
+              </div>
+            );
+          }
+          return <span className="whitespace-nowrap">{row.conversion_factor}</span>;
+        },
+        width: 200,
+      },
+      {
+        id: "remarks",
+        header: "備考",
+        accessor: (row) => row.remarks || "",
+        cell: (row) => (
+          <span className="block max-w-[150px] truncate" title={row.remarks || "-"}>
+            {row.remarks || "-"}
+          </span>
+        ),
+        width: 150,
+      },
+    ],
+    [editingId, editValue, isUpdating, setEditValue, handleSaveEdit, handleCancelEdit],
+  );
+
+  // アクションボタン
+  const renderRowActions = (conversion: UomConversionResponse) => {
+    // 編集中の行にはアクションを表示しない
+    if (editingId === conversion.conversion_id) {
+      return null;
+    }
+
+    const inactive = isInactive(conversion.valid_to);
+
+    if (inactive) {
+      return (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRestore(conversion);
+            }}
+            title="復元"
+            className="h-8 w-8 p-0"
+          >
+            <RotateCcw className="h-4 w-4 text-green-600" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePermanentDelete(conversion);
+            }}
+            title="完全に削除"
+            className="h-8 w-8 p-0"
+          >
+            <Trash2 className="h-4 w-4 text-red-600" />
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-end gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleStartEdit(conversion);
+          }}
+          className="h-8 w-8 p-0"
+        >
+          <Pencil className="h-4 w-4 text-slate-500" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSoftDelete(conversion);
+          }}
+          className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  };
+
+  // 行クラス名（削除済み行を薄くする）
+  const getRowClassName = (conversion: UomConversionResponse) => {
+    const inactive = isInactive(conversion.valid_to);
+    return inactive ? "opacity-60" : "";
+  };
+
+  return (
+    <DataTable
+      data={conversions}
+      columns={columns}
+      getRowId={(row) => row.conversion_id}
+      rowActions={renderRowActions}
+      getRowClassName={getRowClassName}
+      emptyMessage="単位変換が登録されていません"
+    />
   );
 }

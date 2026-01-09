@@ -1,13 +1,16 @@
-/* eslint-disable max-lines-per-function */
 /**
  * CustomerItemsTable - Table component for customer items.
+ * Refactored to use DataTable component.
  * OCR-SAP変換フィールド対応版 + チェックボックス選択対応
  */
 import { Building2, CheckCircle, Package, RotateCcw, Trash2, XCircle } from "lucide-react";
+import { useMemo } from "react";
 
 import type { CustomerItem } from "../api";
 
-import { Button, Checkbox } from "@/components/ui";
+import { Button } from "@/components/ui";
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 
 interface CustomerItemsTableProps {
   items: CustomerItem[];
@@ -33,240 +36,6 @@ const isInactive = (validTo?: string) => {
 /** CustomerItem用の一意キー生成 */
 const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.external_product_code}`;
 
-interface TableHeaderProps {
-  showCheckbox: boolean;
-  allSelected: boolean;
-  someSelected: boolean;
-  onToggleSelectAll?: () => void;
-  selectableCount: number;
-}
-
-function TableHeader({
-  showCheckbox,
-  allSelected,
-  someSelected,
-  onToggleSelectAll,
-  selectableCount,
-}: TableHeaderProps) {
-  return (
-    <thead className="sticky top-0 z-10 bg-gray-50">
-      <tr>
-        {showCheckbox && (
-          <th className="w-12 px-4 py-3 text-left">
-            <Checkbox
-              checked={allSelected}
-              onCheckedChange={() => onToggleSelectAll?.()}
-              aria-label="全て選択"
-              disabled={selectableCount === 0}
-              className={someSelected && !allSelected ? "opacity-50" : ""}
-            />
-          </th>
-        )}
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
-          得意先
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
-          得意先品番
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
-          製品
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
-          仕入先
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
-          基本単位
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
-          包装
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
-          発注
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
-          出荷票テキスト
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
-          特記事項
-        </th>
-        <th className="px-4 py-3 text-right text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
-          操作
-        </th>
-      </tr>
-    </thead>
-  );
-}
-
-interface TableRowProps {
-  item: CustomerItem;
-  onSoftDelete: (item: CustomerItem) => void;
-  onPermanentDelete: (item: CustomerItem) => void;
-  onRestore: (item: CustomerItem) => void;
-  onRowClick?: (item: CustomerItem) => void;
-  showCheckbox: boolean;
-  isSelected: boolean;
-  onToggleSelect?: (id: string) => void;
-  isAdmin?: boolean;
-}
-
-function TableRow({
-  item,
-  onSoftDelete,
-  onPermanentDelete,
-  onRestore,
-  onRowClick,
-  showCheckbox,
-  isSelected,
-  onToggleSelect,
-  isAdmin = false,
-}: TableRowProps) {
-  const inactive = isInactive(item.valid_to);
-  const itemKey = getItemKey(item);
-  // 管理者は全アイテム選択可、非管理者はアクティブのみ（論理削除用）
-  const canSelect = isAdmin ? true : !inactive;
-
-  return (
-    <tr className="cursor-pointer hover:bg-gray-50" onClick={() => onRowClick?.(item)}>
-      {showCheckbox && (
-        <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => onToggleSelect?.(itemKey)}
-            aria-label={`${item.customer_name} - ${item.external_product_code}を選択`}
-            disabled={!canSelect}
-          />
-        </td>
-      )}
-      <td className="px-4 py-4 text-sm text-gray-900">
-        <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 shrink-0 text-orange-600" />
-          <div className="min-w-[120px]">
-            <div className="font-medium">{item.customer_code}</div>
-            <div className="truncate text-xs text-gray-500" title={item.customer_name}>
-              {item.customer_name}
-            </div>
-            {inactive && (
-              <span className="mt-1 inline-block rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
-                削除済
-              </span>
-            )}
-          </div>
-        </div>
-      </td>
-      <td className="px-4 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
-        {item.external_product_code}
-      </td>
-      <td className="px-4 py-4 text-sm text-gray-900">
-        <div className="flex items-center gap-2">
-          <Package className="h-4 w-4 shrink-0 text-green-600" />
-          <div className="min-w-[120px]">
-            <div className="truncate font-medium" title={item.product_name}>
-              {item.product_name}
-            </div>
-            <div className="text-xs text-gray-500">ID: {item.product_id}</div>
-          </div>
-        </div>
-      </td>
-      <td className="px-4 py-4 text-sm text-gray-600">
-        {item.supplier_name ? (
-          <div className="min-w-[100px]">
-            <div className="font-medium">{item.supplier_code}</div>
-            <div className="truncate text-xs text-gray-500" title={item.supplier_name}>
-              {item.supplier_name}
-            </div>
-          </div>
-        ) : (
-          "-"
-        )}
-      </td>
-      <td className="px-4 py-4 text-sm whitespace-nowrap text-gray-900">{item.base_unit}</td>
-      <td className="px-4 py-4 text-sm whitespace-nowrap text-gray-600">
-        {item.pack_unit && item.pack_quantity ? (
-          <span>
-            {item.pack_unit} / {item.pack_quantity}
-          </span>
-        ) : (
-          "-"
-        )}
-      </td>
-      <td className="px-4 py-4 text-sm whitespace-nowrap">
-        {item.is_procurement_required ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-            <CheckCircle className="h-3 w-3" />要
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-            <XCircle className="h-3 w-3" />
-            不要
-          </span>
-        )}
-      </td>
-      <td className="max-w-[150px] px-4 py-4 text-sm text-gray-600">
-        {item.shipping_slip_text ? (
-          <div className="truncate" title={item.shipping_slip_text}>
-            {item.shipping_slip_text}
-          </div>
-        ) : (
-          <span className="text-gray-400">-</span>
-        )}
-      </td>
-      <td className="max-w-[150px] px-4 py-4 text-sm text-gray-600">
-        {item.special_instructions ? (
-          <div className="truncate" title={item.special_instructions}>
-            {item.special_instructions}
-          </div>
-        ) : (
-          <span className="text-gray-400">-</span>
-        )}
-      </td>
-      <td className="px-4 py-4 text-right text-sm whitespace-nowrap">
-        {inactive ? (
-          <div className="flex items-center justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRestore(item);
-              }}
-              title="復元"
-              className="h-8 w-8 p-0"
-            >
-              <RotateCcw className="h-4 w-4 text-green-600" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onPermanentDelete(item);
-              }}
-              title="完全に削除"
-              className="h-8 w-8 p-0"
-            >
-              <Trash2 className="h-4 w-4 text-red-600" />
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSoftDelete(item);
-              }}
-              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </td>
-    </tr>
-  );
-}
-
 export function CustomerItemsTable({
   items,
   isLoading,
@@ -279,13 +48,245 @@ export function CustomerItemsTable({
   onToggleSelectAll,
   isAdmin = false,
 }: CustomerItemsTableProps) {
-  const showCheckbox = !!selectedIds && !!onToggleSelect;
-  // 管理者は全アイテム、非管理者はアクティブのみ選択対象（論理削除用）
-  const selectableItems = isAdmin ? items : items.filter((item) => !isInactive(item.valid_to));
-  const allSelectableSelected =
-    selectableItems.length > 0 &&
-    selectableItems.every((item) => selectedIds?.has(getItemKey(item)));
-  const someSelected = selectableItems.some((item) => selectedIds?.has(getItemKey(item)));
+  // 列定義
+  const columns = useMemo<Column<CustomerItem>[]>(
+    () => [
+      {
+        id: "customer",
+        header: "得意先",
+        accessor: (row) => row.customer_name,
+        cell: (row) => {
+          const inactive = isInactive(row.valid_to);
+          return (
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 shrink-0 text-orange-600" />
+              <div className="min-w-[120px]">
+                <div className="font-medium">{row.customer_code}</div>
+                <div className="truncate text-xs text-gray-500" title={row.customer_name}>
+                  {row.customer_name}
+                </div>
+                {inactive && (
+                  <span className="mt-1 inline-block rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                    削除済
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        },
+        width: 180,
+        sortable: true,
+      },
+      {
+        id: "external_product_code",
+        header: "得意先品番",
+        accessor: (row) => row.external_product_code,
+        cell: (row) => (
+          <span className="font-medium whitespace-nowrap">{row.external_product_code}</span>
+        ),
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "product",
+        header: "製品",
+        accessor: (row) => row.product_name,
+        cell: (row) => (
+          <div className="flex items-center gap-2">
+            <Package className="h-4 w-4 shrink-0 text-green-600" />
+            <div className="min-w-[120px]">
+              <div className="truncate font-medium" title={row.product_name}>
+                {row.product_name}
+              </div>
+              <div className="text-xs text-gray-500">ID: {row.product_id}</div>
+            </div>
+          </div>
+        ),
+        width: 180,
+        sortable: true,
+      },
+      {
+        id: "supplier",
+        header: "仕入先",
+        accessor: (row) => row.supplier_name || "",
+        cell: (row) =>
+          row.supplier_name ? (
+            <div className="min-w-[100px]">
+              <div className="font-medium">{row.supplier_code}</div>
+              <div className="truncate text-xs text-gray-500" title={row.supplier_name}>
+                {row.supplier_name}
+              </div>
+            </div>
+          ) : (
+            <span className="text-gray-400">-</span>
+          ),
+        width: 140,
+        sortable: true,
+      },
+      {
+        id: "base_unit",
+        header: "基本単位",
+        accessor: (row) => row.base_unit,
+        width: 100,
+        sortable: true,
+      },
+      {
+        id: "pack",
+        header: "包装",
+        accessor: (row) => (row.pack_unit && row.pack_quantity ? `${row.pack_unit}/${row.pack_quantity}` : "-"),
+        cell: (row) =>
+          row.pack_unit && row.pack_quantity ? (
+            <span>
+              {row.pack_unit} / {row.pack_quantity}
+            </span>
+          ) : (
+            <span className="text-gray-400">-</span>
+          ),
+        width: 100,
+      },
+      {
+        id: "procurement",
+        header: "発注",
+        accessor: (row) => (row.is_procurement_required ? "要" : "不要"),
+        cell: (row) =>
+          row.is_procurement_required ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+              <CheckCircle className="h-3 w-3" />
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+              <XCircle className="h-3 w-3" />
+              不要
+            </span>
+          ),
+        width: 80,
+        align: "center",
+        sortable: true,
+      },
+      {
+        id: "shipping_slip_text",
+        header: "出荷票テキスト",
+        accessor: (row) => row.shipping_slip_text || "",
+        cell: (row) =>
+          row.shipping_slip_text ? (
+            <div className="max-w-[150px] truncate" title={row.shipping_slip_text}>
+              {row.shipping_slip_text}
+            </div>
+          ) : (
+            <span className="text-gray-400">-</span>
+          ),
+        width: 150,
+      },
+      {
+        id: "special_instructions",
+        header: "特記事項",
+        accessor: (row) => row.special_instructions || "",
+        cell: (row) =>
+          row.special_instructions ? (
+            <div className="max-w-[150px] truncate" title={row.special_instructions}>
+              {row.special_instructions}
+            </div>
+          ) : (
+            <span className="text-gray-400">-</span>
+          ),
+        width: 150,
+      },
+    ],
+    [],
+  );
+
+  // アクションボタン
+  const renderRowActions = (item: CustomerItem) => {
+    const inactive = isInactive(item.valid_to);
+
+    if (inactive) {
+      return (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRestore(item);
+            }}
+            title="復元"
+            className="h-8 w-8 p-0"
+          >
+            <RotateCcw className="h-4 w-4 text-green-600" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPermanentDelete(item);
+            }}
+            title="完全に削除"
+            className="h-8 w-8 p-0"
+          >
+            <Trash2 className="h-4 w-4 text-red-600" />
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          onSoftDelete(item);
+        }}
+        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    );
+  };
+
+  // 行クラス名（削除済み行を薄くする）
+  const getRowClassName = (item: CustomerItem) => {
+    const inactive = isInactive(item.valid_to);
+    return inactive ? "opacity-60" : "";
+  };
+
+  // 選択状態変更ハンドラー
+  const handleSelectionChange = (ids: (string | number)[]) => {
+    if (!onToggleSelect || !onToggleSelectAll) return;
+
+    // 選択可能なアイテムのキー
+    const selectableItems = isAdmin ? items : items.filter((item) => !isInactive(item.valid_to));
+    const selectableKeys = selectableItems.map(getItemKey);
+
+    // 全選択解除の場合
+    if (ids.length === 0 && selectedIds && selectedIds.size > 0) {
+      onToggleSelectAll();
+      return;
+    }
+
+    // 全選択の場合
+    if (ids.length === selectableKeys.length && selectedIds && selectedIds.size < selectableKeys.length) {
+      onToggleSelectAll();
+      return;
+    }
+
+    // 個別トグルの場合（差分を見つける）
+    const idsSet = new Set(ids.map(String));
+    const currentSet = selectedIds || new Set();
+
+    const added = [...idsSet].find((id) => !currentSet.has(id));
+    const removed = [...currentSet].find((id) => !idsSet.has(id));
+
+    if (added !== undefined) {
+      onToggleSelect(added);
+    } else if (removed !== undefined) {
+      onToggleSelect(removed);
+    }
+  };
+
+  // 選択可能かどうかを判定
+  const selectedIdsArray = selectedIds ? Array.from(selectedIds) : undefined;
 
   return (
     <div className="rounded-lg border bg-white shadow-sm">
@@ -294,41 +295,19 @@ export function CustomerItemsTable({
         <p className="text-sm text-gray-600">{items.length} 件のマッピング</p>
       </div>
 
-      {isLoading ? (
-        <div className="p-8 text-center text-gray-500">読み込み中...</div>
-      ) : items.length === 0 ? (
-        <div className="p-8 text-center text-gray-500">
-          得意先品番マッピングが登録されていません
-        </div>
-      ) : (
-        <div className="max-h-[600px] overflow-auto">
-          <table className="w-full min-w-[1200px] divide-y divide-gray-200">
-            <TableHeader
-              showCheckbox={showCheckbox}
-              allSelected={allSelectableSelected}
-              someSelected={someSelected}
-              onToggleSelectAll={onToggleSelectAll}
-              selectableCount={selectableItems.length}
-            />
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {items.map((item) => (
-                <TableRow
-                  key={getItemKey(item)}
-                  item={item}
-                  onSoftDelete={onSoftDelete}
-                  onPermanentDelete={onPermanentDelete}
-                  onRestore={onRestore}
-                  onRowClick={onRowClick}
-                  showCheckbox={showCheckbox}
-                  isSelected={selectedIds?.has(getItemKey(item)) ?? false}
-                  onToggleSelect={onToggleSelect}
-                  isAdmin={isAdmin}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        data={items}
+        columns={columns}
+        selectable={!!selectedIds && !!onToggleSelect}
+        selectedIds={selectedIdsArray}
+        onSelectionChange={handleSelectionChange}
+        getRowId={getItemKey}
+        onRowClick={onRowClick}
+        rowActions={renderRowActions}
+        getRowClassName={getRowClassName}
+        isLoading={isLoading}
+        emptyMessage="得意先品番マッピングが登録されていません"
+      />
     </div>
   );
 }

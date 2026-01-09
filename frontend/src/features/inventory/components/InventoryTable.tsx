@@ -1,19 +1,25 @@
-/* eslint-disable max-lines-per-function */
-import { useState, useRef, useCallback, useEffect } from "react";
+/**
+ * InventoryTable - Main inventory table with expandable lot details.
+ * Refactored to use DataTable component.
+ */
+import { useState, useMemo } from "react";
 
 import type { InventoryItem } from "@/features/inventory/api";
 import {
   LoadingState,
   EmptyState,
-  InventoryRow,
+  ExpandedLotDetails,
 } from "@/features/inventory/components/InventoryTableComponents";
 import { LotEditForm, type LotUpdateData } from "@/features/inventory/components/LotEditForm";
 import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
 import { useInventoryTableLogic } from "@/features/inventory/hooks/useInventoryTableLogic";
-import * as styles from "@/features/inventory/pages/styles";
 import { QuickWithdrawalDialog, WithdrawalHistoryDialog } from "@/features/withdrawals/components";
+import { Button } from "@/components/ui";
 import { FormDialog } from "@/shared/components/form";
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 import type { LotUI } from "@/shared/libs/normalize";
+import { fmt } from "@/shared/utils/number";
 
 interface InventoryTableProps {
   data: InventoryItem[];
@@ -21,6 +27,9 @@ interface InventoryTableProps {
   onRowClick?: (item: InventoryItem) => void;
   onRefresh?: () => void;
 }
+
+/** 複合キー生成 */
+const getItemKey = (item: InventoryItem) => `${item.product_id}-${item.warehouse_id}`;
 
 export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: InventoryTableProps) {
   const {
@@ -64,79 +73,279 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
     onRefresh?.();
   };
 
-  // 列リサイズロジック
-  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
-    expander: 40,
-    product: 200,
-    warehouse: 150,
-    lots: 80,
-    total: 80,
-    soft: 80,
-    hard: 80,
-    available: 80,
-    updated: 150,
-    actions: 100,
-  });
+  // 展開された行のIDリスト
+  const expandedRowIds = useMemo(() => {
+    return data
+      .filter((item) => isRowExpanded(item.product_id, item.warehouse_id))
+      .map(getItemKey);
+  }, [data, isRowExpanded]);
 
-  const resizingColumn = useRef<string | null>(null);
-  const startX = useRef<number>(0);
-  const startWidth = useRef<number>(0);
+  // 展開状態変更ハンドラー
+  const handleExpandedRowsChange = (ids: (string | number)[]) => {
+    // 変更を検出して対応する行をトグル
+    const idsSet = new Set(ids.map(String));
+    const currentSet = new Set(expandedRowIds);
 
-  const handleResizeStart = (e: React.MouseEvent | React.TouchEvent, columnId: string) => {
-    e.preventDefault();
-    resizingColumn.current = columnId;
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    startX.current = clientX;
-    startWidth.current = columnWidths[columnId];
+    // 新しく展開された行
+    const added = [...idsSet].find((id) => !currentSet.has(id));
+    if (added) {
+      const item = data.find((i) => getItemKey(i) === added);
+      if (item) {
+        toggleRow(item.product_id, item.warehouse_id);
+      }
+      return;
+    }
 
-    document.addEventListener("mousemove", handleResizeMove);
-    document.addEventListener("mouseup", handleResizeEnd);
-    document.addEventListener("touchmove", handleResizeMove);
-    document.addEventListener("touchend", handleResizeEnd);
+    // 折りたたまれた行
+    const removed = [...currentSet].find((id) => !idsSet.has(id));
+    if (removed) {
+      const item = data.find((i) => getItemKey(i) === removed);
+      if (item) {
+        toggleRow(item.product_id, item.warehouse_id);
+      }
+    }
   };
 
-  const handleResizeMove = useCallback((e: MouseEvent | TouchEvent) => {
-    if (!resizingColumn.current) return;
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const diff = clientX - startX.current;
-
-    // 最小幅を30pxに設定
-    const newWidth = Math.max(30, startWidth.current + diff);
-
-    setColumnWidths((prev) => ({
-      ...prev,
-      [resizingColumn.current!]: newWidth,
-    }));
-  }, []);
-
-  const handleResizeEnd = useCallback(() => {
-    resizingColumn.current = null;
-    document.removeEventListener("mousemove", handleResizeMove);
-    document.removeEventListener("mouseup", handleResizeEnd);
-    document.removeEventListener("touchmove", handleResizeMove);
-    document.removeEventListener("touchend", handleResizeEnd);
-  }, [handleResizeMove]);
-
-  // コンポーネントのアンマウント時にイベントリスナーを解除
-  useEffect(() => {
-    return () => {
-      document.removeEventListener("mousemove", handleResizeMove);
-      document.removeEventListener("mouseup", handleResizeEnd);
-      document.removeEventListener("touchmove", handleResizeMove);
-      document.removeEventListener("touchend", handleResizeEnd);
-    };
-  }, [handleResizeMove, handleResizeEnd]);
-
-  // リサイズハンドルのレンダリングヘルパー
-  const ResizeHandle = ({ columnId }: { columnId: string }) => (
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events
-    <div
-      onMouseDown={(e) => handleResizeStart(e, columnId)}
-      onTouchStart={(e) => handleResizeStart(e, columnId)}
-      className="absolute top-0 right-0 h-full w-1 cursor-col-resize touch-none bg-slate-200 opacity-0 transition-opacity select-none group-hover:opacity-50 hover:bg-blue-400 hover:opacity-100"
-      onClick={(e) => e.stopPropagation()}
-    />
+  // 列定義
+  const columns = useMemo<Column<InventoryItem>[]>(
+    () => [
+      {
+        id: "product",
+        header: "製品",
+        accessor: (row) => row.product_name || row.product_code || `ID: ${row.product_id}`,
+        cell: (row) => (
+          <span
+            className="block truncate"
+            title={row.product_name || row.product_code || `ID: ${row.product_id}`}
+          >
+            {row.product_name || row.product_code || `ID: ${row.product_id}`}
+          </span>
+        ),
+        width: 200,
+        sortable: true,
+      },
+      {
+        id: "warehouse",
+        header: "倉庫",
+        accessor: (row) => row.warehouse_name || row.warehouse_code || `ID: ${row.warehouse_id}`,
+        cell: (row) => (
+          <span
+            className="block truncate"
+            title={row.warehouse_name || row.warehouse_code || `ID: ${row.warehouse_id}`}
+          >
+            {row.warehouse_name || row.warehouse_code || `ID: ${row.warehouse_id}`}
+          </span>
+        ),
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "lots",
+        header: "ロット数",
+        accessor: (row) => {
+          const lots = getLotsForItem(row.product_id, row.warehouse_id);
+          return lots.length;
+        },
+        width: 80,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "total",
+        header: "総在庫数",
+        accessor: (row) => row.total_quantity,
+        cell: (row) => fmt(row.total_quantity),
+        width: 100,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "soft",
+        header: "仮引当",
+        accessor: (row) => row.soft_allocated_quantity,
+        cell: (row) => (
+          <span className="text-orange-600">{fmt(row.soft_allocated_quantity)}</span>
+        ),
+        width: 100,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "hard",
+        header: "確定引当",
+        accessor: (row) => row.hard_allocated_quantity,
+        cell: (row) => (
+          <span className="font-medium text-red-600">{fmt(row.hard_allocated_quantity)}</span>
+        ),
+        width: 100,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "available",
+        header: "利用可能",
+        accessor: (row) => row.available_quantity,
+        cell: (row) => (
+          <span className="font-medium text-green-600">{fmt(row.available_quantity)}</span>
+        ),
+        width: 100,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "updated",
+        header: "最終更新",
+        accessor: (row) => row.last_updated,
+        cell: (row) => (
+          <span className="text-gray-600">
+            {new Date(row.last_updated).toLocaleString("ja-JP")}
+          </span>
+        ),
+        width: 180,
+        sortable: true,
+      },
+    ],
+    [getLotsForItem],
   );
+
+  // アクションボタン
+  const renderRowActions = (item: InventoryItem) => {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleViewDetail(item.product_id, item.warehouse_id);
+        }}
+      >
+        詳細
+      </Button>
+    );
+  };
+
+  // 展開された行のコンテンツ
+  const renderExpandedRow = (item: InventoryItem) => {
+    const lots = getLotsForItem(item.product_id, item.warehouse_id);
+
+    return (
+      <div className="px-8 py-4">
+        <h4 className="mb-3 text-sm font-semibold text-gray-700">ロット一覧 ({lots.length}件)</h4>
+        {lots.length > 0 ? (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="pb-2 text-left font-medium text-gray-600">ロット番号</th>
+                <th className="pb-2 text-right font-medium text-gray-600">現在在庫</th>
+                <th className="pb-2 text-left font-medium text-gray-600">単位</th>
+                <th className="pb-2 text-left font-medium text-gray-600">入荷日</th>
+                <th className="pb-2 text-left font-medium text-gray-600">有効期限</th>
+                <th className="pb-2 text-left font-medium text-gray-600">ステータス</th>
+                <th className="pb-2 text-right font-medium text-gray-600">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lots.map((lot) => {
+                const lotWithWarehouseName = {
+                  ...lot,
+                  warehouse_name:
+                    lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+                };
+                return (
+                  <tr
+                    key={lot.id}
+                    className="border-b border-gray-100 hover:bg-gray-50"
+                  >
+                    <td className="py-2 font-medium text-gray-900">{lot.lot_number}</td>
+                    <td className="py-2 text-right font-semibold">
+                      {fmt(Number(lot.current_quantity))}
+                    </td>
+                    <td className="py-2 text-gray-600">{lot.unit}</td>
+                    <td className="py-2 text-gray-600">
+                      {lot.received_date && !isNaN(new Date(lot.received_date).getTime())
+                        ? new Date(lot.received_date).toLocaleDateString("ja-JP")
+                        : "-"}
+                    </td>
+                    <td className="py-2 text-gray-600">
+                      {lot.expiry_date && !isNaN(new Date(lot.expiry_date).getTime())
+                        ? new Date(lot.expiry_date).toLocaleDateString("ja-JP")
+                        : "-"}
+                    </td>
+                    <td className="py-2">
+                      {/* ステータスアイコンは省略 - 必要に応じて追加 */}
+                      <span className="text-xs text-gray-500">
+                        {Number(lot.locked_quantity || 0) > 0 ? "ロック中" : "利用可"}
+                      </span>
+                    </td>
+                    <td className="py-2 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditLot(lotWithWarehouseName)}
+                          title="編集"
+                          className="h-7 w-7 p-0"
+                        >
+                          編
+                        </Button>
+                        {Number(lot.locked_quantity || 0) > 0 ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleUnlockLot(lotWithWarehouseName)}
+                            title="ロック解除"
+                            className="h-7 w-7 p-0"
+                          >
+                            解
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleLockLot(lotWithWarehouseName)}
+                            title="ロック"
+                            className="h-7 w-7 p-0"
+                          >
+                            ロ
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleWithdrawLot(lotWithWarehouseName)}
+                          title="出庫"
+                          className="h-7 w-7 p-0"
+                          disabled={
+                            Number(lot.current_quantity) -
+                              Number(lot.allocated_quantity) -
+                              Number(lot.locked_quantity || 0) <=
+                            0
+                          }
+                        >
+                          出
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleHistoryLot(lotWithWarehouseName)}
+                          title="履歴"
+                          className="h-7 w-7 p-0"
+                        >
+                          履
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-sm text-gray-500">ロットがありません</p>
+        )}
+      </div>
+    );
+  };
 
   if (isLoading) {
     return <LoadingState />;
@@ -150,108 +359,17 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
     <div className="space-y-4">
       <div className="text-sm text-gray-600">{data.length} 件の在庫アイテム</div>
 
-      <div className={styles.table.container}>
-        <table className={styles.table.root}>
-          <thead className={styles.table.thead}>
-            <tr>
-              <th
-                className={`${styles.table.th} group relative`}
-                style={{ width: columnWidths.expander }}
-              >
-                <ResizeHandle columnId="expander" />
-              </th>
-              <th
-                className={`${styles.table.th} group relative`}
-                style={{ width: columnWidths.product }}
-              >
-                製品
-                <ResizeHandle columnId="product" />
-              </th>
-              <th
-                className={`${styles.table.th} group relative`}
-                style={{ width: columnWidths.warehouse }}
-              >
-                倉庫
-                <ResizeHandle columnId="warehouse" />
-              </th>
-              <th
-                className={`${styles.table.thRight} group relative`}
-                style={{ width: columnWidths.lots }}
-              >
-                ロット数
-                <ResizeHandle columnId="lots" />
-              </th>
-              <th
-                className={`${styles.table.thRight} group relative`}
-                style={{ width: columnWidths.total }}
-              >
-                総在庫数
-                <ResizeHandle columnId="total" />
-              </th>
-              <th
-                className={`${styles.table.thRight} group relative`}
-                style={{ width: columnWidths.soft }}
-              >
-                仮引当
-                <ResizeHandle columnId="soft" />
-              </th>
-              <th
-                className={`${styles.table.thRight} group relative`}
-                style={{ width: columnWidths.hard }}
-              >
-                確定引当
-                <ResizeHandle columnId="hard" />
-              </th>
-              <th
-                className={`${styles.table.thRight} group relative`}
-                style={{ width: columnWidths.available }}
-              >
-                利用可能
-                <ResizeHandle columnId="available" />
-              </th>
-              <th
-                className={`${styles.table.th} group relative`}
-                style={{ width: columnWidths.updated }}
-              >
-                最終更新
-                <ResizeHandle columnId="updated" />
-              </th>
-              <th
-                className={`${styles.table.thRight} group relative`}
-                style={{ width: columnWidths.actions }}
-              >
-                アクション
-                <ResizeHandle columnId="actions" />
-              </th>
-            </tr>
-          </thead>
-          <tbody className={styles.table.tbody}>
-            {data.map((item) => {
-              const expanded = isRowExpanded(item.product_id, item.warehouse_id);
-              // ロット数は常に取得して表示
-              const lots = getLotsForItem(item.product_id, item.warehouse_id);
-
-              return (
-                <InventoryRow
-                  key={`${item.product_id}-${item.warehouse_id}`}
-                  item={item}
-                  isExpanded={expanded}
-                  lots={lots}
-                  onToggleRow={toggleRow}
-                  onRowClick={onRowClick}
-                  onViewDetail={handleViewDetail}
-                  onEditLot={handleEditLot}
-                  onLockLot={handleLockLot}
-                  onUnlockLot={handleUnlockLot}
-                  onWithdrawLot={handleWithdrawLot}
-                  onHistoryLot={handleHistoryLot}
-                  columnWidths={columnWidths}
-                />
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        data={data}
+        columns={columns}
+        getRowId={getItemKey}
+        onRowClick={onRowClick}
+        rowActions={renderRowActions}
+        expandable
+        expandedRowIds={expandedRowIds}
+        onExpandedRowsChange={handleExpandedRowsChange}
+        renderExpandedRow={renderExpandedRow}
+      />
 
       <LotDialogs
         selectedLot={selectedLot}
