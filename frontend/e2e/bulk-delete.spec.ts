@@ -38,60 +38,69 @@ test.describe("Bulk Delete", () => {
 
   // Helper to mock customers list
   const mockCustomersList = async (page: import("@playwright/test").Page) => {
-    await page.route("**/*", async (route) => {
-      const url = route.request().url();
-      if (url.includes("masters/customers")) {
-        if (route.request().method() === "GET") {
-          await route.fulfill({
-            json: [
-              {
-                id: 1,
-                customer_code: "C001",
-                customer_name: "Customer 1",
-                updated_at: "2025-01-01T10:00:00Z",
-              },
-              {
-                id: 2,
-                customer_code: "C002",
-                customer_name: "Customer 2",
-                updated_at: "2025-01-01T10:00:00Z",
-              },
-              {
-                id: 3,
-                customer_code: "C003",
-                customer_name: "Customer 3",
-                updated_at: "2025-01-01T10:00:00Z",
-              },
-            ],
-          });
-          return;
-        } else if (route.request().method() === "DELETE") {
-          await route.fulfill({ json: { success: true } });
-          return;
-        }
-      } else if (url.includes("auth/me")) {
-        // let the other handler handle it?
-        // Playwright executes handlers in order.
-        // If I have **/* here, it might swallow everything.
-        // I should put this handler LAST or verify order avoiding conflict.
-        // But mockCustomersList is called inside beforeEach.
-        // mockAuth called before mockCustomersList.
-        // So mockAuth handler (**/auth/me) runs first?
-        // No, standard Playwright: new routes override old ones (LIFO) or FIFO?
-        // Documentation: "Routes specified later override those specified earlier." (Reverse?)
-        // "When multiple routes match the request, the one defined LAST is used."
-        // So MOCK CUSTOMERS LIST defined AFTER mockAuth -> runs FIRST.
-        // So I must handle auth/me here or fallback.
-        await route.fallback();
-        return;
+    // Mock GET list
+    await page.route("**/api/masters/customers", async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({
+          json: [
+            {
+              id: 1,
+              customer_code: "C001",
+              customer_name: "Customer 1",
+              updated_at: "2025-01-01T10:00:00Z",
+            },
+            {
+              id: 2,
+              customer_code: "C002",
+              customer_name: "Customer 2",
+              updated_at: "2025-01-01T10:00:00Z",
+            },
+            {
+              id: 3,
+              customer_code: "C003",
+              customer_name: "Customer 3",
+              updated_at: "2025-01-01T10:00:00Z",
+            },
+          ],
+        });
+      } else {
+        await route.continue();
       }
-      await route.fallback();
+    });
+
+    // Mock DELETE
+    await page.route("**/api/masters/customers/bulk-upsert", async (route) => {
+      if (route.request().method() === "POST") {
+        // upsert/delete endpoint
+        await route.fulfill({ json: { success: true, count: 1 } });
+      } else {
+        await route.continue();
+      }
+    });
+
+    // Mock specific delete endpoints if used
+    await page.route("**/api/masters/customers/*/permanent", async (route) => {
+      await route.fulfill({ json: { success: true } });
+    });
+  };
+
+  // Helper to mock warehouses (often loaded in background)
+  const mockWarehouses = async (page: import("@playwright/test").Page) => {
+    await page.route("**/api/masters/warehouses", async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({
+          json: [{ id: 1, warehouse_name: "Warehouse 1" }],
+        });
+      } else {
+        await route.continue();
+      }
     });
   };
 
   test.describe("Admin - Bulk Permanent Delete", () => {
     test.beforeEach(async ({ page }) => {
       await mockAuth(page, ["admin"]);
+      await mockWarehouses(page);
       await mockCustomersList(page);
     });
 
@@ -148,6 +157,7 @@ test.describe("Bulk Delete", () => {
   test.describe("Non-Admin - Bulk Soft Delete", () => {
     test.beforeEach(async ({ page }) => {
       await mockAuth(page, ["user"]);
+      await mockWarehouses(page);
       await mockCustomersList(page);
     });
 
