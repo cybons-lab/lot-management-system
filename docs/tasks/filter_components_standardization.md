@@ -5,7 +5,7 @@
 - **開始日**: 2026-01-09
 - **担当**: Claude
 - **優先度**: 高
-- **進捗**: 🟢 Phase 1-2 完了 (OrdersFilters, CustomerItemsFilter 移行済み)
+- **進捗**: 🟢 Phase 1-2 完了 (主要3ページ移行済み)
 - **完了日 (Phase 1-2)**: 2026-01-09
 
 ---
@@ -164,7 +164,7 @@ export function ProductListPage() {
   - ジェネリック型対応済み
   - クリア/リセット機能実装済み
 
-### Phase 2: 既存コンポーネントのリファクタリング（2-3日目） 🟡 一部完了
+### Phase 2: 既存コンポーネントのリファクタリング（2-3日目） ✅ 主要タスク完了
 
 **優先順位順に移行:**
 
@@ -173,12 +173,12 @@ export function ProductListPage() {
    - [x] `OrdersFilters` → SimpleFilterContainer化 (完了)
    - [x] `CustomerItemsFilter` → SimpleFilterContainer化 (完了)
 
-2. **中優先度**
+2. **中優先度** ✅ 完了
    - [x] ~~`LotAdvancedFilters`~~ → 未使用のため削除
-   - [ ] 在庫ページのフィルター (LotFilters)
-   - [ ] 入荷予定ページのフィルター
+   - [x] ~~`LotFilters`~~ → 未使用のため削除
+   - [x] `InboundPlansList` フィルター → SimpleFilterContainer化 (完了)
 
-3. **低優先度（単純なフィルター）**
+3. **低優先度（単純なフィルター）** - 今後の改善候補
    - [ ] 得意先管理ページ
    - [ ] 製品管理ページ
    - [ ] 倉庫管理ページ
@@ -355,4 +355,35 @@ function useFilters<T extends Record<string, any>>(
 - `d49334e` - chore: remove unused filter components and duplicate useFilters hook
 - `ba1b1cc` - fix: update FilterContainer.example.tsx to use existing useFilters hook API
 - `1bbb3a5` - fix: make filter interfaces extend FilterState in examples
+
+
+---
+
+## 📊 Phase 2 実装完了サマリー (2026-01-09 午後)
+
+### ✅ 追加で完了した作業
+
+**InboundPlansList フィルター移行:**
+- **InboundPlansList** のフィルターを SimpleFilterContainer に移行 (✅ 完了)
+  - 場所: `/frontend/src/features/inbound-plans/components/InboundPlansList.tsx`
+  - 削減: **89行** (重複していた3箇所のフィルターUIを統一)
+  - 改善: エラー時、データ形式エラー時、正常時の3箇所に重複していたフィルターUIを1つに統合
+
+**追加削除:**
+- `LotFilters.tsx` (削除 - 83行) - 未使用コンポーネント
+
+### 📈 累積成果 (Phase 1-2)
+
+- **コード削減**: 約 **-480行**
+  - 移行による削減: -131行 (OrdersFilters -24, CustomerItemsFilter -18, InboundPlansList -89)
+  - 削除による削減: -395行 (LotsPageFilters -84, LotAdvancedFilters -84, LotFilters -83, useFilters -60, 重複フィルターUI -84)
+  - 新規追加: +46行 (FilterContainer, useFilters wrapper)
+- **ファイル削減**: **-4ファイル**
+- **統一されたフィルター UI**: **3ページ** (Orders, CustomerItems, InboundPlans)
+- **DRY改善**: 重複していたフィルターUI実装を1つに統一
+
+### 🔗 関連コミット (Phase 2)
+
+- `28ef901` - refactor: migrate InboundPlansList filters to use SimpleFilterContainer
+- `958bb36` - chore: remove unused LotFilters component
 
