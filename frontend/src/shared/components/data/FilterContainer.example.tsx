@@ -8,12 +8,13 @@
 import { FilterContainer } from "./FilterContainer";
 import { TextFilterField, SelectFilterField, CheckboxFilterField } from "./filter-fields";
 
+import type { FilterState } from "@/hooks/ui/filters/useFilters";
 import { useFilters } from "@/hooks/ui";
 
 /**
  * フィルター型定義の例
  */
-interface ProductFilters {
+interface ProductFilters extends FilterState {
   search: string;
   category: string;
   warehouse: string;
@@ -161,7 +162,7 @@ export function SimpleProductFiltersExample() {
  * LotsPageFilters の移行例
  * （旧実装を新 FilterContainer に置き換え）
  */
-interface LotFilters {
+interface LotFilters extends FilterState {
   search: string;
   product_code: string;
   warehouse_code: string;
