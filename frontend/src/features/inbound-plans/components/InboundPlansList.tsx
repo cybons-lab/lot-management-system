@@ -10,6 +10,7 @@ import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
 import { useSuppliersQuery } from "@/hooks/api/useMastersQuery";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
+import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
 import { formatDate } from "@/shared/utils/date";
 
 // ============================================
@@ -71,6 +72,77 @@ export function InboundPlansList({
         label: `${s.supplier_code} - ${s.supplier_name}`,
       })),
     [suppliers],
+  );
+
+  // フィルターのリセット処理
+  const handleResetFilters = () => {
+    onFilterChange({
+      supplier_id: "",
+      product_id: "",
+      status: "",
+      date_from: "",
+      date_to: "",
+    });
+  };
+
+  // フィルターUIコンポーネント
+  const renderFilters = () => (
+    <SimpleFilterContainer
+      hideSearch
+      onReset={handleResetFilters}
+    >
+      <div className="grid gap-4 md:grid-cols-4">
+        <div>
+          <Label className="mb-2 block text-sm font-medium">仕入先</Label>
+          <SearchableSelect
+            options={supplierOptions}
+            value={filters.supplier_id}
+            onChange={(value) => onFilterChange({ ...filters, supplier_id: value })}
+            placeholder="仕入先を検索..."
+          />
+        </div>
+        <div>
+          <Label className="mb-2 block text-sm font-medium">ステータス</Label>
+          <select
+            value={filters.status}
+            onChange={(e) =>
+              onFilterChange({
+                ...filters,
+                status: e.target.value as
+                  | ""
+                  | "planned"
+                  | "partially_received"
+                  | "received"
+                  | "cancelled",
+              })
+            }
+            className="w-full rounded-md border px-3 py-2 text-sm"
+          >
+            <option value="">すべて</option>
+            <option value="planned">Planned（予定）</option>
+            <option value="partially_received">Partially Received（一部入荷）</option>
+            <option value="received">Received（入荷済）</option>
+            <option value="cancelled">Cancelled（キャンセル）</option>
+          </select>
+        </div>
+        <div>
+          <Label className="mb-2 block text-sm font-medium">入荷予定日（開始）</Label>
+          <Input
+            type="date"
+            value={filters.date_from}
+            onChange={(e) => onFilterChange({ ...filters, date_from: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label className="mb-2 block text-sm font-medium">入荷予定日（終了）</Label>
+          <Input
+            type="date"
+            value={filters.date_to}
+            onChange={(e) => onFilterChange({ ...filters, date_to: e.target.value })}
+          />
+        </div>
+      </div>
+    </SimpleFilterContainer>
   );
 
   // 列定義
@@ -182,61 +254,7 @@ export function InboundPlansList({
   if (isError) {
     return (
       <div className="space-y-6">
-        {/* Filters */}
-        <div className="rounded-lg border bg-white p-4">
-          <div className="grid gap-4 md:grid-cols-4">
-            <div>
-              <Label className="mb-2 block text-sm font-medium">仕入先</Label>
-              <SearchableSelect
-                options={supplierOptions}
-                value={filters.supplier_id}
-                onChange={(value) => onFilterChange({ ...filters, supplier_id: value })}
-                placeholder="仕入先を検索..."
-              />
-            </div>
-            <div>
-              <Label className="mb-2 block text-sm font-medium">ステータス</Label>
-              <select
-                value={filters.status}
-                onChange={(e) =>
-                  onFilterChange({
-                    ...filters,
-                    status: e.target.value as
-                      | ""
-                      | "planned"
-                      | "partially_received"
-                      | "received"
-                      | "cancelled",
-                  })
-                }
-                className="w-full rounded-md border px-3 py-2 text-sm"
-              >
-                <option value="">すべて</option>
-                <option value="planned">Planned（予定）</option>
-                <option value="partially_received">Partially Received（一部入荷）</option>
-                <option value="received">Received（入荷済）</option>
-                <option value="cancelled">Cancelled（キャンセル）</option>
-              </select>
-            </div>
-            <div>
-              <Label className="mb-2 block text-sm font-medium">入荷予定日（開始）</Label>
-              <Input
-                type="date"
-                value={filters.date_from}
-                onChange={(e) => onFilterChange({ ...filters, date_from: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label className="mb-2 block text-sm font-medium">入荷予定日（終了）</Label>
-              <Input
-                type="date"
-                value={filters.date_to}
-                onChange={(e) => onFilterChange({ ...filters, date_to: e.target.value })}
-              />
-            </div>
-          </div>
-        </div>
-
+        {renderFilters()}
         <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-600">
           データの取得に失敗しました
         </div>
@@ -248,61 +266,7 @@ export function InboundPlansList({
   if (!Array.isArray(plans)) {
     return (
       <div className="space-y-6">
-        {/* Filters */}
-        <div className="rounded-lg border bg-white p-4">
-          <div className="grid gap-4 md:grid-cols-4">
-            <div>
-              <Label className="mb-2 block text-sm font-medium">仕入先</Label>
-              <SearchableSelect
-                options={supplierOptions}
-                value={filters.supplier_id}
-                onChange={(value) => onFilterChange({ ...filters, supplier_id: value })}
-                placeholder="仕入先を検索..."
-              />
-            </div>
-            <div>
-              <Label className="mb-2 block text-sm font-medium">ステータス</Label>
-              <select
-                value={filters.status}
-                onChange={(e) =>
-                  onFilterChange({
-                    ...filters,
-                    status: e.target.value as
-                      | ""
-                      | "planned"
-                      | "partially_received"
-                      | "received"
-                      | "cancelled",
-                  })
-                }
-                className="w-full rounded-md border px-3 py-2 text-sm"
-              >
-                <option value="">すべて</option>
-                <option value="planned">Planned（予定）</option>
-                <option value="partially_received">Partially Received（一部入荷）</option>
-                <option value="received">Received（入荷済）</option>
-                <option value="cancelled">Cancelled（キャンセル）</option>
-              </select>
-            </div>
-            <div>
-              <Label className="mb-2 block text-sm font-medium">入荷予定日（開始）</Label>
-              <Input
-                type="date"
-                value={filters.date_from}
-                onChange={(e) => onFilterChange({ ...filters, date_from: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label className="mb-2 block text-sm font-medium">入荷予定日（終了）</Label>
-              <Input
-                type="date"
-                value={filters.date_to}
-                onChange={(e) => onFilterChange({ ...filters, date_to: e.target.value })}
-              />
-            </div>
-          </div>
-        </div>
-
+        {renderFilters()}
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           入荷予定が登録されていません
           {plans && (
@@ -317,60 +281,7 @@ export function InboundPlansList({
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="rounded-lg border bg-white p-4">
-        <div className="grid gap-4 md:grid-cols-4">
-          <div>
-            <Label className="mb-2 block text-sm font-medium">仕入先</Label>
-            <SearchableSelect
-              options={supplierOptions}
-              value={filters.supplier_id}
-              onChange={(value) => onFilterChange({ ...filters, supplier_id: value })}
-              placeholder="仕入先を検索..."
-            />
-          </div>
-          <div>
-            <Label className="mb-2 block text-sm font-medium">ステータス</Label>
-            <select
-              value={filters.status}
-              onChange={(e) =>
-                onFilterChange({
-                  ...filters,
-                  status: e.target.value as
-                    | ""
-                    | "planned"
-                    | "partially_received"
-                    | "received"
-                    | "cancelled",
-                })
-              }
-              className="w-full rounded-md border px-3 py-2 text-sm"
-            >
-              <option value="">すべて</option>
-              <option value="planned">Planned（予定）</option>
-              <option value="partially_received">Partially Received（一部入荷）</option>
-              <option value="received">Received（入荷済）</option>
-              <option value="cancelled">Cancelled（キャンセル）</option>
-            </select>
-          </div>
-          <div>
-            <Label className="mb-2 block text-sm font-medium">入荷予定日（開始）</Label>
-            <Input
-              type="date"
-              value={filters.date_from}
-              onChange={(e) => onFilterChange({ ...filters, date_from: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label className="mb-2 block text-sm font-medium">入荷予定日（終了）</Label>
-            <Input
-              type="date"
-              value={filters.date_to}
-              onChange={(e) => onFilterChange({ ...filters, date_to: e.target.value })}
-            />
-          </div>
-        </div>
-      </div>
+      {renderFilters()}
 
       {/* Data display area */}
       <div className="space-y-4">
