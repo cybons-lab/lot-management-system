@@ -8,7 +8,7 @@
 import { FilterContainer } from "./FilterContainer";
 import { TextFilterField, SelectFilterField, CheckboxFilterField } from "./filter-fields";
 
-import { useFilters } from "@/shared/hooks/useFilters";
+import { useFilters } from "@/hooks/ui";
 
 /**
  * フィルター型定義の例
@@ -26,13 +26,7 @@ interface ProductFilters {
  */
 export function ProductListFiltersExample() {
   // useFilters フックでフィルター状態を管理
-  const {
-    filters,
-    setFilter,
-    resetFilters,
-    isActive,
-    activeCount,
-  } = useFilters<ProductFilters>({
+  const filters = useFilters<ProductFilters>({
     search: '',
     category: 'all',
     warehouse: 'all',
@@ -68,10 +62,10 @@ export function ProductListFiltersExample() {
     <div className="space-y-4">
       {/* FilterContainer の基本的な使い方 */}
       <FilterContainer
-        searchValue={filters.search}
-        onSearchChange={(value) => setFilter('search', value)}
+        searchValue={filters.values.search}
+        onSearchChange={(value) => filters.set('search', value)}
         searchPlaceholder="製品コード、製品名で検索..."
-        onReset={resetFilters}
+        onReset={filters.reset}
         collapsible
         expandButtonText="詳細フィルター"
       >
@@ -79,39 +73,39 @@ export function ProductListFiltersExample() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <SelectFilterField
             label="カテゴリ"
-            value={filters.category}
-            onChange={(value) => setFilter('category', value)}
+            value={filters.values.category}
+            onChange={(value) => filters.set('category', value)}
             options={categoryOptions}
           />
 
           <SelectFilterField
             label="倉庫"
-            value={filters.warehouse}
-            onChange={(value) => setFilter('warehouse', value)}
+            value={filters.values.warehouse}
+            onChange={(value) => filters.set('warehouse', value)}
             options={warehouseOptions}
           />
 
           <SelectFilterField
             label="ステータス"
-            value={filters.status}
-            onChange={(value) => setFilter('status', value)}
+            value={filters.values.status}
+            onChange={(value) => filters.set('status', value)}
             options={statusOptions}
           />
         </div>
 
         <CheckboxFilterField
           label="在庫ありのみ表示"
-          checked={filters.inStock}
-          onChange={(checked) => setFilter('inStock', checked)}
+          checked={filters.values.inStock}
+          onChange={(checked) => filters.set('inStock', checked)}
         />
       </FilterContainer>
 
       {/* フィルター状態の表示（デバッグ用） */}
       <div className="rounded-lg border bg-slate-50 p-4 text-sm">
         <h4 className="mb-2 font-semibold">フィルター状態:</h4>
-        <pre className="text-xs">{JSON.stringify(filters, null, 2)}</pre>
+        <pre className="text-xs">{JSON.stringify(filters.values, null, 2)}</pre>
         <p className="mt-2">
-          アクティブ: {isActive ? 'Yes' : 'No'} | アクティブフィルター数: {activeCount}
+          デフォルト: {filters.isDefault ? 'Yes' : 'No'} | アクティブフィルター数: {filters.activeCount}
         </p>
       </div>
     </div>
@@ -123,7 +117,7 @@ export function ProductListFiltersExample() {
  * （展開機能なし、常に全フィルター表示）
  */
 export function SimpleProductFiltersExample() {
-  const { filters, setFilter, resetFilters } = useFilters<ProductFilters>({
+  const filters = useFilters<ProductFilters>({
     search: '',
     category: 'all',
     warehouse: 'all',
@@ -133,16 +127,16 @@ export function SimpleProductFiltersExample() {
 
   return (
     <FilterContainer
-      searchValue={filters.search}
-      onSearchChange={(value) => setFilter('search', value)}
-      onReset={resetFilters}
+      searchValue={filters.values.search}
+      onSearchChange={(value) => filters.set('search', value)}
+      onReset={filters.reset}
       collapsible={false}  // 展開機能をオフ
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <SelectFilterField
           label="カテゴリ"
-          value={filters.category}
-          onChange={(value) => setFilter('category', value)}
+          value={filters.values.category}
+          onChange={(value) => filters.set('category', value)}
           options={[
             { value: 'all', label: 'すべて' },
             { value: 'electronics', label: '電子部品' },
@@ -151,8 +145,8 @@ export function SimpleProductFiltersExample() {
 
         <SelectFilterField
           label="ステータス"
-          value={filters.status}
-          onChange={(value) => setFilter('status', value)}
+          value={filters.values.status}
+          onChange={(value) => filters.set('status', value)}
           options={[
             { value: 'all', label: 'すべて' },
             { value: 'active', label: '有効' },
@@ -176,8 +170,8 @@ interface LotFilters {
   expiry_date_to: string;
 }
 
-export function LotsPageFiltersRefactored() {
-  const { filters, setFilter, resetFilters } = useFilters<LotFilters>({
+export function LotFiltersExample() {
+  const filters = useFilters<LotFilters>({
     search: '',
     product_code: '',
     warehouse_code: '',
@@ -188,32 +182,32 @@ export function LotsPageFiltersRefactored() {
 
   return (
     <FilterContainer
-      searchValue={filters.search}
-      onSearchChange={(value) => setFilter('search', value)}
+      searchValue={filters.values.search}
+      onSearchChange={(value) => filters.set('search', value)}
       searchPlaceholder="ロット番号、製品コード、製品名で検索..."
-      onReset={resetFilters}
+      onReset={filters.reset}
       collapsible
       expandButtonText="詳細フィルター"
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <TextFilterField
           label="製品コード"
-          value={filters.product_code}
-          onChange={(value) => setFilter('product_code', value)}
+          value={filters.values.product_code}
+          onChange={(value) => filters.set('product_code', value)}
           placeholder="例: P001"
         />
 
         <TextFilterField
           label="倉庫コード"
-          value={filters.warehouse_code}
-          onChange={(value) => setFilter('warehouse_code', value)}
+          value={filters.values.warehouse_code}
+          onChange={(value) => filters.set('warehouse_code', value)}
           placeholder="例: WH-01"
         />
 
         <SelectFilterField
           label="ステータス"
-          value={filters.status}
-          onChange={(value) => setFilter('status', value)}
+          value={filters.values.status}
+          onChange={(value) => filters.set('status', value)}
           options={[
             { value: 'all', label: 'すべて' },
             { value: 'active', label: '有効' },
