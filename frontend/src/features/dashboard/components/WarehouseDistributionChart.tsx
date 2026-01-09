@@ -41,9 +41,9 @@ export function WarehouseDistributionChart() {
     // Recharts Pie onClick passes the data object directly (or via payload)
     // data might be the entry object
     if (data && data.id) {
-        navigate(`/inventory?warehouse_id=${data.id}`);
+      navigate(`/inventory?warehouse_id=${data.id}`);
     } else if (data && data.payload && data.payload.id) {
-         navigate(`/inventory?warehouse_id=${data.payload.id}`);
+      navigate(`/inventory?warehouse_id=${data.payload.id}`);
     }
   };
 
@@ -87,10 +87,7 @@ export function WarehouseDistributionChart() {
             }}
             formatter={(value: number) => [value.toLocaleString("ja-JP"), "在庫数"]}
           />
-          <Legend
-            wrapperStyle={{ fontSize: "11px" }}
-            iconType="circle"
-          />
+          <Legend wrapperStyle={{ fontSize: "11px" }} iconType="circle" />
         </PieChart>
       </ResponsiveContainer>
     </ChartContainer>

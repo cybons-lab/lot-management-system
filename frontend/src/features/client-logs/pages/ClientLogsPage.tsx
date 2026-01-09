@@ -60,9 +60,7 @@ export function ClientLogsPage() {
         id: "level",
         header: "レベル",
         accessor: (row) => row.level,
-        cell: (row) => (
-          <Badge variant={getLevelBadgeVariant(row.level)}>{row.level}</Badge>
-        ),
+        cell: (row) => <Badge variant={getLevelBadgeVariant(row.level)}>{row.level}</Badge>,
         width: 80,
         sortable: true,
       },
@@ -90,9 +88,7 @@ export function ClientLogsPage() {
         header: "日時",
         accessor: (row) => row.created_at,
         cell: (row) => (
-          <span className="text-gray-600">
-            {new Date(row.created_at).toLocaleString("ja-JP")}
-          </span>
+          <span className="text-gray-600">{new Date(row.created_at).toLocaleString("ja-JP")}</span>
         ),
         width: 180,
         sortable: true,

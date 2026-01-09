@@ -17,9 +17,7 @@ export function KeyboardShortcutsHelp({ open, onOpenChange }: KeyboardShortcutsH
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>キーボードショートカット</DialogTitle>
-          <DialogDescription>
-            利用可能なショートカットキーの一覧です。
-          </DialogDescription>
+          <DialogDescription>利用可能なショートカットキーの一覧です。</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 items-center gap-4 border-b pb-2">

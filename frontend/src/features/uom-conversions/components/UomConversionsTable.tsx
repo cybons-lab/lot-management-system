@@ -62,7 +62,9 @@ export function UomConversionsTable({
               <Package className="h-4 w-4 text-green-600" />
               <span className="whitespace-nowrap">{row.product_code}</span>
               {inactive && (
-                <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">削除済</span>
+                <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                  削除済
+                </span>
               )}
             </div>
           );
@@ -86,7 +88,9 @@ export function UomConversionsTable({
         id: "external_unit",
         header: "外部単位",
         accessor: (row) => row.external_unit,
-        cell: (row) => <span className="font-medium text-indigo-600 whitespace-nowrap">{row.external_unit}</span>,
+        cell: (row) => (
+          <span className="font-medium whitespace-nowrap text-indigo-600">{row.external_unit}</span>
+        ),
         width: 120,
         sortable: true,
       },

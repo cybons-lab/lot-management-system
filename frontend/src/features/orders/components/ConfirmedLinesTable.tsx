@@ -94,7 +94,9 @@ export function ConfirmedLinesTable({
         id: "delivery_date",
         header: "納期",
         accessor: (row) => row.delivery_date,
-        cell: (row) => <span className="text-sm text-slate-600">{formatDate(row.delivery_date)}</span>,
+        cell: (row) => (
+          <span className="text-sm text-slate-600">{formatDate(row.delivery_date)}</span>
+        ),
         width: 120,
         sortable: true,
       },

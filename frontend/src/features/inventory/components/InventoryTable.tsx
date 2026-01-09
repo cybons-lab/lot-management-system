@@ -7,10 +7,7 @@ import { useState, useMemo } from "react";
 
 import { Button } from "@/components/ui";
 import type { InventoryItem } from "@/features/inventory/api";
-import {
-  LoadingState,
-  EmptyState,
-} from "@/features/inventory/components/InventoryTableComponents";
+import { LoadingState, EmptyState } from "@/features/inventory/components/InventoryTableComponents";
 import { LotEditForm, type LotUpdateData } from "@/features/inventory/components/LotEditForm";
 import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
 import { useInventoryTableLogic } from "@/features/inventory/hooks/useInventoryTableLogic";
@@ -76,9 +73,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
 
   // 展開された行のIDリスト
   const expandedRowIds = useMemo(() => {
-    return data
-      .filter((item) => isRowExpanded(item.product_id, item.warehouse_id))
-      .map(getItemKey);
+    return data.filter((item) => isRowExpanded(item.product_id, item.warehouse_id)).map(getItemKey);
   }, [data, isRowExpanded]);
 
   // 展開状態変更ハンドラー
@@ -165,9 +160,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
         id: "soft",
         header: "仮引当",
         accessor: (row) => row.soft_allocated_quantity,
-        cell: (row) => (
-          <span className="text-orange-600">{fmt(row.soft_allocated_quantity)}</span>
-        ),
+        cell: (row) => <span className="text-orange-600">{fmt(row.soft_allocated_quantity)}</span>,
         width: 100,
         align: "right",
         sortable: true,
@@ -252,14 +245,10 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
               {lots.map((lot) => {
                 const lotWithWarehouseName = {
                   ...lot,
-                  warehouse_name:
-                    lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+                  warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code,
                 };
                 return (
-                  <tr
-                    key={lot.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
-                  >
+                  <tr key={lot.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-2 font-medium text-gray-900">{lot.lot_number}</td>
                     <td className="py-2 text-right font-semibold">
                       {fmt(Number(lot.current_quantity))}

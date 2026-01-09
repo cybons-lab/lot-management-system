@@ -155,9 +155,7 @@ export function DeleteDialog({
 
   // 確認ボタンの有効/無効
   const isConfirmDisabled =
-    isPending ||
-    (bulk && selectedCount === 0) ||
-    (!isSoft && confirmInput !== confirmationPhrase);
+    isPending || (bulk && selectedCount === 0) || (!isSoft && confirmInput !== confirmationPhrase);
 
   // Styles
   const alertStyles = isSoft

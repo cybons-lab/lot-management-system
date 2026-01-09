@@ -92,6 +92,4 @@ describe("InventoryTable", () => {
     const resizers = container.querySelectorAll(".cursor-col-resize");
     expect(resizers.length).toBeGreaterThan(0);
   });
-
-
 });

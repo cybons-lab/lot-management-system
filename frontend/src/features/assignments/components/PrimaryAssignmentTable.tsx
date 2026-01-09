@@ -3,14 +3,7 @@ import { useMemo } from "react";
 
 import type { SupplierGroup } from "../types";
 
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";

@@ -87,10 +87,7 @@ export function InboundPlansList({
 
   // フィルターUIコンポーネント
   const renderFilters = () => (
-    <SimpleFilterContainer
-      hideSearch
-      onReset={handleResetFilters}
-    >
+    <SimpleFilterContainer hideSearch onReset={handleResetFilters}>
       <div className="grid gap-4 md:grid-cols-4">
         <div>
           <Label className="mb-2 block text-sm font-medium">仕入先</Label>

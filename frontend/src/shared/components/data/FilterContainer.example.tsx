@@ -28,35 +28,35 @@ interface ProductFilters extends FilterState {
 export function ProductListFiltersExample() {
   // useFilters フックでフィルター状態を管理
   const filters = useFilters<ProductFilters>({
-    search: '',
-    category: 'all',
-    warehouse: 'all',
+    search: "",
+    category: "all",
+    warehouse: "all",
     inStock: false,
-    status: 'all',
+    status: "all",
   });
 
   // カテゴリオプション（実際にはAPIから取得）
   const categoryOptions = [
-    { value: 'all', label: 'すべて' },
-    { value: 'electronics', label: '電子部品' },
-    { value: 'mechanical', label: '機械部品' },
-    { value: 'chemical', label: '化学製品' },
+    { value: "all", label: "すべて" },
+    { value: "electronics", label: "電子部品" },
+    { value: "mechanical", label: "機械部品" },
+    { value: "chemical", label: "化学製品" },
   ];
 
   // 倉庫オプション
   const warehouseOptions = [
-    { value: 'all', label: 'すべて' },
-    { value: 'WH-01', label: '第1倉庫' },
-    { value: 'WH-02', label: '第2倉庫' },
-    { value: 'WH-03', label: '第3倉庫' },
+    { value: "all", label: "すべて" },
+    { value: "WH-01", label: "第1倉庫" },
+    { value: "WH-02", label: "第2倉庫" },
+    { value: "WH-03", label: "第3倉庫" },
   ];
 
   // ステータスオプション
   const statusOptions = [
-    { value: 'all', label: 'すべて' },
-    { value: 'active', label: '有効' },
-    { value: 'inactive', label: '無効' },
-    { value: 'discontinued', label: '廃番' },
+    { value: "all", label: "すべて" },
+    { value: "active", label: "有効" },
+    { value: "inactive", label: "無効" },
+    { value: "discontinued", label: "廃番" },
   ];
 
   return (
@@ -64,7 +64,7 @@ export function ProductListFiltersExample() {
       {/* FilterContainer の基本的な使い方 */}
       <FilterContainer
         searchValue={filters.values.search}
-        onSearchChange={(value) => filters.set('search', value)}
+        onSearchChange={(value) => filters.set("search", value)}
         searchPlaceholder="製品コード、製品名で検索..."
         onReset={filters.reset}
         collapsible
@@ -75,21 +75,21 @@ export function ProductListFiltersExample() {
           <SelectFilterField
             label="カテゴリ"
             value={filters.values.category}
-            onChange={(value) => filters.set('category', value)}
+            onChange={(value) => filters.set("category", value)}
             options={categoryOptions}
           />
 
           <SelectFilterField
             label="倉庫"
             value={filters.values.warehouse}
-            onChange={(value) => filters.set('warehouse', value)}
+            onChange={(value) => filters.set("warehouse", value)}
             options={warehouseOptions}
           />
 
           <SelectFilterField
             label="ステータス"
             value={filters.values.status}
-            onChange={(value) => filters.set('status', value)}
+            onChange={(value) => filters.set("status", value)}
             options={statusOptions}
           />
         </div>
@@ -97,7 +97,7 @@ export function ProductListFiltersExample() {
         <CheckboxFilterField
           label="在庫ありのみ表示"
           checked={filters.values.inStock}
-          onChange={(checked) => filters.set('inStock', checked)}
+          onChange={(checked) => filters.set("inStock", checked)}
         />
       </FilterContainer>
 
@@ -106,7 +106,8 @@ export function ProductListFiltersExample() {
         <h4 className="mb-2 font-semibold">フィルター状態:</h4>
         <pre className="text-xs">{JSON.stringify(filters.values, null, 2)}</pre>
         <p className="mt-2">
-          デフォルト: {filters.isDefault ? 'Yes' : 'No'} | アクティブフィルター数: {filters.activeCount}
+          デフォルト: {filters.isDefault ? "Yes" : "No"} | アクティブフィルター数:{" "}
+          {filters.activeCount}
         </p>
       </div>
     </div>
@@ -119,38 +120,38 @@ export function ProductListFiltersExample() {
  */
 export function SimpleProductFiltersExample() {
   const filters = useFilters<ProductFilters>({
-    search: '',
-    category: 'all',
-    warehouse: 'all',
+    search: "",
+    category: "all",
+    warehouse: "all",
     inStock: false,
-    status: 'all',
+    status: "all",
   });
 
   return (
     <FilterContainer
       searchValue={filters.values.search}
-      onSearchChange={(value) => filters.set('search', value)}
+      onSearchChange={(value) => filters.set("search", value)}
       onReset={filters.reset}
-      collapsible={false}  // 展開機能をオフ
+      collapsible={false} // 展開機能をオフ
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <SelectFilterField
           label="カテゴリ"
           value={filters.values.category}
-          onChange={(value) => filters.set('category', value)}
+          onChange={(value) => filters.set("category", value)}
           options={[
-            { value: 'all', label: 'すべて' },
-            { value: 'electronics', label: '電子部品' },
+            { value: "all", label: "すべて" },
+            { value: "electronics", label: "電子部品" },
           ]}
         />
 
         <SelectFilterField
           label="ステータス"
           value={filters.values.status}
-          onChange={(value) => filters.set('status', value)}
+          onChange={(value) => filters.set("status", value)}
           options={[
-            { value: 'all', label: 'すべて' },
-            { value: 'active', label: '有効' },
+            { value: "all", label: "すべて" },
+            { value: "active", label: "有効" },
           ]}
         />
       </div>
@@ -173,18 +174,18 @@ interface LotFilters extends FilterState {
 
 export function LotFiltersExample() {
   const filters = useFilters<LotFilters>({
-    search: '',
-    product_code: '',
-    warehouse_code: '',
-    status: 'all',
-    expiry_date_from: '',
-    expiry_date_to: '',
+    search: "",
+    product_code: "",
+    warehouse_code: "",
+    status: "all",
+    expiry_date_from: "",
+    expiry_date_to: "",
   });
 
   return (
     <FilterContainer
       searchValue={filters.values.search}
-      onSearchChange={(value) => filters.set('search', value)}
+      onSearchChange={(value) => filters.set("search", value)}
       searchPlaceholder="ロット番号、製品コード、製品名で検索..."
       onReset={filters.reset}
       collapsible
@@ -194,27 +195,27 @@ export function LotFiltersExample() {
         <TextFilterField
           label="製品コード"
           value={filters.values.product_code}
-          onChange={(value) => filters.set('product_code', value)}
+          onChange={(value) => filters.set("product_code", value)}
           placeholder="例: P001"
         />
 
         <TextFilterField
           label="倉庫コード"
           value={filters.values.warehouse_code}
-          onChange={(value) => filters.set('warehouse_code', value)}
+          onChange={(value) => filters.set("warehouse_code", value)}
           placeholder="例: WH-01"
         />
 
         <SelectFilterField
           label="ステータス"
           value={filters.values.status}
-          onChange={(value) => filters.set('status', value)}
+          onChange={(value) => filters.set("status", value)}
           options={[
-            { value: 'all', label: 'すべて' },
-            { value: 'active', label: '有効' },
-            { value: 'allocated', label: '引当済' },
-            { value: 'shipped', label: '出荷済' },
-            { value: 'inactive', label: '無効' },
+            { value: "all", label: "すべて" },
+            { value: "active", label: "有効" },
+            { value: "allocated", label: "引当済" },
+            { value: "shipped", label: "出荷済" },
+            { value: "inactive", label: "無効" },
           ]}
         />
       </div>

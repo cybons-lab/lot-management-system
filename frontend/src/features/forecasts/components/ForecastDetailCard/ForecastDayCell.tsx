@@ -17,7 +17,6 @@ import { formatDateKey } from "@/shared/utils/date";
 
 /* eslint-disable max-lines-per-function, complexity */
 
-
 /**
  * Render a single day cell for the grid
  * Displays date and quantity with appropriate styling

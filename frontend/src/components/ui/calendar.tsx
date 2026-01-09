@@ -46,11 +46,13 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         day_hidden: "invisible",
         ...classNames,
       }}
-      components={{
-        IconLeft: () => <ChevronLeft className="h-4 w-4" />,
-        IconRight: () => <ChevronRight className="h-4 w-4" />,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any}
+      components={
+        {
+          IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+          IconRight: () => <ChevronRight className="h-4 w-4" />,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any
+      }
       {...props}
     />
   );

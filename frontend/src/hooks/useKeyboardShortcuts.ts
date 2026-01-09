@@ -58,7 +58,7 @@ export function useKeyboardShortcuts() {
       } else {
         // g以外のキーが押されたらリセット（ただし修飾キーなしの場合）
         if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-            // setLastKey(null); // 不要：lastKeyはgの時のみセットされる
+          // setLastKey(null); // 不要：lastKeyはgの時のみセットされる
         }
       }
     };

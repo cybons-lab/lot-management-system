@@ -74,13 +74,13 @@ export interface FilterContainerProps {
 // eslint-disable-next-line complexity
 export function FilterContainer({
   children,
-  searchValue = '',
+  searchValue = "",
   onSearchChange,
-  searchPlaceholder = '検索...',
+  searchPlaceholder = "検索...",
   onReset,
   collapsible = true,
   defaultExpanded = false,
-  expandButtonText = '詳細フィルター',
+  expandButtonText = "詳細フィルター",
   className,
   hideSearch = false,
 }: FilterContainerProps) {
@@ -90,12 +90,7 @@ export function FilterContainer({
   const showExpandButton = collapsible && hasAdvancedFilters;
 
   return (
-    <div
-      className={cn(
-        'rounded-lg border border-slate-200 bg-white p-4 shadow-sm',
-        className,
-      )}
-    >
+    <div className={cn("rounded-lg border border-slate-200 bg-white p-4 shadow-sm", className)}>
       {/* 検索バー + ボタンエリア */}
       <div className="flex gap-2">
         {/* 検索バー */}
@@ -142,9 +137,7 @@ export function FilterContainer({
 
       {/* 詳細フィルターエリア */}
       {hasAdvancedFilters && (!collapsible || isExpanded) && (
-        <div className="mt-4 space-y-4 border-t border-slate-200 pt-4">
-          {children}
-        </div>
+        <div className="mt-4 space-y-4 border-t border-slate-200 pt-4">{children}</div>
       )}
     </div>
   );
@@ -170,13 +163,13 @@ export function FilterContainer({
  */
 export function SimpleFilterContainer({
   children,
-  searchValue = '',
+  searchValue = "",
   onSearchChange,
-  searchPlaceholder = '検索...',
+  searchPlaceholder = "検索...",
   onReset,
   className,
   hideSearch = false,
-}: Omit<FilterContainerProps, 'collapsible' | 'defaultExpanded' | 'expandButtonText'>) {
+}: Omit<FilterContainerProps, "collapsible" | "defaultExpanded" | "expandButtonText">) {
   return (
     <FilterContainer
       searchValue={searchValue}
@@ -220,7 +213,7 @@ export function InlineFilterContainer({
   className?: string;
 }) {
   return (
-    <div className={cn('flex flex-wrap items-end gap-4', className)}>
+    <div className={cn("flex flex-wrap items-end gap-4", className)}>
       {children}
       {onReset && (
         <Button

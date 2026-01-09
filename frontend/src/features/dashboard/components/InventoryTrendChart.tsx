@@ -58,12 +58,7 @@ export function InventoryTrendChart() {
               name="有効在庫"
               stroke={CHART_COLORS.success}
             />
-            <Line
-              type="monotone"
-              dataKey="allocated"
-              name="引当済"
-              stroke={CHART_COLORS.warning}
-            />
+            <Line type="monotone" dataKey="allocated" name="引当済" stroke={CHART_COLORS.warning} />
           </LineChart>
         </ResponsiveContainer>
       </div>

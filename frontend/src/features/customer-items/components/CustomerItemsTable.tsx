@@ -135,7 +135,8 @@ export function CustomerItemsTable({
       {
         id: "pack",
         header: "包装",
-        accessor: (row) => (row.pack_unit && row.pack_quantity ? `${row.pack_unit}/${row.pack_quantity}` : "-"),
+        accessor: (row) =>
+          row.pack_unit && row.pack_quantity ? `${row.pack_unit}/${row.pack_quantity}` : "-",
         cell: (row) =>
           row.pack_unit && row.pack_quantity ? (
             <span>
@@ -269,7 +270,11 @@ export function CustomerItemsTable({
     }
 
     // 全選択の場合
-    if (ids.length === selectableKeys.length && selectedIds && selectedIds.size < selectableKeys.length) {
+    if (
+      ids.length === selectableKeys.length &&
+      selectedIds &&
+      selectedIds.size < selectableKeys.length
+    ) {
       onToggleSelectAll();
       return;
     }

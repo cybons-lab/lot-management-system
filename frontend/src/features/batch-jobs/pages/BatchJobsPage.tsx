@@ -243,9 +243,7 @@ export function BatchJobsPage() {
         header: "作成日時",
         accessor: (row) => row.created_at,
         cell: (row) => (
-          <span className="text-gray-600">
-            {new Date(row.created_at).toLocaleString("ja-JP")}
-          </span>
+          <span className="text-gray-600">{new Date(row.created_at).toLocaleString("ja-JP")}</span>
         ),
         width: 180,
         sortable: true,

@@ -8,7 +8,7 @@
  */
 
 import { useLocation } from "react-router-dom";
- 
+
 import * as styles from "./TopNavLayout.styles";
 
 import { KeyboardShortcutsHelp } from "@/components/common/KeyboardShortcutsHelp";
