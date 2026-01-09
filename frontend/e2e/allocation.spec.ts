@@ -23,6 +23,29 @@ test.describe("Lot Allocation", () => {
       });
     });
 
+    // Mock Single Order (for allocation dialog)
+    await page.route(/.*\/api\/orders\/\d+$/, async (route) => {
+      console.log("MOCK MATCHED: Single Order");
+      await route.fulfill({
+        json: {
+          id: 1,
+          order_number: "ORD-001",
+          customer_name: "Test Customer",
+          delivery_date: "2025-01-01",
+          status: "open",
+          items: [
+            {
+              order_line_id: 100,
+              product_name: "Test Product",
+              product_code: "PROD-001",
+              quantity: 100,
+              allocated_quantity: 0,
+            },
+          ],
+        },
+      });
+    });
+
     // Mock Confirmed Order Lines
     await page.route("**/orders/confirmed-order-lines*", async (route) => {
       await route.fulfill({ json: [] });

@@ -15,6 +15,28 @@ test.describe("Shortage & Auto Order", () => {
       });
     });
 
+    // Mock Single Order (for allocation dialog)
+    await page.route(/.*\/api\/orders\/\d+$/, async (route) => {
+      await route.fulfill({
+        json: {
+          id: 2,
+          order_number: "SHRT-001",
+          customer_name: "Shortage Inc.",
+          delivery_date: "2025-01-15",
+          status: "open",
+          items: [
+            {
+              order_line_id: 200,
+              product_name: "Shortage Product",
+              product_code: "PROD-SHORT",
+              quantity: 100,
+              allocated_quantity: 0,
+            },
+          ],
+        },
+      });
+    });
+
     // Mock Order Lines (Shortage Scenario)
     await page.route("**/orders/lines*", async (route) => {
       await route.fulfill({
