@@ -209,7 +209,7 @@ export function DeleteDialog({
                 ⚠️ この操作は取り消せません。データベースから完全に削除されます。
               </span>
             )}
-            {isSoft && !bulk && (
+            {isSoft && (
               <span className="block text-slate-600">
                 無効化されたデータは一覧から非表示になりますが、完全には削除されません。
               </span>
