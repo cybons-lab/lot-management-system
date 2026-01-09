@@ -1,12 +1,12 @@
 /**
- * CustomerItemsFilter - Filter section for customer items page.
+ * CustomerItemsFilter - Filter section for customer items page (FilterContainer使用版).
  */
 import { useMemo } from "react";
 
-import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
+import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
 
 interface CustomerItemsFilterProps {
   filters: {
@@ -47,10 +47,19 @@ export function CustomerItemsFilter({
     [products],
   );
 
+  const handleReset = () => {
+    setFilters({ customer_id: "", product_id: "" });
+    setSearchQuery("");
+  };
+
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm">
-      <h3 className="mb-4 text-lg font-semibold">フィルター</h3>
-      <div className="grid gap-4 md:grid-cols-3">
+    <SimpleFilterContainer
+      searchValue={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder="品番で検索..."
+      onReset={handleReset}
+    >
+      <div className="grid gap-4 md:grid-cols-2">
         <div>
           <Label htmlFor="filter-customer" className="mb-2 block text-sm font-medium">
             得意先
@@ -73,19 +82,7 @@ export function CustomerItemsFilter({
             placeholder="製品を検索..."
           />
         </div>
-        <div>
-          <Label htmlFor="filter-search" className="mb-2 block text-sm font-medium">
-            検索
-          </Label>
-          <Input
-            id="filter-search"
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="品番で検索..."
-          />
-        </div>
       </div>
-    </div>
+    </SimpleFilterContainer>
   );
 }

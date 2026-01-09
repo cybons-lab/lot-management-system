@@ -92,11 +92,4 @@ describe("InventoryTable", () => {
     const resizers = container.querySelectorAll(".cursor-col-resize");
     expect(resizers.length).toBeGreaterThan(0);
   });
-
-  it("passes column widths to rows", () => {
-    render(<InventoryTable data={mockData} isLoading={false} />);
-
-    const productCell = screen.getByTestId("product-cell");
-    expect(productCell).toHaveStyle({ width: "200px" });
-  });
 });

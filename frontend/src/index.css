@@ -139,3 +139,45 @@
     animation: shake 0.2s ease-in-out 0s 2;
   }
 }
+
+@layer components {
+  @media (max-width: 640px) {
+    .responsive-table thead {
+      display: none;
+    }
+    .responsive-table tbody tr {
+      display: block;
+      margin-bottom: 1rem;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      background-color: hsl(var(--card));
+    }
+    .responsive-table td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid hsl(var(--border));
+      text-align: right;
+    }
+    .responsive-table td:last-child {
+      border-bottom: none;
+    }
+    .responsive-table td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      text-align: left;
+      margin-right: 1rem;
+      color: hsl(var(--muted-foreground));
+    }
+    /* ラベルがない場合（チェックボックスなど）は左寄せなどを調整 */
+    .responsive-table td:not([data-label])::before,
+    .responsive-table td[data-label=""]::before {
+      display: none;
+    }
+    /* チェックボックス列などの調整 */
+    .responsive-table td:has(> [role="checkbox"]) {
+      justify-content: flex-start;
+    }
+  }
+}

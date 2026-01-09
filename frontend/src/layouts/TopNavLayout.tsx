@@ -11,7 +11,9 @@ import { useLocation } from "react-router-dom";
 
 import * as styles from "./TopNavLayout.styles";
 
+import { KeyboardShortcutsHelp } from "@/components/common/KeyboardShortcutsHelp";
 import { GlobalNavigation } from "@/components/layouts/GlobalNavigation";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 // ============================================
 // メインコンポーネント
@@ -23,6 +25,7 @@ interface TopNavLayoutProps {
 
 export function TopNavLayout({ children }: TopNavLayoutProps) {
   const location = useLocation();
+  const { showHelp, setShowHelp } = useKeyboardShortcuts();
 
   return (
     <div className={styles.root}>
@@ -30,6 +33,8 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
 
       {/* メインコンテンツ */}
       <main className={styles.main}>{children}</main>
+
+      <KeyboardShortcutsHelp open={showHelp} onOpenChange={setShowHelp} />
     </div>
   );
 }

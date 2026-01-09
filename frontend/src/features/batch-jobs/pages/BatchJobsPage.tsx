@@ -1,9 +1,10 @@
 /**
  * BatchJobsPage (v3.0 - SAP Inventory Sync Enhanced)
  * Batch jobs management page with SAP Inventory Sync section
+ * Refactored to use DataTable component.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -17,7 +18,29 @@ import {
 import * as styles from "./BatchJobsPage.styles";
 
 import { Button } from "@/components/ui";
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
+
+interface InventorySyncAlert {
+  rule_id: number;
+  rule_parameters: {
+    product_id: number;
+    local_qty: number;
+    sap_qty: number;
+    diff_amount: number;
+    diff_pct: number;
+    checked_at: string;
+  };
+}
+
+interface BatchJob {
+  job_id: number;
+  job_name: string;
+  job_type: string;
+  status: string;
+  created_at: string;
+}
 
 // eslint-disable-next-line max-lines-per-function -- Page component with multiple sections (SAP sync + batch jobs list)
 export function BatchJobsPage() {
@@ -89,6 +112,174 @@ export function BatchJobsPage() {
     }
   };
 
+  // 列定義: SAP在庫同期アラート
+  const alertColumns = useMemo<Column<InventorySyncAlert>[]>(
+    () => [
+      {
+        id: "product_id",
+        header: "商品ID",
+        accessor: (row) => row.rule_parameters.product_id,
+        cell: (row) => <span className="font-medium">{row.rule_parameters.product_id}</span>,
+        width: 100,
+        sortable: true,
+      },
+      {
+        id: "local_qty",
+        header: "ローカル在庫",
+        accessor: (row) => row.rule_parameters.local_qty,
+        width: 120,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "sap_qty",
+        header: "SAP在庫",
+        accessor: (row) => row.rule_parameters.sap_qty,
+        width: 120,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "diff_amount",
+        header: "差異",
+        accessor: (row) => row.rule_parameters.diff_amount,
+        cell: (row) => (
+          <span
+            className={`font-semibold ${
+              row.rule_parameters.diff_amount > 0 ? "text-orange-600" : "text-blue-600"
+            }`}
+          >
+            {row.rule_parameters.diff_amount > 0 ? "+" : ""}
+            {row.rule_parameters.diff_amount}
+          </span>
+        ),
+        width: 100,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "diff_pct",
+        header: "差異率",
+        accessor: (row) => row.rule_parameters.diff_pct,
+        cell: (row) => {
+          const diffPct = row.rule_parameters.diff_pct;
+          const diffLevel = diffPct > 10 ? "high" : diffPct > 5 ? "medium" : "low";
+          return (
+            <span
+              className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                diffLevel === "high"
+                  ? "bg-red-100 text-red-800"
+                  : diffLevel === "medium"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-blue-100 text-blue-800"
+              }`}
+            >
+              {diffPct.toFixed(1)}%
+            </span>
+          );
+        },
+        width: 100,
+        sortable: true,
+      },
+      {
+        id: "checked_at",
+        header: "最終チェック",
+        accessor: (row) => row.rule_parameters.checked_at,
+        cell: (row) => (
+          <span className="text-gray-600">
+            {new Date(row.rule_parameters.checked_at).toLocaleString("ja-JP")}
+          </span>
+        ),
+        width: 180,
+        sortable: true,
+      },
+    ],
+    [],
+  );
+
+  // 列定義: バッチジョブ
+  const batchJobColumns = useMemo<Column<BatchJob>[]>(
+    () => [
+      {
+        id: "job_id",
+        header: "ジョブID",
+        accessor: (row) => row.job_id,
+        width: 100,
+        sortable: true,
+      },
+      {
+        id: "job_name",
+        header: "ジョブ名",
+        accessor: (row) => row.job_name,
+        width: 200,
+        sortable: true,
+      },
+      {
+        id: "job_type",
+        header: "ジョブ種別",
+        accessor: (row) => row.job_type,
+        cell: (row) => <span className={styles.jobTypeBadge}>{row.job_type}</span>,
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "status",
+        header: "ステータス",
+        accessor: (row) => row.status,
+        cell: (row) => (
+          <span
+            className={styles.statusBadge({
+              status: row.status as "pending" | "running" | "completed" | "failed",
+            })}
+          >
+            {row.status}
+          </span>
+        ),
+        width: 120,
+        sortable: true,
+      },
+      {
+        id: "created_at",
+        header: "作成日時",
+        accessor: (row) => row.created_at,
+        cell: (row) => (
+          <span className="text-gray-600">{new Date(row.created_at).toLocaleString("ja-JP")}</span>
+        ),
+        width: 180,
+        sortable: true,
+      },
+    ],
+    [],
+  );
+
+  // アクションボタン: バッチジョブ
+  const renderBatchJobActions = (job: BatchJob) => (
+    <div className={styles.actionButtons}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleExecute(job.job_id);
+        }}
+        disabled={executeMutation.isPending || job.status === "running"}
+      >
+        実行
+      </Button>
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDelete(job.job_id);
+        }}
+        disabled={deleteMutation.isPending}
+      >
+        削除
+      </Button>
+    </div>
+  );
+
   return (
     <PageContainer>
       <div className={styles.header.root}>
@@ -144,71 +335,12 @@ export function BatchJobsPage() {
                 ✓ 差異はありません
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-lg border bg-white">
-                <table className="w-full">
-                  <thead className="border-b bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                        商品ID
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                        ローカル在庫
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                        SAP在庫
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                        差異
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                        差異率
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                        最終チェック
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {alertsData.alerts.map((alert) => {
-                      const params = alert.rule_parameters;
-                      const diffPct = params.diff_pct;
-                      const diffLevel = diffPct > 10 ? "high" : diffPct > 5 ? "medium" : "low";
-
-                      return (
-                        <tr key={alert.rule_id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm font-medium">{params.product_id}</td>
-                          <td className="px-4 py-3 text-sm">{params.local_qty}</td>
-                          <td className="px-4 py-3 text-sm">{params.sap_qty}</td>
-                          <td
-                            className={`px-4 py-3 text-sm font-semibold ${
-                              params.diff_amount > 0 ? "text-orange-600" : "text-blue-600"
-                            }`}
-                          >
-                            {params.diff_amount > 0 ? "+" : ""}
-                            {params.diff_amount}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <span
-                              className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                                diffLevel === "high"
-                                  ? "bg-red-100 text-red-800"
-                                  : diffLevel === "medium"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-blue-100 text-blue-800"
-                              }`}
-                            >
-                              {diffPct.toFixed(1)}%
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {new Date(params.checked_at).toLocaleString("ja-JP")}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                data={alertsData.alerts}
+                columns={alertColumns}
+                getRowId={(row) => row.rule_id}
+                emptyMessage="差異アラートがありません"
+              />
             )}
           </div>
         </div>
@@ -254,63 +386,13 @@ export function BatchJobsPage() {
             </div>
 
             {/* Table */}
-            <div className={styles.table.container}>
-              <table className={styles.table.root}>
-                <thead className={styles.table.thead}>
-                  <tr>
-                    <th className={styles.table.th}>ジョブID</th>
-                    <th className={styles.table.th}>ジョブ名</th>
-                    <th className={styles.table.th}>ジョブ種別</th>
-                    <th className={styles.table.th}>ステータス</th>
-                    <th className={styles.table.th}>作成日時</th>
-                    <th className={styles.table.th}>操作</th>
-                  </tr>
-                </thead>
-                <tbody className={styles.table.tbody}>
-                  {response.jobs.map((job) => (
-                    <tr key={job.job_id} className={styles.table.tr}>
-                      <td className={styles.table.td}>{job.job_id}</td>
-                      <td className={styles.table.tdMedium}>{job.job_name}</td>
-                      <td className={styles.table.td}>
-                        <span className={styles.jobTypeBadge}>{job.job_type}</span>
-                      </td>
-                      <td className={styles.table.td}>
-                        <span
-                          className={styles.statusBadge({
-                            status: job.status as "pending" | "running" | "completed" | "failed",
-                          })}
-                        >
-                          {job.status}
-                        </span>
-                      </td>
-                      <td className={styles.table.tdGray}>
-                        {new Date(job.created_at).toLocaleString("ja-JP")}
-                      </td>
-                      <td className={styles.table.td}>
-                        <div className={styles.actionButtons}>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleExecute(job.job_id)}
-                            disabled={executeMutation.isPending || job.status === "running"}
-                          >
-                            実行
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(job.job_id)}
-                            disabled={deleteMutation.isPending}
-                          >
-                            削除
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              data={response.jobs}
+              columns={batchJobColumns}
+              getRowId={(row) => row.job_id}
+              rowActions={renderBatchJobActions}
+              emptyMessage="バッチジョブがありません"
+            />
           </div>
         )}
       </div>

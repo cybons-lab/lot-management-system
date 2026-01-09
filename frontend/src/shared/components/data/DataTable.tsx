@@ -13,15 +13,35 @@
 import {
   useReactTable,
   getCoreRowModel,
+  getExpandedRowModel,
   flexRender,
   type ColumnDef,
   type SortingState,
+  type ExpandedState,
+  type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  ChevronRight,
+  ChevronDown,
+  Settings2,
+} from "lucide-react";
 import * as React from "react";
 import { useMemo } from "react";
 
+import { Button } from "@/components/ui";
 import { Checkbox } from "@/components/ui";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/display/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/shared/libs/utils";
 
 // ============================================
@@ -85,6 +105,14 @@ export interface DataTableProps<T = never> {
   className?: string;
   /** 行のクラス名取得関数 */
   getRowClassName?: (row: T) => string;
+  /** 展開可能な行を有効化 */
+  expandable?: boolean;
+  /** 展開された行のID配列 */
+  expandedRowIds?: (string | number)[];
+  /** 展開状態変更時のコールバック */
+  onExpandedRowsChange?: (ids: (string | number)[]) => void;
+  /** 展開された行のレンダリング関数 */
+  renderExpandedRow?: (row: T) => React.ReactNode;
 }
 
 // ============================================
@@ -107,7 +135,13 @@ export function DataTable<T = never>({
   isLoading = false,
   className,
   getRowClassName,
+  expandable = false,
+  expandedRowIds = [],
+  onExpandedRowsChange,
+  renderExpandedRow,
 }: DataTableProps<T>) {
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+
   // TanStack Table用のカラム定義変換
   const tableColumns = useMemo<ColumnDef<T>[]>(() => {
     const defs: ColumnDef<T>[] = [];
@@ -136,6 +170,37 @@ export function DataTable<T = never>({
         ),
         size: 48, // w-12 equivalent
         enableResizing: false,
+        enableHiding: false,
+      });
+    }
+
+    // 展開列
+    if (expandable) {
+      defs.push({
+        id: "__expander",
+        header: () => null,
+        cell: ({ row }) => {
+          return row.getCanExpand() ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                row.toggleExpanded();
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-slate-100"
+              aria-label={row.getIsExpanded() ? "折りたたむ" : "展開する"}
+            >
+              {row.getIsExpanded() ? (
+                <ChevronDown className="h-4 w-4 text-slate-600" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-slate-600" />
+              )}
+            </button>
+          ) : null;
+        },
+        size: 40,
+        enableResizing: false,
+        enableHiding: false,
       });
     }
 
@@ -181,6 +246,7 @@ export function DataTable<T = never>({
         ),
         size: 96, // w-24 equivalent
         enableResizing: false,
+        enableHiding: false,
         meta: {
           align: "right",
         },
@@ -188,7 +254,7 @@ export function DataTable<T = never>({
     }
 
     return defs;
-  }, [columns, selectable, rowActions]);
+  }, [columns, selectable, expandable, rowActions]);
 
   // ソート状態の変換
   const sorting = useMemo<SortingState>(() => {
@@ -209,15 +275,28 @@ export function DataTable<T = never>({
     return selection;
   }, [selectedIds]);
 
+  // 展開状態の変換
+  const expanded = useMemo<ExpandedState>(() => {
+    const expandedState: Record<string, boolean> = {};
+    expandedRowIds.forEach((id) => {
+      expandedState[String(id)] = true;
+    });
+    return expandedState;
+  }, [expandedRowIds]);
+
   const table = useReactTable({
     data,
     columns: tableColumns,
     state: {
       sorting,
       rowSelection,
+      expanded,
+      columnVisibility,
     },
     columnResizeMode: "onChange",
+    onColumnVisibilityChange: setColumnVisibility,
     getRowId: (row) => String(getRowId(row)),
+    getRowCanExpand: () => expandable && !!renderExpandedRow,
     onSortingChange: (updaterOrValue) => {
       // Controlled mode: we only call onSortChange
       // We need to calculate next state to determine direction
@@ -244,7 +323,23 @@ export function DataTable<T = never>({
       );
       onSelectionChange(selectedIdList);
     },
+    onExpandedChange: (updaterOrValue) => {
+      if (!onExpandedRowsChange) return;
+      const nextExpanded =
+        typeof updaterOrValue === "function" ? updaterOrValue(expanded) : updaterOrValue;
+      // Cast to Record for safe index access (ExpandedState is either boolean or Record)
+      if (typeof nextExpanded === "boolean") {
+        // If true, all rows are expanded - but we don't support that pattern
+        onExpandedRowsChange([]);
+      } else {
+        const expandedIdList = Object.keys(nextExpanded).filter(
+          (id) => (nextExpanded as Record<string, boolean>)[id],
+        );
+        onExpandedRowsChange(expandedIdList);
+      }
+    },
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     manualSorting: true, // Server-side or external sorting
   });
 
@@ -261,10 +356,33 @@ export function DataTable<T = never>({
   // ローディング表示
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-          <p className="text-sm text-gray-500">読み込み中...</p>
+      <div className={cn("relative flex flex-col gap-2", className)}>
+        <div className="flex items-center justify-end">
+          <Skeleton className="h-8 w-24 rounded-md" />
+        </div>
+        <div className="relative overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-md">
+          <table className="w-full" style={{ tableLayout: "fixed" }}>
+            <thead className="border-b bg-slate-50">
+              <tr>
+                {tableColumns.map((_, i) => (
+                  <th key={i} className="px-4 py-3">
+                    <Skeleton className="h-4 w-20 bg-slate-200" />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-b border-slate-100 last:border-0">
+                  {tableColumns.map((_, j) => (
+                    <td key={j} className="px-4 py-3">
+                      <Skeleton className="h-4 w-full" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     );
@@ -282,117 +400,167 @@ export function DataTable<T = never>({
   return (
     <div
       className={cn(
-        "relative overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-md",
+        "relative flex flex-col gap-2", // Changed to flex-col to accommodate toolbar
         className,
       )}
     >
-      <table className="w-full" style={{ tableLayout: "fixed" }}>
-        <thead className="border-b bg-slate-50">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                const meta = header.column.columnDef.meta as
-                  | { align?: string; className?: string }
-                  | undefined;
+      {/* Toolbar */}
+      <div className="flex items-center justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="ml-auto h-8">
+              <Settings2 className="h-4 w-4 lg:mr-2" />
+              <span className="hidden lg:inline">表示列</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[150px]">
+            <DropdownMenuLabel>表示列を選択</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {table
+              .getAllColumns()
+              .filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide())
+              .map((column) => {
                 return (
-                  <th
-                    key={header.id}
-                    className={cn(
-                      "relative px-4 py-3 text-left text-sm font-semibold text-slate-700",
-                      meta?.align === "center" && "text-center",
-                      meta?.align === "right" && "text-right",
-                      header.column.getCanSort() &&
-                        "cursor-pointer transition-colors select-none hover:bg-slate-100",
-                      meta?.className,
-                    )}
-                    style={{ width: header.getSize() }}
-                    onClick={header.column.getToggleSortingHandler()}
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value: boolean) => column.toggleVisibility(!!value)}
                   >
-                    <div
-                      className={cn(
-                        "flex items-center gap-1 whitespace-nowrap",
-                        meta?.align === "right" && "justify-end",
-                        meta?.align === "center" && "justify-center",
-                      )}
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getCanSort() && (
-                        <SortIcon isSorted={header.column.getIsSorted()} />
-                      )}
-                    </div>
-                    {header.column.getCanResize() && (
-                      // eslint-disable-next-line jsx-a11y/click-events-have-key-events
-                      <div
-                        onMouseDown={header.getResizeHandler()}
-                        onTouchStart={header.getResizeHandler()}
-                        onClick={(e) => e.stopPropagation()}
-                        className={cn(
-                          "absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none",
-                          "transition-all duration-200 select-none",
-                          "bg-transparent hover:w-2 hover:bg-blue-500",
-                          header.column.getIsResizing() && "w-2 bg-blue-600 shadow-lg",
-                        )}
-                      />
-                    )}
-                  </th>
+                    {column.columnDef.header as string}
+                  </DropdownMenuCheckboxItem>
                 );
               })}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => {
-            const customClassName = getRowClassName?.(row.original);
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-            return (
-              <tr
-                key={row.id}
-                className={cn(
-                  "relative transition-all duration-150",
-                  "group", // Added group class here
-                  // ストライプ効果
-                  row.index % 2 === 0 ? "bg-white" : "bg-slate-50/30",
-                  // ホバー効果
-                  (onRowClick || renderHoverActions) && "hover:bg-blue-50/30",
-                  onRowClick && "cursor-pointer",
-                  // 選択状態
-                  row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/80",
-                  customClassName,
-                )}
-                onClick={() => onRowClick?.(row.original)}
-              >
-                {row.getVisibleCells().map((cell) => {
-                  const meta = cell.column.columnDef.meta as
+      <div className="relative overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-md">
+        <table className="responsive-table w-full" style={{ tableLayout: "fixed" }}>
+          <thead className="border-b bg-slate-50">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  const meta = header.column.columnDef.meta as
                     | { align?: string; className?: string }
                     | undefined;
                   return (
-                    <td
-                      key={cell.id}
+                    <th
+                      key={header.id}
                       className={cn(
-                        "px-4 py-3 text-sm text-slate-900",
+                        "relative px-4 py-3 text-left text-sm font-semibold text-slate-700",
                         meta?.align === "center" && "text-center",
                         meta?.align === "right" && "text-right",
+                        header.column.getCanSort() &&
+                          "cursor-pointer transition-colors select-none hover:bg-slate-100",
                         meta?.className,
                       )}
+                      style={{ width: header.getSize() }}
+                      onClick={header.column.getToggleSortingHandler()}
                     >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                      <div
+                        className={cn(
+                          "flex items-center gap-1 whitespace-nowrap",
+                          meta?.align === "right" && "justify-end",
+                          meta?.align === "center" && "justify-center",
+                        )}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getCanSort() && (
+                          <SortIcon isSorted={header.column.getIsSorted()} />
+                        )}
+                      </div>
+                      {header.column.getCanResize() && (
+                        // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onClick={(e) => e.stopPropagation()}
+                          className={cn(
+                            "absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none",
+                            "transition-all duration-200 select-none",
+                            "bg-transparent hover:w-2 hover:bg-blue-500",
+                            header.column.getIsResizing() && "w-2 bg-blue-600 shadow-lg",
+                          )}
+                        />
+                      )}
+                    </th>
                   );
                 })}
-
-                {/* ホバーアクション */}
-                {renderHoverActions && (
-                  <td className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:opacity-100">
-                    <div className="pointer-events-auto flex gap-1 rounded-md border border-slate-200 bg-white p-1.5 shadow-lg">
-                      {renderHoverActions(row.original)}
-                    </div>
-                  </td>
-                )}
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => {
+              const customClassName = getRowClassName?.(row.original);
+
+              return (
+                <React.Fragment key={row.id}>
+                  <tr
+                    className={cn(
+                      "relative transition-all duration-150",
+                      "group", // Added group class here
+                      // ストライプ効果
+                      row.index % 2 === 0 ? "bg-white" : "bg-slate-50/30",
+                      // ホバー効果
+                      (onRowClick || renderHoverActions) && "hover:bg-blue-50/30",
+                      onRowClick && "cursor-pointer",
+                      // 選択状態
+                      row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/80",
+                      customClassName,
+                    )}
+                    onClick={() => onRowClick?.(row.original)}
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      const meta = cell.column.columnDef.meta as
+                        | { align?: string; className?: string }
+                        | undefined;
+                      return (
+                        <td
+                          key={cell.id}
+                          className={cn(
+                            "px-4 py-3 text-sm text-slate-900",
+                            meta?.align === "center" && "text-center",
+                            meta?.align === "right" && "text-right",
+                            meta?.className,
+                          )}
+                          data-label={
+                            typeof cell.column.columnDef.header === "string"
+                              ? cell.column.columnDef.header
+                              : undefined
+                          }
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      );
+                    })}
+
+                    {/* ホバーアクション */}
+                    {renderHoverActions && (
+                      <td className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:opacity-100">
+                        <div className="pointer-events-auto flex gap-1 rounded-md border border-slate-200 bg-white p-1.5 shadow-lg">
+                          {renderHoverActions(row.original)}
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+
+                  {/* 展開された行 */}
+                  {row.getIsExpanded() && renderExpandedRow && (
+                    <tr className="bg-slate-50/50">
+                      <td colSpan={row.getVisibleCells().length} className="p-0">
+                        <div className="border-t border-slate-200 px-4 py-3">
+                          {renderExpandedRow(row.original)}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

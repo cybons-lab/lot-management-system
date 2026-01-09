@@ -1,101 +1,13 @@
 /**
  * ConfirmedLinesTable - Table component for confirmed order lines.
+ * Refactored to use DataTable component.
  */
+import { useMemo } from "react";
+
 import type { ConfirmedOrderLine } from "@/hooks/useConfirmedOrderLines";
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 import { formatDate } from "@/shared/utils/date";
-
-interface TableHeaderProps {
-  lines: ConfirmedOrderLine[];
-  selectedIds: number[];
-  onToggleAll: () => void;
-}
-
-function TableHeader({ lines, selectedIds, onToggleAll }: TableHeaderProps) {
-  return (
-    <thead className="bg-slate-50">
-      <tr>
-        <th className="w-12 px-4 py-3 text-left">
-          <input
-            type="checkbox"
-            checked={lines.length > 0 && selectedIds.length === lines.length}
-            onChange={onToggleAll}
-            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-          />
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wide text-slate-700 uppercase">
-          受注番号
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wide text-slate-700 uppercase">
-          顧客名
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wide text-slate-700 uppercase">
-          製品コード
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wide text-slate-700 uppercase">
-          製品名
-        </th>
-        <th className="px-4 py-3 text-right text-xs font-medium tracking-wide text-slate-700 uppercase">
-          数量
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wide text-slate-700 uppercase">
-          納期
-        </th>
-      </tr>
-    </thead>
-  );
-}
-
-interface TableRowProps {
-  line: ConfirmedOrderLine;
-  isSelected: boolean;
-  onToggle: (lineId: number) => void;
-}
-
-function TableRow({ line, isSelected, onToggle }: TableRowProps) {
-  return (
-    <tr className={`transition-colors hover:bg-slate-50 ${isSelected ? "bg-blue-50" : ""}`}>
-      <td className="px-4 py-3">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggle(line.line_id)}
-          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-        />
-      </td>
-      <td className="px-4 py-3">
-        <div className="max-w-[150px] truncate font-medium text-slate-900" title={line.order_code}>
-          {line.order_code}
-        </div>
-      </td>
-      <td className="px-4 py-3">
-        <div className="max-w-[150px] truncate text-sm text-slate-600" title={line.customer_name}>
-          {line.customer_name}
-        </div>
-      </td>
-      <td className="px-4 py-3">
-        <div
-          className="max-w-[120px] truncate font-mono text-sm text-slate-900"
-          title={line.product_code}
-        >
-          {line.product_code}
-        </div>
-      </td>
-      <td className="px-4 py-3">
-        <div className="max-w-[200px] truncate text-sm text-slate-600" title={line.product_name}>
-          {line.product_name}
-        </div>
-      </td>
-      <td className="px-4 py-3 text-right">
-        <span className="font-medium text-slate-900">
-          {line.order_quantity} {line.unit}
-        </span>
-      </td>
-      <td className="px-4 py-3">
-        <span className="text-sm text-slate-600">{formatDate(line.delivery_date)}</span>
-      </td>
-    </tr>
-  );
-}
 
 interface ConfirmedLinesTableProps {
   lines: ConfirmedOrderLine[];
@@ -104,27 +16,129 @@ interface ConfirmedLinesTableProps {
   onToggleAll: () => void;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function ConfirmedLinesTable({
   lines,
   selectedIds,
   onToggle,
   onToggleAll,
 }: ConfirmedLinesTableProps) {
+  // 列定義
+  const columns = useMemo<Column<ConfirmedOrderLine>[]>(
+    () => [
+      {
+        id: "order_code",
+        header: "受注番号",
+        accessor: (row) => row.order_code,
+        cell: (row) => (
+          <div className="max-w-[150px] truncate font-medium text-slate-900" title={row.order_code}>
+            {row.order_code}
+          </div>
+        ),
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "customer_name",
+        header: "顧客名",
+        accessor: (row) => row.customer_name,
+        cell: (row) => (
+          <div className="max-w-[150px] truncate text-sm text-slate-600" title={row.customer_name}>
+            {row.customer_name}
+          </div>
+        ),
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "product_code",
+        header: "製品コード",
+        accessor: (row) => row.product_code,
+        cell: (row) => (
+          <div
+            className="max-w-[120px] truncate font-mono text-sm text-slate-900"
+            title={row.product_code}
+          >
+            {row.product_code}
+          </div>
+        ),
+        width: 120,
+        sortable: true,
+      },
+      {
+        id: "product_name",
+        header: "製品名",
+        accessor: (row) => row.product_name,
+        cell: (row) => (
+          <div className="max-w-[200px] truncate text-sm text-slate-600" title={row.product_name}>
+            {row.product_name}
+          </div>
+        ),
+        width: 200,
+        sortable: true,
+      },
+      {
+        id: "quantity",
+        header: "数量",
+        accessor: (row) => row.order_quantity,
+        cell: (row) => (
+          <span className="font-medium text-slate-900">
+            {row.order_quantity} {row.unit}
+          </span>
+        ),
+        width: 100,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "delivery_date",
+        header: "納期",
+        accessor: (row) => row.delivery_date,
+        cell: (row) => (
+          <span className="text-sm text-slate-600">{formatDate(row.delivery_date)}</span>
+        ),
+        width: 120,
+        sortable: true,
+      },
+    ],
+    [],
+  );
+
+  // 選択状態変更ハンドラー
+  const handleSelectionChange = (ids: (string | number)[]) => {
+    // 全選択解除の場合
+    if (ids.length === 0 && selectedIds.length > 0) {
+      onToggleAll();
+      return;
+    }
+
+    // 全選択の場合
+    if (ids.length === lines.length && selectedIds.length < lines.length) {
+      onToggleAll();
+      return;
+    }
+
+    // 個別トグルの場合（差分を見つける）
+    const numericIds = ids.map((id) => Number(id));
+    const added = numericIds.find((id) => !selectedIds.includes(id));
+    const removed = selectedIds.find((id) => !numericIds.includes(id));
+
+    if (added !== undefined) {
+      onToggle(added);
+    } else if (removed !== undefined) {
+      onToggle(removed);
+    }
+  };
+
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <table className="w-full">
-        <TableHeader lines={lines} selectedIds={selectedIds} onToggleAll={onToggleAll} />
-        <tbody className="divide-y divide-slate-200">
-          {lines.map((line) => (
-            <TableRow
-              key={line.line_id}
-              line={line}
-              isSelected={selectedIds.includes(line.line_id)}
-              onToggle={onToggle}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      data={lines}
+      columns={columns}
+      selectable
+      selectedIds={selectedIds}
+      onSelectionChange={handleSelectionChange}
+      getRowId={(row) => row.line_id}
+      emptyMessage="確定済の受注明細がありません"
+    />
   );
 }

@@ -2,10 +2,10 @@ import { useState } from "react";
 
 import { OrderAllocationInline } from "./OrderAllocationInline";
 import { OrderSummaryHeader } from "./OrderSummaryHeader";
-import { formatDateKey } from "./utils/date-utils";
 
 import type { useLotAllocationForOrder } from "@/features/forecasts/hooks/useLotAllocationForOrder";
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
+import { formatDateKey } from "@/shared/utils/date";
 
 interface OrderSummaryRowProps {
   order: OrderWithLinesResponse;

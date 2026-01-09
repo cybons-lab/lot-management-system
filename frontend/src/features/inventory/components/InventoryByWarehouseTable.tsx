@@ -1,14 +1,14 @@
+/**
+ * InventoryByWarehouseTable - Aggregated inventory by warehouse.
+ * Refactored to use DataTable component.
+ */
+import { useMemo } from "react";
+
 import type { InventoryByWarehouseResponse } from "../types/InventoryAggregationTypes";
 
 import { Button } from "@/components/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 import { fmt } from "@/shared/utils/number";
 
 interface InventoryByWarehouseTableProps {
@@ -17,67 +17,99 @@ interface InventoryByWarehouseTableProps {
   onViewDetail?: (warehouseId: number) => void;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function InventoryByWarehouseTable({
   data,
   onRowClick,
   onViewDetail,
 }: InventoryByWarehouseTableProps) {
+  // 列定義
+  const columns = useMemo<Column<InventoryByWarehouseResponse>[]>(
+    () => [
+      {
+        id: "warehouse_code",
+        header: "倉庫コード",
+        accessor: (row) => row.warehouse_code,
+        cell: (row) => (
+          <div className="max-w-[120px] truncate font-medium" title={row.warehouse_code}>
+            {row.warehouse_code}
+          </div>
+        ),
+        width: 120,
+        sortable: true,
+      },
+      {
+        id: "warehouse_name",
+        header: "倉庫名",
+        accessor: (row) => row.warehouse_name,
+        cell: (row) => (
+          <div className="max-w-[200px] truncate" title={row.warehouse_name}>
+            {row.warehouse_name}
+          </div>
+        ),
+        width: 200,
+        sortable: true,
+      },
+      {
+        id: "total_quantity",
+        header: "総在庫数",
+        accessor: (row) => row.total_quantity,
+        cell: (row) => <span className="font-mono">{fmt(row.total_quantity)}</span>,
+        width: 120,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "product_count",
+        header: "製品数",
+        accessor: (row) => row.product_count,
+        cell: (row) => <span className="font-mono">{row.product_count}</span>,
+        width: 100,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "lot_count",
+        header: "ロット数",
+        accessor: (row) => row.lot_count,
+        cell: (row) => <span className="font-mono">{row.lot_count}</span>,
+        width: 100,
+        align: "right",
+        sortable: true,
+      },
+    ],
+    [],
+  );
+
+  // アクションボタン
+  const renderRowActions = onViewDetail
+    ? (row: InventoryByWarehouseResponse) => (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetail(row.warehouse_id);
+          }}
+        >
+          詳細
+        </Button>
+      )
+    : undefined;
+
+  // 行クリックハンドラー
+  const handleRowClick = onRowClick
+    ? (row: InventoryByWarehouseResponse) => onRowClick(row.warehouse_code)
+    : undefined;
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>倉庫コード</TableHead>
-            <TableHead>倉庫名</TableHead>
-            <TableHead className="text-right">総在庫数</TableHead>
-            <TableHead className="text-right">製品数</TableHead>
-            <TableHead className="text-right">ロット数</TableHead>
-            <TableHead className="text-right">アクション</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((row) => (
-            <TableRow
-              key={row.warehouse_id}
-              className={onRowClick ? "hover:bg-muted/50 cursor-pointer" : ""}
-              onClick={onRowClick ? () => onRowClick(row.warehouse_code) : undefined}
-            >
-              <TableCell className="font-medium">
-                <div className="max-w-[120px] truncate" title={row.warehouse_code}>
-                  {row.warehouse_code}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="max-w-[200px] truncate" title={row.warehouse_name}>
-                  {row.warehouse_name}
-                </div>
-              </TableCell>
-              <TableCell className="text-right font-mono">{fmt(row.total_quantity)}</TableCell>
-              <TableCell className="text-right font-mono">{row.product_count}</TableCell>
-              <TableCell className="text-right font-mono">{row.lot_count}</TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onViewDetail?.(row.warehouse_id);
-                  }}
-                >
-                  詳細
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-          {data.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
-                データがありません
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      data={data}
+      columns={columns}
+      getRowId={(row) => row.warehouse_id}
+      onRowClick={handleRowClick}
+      rowActions={renderRowActions}
+      emptyMessage="データがありません"
+    />
   );
 }

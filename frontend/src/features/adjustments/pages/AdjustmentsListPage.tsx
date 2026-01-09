@@ -1,9 +1,10 @@
 /**
  * AdjustmentsListPage (v2.2 - Phase D-5)
  * Inventory adjustments list page
+ * Refactored to use DataTable component.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import type { AdjustmentType } from "../api";
@@ -13,7 +14,21 @@ import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
+
+interface Adjustment {
+  adjustment_id: number;
+  lot_id: number;
+  lot_number?: string;
+  product_code?: string;
+  product_name?: string;
+  adjustment_type: AdjustmentType;
+  adjusted_quantity: number;
+  reason: string;
+  adjusted_at: string;
+}
 
 export function AdjustmentsListPage() {
   const navigate = useNavigate();
@@ -45,6 +60,83 @@ export function AdjustmentsListPage() {
     };
     return labels[type];
   };
+
+  // 列定義
+  const columns = useMemo<Column<Adjustment>[]>(
+    () => [
+      {
+        id: "adjustment_id",
+        header: "調整ID",
+        accessor: (row) => row.adjustment_id,
+        width: 100,
+        sortable: true,
+      },
+      {
+        id: "lot_number",
+        header: "ロット番号",
+        accessor: (row) => row.lot_number,
+        cell: (row) => <span>{row.lot_number || `ID: ${row.lot_id}`}</span>,
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "product",
+        header: "製品",
+        accessor: (row) => row.product_name || row.product_code,
+        cell: (row) => <span>{row.product_name || row.product_code || "-"}</span>,
+        width: 200,
+        sortable: true,
+      },
+      {
+        id: "adjustment_type",
+        header: "調整タイプ",
+        accessor: (row) => row.adjustment_type,
+        cell: (row) => (
+          <span className="inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800">
+            {getAdjustmentTypeLabel(row.adjustment_type)}
+          </span>
+        ),
+        width: 120,
+        sortable: true,
+      },
+      {
+        id: "adjusted_quantity",
+        header: "調整数量",
+        accessor: (row) => row.adjusted_quantity,
+        cell: (row) => (
+          <span
+            className={`font-medium ${
+              row.adjusted_quantity >= 0 ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {row.adjusted_quantity >= 0 ? "+" : ""}
+            {row.adjusted_quantity}
+          </span>
+        ),
+        width: 120,
+        align: "right",
+        sortable: true,
+      },
+      {
+        id: "reason",
+        header: "理由",
+        accessor: (row) => row.reason,
+        width: 200,
+        sortable: true,
+      },
+      {
+        id: "adjusted_at",
+        header: "調整日時",
+        accessor: (row) => row.adjusted_at,
+        cell: (row) => (
+          <span className="text-gray-600">{new Date(row.adjusted_at).toLocaleString("ja-JP")}</span>
+        ),
+        width: 180,
+        sortable: true,
+      },
+    ],
+    [],
+  );
 
   return (
     <PageContainer>
@@ -108,59 +200,12 @@ export function AdjustmentsListPage() {
           <div className="text-sm text-gray-600">{adjustments.length} 件の調整履歴</div>
 
           {/* Table */}
-          <div className="overflow-x-auto rounded-lg border bg-white">
-            <table className="w-full">
-              <thead className="border-b bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">調整ID</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ロット番号
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">製品</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    調整タイプ
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
-                    調整数量
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">理由</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    調整日時
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {adjustments.map((adjustment) => (
-                  <tr key={adjustment.adjustment_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{adjustment.adjustment_id}</td>
-                    <td className="px-4 py-3 text-sm">
-                      {adjustment.lot_number || `ID: ${adjustment.lot_id}`}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {adjustment.product_name || adjustment.product_code || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className="inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800">
-                        {getAdjustmentTypeLabel(adjustment.adjustment_type)}
-                      </span>
-                    </td>
-                    <td
-                      className={`px-4 py-3 text-right text-sm font-medium ${
-                        adjustment.adjusted_quantity >= 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {adjustment.adjusted_quantity >= 0 ? "+" : ""}
-                      {adjustment.adjusted_quantity}
-                    </td>
-                    <td className="px-4 py-3 text-sm">{adjustment.reason}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {new Date(adjustment.adjusted_at).toLocaleString("ja-JP")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={adjustments}
+            columns={columns}
+            getRowId={(row) => row.adjustment_id}
+            emptyMessage="調整履歴がありません"
+          />
         </div>
       )}
     </PageContainer>

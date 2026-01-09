@@ -1,15 +1,28 @@
 /**
  * OperationLogsPage (v2.2 - Phase H-1)
  * Operation logs list page (read-only)
+ * Refactored to use DataTable component.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useOperationLogs } from "../hooks";
 
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
+
+interface OperationLog {
+  log_id: number;
+  user_id: number | null;
+  operation_type: string;
+  target_table: string;
+  target_id: number | null;
+  ip_address: string | null;
+  created_at: string;
+}
 
 export function OperationLogsPage() {
   const [filters, setFilters] = useState({
@@ -27,6 +40,73 @@ export function OperationLogsPage() {
 
   // Fetch operation logs
   const { data: response, isLoading, isError } = useOperationLogs(queryParams);
+
+  // 列定義
+  const columns = useMemo<Column<OperationLog>[]>(
+    () => [
+      {
+        id: "log_id",
+        header: "ログID",
+        accessor: (row) => row.log_id,
+        width: 100,
+        sortable: true,
+      },
+      {
+        id: "user_id",
+        header: "ユーザーID",
+        accessor: (row) => row.user_id,
+        cell: (row) => <span>{row.user_id ?? "-"}</span>,
+        width: 120,
+        sortable: true,
+      },
+      {
+        id: "operation_type",
+        header: "操作種別",
+        accessor: (row) => row.operation_type,
+        cell: (row) => (
+          <span className="inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800">
+            {row.operation_type}
+          </span>
+        ),
+        width: 120,
+        sortable: true,
+      },
+      {
+        id: "target_table",
+        header: "対象テーブル",
+        accessor: (row) => row.target_table,
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "target_id",
+        header: "対象ID",
+        accessor: (row) => row.target_id,
+        cell: (row) => <span>{row.target_id ?? "-"}</span>,
+        width: 100,
+        sortable: true,
+      },
+      {
+        id: "ip_address",
+        header: "IPアドレス",
+        accessor: (row) => row.ip_address,
+        cell: (row) => <span>{row.ip_address ?? "-"}</span>,
+        width: 140,
+        sortable: true,
+      },
+      {
+        id: "created_at",
+        header: "作成日時",
+        accessor: (row) => row.created_at,
+        cell: (row) => (
+          <span className="text-gray-600">{new Date(row.created_at).toLocaleString("ja-JP")}</span>
+        ),
+        width: 180,
+        sortable: true,
+      },
+    ],
+    [],
+  );
 
   return (
     <PageContainer>
@@ -84,50 +164,12 @@ export function OperationLogsPage() {
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto rounded-lg border bg-white">
-            <table className="w-full">
-              <thead className="border-b bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">ログID</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ユーザーID
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    操作種別
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    対象テーブル
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">対象ID</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    IPアドレス
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    作成日時
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {response.logs.map((log) => (
-                  <tr key={log.log_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{log.log_id}</td>
-                    <td className="px-4 py-3 text-sm">{log.user_id ?? "-"}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className="inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800">
-                        {log.operation_type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm">{log.target_table}</td>
-                    <td className="px-4 py-3 text-sm">{log.target_id ?? "-"}</td>
-                    <td className="px-4 py-3 text-sm">{log.ip_address ?? "-"}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {new Date(log.created_at).toLocaleString("ja-JP")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={response.logs}
+            columns={columns}
+            getRowId={(row) => row.log_id}
+            emptyMessage="操作ログがありません"
+          />
         </div>
       )}
     </PageContainer>

@@ -11,11 +11,12 @@ import {
   calculateDekadAggregations,
   calculateMonthlyAggregation,
 } from "../utils/aggregation-utils";
+
 import {
   getDatesForMonth,
   getDatesForNextMonthFirst10Days,
   getMonthStart,
-} from "../utils/date-utils";
+} from "@/shared/utils/date";
 
 interface UseForecastCalculationsResult {
   dailyData: Map<string, number>;

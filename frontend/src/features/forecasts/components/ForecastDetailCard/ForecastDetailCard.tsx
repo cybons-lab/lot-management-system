@@ -17,12 +17,12 @@ import { useForecastCalculations } from "./hooks/use-forecast-calculations";
 import { PlanningAllocationPanel } from "./PlanningAllocationPanel";
 import { RelatedOrdersSection } from "./RelatedOrdersSection";
 import type { ForecastDetailCardProps } from "./types";
-import { formatDateKey, getTodayStart } from "./utils/date-utils";
 import { WarehouseInfoCard } from "./WarehouseInfoCard";
 
 import { Card, CardContent } from "@/components/ui";
 import { useForecastMutations } from "@/features/forecasts/hooks/useForecastMutations";
 import { cn } from "@/shared/libs/utils";
+import { formatDateKey, getTodayStart } from "@/shared/utils/date";
 
 export function ForecastDetailCard({
   group,

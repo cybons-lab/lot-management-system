@@ -1,13 +1,17 @@
 /**
  * ClientLogsPage
  * クライアントログ（フロントエンドエラーログ）一覧画面
+ * Refactored to use DataTable component.
  */
 
 import { RefreshCw, AlertCircle } from "lucide-react";
+import { useMemo } from "react";
 
 import { useClientLogs } from "../hooks";
 
 import { Button, Badge } from "@/components/ui";
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 type LogLevel = "error" | "warning" | string;
@@ -32,47 +36,7 @@ interface ClientLog {
   created_at: string;
 }
 
-function LogsTable({ logs }: { logs: ClientLog[] }) {
-  return (
-    <div className="overflow-x-auto rounded-lg border bg-white">
-      <table className="w-full">
-        <thead className="border-b bg-gray-50">
-          <tr>
-            <th className="w-[60px] px-4 py-3 text-left text-sm font-medium text-gray-700">ID</th>
-            <th className="w-[80px] px-4 py-3 text-left text-sm font-medium text-gray-700">
-              レベル
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">メッセージ</th>
-            <th className="w-[100px] px-4 py-3 text-left text-sm font-medium text-gray-700">
-              ユーザーID
-            </th>
-            <th className="w-[180px] px-4 py-3 text-left text-sm font-medium text-gray-700">
-              日時
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {logs.map((log) => (
-            <tr key={log.id} className="hover:bg-gray-50">
-              <td className="px-4 py-3 text-sm">{log.id}</td>
-              <td className="px-4 py-3 text-sm">
-                <Badge variant={getLevelBadgeVariant(log.level)}>{log.level}</Badge>
-              </td>
-              <td className="max-w-md truncate px-4 py-3 font-mono text-sm" title={log.message}>
-                {log.message}
-              </td>
-              <td className="px-4 py-3 text-sm">{log.user_id ?? "-"}</td>
-              <td className="px-4 py-3 text-sm text-gray-600">
-                {new Date(log.created_at).toLocaleString("ja-JP")}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
+// eslint-disable-next-line max-lines-per-function
 export function ClientLogsPage() {
   const {
     data: logs = [],
@@ -81,6 +45,57 @@ export function ClientLogsPage() {
     refetch,
     isFetching,
   } = useClientLogs({ limit: 100 });
+
+  // 列定義
+  const columns = useMemo<Column<ClientLog>[]>(
+    () => [
+      {
+        id: "id",
+        header: "ID",
+        accessor: (row) => row.id,
+        width: 60,
+        sortable: true,
+      },
+      {
+        id: "level",
+        header: "レベル",
+        accessor: (row) => row.level,
+        cell: (row) => <Badge variant={getLevelBadgeVariant(row.level)}>{row.level}</Badge>,
+        width: 80,
+        sortable: true,
+      },
+      {
+        id: "message",
+        header: "メッセージ",
+        accessor: (row) => row.message,
+        cell: (row) => (
+          <div className="max-w-md truncate font-mono" title={row.message}>
+            {row.message}
+          </div>
+        ),
+        sortable: true,
+      },
+      {
+        id: "user_id",
+        header: "ユーザーID",
+        accessor: (row) => row.user_id,
+        cell: (row) => <span>{row.user_id ?? "-"}</span>,
+        width: 100,
+        sortable: true,
+      },
+      {
+        id: "created_at",
+        header: "日時",
+        accessor: (row) => row.created_at,
+        cell: (row) => (
+          <span className="text-gray-600">{new Date(row.created_at).toLocaleString("ja-JP")}</span>
+        ),
+        width: 180,
+        sortable: true,
+      },
+    ],
+    [],
+  );
 
   return (
     <PageContainer>
@@ -115,7 +130,12 @@ export function ClientLogsPage() {
       ) : (
         <div className="space-y-4">
           <div className="text-sm text-gray-600">{logs.length} 件のログ</div>
-          <LogsTable logs={logs} />
+          <DataTable
+            data={logs}
+            columns={columns}
+            getRowId={(row) => row.id}
+            emptyMessage="クライアントログがありません"
+          />
         </div>
       )}
     </PageContainer>

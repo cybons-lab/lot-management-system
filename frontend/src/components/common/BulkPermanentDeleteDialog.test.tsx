@@ -110,7 +110,7 @@ describe("BulkPermanentDeleteDialog", () => {
   it("shows loading state when isPending is true", () => {
     render(<BulkPermanentDeleteDialog {...defaultProps} isPending={true} />);
 
-    expect(screen.getByRole("button", { name: "削除中..." })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "処理中..." })).toBeInTheDocument();
   });
 
   it("disables confirm button when isPending is true even with correct phrase", () => {
@@ -119,7 +119,7 @@ describe("BulkPermanentDeleteDialog", () => {
     const input = screen.getByPlaceholderText("DELETE");
     fireEvent.change(input, { target: { value: "DELETE" } });
 
-    const confirmButton = screen.getByRole("button", { name: "削除中..." });
+    const confirmButton = screen.getByRole("button", { name: "処理中..." });
     expect(confirmButton).toBeDisabled();
   });
 

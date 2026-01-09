@@ -11,11 +11,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { DayCellProps } from "./types";
-import { formatDateKey } from "./utils/date-utils";
-
-/* eslint-disable max-lines-per-function, complexity */
 
 import { cn } from "@/shared/libs/utils";
+import { formatDateKey } from "@/shared/utils/date";
+
+/* eslint-disable max-lines-per-function, complexity */
 
 /**
  * Render a single day cell for the grid

@@ -4,7 +4,8 @@
 
 import { ForecastDayCell } from "./ForecastDayCell";
 import type { ForecastDailyGridProps } from "./types";
-import { formatDateKey, isPastDate } from "./utils/date-utils";
+
+import { formatDateKey, isPastDate } from "@/shared/utils/date";
 
 /**
  * Display daily forecast data in a grid layout

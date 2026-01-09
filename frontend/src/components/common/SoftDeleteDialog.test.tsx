@@ -54,7 +54,8 @@ describe("SoftDeleteDialog", () => {
     const confirmButton = screen.getByRole("button", { name: "無効化" });
     fireEvent.click(confirmButton);
 
-    expect(defaultProps.onConfirm).toHaveBeenCalledWith(null);
+    const today = new Date().toISOString().split("T")[0];
+    expect(defaultProps.onConfirm).toHaveBeenCalledWith(today);
   });
 
   it("calls onConfirm with date when date is specified", () => {
