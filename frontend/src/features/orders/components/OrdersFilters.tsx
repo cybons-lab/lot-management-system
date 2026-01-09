@@ -1,4 +1,4 @@
-import { Crown, Search } from "lucide-react";
+import { Crown } from "lucide-react";
 
 import {
   Button,
@@ -10,30 +10,24 @@ import {
   SelectValue,
 } from "@/components/ui";
 import type { useFilters } from "@/hooks/ui";
+import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
 
 interface OrdersFiltersProps {
   filters: ReturnType<typeof useFilters>;
 }
 
 /**
- * 受注管理画面のフィルターUI（統合版）
+ * 受注管理画面のフィルターUI（FilterContainer使用版）
  */
 // eslint-disable-next-line max-lines-per-function
 export function OrdersFilters({ filters }: OrdersFiltersProps) {
   return (
-    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
-          <Input
-            value={(filters.values.search as string) || ""}
-            onChange={(e) => filters.set("search", e.target.value)}
-            placeholder="受注番号、得意先、製品で検索..."
-            className="pl-9"
-          />
-        </div>
-      </div>
-
+    <SimpleFilterContainer
+      searchValue={(filters.values.search as string) || ""}
+      onSearchChange={(value) => filters.set("search", value)}
+      searchPlaceholder="受注番号、得意先、製品で検索..."
+      onReset={filters.reset}
+    >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
         <div className="space-y-2">
           <label htmlFor="customer-code-filter" className="text-sm font-medium text-slate-700">
@@ -130,16 +124,8 @@ export function OrdersFilters({ filters }: OrdersFiltersProps) {
               主担当の仕入先のみ
             </label>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={filters.reset}
-            className="text-xs text-slate-500"
-          >
-            リセット
-          </Button>
         </div>
       </div>
-    </div>
+    </SimpleFilterContainer>
   );
 }
