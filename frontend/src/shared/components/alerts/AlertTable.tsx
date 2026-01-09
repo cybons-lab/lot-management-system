@@ -1,14 +1,18 @@
 /**
  * AlertTable component
+ * Refactored to use DataTable component.
  *
  * Displays a table of alerts with navigation to target resources.
  */
 
-import { AlertCircle, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { AlertBadge } from "./AlertBadge";
 
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 import type { AlertItem } from "@/shared/types/alerts";
 import { formatDate } from "@/shared/utils/date";
 
@@ -16,42 +20,6 @@ interface AlertTableProps {
   alerts: AlertItem[];
   isLoading?: boolean;
   onAlertClick?: (alert: AlertItem) => void;
-}
-
-interface AlertRowProps {
-  alert: AlertItem;
-  onClick: (alert: AlertItem) => void;
-}
-
-function AlertRow({ alert, onClick }: AlertRowProps) {
-  return (
-    <tr
-      onClick={() => onClick(alert)}
-      className="cursor-pointer transition-colors hover:bg-slate-50"
-    >
-      <td className="px-6 py-4 whitespace-nowrap">
-        <AlertBadge severity={alert.severity} />
-      </td>
-      <td className="px-6 py-4">
-        <div className="text-sm font-medium text-slate-900">{alert.title}</div>
-        {alert.message && (
-          <div className="mt-1 line-clamp-2 text-sm text-slate-500">{alert.message}</div>
-        )}
-      </td>
-      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-500">
-        {alert.target.resource_type === "order" && `受注 #${alert.target.id}`}
-        {alert.target.resource_type === "lot" && `ロット #${alert.target.id}`}
-        {alert.target.resource_type === "inventory_item" && `在庫 #${alert.target.id}`}
-        {alert.target.resource_type === "forecast_daily" && `予測 #${alert.target.id}`}
-      </td>
-      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-500">
-        {formatDate(alert.occurred_at)}
-      </td>
-      <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-        <ChevronRight className="inline h-5 w-5 text-slate-400" />
-      </td>
-    </tr>
-  );
 }
 
 export function AlertTable({ alerts, isLoading = false, onAlertClick }: AlertTableProps) {
@@ -81,56 +49,79 @@ export function AlertTable({ alerts, isLoading = false, onAlertClick }: AlertTab
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-          <p className="text-sm text-gray-500">読み込み中...</p>
-        </div>
-      </div>
-    );
-  }
+  // 列定義
+  const columns = useMemo<Column<AlertItem>[]>(
+    () => [
+      {
+        id: "severity",
+        header: "重要度",
+        accessor: (row) => row.severity,
+        cell: (row) => <AlertBadge severity={row.severity} />,
+        width: 120,
+        sortable: true,
+      },
+      {
+        id: "title",
+        header: "タイトル",
+        accessor: (row) => row.title,
+        cell: (row) => (
+          <div>
+            <div className="text-sm font-medium text-slate-900">{row.title}</div>
+            {row.message && (
+              <div className="mt-1 line-clamp-2 text-sm text-slate-500">{row.message}</div>
+            )}
+          </div>
+        ),
+        width: 400,
+        sortable: true,
+      },
+      {
+        id: "target",
+        header: "対象",
+        accessor: (row) => {
+          const { target } = row;
+          switch (target.resource_type) {
+            case "order":
+              return `受注 #${target.id}`;
+            case "lot":
+              return `ロット #${target.id}`;
+            case "inventory_item":
+              return `在庫 #${target.id}`;
+            case "forecast_daily":
+              return `予測 #${target.id}`;
+            default:
+              return "";
+          }
+        },
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "occurred_at",
+        header: "発生日時",
+        accessor: (row) => row.occurred_at,
+        cell: (row) => <span className="whitespace-nowrap">{formatDate(row.occurred_at)}</span>,
+        width: 150,
+        sortable: true,
+      },
+    ],
+    [],
+  );
 
-  if (alerts.length === 0) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <div className="flex flex-col items-center gap-2">
-          <AlertCircle className="h-12 w-12 text-gray-400" />
-          <p className="text-sm text-gray-500">アラートはありません</p>
-        </div>
-      </div>
-    );
-  }
+  // 行アクション（矢印アイコン）
+  const renderRowActions = () => {
+    return <ChevronRight className="h-5 w-5 text-slate-400" />;
+  };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-slate-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-              重要度
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-              タイトル
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-              対象
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-              発生日時
-            </th>
-            <th className="relative px-6 py-3">
-              <span className="sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-200 bg-white">
-          {alerts.map((alert) => (
-            <AlertRow key={alert.id} alert={alert} onClick={handleAlertClick} />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      data={alerts}
+      columns={columns}
+      getRowId={(row) => row.id}
+      onRowClick={handleAlertClick}
+      rowActions={renderRowActions}
+      isLoading={isLoading}
+      emptyMessage="アラートはありません"
+    />
   );
 }
