@@ -10,6 +10,7 @@ import { Archive, Library, AlertCircle } from "lucide-react";
 import * as styles from "./styles";
 
 import { StatCard } from "@/components/ui";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/services/api";
 
 export function DashboardStats() {
@@ -27,10 +28,9 @@ export function DashboardStats() {
   if (isLoading) {
     return (
       <div className={styles.grid}>
-        <StatCardSkeleton />
-        <StatCardSkeleton />
-        <StatCardSkeleton />
-        <StatCardSkeleton />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-32 w-full rounded-xl bg-slate-100" />
+        ))}
       </div>
     );
   }
@@ -67,7 +67,7 @@ export function DashboardStats() {
       <StatCard
         title="引当率"
         value={`${stats.allocation_rate}%`}
-        icon={AlertCircle} // Using AlertCircle for now, maybe PieChart would be better but keeping icons consistent
+        icon={AlertCircle}
         colorClass="border-purple-500"
       />
       <StatCard
@@ -76,21 +76,6 @@ export function DashboardStats() {
         icon={AlertCircle}
         colorClass="border-destructive"
       />
-    </div>
-  );
-}
-
-// スケルトンコンポーネント (ローディング中)
-function StatCardSkeleton() {
-  return (
-    <div className={styles.skeleton.root}>
-      <div className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-        <div className={styles.skeleton.title}></div>
-        <div className="bg-muted h-4 w-4 rounded"></div>
-      </div>
-      <div className="p-4 pt-0">
-        <div className={styles.skeleton.value}></div>
-      </div>
     </div>
   );
 }

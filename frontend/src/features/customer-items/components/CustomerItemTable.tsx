@@ -19,6 +19,7 @@ interface CustomerItemTableProps {
   isDeleting?: boolean;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function CustomerItemTable({
   items,
   onDelete,

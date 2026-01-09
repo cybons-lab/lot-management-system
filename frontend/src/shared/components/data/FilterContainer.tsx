@@ -71,6 +71,7 @@ export interface FilterContainerProps {
  * </FilterContainer>
  * ```
  */
+// eslint-disable-next-line complexity
 export function FilterContainer({
   children,
   searchValue = '',

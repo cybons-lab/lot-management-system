@@ -18,12 +18,23 @@ import {
   type ColumnDef,
   type SortingState,
   type ExpandedState,
+  type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, ChevronDown } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, ChevronDown, Settings2 } from "lucide-react";
 import * as React from "react";
 import { useMemo } from "react";
 
+import { Button } from "@/components/ui";
 import { Checkbox } from "@/components/ui";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/display/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/shared/libs/utils";
 
 // ============================================
@@ -122,6 +133,8 @@ export function DataTable<T = never>({
   onExpandedRowsChange,
   renderExpandedRow,
 }: DataTableProps<T>) {
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+
   // TanStack Table用のカラム定義変換
   const tableColumns = useMemo<ColumnDef<T>[]>(() => {
     const defs: ColumnDef<T>[] = [];
@@ -150,6 +163,7 @@ export function DataTable<T = never>({
         ),
         size: 48, // w-12 equivalent
         enableResizing: false,
+        enableHiding: false,
       });
     }
 
@@ -166,7 +180,7 @@ export function DataTable<T = never>({
                 e.stopPropagation();
                 row.toggleExpanded();
               }}
-              className="flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-slate-100"
+              className="flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-slate-100"
               aria-label={row.getIsExpanded() ? "折りたたむ" : "展開する"}
             >
               {row.getIsExpanded() ? (
@@ -179,6 +193,7 @@ export function DataTable<T = never>({
         },
         size: 40,
         enableResizing: false,
+        enableHiding: false,
       });
     }
 
@@ -224,6 +239,7 @@ export function DataTable<T = never>({
         ),
         size: 96, // w-24 equivalent
         enableResizing: false,
+        enableHiding: false,
         meta: {
           align: "right",
         },
@@ -268,8 +284,10 @@ export function DataTable<T = never>({
       sorting,
       rowSelection,
       expanded,
+      columnVisibility,
     },
     columnResizeMode: "onChange",
+    onColumnVisibilityChange: setColumnVisibility,
     getRowId: (row) => String(getRowId(row)),
     getRowCanExpand: () => expandable && !!renderExpandedRow,
     onSortingChange: (updaterOrValue) => {
@@ -302,8 +320,16 @@ export function DataTable<T = never>({
       if (!onExpandedRowsChange) return;
       const nextExpanded =
         typeof updaterOrValue === "function" ? updaterOrValue(expanded) : updaterOrValue;
-      const expandedIdList = Object.keys(nextExpanded).filter((id) => nextExpanded[id]);
-      onExpandedRowsChange(expandedIdList);
+      // Cast to Record for safe index access (ExpandedState is either boolean or Record)
+      if (typeof nextExpanded === "boolean") {
+        // If true, all rows are expanded - but we don't support that pattern
+        onExpandedRowsChange([]);
+      } else {
+        const expandedIdList = Object.keys(nextExpanded).filter(
+          (id) => (nextExpanded as Record<string, boolean>)[id]
+        );
+        onExpandedRowsChange(expandedIdList);
+      }
     },
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -323,10 +349,38 @@ export function DataTable<T = never>({
   // ローディング表示
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-          <p className="text-sm text-gray-500">読み込み中...</p>
+      <div
+        className={cn(
+          "relative flex flex-col gap-2",
+          className,
+        )}
+      >
+        <div className="flex items-center justify-end">
+          <Skeleton className="h-8 w-24 rounded-md" />
+        </div>
+        <div className="relative overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-md">
+          <table className="w-full" style={{ tableLayout: "fixed" }}>
+            <thead className="border-b bg-slate-50">
+              <tr>
+                {tableColumns.map((_, i) => (
+                  <th key={i} className="px-4 py-3">
+                    <Skeleton className="h-4 w-20 bg-slate-200" />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-b border-slate-100 last:border-0">
+                  {tableColumns.map((_, j) => (
+                    <td key={j} className="px-4 py-3">
+                      <Skeleton className="h-4 w-full" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     );
@@ -344,11 +398,43 @@ export function DataTable<T = never>({
   return (
     <div
       className={cn(
-        "relative overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-md",
+        "relative flex flex-col gap-2", // Changed to flex-col to accommodate toolbar
         className,
       )}
     >
-      <table className="w-full" style={{ tableLayout: "fixed" }}>
+      {/* Toolbar */}
+      <div className="flex items-center justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="ml-auto h-8">
+              <Settings2 className="h-4 w-4 lg:mr-2" />
+              <span className="hidden lg:inline">表示列</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[150px]">
+            <DropdownMenuLabel>表示列を選択</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {table
+              .getAllColumns()
+              .filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide())
+              .map((column) => {
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value: boolean) => column.toggleVisibility(!!value)}
+                  >
+                    {column.columnDef.header as string}
+                  </DropdownMenuCheckboxItem>
+                );
+              })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="relative overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-md">
+        <table className="w-full responsive-table" style={{ tableLayout: "fixed" }}>
         <thead className="border-b bg-slate-50">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -436,6 +522,7 @@ export function DataTable<T = never>({
                           meta?.align === "right" && "text-right",
                           meta?.className,
                         )}
+                        data-label={typeof cell.column.columnDef.header === "string" ? cell.column.columnDef.header : undefined}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
@@ -467,6 +554,7 @@ export function DataTable<T = never>({
           })}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }

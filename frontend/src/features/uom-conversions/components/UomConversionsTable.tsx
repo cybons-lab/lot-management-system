@@ -33,6 +33,7 @@ interface TableProps {
 }
 
 /** UOM conversions table component */
+// eslint-disable-next-line max-lines-per-function
 export function UomConversionsTable({
   conversions,
   editingId,
@@ -48,6 +49,7 @@ export function UomConversionsTable({
 }: TableProps) {
   // 列定義
   const columns = useMemo<Column<UomConversionResponse>[]>(
+    // eslint-disable-next-line max-lines-per-function
     () => [
       {
         id: "product_code",

@@ -15,8 +15,8 @@ import {
 } from "@/features/orders/hooks/useOrderLineComputed";
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
 import { formatCodeAndName } from "@/shared/libs/utils";
-import { formatYmd } from "@/shared/libs/utils/date";
 import type { AllocatedLot, LotCandidateResponse } from "@/shared/types/aliases";
+import { formatYmd } from "@/shared/utils/date";
 
 type Props = {
   order?: OrderSource | null;

@@ -18,9 +18,9 @@ import {
 import * as styles from "./BatchJobsPage.styles";
 
 import { Button } from "@/components/ui";
-import { PageContainer, PageHeader } from "@/shared/components/layout";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 interface InventorySyncAlert {
   rule_id: number;

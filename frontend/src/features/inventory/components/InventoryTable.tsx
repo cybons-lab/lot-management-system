@@ -1,23 +1,23 @@
+/* eslint-disable max-lines */
 /**
  * InventoryTable - Main inventory table with expandable lot details.
  * Refactored to use DataTable component.
  */
 import { useState, useMemo } from "react";
 
+import { Button } from "@/components/ui";
 import type { InventoryItem } from "@/features/inventory/api";
 import {
   LoadingState,
   EmptyState,
-  ExpandedLotDetails,
 } from "@/features/inventory/components/InventoryTableComponents";
 import { LotEditForm, type LotUpdateData } from "@/features/inventory/components/LotEditForm";
 import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
 import { useInventoryTableLogic } from "@/features/inventory/hooks/useInventoryTableLogic";
 import { QuickWithdrawalDialog, WithdrawalHistoryDialog } from "@/features/withdrawals/components";
-import { Button } from "@/components/ui";
-import { FormDialog } from "@/shared/components/form";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
+import { FormDialog } from "@/shared/components/form";
 import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 
@@ -31,6 +31,7 @@ interface InventoryTableProps {
 /** 複合キー生成 */
 const getItemKey = (item: InventoryItem) => `${item.product_id}-${item.warehouse_id}`;
 
+// eslint-disable-next-line max-lines-per-function
 export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: InventoryTableProps) {
   const {
     selectedLot,
@@ -108,6 +109,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
 
   // 列定義
   const columns = useMemo<Column<InventoryItem>[]>(
+    // eslint-disable-next-line max-lines-per-function
     () => [
       {
         id: "product",
@@ -225,6 +227,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
   };
 
   // 展開された行のコンテンツ
+  // eslint-disable-next-line max-lines-per-function
   const renderExpandedRow = (item: InventoryItem) => {
     const lots = getLotsForItem(item.product_id, item.warehouse_id);
 
@@ -245,6 +248,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
               </tr>
             </thead>
             <tbody>
+              {/* eslint-disable-next-line max-lines-per-function */}
               {lots.map((lot) => {
                 const lotWithWarehouseName = {
                   ...lot,

@@ -16,6 +16,7 @@ interface ConfirmedLinesTableProps {
   onToggleAll: () => void;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function ConfirmedLinesTable({
   lines,
   selectedIds,

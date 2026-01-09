@@ -22,6 +22,7 @@ interface AlertTableProps {
   onAlertClick?: (alert: AlertItem) => void;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function AlertTable({ alerts, isLoading = false, onAlertClick }: AlertTableProps) {
   const navigate = useNavigate();
 

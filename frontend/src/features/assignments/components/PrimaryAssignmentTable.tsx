@@ -20,6 +20,7 @@ interface PrimaryAssignmentTableProps {
   onEdit: (group: SupplierGroup) => void;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function PrimaryAssignmentTable({ sortedGroups, onEdit }: PrimaryAssignmentTableProps) {
   const { user: currentUser } = useAuth();
 

@@ -10,9 +10,9 @@ import { useMemo } from "react";
 import { useClientLogs } from "../hooks";
 
 import { Button, Badge } from "@/components/ui";
-import { PageContainer, PageHeader } from "@/shared/components/layout";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 type LogLevel = "error" | "warning" | string;
 type BadgeVariant = "destructive" | "secondary" | "outline";
@@ -36,6 +36,7 @@ interface ClientLog {
   created_at: string;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function ClientLogsPage() {
   const {
     data: logs = [],

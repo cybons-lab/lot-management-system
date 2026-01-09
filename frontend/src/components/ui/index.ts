@@ -20,3 +20,8 @@ export * from "./layout";
 
 // Feedback components
 export * from "./feedback";
+
+export * from "./calendar";
+export * from "./popover";
+export * from "./skeleton";
+

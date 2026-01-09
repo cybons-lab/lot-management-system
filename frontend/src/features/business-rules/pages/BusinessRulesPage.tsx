@@ -10,9 +10,9 @@ import { toast } from "sonner";
 import { useBusinessRules, useToggleBusinessRuleActive, useDeleteBusinessRule } from "../hooks";
 
 import { Button } from "@/components/ui";
-import { PageContainer, PageHeader } from "@/shared/components/layout";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 interface BusinessRule {
   rule_id: number;

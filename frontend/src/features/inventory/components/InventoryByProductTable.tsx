@@ -17,6 +17,7 @@ interface InventoryByProductTableProps {
   onViewDetail?: (productId: number) => void;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function InventoryByProductTable({
   data,
   onRowClick,

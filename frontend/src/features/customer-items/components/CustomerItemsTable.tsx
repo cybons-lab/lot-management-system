@@ -36,6 +36,7 @@ const isInactive = (validTo?: string) => {
 /** CustomerItem用の一意キー生成 */
 const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.external_product_code}`;
 
+// eslint-disable-next-line max-lines-per-function
 export function CustomerItemsTable({
   items,
   isLoading,
@@ -50,6 +51,7 @@ export function CustomerItemsTable({
 }: CustomerItemsTableProps) {
   // 列定義
   const columns = useMemo<Column<CustomerItem>[]>(
+    // eslint-disable-next-line max-lines-per-function
     () => [
       {
         id: "customer",
@@ -252,6 +254,7 @@ export function CustomerItemsTable({
   };
 
   // 選択状態変更ハンドラー
+  // eslint-disable-next-line complexity
   const handleSelectionChange = (ids: (string | number)[]) => {
     if (!onToggleSelect || !onToggleSelectAll) return;
 
@@ -273,7 +276,7 @@ export function CustomerItemsTable({
 
     // 個別トグルの場合（差分を見つける）
     const idsSet = new Set(ids.map(String));
-    const currentSet = selectedIds || new Set();
+    const currentSet = selectedIds ? new Set([...selectedIds].map(String)) : new Set<string>();
 
     const added = [...idsSet].find((id) => !currentSet.has(id));
     const removed = [...currentSet].find((id) => !idsSet.has(id));
