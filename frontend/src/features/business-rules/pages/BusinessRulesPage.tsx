@@ -1,15 +1,26 @@
 /**
  * BusinessRulesPage (v2.2 - Phase H-2)
  * Business rules management page
+ * Refactored to use DataTable component.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { useBusinessRules, useToggleBusinessRuleActive, useDeleteBusinessRule } from "../hooks";
 
 import { Button } from "@/components/ui";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
+import type { Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
+
+interface BusinessRule {
+  rule_id: number;
+  rule_code: string;
+  rule_name: string;
+  rule_type: string;
+  is_active: boolean;
+}
 
 export function BusinessRulesPage() {
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
@@ -54,6 +65,92 @@ export function BusinessRulesPage() {
       toast.error("削除に失敗しました");
     }
   };
+
+  // 列定義
+  const columns = useMemo<Column<BusinessRule>[]>(
+    () => [
+      {
+        id: "rule_id",
+        header: "ルールID",
+        accessor: (row) => row.rule_id,
+        width: 100,
+        sortable: true,
+      },
+      {
+        id: "rule_code",
+        header: "ルールコード",
+        accessor: (row) => row.rule_code,
+        cell: (row) => <span className="font-medium">{row.rule_code}</span>,
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "rule_name",
+        header: "ルール名",
+        accessor: (row) => row.rule_name,
+        width: 200,
+        sortable: true,
+      },
+      {
+        id: "rule_type",
+        header: "ルール種別",
+        accessor: (row) => row.rule_type,
+        cell: (row) => (
+          <span className="inline-flex rounded-full bg-purple-100 px-2 py-1 text-xs font-semibold text-purple-800">
+            {row.rule_type}
+          </span>
+        ),
+        width: 150,
+        sortable: true,
+      },
+      {
+        id: "is_active",
+        header: "状態",
+        accessor: (row) => row.is_active,
+        cell: (row) =>
+          row.is_active ? (
+            <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+              有効
+            </span>
+          ) : (
+            <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-800">
+              無効
+            </span>
+          ),
+        width: 100,
+        sortable: true,
+      },
+    ],
+    [],
+  );
+
+  // アクションボタン
+  const renderRowActions = (rule: BusinessRule) => (
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleToggleActive(rule.rule_id);
+        }}
+        disabled={toggleActiveMutation.isPending}
+      >
+        {rule.is_active ? "無効化" : "有効化"}
+      </Button>
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDelete(rule.rule_id);
+        }}
+        disabled={deleteMutation.isPending}
+      >
+        削除
+      </Button>
+    </div>
+  );
 
   return (
     <PageContainer>
@@ -117,73 +214,13 @@ export function BusinessRulesPage() {
           <div className="text-sm text-gray-600">{response.total} 件のルール</div>
 
           {/* Table */}
-          <div className="overflow-x-auto rounded-lg border bg-white">
-            <table className="w-full">
-              <thead className="border-b bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ルールID
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ルールコード
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ルール名
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ルール種別
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">状態</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {response.rules.map((rule) => (
-                  <tr key={rule.rule_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{rule.rule_id}</td>
-                    <td className="px-4 py-3 text-sm font-medium">{rule.rule_code}</td>
-                    <td className="px-4 py-3 text-sm">{rule.rule_name}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className="inline-flex rounded-full bg-purple-100 px-2 py-1 text-xs font-semibold text-purple-800">
-                        {rule.rule_type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {rule.is_active ? (
-                        <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
-                          有効
-                        </span>
-                      ) : (
-                        <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-800">
-                          無効
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleToggleActive(rule.rule_id)}
-                          disabled={toggleActiveMutation.isPending}
-                        >
-                          {rule.is_active ? "無効化" : "有効化"}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(rule.rule_id)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          削除
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={response.rules}
+            columns={columns}
+            getRowId={(row) => row.rule_id}
+            rowActions={renderRowActions}
+            emptyMessage="業務ルールがありません"
+          />
         </div>
       )}
     </PageContainer>
