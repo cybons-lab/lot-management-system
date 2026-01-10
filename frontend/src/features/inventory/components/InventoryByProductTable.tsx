@@ -31,9 +31,7 @@ export function InventoryByProductTable({
         header: "製品コード",
         accessor: (row) => row.product_code,
         cell: (row) => (
-          <div className="max-w-[150px] truncate font-medium" title={row.product_code}>
-            {row.product_code}
-          </div>
+          <span className="whitespace-nowrap font-medium">{row.product_code}</span>
         ),
         width: 150,
         sortable: true,
@@ -42,11 +40,7 @@ export function InventoryByProductTable({
         id: "product_name",
         header: "製品名",
         accessor: (row) => row.product_name,
-        cell: (row) => (
-          <div className="max-w-[200px] truncate" title={row.product_name}>
-            {row.product_name}
-          </div>
-        ),
+        cell: (row) => <span className="whitespace-nowrap">{row.product_name}</span>,
         width: 200,
         sortable: true,
       },

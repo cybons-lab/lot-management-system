@@ -12,7 +12,9 @@ export const columns: Column<OrderUI>[] = [
   {
     id: "order_no",
     header: "受注番号",
-    cell: (order: OrderUI) => <span className="font-medium text-slate-900">{order.order_no}</span>,
+    cell: (order: OrderUI) => (
+      <span className="whitespace-nowrap font-medium text-slate-900">{order.order_no}</span>
+    ),
     sortable: true,
     width: "150px",
   },
@@ -20,23 +22,21 @@ export const columns: Column<OrderUI>[] = [
     id: "customer_code",
     header: "得意先",
     cell: (order: OrderUI) => (
-      <div className="max-w-[180px]">
+      <div className="whitespace-nowrap">
         <div className="font-medium text-slate-900">{order.customer_code}</div>
         {order.customer_name && (
-          <div className="truncate text-xs text-slate-600" title={order.customer_name}>
-            {order.customer_name}
-          </div>
+          <div className="text-xs text-slate-600">{order.customer_name}</div>
         )}
       </div>
     ),
     sortable: true,
-    width: "180px",
+    width: "200px",
   },
   {
     id: "order_date",
     header: "受注日",
     cell: (order: OrderUI) => (
-      <span className="text-slate-900">{formatDate(order.order_date)}</span>
+      <span className="whitespace-nowrap text-slate-900">{formatDate(order.order_date)}</span>
     ),
     sortable: true,
     width: "120px",
@@ -45,7 +45,7 @@ export const columns: Column<OrderUI>[] = [
     id: "due_date",
     header: "納期",
     cell: (order: OrderUI) => (
-      <span className="text-slate-900">{formatDate(order.due_date || null)}</span>
+      <span className="whitespace-nowrap text-slate-900">{formatDate(order.due_date || null)}</span>
     ),
     sortable: true,
     width: "120px",

@@ -32,11 +32,9 @@ export function InventoryBySupplierTable({
         header: "仕入先コード",
         accessor: (row) => row.supplier_code,
         cell: (row) => (
-          <div className="max-w-[120px] truncate font-medium" title={row.supplier_code}>
-            {row.supplier_code}
-          </div>
+          <span className="whitespace-nowrap font-medium">{row.supplier_code}</span>
         ),
-        width: 120,
+        width: 140,
         sortable: true,
       },
       {
@@ -45,9 +43,7 @@ export function InventoryBySupplierTable({
         accessor: (row) => row.supplier_name,
         cell: (row) => (
           <div className="flex items-center gap-2">
-            <span className="max-w-[200px] truncate" title={row.supplier_name}>
-              {row.supplier_name}
-            </span>
+            <span className="whitespace-nowrap">{row.supplier_name}</span>
             {row.is_primary_supplier && (
               <Badge
                 variant="outline"

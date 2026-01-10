@@ -31,9 +31,7 @@ export function ConfirmedLinesTable({
         header: "受注番号",
         accessor: (row) => row.order_code,
         cell: (row) => (
-          <div className="max-w-[150px] truncate font-medium text-slate-900" title={row.order_code}>
-            {row.order_code}
-          </div>
+          <span className="whitespace-nowrap font-medium text-slate-900">{row.order_code}</span>
         ),
         width: 150,
         sortable: true,
@@ -43,11 +41,9 @@ export function ConfirmedLinesTable({
         header: "顧客名",
         accessor: (row) => row.customer_name,
         cell: (row) => (
-          <div className="max-w-[150px] truncate text-sm text-slate-600" title={row.customer_name}>
-            {row.customer_name}
-          </div>
+          <span className="whitespace-nowrap text-sm text-slate-600">{row.customer_name}</span>
         ),
-        width: 150,
+        width: 180,
         sortable: true,
       },
       {
@@ -55,14 +51,11 @@ export function ConfirmedLinesTable({
         header: "製品コード",
         accessor: (row) => row.product_code,
         cell: (row) => (
-          <div
-            className="max-w-[120px] truncate font-mono text-sm text-slate-900"
-            title={row.product_code}
-          >
+          <span className="whitespace-nowrap font-mono text-sm text-slate-900">
             {row.product_code}
-          </div>
+          </span>
         ),
-        width: 120,
+        width: 140,
         sortable: true,
       },
       {
@@ -70,9 +63,7 @@ export function ConfirmedLinesTable({
         header: "製品名",
         accessor: (row) => row.product_name,
         cell: (row) => (
-          <div className="max-w-[200px] truncate text-sm text-slate-600" title={row.product_name}>
-            {row.product_name}
-          </div>
+          <span className="whitespace-nowrap text-sm text-slate-600">{row.product_name}</span>
         ),
         width: 200,
         sortable: true,

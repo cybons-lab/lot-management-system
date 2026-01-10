@@ -45,26 +45,31 @@ export function createLotColumns(): Column<LotUI>[] {
     {
       id: "lot_number",
       header: "ロット番号",
-      cell: (lot) => <span className="font-medium">{lot.lot_number}</span>,
+      cell: (lot) => (
+        <span className="whitespace-nowrap font-medium text-slate-900">{lot.lot_number}</span>
+      ),
       sortable: true,
+      width: "150px",
     },
     {
       id: "product_code",
       header: "製品コード",
       cell: (lot) => (
-        <span className={lot.product_deleted ? "text-muted-foreground line-through" : ""}>
+        <span
+          className={`whitespace-nowrap ${lot.product_deleted ? "text-muted-foreground line-through" : "text-slate-900"}`}
+        >
           {lot.product_code}
         </span>
       ),
       sortable: true,
+      width: "150px",
     },
     {
       id: "product_name",
       header: "製品名",
       cell: (lot) => (
         <span
-          className={`block max-w-[200px] truncate ${lot.product_deleted ? "text-muted-foreground italic" : ""}`}
-          title={lot.product_name ?? ""}
+          className={`whitespace-nowrap ${lot.product_deleted ? "text-muted-foreground italic" : ""}`}
         >
           {lot.product_name}
           {lot.product_deleted && (
@@ -81,14 +86,10 @@ export function createLotColumns(): Column<LotUI>[] {
       header: "納品先",
       cell: (lot) => {
         const text = getDeliveryPlace(lot);
-        return (
-          <span className="block max-w-[150px] truncate" title={text}>
-            {text}
-          </span>
-        );
+        return <span className="whitespace-nowrap">{text}</span>;
       },
       sortable: true,
-      width: "150px",
+      width: "180px",
     },
     {
       id: "current_quantity",
@@ -96,13 +97,14 @@ export function createLotColumns(): Column<LotUI>[] {
       cell: (lot) => {
         const qty = Number(lot.current_quantity);
         return (
-          <span className={qty > 0 ? "font-semibold" : "text-gray-400"}>
+          <span className={`whitespace-nowrap ${qty > 0 ? "font-semibold" : "text-slate-400"}`}>
             {qty.toLocaleString()}
           </span>
         );
       },
       sortable: true,
       align: "right",
+      width: "120px",
     },
     {
       id: "unit",

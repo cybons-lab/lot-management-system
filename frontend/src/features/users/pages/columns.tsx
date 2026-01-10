@@ -28,19 +28,11 @@ export function createUserColumns({
     }),
     columnHelper.accessor("email", {
       header: "メールアドレス",
-      cell: (info) => (
-        <span className="block max-w-[220px] truncate" title={info.getValue()}>
-          {info.getValue()}
-        </span>
-      ),
+      cell: (info) => <span className="whitespace-nowrap">{info.getValue()}</span>,
     }),
     columnHelper.accessor("display_name", {
       header: "表示名",
-      cell: (info) => (
-        <span className="block max-w-[180px] truncate" title={info.getValue()}>
-          {info.getValue()}
-        </span>
-      ),
+      cell: (info) => <span className="whitespace-nowrap">{info.getValue()}</span>,
     }),
     columnHelper.accessor("is_active", {
       header: "状態",

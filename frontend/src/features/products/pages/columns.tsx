@@ -36,27 +36,28 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
   return [
     {
       id: "product_code",
-      header: "先方品番",
+      header: "製品コード",
       cell: (row) => (
-        <div className="flex items-center">
-          <span className="font-mono text-sm font-medium text-gray-900">{row.product_code}</span>
+        <div className="flex items-center gap-2">
+          <span className="whitespace-nowrap font-mono text-sm font-medium text-slate-900">
+            {row.product_code}
+          </span>
           {isInactive(row.valid_to) && (
-            <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+            <span className="shrink-0 rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
               削除済
             </span>
           )}
         </div>
       ),
       sortable: true,
-      width: "150px",
+      width: "180px",
     },
     {
       id: "product_name",
-      header: "商品名",
+      header: "製品名",
       cell: (row) => (
         <span
-          className={`block max-w-[200px] truncate ${isInactive(row.valid_to) ? "text-muted-foreground" : "text-gray-900"}`}
-          title={row.product_name}
+          className={`whitespace-nowrap ${isInactive(row.valid_to) ? "text-muted-foreground" : "text-slate-900"}`}
         >
           {row.product_name}
         </span>
@@ -68,56 +69,70 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
       id: "maker_part_code",
       header: "メーカー品番",
       cell: (row) => (
-        <span className="font-mono text-sm text-gray-700">{row.maker_part_code || "-"}</span>
+        <span className="whitespace-nowrap font-mono text-sm text-slate-700">
+          {row.maker_part_code || "-"}
+        </span>
       ),
       sortable: true,
-      width: "120px",
+      width: "140px",
     },
     {
       id: "base_unit",
       header: "基本単位",
-      cell: (row) => <span className="text-sm text-gray-700">{row.base_unit || "-"}</span>,
-      sortable: true,
-      width: "80px",
-    },
-    {
-      id: "consumption_limit_days",
-      header: "消費期限",
       cell: (row) => (
-        <span className="text-sm text-gray-700">
-          {row.consumption_limit_days != null ? `${row.consumption_limit_days}日` : "-"}
-        </span>
+        <span className="whitespace-nowrap text-sm text-slate-700">{row.base_unit || "-"}</span>
       ),
       sortable: true,
       width: "90px",
     },
     {
+      id: "consumption_limit_days",
+      header: "消費期限(日)",
+      cell: (row) => (
+        <span className="whitespace-nowrap text-sm text-slate-700">
+          {row.consumption_limit_days != null ? row.consumption_limit_days : "-"}
+        </span>
+      ),
+      sortable: true,
+      width: "100px",
+      align: "right",
+    },
+    {
       id: "internal_unit",
       header: "社内単位",
-      cell: (row) => <span className="text-sm text-gray-700">{row.internal_unit}</span>,
+      cell: (row) => (
+        <span className="whitespace-nowrap text-sm text-slate-700">{row.internal_unit}</span>
+      ),
       sortable: true,
       width: "90px",
     },
     {
       id: "external_unit",
       header: "外部単位",
-      cell: (row) => <span className="text-sm text-gray-700">{row.external_unit}</span>,
+      cell: (row) => (
+        <span className="whitespace-nowrap text-sm text-slate-700">{row.external_unit}</span>
+      ),
       sortable: true,
       width: "90px",
     },
     {
       id: "qty_per_internal_unit",
-      header: "数量/単位",
-      cell: (row) => <span className="text-sm text-gray-700">{row.qty_per_internal_unit}</span>,
+      header: "単位当たり数量",
+      cell: (row) => (
+        <span className="whitespace-nowrap text-sm text-slate-700">{row.qty_per_internal_unit}</span>
+      ),
       sortable: true,
-      width: "90px",
+      width: "120px",
+      align: "right",
     },
     {
       id: "updated_at",
       header: "更新日時",
-      cell: (row) => <span className="text-sm text-gray-500">{formatDate(row.updated_at)}</span>,
+      cell: (row) => (
+        <span className="whitespace-nowrap text-sm text-slate-500">{formatDate(row.updated_at)}</span>
+      ),
       sortable: true,
-      width: "110px",
+      width: "120px",
     },
     {
       id: "actions",

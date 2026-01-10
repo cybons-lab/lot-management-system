@@ -31,22 +31,16 @@ export function InventoryByWarehouseTable({
         header: "倉庫コード",
         accessor: (row) => row.warehouse_code,
         cell: (row) => (
-          <div className="max-w-[120px] truncate font-medium" title={row.warehouse_code}>
-            {row.warehouse_code}
-          </div>
+          <span className="whitespace-nowrap font-medium">{row.warehouse_code}</span>
         ),
-        width: 120,
+        width: 140,
         sortable: true,
       },
       {
         id: "warehouse_name",
         header: "倉庫名",
         accessor: (row) => row.warehouse_name,
-        cell: (row) => (
-          <div className="max-w-[200px] truncate" title={row.warehouse_name}>
-            {row.warehouse_name}
-          </div>
-        ),
+        cell: (row) => <span className="whitespace-nowrap">{row.warehouse_name}</span>,
         width: 200,
         sortable: true,
       },
