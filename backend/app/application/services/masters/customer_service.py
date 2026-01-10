@@ -15,8 +15,12 @@ from app.presentation.schemas.masters.masters_schema import (
     BulkUpsertSummary,
     CustomerBulkRow,
     CustomerCreate,
+    CustomerCreate,
     CustomerUpdate,
 )
+
+# Avoid circular import by importing inside methods or using TYPE_CHECKING
+# from app.application.services.admin.operation_logs_service import OperationLogService
 
 
 class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]):
@@ -27,6 +31,31 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
 
     def __init__(self, db: Session):
         super().__init__(db, Customer)
+
+    def _log_operation(self, user_id: int | None, operation_type: str, target_id: int | None, changes: dict | None = None) -> None:
+        if not user_id:
+            return
+        from app.application.services.admin.operation_logs_service import OperationLogService
+        log_service = OperationLogService(self.db)
+        log_service.log_operation(
+            user_id=user_id,
+            operation_type=operation_type,
+            target_table="customers",
+            target_id=target_id,
+            changes=changes,
+        )
+
+    def create(self, payload: CustomerCreate, *, user_id: int | None = None) -> Customer:
+        """Create new customer."""
+        customer = Customer(**payload.model_dump())
+        self.db.add(customer)
+        self.db.flush()
+        
+        self._log_operation(user_id, "create", customer.id, payload.model_dump(mode="json"))
+        
+        self.db.commit()
+        self.db.refresh(customer)
+        return customer
 
     def get_by_code(self, code: str, *, raise_404: bool = True) -> Customer | None:
         """Get customer by customer_code."""
@@ -42,23 +71,49 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
             )
         return customer
 
-    def update_by_code(self, code: str, payload: CustomerUpdate) -> Customer:
+    def update_by_code(
+        self, code: str, payload: CustomerUpdate, *, is_admin: bool = False, user_id: int | None = None
+    ) -> Customer:
         """Update customer by customer_code."""
         customer = self.get_by_code(code)
         assert customer is not None  # raise_404=True ensures this
-        return self.update(customer.id, payload)
 
-    def delete_by_code(self, code: str, *, end_date: date | None = None) -> None:
-        """Soft delete customer by customer_code.
+        # Capture old values if needed for detailed diff (skipping for now, just logging payload)
+        
+        # Check for code change
+        if payload.customer_code and payload.customer_code != customer.customer_code:
+            # ... (existing checks) ...
+            relation_checker = RelationCheckService(self.db)
+            if relation_checker.customer_has_related_data(customer.id):
+                summary = relation_checker.get_related_data_summary("customer", customer.id)
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"この得意先には関連データが存在するためコードを変更できません。関連データ: {summary}",
+                )
 
-        When customer is soft-deleted:
-        - Unallocated orders are cancelled (status='cancelled')
-        - Allocated orders are put on hold (status='on_hold')
+            # 2. 権限チェック (管理者のみ)
+            if not is_admin:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="得意先コードの変更は管理者のみ許可されています。",
+                )
+            
+            # 3. 重複チェック
+            existing = self.get_by_code(payload.customer_code, raise_404=False)
+            if existing and existing.id != customer.id:
+                 raise HTTPException(
+                     status_code=status.HTTP_409_CONFLICT,
+                     detail=f"得意先コード '{payload.customer_code}' は既に存在します。",
+                 )
 
-        Args:
-            code: Customer code
-            end_date: End date for validity. Defaults to today.
-        """
+        updated_customer = self.update(customer.id, payload)
+        self._log_operation(user_id, "update", customer.id, payload.model_dump(exclude_unset=True, mode="json"))
+        return updated_customer
+
+    def delete_by_code(
+        self, code: str, *, end_date: date | None = None, user_id: int | None = None
+    ) -> None:
+        """Soft delete customer by customer_code."""
         customer = self.get_by_code(code)
         assert customer is not None
 
@@ -67,6 +122,8 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
 
         # Perform soft delete
         self.delete(customer.id, end_date=end_date)
+        
+        self._log_operation(user_id, "delete", customer.id, {"type": "soft", "end_date": str(end_date) if end_date else None})
 
     def _transition_customer_orders(self, customer_id: int) -> None:
         """得意先無効化時の受注状態遷移.
@@ -109,18 +166,22 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
 
             if all_cancelled:
                 order.status = "closed"
+                order.cancel_reason = "Related customer deleted"
             elif all_on_hold:
                 order.status = "on_hold"
+                order.cancel_reason = "Related customer deleted"
             else:
                 order.status = "part_allocated"  # 混在状態
+                order.cancel_reason = "Related customer deleted (Partial)"
 
-    def hard_delete_by_code(self, code: str) -> None:
+    def hard_delete_by_code(self, code: str, *, user_id: int | None = None) -> None:
         """Permanently delete customer by customer_code.
 
         Only allowed if customer has no related data (orders, withdrawals, etc.).
 
         Args:
             code: Customer code
+            user_id: User performing the action
 
         Raises:
             HTTPException: 409 if customer has related data
@@ -138,13 +199,19 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
                 f"関連データ: {summary}",
             )
 
+        customer_id = customer.id
         self.hard_delete(customer.id)
+        
+        self._log_operation(user_id, "delete", customer_id, {"type": "hard"})
 
-    def restore_by_code(self, code: str) -> Customer:
-        """Restore a soft-deleted customer by customer_code."""
+    def restore_by_code(self, code: str, *, user_id: int | None = None) -> Customer:
+        """Restore a soft-deleted customer."""
         customer = self.get_by_code(code)
         assert customer is not None
-        return self.restore(customer.id)
+        restored = self.restore(customer.id)
+        
+        self._log_operation(user_id, "update", customer.id, {"type": "restore"})
+        return restored
 
     def bulk_upsert(self, rows: list[CustomerBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert customers by customer_code.

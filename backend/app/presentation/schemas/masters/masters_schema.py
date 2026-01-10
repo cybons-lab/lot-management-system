@@ -146,6 +146,7 @@ class CustomerCreate(CustomerBase):
 class CustomerUpdate(BaseSchema):
     """Update customer request."""
 
+    customer_code: str | None = Field(None, min_length=1, max_length=50)
     customer_name: str | None = Field(None, min_length=1, max_length=200)
     address: str | None = Field(None, max_length=500)
     contact_name: str | None = Field(None, max_length=100)

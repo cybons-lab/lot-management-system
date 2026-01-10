@@ -2,16 +2,18 @@
 """Tests for operation logs API endpoints."""
 
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from starlette.testclient import TestClient
 
+from app.core.config import settings
 from app.core.database import get_db
-from app.infrastructure.persistence.models import OperationLog, User
+from app.infrastructure.persistence.models.auth_models import User
+from app.infrastructure.persistence.models.logs_models import OperationLog
 from app.main import app
 
 
 def _truncate_all(db: Session):
-    for table in [OperationLog, User]:
+    for table in [OperationLog]:
         try:
             db.query(table).delete()
         except Exception:
@@ -47,14 +49,16 @@ def sample_user(test_db: Session):
     return user
 
 
-def test_list_operation_logs_empty(test_db: Session):
+def test_list_operation_logs_empty(test_db: Session, superuser_token_headers):
     """Test listing logs when none exist."""
     client = TestClient(app)
-    response = client.get("/api/operation-logs")
+    response = client.get("/api/operation-logs", headers=superuser_token_headers)
     assert response.status_code == 200
 
 
-def test_list_operation_logs_with_user_filter(test_db: Session, sample_user: User):
+def test_list_operation_logs_with_user_filter(
+    test_db: Session, sample_user: User, superuser_token_headers
+):
     """Test listing logs filtered by user."""
     client = TestClient(app)
 
@@ -69,13 +73,19 @@ def test_list_operation_logs_with_user_filter(test_db: Session, sample_user: Use
     test_db.add(log)
     test_db.commit()
 
-    response = client.get("/api/operation-logs", params={"user_id": sample_user.id})
+    response = client.get(
+        "/api/operation-logs",
+        params={"user_id": sample_user.id},
+        headers=superuser_token_headers,
+    )
     assert response.status_code == 200
     data = response.json()
     assert len(data["logs"]) >= 1
 
 
-def test_list_operation_logs_with_type_filter(test_db: Session, sample_user: User):
+def test_list_operation_logs_with_type_filter(
+    test_db: Session, sample_user: User, superuser_token_headers
+):
     """Test filtering by operation type."""
     client = TestClient(app)
 
@@ -88,14 +98,62 @@ def test_list_operation_logs_with_type_filter(test_db: Session, sample_user: Use
     test_db.add(log)
     test_db.commit()
 
-    response = client.get("/api/operation-logs", params={"operation_type": "delete"})
+    response = client.get(
+        "/api/operation-logs",
+        params={"operation_type": "delete"},
+        headers=superuser_token_headers,
+    )
     assert response.status_code == 200
     data = response.json()
     assert len(data["logs"]) >= 1
     assert data["logs"][0]["operation_type"] == "delete"
 
 
-def test_list_operation_logs_with_pagination(test_db: Session, sample_user: User):
+def test_list_operation_logs_with_target_table_filter(
+    test_db: Session, sample_user: User, superuser_token_headers
+):
+    """Test filtering by target table."""
+    client = TestClient(app)
+
+    log = OperationLog(
+        user_id=sample_user.id,
+        operation_type="create",
+        target_table="products",
+        target_id=1,
+    )
+    test_db.add(log)
+    test_db.commit()
+
+    response = client.get(
+        "/api/operation-logs",
+        headers=superuser_token_headers,
+        params={"target_table": "products"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert data["logs"][0]["target_table"] == "products"
+
+
+def test_get_filters(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    """Test get filters."""
+    response = client.get(
+        "/api/operation-logs/filters",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "users" in data
+    assert "operation_types" in data
+    assert "target_tables" in data
+    assert isinstance(data["users"], list)
+
+
+def test_list_operation_logs_with_pagination(
+    test_db: Session, sample_user: User, superuser_token_headers
+):
     """Test pagination."""
     client = TestClient(app)
 
@@ -110,7 +168,11 @@ def test_list_operation_logs_with_pagination(test_db: Session, sample_user: User
         test_db.add(log)
     test_db.commit()
 
-    response = client.get("/api/operation-logs", params={"skip": 2, "limit": 2})
+    response = client.get(
+        "/api/operation-logs",
+        params={"skip": 2, "limit": 2},
+        headers=superuser_token_headers,
+    )
     assert response.status_code == 200
     data = response.json()
     assert len(data["logs"]) == 2

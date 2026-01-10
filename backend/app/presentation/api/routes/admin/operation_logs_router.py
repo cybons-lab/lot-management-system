@@ -10,15 +10,17 @@ from app.application.services.admin.operation_logs_service import (
     OperationLogService,
 )
 from app.core.database import get_db
+from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.schemas.system.operation_logs_schema import (
     MasterChangeLogListResponse,
     MasterChangeLogResponse,
+    OperationLogFiltersResponse,
     OperationLogListResponse,
     OperationLogResponse,
 )
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 
-
-router = APIRouter(tags=["logs"])
+router = APIRouter(tags=["logs"], dependencies=[Depends(get_current_admin)])
 
 
 @router.get("/operation-logs", response_model=OperationLogListResponse)
@@ -66,6 +68,17 @@ def list_operation_logs(
         page=page,
         page_size=limit,
     )
+
+
+@router.get("/operation-logs/filters", response_model=OperationLogFiltersResponse)
+def get_operation_log_filters(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    """操作ログのフィルタ候補取得."""
+    service = OperationLogService(db)
+    filters = service.get_filters()
+    return OperationLogFiltersResponse(**filters)
 
 
 @router.get("/operation-logs/{log_id}", response_model=OperationLogResponse)

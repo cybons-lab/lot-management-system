@@ -217,6 +217,9 @@ class Order(Base):
     ocr_source_filename: Mapped[str | None] = mapped_column(
         String(255), nullable=True, comment="OCR取込元ファイル名"
     )
+    cancel_reason: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, comment="キャンセル・保留理由"
+    )
 
     __table_args__ = (
         Index("idx_orders_customer", "customer_id"),

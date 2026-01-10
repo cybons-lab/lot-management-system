@@ -10,6 +10,7 @@ class OperationLogResponse(BaseModel):
 
     log_id: int = Field(..., validation_alias="id")
     user_id: int | None = None
+    user_name: str | None = Field(None, description="ユーザー名")
     operation_type: str = Field(
         ..., description="操作種別（create/update/delete/login/logout/export）"
     )
@@ -53,3 +54,18 @@ class MasterChangeLogListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class FilterOption(BaseModel):
+    """フィルタ選択肢."""
+
+    label: str
+    value: str
+
+
+class OperationLogFiltersResponse(BaseModel):
+    """操作ログフィルタ選択肢レスポンス."""
+
+    users: list[FilterOption]
+    operation_types: list[FilterOption]
+    target_tables: list[FilterOption]
