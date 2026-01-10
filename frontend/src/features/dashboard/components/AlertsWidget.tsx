@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ExternalLink } from "lucide-react";
+import { AlertCircle, AlertTriangle, ExternalLink, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 import { http } from "@/shared/api/http-client";
 import { AlertTable } from "@/shared/components/alerts/AlertTable";
 import type { AlertItem } from "@/shared/types/alerts";
@@ -14,7 +14,12 @@ async function http_get_alerts() {
 }
 
 export function AlertsWidget() {
-  const { data: alerts, isLoading } = useQuery({
+  const {
+    data: alerts,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["alerts", { only_open: true, limit: 10 }],
     queryFn: () => http_get_alerts(),
   });
@@ -40,7 +45,18 @@ export function AlertsWidget() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <AlertTable alerts={alerts || []} isLoading={isLoading} />
+        {isError ? (
+          <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+            <AlertCircle className="mb-2 h-8 w-8 text-red-400" />
+            <p className="mb-2 text-sm">アラートの取得に失敗しました</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="mr-1 h-3 w-3" />
+              再試行
+            </Button>
+          </div>
+        ) : (
+          <AlertTable alerts={alerts || []} isLoading={isLoading} />
+        )}
       </CardContent>
     </Card>
   );

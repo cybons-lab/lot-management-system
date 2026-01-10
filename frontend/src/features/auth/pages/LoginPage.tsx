@@ -1,6 +1,7 @@
 import { Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import {
   Button,
@@ -39,6 +40,7 @@ export function LoginPage() {
         setUsers(data);
       } catch (error) {
         console.error("Failed to fetch users", error);
+        toast.error("ユーザー一覧の取得に失敗しました");
       }
     };
     fetchUsers();
@@ -64,6 +66,7 @@ export function LoginPage() {
       navigate("/");
     } catch (error) {
       console.error("Login failed", error);
+      toast.error("ログインに失敗しました");
     } finally {
       setIsLoading(false);
     }

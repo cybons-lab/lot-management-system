@@ -9,7 +9,8 @@
  * - Validation logic
  */
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { toast } from "sonner";
 
 import type { WithdrawalCreateRequest, WithdrawalType } from "../api";
 
@@ -110,25 +111,52 @@ export function useWithdrawalFormState({
   }, [preselectedLot]);
 
   // Fetch delivery places when customer changes
+  // Use ref to track current customer_id for race condition prevention
+  const customerIdRef = useRef(filters.customer_id);
+  customerIdRef.current = filters.customer_id;
+
   useEffect(() => {
-    if (filters.customer_id) {
-      setIsLoadingDeliveryPlaces(true);
-      http
-        .get<DeliveryPlace[]>(`masters/delivery-places?customer_id=${filters.customer_id}`)
-        .then((places) => {
-          setDeliveryPlaces(places);
-          setFilters((prev) => ({ ...prev, delivery_place_id: 0 }));
-        })
-        .catch(() => {
-          setDeliveryPlaces([]);
-        })
-        .finally(() => {
-          setIsLoadingDeliveryPlaces(false);
-        });
-    } else {
+    const currentCustomerId = filters.customer_id;
+
+    if (!currentCustomerId) {
       setDeliveryPlaces([]);
       setFilters((prev) => ({ ...prev, delivery_place_id: 0 }));
+      return;
     }
+
+    const abortController = new AbortController();
+    setIsLoadingDeliveryPlaces(true);
+
+    http
+      .get<DeliveryPlace[]>(`masters/delivery-places?customer_id=${currentCustomerId}`, {
+        signal: abortController.signal,
+      })
+      .then((places) => {
+        // Check if customer_id hasn't changed during the request
+        if (customerIdRef.current === currentCustomerId) {
+          setDeliveryPlaces(places);
+          setFilters((prev) => ({ ...prev, delivery_place_id: 0 }));
+        }
+      })
+      .catch((error) => {
+        // Ignore AbortError (expected when component unmounts or customer_id changes)
+        if ((error as Error).name !== "AbortError") {
+          console.error("納入先取得エラー:", error);
+          toast.error("納入先の取得に失敗しました");
+          if (customerIdRef.current === currentCustomerId) {
+            setDeliveryPlaces([]);
+          }
+        }
+      })
+      .finally(() => {
+        if (customerIdRef.current === currentCustomerId) {
+          setIsLoadingDeliveryPlaces(false);
+        }
+      });
+
+    return () => {
+      abortController.abort();
+    };
   }, [filters.customer_id]);
 
   // Reset product filter when supplier changes if product is no longer available

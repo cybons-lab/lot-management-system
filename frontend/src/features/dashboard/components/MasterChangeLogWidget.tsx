@@ -1,16 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { ArrowLeftRight, Database, ExternalLink, Plus, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeftRight,
+  Database,
+  ExternalLink,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { api } from "@/services/api";
 import type { MasterChangeLog } from "@/services/api";
 
 export function MasterChangeLogWidget() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["masterChangeLogs", { limit: 20 }],
     queryFn: () => api.getMasterChangeLogs({ limit: 20 }),
   });
@@ -37,7 +45,16 @@ export function MasterChangeLogWidget() {
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[350px]">
-          {isLoading ? (
+          {isError ? (
+            <div className="flex flex-col items-center justify-center py-10 text-slate-500">
+              <AlertCircle className="mb-2 h-8 w-8 text-red-400" />
+              <p className="mb-2 text-sm">変更履歴の取得に失敗しました</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                <RefreshCw className="mr-1 h-3 w-3" />
+                再試行
+              </Button>
+            </div>
+          ) : isLoading ? (
             <div className="space-y-4 p-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex animate-pulse gap-4">

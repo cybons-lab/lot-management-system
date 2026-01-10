@@ -6,8 +6,9 @@
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import {
   withdrawalFormSchema,
@@ -32,6 +33,7 @@ interface UseWithdrawalFormProps {
   lots: LotUI[];
 }
 
+// eslint-disable-next-line max-lines-per-function -- AbortControllerとエラー処理の追加により行数増加
 export function useWithdrawalForm({ preselectedLot, lots }: UseWithdrawalFormProps) {
   const { user } = useAuth();
 
@@ -67,27 +69,51 @@ export function useWithdrawalForm({ preselectedLot, lots }: UseWithdrawalFormPro
   }, [preselectedLot, setValue]);
 
   // Effect: Fetch Delivery Places when Customer changes
+  // Use ref to track current customerId for race condition prevention
+  const customerIdRef = useRef(customerId);
+  customerIdRef.current = customerId;
+
   useEffect(() => {
-    if (customerId) {
-      setIsLoadingDeliveryPlaces(true);
-      http
-        .get<DeliveryPlace[]>(`masters/delivery-places?customer_id=${customerId}`)
-        .then((places) => {
-          setDeliveryPlaces(places);
-          // Reset delivery place selection if current selection is invalid for new customer
-          // For UX, simple reset to 0 is often safest when switching parents
-          setValue("delivery_place_id", 0);
-        })
-        .catch(() => {
-          setDeliveryPlaces([]);
-        })
-        .finally(() => {
-          setIsLoadingDeliveryPlaces(false);
-        });
-    } else {
+    if (!customerId) {
       setDeliveryPlaces([]);
       setValue("delivery_place_id", 0);
+      return;
     }
+
+    const abortController = new AbortController();
+    const currentCustomerId = customerId;
+    setIsLoadingDeliveryPlaces(true);
+
+    http
+      .get<DeliveryPlace[]>(`masters/delivery-places?customer_id=${currentCustomerId}`, {
+        signal: abortController.signal,
+      })
+      .then((places) => {
+        // Check if customerId hasn't changed during the request
+        if (customerIdRef.current === currentCustomerId) {
+          setDeliveryPlaces(places);
+          setValue("delivery_place_id", 0);
+        }
+      })
+      .catch((error) => {
+        // Ignore AbortError (expected when component unmounts or customerId changes)
+        if ((error as Error).name !== "AbortError") {
+          console.error("納入先取得エラー:", error);
+          toast.error("納入先の取得に失敗しました");
+          if (customerIdRef.current === currentCustomerId) {
+            setDeliveryPlaces([]);
+          }
+        }
+      })
+      .finally(() => {
+        if (customerIdRef.current === currentCustomerId) {
+          setIsLoadingDeliveryPlaces(false);
+        }
+      });
+
+    return () => {
+      abortController.abort();
+    };
   }, [customerId, setValue]);
 
   // Calculated Values

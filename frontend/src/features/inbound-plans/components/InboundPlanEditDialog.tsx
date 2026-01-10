@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui";
@@ -64,6 +65,7 @@ export function InboundPlanEditDialog({
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to update inbound plan:", error);
+      toast.error("入荷予定の更新に失敗しました");
     }
   };
 

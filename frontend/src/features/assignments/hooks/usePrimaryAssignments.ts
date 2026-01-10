@@ -1,29 +1,58 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { toast } from "sonner";
 
 import type { SupplierAssignment, SupplierGroup } from "../types";
 
 import { http } from "@/shared/api/http-client";
 
+// eslint-disable-next-line max-lines-per-function -- AbortControllerとエラー処理の追加により行数増加
 export function usePrimaryAssignments() {
   const [assignments, setAssignments] = useState<SupplierAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Use ref to track current refreshKey for race condition prevention
+  const refreshKeyRef = useRef(refreshKey);
+  refreshKeyRef.current = refreshKey;
+
   useEffect(() => {
+    const currentRefreshKey = refreshKey;
+    const abortController = new AbortController();
+
     const fetchAssignments = async () => {
       try {
         setIsLoading(true);
-        const data = await http.get<SupplierAssignment[]>("assignments");
-        setAssignments(data);
+        setError(null);
+        const data = await http.get<SupplierAssignment[]>("assignments", {
+          signal: abortController.signal,
+        });
+        // Check if refreshKey hasn't changed during the request
+        if (refreshKeyRef.current === currentRefreshKey) {
+          setAssignments(data);
+        }
       } catch (err) {
-        console.error("Failed to fetch assignments", err);
-        setError("データの取得に失敗しました");
+        // Ignore AbortError (expected when component unmounts or refreshKey changes)
+        if ((err as Error).name !== "AbortError") {
+          console.error("Failed to fetch assignments", err);
+          const errorMessage = "データの取得に失敗しました";
+          if (refreshKeyRef.current === currentRefreshKey) {
+            setError(errorMessage);
+          }
+          toast.error(errorMessage);
+        }
       } finally {
-        setIsLoading(false);
+        if (refreshKeyRef.current === currentRefreshKey) {
+          setIsLoading(false);
+        }
       }
     };
+
     fetchAssignments();
+
+    return () => {
+      abortController.abort();
+    };
   }, [refreshKey]);
 
   // 仕入先ごとにグループ化

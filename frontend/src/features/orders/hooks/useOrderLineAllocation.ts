@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
 import {
@@ -61,6 +61,10 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     return "mixed" as const;
   }, [hardAllocatedDb, softAllocatedDb]);
 
+  // Use ref to track current orderLine.id for race condition prevention
+  const orderLineIdRef = useRef<number | null>(orderLine?.id ?? null);
+  orderLineIdRef.current = orderLine?.id ?? null;
+
   // Effects
   useEffect(() => {
     if (!orderLine) {
@@ -69,6 +73,9 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
       return;
     }
 
+    const currentOrderLineId = orderLine.id;
+    let isCancelled = false;
+
     const fetchCandidates = async () => {
       setIsLoadingCandidates(true);
       try {
@@ -76,6 +83,12 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
           order_line_id: orderLine.id,
           product_id: Number(orderLine.product_id || 0),
         });
+
+        // Check if orderLine hasn't changed during the request
+        if (isCancelled || orderLineIdRef.current !== currentOrderLineId) {
+          return;
+        }
+
         setCandidateLots(res.items);
 
         // Initialize allocations
@@ -95,14 +108,24 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
         }
         setLotAllocations(initialAllocations);
       } catch (error) {
+        // Skip error handling if request was cancelled
+        if (isCancelled || orderLineIdRef.current !== currentOrderLineId) {
+          return;
+        }
         console.error("Failed to fetch candidate lots", error);
         toast.error("ロット候補の取得に失敗しました");
       } finally {
-        setIsLoadingCandidates(false);
+        if (!isCancelled && orderLineIdRef.current === currentOrderLineId) {
+          setIsLoadingCandidates(false);
+        }
       }
     };
 
     fetchCandidates();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [orderLine]);
 
   // Actions
