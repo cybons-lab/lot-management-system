@@ -12,6 +12,7 @@ interface InboundPlan {
   id: number;
   plan_number: string;
   supplier_name?: string;
+  supplier_code?: string;
   supplier_id: number;
   planned_arrival_date: string;
   status: string;
@@ -35,7 +36,24 @@ export function InboundPlanTable({ plans }: InboundPlanTableProps) {
       {
         id: "supplier",
         header: "仕入先",
-        accessor: (row) => row.supplier_name || `ID:${row.supplier_id}`,
+        accessor: (row) =>
+          row.supplier_name
+            ? `${row.supplier_name} (${row.supplier_code || "No Code"})`
+            : `ID: ${row.supplier_id}`,
+        cell: (row) => (
+          <span className="truncate" title={row.supplier_name}>
+            {row.supplier_name ? (
+              <>
+                {row.supplier_name}
+                <span className="ml-1 text-[10px] text-slate-400">
+                  ({row.supplier_code || "-"})
+                </span>
+              </>
+            ) : (
+              <span className="text-slate-400">ID: {row.supplier_id}</span>
+            )}
+          </span>
+        ),
         width: 200,
         sortable: true,
       },

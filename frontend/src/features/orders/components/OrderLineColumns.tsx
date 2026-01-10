@@ -31,7 +31,8 @@ export function createOrderLineColumns(
     // 種別（アイコン化）
     {
       id: "order_type",
-      header: "",
+      header: "需要種別",
+      accessor: (row: OrderLineRow) => (row.order_type as string) || "ORDER",
       cell: (row: OrderLineRow) => {
         const iconMap = {
           FORECAST_LINKED: {
@@ -69,6 +70,7 @@ export function createOrderLineColumns(
     {
       id: "customer_name",
       header: "得意先",
+      accessor: (row: OrderLineRow) => row.customer_name ?? "",
       cell: (row: OrderLineRow) => {
         let isInactiveCustomer = false;
         if (row.customer_valid_to) {
@@ -99,6 +101,7 @@ export function createOrderLineColumns(
     {
       id: "product_code",
       header: "製品",
+      accessor: (row: OrderLineRow) => row.product_code ?? "",
       cell: (row: OrderLineRow) => (
         <div>
           <div className="text-sm font-medium text-slate-600">{row.product_code ?? "–"}</div>
@@ -116,6 +119,7 @@ export function createOrderLineColumns(
     {
       id: "order_quantity",
       header: "注文数量",
+      accessor: (row: OrderLineRow) => Number(row.order_quantity ?? row.quantity ?? 0),
       cell: (row: OrderLineRow) => {
         const qty = Number(row.order_quantity ?? row.quantity ?? 0);
         return (
@@ -135,6 +139,13 @@ export function createOrderLineColumns(
     {
       id: "allocated_quantity",
       header: "引当数量",
+      accessor: (row: OrderLineRow) => {
+        const lots = coerceAllocatedLots(row.allocated_lots);
+        return lots.reduce(
+          (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
+          0,
+        );
+      },
       cell: (row: OrderLineRow) => {
         const lots = coerceAllocatedLots(row.allocated_lots);
         const allocatedQty = lots.reduce(
@@ -163,6 +174,15 @@ export function createOrderLineColumns(
     {
       id: "allocation_rate",
       header: "引当率",
+      accessor: (row: OrderLineRow) => {
+        const orderQty = Number(row.order_quantity ?? row.quantity ?? 0);
+        const lots = coerceAllocatedLots(row.allocated_lots);
+        const allocatedQty = lots.reduce(
+          (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
+          0,
+        );
+        return orderQty > 0 ? (allocatedQty / orderQty) * 100 : 0;
+      },
       cell: (row: OrderLineRow) => {
         const orderQty = Number(row.order_quantity ?? row.quantity ?? 0);
         const lots = coerceAllocatedLots(row.allocated_lots);
@@ -195,6 +215,7 @@ export function createOrderLineColumns(
     {
       id: "due_date",
       header: "納期",
+      accessor: (row: OrderLineRow) => row.delivery_date ?? row.due_date ?? "",
       cell: (row: OrderLineRow) => {
         const dueDate = row.delivery_date ?? row.due_date ?? null;
         return <div className="font-semibold text-slate-900">{formatDate(dueDate)}</div>;
@@ -206,6 +227,15 @@ export function createOrderLineColumns(
     {
       id: "status",
       header: "状況",
+      accessor: (row: OrderLineRow) => {
+        const orderQty = Number(row.order_quantity ?? row.quantity ?? 0);
+        const lots = coerceAllocatedLots(row.allocated_lots);
+        const allocatedQty = lots.reduce(
+          (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
+          0,
+        );
+        return orderQty > 0 ? (allocatedQty / orderQty) * 100 : 0;
+      },
       cell: (row: OrderLineRow) => {
         const orderQty = Number(row.order_quantity ?? row.quantity ?? 0);
         const lots = coerceAllocatedLots(row.allocated_lots);
@@ -262,6 +292,7 @@ export function createOrderLineColumns(
       },
       align: "right",
       width: "80px",
+      enableHiding: false,
     },
   ];
 }

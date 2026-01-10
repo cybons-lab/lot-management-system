@@ -345,6 +345,11 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
 
     def create_forecast(self, data: ForecastCreate) -> ForecastResponse:
         """Create a new forecast entry and automatically create provisional order."""
+        # Auto-generate forecast_period if not provided
+        forecast_period = data.forecast_period
+        if not forecast_period:
+            forecast_period = data.forecast_date.strftime("%Y-%m")
+
         db_forecast = ForecastCurrent(
             customer_id=data.customer_id,
             delivery_place_id=data.delivery_place_id,
@@ -352,7 +357,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             forecast_date=data.forecast_date,
             forecast_quantity=data.forecast_quantity,
             unit=data.unit,
-            forecast_period=data.forecast_period,
+            forecast_period=forecast_period,
         )
 
         self.db.add(db_forecast)

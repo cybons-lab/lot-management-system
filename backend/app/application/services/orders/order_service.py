@@ -299,6 +299,7 @@ class OrderService:
         product_code: str | None = None,
         date_from: date | None = None,
         date_to: date | None = None,
+        order_type: str | None = None,
     ) -> list[OrderLineResponse]:
         """Get flattened order lines with filtering."""
         stmt = (
@@ -327,6 +328,8 @@ class OrderService:
             stmt = stmt.where(OrderLine.delivery_date >= date_from)
         if date_to:
             stmt = stmt.where(OrderLine.delivery_date <= date_to)
+        if order_type:
+            stmt = stmt.where(OrderLine.order_type == order_type)
 
         stmt = stmt.order_by(OrderLine.delivery_date.asc()).offset(skip).limit(limit)
         lines = self.db.execute(stmt).scalars().all()

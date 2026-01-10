@@ -22,6 +22,7 @@ def list_order_lines(
     product_code: str | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
+    order_type: str | None = None,
     db: Session = Depends(get_db),
 ):
     """受注明細一覧取得.
@@ -37,4 +38,5 @@ def list_order_lines(
         product_code=product_code,
         date_from=date_from,
         date_to=date_to,
+        order_type=order_type,
     )

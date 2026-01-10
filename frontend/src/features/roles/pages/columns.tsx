@@ -27,19 +27,13 @@ export function createRoleColumns({ onDelete, isDeleting = false }: RoleColumnsO
     }),
     columnHelper.accessor("role_name", {
       header: "ロール名",
-      cell: (info) => (
-        <span className="block max-w-[180px] truncate" title={info.getValue()}>
-          {info.getValue()}
-        </span>
-      ),
+      cell: (info) => <span className="whitespace-nowrap">{info.getValue()}</span>,
     }),
     columnHelper.accessor("description", {
       header: "説明",
       cell: (info) =>
         info.getValue() ? (
-          <span className="line-clamp-2 max-w-[260px]" title={info.getValue() ?? ""}>
-            {info.getValue()}
-          </span>
+          <span className="whitespace-nowrap">{info.getValue()}</span>
         ) : (
           <span className="text-slate-400">-</span>
         ),

@@ -17,10 +17,14 @@ import {
 
 const QUERY_KEY = ["delivery-places"] as const;
 
-export function useDeliveryPlaces(params?: { customerId?: number; includeInactive?: boolean }) {
+export function useDeliveryPlaces(
+  params?: { customerId?: number; includeInactive?: boolean },
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: params ? [...QUERY_KEY, params] : QUERY_KEY,
     queryFn: () => fetchDeliveryPlaces(params),
+    enabled: options?.enabled,
   });
 }
 

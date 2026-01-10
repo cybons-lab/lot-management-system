@@ -53,7 +53,7 @@ export function UomConversionsTable({
     () => [
       {
         id: "product_code",
-        header: "製品コード",
+        header: "先方品番",
         accessor: (row) => row.product_code,
         cell: (row) => {
           const inactive = isInactive(row.valid_to);

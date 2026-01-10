@@ -9,7 +9,7 @@ import { z } from "zod";
  * 製品スキーマ
  */
 export const productSchema = z.object({
-  product_code: z.string().min(1, "製品コードは必須です"),
+  product_code: z.string().min(1, "先方品番は必須です"),
   product_name: z.string().min(1, "製品名は必須です"),
   unit: z.string().optional(),
   category: z.string().optional(),

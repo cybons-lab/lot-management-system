@@ -5,8 +5,15 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
+from app.infrastructure.persistence.models.lot_reservations_model import (
+    LotReservation,
+    ReservationSourceType,
+    ReservationStatus,
+)
 from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace, Product
 from app.infrastructure.persistence.models.orders_models import Order, OrderLine
+
+from .inventory import get_any_lot_id
 
 
 def generate_orders(
@@ -111,9 +118,25 @@ def generate_orders(
             qty = Decimal(str(int(qty)))
             if qty <= 0:
                 qty = Decimal("1")
-
             # Use product's internal unit
             unit = product.internal_unit or product.base_unit or "pcs"
+
+            # order_type distribution
+            order_type = random.choices(
+                ["ORDER", "KANBAN", "SPOT", "FORECAST_LINKED"],
+                weights=[60, 20, 10, 10],
+                k=1,
+            )[0]
+
+            # status distribution
+            if delivery_date < date.today():
+                status = "shipped"
+            else:
+                status = random.choices(
+                    ["pending", "allocated"],
+                    weights=[70, 30],
+                    k=1,
+                )[0]
 
             # Create OrderLine
             ol = OrderLine(
@@ -123,10 +146,28 @@ def generate_orders(
                 order_quantity=qty,
                 unit=unit,
                 delivery_place_id=fc.delivery_place_id,
-                status="pending",
+                order_type=order_type,
+                status=status,
             )
             db.add(ol)
+            db.flush()
             line_count += 1
+
+            # If allocated, create LotReservation
+            if status == "allocated":
+                lot_id = get_any_lot_id(db, fc.product_id, qty)
+                if lot_id:
+                    res = LotReservation(
+                        lot_id=lot_id,
+                        source_type=ReservationSourceType.ORDER.value,
+                        source_id=ol.id,
+                        reserved_qty=qty,
+                        status=ReservationStatus.ACTIVE.value,
+                    )
+                    db.add(res)
+                else:
+                    # Could not find enough stock, revert status to pending
+                    ol.status = "pending"
 
     db.commit()
     print(f"[INFO] Generated {order_count} orders with {line_count} lines (forecast-based)")

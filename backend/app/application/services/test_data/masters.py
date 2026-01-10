@@ -59,11 +59,17 @@ def generate_customers_and_delivery_places(
 
     # 5-10 customers
     count = random.randint(5, 10)
-
     for _ in range(count):
+        from datetime import date, timedelta
+
+        valid_to = date(9999, 12, 31)
+        if random.random() < 0.1:  # 10% chance to be inactive
+            valid_to = date.today() - timedelta(days=random.randint(1, 30))
+
         c = Customer(
             customer_code=fake.unique.bothify(text="CUST-####"),
             customer_name=fake.company(),
+            valid_to=valid_to,
         )
         customers.append(c)
         db.add(c)

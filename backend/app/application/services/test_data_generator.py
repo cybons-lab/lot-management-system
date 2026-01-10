@@ -6,6 +6,7 @@ Refactored: Split into smaller modules for better maintainability.
 from sqlalchemy.orm import Session
 
 from .test_data.forecasts import generate_forecasts, generate_reservations
+from .test_data.inbound import generate_inbound_plans
 from .test_data.inventory import generate_lots
 from .test_data.masters import (
     generate_customer_items,
@@ -16,6 +17,7 @@ from .test_data.masters import (
 )
 from .test_data.orders import generate_orders
 from .test_data.utils import clear_data
+from .test_data.withdrawals import generate_withdrawals
 
 
 # Re-export all functions for backward compatibility
@@ -31,6 +33,8 @@ __all__ = [
     "generate_reservations",
     "generate_orders",
     "generate_all_test_data",
+    "generate_withdrawals",
+    "generate_inbound_plans",
 ]
 
 
@@ -56,8 +60,14 @@ def generate_all_test_data(db: Session):
         # Step 3: Generate reservations (requires lots to exist)
         generate_reservations(db)
 
-        # Step 4: Generate orders
+        # Step 4: Generate orders (diverse types + reservations)
         generate_orders(db, customers, products, products_with_forecast, delivery_places)
+
+        # Step 5: Generate withdrawal history (requires lots and customers)
+        generate_withdrawals(db, customers, delivery_places)
+
+        # Step 6: Generate inbound plans and link past plans to lots
+        generate_inbound_plans(db, products, suppliers)
 
         return True
     except Exception as e:

@@ -120,27 +120,21 @@ export function useLotColumns({
       baseColumns[0], // lot_number
       {
         id: "product_code",
-        header: "製品コード",
-        cell: (lot) => lot.product_code ?? "–",
+        header: "先方品番",
+        cell: (lot) => <span className="whitespace-nowrap">{lot.product_code ?? "–"}</span>,
         sortable: true,
       },
       {
         id: "product_name",
         header: "製品名",
-        cell: (lot) => (
-          <div className="max-w-[300px] truncate" title={lot.product_name ?? ""}>
-            {lot.product_name ?? "–"}
-          </div>
-        ),
+        cell: (lot) => <span className="whitespace-nowrap">{lot.product_name ?? "–"}</span>,
       },
       {
         id: "supplier_name",
         header: "仕入先",
         cell: (lot) => (
           <div className="flex items-center gap-2">
-            <span className="max-w-[120px] truncate" title={lot.supplier_name ?? ""}>
-              {lot.supplier_name ?? "–"}
-            </span>
+            <span className="whitespace-nowrap">{lot.supplier_name ?? "–"}</span>
             {isPrimary(lot.supplier_id) && <PrimaryBadge />}
           </div>
         ),
