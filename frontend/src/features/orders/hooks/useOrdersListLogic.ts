@@ -103,7 +103,7 @@ export function useOrdersListLogic() {
       if (filters.values.unallocatedOnly && !applyUnallocatedFilter(line)) {
         return false;
       }
-      
+
       // Filter inactive customers
       if (!filters.values.showInactiveCustomers && line.customer_valid_to) {
         const todayStr = new Date().toISOString().split("T")[0];
@@ -111,10 +111,15 @@ export function useOrdersListLogic() {
           return false;
         }
       }
-      
+
       return true;
     });
-  }, [allOrderLines, filters.values.search, filters.values.unallocatedOnly, filters.values.showInactiveCustomers]);
+  }, [
+    allOrderLines,
+    filters.values.search,
+    filters.values.unallocatedOnly,
+    filters.values.showInactiveCustomers,
+  ]);
 
   const sortedLines = table.sortData(filteredLines);
   const paginatedLines = table.paginateData(sortedLines);

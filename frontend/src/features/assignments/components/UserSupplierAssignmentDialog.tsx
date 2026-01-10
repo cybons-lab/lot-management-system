@@ -84,10 +84,12 @@ export function UserSupplierAssignmentDialog({
                   <FormLabel>仕入先</FormLabel>
                   <FormControl>
                     <SearchableSelect
-                      options={suppliers?.map((supplier) => ({
-                        value: String(supplier.id),
-                        label: `${supplier.supplier_name} (${supplier.supplier_code})`,
-                      })) ?? []}
+                      options={
+                        suppliers?.map((supplier) => ({
+                          value: String(supplier.id),
+                          label: `${supplier.supplier_name} (${supplier.supplier_code})`,
+                        })) ?? []
+                      }
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="仕入先を検索..."

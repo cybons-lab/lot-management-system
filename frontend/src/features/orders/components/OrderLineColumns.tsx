@@ -218,8 +218,7 @@ export function createOrderLineColumns(
         const statusConfig = {
           icon: rate === 0 ? Circle : rate === 100 ? CheckCircle : CircleDot,
           color: rate === 0 ? "text-red-500" : rate === 100 ? "text-green-500" : "text-blue-500",
-          label:
-            rate === 0 ? "未引当" : rate === 100 ? "引当済" : `部分引当 (${rate.toFixed(0)}%)`,
+          label: rate === 0 ? "未引当" : rate === 100 ? "引当済" : `部分引当 (${rate.toFixed(0)}%)`,
         };
 
         const IconComponent = statusConfig.icon;

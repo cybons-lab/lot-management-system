@@ -6,15 +6,14 @@ Tests:
 - Soft deletion transitions orders correctly
 """
 
-import pytest
 from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
 
+import pytest
 from sqlalchemy.orm import Session
 
-from app.application.services.masters.customer_service import CustomerService
 from app.application.services.common.relation_check_service import RelationCheckService
+from app.application.services.masters.customer_service import CustomerService
 
 
 class TestRelationCheckService:
@@ -44,7 +43,6 @@ class TestRelationCheckService:
         """Customer with orders should return True."""
         from app.infrastructure.persistence.models.masters_models import (
             Customer,
-            DeliveryPlace,
         )
         from app.infrastructure.persistence.models.orders_models import Order
 
@@ -81,6 +79,7 @@ class TestCustomerServiceHardDelete:
     def test_hard_delete_blocked_with_orders(self, db_session: Session):
         """Hard delete should fail when customer has orders."""
         from fastapi import HTTPException
+
         from app.infrastructure.persistence.models.masters_models import Customer
         from app.infrastructure.persistence.models.orders_models import Order
 
@@ -130,12 +129,7 @@ class TestCustomerServiceHardDelete:
         service.hard_delete_by_code("DEL002")
 
         # Verify deleted
-        assert (
-            db_session.query(Customer)
-            .filter(Customer.customer_code == "DEL002")
-            .first()
-            is None
-        )
+        assert db_session.query(Customer).filter(Customer.customer_code == "DEL002").first() is None
 
 
 class TestCustomerServiceSoftDeleteOrderTransition:
@@ -220,6 +214,10 @@ class TestCustomerServiceSoftDeleteOrderTransition:
 
     def test_soft_delete_holds_allocated_orders(self, db_session: Session):
         """Soft delete should put allocated orders on hold."""
+        from app.infrastructure.persistence.models.inventory_models import Lot
+        from app.infrastructure.persistence.models.lot_reservations_model import (
+            LotReservation,
+        )
         from app.infrastructure.persistence.models.masters_models import (
             Customer,
             DeliveryPlace,
@@ -227,10 +225,6 @@ class TestCustomerServiceSoftDeleteOrderTransition:
             Warehouse,
         )
         from app.infrastructure.persistence.models.orders_models import Order, OrderLine
-        from app.infrastructure.persistence.models.inventory_models import Lot
-        from app.infrastructure.persistence.models.lot_reservations_model import (
-            LotReservation,
-        )
 
         # Create customer
         customer = Customer(

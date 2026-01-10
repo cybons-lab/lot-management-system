@@ -88,11 +88,7 @@ export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHist
 
   if (isError) {
     return (
-      <QueryErrorFallback
-        error={error}
-        resetError={refetch}
-        title="出庫履歴の取得に失敗しました"
-      />
+      <QueryErrorFallback error={error} resetError={refetch} title="出庫履歴の取得に失敗しました" />
     );
   }
 

@@ -76,9 +76,7 @@ export function AllocationDialog({ line, onClose, onSuccess }: AllocationDialogP
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>エラー</DialogTitle>
-            <DialogDescription className="sr-only">
-              データの取得に失敗しました
-            </DialogDescription>
+            <DialogDescription className="sr-only">データの取得に失敗しました</DialogDescription>
           </DialogHeader>
           <QueryErrorFallback
             error={error}

@@ -37,19 +37,19 @@ export function DatePickerWithRange({ className, date, setDate }: DatePickerWith
     if (isNaN(hours) || isNaN(minutes)) return;
 
     const newDateRange = { ...date };
-    
+
     if (type === "start" && newDateRange.from) {
       const newFrom = new Date(newDateRange.from);
       newFrom.setHours(hours, minutes);
       newDateRange.from = newFrom;
     }
-    
+
     if (type === "end" && newDateRange.to) {
       const newTo = new Date(newDateRange.to);
       newTo.setHours(hours, minutes);
       newDateRange.to = newTo;
     }
-    
+
     setDate(newDateRange);
   };
 
@@ -120,48 +120,52 @@ export function DatePickerWithRange({ className, date, setDate }: DatePickerWith
             numberOfMonths={2}
           />
           <div className="border-t p-3">
-             <div className="mb-4 flex items-center justify-center text-sm font-medium">
-                {date?.from ? (
-                  date.to ? (
-                    <>
-                      {format(date.from, "yyyy/MM/dd", { locale: ja })} -{" "}
-                      {format(date.to, "yyyy/MM/dd", { locale: ja })}
-                    </>
-                  ) : (
-                    format(date.from, "yyyy/MM/dd", { locale: ja })
-                  )
+            <div className="mb-4 flex items-center justify-center text-sm font-medium">
+              {date?.from ? (
+                date.to ? (
+                  <>
+                    {format(date.from, "yyyy/MM/dd", { locale: ja })} -{" "}
+                    {format(date.to, "yyyy/MM/dd", { locale: ja })}
+                  </>
                 ) : (
-                  <span className="text-muted-foreground">期間を選択してください</span>
-                )}
-             </div>
-             <div className="flex items-center gap-4">
-               <div className="grid gap-1.5">
-                 <Label htmlFor="start-time" className="text-xs">開始時間</Label>
-                 <div className="flex items-center">
-                   <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                   <Input
-                     id="start-time"
-                     type="time"
-                     className="h-8 w-[110px]"
-                     value={startTime}
-                     onChange={(e) => handleTimeChange("start", e.target.value)}
-                   />
-                 </div>
-               </div>
-               <div className="grid gap-1.5">
-                 <Label htmlFor="end-time" className="text-xs">終了時間</Label>
-                 <div className="flex items-center">
-                   <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                   <Input
-                     id="end-time"
-                     type="time"
-                     className="h-8 w-[110px]"
-                     value={endTime}
-                     onChange={(e) => handleTimeChange("end", e.target.value)}
-                   />
-                 </div>
-               </div>
-             </div>
+                  format(date.from, "yyyy/MM/dd", { locale: ja })
+                )
+              ) : (
+                <span className="text-muted-foreground">期間を選択してください</span>
+              )}
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="grid gap-1.5">
+                <Label htmlFor="start-time" className="text-xs">
+                  開始時間
+                </Label>
+                <div className="flex items-center">
+                  <Clock className="text-muted-foreground mr-2 h-4 w-4" />
+                  <Input
+                    id="start-time"
+                    type="time"
+                    className="h-8 w-[110px]"
+                    value={startTime}
+                    onChange={(e) => handleTimeChange("start", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="end-time" className="text-xs">
+                  終了時間
+                </Label>
+                <div className="flex items-center">
+                  <Clock className="text-muted-foreground mr-2 h-4 w-4" />
+                  <Input
+                    id="end-time"
+                    type="time"
+                    className="h-8 w-[110px]"
+                    value={endTime}
+                    onChange={(e) => handleTimeChange("end", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </PopoverContent>
       </Popover>

@@ -219,9 +219,7 @@ def test_delete_customer_success(test_db: Session, superuser_token_headers):
     test_db.add(c)
     test_db.commit()
 
-    response = client.delete(
-        "/api/masters/customers/DELETE-001", headers=superuser_token_headers
-    )
+    response = client.delete("/api/masters/customers/DELETE-001", headers=superuser_token_headers)
     assert response.status_code == 204
 
     # Verify soft deletion: customer still exists when fetched by code
@@ -246,7 +244,5 @@ def test_delete_customer_success(test_db: Session, superuser_token_headers):
 def test_delete_customer_not_found(test_db: Session, superuser_token_headers):
     """Test deleting a non-existent customer."""
     client = TestClient(app)
-    response = client.delete(
-        "/api/masters/customers/NON-EXISTENT", headers=superuser_token_headers
-    )
+    response = client.delete("/api/masters/customers/NON-EXISTENT", headers=superuser_token_headers)
     assert response.status_code == 404

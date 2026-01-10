@@ -8,6 +8,7 @@ Create Date: 2026-01-10 11:55:00.000000
 
 from alembic import op
 
+
 # revision identifiers, used by Alembic.
 revision = "p1q2r3s4t5u6"
 down_revision = "o2p3q4r5s6t7"
@@ -41,12 +42,8 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Remove on_hold status from order_lines and orders."""
     # First, update any on_hold records to cancelled
-    op.execute(
-        "UPDATE order_lines SET status = 'cancelled' WHERE status = 'on_hold'"
-    )
-    op.execute(
-        "UPDATE orders SET status = 'closed' WHERE status = 'on_hold'"
-    )
+    op.execute("UPDATE order_lines SET status = 'cancelled' WHERE status = 'on_hold'")
+    op.execute("UPDATE orders SET status = 'closed' WHERE status = 'on_hold'")
 
     # Drop new constraint
     op.drop_constraint("chk_order_lines_status", "order_lines", type_="check")

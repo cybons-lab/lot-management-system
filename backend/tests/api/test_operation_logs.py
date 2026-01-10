@@ -5,7 +5,6 @@ import pytest
 from sqlalchemy.orm import Session
 from starlette.testclient import TestClient
 
-from app.core.config import settings
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.logs_models import OperationLog

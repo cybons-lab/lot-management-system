@@ -67,24 +67,22 @@ export function DateTimePicker({ className, date, setDate, label }: DateTimePick
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? (
-              format(date, "yyyy/MM/dd HH:mm", { locale: ja })
-            ) : (
-              <span>日付を選択</span>
-            )}
+            {date ? format(date, "yyyy/MM/dd HH:mm", { locale: ja }) : <span>日付を選択</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             mode="single"
-            selected={date ? new Date(date.getFullYear(), date.getMonth(), date.getDate()) : undefined}
+            selected={
+              date ? new Date(date.getFullYear(), date.getMonth(), date.getDate()) : undefined
+            }
             onSelect={handleDateSelect}
             initialFocus
             locale={ja}
           />
           <div className="border-t p-3">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Clock className="text-muted-foreground h-4 w-4" />
               <Input
                 type="time"
                 className="h-8"
