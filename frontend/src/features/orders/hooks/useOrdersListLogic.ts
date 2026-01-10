@@ -65,6 +65,8 @@ export function useOrdersListLogic() {
     status: "all",
     order_type: "all",
     unallocatedOnly: false,
+    primarySuppliersOnly: false,
+    showInactiveCustomers: false,
   });
 
   const [viewMode, setViewMode] = useState<ViewMode>("flat");
@@ -101,9 +103,18 @@ export function useOrdersListLogic() {
       if (filters.values.unallocatedOnly && !applyUnallocatedFilter(line)) {
         return false;
       }
+      
+      // Filter inactive customers
+      if (!filters.values.showInactiveCustomers && line.customer_valid_to) {
+        const todayStr = new Date().toISOString().split("T")[0];
+        if (line.customer_valid_to < todayStr) {
+          return false;
+        }
+      }
+      
       return true;
     });
-  }, [allOrderLines, filters.values.search, filters.values.unallocatedOnly]);
+  }, [allOrderLines, filters.values.search, filters.values.unallocatedOnly, filters.values.showInactiveCustomers]);
 
   const sortedLines = table.sortData(filteredLines);
   const paginatedLines = table.paginateData(sortedLines);

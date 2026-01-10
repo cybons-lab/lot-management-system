@@ -13,6 +13,7 @@ import { http } from "@/shared/api/http-client";
 export interface OperationLog {
   log_id: number;
   user_id: number | null;
+  user_name: string | null;
   operation_type: string;
   target_table: string;
   target_id: number | null;
@@ -29,6 +30,17 @@ export interface OperationLogListResponse {
   total: number;
   page: number;
   page_size: number;
+}
+
+export interface FilterOption {
+  label: string;
+  value: string;
+}
+
+export interface OperationLogFiltersResponse {
+  users: FilterOption[];
+  operation_types: FilterOption[];
+  target_tables: FilterOption[];
 }
 
 /**
@@ -64,6 +76,14 @@ export const getOperationLogs = (params?: OperationLogsListParams) => {
   return http.get<OperationLogListResponse>(
     `operation-logs${queryString ? "?" + queryString : ""}`,
   );
+};
+
+/**
+ * Get operation log filters
+ * @endpoint GET /operation-logs/filters
+ */
+export const getOperationLogFilters = () => {
+  return http.get<OperationLogFiltersResponse>(`operation-logs/filters`);
 };
 
 /**

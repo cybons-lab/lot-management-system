@@ -6,7 +6,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type { OperationLogsListParams } from "../api";
-import { getOperationLogs, getOperationLog } from "../api";
+import { getOperationLog, getOperationLogFilters, getOperationLogs } from "../api";
 
 // ===== Query Keys =====
 
@@ -28,6 +28,14 @@ export const useOperationLogs = (params?: OperationLogsListParams) => {
     queryKey: operationLogKeys.list(params),
     queryFn: () => getOperationLogs(params),
     staleTime: 1000 * 60, // 1 minute (logs are frequently updated)
+  });
+};
+
+export const useOperationLogFilters = () => {
+  return useQuery({
+    queryKey: ["operation-log-filters"],
+    queryFn: () => getOperationLogFilters(),
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 };
 

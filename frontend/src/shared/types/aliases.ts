@@ -178,6 +178,7 @@ export enum OrderStatus {
   SHIPPED = "shipped",
   CLOSED = "closed",
   CANCELLED = "cancelled",
+  ON_HOLD = "on_hold",
 }
 
 /**
@@ -194,6 +195,7 @@ export const ORDER_STATUS_DISPLAY: Record<OrderStatus, { label: string; variant:
   [OrderStatus.SHIPPED]: { label: "出荷済", variant: "bg-green-100 text-green-800" },
   [OrderStatus.CLOSED]: { label: "完了", variant: "bg-gray-100 text-gray-800" },
   [OrderStatus.CANCELLED]: { label: "キャンセル", variant: "bg-red-100 text-red-800" },
+  [OrderStatus.ON_HOLD]: { label: "保留中", variant: "bg-amber-100 text-amber-800" },
 };
 
 type ApiOrderLine = components["schemas"]["OrderLineResponse"];

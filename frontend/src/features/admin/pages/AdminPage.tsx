@@ -178,6 +178,9 @@ export function AdminPage() {
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link to="/admin/client-logs">クライアントログ表示</Link>
             </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link to="/admin/operation-logs">操作ログ（監査ログ）</Link>
+            </Button>
           </div>
         </div>
       </div>
