@@ -1,10 +1,15 @@
 import random
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models.inbound_models import ExpectedLot, InboundPlan, InboundPlanLine, InboundPlanStatus
+from app.infrastructure.persistence.models.inbound_models import (
+    ExpectedLot,
+    InboundPlan,
+    InboundPlanLine,
+    InboundPlanStatus,
+)
 from app.infrastructure.persistence.models.inventory_models import Lot
 from app.infrastructure.persistence.models.masters_models import Product, Supplier
 
@@ -12,8 +17,7 @@ from .utils import fake
 
 
 def generate_inbound_plans(db: Session, products: list[Product], suppliers: list[Supplier]):
-    """Generate inbound plans: some in the future (planned), some in the past (received).
-    """
+    """Generate inbound plans: some in the future (planned), some in the past (received)."""
     if not products or not suppliers:
         return
 
@@ -65,7 +69,7 @@ def generate_inbound_plans(db: Session, products: list[Product], suppliers: list
 
     # 2. Future Planned Plans (Next 30 days)
     num_future_plans = 10
-    for i in range(num_future_plans):
+    for _ in range(num_future_plans):
         supplier = random.choice(suppliers)
         arrival_date = today + timedelta(days=random.randint(5, 30))
         
@@ -104,4 +108,4 @@ def generate_inbound_plans(db: Session, products: list[Product], suppliers: list
             db.add(expected)
 
     db.commit()
-    print(f"[INFO] Generated inbound plans (past and future)")
+    print("[INFO] Generated inbound plans (past and future)")

@@ -29,7 +29,7 @@ import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 import { getLotStatuses } from "@/shared/utils/status";
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function, complexity
 export function InventoryItemDetailPage() {
   const { productId, warehouseId } = useParams<{ productId: string; warehouseId: string }>();
   const navigate = useNavigate();
