@@ -47,7 +47,7 @@ export function createWarehouseColumns(
       header: "倉庫コード",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          <span className="whitespace-nowrap font-mono text-sm font-medium text-slate-900">
+          <span className="font-mono text-sm font-medium whitespace-nowrap text-slate-900">
             {row.warehouse_code}
           </span>
           {isInactive(row.valid_to) && (
@@ -77,7 +77,7 @@ export function createWarehouseColumns(
       id: "warehouse_type",
       header: "タイプ",
       cell: (row) => (
-        <span className="inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800">
+        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium whitespace-nowrap text-slate-800">
           {warehouseTypeLabels[row.warehouse_type] ?? row.warehouse_type}
         </span>
       ),
@@ -88,7 +88,7 @@ export function createWarehouseColumns(
       id: "default_transport_lead_time_days",
       header: "輸送LT(日)",
       cell: (row) => (
-        <span className="whitespace-nowrap text-sm text-slate-900">
+        <span className="text-sm whitespace-nowrap text-slate-900">
           {row.default_transport_lead_time_days ?? "-"}
         </span>
       ),
@@ -100,7 +100,7 @@ export function createWarehouseColumns(
       id: "updated_at",
       header: "更新日時",
       cell: (row) => (
-        <span className="whitespace-nowrap text-sm text-slate-500">
+        <span className="text-sm whitespace-nowrap text-slate-500">
           {formatDate(row.updated_at)}
         </span>
       ),

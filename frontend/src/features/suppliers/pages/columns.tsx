@@ -11,7 +11,7 @@ export const supplierColumns: Column<Supplier>[] = [
     id: "supplier_code",
     header: "仕入先コード",
     cell: (row) => (
-      <span className="whitespace-nowrap font-mono text-sm font-medium text-slate-900">
+      <span className="font-mono text-sm font-medium whitespace-nowrap text-slate-900">
         {row.supplier_code}
       </span>
     ),
@@ -29,9 +29,7 @@ export const supplierColumns: Column<Supplier>[] = [
     id: "updated_at",
     header: "更新日時",
     cell: (row) => (
-      <span className="whitespace-nowrap text-sm text-slate-500">
-        {formatDate(row.updated_at)}
-      </span>
+      <span className="text-sm whitespace-nowrap text-slate-500">{formatDate(row.updated_at)}</span>
     ),
     sortable: true,
     width: "150px",

@@ -39,7 +39,7 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
       header: "先方品番",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          <span className="whitespace-nowrap font-mono text-sm font-medium text-slate-900">
+          <span className="font-mono text-sm font-medium whitespace-nowrap text-slate-900">
             {row.product_code}
           </span>
           {isInactive(row.valid_to) && (
@@ -69,7 +69,7 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
       id: "maker_part_code",
       header: "メーカー品番",
       cell: (row) => (
-        <span className="whitespace-nowrap font-mono text-sm text-slate-700">
+        <span className="font-mono text-sm whitespace-nowrap text-slate-700">
           {row.maker_part_code || "-"}
         </span>
       ),
@@ -80,7 +80,7 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
       id: "base_unit",
       header: "基本単位",
       cell: (row) => (
-        <span className="whitespace-nowrap text-sm text-slate-700">{row.base_unit || "-"}</span>
+        <span className="text-sm whitespace-nowrap text-slate-700">{row.base_unit || "-"}</span>
       ),
       sortable: true,
       width: "90px",
@@ -89,7 +89,7 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
       id: "consumption_limit_days",
       header: "消費期限(日)",
       cell: (row) => (
-        <span className="whitespace-nowrap text-sm text-slate-700">
+        <span className="text-sm whitespace-nowrap text-slate-700">
           {row.consumption_limit_days != null ? row.consumption_limit_days : "-"}
         </span>
       ),
@@ -101,7 +101,7 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
       id: "internal_unit",
       header: "社内単位",
       cell: (row) => (
-        <span className="whitespace-nowrap text-sm text-slate-700">{row.internal_unit}</span>
+        <span className="text-sm whitespace-nowrap text-slate-700">{row.internal_unit}</span>
       ),
       sortable: true,
       width: "90px",
@@ -110,7 +110,7 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
       id: "external_unit",
       header: "外部単位",
       cell: (row) => (
-        <span className="whitespace-nowrap text-sm text-slate-700">{row.external_unit}</span>
+        <span className="text-sm whitespace-nowrap text-slate-700">{row.external_unit}</span>
       ),
       sortable: true,
       width: "90px",
@@ -119,7 +119,9 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
       id: "qty_per_internal_unit",
       header: "単位当たり数量",
       cell: (row) => (
-        <span className="whitespace-nowrap text-sm text-slate-700">{row.qty_per_internal_unit}</span>
+        <span className="text-sm whitespace-nowrap text-slate-700">
+          {row.qty_per_internal_unit}
+        </span>
       ),
       sortable: true,
       width: "120px",
@@ -129,7 +131,9 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
       id: "updated_at",
       header: "更新日時",
       cell: (row) => (
-        <span className="whitespace-nowrap text-sm text-slate-500">{formatDate(row.updated_at)}</span>
+        <span className="text-sm whitespace-nowrap text-slate-500">
+          {formatDate(row.updated_at)}
+        </span>
       ),
       sortable: true,
       width: "120px",

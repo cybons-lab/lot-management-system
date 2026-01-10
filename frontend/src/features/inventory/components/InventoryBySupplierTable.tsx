@@ -31,9 +31,7 @@ export function InventoryBySupplierTable({
         id: "supplier_code",
         header: "仕入先コード",
         accessor: (row) => row.supplier_code,
-        cell: (row) => (
-          <span className="whitespace-nowrap font-medium">{row.supplier_code}</span>
-        ),
+        cell: (row) => <span className="font-medium whitespace-nowrap">{row.supplier_code}</span>,
         width: 140,
         sortable: true,
       },

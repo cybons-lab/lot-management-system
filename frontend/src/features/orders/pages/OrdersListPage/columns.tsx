@@ -13,7 +13,7 @@ export const columns: Column<OrderUI>[] = [
     id: "order_no",
     header: "受注番号",
     cell: (order: OrderUI) => (
-      <span className="whitespace-nowrap font-medium text-slate-900">{order.order_no}</span>
+      <span className="font-medium whitespace-nowrap text-slate-900">{order.order_no}</span>
     ),
     sortable: true,
     width: "150px",
@@ -24,9 +24,7 @@ export const columns: Column<OrderUI>[] = [
     cell: (order: OrderUI) => (
       <div className="whitespace-nowrap">
         <div className="font-medium text-slate-900">{order.customer_code}</div>
-        {order.customer_name && (
-          <div className="text-xs text-slate-600">{order.customer_name}</div>
-        )}
+        {order.customer_name && <div className="text-xs text-slate-600">{order.customer_name}</div>}
       </div>
     ),
     sortable: true,

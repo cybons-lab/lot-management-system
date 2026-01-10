@@ -30,9 +30,7 @@ export function InventoryByWarehouseTable({
         id: "warehouse_code",
         header: "倉庫コード",
         accessor: (row) => row.warehouse_code,
-        cell: (row) => (
-          <span className="whitespace-nowrap font-medium">{row.warehouse_code}</span>
-        ),
+        cell: (row) => <span className="font-medium whitespace-nowrap">{row.warehouse_code}</span>,
         width: 140,
         sortable: true,
       },

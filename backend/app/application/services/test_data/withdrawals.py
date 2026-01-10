@@ -11,7 +11,9 @@ from app.infrastructure.persistence.models.withdrawal_models import Withdrawal, 
 from .utils import fake
 
 
-def generate_withdrawals(db: Session, customers: list[Customer], delivery_places: list[DeliveryPlace]):
+def generate_withdrawals(
+    db: Session, customers: list[Customer], delivery_places: list[DeliveryPlace]
+):
     """Generate withdrawal history for some lots.
 
     Strategies:
@@ -31,22 +33,18 @@ def generate_withdrawals(db: Session, customers: list[Customer], delivery_places
     for lot in selected_lots:
         # Create 1-2 withdrawals per lot
         num_records = random.randint(1, 2)
-        
+
         for _ in range(num_records):
             if lot.current_quantity <= 0:
                 break
 
             # Withdrawal type distribution
-            w_type = random.choices(
-                list(WithdrawalType),
-                weights=[20, 30, 20, 10, 15, 5],
-                k=1
-            )[0]
+            w_type = random.choices(list(WithdrawalType), weights=[20, 30, 20, 10, 15, 5], k=1)[0]
 
             # Determine quantity (10-30% of current or max 50)
             max_w_qty = float(lot.current_quantity) * 0.3
             qty = Decimal(str(round(random.uniform(1, max(1.1, max_w_qty)), 2)))
-            
+
             if qty > lot.current_quantity:
                 qty = lot.current_quantity
 
@@ -71,10 +69,11 @@ def generate_withdrawals(db: Session, customers: list[Customer], delivery_places
                 ship_date=ship_date,
                 reason=fake.sentence(nb_words=6),
                 reference_number=fake.bothify(text="REF-#####"),
-                withdrawn_at=datetime.combine(ship_date, datetime.min.time()) + timedelta(hours=random.randint(9, 17))
+                withdrawn_at=datetime.combine(ship_date, datetime.min.time())
+                + timedelta(hours=random.randint(9, 17)),
             )
             db.add(withdrawal)
-            
+
             # Update lot quantity (simulating manual withdrawal)
             lot.current_quantity -= qty
             withdrawal_count += 1

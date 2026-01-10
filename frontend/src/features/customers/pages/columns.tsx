@@ -16,7 +16,7 @@ export const customerColumns: Column<Customer>[] = [
     id: "customer_code",
     header: "得意先コード",
     cell: (row) => (
-      <span className="whitespace-nowrap font-mono text-sm font-medium text-slate-900">
+      <span className="font-mono text-sm font-medium whitespace-nowrap text-slate-900">
         {row.customer_code}
       </span>
     ),
@@ -34,9 +34,7 @@ export const customerColumns: Column<Customer>[] = [
     id: "created_at",
     header: "作成日時",
     cell: (row) => (
-      <span className="whitespace-nowrap text-sm text-slate-500">
-        {formatDate(row.created_at)}
-      </span>
+      <span className="text-sm whitespace-nowrap text-slate-500">{formatDate(row.created_at)}</span>
     ),
     sortable: true,
     width: "150px",
@@ -45,9 +43,7 @@ export const customerColumns: Column<Customer>[] = [
     id: "updated_at",
     header: "更新日時",
     cell: (row) => (
-      <span className="whitespace-nowrap text-sm text-slate-500">
-        {formatDate(row.updated_at)}
-      </span>
+      <span className="text-sm whitespace-nowrap text-slate-500">{formatDate(row.updated_at)}</span>
     ),
     sortable: true,
     width: "150px",

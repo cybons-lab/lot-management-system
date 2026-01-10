@@ -209,7 +209,8 @@ export function InventoryItemDetailPage() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">在庫詳細</h2>
           <p className="mt-1 text-gray-600">
-            {item.product_name || "名称未設定"} ({item.product_code || "-"}) / {item.warehouse_name || "名称未設定"} ({item.warehouse_code || "-"})
+            {item.product_name || "名称未設定"} ({item.product_code || "-"}) /{" "}
+            {item.warehouse_name || "名称未設定"} ({item.warehouse_code || "-"})
           </p>
         </div>
         <Button variant="outline" onClick={handleBack}>

@@ -79,11 +79,7 @@ export function DateRangePicker({ className, date, onDateChange }: DateRangePick
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date?.to ? (
-                format(date.to, "yyyy/MM/dd", { locale: ja })
-              ) : (
-                <span>日付を選択</span>
-              )}
+              {date?.to ? format(date.to, "yyyy/MM/dd", { locale: ja }) : <span>日付を選択</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
