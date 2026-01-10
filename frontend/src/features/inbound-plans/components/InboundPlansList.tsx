@@ -21,7 +21,8 @@ export interface InboundPlan {
   id: number;
   plan_number: string;
   supplier_id: number;
-  supplier_name?: string;
+  supplier_name?: string | null;
+  supplier_code?: string | null;
   planned_arrival_date: string;
   status: "planned" | "partially_received" | "received" | "cancelled";
   created_at: string;
@@ -168,14 +169,30 @@ export function InboundPlansList({
       {
         id: "supplier",
         header: "仕入先",
-        accessor: (row) => row.supplier_name || `ID: ${row.supplier_id}`,
+        accessor: (row) =>
+          row.supplier_name
+            ? `${row.supplier_name} (${row.supplier_code || ""})`
+            : `ID: ${row.supplier_id}`,
         cell: (row) => (
           <div>
             <span
-              className="block max-w-[200px] truncate"
-              title={row.supplier_name || `ID: ${row.supplier_id}`}
+              className="block max-w-[250px] truncate font-medium"
+              title={
+                row.supplier_name
+                  ? `${row.supplier_name} (${row.supplier_code || ""})`
+                  : `ID: ${row.supplier_id}`
+              }
             >
-              {row.supplier_name || `ID: ${row.supplier_id}`}
+              {row.supplier_name ? (
+                <>
+                  {row.supplier_name}
+                  <span className="ml-1 text-xs text-slate-500">
+                    ({row.supplier_code || "No Code"})
+                  </span>
+                </>
+              ) : (
+                `ID: ${row.supplier_id}`
+              )}
             </span>
             {row.is_primary_supplier && (
               <Badge

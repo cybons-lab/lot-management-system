@@ -84,7 +84,9 @@ class InboundService:
         """
         from sqlalchemy import case
 
-        query = self.db.query(InboundPlan).options(joinedload(InboundPlan.lines))
+        query = self.db.query(InboundPlan).options(
+            joinedload(InboundPlan.lines), joinedload(InboundPlan.supplier)
+        )
 
         if supplier_id is not None:
             query = query.filter(InboundPlan.supplier_id == supplier_id)
@@ -154,6 +156,8 @@ class InboundService:
             id=plan.id,
             plan_number=plan.plan_number,
             supplier_id=plan.supplier_id,
+            supplier_name=plan.supplier.supplier_name if plan.supplier else None,
+            supplier_code=plan.supplier.supplier_code if plan.supplier else None,
             planned_arrival_date=plan.planned_arrival_date,
             status=InboundPlanStatus(plan.status),
             notes=plan.notes,

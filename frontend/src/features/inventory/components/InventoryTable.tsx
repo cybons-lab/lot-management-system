@@ -109,31 +109,43 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
       {
         id: "product",
         header: "製品",
-        accessor: (row) => row.product_name || row.product_code || `ID: ${row.product_id}`,
+        accessor: (row) =>
+          row.product_name
+            ? `${row.product_name} (${row.product_code || ""})`
+            : row.product_code || `ID: ${row.product_id}`,
         cell: (row) => (
-          <span
-            className="block truncate"
-            title={row.product_name || row.product_code || `ID: ${row.product_id}`}
-          >
-            {row.product_name || row.product_code || `ID: ${row.product_id}`}
-          </span>
+          <div className="flex flex-col">
+            <span
+              className="block truncate font-medium text-slate-900"
+              title={row.product_name || ""}
+            >
+              {row.product_name || "名称未設定"}
+            </span>
+            <span className="text-[11px] text-slate-500">{row.product_code || "-"}</span>
+          </div>
         ),
-        width: 200,
+        width: 250,
         sortable: true,
       },
       {
         id: "warehouse",
         header: "倉庫",
-        accessor: (row) => row.warehouse_name || row.warehouse_code || `ID: ${row.warehouse_id}`,
+        accessor: (row) =>
+          row.warehouse_name
+            ? `${row.warehouse_name} (${row.warehouse_code || ""})`
+            : row.warehouse_code || `ID: ${row.warehouse_id}`,
         cell: (row) => (
-          <span
-            className="block truncate"
-            title={row.warehouse_name || row.warehouse_code || `ID: ${row.warehouse_id}`}
-          >
-            {row.warehouse_name || row.warehouse_code || `ID: ${row.warehouse_id}`}
-          </span>
+          <div className="flex flex-col">
+            <span
+              className="block truncate font-medium text-slate-700"
+              title={row.warehouse_name || ""}
+            >
+              {row.warehouse_name || "名称未設定"}
+            </span>
+            <span className="text-[11px] text-slate-500">{row.warehouse_code || "-"}</span>
+          </div>
         ),
-        width: 150,
+        width: 180,
         sortable: true,
       },
       {

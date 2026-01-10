@@ -207,9 +207,9 @@ export function InventoryItemDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">在庫アイテム詳細</h2>
+          <h2 className="text-3xl font-bold tracking-tight">在庫詳細</h2>
           <p className="mt-1 text-gray-600">
-            製品ID: {item.product_id} / 倉庫ID: {item.warehouse_id}
+            {item.product_name || "名称未設定"} ({item.product_code || "-"}) / {item.warehouse_name || "名称未設定"} ({item.warehouse_code || "-"})
           </p>
         </div>
         <Button variant="outline" onClick={handleBack}>
@@ -224,13 +224,13 @@ export function InventoryItemDetailPage() {
           <div>
             <div className={styles.detailGrid.label}>製品</div>
             <div className={styles.detailGrid.value}>
-              {item.product_name || item.product_code || `ID: ${item.product_id}`}
+              {item.product_name || "名称未設定"} ({item.product_code || "-"})
             </div>
           </div>
           <div>
             <div className={styles.detailGrid.label}>倉庫</div>
             <div className={styles.detailGrid.value}>
-              {item.warehouse_name || `ID: ${item.warehouse_id}`}
+              {item.warehouse_name || "名称未設定"} ({item.warehouse_code || "-"})
             </div>
           </div>
           <div>

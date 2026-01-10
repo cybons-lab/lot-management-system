@@ -67,6 +67,8 @@ export interface Column<T = never> {
   align?: "left" | "center" | "right";
   /** 追加のCSSClass */
   className?: string;
+  /** 非表示を許可するかどうか (デフォルト: true) */
+  enableHiding?: boolean;
 }
 
 export interface SortConfig {
@@ -230,6 +232,7 @@ export function DataTable<T = never>({
         size: parseWidth(col.width),
         minSize: col.minWidth ? parseWidth(col.minWidth) : undefined,
         enableSorting: col.sortable,
+        enableHiding: col.enableHiding ?? true,
         meta: {
           align: col.align,
           className: col.className,

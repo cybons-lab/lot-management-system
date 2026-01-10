@@ -17,6 +17,12 @@ def clear_data(db: Session):
     db.execute(text("SET session_replication_role = 'replica';"))
 
     tables = [
+        "lot_reservation_history",
+        "lot_reservations",
+        "withdrawals",
+        "expected_lots",
+        "inbound_plan_lines",
+        "inbound_plans",
         "allocation_suggestions",
         "order_lines",
         "orders",

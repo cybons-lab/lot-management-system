@@ -83,6 +83,8 @@ def list_inbound_plans(
                 id=plan.id,
                 plan_number=plan.plan_number,
                 supplier_id=plan.supplier_id,
+                supplier_name=plan.supplier.supplier_name if plan.supplier else None,
+                supplier_code=plan.supplier.supplier_code if plan.supplier else None,
                 planned_arrival_date=plan.planned_arrival_date,
                 status=InboundPlanStatus(plan.status),
                 notes=plan.notes,
