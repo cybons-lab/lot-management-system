@@ -1,7 +1,7 @@
 # コード品質改善タスク計画
 
 **作成日:** 2026-01-10
-**ステータス:** Phase 1完了、Phase 2-3未着手
+**ステータス:** Phase 1完了、Phase 2完了、Phase 3未着手
 
 ---
 
@@ -282,14 +282,14 @@ function QueryErrorState({ message, onRetry }: ErrorStateProps) {
 ## チェックリスト
 
 ### Phase 2
-- [ ] AllocationDialog.tsx - isError処理追加
-- [ ] ForecastsTab.tsx - isError処理追加
-- [ ] InboundPlansTab.tsx - isError処理追加
-- [ ] WithdrawalCalendar.tsx - isError処理追加
-- [ ] WithdrawalHistoryList.tsx - isError処理追加
-- [ ] QueryErrorState共通コンポーネント作成（オプション）
-- [ ] 型チェック通過
-- [ ] Lint通過
+- [x] AllocationDialog.tsx - isError処理追加
+- [x] ForecastsTab.tsx - isError処理追加
+- [x] InboundPlansTab.tsx - isError処理追加
+- [x] WithdrawalCalendar.tsx - isError処理追加
+- [x] WithdrawalHistoryList.tsx - isError処理追加
+- [x] QueryErrorState共通コンポーネント作成（オプション）→ 既存の`QueryErrorFallback`を使用
+- [x] 型チェック通過
+- [x] Lint通過
 - [ ] コミット・プッシュ
 
 ### Phase 3（個別PR推奨）

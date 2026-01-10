@@ -24,6 +24,7 @@ import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui";
 import { getWithdrawals } from "@/features/withdrawals/api";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { fmt } from "@/shared/utils/number";
 
 interface WithdrawalCalendarProps {
@@ -300,7 +301,7 @@ function useWithdrawalCalendarData(lotId: number, currentMonth: Date) {
   const startDate = startOfWeek(monthStart);
   const endDate = endOfWeek(endOfMonth(currentMonth));
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["withdrawals", "calendar", lotId, format(currentMonth, "yyyy-MM")],
     queryFn: () =>
       getWithdrawals({
@@ -339,7 +340,7 @@ function useWithdrawalCalendarData(lotId: number, currentMonth: Date) {
 
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
-  return { dailyStats, monthlyTotal, days, isLoading };
+  return { dailyStats, monthlyTotal, days, isLoading, isError, error, refetch };
 }
 
 export function WithdrawalCalendar({
@@ -350,14 +351,24 @@ export function WithdrawalCalendar({
 }: WithdrawalCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
-  const { dailyStats, monthlyTotal, days, isLoading } = useWithdrawalCalendarData(
-    lotId,
-    currentMonth,
-  );
+  const { dailyStats, monthlyTotal, days, isLoading, isError, error, refetch } =
+    useWithdrawalCalendarData(lotId, currentMonth);
 
   const handleDateClick = (date: Date) => onDateSelect?.(format(date, "yyyy-MM-dd"));
 
   if (isLoading) return <LoadingSpinner />;
+
+  if (isError) {
+    return (
+      <div className="p-4">
+        <QueryErrorFallback
+          error={error}
+          resetError={refetch}
+          title="出庫履歴の取得に失敗しました"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 p-4">

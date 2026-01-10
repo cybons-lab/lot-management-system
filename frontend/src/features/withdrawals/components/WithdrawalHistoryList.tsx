@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { getWithdrawals, type WithdrawalResponse } from "../api";
 
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { fmt } from "@/shared/utils/number";
 
 interface WithdrawalHistoryListProps {
@@ -13,7 +14,7 @@ interface WithdrawalHistoryListProps {
 }
 
 export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHistoryListProps) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["withdrawals", "list", { productId, warehouseId }],
     queryFn: () =>
       getWithdrawals({
@@ -81,6 +82,16 @@ export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHist
       <div className="flex h-40 items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorFallback
+        error={error}
+        resetError={refetch}
+        title="出庫履歴の取得に失敗しました"
+      />
     );
   }
 

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui";
 import { LotAllocationPanel } from "@/features/allocations/components/lots/LotAllocationPanel";
 import * as ordersApi from "@/features/orders/api";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 
 interface AllocationDialogProps {
@@ -31,7 +32,12 @@ interface AllocationDialogProps {
 
 export function AllocationDialog({ line, onClose, onSuccess }: AllocationDialogProps) {
   // 親受注の情報を取得（LotAllocationPanel に必要）
-  const { data: order } = useQuery({
+  const {
+    data: order,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["order", line?.order_id],
     queryFn: () => ordersApi.getOrder(line!.order_id),
     enabled: !!line?.order_id,
@@ -62,6 +68,26 @@ export function AllocationDialog({ line, onClose, onSuccess }: AllocationDialogP
   });
 
   if (!line) return null;
+
+  if (isError) {
+    return (
+      <Dialog open={!!line} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>エラー</DialogTitle>
+            <DialogDescription className="sr-only">
+              データの取得に失敗しました
+            </DialogDescription>
+          </DialogHeader>
+          <QueryErrorFallback
+            error={error}
+            resetError={refetch}
+            title="受注データの取得に失敗しました"
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={!!line} onOpenChange={(open) => !open && onClose()}>
