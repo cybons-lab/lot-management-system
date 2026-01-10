@@ -21,7 +21,7 @@ class ForecastBase(BaseSchema):
     forecast_date: date
     forecast_quantity: Decimal
     unit: str | None = None
-    forecast_period: str
+    forecast_period: str | None = None
 
 
 class ForecastCreate(ForecastBase):

@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import type { ForecastGroup } from "../api";
-import { ForecastListCard } from "../components";
+import { AddForecastDialog, ForecastListCard } from "../components";
 import { useForecasts, useDeleteForecast } from "../hooks";
 import { useForecastListPageState } from "../hooks/useForecastListPageState";
 
@@ -42,6 +42,7 @@ export function ForecastListPage() {
 
   // 確認ダイアログの状態（一時的なUI状態なので永続化しない）
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [addForecastOpen, setAddForecastOpen] = useState(false);
   const [pendingPeriods, setPendingPeriods] = useState<string[]>([]);
 
   const { data: response, isLoading, isError, refetch } = useForecasts(queryParams);
@@ -211,7 +212,10 @@ export function ForecastListPage() {
             >
               {generateMutation.isPending ? "更新中..." : "計画引当を更新"}
             </Button>
-            <Button onClick={() => navigate(ROUTES.FORECASTS.IMPORT)}>一括インポート</Button>
+            <Button variant="outline" onClick={() => navigate(ROUTES.FORECASTS.IMPORT)}>
+              一括インポート
+            </Button>
+            <Button onClick={() => setAddForecastOpen(true)}>手動追加</Button>
           </div>
         }
       />
@@ -310,6 +314,12 @@ export function ForecastListPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* 手動追加ダイアログ */}
+      <AddForecastDialog
+        open={addForecastOpen}
+        onOpenChange={setAddForecastOpen}
+        onSuccess={refetch}
+      />
     </PageContainer>
   );
 }
