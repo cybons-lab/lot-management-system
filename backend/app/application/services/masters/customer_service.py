@@ -32,10 +32,17 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
     def __init__(self, db: Session):
         super().__init__(db, Customer)
 
-    def _log_operation(self, user_id: int | None, operation_type: str, target_id: int | None, changes: dict | None = None) -> None:
+    def _log_operation(
+        self,
+        user_id: int | None,
+        operation_type: str,
+        target_id: int | None,
+        changes: dict | None = None,
+    ) -> None:
         if not user_id:
             return
         from app.application.services.admin.operation_logs_service import OperationLogService
+
         log_service = OperationLogService(self.db)
         log_service.log_operation(
             user_id=user_id,
@@ -50,9 +57,9 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
         customer = Customer(**payload.model_dump())
         self.db.add(customer)
         self.db.flush()
-        
+
         self._log_operation(user_id, "create", customer.id, payload.model_dump(mode="json"))
-        
+
         self.db.commit()
         self.db.refresh(customer)
         return customer
@@ -72,14 +79,19 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
         return customer
 
     def update_by_code(
-        self, code: str, payload: CustomerUpdate, *, is_admin: bool = False, user_id: int | None = None
+        self,
+        code: str,
+        payload: CustomerUpdate,
+        *,
+        is_admin: bool = False,
+        user_id: int | None = None,
     ) -> Customer:
         """Update customer by customer_code."""
         customer = self.get_by_code(code)
         assert customer is not None  # raise_404=True ensures this
 
         # Capture old values if needed for detailed diff (skipping for now, just logging payload)
-        
+
         # Check for code change
         if payload.customer_code and payload.customer_code != customer.customer_code:
             # ... (existing checks) ...
@@ -97,17 +109,19 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="得意先コードの変更は管理者のみ許可されています。",
                 )
-            
+
             # 3. 重複チェック
             existing = self.get_by_code(payload.customer_code, raise_404=False)
             if existing and existing.id != customer.id:
-                 raise HTTPException(
-                     status_code=status.HTTP_409_CONFLICT,
-                     detail=f"得意先コード '{payload.customer_code}' は既に存在します。",
-                 )
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"得意先コード '{payload.customer_code}' は既に存在します。",
+                )
 
         updated_customer = self.update(customer.id, payload)
-        self._log_operation(user_id, "update", customer.id, payload.model_dump(exclude_unset=True, mode="json"))
+        self._log_operation(
+            user_id, "update", customer.id, payload.model_dump(exclude_unset=True, mode="json")
+        )
         return updated_customer
 
     def delete_by_code(
@@ -122,8 +136,13 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
 
         # Perform soft delete
         self.delete(customer.id, end_date=end_date)
-        
-        self._log_operation(user_id, "delete", customer.id, {"type": "soft", "end_date": str(end_date) if end_date else None})
+
+        self._log_operation(
+            user_id,
+            "delete",
+            customer.id,
+            {"type": "soft", "end_date": str(end_date) if end_date else None},
+        )
 
     def _transition_customer_orders(self, customer_id: int) -> None:
         """得意先無効化時の受注状態遷移.
@@ -201,7 +220,7 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
 
         customer_id = customer.id
         self.hard_delete(customer.id)
-        
+
         self._log_operation(user_id, "delete", customer_id, {"type": "hard"})
 
     def restore_by_code(self, code: str, *, user_id: int | None = None) -> Customer:
@@ -209,7 +228,7 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
         customer = self.get_by_code(code)
         assert customer is not None
         restored = self.restore(customer.id)
-        
+
         self._log_operation(user_id, "update", customer.id, {"type": "restore"})
         return restored
 

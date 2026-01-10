@@ -41,9 +41,7 @@ class RelationCheckService:
 
         # 受注チェック
         order_count = (
-            self.db.query(func.count(Order.id))
-            .filter(Order.customer_id == customer_id)
-            .scalar()
+            self.db.query(func.count(Order.id)).filter(Order.customer_id == customer_id).scalar()
         )
         if order_count > 0:
             return True
@@ -100,9 +98,7 @@ class RelationCheckService:
 
         # ロットチェック
         lot_count = (
-            self.db.query(func.count(Lot.id))
-            .filter(Lot.supplier_id == supplier_id)
-            .scalar()
+            self.db.query(func.count(Lot.id)).filter(Lot.supplier_id == supplier_id).scalar()
         )
         if lot_count > 0:
             return True
@@ -152,11 +148,7 @@ class RelationCheckService:
         )
 
         # ロットチェック
-        lot_count = (
-            self.db.query(func.count(Lot.id))
-            .filter(Lot.product_id == product_id)
-            .scalar()
-        )
+        lot_count = self.db.query(func.count(Lot.id)).filter(Lot.product_id == product_id).scalar()
         if lot_count > 0:
             return True
 
@@ -198,9 +190,7 @@ class RelationCheckService:
 
         # ロットチェック
         lot_count = (
-            self.db.query(func.count(Lot.id))
-            .filter(Lot.warehouse_id == warehouse_id)
-            .scalar()
+            self.db.query(func.count(Lot.id)).filter(Lot.warehouse_id == warehouse_id).scalar()
         )
         if lot_count > 0:
             return True
@@ -219,9 +209,7 @@ class RelationCheckService:
 
         return False
 
-    def get_related_data_summary(
-        self, entity_type: str, entity_id: int
-    ) -> dict[str, int]:
+    def get_related_data_summary(self, entity_type: str, entity_id: int) -> dict[str, int]:
         """関連データの件数サマリーを取得.
 
         Args:
@@ -237,9 +225,7 @@ class RelationCheckService:
             from app.infrastructure.persistence.models.orders_models import Order
 
             summary["orders"] = (
-                self.db.query(func.count(Order.id))
-                .filter(Order.customer_id == entity_id)
-                .scalar()
+                self.db.query(func.count(Order.id)).filter(Order.customer_id == entity_id).scalar()
                 or 0
             )
 
@@ -248,10 +234,7 @@ class RelationCheckService:
             from app.infrastructure.persistence.models.inbound_models import InboundPlan
 
             summary["lots"] = (
-                self.db.query(func.count(Lot.id))
-                .filter(Lot.supplier_id == entity_id)
-                .scalar()
-                or 0
+                self.db.query(func.count(Lot.id)).filter(Lot.supplier_id == entity_id).scalar() or 0
             )
             summary["inbound_plans"] = (
                 self.db.query(func.count(InboundPlan.id))
@@ -265,10 +248,7 @@ class RelationCheckService:
             from app.infrastructure.persistence.models.orders_models import OrderLine
 
             summary["lots"] = (
-                self.db.query(func.count(Lot.id))
-                .filter(Lot.product_id == entity_id)
-                .scalar()
-                or 0
+                self.db.query(func.count(Lot.id)).filter(Lot.product_id == entity_id).scalar() or 0
             )
             summary["order_lines"] = (
                 self.db.query(func.count(OrderLine.id))
@@ -281,9 +261,7 @@ class RelationCheckService:
             from app.infrastructure.persistence.models.inventory_models import Lot
 
             summary["lots"] = (
-                self.db.query(func.count(Lot.id))
-                .filter(Lot.warehouse_id == entity_id)
-                .scalar()
+                self.db.query(func.count(Lot.id)).filter(Lot.warehouse_id == entity_id).scalar()
                 or 0
             )
 

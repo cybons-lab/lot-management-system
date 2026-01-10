@@ -99,20 +99,17 @@ class OperationLogService:
         # Note: We fetch all users who have logs.
         # This query might be slow if logs are huge, but distinct user_id count is usually small.
         # Using a subquery for distinct user_id might be better.
-        stmt = (
-            select(OperationLog.user_id)
-            .where(OperationLog.user_id.is_not(None))
-            .distinct()
-        )
+        stmt = select(OperationLog.user_id).where(OperationLog.user_id.is_not(None)).distinct()
         user_ids = [row[0] for row in self.db.execute(stmt).all()]
-        
+
         from app.infrastructure.persistence.models.auth_models import User
+
         users = []
         if user_ids:
             user_objs = self.db.query(User).filter(User.id.in_(user_ids)).all()
             for u in user_objs:
                 users.append({"label": u.display_name, "value": str(u.id)})
-        
+
         # 2. Operation Types
         stmt = select(OperationLog.operation_type).distinct().order_by(OperationLog.operation_type)
         ops = [row[0] for row in self.db.execute(stmt).all()]
@@ -121,7 +118,7 @@ class OperationLogService:
         # 3. Target Tables
         stmt = select(OperationLog.target_table).distinct().order_by(OperationLog.target_table)
         tables = [row[0] for row in self.db.execute(stmt).all()]
-        
+
         # Simple JP mapping (could be shared, but hardcoded here for now)
         table_map = {
             "customers": "得意先マスタ",
@@ -134,16 +131,14 @@ class OperationLogService:
             "allocations": "引当データ",
             "roles": "ロール",
         }
-        target_tables = [
-            {"label": table_map.get(t, t), "value": t}
-            for t in tables
-        ]
+        target_tables = [{"label": table_map.get(t, t), "value": t} for t in tables]
 
         return {
             "users": users,
             "operation_types": operation_types,
             "target_tables": target_tables,
         }
+
 
 class MasterChangeLogService:
     """Service for master change logs (マスタ変更履歴)."""
