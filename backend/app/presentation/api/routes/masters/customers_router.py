@@ -111,8 +111,9 @@ def create_customer(
     """顧客を新規作成.
 
     Args:
-        customer: 顧客作成リクエストデータ
+        customer: 作成する得意先情報
         db: データベースセッション
+        current_user: 現在のユーザー（管理者権限が必要）
 
     Returns:
         CustomerResponse: 作成された顧客情報

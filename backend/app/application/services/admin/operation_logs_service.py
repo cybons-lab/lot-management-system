@@ -1,8 +1,9 @@
 """Operation logs service (操作ログサービス)."""
 
 from datetime import datetime
+from typing import cast
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.infrastructure.persistence.models import MasterChangeLog, OperationLog

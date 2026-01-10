@@ -11,6 +11,7 @@ from app.application.services.admin.operation_logs_service import (
 )
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.system.operation_logs_schema import (
     MasterChangeLogListResponse,
     MasterChangeLogResponse,
@@ -18,7 +19,7 @@ from app.presentation.schemas.system.operation_logs_schema import (
     OperationLogListResponse,
     OperationLogResponse,
 )
-from app.presentation.api.routes.auth.auth_router import get_current_admin
+
 
 router = APIRouter(tags=["logs"], dependencies=[Depends(get_current_admin)])
 

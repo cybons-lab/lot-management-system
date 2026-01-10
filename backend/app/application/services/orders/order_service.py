@@ -282,7 +282,7 @@ class OrderService:
         self._populate_additional_info(response_orders)
 
         # Populate customer_valid_to for lines
-        for r_order, m_order in zip(response_orders, orders):
+        for r_order, m_order in zip(response_orders, orders, strict=False):
             if m_order.customer:
                 c_valid_to = m_order.customer.valid_to
                 for line in r_order.lines:

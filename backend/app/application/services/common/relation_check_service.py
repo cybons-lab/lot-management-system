@@ -9,6 +9,8 @@
 - コード編集は管理者のみ、関連データ0件の場合のみ許可
 """
 
+from __future__ import annotations
+
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -33,11 +35,11 @@ class RelationCheckService:
         Returns:
             True if related data exists, False otherwise
         """
-        from app.infrastructure.persistence.models.orders_models import Order
-        from app.infrastructure.persistence.models.withdrawal_models import Withdrawal
         from app.infrastructure.persistence.models.forecast_models import (
             ForecastCurrent,
         )
+        from app.infrastructure.persistence.models.orders_models import Order
+        from app.infrastructure.persistence.models.withdrawal_models import Withdrawal
 
         # 受注チェック
         order_count = (
@@ -90,8 +92,8 @@ class RelationCheckService:
         Returns:
             True if related data exists, False otherwise
         """
-        from app.infrastructure.persistence.models.inventory_models import Lot
         from app.infrastructure.persistence.models.inbound_models import InboundPlan
+        from app.infrastructure.persistence.models.inventory_models import Lot
         from app.infrastructure.persistence.models.product_supplier_models import (
             ProductSupplier,
         )
@@ -138,14 +140,11 @@ class RelationCheckService:
         Returns:
             True if related data exists, False otherwise
         """
-        from app.infrastructure.persistence.models.inventory_models import Lot
-        from app.infrastructure.persistence.models.orders_models import OrderLine
-        from app.infrastructure.persistence.models.lot_reservations_model import (
-            LotReservation,
-        )
         from app.infrastructure.persistence.models.forecast_models import (
             ForecastCurrent,
         )
+        from app.infrastructure.persistence.models.inventory_models import Lot
+        from app.infrastructure.persistence.models.orders_models import OrderLine
 
         # ロットチェック
         lot_count = self.db.query(func.count(Lot.id)).filter(Lot.product_id == product_id).scalar()
@@ -230,8 +229,8 @@ class RelationCheckService:
             )
 
         elif entity_type == "supplier":
-            from app.infrastructure.persistence.models.inventory_models import Lot
             from app.infrastructure.persistence.models.inbound_models import InboundPlan
+            from app.infrastructure.persistence.models.inventory_models import Lot
 
             summary["lots"] = (
                 self.db.query(func.count(Lot.id)).filter(Lot.supplier_id == entity_id).scalar() or 0

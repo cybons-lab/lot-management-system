@@ -15,9 +15,9 @@ from app.presentation.schemas.masters.masters_schema import (
     BulkUpsertSummary,
     CustomerBulkRow,
     CustomerCreate,
-    CustomerCreate,
     CustomerUpdate,
 )
+
 
 # Avoid circular import by importing inside methods or using TYPE_CHECKING
 # from app.application.services.admin.operation_logs_service import OperationLogService
@@ -150,10 +150,10 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
         - 未引当受注 → cancelled
         - 引当済み受注 → on_hold
         """
-        from app.infrastructure.persistence.models.orders_models import Order, OrderLine
         from app.infrastructure.persistence.models.lot_reservations_model import (
             LotReservation,
         )
+        from app.infrastructure.persistence.models.orders_models import Order
 
         # この得意先の受注を取得
         orders = self.db.query(Order).filter(Order.customer_id == customer_id).all()
