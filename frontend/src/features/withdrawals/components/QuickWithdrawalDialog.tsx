@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useCustomersQuery } from "@/hooks/api/useMastersQuery";
@@ -253,22 +254,16 @@ export function QuickWithdrawalDialog({
             <Label htmlFor="customer_id" className="mb-2 block text-sm font-medium">
               得意先 <span className="text-red-500">*</span>
             </Label>
-            <Select
+            <SearchableSelect
+              options={customers.map((c) => ({
+                value: String(c.id),
+                label: `${c.customer_code} - ${c.customer_name}`,
+              }))}
               value={formState.customer_id ? String(formState.customer_id) : ""}
-              onValueChange={(v) => updateField("customer_id", Number(v))}
+              onChange={(v) => updateField("customer_id", Number(v))}
+              placeholder={isLoadingCustomers ? "読み込み中..." : "得意先を検索..."}
               disabled={isLoadingCustomers || isSubmitting}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={isLoadingCustomers ? "読み込み中..." : "得意先を選択"} />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.customer_code} - {c.customer_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
             {errors.customer_id && (
               <p className="mt-1 text-sm text-red-600">{errors.customer_id}</p>
             )}
