@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 
 /**
  * アドホックロット作成データの型定義
@@ -186,24 +187,22 @@ export function AdhocLotCreateForm({
             name="supplier_code"
             control={control}
             render={({ field }) => (
-              <Select value={field.value ?? "none"} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="仕入先を選択（任意）" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">指定なし（全製品表示）</SelectItem>
-                  {suppliers.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.supplier_code}>
-                      {supplier.supplier_code} - {supplier.supplier_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[
+                  { value: "none", label: "指定なし（全製品表示）" },
+                  ...suppliers.map((supplier) => ({
+                    value: supplier.supplier_code,
+                    label: `${supplier.supplier_code} - ${supplier.supplier_name}`,
+                  })),
+                ]}
+                value={field.value ?? "none"}
+                onChange={field.onChange}
+                placeholder="仕入先を検索..."
+              />
             )}
           />
         </div>
 
-        {/* Row 2: Product & Warehouse */}
         {/* 製品選択 */}
         <div>
           <Label htmlFor="product_id">製品 *</Label>
@@ -211,18 +210,15 @@ export function AdhocLotCreateForm({
             name="product_id"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="製品を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredProducts.map((product) => (
-                    <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.product_code} - {product.product_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={filteredProducts.map((product) => ({
+                  value: product.id.toString(),
+                  label: `${product.product_code} - ${product.product_name}`,
+                }))}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="製品を検索..."
+              />
             )}
           />
           {selectedSupplier !== "none" && filteredProducts.length === 0 && (
