@@ -62,7 +62,7 @@ export function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFor
         </div>
 
         <div>
-          <Label htmlFor="product_code">製品コード *</Label>
+          <Label htmlFor="product_code">先方品番 *</Label>
           <Input id="product_code" name="product_code" required placeholder="例: P001" />
         </div>
 

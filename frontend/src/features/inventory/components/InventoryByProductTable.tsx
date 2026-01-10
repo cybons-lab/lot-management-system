@@ -28,7 +28,7 @@ export function InventoryByProductTable({
     () => [
       {
         id: "product_code",
-        header: "製品コード",
+        header: "先方品番",
         accessor: (row) => row.product_code,
         cell: (row) => (
           <span className="whitespace-nowrap font-medium">{row.product_code}</span>

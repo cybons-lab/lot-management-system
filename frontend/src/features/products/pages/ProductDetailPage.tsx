@@ -72,7 +72,7 @@ export function ProductDetailPage() {
         <div className={styles.emptyState.container}>
           <p className={styles.emptyState.title}>商品が見つかりません</p>
           <p className={styles.emptyState.description}>
-            指定された製品コード「{productCode}」は存在しないか、削除されています。
+            指定された先方品番「{productCode}」は存在しないか、削除されています。
           </p>
           <Button className={styles.emptyState.action} onClick={handleBack}>
             一覧に戻る
@@ -120,7 +120,7 @@ export function ProductDetailPage() {
         ) : (
           <div className="space-y-4">
             <div className={styles.form.field}>
-              <span className={styles.form.label}>製品コード</span>
+              <span className={styles.form.label}>先方品番</span>
               <p className="font-mono text-lg font-medium">{product.product_code}</p>
             </div>
             <div className={styles.form.field}>
