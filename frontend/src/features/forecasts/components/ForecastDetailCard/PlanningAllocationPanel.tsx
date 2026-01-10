@@ -31,7 +31,7 @@ function LotBreakdownSection({ lots }: { lots: LotBreakdownItem[] }) {
           <thead className="sticky top-0 bg-white text-[11px] text-slate-400">
             <tr>
               <th className="px-2 py-1 font-medium">ロット番号</th>
-              <th className="px-2 py-1 font-medium">賞味期限</th>
+              <th className="px-2 py-1 font-medium">消費期限</th>
               <th className="px-2 py-1 text-right font-medium">引当数量</th>
               <th className="px-2 py-1 text-right font-medium">他グループ</th>
             </tr>

@@ -145,7 +145,7 @@ class VLotDetails(Base):
     ロット詳細情報を提供するビュー。
     - lots テーブルをベースに、products, warehouses, suppliers を JOIN
     - 在庫数量（current_quantity, allocated_quantity, available_quantity）を含む
-    - 賞味期限までの日数（days_to_expiry）を算出
+    - 消費期限までの日数（days_to_expiry）を算出
     - 論理削除されたマスタ参照時はCOALESCEでフォールバック値を設定
     """
 
