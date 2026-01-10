@@ -161,16 +161,17 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         # Create delivery place
         delivery_place = DeliveryPlace(
             customer_id=customer.id,
-            delivery_place_code="DP001",
-            delivery_place_name="Test Delivery Place",
+            delivery_place_code="SOFT001-DP",
+            delivery_place_name="Test Delivery Place SOFT001",
         )
         db_session.add(delivery_place)
         db_session.commit()
 
         # Create product
         product = Product(
-            product_code="PROD001",
-            product_name="Test Product",
+            maker_part_code="SOFT001-PROD",
+            product_name="Test Product SOFT001",
+            base_unit="EA",
         )
         db_session.add(product)
         db_session.commit()
@@ -210,6 +211,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
 
         # Cleanup
         db_session.delete(order_line)
+        db_session.flush()  # OrderLine削除を先に確定
         db_session.delete(order)
         db_session.delete(delivery_place)
         db_session.delete(product)
@@ -241,35 +243,37 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         # Create delivery place
         delivery_place = DeliveryPlace(
             customer_id=customer.id,
-            delivery_place_code="DP002",
-            delivery_place_name="Test Delivery Place 2",
+            delivery_place_code="SOFT002-DP",
+            delivery_place_name="Test Delivery Place SOFT002",
         )
         db_session.add(delivery_place)
         db_session.commit()
 
         # Create product
         product = Product(
-            product_code="PROD002",
-            product_name="Test Product 2",
+            maker_part_code="SOFT002-PROD",
+            product_name="Test Product SOFT002",
+            base_unit="EA",
         )
         db_session.add(product)
         db_session.commit()
 
         # Create warehouse
         warehouse = Warehouse(
-            warehouse_code="WH001",
-            warehouse_name="Test Warehouse",
+            warehouse_code="SOFT002-WH",
+            warehouse_name="Test Warehouse SOFT002",
+            warehouse_type="internal",
         )
         db_session.add(warehouse)
         db_session.commit()
 
         # Create lot
         lot = Lot(
-            lot_number="LOT001",
+            lot_number="SOFT002-LOT",
             product_id=product.id,
             warehouse_id=warehouse.id,
             current_quantity=Decimal("1000"),
-            allocated_quantity=Decimal("100"),
+            received_date=date.today(),
             unit="EA",
         )
         db_session.add(lot)
@@ -321,6 +325,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         # Cleanup
         db_session.delete(reservation)
         db_session.delete(order_line)
+        db_session.flush()  # OrderLine削除を先に確定
         db_session.delete(order)
         db_session.delete(lot)
         db_session.delete(warehouse)
