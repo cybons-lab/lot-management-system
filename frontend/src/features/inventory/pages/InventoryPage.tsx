@@ -178,16 +178,6 @@ export function InventoryPage() {
             value={fmt(stats.totalAllocated)}
             description="既に引当済の在庫数"
           />
-          <StatCard
-            title="製品種類数"
-            value={fmt(stats.uniqueProducts)}
-            description="在庫がある製品の種類"
-          />
-          <StatCard
-            title="倉庫数"
-            value={fmt(stats.uniqueWarehouses)}
-            description="在庫がある倉庫の数"
-          />
         </div>
 
         {/* View Mode Switcher & Actions */}
