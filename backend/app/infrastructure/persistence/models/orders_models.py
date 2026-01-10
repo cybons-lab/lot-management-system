@@ -357,7 +357,7 @@ class OrderLine(Base):
             postgresql_where=text("customer_order_no IS NOT NULL"),
         ),
         CheckConstraint(
-            "status IN ('pending', 'allocated', 'shipped', 'completed', 'cancelled')",
+            "status IN ('pending', 'allocated', 'shipped', 'completed', 'cancelled', 'on_hold')",
             name="chk_order_lines_status",
         ),
         CheckConstraint(

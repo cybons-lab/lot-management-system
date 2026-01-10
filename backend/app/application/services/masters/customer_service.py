@@ -1,10 +1,14 @@
 from datetime import date
 from typing import cast
 
+from fastapi import HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.application.services.common.relation_check_service import (
+    RelationCheckService,
+)
 from app.infrastructure.persistence.models.masters_models import Customer
 from app.presentation.schemas.masters.masters_schema import (
     BulkUpsertResponse,
@@ -47,18 +51,93 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
     def delete_by_code(self, code: str, *, end_date: date | None = None) -> None:
         """Soft delete customer by customer_code.
 
+        When customer is soft-deleted:
+        - Unallocated orders are cancelled (status='cancelled')
+        - Allocated orders are put on hold (status='on_hold')
+
         Args:
             code: Customer code
             end_date: End date for validity. Defaults to today.
         """
         customer = self.get_by_code(code)
         assert customer is not None
+
+        # Transition related orders
+        self._transition_customer_orders(customer.id)
+
+        # Perform soft delete
         self.delete(customer.id, end_date=end_date)
 
+    def _transition_customer_orders(self, customer_id: int) -> None:
+        """得意先無効化時の受注状態遷移.
+
+        - 未引当受注 → cancelled
+        - 引当済み受注 → on_hold
+        """
+        from app.infrastructure.persistence.models.orders_models import Order, OrderLine
+        from app.infrastructure.persistence.models.lot_reservations_model import (
+            LotReservation,
+        )
+
+        # この得意先の受注を取得
+        orders = self.db.query(Order).filter(Order.customer_id == customer_id).all()
+
+        for order in orders:
+            # 受注明細ごとに引当状況をチェック
+            for line in order.order_lines:
+                # 引当があるかチェック
+                has_allocation = (
+                    self.db.query(LotReservation)
+                    .filter(
+                        LotReservation.source_type == "order",
+                        LotReservation.source_id == line.id,
+                    )
+                    .first()
+                    is not None
+                )
+
+                if has_allocation:
+                    # 引当済み → on_hold（要対応）
+                    line.status = "on_hold"
+                else:
+                    # 未引当 → cancelled
+                    line.status = "cancelled"
+
+            # 受注ヘッダーのステータス更新
+            all_cancelled = all(line.status == "cancelled" for line in order.order_lines)
+            all_on_hold = all(line.status == "on_hold" for line in order.order_lines)
+
+            if all_cancelled:
+                order.status = "closed"
+            elif all_on_hold:
+                order.status = "on_hold"
+            else:
+                order.status = "part_allocated"  # 混在状態
+
     def hard_delete_by_code(self, code: str) -> None:
-        """Permanently delete customer by customer_code."""
+        """Permanently delete customer by customer_code.
+
+        Only allowed if customer has no related data (orders, withdrawals, etc.).
+
+        Args:
+            code: Customer code
+
+        Raises:
+            HTTPException: 409 if customer has related data
+        """
         customer = self.get_by_code(code)
         assert customer is not None
+
+        # Check for related data
+        relation_checker = RelationCheckService(self.db)
+        if relation_checker.customer_has_related_data(customer.id):
+            summary = relation_checker.get_related_data_summary("customer", customer.id)
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"この得意先には関連データが存在するため削除できません。論理削除を使用してください。"
+                f"関連データ: {summary}",
+            )
+
         self.hard_delete(customer.id)
 
     def restore_by_code(self, code: str) -> Customer:
