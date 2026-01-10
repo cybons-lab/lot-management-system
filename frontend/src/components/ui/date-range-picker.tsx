@@ -4,10 +4,10 @@ import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
 
+import { Label } from "@/components/ui";
 import { Button } from "@/components/ui/base/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/form/input";
-import { Label } from "@/components/ui";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ interface DatePickerWithRangeProps {
   setDate: (date?: DateRange) => void;
 }
 
+/* eslint-disable max-lines-per-function */
 export function DatePickerWithRange({ className, date, setDate }: DatePickerWithRangeProps) {
   // Local state for time inputs
   // Initialize from props if available
@@ -105,7 +106,7 @@ export function DatePickerWithRange({ className, date, setDate }: DatePickerWith
             }
             onSelect={(newDate) => {
               // Preserve times when dates change
-              let updatedDate = newDate;
+              const updatedDate = newDate;
               if (updatedDate?.from) {
                 const [h, m] = startTime.split(":").map(Number);
                 updatedDate.from.setHours(h, m);

@@ -13,6 +13,7 @@ interface WithdrawalHistoryListProps {
   warehouseId: number;
 }
 
+/* eslint-disable max-lines-per-function */
 export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHistoryListProps) {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["withdrawals", "list", { productId, warehouseId }],

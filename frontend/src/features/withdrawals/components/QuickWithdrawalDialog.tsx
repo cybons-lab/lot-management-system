@@ -23,8 +23,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui";
-import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useCustomersQuery } from "@/hooks/api/useMastersQuery";
 import { http } from "@/shared/api/http-client";

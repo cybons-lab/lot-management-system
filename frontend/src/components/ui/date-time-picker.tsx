@@ -5,10 +5,10 @@ import { ja } from "date-fns/locale";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import * as React from "react";
 
+import { Label } from "@/components/ui";
 import { Button } from "@/components/ui/base/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/form/input";
-import { Label } from "@/components/ui";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
