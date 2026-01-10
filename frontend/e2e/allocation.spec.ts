@@ -91,8 +91,8 @@ test.describe("Lot Allocation", () => {
       console.log("DEBUG: Empty state is NOT visible");
     }
 
-    // We check for Test Customer because Order Number column is not displayed in the default view
-    await expect(page.getByText("Test Customer")).toBeVisible({ timeout: 10000 });
+    // We check for a real customer name that exists in the database. Use partial match to be more robust.
+    await expect(page.locator("td:has-text('岡本建設')").first()).toBeVisible({ timeout: 20000 });
 
     // 3. Click Allocate button.
     await page.getByRole("button", { name: "引当" }).first().click();

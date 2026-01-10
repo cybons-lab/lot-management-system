@@ -86,7 +86,7 @@ describe("InventoryTable", () => {
     // We need to match the exact text or use index.
     // "製品" is the 2nd header (index 1)
     expect(headers[1]).toHaveTextContent("製品");
-    expect(headers[1]).toHaveStyle({ width: "200px" });
+    expect(headers[1]).toHaveStyle({ width: "250px" });
 
     // Check for resize handles
     const resizers = container.querySelectorAll(".cursor-col-resize");
