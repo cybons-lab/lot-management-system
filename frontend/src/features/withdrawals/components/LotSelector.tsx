@@ -7,7 +7,7 @@
  */
 
 import { Label } from "@/components/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import type { LotUI } from "@/shared/libs/normalize";
 
 interface LotSelectorProps {
@@ -47,28 +47,22 @@ export function LotSelector({
           </div>
         </div>
       ) : (
-        <Select
+        <SearchableSelect
+          options={filteredLots.map((lot) => {
+            const avail =
+              Number(lot.current_quantity) -
+              Number(lot.allocated_quantity) -
+              Number(lot.locked_quantity || 0);
+            return {
+              value: String(lot.lot_id),
+              label: `${lot.lot_number} - ${lot.product_name} (利用可能: ${avail})`,
+            };
+          })}
           value={selectedLotId ? String(selectedLotId) : ""}
-          onValueChange={(v) => onLotChange(Number(v))}
+          onChange={(v) => onLotChange(Number(v))}
+          placeholder={isLoading ? "読み込み中..." : "ロットを検索..."}
           disabled={isLoading}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={isLoading ? "読み込み中..." : "ロットを選択"} />
-          </SelectTrigger>
-          <SelectContent>
-            {filteredLots.map((lot) => {
-              const avail =
-                Number(lot.current_quantity) -
-                Number(lot.allocated_quantity) -
-                Number(lot.locked_quantity || 0);
-              return (
-                <SelectItem key={lot.lot_id} value={String(lot.lot_id)} disabled={avail <= 0}>
-                  {lot.lot_number} - {lot.product_name} (利用可能: {avail})
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+        />
       )}
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
       {selectedLot && !preselectedLot && (

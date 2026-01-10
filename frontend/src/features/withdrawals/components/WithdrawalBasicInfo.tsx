@@ -14,6 +14,7 @@ import {
   SelectValue,
   Textarea,
 } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 
 interface Customer {
   id: number;
@@ -92,22 +93,16 @@ export function WithdrawalBasicInfo({
           name="customer_id"
           control={control}
           render={({ field }) => (
-            <Select
+            <SearchableSelect
+              options={customers.map((c) => ({
+                value: String(c.id),
+                label: `${c.customer_code} - ${c.customer_name}`,
+              }))}
               value={field.value ? String(field.value) : ""}
-              onValueChange={(v) => field.onChange(Number(v))}
+              onChange={(v) => field.onChange(Number(v))}
+              placeholder={isLoadingCustomers ? "読み込み中..." : "得意先を検索..."}
               disabled={isLoadingCustomers}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={isLoadingCustomers ? "読み込み中..." : "得意先を選択"} />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.customer_code} - {c.customer_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           )}
         />
         {errors.customer_id && (

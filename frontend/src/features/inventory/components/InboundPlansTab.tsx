@@ -5,6 +5,7 @@ import { InboundPlanTable } from "./InboundPlanTable";
 
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 
 interface InboundPlansTabProps {
   productId: number;
@@ -12,7 +13,13 @@ interface InboundPlansTabProps {
 }
 
 export function InboundPlansTab(_props: InboundPlansTabProps) {
-  const { data: allPlans, isLoading } = useQuery({
+  const {
+    data: allPlans,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["inbound-plans"],
     queryFn: async () => {
       const { getInboundPlans } = await import("@/features/inbound-plans/api");
@@ -35,6 +42,16 @@ export function InboundPlansTab(_props: InboundPlansTabProps) {
       <div className="flex h-32 items-center justify-center">
         <div className="text-gray-500">読み込み中...</div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorFallback
+        error={error}
+        resetError={refetch}
+        title="入荷予定データの取得に失敗しました"
+      />
     );
   }
 

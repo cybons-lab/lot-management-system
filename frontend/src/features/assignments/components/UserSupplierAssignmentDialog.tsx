@@ -19,12 +19,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { useSuppliers } from "@/features/suppliers";
 
 interface UserSupplierAssignmentDialogProps {
@@ -86,20 +82,19 @@ export function UserSupplierAssignmentDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>仕入先</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="仕入先を選択" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {suppliers?.map((supplier) => (
-                        <SelectItem key={supplier.id} value={String(supplier.id)}>
-                          {supplier.supplier_name} ({supplier.supplier_code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <SearchableSelect
+                      options={
+                        suppliers?.map((supplier) => ({
+                          value: String(supplier.id),
+                          label: `${supplier.supplier_name} (${supplier.supplier_code})`,
+                        })) ?? []
+                      }
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="仕入先を検索..."
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

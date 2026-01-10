@@ -12,7 +12,7 @@ from app.application.services.common.export_service import ExportService
 from app.application.services.masters.customer_service import CustomerService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.presentation.api.routes.auth.auth_router import get_current_admin
+from app.presentation.api.routes.auth.auth_router import get_current_admin, get_current_user
 from app.presentation.schemas.masters.masters_schema import (
     BulkUpsertResponse,
     CustomerBulkUpsertRequest,
@@ -103,12 +103,17 @@ def get_customer(customer_code: str, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=CustomerResponse, status_code=201)
-def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
+def create_customer(
+    customer: CustomerCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """顧客を新規作成.
 
     Args:
-        customer: 顧客作成リクエストデータ
+        customer: 作成する得意先情報
         db: データベースセッション
+        current_user: 現在のユーザー（管理者権限が必要）
 
     Returns:
         CustomerResponse: 作成された顧客情報
@@ -124,7 +129,8 @@ def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
             detail="Customer with this code already exists",
         )
     try:
-        return service.create(customer)
+        user_id = current_user.id if current_user else None
+        return service.create(customer, user_id=user_id)
     except Exception as e:
         from sqlalchemy.exc import IntegrityError
 
@@ -137,10 +143,18 @@ def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{customer_code}", response_model=CustomerResponse)
-def update_customer(customer_code: str, customer: CustomerUpdate, db: Session = Depends(get_db)):
+def update_customer(
+    customer_code: str,
+    customer: CustomerUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Update a customer."""
     service = CustomerService(db)
-    return service.update_by_code(customer_code, customer)
+    is_admin = any(ur.role.role_code == "admin" for ur in current_user.user_roles)
+    return service.update_by_code(
+        customer_code, customer, is_admin=is_admin, user_id=current_user.id
+    )
 
 
 @router.delete("/{customer_code}", status_code=204)
@@ -148,10 +162,11 @@ def delete_customer(
     customer_code: str,
     end_date: date | None = Query(None, description="End date for soft delete"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Soft delete customer (set valid_to to end_date or today)."""
     service = CustomerService(db)
-    service.delete_by_code(customer_code, end_date=end_date)
+    service.delete_by_code(customer_code, end_date=end_date, user_id=current_user.id)
     return None
 
 
@@ -163,15 +178,19 @@ def permanent_delete_customer(
 ):
     """Permanently delete customer (admin only)."""
     service = CustomerService(db)
-    service.hard_delete_by_code(customer_code)
+    service.hard_delete_by_code(customer_code, user_id=current_user.id)
     return None
 
 
 @router.post("/{customer_code}/restore", response_model=CustomerResponse)
-def restore_customer(customer_code: str, db: Session = Depends(get_db)):
+def restore_customer(
+    customer_code: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Restore a soft-deleted customer."""
     service = CustomerService(db)
-    return service.restore_by_code(customer_code)
+    return service.restore_by_code(customer_code, user_id=current_user.id)
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)

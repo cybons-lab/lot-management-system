@@ -14,6 +14,7 @@ import {
   TrendingUp,
   PackagePlus,
   Database,
+  ClipboardList,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -83,6 +84,14 @@ const navItems: NavItem[] = [
     icon: Settings,
     color: "text-gray-600",
     activeColor: "text-red-600 bg-red-50",
+    requireAdmin: true,
+  },
+  {
+    title: "操作ログ",
+    href: ROUTES.ADMIN.OPERATION_LOGS,
+    icon: ClipboardList,
+    color: "text-gray-600",
+    activeColor: "text-orange-600 bg-orange-50",
     requireAdmin: true,
   },
   {

@@ -1,4 +1,5 @@
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { LotCandidateRow } from "./LotCandidateRow";
 
@@ -110,7 +111,8 @@ export function OrderAllocationInline({ line, logic }: OrderAllocationInlineProp
       // 単一ロットの引当として保存
       await saveAllocations(line.id);
     } catch (error) {
-      console.error(error);
+      console.error("引当保存エラー:", error);
+      toast.error("引当の保存に失敗しました");
     }
   };
 

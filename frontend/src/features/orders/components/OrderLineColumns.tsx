@@ -69,14 +69,29 @@ export function createOrderLineColumns(
     {
       id: "customer_name",
       header: "得意先",
-      cell: (row: OrderLineRow) => (
-        <div>
-          <div className="truncate font-semibold text-slate-900" title={row.customer_name ?? ""}>
-            {row.customer_name}
+      cell: (row: OrderLineRow) => {
+        let isInactiveCustomer = false;
+        if (row.customer_valid_to) {
+          const todayStr = new Date().toISOString().split("T")[0];
+          if (row.customer_valid_to < todayStr) {
+            isInactiveCustomer = true;
+          }
+        }
+        return (
+          <div>
+            <div
+              className={`truncate font-semibold ${isInactiveCustomer ? "text-slate-500 line-through" : "text-slate-900"}`}
+              title={row.customer_name ?? ""}
+            >
+              {row.customer_name}
+              {isInactiveCustomer && (
+                <span className="ml-1 text-xs font-normal text-red-500 no-underline">(無効)</span>
+              )}
+            </div>
+            <div className="text-[11px] text-slate-500">{row.customer_code}</div>
           </div>
-          <div className="text-[11px] text-slate-500">{row.customer_code}</div>
-        </div>
-      ),
+        );
+      },
       minWidth: 200,
     },
 
@@ -220,19 +235,31 @@ export function createOrderLineColumns(
     {
       id: "actions",
       header: "操作",
-      cell: (row: OrderLineRow) => (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 border-slate-300 text-xs hover:border-slate-400 hover:bg-slate-50"
-          onClick={(e) => {
-            e.stopPropagation();
-            onAllocate?.(row);
-          }}
-        >
-          引当
-        </Button>
-      ),
+      cell: (row: OrderLineRow) => {
+        let isInactiveCustomer = false;
+        if (row.customer_valid_to) {
+          const todayStr = new Date().toISOString().split("T")[0];
+          if (row.customer_valid_to < todayStr) {
+            isInactiveCustomer = true;
+          }
+        }
+
+        return (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 border-slate-300 text-xs hover:border-slate-400 hover:bg-slate-50"
+            disabled={isInactiveCustomer}
+            title={isInactiveCustomer ? "無効な得意先のため操作できません" : undefined}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAllocate?.(row);
+            }}
+          >
+            引当
+          </Button>
+        );
+      },
       align: "right",
       width: "80px",
     },

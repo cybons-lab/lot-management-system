@@ -122,7 +122,7 @@ def test_get_customer_not_found(test_db: Session):
 # ===== POST /api/masters/customers Tests =====
 
 
-def test_create_customer_success(test_db: Session):
+def test_create_customer_success(test_db: Session, superuser_token_headers):
     """Test creating a new customer."""
     client = TestClient(app)
 
@@ -131,7 +131,9 @@ def test_create_customer_success(test_db: Session):
         "customer_name": "New Customer",
     }
 
-    response = client.post("/api/masters/customers", json=customer_data)
+    response = client.post(
+        "/api/masters/customers", json=customer_data, headers=superuser_token_headers
+    )
     assert response.status_code == 201
     data = response.json()
     assert data["customer_code"] == "CREATE-001"
@@ -139,7 +141,7 @@ def test_create_customer_success(test_db: Session):
     assert "id" in data
 
 
-def test_create_customer_duplicate_returns_409(test_db: Session):
+def test_create_customer_duplicate_returns_409(test_db: Session, superuser_token_headers):
     """Test creating duplicate customer returns 409."""
     client = TestClient(app)
 
@@ -155,14 +157,16 @@ def test_create_customer_duplicate_returns_409(test_db: Session):
         "customer_name": "Duplicate",
     }
 
-    response = client.post("/api/masters/customers", json=customer_data)
+    response = client.post(
+        "/api/masters/customers", json=customer_data, headers=superuser_token_headers
+    )
     assert response.status_code == 409
 
 
 # ===== PUT /api/masters/customers/{code} Tests =====
 
 
-def test_update_customer_success(test_db: Session):
+def test_update_customer_success(test_db: Session, superuser_token_headers):
     """Test updating a customer."""
     client = TestClient(app)
 
@@ -177,26 +181,30 @@ def test_update_customer_success(test_db: Session):
         "customer_name": "New Name",
     }
 
-    response = client.put("/api/masters/customers/UPDATE-001", json=update_data)
+    response = client.put(
+        "/api/masters/customers/UPDATE-001", json=update_data, headers=superuser_token_headers
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["customer_code"] == "UPDATE-001"
     assert data["customer_name"] == "New Name"
 
 
-def test_update_customer_not_found(test_db: Session):
+def test_update_customer_not_found(test_db: Session, superuser_token_headers):
     """Test updating a non-existent customer."""
     client = TestClient(app)
 
     update_data = {"customer_name": "New Name"}
-    response = client.put("/api/masters/customers/NON-EXISTENT", json=update_data)
+    response = client.put(
+        "/api/masters/customers/NON-EXISTENT", json=update_data, headers=superuser_token_headers
+    )
     assert response.status_code == 404
 
 
 # ===== DELETE /api/masters/customers/{code} Tests =====
 
 
-def test_delete_customer_success(test_db: Session):
+def test_delete_customer_success(test_db: Session, superuser_token_headers):
     """Test soft deleting a customer.
 
     Soft delete sets valid_to to today. The customer can still be retrieved
@@ -211,7 +219,7 @@ def test_delete_customer_success(test_db: Session):
     test_db.add(c)
     test_db.commit()
 
-    response = client.delete("/api/masters/customers/DELETE-001")
+    response = client.delete("/api/masters/customers/DELETE-001", headers=superuser_token_headers)
     assert response.status_code == 204
 
     # Verify soft deletion: customer still exists when fetched by code
@@ -233,8 +241,8 @@ def test_delete_customer_success(test_db: Session):
     assert "DELETE-001" in customer_codes
 
 
-def test_delete_customer_not_found(test_db: Session):
+def test_delete_customer_not_found(test_db: Session, superuser_token_headers):
     """Test deleting a non-existent customer."""
     client = TestClient(app)
-    response = client.delete("/api/masters/customers/NON-EXISTENT")
+    response = client.delete("/api/masters/customers/NON-EXISTENT", headers=superuser_token_headers)
     assert response.status_code == 404

@@ -4,7 +4,7 @@ export const root = "space-y-6";
 
 export const actionBar = "flex items-center justify-end gap-2";
 
-export const statsGrid = "grid grid-cols-1 gap-4 sm:grid-cols-3";
+export const statsGrid = "grid grid-cols-2 gap-4 sm:grid-cols-4";
 
 export const statsCard = cva(
   "group rounded-xl border border-slate-200 bg-white/90 p-5 shadow-sm transition-all duration-200 hover:shadow-md",

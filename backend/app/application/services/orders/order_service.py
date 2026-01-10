@@ -281,6 +281,13 @@ class OrderService:
         # Populate additional info
         self._populate_additional_info(response_orders)
 
+        # Populate customer_valid_to for lines
+        for r_order, m_order in zip(response_orders, orders, strict=False):
+            if m_order.customer:
+                c_valid_to = m_order.customer.valid_to
+                for line in r_order.lines:
+                    line.customer_valid_to = c_valid_to
+
         return response_orders
 
     def get_order_lines(
@@ -335,6 +342,7 @@ class OrderService:
                 customer = line.order.customer
                 resp.customer_name = get_customer_name(customer) or None
                 resp.customer_code = get_customer_code(customer) or None
+                resp.customer_valid_to = customer.valid_to if customer else None
 
             # P3: lot_reservations don't have lot_number directly
             # lot info is available via reservation.lot.lot_number if needed

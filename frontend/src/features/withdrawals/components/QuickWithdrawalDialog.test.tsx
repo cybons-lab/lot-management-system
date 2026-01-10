@@ -255,7 +255,7 @@ describe("QuickWithdrawalDialog", () => {
     const user = userEvent.setup();
 
     // Select customer
-    const customerSelectTrigger = screen.getByText("得意先を選択");
+    const customerSelectTrigger = screen.getByText("得意先を検索...");
     await user.click(customerSelectTrigger);
 
     const customerOption = screen.getByText(/顧客A/);
@@ -287,7 +287,7 @@ describe("QuickWithdrawalDialog", () => {
     const user = userEvent.setup();
 
     // 1. Select Customer
-    await user.click(screen.getByText("得意先を選択"));
+    await user.click(screen.getByText("得意先を検索..."));
     await user.click(screen.getByText(/顧客A/));
 
     // 2. Select Delivery Place

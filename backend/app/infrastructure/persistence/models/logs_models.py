@@ -23,8 +23,9 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from .auth_models import User
 from .base_model import Base
 
 
@@ -42,6 +43,7 @@ class OperationLog(Base):
     user_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL")
     )
+    user: Mapped[User] = relationship("User", foreign_keys=[user_id])
     operation_type: Mapped[str] = mapped_column(String(50), nullable=False)
     target_table: Mapped[str] = mapped_column(String(50), nullable=False)
     target_id: Mapped[int | None] = mapped_column(BigInteger)
@@ -61,6 +63,10 @@ class OperationLog(Base):
         Index("idx_operation_logs_table", "target_table"),
         Index("idx_operation_logs_created", "created_at"),
     )
+
+    @property
+    def user_name(self) -> str | None:
+        return self.user.display_name if self.user else None
 
 
 class MasterChangeLog(Base):

@@ -124,6 +124,18 @@ export function OrdersFilters({ filters }: OrdersFiltersProps) {
               主担当の仕入先のみ
             </label>
           </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="showInactiveCustomers"
+              checked={!!filters.values.showInactiveCustomers}
+              onChange={(e) => filters.set("showInactiveCustomers", e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-slate-500"
+            />
+            <label htmlFor="showInactiveCustomers" className="text-sm font-medium text-slate-700">
+              無効な得意先を表示
+            </label>
+          </div>
         </div>
       </div>
     </SimpleFilterContainer>

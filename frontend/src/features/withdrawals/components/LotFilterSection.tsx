@@ -6,7 +6,7 @@
  */
 
 import { Label } from "@/components/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import type { Product } from "@/features/products/validators/product-schema";
 import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
 
@@ -45,23 +45,19 @@ export function LotFilterSection({
           <Label htmlFor="filter_supplier" className="mb-2 block text-sm font-medium">
             仕入元
           </Label>
-          <Select
+          <SearchableSelect
+            options={[
+              { value: "", label: "すべて" },
+              ...suppliers.map((s) => ({
+                value: String(s.id),
+                label: `${s.supplier_code} - ${s.supplier_name}`,
+              })),
+            ]}
             value={filters.supplier_id ? String(filters.supplier_id) : ""}
-            onValueChange={(v) => onSupplierChange(v ? Number(v) : 0)}
+            onChange={(v) => onSupplierChange(v ? Number(v) : 0)}
+            placeholder={isLoadingSuppliers ? "読み込み中..." : "仕入元を検索..."}
             disabled={isLoadingSuppliers}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={isLoadingSuppliers ? "読み込み中..." : "すべて"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">すべて</SelectItem>
-              {suppliers.map((s) => (
-                <SelectItem key={s.id} value={String(s.id)}>
-                  {s.supplier_code} - {s.supplier_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
         </div>
 
         {/* Product filter */}
@@ -72,23 +68,19 @@ export function LotFilterSection({
               <span className="text-xs text-slate-500">({filteredProducts.length}件)</span>
             )}
           </Label>
-          <Select
+          <SearchableSelect
+            options={[
+              { value: "", label: "すべて" },
+              ...filteredProducts.map((p) => ({
+                value: String(p.id),
+                label: `${p.product_code} - ${p.product_name}`,
+              })),
+            ]}
             value={filters.product_id ? String(filters.product_id) : ""}
-            onValueChange={(v) => onProductChange(v ? Number(v) : 0)}
+            onChange={(v) => onProductChange(v ? Number(v) : 0)}
+            placeholder={isLoadingProducts ? "読み込み中..." : "製品を検索..."}
             disabled={isLoadingProducts}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={isLoadingProducts ? "読み込み中..." : "すべて"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">すべて</SelectItem>
-              {filteredProducts.map((p) => (
-                <SelectItem key={p.id} value={String(p.id)}>
-                  {p.product_code} - {p.product_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
         </div>
       </div>
 

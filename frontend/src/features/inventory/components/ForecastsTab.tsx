@@ -6,13 +6,20 @@ import { ForecastSummaryCards } from "./ForecastSummaryCards";
 
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 
 interface ForecastsTabProps {
   productId: number;
 }
 
 export function ForecastsTab({ productId }: ForecastsTabProps) {
-  const { data: forecastData, isLoading } = useQuery({
+  const {
+    data: forecastData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["forecasts", productId],
     queryFn: async () => {
       const { getForecasts } = await import("@/features/forecasts/api");
@@ -27,6 +34,16 @@ export function ForecastsTab({ productId }: ForecastsTabProps) {
       <div className="flex h-32 items-center justify-center">
         <div className="text-gray-500">読み込み中...</div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorFallback
+        error={error}
+        resetError={refetch}
+        title="需要予測データの取得に失敗しました"
+      />
     );
   }
 

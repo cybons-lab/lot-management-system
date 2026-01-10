@@ -9473,6 +9473,8 @@ export interface components {
       customer_name?: string | null;
       /** Customer Code */
       customer_code?: string | null;
+      /** Customer Valid To */
+      customer_valid_to?: string | null;
       /** Order Date */
       order_date?: string | null;
       /** Supplier Name */
@@ -9534,6 +9536,11 @@ export interface components {
        * @description OCR取込元ファイル名
        */
       ocr_source_filename?: string | null;
+      /**
+       * Cancel Reason
+       * @description キャンセル・保留理由
+       */
+      cancel_reason?: string | null;
       /**
        * Locked By User Id
        * @description 編集中のユーザーID

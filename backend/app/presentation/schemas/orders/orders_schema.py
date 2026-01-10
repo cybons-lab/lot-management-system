@@ -52,6 +52,7 @@ class OrderResponse(OrderBase):
 
     # OCR取込情報
     ocr_source_filename: str | None = Field(None, description="OCR取込元ファイル名")
+    cancel_reason: str | None = Field(None, description="キャンセル・保留理由")
 
     # Optimistic Locking
     locked_by_user_id: int | None = Field(None, description="編集中のユーザーID")
@@ -169,6 +170,7 @@ class OrderLineResponse(OrderLineBase):
     customer_id: int | None = None
     customer_name: str | None = None
     customer_code: str | None = None
+    customer_valid_to: date | None = None
     order_date: date | None = None
 
     # Product Unit Info (flattened from product relationship)

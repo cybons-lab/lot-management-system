@@ -3,9 +3,10 @@
 from datetime import datetime
 from typing import cast
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, joinedload
 
-from app.infrastructure.persistence.models.logs_models import MasterChangeLog, OperationLog
+from app.infrastructure.persistence.models import MasterChangeLog, OperationLog
 
 
 class OperationLogService:
@@ -51,9 +52,15 @@ class OperationLogService:
         # Get total count
         total = query.count()
 
-        # Apply pagination and order
-        logs = query.order_by(OperationLog.created_at.desc()).offset(skip).limit(limit).all()
-
+        # Apply pagination
+        offset = skip
+        logs = (
+            query.options(joinedload(OperationLog.user))
+            .order_by(OperationLog.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
         return logs, total
 
     def get_by_id(self, log_id: int) -> OperationLog | None:
@@ -62,6 +69,76 @@ class OperationLogService:
             OperationLog | None,
             self.db.query(OperationLog).filter(OperationLog.log_id == log_id).first(),  # type: ignore[attr-defined]
         )
+
+    def log_operation(
+        self,
+        user_id: int | None,
+        operation_type: str,
+        target_table: str,
+        target_id: int | None,
+        changes: dict | None = None,
+        ip_address: str | None = None,
+    ) -> OperationLog:
+        """Create operation log.
+
+        Note: Does not commit. Caller must commit.
+        """
+        log = OperationLog(
+            user_id=user_id,
+            operation_type=operation_type,
+            target_table=target_table,
+            target_id=target_id,
+            changes=changes,
+            ip_address=ip_address,
+        )
+        self.db.add(log)
+        return log
+
+    def get_filters(self) -> dict:
+        """Get filter options for operation logs."""
+        # 1. Users (distinct user_ids from logs, joined with user info)
+        # Note: We fetch all users who have logs.
+        # This query might be slow if logs are huge, but distinct user_id count is usually small.
+        # Using a subquery for distinct user_id might be better.
+        stmt = select(OperationLog.user_id).where(OperationLog.user_id.is_not(None)).distinct()
+        user_ids = [row[0] for row in self.db.execute(stmt).all()]
+
+        from app.infrastructure.persistence.models.auth_models import User
+
+        users = []
+        if user_ids:
+            user_objs = self.db.query(User).filter(User.id.in_(user_ids)).all()
+            for u in user_objs:
+                users.append({"label": u.display_name, "value": str(u.id)})
+
+        # 2. Operation Types
+        stmt = select(OperationLog.operation_type).distinct().order_by(OperationLog.operation_type)
+        ops = [row[0] for row in self.db.execute(stmt).all()]
+        operation_types = [{"label": op, "value": op} for op in ops]
+
+        # 3. Target Tables
+        stmt = select(OperationLog.target_table).distinct().order_by(OperationLog.target_table)
+        tables = [row[0] for row in self.db.execute(stmt).all()]
+
+        # Simple JP mapping (could be shared, but hardcoded here for now)
+        table_map = {
+            "customers": "得意先マスタ",
+            "products": "商品マスタ",
+            "warehouses": "倉庫マスタ",
+            "suppliers": "仕入先マスタ",
+            "users": "ユーザー",
+            "orders": "受注データ",
+            "order_lines": "受注明細",
+            "allocations": "引当データ",
+            "roles": "ロール",
+        }
+        target_tables = [{"label": table_map.get(t, t), "value": t} for t in tables]
+
+        return {
+            "users": users,
+            "operation_types": operation_types,
+            "target_tables": target_tables,
+        }
 
 
 class MasterChangeLogService:
