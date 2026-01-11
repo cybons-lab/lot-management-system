@@ -10,7 +10,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { ReservationCancelDialog, type ReservationInfo } from "./ReservationCancelDialog";
+import { type ReservationInfo } from "../types";
+import { ReservationCancelDialog } from "./ReservationCancelDialog";
 
 // Mock hooks
 const mockCancelMutation = {
