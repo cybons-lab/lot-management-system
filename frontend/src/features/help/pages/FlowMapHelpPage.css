@@ -153,7 +153,9 @@
 }
 
 .flow-node.selected {
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3), 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.3),
+    0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .flow-node.highlight {

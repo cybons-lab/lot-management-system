@@ -5,7 +5,15 @@
  * 一般事務員向けに「仕事の流れ」を分かりやすく表示
  */
 
-import { ArrowRight, MousePointerClick, PenLine, Search, CheckCircle2, Printer, PartyPopper } from "lucide-react";
+import {
+  ArrowRight,
+  MousePointerClick,
+  PenLine,
+  Search,
+  CheckCircle2,
+  Printer,
+  PartyPopper,
+} from "lucide-react";
 import { useState, useMemo } from "react";
 
 import graphData from "@/data/graph.json";
@@ -18,7 +26,10 @@ const flowData = graphData as FlowData;
 type TabType = "flow" | "exceptions" | "terms";
 
 // モダンなアイコン設定（Lucide）
-const NODE_TYPE_ICONS: Record<FlowNodeType, React.ComponentType<{ className?: string; size?: number }>> = {
+const NODE_TYPE_ICONS: Record<
+  FlowNodeType,
+  React.ComponentType<{ className?: string; size?: number }>
+> = {
   input: PenLine,
   confirm: Search,
   register: CheckCircle2,
@@ -36,17 +47,45 @@ const NODE_TYPE_LABELS: Record<FlowNodeType, string> = {
 
 // モダンな配色（グラデーション対応）
 const NODE_TYPE_COLORS: Record<FlowNodeType, { bg: string; icon: string; border: string }> = {
-  input: { bg: "linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)", icon: "#0284c7", border: "#7dd3fc" },
-  confirm: { bg: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)", icon: "#d97706", border: "#fcd34d" },
-  register: { bg: "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)", icon: "#059669", border: "#6ee7b7" },
-  print: { bg: "linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)", icon: "#db2777", border: "#f9a8d4" },
-  complete: { bg: "linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)", icon: "#9333ea", border: "#c4b5fd" },
+  input: {
+    bg: "linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)",
+    icon: "#0284c7",
+    border: "#7dd3fc",
+  },
+  confirm: {
+    bg: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+    icon: "#d97706",
+    border: "#fcd34d",
+  },
+  register: {
+    bg: "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
+    icon: "#059669",
+    border: "#6ee7b7",
+  },
+  print: {
+    bg: "linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)",
+    icon: "#db2777",
+    border: "#f9a8d4",
+  },
+  complete: {
+    bg: "linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)",
+    icon: "#9333ea",
+    border: "#c4b5fd",
+  },
 };
 
 const FLOW_TYPE_CONFIG: Record<FlowType, { label: string; color: string; gradient: string }> = {
   order: { label: "受注", color: "#6366f1", gradient: "linear-gradient(90deg, #6366f1, #8b5cf6)" },
-  allocation: { label: "引当", color: "#06b6d4", gradient: "linear-gradient(90deg, #06b6d4, #22d3ee)" },
-  shipment: { label: "出荷", color: "#10b981", gradient: "linear-gradient(90deg, #10b981, #34d399)" },
+  allocation: {
+    label: "引当",
+    color: "#06b6d4",
+    gradient: "linear-gradient(90deg, #06b6d4, #22d3ee)",
+  },
+  shipment: {
+    label: "出荷",
+    color: "#10b981",
+    gradient: "linear-gradient(90deg, #10b981, #34d399)",
+  },
 };
 
 // ─────────────────────────────────────────────
@@ -100,17 +139,17 @@ function FlowEdgeComponent({ label }: { label?: string }) {
   );
 }
 
-function DetailPanel({
-  node,
-}: {
-  node: FlowNode | null;
-}) {
+function DetailPanel({ node }: { node: FlowNode | null }) {
   if (!node) {
     return (
       <div className="flow-help-detail">
         <div className="flow-help-detail-empty">
           <MousePointerClick />
-          <p>ノードをクリックすると<br />詳細が表示されます</p>
+          <p>
+            ノードをクリックすると
+            <br />
+            詳細が表示されます
+          </p>
         </div>
       </div>
     );
@@ -170,7 +209,9 @@ function DetailPanel({
             <h4>関連する例外</h4>
             <div>
               {node.relatedExceptions.map((ex, i) => (
-                <span key={i} className="flow-help-detail-exception">{ex}</span>
+                <span key={i} className="flow-help-detail-exception">
+                  {ex}
+                </span>
               ))}
             </div>
           </div>
@@ -265,7 +306,8 @@ function ExceptionsTab({ exceptions }: { exceptions: FlowData["exceptions"] }) {
         <div key={ex.id} className="flow-exception-card">
           <h3>{ex.title}</h3>
           <p className="flow-exception-trigger">
-            <strong>発生条件：</strong>{ex.trigger}
+            <strong>発生条件：</strong>
+            {ex.trigger}
           </p>
           <ol className="flow-exception-steps">
             {ex.steps.map((step, i) => (
@@ -306,9 +348,7 @@ export function FlowMapHelpPage() {
     if (!searchTerm.trim()) return new Set<string>();
     const lower = searchTerm.toLowerCase();
     return new Set(
-      flowData.nodes
-        .filter((n) => n.label.toLowerCase().includes(lower))
-        .map((n) => n.id)
+      flowData.nodes.filter((n) => n.label.toLowerCase().includes(lower)).map((n) => n.id),
     );
   }, [searchTerm]);
 
@@ -369,17 +409,11 @@ export function FlowMapHelpPage() {
               onNodeClick={handleNodeClick}
             />
           )}
-          {activeTab === "exceptions" && (
-            <ExceptionsTab exceptions={flowData.exceptions} />
-          )}
-          {activeTab === "terms" && (
-            <TermsTab terms={flowData.terms} />
-          )}
+          {activeTab === "exceptions" && <ExceptionsTab exceptions={flowData.exceptions} />}
+          {activeTab === "terms" && <TermsTab terms={flowData.terms} />}
         </div>
 
-        {activeTab === "flow" && (
-          <DetailPanel node={selectedNode} />
-        )}
+        {activeTab === "flow" && <DetailPanel node={selectedNode} />}
       </div>
     </div>
   );

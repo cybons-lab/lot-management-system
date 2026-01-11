@@ -109,7 +109,6 @@ const navItems: NavItem[] = [
 // --- Sub-components ---
 
 function NavItems({ user, currentPath }: { currentPath: string; user: User | null }) {
-
   return (
     <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
       {navItems

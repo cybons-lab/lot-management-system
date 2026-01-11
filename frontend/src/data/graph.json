@@ -20,11 +20,7 @@
       "label": "内容確認",
       "flowType": "order",
       "description": "入力した注文内容を確認します。特に金額と納期をダブルチェックしてください。",
-      "commonMistakes": [
-        "単価の確認漏れ",
-        "送料の計算ミス",
-        "特記事項の見落とし"
-      ],
+      "commonMistakes": ["単価の確認漏れ", "送料の計算ミス", "特記事項の見落とし"],
       "nextAction": { "label": "受注確定へ進む" },
       "order": 2
     },
@@ -34,10 +30,7 @@
       "label": "受注確定",
       "flowType": "order",
       "description": "確認が完了したら「確定」ボタンを押します。確定後は修正できません。",
-      "commonMistakes": [
-        "確定前の最終確認を忘れた",
-        "重複登録（2回押し）"
-      ],
+      "commonMistakes": ["確定前の最終確認を忘れた", "重複登録（2回押し）"],
       "nextAction": { "label": "引当処理へ" },
       "relatedExceptions": ["キャンセル対応"],
       "order": 3
@@ -48,10 +41,7 @@
       "label": "引当指示",
       "flowType": "allocation",
       "description": "受注に対して在庫を引き当てます。自動引当または手動選択ができます。",
-      "commonMistakes": [
-        "ロット指定の間違い",
-        "倉庫の選択ミス"
-      ],
+      "commonMistakes": ["ロット指定の間違い", "倉庫の選択ミス"],
       "nextAction": { "label": "自動引当を実行" },
       "order": 4
     },
@@ -61,10 +51,7 @@
       "label": "引当結果確認",
       "flowType": "allocation",
       "description": "引当結果を確認します。在庫不足の場合は「保留」になります。",
-      "commonMistakes": [
-        "保留状態の見落とし",
-        "部分引当の確認漏れ"
-      ],
+      "commonMistakes": ["保留状態の見落とし", "部分引当の確認漏れ"],
       "nextAction": { "label": "出荷指示へ" },
       "relatedExceptions": ["在庫不足対応"],
       "order": 5
@@ -75,10 +62,7 @@
       "label": "出荷指示",
       "flowType": "shipment",
       "description": "出荷日と配送先を確認し、出荷指示を登録します。",
-      "commonMistakes": [
-        "配送先住所の確認漏れ",
-        "出荷日の曜日確認忘れ"
-      ],
+      "commonMistakes": ["配送先住所の確認漏れ", "出荷日の曜日確認忘れ"],
       "nextAction": { "label": "出荷実績を登録" },
       "order": 6
     },
@@ -88,10 +72,7 @@
       "label": "出荷実績登録",
       "flowType": "shipment",
       "description": "実際に出荷したら実績を登録します。伝票番号を入力してください。",
-      "commonMistakes": [
-        "伝票番号の入力ミス",
-        "出荷数量の間違い"
-      ],
+      "commonMistakes": ["伝票番号の入力ミス", "出荷数量の間違い"],
       "nextAction": { "label": "完了へ" },
       "order": 7
     },
@@ -143,11 +124,7 @@
       "title": "配送先変更",
       "description": "出荷前に配送先の変更依頼があった場合",
       "trigger": "顧客から住所変更の連絡があった",
-      "steps": [
-        "出荷指示の状態を確認",
-        "未出荷なら住所を修正",
-        "出荷済みなら配送会社に連絡"
-      ]
+      "steps": ["出荷指示の状態を確認", "未出荷なら住所を修正", "出荷済みなら配送会社に連絡"]
     }
   ],
   "terms": [
