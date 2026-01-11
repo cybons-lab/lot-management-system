@@ -158,3 +158,17 @@ export interface LineStockStatus {
 export interface CandidateLotFetcher {
   (lineId: number, productId: number): CandidateLotItem[];
 }
+
+/**
+ * Reservation information for cancellation dialog
+ */
+export interface ReservationInfo {
+  id: number;
+  lot_id?: number | null;
+  lot_number?: string | null;
+  reserved_qty?: number | string;
+  product_name?: string | null;
+  product_code?: string | null;
+  order_number?: string | null;
+  status?: string;
+}

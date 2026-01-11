@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { type ReservationCancelReason } from "../api";
 import { useCancelReservationMutation } from "../hooks/mutations";
+import { type ReservationInfo } from "../types";
 
 import { ReservationCancelForm } from "./ReservationCancelForm";
 
@@ -22,17 +23,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui";
-
-export interface ReservationInfo {
-  id: number;
-  lot_id?: number | null;
-  lot_number?: string | null;
-  reserved_qty?: number | string;
-  product_name?: string | null;
-  product_code?: string | null;
-  order_number?: string | null;
-  status?: string;
-}
 
 interface ReservationCancelDialogProps {
   reservation: ReservationInfo | null;

@@ -1,6 +1,5 @@
 import { RESERVATION_CANCEL_REASONS, type ReservationCancelReason } from "../api";
-
-import { type ReservationInfo } from "./ReservationCancelDialog";
+import { type ReservationInfo } from "../types";
 
 import {
   Label,
