@@ -1,383 +1,175 @@
 {
-  "domains": [
-    {
-      "id": "domain-order",
-      "label": "受注",
-      "x": 80,
-      "y": 60,
-      "w": 420,
-      "h": 260,
-      "description": "受注受付から確定までの流れ"
-    },
-    {
-      "id": "domain-inventory",
-      "label": "在庫/ロット",
-      "x": 560,
-      "y": 60,
-      "w": 420,
-      "h": 260,
-      "description": "在庫の可視化とロット管理"
-    },
-    {
-      "id": "domain-allocation",
-      "label": "引当",
-      "x": 1040,
-      "y": 60,
-      "w": 380,
-      "h": 260,
-      "description": "出荷向けの引当と在庫予約"
-    },
-    {
-      "id": "domain-shipping",
-      "label": "出荷",
-      "x": 80,
-      "y": 360,
-      "w": 420,
-      "h": 260,
-      "description": "出荷指示から実績まで"
-    },
-    {
-      "id": "domain-master",
-      "label": "マスタ",
-      "x": 560,
-      "y": 360,
-      "w": 420,
-      "h": 260,
-      "description": "商品・取引先などの基盤情報"
-    },
-    {
-      "id": "domain-external",
-      "label": "外部連携",
-      "x": 1040,
-      "y": 360,
-      "w": 380,
-      "h": 260,
-      "description": "SAP/EDIなど外部システム"
-    }
-  ],
   "nodes": [
     {
-      "id": "order-entry",
-      "type": "screen",
-      "label": "受注入力",
-      "x": 180,
-      "y": 140,
-      "domainId": "domain-order",
-      "importance": 3,
-      "description": "営業が受注内容を登録する画面",
-      "inputs": ["顧客情報", "受注明細"],
-      "outputs": ["受注ヘッダ", "受注明細"],
-      "links": ["/orders"]
+      "id": "order-input",
+      "type": "input",
+      "label": "注文入力",
+      "flowType": "order",
+      "description": "顧客からの注文情報を入力します。品番・数量・納期を入力してください。",
+      "commonMistakes": [
+        "品番の入力ミス（似た品番に注意）",
+        "数量の単位間違い（個/箱/ケース）",
+        "納期の曜日確認漏れ"
+      ],
+      "nextAction": { "label": "内容確認へ進む" },
+      "order": 1
     },
     {
-      "id": "order-check",
-      "type": "process",
-      "label": "与信/条件チェック",
-      "x": 350,
-      "y": 140,
-      "domainId": "domain-order",
-      "importance": 2,
-      "description": "与信や納期条件を判定する処理",
-      "inputs": ["受注情報", "顧客与信"],
-      "outputs": ["確定可否"]
+      "id": "order-confirm",
+      "type": "confirm",
+      "label": "内容確認",
+      "flowType": "order",
+      "description": "入力した注文内容を確認します。特に金額と納期をダブルチェックしてください。",
+      "commonMistakes": [
+        "単価の確認漏れ",
+        "送料の計算ミス",
+        "特記事項の見落とし"
+      ],
+      "nextAction": { "label": "受注確定へ進む" },
+      "order": 2
     },
     {
-      "id": "order-db",
-      "type": "data",
-      "label": "受注DB",
-      "x": 260,
-      "y": 240,
-      "domainId": "domain-order",
-      "importance": 2,
-      "description": "受注ヘッダ・明細の保管",
-      "inputs": ["登録/更新"],
-      "outputs": ["受注情報参照"]
+      "id": "order-register",
+      "type": "register",
+      "label": "受注確定",
+      "flowType": "order",
+      "description": "確認が完了したら「確定」ボタンを押します。確定後は修正できません。",
+      "commonMistakes": [
+        "確定前の最終確認を忘れた",
+        "重複登録（2回押し）"
+      ],
+      "nextAction": { "label": "引当処理へ" },
+      "relatedExceptions": ["キャンセル対応"],
+      "order": 3
     },
     {
-      "id": "inventory-screen",
-      "type": "screen",
-      "label": "在庫照会",
-      "x": 640,
-      "y": 140,
-      "domainId": "domain-inventory",
-      "importance": 3,
-      "description": "在庫・ロットの照会画面",
-      "inputs": ["品目", "拠点"],
-      "outputs": ["在庫一覧"]
+      "id": "alloc-input",
+      "type": "input",
+      "label": "引当指示",
+      "flowType": "allocation",
+      "description": "受注に対して在庫を引き当てます。自動引当または手動選択ができます。",
+      "commonMistakes": [
+        "ロット指定の間違い",
+        "倉庫の選択ミス"
+      ],
+      "nextAction": { "label": "自動引当を実行" },
+      "order": 4
     },
     {
-      "id": "lot-manage",
-      "type": "process",
-      "label": "ロット更新",
-      "x": 820,
-      "y": 140,
-      "domainId": "domain-inventory",
-      "importance": 2,
-      "description": "ロット在庫の調整・補正"
+      "id": "alloc-confirm",
+      "type": "confirm",
+      "label": "引当結果確認",
+      "flowType": "allocation",
+      "description": "引当結果を確認します。在庫不足の場合は「保留」になります。",
+      "commonMistakes": [
+        "保留状態の見落とし",
+        "部分引当の確認漏れ"
+      ],
+      "nextAction": { "label": "出荷指示へ" },
+      "relatedExceptions": ["在庫不足対応"],
+      "order": 5
     },
     {
-      "id": "inventory-db",
-      "type": "data",
-      "label": "在庫DB",
-      "x": 720,
-      "y": 240,
-      "domainId": "domain-inventory",
-      "importance": 3,
-      "description": "在庫とロット情報の管理",
-      "inputs": ["在庫更新"],
-      "outputs": ["在庫参照"]
-    },
-    {
-      "id": "allocation-screen",
-      "type": "screen",
-      "label": "引当画面",
-      "x": 1120,
-      "y": 140,
-      "domainId": "domain-allocation",
-      "importance": 3,
-      "description": "受注に対する引当を調整する画面",
-      "inputs": ["受注情報"],
-      "outputs": ["引当指示"]
-    },
-    {
-      "id": "allocation-engine",
-      "type": "process",
-      "label": "自動引当",
-      "x": 1280,
-      "y": 140,
-      "domainId": "domain-allocation",
-      "importance": 2,
-      "description": "在庫と優先度から引当計算",
-      "inputs": ["受注", "在庫"],
-      "outputs": ["引当結果"]
-    },
-    {
-      "id": "allocation-db",
-      "type": "data",
-      "label": "引当DB",
-      "x": 1200,
-      "y": 240,
-      "domainId": "domain-allocation",
-      "importance": 2,
-      "description": "引当結果の保存"
-    },
-    {
-      "id": "shipping-plan",
-      "type": "screen",
+      "id": "ship-input",
+      "type": "input",
       "label": "出荷指示",
-      "x": 180,
-      "y": 440,
-      "domainId": "domain-shipping",
-      "importance": 3,
-      "description": "出荷計画の作成画面",
-      "inputs": ["引当結果"],
-      "outputs": ["出荷指示"]
+      "flowType": "shipment",
+      "description": "出荷日と配送先を確認し、出荷指示を登録します。",
+      "commonMistakes": [
+        "配送先住所の確認漏れ",
+        "出荷日の曜日確認忘れ"
+      ],
+      "nextAction": { "label": "出荷実績を登録" },
+      "order": 6
     },
     {
-      "id": "shipping-process",
-      "type": "process",
-      "label": "出荷実績",
-      "x": 340,
-      "y": 520,
-      "domainId": "domain-shipping",
-      "importance": 2,
-      "description": "出荷実績の確定",
-      "inputs": ["出荷指示"],
-      "outputs": ["出荷実績"]
+      "id": "ship-register",
+      "type": "register",
+      "label": "出荷実績登録",
+      "flowType": "shipment",
+      "description": "実際に出荷したら実績を登録します。伝票番号を入力してください。",
+      "commonMistakes": [
+        "伝票番号の入力ミス",
+        "出荷数量の間違い"
+      ],
+      "nextAction": { "label": "完了へ" },
+      "order": 7
     },
     {
-      "id": "shipping-db",
-      "type": "data",
-      "label": "出荷DB",
-      "x": 240,
-      "y": 580,
-      "domainId": "domain-shipping",
-      "importance": 2,
-      "description": "出荷履歴の管理"
-    },
-    {
-      "id": "master-screen",
-      "type": "screen",
-      "label": "商品マスタ",
-      "x": 640,
-      "y": 440,
-      "domainId": "domain-master",
-      "importance": 2,
-      "description": "商品情報を管理する画面",
-      "inputs": ["商品情報"],
-      "outputs": ["商品マスタ"]
-    },
-    {
-      "id": "customer-master",
-      "type": "screen",
-      "label": "取引先マスタ",
-      "x": 820,
-      "y": 520,
-      "domainId": "domain-master",
-      "importance": 2,
-      "description": "取引先の基本情報管理"
-    },
-    {
-      "id": "master-db",
-      "type": "data",
-      "label": "マスタDB",
-      "x": 720,
-      "y": 580,
-      "domainId": "domain-master",
-      "importance": 3,
-      "description": "商品・取引先などの統合マスタ"
-    },
-    {
-      "id": "sap-link",
-      "type": "external",
-      "label": "SAP連携",
-      "x": 1120,
-      "y": 440,
-      "domainId": "domain-external",
-      "importance": 2,
-      "description": "SAPへ受注/出荷情報を送信"
-    },
-    {
-      "id": "edi-link",
-      "type": "external",
-      "label": "EDI連携",
-      "x": 1280,
-      "y": 520,
-      "domainId": "domain-external",
-      "importance": 1,
-      "description": "取引先EDIとのデータ交換"
-    },
-    {
-      "id": "external-db",
-      "type": "data",
-      "label": "連携ログ",
-      "x": 1200,
-      "y": 580,
-      "domainId": "domain-external",
-      "importance": 1,
-      "description": "外部連携のログ保存"
+      "id": "ship-complete",
+      "type": "complete",
+      "label": "完了",
+      "flowType": "shipment",
+      "description": "出荷処理が完了しました。請求処理に進みます。",
+      "order": 8
     }
   ],
   "edges": [
+    { "id": "e1", "source": "order-input", "target": "order-confirm", "label": "確認" },
+    { "id": "e2", "source": "order-confirm", "target": "order-register", "label": "確定" },
+    { "id": "e3", "source": "order-register", "target": "alloc-input", "label": "引当へ" },
+    { "id": "e4", "source": "alloc-input", "target": "alloc-confirm", "label": "実行" },
+    { "id": "e5", "source": "alloc-confirm", "target": "ship-input", "label": "出荷へ" },
+    { "id": "e6", "source": "ship-input", "target": "ship-register", "label": "登録" },
+    { "id": "e7", "source": "ship-register", "target": "ship-complete", "label": "完了" }
+  ],
+  "exceptions": [
     {
-      "id": "edge-order-to-check",
-      "source": "order-entry",
-      "target": "order-check",
-      "type": "flow",
-      "label": "受注登録"
+      "id": "ex-stock-shortage",
+      "title": "在庫不足",
+      "description": "引当時に在庫が足りない場合の対応",
+      "trigger": "引当結果確認で「保留」と表示された場合",
+      "steps": [
+        "保留理由を確認（不足数量をメモ）",
+        "入荷予定を確認",
+        "担当者に連絡（TEL/チャット）",
+        "顧客への納期回答を調整"
+      ]
     },
     {
-      "id": "edge-check-to-db",
-      "source": "order-check",
-      "target": "order-db",
-      "type": "data",
-      "label": "確定保存"
+      "id": "ex-cancel",
+      "title": "キャンセル対応",
+      "description": "顧客から注文キャンセルの連絡があった場合",
+      "trigger": "顧客からキャンセル依頼を受けた",
+      "steps": [
+        "受注番号を確認",
+        "出荷済みかどうかを確認",
+        "未出荷なら「取消登録」画面へ",
+        "出荷済みなら返品処理へ"
+      ]
     },
     {
-      "id": "edge-order-to-inventory",
-      "source": "order-entry",
-      "target": "inventory-screen",
-      "type": "flow",
-      "label": "在庫確認"
+      "id": "ex-address-change",
+      "title": "配送先変更",
+      "description": "出荷前に配送先の変更依頼があった場合",
+      "trigger": "顧客から住所変更の連絡があった",
+      "steps": [
+        "出荷指示の状態を確認",
+        "未出荷なら住所を修正",
+        "出荷済みなら配送会社に連絡"
+      ]
+    }
+  ],
+  "terms": [
+    {
+      "term": "引当",
+      "definition": "受注に対して在庫を予約すること。引当済みの在庫は他の受注には使えません。",
+      "relatedNodes": ["alloc-input", "alloc-confirm"]
     },
     {
-      "id": "edge-inventory-to-allocation",
-      "source": "inventory-screen",
-      "target": "allocation-screen",
-      "type": "flow",
-      "label": "引当依頼"
+      "term": "ロット",
+      "definition": "同じ条件で製造・入荷した商品のまとまり。賞味期限や製造日で管理します。",
+      "relatedNodes": ["alloc-input"]
     },
     {
-      "id": "edge-allocation-engine",
-      "source": "allocation-screen",
-      "target": "allocation-engine",
-      "type": "flow",
-      "label": "自動引当"
+      "term": "保留",
+      "definition": "在庫不足などで処理を一時停止している状態。担当者の確認が必要です。",
+      "relatedNodes": ["alloc-confirm"]
     },
     {
-      "id": "edge-allocation-db",
-      "source": "allocation-engine",
-      "target": "allocation-db",
-      "type": "data",
-      "label": "引当結果"
-    },
-    {
-      "id": "edge-allocation-to-shipping",
-      "source": "allocation-db",
-      "target": "shipping-plan",
-      "type": "flow",
-      "label": "出荷指示"
-    },
-    {
-      "id": "edge-shipping-plan-to-process",
-      "source": "shipping-plan",
-      "target": "shipping-process",
-      "type": "flow",
-      "label": "出荷実績"
-    },
-    {
-      "id": "edge-shipping-process-db",
-      "source": "shipping-process",
-      "target": "shipping-db",
-      "type": "data",
-      "label": "実績保存"
-    },
-    {
-      "id": "edge-master-to-order",
-      "source": "master-db",
-      "target": "order-entry",
-      "type": "data",
-      "label": "マスタ参照"
-    },
-    {
-      "id": "edge-master-to-inventory",
-      "source": "master-db",
-      "target": "inventory-screen",
-      "type": "data",
-      "label": "品目参照"
-    },
-    {
-      "id": "edge-inventory-db",
-      "source": "inventory-db",
-      "target": "lot-manage",
-      "type": "flow",
-      "label": "在庫更新"
-    },
-    {
-      "id": "edge-inventory-db-alloc",
-      "source": "inventory-db",
-      "target": "allocation-engine",
-      "type": "data",
-      "label": "在庫参照"
-    },
-    {
-      "id": "edge-shipping-sap",
-      "source": "shipping-db",
-      "target": "sap-link",
-      "type": "flow",
-      "label": "出荷連携"
-    },
-    {
-      "id": "edge-order-sap",
-      "source": "order-db",
-      "target": "sap-link",
-      "type": "data",
-      "label": "受注送信"
-    },
-    {
-      "id": "edge-external-edi",
-      "source": "sap-link",
-      "target": "edi-link",
-      "type": "exception",
-      "label": "送信失敗",
-      "description": "EDI送信時のエラー通知"
-    },
-    {
-      "id": "edge-external-log",
-      "source": "sap-link",
-      "target": "external-db",
-      "type": "data",
-      "label": "ログ保存"
+      "term": "出荷実績",
+      "definition": "実際に商品を発送したことを記録すること。伝票番号と紐付けます。",
+      "relatedNodes": ["ship-register"]
     }
   ]
 }

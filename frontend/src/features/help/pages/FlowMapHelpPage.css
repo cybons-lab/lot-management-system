@@ -1,187 +1,431 @@
-.flow-map-page {
+/**
+ * FlowMapHelpPage.css
+ * 業務フロー可視化ページのスタイル
+ */
+
+.flow-help-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px;
-  min-height: calc(100vh - 80px);
+  height: calc(100vh - 80px);
   background: #f8fafc;
 }
 
-.flow-map-toolbar {
+/* ヘッダー */
+.flow-help-header {
+  padding: 1.5rem 2rem 1rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.flow-help-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.25rem;
+}
+
+.flow-help-header p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* タブ */
+.flow-help-tabs {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 16px;
-  padding: 12px 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.flow-map-toolbar input[type="text"] {
-  min-width: 220px;
-  padding: 6px 10px;
-  border: 1px solid #cbd5f5;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.flow-map-toolbar button {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5f5;
-  background: #eff6ff;
-  font-size: 14px;
+.flow-help-tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-.flow-map-toolbar button:hover {
-  background: #dbeafe;
+.flow-help-tab:hover {
+  background: #f1f5f9;
+  color: #334155;
 }
 
-.flow-map-toolbar .toolbar-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+.flow-help-tab.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
 }
 
-.flow-map-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 16px;
-  align-items: stretch;
+/* 検索バー */
+.flow-help-search {
+  padding: 0.75rem 2rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.flow-map-canvas {
+.flow-help-search input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  background: #ffffff;
-  position: relative;
-  min-height: 620px;
+  border-radius: 0.5rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.flow-help-search input:focus {
+  border-color: #3b82f6;
+}
+
+/* メインコンテンツ */
+.flow-help-content {
+  display: flex;
+  flex: 1;
   overflow: hidden;
 }
 
-.flow-map-canvas svg {
-  width: 100%;
-  height: 100%;
-  cursor: grab;
+/* キャンバス */
+.flow-help-canvas {
+  flex: 1;
+  padding: 2rem;
+  overflow: auto;
 }
 
-.flow-map-canvas svg:active {
-  cursor: grabbing;
-}
-
-.flow-map-sidepanel {
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  background: #ffffff;
-  padding: 16px;
+/* フローコンテナ */
+.flow-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-height: 620px;
+  gap: 3rem;
+  min-width: max-content;
 }
 
-.flow-map-sidepanel h2 {
-  font-size: 18px;
+/* フローセクション */
+.flow-section {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.flow-section-title {
+  font-size: 1rem;
   font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
 }
 
-.flow-map-sidepanel section {
-  border-top: 1px solid #e2e8f0;
-  padding-top: 12px;
-}
-
-.flow-map-sidepanel ul {
-  margin: 4px 0 0 16px;
-  list-style: disc;
-  font-size: 14px;
-  color: #475569;
-}
-
-.flow-map-label {
-  font-size: 12px;
-  fill: #334155;
-  pointer-events: none;
-}
-
-.flow-map-edge-label {
-  font-size: 11px;
-  fill: #475569;
-  pointer-events: none;
-}
-
-.flow-map-node {
-  cursor: pointer;
-  transition: filter 0.2s ease, stroke-width 0.2s ease;
-}
-
-.flow-map-node.selected {
-  stroke-width: 3px;
-  filter: drop-shadow(0 4px 6px rgba(15, 23, 42, 0.2));
-}
-
-.flow-map-node.hoverable:hover {
-  stroke-width: 2px;
-}
-
-.flow-map-domain {
-  fill: #f1f5f9;
-  stroke: #94a3b8;
-  stroke-width: 1.5px;
-}
-
-.flow-map-domain-label {
-  font-size: 13px;
-  fill: #334155;
-  font-weight: 600;
-}
-
-.flow-map-legend {
+/* フローライン */
+.flow-line {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  font-size: 12px;
-  color: #475569;
-}
-
-.flow-map-legend span {
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0;
 }
 
-.flow-map-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  display: inline-block;
+/* ノード */
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 120px;
 }
 
-.flow-map-selection-empty {
+.flow-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.flow-node.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.flow-node.highlight {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.flow-node-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.flow-node-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+}
+
+/* ノードタイプ別の色 */
+.flow-node.type-input .flow-node-icon {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.flow-node.type-confirm .flow-node-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.flow-node.type-register .flow-node-icon {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.flow-node.type-print .flow-node-icon {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.flow-node.type-complete .flow-node-icon {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* エッジ（矢印） */
+.flow-edge {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+}
+
+.flow-edge-line {
+  width: 60px;
+  height: 3px;
+  background: #3b82f6;
+  position: relative;
+}
+
+.flow-edge-line::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-left-color: #3b82f6;
+}
+
+.flow-edge-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  position: absolute;
+  top: -1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* 詳細パネル */
+.flow-help-detail {
+  width: 360px;
+  background: white;
+  border-left: 1px solid #e2e8f0;
+  overflow-y: auto;
+}
+
+.flow-help-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   color: #94a3b8;
-  font-size: 14px;
+  text-align: center;
+  padding: 2rem;
 }
 
-.flow-map-badge {
+.flow-help-detail-empty svg {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.flow-help-detail-content {
+  padding: 1.5rem;
+}
+
+.flow-help-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.flow-help-detail-icon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  font-size: 1.5rem;
+}
+
+.flow-help-detail-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.flow-help-detail-section {
+  margin-bottom: 1.5rem;
+}
+
+.flow-help-detail-section h4 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.5rem;
+}
+
+.flow-help-detail-section p {
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.flow-help-detail-section ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.flow-help-detail-section li {
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.6;
+  margin-bottom: 0.25rem;
+}
+
+.flow-help-detail-action {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #e2e8f0;
-  font-size: 12px;
-  color: #475569;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background: #3b82f6;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-@media (max-width: 1200px) {
-  .flow-map-layout {
-    grid-template-columns: 1fr;
-  }
+.flow-help-detail-action:hover {
+  background: #2563eb;
+}
 
-  .flow-map-sidepanel {
-    min-height: unset;
-  }
+.flow-help-detail-exception {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #dc2626;
+  background: #fef2f2;
+  border-radius: 0.25rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* 例外タブ */
+.flow-exceptions {
+  padding: 2rem;
+}
+
+.flow-exception-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.flow-exception-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flow-exception-card h3::before {
+  content: "⚠️";
+}
+
+.flow-exception-trigger {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 1rem;
+  padding: 0.5rem;
+  background: #fef2f2;
+  border-radius: 0.5rem;
+}
+
+.flow-exception-steps {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.flow-exception-steps li {
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.8;
+}
+
+/* 用語タブ */
+.flow-terms {
+  padding: 2rem;
+}
+
+.flow-term-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.flow-term-card dt {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem;
+}
+
+.flow-term-card dd {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
 }

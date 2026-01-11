@@ -1,41 +1,65 @@
-export type GraphNodeType = "domain" | "screen" | "process" | "data" | "external";
-export type GraphEdgeType = "flow" | "data" | "exception";
+/**
+ * フローマップ型定義
+ * 一般事務員向けの業務フロー可視化用
+ */
 
-export type GraphDomain = {
+/** ノードの種別（業務用語） */
+export type FlowNodeType = "input" | "confirm" | "register" | "print" | "complete";
+
+/** フローの種別 */
+export type FlowType = "order" | "allocation" | "shipment";
+
+/** ノード定義 */
+export interface FlowNode {
   id: string;
+  type: FlowNodeType;
   label: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  description?: string;
-};
+  flowType: FlowType;
+  /** 何をする？（1〜2行） */
+  description: string;
+  /** よくあるミス（箇条書き3つまで） */
+  commonMistakes?: string[];
+  /** 次にやること */
+  nextAction?: {
+    label: string;
+    href?: string;
+  };
+  /** 関連する例外 */
+  relatedExceptions?: string[];
+  /** X座標（左→右の順序） */
+  order: number;
+}
 
-export type GraphNode = {
-  id: string;
-  type: GraphNodeType;
-  label: string;
-  x: number;
-  y: number;
-  domainId?: string;
-  importance?: 1 | 2 | 3;
-  description?: string;
-  inputs?: string[];
-  outputs?: string[];
-  links?: string[];
-};
-
-export type GraphEdge = {
+/** エッジ定義 */
+export interface FlowEdge {
   id: string;
   source: string;
   target: string;
-  type: GraphEdgeType;
   label?: string;
-  description?: string;
-};
+  /** 例外フローかどうか */
+  isException?: boolean;
+}
 
-export type GraphData = {
-  domains: GraphDomain[];
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-};
+/** 例外フロー定義 */
+export interface ExceptionFlow {
+  id: string;
+  title: string;
+  description: string;
+  trigger: string;
+  steps: string[];
+}
+
+/** 用語定義 */
+export interface TermDefinition {
+  term: string;
+  definition: string;
+  relatedNodes?: string[];
+}
+
+/** フローデータ全体 */
+export interface FlowData {
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+  exceptions: ExceptionFlow[];
+  terms: TermDefinition[];
+}

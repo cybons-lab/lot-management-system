@@ -1,434 +1,343 @@
-import * as d3 from "d3";
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+/**
+ * FlowMapHelpPage.tsx
+ *
+ * 業務フロー可視化ヘルプページ
+ * 一般事務員向けに「仕事の流れ」を分かりやすく表示
+ */
+
+import { ArrowRight, MousePointerClick } from "lucide-react";
+import { useState, useMemo } from "react";
 
 import graphData from "@/data/graph.json";
-import type {
-  GraphData,
-  GraphEdge,
-  GraphEdgeType,
-  GraphNode,
-  GraphNodeType,
-} from "@/features/help/types/flowMap";
+import type { FlowData, FlowNode, FlowNodeType, FlowType } from "@/features/help/types/flowMap";
 
 import "./FlowMapHelpPage.css";
 
-const typedGraph = graphData as GraphData;
+const flowData = graphData as FlowData;
 
-const NODE_DIMENSIONS: Record<Exclude<GraphNodeType, "domain">, { width: number; height: number }>
-= {
-  screen: { width: 140, height: 56 },
-  process: { width: 140, height: 50 },
-  data: { width: 130, height: 52 },
-  external: { width: 150, height: 56 },
+type TabType = "flow" | "exceptions" | "terms";
+
+const NODE_TYPE_CONFIG: Record<FlowNodeType, { icon: string; label: string }> = {
+  input: { icon: "✏️", label: "入力" },
+  confirm: { icon: "👁️", label: "確認" },
+  register: { icon: "✓", label: "登録" },
+  print: { icon: "🖨️", label: "出力" },
+  complete: { icon: "🎉", label: "完了" },
 };
 
-const NODE_COLORS: Record<Exclude<GraphNodeType, "domain">, { fill: string; stroke: string }>
-= {
-  screen: { fill: "#e0f2fe", stroke: "#38bdf8" },
-  process: { fill: "#ede9fe", stroke: "#8b5cf6" },
-  data: { fill: "#dcfce7", stroke: "#22c55e" },
-  external: { fill: "#fff7ed", stroke: "#fb923c" },
+const FLOW_TYPE_CONFIG: Record<FlowType, { label: string; color: string }> = {
+  order: { label: "受注", color: "#3b82f6" },
+  allocation: { label: "引当", color: "#8b5cf6" },
+  shipment: { label: "出荷", color: "#22c55e" },
 };
 
-const EDGE_COLORS: Record<GraphEdgeType, string> = {
-  flow: "#2563eb",
-  data: "#16a34a",
-  exception: "#dc2626",
-};
+// ─────────────────────────────────────────────
+// サブコンポーネント
+// ─────────────────────────────────────────────
 
-const IMPORTANCE_LEVELS: Array<1 | 2 | 3> = [1, 2, 3];
-const NODE_TYPES: GraphNodeType[] = ["domain", "screen", "process", "data", "external"];
+function FlowNodeComponent({
+  node,
+  isSelected,
+  isHighlight,
+  onClick,
+}: {
+  node: FlowNode;
+  isSelected: boolean;
+  isHighlight: boolean;
+  onClick: () => void;
+}) {
+  const config = NODE_TYPE_CONFIG[node.type];
 
-const getNodeDimensions = (type: GraphNodeType) => {
-  if (type === "domain") {
-    return { width: 0, height: 0 };
+  return (
+    <button
+      type="button"
+      className={`flow-node type-${node.type} ${isSelected ? "selected" : ""} ${isHighlight ? "highlight" : ""}`}
+      onClick={onClick}
+    >
+      <div className="flow-node-icon">{config.icon}</div>
+      <div className="flow-node-label">{node.label}</div>
+    </button>
+  );
+}
+
+function FlowEdgeComponent({ label }: { label?: string }) {
+  return (
+    <div className="flow-edge">
+      <div className="flow-edge-line">
+        {label && <span className="flow-edge-label">{label}</span>}
+      </div>
+    </div>
+  );
+}
+
+function DetailPanel({
+  node,
+}: {
+  node: FlowNode | null;
+}) {
+  if (!node) {
+    return (
+      <div className="flow-help-detail">
+        <div className="flow-help-detail-empty">
+          <MousePointerClick />
+          <p>ノードをクリックすると<br />詳細が表示されます</p>
+        </div>
+      </div>
+    );
   }
-  return NODE_DIMENSIONS[type];
-};
 
-const getNodeRadius = (type: GraphNodeType) => {
-  if (type === "screen") return 12;
-  if (type === "process") return 8;
-  if (type === "data") return 6;
-  if (type === "external") return 18;
-  return 0;
-};
+  const config = NODE_TYPE_CONFIG[node.type];
 
-const centerTransform = (
-  svg: SVGSVGElement,
-  zoom: d3.ZoomBehavior<SVGSVGElement, unknown>,
-  transform: d3.ZoomTransform,
-  target: { x: number; y: number },
-) => {
-  const rect = svg.getBoundingClientRect();
-  const nextTransform = d3
-    .zoomIdentity
-    .translate(rect.width / 2 - target.x * transform.k, rect.height / 2 - target.y * transform.k)
-    .scale(transform.k);
-  d3.select(svg).transition().duration(300).call(zoom.transform, nextTransform);
-};
+  return (
+    <div className="flow-help-detail">
+      <div className="flow-help-detail-content">
+        <div className="flow-help-detail-header">
+          <div className={`flow-help-detail-icon flow-node-icon type-${node.type}`} style={{
+            background: node.type === "input" ? "#dbeafe" :
+                       node.type === "confirm" ? "#dcfce7" :
+                       node.type === "register" ? "#f3e8ff" :
+                       node.type === "print" ? "#ffedd5" : "#f1f5f9"
+          }}>
+            {config.icon}
+          </div>
+          <h3 className="flow-help-detail-title">{node.label}</h3>
+        </div>
 
-export function FlowMapHelpPage() {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
-  const [transform, setTransform] = useState(d3.zoomIdentity);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeTypes, setActiveTypes] = useState<Record<GraphNodeType, boolean>>({
-    domain: true,
-    screen: true,
-    process: true,
-    data: true,
-    external: true,
-  });
-  const [activeImportance, setActiveImportance] = useState<Record<1 | 2 | 3, boolean>>({
-    1: true,
-    2: true,
-    3: true,
-  });
+        <div className="flow-help-detail-section">
+          <h4>何をする？</h4>
+          <p>{node.description}</p>
+        </div>
 
-  useEffect(() => {
-    const svg = svgRef.current;
-    if (!svg) return;
+        {node.commonMistakes && node.commonMistakes.length > 0 && (
+          <div className="flow-help-detail-section">
+            <h4>よくあるミス</h4>
+            <ul>
+              {node.commonMistakes.map((mistake, i) => (
+                <li key={i}>{mistake}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-    const zoom = d3
-      .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.5, 2.5])
-      .on("zoom", (event) => {
-        setTransform(event.transform);
-      });
+        {node.nextAction && (
+          <div className="flow-help-detail-section">
+            <h4>次にやること</h4>
+            <button type="button" className="flow-help-detail-action">
+              <ArrowRight size={16} />
+              {node.nextAction.label}
+            </button>
+          </div>
+        )}
 
-    d3.select(svg).call(zoom);
-    zoomRef.current = zoom;
+        {node.relatedExceptions && node.relatedExceptions.length > 0 && (
+          <div className="flow-help-detail-section">
+            <h4>関連する例外</h4>
+            <div>
+              {node.relatedExceptions.map((ex, i) => (
+                <span key={i} className="flow-help-detail-exception">{ex}</span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
-    return () => {
-      d3.select(svg).on(".zoom", null);
+function FlowTab({
+  nodes,
+  edges,
+  selectedNodeId,
+  highlightNodeIds,
+  onNodeClick,
+}: {
+  nodes: FlowNode[];
+  edges: FlowData["edges"];
+  selectedNodeId: string | null;
+  highlightNodeIds: Set<string>;
+  onNodeClick: (node: FlowNode) => void;
+}) {
+  // フロータイプごとにグループ化
+  const flowGroups = useMemo(() => {
+    const groups: Record<FlowType, FlowNode[]> = {
+      order: [],
+      allocation: [],
+      shipment: [],
     };
-  }, []);
 
-  const nodeMap = useMemo(() => new Map(typedGraph.nodes.map((node) => [node.id, node])), []);
-
-  const filteredNodes = useMemo(() => {
-    return typedGraph.nodes.filter((node) => {
-      const importance = node.importance ?? 2;
-      return activeTypes[node.type] && activeImportance[importance];
+    nodes.forEach((node) => {
+      if (groups[node.flowType]) {
+        groups[node.flowType].push(node);
+      }
     });
-  }, [activeTypes, activeImportance]);
 
-  const filteredNodeIds = useMemo(() => new Set(filteredNodes.map((node) => node.id)), [filteredNodes]);
+    // order でソート
+    Object.values(groups).forEach((group) => {
+      group.sort((a, b) => a.order - b.order);
+    });
 
-  const filteredEdges = useMemo(() => {
-    return typedGraph.edges.filter(
-      (edge) => filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target),
+    return groups;
+  }, [nodes]);
+
+  const renderFlowLine = (flowNodes: FlowNode[], flowType: FlowType) => {
+    if (flowNodes.length === 0) return null;
+
+    return (
+      <div className="flow-section" key={flowType}>
+        <h3 className="flow-section-title" style={{ borderColor: FLOW_TYPE_CONFIG[flowType].color }}>
+          {FLOW_TYPE_CONFIG[flowType].label}
+        </h3>
+        <div className="flow-line">
+          {flowNodes.map((node, index) => {
+            const edge = edges.find((e) => e.source === node.id);
+            return (
+              <div key={node.id} style={{ display: "flex", alignItems: "center" }}>
+                <FlowNodeComponent
+                  node={node}
+                  isSelected={node.id === selectedNodeId}
+                  isHighlight={highlightNodeIds.has(node.id)}
+                  onClick={() => onNodeClick(node)}
+                />
+                {index < flowNodes.length - 1 && <FlowEdgeComponent label={edge?.label} />}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     );
-  }, [filteredNodeIds]);
-
-  const visibleDomains = useMemo(() => {
-    if (!activeTypes.domain) return [];
-    return typedGraph.domains.filter((domain) =>
-      filteredNodes.some((node) => node.domainId === domain.id),
-    );
-  }, [activeTypes.domain, filteredNodes]);
-
-  const matchingNodeIds = useMemo(() => {
-    if (!searchTerm.trim()) return new Set<string>();
-    const lower = searchTerm.trim().toLowerCase();
-    return new Set(
-      typedGraph.nodes
-        .filter((node) => node.label.toLowerCase().includes(lower))
-        .map((node) => node.id),
-    );
-  }, [searchTerm]);
-
-  const handleSearch = useCallback(() => {
-    const lower = searchTerm.trim().toLowerCase();
-    if (!lower) return;
-    const match = typedGraph.nodes.find((node) => node.label.toLowerCase().includes(lower));
-    if (!match) return;
-    setSelectedNodeId(match.id);
-    setSelectedEdgeId(null);
-    if (svgRef.current && zoomRef.current) {
-      centerTransform(svgRef.current, zoomRef.current, transform, match);
-    }
-  }, [searchTerm, transform]);
-
-  const handleReset = useCallback(() => {
-    setSelectedNodeId(null);
-    setSelectedEdgeId(null);
-    setSearchTerm("");
-    if (svgRef.current && zoomRef.current) {
-      d3.select(svgRef.current)
-        .transition()
-        .duration(300)
-        .call(zoomRef.current.transform, d3.zoomIdentity);
-    }
-  }, []);
-
-  const handleNodeClick = (node: GraphNode) => {
-    setSelectedNodeId(node.id);
-    setSelectedEdgeId(null);
-  };
-
-  const handleEdgeClick = (edge: GraphEdge) => {
-    setSelectedEdgeId(edge.id);
-    setSelectedNodeId(null);
-  };
-
-  const selectedNode = typedGraph.nodes.find((node) => node.id === selectedNodeId) ?? null;
-  const selectedEdge = typedGraph.edges.find((edge) => edge.id === selectedEdgeId) ?? null;
-
-  const getNodePosition = (node: GraphNode) => {
-    const { width, height } = getNodeDimensions(node.type);
-    return {
-      x: node.x - width / 2,
-      y: node.y - height / 2,
-      width,
-      height,
-    };
-  };
-
-  const onSvgClick = (event: MouseEvent<SVGSVGElement>) => {
-    if (event.target === event.currentTarget) {
-      setSelectedNodeId(null);
-      setSelectedEdgeId(null);
-    }
   };
 
   return (
-    <div className="flow-map-page">
-      <div className="flow-map-toolbar">
-        <div className="toolbar-group">
-          <strong>検索</strong>
-          <input
-            type="text"
-            placeholder="ノード名で検索"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") handleSearch();
-            }}
-          />
-          <button type="button" onClick={handleSearch}>
-            センタリング
-          </button>
+    <div className="flow-container">
+      {renderFlowLine(flowGroups.order, "order")}
+      {renderFlowLine(flowGroups.allocation, "allocation")}
+      {renderFlowLine(flowGroups.shipment, "shipment")}
+    </div>
+  );
+}
+
+function ExceptionsTab({ exceptions }: { exceptions: FlowData["exceptions"] }) {
+  return (
+    <div className="flow-exceptions">
+      {exceptions.map((ex) => (
+        <div key={ex.id} className="flow-exception-card">
+          <h3>{ex.title}</h3>
+          <p className="flow-exception-trigger">
+            <strong>発生条件：</strong>{ex.trigger}
+          </p>
+          <ol className="flow-exception-steps">
+            {ex.steps.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
         </div>
-        <div className="toolbar-group">
-          <strong>カテゴリ</strong>
-          {NODE_TYPES.map((type) => (
-            <label key={type}>
-              <input
-                type="checkbox"
-                checked={activeTypes[type]}
-                onChange={(event) =>
-                  setActiveTypes((prev) => ({ ...prev, [type]: event.target.checked }))
-                }
-              />
-              {type}
-            </label>
-          ))}
-        </div>
-        <div className="toolbar-group">
-          <strong>重要度</strong>
-          {IMPORTANCE_LEVELS.map((level) => (
-            <label key={level}>
-              <input
-                type="checkbox"
-                checked={activeImportance[level]}
-                onChange={(event) =>
-                  setActiveImportance((prev) => ({ ...prev, [level]: event.target.checked }))
-                }
-              />
-              {level}
-            </label>
-          ))}
-        </div>
-        <button type="button" onClick={handleReset}>
-          リセット
+      ))}
+    </div>
+  );
+}
+
+function TermsTab({ terms }: { terms: FlowData["terms"] }) {
+  return (
+    <div className="flow-terms">
+      <dl>
+        {terms.map((term) => (
+          <div key={term.term} className="flow-term-card">
+            <dt>{term.term}</dt>
+            <dd>{term.definition}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// メインコンポーネント
+// ─────────────────────────────────────────────
+
+export function FlowMapHelpPage() {
+  const [activeTab, setActiveTab] = useState<TabType>("flow");
+  const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const highlightNodeIds = useMemo(() => {
+    if (!searchTerm.trim()) return new Set<string>();
+    const lower = searchTerm.toLowerCase();
+    return new Set(
+      flowData.nodes
+        .filter((n) => n.label.toLowerCase().includes(lower))
+        .map((n) => n.id)
+    );
+  }, [searchTerm]);
+
+  const handleNodeClick = (node: FlowNode) => {
+    setSelectedNode(node);
+  };
+
+  return (
+    <div className="flow-help-page">
+      <header className="flow-help-header">
+        <h1>業務フローガイド</h1>
+        <p>仕事の流れと、迷った時の次の行動を確認できます</p>
+      </header>
+
+      <div className="flow-help-tabs">
+        <button
+          type="button"
+          className={`flow-help-tab ${activeTab === "flow" ? "active" : ""}`}
+          onClick={() => setActiveTab("flow")}
+        >
+          通常の流れ
+        </button>
+        <button
+          type="button"
+          className={`flow-help-tab ${activeTab === "exceptions" ? "active" : ""}`}
+          onClick={() => setActiveTab("exceptions")}
+        >
+          よくある例外
+        </button>
+        <button
+          type="button"
+          className={`flow-help-tab ${activeTab === "terms" ? "active" : ""}`}
+          onClick={() => setActiveTab("terms")}
+        >
+          用語・ルール
         </button>
       </div>
 
-      <div className="flow-map-layout">
-        <div className="flow-map-canvas">
-          <svg ref={svgRef} onClick={onSvgClick}>
-            <defs>
-              {Object.entries(EDGE_COLORS).map(([type, color]) => (
-                <marker
-                  key={type}
-                  id={`arrow-${type}`}
-                  viewBox="0 0 10 10"
-                  refX="10"
-                  refY="5"
-                  markerWidth="8"
-                  markerHeight="8"
-                  orient="auto-start-reverse"
-                >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />
-                </marker>
-              ))}
-            </defs>
-            <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.k})`}>
-              {visibleDomains.map((domain) => (
-                <g key={domain.id}>
-                  <rect
-                    className="flow-map-domain"
-                    x={domain.x}
-                    y={domain.y}
-                    width={domain.w}
-                    height={domain.h}
-                    rx={18}
-                  />
-                  <text className="flow-map-domain-label" x={domain.x + 16} y={domain.y + 24}>
-                    {domain.label}
-                  </text>
-                </g>
-              ))}
+      {activeTab === "flow" && (
+        <div className="flow-help-search">
+          <input
+            type="text"
+            placeholder="画面名・作業名で検索..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      )}
 
-              {filteredEdges.map((edge) => {
-                const source = nodeMap.get(edge.source);
-                const target = nodeMap.get(edge.target);
-                if (!source || !target) return null;
-                const color = EDGE_COLORS[edge.type];
-                const midX = (source.x + target.x) / 2;
-                const midY = (source.y + target.y) / 2;
-                return (
-                  <g key={edge.id}>
-                    <path
-                      d={`M ${source.x} ${source.y} L ${target.x} ${target.y}`}
-                      stroke={color}
-                      strokeWidth={2}
-                      fill="none"
-                      markerEnd={`url(#arrow-${edge.type})`}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        handleEdgeClick(edge);
-                      }}
-                      style={{ cursor: "pointer" }}
-                    />
-                    {edge.label && (
-                      <text className="flow-map-edge-label" x={midX + 4} y={midY - 6}>
-                        {edge.label}
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
-
-              {filteredNodes.map((node) => {
-                if (node.type === "domain") return null;
-                const { x, y, width, height } = getNodePosition(node);
-                const { fill, stroke } = NODE_COLORS[node.type];
-                const isSelected = node.id === selectedNodeId;
-                const isMatch = matchingNodeIds.has(node.id);
-                return (
-                  <g
-                    key={node.id}
-                    className="flow-map-node hoverable"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleNodeClick(node);
-                    }}
-                  >
-                    <rect
-                      x={x}
-                      y={y}
-                      width={width}
-                      height={height}
-                      rx={getNodeRadius(node.type)}
-                      fill={fill}
-                      stroke={isSelected || isMatch ? "#0f172a" : stroke}
-                      strokeWidth={isSelected || isMatch ? 3 : 1.5}
-                      className={isSelected ? "flow-map-node selected" : "flow-map-node"}
-                    >
-                      <title>{node.description ?? node.label}</title>
-                    </rect>
-                    <text className="flow-map-label" x={node.x} y={node.y + 4} textAnchor="middle">
-                      {node.label}
-                    </text>
-                  </g>
-                );
-              })}
-            </g>
-          </svg>
+      <div className="flow-help-content">
+        <div className="flow-help-canvas">
+          {activeTab === "flow" && (
+            <FlowTab
+              nodes={flowData.nodes}
+              edges={flowData.edges}
+              selectedNodeId={selectedNode?.id ?? null}
+              highlightNodeIds={highlightNodeIds}
+              onNodeClick={handleNodeClick}
+            />
+          )}
+          {activeTab === "exceptions" && (
+            <ExceptionsTab exceptions={flowData.exceptions} />
+          )}
+          {activeTab === "terms" && (
+            <TermsTab terms={flowData.terms} />
+          )}
         </div>
 
-        <aside className="flow-map-sidepanel">
-          <h2>詳細</h2>
-          <div className="flow-map-legend">
-            {Object.entries(NODE_COLORS).map(([type, style]) => (
-              <span key={type}>
-                <i className="flow-map-dot" style={{ background: style.fill }} />
-                {type}
-              </span>
-            ))}
-            <span>
-              <i className="flow-map-dot" style={{ background: EDGE_COLORS.flow }} /> flow
-            </span>
-            <span>
-              <i className="flow-map-dot" style={{ background: EDGE_COLORS.data }} /> data
-            </span>
-            <span>
-              <i className="flow-map-dot" style={{ background: EDGE_COLORS.exception }} /> exception
-            </span>
-          </div>
-
-          {!selectedNode && !selectedEdge && (
-            <p className="flow-map-selection-empty">
-              ノードをクリックすると詳細が表示されます。
-            </p>
-          )}
-
-          {selectedNode && (
-            <>
-              <section>
-                <h3>{selectedNode.label}</h3>
-                <div className="flow-map-badge">type: {selectedNode.type}</div>
-                <div className="flow-map-badge">
-                  importance: {selectedNode.importance ?? 2}
-                </div>
-                <p>{selectedNode.description ?? "説明は準備中です。"}</p>
-              </section>
-              {selectedNode.inputs && selectedNode.inputs.length > 0 && (
-                <section>
-                  <h4>Inputs</h4>
-                  <ul>
-                    {selectedNode.inputs.map((input) => (
-                      <li key={input}>{input}</li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-              {selectedNode.outputs && selectedNode.outputs.length > 0 && (
-                <section>
-                  <h4>Outputs</h4>
-                  <ul>
-                    {selectedNode.outputs.map((output) => (
-                      <li key={output}>{output}</li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-              {selectedNode.links && selectedNode.links.length > 0 && (
-                <section>
-                  <h4>Related Links</h4>
-                  <ul>
-                    {selectedNode.links.map((link) => (
-                      <li key={link}>{link}</li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-            </>
-          )}
-
-          {selectedEdge && (
-            <section>
-              <h3>{selectedEdge.label ?? selectedEdge.id}</h3>
-              <div className="flow-map-badge">type: {selectedEdge.type}</div>
-              <p>{selectedEdge.description ?? "エッジの説明は準備中です。"}</p>
-            </section>
-          )}
-        </aside>
+        {activeTab === "flow" && (
+          <DetailPanel node={selectedNode} />
+        )}
       </div>
     </div>
   );
