@@ -161,6 +161,18 @@ class WithdrawalType(str, PyEnum):
     OTHER = "other"  # その他
 
 
+class WithdrawalCancelReason(str, PyEnum):
+    """出庫取消理由."""
+
+    INPUT_ERROR = "input_error"  # 入力ミス
+    WRONG_QUANTITY = "wrong_quantity"  # 数量誤り
+    WRONG_LOT = "wrong_lot"  # ロット選択誤り
+    WRONG_PRODUCT = "wrong_product"  # 品目誤り
+    CUSTOMER_REQUEST = "customer_request"  # 顧客都合
+    DUPLICATE = "duplicate"  # 重複登録
+    OTHER = "other"  # その他
+
+
 class Withdrawal(Base):
     """出庫記録（受注外出庫）.
 
@@ -204,6 +216,16 @@ class Withdrawal(Base):
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
 
+    # 取消関連フィールド
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    cancelled_by: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=True,
+    )
+    cancel_reason: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    cancel_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     __table_args__ = (
         CheckConstraint("quantity > 0", name="chk_withdrawals_quantity"),
         CheckConstraint(
@@ -220,4 +242,5 @@ class Withdrawal(Base):
     lot: Mapped[Lot] = relationship("Lot")
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
-    user: Mapped[User] = relationship("User")
+    user: Mapped[User] = relationship("User", foreign_keys=[withdrawn_by])
+    cancelled_by_user: Mapped[User | None] = relationship("User", foreign_keys=[cancelled_by])

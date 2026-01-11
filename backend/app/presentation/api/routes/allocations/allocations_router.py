@@ -127,7 +127,7 @@ r"""引当APIルーター.
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.application.services.allocations import actions, fefo
+from app.application.services.allocations import actions, cancel, fefo
 from app.application.services.allocations.schemas import (
     AllocationCommitError,
     AllocationNotFoundError,
@@ -154,6 +154,8 @@ from app.presentation.schemas.allocations.allocations_schema import (
     HardAllocationConfirmResponse,
     ManualAllocationRequest,
     ManualAllocationResponse,
+    ReservationCancelRequest,
+    ReservationCancelResponse,
 )
 
 
@@ -493,3 +495,74 @@ def bulk_auto_allocate(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
         raise  # グローバルハンドラに委譲
+
+
+@router.post("/{allocation_id}/cancel", response_model=ReservationCancelResponse)
+def cancel_confirmed_allocation(
+    allocation_id: int,
+    request: ReservationCancelRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(AuthService.get_current_user),
+) -> ReservationCancelResponse:
+    """CONFIRMED予約を取消（反対仕訳方式）.
+
+    SAP連携後のCONFIRMED予約を取消す。
+    stock_historyにALLOCATION_RELEASEトランザクションを記録し、
+    予約ステータスをRELEASEDに変更する。
+
+    Args:
+        allocation_id: 予約ID
+        request: 取消リクエスト（理由、メモ、実行者）
+        db: データベースセッション
+        current_user: 現在のログインユーザー（認証必須）
+
+    Returns:
+        ReservationCancelResponse: 取消後の予約情報
+
+    Raises:
+        HTTPException: 予約が見つからない（404）、不正な状態遷移（400）
+    """
+    try:
+        reservation = cancel.cancel_confirmed_reservation(
+            db,
+            allocation_id,
+            cancel_reason=request.reason,
+            cancel_note=request.note,
+            cancelled_by=request.cancelled_by,
+        )
+
+        # Get lot info for response
+        lot_number = None
+        if reservation.lot:
+            lot_number = reservation.lot.lot_number
+
+        # Get cancel reason label
+        cancel_reason_label = cancel.ReservationCancelReason.LABELS.get(
+            reservation.cancel_reason or "", None
+        )
+
+        return ReservationCancelResponse(
+            id=reservation.id,
+            lot_id=reservation.lot_id,
+            lot_number=lot_number,
+            reserved_quantity=reservation.reserved_qty,
+            status="released",
+            cancel_reason=reservation.cancel_reason,
+            cancel_reason_label=cancel_reason_label,
+            cancel_note=reservation.cancel_note,
+            cancelled_by=reservation.cancelled_by,
+            released_at=reservation.released_at,
+            message="Reservation cancelled successfully",
+        )
+    except AllocationNotFoundError as e:
+        raise HTTPException(
+            status_code=404, detail={"error": "RESERVATION_NOT_FOUND", "message": str(e)}
+        )
+    except AllocationCommitError as e:
+        error_code = getattr(e, "error_code", "CANCELLATION_FAILED")
+        if error_code == "INVALID_STATE_TRANSITION":
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "INVALID_STATE_TRANSITION", "message": str(e)},
+            )
+        raise HTTPException(status_code=400, detail={"error": error_code, "message": str(e)})

@@ -496,3 +496,66 @@ export const saveManualAllocations = async (data: {
 export const getAllocationsByOrder = (orderId: number) => {
   return http.get<ManualAllocationResponse[]>(`v2/allocation/by-order/${orderId}`);
 };
+
+// ===== Reservation Cancel (予約取消) =====
+
+export type ReservationCancelReason =
+  | "input_error"
+  | "wrong_quantity"
+  | "wrong_lot"
+  | "wrong_product"
+  | "customer_request"
+  | "duplicate"
+  | "other";
+
+export const RESERVATION_CANCEL_REASON_LABELS: Record<ReservationCancelReason, string> = {
+  input_error: "入力ミス",
+  wrong_quantity: "数量誤り",
+  wrong_lot: "ロット選択誤り",
+  wrong_product: "品目誤り",
+  customer_request: "顧客都合",
+  duplicate: "重複登録",
+  other: "その他",
+};
+
+export const RESERVATION_CANCEL_REASONS: Array<{ value: ReservationCancelReason; label: string }> =
+  [
+    { value: "input_error", label: "入力ミス" },
+    { value: "wrong_quantity", label: "数量誤り" },
+    { value: "wrong_lot", label: "ロット選択誤り" },
+    { value: "wrong_product", label: "品目誤り" },
+    { value: "customer_request", label: "顧客都合" },
+    { value: "duplicate", label: "重複登録" },
+    { value: "other", label: "その他" },
+  ];
+
+export interface ReservationCancelRequest {
+  reason: ReservationCancelReason;
+  note?: string | null;
+  cancelled_by?: string | null;
+}
+
+export interface ReservationCancelResponse {
+  id: number;
+  lot_id: number | null;
+  lot_number: string | null;
+  reserved_quantity: string;
+  status: string;
+  cancel_reason: string | null;
+  cancel_reason_label: string | null;
+  cancel_note: string | null;
+  cancelled_by: string | null;
+  released_at: string | null;
+  message: string;
+}
+
+/**
+ * Cancel a CONFIRMED reservation (reversal transaction)
+ * @endpoint POST /api/allocations/{allocation_id}/cancel
+ */
+export const cancelConfirmedReservation = (
+  allocationId: number,
+  data: ReservationCancelRequest,
+) => {
+  return http.post<ReservationCancelResponse>(`allocations/${allocationId}/cancel`, data);
+};

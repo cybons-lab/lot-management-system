@@ -65,7 +65,7 @@ from .views_models import (
     VOrderLineContext,
     VProductCodeToId,
 )
-from .withdrawal_models import Withdrawal, WithdrawalType
+from .withdrawal_models import Withdrawal, WithdrawalCancelReason, WithdrawalType
 
 
 __all__ = [
@@ -95,6 +95,7 @@ __all__ = [
     "AllocationTrace",
     "Withdrawal",
     "WithdrawalType",
+    "WithdrawalCancelReason",
     # Reservations
     "LotReservation",
     "ReservationSourceType",

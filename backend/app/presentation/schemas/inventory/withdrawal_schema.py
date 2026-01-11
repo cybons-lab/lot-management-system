@@ -35,6 +35,29 @@ WITHDRAWAL_TYPE_LABELS = {
 }
 
 
+class WithdrawalCancelReason(str, Enum):
+    """出庫取消理由."""
+
+    INPUT_ERROR = "input_error"  # 入力ミス
+    WRONG_QUANTITY = "wrong_quantity"  # 数量誤り
+    WRONG_LOT = "wrong_lot"  # ロット選択誤り
+    WRONG_PRODUCT = "wrong_product"  # 品目誤り
+    CUSTOMER_REQUEST = "customer_request"  # 顧客都合
+    DUPLICATE = "duplicate"  # 重複登録
+    OTHER = "other"  # その他
+
+
+CANCEL_REASON_LABELS = {
+    WithdrawalCancelReason.INPUT_ERROR: "入力ミス",
+    WithdrawalCancelReason.WRONG_QUANTITY: "数量誤り",
+    WithdrawalCancelReason.WRONG_LOT: "ロット選択誤り",
+    WithdrawalCancelReason.WRONG_PRODUCT: "品目誤り",
+    WithdrawalCancelReason.CUSTOMER_REQUEST: "顧客都合",
+    WithdrawalCancelReason.DUPLICATE: "重複登録",
+    WithdrawalCancelReason.OTHER: "その他",
+}
+
+
 class WithdrawalCreate(BaseSchema):
     """出庫登録リクエスト."""
 
@@ -49,6 +72,14 @@ class WithdrawalCreate(BaseSchema):
         None, max_length=100, description="参照番号（SAP受注番号など）"
     )
     withdrawn_by: int | None = Field(None, description="出庫実行者ユーザーID")
+
+
+class WithdrawalCancelRequest(BaseSchema):
+    """出庫取消リクエスト."""
+
+    reason: WithdrawalCancelReason = Field(..., description="取消理由")
+    note: str | None = Field(None, max_length=500, description="取消メモ（その他の場合など）")
+    cancelled_by: int | None = Field(None, description="取消実行者ユーザーID")
 
 
 class WithdrawalResponse(BaseSchema):
@@ -76,6 +107,14 @@ class WithdrawalResponse(BaseSchema):
     withdrawn_by_name: str | None = None
     withdrawn_at: datetime
     created_at: datetime
+    # 取消関連フィールド
+    is_cancelled: bool = Field(False, description="取消済みフラグ")
+    cancelled_at: datetime | None = None
+    cancelled_by: int | None = None
+    cancelled_by_name: str | None = None
+    cancel_reason: WithdrawalCancelReason | None = None
+    cancel_reason_label: str | None = None
+    cancel_note: str | None = None
 
 
 class WithdrawalListResponse(BaseSchema):

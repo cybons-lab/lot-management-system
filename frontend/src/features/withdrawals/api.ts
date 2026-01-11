@@ -34,6 +34,37 @@ export const WITHDRAWAL_TYPES: Array<{ value: WithdrawalType; label: string }> =
   { value: "other", label: "その他" },
 ];
 
+// ============ Cancel Types ============
+
+export type WithdrawalCancelReason =
+  | "input_error"
+  | "wrong_quantity"
+  | "wrong_lot"
+  | "wrong_product"
+  | "customer_request"
+  | "duplicate"
+  | "other";
+
+export const CANCEL_REASON_LABELS: Record<WithdrawalCancelReason, string> = {
+  input_error: "入力ミス",
+  wrong_quantity: "数量誤り",
+  wrong_lot: "ロット選択誤り",
+  wrong_product: "品目誤り",
+  customer_request: "顧客都合",
+  duplicate: "重複登録",
+  other: "その他",
+};
+
+export const CANCEL_REASONS: Array<{ value: WithdrawalCancelReason; label: string }> = [
+  { value: "input_error", label: "入力ミス" },
+  { value: "wrong_quantity", label: "数量誤り" },
+  { value: "wrong_lot", label: "ロット選択誤り" },
+  { value: "wrong_product", label: "品目誤り" },
+  { value: "customer_request", label: "顧客都合" },
+  { value: "duplicate", label: "重複登録" },
+  { value: "other", label: "その他" },
+];
+
 export interface WithdrawalCreateRequest {
   lot_id: number;
   quantity: number;
@@ -44,6 +75,12 @@ export interface WithdrawalCreateRequest {
   reason?: string;
   reference_number?: string;
   withdrawn_by?: number;
+}
+
+export interface WithdrawalCancelRequest {
+  reason: WithdrawalCancelReason;
+  note?: string | null;
+  cancelled_by?: number | null;
 }
 
 export interface WithdrawalResponse {
@@ -69,6 +106,14 @@ export interface WithdrawalResponse {
   withdrawn_by_name?: string | null;
   withdrawn_at: string;
   created_at: string;
+  // 取消関連フィールド
+  is_cancelled: boolean;
+  cancelled_at?: string | null;
+  cancelled_by?: number | null;
+  cancelled_by_name?: string | null;
+  cancel_reason?: WithdrawalCancelReason | null;
+  cancel_reason_label?: string | null;
+  cancel_note?: string | null;
 }
 
 export interface WithdrawalListResponse {
@@ -132,4 +177,14 @@ export async function getWithdrawal(withdrawalId: number): Promise<WithdrawalRes
  */
 export async function createWithdrawal(data: WithdrawalCreateRequest): Promise<WithdrawalResponse> {
   return http.post<WithdrawalResponse>(BASE_PATH, data);
+}
+
+/**
+ * 出庫を取消（反対仕訳方式）
+ */
+export async function cancelWithdrawal(
+  withdrawalId: number,
+  data: WithdrawalCancelRequest,
+): Promise<WithdrawalResponse> {
+  return http.post<WithdrawalResponse>(`${BASE_PATH}/${withdrawalId}/cancel`, data);
 }

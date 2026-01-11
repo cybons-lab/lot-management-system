@@ -127,13 +127,40 @@ from app.application.services.allocations.utils import (
     update_order_line_status,
 )
 from app.core.time_utils import utcnow
-from app.infrastructure.persistence.models import Lot, OrderLine
+from app.infrastructure.persistence.models import (
+    Lot,
+    OrderLine,
+    StockHistory,
+    StockTransactionType,
+)
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
     ReservationStateMachine,
     ReservationStatus,
 )
+
+
+class ReservationCancelReason:
+    """予約取消理由の定数."""
+
+    INPUT_ERROR = "input_error"
+    WRONG_QUANTITY = "wrong_quantity"
+    WRONG_LOT = "wrong_lot"
+    WRONG_PRODUCT = "wrong_product"
+    CUSTOMER_REQUEST = "customer_request"
+    DUPLICATE = "duplicate"
+    OTHER = "other"
+
+    LABELS = {
+        "input_error": "入力ミス",
+        "wrong_quantity": "数量誤り",
+        "wrong_lot": "ロット選択誤り",
+        "wrong_product": "品目誤り",
+        "customer_request": "顧客都合",
+        "duplicate": "重複登録",
+        "other": "その他",
+    }
 
 
 def release_reservation(db: Session, reservation_id: int, *, commit_db: bool = True) -> None:
@@ -265,3 +292,96 @@ def release_reservations_for_order_line(db: Session, order_line_id: int) -> list
         db.commit()
 
     return released_ids
+
+
+def cancel_confirmed_reservation(
+    db: Session,
+    reservation_id: int,
+    *,
+    cancel_reason: str,
+    cancel_note: str | None = None,
+    cancelled_by: str | None = None,
+    commit_db: bool = True,
+) -> LotReservation:
+    """CONFIRMED予約を取消（反対仕訳方式）.
+
+    SAP連携後のCONFIRMED予約を取消す。
+    - stock_historyにALLOCATION_RELEASEトランザクションを記録
+    - 予約ステータスをRELEASEDに変更
+    - 取消理由を記録
+
+    Args:
+        db: データベースセッション
+        reservation_id: 予約ID
+        cancel_reason: 取消理由（ReservationCancelReasonの値）
+        cancel_note: 取消メモ（任意）
+        cancelled_by: 取消実行者（任意）
+        commit_db: Trueの場合、処理完了後にcommitを実行
+
+    Returns:
+        取消後の予約レコード
+
+    Raises:
+        AllocationNotFoundError: 予約が見つからない場合
+        AllocationCommitError: 不正な状態遷移の場合
+    """
+    reservation = db.get(LotReservation, reservation_id)
+    if not reservation:
+        raise AllocationNotFoundError(f"Reservation {reservation_id} not found")
+
+    # Already released - idempotent
+    if reservation.status == ReservationStatus.RELEASED:
+        return reservation
+
+    # 状態遷移の検証
+    if not ReservationStateMachine.can_release(reservation.status):
+        raise AllocationCommitError(
+            "INVALID_STATE_TRANSITION",
+            f"Cannot release reservation {reservation_id} from status '{reservation.status}'",
+        )
+
+    now = utcnow()
+
+    # ロットをロック取得
+    lot = None
+    if reservation.lot_id:
+        lot_stmt = select(Lot).where(Lot.id == reservation.lot_id).with_for_update()
+        lot = db.execute(lot_stmt).scalar_one_or_none()
+
+    # CONFIRMED予約の場合、stock_historyに反対仕訳を記録
+    if reservation.status == ReservationStatus.CONFIRMED and lot:
+        stock_history = StockHistory(
+            lot_id=lot.id,
+            transaction_type=StockTransactionType.ALLOCATION_RELEASE,
+            quantity_change=+reservation.reserved_qty,  # 予約解放はプラス表記
+            quantity_after=lot.current_quantity,  # current_quantityは変わらない
+            reference_type="reservation_cancellation",
+            reference_id=reservation.id,
+            transaction_date=now,
+        )
+        db.add(stock_history)
+
+    # 予約ステータスを更新
+    reservation.status = ReservationStatus.RELEASED
+    reservation.released_at = now
+    reservation.updated_at = now
+    reservation.cancel_reason = cancel_reason
+    reservation.cancel_note = cancel_note
+    reservation.cancelled_by = cancelled_by
+
+    if lot:
+        lot.updated_at = now
+
+    db.flush()
+
+    # 受注連動の場合、受注ステータスを更新
+    if reservation.source_type == ReservationSourceType.ORDER and reservation.source_id:
+        line = db.get(OrderLine, reservation.source_id)
+        if line:
+            update_order_allocation_status(db, line.order_id)
+            update_order_line_status(db, line.id)
+
+    if commit_db:
+        db.commit()
+
+    return reservation

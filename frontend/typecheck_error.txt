@@ -1,0 +1,9 @@
+
+> lot-management-frontend@1.0.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+src/features/allocations/components/ReservationCancelDialog.test.tsx(30,53): error TS6133: 'args' is declared but its value is never read.
+src/features/allocations/components/ReservationCancelDialog.test.tsx(47,9): error TS6133: 'React' is declared but its value is never read.
+src/features/withdrawals/components/QuickWithdrawalDialog.test.tsx(212,65): error TS2345: Argument of type '{ withdrawal_id: number; lot_id: number; lot_number: string; product_id: number; product_name: string; product_code: string; quantity: string; withdrawal_type: "order_manual"; withdrawal_type_label: string; ... 12 more ...; created_at: string; }' is not assignable to parameter of type 'WithdrawalResponse'.
+  Property 'is_cancelled' is missing in type '{ withdrawal_id: number; lot_id: number; lot_number: string; product_id: number; product_name: string; product_code: string; quantity: string; withdrawal_type: "order_manual"; withdrawal_type_label: string; ... 12 more ...; created_at: string; }' but required in type 'WithdrawalResponse'.
+src/features/withdrawals/components/WithdrawalCancelDialog.test.tsx(37,9): error TS6133: 'React' is declared but its value is never read.
