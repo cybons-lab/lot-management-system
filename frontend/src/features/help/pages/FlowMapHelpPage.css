@@ -57,9 +57,10 @@
 }
 
 .flow-help-tab.active {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
-  border-color: #3b82f6;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
 }
 
 /* 検索バー */
@@ -135,24 +136,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 1.5rem;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
   background: white;
   border: 2px solid #e2e8f0;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   cursor: pointer;
-  transition: all 0.2s;
-  min-width: 120px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 100px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .flow-node:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .flow-node.selected {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3), 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .flow-node.highlight {
@@ -161,46 +162,20 @@
 }
 
 .flow-node-icon {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 3rem;
+  height: 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.5rem;
-  font-size: 1.25rem;
+  border-radius: 0.75rem;
 }
 
 .flow-node-label {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #1e293b;
   text-align: center;
-}
-
-/* ノードタイプ別の色 */
-.flow-node.type-input .flow-node-icon {
-  background: #dbeafe;
-  color: #2563eb;
-}
-
-.flow-node.type-confirm .flow-node-icon {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.flow-node.type-register .flow-node-icon {
-  background: #f3e8ff;
-  color: #9333ea;
-}
-
-.flow-node.type-print .flow-node-icon {
-  background: #ffedd5;
-  color: #ea580c;
-}
-
-.flow-node.type-complete .flow-node-icon {
-  background: #f1f5f9;
-  color: #64748b;
+  line-height: 1.3;
 }
 
 /* エッジ（矢印） */
@@ -213,8 +188,9 @@
 .flow-edge-line {
   width: 60px;
   height: 3px;
-  background: #3b82f6;
+  background: linear-gradient(90deg, #6366f1, #a78bfa);
   position: relative;
+  border-radius: 2px;
 }
 
 .flow-edge-line::after {
@@ -224,7 +200,7 @@
   top: 50%;
   transform: translateY(-50%);
   border: 6px solid transparent;
-  border-left-color: #3b82f6;
+  border-left-color: #a78bfa;
 }
 
 .flow-edge-label {
@@ -291,6 +267,13 @@
   font-weight: 700;
   color: #1e293b;
   margin: 0;
+  line-height: 1.3;
+}
+
+.flow-help-detail-type {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
 }
 
 .flow-help-detail-section {
@@ -329,19 +312,21 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: white;
-  background: #3b82f6;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
 .flow-help-detail-action:hover {
-  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
 }
 
 .flow-help-detail-exception {

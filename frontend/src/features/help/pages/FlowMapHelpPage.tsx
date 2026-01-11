@@ -5,7 +5,7 @@
  * 一般事務員向けに「仕事の流れ」を分かりやすく表示
  */
 
-import { ArrowRight, MousePointerClick } from "lucide-react";
+import { ArrowRight, MousePointerClick, PenLine, Search, CheckCircle2, Printer, PartyPopper } from "lucide-react";
 import { useState, useMemo } from "react";
 
 import graphData from "@/data/graph.json";
@@ -17,18 +17,36 @@ const flowData = graphData as FlowData;
 
 type TabType = "flow" | "exceptions" | "terms";
 
-const NODE_TYPE_CONFIG: Record<FlowNodeType, { icon: string; label: string }> = {
-  input: { icon: "✏️", label: "入力" },
-  confirm: { icon: "👁️", label: "確認" },
-  register: { icon: "✓", label: "登録" },
-  print: { icon: "🖨️", label: "出力" },
-  complete: { icon: "🎉", label: "完了" },
+// モダンなアイコン設定（Lucide）
+const NODE_TYPE_ICONS: Record<FlowNodeType, React.ComponentType<{ className?: string; size?: number }>> = {
+  input: PenLine,
+  confirm: Search,
+  register: CheckCircle2,
+  print: Printer,
+  complete: PartyPopper,
 };
 
-const FLOW_TYPE_CONFIG: Record<FlowType, { label: string; color: string }> = {
-  order: { label: "受注", color: "#3b82f6" },
-  allocation: { label: "引当", color: "#8b5cf6" },
-  shipment: { label: "出荷", color: "#22c55e" },
+const NODE_TYPE_LABELS: Record<FlowNodeType, string> = {
+  input: "入力",
+  confirm: "確認",
+  register: "登録",
+  print: "出力",
+  complete: "完了",
+};
+
+// モダンな配色（グラデーション対応）
+const NODE_TYPE_COLORS: Record<FlowNodeType, { bg: string; icon: string; border: string }> = {
+  input: { bg: "linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)", icon: "#0284c7", border: "#7dd3fc" },
+  confirm: { bg: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)", icon: "#d97706", border: "#fcd34d" },
+  register: { bg: "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)", icon: "#059669", border: "#6ee7b7" },
+  print: { bg: "linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)", icon: "#db2777", border: "#f9a8d4" },
+  complete: { bg: "linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)", icon: "#9333ea", border: "#c4b5fd" },
+};
+
+const FLOW_TYPE_CONFIG: Record<FlowType, { label: string; color: string; gradient: string }> = {
+  order: { label: "受注", color: "#6366f1", gradient: "linear-gradient(90deg, #6366f1, #8b5cf6)" },
+  allocation: { label: "引当", color: "#06b6d4", gradient: "linear-gradient(90deg, #06b6d4, #22d3ee)" },
+  shipment: { label: "出荷", color: "#10b981", gradient: "linear-gradient(90deg, #10b981, #34d399)" },
 };
 
 // ─────────────────────────────────────────────
@@ -46,15 +64,27 @@ function FlowNodeComponent({
   isHighlight: boolean;
   onClick: () => void;
 }) {
-  const config = NODE_TYPE_CONFIG[node.type];
+  const Icon = NODE_TYPE_ICONS[node.type];
+  const colors = NODE_TYPE_COLORS[node.type];
 
   return (
     <button
       type="button"
-      className={`flow-node type-${node.type} ${isSelected ? "selected" : ""} ${isHighlight ? "highlight" : ""}`}
+      className={`flow-node ${isSelected ? "selected" : ""} ${isHighlight ? "highlight" : ""}`}
       onClick={onClick}
+      style={{
+        borderColor: isSelected ? colors.icon : colors.border,
+      }}
     >
-      <div className="flow-node-icon">{config.icon}</div>
+      <div
+        className="flow-node-icon"
+        style={{
+          background: colors.bg,
+          color: colors.icon,
+        }}
+      >
+        <Icon size={20} />
+      </div>
       <div className="flow-node-label">{node.label}</div>
     </button>
   );
@@ -86,21 +116,27 @@ function DetailPanel({
     );
   }
 
-  const config = NODE_TYPE_CONFIG[node.type];
+  const Icon = NODE_TYPE_ICONS[node.type];
+  const colors = NODE_TYPE_COLORS[node.type];
+  const label = NODE_TYPE_LABELS[node.type];
 
   return (
     <div className="flow-help-detail">
       <div className="flow-help-detail-content">
         <div className="flow-help-detail-header">
-          <div className={`flow-help-detail-icon flow-node-icon type-${node.type}`} style={{
-            background: node.type === "input" ? "#dbeafe" :
-                       node.type === "confirm" ? "#dcfce7" :
-                       node.type === "register" ? "#f3e8ff" :
-                       node.type === "print" ? "#ffedd5" : "#f1f5f9"
-          }}>
-            {config.icon}
+          <div
+            className="flow-help-detail-icon"
+            style={{
+              background: colors.bg,
+              color: colors.icon,
+            }}
+          >
+            <Icon size={24} />
           </div>
-          <h3 className="flow-help-detail-title">{node.label}</h3>
+          <div>
+            <h3 className="flow-help-detail-title">{node.label}</h3>
+            <span className="flow-help-detail-type">{label}</span>
+          </div>
         </div>
 
         <div className="flow-help-detail-section">
@@ -184,7 +220,13 @@ function FlowTab({
 
     return (
       <div className="flow-section" key={flowType}>
-        <h3 className="flow-section-title" style={{ borderColor: FLOW_TYPE_CONFIG[flowType].color }}>
+        <h3
+          className="flow-section-title"
+          style={{
+            borderImage: FLOW_TYPE_CONFIG[flowType].gradient,
+            borderImageSlice: 1,
+          }}
+        >
           {FLOW_TYPE_CONFIG[flowType].label}
         </h3>
         <div className="flow-line">
