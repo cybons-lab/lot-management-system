@@ -104,6 +104,10 @@ export const ROUTES = {
       LAYER_CODES: "/rpa/material-delivery-note/layer-codes",
     },
   },
+
+  HELP: {
+    FLOW_MAP: "/help/flow-map",
+  },
 } as const;
 
 /**

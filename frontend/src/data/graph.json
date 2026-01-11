@@ -1,0 +1,383 @@
+{
+  "domains": [
+    {
+      "id": "domain-order",
+      "label": "受注",
+      "x": 80,
+      "y": 60,
+      "w": 420,
+      "h": 260,
+      "description": "受注受付から確定までの流れ"
+    },
+    {
+      "id": "domain-inventory",
+      "label": "在庫/ロット",
+      "x": 560,
+      "y": 60,
+      "w": 420,
+      "h": 260,
+      "description": "在庫の可視化とロット管理"
+    },
+    {
+      "id": "domain-allocation",
+      "label": "引当",
+      "x": 1040,
+      "y": 60,
+      "w": 380,
+      "h": 260,
+      "description": "出荷向けの引当と在庫予約"
+    },
+    {
+      "id": "domain-shipping",
+      "label": "出荷",
+      "x": 80,
+      "y": 360,
+      "w": 420,
+      "h": 260,
+      "description": "出荷指示から実績まで"
+    },
+    {
+      "id": "domain-master",
+      "label": "マスタ",
+      "x": 560,
+      "y": 360,
+      "w": 420,
+      "h": 260,
+      "description": "商品・取引先などの基盤情報"
+    },
+    {
+      "id": "domain-external",
+      "label": "外部連携",
+      "x": 1040,
+      "y": 360,
+      "w": 380,
+      "h": 260,
+      "description": "SAP/EDIなど外部システム"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "order-entry",
+      "type": "screen",
+      "label": "受注入力",
+      "x": 180,
+      "y": 140,
+      "domainId": "domain-order",
+      "importance": 3,
+      "description": "営業が受注内容を登録する画面",
+      "inputs": ["顧客情報", "受注明細"],
+      "outputs": ["受注ヘッダ", "受注明細"],
+      "links": ["/orders"]
+    },
+    {
+      "id": "order-check",
+      "type": "process",
+      "label": "与信/条件チェック",
+      "x": 350,
+      "y": 140,
+      "domainId": "domain-order",
+      "importance": 2,
+      "description": "与信や納期条件を判定する処理",
+      "inputs": ["受注情報", "顧客与信"],
+      "outputs": ["確定可否"]
+    },
+    {
+      "id": "order-db",
+      "type": "data",
+      "label": "受注DB",
+      "x": 260,
+      "y": 240,
+      "domainId": "domain-order",
+      "importance": 2,
+      "description": "受注ヘッダ・明細の保管",
+      "inputs": ["登録/更新"],
+      "outputs": ["受注情報参照"]
+    },
+    {
+      "id": "inventory-screen",
+      "type": "screen",
+      "label": "在庫照会",
+      "x": 640,
+      "y": 140,
+      "domainId": "domain-inventory",
+      "importance": 3,
+      "description": "在庫・ロットの照会画面",
+      "inputs": ["品目", "拠点"],
+      "outputs": ["在庫一覧"]
+    },
+    {
+      "id": "lot-manage",
+      "type": "process",
+      "label": "ロット更新",
+      "x": 820,
+      "y": 140,
+      "domainId": "domain-inventory",
+      "importance": 2,
+      "description": "ロット在庫の調整・補正"
+    },
+    {
+      "id": "inventory-db",
+      "type": "data",
+      "label": "在庫DB",
+      "x": 720,
+      "y": 240,
+      "domainId": "domain-inventory",
+      "importance": 3,
+      "description": "在庫とロット情報の管理",
+      "inputs": ["在庫更新"],
+      "outputs": ["在庫参照"]
+    },
+    {
+      "id": "allocation-screen",
+      "type": "screen",
+      "label": "引当画面",
+      "x": 1120,
+      "y": 140,
+      "domainId": "domain-allocation",
+      "importance": 3,
+      "description": "受注に対する引当を調整する画面",
+      "inputs": ["受注情報"],
+      "outputs": ["引当指示"]
+    },
+    {
+      "id": "allocation-engine",
+      "type": "process",
+      "label": "自動引当",
+      "x": 1280,
+      "y": 140,
+      "domainId": "domain-allocation",
+      "importance": 2,
+      "description": "在庫と優先度から引当計算",
+      "inputs": ["受注", "在庫"],
+      "outputs": ["引当結果"]
+    },
+    {
+      "id": "allocation-db",
+      "type": "data",
+      "label": "引当DB",
+      "x": 1200,
+      "y": 240,
+      "domainId": "domain-allocation",
+      "importance": 2,
+      "description": "引当結果の保存"
+    },
+    {
+      "id": "shipping-plan",
+      "type": "screen",
+      "label": "出荷指示",
+      "x": 180,
+      "y": 440,
+      "domainId": "domain-shipping",
+      "importance": 3,
+      "description": "出荷計画の作成画面",
+      "inputs": ["引当結果"],
+      "outputs": ["出荷指示"]
+    },
+    {
+      "id": "shipping-process",
+      "type": "process",
+      "label": "出荷実績",
+      "x": 340,
+      "y": 520,
+      "domainId": "domain-shipping",
+      "importance": 2,
+      "description": "出荷実績の確定",
+      "inputs": ["出荷指示"],
+      "outputs": ["出荷実績"]
+    },
+    {
+      "id": "shipping-db",
+      "type": "data",
+      "label": "出荷DB",
+      "x": 240,
+      "y": 580,
+      "domainId": "domain-shipping",
+      "importance": 2,
+      "description": "出荷履歴の管理"
+    },
+    {
+      "id": "master-screen",
+      "type": "screen",
+      "label": "商品マスタ",
+      "x": 640,
+      "y": 440,
+      "domainId": "domain-master",
+      "importance": 2,
+      "description": "商品情報を管理する画面",
+      "inputs": ["商品情報"],
+      "outputs": ["商品マスタ"]
+    },
+    {
+      "id": "customer-master",
+      "type": "screen",
+      "label": "取引先マスタ",
+      "x": 820,
+      "y": 520,
+      "domainId": "domain-master",
+      "importance": 2,
+      "description": "取引先の基本情報管理"
+    },
+    {
+      "id": "master-db",
+      "type": "data",
+      "label": "マスタDB",
+      "x": 720,
+      "y": 580,
+      "domainId": "domain-master",
+      "importance": 3,
+      "description": "商品・取引先などの統合マスタ"
+    },
+    {
+      "id": "sap-link",
+      "type": "external",
+      "label": "SAP連携",
+      "x": 1120,
+      "y": 440,
+      "domainId": "domain-external",
+      "importance": 2,
+      "description": "SAPへ受注/出荷情報を送信"
+    },
+    {
+      "id": "edi-link",
+      "type": "external",
+      "label": "EDI連携",
+      "x": 1280,
+      "y": 520,
+      "domainId": "domain-external",
+      "importance": 1,
+      "description": "取引先EDIとのデータ交換"
+    },
+    {
+      "id": "external-db",
+      "type": "data",
+      "label": "連携ログ",
+      "x": 1200,
+      "y": 580,
+      "domainId": "domain-external",
+      "importance": 1,
+      "description": "外部連携のログ保存"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-order-to-check",
+      "source": "order-entry",
+      "target": "order-check",
+      "type": "flow",
+      "label": "受注登録"
+    },
+    {
+      "id": "edge-check-to-db",
+      "source": "order-check",
+      "target": "order-db",
+      "type": "data",
+      "label": "確定保存"
+    },
+    {
+      "id": "edge-order-to-inventory",
+      "source": "order-entry",
+      "target": "inventory-screen",
+      "type": "flow",
+      "label": "在庫確認"
+    },
+    {
+      "id": "edge-inventory-to-allocation",
+      "source": "inventory-screen",
+      "target": "allocation-screen",
+      "type": "flow",
+      "label": "引当依頼"
+    },
+    {
+      "id": "edge-allocation-engine",
+      "source": "allocation-screen",
+      "target": "allocation-engine",
+      "type": "flow",
+      "label": "自動引当"
+    },
+    {
+      "id": "edge-allocation-db",
+      "source": "allocation-engine",
+      "target": "allocation-db",
+      "type": "data",
+      "label": "引当結果"
+    },
+    {
+      "id": "edge-allocation-to-shipping",
+      "source": "allocation-db",
+      "target": "shipping-plan",
+      "type": "flow",
+      "label": "出荷指示"
+    },
+    {
+      "id": "edge-shipping-plan-to-process",
+      "source": "shipping-plan",
+      "target": "shipping-process",
+      "type": "flow",
+      "label": "出荷実績"
+    },
+    {
+      "id": "edge-shipping-process-db",
+      "source": "shipping-process",
+      "target": "shipping-db",
+      "type": "data",
+      "label": "実績保存"
+    },
+    {
+      "id": "edge-master-to-order",
+      "source": "master-db",
+      "target": "order-entry",
+      "type": "data",
+      "label": "マスタ参照"
+    },
+    {
+      "id": "edge-master-to-inventory",
+      "source": "master-db",
+      "target": "inventory-screen",
+      "type": "data",
+      "label": "品目参照"
+    },
+    {
+      "id": "edge-inventory-db",
+      "source": "inventory-db",
+      "target": "lot-manage",
+      "type": "flow",
+      "label": "在庫更新"
+    },
+    {
+      "id": "edge-inventory-db-alloc",
+      "source": "inventory-db",
+      "target": "allocation-engine",
+      "type": "data",
+      "label": "在庫参照"
+    },
+    {
+      "id": "edge-shipping-sap",
+      "source": "shipping-db",
+      "target": "sap-link",
+      "type": "flow",
+      "label": "出荷連携"
+    },
+    {
+      "id": "edge-order-sap",
+      "source": "order-db",
+      "target": "sap-link",
+      "type": "data",
+      "label": "受注送信"
+    },
+    {
+      "id": "edge-external-edi",
+      "source": "sap-link",
+      "target": "edi-link",
+      "type": "exception",
+      "label": "送信失敗",
+      "description": "EDI送信時のエラー通知"
+    },
+    {
+      "id": "edge-external-log",
+      "source": "sap-link",
+      "target": "external-db",
+      "type": "data",
+      "label": "ログ保存"
+    }
+  ]
+}

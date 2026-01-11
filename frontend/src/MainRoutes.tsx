@@ -63,6 +63,7 @@ import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehouseDeliveryRoutesListPage } from "@/features/warehouse-delivery-routes";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
 import { WithdrawalCreatePage, WithdrawalsListPage } from "@/features/withdrawals/pages";
+import { FlowMapHelpPage } from "@/features/help/pages/FlowMapHelpPage";
 
 // --- Route Groups ---
 
@@ -270,6 +271,9 @@ export function MainRoutes() {
       <Route path="/rpa/material-delivery-note/step3/:runId" element={<Step3DetailPage />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4} element={<Step4ListPage />} />
       <Route path="/rpa/material-delivery-note/step4/:runId" element={<Step4DetailPage />} />
+
+      {/* Help */}
+      <Route path={ROUTES.HELP.FLOW_MAP} element={<FlowMapHelpPage />} />
 
       {/* Catch all - redirect to dashboard */}
       <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
