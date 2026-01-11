@@ -287,6 +287,25 @@ class LotReservation(Base):
         comment="Timestamp when reservation was released",
     )
 
+    # Cancellation fields (for CONFIRMED reservation reversal)
+    cancel_reason: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        comment="Reason for cancellation (input_error, wrong_quantity, etc.)",
+    )
+
+    cancel_note: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        comment="Additional notes for cancellation",
+    )
+
+    cancelled_by: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        comment="User who cancelled the reservation",
+    )
+
     # SAP Registration markers (P3: explicit CONFIRMED signal)
     sap_document_no: Mapped[str | None] = mapped_column(
         String(20),

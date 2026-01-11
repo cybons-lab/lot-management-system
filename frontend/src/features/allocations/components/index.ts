@@ -27,3 +27,7 @@ export { AllocationInput, AllocationProgress, WarehouseAllocationModal } from ".
 
 // Allocation List components
 export { FlatAllocationList, LineBasedAllocationList } from "./allocation-list";
+
+// Dialogs
+export { ReservationCancelDialog } from "./ReservationCancelDialog";
+export type { ReservationInfo } from "./ReservationCancelDialog";

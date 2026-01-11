@@ -344,3 +344,38 @@ class DragAssignRequest(BaseSchema):
 
 # NOTE: DragAssignResponse, AllocationSuggestionManualRequest, AllocationSuggestionManualResponse
 # have been removed as they were deprecated and unused.
+
+
+# ============================================================
+# Reservation Cancellation (予約取消)
+# ============================================================
+
+
+class ReservationCancelRequest(BaseSchema):
+    """Reservation cancellation request (CONFIRMED予約の取消).
+
+    反対仕訳方式で予約を取消す。
+    """
+
+    reason: str = Field(
+        ...,
+        description="取消理由コード",
+    )
+    note: str | None = Field(None, max_length=500, description="取消メモ（任意）")
+    cancelled_by: str | None = Field(None, max_length=50, description="取消実行者（任意）")
+
+
+class ReservationCancelResponse(BaseSchema):
+    """Reservation cancellation response."""
+
+    id: int
+    lot_id: int | None = None
+    lot_number: str | None = None
+    reserved_quantity: Decimal = Field(..., decimal_places=3)
+    status: str = Field(..., description="取消後のステータス（released）")
+    cancel_reason: str | None = None
+    cancel_reason_label: str | None = None
+    cancel_note: str | None = None
+    cancelled_by: str | None = None
+    released_at: datetime | None = None
+    message: str = "Reservation cancelled successfully"
