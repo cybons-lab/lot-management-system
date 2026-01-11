@@ -7,3 +7,4 @@ export { QuickWithdrawalDialog } from "./QuickWithdrawalDialog";
 export { WithdrawalCalendar } from "./WithdrawalCalendar";
 export { WithdrawalHistoryList } from "./WithdrawalHistoryList";
 export { WithdrawalHistoryDialog } from "./WithdrawalHistoryDialog";
+export { WithdrawalCancelDialog } from "./WithdrawalCancelDialog";

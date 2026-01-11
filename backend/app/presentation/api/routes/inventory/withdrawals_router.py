@@ -15,6 +15,7 @@ from app.application.services.inventory.lot_reservation_service import (
 from app.application.services.inventory.withdrawal_service import WithdrawalService
 from app.presentation.api.deps import get_db
 from app.presentation.schemas.inventory.withdrawal_schema import (
+    WithdrawalCancelRequest,
     WithdrawalCreate,
     WithdrawalListResponse,
     WithdrawalResponse,
@@ -135,5 +136,40 @@ def create_withdrawal(
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from e
+
+
+@router.post("/{withdrawal_id}/cancel", response_model=WithdrawalResponse)
+def cancel_withdrawal(
+    withdrawal_id: int,
+    data: WithdrawalCancelRequest,
+    db: Session = Depends(get_db),
+):
+    """出庫を取消.
+
+    反対仕訳方式で出庫を取消し、ロットの在庫を復元する。
+    - stock_historyにRETURNトランザクションを記録
+    - ロットのcurrent_quantityを復元
+    - べき等性: 既に取消済みの場合はそのまま返す
+
+    Args:
+        withdrawal_id: 出庫ID
+        data: 取消リクエスト（理由、メモ）
+        db: データベースセッション
+
+    Returns:
+        取消後の出庫レコード
+
+    Raises:
+        HTTPException: 出庫が見つからない場合
+    """
+    service = WithdrawalService(db)
+
+    try:
+        return service.cancel_withdrawal(withdrawal_id, data)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
         ) from e

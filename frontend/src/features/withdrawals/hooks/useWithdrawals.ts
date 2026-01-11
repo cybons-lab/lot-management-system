@@ -7,12 +7,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
+  WithdrawalCancelRequest,
   WithdrawalCreateRequest,
   WithdrawalListParams,
   WithdrawalListResponse,
   WithdrawalResponse,
 } from "../api";
-import { createWithdrawal, getWithdrawal, getWithdrawals } from "../api";
+import { cancelWithdrawal, createWithdrawal, getWithdrawal, getWithdrawals } from "../api";
 
 const QUERY_KEY = "withdrawals";
 
@@ -52,9 +53,30 @@ export function useWithdrawals() {
       },
     });
 
+  /**
+   * 出庫を取消（反対仕訳方式）
+   */
+  const useCancel = () =>
+    useMutation({
+      mutationFn: ({
+        withdrawalId,
+        data,
+      }: {
+        withdrawalId: number;
+        data: WithdrawalCancelRequest;
+      }) => cancelWithdrawal(withdrawalId, data),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+        // ロット一覧も更新（数量が戻るため）
+        queryClient.invalidateQueries({ queryKey: ["lots"] });
+        queryClient.invalidateQueries({ queryKey: ["inventory-items"] });
+      },
+    });
+
   return {
     useList,
     useGet,
     useCreate,
+    useCancel,
   };
 }

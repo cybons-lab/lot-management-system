@@ -75,7 +75,10 @@ from app.infrastructure.persistence.models.withdrawal_models import (
     Withdrawal,
 )
 from app.presentation.schemas.inventory.withdrawal_schema import (
+    CANCEL_REASON_LABELS,
     WITHDRAWAL_TYPE_LABELS,
+    WithdrawalCancelReason,
+    WithdrawalCancelRequest,
     WithdrawalCreate,
     WithdrawalListResponse,
     WithdrawalResponse,
@@ -127,6 +130,7 @@ class WithdrawalService:
             joinedload(Withdrawal.customer),
             joinedload(Withdrawal.delivery_place),
             joinedload(Withdrawal.user),
+            joinedload(Withdrawal.cancelled_by_user),
         )
 
         if lot_id is not None:
@@ -182,6 +186,7 @@ class WithdrawalService:
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),
+                joinedload(Withdrawal.cancelled_by_user),
             )
             .filter(Withdrawal.id == withdrawal_id)
             .first()
@@ -301,6 +306,7 @@ class WithdrawalService:
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),
+                joinedload(Withdrawal.cancelled_by_user),
             )
             .filter(Withdrawal.id == withdrawal.id)
             .first()
@@ -316,6 +322,18 @@ class WithdrawalService:
         withdrawal_type = WithdrawalType(withdrawal.withdrawal_type)
         lot = withdrawal.lot
         product = lot.product if lot else None
+
+        # 取消理由の変換
+        cancel_reason = None
+        cancel_reason_label = None
+        if withdrawal.cancel_reason:
+            try:
+                cancel_reason = WithdrawalCancelReason(withdrawal.cancel_reason)
+                cancel_reason_label = CANCEL_REASON_LABELS.get(
+                    cancel_reason, str(cancel_reason.value)
+                )
+            except ValueError:
+                cancel_reason_label = withdrawal.cancel_reason
 
         return WithdrawalResponse(
             id=withdrawal.id,
@@ -342,4 +360,114 @@ class WithdrawalService:
             withdrawn_by_name=withdrawal.user.username if withdrawal.user else None,
             withdrawn_at=withdrawal.withdrawn_at,
             created_at=withdrawal.created_at,
+            # 取消関連フィールド
+            is_cancelled=withdrawal.cancelled_at is not None,
+            cancelled_at=withdrawal.cancelled_at,
+            cancelled_by=withdrawal.cancelled_by,
+            cancelled_by_name=(
+                withdrawal.cancelled_by_user.username
+                if withdrawal.cancelled_by_user
+                else None
+            ),
+            cancel_reason=cancel_reason,
+            cancel_reason_label=cancel_reason_label,
+            cancel_note=withdrawal.cancel_note,
         )
+
+    def cancel_withdrawal(
+        self, withdrawal_id: int, data: WithdrawalCancelRequest
+    ) -> WithdrawalResponse:
+        """出庫を取消（反対仕訳方式）.
+
+        取消済みの出庫に対してRETURNトランザクションを記録し、
+        ロットの在庫を復元する。
+
+        Args:
+            withdrawal_id: 出庫ID
+            data: 取消リクエスト
+
+        Returns:
+            取消後の出庫レコード
+
+        Raises:
+            ValueError: 出庫が見つからない、または既に取消済みの場合
+        """
+        # 出庫レコードを取得
+        withdrawal = (
+            self.db.query(Withdrawal).filter(Withdrawal.id == withdrawal_id).first()
+        )
+
+        if not withdrawal:
+            raise ValueError(f"出庫（ID={withdrawal_id}）が見つかりません")
+
+        # べき等性: 既に取消済みの場合はそのまま返す
+        if withdrawal.cancelled_at is not None:
+            return self.get_withdrawal_by_id(withdrawal_id)  # type: ignore
+
+        # ロットを取得（ロック付き）
+        lot = (
+            self.db.query(Lot).filter(Lot.id == withdrawal.lot_id).with_for_update().first()
+        )
+
+        if not lot:
+            raise ValueError(f"ロット（ID={withdrawal.lot_id}）が見つかりません")
+
+        # 在庫を復元
+        quantity_before = lot.current_quantity
+        new_quantity = lot.current_quantity + withdrawal.quantity
+        lot.current_quantity = new_quantity
+        lot.updated_at = utcnow()
+
+        # depletedだった場合はactiveに戻す
+        if lot.status == "depleted":
+            lot.status = "active"
+
+        # stock_historyにRETURNトランザクションを記録（反対仕訳）
+        stock_history = StockHistory(
+            lot_id=lot.id,
+            transaction_type=StockTransactionType.RETURN,
+            quantity_change=+withdrawal.quantity,  # 戻りはプラス
+            quantity_after=new_quantity,
+            reference_type="withdrawal_cancellation",
+            reference_id=withdrawal.id,
+            transaction_date=utcnow(),
+        )
+        self.db.add(stock_history)
+
+        # 出庫レコードに取消情報を記録
+        withdrawal.cancelled_at = utcnow()
+        withdrawal.cancelled_by = data.cancelled_by
+        withdrawal.cancel_reason = data.reason.value
+        withdrawal.cancel_note = data.note
+
+        self.db.commit()
+        self.db.refresh(withdrawal)
+
+        # ドメインイベント発行
+        event = StockChangedEvent(
+            lot_id=lot.id,
+            quantity_before=quantity_before,
+            quantity_after=new_quantity,
+            quantity_change=+withdrawal.quantity,
+            reason=f"withdrawal_cancellation:{data.reason.value}",
+        )
+        EventDispatcher.queue(event)
+
+        # レスポンス用にリレーションを再取得
+        refreshed = (
+            self.db.query(Withdrawal)
+            .options(
+                joinedload(Withdrawal.lot).joinedload(Lot.product),
+                joinedload(Withdrawal.customer),
+                joinedload(Withdrawal.delivery_place),
+                joinedload(Withdrawal.user),
+                joinedload(Withdrawal.cancelled_by_user),
+            )
+            .filter(Withdrawal.id == withdrawal.id)
+            .first()
+        )
+
+        if not refreshed:
+            raise ValueError(f"出庫（ID={withdrawal.id}）の再取得に失敗しました")
+
+        return self._to_response(refreshed)

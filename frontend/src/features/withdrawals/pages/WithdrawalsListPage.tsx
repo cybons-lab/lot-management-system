@@ -7,10 +7,12 @@
 import { formatDistanceToNow } from "date-fns";
 /* eslint-disable max-lines-per-function */
 import { ja } from "date-fns/locale";
-import { ArrowLeft, Plus } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Plus, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { WITHDRAWAL_TYPE_LABELS } from "../api";
+import { WITHDRAWAL_TYPE_LABELS, type WithdrawalResponse } from "../api";
+import { WithdrawalCancelDialog } from "../components/WithdrawalCancelDialog";
 import { useWithdrawals } from "../hooks";
 import { useWithdrawalsPageState } from "../hooks/useWithdrawalsPageState";
 
@@ -37,6 +39,15 @@ export function WithdrawalsListPage() {
 
   // フィルタ・ページ状態（sessionStorageで永続化）
   const { page, filterType, setPage, setFilterType } = useWithdrawalsPageState();
+
+  // 取消ダイアログの状態
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<WithdrawalResponse | null>(null);
+
+  const handleCancelClick = (withdrawal: WithdrawalResponse) => {
+    setSelectedWithdrawal(withdrawal);
+    setCancelDialogOpen(true);
+  };
 
   const { useList } = useWithdrawals();
   const { data, isLoading, isError, error } = useList({
@@ -140,6 +151,7 @@ export function WithdrawalsListPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>状態</TableHead>
                     <TableHead>出庫日時</TableHead>
                     <TableHead>出庫タイプ</TableHead>
                     <TableHead>ロット</TableHead>
@@ -149,11 +161,33 @@ export function WithdrawalsListPage() {
                     <TableHead>納入場所</TableHead>
                     <TableHead>出荷日</TableHead>
                     <TableHead>参照番号</TableHead>
+                    <TableHead>操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {withdrawals.map((w) => (
-                    <TableRow key={w.withdrawal_id}>
+                    <TableRow
+                      key={w.withdrawal_id}
+                      className={w.is_cancelled ? "bg-slate-50 opacity-60" : ""}
+                    >
+                      <TableCell>
+                        {w.is_cancelled ? (
+                          <div className="flex flex-col">
+                            <span className="inline-flex items-center rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
+                              取消済
+                            </span>
+                            {w.cancel_reason_label && (
+                              <span className="mt-1 text-xs text-gray-500">
+                                {w.cancel_reason_label}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                            有効
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div className="text-sm">
                           {formatDistanceToNow(new Date(w.withdrawn_at), {
@@ -175,7 +209,11 @@ export function WithdrawalsListPage() {
                         <div className="text-sm">{w.product_name}</div>
                         <div className="text-xs text-gray-500">{w.product_code}</div>
                       </TableCell>
-                      <TableCell className="text-right font-medium">{w.quantity}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        <span className={w.is_cancelled ? "line-through" : ""}>
+                          {w.quantity}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         <div className="text-sm">{w.customer_name}</div>
                         <div className="text-xs text-gray-500">{w.customer_code}</div>
@@ -187,6 +225,19 @@ export function WithdrawalsListPage() {
                       <TableCell>{w.ship_date}</TableCell>
                       <TableCell className="text-sm text-gray-600">
                         {w.reference_number || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {!w.is_cancelled && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCancelClick(w)}
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <XCircle className="mr-1 h-4 w-4" />
+                            取消
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -223,6 +274,13 @@ export function WithdrawalsListPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* 取消ダイアログ */}
+      <WithdrawalCancelDialog
+        withdrawal={selectedWithdrawal}
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+      />
     </div>
   );
 }
