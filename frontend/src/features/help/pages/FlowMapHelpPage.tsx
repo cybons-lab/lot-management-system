@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import * as d3 from "d3";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 
 import graphData from "@/data/graph.json";
 import type {
@@ -315,6 +315,7 @@ export function FlowMapHelpPage() {
               })}
 
               {filteredNodes.map((node) => {
+                if (node.type === "domain") return null;
                 const { x, y, width, height } = getNodePosition(node);
                 const { fill, stroke } = NODE_COLORS[node.type];
                 const isSelected = node.id === selectedNodeId;

@@ -21,6 +21,7 @@ import { ForecastDetailPage } from "@/features/forecasts/pages/ForecastDetailPag
 import { ForecastEditPage } from "@/features/forecasts/pages/ForecastEditPage";
 import { ForecastImportPage } from "@/features/forecasts/pages/ForecastImportPage";
 import { ForecastListPage } from "@/features/forecasts/pages/ForecastListPage";
+import { FlowMapHelpPage } from "@/features/help/pages/FlowMapHelpPage";
 import { InboundPlanCreatePage } from "@/features/inbound-plans/pages/InboundPlanCreatePage";
 import { InboundPlanDetailPage } from "@/features/inbound-plans/pages/InboundPlanDetailPage";
 import { InboundPlanEditPage } from "@/features/inbound-plans/pages/InboundPlanEditPage";
@@ -63,7 +64,6 @@ import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehouseDeliveryRoutesListPage } from "@/features/warehouse-delivery-routes";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
 import { WithdrawalCreatePage, WithdrawalsListPage } from "@/features/withdrawals/pages";
-import { FlowMapHelpPage } from "@/features/help/pages/FlowMapHelpPage";
 
 // --- Route Groups ---
 
