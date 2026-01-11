@@ -365,9 +365,7 @@ class WithdrawalService:
             cancelled_at=withdrawal.cancelled_at,
             cancelled_by=withdrawal.cancelled_by,
             cancelled_by_name=(
-                withdrawal.cancelled_by_user.username
-                if withdrawal.cancelled_by_user
-                else None
+                withdrawal.cancelled_by_user.username if withdrawal.cancelled_by_user else None
             ),
             cancel_reason=cancel_reason,
             cancel_reason_label=cancel_reason_label,
@@ -392,9 +390,12 @@ class WithdrawalService:
         Raises:
             ValueError: 出庫が見つからない、または既に取消済みの場合
         """
-        # 出庫レコードを取得
+        # 出庫レコードを取得（行ロック取得して同時実行を防ぐ）
         withdrawal = (
-            self.db.query(Withdrawal).filter(Withdrawal.id == withdrawal_id).first()
+            self.db.query(Withdrawal)
+            .filter(Withdrawal.id == withdrawal_id)
+            .with_for_update()
+            .first()
         )
 
         if not withdrawal:
@@ -405,9 +406,7 @@ class WithdrawalService:
             return self.get_withdrawal_by_id(withdrawal_id)  # type: ignore
 
         # ロットを取得（ロック付き）
-        lot = (
-            self.db.query(Lot).filter(Lot.id == withdrawal.lot_id).with_for_update().first()
-        )
+        lot = self.db.query(Lot).filter(Lot.id == withdrawal.lot_id).with_for_update().first()
 
         if not lot:
             raise ValueError(f"ロット（ID={withdrawal.lot_id}）が見つかりません")

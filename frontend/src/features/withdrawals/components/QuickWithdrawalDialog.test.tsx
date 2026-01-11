@@ -232,6 +232,7 @@ describe("QuickWithdrawalDialog", () => {
       withdrawn_by_name: "testuser",
       withdrawn_at: "2026-01-07T12:00:00Z",
       created_at: "2026-01-07T12:00:00Z",
+      is_cancelled: false,
     });
   });
 

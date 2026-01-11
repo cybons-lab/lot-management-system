@@ -6,11 +6,9 @@
 
 import { useState } from "react";
 import { Loader2, XCircle } from "lucide-react";
+import { toast } from "sonner";
 
-import {
-  RESERVATION_CANCEL_REASONS,
-  type ReservationCancelReason,
-} from "../api";
+import { RESERVATION_CANCEL_REASONS, type ReservationCancelReason } from "../api";
 import { useCancelReservationMutation } from "../hooks/mutations";
 
 import {
@@ -29,7 +27,6 @@ import {
   SelectValue,
   Textarea,
 } from "@/components/ui";
-import { useToast } from "@/hooks/use-toast";
 
 export interface ReservationInfo {
   id: number;
@@ -55,15 +52,14 @@ export function ReservationCancelDialog({
   onOpenChange,
   onSuccess,
 }: ReservationCancelDialogProps) {
-  const { toast } = useToast();
+  /* const { toast } = useToast(); */
 
   const [reason, setReason] = useState<ReservationCancelReason>("input_error");
   const [note, setNote] = useState("");
 
   const cancelMutation = useCancelReservationMutation({
     onSuccess: (response) => {
-      toast({
-        title: "予約を取り消しました",
+      toast.success("予約を取り消しました", {
         description: response.lot_number
           ? `ロット ${response.lot_number} の引当が解除されました`
           : "引当が解除されました",
@@ -75,10 +71,8 @@ export function ReservationCancelDialog({
       onSuccess?.();
     },
     onError: (error) => {
-      toast({
-        title: "取消に失敗しました",
+      toast.error("取消に失敗しました", {
         description: error instanceof Error ? error.message : "エラーが発生しました",
-        variant: "destructive",
       });
     },
   });
@@ -188,11 +182,7 @@ export function ReservationCancelDialog({
           >
             キャンセル
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleCancel}
-            disabled={cancelMutation.isPending}
-          >
+          <Button variant="destructive" onClick={handleCancel} disabled={cancelMutation.isPending}>
             {cancelMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

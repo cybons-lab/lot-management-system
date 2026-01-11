@@ -6,12 +6,9 @@
 
 import { useState } from "react";
 import { Loader2, XCircle } from "lucide-react";
+import { toast } from "sonner";
 
-import {
-  CANCEL_REASONS,
-  type WithdrawalCancelReason,
-  type WithdrawalResponse,
-} from "../api";
+import { CANCEL_REASONS, type WithdrawalCancelReason, type WithdrawalResponse } from "../api";
 import { useWithdrawals } from "../hooks";
 
 import {
@@ -30,7 +27,6 @@ import {
   SelectValue,
   Textarea,
 } from "@/components/ui";
-import { useToast } from "@/hooks/use-toast";
 
 interface WithdrawalCancelDialogProps {
   withdrawal: WithdrawalResponse | null;
@@ -43,7 +39,7 @@ export function WithdrawalCancelDialog({
   open,
   onOpenChange,
 }: WithdrawalCancelDialogProps) {
-  const { toast } = useToast();
+  /* const { toast } = useToast(); */
   const { useCancel } = useWithdrawals();
   const cancelMutation = useCancel();
 
@@ -62,8 +58,7 @@ export function WithdrawalCancelDialog({
         },
       });
 
-      toast({
-        title: "出庫を取り消しました",
+      toast.success("出庫を取り消しました", {
         description: `ロット ${withdrawal.lot_number} の在庫が復元されました`,
       });
 
@@ -71,10 +66,8 @@ export function WithdrawalCancelDialog({
       setReason("input_error");
       setNote("");
     } catch (error) {
-      toast({
-        title: "取消に失敗しました",
+      toast.error("取消に失敗しました", {
         description: error instanceof Error ? error.message : "エラーが発生しました",
-        variant: "destructive",
       });
     }
   };
@@ -89,9 +82,7 @@ export function WithdrawalCancelDialog({
             <XCircle className="h-5 w-5 text-red-500" />
             出庫の取消
           </DialogTitle>
-          <DialogDescription>
-            この出庫を取り消すと、ロットの在庫が復元されます。
-          </DialogDescription>
+          <DialogDescription>この出庫を取り消すと、ロットの在庫が復元されます。</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -158,11 +149,7 @@ export function WithdrawalCancelDialog({
           >
             キャンセル
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleCancel}
-            disabled={cancelMutation.isPending}
-          >
+          <Button variant="destructive" onClick={handleCancel} disabled={cancelMutation.isPending}>
             {cancelMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

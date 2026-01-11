@@ -210,9 +210,7 @@ export function WithdrawalsListPage() {
                         <div className="text-xs text-gray-500">{w.product_code}</div>
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        <span className={w.is_cancelled ? "line-through" : ""}>
-                          {w.quantity}
-                        </span>
+                        <span className={w.is_cancelled ? "line-through" : ""}>{w.quantity}</span>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">{w.customer_name}</div>

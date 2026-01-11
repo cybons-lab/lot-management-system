@@ -243,6 +243,4 @@ class Withdrawal(Base):
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
     user: Mapped[User] = relationship("User", foreign_keys=[withdrawn_by])
-    cancelled_by_user: Mapped[User | None] = relationship(
-        "User", foreign_keys=[cancelled_by]
-    )
+    cancelled_by_user: Mapped[User | None] = relationship("User", foreign_keys=[cancelled_by])
