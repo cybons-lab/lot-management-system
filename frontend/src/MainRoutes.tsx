@@ -21,6 +21,7 @@ import { ForecastDetailPage } from "@/features/forecasts/pages/ForecastDetailPag
 import { ForecastEditPage } from "@/features/forecasts/pages/ForecastEditPage";
 import { ForecastImportPage } from "@/features/forecasts/pages/ForecastImportPage";
 import { ForecastListPage } from "@/features/forecasts/pages/ForecastListPage";
+import { FlowMapHelpPage } from "@/features/help/pages/FlowMapHelpPage";
 import { InboundPlanCreatePage } from "@/features/inbound-plans/pages/InboundPlanCreatePage";
 import { InboundPlanDetailPage } from "@/features/inbound-plans/pages/InboundPlanDetailPage";
 import { InboundPlanEditPage } from "@/features/inbound-plans/pages/InboundPlanEditPage";
@@ -270,6 +271,9 @@ export function MainRoutes() {
       <Route path="/rpa/material-delivery-note/step3/:runId" element={<Step3DetailPage />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4} element={<Step4ListPage />} />
       <Route path="/rpa/material-delivery-note/step4/:runId" element={<Step4DetailPage />} />
+
+      {/* Help */}
+      <Route path={ROUTES.HELP.FLOW_MAP} element={<FlowMapHelpPage />} />
 
       {/* Catch all - redirect to dashboard */}
       <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />

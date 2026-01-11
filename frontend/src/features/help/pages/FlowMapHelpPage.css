@@ -1,0 +1,418 @@
+/**
+ * FlowMapHelpPage.css
+ * 業務フロー可視化ページのスタイル
+ */
+
+.flow-help-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px);
+  background: #f8fafc;
+}
+
+/* ヘッダー */
+.flow-help-header {
+  padding: 1.5rem 2rem 1rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.flow-help-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.25rem;
+}
+
+.flow-help-header p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* タブ */
+.flow-help-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.flow-help-tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.flow-help-tab:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.flow-help-tab.active {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+/* 検索バー */
+.flow-help-search {
+  padding: 0.75rem 2rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.flow-help-search input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.flow-help-search input:focus {
+  border-color: #3b82f6;
+}
+
+/* メインコンテンツ */
+.flow-help-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* キャンバス */
+.flow-help-canvas {
+  flex: 1;
+  padding: 2rem;
+  overflow: auto;
+}
+
+/* フローコンテナ */
+.flow-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  min-width: max-content;
+}
+
+/* フローセクション */
+.flow-section {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.flow-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* フローライン */
+.flow-line {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* ノード */
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 100px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.flow-node:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.flow-node.selected {
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.3),
+    0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.flow-node.highlight {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.flow-node-icon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+}
+
+.flow-node-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* エッジ（矢印） */
+.flow-edge {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+}
+
+.flow-edge-line {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #6366f1, #a78bfa);
+  position: relative;
+  border-radius: 2px;
+}
+
+.flow-edge-line::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-left-color: #a78bfa;
+}
+
+.flow-edge-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  position: absolute;
+  top: -1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* 詳細パネル */
+.flow-help-detail {
+  width: 360px;
+  background: white;
+  border-left: 1px solid #e2e8f0;
+  overflow-y: auto;
+}
+
+.flow-help-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #94a3b8;
+  text-align: center;
+  padding: 2rem;
+}
+
+.flow-help-detail-empty svg {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.flow-help-detail-content {
+  padding: 1.5rem;
+}
+
+.flow-help-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.flow-help-detail-icon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  font-size: 1.5rem;
+}
+
+.flow-help-detail-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.flow-help-detail-type {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.flow-help-detail-section {
+  margin-bottom: 1.5rem;
+}
+
+.flow-help-detail-section h4 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.5rem;
+}
+
+.flow-help-detail-section p {
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.flow-help-detail-section ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.flow-help-detail-section li {
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.6;
+  margin-bottom: 0.25rem;
+}
+
+.flow-help-detail-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.flow-help-detail-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.flow-help-detail-exception {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #dc2626;
+  background: #fef2f2;
+  border-radius: 0.25rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* 例外タブ */
+.flow-exceptions {
+  padding: 2rem;
+}
+
+.flow-exception-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.flow-exception-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flow-exception-card h3::before {
+  content: "⚠️";
+}
+
+.flow-exception-trigger {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 1rem;
+  padding: 0.5rem;
+  background: #fef2f2;
+  border-radius: 0.5rem;
+}
+
+.flow-exception-steps {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.flow-exception-steps li {
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.8;
+}
+
+/* 用語タブ */
+.flow-terms {
+  padding: 2rem;
+}
+
+.flow-term-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.flow-term-card dt {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem;
+}
+
+.flow-term-card dd {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
+}

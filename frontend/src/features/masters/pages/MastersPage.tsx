@@ -21,85 +21,115 @@ interface MasterLink {
   requireAdmin?: boolean;
 }
 
-const masterLinks: MasterLink[] = [
+interface MasterSection {
+  title: string;
+  description: string;
+  links: MasterLink[];
+}
+
+const masterSections: MasterSection[] = [
   {
-    title: "得意先マスタ",
-    description: "顧客情報を管理",
-    href: ROUTES.MASTERS.CUSTOMERS,
-    icon: Users,
-    color: "bg-blue-50 text-blue-600 hover:bg-blue-100",
+    title: "基本マスタ",
+    description: "単独で管理する基礎データ",
+    links: [
+      {
+        title: "得意先マスタ",
+        description: "得意先の基本情報を管理",
+        href: ROUTES.MASTERS.CUSTOMERS,
+        icon: Users,
+        color: "bg-blue-50 text-blue-600 hover:bg-blue-100",
+      },
+      {
+        title: "納入先マスタ",
+        description: "納入先の基本情報を管理",
+        href: "/delivery-places",
+        icon: Database,
+        color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
+      },
+      {
+        title: "倉庫マスタ",
+        description: "倉庫の基本情報を管理",
+        href: ROUTES.MASTERS.WAREHOUSES,
+        icon: Warehouse,
+        color: "bg-purple-50 text-purple-600 hover:bg-purple-100",
+      },
+      {
+        title: "製品マスタ",
+        description: "社内基準の製品情報を管理",
+        href: ROUTES.MASTERS.PRODUCTS,
+        icon: Package,
+        color: "bg-green-50 text-green-600 hover:bg-green-100",
+      },
+      {
+        title: "仕入先マスタ",
+        description: "仕入先の基本情報を管理",
+        href: ROUTES.MASTERS.SUPPLIERS,
+        icon: Building2,
+        color: "bg-orange-50 text-orange-600 hover:bg-orange-100",
+      },
+    ],
   },
   {
-    title: "納入先マスタ",
-    description: "納入先情報を管理",
-    href: "/delivery-places",
-    icon: Database,
-    color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
+    title: "マッピングマスタ",
+    description: "得意先/仕入先と製品の紐付けを管理",
+    links: [
+      {
+        title: "得意先品番マッピング",
+        description: "得意先品番と製品/仕入先の紐付け",
+        href: ROUTES.MASTERS.CUSTOMER_ITEMS,
+        icon: Database,
+        color: "bg-teal-50 text-teal-600 hover:bg-teal-100",
+      },
+      {
+        title: "仕入先別製品設定",
+        description: "製品と仕入先の関係・主取引先設定",
+        href: "/masters/supplier-products",
+        icon: Database,
+        color: "bg-cyan-50 text-cyan-600 hover:bg-cyan-100",
+      },
+    ],
   },
   {
-    title: "倉庫マスタ",
-    description: "倉庫情報を管理",
-    href: ROUTES.MASTERS.WAREHOUSES,
-    icon: Warehouse,
-    color: "bg-purple-50 text-purple-600 hover:bg-purple-100",
+    title: "変換・設定",
+    description: "製品に紐づく単位や担当の設定",
+    links: [
+      {
+        title: "単位換算",
+        description: "製品ごとの単位換算係数を管理",
+        href: "/masters/uom-conversions",
+        icon: Package,
+        color: "bg-indigo-50 text-indigo-600 hover:bg-indigo-100",
+      },
+      {
+        title: "主担当設定",
+        description: "仕入先ごとの主担当者を設定",
+        href: "/masters/primary-assignments",
+        icon: UserCheck,
+        color: "bg-amber-50 text-amber-600 hover:bg-amber-100",
+      },
+    ],
   },
   {
-    title: "製品マスタ",
-    description: "製品情報を管理",
-    href: ROUTES.MASTERS.PRODUCTS,
-    icon: Package,
-    color: "bg-green-50 text-green-600 hover:bg-green-100",
-  },
-  {
-    title: "仕入先マスタ",
-    description: "サプライヤー情報を管理",
-    href: ROUTES.MASTERS.SUPPLIERS,
-    icon: Building2,
-    color: "bg-orange-50 text-orange-600 hover:bg-orange-100",
-  },
-  {
-    title: "得意先商品",
-    description: "顧客別製品情報を管理",
-    href: ROUTES.MASTERS.CUSTOMER_ITEMS,
-    icon: Database,
-    color: "bg-teal-50 text-teal-600 hover:bg-teal-100",
-  },
-  {
-    title: "仕入先商品",
-    description: "仕入先別製品情報を管理",
-    href: "/masters/supplier-products",
-    icon: Database,
-    color: "bg-cyan-50 text-cyan-600 hover:bg-cyan-100",
-  },
-  {
-    title: "単位換算",
-    description: "製品単位の換算情報を管理",
-    href: "/masters/uom-conversions",
-    icon: Package,
-    color: "bg-indigo-50 text-indigo-600 hover:bg-indigo-100",
-  },
-  {
-    title: "主担当設定",
-    description: "仕入先ごとの主担当者を設定",
-    href: "/masters/primary-assignments",
-    icon: UserCheck,
-    color: "bg-amber-50 text-amber-600 hover:bg-amber-100",
-  },
-  {
-    title: "ユーザー管理",
-    description: "ユーザーアカウントを管理",
-    href: ROUTES.SETTINGS.USERS,
-    icon: Users,
-    color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
-    requireAdmin: true,
-  },
-  {
-    title: "一括インポート・初期化",
-    description: "マスタデータの一括登録とDB初期化",
-    href: ROUTES.MASTERS.BULK_LOAD,
-    icon: FilePenLine,
-    color: "bg-rose-50 text-rose-600 hover:bg-rose-100",
-    requireAdmin: true,
+    title: "運用・管理",
+    description: "ユーザーや初期化などの管理機能",
+    links: [
+      {
+        title: "ユーザー管理",
+        description: "ユーザーアカウントを管理",
+        href: ROUTES.SETTINGS.USERS,
+        icon: Users,
+        color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
+        requireAdmin: true,
+      },
+      {
+        title: "一括インポート・初期化",
+        description: "マスタデータの一括登録とDB初期化",
+        href: ROUTES.MASTERS.BULK_LOAD,
+        icon: FilePenLine,
+        color: "bg-rose-50 text-rose-600 hover:bg-rose-100",
+        requireAdmin: true,
+      },
+    ],
   },
 ];
 
@@ -108,7 +138,12 @@ export function MastersPage() {
   const isAdmin = user?.roles?.includes("admin");
 
   // 管理者でない場合は管理者専用リンクを除外
-  const visibleLinks = masterLinks.filter((link) => !link.requireAdmin || isAdmin);
+  const visibleSections = masterSections
+    .map((section) => ({
+      ...section,
+      links: section.links.filter((link) => !link.requireAdmin || isAdmin),
+    }))
+    .filter((section) => section.links.length > 0);
 
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
@@ -119,31 +154,41 @@ export function MastersPage() {
       </div>
 
       {/* マスタリンクグリッド */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleLinks.map((master) => {
-          const Icon = master.icon;
-          return (
-            <Link
-              key={master.href}
-              to={master.href}
-              className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md"
-            >
-              <div className="flex items-start gap-4">
-                <div
-                  className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${master.color}`}
-                >
-                  <Icon className="h-6 w-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900 group-hover:text-teal-600">
-                    {master.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600">{master.description}</p>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+      <div className="space-y-8">
+        {visibleSections.map((section) => (
+          <section key={section.title} className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">{section.title}</h2>
+              <p className="mt-1 text-sm text-slate-600">{section.description}</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {section.links.map((master) => {
+                const Icon = master.icon;
+                return (
+                  <Link
+                    key={master.href}
+                    to={master.href}
+                    className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${master.color}`}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-teal-600">
+                          {master.title}
+                        </h3>
+                        <p className="mt-1 text-sm text-slate-600">{master.description}</p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   );

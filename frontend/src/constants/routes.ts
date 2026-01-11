@@ -81,6 +81,7 @@ export const ROUTES = {
   ADMIN: {
     INDEX: "/admin",
     OPERATION_LOGS: "/admin/operation-logs",
+    CLIENT_LOGS: "/admin/client-logs",
     BUSINESS_RULES: "/admin/business-rules",
     BATCH_JOBS: "/admin/batch-jobs",
     MASTER_CHANGE_LOGS: "/admin/master-change-logs",
@@ -103,6 +104,10 @@ export const ROUTES = {
       RUN_DETAIL: (runId: number | string) => `/rpa/material-delivery-note/runs/${runId}`,
       LAYER_CODES: "/rpa/material-delivery-note/layer-codes",
     },
+  },
+
+  HELP: {
+    FLOW_MAP: "/help/flow-map",
   },
 } as const;
 
