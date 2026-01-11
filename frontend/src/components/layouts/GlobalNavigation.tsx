@@ -15,9 +15,17 @@ import {
   PackagePlus,
   Database,
   ClipboardList,
+  HelpCircle,
+  ChevronDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/display/dropdown-menu";
 import { ROUTES } from "@/constants/routes";
 import { type User, useAuth } from "@/features/auth/AuthContext";
 import { cn } from "@/shared/libs/utils";
@@ -28,11 +36,12 @@ import { cn } from "@/shared/libs/utils";
 
 interface NavItem {
   title: string;
-  href: string;
+  href?: string;
   icon: React.ComponentType<{ className?: string }>;
   color?: string;
   activeColor?: string;
   requireAdmin?: boolean;
+  subItems?: { title: string; href: string }[];
 }
 
 const navItems: NavItem[] = [
@@ -40,66 +49,56 @@ const navItems: NavItem[] = [
     title: "ダッシュボード",
     href: ROUTES.DASHBOARD,
     icon: LayoutDashboard,
-    color: "text-gray-600",
-    activeColor: "text-blue-600 bg-blue-50",
   },
   {
     title: "オリジナル（需要予測）",
     href: ROUTES.FORECASTS.LIST,
     icon: TrendingUp,
-    color: "text-gray-600",
-    activeColor: "text-cyan-600 bg-cyan-50",
   },
   {
     title: "入荷予定",
     href: ROUTES.INBOUND_PLANS.LIST,
     icon: PackagePlus,
-    color: "text-gray-600",
-    activeColor: "text-indigo-600 bg-indigo-50",
   },
   {
     title: "在庫・ロット管理",
     href: ROUTES.INVENTORY.ROOT,
     icon: Package,
-    color: "text-gray-600",
-    activeColor: "text-purple-600 bg-purple-50",
   },
   {
     title: "受注管理",
     href: ROUTES.ORDERS.LIST,
     icon: ShoppingCart,
-    color: "text-gray-600",
-    activeColor: "text-green-600 bg-green-50",
   },
   {
     title: "RPA",
     href: ROUTES.RPA.ROOT,
     icon: Settings,
-    color: "text-gray-600",
-    activeColor: "text-indigo-600 bg-indigo-50",
   },
   {
     title: "管理",
     href: ROUTES.ADMIN.INDEX,
     icon: Settings,
-    color: "text-gray-600",
-    activeColor: "text-red-600 bg-red-50",
     requireAdmin: true,
   },
   {
-    title: "操作ログ",
-    href: ROUTES.ADMIN.OPERATION_LOGS,
+    title: "ログ",
     icon: ClipboardList,
-    color: "text-gray-600",
-    activeColor: "text-orange-600 bg-orange-50",
     requireAdmin: true,
+    subItems: [
+      { title: "操作ログ", href: ROUTES.ADMIN.OPERATION_LOGS },
+      { title: "クライアントログ", href: ROUTES.ADMIN.CLIENT_LOGS },
+    ],
   },
   {
     title: "マスタ",
     href: "/masters",
     icon: Database,
-    color: "text-gray-600",
-    activeColor: "text-teal-600 bg-teal-50",
+  },
+  {
+    title: "ヘルプ",
+    icon: HelpCircle,
+    subItems: [{ title: "フローマップ", href: ROUTES.HELP.FLOW_MAP }],
   },
 ];
 
@@ -109,21 +108,69 @@ const navItems: NavItem[] = [
 
 // --- Sub-components ---
 
-function NavItems({ currentPath, user }: { currentPath: string; user: User | null }) {
+function NavItems({ user, currentPath }: { currentPath: string; user: User | null }) {
+
   return (
     <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
       {navItems
         .filter((item) => !item.requireAdmin || user?.roles?.includes("admin"))
         .map((item) => {
           const Icon = item.icon;
+
+          if (item.subItems) {
+            const isSubActive = item.subItems.some(
+              (sub) => currentPath === sub.href || currentPath.startsWith(sub.href),
+            );
+
+            return (
+              <DropdownMenu key={item.title}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 outline-none",
+                      isSubActive
+                        ? "bg-gray-100 text-gray-900"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "h-4 w-4 transition-colors",
+                        isSubActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
+                      )}
+                    />
+                    <span className="hidden lg:inline">{item.title}</span>
+                    <ChevronDown className="h-3 w-3 opacity-50" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  {item.subItems.map((sub) => (
+                    <DropdownMenuItem key={sub.href} asChild>
+                      <Link
+                        to={sub.href}
+                        className={cn(
+                          "w-full cursor-pointer",
+                          currentPath === sub.href && "bg-gray-100 font-bold",
+                        )}
+                      >
+                        {sub.title}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          }
+
           const isActive =
             currentPath === item.href ||
-            (item.href !== "/dashboard" && currentPath.startsWith(item.href));
+            (item.href !== "/dashboard" && item.href && currentPath.startsWith(item.href));
 
           return (
             <Link
               key={item.href}
-              to={item.href}
+              to={item.href || "#"}
               className={cn(
                 "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200",
                 isActive
@@ -233,7 +280,7 @@ export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
             </div>
           </div>
 
-          <NavItems currentPath={currentPath} user={user} />
+          <NavItems user={user} currentPath={currentPath} />
           <UserMenu user={user} logout={logout} />
         </div>
       </div>

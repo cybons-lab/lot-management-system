@@ -81,6 +81,7 @@ export const ROUTES = {
   ADMIN: {
     INDEX: "/admin",
     OPERATION_LOGS: "/admin/operation-logs",
+    CLIENT_LOGS: "/admin/client-logs",
     BUSINESS_RULES: "/admin/business-rules",
     BATCH_JOBS: "/admin/batch-jobs",
     MASTER_CHANGE_LOGS: "/admin/master-change-logs",
