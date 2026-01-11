@@ -52,6 +52,7 @@ vi.mock("@/components/ui", () => {
     DialogTitle: ({ children }: any) => <div>{children}</div>,
     DialogDescription: ({ children }: any) => <div>{children}</div>,
     DialogFooter: ({ children }: any) => <div>{children}</div>,
+    // eslint-disable-next-line jsx-a11y/label-has-associated-control
     Label: (props: any) => <label {...props} />,
     Textarea: (props: any) => <textarea {...props} />,
     Select: (props: any) => <div>{props.children}</div>,
@@ -59,7 +60,15 @@ vi.mock("@/components/ui", () => {
     SelectValue: () => <span>Select Value</span>,
     SelectContent: (props: any) => <div>{props.children}</div>,
     SelectItem: (props: any) => (
-      <div onClick={() => props.onSelect && props.onSelect(props.value)}>{props.children}</div>
+      <div
+        role="option"
+        onClick={() => props.onSelect && props.onSelect(props.value)}
+        onKeyDown={(e) => e.key === "Enter" && props.onSelect && props.onSelect(props.value)}
+        tabIndex={0}
+        aria-selected={false}
+      >
+        {props.children}
+      </div>
     ),
   };
 });

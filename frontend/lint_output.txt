@@ -1,0 +1,19 @@
+
+> lot-management-frontend@1.0.0 lint
+> eslint . --max-warnings=0 --max-warnings=0
+
+
+D:\Work\Lot-management-system\frontend\src\features\allocations\components\ReservationCancelDialog.test.tsx
+  55:28  error  A form label must be associated with a control  jsx-a11y/label-has-associated-control
+
+D:\Work\Lot-management-system\frontend\src\features\allocations\components\ReservationCancelForm.tsx
+  3:1  error  There should be at least one empty line between import groups                       import/order
+  4:1  error  `./ReservationCancelDialog` import should occur before import of `@/components/ui`  import/order
+
+D:\Work\Lot-management-system\frontend\src\features\withdrawals\components\WithdrawalCancelDialog.test.tsx
+  46:28  error    A form label must be associated with a control                                                  jsx-a11y/label-has-associated-control
+  53:7   warning  Visible, non-interactive elements with click handlers must have at least one keyboard listener  jsx-a11y/click-events-have-key-events
+
+笨・5 problems (4 errors, 1 warning)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+

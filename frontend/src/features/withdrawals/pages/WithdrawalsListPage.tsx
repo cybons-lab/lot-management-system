@@ -7,8 +7,8 @@
 import { formatDistanceToNow } from "date-fns";
 /* eslint-disable max-lines-per-function */
 import { ja } from "date-fns/locale";
-import { useState } from "react";
 import { ArrowLeft, Plus, XCircle } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { WITHDRAWAL_TYPE_LABELS, type WithdrawalResponse } from "../api";
