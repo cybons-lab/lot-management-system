@@ -1,6 +1,14 @@
 import { CANCEL_REASONS, type WithdrawalCancelReason, type WithdrawalResponse } from "../api";
 
-import { Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "@/components/ui";
+import {
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+} from "@/components/ui";
 
 interface WithdrawalCancelFormProps {
   withdrawal: WithdrawalResponse;
@@ -44,7 +52,10 @@ export function WithdrawalCancelForm({
       {/* 取消理由の選択 */}
       <div className="space-y-2">
         <Label htmlFor="cancel-reason">取消理由 *</Label>
-        <Select value={reason} onValueChange={(value) => onReasonChange(value as WithdrawalCancelReason)}>
+        <Select
+          value={reason}
+          onValueChange={(value) => onReasonChange(value as WithdrawalCancelReason)}
+        >
           <SelectTrigger id="cancel-reason">
             <SelectValue placeholder="理由を選択" />
           </SelectTrigger>

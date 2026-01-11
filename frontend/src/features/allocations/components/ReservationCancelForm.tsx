@@ -2,7 +2,15 @@ import { RESERVATION_CANCEL_REASONS, type ReservationCancelReason } from "../api
 
 import { type ReservationInfo } from "./ReservationCancelDialog";
 
-import { Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "@/components/ui";
+import {
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+} from "@/components/ui";
 
 interface ReservationCancelFormProps {
   reservation: ReservationInfo;
@@ -60,7 +68,10 @@ export function ReservationCancelForm({
       {/* 取消理由の選択 */}
       <div className="space-y-2">
         <Label htmlFor="cancel-reason">取消理由 *</Label>
-        <Select value={reason} onValueChange={(value) => onReasonChange(value as ReservationCancelReason)}>
+        <Select
+          value={reason}
+          onValueChange={(value) => onReasonChange(value as ReservationCancelReason)}
+        >
           <SelectTrigger id="cancel-reason">
             <SelectValue placeholder="理由を選択" />
           </SelectTrigger>
