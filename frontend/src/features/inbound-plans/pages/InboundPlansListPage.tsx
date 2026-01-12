@@ -7,7 +7,11 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
-import { InboundPlansList, type InboundPlansFilters, type InboundPlan } from "../components/InboundPlansList";
+import {
+  InboundPlansList,
+  type InboundPlansFilters,
+  type InboundPlan,
+} from "../components/InboundPlansList";
 import { useInboundPlans, useDeleteInboundPlan, useSyncFromSAP } from "../hooks";
 
 import { PermanentDeleteDialog } from "@/components/common";
