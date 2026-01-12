@@ -21,8 +21,9 @@ import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { useAuth } from "@/features/auth/AuthContext";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
-import { useListPageDialogs } from "@/hooks/ui";
+import { useListPageDialogs, useTable } from "@/hooks/ui";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -157,6 +158,7 @@ export function CustomersListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "customer_code", direction: "asc" });
   const [showInactive, setShowInactive] = useState(false);
+  const table = useTable({ initialPageSize: 25 });
 
   // Dialog management with shared hook
   const {
@@ -227,6 +229,9 @@ export function CustomersListPage() {
     });
     return sorted;
   }, [filteredCustomers, sort]);
+
+  // ページネーション
+  const paginatedCustomers = table.paginateData(sortedCustomers);
 
   const handleRowClick = useCallback(
     (customer: Customer) => {
@@ -420,7 +425,7 @@ export function CustomersListPage() {
         )}
 
         <DataTable
-          data={sortedCustomers as CustomerWithValidTo[]}
+          data={paginatedCustomers as CustomerWithValidTo[]}
           columns={columns}
           sort={sort}
           onSortChange={setSort}
@@ -432,6 +437,16 @@ export function CustomersListPage() {
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
         />
+        {sortedCustomers.length > 0 && (
+          <TablePagination
+            currentPage={table.calculatePagination(sortedCustomers.length).page ?? 1}
+            pageSize={table.calculatePagination(sortedCustomers.length).pageSize ?? 25}
+            totalCount={sortedCustomers.length}
+            onPageChange={table.setPage}
+            onPageSizeChange={table.setPageSize}
+            pageSizeOptions={[25, 50, 100]}
+          />
+        )}
       </div>
 
       {/* 新規登録ダイアログ */}

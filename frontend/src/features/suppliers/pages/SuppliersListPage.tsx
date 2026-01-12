@@ -19,8 +19,9 @@ import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { useAuth } from "@/features/auth/AuthContext";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
-import { useListPageDialogs } from "@/hooks/ui";
+import { useListPageDialogs, useTable } from "@/hooks/ui";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -146,6 +147,7 @@ export function SuppliersListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "supplier_code", direction: "asc" });
   const [showInactive, setShowInactive] = useState(false);
+  const table = useTable({ initialPageSize: 25 });
 
   // Dialog management with shared hook
   const {
@@ -228,6 +230,9 @@ export function SuppliersListPage() {
     });
     return sorted;
   }, [filteredSuppliers, sort]);
+
+  // ページネーション
+  const paginatedSuppliers = table.paginateData(sortedSuppliers);
 
   const handleCreate = useCallback(
     (data: SupplierCreate) => {
@@ -390,7 +395,7 @@ export function SuppliersListPage() {
         )}
 
         <DataTable
-          data={sortedSuppliers as SupplierWithValidTo[]}
+          data={paginatedSuppliers as SupplierWithValidTo[]}
           columns={columns}
           sort={sort}
           onSortChange={setSort}
@@ -402,6 +407,16 @@ export function SuppliersListPage() {
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
         />
+        {sortedSuppliers.length > 0 && (
+          <TablePagination
+            currentPage={table.calculatePagination(sortedSuppliers.length).page ?? 1}
+            pageSize={table.calculatePagination(sortedSuppliers.length).pageSize ?? 25}
+            totalCount={sortedSuppliers.length}
+            onPageChange={table.setPage}
+            onPageSizeChange={table.setPageSize}
+            pageSizeOptions={[25, 50, 100]}
+          />
+        )}
       </div>
 
       <Dialog open={isCreateOpen} onOpenChange={(open) => !open && close()}>
