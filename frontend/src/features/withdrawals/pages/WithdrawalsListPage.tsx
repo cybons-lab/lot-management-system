@@ -69,30 +69,12 @@ export function WithdrawalsListPage() {
     skip: (page - 1) * PAGE_SIZE,
     limit: PAGE_SIZE,
     withdrawal_type: filterType === "all" ? undefined : filterType,
+    search: searchQuery || undefined, // 空文字列はundefinedにして送信しない
   });
 
   const withdrawals = useMemo(() => data?.withdrawals ?? [], [data]);
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
-  const filteredWithdrawals = useMemo(() => {
-    if (!searchQuery.trim()) return withdrawals;
-    const query = searchQuery.toLowerCase();
-    return withdrawals.filter((w) => {
-      return [
-        w.lot_number,
-        w.product_name,
-        w.product_code,
-        w.customer_name,
-        w.customer_code,
-        w.delivery_place_name,
-        w.delivery_place_code,
-        w.reference_number,
-        w.ship_date,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query));
-    });
-  }, [searchQuery, withdrawals]);
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -194,7 +176,7 @@ export function WithdrawalsListPage() {
         <CardHeader>
           <CardDescription>
             {searchQuery.trim()
-              ? `検索結果 ${filteredWithdrawals.length} 件`
+              ? `検索結果 ${withdrawals.length} 件`
               : `${total} 件中 ${(page - 1) * PAGE_SIZE + 1} - ${Math.min(
                   page * PAGE_SIZE,
                   total,
@@ -207,7 +189,7 @@ export function WithdrawalsListPage() {
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
               <span className="ml-2 text-gray-500">読み込み中...</span>
             </div>
-          ) : filteredWithdrawals.length === 0 ? (
+          ) : withdrawals.length === 0 ? (
             <div className="py-8 text-center text-gray-500">
               {searchQuery.trim()
                 ? "検索条件に一致する出庫履歴がありません"
@@ -232,7 +214,7 @@ export function WithdrawalsListPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredWithdrawals.map((w) => (
+                  {withdrawals.map((w) => (
                     <TableRow
                       key={w.withdrawal_id}
                       className={w.is_cancelled ? "bg-slate-50 opacity-60" : ""}
