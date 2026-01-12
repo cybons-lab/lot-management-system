@@ -23,6 +23,7 @@ import {
 } from "./index";
 
 import { useCustomers } from "@/features/customers/hooks";
+import { useTable } from "@/hooks/ui";
 import type { SortConfig } from "@/shared/components/data/DataTable";
 
 interface DialogState {
@@ -42,6 +43,7 @@ export function useDeliveryPlacesPageState() {
     direction: "asc",
   });
   const [showInactive, setShowInactive] = useState(false);
+  const table = useTable({ initialPageSize: 25 });
 
   // Dialog state
   const [dialogState, setDialogState] = useState<DialogState>({
@@ -104,6 +106,9 @@ export function useDeliveryPlacesPageState() {
     });
     return sorted;
   }, [filteredData, sort]);
+
+  // Paginated data
+  const paginatedData = table.paginateData(sortedData);
 
   // Dialog handlers
   const openCreateDialog = useCallback(() => {
@@ -200,6 +205,11 @@ export function useDeliveryPlacesPageState() {
     setSort,
     showInactive,
     setShowInactive,
+
+    // Pagination
+    table,
+    paginatedData,
+    totalCount: sortedData.length,
 
     // Dialog state
     ...dialogState,
