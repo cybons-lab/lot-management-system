@@ -9,11 +9,27 @@ import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
 import { useSuppliersQuery } from "@/hooks/api/useMastersQuery";
 import { useTable } from "@/hooks/ui";
-import type { Column } from "@/shared/components/data/DataTable";
-import { DataTable } from "@/shared/components/data/DataTable";
+import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { formatDate } from "@/shared/utils/date";
+
+// ============================================
+// ヘルパー関数
+// ============================================
+
+/**
+ * ステータスを日本語ラベルに変換
+ */
+const getStatusLabel = (status: string): string => {
+  const labels: Record<string, string> = {
+    planned: "予定",
+    partially_received: "一部入荷",
+    received: "入荷済",
+    cancelled: "キャンセル",
+  };
+  return labels[status] || status;
+};
 
 // ============================================
 // 型定義
@@ -70,6 +86,10 @@ export function InboundPlansList({
   // Master data for filter options
   const { data: suppliers = [] } = useSuppliersQuery();
   const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSort] = useState<SortConfig>({
+    column: "planned_arrival_date",
+    direction: "desc",
+  });
   const table = useTable({ initialPageSize: 25 });
 
   const supplierOptions = useMemo(
@@ -196,7 +216,21 @@ export function InboundPlansList({
         .some((value) => String(value).toLowerCase().includes(query)),
     );
   }, [plansList, searchQuery]);
-  const paginatedPlans = table.paginateData(filteredPlans);
+
+  // ソート処理
+  const sortedPlans = useMemo(() => {
+    const sorted = [...filteredPlans];
+    sorted.sort((a, b) => {
+      const aVal = a[sort.column as keyof InboundPlan];
+      const bVal = b[sort.column as keyof InboundPlan];
+      if (aVal === undefined || aVal === null || bVal === undefined || bVal === null) return 0;
+      const cmp = String(aVal).localeCompare(String(bVal), "ja");
+      return sort.direction === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [filteredPlans, sort]);
+
+  const paginatedPlans = table.paginateData(sortedPlans);
 
   useEffect(() => {
     table.setPage(1);
@@ -304,7 +338,7 @@ export function InboundPlansList({
                     : "bg-gray-100 text-gray-800"
             }`}
           >
-            {row.status}
+            {getStatusLabel(row.status)}
           </span>
         ),
         width: 150,
@@ -373,7 +407,7 @@ export function InboundPlansList({
       <div className="space-y-4">
         <div className="text-sm text-gray-600">
           {searchQuery.trim()
-            ? `検索結果 ${filteredPlans.length} 件`
+            ? `検索結果 ${sortedPlans.length} 件`
             : `${plansList.length} 件の入荷予定が見つかりました`}
         </div>
 
@@ -383,19 +417,21 @@ export function InboundPlansList({
           getRowId={(row) => row.id}
           rowActions={renderRowActions}
           isLoading={isLoading}
+          sort={sort}
+          onSortChange={setSort}
           emptyMessage={
             searchQuery.trim()
               ? "検索条件に一致する入荷予定がありません"
               : "入荷予定が登録されていません"
           }
         />
-        {filteredPlans.length > 0 && (
+        {sortedPlans.length > 0 && (
           <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
             <TablePagination
-              currentPage={table.calculatePagination(filteredPlans.length).page ?? 1}
-              pageSize={table.calculatePagination(filteredPlans.length).pageSize ?? 25}
+              currentPage={table.calculatePagination(sortedPlans.length).page ?? 1}
+              pageSize={table.calculatePagination(sortedPlans.length).pageSize ?? 25}
               totalCount={
-                table.calculatePagination(filteredPlans.length).totalItems ?? filteredPlans.length
+                table.calculatePagination(sortedPlans.length).totalItems ?? sortedPlans.length
               }
               onPageChange={table.setPage}
               onPageSizeChange={table.setPageSize}

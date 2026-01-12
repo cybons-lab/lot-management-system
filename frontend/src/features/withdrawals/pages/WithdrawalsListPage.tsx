@@ -7,7 +7,7 @@
 import { formatDistanceToNow } from "date-fns";
 /* eslint-disable max-lines-per-function */
 import { ja } from "date-fns/locale";
-import { ArrowLeft, Plus, Search, XCircle } from "lucide-react";
+import { ArrowLeft, Plus, RotateCcw, Search, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -55,6 +55,13 @@ export function WithdrawalsListPage() {
   const handleCancelClick = (withdrawal: WithdrawalResponse) => {
     setSelectedWithdrawal(withdrawal);
     setCancelDialogOpen(true);
+  };
+
+  // フィルターリセット処理
+  const handleResetFilters = () => {
+    setFilterType("all");
+    setSearchQuery("");
+    setPage(1);
   };
 
   const { useList } = useWithdrawals();
@@ -169,6 +176,15 @@ export function WithdrawalsListPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetFilters}
+              className="text-slate-600 hover:text-slate-900"
+            >
+              <RotateCcw className="mr-1.5 h-4 w-4" />
+              リセット
+            </Button>
           </div>
         </CardContent>
       </Card>

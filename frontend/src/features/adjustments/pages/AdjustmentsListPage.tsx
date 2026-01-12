@@ -17,6 +17,7 @@ import { ROUTES } from "@/constants/routes";
 import { useTable } from "@/hooks/ui";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
+import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 
@@ -68,6 +69,15 @@ export function AdjustmentsListPage() {
 
   const handleCreateNew = () => {
     navigate(ROUTES.INVENTORY.ADJUSTMENTS.NEW);
+  };
+
+  // フィルターリセット処理
+  const handleResetFilters = () => {
+    setFilters({
+      lot_id: "",
+      adjustment_type: "" as "" | AdjustmentType,
+    });
+    setSearchQuery("");
   };
 
   const getAdjustmentTypeLabel = (type: AdjustmentType): string => {
@@ -168,7 +178,7 @@ export function AdjustmentsListPage() {
       />
 
       {/* Filters */}
-      <div className="rounded-lg border bg-white p-4">
+      <SimpleFilterContainer hideSearch onReset={handleResetFilters}>
         <div className="grid gap-4 md:grid-cols-3">
           <div>
             <Label className="mb-2 block text-sm font-medium">ロットID</Label>
@@ -209,7 +219,7 @@ export function AdjustmentsListPage() {
             />
           </div>
         </div>
-      </div>
+      </SimpleFilterContainer>
 
       {/* Data display area */}
       {isLoading ? (
