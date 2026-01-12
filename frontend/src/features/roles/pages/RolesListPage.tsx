@@ -3,21 +3,26 @@
  * Roles list page with inline create form
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import type { CreateRoleRequest } from "../api";
+import type { CreateRoleRequest, Role } from "../api";
 import { RoleForm } from "../components/RoleForm";
 import { useRoles, useCreateRole, useDeleteRole } from "../hooks";
 
 import { createRoleColumns } from "./columns";
 
-import { Button } from "@/components/ui";
+import { PermanentDeleteDialog } from "@/components/common";
+import { Button, Input } from "@/components/ui";
 import { TanstackTable } from "@/shared/components";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function RolesListPage() {
   const [showForm, setShowForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // 削除ダイアログの状態
+  const [deletingRole, setDeletingRole] = useState<Role | null>(null);
 
   // Fetch roles
   const { data: roles, isLoading, isError } = useRoles();
@@ -47,14 +52,20 @@ export function RolesListPage() {
     }
   };
 
-  const handleDelete = async (roleId: number) => {
-    if (!confirm("このロールを削除してもよろしいですか？")) {
-      return;
+  const handleDeleteClick = (roleId: number) => {
+    const role = roles?.find((r) => r.id === roleId);
+    if (role) {
+      setDeletingRole(role);
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingRole) return;
 
     try {
-      await deleteMutation.mutateAsync(roleId);
+      await deleteMutation.mutateAsync(deletingRole.id);
       toast.success("ロールを削除しました");
+      setDeletingRole(null);
     } catch (error) {
       console.error("Failed to delete role:", error);
       toast.error("削除に失敗しました。ロールが使用中の可能性があります。");
@@ -62,9 +73,21 @@ export function RolesListPage() {
   };
 
   const columns = createRoleColumns({
-    onDelete: handleDelete,
+    onDelete: handleDeleteClick,
     isDeleting: deleteMutation.isPending,
   });
+
+  const filteredRoles = useMemo(() => {
+    if (!roles) return [];
+    if (!searchQuery.trim()) return roles;
+    const query = searchQuery.toLowerCase();
+    return roles.filter(
+      (role) =>
+        role.role_code.toLowerCase().includes(query) ||
+        role.role_name.toLowerCase().includes(query) ||
+        (role.description ?? "").toLowerCase().includes(query),
+    );
+  }, [roles, searchQuery]);
 
   return (
     <PageContainer>
@@ -87,6 +110,16 @@ export function RolesListPage() {
         </div>
       )}
 
+      <div className="rounded-lg border bg-white p-4">
+        <Input
+          type="search"
+          placeholder="ロールコード・名称・説明で検索..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
+
       {/* Data display area */}
       {isLoading ? (
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
@@ -100,9 +133,13 @@ export function RolesListPage() {
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           ロールが登録されていません
         </div>
+      ) : filteredRoles.length === 0 ? (
+        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
+          検索条件に一致するロールがありません
+        </div>
       ) : (
         <TanstackTable
-          data={roles}
+          data={filteredRoles}
           columns={columns}
           initialPageSize={25}
           isLoading={isLoading}
@@ -110,6 +147,16 @@ export function RolesListPage() {
           className="overflow-hidden"
         />
       )}
+
+      <PermanentDeleteDialog
+        open={!!deletingRole}
+        onOpenChange={(open) => !open && setDeletingRole(null)}
+        onConfirm={handleConfirmDelete}
+        isPending={deleteMutation.isPending}
+        title="ロールを削除しますか？"
+        description={`${deletingRole?.role_name}（${deletingRole?.role_code}）を削除します。この操作は取り消せません。`}
+        confirmationPhrase={deletingRole?.role_code || "delete"}
+      />
     </PageContainer>
   );
 }

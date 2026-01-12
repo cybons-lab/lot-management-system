@@ -1,16 +1,16 @@
 /**
  * Zod Validation Schemas - Products
- * 製品関連のバリデーションスキーマ
+ * 商品関連のバリデーションスキーマ
  */
 
 import { z } from "zod";
 
 /**
- * 製品スキーマ
+ * 商品スキーマ
  */
 export const productSchema = z.object({
   product_code: z.string().min(1, "先方品番は必須です"),
-  product_name: z.string().min(1, "製品名は必須です"),
+  product_name: z.string().min(1, "商品名は必須です"),
   unit: z.string().optional(),
   category: z.string().optional(),
 });

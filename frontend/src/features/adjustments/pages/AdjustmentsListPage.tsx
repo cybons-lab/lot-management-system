@@ -4,7 +4,7 @@
  * Refactored to use DataTable component.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import type { AdjustmentType } from "../api";
@@ -14,8 +14,11 @@ import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { useTable } from "@/hooks/ui";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
+import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 interface Adjustment {
@@ -36,6 +39,8 @@ export function AdjustmentsListPage() {
     lot_id: "",
     adjustment_type: "" as "" | AdjustmentType,
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const table = useTable({ initialPageSize: 25 });
 
   // Build query params
   const queryParams = {
@@ -46,8 +51,34 @@ export function AdjustmentsListPage() {
   // Fetch adjustments
   const { data: adjustments, isLoading, isError } = useAdjustments(queryParams);
 
+  const filteredAdjustments = useMemo(() => {
+    if (!adjustments) return [];
+    if (!searchQuery.trim()) return adjustments;
+    const query = searchQuery.toLowerCase();
+    return adjustments.filter((row) =>
+      [row.lot_number, row.product_name, row.product_code, row.reason, row.adjustment_type]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query)),
+    );
+  }, [adjustments, searchQuery]);
+  const paginatedAdjustments = table.paginateData(filteredAdjustments);
+
+  useEffect(() => {
+    table.setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, searchQuery]);
+
   const handleCreateNew = () => {
     navigate(ROUTES.INVENTORY.ADJUSTMENTS.NEW);
+  };
+
+  // フィルターリセット処理
+  const handleResetFilters = () => {
+    setFilters({
+      lot_id: "",
+      adjustment_type: "" as "" | AdjustmentType,
+    });
+    setSearchQuery("");
   };
 
   const getAdjustmentTypeLabel = (type: AdjustmentType): string => {
@@ -148,8 +179,8 @@ export function AdjustmentsListPage() {
       />
 
       {/* Filters */}
-      <div className="rounded-lg border bg-white p-4">
-        <div className="grid gap-4 md:grid-cols-2">
+      <SimpleFilterContainer hideSearch onReset={handleResetFilters}>
+        <div className="grid gap-4 md:grid-cols-3">
           <div>
             <Label className="mb-2 block text-sm font-medium">ロットID</Label>
             <Input
@@ -179,8 +210,17 @@ export function AdjustmentsListPage() {
               <option value="other">その他</option>
             </select>
           </div>
+          <div>
+            <Label className="mb-2 block text-sm font-medium">キーワード検索</Label>
+            <Input
+              type="search"
+              placeholder="ロット・製品・理由で検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
-      </div>
+      </SimpleFilterContainer>
 
       {/* Data display area */}
       {isLoading ? (
@@ -195,17 +235,41 @@ export function AdjustmentsListPage() {
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           調整履歴が登録されていません
         </div>
+      ) : filteredAdjustments.length === 0 ? (
+        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
+          検索条件に一致する調整履歴がありません
+        </div>
       ) : (
         <div className="space-y-4">
-          <div className="text-sm text-gray-600">{adjustments.length} 件の調整履歴</div>
+          <div className="text-sm text-gray-600">
+            {searchQuery.trim()
+              ? `検索結果 ${filteredAdjustments.length} 件`
+              : `${adjustments.length} 件の調整履歴`}
+          </div>
 
           {/* Table */}
           <DataTable
-            data={adjustments}
+            data={paginatedAdjustments}
             columns={columns}
             getRowId={(row) => row.adjustment_id}
-            emptyMessage="調整履歴がありません"
+            emptyMessage={
+              searchQuery.trim() ? "検索条件に一致する調整履歴がありません" : "調整履歴がありません"
+            }
           />
+          {filteredAdjustments.length > 0 && (
+            <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <TablePagination
+                currentPage={table.calculatePagination(filteredAdjustments.length).page ?? 1}
+                pageSize={table.calculatePagination(filteredAdjustments.length).pageSize ?? 25}
+                totalCount={
+                  table.calculatePagination(filteredAdjustments.length).totalItems ??
+                  filteredAdjustments.length
+                }
+                onPageChange={table.setPage}
+                onPageSizeChange={table.setPageSize}
+              />
+            </div>
+          )}
         </div>
       )}
     </PageContainer>

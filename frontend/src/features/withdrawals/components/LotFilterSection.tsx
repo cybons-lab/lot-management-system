@@ -63,7 +63,7 @@ export function LotFilterSection({
         {/* Product filter */}
         <div>
           <Label htmlFor="filter_product" className="mb-2 block text-sm font-medium">
-            製品{" "}
+            商品{" "}
             {filteredProducts.length < products.length && (
               <span className="text-xs text-slate-500">({filteredProducts.length}件)</span>
             )}
@@ -78,7 +78,7 @@ export function LotFilterSection({
             ]}
             value={filters.product_id ? String(filters.product_id) : ""}
             onChange={(v) => onProductChange(v ? Number(v) : 0)}
-            placeholder={isLoadingProducts ? "読み込み中..." : "製品を検索..."}
+            placeholder={isLoadingProducts ? "読み込み中..." : "商品を検索..."}
             disabled={isLoadingProducts}
           />
         </div>

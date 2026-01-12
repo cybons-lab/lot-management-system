@@ -13,17 +13,19 @@ import { Button, Input, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 // eslint-disable-next-line max-lines-per-function, complexity
 export function SupplierProductsPage() {
   const {
-    // Data
     supplierProducts,
     products,
     suppliers,
-    sortedData,
+    paginatedData,
+    table,
+    totalCount,
     isLoading,
     isError,
     error,
@@ -75,7 +77,7 @@ export function SupplierProductsPage() {
   if (isError) {
     return (
       <div className="space-y-6 px-6 py-6 md:px-8">
-        <PageHeader title="仕入先商品" subtitle="仕入先別の製品情報を管理します" />
+        <PageHeader title="仕入先商品" subtitle="仕入先別の商品情報を管理します" />
         <QueryErrorFallback error={error} resetError={refetch} />
       </div>
     );
@@ -85,7 +87,7 @@ export function SupplierProductsPage() {
     <div className="space-y-6 px-6 py-6 md:px-8">
       <PageHeader
         title="仕入先商品"
-        subtitle="仕入先別の製品情報を管理します"
+        subtitle="仕入先別の商品情報を管理します"
         actions={
           <div className="flex gap-2">
             <SupplierProductExportButton size="sm" />
@@ -129,7 +131,7 @@ export function SupplierProductsPage() {
             </div>
             <Input
               type="search"
-              placeholder="製品・仕入先で検索..."
+              placeholder="商品・仕入先で検索..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-64"
@@ -139,7 +141,7 @@ export function SupplierProductsPage() {
         <SupplierProductsTable
           products={products}
           suppliers={suppliers}
-          supplierProducts={sortedData}
+          supplierProducts={paginatedData}
           isLoading={isLoading}
           sort={sort}
           onSortChange={setSort}
@@ -148,6 +150,16 @@ export function SupplierProductsPage() {
           onPermanentDelete={openPermanentDeleteDialog}
           onRestore={openRestoreDialog}
         />
+        {totalCount > 0 && (
+          <TablePagination
+            currentPage={table.calculatePagination(totalCount).page ?? 1}
+            pageSize={table.calculatePagination(totalCount).pageSize ?? 25}
+            totalCount={totalCount}
+            onPageChange={table.setPage}
+            onPageSizeChange={table.setPageSize}
+            pageSizeOptions={[25, 50, 100]}
+          />
+        )}
       </div>
 
       {/* 新規登録ダイアログ */}
@@ -189,7 +201,7 @@ export function SupplierProductsPage() {
         open={!!deletingItem && deleteMode === "soft"}
         onOpenChange={(open) => !open && closeDeleteDialog()}
         title="仕入先商品設定を無効化しますか？"
-        description={`${deletingItem?.product_name || "製品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を無効化します。`}
+        description={`${deletingItem?.product_name || "商品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を無効化します。`}
         onConfirm={handleSoftDelete}
         isPending={isSoftDeleting}
         onSwitchToPermanent={switchToPermanentDelete}
@@ -201,7 +213,7 @@ export function SupplierProductsPage() {
         onConfirm={handlePermanentDelete}
         isPending={isPermanentDeleting}
         title="仕入先商品設定を完全に削除しますか？"
-        description={`${deletingItem?.product_name || "製品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を完全に削除します。`}
+        description={`${deletingItem?.product_name || "商品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を完全に削除します。`}
         confirmationPhrase={deletingItem?.product_code || "delete"}
       />
 

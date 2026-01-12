@@ -39,7 +39,7 @@ export function WithdrawalCancelForm({
             <span className="font-medium">{withdrawal.quantity}</span>
           </div>
           <div className="col-span-2">
-            <span className="text-slate-500">製品:</span>{" "}
+            <span className="text-slate-500">商品:</span>{" "}
             <span className="font-medium">{withdrawal.product_name}</span>
           </div>
           <div className="col-span-2">

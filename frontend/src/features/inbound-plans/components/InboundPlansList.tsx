@@ -1,5 +1,5 @@
 import { Crown } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
@@ -8,10 +8,28 @@ import { Badge } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
 import { useSuppliersQuery } from "@/hooks/api/useMastersQuery";
-import type { Column } from "@/shared/components/data/DataTable";
-import { DataTable } from "@/shared/components/data/DataTable";
+import { useTable } from "@/hooks/ui";
+import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { formatDate } from "@/shared/utils/date";
+
+// ============================================
+// ヘルパー関数
+// ============================================
+
+/**
+ * ステータスを日本語ラベルに変換
+ */
+const getStatusLabel = (status: string): string => {
+  const labels: Record<string, string> = {
+    planned: "予定",
+    partially_received: "一部入荷",
+    received: "入荷済",
+    cancelled: "キャンセル",
+  };
+  return labels[status] || status;
+};
 
 // ============================================
 // 型定義
@@ -28,6 +46,7 @@ export interface InboundPlan {
   created_at: string;
   is_primary_supplier?: boolean;
   sap_po_number?: string | null; // SAP購買発注番号
+  total_quantity?: number; // 明細数量計
 }
 
 export interface InboundPlansFilters {
@@ -36,6 +55,7 @@ export interface InboundPlansFilters {
   status: "" | "planned" | "partially_received" | "received" | "cancelled";
   date_from: string;
   date_to: string;
+  prioritize_primary?: boolean;
 }
 
 interface InboundPlansListProps {
@@ -65,6 +85,12 @@ export function InboundPlansList({
 }: InboundPlansListProps) {
   // Master data for filter options
   const { data: suppliers = [] } = useSuppliersQuery();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSort] = useState<SortConfig>({
+    column: "planned_arrival_date",
+    direction: "desc",
+  });
+  const table = useTable({ initialPageSize: 25 });
 
   const supplierOptions = useMemo(
     () =>
@@ -83,13 +109,15 @@ export function InboundPlansList({
       status: "",
       date_from: "",
       date_to: "",
+      prioritize_primary: false,
     });
+    setSearchQuery("");
   };
 
   // フィルターUIコンポーネント
   const renderFilters = () => (
     <SimpleFilterContainer hideSearch onReset={handleResetFilters}>
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <div>
           <Label className="mb-2 block text-sm font-medium">仕入先</Label>
           <SearchableSelect
@@ -139,9 +167,75 @@ export function InboundPlansList({
             onChange={(e) => onFilterChange({ ...filters, date_to: e.target.value })}
           />
         </div>
+        <div className="flex items-end pb-2">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="prioritize_primary"
+              checked={!!filters.prioritize_primary}
+              onChange={(e) => onFilterChange({ ...filters, prioritize_primary: e.target.checked })}
+              className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
+            />
+            <Label
+              htmlFor="prioritize_primary"
+              className="flex cursor-pointer items-center gap-1 text-sm font-medium text-slate-700"
+            >
+              <Crown className="h-3.5 w-3.5 text-amber-600" />
+              主担当の仕入先のみ
+            </Label>
+          </div>
+        </div>
+        <div className="md:col-span-2">
+          <Label className="mb-2 block text-sm font-medium">キーワード検索</Label>
+          <Input
+            type="search"
+            placeholder="入荷予定番号・SAP発注番号・仕入先で検索..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
     </SimpleFilterContainer>
   );
+
+  const plansList = useMemo(() => (Array.isArray(plans) ? plans : []), [plans]);
+  const hasInvalidData = plans !== undefined && !Array.isArray(plans);
+  const filteredPlans = useMemo(() => {
+    if (!searchQuery.trim()) return plansList;
+    const query = searchQuery.toLowerCase();
+    return plansList.filter((plan) =>
+      [
+        plan.plan_number,
+        plan.sap_po_number,
+        plan.supplier_name,
+        plan.supplier_code,
+        plan.status,
+        plan.planned_arrival_date,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query)),
+    );
+  }, [plansList, searchQuery]);
+
+  // ソート処理
+  const sortedPlans = useMemo(() => {
+    const sorted = [...filteredPlans];
+    sorted.sort((a, b) => {
+      const aVal = a[sort.column as keyof InboundPlan];
+      const bVal = b[sort.column as keyof InboundPlan];
+      if (aVal === undefined || aVal === null || bVal === undefined || bVal === null) return 0;
+      const cmp = String(aVal).localeCompare(String(bVal), "ja");
+      return sort.direction === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [filteredPlans, sort]);
+
+  const paginatedPlans = table.paginateData(sortedPlans);
+
+  useEffect(() => {
+    table.setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, searchQuery]);
 
   // 列定義
   const columns = useMemo<Column<InboundPlan>[]>(
@@ -217,6 +311,19 @@ export function InboundPlansList({
         sortable: true,
       },
       {
+        id: "total_quantity",
+        header: "合計数量",
+        accessor: (row) => row.total_quantity || 0,
+        cell: (row) => (
+          <div className="text-right font-mono text-sm">
+            {(row.total_quantity || 0).toLocaleString()}
+          </div>
+        ),
+        width: 100,
+        align: "right",
+        sortable: true,
+      },
+      {
         id: "status",
         header: "ステータス",
         accessor: (row) => row.status,
@@ -232,7 +339,7 @@ export function InboundPlansList({
                     : "bg-gray-100 text-gray-800"
             }`}
           >
-            {row.status}
+            {getStatusLabel(row.status)}
           </span>
         ),
         width: 150,
@@ -283,7 +390,7 @@ export function InboundPlansList({
         {renderFilters()}
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           入荷予定が登録されていません
-          {plans && (
+          {hasInvalidData && (
             <div className="mt-2 text-xs text-red-500">
               データ形式エラー: 配列ではありません (Received: {typeof plans})
             </div>
@@ -299,16 +406,39 @@ export function InboundPlansList({
 
       {/* Data display area */}
       <div className="space-y-4">
-        <div className="text-sm text-gray-600">{plans.length} 件の入荷予定が見つかりました</div>
+        <div className="text-sm text-gray-600">
+          {searchQuery.trim()
+            ? `検索結果 ${sortedPlans.length} 件`
+            : `${plansList.length} 件の入荷予定が見つかりました`}
+        </div>
 
         <DataTable
-          data={plans}
+          data={paginatedPlans}
           columns={columns}
           getRowId={(row) => row.id}
           rowActions={renderRowActions}
           isLoading={isLoading}
-          emptyMessage="入荷予定が登録されていません"
+          sort={sort}
+          onSortChange={setSort}
+          emptyMessage={
+            searchQuery.trim()
+              ? "検索条件に一致する入荷予定がありません"
+              : "入荷予定が登録されていません"
+          }
         />
+        {sortedPlans.length > 0 && (
+          <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <TablePagination
+              currentPage={table.calculatePagination(sortedPlans.length).page ?? 1}
+              pageSize={table.calculatePagination(sortedPlans.length).pageSize ?? 25}
+              totalCount={
+                table.calculatePagination(sortedPlans.length).totalItems ?? sortedPlans.length
+              }
+              onPageChange={table.setPage}
+              onPageSizeChange={table.setPageSize}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

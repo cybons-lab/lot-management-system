@@ -13,17 +13,19 @@ import { Input, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function, complexity
 export function DeliveryPlacesListPage() {
   const {
-    // Data
     deliveryPlaces,
     customers,
-    sortedData,
+    paginatedData,
+    table,
+    totalCount,
     isLoading,
     isError,
     error,
@@ -133,7 +135,7 @@ export function DeliveryPlacesListPage() {
         </div>
         <DeliveryPlacesTable
           customers={customers}
-          deliveryPlaces={sortedData}
+          deliveryPlaces={paginatedData}
           isLoading={isLoading}
           sort={sort}
           onSortChange={setSort}
@@ -142,6 +144,16 @@ export function DeliveryPlacesListPage() {
           onPermanentDelete={openPermanentDeleteDialog}
           onRestore={openRestoreDialog}
         />
+        {totalCount > 0 && (
+          <TablePagination
+            currentPage={table.calculatePagination(totalCount).page ?? 1}
+            pageSize={table.calculatePagination(totalCount).pageSize ?? 25}
+            totalCount={totalCount}
+            onPageChange={table.setPage}
+            onPageSizeChange={table.setPageSize}
+            pageSizeOptions={[25, 50, 100]}
+          />
+        )}
       </div>
 
       {/* 新規登録ダイアログ */}

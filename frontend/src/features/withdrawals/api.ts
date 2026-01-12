@@ -133,6 +133,7 @@ export interface WithdrawalListParams {
   end_date?: string;
   product_id?: number;
   warehouse_id?: number;
+  search?: string;
 }
 
 // ============ API Functions ============
@@ -158,6 +159,7 @@ export async function getWithdrawals(
   if (params?.product_id !== undefined) searchParams.set("product_id", String(params.product_id));
   if (params?.warehouse_id !== undefined)
     searchParams.set("warehouse_id", String(params.warehouse_id));
+  if (params?.search) searchParams.set("search", params.search);
 
   const query = searchParams.toString();
   const url = query ? `${BASE_PATH}?${query}` : BASE_PATH;

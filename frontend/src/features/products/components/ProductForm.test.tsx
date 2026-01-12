@@ -17,8 +17,8 @@ describe("ProductForm", () => {
   it("renders all input fields correctly in create mode", () => {
     render(<ProductForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
-    // 製品コードは新規作成時は表示されない
-    expect(screen.queryByLabelText(/製品コード/)).not.toBeInTheDocument();
+    // 商品コードは新規作成時は表示されない
+    expect(screen.queryByLabelText(/商品コード/)).not.toBeInTheDocument();
 
     expect(screen.getByLabelText(/商品名/)).toBeInTheDocument();
     expect(screen.getByLabelText(/社内単位/)).toBeInTheDocument();
@@ -101,7 +101,7 @@ describe("ProductForm", () => {
 
     render(<ProductForm product={product} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
-    expect(screen.getByLabelText(/製品コード/)).toHaveValue("EDIT-001"); // 編集モードでのみ表示
+    expect(screen.getByLabelText(/商品コード/)).toHaveValue("EDIT-001"); // 編集モードでのみ表示
     expect(screen.getByLabelText(/商品名/)).toHaveValue("Edit Product");
     expect(screen.getByLabelText(/社内単位/)).toHaveValue("EA");
     expect(screen.getByLabelText(/外部単位/)).toHaveValue("CS");

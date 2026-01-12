@@ -1,5 +1,5 @@
 import { Plus, Route } from "lucide-react";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 
 import type { WarehouseDeliveryRoute, WarehouseDeliveryRouteCreate } from "../api";
 import { WarehouseDeliveryRouteForm } from "../components";
@@ -14,8 +14,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useDeliveryPlaces } from "@/features/delivery-places/hooks";
 import { useProducts } from "@/features/products/hooks";
 import { useWarehouses } from "@/features/warehouses/hooks";
+import { useTable } from "@/hooks/ui";
 import type { SortConfig } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { ConfirmDialog } from "@/shared/components/form/FormDialog";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -40,7 +42,7 @@ interface ProductOption {
   product_name: string;
 }
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function, complexity */
 export function WarehouseDeliveryRoutesListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "warehouse_code", direction: "asc" });
@@ -48,6 +50,7 @@ export function WarehouseDeliveryRoutesListPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingRoute, setEditingRoute] = useState<WarehouseDeliveryRoute | null>(null);
   const [deletingRoute, setDeletingRoute] = useState<WarehouseDeliveryRoute | null>(null);
+  const table = useTable({ initialPageSize: 25 });
 
   // Data
   const { useList, useCreate, useUpdate, useDelete } = useWarehouseDeliveryRoutes();
@@ -110,11 +113,17 @@ export function WarehouseDeliveryRoutesListPage() {
           r.warehouse_name?.toLowerCase().includes(q) ||
           r.delivery_place_code?.toLowerCase().includes(q) ||
           r.delivery_place_name?.toLowerCase().includes(q) ||
-          r.maker_part_code?.toLowerCase().includes(q),
+          r.maker_part_code?.toLowerCase().includes(q) ||
+          r.product_name?.toLowerCase().includes(q),
       );
     }
     return result;
   }, [routes, searchQuery, showInactive]);
+
+  useEffect(() => {
+    table.setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, showInactive]);
 
   // Sort
   const sortedRoutes = useMemo(() => {
@@ -128,6 +137,7 @@ export function WarehouseDeliveryRoutesListPage() {
     });
     return sorted;
   }, [filteredRoutes, sort]);
+  const paginatedRoutes = table.paginateData(sortedRoutes);
 
   const columns = useMemo(
     () =>
@@ -218,7 +228,7 @@ export function WarehouseDeliveryRoutesListPage() {
             </div>
             <Input
               type="search"
-              placeholder="倉庫・納入先・品番で検索..."
+              placeholder="倉庫・納入先・品番・品名で検索..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={styles.searchInput}
@@ -226,7 +236,7 @@ export function WarehouseDeliveryRoutesListPage() {
           </div>
         </div>
         <DataTable
-          data={sortedRoutes}
+          data={paginatedRoutes}
           columns={columns}
           sort={sort}
           onSortChange={setSort}
@@ -234,6 +244,19 @@ export function WarehouseDeliveryRoutesListPage() {
           isLoading={isLoading}
           emptyMessage="輸送経路が登録されていません"
         />
+        {sortedRoutes.length > 0 && (
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <TablePagination
+              currentPage={table.calculatePagination(sortedRoutes.length).page ?? 1}
+              pageSize={table.calculatePagination(sortedRoutes.length).pageSize ?? 25}
+              totalCount={
+                table.calculatePagination(sortedRoutes.length).totalItems ?? sortedRoutes.length
+              }
+              onPageChange={table.setPage}
+              onPageSizeChange={table.setPageSize}
+            />
+          </div>
+        )}
       </div>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>

@@ -22,8 +22,9 @@ import { Input, Checkbox, Button } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { useAuth } from "@/features/auth/AuthContext";
-import { useListPageDialogs } from "@/hooks/ui";
+import { useListPageDialogs, useTable } from "@/hooks/ui";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -36,6 +37,7 @@ export function ProductsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "product_code", direction: "asc" });
   const [showInactive, setShowInactive] = useState(false);
+  const table = useTable({ initialPageSize: 25 });
 
   // Dialog management with shared hook
   const {
@@ -101,6 +103,9 @@ export function ProductsListPage() {
     });
     return sorted;
   }, [filteredProducts, sort]);
+
+  // ページネーション
+  const paginatedProducts = table.paginateData(sortedProducts);
 
   const handleRowClick = useCallback(
     (product: Product) => {
@@ -281,7 +286,7 @@ export function ProductsListPage() {
         )}
 
         <DataTable
-          data={sortedProducts as ProductWithValidTo[]}
+          data={paginatedProducts as ProductWithValidTo[]}
           columns={columns}
           sort={sort}
           onSortChange={setSort}
@@ -293,6 +298,16 @@ export function ProductsListPage() {
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
         />
+        {sortedProducts.length > 0 && (
+          <TablePagination
+            currentPage={table.calculatePagination(sortedProducts.length).page ?? 1}
+            pageSize={table.calculatePagination(sortedProducts.length).pageSize ?? 25}
+            totalCount={sortedProducts.length}
+            onPageChange={table.setPage}
+            onPageSizeChange={table.setPageSize}
+            pageSizeOptions={[25, 50, 100]}
+          />
+        )}
       </div>
 
       <Dialog open={isCreateOpen} onOpenChange={(open) => !open && close()}>

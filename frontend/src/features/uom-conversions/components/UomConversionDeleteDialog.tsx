@@ -38,7 +38,7 @@ export function UomConversionDeleteDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>単位換算を削除しますか？</AlertDialogTitle>
           <AlertDialogDescription>
-            製品「{target?.product_name}」（{target?.product_code}）の 外部単位「
+            商品「{target?.product_name}」（{target?.product_code}）の 外部単位「
             {target?.external_unit}」の換算情報を削除します。 この操作は取り消せません。
           </AlertDialogDescription>
         </AlertDialogHeader>

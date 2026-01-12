@@ -17,6 +17,7 @@ import { useSupplierProducts } from "./useSupplierProducts";
 
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
+import { useTable } from "@/hooks/ui";
 import type { SortConfig } from "@/shared/components/data/DataTable";
 
 interface DialogState {
@@ -37,6 +38,7 @@ export function useSupplierProductsPageState() {
     direction: "asc",
   });
   const [showInactive, setShowInactive] = useState(false);
+  const table = useTable({ initialPageSize: 25 });
 
   // Dialog state
   const [dialogState, setDialogState] = useState<DialogState>({
@@ -120,6 +122,9 @@ export function useSupplierProductsPageState() {
     });
     return sorted;
   }, [filteredData, sort, productMap, supplierMap]);
+
+  // Paginated data
+  const paginatedData = table.paginateData(sortedData);
 
   // Dialog handlers
   const openCreateDialog = useCallback(() => {
@@ -228,6 +233,11 @@ export function useSupplierProductsPageState() {
     setSort,
     showInactive,
     setShowInactive,
+
+    // Pagination
+    table,
+    paginatedData,
+    totalCount: sortedData.length,
 
     // Dialog state
     ...dialogState,

@@ -36,6 +36,9 @@ def list_withdrawals(
     end_date: date | None = Query(None, description="終了日（出荷日）"),
     product_id: int | None = Query(None, description="製品IDでフィルタ"),
     warehouse_id: int | None = Query(None, description="倉庫IDでフィルタ"),
+    search: str | None = Query(
+        None, description="キーワード検索（ロット、製品、得意先、納入先、参照番号）"
+    ),
     db: Session = Depends(get_db),
 ):
     """出庫履歴一覧を取得.
@@ -50,6 +53,7 @@ def list_withdrawals(
         end_date: 終了日
         product_id: 製品ID
         warehouse_id: 倉庫ID
+        search: 検索キーワード
         db: データベースセッション
 
     Returns:
@@ -66,6 +70,7 @@ def list_withdrawals(
         end_date=end_date,
         product_id=product_id,
         warehouse_id=warehouse_id,
+        search_query=search,
     )
 
 

@@ -86,7 +86,7 @@ function OrderLinesTable({
         <TableHeader>
           <TableRow>
             <TableHead>行No</TableHead>
-            <TableHead>製品</TableHead>
+            <TableHead>商品</TableHead>
             <TableHead>納入先</TableHead>
             <TableHead>得意先受注No</TableHead>
             <TableHead>SAP受注No</TableHead>

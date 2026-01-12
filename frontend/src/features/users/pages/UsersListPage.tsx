@@ -3,28 +3,34 @@
  * Users list page with inline create form
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import type { CreateUserRequest } from "../api";
+import type { CreateUserRequest, User } from "../api";
 import { UserForm } from "../components/UserForm";
 import { useUsers, useCreateUser, useDeleteUser } from "../hooks";
 
 import { createUserColumns } from "./columns";
 
+import { PermanentDeleteDialog } from "@/components/common";
+import { Input } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { TanstackTable } from "@/shared/components";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function, complexity
 export function UsersListPage() {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // 削除ダイアログの状態
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
 
   // Fetch users
   const { data: users, isLoading, isError } = useUsers({ is_active: isActiveFilter });
@@ -56,14 +62,20 @@ export function UsersListPage() {
     }
   };
 
-  const handleDelete = async (userId: number) => {
-    if (!confirm("このユーザーを削除してもよろしいですか？")) {
-      return;
+  const handleDeleteClick = (userId: number) => {
+    const user = users?.find((u) => u.user_id === userId);
+    if (user) {
+      setDeletingUser(user);
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingUser) return;
 
     try {
-      await deleteMutation.mutateAsync(userId);
+      await deleteMutation.mutateAsync(deletingUser.user_id);
       toast.success("ユーザーを削除しました");
+      setDeletingUser(null);
     } catch (error) {
       console.error("Failed to delete user:", error);
       toast.error("削除に失敗しました");
@@ -76,9 +88,21 @@ export function UsersListPage() {
 
   const columns = createUserColumns({
     onViewDetail: handleViewDetail,
-    onDelete: handleDelete,
+    onDelete: handleDeleteClick,
     isDeleting: deleteMutation.isPending,
   });
+
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    if (!searchQuery.trim()) return users;
+    const query = searchQuery.toLowerCase();
+    return users.filter(
+      (user) =>
+        user.username.toLowerCase().includes(query) ||
+        user.display_name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query),
+    );
+  }, [users, searchQuery]);
 
   return (
     <PageContainer>
@@ -121,7 +145,7 @@ export function UsersListPage() {
 
       {/* Filter */}
       <div className="rounded-lg border bg-white p-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <label className="text-sm font-medium" htmlFor="status-filter">
             状態フィルタ:
           </label>
@@ -139,6 +163,13 @@ export function UsersListPage() {
             <option value="active">有効のみ</option>
             <option value="inactive">無効のみ</option>
           </select>
+          <Input
+            type="search"
+            placeholder="ユーザー名・表示名・メールで検索..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="min-w-[240px]"
+          />
         </div>
       </div>
 
@@ -155,9 +186,13 @@ export function UsersListPage() {
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           ユーザーが登録されていません
         </div>
+      ) : filteredUsers.length === 0 ? (
+        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
+          検索条件に一致するユーザーがいません
+        </div>
       ) : (
         <TanstackTable
-          data={users}
+          data={filteredUsers}
           columns={columns}
           initialPageSize={25}
           isLoading={isLoading}
@@ -165,6 +200,16 @@ export function UsersListPage() {
           className="overflow-hidden"
         />
       )}
+
+      <PermanentDeleteDialog
+        open={!!deletingUser}
+        onOpenChange={(open) => !open && setDeletingUser(null)}
+        onConfirm={handleConfirmDelete}
+        isPending={deleteMutation.isPending}
+        title="ユーザーを削除しますか？"
+        description={`${deletingUser?.display_name}（${deletingUser?.username}）を削除します。この操作は取り消せません。`}
+        confirmationPhrase={deletingUser?.username || "delete"}
+      />
     </PageContainer>
   );
 }

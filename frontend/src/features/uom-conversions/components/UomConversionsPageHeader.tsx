@@ -20,7 +20,7 @@ export function UomConversionsPageHeader({
     <div className="flex items-center justify-between">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">単位換算</h1>
-        <p className="mt-1 text-sm text-slate-600">製品単位の換算情報を管理します</p>
+        <p className="mt-1 text-sm text-slate-600">商品単位の換算情報を管理します</p>
       </div>
       <div className="flex gap-2">
         <UomConversionExportButton size="sm" />

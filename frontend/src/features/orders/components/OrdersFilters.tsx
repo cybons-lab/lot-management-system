@@ -25,7 +25,7 @@ export function OrdersFilters({ filters }: OrdersFiltersProps) {
     <SimpleFilterContainer
       searchValue={(filters.values.search as string) || ""}
       onSearchChange={(value) => filters.set("search", value)}
-      searchPlaceholder="受注番号、得意先、製品で検索..."
+      searchPlaceholder="受注番号、納入先、得意先、商品、SAP受注Noで検索..."
       onReset={filters.reset}
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-5">

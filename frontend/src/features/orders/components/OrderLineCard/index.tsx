@@ -147,7 +147,7 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
             </div>
 
             <InfoRow
-              label="製品"
+              label="商品"
               value={`${computed.productCode ?? ""} ${computed.productName ?? ""}`.trim() || "—"}
               highlight
             />

@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/form";
 
 const schema = z.object({
-  product_id: z.coerce.number().min(1, "製品を選択してください"),
+  product_id: z.coerce.number().min(1, "商品を選択してください"),
   external_unit: z.string().min(1, "外部単位は必須です").max(20, "20文字以内"),
   factor: z.coerce.number().positive("正の数を入力してください"),
 });
@@ -93,14 +93,14 @@ export function UomConversionForm({
           name="product_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>製品</FormLabel>
+              <FormLabel>商品</FormLabel>
               <Select
                 value={field.value ? String(field.value) : ""}
                 onValueChange={(v) => field.onChange(Number(v))}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="製品を選択" />
+                    <SelectValue placeholder="商品を選択" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>

@@ -126,6 +126,7 @@ export interface InboundPlansListParams {
   status?: "planned" | "partially_received" | "received" | "cancelled";
   date_from?: string;
   date_to?: string;
+  prioritize_primary?: boolean;
 }
 
 // ===== API Functions =====
@@ -143,6 +144,9 @@ export const getInboundPlans = async (params?: InboundPlansListParams) => {
   if (params?.status) searchParams.append("status", params.status);
   if (params?.date_from) searchParams.append("date_from", params.date_from);
   if (params?.date_to) searchParams.append("date_to", params.date_to);
+  if (params?.prioritize_primary !== undefined) {
+    searchParams.append("prioritize_primary", params.prioritize_primary.toString());
+  }
 
   const queryString = searchParams.toString();
   const response = await http.get<InboundPlanListResponse>(

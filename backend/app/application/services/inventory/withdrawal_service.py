@@ -47,6 +47,7 @@
 from datetime import date
 from decimal import Decimal
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.soft_delete_utils import (
@@ -68,6 +69,7 @@ from app.infrastructure.persistence.models import (
     Customer,
     DeliveryPlace,
     Lot,
+    Product,
     StockHistory,
     StockTransactionType,
 )
@@ -108,6 +110,7 @@ class WithdrawalService:
         end_date: date | None = None,
         product_id: int | None = None,
         warehouse_id: int | None = None,
+        search_query: str | None = None,
     ) -> WithdrawalListResponse:
         """出庫履歴一覧を取得.
 
@@ -121,6 +124,7 @@ class WithdrawalService:
             end_date: 終了日（出荷日）
             product_id: 製品IDでフィルタ
             warehouse_id: 倉庫IDでフィルタ
+            search_query: キーワード検索（ロット、製品、得意先、納入先、参照番号）
 
         Returns:
             出庫履歴一覧
@@ -143,6 +147,35 @@ class WithdrawalService:
                 query = query.filter(Lot.product_id == product_id)
             if warehouse_id is not None:
                 query = query.filter(Lot.warehouse_id == warehouse_id)
+
+        if search_query:
+            term = f"%{search_query}%"
+            # 検索に必要なテーブルを結合（重複結合を防ぐため、既に結合されているか確認するか、joinの仕方を統一する）
+            # ここではシンプルに、まだ結合されていない場合に結合する戦略をとるが、
+            # SQLAlchemyは同じテーブルへのjoinを自動で重複排除しない場合があるため、明示的にjoinする。
+            # ただし、options(joinedload)はEager Load用であり、フィルタリングのためのjoinとは別。
+            # フィルタリングのためにjoinが必要。
+
+            # LotとProductは結合必須
+            if product_id is None and warehouse_id is None:  # 上ですでに結合していない場合
+                query = query.join(Withdrawal.lot)
+            query = query.join(Lot.product)
+
+            # CustomerとDeliveryPlaceは外部結合（存在しない場合もあるため）
+            query = query.outerjoin(Withdrawal.customer)
+            query = query.outerjoin(Withdrawal.delivery_place)
+
+            query = query.filter(
+                or_(
+                    Lot.lot_number.ilike(term),
+                    Product.product_code.ilike(term),
+                    Product.product_name.ilike(term),
+                    Product.maker_item_code.ilike(term),
+                    Customer.customer_name.ilike(term),
+                    DeliveryPlace.delivery_place_name.ilike(term),
+                    Withdrawal.reference_number.ilike(term),
+                )
+            )
 
         if customer_id is not None:
             query = query.filter(Withdrawal.customer_id == customer_id)
