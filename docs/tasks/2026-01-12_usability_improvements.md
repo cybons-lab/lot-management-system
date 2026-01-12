@@ -139,7 +139,8 @@ const getStatusLabel = (status: string): string => {
 2. [x] ステータス表示の日本語化（InboundPlansList）
 3. [x] フィルターリセットボタン追加（Adjustments, Withdrawals）
 4. [x] 削除確認ダイアログ統一化（InboundPlans）
-5. [ ] 削除確認ダイアログ統一化（Users, Roles）
+5. [x] 削除確認ダイアログ統一化（Users, Roles）
+
 
 ---
 

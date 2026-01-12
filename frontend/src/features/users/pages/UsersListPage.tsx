@@ -7,12 +7,13 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import type { CreateUserRequest } from "../api";
+import type { CreateUserRequest, User } from "../api";
 import { UserForm } from "../components/UserForm";
 import { useUsers, useCreateUser, useDeleteUser } from "../hooks";
 
 import { createUserColumns } from "./columns";
 
+import { PermanentDeleteDialog } from "@/components/common";
 import { Input } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
@@ -27,6 +28,9 @@ export function UsersListPage() {
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // 削除ダイアログの状態
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
 
   // Fetch users
   const { data: users, isLoading, isError } = useUsers({ is_active: isActiveFilter });
@@ -58,14 +62,20 @@ export function UsersListPage() {
     }
   };
 
-  const handleDelete = async (userId: number) => {
-    if (!confirm("このユーザーを削除してもよろしいですか？")) {
-      return;
+  const handleDeleteClick = (userId: number) => {
+    const user = users?.find((u) => u.user_id === userId);
+    if (user) {
+      setDeletingUser(user);
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingUser) return;
 
     try {
-      await deleteMutation.mutateAsync(userId);
+      await deleteMutation.mutateAsync(deletingUser.user_id);
       toast.success("ユーザーを削除しました");
+      setDeletingUser(null);
     } catch (error) {
       console.error("Failed to delete user:", error);
       toast.error("削除に失敗しました");
@@ -78,7 +88,7 @@ export function UsersListPage() {
 
   const columns = createUserColumns({
     onViewDetail: handleViewDetail,
-    onDelete: handleDelete,
+    onDelete: handleDeleteClick,
     isDeleting: deleteMutation.isPending,
   });
 
@@ -190,6 +200,16 @@ export function UsersListPage() {
           className="overflow-hidden"
         />
       )}
+
+      <PermanentDeleteDialog
+        open={!!deletingUser}
+        onOpenChange={(open) => !open && setDeletingUser(null)}
+        onConfirm={handleConfirmDelete}
+        isPending={deleteMutation.isPending}
+        title="ユーザーを削除しますか？"
+        description={`${deletingUser?.display_name}（${deletingUser?.username}）を削除します。この操作は取り消せません。`}
+        confirmationPhrase={deletingUser?.username || "delete"}
+      />
     </PageContainer>
   );
 }
