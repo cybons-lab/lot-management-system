@@ -65,7 +65,8 @@ export function AdjustmentsListPage() {
 
   useEffect(() => {
     table.setPage(1);
-  }, [filters, searchQuery, table]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, searchQuery]);
 
   const handleCreateNew = () => {
     navigate(ROUTES.INVENTORY.ADJUSTMENTS.NEW);

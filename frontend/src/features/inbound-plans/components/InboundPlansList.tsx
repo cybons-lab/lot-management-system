@@ -234,7 +234,8 @@ export function InboundPlansList({
 
   useEffect(() => {
     table.setPage(1);
-  }, [filters, searchQuery, table]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, searchQuery]);
 
   // 列定義
   const columns = useMemo<Column<InboundPlan>[]>(

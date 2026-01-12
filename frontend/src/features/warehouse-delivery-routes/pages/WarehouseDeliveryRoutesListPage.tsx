@@ -122,7 +122,8 @@ export function WarehouseDeliveryRoutesListPage() {
 
   useEffect(() => {
     table.setPage(1);
-  }, [searchQuery, showInactive, table]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, showInactive]);
 
   // Sort
   const sortedRoutes = useMemo(() => {
