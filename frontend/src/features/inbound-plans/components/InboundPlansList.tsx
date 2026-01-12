@@ -7,8 +7,8 @@ import { Label } from "@/components/ui";
 import { Badge } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
-import { useTable } from "@/hooks/ui";
 import { useSuppliersQuery } from "@/hooks/api/useMastersQuery";
+import { useTable } from "@/hooks/ui";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
 import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
@@ -30,6 +30,7 @@ export interface InboundPlan {
   created_at: string;
   is_primary_supplier?: boolean;
   sap_po_number?: string | null; // SAP購買発注番号
+  total_quantity?: number; // 明細数量計
 }
 
 export interface InboundPlansFilters {
@@ -38,6 +39,7 @@ export interface InboundPlansFilters {
   status: "" | "planned" | "partially_received" | "received" | "cancelled";
   date_from: string;
   date_to: string;
+  prioritize_primary?: boolean;
 }
 
 interface InboundPlansListProps {
@@ -87,7 +89,9 @@ export function InboundPlansList({
       status: "",
       date_from: "",
       date_to: "",
+      prioritize_primary: false,
     });
+    setSearchQuery("");
   };
 
   // フィルターUIコンポーネント
@@ -143,6 +147,24 @@ export function InboundPlansList({
             onChange={(e) => onFilterChange({ ...filters, date_to: e.target.value })}
           />
         </div>
+        <div className="flex items-end pb-2">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="prioritize_primary"
+              checked={!!filters.prioritize_primary}
+              onChange={(e) => onFilterChange({ ...filters, prioritize_primary: e.target.checked })}
+              className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
+            />
+            <Label
+              htmlFor="prioritize_primary"
+              className="flex cursor-pointer items-center gap-1 text-sm font-medium text-slate-700"
+            >
+              <Crown className="h-3.5 w-3.5 text-amber-600" />
+              主担当の仕入先のみ
+            </Label>
+          </div>
+        </div>
         <div className="md:col-span-2">
           <Label className="mb-2 block text-sm font-medium">キーワード検索</Label>
           <Input
@@ -156,7 +178,7 @@ export function InboundPlansList({
     </SimpleFilterContainer>
   );
 
-  const plansList = Array.isArray(plans) ? plans : [];
+  const plansList = useMemo(() => (Array.isArray(plans) ? plans : []), [plans]);
   const hasInvalidData = plans !== undefined && !Array.isArray(plans);
   const filteredPlans = useMemo(() => {
     if (!searchQuery.trim()) return plansList;
@@ -251,6 +273,19 @@ export function InboundPlansList({
         accessor: (row) => row.planned_arrival_date,
         cell: (row) => formatDate(row.planned_arrival_date),
         width: 120,
+        sortable: true,
+      },
+      {
+        id: "total_quantity",
+        header: "合計数量",
+        accessor: (row) => row.total_quantity || 0,
+        cell: (row) => (
+          <div className="text-right font-mono text-sm">
+            {(row.total_quantity || 0).toLocaleString()}
+          </div>
+        ),
+        width: 100,
+        align: "right",
         sortable: true,
       },
       {

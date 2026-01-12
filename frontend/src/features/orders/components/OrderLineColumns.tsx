@@ -125,7 +125,10 @@ export function createOrderLineColumns(
         const deliveryPlaceName = row.delivery_place_name ?? row.delivery_place ?? "納入先未設定";
         return (
           <div>
-            <div className="truncate text-sm font-semibold text-slate-900" title={deliveryPlaceName}>
+            <div
+              className="truncate text-sm font-semibold text-slate-900"
+              title={deliveryPlaceName}
+            >
               {deliveryPlaceName}
             </div>
             {row.delivery_place_code && (

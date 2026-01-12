@@ -64,7 +64,7 @@ export function WithdrawalsListPage() {
     withdrawal_type: filterType === "all" ? undefined : filterType,
   });
 
-  const withdrawals = data?.withdrawals ?? [];
+  const withdrawals = useMemo(() => data?.withdrawals ?? [], [data]);
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const filteredWithdrawals = useMemo(() => {

@@ -42,7 +42,7 @@ interface ProductOption {
   product_name: string;
 }
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function, complexity */
 export function WarehouseDeliveryRoutesListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "warehouse_code", direction: "asc" });

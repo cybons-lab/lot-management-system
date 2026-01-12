@@ -14,11 +14,11 @@ import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { useTable } from "@/hooks/ui";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
-import { useTable } from "@/hooks/ui";
 
 interface Adjustment {
   adjustment_id: number;
@@ -242,9 +242,7 @@ export function AdjustmentsListPage() {
             columns={columns}
             getRowId={(row) => row.adjustment_id}
             emptyMessage={
-              searchQuery.trim()
-                ? "検索条件に一致する調整履歴がありません"
-                : "調整履歴がありません"
+              searchQuery.trim() ? "検索条件に一致する調整履歴がありません" : "調整履歴がありません"
             }
           />
           {filteredAdjustments.length > 0 && (

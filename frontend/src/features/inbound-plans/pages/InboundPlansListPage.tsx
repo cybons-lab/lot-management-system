@@ -26,6 +26,7 @@ export function InboundPlansListPage() {
     status: (searchParams.get("status") as InboundPlansFilters["status"]) || "",
     date_from: searchParams.get("date_from") || "",
     date_to: searchParams.get("date_to") || "",
+    prioritize_primary: searchParams.get("prioritize_primary") === "true",
   });
 
   // Build query params
@@ -35,6 +36,7 @@ export function InboundPlansListPage() {
     status: filters.status || undefined,
     date_from: filters.date_from || undefined,
     date_to: filters.date_to || undefined,
+    prioritize_primary: filters.prioritize_primary || undefined,
   };
 
   // Fetch inbound plans
