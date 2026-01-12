@@ -21,7 +21,7 @@ import { TanstackTable } from "@/shared/components";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function, complexity
 export function UsersListPage() {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);

@@ -5,7 +5,6 @@
  */
 
 import { formatDistanceToNow } from "date-fns";
-/* eslint-disable max-lines-per-function */
 import { ja } from "date-fns/locale";
 import { ArrowLeft, Plus, RotateCcw, Search, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -41,6 +40,7 @@ import {
 
 const PAGE_SIZE = 20;
 
+// eslint-disable-next-line max-lines-per-function, complexity
 export function WithdrawalsListPage() {
   const navigate = useNavigate();
 

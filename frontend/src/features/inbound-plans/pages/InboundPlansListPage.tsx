@@ -16,7 +16,7 @@ import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-/* eslint-disable-next-line complexity */
+// eslint-disable-next-line max-lines-per-function
 export function InboundPlansListPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
