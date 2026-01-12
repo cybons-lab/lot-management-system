@@ -35,7 +35,7 @@ import { type Product } from "@/features/products/api";
 import { type Supplier } from "@/features/suppliers/api";
 
 const schema = z.object({
-  product_id: z.coerce.number().min(1, "製品を選択してください"),
+  product_id: z.coerce.number().min(1, "商品を選択してください"),
   supplier_id: z.coerce.number().min(1, "仕入先を選択してください"),
   is_primary: z.boolean().default(false),
   lead_time_days: z.number().nullable(),
@@ -82,13 +82,13 @@ export function SupplierProductForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        {/* 製品 (編集時は変更不可) */}
+        {/* 商品 (編集時は変更不可) */}
         <FormField
           control={control}
           name="product_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>製品</FormLabel>
+              <FormLabel>商品</FormLabel>
               <Select
                 value={field.value ? String(field.value) : ""}
                 onValueChange={(v) => field.onChange(Number(v))}
@@ -96,7 +96,7 @@ export function SupplierProductForm({
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="製品を選択" />
+                    <SelectValue placeholder="商品を選択" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -150,7 +150,7 @@ export function SupplierProductForm({
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <FormLabel className="text-base">主要仕入先</FormLabel>
-                <FormDescription>この製品のメイン仕入先として設定します</FormDescription>
+                <FormDescription>この商品のメイン仕入先として設定します</FormDescription>
               </div>
               <FormControl>
                 <Checkbox checked={field.value} onCheckedChange={field.onChange} />

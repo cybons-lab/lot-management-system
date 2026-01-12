@@ -60,7 +60,7 @@ export function ConfirmedLinesTable({
       },
       {
         id: "product_name",
-        header: "製品名",
+        header: "商品名",
         accessor: (row) => row.product_name,
         cell: (row) => (
           <span className="text-sm whitespace-nowrap text-slate-600">{row.product_name}</span>

@@ -171,7 +171,7 @@ export function WithdrawalsListPage() {
               <Search className="h-4 w-4 text-gray-400" />
               <Input
                 type="search"
-                placeholder="ロット・製品・得意先・納入先・参照番号で検索..."
+                placeholder="ロット・商品・得意先・納入先・参照番号で検索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -222,7 +222,7 @@ export function WithdrawalsListPage() {
                     <TableHead>出庫日時</TableHead>
                     <TableHead>出庫タイプ</TableHead>
                     <TableHead>ロット</TableHead>
-                    <TableHead>製品</TableHead>
+                    <TableHead>商品</TableHead>
                     <TableHead className="text-right">数量</TableHead>
                     <TableHead>得意先</TableHead>
                     <TableHead>納入場所</TableHead>

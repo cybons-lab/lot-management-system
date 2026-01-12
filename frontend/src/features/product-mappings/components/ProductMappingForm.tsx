@@ -28,7 +28,7 @@ const schema = z.object({
   customer_id: z.coerce.number().min(1, "得意先を選択してください"),
   customer_part_code: z.string().min(1, "先方品番は必須です"),
   supplier_id: z.coerce.number().min(1, "仕入先を選択してください"),
-  product_id: z.coerce.number().min(1, "製品を選択してください"),
+  product_id: z.coerce.number().min(1, "商品を選択してください"),
   base_unit: z.string().min(1, "基本単位は必須です"),
   pack_unit: z.string().optional(),
   pack_quantity: z.coerce.number().optional(),
@@ -171,7 +171,7 @@ export function ProductMappingForm({
           name="product_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>製品</FormLabel>
+              <FormLabel>商品</FormLabel>
               <Select
                 value={field.value ? String(field.value) : ""}
                 onValueChange={(val) => field.onChange(Number(val))}

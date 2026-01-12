@@ -79,7 +79,7 @@ export function SupplierProductsTable({
       },
       {
         id: "product_id",
-        header: "製品",
+        header: "商品",
         cell: (row) => {
           if (row.product_code && row.product_name) {
             return `${row.product_code} - ${row.product_name}`;

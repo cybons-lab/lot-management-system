@@ -28,7 +28,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useCustomers } from "@/features/customers/hooks";
 import { useProducts } from "@/features/products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks";
+import { useTable } from "@/hooks/ui";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -42,6 +44,7 @@ export function ProductMappingsListPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ProductMapping | null>(null);
   const [deletingItem, setDeletingItem] = useState<ProductMapping | null>(null);
+  const table = useTable({ initialPageSize: 25 });
 
   const { data: productMappings = [], isLoading, isError, error, refetch } = useProductMappings();
   const { useList: useCustomerList } = useCustomers();
@@ -109,7 +112,7 @@ export function ProductMappingsListPage() {
       },
       {
         id: "product_id",
-        header: "製品",
+        header: "商品",
         cell: (row) => {
           const product = productMap.get(row.product_id);
           if (!product) return `ID: ${row.product_id}`;
@@ -157,6 +160,9 @@ export function ProductMappingsListPage() {
     });
     return sorted;
   }, [filteredData, sort]);
+
+  // ページネーション
+  const paginatedData = table.paginateData(sortedData);
 
   const handleCreate = useCallback(
     (data: ProductMappingCreate) => {
@@ -253,7 +259,7 @@ export function ProductMappingsListPage() {
           />
         </div>
         <DataTable
-          data={sortedData}
+          data={paginatedData}
           columns={[...columns, actionColumn]}
           sort={sort}
           onSortChange={setSort}
@@ -261,6 +267,16 @@ export function ProductMappingsListPage() {
           isLoading={isLoading}
           emptyMessage="商品マッピングが登録されていません"
         />
+        {sortedData.length > 0 && (
+          <TablePagination
+            currentPage={table.calculatePagination(sortedData.length).page ?? 1}
+            pageSize={table.calculatePagination(sortedData.length).pageSize ?? 25}
+            totalCount={sortedData.length}
+            onPageChange={table.setPage}
+            onPageSizeChange={table.setPageSize}
+            pageSizeOptions={[25, 50, 100]}
+          />
+        )}
       </div>
 
       {/* 新規登録ダイアログ */}

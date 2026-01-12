@@ -97,10 +97,10 @@ export function createOrderLineColumns(
       minWidth: 200,
     },
 
-    // 製品
+    // 商品
     {
       id: "product_code",
-      header: "製品",
+      header: "商品",
       accessor: (row: OrderLineRow) => row.product_code ?? "",
       cell: (row: OrderLineRow) => (
         <div>

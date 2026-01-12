@@ -231,7 +231,7 @@ export function QuickWithdrawalDialog({
           <div className="rounded-lg border bg-slate-50 p-3">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-slate-500">製品:</span>{" "}
+                <span className="text-slate-500">商品:</span>{" "}
                 <span className="font-medium">{lot.product_name || lot.product_code}</span>
               </div>
               <div>

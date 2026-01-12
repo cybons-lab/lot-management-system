@@ -74,7 +74,7 @@ export function UomConversionsTable({
       },
       {
         id: "product_name",
-        header: "製品名",
+        header: "商品名",
         accessor: (row) => row.product_name ?? "",
         cell: (row) => (
           <span className="block max-w-[200px] truncate" title={row.product_name ?? ""}>
