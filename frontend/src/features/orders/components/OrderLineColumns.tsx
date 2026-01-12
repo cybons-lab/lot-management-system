@@ -115,6 +115,28 @@ export function createOrderLineColumns(
       minWidth: 300,
     },
 
+    // 納入先
+    {
+      id: "delivery_place",
+      header: "納入先",
+      accessor: (row: OrderLineRow) =>
+        row.delivery_place_name ?? row.delivery_place_code ?? row.delivery_place ?? "",
+      cell: (row: OrderLineRow) => {
+        const deliveryPlaceName = row.delivery_place_name ?? row.delivery_place ?? "納入先未設定";
+        return (
+          <div>
+            <div className="truncate text-sm font-semibold text-slate-900" title={deliveryPlaceName}>
+              {deliveryPlaceName}
+            </div>
+            {row.delivery_place_code && (
+              <div className="text-[11px] text-slate-500">{row.delivery_place_code}</div>
+            )}
+          </div>
+        );
+      },
+      minWidth: 220,
+    },
+
     // 注文数量（単位を小さく）
     {
       id: "order_quantity",

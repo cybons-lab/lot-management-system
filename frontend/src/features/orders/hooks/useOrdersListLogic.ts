@@ -20,11 +20,18 @@ function applySearchFilter(line: OrderLineRow, searchTerm: string): boolean {
   const matchCustomer =
     (line.customer_name || "").toLowerCase().includes(searchLower) ||
     (line.customer_code || "").toLowerCase().includes(searchLower);
+  const matchDeliveryPlace =
+    (line.delivery_place_name || "").toLowerCase().includes(searchLower) ||
+    (line.delivery_place_code || "").toLowerCase().includes(searchLower) ||
+    (line.delivery_place || "").toLowerCase().includes(searchLower);
+  const matchReferenceNo =
+    (line.customer_order_no || "").toLowerCase().includes(searchLower) ||
+    (line.sap_order_no || "").toLowerCase().includes(searchLower);
   const matchProduct =
     (line.product_name || "").toLowerCase().includes(searchLower) ||
     (line.product_code || "").toLowerCase().includes(searchLower);
 
-  return matchOrderNo || matchCustomer || matchProduct;
+  return matchOrderNo || matchCustomer || matchDeliveryPlace || matchReferenceNo || matchProduct;
 }
 
 /**

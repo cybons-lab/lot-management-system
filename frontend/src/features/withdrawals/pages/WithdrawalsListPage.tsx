@@ -7,8 +7,8 @@
 import { formatDistanceToNow } from "date-fns";
 /* eslint-disable max-lines-per-function */
 import { ja } from "date-fns/locale";
-import { ArrowLeft, Plus, XCircle } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Plus, Search, XCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { WITHDRAWAL_TYPE_LABELS, type WithdrawalResponse } from "../api";
@@ -30,7 +30,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import {
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui";
 
 const PAGE_SIZE = 20;
 
@@ -43,6 +50,7 @@ export function WithdrawalsListPage() {
   // 取消ダイアログの状態
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<WithdrawalResponse | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleCancelClick = (withdrawal: WithdrawalResponse) => {
     setSelectedWithdrawal(withdrawal);
@@ -59,6 +67,31 @@ export function WithdrawalsListPage() {
   const withdrawals = data?.withdrawals ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const filteredWithdrawals = useMemo(() => {
+    if (!searchQuery.trim()) return withdrawals;
+    const query = searchQuery.toLowerCase();
+    return withdrawals.filter((w) => {
+      return [
+        w.lot_number,
+        w.product_name,
+        w.product_code,
+        w.customer_name,
+        w.customer_code,
+        w.delivery_place_name,
+        w.delivery_place_code,
+        w.reference_number,
+        w.ship_date,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query));
+    });
+  }, [searchQuery, withdrawals]);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setPage(1);
+    }
+  }, [searchQuery, setPage]);
 
   const handleBack = () => {
     navigate("/inventory");
@@ -110,7 +143,7 @@ export function WithdrawalsListPage() {
           <CardTitle className="text-sm font-medium">フィルター</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <div className="w-48">
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger>
@@ -127,6 +160,15 @@ export function WithdrawalsListPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex flex-1 items-center gap-2 sm:max-w-sm">
+              <Search className="h-4 w-4 text-gray-400" />
+              <Input
+                type="search"
+                placeholder="ロット・製品・得意先・納入先・参照番号で検索..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -135,7 +177,12 @@ export function WithdrawalsListPage() {
       <Card>
         <CardHeader>
           <CardDescription>
-            {total} 件中 {(page - 1) * PAGE_SIZE + 1} - {Math.min(page * PAGE_SIZE, total)} 件を表示
+            {searchQuery.trim()
+              ? `検索結果 ${filteredWithdrawals.length} 件`
+              : `${total} 件中 ${(page - 1) * PAGE_SIZE + 1} - ${Math.min(
+                  page * PAGE_SIZE,
+                  total,
+                )} 件を表示`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -144,8 +191,12 @@ export function WithdrawalsListPage() {
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
               <span className="ml-2 text-gray-500">読み込み中...</span>
             </div>
-          ) : withdrawals.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">出庫履歴がありません</div>
+          ) : filteredWithdrawals.length === 0 ? (
+            <div className="py-8 text-center text-gray-500">
+              {searchQuery.trim()
+                ? "検索条件に一致する出庫履歴がありません"
+                : "出庫履歴がありません"}
+            </div>
           ) : (
             <>
               <Table>
@@ -165,7 +216,7 @@ export function WithdrawalsListPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {withdrawals.map((w) => (
+                  {filteredWithdrawals.map((w) => (
                     <TableRow
                       key={w.withdrawal_id}
                       className={w.is_cancelled ? "bg-slate-50 opacity-60" : ""}
@@ -217,8 +268,10 @@ export function WithdrawalsListPage() {
                         <div className="text-xs text-gray-500">{w.customer_code}</div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">{w.delivery_place_name}</div>
-                        <div className="text-xs text-gray-500">{w.delivery_place_code}</div>
+                        <div className="text-sm">{w.delivery_place_name || "納入先未設定"}</div>
+                        {w.delivery_place_code && (
+                          <div className="text-xs text-gray-500">{w.delivery_place_code}</div>
+                        )}
                       </TableCell>
                       <TableCell>{w.ship_date}</TableCell>
                       <TableCell className="text-sm text-gray-600">

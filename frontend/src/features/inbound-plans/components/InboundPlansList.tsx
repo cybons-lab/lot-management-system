@@ -1,5 +1,5 @@
 import { Crown } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
@@ -7,10 +7,12 @@ import { Label } from "@/components/ui";
 import { Badge } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
+import { useTable } from "@/hooks/ui";
 import { useSuppliersQuery } from "@/hooks/api/useMastersQuery";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
 import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { formatDate } from "@/shared/utils/date";
 
 // ============================================
@@ -65,6 +67,8 @@ export function InboundPlansList({
 }: InboundPlansListProps) {
   // Master data for filter options
   const { data: suppliers = [] } = useSuppliersQuery();
+  const [searchQuery, setSearchQuery] = useState("");
+  const table = useTable({ initialPageSize: 25 });
 
   const supplierOptions = useMemo(
     () =>
@@ -89,7 +93,7 @@ export function InboundPlansList({
   // フィルターUIコンポーネント
   const renderFilters = () => (
     <SimpleFilterContainer hideSearch onReset={handleResetFilters}>
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <div>
           <Label className="mb-2 block text-sm font-medium">仕入先</Label>
           <SearchableSelect
@@ -139,9 +143,42 @@ export function InboundPlansList({
             onChange={(e) => onFilterChange({ ...filters, date_to: e.target.value })}
           />
         </div>
+        <div className="md:col-span-2">
+          <Label className="mb-2 block text-sm font-medium">キーワード検索</Label>
+          <Input
+            type="search"
+            placeholder="入荷予定番号・SAP発注番号・仕入先で検索..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
     </SimpleFilterContainer>
   );
+
+  const plansList = Array.isArray(plans) ? plans : [];
+  const hasInvalidData = plans !== undefined && !Array.isArray(plans);
+  const filteredPlans = useMemo(() => {
+    if (!searchQuery.trim()) return plansList;
+    const query = searchQuery.toLowerCase();
+    return plansList.filter((plan) =>
+      [
+        plan.plan_number,
+        plan.sap_po_number,
+        plan.supplier_name,
+        plan.supplier_code,
+        plan.status,
+        plan.planned_arrival_date,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query)),
+    );
+  }, [plansList, searchQuery]);
+  const paginatedPlans = table.paginateData(filteredPlans);
+
+  useEffect(() => {
+    table.setPage(1);
+  }, [filters, searchQuery, table]);
 
   // 列定義
   const columns = useMemo<Column<InboundPlan>[]>(
@@ -283,7 +320,7 @@ export function InboundPlansList({
         {renderFilters()}
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           入荷予定が登録されていません
-          {plans && (
+          {hasInvalidData && (
             <div className="mt-2 text-xs text-red-500">
               データ形式エラー: 配列ではありません (Received: {typeof plans})
             </div>
@@ -299,16 +336,37 @@ export function InboundPlansList({
 
       {/* Data display area */}
       <div className="space-y-4">
-        <div className="text-sm text-gray-600">{plans.length} 件の入荷予定が見つかりました</div>
+        <div className="text-sm text-gray-600">
+          {searchQuery.trim()
+            ? `検索結果 ${filteredPlans.length} 件`
+            : `${plansList.length} 件の入荷予定が見つかりました`}
+        </div>
 
         <DataTable
-          data={plans}
+          data={paginatedPlans}
           columns={columns}
           getRowId={(row) => row.id}
           rowActions={renderRowActions}
           isLoading={isLoading}
-          emptyMessage="入荷予定が登録されていません"
+          emptyMessage={
+            searchQuery.trim()
+              ? "検索条件に一致する入荷予定がありません"
+              : "入荷予定が登録されていません"
+          }
         />
+        {filteredPlans.length > 0 && (
+          <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <TablePagination
+              currentPage={table.calculatePagination(filteredPlans.length).page ?? 1}
+              pageSize={table.calculatePagination(filteredPlans.length).pageSize ?? 25}
+              totalCount={
+                table.calculatePagination(filteredPlans.length).totalItems ?? filteredPlans.length
+              }
+              onPageChange={table.setPage}
+              onPageSizeChange={table.setPageSize}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

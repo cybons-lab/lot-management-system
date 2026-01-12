@@ -3,7 +3,7 @@
  * Users list page with inline create form
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ import { useUsers, useCreateUser, useDeleteUser } from "../hooks";
 import { createUserColumns } from "./columns";
 
 import { ROUTES } from "@/constants/routes";
+import { Input } from "@/components/ui";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { TanstackTable } from "@/shared/components";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
@@ -25,6 +26,7 @@ export function UsersListPage() {
   const [showForm, setShowForm] = useState(false);
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch users
   const { data: users, isLoading, isError } = useUsers({ is_active: isActiveFilter });
@@ -80,6 +82,18 @@ export function UsersListPage() {
     isDeleting: deleteMutation.isPending,
   });
 
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    if (!searchQuery.trim()) return users;
+    const query = searchQuery.toLowerCase();
+    return users.filter(
+      (user) =>
+        user.username.toLowerCase().includes(query) ||
+        user.display_name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query),
+    );
+  }, [users, searchQuery]);
+
   return (
     <PageContainer>
       <PageHeader
@@ -121,7 +135,7 @@ export function UsersListPage() {
 
       {/* Filter */}
       <div className="rounded-lg border bg-white p-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <label className="text-sm font-medium" htmlFor="status-filter">
             状態フィルタ:
           </label>
@@ -139,6 +153,13 @@ export function UsersListPage() {
             <option value="active">有効のみ</option>
             <option value="inactive">無効のみ</option>
           </select>
+          <Input
+            type="search"
+            placeholder="ユーザー名・表示名・メールで検索..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="min-w-[240px]"
+          />
         </div>
       </div>
 
@@ -155,9 +176,13 @@ export function UsersListPage() {
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           ユーザーが登録されていません
         </div>
+      ) : filteredUsers.length === 0 ? (
+        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
+          検索条件に一致するユーザーがいません
+        </div>
       ) : (
         <TanstackTable
-          data={users}
+          data={filteredUsers}
           columns={columns}
           initialPageSize={25}
           isLoading={isLoading}
