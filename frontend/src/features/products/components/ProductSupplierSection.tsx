@@ -1,5 +1,5 @@
 /**
- * ProductSupplierSection - 製品に紐づく仕入先一覧を表示
+ * ProductSupplierSection - 商品に紐づく仕入先一覧を表示
  */
 import { useQuery } from "@tanstack/react-query";
 import { Store, Star } from "lucide-react";
@@ -75,7 +75,7 @@ export function ProductSupplierSection({ productCode }: ProductSupplierSectionPr
       </CardHeader>
       <CardContent>
         {!suppliers || suppliers.length === 0 ? (
-          <p className="text-sm text-gray-500">この製品に紐づく仕入先はありません</p>
+          <p className="text-sm text-gray-500">この商品に紐づく仕入先はありません</p>
         ) : (
           <div className="space-y-3">
             {suppliers.map((supplier: ProductSupplier) => (

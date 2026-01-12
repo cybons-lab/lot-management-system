@@ -86,7 +86,7 @@ export function ProductForm({
       {isEditMode && (
         <div className={formStyles.field}>
           <Label htmlFor="product_code" className={formStyles.label}>
-            製品コード (自動採番)
+            商品コード (自動採番)
           </Label>
           <Input
             id="product_code"

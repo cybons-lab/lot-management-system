@@ -1,5 +1,5 @@
 /**
- * ProductExportButton - 製品エクスポート (Backend API)
+ * ProductExportButton - 商品エクスポート (Backend API)
  */
 import { ExportButton } from "@/shared/components/ExportButton";
 

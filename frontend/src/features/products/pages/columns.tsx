@@ -54,7 +54,7 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
     },
     {
       id: "product_name",
-      header: "製品名",
+      header: "商品名",
       cell: (row) => (
         <span
           className={`whitespace-nowrap ${isInactive(row.valid_to) ? "text-muted-foreground" : "text-slate-900"}`}
