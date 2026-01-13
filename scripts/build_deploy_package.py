@@ -83,9 +83,9 @@ EXCLUDE_FILES = {
 
 def print_step(message: str) -> None:
     """ステップメッセージを出力."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"🔧 {message}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
 
 def print_success(message: str) -> None:
@@ -118,17 +118,34 @@ def should_exclude(path: Path, base_dir: Path) -> bool:
     return False
 
 
+def run_command(
+    cmd: list[str], cwd: Path | None = None, allow_shell_on_windows: bool = False
+) -> subprocess.CompletedProcess:
+    """コマンドを実行し、結果を返す."""
+    use_shell = False
+    if allow_shell_on_windows and os.name == "nt":
+        use_shell = True
+
+    return subprocess.run(
+        cmd,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        shell=use_shell,
+    )
+
+
 def generate_requirements(backend_dir: Path, output_path: Path) -> bool:
     """pyproject.toml から requirements.txt を生成."""
     print_step("requirements.txt を生成中...")
 
     # uv が使えるか確認
     try:
-        result = subprocess.run(
+        result = run_command(
             ["uv", "pip", "compile", "pyproject.toml", "-o", str(output_path)],
             cwd=backend_dir,
-            capture_output=True,
-            text=True,
         )
         if result.returncode == 0:
             print_success(f"requirements.txt を生成しました: {output_path}")
@@ -140,11 +157,9 @@ def generate_requirements(backend_dir: Path, output_path: Path) -> bool:
 
     # pip-tools で試行
     try:
-        result = subprocess.run(
+        result = run_command(
             ["pip-compile", "pyproject.toml", "-o", str(output_path)],
             cwd=backend_dir,
-            capture_output=True,
-            text=True,
         )
         if result.returncode == 0:
             print_success(f"requirements.txt を生成しました: {output_path}")
@@ -185,11 +200,7 @@ def build_frontend_with_docker(frontend_dir: Path) -> bool:
     # docker compose が使えるか確認
     try:
         # まず docker compose version を確認
-        result = subprocess.run(
-            ["docker", "compose", "version"],
-            capture_output=True,
-            text=True,
-        )
+        result = run_command(["docker", "compose", "version"])
         if result.returncode != 0:
             print("docker compose が利用できません")
             return False
@@ -199,11 +210,9 @@ def build_frontend_with_docker(frontend_dir: Path) -> bool:
 
     # npm install を Docker 経由で実行
     print("Docker: npm install を実行中...")
-    result = subprocess.run(
+    result = run_command(
         ["docker", "compose", "run", "--rm", "frontend", "npm", "install"],
         cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
     )
     if result.returncode != 0:
         print(f"Docker npm install に失敗: {result.stderr}")
@@ -211,11 +220,9 @@ def build_frontend_with_docker(frontend_dir: Path) -> bool:
 
     # npm run build を Docker 経由で実行
     print("Docker: npm run build を実行中...")
-    result = subprocess.run(
+    result = run_command(
         ["docker", "compose", "run", "--rm", "frontend", "npm", "run", "build"],
         cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
     )
     if result.returncode != 0:
         print(f"Docker npm run build に失敗: {result.stderr}")
@@ -231,12 +238,10 @@ def build_frontend_with_npm(frontend_dir: Path) -> bool:
     # npm install
     print("npm install を実行中...")
     try:
-        result = subprocess.run(
+        result = run_command(
             ["npm", "install"],
             cwd=frontend_dir,
-            capture_output=True,
-            text=True,
-            shell=(os.name == "nt"),  # Windows では shell=True が必要
+            allow_shell_on_windows=True,
         )
         if result.returncode != 0:
             print(f"npm install に失敗: {result.stderr}")
@@ -247,12 +252,10 @@ def build_frontend_with_npm(frontend_dir: Path) -> bool:
 
     # npm run build
     print("npm run build を実行中...")
-    result = subprocess.run(
+    result = run_command(
         ["npm", "run", "build"],
         cwd=frontend_dir,
-        capture_output=True,
-        text=True,
-        shell=(os.name == "nt"),
+        allow_shell_on_windows=True,
     )
     if result.returncode != 0:
         print(f"npm run build に失敗: {result.stderr}")
@@ -287,7 +290,9 @@ def build_frontend(frontend_dir: Path) -> bool:
             print_success("ローカルnpm経由でフロントエンドのビルドが完了しました")
             return True
         else:
-            print_error("ビルドは成功しましたが、distディレクトリが生成されませんでした")
+            print_error(
+                "ビルドは成功しましたが、distディレクトリが生成されませんでした"
+            )
             return False
 
     # 両方失敗
