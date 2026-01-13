@@ -154,6 +154,31 @@ test.describe("Product Mappings", () => {
         await expect(page.getByRole("button", { name: "新規登録" })).toBeVisible();
     });
 
+    test("should successfully trigger export download", async ({ page }) => {
+        let exportCalled = false;
+
+        // Override the export route specifically
+        await page.route("**/masters/product-mappings/export/download*", async (route) => {
+            exportCalled = true;
+            await route.fulfill({
+                body: "dummy excel content",
+                headers: {
+                    "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "content-disposition": "attachment; filename=product-mappings.xlsx"
+                }
+            });
+        });
+
+        // Click export button
+        await page.getByRole("button", { name: "Excelエクスポート" }).click();
+
+        // Wait for download to be triggered (export is async)
+        await page.waitForTimeout(2000);
+
+        // Verify API was called - this catches issues like wrong API path
+        expect(exportCalled).toBe(true);
+    });
+
     test("should open import dialog", async ({ page }) => {
         await page.getByRole("button", { name: "インポート" }).click();
         await expect(page.getByText("商品マッピング一括登録")).toBeVisible();
