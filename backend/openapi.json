@@ -11702,6 +11702,11 @@
         "summary": "List Master Change Logs",
         "description": "マスタ変更履歴一覧取得.\n\nNote:\n    ダッシュボード表示用にパブリックアクセス（または一般ユーザーアクセス）を許可するため、\n    厳格な認証依存関係（Depends(get_current_admin)）は設定していません。\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    table_name: テーブル名でフィルタ（オプション）\n    record_id: レコードIDでフィルタ（オプション）\n    change_type: 変更種別でフィルタ（オプション）\n    changed_by: 変更者でフィルタ（オプション）\n    start_date: 開始日時（オプション）\n    end_date: 終了日時（オプション）\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴のリスト（ページネーション付き）",
         "operationId": "list_master_change_logs_api_master_change_logs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "skip",
