@@ -208,10 +208,10 @@ def build_frontend_with_docker(frontend_dir: Path) -> bool:
         print("docker コマンドが見つかりません")
         return False
 
-    # npm install を Docker 経由で実行
-    print("Docker: npm install を実行中...")
+    # npm ci を Docker 経由で実行
+    print("Docker: npm ci を実行中...")
     result = run_command(
-        ["docker", "compose", "run", "--rm", "frontend", "npm", "install"],
+        ["docker", "compose", "run", "--rm", "frontend", "npm", "ci"],
         cwd=PROJECT_ROOT,
     )
     if result.returncode != 0:
@@ -235,11 +235,11 @@ def build_frontend_with_npm(frontend_dir: Path) -> bool:
     """ローカルnpm経由でフロントエンドをビルド."""
     print("ローカルnpm経由でビルドを試みます...")
 
-    # npm install
-    print("npm install を実行中...")
+    # npm ci
+    print("npm ci を実行中...")
     try:
         result = run_command(
-            ["npm", "install"],
+            ["npm", "ci"],
             cwd=frontend_dir,
             allow_shell_on_windows=True,
         )

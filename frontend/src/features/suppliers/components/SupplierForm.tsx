@@ -53,7 +53,6 @@ export function SupplierForm({
           id="supplier_code"
           {...register("supplier_code")}
           placeholder="例: SUP-001"
-          disabled={isEditMode}
           className={formStyles.input}
         />
         {errors.supplier_code && <p className={formStyles.error}>{errors.supplier_code.message}</p>}

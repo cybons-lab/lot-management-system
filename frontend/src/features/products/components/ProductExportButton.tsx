@@ -9,6 +9,6 @@ export interface ProductExportButtonProps {
 
 export function ProductExportButton({ size = "default" }: ProductExportButtonProps) {
   return (
-    <ExportButton apiPath="/masters/products/export/download" filePrefix="products" size={size} />
+    <ExportButton apiPath="masters/products/export/download" filePrefix="products" size={size} />
   );
 }

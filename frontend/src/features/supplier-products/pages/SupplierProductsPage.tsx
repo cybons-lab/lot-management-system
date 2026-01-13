@@ -1,20 +1,20 @@
 /**
  * SupplierProductsPage - 仕入先商品詳細・一覧
  */
-import { Package, Plus, Upload } from "lucide-react";
+import { Package } from "lucide-react";
 
-import { SupplierProductExportButton } from "../components/SupplierProductExportButton";
 import { SupplierProductForm } from "../components/SupplierProductForm";
 import { SupplierProductsTable } from "../components/SupplierProductsTable";
 import { useSupplierProductsPageState } from "../hooks/useSupplierProductsPageState";
 
 import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/components/common";
-import { Button, Input, Checkbox } from "@/components/ui";
+import { Input, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
+import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 // eslint-disable-next-line max-lines-per-function, complexity
@@ -89,17 +89,13 @@ export function SupplierProductsPage() {
         title="仕入先商品"
         subtitle="仕入先別の商品情報を管理します"
         actions={
-          <div className="flex gap-2">
-            <SupplierProductExportButton size="sm" />
-            <Button variant="outline" size="sm" onClick={openImportDialog}>
-              <Upload className="mr-2 h-4 w-4" />
-              インポート
-            </Button>
-            <Button size="sm" onClick={openCreateDialog}>
-              <Plus className="mr-2 h-4 w-4" />
-              新規登録
-            </Button>
-          </div>
+          <MasterPageActions
+            exportApiPath="masters/supplier-products/export/download"
+            exportFilePrefix="supplier_products"
+            onImportClick={openImportDialog}
+            onCreateClick={openCreateDialog}
+            size="sm"
+          />
         }
       />
 

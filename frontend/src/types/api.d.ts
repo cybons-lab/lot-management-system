@@ -815,9 +815,21 @@ export interface paths {
     };
     /**
      * List Order Lines
-     * @description 受注明細一覧取得.
+     * @description 受注明細一覧取得（フラット表示用）.
      *
-     *     受注ヘッダ情報や製品情報などを結合したフラットな明細リストを返します。
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数
+     *         status: ステータスフィルタ
+     *         customer_code: 顧客コードフィルタ
+     *         product_code: 製品コードフィルタ
+     *         date_from: 納期開始日
+     *         date_to: 納期終了日
+     *         order_type: 受注種別フィルタ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         list[OrderLineResponse]: 受注明細リスト
      */
     get: operations["list_order_lines_api_orders_lines_get"];
     put?: never;
@@ -1405,6 +1417,42 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/allocations/{allocation_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Confirmed Allocation
+     * @description CONFIRMED予約を取消（反対仕訳方式）.
+     *
+     *     SAP連携後のCONFIRMED予約を取消す。
+     *     stock_historyにALLOCATION_RELEASEトランザクションを記録し、
+     *     予約ステータスをRELEASEDに変更する。
+     *
+     *     Args:
+     *         allocation_id: 予約ID
+     *         request: 取消リクエスト（理由、メモ、実行者）
+     *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（認証必須）
+     *
+     *     Returns:
+     *         ReservationCancelResponse: 取消後の予約情報
+     *
+     *     Raises:
+     *         HTTPException: 予約が見つからない（404）、不正な状態遷移（400）
+     */
+    post: operations["cancel_confirmed_allocation_api_allocations__allocation_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/inbound-plans": {
     parameters: {
       query?: never;
@@ -1710,6 +1758,7 @@ export interface paths {
      *         end_date: 終了日
      *         product_id: 製品ID
      *         warehouse_id: 倉庫ID
+     *         search: 検索キーワード
      *         db: データベースセッション
      *
      *     Returns:
@@ -1772,6 +1821,42 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/withdrawals/{withdrawal_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Withdrawal
+     * @description 出庫を取消.
+     *
+     *     反対仕訳方式で出庫を取消し、ロットの在庫を復元する。
+     *     - stock_historyにRETURNトランザクションを記録
+     *     - ロットのcurrent_quantityを復元
+     *     - べき等性: 既に取消済みの場合はそのまま返す
+     *
+     *     Args:
+     *         withdrawal_id: 出庫ID
+     *         data: 取消リクエスト（理由、メモ）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         取消後の出庫レコード
+     *
+     *     Raises:
+     *         HTTPException: 出庫が見つからない場合
+     */
+    post: operations["cancel_withdrawal_api_withdrawals__withdrawal_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/customers": {
     parameters: {
       query?: never;
@@ -1802,8 +1887,9 @@ export interface paths {
      * @description 顧客を新規作成.
      *
      *     Args:
-     *         customer: 顧客作成リクエストデータ
+     *         customer: 作成する得意先情報
      *         db: データベースセッション
+     *         current_user: 現在のユーザー（管理者権限が必要）
      *
      *     Returns:
      *         CustomerResponse: 作成された顧客情報
@@ -3239,6 +3325,33 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/customer-items/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Customer Items
+     * @description 得意先品番マッピングをエクスポート.
+     *
+     *     Args:
+     *         format: エクスポート形式（'csv' または 'xlsx'）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         Excel形式またはCSV形式のファイルレスポンス
+     */
+    get: operations["export_customer_items_api_masters_customer_items_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/customer-items/{customer_id}": {
     parameters: {
       query?: never;
@@ -3365,33 +3478,6 @@ export interface paths {
      *         HTTPException: マッピングが存在しない場合
      */
     post: operations["restore_customer_item_api_masters_customer_items__customer_id___external_product_code__restore_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/masters/customer-items/export/download": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Export Customer Items
-     * @description 得意先品番マッピングをエクスポート.
-     *
-     *     Args:
-     *         format: エクスポート形式（'csv' または 'xlsx'）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         Excel形式またはCSV形式のファイルレスポンス
-     */
-    get: operations["export_customer_items_api_masters_customer_items_export_download_get"];
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -4564,11 +4650,32 @@ export interface paths {
      *         start_date: 開始日時（オプション）
      *         end_date: 終了日時（オプション）
      *         db: データベースセッション
+     *         current_user: 現在の管理者ユーザー（認証用）
      *
      *     Returns:
      *         操作ログのリスト（ページネーション付き）
      */
     get: operations["list_operation_logs_api_operation_logs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/operation-logs/filters": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Operation Log Filters
+     * @description 操作ログのフィルタ候補取得.
+     */
+    get: operations["get_operation_log_filters_api_operation_logs_filters_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -4591,6 +4698,7 @@ export interface paths {
      *     Args:
      *         log_id: ログID
      *         db: データベースセッション
+     *         current_user: 現在の管理者ユーザー（認証用）
      *
      *     Returns:
      *         操作ログ詳細
@@ -4617,6 +4725,10 @@ export interface paths {
     /**
      * List Master Change Logs
      * @description マスタ変更履歴一覧取得.
+     *
+     *     Note:
+     *         ダッシュボード表示用にパブリックアクセス（または一般ユーザーアクセス）を許可するため、
+     *         厳格な認証依存関係（Depends(get_current_admin)）は設定していません。
      *
      *     Args:
      *         skip: スキップ件数
@@ -4655,6 +4767,7 @@ export interface paths {
      *     Args:
      *         change_log_id: 変更ログID
      *         db: データベースセッション
+     *         current_user: 現在の管理者ユーザー（認証用）
      *
      *     Returns:
      *         マスタ変更履歴詳細
@@ -4686,6 +4799,7 @@ export interface paths {
      *         table_name: テーブル名
      *         record_id: レコードID
      *         db: データベースセッション
+     *         current_user: 現在の管理者ユーザー（認証用）
      *
      *     Returns:
      *         マスタ変更履歴のリスト（降順）
@@ -5132,6 +5246,7 @@ export interface paths {
      *     Args:
      *         request: リクエスト（開始日・終了日）
      *         current_user: ログインユーザー（オプション）
+     *         db: データベースセッション
      *
      *     Returns:
      *         実行結果
@@ -5444,6 +5559,26 @@ export interface paths {
      *     URL/JSONを指定してFlowをトリガーする。
      */
     post: operations["execute_material_delivery_note_api_rpa_material_delivery_note_execute_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/cloud-flow/execute-generic": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Generic Flow
+     * @description 汎用Cloud Flow実行.
+     */
+    post: operations["execute_generic_flow_api_rpa_cloud_flow_execute_generic_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -6639,6 +6774,18 @@ export interface components {
       description?: string | null;
     };
     /**
+     * CloudFlowGenericExecuteRequest
+     * @description 汎用Cloud Flow実行リクエスト.
+     */
+    CloudFlowGenericExecuteRequest: {
+      /** Flow Url */
+      flow_url: string;
+      /** Json Payload */
+      json_payload?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
      * CloudFlowJobCreate
      * @description ジョブ作成リクエスト.
      */
@@ -7441,6 +7588,8 @@ export interface components {
      * @description Update customer request.
      */
     CustomerUpdate: {
+      /** Customer Code */
+      customer_code?: string | null;
       /** Customer Name */
       customer_name?: string | null;
       /** Address */
@@ -7543,6 +7692,8 @@ export interface components {
      * @description Update delivery place request.
      */
     DeliveryPlaceUpdate: {
+      /** Delivery Place Code */
+      delivery_place_code?: string | null;
       /** Jiku Code */
       jiku_code?: string | null;
       /** Delivery Place Name */
@@ -7650,6 +7801,16 @@ export interface components {
       warnings?: string[];
     };
     /**
+     * FilterOption
+     * @description フィルタ選択肢.
+     */
+    FilterOption: {
+      /** Label */
+      label: string;
+      /** Value */
+      value: string;
+    };
+    /**
      * ForecastBulkImportItem
      * @description Single item for bulk import.
      */
@@ -7724,7 +7885,7 @@ export interface components {
       /** Unit */
       unit?: string | null;
       /** Forecast Period */
-      forecast_period: string;
+      forecast_period?: string | null;
     };
     /**
      * ForecastGroupKey
@@ -8042,6 +8203,10 @@ export interface components {
       notes?: string | null;
       /** Inbound Plan Id */
       inbound_plan_id: number;
+      /** Supplier Name */
+      supplier_name?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
       /**
        * Total Quantity
        * @description Sum of planned_quantity from all lines
@@ -8174,6 +8339,10 @@ export interface components {
       notes?: string | null;
       /** Inbound Plan Id */
       inbound_plan_id: number;
+      /** Supplier Name */
+      supplier_name?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
       /**
        * Total Quantity
        * @description Sum of planned_quantity from all lines
@@ -9082,6 +9251,18 @@ export interface components {
       lines: components["schemas"]["OcrImportLineResult"][];
     };
     /**
+     * OperationLogFiltersResponse
+     * @description 操作ログフィルタ選択肢レスポンス.
+     */
+    OperationLogFiltersResponse: {
+      /** Users */
+      users: components["schemas"]["FilterOption"][];
+      /** Operation Types */
+      operation_types: components["schemas"]["FilterOption"][];
+      /** Target Tables */
+      target_tables: components["schemas"]["FilterOption"][];
+    };
+    /**
      * OperationLogListResponse
      * @description 操作ログ一覧レスポンス.
      */
@@ -9104,6 +9285,11 @@ export interface components {
       log_id: number;
       /** User Id */
       user_id?: number | null;
+      /**
+       * User Name
+       * @description ユーザー名
+       */
+      user_name?: string | null;
       /**
        * Operation Type
        * @description 操作種別（create/update/delete/login/logout/export）
@@ -9977,6 +10163,63 @@ export interface components {
       is_active?: boolean | null;
     };
     /**
+     * ReservationCancelRequest
+     * @description Reservation cancellation request (CONFIRMED予約の取消).
+     *
+     *     反対仕訳方式で予約を取消す。
+     */
+    ReservationCancelRequest: {
+      /**
+       * Reason
+       * @description 取消理由コード
+       */
+      reason: string;
+      /**
+       * Note
+       * @description 取消メモ（任意）
+       */
+      note?: string | null;
+      /**
+       * Cancelled By
+       * @description 取消実行者（任意）
+       */
+      cancelled_by?: string | null;
+    };
+    /**
+     * ReservationCancelResponse
+     * @description Reservation cancellation response.
+     */
+    ReservationCancelResponse: {
+      /** Id */
+      id: number;
+      /** Lot Id */
+      lot_id?: number | null;
+      /** Lot Number */
+      lot_number?: string | null;
+      /** Reserved Quantity */
+      reserved_quantity: string;
+      /**
+       * Status
+       * @description 取消後のステータス（released）
+       */
+      status: string;
+      /** Cancel Reason */
+      cancel_reason?: string | null;
+      /** Cancel Reason Label */
+      cancel_reason_label?: string | null;
+      /** Cancel Note */
+      cancel_note?: string | null;
+      /** Cancelled By */
+      cancelled_by?: string | null;
+      /** Released At */
+      released_at?: string | null;
+      /**
+       * Message
+       * @default Reservation cancelled successfully
+       */
+      message: string;
+    };
+    /**
      * ReservationDetail
      * @description Reservation detail (DDL: lot_reservations).
      */
@@ -10732,6 +10975,8 @@ export interface components {
      * @description Update supplier request.
      */
     SupplierUpdate: {
+      /** Supplier Code */
+      supplier_code?: string | null;
       /** Supplier Name */
       supplier_name?: string | null;
     };
@@ -11291,6 +11536,8 @@ export interface components {
      * @description Update warehouse request.
      */
     WarehouseUpdate: {
+      /** Warehouse Code */
+      warehouse_code?: string | null;
       /** Warehouse Name */
       warehouse_name?: string | null;
       /**
@@ -11303,6 +11550,37 @@ export interface components {
        * @description デフォルト輸送リードタイム（日）
        */
       default_transport_lead_time_days?: number | null;
+    };
+    /**
+     * WithdrawalCancelReason
+     * @description 出庫取消理由.
+     * @enum {string}
+     */
+    WithdrawalCancelReason:
+      | "input_error"
+      | "wrong_quantity"
+      | "wrong_lot"
+      | "wrong_product"
+      | "customer_request"
+      | "duplicate"
+      | "other";
+    /**
+     * WithdrawalCancelRequest
+     * @description 出庫取消リクエスト.
+     */
+    WithdrawalCancelRequest: {
+      /** @description 取消理由 */
+      reason: components["schemas"]["WithdrawalCancelReason"];
+      /**
+       * Note
+       * @description 取消メモ（その他の場合など）
+       */
+      note?: string | null;
+      /**
+       * Cancelled By
+       * @description 取消実行者ユーザーID
+       */
+      cancelled_by?: number | null;
     };
     /**
      * WithdrawalCreate
@@ -11427,6 +11705,23 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+      /**
+       * Is Cancelled
+       * @description 取消済みフラグ
+       * @default false
+       */
+      is_cancelled: boolean;
+      /** Cancelled At */
+      cancelled_at?: string | null;
+      /** Cancelled By */
+      cancelled_by?: number | null;
+      /** Cancelled By Name */
+      cancelled_by_name?: string | null;
+      cancel_reason?: components["schemas"]["WithdrawalCancelReason"] | null;
+      /** Cancel Reason Label */
+      cancel_reason_label?: string | null;
+      /** Cancel Note */
+      cancel_note?: string | null;
     };
     /**
      * WithdrawalType
@@ -12854,6 +13149,7 @@ export interface operations {
         product_code?: string | null;
         date_from?: string | null;
         date_to?: string | null;
+        order_type?: string | null;
       };
       header?: never;
       path?: never;
@@ -13680,6 +13976,41 @@ export interface operations {
       };
     };
   };
+  cancel_confirmed_allocation_api_allocations__allocation_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        allocation_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReservationCancelRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReservationCancelResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_inbound_plans_api_inbound_plans_get: {
     parameters: {
       query?: {
@@ -14097,6 +14428,8 @@ export interface operations {
         product_id?: number | null;
         /** @description 倉庫IDでフィルタ */
         warehouse_id?: number | null;
+        /** @description キーワード検索（ロット、製品、得意先、納入先、参照番号） */
+        search?: string | null;
       };
       header?: never;
       path?: never;
@@ -14167,6 +14500,41 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WithdrawalResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_withdrawal_api_withdrawals__withdrawal_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        withdrawal_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WithdrawalCancelRequest"];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
@@ -16377,6 +16745,37 @@ export interface operations {
       };
     };
   };
+  export_customer_items_api_masters_customer_items_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_customer_items_by_customer_api_masters_customer_items__customer_id__get: {
     parameters: {
       query?: never;
@@ -16525,37 +16924,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["CustomerItemResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  export_customer_items_api_masters_customer_items_export_download_get: {
-    parameters: {
-      query?: {
-        format?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
         };
       };
       /** @description Validation Error */
@@ -18359,6 +18727,26 @@ export interface operations {
       };
     };
   };
+  get_operation_log_filters_api_operation_logs_filters_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OperationLogFiltersResponse"];
+        };
+      };
+    };
+  };
   get_operation_log_api_operation_logs__log_id__get: {
     parameters: {
       query?: never;
@@ -19559,6 +19947,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["MaterialDeliveryNoteExecuteResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_generic_flow_api_rpa_cloud_flow_execute_generic_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CloudFlowGenericExecuteRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */

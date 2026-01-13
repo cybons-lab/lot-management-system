@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
 from app.infrastructure.persistence.models import Customer, Product, ProductMapping, Supplier
 from app.presentation.schemas.masters.masters_schema import (
@@ -13,6 +14,77 @@ from app.presentation.schemas.masters.masters_schema import (
 
 
 router = APIRouter(prefix="/product-mappings", tags=["product-mappings"])
+
+
+@router.get("/template/download")
+def download_product_mappings_template(format: str = "csv", include_sample: bool = True):
+    """得意先品番マッピング インポートテンプレートをダウンロード.
+
+    Args:
+        format: ファイル形式（'csv' または 'xlsx'、デフォルト: csv）
+        include_sample: サンプル行を含めるか（デフォルト: True）
+
+    Returns:
+        インポート用テンプレートファイル
+    """
+    return ExportService.export_template(
+        "product_mappings", format=format, include_sample=include_sample
+    )
+
+
+@router.get("/export/download")
+def export_product_mappings(format: str = "csv", db: Session = Depends(get_db)):
+    """得意先品番マッピングをエクスポート.
+
+    Args:
+        format: エクスポート形式（"csv" または "xlsx"）
+        db: データベースセッション
+
+    Returns:
+        Excel形式またはCSV形式のファイルレスポンス
+    """
+    query = (
+        db.query(
+            ProductMapping.id,
+            Customer.customer_code,
+            Customer.customer_name,
+            ProductMapping.customer_part_code,
+            Supplier.supplier_code,
+            Supplier.supplier_name,
+            Product.maker_part_code.label("product_code"),
+            Product.product_name,
+            ProductMapping.base_unit,
+            ProductMapping.pack_unit,
+            ProductMapping.pack_quantity,
+            ProductMapping.special_instructions,
+        )
+        .join(Customer, ProductMapping.customer_id == Customer.id)
+        .join(Supplier, ProductMapping.supplier_id == Supplier.id)
+        .join(Product, ProductMapping.product_id == Product.id)
+    )
+
+    results = query.all()
+
+    data = [
+        {
+            "customer_code": r.customer_code,
+            "customer_name": r.customer_name,
+            "customer_part_code": r.customer_part_code,
+            "supplier_code": r.supplier_code,
+            "supplier_name": r.supplier_name,
+            "product_code": r.product_code,
+            "product_name": r.product_name,
+            "base_unit": r.base_unit,
+            "pack_unit": r.pack_unit,
+            "pack_quantity": r.pack_quantity,
+            "special_instructions": r.special_instructions,
+        }
+        for r in results
+    ]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "product_mappings")
+    return ExportService.export_to_csv(data, "product_mappings")
 
 
 @router.get("", response_model=list[ProductMappingResponse])

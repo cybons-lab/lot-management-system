@@ -8,5 +8,5 @@ export interface UserExportButtonProps {
 }
 
 export function UserExportButton({ size = "default" }: UserExportButtonProps) {
-  return <ExportButton apiPath="/admin/users/export/download" filePrefix="users" size={size} />;
+  return <ExportButton apiPath="admin/users/export/download" filePrefix="users" size={size} />;
 }

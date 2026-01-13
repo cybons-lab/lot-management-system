@@ -19,6 +19,8 @@ async function downloadTemplate(group: TemplateGroup): Promise<void> {
     endpoint = "/masters/delivery-places/template/download?format=xlsx";
   } else if (group === "user") {
     endpoint = "/users/template/download?format=xlsx";
+  } else if (group === "product_mappings") {
+    endpoint = "/masters/product-mappings/template/download?format=xlsx";
   } else {
     endpoint = "/masters/customers/template/download?format=xlsx";
   }

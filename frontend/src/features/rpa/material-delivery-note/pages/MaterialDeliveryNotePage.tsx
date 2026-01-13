@@ -3,7 +3,7 @@
  * 素材納品書発行のメニューページ - Step1/Step2/履歴へのナビゲーション
  */
 
-import { CheckSquare, Download, FileText, History, Play, Settings, Wrench } from "lucide-react";
+import { CheckSquare, Download, FileText, History, Play, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui";
@@ -101,14 +101,6 @@ export function MaterialDeliveryNotePage() {
           variant="secondary"
         />
 
-        {/* クラウドフロー実行（汎用） */}
-        <MenuCard
-          title="クラウドフロー実行 (汎用)"
-          description="Runデータを使用せず、直接URLとJSONを指定してクラウドフローを実行します。"
-          icon={<Wrench className="h-6 w-6" />}
-          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CLOUD_FLOW_EXECUTE}
-          variant="secondary"
-        />
         <MenuCard
           title="層別コードマスタ"
           description="層別コードとメーカー名の対応付を管理します。"

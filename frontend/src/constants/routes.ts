@@ -90,6 +90,7 @@ export const ROUTES = {
 
   RPA: {
     ROOT: "/rpa",
+    GENERIC_CLOUD_FLOW: "/rpa/generic-cloud-flow",
     MATERIAL_DELIVERY_NOTE: {
       ROOT: "/rpa/material-delivery-note",
       STEP1: "/rpa/material-delivery-note/step1",
@@ -99,7 +100,6 @@ export const ROUTES = {
       STEP3_EXECUTE: (runId: number | string) => `/rpa/material-delivery-note/step3/${runId}`,
       STEP4: "/rpa/material-delivery-note/step4",
       STEP4_DETAIL: (runId: number | string) => `/rpa/material-delivery-note/step4/${runId}`,
-      CLOUD_FLOW_EXECUTE: "/rpa/material-delivery-note/execute",
       RUNS: "/rpa/material-delivery-note/runs",
       RUN_DETAIL: (runId: number | string) => `/rpa/material-delivery-note/runs/${runId}`,
       LAYER_CODES: "/rpa/material-delivery-note/layer-codes",

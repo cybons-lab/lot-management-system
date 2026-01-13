@@ -524,11 +524,12 @@ export function DataTable<T = never>({
                         <td
                           key={cell.id}
                           className={cn(
-                            "px-4 py-3 text-sm text-slate-900",
+                            "overflow-hidden px-4 py-3 text-sm text-slate-900",
                             meta?.align === "center" && "text-center",
                             meta?.align === "right" && "text-right",
                             meta?.className,
                           )}
+                          style={{ maxWidth: 0 }}
                           data-label={
                             typeof cell.column.columnDef.header === "string"
                               ? cell.column.columnDef.header

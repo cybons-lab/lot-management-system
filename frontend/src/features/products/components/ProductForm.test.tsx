@@ -17,8 +17,8 @@ describe("ProductForm", () => {
   it("renders all input fields correctly in create mode", () => {
     render(<ProductForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
-    // 商品コードは新規作成時は表示されない
-    expect(screen.queryByLabelText(/商品コード/)).not.toBeInTheDocument();
+    // 商品コードは新規作成時も表示される（プレースホルダー付き）
+    expect(screen.getByLabelText(/商品コード/)).toBeInTheDocument();
 
     expect(screen.getByLabelText(/商品名/)).toBeInTheDocument();
     expect(screen.getByLabelText(/社内単位/)).toBeInTheDocument();

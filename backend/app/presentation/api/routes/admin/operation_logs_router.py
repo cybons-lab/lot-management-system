@@ -21,7 +21,7 @@ from app.presentation.schemas.system.operation_logs_schema import (
 )
 
 
-router = APIRouter(tags=["logs"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(tags=["logs"])
 
 
 @router.get("/operation-logs", response_model=OperationLogListResponse)
@@ -34,6 +34,7 @@ def list_operation_logs(
     start_date: datetime | None = Query(None, description="開始日時（この日時以降）"),
     end_date: datetime | None = Query(None, description="終了日時（この日時以前）"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
 ):
     """操作ログ一覧取得.
 
@@ -46,6 +47,7 @@ def list_operation_logs(
         start_date: 開始日時（オプション）
         end_date: 終了日時（オプション）
         db: データベースセッション
+        current_user: 現在の管理者ユーザー（認証用）
 
     Returns:
         操作ログのリスト（ページネーション付き）
@@ -83,12 +85,17 @@ def get_operation_log_filters(
 
 
 @router.get("/operation-logs/{log_id}", response_model=OperationLogResponse)
-def get_operation_log(log_id: int, db: Session = Depends(get_db)):
+def get_operation_log(
+    log_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
     """操作ログ詳細取得.
 
     Args:
         log_id: ログID
         db: データベースセッション
+        current_user: 現在の管理者ユーザー（認証用）
 
     Returns:
         操作ログ詳細
@@ -117,6 +124,10 @@ def list_master_change_logs(
     db: Session = Depends(get_db),
 ):
     """マスタ変更履歴一覧取得.
+
+    Note:
+        ダッシュボード表示用にパブリックアクセス（または一般ユーザーアクセス）を許可するため、
+        厳格な認証依存関係（Depends(get_current_admin)）は設定していません。
 
     Args:
         skip: スキップ件数
@@ -155,12 +166,17 @@ def list_master_change_logs(
 
 
 @router.get("/master-change-logs/{change_log_id}", response_model=MasterChangeLogResponse)
-def get_master_change_log(change_log_id: int, db: Session = Depends(get_db)):
+def get_master_change_log(
+    change_log_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
     """マスタ変更履歴詳細取得.
 
     Args:
         change_log_id: 変更ログID
         db: データベースセッション
+        current_user: 現在の管理者ユーザー（認証用）
 
     Returns:
         マスタ変更履歴詳細
@@ -186,6 +202,7 @@ def get_master_change_logs_by_record(
     table_name: str,
     record_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
 ):
     """特定レコードのマスタ変更履歴取得.
 
@@ -193,6 +210,7 @@ def get_master_change_logs_by_record(
         table_name: テーブル名
         record_id: レコードID
         db: データベースセッション
+        current_user: 現在の管理者ユーザー（認証用）
 
     Returns:
         マスタ変更履歴のリスト（降順）

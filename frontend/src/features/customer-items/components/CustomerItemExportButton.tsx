@@ -10,7 +10,7 @@ export interface CustomerItemExportButtonProps {
 export function CustomerItemExportButton({ size = "default" }: CustomerItemExportButtonProps) {
   return (
     <ExportButton
-      apiPath="/masters/customer-items/export/download"
+      apiPath="masters/customer-items/export/download"
       filePrefix="customer_items"
       size={size}
     />

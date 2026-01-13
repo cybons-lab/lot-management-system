@@ -65,7 +65,7 @@ export function CustomerForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={formStyles.grid}>
-      <CustomerFormFields register={register} errors={errors} isEditMode={isEditMode} />
+      <CustomerFormFields register={register} errors={errors} />
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           キャンセル

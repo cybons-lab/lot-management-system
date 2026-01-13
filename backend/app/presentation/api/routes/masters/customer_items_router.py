@@ -54,6 +54,25 @@ def list_customer_items(
     )
 
 
+@router.get("/export/download")
+def export_customer_items(format: str = "csv", db: Session = Depends(get_db)):
+    """得意先品番マッピングをエクスポート.
+
+    Args:
+        format: エクスポート形式（'csv' または 'xlsx'）
+        db: データベースセッション
+
+    Returns:
+        Excel形式またはCSV形式のファイルレスポンス
+    """
+    service = CustomerItemsService(db)
+    items = service.get_all()
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(items, "customer_items")
+    return ExportService.export_to_csv(items, "customer_items")
+
+
 @router.get("/{customer_id}", response_model=list[CustomerItemResponse])
 def list_customer_items_by_customer(customer_id: int, db: Session = Depends(get_db)):
     """特定得意先の品番マッピング一覧取得.
@@ -210,25 +229,6 @@ def restore_customer_item(
             detail="Customer item mapping not found",
         )
     return restored
-
-
-@router.get("/export/download")
-def export_customer_items(format: str = "csv", db: Session = Depends(get_db)):
-    """得意先品番マッピングをエクスポート.
-
-    Args:
-        format: エクスポート形式（'csv' または 'xlsx'）
-        db: データベースセッション
-
-    Returns:
-        Excel形式またはCSV形式のファイルレスポンス
-    """
-    service = CustomerItemsService(db)
-    items = service.get_all()
-
-    if format == "xlsx":
-        return ExportService.export_to_excel(items, "customer_items")
-    return ExportService.export_to_csv(items, "customer_items")
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)

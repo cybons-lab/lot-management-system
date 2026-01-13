@@ -134,7 +134,7 @@ r"""受注エンドポイント（全修正版） I/O整形のみを責務とし
 import logging
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -155,6 +155,7 @@ from app.presentation.api.deps import get_db, get_uow
 from app.presentation.api.routes.auth.auth_router import get_current_user, get_current_user_optional
 from app.presentation.schemas.orders.orders_schema import (
     OrderCreate,
+    OrderLineResponse,
     OrderWithLinesResponse,
 )
 
@@ -228,6 +229,47 @@ def get_order(order_id: int, db: Session = Depends(get_db)):
     """
     service = OrderService(db)
     return service.get_order_detail(order_id)
+
+
+@router.get("/lines", response_model=list[OrderLineResponse])
+def list_order_lines(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=1000),
+    status: str | None = None,
+    customer_code: str | None = None,
+    product_code: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
+    order_type: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """受注明細一覧取得（フラット表示用）.
+
+    Args:
+        skip: スキップ件数
+        limit: 取得件数
+        status: ステータスフィルタ
+        customer_code: 顧客コードフィルタ
+        product_code: 製品コードフィルタ
+        date_from: 納期開始日
+        date_to: 納期終了日
+        order_type: 受注種別フィルタ
+        db: データベースセッション
+
+    Returns:
+        list[OrderLineResponse]: 受注明細リスト
+    """
+    service = OrderService(db)
+    return service.get_order_lines(
+        skip=skip,
+        limit=limit,
+        status=status,
+        customer_code=customer_code,
+        product_code=product_code,
+        date_from=date_from,
+        date_to=date_to,
+        order_type=order_type,
+    )
 
 
 @router.post("", response_model=OrderWithLinesResponse, status_code=201)

@@ -189,9 +189,16 @@ def update_delivery_place(
     for field, value in update_data.items():
         setattr(place, field, value)
 
-    db.commit()
-    db.refresh(place)
-    return place
+    try:
+        db.commit()
+        db.refresh(place)
+        return place
+    except Exception as e:
+        db.rollback()
+        # Basic check for unique constraint violation
+        if "unique constraint" in str(e).lower() or "integrity" in str(e).lower():
+            raise HTTPException(status_code=400, detail="Delivery place code already exists")
+        raise e
 
 
 @router.delete("/{delivery_place_id}", status_code=status.HTTP_204_NO_CONTENT)

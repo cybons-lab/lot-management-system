@@ -1,8 +1,8 @@
-"""merge heads
+"""merge_heads
 
-Revision ID: fb04bac1471c
-Revises: 3ee7b8597d75, x2y3z4a5b6c7
-Create Date: 2026-01-12 00:51:02.203643
+Revision ID: d6977674c857
+Revises: fb04bac1471c, y3z4a5b6c7d8
+Create Date: 2026-01-13 19:49:39.404959
 
 """
 
@@ -12,8 +12,8 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "fb04bac1471c"
-down_revision = ("3ee7b8597d75", "x2y3z4a5b6c7")
+revision = "d6977674c857"
+down_revision = ("fb04bac1471c", "y3z4a5b6c7d8")
 branch_labels = None
 depends_on = None
 
