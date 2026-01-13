@@ -62,7 +62,7 @@ def export_product_mappings(format: str = "csv", db: Session = Depends(get_db)):
         .join(Supplier, ProductMapping.supplier_id == Supplier.id)
         .join(Product, ProductMapping.product_id == Product.id)
     )
-    
+
     results = query.all()
 
     data = [

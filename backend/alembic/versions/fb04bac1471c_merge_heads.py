@@ -5,14 +5,15 @@ Revises: 3ee7b8597d75, x2y3z4a5b6c7
 Create Date: 2026-01-12 00:51:02.203643
 
 """
+
 import sqlalchemy as sa
 
 from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = 'fb04bac1471c'
-down_revision = ('3ee7b8597d75', 'x2y3z4a5b6c7')
+revision = "fb04bac1471c"
+down_revision = ("3ee7b8597d75", "x2y3z4a5b6c7")
 branch_labels = None
 depends_on = None
 

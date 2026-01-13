@@ -243,9 +243,13 @@ class RPAService:
             if config_step3_url:
                 url_step3 = config_step3_url.config_value
             if config_step1_payload:
-                payload_step1 = config_step1_payload.config_value.replace("{{start_date}}", start_date).replace("{{end_date}}", end_date)
+                payload_step1 = config_step1_payload.config_value.replace(
+                    "{{start_date}}", start_date
+                ).replace("{{end_date}}", end_date)
             if config_step3_payload:
-                payload_step3 = config_step3_payload.config_value.replace("{{start_date}}", start_date).replace("{{end_date}}", end_date)
+                payload_step3 = config_step3_payload.config_value.replace(
+                    "{{start_date}}", start_date
+                ).replace("{{end_date}}", end_date)
 
         # PAD実行のモック（実際はPower Automate Desktop APIを呼び出す）
         # 設定値を使用して実行（ログに出力）

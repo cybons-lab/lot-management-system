@@ -124,8 +124,10 @@ export function RpaSettingsModal() {
 
               <TabsContent value="step1" className="space-y-4 pt-4">
                 <div className="bg-muted text-muted-foreground rounded-md p-3 text-sm">
-                  進度実績ダウンロード処理（Step1）の設定です。<br />
-                  JSON内の <code>{"{{start_date}}"}</code>, <code>{"{{end_date}}"}</code> は実行時に日付（YYYY-MM-DD）に置換されます。
+                  進度実績ダウンロード処理（Step1）の設定です。
+                  <br />
+                  JSON内の <code>{"{{start_date}}"}</code>, <code>{"{{end_date}}"}</code>{" "}
+                  は実行時に日付（YYYY-MM-DD）に置換されます。
                 </div>
                 <FormField
                   control={form.control}
@@ -161,8 +163,10 @@ export function RpaSettingsModal() {
 
               <TabsContent value="step3" className="space-y-4 pt-4">
                 <div className="bg-muted text-muted-foreground rounded-md p-3 text-sm">
-                  PAD実行・監視処理（Step3）の設定です。<br />
-                  JSON内の <code>{"{{id}}"}</code>, <code>{"{{start_date}}"}</code>, <code>{"{{end_date}}"}</code> は実行時に値に置換されます。
+                  PAD実行・監視処理（Step3）の設定です。
+                  <br />
+                  JSON内の <code>{"{{id}}"}</code>, <code>{"{{start_date}}"}</code>,{" "}
+                  <code>{"{{end_date}}"}</code> は実行時に値に置換されます。
                 </div>
                 <FormField
                   control={form.control}

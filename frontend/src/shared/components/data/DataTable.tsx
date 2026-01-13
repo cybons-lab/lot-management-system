@@ -457,7 +457,7 @@ export function DataTable<T = never>({
                         meta?.align === "center" && "text-center",
                         meta?.align === "right" && "text-right",
                         header.column.getCanSort() &&
-                        "cursor-pointer transition-colors select-none hover:bg-slate-100",
+                          "cursor-pointer transition-colors select-none hover:bg-slate-100",
                         meta?.className,
                       )}
                       style={{ width: header.getSize() }}
@@ -524,7 +524,7 @@ export function DataTable<T = never>({
                         <td
                           key={cell.id}
                           className={cn(
-                            "px-4 py-3 text-sm text-slate-900 overflow-hidden",
+                            "overflow-hidden px-4 py-3 text-sm text-slate-900",
                             meta?.align === "center" && "text-center",
                             meta?.align === "right" && "text-right",
                             meta?.className,

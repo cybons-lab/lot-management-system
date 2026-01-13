@@ -231,9 +231,6 @@ def restore_customer_item(
     return restored
 
 
-
-
-
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)
 def bulk_upsert_customer_items(
     request: CustomerItemBulkUpsertRequest, db: Session = Depends(get_db)

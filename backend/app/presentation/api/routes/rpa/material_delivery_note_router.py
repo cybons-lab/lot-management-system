@@ -387,7 +387,7 @@ async def execute_step2(
                 raw_payload = raw_payload.replace("{{start_date}}", str(request.start_date))
             if request.end_date:
                 raw_payload = raw_payload.replace("{{end_date}}", str(request.end_date))
-            
+
             json_payload = json.loads(raw_payload)
         except json.JSONDecodeError:
             raise HTTPException(
