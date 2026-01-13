@@ -6,7 +6,10 @@
 import { FileText, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { RpaSettingsModal } from "../components/RpaSettingsModal";
+
 import { ROUTES } from "@/constants/routes";
+import { useAuth } from "@/features/auth/AuthContext";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -39,9 +42,16 @@ function RPAMenuCard({ title, description, icon, to }: RPAMenuCardProps) {
 }
 
 export function RPAPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes("admin");
+
   return (
     <PageContainer>
-      <PageHeader title="RPA" subtitle="RPA (Robotic Process Automation) 機能一覧" />
+      <PageHeader
+        title="RPA"
+        subtitle="RPA (Robotic Process Automation) 機能一覧"
+        actions={isAdmin ? <RpaSettingsModal /> : undefined}
+      />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* 素材納品書発行 */}
@@ -50,6 +60,14 @@ export function RPAPage() {
           description="CSVファイルの取込、チェック、およびワークフロー実行を行います。Step1、Step2のプロセス管理が可能です。"
           icon={<FileText className="h-6 w-6" />}
           to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.ROOT}
+        />
+
+        {/* クラウドフロー実行（汎用） */}
+        <RPAMenuCard
+          title="クラウドフロー実行 (汎用)"
+          description="Runデータを使用せず、直接URLとJSONを指定してクラウドフローを実行します。"
+          icon={<FileText className="h-6 w-6" />}
+          to={ROUTES.RPA.GENERIC_CLOUD_FLOW}
         />
       </div>
     </PageContainer>

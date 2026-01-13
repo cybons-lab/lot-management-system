@@ -56,3 +56,10 @@ class CloudFlowConfigUpdate(BaseModel):
 
     config_value: str
     description: str | None = None
+
+
+class CloudFlowGenericExecuteRequest(BaseModel):
+    """汎用Cloud Flow実行リクエスト."""
+
+    flow_url: str
+    json_payload: dict | None = None

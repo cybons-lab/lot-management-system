@@ -191,13 +191,15 @@ def get_lock_manager() -> RPALockManager:
 class RPAService:
     """RPA実行サービス."""
 
-    def __init__(self, lock_manager: RPALockManager):
+    def __init__(self, lock_manager: RPALockManager, db=None):
         """初期化.
 
         Args:
             lock_manager: ロックマネージャー
+            db: データベースセッション
         """
         self.lock_manager = lock_manager
+        self.db = db
 
     def execute_material_delivery_document(
         self, start_date: str, end_date: str, user: str = "system"
@@ -221,9 +223,38 @@ class RPAService:
                 "execution_time_seconds": remaining,
             }
 
+        # Cloud Flow設定を取得
+        url_step1 = None
+        url_step3 = None
+        payload_step1 = None
+        payload_step3 = None
+
+        if self.db:
+            from app.application.services.cloud_flow_service import CloudFlowService
+
+            cf_service = CloudFlowService(self.db)
+            config_step1_url = cf_service.get_config("STEP1_URL")
+            config_step3_url = cf_service.get_config("STEP3_URL")
+            config_step1_payload = cf_service.get_config("STEP1_PAYLOAD")
+            config_step3_payload = cf_service.get_config("STEP3_PAYLOAD")
+
+            if config_step1_url:
+                url_step1 = config_step1_url.config_value
+            if config_step3_url:
+                url_step3 = config_step3_url.config_value
+            if config_step1_payload:
+                payload_step1 = config_step1_payload.config_value.replace("{{start_date}}", start_date).replace("{{end_date}}", end_date)
+            if config_step3_payload:
+                payload_step3 = config_step3_payload.config_value.replace("{{start_date}}", start_date).replace("{{end_date}}", end_date)
+
         # PAD実行のモック（実際はPower Automate Desktop APIを呼び出す）
-        # ここでは単にログ出力して成功を返す
+        # 設定値を使用して実行（ログに出力）
         print(f"[RPA] 素材納品書発行を実行: {start_date} ~ {end_date}")
+        print(f"[RPA] Using STEP1 URL: {url_step1 or 'Not Set'}")
+        print(f"[RPA] Using STEP3 URL: {url_step3 or 'Not Set'}")
+        print(f"[RPA] Using STEP1 Payload: {payload_step1 or 'Not Set'}")
+        print(f"[RPA] Using STEP3 Payload: {payload_step3 or 'Not Set'}")
+
         time.sleep(0.1)  # 実行シミュレーション
 
         return {

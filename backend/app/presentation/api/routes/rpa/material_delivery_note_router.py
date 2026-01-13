@@ -378,9 +378,17 @@ async def execute_step2(
     service = MaterialDeliveryNoteOrchestrator(uow)
 
     try:
-        # JSON Payload parse
+        # JSON Payload parse with variable substitution
         try:
-            json_payload = json.loads(request.json_payload) if request.json_payload else {}
+            raw_payload = request.json_payload or "{}"
+            # Replace variables
+            raw_payload = raw_payload.replace("{{id}}", str(run_id))
+            if request.start_date:
+                raw_payload = raw_payload.replace("{{start_date}}", str(request.start_date))
+            if request.end_date:
+                raw_payload = raw_payload.replace("{{end_date}}", str(request.end_date))
+            
+            json_payload = json.loads(raw_payload)
         except json.JSONDecodeError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

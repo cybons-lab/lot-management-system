@@ -2575,7 +2575,7 @@
           "orders"
         ],
         "summary": "List Order Lines",
-        "description": "受注明細一覧取得.\n\n受注ヘッダ情報や製品情報などを結合したフラットな明細リストを返します。",
+        "description": "受注明細一覧取得（フラット表示用）.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数\n    status: ステータスフィルタ\n    customer_code: 顧客コードフィルタ\n    product_code: 製品コードフィルタ\n    date_from: 納期開始日\n    date_to: 納期終了日\n    order_type: 受注種別フィルタ\n    db: データベースセッション\n\nReturns:\n    list[OrderLineResponse]: 受注明細リスト",
         "operationId": "list_order_lines_api_orders_lines_get",
         "parameters": [
           {
@@ -2584,6 +2584,7 @@
             "required": false,
             "schema": {
               "type": "integer",
+              "minimum": 0,
               "default": 0,
               "title": "Skip"
             }
@@ -2594,6 +2595,8 @@
             "required": false,
             "schema": {
               "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
               "default": 100,
               "title": "Limit"
             }
@@ -8515,6 +8518,48 @@
         }
       }
     },
+    "/api/masters/customer-items/export/download": {
+      "get": {
+        "tags": [
+          "customer-items"
+        ],
+        "summary": "Export Customer Items",
+        "description": "得意先品番マッピングをエクスポート.\n\nArgs:\n    format: エクスポート形式（'csv' または 'xlsx'）\n    db: データベースセッション\n\nReturns:\n    Excel形式またはCSV形式のファイルレスポンス",
+        "operationId": "export_customer_items_api_masters_customer_items_export_download_get",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "csv",
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/masters/customer-items/{customer_id}": {
       "get": {
         "tags": [
@@ -8770,48 +8815,6 @@
                 "schema": {
                   "$ref": "#/components/schemas/CustomerItemResponse"
                 }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/masters/customer-items/export/download": {
-      "get": {
-        "tags": [
-          "customer-items"
-        ],
-        "summary": "Export Customer Items",
-        "description": "得意先品番マッピングをエクスポート.\n\nArgs:\n    format: エクスポート形式（'csv' または 'xlsx'）\n    db: データベースセッション\n\nReturns:\n    Excel形式またはCSV形式のファイルレスポンス",
-        "operationId": "export_customer_items_api_masters_customer_items_export_download_get",
-        "parameters": [
-          {
-            "name": "format",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "csv",
-              "title": "Format"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
               }
             }
           },
@@ -11464,7 +11467,7 @@
           "logs"
         ],
         "summary": "List Operation Logs",
-        "description": "操作ログ一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    user_id: ユーザーIDでフィルタ（オプション）\n    operation_type: 操作種別でフィルタ（オプション）\n    target_table: 対象テーブル名でフィルタ（オプション）\n    start_date: 開始日時（オプション）\n    end_date: 終了日時（オプション）\n    db: データベースセッション\n\nReturns:\n    操作ログのリスト（ページネーション付き）",
+        "description": "操作ログ一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    user_id: ユーザーIDでフィルタ（オプション）\n    operation_type: 操作種別でフィルタ（オプション）\n    target_table: 対象テーブル名でフィルタ（オプション）\n    start_date: 開始日時（オプション）\n    end_date: 終了日時（オプション）\n    db: データベースセッション\n    current_user: 現在の管理者ユーザー（認証用）\n\nReturns:\n    操作ログのリスト（ページネーション付き）",
         "operationId": "list_operation_logs_api_operation_logs_get",
         "security": [
           {
@@ -11649,7 +11652,7 @@
           "logs"
         ],
         "summary": "Get Operation Log",
-        "description": "操作ログ詳細取得.\n\nArgs:\n    log_id: ログID\n    db: データベースセッション\n\nReturns:\n    操作ログ詳細\n\nRaises:\n    HTTPException: ログが存在しない場合",
+        "description": "操作ログ詳細取得.\n\nArgs:\n    log_id: ログID\n    db: データベースセッション\n    current_user: 現在の管理者ユーザー（認証用）\n\nReturns:\n    操作ログ詳細\n\nRaises:\n    HTTPException: ログが存在しない場合",
         "operationId": "get_operation_log_api_operation_logs__log_id__get",
         "security": [
           {
@@ -11697,13 +11700,8 @@
           "logs"
         ],
         "summary": "List Master Change Logs",
-        "description": "マスタ変更履歴一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    table_name: テーブル名でフィルタ（オプション）\n    record_id: レコードIDでフィルタ（オプション）\n    change_type: 変更種別でフィルタ（オプション）\n    changed_by: 変更者でフィルタ（オプション）\n    start_date: 開始日時（オプション）\n    end_date: 終了日時（オプション）\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴のリスト（ページネーション付き）",
+        "description": "マスタ変更履歴一覧取得.\n\nNote:\n    ダッシュボード表示用にパブリックアクセス（または一般ユーザーアクセス）を許可するため、\n    厳格な認証依存関係（Depends(get_current_admin)）は設定していません。\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    table_name: テーブル名でフィルタ（オプション）\n    record_id: レコードIDでフィルタ（オプション）\n    change_type: 変更種別でフィルタ（オプション）\n    changed_by: 変更者でフィルタ（オプション）\n    start_date: 開始日時（オプション）\n    end_date: 終了日時（オプション）\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴のリスト（ページネーション付き）",
         "operationId": "list_master_change_logs_api_master_change_logs_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
         "parameters": [
           {
             "name": "skip",
@@ -11873,7 +11871,7 @@
           "logs"
         ],
         "summary": "Get Master Change Log",
-        "description": "マスタ変更履歴詳細取得.\n\nArgs:\n    change_log_id: 変更ログID\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴詳細\n\nRaises:\n    HTTPException: ログが存在しない場合",
+        "description": "マスタ変更履歴詳細取得.\n\nArgs:\n    change_log_id: 変更ログID\n    db: データベースセッション\n    current_user: 現在の管理者ユーザー（認証用）\n\nReturns:\n    マスタ変更履歴詳細\n\nRaises:\n    HTTPException: ログが存在しない場合",
         "operationId": "get_master_change_log_api_master_change_logs__change_log_id__get",
         "security": [
           {
@@ -11921,7 +11919,7 @@
           "logs"
         ],
         "summary": "Get Master Change Logs By Record",
-        "description": "特定レコードのマスタ変更履歴取得.\n\nArgs:\n    table_name: テーブル名\n    record_id: レコードID\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴のリスト（降順）",
+        "description": "特定レコードのマスタ変更履歴取得.\n\nArgs:\n    table_name: テーブル名\n    record_id: レコードID\n    db: データベースセッション\n    current_user: 現在の管理者ユーザー（認証用）\n\nReturns:\n    マスタ変更履歴のリスト（降順）",
         "operationId": "get_master_change_logs_by_record_api_master_change_logs_record__table_name___record_id__get",
         "security": [
           {
@@ -12807,7 +12805,7 @@
           "rpa"
         ],
         "summary": "Execute Material Delivery Document",
-        "description": "素材納品書発行を実行.\n\nArgs:\n    request: リクエスト（開始日・終了日）\n    current_user: ログインユーザー（オプション）\n\nReturns:\n    実行結果",
+        "description": "素材納品書発行を実行.\n\nArgs:\n    request: リクエスト（開始日・終了日）\n    current_user: ログインユーザー（オプション）\n    db: データベースセッション\n\nReturns:\n    実行結果",
         "operationId": "execute_material_delivery_document_api_rpa_material_delivery_document_post",
         "requestBody": {
           "content": {
@@ -13589,6 +13587,51 @@
                 "schema": {
                   "$ref": "#/components/schemas/MaterialDeliveryNoteExecuteResponse"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/rpa/cloud-flow/execute-generic": {
+      "post": {
+        "tags": [
+          "cloud-flow"
+        ],
+        "summary": "Execute Generic Flow",
+        "description": "汎用Cloud Flow実行.",
+        "operationId": "execute_generic_flow_api_rpa_cloud_flow_execute_generic_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudFlowGenericExecuteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -16041,6 +16084,32 @@
         ],
         "title": "CloudFlowConfigUpdate",
         "description": "設定更新リクエスト."
+      },
+      "CloudFlowGenericExecuteRequest": {
+        "properties": {
+          "flow_url": {
+            "type": "string",
+            "title": "Flow Url"
+          },
+          "json_payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Json Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flow_url"
+        ],
+        "title": "CloudFlowGenericExecuteRequest",
+        "description": "汎用Cloud Flow実行リクエスト."
       },
       "CloudFlowJobCreate": {
         "properties": {

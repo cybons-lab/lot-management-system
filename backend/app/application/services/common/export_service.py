@@ -58,6 +58,35 @@ TEMPLATE_DEFINITIONS = {
         ],
         "description": "納入先マスタ インポート用テンプレート",
     },
+    "product_mappings": {
+        "columns": [
+            "customer_code",
+            "customer_name",
+            "customer_part_code",
+            "supplier_code",
+            "supplier_name",
+            "product_code",
+            "product_name",
+            "base_unit",
+            "pack_unit",
+            "pack_quantity",
+            "special_instructions",
+        ],
+        "sample_row": [
+            "CUST-001",
+            "サンプル顧客",
+            "CUST-PART-001",
+            "SUP-001",
+            "サンプル仕入先",
+            "PROD-001",
+            "サンプル商品",
+            "個",
+            "箱",
+            "10",
+            "特記事項サンプル",
+        ],
+        "description": "得意先品番マッピング インポート用テンプレート",
+    },
 }
 
 

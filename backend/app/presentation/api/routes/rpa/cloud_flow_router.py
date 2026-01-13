@@ -6,10 +6,15 @@ from sqlalchemy.orm import Session
 from app.application.services.cloud_flow_service import CloudFlowService
 from app.core.database import get_db
 from app.infrastructure.persistence.models import User
-from app.presentation.api.routes.auth.auth_router import get_current_user, get_current_user_optional
+from app.presentation.api.routes.auth.auth_router import (
+    get_current_admin,
+    get_current_user,
+    get_current_user_optional,
+)
 from app.presentation.schemas.cloud_flow_schema import (
     CloudFlowConfigResponse,
     CloudFlowConfigUpdate,
+    CloudFlowGenericExecuteRequest,
     CloudFlowJobCreate,
     CloudFlowJobResponse,
     CloudFlowQueueStatus,
@@ -34,6 +39,20 @@ def _job_to_response(job, position: int | None = None) -> CloudFlowJobResponse:
         result_message=job.result_message,
         error_message=job.error_message,
         position_in_queue=position,
+    )
+
+
+@router.post("/execute-generic", status_code=status.HTTP_200_OK)
+async def execute_generic_flow(
+    request: CloudFlowGenericExecuteRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """汎用Cloud Flow実行."""
+    from app.application.services.rpa import call_power_automate_flow
+
+    return await call_power_automate_flow(
+        flow_url=request.flow_url,
+        json_payload=request.json_payload or {},
     )
 
 
@@ -122,7 +141,7 @@ def update_config(
     config_key: str,
     request: CloudFlowConfigUpdate,
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    _current_user: User = Depends(get_current_admin),
 ) -> CloudFlowConfigResponse:
     """設定を登録/更新."""
     service = CloudFlowService(db)

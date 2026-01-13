@@ -24,3 +24,37 @@ export async function executeMaterialDeliveryDocument(
 ): Promise<MaterialDeliveryDocumentResponse> {
   return http.post<MaterialDeliveryDocumentResponse>("rpa/material-delivery-document", request);
 }
+
+export interface GenericCloudFlowExecuteRequest {
+  flow_url: string;
+  json_payload?: Record<string, unknown>;
+}
+
+export async function executeGenericCloudFlow(
+  request: GenericCloudFlowExecuteRequest,
+): Promise<unknown> {
+  return http.post("rpa/cloud-flow/execute-generic", request);
+}
+
+export interface CloudFlowConfigResponse {
+  id: number;
+  config_key: string;
+  config_value: string;
+  description: string | null;
+}
+
+export interface CloudFlowConfigUpdate {
+  config_value: string;
+  description?: string | null;
+}
+
+export async function getCloudFlowConfig(key: string): Promise<CloudFlowConfigResponse> {
+  return http.get<CloudFlowConfigResponse>(`rpa/cloud-flow/configs/${key}`);
+}
+
+export async function updateCloudFlowConfig(
+  key: string,
+  data: CloudFlowConfigUpdate,
+): Promise<CloudFlowConfigResponse> {
+  return http.put<CloudFlowConfigResponse>(`rpa/cloud-flow/configs/${key}`, data);
+}

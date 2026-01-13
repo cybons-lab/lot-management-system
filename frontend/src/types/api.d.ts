@@ -815,9 +815,21 @@ export interface paths {
     };
     /**
      * List Order Lines
-     * @description 受注明細一覧取得.
+     * @description 受注明細一覧取得（フラット表示用）.
      *
-     *     受注ヘッダ情報や製品情報などを結合したフラットな明細リストを返します。
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数
+     *         status: ステータスフィルタ
+     *         customer_code: 顧客コードフィルタ
+     *         product_code: 製品コードフィルタ
+     *         date_from: 納期開始日
+     *         date_to: 納期終了日
+     *         order_type: 受注種別フィルタ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         list[OrderLineResponse]: 受注明細リスト
      */
     get: operations["list_order_lines_api_orders_lines_get"];
     put?: never;
@@ -3313,6 +3325,33 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/customer-items/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Customer Items
+     * @description 得意先品番マッピングをエクスポート.
+     *
+     *     Args:
+     *         format: エクスポート形式（'csv' または 'xlsx'）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         Excel形式またはCSV形式のファイルレスポンス
+     */
+    get: operations["export_customer_items_api_masters_customer_items_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/customer-items/{customer_id}": {
     parameters: {
       query?: never;
@@ -3439,33 +3478,6 @@ export interface paths {
      *         HTTPException: マッピングが存在しない場合
      */
     post: operations["restore_customer_item_api_masters_customer_items__customer_id___external_product_code__restore_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/masters/customer-items/export/download": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Export Customer Items
-     * @description 得意先品番マッピングをエクスポート.
-     *
-     *     Args:
-     *         format: エクスポート形式（'csv' または 'xlsx'）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         Excel形式またはCSV形式のファイルレスポンス
-     */
-    get: operations["export_customer_items_api_masters_customer_items_export_download_get"];
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -4638,6 +4650,7 @@ export interface paths {
      *         start_date: 開始日時（オプション）
      *         end_date: 終了日時（オプション）
      *         db: データベースセッション
+     *         current_user: 現在の管理者ユーザー（認証用）
      *
      *     Returns:
      *         操作ログのリスト（ページネーション付き）
@@ -4685,6 +4698,7 @@ export interface paths {
      *     Args:
      *         log_id: ログID
      *         db: データベースセッション
+     *         current_user: 現在の管理者ユーザー（認証用）
      *
      *     Returns:
      *         操作ログ詳細
@@ -4711,6 +4725,10 @@ export interface paths {
     /**
      * List Master Change Logs
      * @description マスタ変更履歴一覧取得.
+     *
+     *     Note:
+     *         ダッシュボード表示用にパブリックアクセス（または一般ユーザーアクセス）を許可するため、
+     *         厳格な認証依存関係（Depends(get_current_admin)）は設定していません。
      *
      *     Args:
      *         skip: スキップ件数
@@ -4749,6 +4767,7 @@ export interface paths {
      *     Args:
      *         change_log_id: 変更ログID
      *         db: データベースセッション
+     *         current_user: 現在の管理者ユーザー（認証用）
      *
      *     Returns:
      *         マスタ変更履歴詳細
@@ -4780,6 +4799,7 @@ export interface paths {
      *         table_name: テーブル名
      *         record_id: レコードID
      *         db: データベースセッション
+     *         current_user: 現在の管理者ユーザー（認証用）
      *
      *     Returns:
      *         マスタ変更履歴のリスト（降順）
@@ -5226,6 +5246,7 @@ export interface paths {
      *     Args:
      *         request: リクエスト（開始日・終了日）
      *         current_user: ログインユーザー（オプション）
+     *         db: データベースセッション
      *
      *     Returns:
      *         実行結果
@@ -5538,6 +5559,26 @@ export interface paths {
      *     URL/JSONを指定してFlowをトリガーする。
      */
     post: operations["execute_material_delivery_note_api_rpa_material_delivery_note_execute_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/cloud-flow/execute-generic": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Generic Flow
+     * @description 汎用Cloud Flow実行.
+     */
+    post: operations["execute_generic_flow_api_rpa_cloud_flow_execute_generic_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -6731,6 +6772,18 @@ export interface components {
       config_value: string;
       /** Description */
       description?: string | null;
+    };
+    /**
+     * CloudFlowGenericExecuteRequest
+     * @description 汎用Cloud Flow実行リクエスト.
+     */
+    CloudFlowGenericExecuteRequest: {
+      /** Flow Url */
+      flow_url: string;
+      /** Json Payload */
+      json_payload?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * CloudFlowJobCreate
@@ -16692,6 +16745,37 @@ export interface operations {
       };
     };
   };
+  export_customer_items_api_masters_customer_items_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_customer_items_by_customer_api_masters_customer_items__customer_id__get: {
     parameters: {
       query?: never;
@@ -16840,37 +16924,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["CustomerItemResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  export_customer_items_api_masters_customer_items_export_download_get: {
-    parameters: {
-      query?: {
-        format?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
         };
       };
       /** @description Validation Error */
@@ -19894,6 +19947,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["MaterialDeliveryNoteExecuteResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_generic_flow_api_rpa_cloud_flow_execute_generic_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CloudFlowGenericExecuteRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */

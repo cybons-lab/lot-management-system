@@ -46,7 +46,6 @@ import {
   CsvImportPage,
   LayerCodeMappingsPage,
   MaterialDeliveryNotePage,
-  CloudFlowExecutePage,
   RunDetailPage,
   RunsListPage,
   Step1Page,
@@ -56,6 +55,7 @@ import {
   Step4DetailPage,
   Step4ListPage,
 } from "@/features/rpa/material-delivery-note";
+import { GenericCloudFlowExecutePage } from "@/features/rpa/pages/GenericCloudFlowExecutePage";
 import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
 import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
 import { UomConversionsPage } from "@/features/uom-conversions/pages/UomConversionsPage";
@@ -253,6 +253,7 @@ export function MainRoutes() {
 
       {/* RPA */}
       <Route path={ROUTES.RPA.ROOT} element={<RPAPage />} />
+      <Route path={ROUTES.RPA.GENERIC_CLOUD_FLOW} element={<GenericCloudFlowExecutePage />} />
       <Route
         path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES}
         element={<LayerCodeMappingsPage />}
@@ -261,10 +262,6 @@ export function MainRoutes() {
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP1} element={<Step1Page />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP2} element={<Step2CheckListPage />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3} element={<Step3ExecuteListPage />} />
-      <Route
-        path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CLOUD_FLOW_EXECUTE}
-        element={<CloudFlowExecutePage />}
-      />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS} element={<RunsListPage />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CSV_IMPORT} element={<CsvImportPage />} />
       <Route path="/rpa/material-delivery-note/runs/:runId" element={<RunDetailPage />} />
