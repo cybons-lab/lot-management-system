@@ -83,9 +83,9 @@ EXCLUDE_FILES = {
 
 def print_step(message: str) -> None:
     """ステップメッセージを出力."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"🔧 {message}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
 
 def print_success(message: str) -> None:
@@ -290,7 +290,9 @@ def build_frontend(frontend_dir: Path) -> bool:
             print_success("ローカルnpm経由でフロントエンドのビルドが完了しました")
             return True
         else:
-            print_error("ビルドは成功しましたが、distディレクトリが生成されませんでした")
+            print_error(
+                "ビルドは成功しましたが、distディレクトリが生成されませんでした"
+            )
             return False
 
     # 両方失敗
