@@ -129,6 +129,8 @@ def generate_requirements(backend_dir: Path, output_path: Path) -> bool:
             cwd=backend_dir,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         if result.returncode == 0:
             print_success(f"requirements.txt を生成しました: {output_path}")
@@ -145,6 +147,8 @@ def generate_requirements(backend_dir: Path, output_path: Path) -> bool:
             cwd=backend_dir,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         if result.returncode == 0:
             print_success(f"requirements.txt を生成しました: {output_path}")
@@ -189,6 +193,8 @@ def build_frontend_with_docker(frontend_dir: Path) -> bool:
             ["docker", "compose", "version"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         if result.returncode != 0:
             print("docker compose が利用できません")
@@ -204,6 +210,8 @@ def build_frontend_with_docker(frontend_dir: Path) -> bool:
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
     )
     if result.returncode != 0:
         print(f"Docker npm install に失敗: {result.stderr}")
@@ -216,6 +224,8 @@ def build_frontend_with_docker(frontend_dir: Path) -> bool:
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
     )
     if result.returncode != 0:
         print(f"Docker npm run build に失敗: {result.stderr}")
@@ -237,6 +247,8 @@ def build_frontend_with_npm(frontend_dir: Path) -> bool:
             capture_output=True,
             text=True,
             shell=(os.name == "nt"),  # Windows では shell=True が必要
+            encoding="utf-8",
+            errors="replace",
         )
         if result.returncode != 0:
             print(f"npm install に失敗: {result.stderr}")
@@ -253,6 +265,8 @@ def build_frontend_with_npm(frontend_dir: Path) -> bool:
         capture_output=True,
         text=True,
         shell=(os.name == "nt"),
+        encoding="utf-8",
+        errors="replace",
     )
     if result.returncode != 0:
         print(f"npm run build に失敗: {result.stderr}")
