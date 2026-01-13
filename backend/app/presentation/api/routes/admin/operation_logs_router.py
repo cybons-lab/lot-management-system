@@ -111,7 +111,11 @@ def get_operation_log(
     return OperationLogResponse.model_validate(log)
 
 
-@router.get("/master-change-logs", response_model=MasterChangeLogListResponse)
+@router.get(
+    "/master-change-logs",
+    response_model=MasterChangeLogListResponse,
+    openapi_extra={"security": []},
+)
 def list_master_change_logs(
     skip: int = Query(0, ge=0, description="スキップ件数"),
     limit: int = Query(100, ge=1, le=1000, description="取得件数上限"),
