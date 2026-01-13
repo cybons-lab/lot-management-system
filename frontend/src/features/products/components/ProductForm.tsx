@@ -83,19 +83,20 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className={formStyles.grid} noValidate>
-      {isEditMode && (
-        <div className={formStyles.field}>
-          <Label htmlFor="product_code" className={formStyles.label}>
-            商品コード (自動採番)
-          </Label>
-          <Input
-            id="product_code"
-            {...register("product_code")}
-            disabled={true}
-            className={`${formStyles.input} bg-gray-100`}
-          />
-        </div>
-      )}
+      <div className={formStyles.field}>
+        <Label htmlFor="product_code" className={formStyles.label}>
+          商品コード (メーカー品番)
+        </Label>
+        <Input
+          id="product_code"
+          {...register("product_code")}
+          placeholder="新規登録時は自動採番されます"
+          className={`${formStyles.input}`}
+        />
+        <p className="mt-1 text-xs text-gray-500">
+          ※編集時はメーカー品番(maker_part_code)が更新されます
+        </p>
+      </div>
 
       <div className={formStyles.field}>
         <Label htmlFor="product_name" className={formStyles.label}>

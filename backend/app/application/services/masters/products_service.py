@@ -7,6 +7,7 @@ from typing import cast
 
 from fastapi import HTTPException, status
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
@@ -160,9 +161,12 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             self.db.commit()
             self.db.refresh(instance)
             return instance
-        except Exception as exc:
+        except IntegrityError as exc:
             self.db.rollback()
-            raise exc
+            from app.core.db_error_parser import parse_db_error
+
+            user_message = parse_db_error(exc, payload.model_dump())
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=user_message) from exc
 
     def update(self, id: int, payload: ProductUpdate) -> Product:
         """Update product with field mapping."""
@@ -183,9 +187,12 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             self.db.commit()
             self.db.refresh(instance)
             return instance
-        except Exception as exc:
+        except IntegrityError as exc:
             self.db.rollback()
-            raise exc
+            from app.core.db_error_parser import parse_db_error
+
+            user_message = parse_db_error(exc, payload.model_dump())
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=user_message) from exc
 
     def update_by_code(self, code: str, payload: ProductUpdate) -> Product:
         """Update product by product code."""

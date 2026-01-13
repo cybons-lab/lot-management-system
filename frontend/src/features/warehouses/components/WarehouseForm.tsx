@@ -69,7 +69,6 @@ export function WarehouseForm({
           id="warehouse_code"
           {...register("warehouse_code")}
           placeholder="例: WH-001"
-          disabled={isEditMode}
           className={formStyles.input}
         />
         {errors.warehouse_code && (

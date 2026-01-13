@@ -7,10 +7,13 @@ import {
   UserCheck,
   FilePenLine,
 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/feedback/alert";
 import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/features/auth/AuthContext";
+import { useMasterStatus } from "@/features/masters/hooks/useMasterStatus";
 
 interface MasterLink {
   title: string;
@@ -153,6 +156,8 @@ export function MastersPage() {
         <p className="mt-1 text-sm text-slate-600">システムの基本情報を管理します</p>
       </div>
 
+      <MasterStatusAlert />
+
       {/* マスタリンクグリッド */}
       <div className="space-y-8">
         {visibleSections.map((section) => (
@@ -190,6 +195,54 @@ export function MastersPage() {
           </section>
         ))}
       </div>
+    </div>
+  );
+}
+
+function MasterStatusAlert() {
+  const { data: status } = useMasterStatus();
+
+  if (!status) return null;
+
+  const hasUnmappedCustomerItems = status.unmapped_customer_items_count > 0;
+  const hasUnmappedProducts = status.unmapped_products_count > 0;
+
+  if (!hasUnmappedCustomerItems && !hasUnmappedProducts) return null;
+
+  return (
+    <div className="space-y-4">
+      {hasUnmappedCustomerItems && (
+        <Alert variant="destructive" className="border-red-200 bg-red-50 text-red-900">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>要確認: マッピング未設定のデータがあります</AlertTitle>
+          <AlertDescription>
+            仕入先が設定されていない得意先商品が{" "}
+            <strong>{status.unmapped_customer_items_count}件</strong> あります。
+            <Link
+              to={ROUTES.MASTERS.CUSTOMER_ITEMS}
+              className="ml-1 font-medium underline hover:text-red-950"
+            >
+              得意先品番マッピングを確認
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
+      {hasUnmappedProducts && (
+        <Alert variant="destructive" className="border-red-200 bg-red-50 text-red-900">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>要確認: マッピング未設定のデータがあります</AlertTitle>
+          <AlertDescription>
+            仕入先が設定されていない製品が <strong>{status.unmapped_products_count}件</strong>{" "}
+            あります。
+            <Link
+              to="/masters/supplier-products"
+              className="ml-1 font-medium underline hover:text-red-950"
+            >
+              仕入先別製品設定を確認
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

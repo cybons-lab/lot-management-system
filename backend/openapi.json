@@ -2679,6 +2679,22 @@
               ],
               "title": "Date To"
             }
+          },
+          {
+            "name": "order_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Type"
+            }
           }
         ],
         "responses": {
@@ -4071,6 +4087,64 @@
         ]
       }
     },
+    "/api/allocations/{allocation_id}/cancel": {
+      "post": {
+        "tags": [
+          "allocations"
+        ],
+        "summary": "Cancel Confirmed Allocation",
+        "description": "CONFIRMED予約を取消（反対仕訳方式）.\n\nSAP連携後のCONFIRMED予約を取消す。\nstock_historyにALLOCATION_RELEASEトランザクションを記録し、\n予約ステータスをRELEASEDに変更する。\n\nArgs:\n    allocation_id: 予約ID\n    request: 取消リクエスト（理由、メモ、実行者）\n    db: データベースセッション\n    current_user: 現在のログインユーザー（認証必須）\n\nReturns:\n    ReservationCancelResponse: 取消後の予約情報\n\nRaises:\n    HTTPException: 予約が見つからない（404）、不正な状態遷移（400）",
+        "operationId": "cancel_confirmed_allocation_api_allocations__allocation_id__cancel_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "allocation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Allocation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationCancelRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationCancelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/inbound-plans": {
       "get": {
         "tags": [
@@ -4734,7 +4808,7 @@
           "withdrawals"
         ],
         "summary": "List Withdrawals",
-        "description": "出庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    lot_id: ロットIDでフィルタ\n    customer_id: 得意先IDでフィルタ\n    withdrawal_type: 出庫タイプでフィルタ\n    start_date: 開始日\n    end_date: 終了日\n    product_id: 製品ID\n    warehouse_id: 倉庫ID\n    db: データベースセッション\n\nReturns:\n    出庫履歴一覧",
+        "description": "出庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    lot_id: ロットIDでフィルタ\n    customer_id: 得意先IDでフィルタ\n    withdrawal_type: 出庫タイプでフィルタ\n    start_date: 開始日\n    end_date: 終了日\n    product_id: 製品ID\n    warehouse_id: 倉庫ID\n    search: 検索キーワード\n    db: データベースセッション\n\nReturns:\n    出庫履歴一覧",
         "operationId": "list_withdrawals_api_withdrawals_get",
         "parameters": [
           {
@@ -4891,6 +4965,24 @@
               "title": "Warehouse Id"
             },
             "description": "倉庫IDでフィルタ"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "キーワード検索（ロット、製品、得意先、納入先、参照番号）",
+              "title": "Search"
+            },
+            "description": "キーワード検索（ロット、製品、得意先、納入先、参照番号）"
           }
         ],
         "responses": {
@@ -5000,6 +5092,59 @@
         }
       }
     },
+    "/api/withdrawals/{withdrawal_id}/cancel": {
+      "post": {
+        "tags": [
+          "withdrawals"
+        ],
+        "summary": "Cancel Withdrawal",
+        "description": "出庫を取消.\n\n反対仕訳方式で出庫を取消し、ロットの在庫を復元する。\n- stock_historyにRETURNトランザクションを記録\n- ロットのcurrent_quantityを復元\n- べき等性: 既に取消済みの場合はそのまま返す\n\nArgs:\n    withdrawal_id: 出庫ID\n    data: 取消リクエスト（理由、メモ）\n    db: データベースセッション\n\nReturns:\n    取消後の出庫レコード\n\nRaises:\n    HTTPException: 出庫が見つからない場合",
+        "operationId": "cancel_withdrawal_api_withdrawals__withdrawal_id__cancel_post",
+        "parameters": [
+          {
+            "name": "withdrawal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Withdrawal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawalCancelRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/masters/customers": {
       "get": {
         "tags": [
@@ -5074,8 +5219,13 @@
           "customers"
         ],
         "summary": "Create Customer",
-        "description": "顧客を新規作成.\n\nArgs:\n    customer: 顧客作成リクエストデータ\n    db: データベースセッション\n\nReturns:\n    CustomerResponse: 作成された顧客情報\n\nRaises:\n    HTTPException: 顧客コードが既に存在する場合（409）",
+        "description": "顧客を新規作成.\n\nArgs:\n    customer: 作成する得意先情報\n    db: データベースセッション\n    current_user: 現在のユーザー（管理者権限が必要）\n\nReturns:\n    CustomerResponse: 作成された顧客情報\n\nRaises:\n    HTTPException: 顧客コードが既に存在する場合（409）",
         "operationId": "create_customer_api_masters_customers_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5253,6 +5403,11 @@
         "summary": "Update Customer",
         "description": "Update a customer.",
         "operationId": "update_customer_api_masters_customers__customer_code__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "customer_code",
@@ -5304,6 +5459,11 @@
         "summary": "Delete Customer",
         "description": "Soft delete customer (set valid_to to end_date or today).",
         "operationId": "delete_customer_api_masters_customers__customer_code__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "customer_code",
@@ -5400,6 +5560,11 @@
         "summary": "Restore Customer",
         "description": "Restore a soft-deleted customer.",
         "operationId": "restore_customer_api_masters_customers__customer_code__restore_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "customer_code",
@@ -11301,6 +11466,11 @@
         "summary": "List Operation Logs",
         "description": "操作ログ一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    user_id: ユーザーIDでフィルタ（オプション）\n    operation_type: 操作種別でフィルタ（オプション）\n    target_table: 対象テーブル名でフィルタ（オプション）\n    start_date: 開始日時（オプション）\n    end_date: 終了日時（オプション）\n    db: データベースセッション\n\nReturns:\n    操作ログのリスト（ページネーション付き）",
         "operationId": "list_operation_logs_api_operation_logs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "skip",
@@ -11446,6 +11616,33 @@
         }
       }
     },
+    "/api/operation-logs/filters": {
+      "get": {
+        "tags": [
+          "logs"
+        ],
+        "summary": "Get Operation Log Filters",
+        "description": "操作ログのフィルタ候補取得.",
+        "operationId": "get_operation_log_filters_api_operation_logs_filters_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationLogFiltersResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/operation-logs/{log_id}": {
       "get": {
         "tags": [
@@ -11454,6 +11651,11 @@
         "summary": "Get Operation Log",
         "description": "操作ログ詳細取得.\n\nArgs:\n    log_id: ログID\n    db: データベースセッション\n\nReturns:\n    操作ログ詳細\n\nRaises:\n    HTTPException: ログが存在しない場合",
         "operationId": "get_operation_log_api_operation_logs__log_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "log_id",
@@ -11497,6 +11699,11 @@
         "summary": "List Master Change Logs",
         "description": "マスタ変更履歴一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    table_name: テーブル名でフィルタ（オプション）\n    record_id: レコードIDでフィルタ（オプション）\n    change_type: 変更種別でフィルタ（オプション）\n    changed_by: 変更者でフィルタ（オプション）\n    start_date: 開始日時（オプション）\n    end_date: 終了日時（オプション）\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴のリスト（ページネーション付き）",
         "operationId": "list_master_change_logs_api_master_change_logs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "skip",
@@ -11668,6 +11875,11 @@
         "summary": "Get Master Change Log",
         "description": "マスタ変更履歴詳細取得.\n\nArgs:\n    change_log_id: 変更ログID\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴詳細\n\nRaises:\n    HTTPException: ログが存在しない場合",
         "operationId": "get_master_change_log_api_master_change_logs__change_log_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "change_log_id",
@@ -11711,6 +11923,11 @@
         "summary": "Get Master Change Logs By Record",
         "description": "特定レコードのマスタ変更履歴取得.\n\nArgs:\n    table_name: テーブル名\n    record_id: レコードID\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴のリスト（降順）",
         "operationId": "get_master_change_logs_by_record_api_master_change_logs_record__table_name___record_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "table_name",
@@ -17632,6 +17849,19 @@
       },
       "CustomerUpdate": {
         "properties": {
+          "customer_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Code"
+          },
           "customer_name": {
             "anyOf": [
               {
@@ -17869,6 +18099,19 @@
       },
       "DeliveryPlaceUpdate": {
         "properties": {
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code"
+          },
           "jiku_code": {
             "anyOf": [
               {
@@ -18161,6 +18404,25 @@
         "title": "FefoPreviewResponse",
         "description": "FEFO preview response."
       },
+      "FilterOption": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "FilterOption",
+        "description": "フィルタ選択肢."
+      },
       "ForecastBulkImportItem": {
         "properties": {
           "customer_code": {
@@ -18317,7 +18579,14 @@
             "title": "Unit"
           },
           "forecast_period": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Forecast Period"
           }
         },
@@ -18327,8 +18596,7 @@
           "delivery_place_id",
           "product_id",
           "forecast_date",
-          "forecast_quantity",
-          "forecast_period"
+          "forecast_quantity"
         ],
         "title": "ForecastCreate",
         "description": "Payload for creating a new forecast entry."
@@ -19116,6 +19384,28 @@
             "type": "integer",
             "title": "Inbound Plan Id"
           },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code"
+          },
           "total_quantity": {
             "anyOf": [
               {
@@ -19410,6 +19700,28 @@
           "inbound_plan_id": {
             "type": "integer",
             "title": "Inbound Plan Id"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code"
           },
           "total_quantity": {
             "anyOf": [
@@ -21397,6 +21709,39 @@
         "title": "OcrImportResponse",
         "description": "OCR取込レスポンス."
       },
+      "OperationLogFiltersResponse": {
+        "properties": {
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/FilterOption"
+            },
+            "type": "array",
+            "title": "Users"
+          },
+          "operation_types": {
+            "items": {
+              "$ref": "#/components/schemas/FilterOption"
+            },
+            "type": "array",
+            "title": "Operation Types"
+          },
+          "target_tables": {
+            "items": {
+              "$ref": "#/components/schemas/FilterOption"
+            },
+            "type": "array",
+            "title": "Target Tables"
+          }
+        },
+        "type": "object",
+        "required": [
+          "users",
+          "operation_types",
+          "target_tables"
+        ],
+        "title": "OperationLogFiltersResponse",
+        "description": "操作ログフィルタ選択肢レスポンス."
+      },
       "OperationLogListResponse": {
         "properties": {
           "logs": {
@@ -21445,6 +21790,18 @@
               }
             ],
             "title": "User Id"
+          },
+          "user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Name",
+            "description": "ユーザー名"
           },
           "operation_type": {
             "type": "string",
@@ -22266,6 +22623,18 @@
             ],
             "title": "Customer Code"
           },
+          "customer_valid_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Valid To"
+          },
           "order_date": {
             "anyOf": [
               {
@@ -22437,6 +22806,18 @@
             ],
             "title": "Ocr Source Filename",
             "description": "OCR取込元ファイル名"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason",
+            "description": "キャンセル・保留理由"
           },
           "locked_by_user_id": {
             "anyOf": [
@@ -23387,6 +23768,156 @@
         "type": "object",
         "title": "ProductUpdate",
         "description": "Payload to partially update a product."
+      },
+      "ReservationCancelRequest": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "取消理由コード"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "取消メモ（任意）"
+          },
+          "cancelled_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled By",
+            "description": "取消実行者（任意）"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "ReservationCancelRequest",
+        "description": "Reservation cancellation request (CONFIRMED予約の取消).\n\n反対仕訳方式で予約を取消す。"
+      },
+      "ReservationCancelResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "lot_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot Id"
+          },
+          "lot_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot Number"
+          },
+          "reserved_quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
+            "title": "Reserved Quantity"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "取消後のステータス（released）"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          },
+          "cancel_reason_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason Label"
+          },
+          "cancel_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Note"
+          },
+          "cancelled_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled By"
+          },
+          "released_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Released At"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "Reservation cancelled successfully"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "reserved_quantity",
+          "status"
+        ],
+        "title": "ReservationCancelResponse",
+        "description": "Reservation cancellation response."
       },
       "ReservationDetail": {
         "properties": {
@@ -25233,6 +25764,19 @@
       },
       "SupplierUpdate": {
         "properties": {
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code"
+          },
           "supplier_name": {
             "anyOf": [
               {
@@ -26292,6 +26836,19 @@
       },
       "WarehouseUpdate": {
         "properties": {
+          "warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Code"
+          },
           "warehouse_name": {
             "anyOf": [
               {
@@ -26335,6 +26892,59 @@
         "type": "object",
         "title": "WarehouseUpdate",
         "description": "Update warehouse request."
+      },
+      "WithdrawalCancelReason": {
+        "type": "string",
+        "enum": [
+          "input_error",
+          "wrong_quantity",
+          "wrong_lot",
+          "wrong_product",
+          "customer_request",
+          "duplicate",
+          "other"
+        ],
+        "title": "WithdrawalCancelReason",
+        "description": "出庫取消理由."
+      },
+      "WithdrawalCancelRequest": {
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/WithdrawalCancelReason",
+            "description": "取消理由"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "取消メモ（その他の場合など）"
+          },
+          "cancelled_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled By",
+            "description": "取消実行者ユーザーID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "WithdrawalCancelRequest",
+        "description": "出庫取消リクエスト."
       },
       "WithdrawalCreate": {
         "properties": {
@@ -26634,6 +27244,78 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "is_cancelled": {
+            "type": "boolean",
+            "title": "Is Cancelled",
+            "description": "取消済みフラグ",
+            "default": false
+          },
+          "cancelled_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled At"
+          },
+          "cancelled_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled By"
+          },
+          "cancelled_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled By Name"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WithdrawalCancelReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cancel_reason_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason Label"
+          },
+          "cancel_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Note"
           }
         },
         "type": "object",

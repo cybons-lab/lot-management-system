@@ -10,10 +10,9 @@ import { FormField } from "./FormField";
 interface CustomerFormFieldsProps {
   register: UseFormRegister<CustomerFormData>;
   errors: FieldErrors<CustomerFormData>;
-  isEditMode: boolean;
 }
 
-export function CustomerFormFields({ register, errors, isEditMode }: CustomerFormFieldsProps) {
+export function CustomerFormFields({ register, errors }: CustomerFormFieldsProps) {
   return (
     <>
       <FormField
@@ -23,8 +22,6 @@ export function CustomerFormFields({ register, errors, isEditMode }: CustomerFor
         error={errors.customer_code}
         placeholder="例: CUST-001"
         required
-        disabled={isEditMode}
-        hint={isEditMode ? "得意先コードは変更できません" : undefined}
       />
       <FormField
         id="customer_name"

@@ -42,6 +42,7 @@ class WarehouseCreate(WarehouseBase):
 class WarehouseUpdate(BaseSchema):
     """Update warehouse request."""
 
+    warehouse_code: str | None = Field(None, min_length=1, max_length=50)
     warehouse_name: str | None = Field(None, min_length=1, max_length=200)
     warehouse_type: str | None = Field(
         None, pattern="^(internal|external|supplier)$", description="internal/external/supplier"
@@ -95,6 +96,7 @@ class SupplierCreate(SupplierBase):
 class SupplierUpdate(BaseSchema):
     """Update supplier request."""
 
+    supplier_code: str | None = Field(None, min_length=1, max_length=50)
     supplier_name: str | None = Field(None, min_length=1, max_length=200)
 
 
@@ -200,6 +202,7 @@ class DeliveryPlaceCreate(DeliveryPlaceBase):
 class DeliveryPlaceUpdate(BaseSchema):
     """Update delivery place request."""
 
+    delivery_place_code: str | None = Field(None, min_length=1, max_length=50)
     jiku_code: str | None = Field(None, max_length=50)
     delivery_place_name: str | None = Field(None, min_length=1, max_length=200)
     customer_id: int | None = Field(None, gt=0)

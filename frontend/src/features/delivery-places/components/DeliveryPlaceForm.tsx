@@ -82,7 +82,7 @@ export function DeliveryPlaceForm({
             <FormItem>
               <FormLabel>納入先コード</FormLabel>
               <FormControl>
-                <Input {...field} disabled={isEdit} placeholder="例: DP001" />
+                <Input {...field} placeholder="例: DP001" />
               </FormControl>
               <FormMessage />
             </FormItem>
