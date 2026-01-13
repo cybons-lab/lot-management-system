@@ -3,7 +3,6 @@
  */
 import { Package } from "lucide-react";
 
-import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { SupplierProductForm } from "../components/SupplierProductForm";
 import { SupplierProductsTable } from "../components/SupplierProductsTable";
 import { useSupplierProductsPageState } from "../hooks/useSupplierProductsPageState";
@@ -15,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
+import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 // eslint-disable-next-line max-lines-per-function, complexity

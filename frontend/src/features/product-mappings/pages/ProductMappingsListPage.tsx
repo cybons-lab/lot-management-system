@@ -1,6 +1,7 @@
 /**
  * ProductMappingsListPage - 商品マスタ一覧
  */
+/* eslint-disable max-lines */
 import { Package, Pencil, Trash2 } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
@@ -14,7 +15,18 @@ import {
   useDeleteProductMapping,
 } from "../hooks";
 
-import { Button, Input, Checkbox, Label, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui";
+import { BulkPermanentDeleteDialog } from "@/components/common";
+import {
+  Button,
+  Input,
+  Checkbox,
+  Label,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,14 +43,13 @@ import { MasterImportDialog } from "@/features/masters/components/MasterImportDi
 import { useProducts } from "@/features/products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks";
 import { useTable } from "@/hooks/ui";
-import { BulkPermanentDeleteDialog } from "@/components/common";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function, complexity
 export function ProductMappingsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("all");
@@ -255,7 +266,7 @@ export function ProductMappingsListPage() {
       setIsBulkDeleteDialogOpen(false);
       refetch();
       toast.success(`${selectedIds.length}件を削除しました`);
-    } catch (error) {
+    } catch {
       toast.error("一括削除に失敗しました");
     } finally {
       setIsBulkDeleting(false);
@@ -357,7 +368,7 @@ export function ProductMappingsListPage() {
           {/* Detailed Filters */}
           <div className="flex flex-wrap gap-4">
             <div className="w-full sm:w-48">
-              <Label className="mb-1 text-xs text-muted-foreground">得意先</Label>
+              <Label className="text-muted-foreground mb-1 text-xs">得意先</Label>
               <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                 <SelectTrigger className="h-8">
                   <SelectValue placeholder="すべての得意先" />
@@ -374,7 +385,7 @@ export function ProductMappingsListPage() {
             </div>
 
             <div className="w-full sm:w-48">
-              <Label className="mb-1 text-xs text-muted-foreground">仕入先</Label>
+              <Label className="text-muted-foreground mb-1 text-xs">仕入先</Label>
               <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
                 <SelectTrigger className="h-8">
                   <SelectValue placeholder="すべての仕入先" />
@@ -391,7 +402,7 @@ export function ProductMappingsListPage() {
             </div>
 
             <div className="w-full sm:w-48">
-              <Label className="mb-1 text-xs text-muted-foreground">商品</Label>
+              <Label className="text-muted-foreground mb-1 text-xs">商品</Label>
               <Select value={selectedProductId} onValueChange={setSelectedProductId}>
                 <SelectTrigger className="h-8">
                   <SelectValue placeholder="すべての商品" />
@@ -410,7 +421,7 @@ export function ProductMappingsListPage() {
 
           {/* Bulk Action Bar */}
           {selectedCount > 0 && (
-            <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-3 mx-4">
+            <div className="mx-4 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-3">
               <span className="text-sm font-medium text-red-800">{selectedCount} 件選択中</span>
               <Button
                 variant="destructive"
