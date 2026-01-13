@@ -10,7 +10,7 @@ interface Props {
 export function UomConversionExportButton({ size = "default" }: Props) {
   return (
     <ExportButton
-      apiPath="/masters/uom-conversions/export/download"
+      apiPath="masters/uom-conversions/export/download"
       filePrefix="uom_conversions"
       size={size}
     />

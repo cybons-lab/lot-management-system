@@ -10,7 +10,7 @@ export interface WarehouseExportButtonProps {
 export function WarehouseExportButton({ size = "default" }: WarehouseExportButtonProps) {
   return (
     <ExportButton
-      apiPath="/masters/warehouses/export/download"
+      apiPath="masters/warehouses/export/download"
       filePrefix="warehouses"
       size={size}
     />
