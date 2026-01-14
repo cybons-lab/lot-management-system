@@ -63,6 +63,7 @@ from app.presentation.api.routes.rpa import (
     layer_code_router,
     material_delivery_note_router,
     rpa_router,
+    smartread_router,
 )
 from app.presentation.api.routes.system.system_router import router as system_router
 from app.presentation.api.v2 import api_router as api_v2_router
@@ -143,6 +144,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(material_delivery_note_router, prefix=prefix)
     app.include_router(cloud_flow_router, prefix=prefix)
     app.include_router(layer_code_router, prefix=prefix)
+    app.include_router(smartread_router, prefix=prefix)
 
     # OCR endpoints
     app.include_router(ocr_router, prefix=prefix)
@@ -192,6 +194,7 @@ __all__ = [
     "sap_router",
     # RPA (1)
     "rpa_router",
+    "smartread_router",
     # Helper function
     "register_all_routers",
 ]

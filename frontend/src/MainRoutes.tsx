@@ -56,6 +56,7 @@ import {
   Step4ListPage,
 } from "@/features/rpa/material-delivery-note";
 import { GenericCloudFlowExecutePage } from "@/features/rpa/pages/GenericCloudFlowExecutePage";
+import { SmartReadPage } from "@/features/rpa/smartread";
 import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
 import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
 import { UomConversionsPage } from "@/features/uom-conversions/pages/UomConversionsPage";
@@ -254,6 +255,7 @@ export function MainRoutes() {
       {/* RPA */}
       <Route path={ROUTES.RPA.ROOT} element={<RPAPage />} />
       <Route path={ROUTES.RPA.GENERIC_CLOUD_FLOW} element={<GenericCloudFlowExecutePage />} />
+      <Route path={ROUTES.RPA.SMARTREAD} element={<SmartReadPage />} />
       <Route
         path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES}
         element={<LayerCodeMappingsPage />}
