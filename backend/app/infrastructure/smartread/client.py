@@ -83,7 +83,6 @@ class SmartReadClient:
 
             if self.request_type:
                 payload["request_type"] = self.request_type
-
             headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",
