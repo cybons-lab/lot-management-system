@@ -292,6 +292,7 @@ class LotService:
         product_id: int | None = None,
         product_code: str | None = None,
         supplier_code: str | None = None,
+        warehouse_id: int | None = None,
         warehouse_code: str | None = None,
         expiry_from: date | None = None,
         expiry_to: date | None = None,
@@ -306,6 +307,7 @@ class LotService:
             product_id: 製品ID
             product_code: 製品コード
             supplier_code: 仕入先コード
+            warehouse_id: 倉庫ID
             warehouse_code: 倉庫コード
             expiry_from: 有効期限開始日
             expiry_to: 有効期限終了日
@@ -331,7 +333,10 @@ class LotService:
             if supplier:
                 query = query.filter(VLotDetails.supplier_id == supplier.id)
 
-        if warehouse_code:
+        # warehouse_id takes priority over warehouse_code
+        if warehouse_id is not None:
+            query = query.filter(VLotDetails.warehouse_id == warehouse_id)
+        elif warehouse_code:
             warehouse = (
                 self.db.query(Warehouse).filter(Warehouse.warehouse_code == warehouse_code).first()
             )
