@@ -140,7 +140,7 @@ from sqlalchemy.orm import Session
 
 from app.application.services.assignments.assignment_service import UserSupplierAssignmentService
 from app.application.services.auth.auth_service import AuthService
-from app.application.services.export.export_service import ExportService
+from app.application.services.common.export_service import ExportService
 from app.application.services.inventory.lot_service import LotService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
@@ -211,8 +211,12 @@ class LotExportRow:
             単位=lot.unit,
             入荷日=str(lot.received_date) if lot.received_date else "",
             有効期限=str(lot.expiry_date) if lot.expiry_date else "",
-            ステータス=status_map.get(lot.status.value if lot.status else "", lot.status.value if lot.status else ""),
-            検査ステータス=inspection_map.get(lot.inspection_status or "", lot.inspection_status or ""),
+            ステータス=status_map.get(
+                lot.status.value if lot.status else "", lot.status.value if lot.status else ""
+            ),
+            検査ステータス=inspection_map.get(
+                lot.inspection_status or "", lot.inspection_status or ""
+            ),
             ロック理由=lot.lock_reason or "",
         )
 

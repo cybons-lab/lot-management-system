@@ -16,26 +16,22 @@ from sqlalchemy.orm import Session
 
 from app.application.services.forecasts.forecast_service import ForecastService
 from app.application.services.inventory.lot_service import LotService
-from app.application.services.masters.customer_item_service import CustomerItemService
 from app.application.services.masters.customer_service import CustomerService
-from app.application.services.masters.delivery_place_service import DeliveryPlaceService
-from app.application.services.masters.product_mapping_service import ProductMappingService
-from app.application.services.masters.product_service import ProductService
+from app.application.services.masters.products_service import ProductService
 from app.application.services.masters.supplier_service import SupplierService
 from app.application.services.masters.warehouse_service import WarehouseService
 from app.application.services.orders.order_service import OrderService
 from app.core.database import get_db
+from app.infrastructure.persistence.models import DeliveryPlace
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.routes.auth.auth_router import get_current_user
 from app.presentation.schemas.masters.masters_schema import (
-    CustomerItemResponse,
     CustomerResponse,
     DeliveryPlaceResponse,
-    ProductMappingResponse,
-    ProductResponse,
     SupplierResponse,
     WarehouseResponse,
 )
+from app.presentation.schemas.masters.products_schema import ProductOut
 
 
 router = APIRouter(prefix="/bulk-export", tags=["bulk-export"])
@@ -57,12 +53,6 @@ EXPORT_TARGETS: list[dict[str, str]] = [
     {"key": "suppliers", "name": "仕入先マスタ", "description": "仕入先一覧データ"},
     {"key": "warehouses", "name": "倉庫マスタ", "description": "倉庫一覧データ"},
     {"key": "delivery_places", "name": "納入先マスタ", "description": "納入先一覧データ"},
-    {
-        "key": "product_mappings",
-        "name": "得意先品番マッピング",
-        "description": "顧客-製品マッピングデータ",
-    },
-    {"key": "customer_items", "name": "顧客品目マスタ", "description": "顧客品目一覧データ"},
     # トランザクションデータ
     {"key": "lots", "name": "ロット一覧", "description": "在庫ロットデータ"},
     {"key": "orders", "name": "受注一覧", "description": "受注データ"},
@@ -85,7 +75,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
     if target == "products":
         service = ProductService(db)
         items = service.get_all()
-        data = [ProductResponse.model_validate(p).model_dump() for p in items]
+        data = [ProductOut.model_validate(p).model_dump() for p in items]
         return data, "products"
 
     if target == "suppliers":
@@ -101,22 +91,12 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         return data, "warehouses"
 
     if target == "delivery_places":
-        service = DeliveryPlaceService(db)
-        items = service.get_all()
+        from sqlalchemy import func
+
+        # Use direct query like delivery_places_router does
+        items = db.query(DeliveryPlace).filter(DeliveryPlace.valid_to > func.current_date()).all()
         data = [DeliveryPlaceResponse.model_validate(d).model_dump() for d in items]
         return data, "delivery_places"
-
-    if target == "product_mappings":
-        service = ProductMappingService(db)
-        items = service.get_all()
-        data = [ProductMappingResponse.model_validate(pm).model_dump() for pm in items]
-        return data, "product_mappings"
-
-    if target == "customer_items":
-        service = CustomerItemService(db)
-        items = service.get_all()
-        data = [CustomerItemResponse.model_validate(ci).model_dump() for ci in items]
-        return data, "customer_items"
 
     if target == "lots":
         service = LotService(db)
