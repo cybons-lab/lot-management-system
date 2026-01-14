@@ -8,6 +8,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import React from "react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -26,15 +27,11 @@ vi.mock("@/shared/api/http-client", () => ({
 }));
 
 // Mock UI Components
-vi.mock("@/components/ui", () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const React = require("react");
-  return {
-    Button: (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} />,
-    Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
-    Label: (props: React.LabelHTMLAttributes<HTMLLabelElement>) => <label {...props} />,
-  };
-});
+vi.mock("@/components/ui", () => ({
+  Button: (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} />,
+  Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
+  Label: (props: React.LabelHTMLAttributes<HTMLLabelElement>) => <span {...props} />,
+}));
 
 vi.mock("@/components/ui/display/alert-dialog", () => ({
   AlertDialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -120,7 +117,7 @@ describe("CustomerDetailPage", () => {
       <Routes>
         <Route path="/customers/:customerCode" element={<CustomerDetailPage />} />
       </Routes>,
-      { wrapper: createTestWrapper("/customers/CUST-001") }
+      { wrapper: createTestWrapper("/customers/CUST-001") },
     );
 
     // Wait for initial load
@@ -153,7 +150,7 @@ describe("CustomerDetailPage", () => {
         expect.objectContaining({
           customer_code: "CUST-NEW",
           customer_name: "Updated Customer",
-        })
+        }),
       );
     });
   });
@@ -171,7 +168,7 @@ describe("CustomerDetailPage", () => {
       <Routes>
         <Route path="/customers/:customerCode" element={<CustomerDetailPage />} />
       </Routes>,
-      { wrapper: createTestWrapper("/customers/CUST-001") }
+      { wrapper: createTestWrapper("/customers/CUST-001") },
     );
 
     // Wait for initial load
@@ -199,7 +196,7 @@ describe("CustomerDetailPage", () => {
         expect.objectContaining({
           customer_code: "CUST-001", // Original code should still be included
           customer_name: "Updated Name Only",
-        })
+        }),
       );
     });
   });
