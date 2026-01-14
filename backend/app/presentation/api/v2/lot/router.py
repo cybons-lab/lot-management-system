@@ -52,6 +52,7 @@ async def list_lots(
     expiry_from: date | None = None,
     expiry_to: date | None = None,
     with_stock: bool = True,
+    status: str | None = None,
     prioritize_primary: bool = True,
     current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
@@ -75,6 +76,7 @@ async def list_lots(
         expiry_from=expiry_from,
         expiry_to=expiry_to,
         with_stock=with_stock,
+        status=status,
         primary_supplier_ids=primary_supplier_ids,
     )
 

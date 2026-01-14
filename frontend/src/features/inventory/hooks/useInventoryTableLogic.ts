@@ -40,6 +40,7 @@ export function useInventoryTableLogic() {
           product_id: productId,
           warehouse_id: warehouseId,
           with_stock: false,
+          status: "active",
         });
 
         const normalizedLots = (response ?? []).map((item) =>
