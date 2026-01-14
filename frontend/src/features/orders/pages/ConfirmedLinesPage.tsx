@@ -9,6 +9,7 @@ import { ConfirmedLinesTable } from "../components/ConfirmedLinesTable";
 import { useConfirmedLinesPage } from "../hooks/useConfirmedLinesPage";
 
 import { Button } from "@/components/ui";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 function LoadingState() {
   return (
@@ -68,16 +69,14 @@ export function ConfirmedLinesPage() {
     <div className="space-y-6 px-6 py-6 md:px-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleBack}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-2xl font-bold text-slate-900">引当確定済み明細 - SAP登録</h1>
-          </div>
-          <p className="mt-1 text-sm text-slate-600">
-            引当が完了している明細を選択してSAPに登録します
-          </p>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <PageHeader
+            title="引当確定済み明細 - SAP登録"
+            subtitle="引当が完了している明細を選択してSAPに登録します"
+          />
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>

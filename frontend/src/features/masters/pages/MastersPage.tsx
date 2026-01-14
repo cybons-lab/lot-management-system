@@ -14,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/feedback/al
 import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useMasterStatus } from "@/features/masters/hooks/useMasterStatus";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 interface MasterLink {
   title: string;
@@ -151,10 +152,7 @@ export function MastersPage() {
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
       {/* ヘッダー */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">マスタ管理</h1>
-        <p className="mt-1 text-sm text-slate-600">システムの基本情報を管理します</p>
-      </div>
+      <PageHeader title="マスタ管理" subtitle="システムの基本情報を管理します" />
 
       <MasterStatusAlert />
 

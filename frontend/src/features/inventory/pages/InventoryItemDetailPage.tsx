@@ -25,6 +25,7 @@ import {
 import { useLotsQuery } from "@/hooks/api";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 import { getLotStatuses } from "@/shared/utils/status";
@@ -206,13 +207,10 @@ export function InventoryItemDetailPage() {
     <div className={styles.root}>
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">在庫詳細</h2>
-          <p className="mt-1 text-gray-600">
-            {item.product_name || "名称未設定"} ({item.product_code || "-"}) /{" "}
-            {item.warehouse_name || "名称未設定"} ({item.warehouse_code || "-"})
-          </p>
-        </div>
+        <PageHeader
+          title="在庫詳細"
+          subtitle={`${item.product_name || "名称未設定"} (${item.product_code || "-"}) / ${item.warehouse_name || "名称未設定"} (${item.warehouse_code || "-"})`}
+        />
         <Button variant="outline" onClick={handleBack}>
           一覧に戻る
         </Button>

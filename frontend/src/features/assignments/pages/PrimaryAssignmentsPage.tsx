@@ -19,6 +19,8 @@ import { SupplierAssignmentEditDialog } from "../components/SupplierAssignmentEd
 import { usePrimaryAssignments } from "../hooks/usePrimaryAssignments";
 import type { SupplierGroup } from "../types";
 
+import { PageHeader } from "@/shared/components/layout/PageHeader";
+
 export function PrimaryAssignmentsPage() {
   const { isLoading, error, supplierGroups, sortedGroups, handleRefresh } = usePrimaryAssignments();
   const [editGroup, setEditGroup] = useState<SupplierGroup | null>(null);
@@ -47,10 +49,7 @@ export function PrimaryAssignmentsPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
             <UserCheck className="h-5 w-5 text-amber-600" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">主担当設定</h1>
-            <p className="text-sm text-slate-600">仕入先ごとの主担当者を確認・設定します</p>
-          </div>
+          <PageHeader title="主担当設定" subtitle="仕入先ごとの主担当者を確認・設定します" />
         </div>
         <AddAssignmentDialog onSuccess={handleRefresh} />
       </div>

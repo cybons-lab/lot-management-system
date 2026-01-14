@@ -5,6 +5,7 @@ from app.presentation.api.routes.admin.admin_healthcheck_router import (
 )
 from app.presentation.api.routes.admin.admin_router import router as admin_router
 from app.presentation.api.routes.admin.batch_jobs_router import router as batch_jobs_router
+from app.presentation.api.routes.admin.bulk_export_router import router as bulk_export_router
 from app.presentation.api.routes.admin.business_rules_router import router as business_rules_router
 from app.presentation.api.routes.admin.health_router import router as health_router
 from app.presentation.api.routes.admin.master_import_router import router as master_import_router
@@ -18,6 +19,7 @@ __all__ = [
     "admin_healthcheck_router",
     "admin_router",
     "batch_jobs_router",
+    "bulk_export_router",
     "business_rules_router",
     "health_router",
     "master_import_router",

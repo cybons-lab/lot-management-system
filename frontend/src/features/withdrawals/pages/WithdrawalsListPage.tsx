@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 const PAGE_SIZE = 20;
 
@@ -113,10 +114,7 @@ export function WithdrawalsListPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             在庫管理
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">出庫履歴</h1>
-            <p className="text-sm text-gray-500">受注外出庫の履歴一覧</p>
-          </div>
+          <PageHeader title="出庫履歴" subtitle="受注外出庫の履歴一覧" />
         </div>
         <div className="flex gap-2">
           <Button onClick={handleCreate}>

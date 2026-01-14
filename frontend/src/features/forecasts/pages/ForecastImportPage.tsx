@@ -1,12 +1,13 @@
 import { ForecastFileUploadCard } from "@/features/forecasts/components/ForecastFileUploadCard";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function ForecastImportPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Forecast インポート</h2>
-        <p className="text-muted-foreground">需要予測データをCSVファイルからインポートします</p>
-      </div>
+      <PageHeader
+        title="Forecast インポート"
+        subtitle="需要予測データをCSVファイルからインポートします"
+      />
 
       <div className="bg-card rounded-lg border p-6">
         <ForecastFileUploadCard />
