@@ -289,11 +289,6 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         data = [ForecastResponse.model_validate(f).model_dump() for f in forecast_list]
         return data, "forecasts"
 
-    if "users" in targets and not _current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User export is strictly limited to administrators",
-        )
 
     """エクスポート可能なターゲット一覧を取得.
 
@@ -331,6 +326,14 @@ def download_bulk_export(
             detail=f"Invalid export targets: {invalid_targets}",
         )
     
+    # Restrict user export to admins
+    if "users" in targets and not _current_user.is_superuser:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User export is strictly limited to administrators",
+        )
+
     # Restrict user export to admins
     if "users" in targets and not _current_user.is_superuser:
         from fastapi import HTTPException, status
