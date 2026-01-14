@@ -45,6 +45,7 @@ def generate_lots(
         1: "single_expiring",  # 1 Expiring Soon
         2: "multi_fefo",  # 3 Active with staggered expiry
         3: "depleted_only",  # 1 Depleted only (Simulates stockout)
+        4: "no_lots",  # No lots at all (Tests lot_count=0 display)
     }
 
     for idx, p in enumerate(products):
@@ -65,6 +66,9 @@ def generate_lots(
                 lots_to_create = [("normal", "active")] * 3
             elif scenario == "depleted_only":
                 lots_to_create = [("depleted", "depleted")]
+            elif scenario == "no_lots":
+                # Skip lot creation entirely - tests lot_count=0 case
+                continue
         else:
             # Standard distribution for others
             # 80% Normal (2-5 lots), 10% Shortage, 5% Expiring, 5% Expired
