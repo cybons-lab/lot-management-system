@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.inventory_models import Lot
 from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
 from .utils import fake
 
@@ -67,7 +68,18 @@ def generate_lots(
             elif scenario == "depleted_only":
                 lots_to_create = [("depleted", "depleted")]
             elif scenario == "no_lots":
-                # Skip lot creation entirely - tests lot_count=0 case
+                # Register product_warehouse but don't create lots - tests lot_count=0 case
+                warehouse = random.choice(warehouses)
+                existing = (
+                    db.query(ProductWarehouse)
+                    .filter(
+                        ProductWarehouse.product_id == p.id,
+                        ProductWarehouse.warehouse_id == warehouse.id,
+                    )
+                    .first()
+                )
+                if not existing:
+                    db.add(ProductWarehouse(product_id=p.id, warehouse_id=warehouse.id))
                 continue
         else:
             # Standard distribution for others
@@ -116,10 +128,11 @@ def generate_lots(
             expiry_date = today + timedelta(days=expiry_days)
             received_date = today - timedelta(days=random.randint(1, 60))
 
+            warehouse = random.choice(warehouses)
             lot = Lot(
                 lot_number=fake.unique.bothify(text="LOT-########"),
                 product_id=p.id,
-                warehouse_id=random.choice(warehouses).id,
+                warehouse_id=warehouse.id,
                 supplier_id=random.choice(suppliers).id if suppliers else None,
                 received_date=received_date,
                 expiry_date=expiry_date,
@@ -129,6 +142,18 @@ def generate_lots(
             )
             db.add(lot)
             generated_count += 1
+
+            # Also register product_warehouse if not exists
+            existing = (
+                db.query(ProductWarehouse)
+                .filter(
+                    ProductWarehouse.product_id == p.id,
+                    ProductWarehouse.warehouse_id == warehouse.id,
+                )
+                .first()
+            )
+            if not existing:
+                db.add(ProductWarehouse(product_id=p.id, warehouse_id=warehouse.id))
 
     db.commit()
     print(f"[INFO] Generated {generated_count} lots for {len(products)} products")

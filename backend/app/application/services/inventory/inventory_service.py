@@ -149,6 +149,7 @@ class InventoryService:
         product_id: int | None = None,
         warehouse_id: int | None = None,
         supplier_id: int | None = None,
+        tab: str = "all",
     ) -> list[InventoryItemResponse]:
         """Get inventory items from v_inventory_summary view with product and
         warehouse names.
@@ -159,6 +160,7 @@ class InventoryService:
             product_id: Filter by product ID
             warehouse_id: Filter by warehouse ID
             supplier_id: Filter by supplier ID (filters lots by supplier)
+            tab: Tab filter - 'in_stock', 'no_stock', or 'all'
 
         Returns:
             List of inventory items
@@ -205,10 +207,12 @@ class InventoryService:
                 SELECT 
                     v.product_id, 
                     v.warehouse_id, 
+                    v.active_lot_count,
                     v.total_quantity, 
                     v.allocated_quantity, 
                     v.available_quantity, 
                     v.last_updated,
+                    v.inventory_state,
                     p.product_name,
                     p.maker_part_code AS product_code,
                     w.warehouse_name,
@@ -228,7 +232,14 @@ class InventoryService:
                 query += " AND v.warehouse_id = :warehouse_id"
                 params["warehouse_id"] = warehouse_id
 
-            query += " ORDER BY v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
+            # Tab filter for inventory_state
+            if tab == "in_stock":
+                query += " AND v.inventory_state = 'in_stock'"
+            elif tab == "no_stock":
+                query += " AND v.inventory_state IN ('no_lots', 'depleted_only')"
+            # 'all' or any other value: no filter
+
+            query += " ORDER BY v.available_quantity DESC, v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
             params["limit"] = limit
             params["skip"] = skip
 
@@ -324,8 +335,10 @@ class InventoryService:
         for idx, row in enumerate(result):
             key = (row.product_id, row.warehouse_id)
             allocs = alloc_map.get(key, {"soft": 0.0, "hard": 0.0})
-            # Use query result if available (supplier filtered), else lookup map
-            lot_count = getattr(row, "lot_count", count_map.get(key, 0))
+            # Use active_lot_count from view, fallback to count_map for supplier-filtered query
+            active_lot_count = getattr(row, "active_lot_count", count_map.get(key, 0))
+            # Use inventory_state from view, default to "no_lots"
+            inventory_state = getattr(row, "inventory_state", "no_lots")
 
             responses.append(
                 InventoryItemResponse(
@@ -337,7 +350,8 @@ class InventoryService:
                     available_quantity=row.available_quantity,
                     soft_allocated_quantity=Decimal(str(allocs["soft"])),
                     hard_allocated_quantity=Decimal(str(allocs["hard"])),
-                    lot_count=lot_count,
+                    active_lot_count=active_lot_count,
+                    inventory_state=inventory_state,
                     last_updated=row.last_updated,
                     product_name=row.product_name,
                     product_code=row.product_code,

@@ -40,6 +40,19 @@ class LotOriginType(str, Enum):
     ADHOC = "adhoc"
 
 
+class InventoryState(str, Enum):
+    """在庫状態.
+
+    - in_stock: 利用可能在庫あり
+    - depleted_only: ロットはあるが利用可能0
+    - no_lots: ロット0件
+    """
+
+    IN_STOCK = "in_stock"
+    DEPLETED_ONLY = "depleted_only"
+    NO_LOTS = "no_lots"
+
+
 class LotLock(BaseSchema):
     """Payload for locking a lot."""
 
@@ -236,8 +249,9 @@ class InventoryItemResponse(BaseSchema):
     available_quantity: Decimal
     soft_allocated_quantity: Decimal = Decimal("0")
     hard_allocated_quantity: Decimal = Decimal("0")
-    lot_count: int = 0
+    active_lot_count: int = 0
     last_updated: datetime
+    inventory_state: InventoryState = InventoryState.NO_LOTS
 
     # Joined fields from master tables
     product_name: str | None = None

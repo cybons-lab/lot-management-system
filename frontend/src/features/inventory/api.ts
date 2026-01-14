@@ -19,9 +19,12 @@ export type LotCreateResponse =
 
 // ===== Inventory Items Types (v2) =====
 
+export type InventoryState = "in_stock" | "depleted_only" | "no_lots";
+
 export type InventoryItem =
   paths["/api/v2/inventory/"]["get"]["responses"][200]["content"]["application/json"][number] & {
-    lot_count: number;
+    active_lot_count: number;
+    inventory_state: InventoryState;
   };
 
 export type InventoryItemsListParams = paths["/api/v2/inventory/"]["get"]["parameters"]["query"];

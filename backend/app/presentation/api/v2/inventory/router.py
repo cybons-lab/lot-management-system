@@ -34,6 +34,7 @@ async def list_inventory(
     product_id: int | None = None,
     warehouse_id: int | None = None,
     supplier_id: int | None = None,
+    tab: str = Query(default="all", regex="^(in_stock|no_stock|all)$"),
     db: Session = Depends(get_db),
 ):
     service = InventoryService(db)
@@ -43,6 +44,7 @@ async def list_inventory(
         product_id=product_id,
         warehouse_id=warehouse_id,
         supplier_id=supplier_id,
+        tab=tab,
     )
 
 

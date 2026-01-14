@@ -131,24 +131,54 @@ WHERE
 
 CREATE VIEW public.v_inventory_summary AS
 SELECT
+  pw.product_id,
+  pw.warehouse_id,
+  COALESCE(agg.active_lot_count, 0) AS active_lot_count,
+  COALESCE(agg.total_quantity, 0) AS total_quantity,
+  COALESCE(agg.allocated_quantity, 0) AS allocated_quantity,
+  COALESCE(agg.locked_quantity, 0) AS locked_quantity,
+  COALESCE(agg.available_quantity, 0) AS available_quantity,
+  COALESCE(agg.provisional_stock, 0) AS provisional_stock,
+  COALESCE(agg.available_with_provisional, 0) AS available_with_provisional,
+  COALESCE(agg.last_updated, pw.updated_at) AS last_updated,
+  CASE
+    WHEN COALESCE(agg.active_lot_count, 0) = 0 THEN 'no_lots'
+    WHEN COALESCE(agg.available_quantity, 0) > 0 THEN 'in_stock'
+    ELSE 'depleted_only'
+  END AS inventory_state
+FROM public.product_warehouse pw
+LEFT JOIN (
+  SELECT
     l.product_id,
     l.warehouse_id,
-    SUM(l.current_quantity) AS total_quantity,
-    SUM(COALESCE(la.allocated_quantity, 0)) AS allocated_quantity,
-    SUM(l.locked_quantity) AS locked_quantity,
-    GREATEST(SUM(l.current_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(l.locked_quantity), 0) AS available_quantity,
-    -- 入荷予定（仮在庫）
+    COUNT(*) FILTER (WHERE l.status = 'active') AS active_lot_count,
+    SUM(l.current_quantity) FILTER (WHERE l.status = 'active') AS total_quantity,
+    SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE l.status = 'active') AS allocated_quantity,
+    SUM(l.locked_quantity) FILTER (WHERE l.status = 'active') AS locked_quantity,
+    GREATEST(
+      SUM(l.current_quantity) FILTER (WHERE l.status = 'active')
+      - SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE l.status = 'active')
+      - SUM(l.locked_quantity) FILTER (WHERE l.status = 'active'),
+      0
+    ) AS available_quantity,
     COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
-    GREATEST(SUM(l.current_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(l.locked_quantity) + COALESCE(SUM(ipl.planned_quantity), 0), 0) AS available_with_provisional,
+    GREATEST(
+      SUM(l.current_quantity) FILTER (WHERE l.status = 'active')
+      - SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE l.status = 'active')
+      - SUM(l.locked_quantity) FILTER (WHERE l.status = 'active')
+      + COALESCE(SUM(ipl.planned_quantity), 0),
+      0
+    ) AS available_with_provisional,
     MAX(l.updated_at) AS last_updated
-FROM public.lots l
-LEFT JOIN public.v_lot_allocations la ON l.id = la.lot_id
-LEFT JOIN public.inbound_plan_lines ipl ON l.product_id = ipl.product_id
-LEFT JOIN public.inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
-WHERE l.status = 'active'
-GROUP BY l.product_id, l.warehouse_id;
+  FROM public.lots l
+  LEFT JOIN public.v_lot_allocations la ON l.id = la.lot_id
+  LEFT JOIN public.inbound_plan_lines ipl ON l.product_id = ipl.product_id
+  LEFT JOIN public.inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
+  GROUP BY l.product_id, l.warehouse_id
+) agg ON agg.product_id = pw.product_id AND agg.warehouse_id = pw.warehouse_id
+WHERE pw.is_active = true;
 
-COMMENT ON VIEW public.v_inventory_summary IS '在庫集計ビュー（仮在庫含む）';
+COMMENT ON VIEW public.v_inventory_summary IS '在庫集計ビュー（product_warehouse起点、ロット0件対応）';
 
 
 CREATE VIEW public.v_lot_details AS

@@ -155,8 +155,23 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
       {
         id: "lots",
         header: "ロット数",
-        accessor: (row) => row.lot_count,
-        width: 80,
+        accessor: (row) => row.active_lot_count,
+        cell: (row) => (
+          <div className="flex items-center gap-1.5">
+            <span>{row.active_lot_count}</span>
+            {row.inventory_state === "no_lots" && (
+              <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] text-red-700">
+                ⛔ なし
+              </span>
+            )}
+            {row.inventory_state === "depleted_only" && (
+              <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] text-yellow-700">
+                ⚠️ 0
+              </span>
+            )}
+          </div>
+        ),
+        width: 100,
         align: "right",
         sortable: true,
       },
@@ -326,8 +341,8 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                           className="h-7 w-7 p-0"
                           disabled={
                             Number(lot.current_quantity) -
-                              Number(lot.allocated_quantity) -
-                              Number(lot.locked_quantity || 0) <=
+                            Number(lot.allocated_quantity) -
+                            Number(lot.locked_quantity || 0) <=
                             0
                           }
                         >

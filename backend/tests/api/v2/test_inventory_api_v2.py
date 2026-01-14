@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 
 from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
 
 @pytest.fixture
@@ -32,6 +33,10 @@ def setup_inventory_data(db_session):
     )
     db_session.add(warehouse)
     db_session.flush()
+
+    # Register product_warehouse (required for v_inventory_summary)
+    pw = ProductWarehouse(product_id=product.id, warehouse_id=warehouse.id)
+    db_session.add(pw)
 
     # Create lot with stock
     lot = Lot(
