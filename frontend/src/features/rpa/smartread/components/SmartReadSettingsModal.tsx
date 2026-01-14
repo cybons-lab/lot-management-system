@@ -1,31 +1,30 @@
+/* eslint-disable max-lines-per-function, complexity, max-lines */
 /**
  * SmartReadSettingsModal
  * SmartRead設定管理モーダル
  */
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, Trash2, Edit, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, Edit, Loader2 } from "lucide-react";
 
+import type { SmartReadConfig } from "../api";
 import {
   useSmartReadConfigs,
   useCreateSmartReadConfig,
   useUpdateSmartReadConfig,
   useDeleteSmartReadConfig,
 } from "../hooks";
-import type { SmartReadConfig } from "../api";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Form,
   FormControl,
   FormDescription,
@@ -33,26 +32,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
+  Input,
+  Textarea,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import {
+  Switch,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -61,7 +54,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui";
 
 // Form validation schema
 const configFormSchema = z.object({
@@ -86,10 +79,7 @@ interface SmartReadSettingsModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function SmartReadSettingsModal({
-  open,
-  onOpenChange,
-}: SmartReadSettingsModalProps) {
+export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettingsModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingConfig, setEditingConfig] = useState<SmartReadConfig | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
@@ -100,7 +90,8 @@ export function SmartReadSettingsModal({
   const deleteMutation = useDeleteSmartReadConfig();
 
   const form = useForm<ConfigFormData>({
-    resolver: zodResolver(configFormSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(configFormSchema) as any,
     defaultValues: {
       name: "",
       endpoint: "",
@@ -195,12 +186,10 @@ export function SmartReadSettingsModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>SmartRead設定</DialogTitle>
-            <DialogDescription>
-              SmartRead OCR APIの接続設定を管理します
-            </DialogDescription>
+            <DialogDescription>SmartRead OCR APIの接続設定を管理します</DialogDescription>
           </DialogHeader>
 
           {isEditing ? (
@@ -231,10 +220,7 @@ export function SmartReadSettingsModal({
                           <FormDescription>この設定を使用可能にする</FormDescription>
                         </div>
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -248,10 +234,7 @@ export function SmartReadSettingsModal({
                     <FormItem>
                       <FormLabel>APIエンドポイント *</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="https://api.smartread.jp/v1"
-                          {...field}
-                        />
+                        <Input placeholder="https://api.smartread.jp/v1" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -265,11 +248,7 @@ export function SmartReadSettingsModal({
                     <FormItem>
                       <FormLabel>APIキー *</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="APIキーを入力"
-                          {...field}
-                        />
+                        <Input type="password" placeholder="APIキーを入力" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -283,10 +262,7 @@ export function SmartReadSettingsModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>リクエストタイプ</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -306,10 +282,7 @@ export function SmartReadSettingsModal({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>デフォルトエクスポート形式</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -338,9 +311,7 @@ export function SmartReadSettingsModal({
                           value={field.value ?? ""}
                         />
                       </FormControl>
-                      <FormDescription>
-                        帳票認識用のテンプレートID（オプション）
-                      </FormDescription>
+                      <FormDescription>帳票認識用のテンプレートID（オプション）</FormDescription>
                     </FormItem>
                   )}
                 />
@@ -380,11 +351,7 @@ export function SmartReadSettingsModal({
                 />
 
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsEditing(false)}
-                  >
+                  <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
                     キャンセル
                   </Button>
                   <Button type="submit" disabled={isPending}>
@@ -406,12 +373,10 @@ export function SmartReadSettingsModal({
 
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
                 </div>
               ) : !configs?.length ? (
-                <div className="py-8 text-center text-muted-foreground">
-                  設定がありません
-                </div>
+                <div className="text-muted-foreground py-8 text-center">設定がありません</div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -426,9 +391,7 @@ export function SmartReadSettingsModal({
                     {configs.map((config) => (
                       <TableRow key={config.id}>
                         <TableCell className="font-medium">{config.name}</TableCell>
-                        <TableCell className="max-w-xs truncate">
-                          {config.endpoint}
-                        </TableCell>
+                        <TableCell className="max-w-xs truncate">{config.endpoint}</TableCell>
                         <TableCell>
                           <span
                             className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
@@ -442,11 +405,7 @@ export function SmartReadSettingsModal({
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(config)}
-                            >
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(config)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
@@ -454,7 +413,7 @@ export function SmartReadSettingsModal({
                               size="icon"
                               onClick={() => setDeleteTargetId(config.id)}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className="text-destructive h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -469,10 +428,7 @@ export function SmartReadSettingsModal({
       </Dialog>
 
       {/* 削除確認ダイアログ */}
-      <AlertDialog
-        open={deleteTargetId !== null}
-        onOpenChange={() => setDeleteTargetId(null)}
-      >
+      <AlertDialog open={deleteTargetId !== null} onOpenChange={() => setDeleteTargetId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>設定を削除しますか？</AlertDialogTitle>

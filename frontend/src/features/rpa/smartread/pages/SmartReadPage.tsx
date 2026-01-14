@@ -1,31 +1,26 @@
+/* eslint-disable max-lines-per-function, complexity */
 /**
  * SmartReadPage
  * SmartRead OCR PDFインポートページ
  */
 
-import { useState, useRef } from "react";
 import { Upload, Download, FileText, Settings, Loader2, AlertCircle } from "lucide-react";
+import { useState, useRef } from "react";
 
-import { useSmartReadConfigs, useAnalyzeFile } from "../hooks";
 import { downloadJson, downloadCsv, type SmartReadAnalyzeResponse } from "../api";
 import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
+import { useSmartReadConfigs, useAnalyzeFile } from "../hooks";
 
-import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
+  Button,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+} from "@/components/ui";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -104,16 +99,15 @@ export function SmartReadPage() {
         <Card>
           <CardHeader>
             <CardTitle>ファイルアップロード</CardTitle>
-            <CardDescription>
-              解析するPDFまたは画像ファイルを選択してください
-            </CardDescription>
+            <CardDescription>解析するPDFまたは画像ファイルを選択してください</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* 設定選択 */}
             <div className="space-y-2">
+              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label className="text-sm font-medium">SmartRead設定</label>
               {configsLoading ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2 text-sm">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   設定を読み込み中...
                 </div>
@@ -128,7 +122,7 @@ export function SmartReadPage() {
               ) : (
                 <Select
                   value={selectedConfigId?.toString() ?? ""}
-                  onValueChange={(value) => setSelectedConfigId(Number(value))}
+                  onValueChange={(value: string) => setSelectedConfigId(Number(value))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="設定を選択" />
@@ -162,16 +156,14 @@ export function SmartReadPage() {
               <p className="mt-2 text-sm text-gray-600">
                 クリックまたはドラッグ&ドロップでファイルを選択
               </p>
-              <p className="mt-1 text-xs text-gray-400">
-                PDF, PNG, JPG, JPEG形式に対応
-              </p>
+              <p className="mt-1 text-xs text-gray-400">PDF, PNG, JPG, JPEG形式に対応</p>
             </div>
 
             {/* 選択されたファイル */}
             {selectedFile && (
               <div className="flex items-center gap-3 rounded-lg border bg-gray-50 p-3">
                 <FileText className="h-8 w-8 text-indigo-600" />
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{selectedFile.name}</p>
                   <p className="text-xs text-gray-500">
                     {(selectedFile.size / 1024).toFixed(1)} KB
@@ -215,17 +207,13 @@ export function SmartReadPage() {
         <Card>
           <CardHeader>
             <CardTitle>解析結果</CardTitle>
-            <CardDescription>
-              SmartRead APIから取得した解析結果を表示します
-            </CardDescription>
+            <CardDescription>SmartRead APIから取得した解析結果を表示します</CardDescription>
           </CardHeader>
           <CardContent>
             {!analyzeResult ? (
               <div className="flex h-64 flex-col items-center justify-center text-gray-400">
                 <FileText className="h-16 w-16" />
-                <p className="mt-4 text-sm">
-                  ファイルを選択して解析を開始してください
-                </p>
+                <p className="mt-4 text-sm">ファイルを選択して解析を開始してください</p>
               </div>
             ) : !analyzeResult.success ? (
               <Alert variant="destructive">
@@ -275,10 +263,7 @@ export function SmartReadPage() {
       </div>
 
       {/* 設定モーダル */}
-      <SmartReadSettingsModal
-        open={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
-      />
+      <SmartReadSettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </PageContainer>
   );
 }
