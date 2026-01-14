@@ -16,7 +16,11 @@ from sqlalchemy.orm import Session
 
 from app.application.services.forecasts.forecast_service import ForecastService
 from app.application.services.inventory.lot_service import LotService
+from app.application.services.masters.customer_items_service import CustomerItemsService
 from app.application.services.masters.customer_service import CustomerService
+from app.application.services.masters.product_mappings_service import (
+    ProductMappingsService,
+)
 from app.application.services.masters.products_service import ProductService
 from app.application.services.masters.supplier_service import SupplierService
 from app.application.services.masters.warehouse_service import WarehouseService
@@ -25,12 +29,6 @@ from app.core.database import get_db
 from app.infrastructure.persistence.models import DeliveryPlace
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.routes.auth.auth_router import get_current_user
-from app.presentation.api.routes.masters.customer_items_router import (
-    CustomerItemsService,
-)
-from app.presentation.api.routes.masters.product_mappings_router import (
-    get_product_mappings_export_data,
-)
 from app.presentation.schemas.masters.masters_schema import (
     CustomerResponse,
     DeliveryPlaceResponse,
@@ -97,45 +95,53 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         Tuple of (data_list, filename)
     """
     if target == "customers":
-        service = CustomerService(db)
-        items = service.get_all()
-        data = [CustomerResponse.model_validate(c).model_dump() for c in items]
+        customer_service = CustomerService(db)
+        customer_list = customer_service.get_all()
+        data = [CustomerResponse.model_validate(c).model_dump() for c in customer_list]
         return data, "customers"
 
     if target == "products":
-        service = ProductService(db)
-        items = service.get_all()
-        data = [ProductOut.model_validate(p).model_dump() for p in items]
+        product_service = ProductService(db)
+        product_list = product_service.get_all()
+        data = [ProductOut.model_validate(p).model_dump() for p in product_list]
         return data, "products"
 
     if target == "suppliers":
-        service = SupplierService(db)
-        items = service.get_all()
-        data = [SupplierResponse.model_validate(s).model_dump() for s in items]
+        supplier_service = SupplierService(db)
+        supplier_list = supplier_service.get_all()
+        data = [SupplierResponse.model_validate(s).model_dump() for s in supplier_list]
         return data, "suppliers"
 
     if target == "warehouses":
-        service = WarehouseService(db)
-        items = service.get_all()
-        data = [WarehouseResponse.model_validate(w).model_dump() for w in items]
+        warehouse_service = WarehouseService(db)
+        warehouse_list = warehouse_service.get_all()
+        data = [WarehouseResponse.model_validate(w).model_dump() for w in warehouse_list]
         return data, "warehouses"
 
     if target == "delivery_places":
         from sqlalchemy import func
 
         # Use direct query like delivery_places_router does
-        items = db.query(DeliveryPlace).filter(DeliveryPlace.valid_to > func.current_date()).all()
-        data = [DeliveryPlaceResponse.model_validate(d).model_dump() for d in items]
+        delivery_place_list = (
+            db.query(DeliveryPlace).filter(DeliveryPlace.valid_to > func.current_date()).all()
+        )
+        data = [DeliveryPlaceResponse.model_validate(d).model_dump() for d in delivery_place_list]
         return data, "delivery_places"
 
     if target == "product_mappings":
-        return get_product_mappings_export_data(db), "product_mappings"
+        pm_service = ProductMappingsService(db)
+        return pm_service.get_export_data(), "product_mappings"
 
     if target == "customer_items":
-        service = CustomerItemsService(db)
-        items = service.get_all()
-        # Items are already in exportable format from service.get_all (Pydantic models)
-        return items, "customer_items"
+        ci_service = CustomerItemsService(db)
+        customer_item_list = ci_service.get_all()
+        # CustomerItem is SQLAlchemy model, need schema validation
+        from app.presentation.schemas.masters.customer_items_schema import CustomerItemResponse
+
+        data = [
+            CustomerItemResponse.model_validate(item).model_dump() for item in customer_item_list
+        ]
+        return data, "customer_items"
 
     if target == "uom_conversions":
         from sqlalchemy import select
@@ -145,26 +151,29 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
             ProductUomConversion,
         )
 
-        query = select(
+        uom_query = select(
             ProductUomConversion.conversion_id,
             ProductUomConversion.product_id,
             ProductUomConversion.external_unit,
             ProductUomConversion.factor,
+            Product.internal_unit,
             Product.maker_part_code,
             Product.product_name,
         ).join(Product, ProductUomConversion.product_id == Product.id)
 
-        results = db.execute(query).all()
+        uom_results = db.execute(uom_query).all()
         data = [
             {
                 "conversion_id": r.conversion_id,
                 "product_id": r.product_id,
                 "external_unit": r.external_unit,
-                "conversion_factor": float(r.factor),
+                "factor": float(r.factor),
+                "internal_unit": r.internal_unit,
+                # "base_unit": r.base_unit, # Optional if needed
                 "product_code": r.maker_part_code,
                 "product_name": r.product_name,
             }
-            for r in results
+            for r in uom_results
         ]
         return data, "uom_conversions"
 
@@ -174,7 +183,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         from app.infrastructure.persistence.models.masters_models import Product, Supplier
         from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
 
-        query = (
+        sp_query = (
             select(
                 ProductSupplier.id,
                 ProductSupplier.product_id,
@@ -189,7 +198,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
             .join(Product, ProductSupplier.product_id == Product.id)
             .join(Supplier, ProductSupplier.supplier_id == Supplier.id)
         )
-        results = db.execute(query).all()
+        sp_results = db.execute(sp_query).all()
         data = [
             {
                 "id": r.id,
@@ -202,7 +211,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
                 "supplier_code": r.supplier_code,
                 "supplier_name": r.supplier_name,
             }
-            for r in results
+            for r in sp_results
         ]
         return data, "supplier_products"
 
@@ -211,8 +220,8 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
 
         from app.infrastructure.persistence.models.masters_models import WarehouseDeliveryRoute
 
-        query = select(WarehouseDeliveryRoute)
-        routes = db.execute(query).scalars().all()
+        wdr_query = select(WarehouseDeliveryRoute)
+        routes = db.execute(wdr_query).scalars().all()
         # Reuse internal router's builder function logic
         data = []
         for route in routes:
@@ -239,35 +248,46 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
             CustomerItemDeliverySettingService,
         )
 
-        service = CustomerItemDeliverySettingService(db)
-        items = service.list_all()  # Assume we add list_all to service
-        return items, "customer_item_delivery_settings"
+        cids_service = CustomerItemDeliverySettingService(db)
+        cids_list = cids_service.list_all()
+        # Convert to dicts
+        data = [setting.model_dump() for setting in cids_list]
+        return data, "customer_item_delivery_settings"
 
     if target == "users":
         from app.application.services.auth.user_service import UserService
 
-        service = UserService(db)
-        users = service.get_all()
+        user_service = UserService(db)
+        users = user_service.get_all()
         from app.presentation.schemas.system.users_schema import UserResponse
 
-        data = [UserResponse.model_validate(u).model_dump() for u in users]
-        return data, "users"
+        user_data = [UserResponse.model_validate(u).model_dump() for u in users]
+        return user_data, "users"
 
     if target == "lots":
-        service = LotService(db)
-        items = service.get_all()
+        from app.presentation.schemas.inventory.lot_schema import LotResponse
+
+        lot_service = LotService(db)
+        lot_list = lot_service.get_all()
+        data = [LotResponse.model_validate(l).model_dump() for l in lot_list]
         # Ensure we return objects that pandas can handle nicely via ExportService._prepare_data
-        return items, "lots"
+        return data, "lots"
 
     if target == "orders":
-        service = OrderService(db)
-        items = service.get_all()
-        return items, "orders"
+        from app.presentation.schemas.orders.order_schema import OrderLineResponse
+
+        order_service = OrderService(db)
+        order_list = order_service.get_all()
+        data = [OrderLineResponse.model_validate(o).model_dump() for o in order_list]
+        return data, "orders"
 
     if target == "forecasts":
-        service = ForecastService(db)
-        items = service.get_all()
-        return items, "forecasts"
+        from app.presentation.schemas.forecasts.forecast_schema import ForecastResponse
+
+        forecast_service = ForecastService(db)
+        forecast_list = forecast_service.get_all()
+        data = [ForecastResponse.model_validate(f).model_dump() for f in forecast_list]
+        return data, "forecasts"
 
     raise ValueError(f"Unknown export target: {target}")
 

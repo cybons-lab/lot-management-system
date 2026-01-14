@@ -55,9 +55,12 @@ def clear_database(db: Session):
     print("🗑️  Clearing database...")
 
     # Delete in correct order (foreign key constraints)
-    # P3: allocations table replaced by lot_reservations
     db.execute(text("DELETE FROM lot_reservations"))
     db.execute(text("DELETE FROM allocation_traces"))
+    db.execute(text("DELETE FROM withdrawals"))
+    db.execute(text("DELETE FROM expected_lots"))
+    db.execute(text("DELETE FROM inbound_plan_lines"))
+    db.execute(text("DELETE FROM inbound_plans"))
     db.execute(text("DELETE FROM order_lines"))
     db.execute(text("DELETE FROM orders"))
     db.execute(text("DELETE FROM lots"))
@@ -69,6 +72,7 @@ def clear_database(db: Session):
     db.execute(text("DELETE FROM warehouses"))
     db.execute(text("DELETE FROM suppliers"))
     db.execute(text("DELETE FROM customers"))
+    db.execute(text("DELETE FROM users WHERE username != 'admin'"))
 
     db.commit()
     print("✅ Database cleared successfully")
@@ -108,9 +112,7 @@ def customer_strategy(draw, customer_id: int):
 @st.composite
 def product_strategy(draw, product_id: int):
     """Generate a product."""
-    from faker import Faker
-
-    faker = Faker("ja_JP")
+    # faker = Faker("ja_JP")
 
     unit_config = draw(
         st.sampled_from(
@@ -123,10 +125,28 @@ def product_strategy(draw, product_id: int):
         )
     )
 
+    # 工業用部品らしい名前を生成
+    parts = [
+        "ネジ",
+        "ボルト",
+        "ナット",
+        "ワッシャー",
+        "ゴムパッキン",
+        "Oリング",
+        "ベアリング",
+        "スプリング",
+        "継手",
+        "バルブ",
+    ]
+    materials = ["ステンレス", "真鍮", "プラスチック", "スチール", "アルミ"]
+    sizes = ["M3", "M4", "M5", "M6", "M8", "M10", "10mm", "20mm", "50mm"]
+
+    product_name = f"{draw(st.sampled_from(materials))}製 {draw(st.sampled_from(parts))} ({draw(st.sampled_from(sizes))})"
+
     return Product(
         id=product_id,
         maker_part_code=f"PROD-{5000 + product_id:04d}",
-        product_name=faker.bs().title(),
+        product_name=product_name,
         base_unit=unit_config["internal"],  # Legacy field, maybe keep as internal
         internal_unit=unit_config["internal"],
         external_unit=unit_config["external"],
@@ -202,7 +222,6 @@ def scenario_lot_strategy(
 
     # Generate quantities
     current_qty = Decimal(str(draw(st.integers(min_value=qty_range[0], max_value=qty_range[1]))))
-    allocated_qty = Decimal(str(int(current_qty * Decimal(str(allocated_pct)))))
 
     # Generate expiry date
     expiry_days_val = draw(st.integers(min_value=expiry_days[0], max_value=expiry_days[1]))
@@ -267,7 +286,7 @@ def generate_test_data():
                 delivery_place_code=f"D{100 + i}",
                 delivery_place_name=f"配送センター{i + 1}",
                 customer_id=customers[i % len(customers)].id,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(UTC),
             )
             db.add(dp)
             delivery_places.append(dp)

@@ -74,7 +74,7 @@ def create_config(
         description=request.description,
         is_active=request.is_active,
     )
-    uow.commit()
+    uow.session.commit()
     return SmartReadConfigResponse.model_validate(config)
 
 

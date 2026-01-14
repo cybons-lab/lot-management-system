@@ -6,6 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
+from app.application.services.masters.product_mappings_service import (
+    ProductMappingsService,
+)
 from app.core.database import get_db
 from app.infrastructure.persistence.models import Customer, Product, ProductMapping, Supplier
 from app.presentation.schemas.masters.masters_schema import (
@@ -45,13 +48,15 @@ def export_product_mappings(format: str = "csv", db: Session = Depends(get_db)):
     Returns:
         Excel形式またはCSV形式のファイルレスポンス
     """
-    data = get_product_mappings_export_data(db)
+    service = ProductMappingsService(db)
+    data = service.get_export_data()
 
     if format == "xlsx":
         return ExportService.export_to_excel(data, "product_mappings")
     return ExportService.export_to_csv(data, "product_mappings")
 
 
+# Deprecated: use ProductMappingsService.get_export_data
 def get_product_mappings_export_data(db: Session) -> list[dict[str, Any]]:
     """Export用データ取得（一括エクスポートでも利用）.
 
@@ -61,44 +66,8 @@ def get_product_mappings_export_data(db: Session) -> list[dict[str, Any]]:
     Returns:
         エクスポート形式の辞書リスト
     """
-    query = (
-        db.query(
-            ProductMapping.id,
-            Customer.customer_code,
-            Customer.customer_name,
-            ProductMapping.customer_part_code,
-            Supplier.supplier_code,
-            Supplier.supplier_name,
-            Product.maker_part_code.label("product_code"),
-            Product.product_name,
-            ProductMapping.base_unit,
-            ProductMapping.pack_unit,
-            ProductMapping.pack_quantity,
-            ProductMapping.special_instructions,
-        )
-        .join(Customer, ProductMapping.customer_id == Customer.id)
-        .join(Supplier, ProductMapping.supplier_id == Supplier.id)
-        .join(Product, ProductMapping.product_id == Product.id)
-    )
-
-    results = query.all()
-
-    return [
-        {
-            "customer_code": r.customer_code,
-            "customer_name": r.customer_name,
-            "customer_part_code": r.customer_part_code,
-            "supplier_code": r.supplier_code,
-            "supplier_name": r.supplier_name,
-            "product_code": r.product_code,
-            "product_name": r.product_name,
-            "base_unit": r.base_unit,
-            "pack_unit": r.pack_unit,
-            "pack_quantity": r.pack_quantity,
-            "special_instructions": r.special_instructions,
-        }
-        for r in results
-    ]
+    service = ProductMappingsService(db)
+    return service.get_export_data()
 
 
 @router.get("", response_model=list[ProductMappingResponse])

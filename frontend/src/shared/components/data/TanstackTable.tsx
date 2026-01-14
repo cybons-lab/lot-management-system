@@ -83,9 +83,9 @@ function TableContent<TData>({ table }: { table: Table<TData> }) {
             </tr>
           ))}
         </thead>
-        <tbody className="divide-y">
+        <tbody className="">
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-slate-50/60">
+            <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50/60">
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}

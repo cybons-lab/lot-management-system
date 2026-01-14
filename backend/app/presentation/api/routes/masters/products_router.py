@@ -32,7 +32,10 @@ def _to_product_out(product: Product) -> ProductOut:
     return ProductOut(
         id=product.id,
         product_code=product.maker_part_code,
+        maker_part_code=product.maker_part_code,
         product_name=product.product_name,
+        base_unit=product.base_unit,
+        consumption_limit_days=product.consumption_limit_days,
         internal_unit=product.internal_unit,
         external_unit=product.external_unit,
         qty_per_internal_unit=float(product.qty_per_internal_unit),
@@ -42,7 +45,7 @@ def _to_product_out(product: Product) -> ProductOut:
         created_at=product.created_at,
         updated_at=product.updated_at,
         valid_to=product.valid_to,
-        supplier_ids=[ps.supplier_id for ps in product.product_suppliers]
+        supplier_ids=[int(ps.supplier_id) for ps in product.product_suppliers]
         if product.product_suppliers
         else [],
     )
