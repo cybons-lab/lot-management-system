@@ -114,7 +114,11 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
         """
         return cast(
             list[Product],
-            self.db.query(Product).order_by(Product.maker_part_code).offset(skip).limit(limit).all(),
+            self.db.query(Product)
+            .order_by(Product.maker_part_code)
+            .offset(skip)
+            .limit(limit)
+            .all(),
         )
 
     def create(self, payload: ProductCreate) -> Product:

@@ -235,7 +235,9 @@ def test_update_customer_code_change_success(test_db: Session, superuser_token_h
     assert response.json()["customer_code"] == "NEW-CODE-001"
 
 
-def test_update_customer_code_change_duplicate_returns_409(test_db: Session, superuser_token_headers):
+def test_update_customer_code_change_duplicate_returns_409(
+    test_db: Session, superuser_token_headers
+):
     """Test updating customer code to existing code returns 409."""
     client = TestClient(app)
 
@@ -254,7 +256,9 @@ def test_update_customer_code_change_duplicate_returns_409(test_db: Session, sup
     assert response.status_code == 409
 
 
-def test_update_customer_code_change_non_admin_forbidden(test_db: Session, normal_user_token_headers):
+def test_update_customer_code_change_non_admin_forbidden(
+    test_db: Session, normal_user_token_headers
+):
     """Test non-admin user cannot change customer code."""
     client = TestClient(app)
 
