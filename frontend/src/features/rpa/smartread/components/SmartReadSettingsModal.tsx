@@ -60,7 +60,7 @@ import {
 const configFormSchema = z.object({
   name: z.string().min(1, "設定名を入力してください").max(100),
   endpoint: z.string().url("有効なURLを入力してください"),
-  api_key: z.string().min(1, "APIキーを入力してください"),
+  api_key: z.string().optional(), // 更新時は空入力を許容
   request_type: z.string().default("sync"),
   template_ids: z.string().optional().nullable(),
   export_type: z.string().default("json"),
@@ -113,7 +113,7 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
     form.reset({
       name: config.name,
       endpoint: config.endpoint,
-      api_key: config.api_key,
+      api_key: "", // APIキーは表示しない（更新時のみ空を許容）
       request_type: config.request_type,
       template_ids: config.template_ids ?? "",
       export_type: config.export_type,
@@ -148,10 +148,16 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
 
   const handleSubmit = async (data: ConfigFormData) => {
     if (editingConfig) {
+      // APIキーが空の場合は送信データから除外（既存のキーを維持）
+      const updateData = { ...data };
+      if (!updateData.api_key) {
+        delete updateData.api_key;
+      }
+
       await updateMutation.mutateAsync({
         configId: editingConfig.id,
         data: {
-          ...data,
+          ...updateData,
           template_ids: data.template_ids || null,
           aggregation_type: data.aggregation_type || null,
           watch_dir: data.watch_dir || null,
@@ -161,8 +167,15 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
         },
       });
     } else {
+      // 新規作成時はAPIキー必須
+      if (!data.api_key) {
+        form.setError("api_key", { message: "APIキーを入力してください" });
+        return;
+      }
+
       await createMutation.mutateAsync({
         ...data,
+        api_key: data.api_key!, // 確実に存在
         template_ids: data.template_ids || null,
         aggregation_type: data.aggregation_type || null,
         watch_dir: data.watch_dir || null,
@@ -188,8 +201,8 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>SmartRead設定</DialogTitle>
-            <DialogDescription>SmartRead OCR APIの接続設定を管理します</DialogDescription>
+            <DialogTitle>AI-OCR設定</DialogTitle>
+            <DialogDescription>AI-OCR APIの接続設定を管理します</DialogDescription>
           </DialogHeader>
 
           {isEditing ? (
@@ -234,7 +247,7 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                     <FormItem>
                       <FormLabel>APIエンドポイント *</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://api.smartread.jp/v1" {...field} />
+                        <Input placeholder="https://api.ai-ocr.example.com/v1" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -246,9 +259,15 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                   name="api_key"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>APIキー *</FormLabel>
+                      <FormLabel>
+                        APIキー {editingConfig ? "(変更する場合のみ入力)" : "*"}
+                      </FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="APIキーを入力" {...field} />
+                        <Input
+                          type="password"
+                          placeholder={editingConfig ? "変更しない場合は空欄" : "APIキーを入力"}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

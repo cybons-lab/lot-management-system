@@ -81,6 +81,8 @@ class SmartReadClient:
             if self.template_ids:
                 payload["template_ids"] = self.template_ids
 
+            if self.request_type:
+                payload["request_type"] = self.request_type
             headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",

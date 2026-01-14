@@ -84,8 +84,8 @@ export function SmartReadPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="SmartRead PDFインポート"
-        subtitle="SmartRead OCRを使用してPDFや画像を解析し、データを抽出します"
+        title="AI-OCR PDFインポート"
+        subtitle="AI-OCRを使用してPDFや画像を解析し、データを抽出します"
         actions={
           <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
@@ -105,7 +105,7 @@ export function SmartReadPage() {
             {/* 設定選択 */}
             <div className="space-y-2">
               {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-              <label className="text-sm font-medium">SmartRead設定</label>
+              <label className="text-sm font-medium">AI-OCR設定</label>
               {configsLoading ? (
                 <div className="text-muted-foreground flex items-center gap-2 text-sm">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -116,7 +116,7 @@ export function SmartReadPage() {
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>設定がありません</AlertTitle>
                   <AlertDescription>
-                    SmartRead設定を追加してください。右上の「設定」ボタンから追加できます。
+                    AI-OCR設定を追加してください。右上の「設定」ボタンから追加できます。
                   </AlertDescription>
                 </Alert>
               ) : (
@@ -208,7 +208,7 @@ export function SmartReadPage() {
         <Card>
           <CardHeader>
             <CardTitle>解析結果</CardTitle>
-            <CardDescription>SmartRead APIから取得した解析結果を表示します</CardDescription>
+            <CardDescription>AI-OCR APIから取得した解析結果を表示します</CardDescription>
           </CardHeader>
           <CardContent>
             {!analyzeResult ? (

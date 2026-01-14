@@ -68,7 +68,7 @@ describe("SmartReadSettingsModal", () => {
   it("renders the modal and list of configs", () => {
     render(<SmartReadSettingsModal open={true} onOpenChange={mockOnOpenChange} />);
 
-    expect(screen.getByText("SmartRead設定")).toBeInTheDocument();
+    expect(screen.getByText("AI-OCR設定")).toBeInTheDocument();
     expect(screen.getByText("Test Config 1")).toBeInTheDocument();
   });
 
