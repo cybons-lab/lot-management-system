@@ -12964,7 +12964,7 @@
           "batch-jobs"
         ],
         "summary": "Execute Inventory Sync Direct",
-        "description": "SAP在庫同期を即座に実行する（バッチジョブ経由なし）.\n\n管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。\nバッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。\n\nArgs:\n    db: データベースセッション\n\nReturns:\n    dict: 実行結果の詳細\n        - checked_products: チェックした商品数\n        - discrepancies_found: 発見された差異数\n        - alerts_created: 作成されたアラート数\n        - details: 差異の詳細リスト",
+        "description": "SAP在庫同期を即座に実行する（バッチジョブ経由なし）.\n\nTODO: [MOCK] SAPMockClientを使用しているため、モックステータスヘッダを付与\n\nArgs:\n    response: FastAPI Response object\n    db: データベースセッション\n\nReturns:\n    dict: 実行結果の詳細\n        - checked_products: チェックした商品数\n        - discrepancies_found: 発見された差異数\n        - alerts_created: 作成されたアラート数\n        - details: 差異の詳細リスト",
         "operationId": "execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post",
         "responses": {
           "200": {
@@ -13202,32 +13202,6 @@
         }
       }
     },
-    "/api/bulk-export/targets": {
-      "get": {
-        "tags": [
-          "bulk-export"
-        ],
-        "summary": "List Export Targets",
-        "description": "エクスポート可能なターゲット一覧を取得.\n\nReturns:\n    list[ExportTarget]: エクスポート可能なデータの一覧",
-        "operationId": "list_export_targets_api_bulk_export_targets_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ExportTarget"
-                  },
-                  "type": "array",
-                  "title": "Response List Export Targets Api Bulk Export Targets Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/bulk-export/download": {
       "get": {
         "tags": [
@@ -13409,7 +13383,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RpaRunCreateResponse"
+                  "$ref": "#/components/schemas/RpaRunResponse"
                 }
               }
             }
@@ -19290,30 +19264,6 @@
         "title": "ExpectedLotResponse",
         "description": "Response model for expected lots."
       },
-      "ExportTarget": {
-        "properties": {
-          "key": {
-            "type": "string",
-            "title": "Key"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
-          }
-        },
-        "type": "object",
-        "required": [
-          "key",
-          "name",
-          "description"
-        ],
-        "title": "ExportTarget",
-        "description": "Exportable target definition."
-      },
       "FefoLineAllocation": {
         "properties": {
           "order_line_id": {
@@ -23208,7 +23158,7 @@
           },
           "status": {
             "type": "string",
-            "pattern": "^(pending|allocated|shipped|completed|cancelled)$",
+            "pattern": "^(pending|allocated|shipped|completed|cancelled|on_hold)$",
             "title": "Status",
             "default": "pending"
           },
@@ -23508,7 +23458,7 @@
           },
           "status": {
             "type": "string",
-            "pattern": "^(pending|allocated|shipped|completed|cancelled)$",
+            "pattern": "^(pending|allocated|shipped|completed|cancelled|on_hold)$",
             "title": "Status",
             "default": "pending"
           },
@@ -25322,35 +25272,6 @@
         ],
         "title": "RpaRunBatchUpdateRequest",
         "description": "RPA Run Batch update request schema."
-      },
-      "RpaRunCreateResponse": {
-        "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "item_count": {
-            "type": "integer",
-            "title": "Item Count"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "status",
-          "item_count",
-          "message"
-        ],
-        "title": "RpaRunCreateResponse",
-        "description": "RPA Run create response schema."
       },
       "RpaRunItemResponse": {
         "properties": {
