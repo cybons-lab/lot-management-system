@@ -100,7 +100,8 @@ def list_users(
         ユーザーのリスト
     """
     service = UserService(db)
-    return service.get_all(skip=skip, limit=limit, is_active=is_active)
+    include_inactive = is_active is None or not is_active
+    return service.get_all(skip=skip, limit=limit, include_inactive=include_inactive)
 
 
 @router.get("/{user_id}", response_model=UserWithRoles)

@@ -168,7 +168,7 @@ class WithdrawalService:
             query = query.filter(
                 or_(
                     Lot.lot_number.ilike(term),
-                    Product.product_code.ilike(term),
+                    Product.maker_part_code.ilike(term),
                     Product.product_name.ilike(term),
                     Product.maker_item_code.ilike(term),
                     Customer.customer_name.ilike(term),

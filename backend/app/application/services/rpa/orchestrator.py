@@ -196,7 +196,7 @@ class MaterialDeliveryNoteOrchestrator:
             pass
 
         now = utcnow()
-        update_values = {"updated_at": now}
+        update_values: dict[str, Any] = {"updated_at": now}
         if issue_flag is not None:
             update_values["issue_flag"] = issue_flag
         if complete_flag is not None:
@@ -464,3 +464,25 @@ class MaterialDeliveryNoteOrchestrator:
             run.updated_at = utcnow()
             # Remove explicit commit
             self.db.flush()
+
+    def get_next_processing_item(self, run_id: int) -> RpaRunItem | None:
+        """次に処理すべきアイテムを取得."""
+        return self.repo.get_next_processing_item(run_id)
+
+    def complete_all_items(self, run_id: int) -> RpaRun | None:
+        """全アイテム完了処理 (Step3完了)."""
+        run = self.get_run(run_id)
+        if not run:
+            return None
+
+        # Step3完了判定とステータス更新を行う
+        self._update_run_status_if_needed(run_id)
+
+        # 強制的に完了ステータスにする場合（運用回避など）
+        # ただし通常は _update_run_status_if_needed で十分
+        self.db.refresh(run)
+        return run
+
+    def get_lot_suggestions(self, run_id: int, item_id: int) -> dict[str, Any]:
+        """ロット候補取得 (Alias)."""
+        return self.get_available_lots_for_item(run_id, item_id)

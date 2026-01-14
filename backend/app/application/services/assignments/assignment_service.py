@@ -34,7 +34,9 @@ class UserSupplierAssignmentService(
     def __init__(self, db: Session):
         super().__init__(db=db, model=UserSupplierAssignment)
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> list[UserSupplierAssignment]:
+    def get_all(
+        self, skip: int = 0, limit: int = 100, *, include_inactive: bool = False
+    ) -> list[UserSupplierAssignment]:
         """Get all user-supplier assignments with related data."""
         stmt = (
             select(UserSupplierAssignment)

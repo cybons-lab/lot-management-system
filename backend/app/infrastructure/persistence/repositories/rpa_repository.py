@@ -184,6 +184,22 @@ class RpaRepository:
             .count()
         )
 
+    def get_next_processing_item(self, run_id: int) -> RpaRunItem | None:
+        """次に処理すべき未完了アイテムを取得."""
+        return (
+            self.db.query(RpaRunItem)
+            .filter(
+                RpaRunItem.run_id == run_id,
+                RpaRunItem.issue_flag.is_(True),
+                or_(
+                    RpaRunItem.result_status.is_(None),
+                    RpaRunItem.result_status == "pending",
+                ),
+            )
+            .order_by(RpaRunItem.row_no.asc())
+            .first()
+        )
+
     def lock_issue_items(self, run_id: int, now: Any) -> int:
         """発行対象アイテムをロックする (Step2開始時)."""
         return (

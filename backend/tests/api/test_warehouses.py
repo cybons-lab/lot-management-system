@@ -214,8 +214,12 @@ def test_update_warehouse_code_change_duplicate_returns_409(test_db: Session):
     """Test updating warehouse code to existing code returns 409."""
     client = TestClient(app)
 
-    w1 = Warehouse(warehouse_code="EXISTING-WH", warehouse_name="Warehouse 1", warehouse_type="internal")
-    w2 = Warehouse(warehouse_code="TO-CHANGE-WH", warehouse_name="Warehouse 2", warehouse_type="internal")
+    w1 = Warehouse(
+        warehouse_code="EXISTING-WH", warehouse_name="Warehouse 1", warehouse_type="internal"
+    )
+    w2 = Warehouse(
+        warehouse_code="TO-CHANGE-WH", warehouse_name="Warehouse 2", warehouse_type="internal"
+    )
     test_db.add_all([w1, w2])
     test_db.commit()
 

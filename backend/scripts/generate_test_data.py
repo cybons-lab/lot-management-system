@@ -18,7 +18,7 @@ Scenarios covered:
 import os
 import random
 import sys
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
@@ -55,9 +55,12 @@ def clear_database(db: Session):
     print("🗑️  Clearing database...")
 
     # Delete in correct order (foreign key constraints)
-    # P3: allocations table replaced by lot_reservations
     db.execute(text("DELETE FROM lot_reservations"))
     db.execute(text("DELETE FROM allocation_traces"))
+    db.execute(text("DELETE FROM withdrawals"))
+    db.execute(text("DELETE FROM expected_lots"))
+    db.execute(text("DELETE FROM inbound_plan_lines"))
+    db.execute(text("DELETE FROM inbound_plans"))
     db.execute(text("DELETE FROM order_lines"))
     db.execute(text("DELETE FROM orders"))
     db.execute(text("DELETE FROM lots"))
@@ -69,6 +72,7 @@ def clear_database(db: Session):
     db.execute(text("DELETE FROM warehouses"))
     db.execute(text("DELETE FROM suppliers"))
     db.execute(text("DELETE FROM customers"))
+    db.execute(text("DELETE FROM users WHERE username != 'admin'"))
 
     db.commit()
     print("✅ Database cleared successfully")
@@ -101,16 +105,14 @@ def customer_strategy(draw, customer_id: int):
         id=customer_id,
         customer_code=f"C{1000 + customer_id}",
         customer_name=faker.company(),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
 
 
 @st.composite
 def product_strategy(draw, product_id: int):
     """Generate a product."""
-    from faker import Faker
-
-    faker = Faker("ja_JP")
+    # faker = Faker("ja_JP")
 
     unit_config = draw(
         st.sampled_from(
@@ -123,16 +125,34 @@ def product_strategy(draw, product_id: int):
         )
     )
 
+    # 工業用部品らしい名前を生成
+    parts = [
+        "ネジ",
+        "ボルト",
+        "ナット",
+        "ワッシャー",
+        "ゴムパッキン",
+        "Oリング",
+        "ベアリング",
+        "スプリング",
+        "継手",
+        "バルブ",
+    ]
+    materials = ["ステンレス", "真鍮", "プラスチック", "スチール", "アルミ"]
+    sizes = ["M3", "M4", "M5", "M6", "M8", "M10", "10mm", "20mm", "50mm"]
+
+    product_name = f"{draw(st.sampled_from(materials))}製 {draw(st.sampled_from(parts))} ({draw(st.sampled_from(sizes))})"
+
     return Product(
         id=product_id,
         maker_part_code=f"PROD-{5000 + product_id:04d}",
-        product_name=faker.bs().title(),
+        product_name=product_name,
         base_unit=unit_config["internal"],  # Legacy field, maybe keep as internal
         internal_unit=unit_config["internal"],
         external_unit=unit_config["external"],
         qty_per_internal_unit=unit_config["factor"],
         consumption_limit_days=draw(st.integers(min_value=30, max_value=180)),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
 
 
@@ -148,7 +168,7 @@ def warehouse_strategy(draw, warehouse_id: int):
         warehouse_code=f"W{10 + warehouse_id}",
         warehouse_name=f"{faker.city()}倉庫",
         warehouse_type=draw(st.sampled_from(["internal", "external", "supplier"])),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
 
 
@@ -170,39 +190,33 @@ def scenario_lot_strategy(
     if scenario == "normal":
         qty_range = (100, 500)
         expiry_days = (60, 365)
-        allocated_pct = 0.2
         status = "active"
     elif scenario == "shortage":
         qty_range = (5, 30)
         expiry_days = (30, 180)
-        allocated_pct = 0.1
         status = "active"
     elif scenario == "expiring":
         qty_range = (50, 200)
         expiry_days = (1, 29)
-        allocated_pct = 0.15
         status = "active"
     elif scenario == "expired":
         qty_range = (100, 300)
         expiry_days = (-30, -1)
-        allocated_pct = 0.0
         status = "expired"
     elif scenario == "depleted":
         qty_range = (0, 0)
         expiry_days = (30, 180)
-        allocated_pct = 0.0
         status = "depleted"
     elif scenario == "large":
         qty_range = (500, 1000)
         expiry_days = (90, 365)
-        allocated_pct = 0.25
+        # allocated_pct = 0.25 (unused)
         status = "active"
     else:
         raise ValueError(f"Unknown scenario: {scenario}")
 
     # Generate quantities
     current_qty = Decimal(str(draw(st.integers(min_value=qty_range[0], max_value=qty_range[1]))))
-    allocated_qty = Decimal(str(int(current_qty * Decimal(str(allocated_pct)))))
 
     # Generate expiry date
     expiry_days_val = draw(st.integers(min_value=expiry_days[0], max_value=expiry_days[1]))
@@ -217,11 +231,10 @@ def scenario_lot_strategy(
         received_date=date.today() - timedelta(days=draw(st.integers(min_value=1, max_value=90))),
         expiry_date=expiry_date,
         current_quantity=current_qty,
-        allocated_quantity=allocated_qty,
         unit=draw(st.sampled_from(["PCS", "BOX", "SET"])),
         status=status,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
 
 
@@ -268,7 +281,7 @@ def generate_test_data():
                 delivery_place_code=f"D{100 + i}",
                 delivery_place_name=f"配送センター{i + 1}",
                 customer_id=customers[i % len(customers)].id,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(UTC),
             )
             db.add(dp)
             delivery_places.append(dp)

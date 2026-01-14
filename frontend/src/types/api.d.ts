@@ -536,6 +536,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/lots/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Lots
+     * @description ロット一覧をExcelファイルとしてエクスポート.
+     *
+     *     Args:
+     *         product_id: 製品ID（フィルタ）
+     *         product_code: 製品コード（フィルタ）
+     *         supplier_code: 仕入先コード（フィルタ）
+     *         warehouse_code: 倉庫コード（フィルタ）
+     *         expiry_from: 有効期限開始日（フィルタ）
+     *         expiry_to: 有効期限終了日（フィルタ）
+     *         with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         Response: Excelファイル（application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）
+     */
+    get: operations["export_lots_api_lots_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/lots": {
     parameters: {
       query?: never;
@@ -840,6 +873,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/orders/lines/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Order Lines
+     * @description 受注明細をExcelでエクスポート.
+     *
+     *     フィルター条件に一致する受注明細をExcelファイルとしてダウンロードします。
+     *
+     *     Args:
+     *         status: ステータスフィルター
+     *         customer_code: 得意先コードフィルター
+     *         product_code: 商品コードフィルター
+     *         date_from: 納期開始日
+     *         date_to: 納期終了日
+     *         order_type: 受注種別フィルター
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         StreamingResponse: Excelファイル
+     */
+    get: operations["export_order_lines_api_orders_lines_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/orders": {
     parameters: {
       query?: never;
@@ -1045,6 +1112,37 @@ export interface paths {
      *         作成されたフォーキャスト
      */
     post: operations["create_forecast_api_forecasts_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/forecasts/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Forecasts
+     * @description フォーキャストをExcelでエクスポート.
+     *
+     *     グループ化されたフォーキャストを明細レベルに展開してExcelファイルとして出力します。
+     *
+     *     Args:
+     *         customer_id: 得意先IDでフィルタ
+     *         delivery_place_id: 納入先IDでフィルタ
+     *         product_id: 製品IDでフィルタ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         StreamingResponse: Excelファイル
+     */
+    get: operations["export_forecasts_api_forecasts_export_download_get"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -5251,6 +5349,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/bulk-export/targets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Export Targets
+     * @description エクスポート可能なターゲット一覧を取得.
+     *
+     *     Returns:
+     *         list[ExportTarget]: エクスポート可能なデータの一覧
+     */
+    get: operations["list_export_targets_api_bulk_export_targets_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/bulk-export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Bulk Export
+     * @description 複数データを一括でZIPダウンロード.
+     *
+     *     Args:
+     *         targets: エクスポート対象のキーリスト（例: ["customers", "products"]）
+     *         format: ファイル形式（xlsx または csv）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         StreamingResponse: ZIPファイル
+     */
+    get: operations["download_bulk_export_api_bulk_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/integration/sap/sales-orders": {
     parameters: {
       query?: never;
@@ -7913,6 +8062,18 @@ export interface components {
       expected_lot_id: number;
       /** Inbound Plan Line Id */
       inbound_plan_line_id: number;
+    };
+    /**
+     * ExportTarget
+     * @description Exportable target definition.
+     */
+    ExportTarget: {
+      /** Key */
+      key: string;
+      /** Name */
+      name: string;
+      /** Description */
+      description: string;
     };
     /**
      * FefoLineAllocation
@@ -13149,6 +13310,43 @@ export interface operations {
       };
     };
   };
+  export_lots_api_lots_export_download_get: {
+    parameters: {
+      query?: {
+        product_id?: number | null;
+        product_code?: string | null;
+        supplier_code?: string | null;
+        warehouse_code?: string | null;
+        expiry_from?: string | null;
+        expiry_to?: string | null;
+        with_stock?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_lots_api_lots_get: {
     parameters: {
       query?: {
@@ -13511,6 +13709,42 @@ export interface operations {
       };
     };
   };
+  export_order_lines_api_orders_lines_export_download_get: {
+    parameters: {
+      query?: {
+        status?: string | null;
+        customer_code?: string | null;
+        product_code?: string | null;
+        date_from?: string | null;
+        date_to?: string | null;
+        order_type?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_orders_api_orders_get: {
     parameters: {
       query?: {
@@ -13814,6 +14048,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ForecastResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_forecasts_api_forecasts_export_download_get: {
+    parameters: {
+      query?: {
+        customer_id?: number | null;
+        delivery_place_id?: number | null;
+        product_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */
@@ -19783,6 +20050,60 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["BatchJobResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_export_targets_api_bulk_export_targets_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExportTarget"][];
+        };
+      };
+    };
+  };
+  download_bulk_export_api_bulk_export_download_get: {
+    parameters: {
+      query: {
+        /** @description エクスポート対象のキー（複数指定可） */
+        targets: string[];
+        /** @description ファイル形式（xlsx または csv） */
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */

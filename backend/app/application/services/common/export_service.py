@@ -95,19 +95,31 @@ class ExportService:
 
     @staticmethod
     def _prepare_data(data: list[dict[str, Any] | Any]) -> list[dict[str, Any]]:
-        """Convert Pydantic models to dicts if necessary."""
+        """Convert objects/models to dicts if necessary."""
         if not data:
             return []
 
+        # If first item is a dict, return as is
+        if isinstance(data[0], dict):
+            return data  # type: ignore
+
         # If first item has model_dump, assume all are Pydantic models
         if hasattr(data[0], "model_dump"):
-            return [item.model_dump() for item in data]  # type: ignore[union-attr]
+            return [item.model_dump() for item in data]
 
-        # If first item has dict, assume all are SQLAlchemy models or similar
-        if hasattr(data[0], "_asdict"):
-            return [item._asdict() for item in data]  # type: ignore[union-attr]
-
-        return data
+        # If it's a list of SQLAlchemy rows or objects
+        result = []
+        for item in data:
+            if hasattr(item, "_asdict"):
+                result.append(item._asdict())
+            elif hasattr(item, "__dict__"):
+                # Regular object or SQLAlchemy model
+                d = {k: v for k, v in item.__dict__.items() if not k.startswith("_")}
+                result.append(d)
+                # Ensure related objects are handled if needed, but here we expect flat dicts
+            else:
+                result.append(item)
+        return result
 
     @staticmethod
     def export_to_csv(data: list[Any], filename: str = "export") -> StreamingResponse:

@@ -34,7 +34,9 @@ def upgrade() -> None:
         # ディレクトリ設定
         sa.Column("watch_dir", sa.Text(), nullable=True),
         sa.Column("export_dir", sa.Text(), nullable=True),
-        sa.Column("input_exts", sa.String(length=100), nullable=True, server_default="pdf,png,jpg,jpeg"),
+        sa.Column(
+            "input_exts", sa.String(length=100), nullable=True, server_default="pdf,png,jpg,jpeg"
+        ),
         # メタ情報
         sa.Column("name", sa.String(length=100), nullable=False, server_default="default"),
         sa.Column("description", sa.Text(), nullable=True),

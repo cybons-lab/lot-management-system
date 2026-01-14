@@ -12,7 +12,7 @@ from app.core.time_utils import utcnow
 
 
 class SAPMockClient:
-    """Mock SAP client for inventory sync.
+    """TODO: [MOCK] Mock SAP client for inventory sync.
 
     本番環境では実際のSAP APIクライアントに置き換え。
     """

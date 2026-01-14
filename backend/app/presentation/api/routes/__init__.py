@@ -17,6 +17,7 @@ from app.presentation.api.routes.admin import (
     admin_healthcheck_router,
     admin_router,
     batch_jobs_router,
+    bulk_export_router,
     business_rules_router,
     health_router,
     master_import_router,
@@ -137,6 +138,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(operation_logs_router, prefix=prefix)
     app.include_router(business_rules_router, prefix=prefix)
     app.include_router(batch_jobs_router, prefix=prefix)
+    app.include_router(bulk_export_router, prefix=prefix)
 
     # Integration endpoints
     app.include_router(sap_router, prefix=prefix)

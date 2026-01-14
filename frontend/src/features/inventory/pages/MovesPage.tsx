@@ -7,6 +7,7 @@
  */
 
 import { Section } from "@/shared/components/layout";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 // ============================================
 // メインコンポーネント
@@ -38,7 +39,7 @@ export function MovesPage() {
             </div>
 
             {/* タイトル */}
-            <h2 className="mb-2 text-2xl font-bold text-gray-900">入出庫履歴</h2>
+            <PageHeader title="入出庫履歴" />
 
             {/* 説明 */}
             <p className="mb-6 text-gray-600">

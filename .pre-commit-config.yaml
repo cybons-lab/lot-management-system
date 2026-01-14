@@ -27,6 +27,17 @@ repos:
       - id: ruff-format
         files: ^backend/
 
+  # Backend - Mypy (Type Check)
+  - repo: local
+    hooks:
+      - id: mypy
+        name: Mypy (Backend)
+        entry: bash -c 'cd backend && uv run mypy app/' --
+        language: system
+        types: [python]
+        files: ^backend/
+        pass_filenames: false
+
   # OpenAPI Schema Sync - regenerate when backend schemas change
   - repo: local
     hooks:

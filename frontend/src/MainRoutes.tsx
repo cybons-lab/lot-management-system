@@ -6,6 +6,7 @@ import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
 import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
 import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
+import { BulkExportPage } from "@/features/admin/pages/BulkExportPage";
 import { MasterChangeLogsPage } from "@/features/admin/pages/MasterChangeLogsPage";
 import { SeedSnapshotsPage } from "@/features/admin/pages/SeedSnapshotsPage";
 import { PrimaryAssignmentsPage } from "@/features/assignments/pages/PrimaryAssignmentsPage";
@@ -202,6 +203,14 @@ function AdminRoutes() {
         element={
           <AdminGuard>
             <ClientLogsPage />
+          </AdminGuard>
+        }
+      />
+      <Route
+        path="/admin/export"
+        element={
+          <AdminGuard>
+            <BulkExportPage />
           </AdminGuard>
         }
       />

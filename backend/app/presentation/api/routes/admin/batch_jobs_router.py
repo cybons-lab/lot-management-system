@@ -1,6 +1,6 @@
 """Batch jobs router (バッチジョブAPI)."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.application.services.admin.batch_jobs_service import BatchJobService
@@ -51,13 +51,13 @@ def list_batch_jobs(
 
 
 @router.post("/inventory-sync/execute")
-def execute_inventory_sync_direct(db: Session = Depends(get_db)):
+def execute_inventory_sync_direct(response: Response, db: Session = Depends(get_db)):
     """SAP在庫同期を即座に実行する（バッチジョブ経由なし）.
 
-    管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。
-    バッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。
+    TODO: [MOCK] SAPMockClientを使用しているため、モックステータスヘッダを付与
 
     Args:
+        response: FastAPI Response object
         db: データベースセッション
 
     Returns:
@@ -68,6 +68,9 @@ def execute_inventory_sync_direct(db: Session = Depends(get_db)):
             - details: 差異の詳細リスト
     """
     from app.application.services.batch.inventory_sync_service import InventorySyncService
+
+    # Set Mock Status Header
+    response.headers["X-Mock-Status"] = "true"
 
     try:
         sync_service = InventorySyncService(db)

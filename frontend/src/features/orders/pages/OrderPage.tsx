@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui"; // Badgeコンポーネントも必要�
 import { Button } from "@/components/ui";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui";
 import * as ordersApi from "@/features/orders/api";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { formatCodeAndName } from "@/shared/libs/utils";
 import { formatOrderCode } from "@/shared/utils/order";
 
@@ -35,13 +36,7 @@ export function OrderPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">受注管理</h2>
-          <p className="text-muted-foreground">現在有効な受注の一覧です。</p>
-        </div>
-        {/* 将来的に受注登録ボタンをここに追加 */}
-      </div>
+      <PageHeader title="受注管理" subtitle="現在有効な受注の一覧です。" />
 
       <div className="rounded-md border">
         <Table>

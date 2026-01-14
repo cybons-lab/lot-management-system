@@ -28,6 +28,7 @@ import {
 } from "@/hooks/api/useMastersQuery";
 import { useCreateLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
+import { ExportButton } from "@/shared/components/ExportButton";
 import { FormDialog } from "@/shared/components/form";
 import { Section } from "@/shared/components/layout";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
@@ -133,6 +134,7 @@ export function InventoryPage() {
         title="在庫管理"
         actions={
           <div className="flex gap-2">
+            <ExportButton apiPath="lots/export/download" filePrefix="lots" size="sm" />
             <Button size="sm" variant="outline" onClick={() => navigate("/inventory/withdrawals")}>
               <History className="mr-2 h-4 w-4" />
               出庫履歴

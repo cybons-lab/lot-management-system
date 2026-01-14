@@ -60,6 +60,18 @@ function OrderDetailHeader({
             <span>•</span>
             <span>{formatDate(order.order_date)}</span>
           </div>
+          {/* OCR取込元ファイル名 */}
+          {order.ocr_source_filename && (
+            <div className="mt-2 text-xs text-slate-500">
+              <span className="font-medium">OCR取込元:</span> {order.ocr_source_filename}
+            </div>
+          )}
+          {/* キャンセル理由（キャンセル時のみ表示） */}
+          {order.status === "cancelled" && order.cancel_reason && (
+            <div className="mt-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+              <span className="font-medium">キャンセル理由:</span> {order.cancel_reason}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <OrderStatusBadge status={order.status} />

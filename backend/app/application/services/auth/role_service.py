@@ -25,7 +25,9 @@ class RoleService(BaseService[Role, RoleCreate, RoleUpdate, int]):
         """Initialize service with database session."""
         super().__init__(db=db, model=Role)
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> list[Role]:
+    def get_all(
+        self, skip: int = 0, limit: int = 100, *, include_inactive: bool = False
+    ) -> list[Role]:
         """Get all roles with pagination."""
         return cast(list[Role], self.db.query(Role).offset(skip).limit(limit).all())
 

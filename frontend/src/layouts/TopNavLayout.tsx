@@ -14,6 +14,7 @@ import * as styles from "./TopNavLayout.styles";
 import { KeyboardShortcutsHelp } from "@/components/common/KeyboardShortcutsHelp";
 import { GlobalNavigation } from "@/components/layouts/GlobalNavigation";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { MockIndicator } from "@/shared/components/MockIndicator";
 
 // ============================================
 // メインコンポーネント
@@ -34,6 +35,7 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
       {/* メインコンテンツ */}
       <main className={styles.main}>{children}</main>
 
+      <MockIndicator />
       <KeyboardShortcutsHelp open={showHelp} onOpenChange={setShowHelp} />
     </div>
   );

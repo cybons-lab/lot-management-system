@@ -30,6 +30,7 @@ import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { ROUTES } from "@/constants/routes";
 import { generateAllocationSuggestions } from "@/features/allocations/api";
 import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
+import { ExportButton } from "@/shared/components/ExportButton";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -205,6 +206,11 @@ export function ForecastListPage() {
         subtitle="顧客×納入先×製品でグループ化（v2.5）"
         actions={
           <div className="flex gap-2">
+            <ExportButton
+              apiPath="forecasts/export/download"
+              filePrefix="forecasts"
+              size="default"
+            />
             <Button
               variant="outline"
               onClick={handleGenerateSuggestions}

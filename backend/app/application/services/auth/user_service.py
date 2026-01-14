@@ -49,12 +49,14 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
             return hashed_password == f"$2b$12$fallback{h}"
         return cast(bool, self.pwd_context.verify(plain_password, hashed_password))
 
-    def get_all(self, skip: int = 0, limit: int = 100, is_active: bool | None = None) -> list[User]:
+    def get_all(
+        self, skip: int = 0, limit: int = 100, *, include_inactive: bool = False
+    ) -> list[User]:
         """Get all users with optional filtering."""
         query = self.db.query(User).options(joinedload(User.user_roles))
 
-        if is_active is not None:
-            query = query.filter(User.is_active == is_active)
+        if not include_inactive:
+            query = query.filter(User.is_active)
 
         return cast(list[User], query.offset(skip).limit(limit).all())
 

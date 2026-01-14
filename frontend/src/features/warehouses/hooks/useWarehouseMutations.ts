@@ -2,6 +2,7 @@
  * useWarehouseMutations - 倉庫のCRUD + Bulk Mutations
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import {
   createWarehouse,
@@ -20,7 +21,10 @@ export function useCreateWarehouse() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: WarehouseCreate) => createWarehouse(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: warehousesQueryKey });
+      toast.success("倉庫を登録しました");
+    },
   });
 }
 
@@ -29,7 +33,10 @@ export function useUpdateWarehouse() {
   return useMutation({
     mutationFn: ({ warehouseCode, data }: { warehouseCode: string; data: WarehouseUpdate }) =>
       updateWarehouse(warehouseCode, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: warehousesQueryKey });
+      toast.success("倉庫を更新しました");
+    },
   });
 }
 
@@ -37,7 +44,10 @@ export function useDeleteWarehouse() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (warehouseCode: string) => deleteWarehouse(warehouseCode),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: warehousesQueryKey });
+      toast.success("倉庫を削除しました");
+    },
   });
 }
 
@@ -45,6 +55,9 @@ export function useBulkUpsertWarehouses() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (rows: WarehouseBulkRow[]) => bulkUpsertWarehouses(rows),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: warehousesQueryKey });
+      toast.success("倉庫を一括登録しました");
+    },
   });
 }
