@@ -1,5 +1,7 @@
 """Product mapping CRUD endpoints (商品マスタ)."""
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -43,6 +45,22 @@ def export_product_mappings(format: str = "csv", db: Session = Depends(get_db)):
     Returns:
         Excel形式またはCSV形式のファイルレスポンス
     """
+    data = get_product_mappings_export_data(db)
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "product_mappings")
+    return ExportService.export_to_csv(data, "product_mappings")
+
+
+def get_product_mappings_export_data(db: Session) -> list[dict[str, Any]]:
+    """Export用データ取得（一括エクスポートでも利用）.
+
+    Args:
+        db: データベースセッション
+
+    Returns:
+        エクスポート形式の辞書リスト
+    """
     query = (
         db.query(
             ProductMapping.id,
@@ -65,7 +83,7 @@ def export_product_mappings(format: str = "csv", db: Session = Depends(get_db)):
 
     results = query.all()
 
-    data = [
+    return [
         {
             "customer_code": r.customer_code,
             "customer_name": r.customer_name,
@@ -81,10 +99,6 @@ def export_product_mappings(format: str = "csv", db: Session = Depends(get_db)):
         }
         for r in results
     ]
-
-    if format == "xlsx":
-        return ExportService.export_to_excel(data, "product_mappings")
-    return ExportService.export_to_csv(data, "product_mappings")
 
 
 @router.get("", response_model=list[ProductMappingResponse])

@@ -98,6 +98,11 @@ class CustomerItemDeliverySettingService:
             source="none",
         )
 
+    def list_all(self) -> list[CustomerItemDeliverySettingResponse]:
+        """List all delivery settings for export."""
+        settings = self.db.query(CustomerItemDeliverySetting).all()
+        return [CustomerItemDeliverySettingResponse.model_validate(s) for s in settings]
+
     def list_by_customer_item(
         self,
         customer_id: int,

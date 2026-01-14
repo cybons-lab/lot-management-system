@@ -92,7 +92,23 @@ test.describe("Export Functionality", () => {
     // Mock targets
     await page.route("**/api/bulk-export/targets*", async (route) => {
       await route.fulfill({
-        json: [{ key: "customers", name: "顧客マスタ", description: "desc" }],
+        json: [
+          { key: "customers", name: "顧客マスタ", description: "desc" },
+          { key: "products", name: "製品マスタ", description: "desc" },
+          { key: "suppliers", name: "仕入先マスタ", description: "desc" },
+          { key: "warehouses", name: "倉庫マスタ", description: "desc" },
+          { key: "delivery_places", name: "納入先マスタ", description: "desc" },
+          { key: "product_mappings", name: "得意先品番マッピング", description: "desc" },
+          { key: "customer_items", name: "顧客別品番設定", description: "desc" },
+          { key: "supplier_products", name: "仕入先商品関連", description: "desc" },
+          { key: "uom_conversions", name: "単位換算マスタ", description: "desc" },
+          { key: "warehouse_delivery_routes", name: "配送ルートマスタ", description: "desc" },
+          { key: "customer_item_delivery_settings", name: "顧客別納入設定", description: "desc" },
+          { key: "lots", name: "ロット一覧", description: "desc" },
+          { key: "orders", name: "受注一覧", description: "desc" },
+          { key: "forecasts", name: "フォーキャスト", description: "desc" },
+          { key: "users", name: "ユーザー一覧", description: "desc" },
+        ],
       });
     });
     // Mock bulk download

@@ -25,6 +25,12 @@ from app.core.database import get_db
 from app.infrastructure.persistence.models import DeliveryPlace
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.routes.auth.auth_router import get_current_user
+from app.presentation.api.routes.masters.customer_items_router import (
+    CustomerItemsService,
+)
+from app.presentation.api.routes.masters.product_mappings_router import (
+    get_product_mappings_export_data,
+)
 from app.presentation.schemas.masters.masters_schema import (
     CustomerResponse,
     DeliveryPlaceResponse,
@@ -53,10 +59,34 @@ EXPORT_TARGETS: list[dict[str, str]] = [
     {"key": "suppliers", "name": "仕入先マスタ", "description": "仕入先一覧データ"},
     {"key": "warehouses", "name": "倉庫マスタ", "description": "倉庫一覧データ"},
     {"key": "delivery_places", "name": "納入先マスタ", "description": "納入先一覧データ"},
+    {
+        "key": "product_mappings",
+        "name": "得意先品番マッピング",
+        "description": "得意先・仕入先・製品の紐付け",
+    },
+    {"key": "customer_items", "name": "顧客別品番設定", "description": "顧客固有の品番マッピング"},
+    {
+        "key": "supplier_products",
+        "name": "仕入先商品関連",
+        "description": "仕入先ごとのリードタイム設定",
+    },
+    {"key": "uom_conversions", "name": "単位換算マスタ", "description": "製品ごとの単位換算定義"},
+    {
+        "key": "warehouse_delivery_routes",
+        "name": "配送ルートマスタ",
+        "description": "倉庫から納入先への配送設定",
+    },
+    {
+        "key": "customer_item_delivery_settings",
+        "name": "顧客別納入設定",
+        "description": "顧客納入先ごとの出荷票設定",
+    },
     # トランザクションデータ
     {"key": "lots", "name": "ロット一覧", "description": "在庫ロットデータ"},
     {"key": "orders", "name": "受注一覧", "description": "受注データ"},
     {"key": "forecasts", "name": "フォーキャスト", "description": "需要予測データ"},
+    # システムデータ
+    {"key": "users", "name": "ユーザー一覧", "description": "システム利用ユーザー"},
 ]
 
 
@@ -98,31 +128,146 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         data = [DeliveryPlaceResponse.model_validate(d).model_dump() for d in items]
         return data, "delivery_places"
 
+    if target == "product_mappings":
+        return get_product_mappings_export_data(db), "product_mappings"
+
+    if target == "customer_items":
+        service = CustomerItemsService(db)
+        items = service.get_all()
+        # Items are already in exportable format from service.get_all (Pydantic models)
+        return items, "customer_items"
+
+    if target == "uom_conversions":
+        from sqlalchemy import select
+
+        from app.infrastructure.persistence.models.masters_models import (
+            Product,
+            ProductUomConversion,
+        )
+
+        query = select(
+            ProductUomConversion.conversion_id,
+            ProductUomConversion.product_id,
+            ProductUomConversion.external_unit,
+            ProductUomConversion.factor,
+            Product.maker_part_code,
+            Product.product_name,
+        ).join(Product, ProductUomConversion.product_id == Product.id)
+
+        results = db.execute(query).all()
+        data = [
+            {
+                "conversion_id": r.conversion_id,
+                "product_id": r.product_id,
+                "external_unit": r.external_unit,
+                "conversion_factor": float(r.factor),
+                "product_code": r.maker_part_code,
+                "product_name": r.product_name,
+            }
+            for r in results
+        ]
+        return data, "uom_conversions"
+
+    if target == "supplier_products":
+        from sqlalchemy import select
+
+        from app.infrastructure.persistence.models.masters_models import Product, Supplier
+        from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
+
+        query = (
+            select(
+                ProductSupplier.id,
+                ProductSupplier.product_id,
+                ProductSupplier.supplier_id,
+                ProductSupplier.is_primary,
+                ProductSupplier.lead_time_days,
+                Product.maker_part_code,
+                Product.product_name,
+                Supplier.supplier_code,
+                Supplier.supplier_name,
+            )
+            .join(Product, ProductSupplier.product_id == Product.id)
+            .join(Supplier, ProductSupplier.supplier_id == Supplier.id)
+        )
+        results = db.execute(query).all()
+        data = [
+            {
+                "id": r.id,
+                "product_id": r.product_id,
+                "supplier_id": r.supplier_id,
+                "is_primary": r.is_primary,
+                "lead_time_days": r.lead_time_days,
+                "product_code": r.maker_part_code,
+                "product_name": r.product_name,
+                "supplier_code": r.supplier_code,
+                "supplier_name": r.supplier_name,
+            }
+            for r in results
+        ]
+        return data, "supplier_products"
+
+    if target == "warehouse_delivery_routes":
+        from sqlalchemy import select
+
+        from app.infrastructure.persistence.models.masters_models import WarehouseDeliveryRoute
+
+        query = select(WarehouseDeliveryRoute)
+        routes = db.execute(query).scalars().all()
+        # Reuse internal router's builder function logic
+        data = []
+        for route in routes:
+            data.append(
+                {
+                    "warehouse_code": route.warehouse.warehouse_code if route.warehouse else None,
+                    "warehouse_name": route.warehouse.warehouse_name if route.warehouse else None,
+                    "delivery_place_code": (
+                        route.delivery_place.delivery_place_code if route.delivery_place else None
+                    ),
+                    "delivery_place_name": (
+                        route.delivery_place.delivery_place_name if route.delivery_place else None
+                    ),
+                    "product_name": route.product.product_name if route.product else None,
+                    "maker_part_code": route.product.maker_part_code if route.product else None,
+                    "transport_lead_time_days": route.transport_lead_time_days,
+                    "notes": route.notes,
+                }
+            )
+        return data, "warehouse_delivery_routes"
+
+    if target == "customer_item_delivery_settings":
+        from app.application.services.masters.customer_item_delivery_setting_service import (
+            CustomerItemDeliverySettingService,
+        )
+
+        service = CustomerItemDeliverySettingService(db)
+        items = service.list_all()  # Assume we add list_all to service
+        return items, "customer_item_delivery_settings"
+
+    if target == "users":
+        from app.application.services.auth.user_service import UserService
+
+        service = UserService(db)
+        users = service.get_all()
+        from app.presentation.schemas.system.users_schema import UserResponse
+
+        data = [UserResponse.model_validate(u).model_dump() for u in users]
+        return data, "users"
+
     if target == "lots":
         service = LotService(db)
         items = service.get_all()
-        # Lot models are converted to dict directly
-        data = [item.__dict__ | {"_sa_instance_state": None} for item in items]
-        # Remove SQLAlchemy state
-        data = [{k: v for k, v in item.items() if k != "_sa_instance_state"} for item in data]
-        return data, "lots"
+        # Ensure we return objects that pandas can handle nicely via ExportService._prepare_data
+        return items, "lots"
 
     if target == "orders":
         service = OrderService(db)
         items = service.get_all()
-        # Use model dict conversion
-        data = [
-            {k: v for k, v in item.__dict__.items() if k != "_sa_instance_state"} for item in items
-        ]
-        return data, "orders"
+        return items, "orders"
 
     if target == "forecasts":
         service = ForecastService(db)
         items = service.get_all()
-        data = [
-            {k: v for k, v in item.__dict__.items() if k != "_sa_instance_state"} for item in items
-        ]
-        return data, "forecasts"
+        return items, "forecasts"
 
     raise ValueError(f"Unknown export target: {target}")
 
