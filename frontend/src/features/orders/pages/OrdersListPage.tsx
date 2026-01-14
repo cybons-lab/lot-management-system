@@ -16,6 +16,7 @@ import { OrdersFilters } from "@/features/orders/components/OrdersFilters";
 import { OrdersFlatView } from "@/features/orders/components/OrdersFlatView";
 import { useOrdersListLogic } from "@/features/orders/hooks/useOrdersListLogic";
 import { TablePagination } from "@/shared/components/data/TablePagination";
+import { ExportButton } from "@/shared/components/ExportButton";
 import { FormDialog } from "@/shared/components/form";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -31,6 +32,11 @@ export function OrdersListPage() {
         subtitle="受注明細一覧と引当状況を管理します"
         actions={
           <div className="flex items-center gap-2">
+            <ExportButton
+              apiPath="/orders/lines/export/download"
+              filePrefix="order_lines"
+              size="sm"
+            />
             <Button variant="outline" size="sm" onClick={() => navigate("/confirmed-lines")}>
               <Send className="mr-2 h-4 w-4" />
               SAP受注登録

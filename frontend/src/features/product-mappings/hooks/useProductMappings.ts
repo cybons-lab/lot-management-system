@@ -2,6 +2,7 @@
  * Product Mappings Hooks (商品マスタ)
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import {
   createProductMapping,
@@ -33,6 +34,7 @@ export function useCreateProductMapping() {
     mutationFn: (data: ProductMappingCreate) => createProductMapping(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success("得意先品番マッピングを登録しました");
     },
   });
 }
@@ -45,6 +47,7 @@ export function useUpdateProductMapping() {
       updateProductMapping(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success("得意先品番マッピングを更新しました");
     },
   });
 }
@@ -56,6 +59,7 @@ export function useDeleteProductMapping() {
     mutationFn: (id: number) => deleteProductMapping(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success("得意先品番マッピングを削除しました");
     },
   });
 }

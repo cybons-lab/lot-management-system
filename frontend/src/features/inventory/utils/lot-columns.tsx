@@ -10,6 +10,7 @@ import type { Column } from "@/shared/components/data/DataTable";
 import { LotStatusBadge } from "@/shared/components/data/StatusBadge";
 import type { LotUI } from "@/shared/libs/normalize";
 import { formatCodeAndName } from "@/shared/libs/utils";
+import { getLotStatuses } from "@/shared/utils/status";
 
 /**
  * 納品先情報を取得
@@ -128,8 +129,10 @@ export function createLotColumns(): Column<LotUI>[] {
       id: "status",
       header: "ステータス",
       cell: (lot) => {
-        const status = Number(lot.current_quantity) > 0 ? "available" : "depleted";
-        return <LotStatusBadge status={status} />;
+        const statuses = getLotStatuses(lot);
+        // 最も重要なステータスを表示（複数ある場合は最優先のみ）
+        const primaryStatus = statuses[0] ?? "available";
+        return <LotStatusBadge status={primaryStatus} />;
       },
       sortable: true,
       align: "center",

@@ -2,6 +2,7 @@
  * Delivery Places Hooks
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import {
   createDeliveryPlace,
@@ -35,6 +36,7 @@ export function useCreateDeliveryPlace() {
     mutationFn: (data: DeliveryPlaceCreate) => createDeliveryPlace(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success("納入先を登録しました");
     },
   });
 }
@@ -47,6 +49,7 @@ export function useUpdateDeliveryPlace() {
       updateDeliveryPlace(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success("納入先を更新しました");
     },
   });
 }
@@ -58,6 +61,7 @@ export function useDeleteDeliveryPlace() {
     mutationFn: (id: number) => deleteDeliveryPlace(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success("納入先を削除しました");
     },
   });
 }
@@ -70,6 +74,7 @@ export function useSoftDeleteDeliveryPlace() {
       softDeleteDeliveryPlace(id, endDate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success("納入先を無効化しました");
     },
   });
 }
@@ -81,6 +86,7 @@ export function usePermanentDeleteDeliveryPlace() {
     mutationFn: (id: number) => permanentDeleteDeliveryPlace(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success("納入先を完全に削除しました");
     },
   });
 }
@@ -92,6 +98,7 @@ export function useRestoreDeliveryPlace() {
     mutationFn: (id: number) => restoreDeliveryPlace(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      toast.success("納入先を復元しました");
     },
   });
 }
