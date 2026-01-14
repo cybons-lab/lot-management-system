@@ -106,13 +106,16 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             .all(),
         )
 
-    def get_all(self) -> list[Product]:  # type: ignore[override]
+    def get_all(self, skip: int = 0, limit: int = 100) -> list[Product]:
         """Get all products.
 
         Returns:
             List of all products ordered by product code
         """
-        return cast(list[Product], self.db.query(Product).order_by(Product.maker_part_code).all())
+        return cast(
+            list[Product],
+            self.db.query(Product).order_by(Product.maker_part_code).offset(skip).limit(limit).all(),
+        )
 
     def create(self, payload: ProductCreate) -> Product:
         """Create new product with field mapping and auto-numbering."""

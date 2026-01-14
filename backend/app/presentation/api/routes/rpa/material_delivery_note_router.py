@@ -27,7 +27,6 @@ from app.presentation.schemas.rpa_run_schema import (
     MaterialDeliveryNoteExecuteRequest,
     MaterialDeliveryNoteExecuteResponse,
     RpaRunBatchUpdateRequest,
-    RpaRunCreateResponse,
     RpaRunItemResponse,
     RpaRunItemUpdateRequest,
     RpaRunListResponse,
@@ -123,7 +122,7 @@ def _build_run_summary(run) -> RpaRunSummaryResponse:
 
 @router.post(
     "/runs",
-    response_model=RpaRunCreateResponse,
+    response_model=RpaRunResponse,
     status_code=status.HTTP_201_CREATED,
 )
 def create_run(

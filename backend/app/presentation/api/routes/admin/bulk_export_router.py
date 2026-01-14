@@ -96,25 +96,25 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
     """
     if target == "customers":
         customer_service = CustomerService(db)
-        customer_list = customer_service.get_all()
+        customer_list = customer_service.get_all(limit=10000)
         data = [CustomerResponse.model_validate(c).model_dump() for c in customer_list]
         return data, "customers"
 
     if target == "products":
         product_service = ProductService(db)
-        product_list = product_service.get_all()
+        product_list = product_service.get_all(limit=10000)
         data = [ProductOut.model_validate(p).model_dump() for p in product_list]
         return data, "products"
 
     if target == "suppliers":
         supplier_service = SupplierService(db)
-        supplier_list = supplier_service.get_all()
+        supplier_list = supplier_service.get_all(limit=10000)
         data = [SupplierResponse.model_validate(s).model_dump() for s in supplier_list]
         return data, "suppliers"
 
     if target == "warehouses":
         warehouse_service = WarehouseService(db)
-        warehouse_list = warehouse_service.get_all()
+        warehouse_list = warehouse_service.get_all(limit=10000)
         data = [WarehouseResponse.model_validate(w).model_dump() for w in warehouse_list]
         return data, "warehouses"
 
@@ -134,7 +134,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
 
     if target == "customer_items":
         ci_service = CustomerItemsService(db)
-        customer_item_list = ci_service.get_all()
+        customer_item_list = ci_service.get_all(limit=10000)
         # CustomerItem is SQLAlchemy model, need schema validation
         from app.presentation.schemas.masters.customer_items_schema import CustomerItemResponse
 
@@ -258,7 +258,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         from app.application.services.auth.user_service import UserService
 
         user_service = UserService(db)
-        users = user_service.get_all()
+        users = user_service.get_all(limit=10000)
         from app.presentation.schemas.system.users_schema import UserResponse
 
         user_data = [UserResponse.model_validate(u).model_dump() for u in users]
@@ -268,7 +268,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         from app.presentation.schemas.inventory.lot_schema import LotResponse
 
         lot_service = LotService(db)
-        lot_list = lot_service.get_all()
+        lot_list = lot_service.get_all(limit=10000)
         data = [LotResponse.model_validate(l).model_dump() for l in lot_list]
         # Ensure we return objects that pandas can handle nicely via ExportService._prepare_data
         return data, "lots"
@@ -277,7 +277,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         from app.presentation.schemas.orders.order_schema import OrderLineResponse
 
         order_service = OrderService(db)
-        order_list = order_service.get_all()
+        order_list = order_service.get_all(limit=10000)
         data = [OrderLineResponse.model_validate(o).model_dump() for o in order_list]
         return data, "orders"
 
@@ -285,15 +285,16 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         from app.presentation.schemas.forecasts.forecast_schema import ForecastResponse
 
         forecast_service = ForecastService(db)
-        forecast_list = forecast_service.get_all()
+        forecast_list = forecast_service.get_all(limit=10000)
         data = [ForecastResponse.model_validate(f).model_dump() for f in forecast_list]
         return data, "forecasts"
 
-    raise ValueError(f"Unknown export target: {target}")
+    if "users" in targets and not _current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User export is strictly limited to administrators",
+        )
 
-
-@router.get("/targets", response_model=list[ExportTarget])
-def list_export_targets() -> list[dict[str, str]]:
     """エクスポート可能なターゲット一覧を取得.
 
     Returns:
@@ -328,6 +329,14 @@ def download_bulk_export(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid export targets: {invalid_targets}",
+        )
+    
+    # Restrict user export to admins
+    if "users" in targets and not _current_user.is_superuser:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User export is strictly limited to administrators",
         )
 
     # Create ZIP in memory

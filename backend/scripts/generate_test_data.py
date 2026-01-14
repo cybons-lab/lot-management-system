@@ -210,12 +210,11 @@ def scenario_lot_strategy(
     elif scenario == "depleted":
         qty_range = (0, 0)
         expiry_days = (30, 180)
-        allocated_pct = 0.0
         status = "depleted"
     elif scenario == "large":
         qty_range = (500, 1000)
         expiry_days = (90, 365)
-        allocated_pct = 0.25
+        # allocated_pct = 0.25 (unused)
         status = "active"
     else:
         raise ValueError(f"Unknown scenario: {scenario}")

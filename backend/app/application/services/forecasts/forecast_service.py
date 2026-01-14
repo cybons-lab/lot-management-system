@@ -364,7 +364,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             customer_name=get_customer_name(forecast.customer),
             delivery_place_code=get_delivery_place_code(forecast.delivery_place),
             delivery_place_name=get_delivery_place_name(forecast.delivery_place),
-            product_code=product_code,
+            product_code=get_product_code(forecast.product),
             product_name=get_product_name(forecast.product),
         )
 
@@ -395,7 +395,9 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             self.db.commit()
 
             # Regenerate allocation suggestions for this period
-            self._regenerate_allocation_suggestions(data.forecast_period)
+            product_code = get_product_code(db_forecast.product)
+            if product_code:
+                self._regenerate_allocation_suggestions(product_code)
 
         return self.get_forecast_by_id(db_forecast.id)  # type: ignore[return-value]
 

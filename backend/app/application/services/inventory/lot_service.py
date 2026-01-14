@@ -281,9 +281,9 @@ class LotService:
 
     # --- New Methods Extracted from Router ---
 
-    def get_all(self) -> list[LotResponse]:
+    def get_all(self, skip: int = 0, limit: int = 100) -> list[LotResponse]:
         """Get all lots (for bulk export)."""
-        return self.list_lots(limit=100000)
+        return self.list_lots(skip=skip, limit=limit)
 
     def list_lots(
         self,
