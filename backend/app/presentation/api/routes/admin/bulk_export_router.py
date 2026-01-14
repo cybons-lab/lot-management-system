@@ -265,7 +265,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         return user_data, "users"
 
     if target == "lots":
-        from app.presentation.schemas.inventory.lot_schema import LotResponse
+        from app.presentation.schemas.inventory.inventory_schema import LotResponse
 
         lot_service = LotService(db)
         lot_list = lot_service.get_all(limit=10000)
@@ -274,7 +274,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         return data, "lots"
 
     if target == "orders":
-        from app.presentation.schemas.orders.order_schema import OrderLineResponse
+        from app.presentation.schemas.orders.orders_schema import OrderLineResponse
 
         order_service = OrderService(db)
         order_list = order_service.get_all(limit=10000)
