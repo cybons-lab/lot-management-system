@@ -79,6 +79,8 @@ describe("SmartReadSettingsModal", () => {
 
     expect(screen.getByLabelText(/設定名/)).toBeInTheDocument();
     expect(screen.getByLabelText(/APIエンドポイント/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/監視フォルダ/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/出力先フォルダ/)).toBeInTheDocument();
     expect(screen.getByText("作成")).toBeInTheDocument();
   });
 
