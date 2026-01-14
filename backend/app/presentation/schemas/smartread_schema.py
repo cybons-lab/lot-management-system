@@ -20,6 +20,7 @@ class SmartReadConfigCreate(BaseModel):
     export_dir: str | None = Field(default=None, description="出力ディレクトリ")
     input_exts: str | None = Field(default="pdf,png,jpg,jpeg", description="対応拡張子")
     description: str | None = Field(default=None, description="説明")
+    is_active: bool = Field(default=True, description="有効/無効")
 
 
 class SmartReadConfigUpdate(BaseModel):
@@ -45,7 +46,7 @@ class SmartReadConfigResponse(BaseModel):
     id: int
     name: str
     endpoint: str
-    api_key: str
+    # api_key: str  # Security: Do not expose API key
     request_type: str
     template_ids: str | None
     export_type: str
