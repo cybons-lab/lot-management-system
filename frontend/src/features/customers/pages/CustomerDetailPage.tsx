@@ -55,6 +55,7 @@ export function CustomerDetailPage() {
       if (!customerCode) return;
 
       const updateData: CustomerUpdate = {
+        customer_code: data.customer_code,
         customer_name: data.customer_name,
       };
       updateCustomer(
@@ -62,11 +63,15 @@ export function CustomerDetailPage() {
         {
           onSuccess: () => {
             setIsEditing(false);
+            // コードが変更された場合は新しいURLにリダイレクト
+            if (data.customer_code !== customerCode) {
+              navigate(`/customers/${data.customer_code}`);
+            }
           },
         },
       );
     },
-    [customerCode, updateCustomer],
+    [customerCode, updateCustomer, navigate],
   );
 
   // 削除

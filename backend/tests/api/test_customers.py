@@ -201,6 +201,75 @@ def test_update_customer_not_found(test_db: Session, superuser_token_headers):
     assert response.status_code == 404
 
 
+def test_update_customer_code_change_success(test_db: Session, superuser_token_headers):
+    """Test updating customer code (admin only, no related data)."""
+    client = TestClient(app)
+
+    c = Customer(
+        customer_code="OLD-CODE-001",
+        customer_name="Test Customer",
+    )
+    test_db.add(c)
+    test_db.commit()
+
+    update_data = {
+        "customer_code": "NEW-CODE-001",
+        "customer_name": "Updated Name",
+    }
+
+    response = client.put(
+        "/api/masters/customers/OLD-CODE-001", json=update_data, headers=superuser_token_headers
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["customer_code"] == "NEW-CODE-001"
+    assert data["customer_name"] == "Updated Name"
+
+    # Verify old code no longer exists
+    response = client.get("/api/masters/customers/OLD-CODE-001")
+    assert response.status_code == 404
+
+    # Verify new code exists
+    response = client.get("/api/masters/customers/NEW-CODE-001")
+    assert response.status_code == 200
+    assert response.json()["customer_code"] == "NEW-CODE-001"
+
+
+def test_update_customer_code_change_duplicate_returns_409(test_db: Session, superuser_token_headers):
+    """Test updating customer code to existing code returns 409."""
+    client = TestClient(app)
+
+    c1 = Customer(customer_code="EXISTING-CODE", customer_name="Customer 1")
+    c2 = Customer(customer_code="TO-CHANGE", customer_name="Customer 2")
+    test_db.add_all([c1, c2])
+    test_db.commit()
+
+    update_data = {
+        "customer_code": "EXISTING-CODE",  # Duplicate
+    }
+
+    response = client.put(
+        "/api/masters/customers/TO-CHANGE", json=update_data, headers=superuser_token_headers
+    )
+    assert response.status_code == 409
+
+
+def test_update_customer_code_change_non_admin_forbidden(test_db: Session, normal_user_token_headers):
+    """Test non-admin user cannot change customer code."""
+    client = TestClient(app)
+
+    c = Customer(customer_code="ADMIN-ONLY", customer_name="Test Customer")
+    test_db.add(c)
+    test_db.commit()
+
+    update_data = {"customer_code": "NEW-CODE"}
+
+    response = client.put(
+        "/api/masters/customers/ADMIN-ONLY", json=update_data, headers=normal_user_token_headers
+    )
+    assert response.status_code == 403
+
+
 # ===== DELETE /api/masters/customers/{code} Tests =====
 
 

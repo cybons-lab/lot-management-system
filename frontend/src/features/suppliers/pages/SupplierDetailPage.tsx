@@ -41,14 +41,23 @@ export function SupplierDetailPage() {
     (data: { supplier_code: string; supplier_name: string }) => {
       if (!supplierCode) return;
       const updateData: SupplierUpdate = {
+        supplier_code: data.supplier_code,
         supplier_name: data.supplier_name,
       };
       updateSupplier(
         { id: supplierCode, data: updateData },
-        { onSuccess: () => setIsEditing(false) },
+        {
+          onSuccess: () => {
+            setIsEditing(false);
+            // コードが変更された場合は新しいURLにリダイレクト
+            if (data.supplier_code !== supplierCode) {
+              navigate(`/suppliers/${data.supplier_code}`);
+            }
+          },
+        },
       );
     },
-    [supplierCode, updateSupplier],
+    [supplierCode, updateSupplier, navigate],
   );
 
   const handleDelete = useCallback(() => {
