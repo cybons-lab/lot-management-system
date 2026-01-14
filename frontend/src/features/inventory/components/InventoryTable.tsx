@@ -3,6 +3,7 @@
  * InventoryTable - Main inventory table with expandable lot details.
  * Refactored to use DataTable component.
  */
+import { ArrowUpFromLine, History, Lock, Pencil, Unlock } from "lucide-react";
 import { useState, useMemo } from "react";
 
 import { Button } from "@/components/ui";
@@ -291,7 +292,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                           title="編集"
                           className="h-7 w-7 p-0"
                         >
-                          編
+                          <Pencil className="h-4 w-4" />
                         </Button>
                         {Number(lot.locked_quantity || 0) > 0 ? (
                           <Button
@@ -301,7 +302,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                             title="ロック解除"
                             className="h-7 w-7 p-0"
                           >
-                            解
+                            <Unlock className="h-4 w-4" />
                           </Button>
                         ) : (
                           <Button
@@ -311,7 +312,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                             title="ロック"
                             className="h-7 w-7 p-0"
                           >
-                            ロ
+                            <Lock className="h-4 w-4" />
                           </Button>
                         )}
                         <Button
@@ -327,7 +328,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                             0
                           }
                         >
-                          出
+                          <ArrowUpFromLine className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -336,7 +337,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                           title="履歴"
                           className="h-7 w-7 p-0"
                         >
-                          履
+                          <History className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>
