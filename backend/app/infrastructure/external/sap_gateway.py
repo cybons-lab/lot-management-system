@@ -197,7 +197,7 @@ class SapGateway(Protocol):
 
 
 class MockSapGateway:
-    """Mock SAP gateway for development and testing.
+    """TODO: [MOCK] Mock SAP gateway for development and testing.
 
     Always returns success with a generated document number.
     """

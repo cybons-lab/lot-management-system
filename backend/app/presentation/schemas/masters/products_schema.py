@@ -55,7 +55,7 @@ class ProductOut(ORMModel):
     """Product response model."""
 
     id: int
-    product_code: str
+    product_code: str = Field(..., validation_alias="maker_part_code")
     product_name: str
     maker_part_code: str | None = None  # 既存データ互換性のためオプショナル
     base_unit: str | None = None  # 既存データ互換性のためオプショナル

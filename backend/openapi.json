@@ -1982,6 +1982,146 @@
         }
       }
     },
+    "/api/lots/export/download": {
+      "get": {
+        "tags": [
+          "lots"
+        ],
+        "summary": "Export Lots",
+        "description": "ロット一覧をExcelファイルとしてエクスポート.\n\nArgs:\n    product_id: 製品ID（フィルタ）\n    product_code: 製品コード（フィルタ）\n    supplier_code: 仕入先コード（フィルタ）\n    warehouse_code: 倉庫コード（フィルタ）\n    expiry_from: 有効期限開始日（フィルタ）\n    expiry_to: 有効期限終了日（フィルタ）\n    with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）\n    db: データベースセッション\n\nReturns:\n    Response: Excelファイル（application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）",
+        "operationId": "export_lots_api_lots_export_download_get",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "product_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Code"
+            }
+          },
+          {
+            "name": "supplier_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Code"
+            }
+          },
+          {
+            "name": "warehouse_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Warehouse Code"
+            }
+          },
+          {
+            "name": "expiry_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expiry From"
+            }
+          },
+          {
+            "name": "expiry_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expiry To"
+            }
+          },
+          {
+            "name": "with_stock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "With Stock"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/lots": {
       "get": {
         "tags": [
@@ -2728,6 +2868,136 @@
         }
       }
     },
+    "/api/orders/lines/export/download": {
+      "get": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Export Order Lines",
+        "description": "受注明細をExcelでエクスポート.\n\nフィルター条件に一致する受注明細をExcelファイルとしてダウンロードします。\n\nArgs:\n    status: ステータスフィルター\n    customer_code: 得意先コードフィルター\n    product_code: 商品コードフィルター\n    date_from: 納期開始日\n    date_to: 納期終了日\n    order_type: 受注種別フィルター\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: Excelファイル",
+        "operationId": "export_order_lines_api_orders_lines_export_download_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "customer_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Customer Code"
+            }
+          },
+          {
+            "name": "product_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Code"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "name": "order_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/orders": {
       "get": {
         "tags": [
@@ -3292,6 +3562,86 @@
                 "schema": {
                   "$ref": "#/components/schemas/ForecastResponse"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/forecasts/export/download": {
+      "get": {
+        "tags": [
+          "forecasts"
+        ],
+        "summary": "Export Forecasts",
+        "description": "フォーキャストをExcelでエクスポート.\n\nグループ化されたフォーキャストを明細レベルに展開してExcelファイルとして出力します。\n\nArgs:\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: Excelファイル",
+        "operationId": "export_forecasts_api_forecasts_export_download_get",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Customer Id"
+            }
+          },
+          {
+            "name": "delivery_place_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Delivery Place Id"
+            }
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -12852,6 +13202,95 @@
         }
       }
     },
+    "/api/bulk-export/targets": {
+      "get": {
+        "tags": [
+          "bulk-export"
+        ],
+        "summary": "List Export Targets",
+        "description": "エクスポート可能なターゲット一覧を取得.\n\nReturns:\n    list[ExportTarget]: エクスポート可能なデータの一覧",
+        "operationId": "list_export_targets_api_bulk_export_targets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExportTarget"
+                  },
+                  "type": "array",
+                  "title": "Response List Export Targets Api Bulk Export Targets Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk-export/download": {
+      "get": {
+        "tags": [
+          "bulk-export"
+        ],
+        "summary": "Download Bulk Export",
+        "description": "複数データを一括でZIPダウンロード.\n\nArgs:\n    targets: エクスポート対象のキーリスト（例: [\"customers\", \"products\"]）\n    format: ファイル形式（xlsx または csv）\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: ZIPファイル",
+        "operationId": "download_bulk_export_api_bulk_export_download_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "targets",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "エクスポート対象のキー（複数指定可）",
+              "title": "Targets"
+            },
+            "description": "エクスポート対象のキー（複数指定可）"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "ファイル形式（xlsx または csv）",
+              "default": "xlsx",
+              "title": "Format"
+            },
+            "description": "ファイル形式（xlsx または csv）"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/integration/sap/sales-orders": {
       "post": {
         "tags": [
@@ -18850,6 +19289,30 @@
         ],
         "title": "ExpectedLotResponse",
         "description": "Response model for expected lots."
+      },
+      "ExportTarget": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "description"
+        ],
+        "title": "ExportTarget",
+        "description": "Exportable target definition."
       },
       "FefoLineAllocation": {
         "properties": {

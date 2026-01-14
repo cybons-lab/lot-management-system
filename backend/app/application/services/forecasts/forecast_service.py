@@ -176,6 +176,40 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         """Initialize forecast service."""
         super().__init__(db=db, model=ForecastCurrent)
 
+    def get_all(self) -> list[ForecastResponse]:
+        """Get all forecasts for bulk export."""
+        forecasts = (
+            self.db.query(ForecastCurrent)
+            .options(
+                joinedload(ForecastCurrent.customer),
+                joinedload(ForecastCurrent.delivery_place),
+                joinedload(ForecastCurrent.product),
+            )
+            .all()
+        )
+        return [
+            ForecastResponse(
+                id=f.id,
+                customer_id=f.customer_id,
+                delivery_place_id=f.delivery_place_id,
+                product_id=f.product_id,
+                forecast_date=f.forecast_date,
+                forecast_quantity=f.forecast_quantity,
+                unit=f.unit,
+                forecast_period=f.forecast_period,
+                snapshot_at=f.snapshot_at,
+                created_at=f.created_at,
+                updated_at=f.updated_at,
+                customer_code=get_customer_code(f.customer),
+                customer_name=get_customer_name(f.customer),
+                delivery_place_code=get_delivery_place_code(f.delivery_place),
+                delivery_place_name=get_delivery_place_name(f.delivery_place),
+                product_code=get_product_code(f.product),
+                product_name=get_product_name(f.product),
+            )
+            for f in forecasts
+        ]
+
     def get_forecasts(
         self,
         skip: int = 0,

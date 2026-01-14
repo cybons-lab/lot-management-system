@@ -41,6 +41,7 @@ from .masters_models import (
     ProductUomConversion,
     Supplier,
     Warehouse,
+    WarehouseDeliveryRoute,
 )
 from .order_groups_models import OrderGroup
 from .orders_models import Order, OrderLine
@@ -85,6 +86,7 @@ __all__ = [
     "CustomerItem",
     "CustomerItemDeliverySetting",
     "ProductMapping",
+    "WarehouseDeliveryRoute",
     # Inventory
     "Lot",
     "LotOriginType",

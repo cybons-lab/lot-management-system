@@ -290,6 +290,10 @@ class OrderService:
 
         return response_orders
 
+    def get_all(self) -> list[OrderLineResponse]:
+        """Get all order lines for bulk export."""
+        return self.get_order_lines(limit=100000)
+
     def get_order_lines(
         self,
         skip: int = 0,

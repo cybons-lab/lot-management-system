@@ -71,6 +71,23 @@ function dispatchAuthError(message: string = "セッションの有効期限が�
 }
 
 /**
+ * Custom event for mock data detection
+ * Components can listen for this event to show mock indicator
+ */
+export const MOCK_STATUS_EVENT = "api:mock-status";
+
+/**
+ * Dispatch mock status event
+ */
+function dispatchMockStatus(isMock: boolean): void {
+  window.dispatchEvent(
+    new CustomEvent(MOCK_STATUS_EVENT, {
+      detail: { isMock },
+    }),
+  );
+}
+
+/**
  * Handle network errors (no response)
  */
 function handleNetworkError(error: HTTPError, request: Request): HTTPError {
@@ -224,8 +241,12 @@ export const apiClient: KyInstance = ky.create({
     ],
     afterResponse: [
       async (_request, _options, response) => {
-        // Note: Response logging removed to reduce console noise
-        // Enable by setting VITE_HTTP_DEBUG=true if needed
+        // Check for mock status header
+        const isMock = response.headers.get("X-Mock-Status") === "true";
+        if (isMock) {
+          dispatchMockStatus(true);
+        }
+
         return response;
       },
     ],
