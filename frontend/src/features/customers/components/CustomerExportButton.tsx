@@ -19,7 +19,7 @@ export function CustomerExportButton({ size = "default" }: Props) {
     try {
       setIsExporting(true);
       const filename = `customers_${new Date().toISOString().slice(0, 10)}.${format}`;
-      await http.download(`/masters/customers/export/download?format=${format}`, filename);
+      await http.download(`masters/customers/export/download?format=${format}`, filename);
     } catch (error) {
       console.error("Export failed:", error);
       toast.error("エクスポートに失敗しました");

@@ -207,7 +207,7 @@ export function ForecastListPage() {
         actions={
           <div className="flex gap-2">
             <ExportButton
-              apiPath="/forecasts/export/download"
+              apiPath="forecasts/export/download"
               filePrefix="forecasts"
               size="default"
             />

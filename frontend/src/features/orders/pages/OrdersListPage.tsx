@@ -33,7 +33,7 @@ export function OrdersListPage() {
         actions={
           <div className="flex items-center gap-2">
             <ExportButton
-              apiPath="/orders/lines/export/download"
+              apiPath="orders/lines/export/download"
               filePrefix="order_lines"
               size="sm"
             />

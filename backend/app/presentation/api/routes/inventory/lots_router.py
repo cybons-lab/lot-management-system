@@ -261,16 +261,9 @@ def export_lots(
         primary_supplier_ids=None,
     )
 
-    # Export rows
-    rows = [LotExportRow.from_lot(lot) for lot in lots]
-    export_service = ExportService()
-    excel_bytes = export_service.export_to_excel(rows)
-
-    return Response(
-        content=excel_bytes,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=lots.xlsx"},
-    )
+    # Export rows - convert dataclass to dict
+    rows_data = [row.__dict__ for row in [LotExportRow.from_lot(lot) for lot in lots]]
+    return ExportService.export_to_excel(rows_data, "lots")
 
 
 @router.get("", response_model=list[LotResponse])

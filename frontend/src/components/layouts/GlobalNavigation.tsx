@@ -17,6 +17,7 @@ import {
   ClipboardList,
   HelpCircle,
   ChevronDown,
+  Download,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -94,6 +95,12 @@ const navItems: NavItem[] = [
     title: "マスタ",
     href: "/masters",
     icon: Database,
+  },
+  {
+    title: "エクスポート",
+    href: "/admin/export",
+    icon: Download,
+    requireAdmin: true,
   },
   {
     title: "ヘルプ",
