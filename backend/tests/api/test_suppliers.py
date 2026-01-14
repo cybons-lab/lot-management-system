@@ -169,6 +169,52 @@ def test_update_supplier_not_found(test_db: Session):
     assert response.status_code == 404
 
 
+def test_update_supplier_code_change_success(test_db: Session):
+    """Test updating supplier code succeeds."""
+    client = TestClient(app)
+
+    s = Supplier(supplier_code="OLD-SUP-CODE", supplier_name="Test Supplier")
+    test_db.add(s)
+    test_db.commit()
+
+    update_data = {
+        "supplier_code": "NEW-SUP-CODE",
+        "supplier_name": "Updated Supplier",
+    }
+
+    response = client.put("/api/masters/suppliers/OLD-SUP-CODE", json=update_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["supplier_code"] == "NEW-SUP-CODE"
+    assert data["supplier_name"] == "Updated Supplier"
+
+    # Verify old code no longer exists
+    response = client.get("/api/masters/suppliers/OLD-SUP-CODE")
+    assert response.status_code == 404
+
+    # Verify new code exists
+    response = client.get("/api/masters/suppliers/NEW-SUP-CODE")
+    assert response.status_code == 200
+    assert response.json()["supplier_code"] == "NEW-SUP-CODE"
+
+
+def test_update_supplier_code_change_duplicate_returns_409(test_db: Session):
+    """Test updating supplier code to existing code returns 409."""
+    client = TestClient(app)
+
+    s1 = Supplier(supplier_code="EXISTING-SUP", supplier_name="Supplier 1")
+    s2 = Supplier(supplier_code="TO-CHANGE-SUP", supplier_name="Supplier 2")
+    test_db.add_all([s1, s2])
+    test_db.commit()
+
+    update_data = {
+        "supplier_code": "EXISTING-SUP",  # Duplicate
+    }
+
+    response = client.put("/api/masters/suppliers/TO-CHANGE-SUP", json=update_data)
+    assert response.status_code == 409
+
+
 # ===== DELETE /api/masters/suppliers/{code} Tests =====
 
 

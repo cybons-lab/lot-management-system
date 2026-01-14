@@ -175,6 +175,58 @@ def test_update_warehouse_not_found(test_db: Session):
     assert response.status_code == 404
 
 
+def test_update_warehouse_code_change_success(test_db: Session):
+    """Test updating warehouse code succeeds."""
+    client = TestClient(app)
+
+    w = Warehouse(
+        warehouse_code="OLD-WH-CODE",
+        warehouse_name="Test Warehouse",
+        warehouse_type="internal",
+    )
+    test_db.add(w)
+    test_db.commit()
+
+    update_data = {
+        "warehouse_code": "NEW-WH-CODE",
+        "warehouse_name": "Updated Warehouse",
+        "warehouse_type": "external",
+    }
+
+    response = client.put("/api/masters/warehouses/OLD-WH-CODE", json=update_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["warehouse_code"] == "NEW-WH-CODE"
+    assert data["warehouse_name"] == "Updated Warehouse"
+    assert data["warehouse_type"] == "external"
+
+    # Verify old code no longer exists
+    response = client.get("/api/masters/warehouses/OLD-WH-CODE")
+    assert response.status_code == 404
+
+    # Verify new code exists
+    response = client.get("/api/masters/warehouses/NEW-WH-CODE")
+    assert response.status_code == 200
+    assert response.json()["warehouse_code"] == "NEW-WH-CODE"
+
+
+def test_update_warehouse_code_change_duplicate_returns_409(test_db: Session):
+    """Test updating warehouse code to existing code returns 409."""
+    client = TestClient(app)
+
+    w1 = Warehouse(warehouse_code="EXISTING-WH", warehouse_name="Warehouse 1", warehouse_type="internal")
+    w2 = Warehouse(warehouse_code="TO-CHANGE-WH", warehouse_name="Warehouse 2", warehouse_type="internal")
+    test_db.add_all([w1, w2])
+    test_db.commit()
+
+    update_data = {
+        "warehouse_code": "EXISTING-WH",  # Duplicate
+    }
+
+    response = client.put("/api/masters/warehouses/TO-CHANGE-WH", json=update_data)
+    assert response.status_code == 409
+
+
 # ===== DELETE /api/masters/warehouses/{code} Tests =====
 
 

@@ -47,15 +47,24 @@ export function WarehouseDetailPage() {
     (data: { warehouse_code: string; warehouse_name: string; warehouse_type: string }) => {
       if (!warehouseCode) return;
       const updateData: WarehouseUpdate = {
+        warehouse_code: data.warehouse_code,
         warehouse_name: data.warehouse_name,
         warehouse_type: data.warehouse_type,
       };
       updateWarehouse(
         { id: warehouseCode, data: updateData },
-        { onSuccess: () => setIsEditing(false) },
+        {
+          onSuccess: () => {
+            setIsEditing(false);
+            // コードが変更された場合は新しいURLにリダイレクト
+            if (data.warehouse_code !== warehouseCode) {
+              navigate(`/warehouses/${data.warehouse_code}`);
+            }
+          },
+        },
       );
     },
-    [warehouseCode, updateWarehouse],
+    [warehouseCode, updateWarehouse, navigate],
   );
 
   const handleDelete = useCallback(() => {
