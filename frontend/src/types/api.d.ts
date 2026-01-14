@@ -3588,6 +3588,60 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/product-mappings/template/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Product Mappings Template
+     * @description 得意先品番マッピング インポートテンプレートをダウンロード.
+     *
+     *     Args:
+     *         format: ファイル形式（'csv' または 'xlsx'、デフォルト: csv）
+     *         include_sample: サンプル行を含めるか（デフォルト: True）
+     *
+     *     Returns:
+     *         インポート用テンプレートファイル
+     */
+    get: operations["download_product_mappings_template_api_masters_product_mappings_template_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/product-mappings/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Product Mappings
+     * @description 得意先品番マッピングをエクスポート.
+     *
+     *     Args:
+     *         format: エクスポート形式（"csv" または "xlsx"）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         Excel形式またはCSV形式のファイルレスポンス
+     */
+    get: operations["export_product_mappings_api_masters_product_mappings_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/product-mappings": {
     parameters: {
       query?: never;
@@ -5708,6 +5762,121 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/smartread/configs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Configs
+     * @description 全設定一覧を取得.
+     */
+    get: operations["get_configs_api_rpa_smartread_configs_get"];
+    put?: never;
+    /**
+     * Create Config
+     * @description 設定を作成.
+     */
+    post: operations["create_config_api_rpa_smartread_configs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Config
+     * @description 設定を取得.
+     */
+    get: operations["get_config_api_rpa_smartread_configs__config_id__get"];
+    /**
+     * Update Config
+     * @description 設定を更新.
+     */
+    put: operations["update_config_api_rpa_smartread_configs__config_id__put"];
+    post?: never;
+    /**
+     * Delete Config
+     * @description 設定を削除.
+     */
+    delete: operations["delete_config_api_rpa_smartread_configs__config_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/analyze": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze File
+     * @description ファイルをSmartRead APIで解析.
+     *
+     *     アップロードされたファイルをSmartRead OCR APIに送信し、
+     *     解析結果を返します。
+     */
+    post: operations["analyze_file_api_rpa_smartread_analyze_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/export/json": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Export To Json
+     * @description データをJSONでダウンロード.
+     */
+    post: operations["export_to_json_api_rpa_smartread_export_json_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/export/csv": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Export To Csv
+     * @description データをCSVでダウンロード.
+     */
+    post: operations["export_to_csv_api_rpa_smartread_export_csv_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/ocr/import": {
     parameters: {
       query?: never;
@@ -6361,6 +6530,15 @@ export interface components {
        * @description 作成日時
        */
       created_at: string;
+    };
+    /** Body_analyze_file_api_rpa_smartread_analyze_post */
+    Body_analyze_file_api_rpa_smartread_analyze_post: {
+      /**
+       * File
+       * Format: binary
+       * @description 解析するファイル（PDF, PNG, JPG）
+       */
+      file: string;
     };
     /** Body_create_run_api_rpa_material_delivery_note_runs_post */
     Body_create_run_api_rpa_material_delivery_note_runs_post: {
@@ -10723,6 +10901,162 @@ export interface components {
        * @description データソース: 'delivery_setting' | 'customer_item' | 'none'
        */
       source: string;
+    };
+    /**
+     * SmartReadAnalyzeResponse
+     * @description 解析レスポンス.
+     */
+    SmartReadAnalyzeResponse: {
+      /** Success */
+      success: boolean;
+      /** Filename */
+      filename: string;
+      /** Data */
+      data: {
+        [key: string]: unknown;
+      }[];
+      /** Error Message */
+      error_message?: string | null;
+    };
+    /**
+     * SmartReadConfigCreate
+     * @description 設定作成リクエスト.
+     */
+    SmartReadConfigCreate: {
+      /**
+       * Name
+       * @description 設定名
+       */
+      name: string;
+      /**
+       * Endpoint
+       * @description SmartRead APIエンドポイント
+       */
+      endpoint: string;
+      /**
+       * Api Key
+       * @description APIキー
+       */
+      api_key: string;
+      /**
+       * Request Type
+       * @description リクエストタイプ (sync/async)
+       * @default sync
+       */
+      request_type: string;
+      /**
+       * Template Ids
+       * @description テンプレートID（カンマ区切り）
+       */
+      template_ids?: string | null;
+      /**
+       * Export Type
+       * @description エクスポートタイプ (json/csv)
+       * @default json
+       */
+      export_type: string;
+      /**
+       * Aggregation Type
+       * @description 集約タイプ
+       */
+      aggregation_type?: string | null;
+      /**
+       * Watch Dir
+       * @description 監視ディレクトリ
+       */
+      watch_dir?: string | null;
+      /**
+       * Export Dir
+       * @description 出力ディレクトリ
+       */
+      export_dir?: string | null;
+      /**
+       * Input Exts
+       * @description 対応拡張子
+       * @default pdf,png,jpg,jpeg
+       */
+      input_exts: string | null;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+      /**
+       * Is Active
+       * @description 有効/無効
+       * @default true
+       */
+      is_active: boolean;
+    };
+    /**
+     * SmartReadConfigResponse
+     * @description 設定レスポンス.
+     */
+    SmartReadConfigResponse: {
+      /** Id */
+      id: number;
+      /** Name */
+      name: string;
+      /** Endpoint */
+      endpoint: string;
+      /** Request Type */
+      request_type: string;
+      /** Template Ids */
+      template_ids: string | null;
+      /** Export Type */
+      export_type: string;
+      /** Aggregation Type */
+      aggregation_type: string | null;
+      /** Watch Dir */
+      watch_dir: string | null;
+      /** Export Dir */
+      export_dir: string | null;
+      /** Input Exts */
+      input_exts: string | null;
+      /** Description */
+      description: string | null;
+      /** Is Active */
+      is_active: boolean;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * SmartReadConfigUpdate
+     * @description 設定更新リクエスト.
+     */
+    SmartReadConfigUpdate: {
+      /** Name */
+      name?: string | null;
+      /** Endpoint */
+      endpoint?: string | null;
+      /** Api Key */
+      api_key?: string | null;
+      /** Request Type */
+      request_type?: string | null;
+      /** Template Ids */
+      template_ids?: string | null;
+      /** Export Type */
+      export_type?: string | null;
+      /** Aggregation Type */
+      aggregation_type?: string | null;
+      /** Watch Dir */
+      watch_dir?: string | null;
+      /** Export Dir */
+      export_dir?: string | null;
+      /** Input Exts */
+      input_exts?: string | null;
+      /** Description */
+      description?: string | null;
+      /** Is Active */
+      is_active?: boolean | null;
     };
     /**
      * Step2ExecuteRequest
@@ -17132,6 +17466,69 @@ export interface operations {
       };
     };
   };
+  download_product_mappings_template_api_masters_product_mappings_template_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+        include_sample?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_product_mappings_api_masters_product_mappings_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_product_mappings_api_masters_product_mappings_get: {
     parameters: {
       query?: {
@@ -20261,6 +20658,266 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_configs_api_rpa_smartread_configs_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadConfigResponse"][];
+        };
+      };
+    };
+  };
+  create_config_api_rpa_smartread_configs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadConfigCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadConfigResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_config_api_rpa_smartread_configs__config_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadConfigResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_config_api_rpa_smartread_configs__config_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadConfigUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadConfigResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_config_api_rpa_smartread_configs__config_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  analyze_file_api_rpa_smartread_analyze_post: {
+    parameters: {
+      query: {
+        /** @description 使用する設定のID */
+        config_id: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_analyze_file_api_rpa_smartread_analyze_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadAnalyzeResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_to_json_api_rpa_smartread_export_json_post: {
+    parameters: {
+      query?: {
+        /** @description 出力ファイル名 */
+        filename?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          [key: string]: unknown;
+        }[];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_to_csv_api_rpa_smartread_export_csv_post: {
+    parameters: {
+      query?: {
+        /** @description 出力ファイル名 */
+        filename?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          [key: string]: unknown;
+        }[];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
       };
       /** @description Validation Error */
       422: {
