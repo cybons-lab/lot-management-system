@@ -47,6 +47,7 @@ from .orders_models import Order, OrderLine
 from .product_supplier_models import ProductSupplier
 from .rpa_models import RpaRun, RpaRunItem, RpaRunStatus
 from .seed_snapshot_model import SeedSnapshot
+from .smartread_models import SmartReadConfig
 from .soft_delete_mixin import INFINITE_VALID_TO, SoftDeleteMixin
 from .system_config_model import SystemConfig
 from .system_models import ClientLog
@@ -159,4 +160,6 @@ __all__ = [
     "CloudFlowJobStatus",
     # Layer Code
     "LayerCodeMapping",
+    # SmartRead
+    "SmartReadConfig",
 ]
