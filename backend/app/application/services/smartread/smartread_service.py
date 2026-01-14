@@ -99,6 +99,7 @@ class SmartReadService:
         export_dir: str | None = None,
         input_exts: str | None = "pdf,png,jpg,jpeg",
         description: str | None = None,
+        is_active: bool = True,
     ) -> SmartReadConfig:
         """設定を作成.
 
@@ -114,6 +115,7 @@ class SmartReadService:
             export_dir: 出力ディレクトリ
             input_exts: 入力拡張子
             description: 説明
+            is_active: 有効/無効
 
         Returns:
             作成された設定
@@ -130,7 +132,7 @@ class SmartReadService:
             export_dir=export_dir,
             input_exts=input_exts,
             description=description,
-            is_active=True,
+            is_active=is_active,
         )
         self.session.add(config)
         self.session.flush()

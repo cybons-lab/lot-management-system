@@ -72,6 +72,7 @@ def create_config(
         export_dir=request.export_dir,
         input_exts=request.input_exts,
         description=request.description,
+        is_active=request.is_active,
     )
     uow.commit()
     return SmartReadConfigResponse.model_validate(config)

@@ -139,6 +139,7 @@ export function SmartReadPage() {
             </div>
 
             {/* ファイルドロップエリア */}
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
             <div
               className="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-indigo-400 hover:bg-indigo-50/50"
               onDragOver={handleDragOver}
