@@ -3,7 +3,7 @@
  * RPAトップページ - 各種RPA機能へのメニュー
  */
 
-import { FileText, ArrowRight } from "lucide-react";
+import { FileText, ArrowRight, ScanLine } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { RpaSettingsModal } from "../components/RpaSettingsModal";
@@ -68,6 +68,14 @@ export function RPAPage() {
           description="Runデータを使用せず、直接URLとJSONを指定してクラウドフローを実行します。"
           icon={<FileText className="h-6 w-6" />}
           to={ROUTES.RPA.GENERIC_CLOUD_FLOW}
+        />
+
+        {/* SmartRead PDFインポート */}
+        <RPAMenuCard
+          title="SmartRead PDFインポート"
+          description="SmartRead OCRを使用してPDFや画像を解析し、CSVまたはJSONでデータをエクスポートします。"
+          icon={<ScanLine className="h-6 w-6" />}
+          to={ROUTES.RPA.SMARTREAD}
         />
       </div>
     </PageContainer>
