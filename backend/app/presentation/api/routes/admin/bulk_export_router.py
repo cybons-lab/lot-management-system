@@ -326,7 +326,8 @@ def download_bulk_export(
         )
 
     # Restrict user export to admins
-    if "users" in targets and not _current_user.is_superuser:
+    is_admin = any(ur.role.role_code == "admin" for ur in _current_user.user_roles)
+    if "users" in targets and not is_admin:
         from fastapi import HTTPException, status
 
         raise HTTPException(
@@ -334,14 +335,7 @@ def download_bulk_export(
             detail="User export is strictly limited to administrators",
         )
 
-    # Restrict user export to admins
-    if "users" in targets and not _current_user.is_superuser:
-        from fastapi import HTTPException, status
 
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User export is strictly limited to administrators",
-        )
 
     # Create ZIP in memory
     zip_buffer = io.BytesIO()
