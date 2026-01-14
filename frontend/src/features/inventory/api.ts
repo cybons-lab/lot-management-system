@@ -56,6 +56,7 @@ export const getLots = (params?: LotsGetParams) => {
   if (params?.expiry_to) searchParams.append("expiry_to", params.expiry_to);
   if (params?.with_stock !== undefined)
     searchParams.append("with_stock", params.with_stock.toString());
+  if (params?.status) searchParams.append("status", params.status);
   if (params?.prioritize_primary !== undefined)
     searchParams.append("prioritize_primary", params.prioritize_primary.toString());
 
