@@ -124,7 +124,7 @@ r"""引当APIルーター.
     → APIはクライアントに優しい表現を使う
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.application.services.allocations import actions, cancel, fefo
@@ -136,6 +136,7 @@ from app.application.services.allocations.schemas import (
 from app.application.services.auth.auth_service import AuthService
 from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.core.database import get_db
+from app.infrastructure.external.sap_gateway import MockSapGateway, get_sap_gateway
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.schemas.allocations.allocations_schema import (
     AllocationCommitRequest,
@@ -322,10 +323,15 @@ def manual_allocate(
 def confirm_allocation(
     allocation_id: int,
     request: HardAllocationConfirmRequest,
+    response: Response,
     db: Session = Depends(get_db),
     current_user: User = Depends(AuthService.get_current_user),
 ) -> HardAllocationConfirmResponse:
     """Confirm allocation (Soft to Hard)."""
+    # Check for Mock usage
+    if isinstance(get_sap_gateway(), MockSapGateway):
+        response.headers["X-Mock-Status"] = "true"
+
     try:
         # returns confirmed reservation
         confirmed_res = actions.confirm_reservation(
@@ -399,10 +405,15 @@ def confirm_allocation(
 @router.post("/confirm-batch", response_model=HardAllocationBatchConfirmResponse)
 def confirm_allocations_batch(
     request: HardAllocationBatchConfirmRequest,
+    response: Response,
     db: Session = Depends(get_db),
     current_user: User = Depends(AuthService.get_current_user),
 ) -> HardAllocationBatchConfirmResponse:
     """Batch confirm allocations."""
+    # Check for Mock usage
+    if isinstance(get_sap_gateway(), MockSapGateway):
+        response.headers["X-Mock-Status"] = "true"
+
     # returns (confirmed_ids, failed_items)
     confirmed_ids, failed_items = actions.confirm_reservations_batch(
         db,
