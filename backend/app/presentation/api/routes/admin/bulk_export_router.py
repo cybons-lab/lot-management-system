@@ -335,8 +335,6 @@ def download_bulk_export(
             detail="User export is strictly limited to administrators",
         )
 
-
-
     # Create ZIP in memory
     zip_buffer = io.BytesIO()
 
