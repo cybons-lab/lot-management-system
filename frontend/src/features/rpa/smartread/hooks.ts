@@ -5,12 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type {
-  SmartReadConfig,
-  SmartReadConfigCreate,
-  SmartReadConfigUpdate,
-  SmartReadAnalyzeResponse,
-} from "./api";
+import type { SmartReadConfigCreate, SmartReadConfigUpdate, SmartReadAnalyzeResponse } from "./api";
 import {
   getConfigs,
   getConfig,
