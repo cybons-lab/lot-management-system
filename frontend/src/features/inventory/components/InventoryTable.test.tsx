@@ -69,6 +69,7 @@ const mockData: InventoryItem[] = [
     soft_allocated_quantity: "0",
     hard_allocated_quantity: "0",
     available_quantity: "100",
+    lot_count: 0,
     last_updated: "2023-01-01",
   },
 ];

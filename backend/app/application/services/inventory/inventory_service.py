@@ -291,7 +291,7 @@ class InventoryService:
             FROM lots l
             WHERE l.product_id IN :product_ids
               AND l.warehouse_id IN :warehouse_ids
-              AND l.current_quantity > 0 AND l.status = 'active'
+              AND l.status = 'active'
             GROUP BY l.product_id, l.warehouse_id
         """
         count_rows = self.db.execute(
@@ -422,7 +422,7 @@ class InventoryService:
         count_query = """
             SELECT COUNT(id) as cnt FROM lots 
             WHERE product_id = :pid AND warehouse_id = :wid 
-            AND current_quantity > 0 AND status = 'active'
+            AND status = 'active'
         """
         count_res = self.db.execute(
             text(count_query), {"pid": product_id, "wid": warehouse_id}
