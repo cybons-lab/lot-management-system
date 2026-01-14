@@ -350,6 +350,43 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                   )}
                 />
 
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="watch_dir"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>監視フォルダ (インプット)</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="/path/to/input"
+                            {...field}
+                            value={field.value ?? ""}
+                          />
+                        </FormControl>
+                        <FormDescription>自動読み込みを行うフォルダパス</FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="export_dir"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>出力先フォルダ</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="/path/to/output"
+                            {...field}
+                            value={field.value ?? ""}
+                          />
+                        </FormControl>
+                        <FormDescription>解析結果を出力するフォルダパス</FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <div className="flex justify-end gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
                     キャンセル
