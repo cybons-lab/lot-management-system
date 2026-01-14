@@ -152,10 +152,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
       {
         id: "lots",
         header: "ロット数",
-        accessor: (row) => {
-          const lots = getLotsForItem(row.product_id, row.warehouse_id);
-          return lots.length;
-        },
+        accessor: (row) => row.lot_count,
         width: 80,
         align: "right",
         sortable: true,
@@ -213,7 +210,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
         sortable: true,
       },
     ],
-    [getLotsForItem],
+    [],
   );
 
   // アクションボタン

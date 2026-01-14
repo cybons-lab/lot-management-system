@@ -8770,6 +8770,11 @@ export interface components {
        */
       hard_allocated_quantity: string;
       /**
+       * Lot Count
+       * @default 0
+       */
+      lot_count: number;
+      /**
        * Last Updated
        * Format: date-time
        */

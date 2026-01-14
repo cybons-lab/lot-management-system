@@ -20,7 +20,9 @@ export type LotCreateResponse =
 // ===== Inventory Items Types (v2) =====
 
 export type InventoryItem =
-  paths["/api/v2/inventory/"]["get"]["responses"][200]["content"]["application/json"][number];
+  paths["/api/v2/inventory/"]["get"]["responses"][200]["content"]["application/json"][number] & {
+    lot_count: number;
+  };
 
 export type InventoryItemsListParams = paths["/api/v2/inventory/"]["get"]["parameters"]["query"];
 

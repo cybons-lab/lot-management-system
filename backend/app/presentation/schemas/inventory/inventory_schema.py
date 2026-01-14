@@ -236,6 +236,7 @@ class InventoryItemResponse(BaseSchema):
     available_quantity: Decimal
     soft_allocated_quantity: Decimal = Decimal("0")
     hard_allocated_quantity: Decimal = Decimal("0")
+    lot_count: int = 0
     last_updated: datetime
 
     # Joined fields from master tables

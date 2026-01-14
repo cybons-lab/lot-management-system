@@ -155,28 +155,30 @@ def generate_reservations(db: Session):
         if not lot_id:
             continue
 
-        # Create reservation (100% copy of forecast)
-        res = AllocationSuggestion(
-            forecast_id=fc.id,
-            customer_id=fc.customer_id,
-            delivery_place_id=fc.delivery_place_id,
-            product_id=fc.product_id,
-            lot_id=lot_id,
-            quantity=fc.forecast_quantity,
-            allocation_type="soft",
-            source="forecast_copy",
-            forecast_period=forecast_period,
-        )
-        db.add(res)
+        # Randomize reservation: 50% chance to have a reservation (simulates active vs unallocated forecasts)
+        if random.random() < 0.5:
+            # Create reservation (100% copy of forecast for simplicity in this generated set)
+            res = AllocationSuggestion(
+                forecast_id=fc.id,
+                customer_id=fc.customer_id,
+                delivery_place_id=fc.delivery_place_id,
+                product_id=fc.product_id,
+                lot_id=lot_id,
+                quantity=fc.forecast_quantity,
+                allocation_type="soft",
+                source="forecast_copy",
+                forecast_period=forecast_period,
+            )
+            db.add(res)
 
-        # Also create LotReservation Record (for v2 available quantity logic)
-        res_v2 = LotReservation(
-            lot_id=lot_id,
-            source_type=ReservationSourceType.FORECAST.value,
-            source_id=fc.id,  # Link to forecast ID
-            reserved_qty=fc.forecast_quantity,
-            status=ReservationStatus.ACTIVE.value,
-        )
-        db.add(res_v2)
+            # Also create LotReservation Record (for v2 available quantity logic)
+            res_v2 = LotReservation(
+                lot_id=lot_id,
+                source_type=ReservationSourceType.FORECAST.value,
+                source_id=fc.id,  # Link to forecast ID
+                reserved_qty=fc.forecast_quantity,
+                status=ReservationStatus.ACTIVE.value,
+            )
+            db.add(res_v2)
 
     db.commit()

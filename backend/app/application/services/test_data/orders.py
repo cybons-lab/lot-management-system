@@ -130,11 +130,11 @@ def generate_orders(
 
             # status distribution
             if delivery_date < date.today():
-                status = "shipped"
+                status = random.choices(["shipped", "completed"], weights=[80, 20], k=1)[0]
             else:
                 status = random.choices(
-                    ["pending", "allocated"],
-                    weights=[70, 30],
+                    ["pending", "allocated", "cancelled", "on_hold"],
+                    weights=[50, 30, 5, 15],
                     k=1,
                 )[0]
 

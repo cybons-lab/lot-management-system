@@ -174,6 +174,7 @@ class InventoryService:
                     SUM(l.current_quantity) as total_quantity,
                     SUM(l.locked_quantity) as allocated_quantity,
                     SUM(l.current_quantity - l.locked_quantity) as available_quantity,
+                    COUNT(l.id) as lot_count,
                     MAX(l.updated_at) as last_updated,
                     p.product_name,
                     p.maker_part_code AS product_code,
@@ -281,8 +282,31 @@ class InventoryService:
             },
         ).fetchall()
 
-        # Map results for O(1) lookup
-        # key: (product_id, warehouse_id) -> { 'soft': 0.0, 'hard': 0.0 }
+        # 2b. Lot Count Aggregation Query (Active lots only)
+        count_query = """
+            SELECT
+                l.product_id,
+                l.warehouse_id,
+                COUNT(l.id) as lot_count
+            FROM lots l
+            WHERE l.product_id IN :product_ids
+              AND l.warehouse_id IN :warehouse_ids
+              AND l.current_quantity > 0 AND l.status = 'active'
+            GROUP BY l.product_id, l.warehouse_id
+        """
+        count_rows = self.db.execute(
+            text(count_query),
+            {
+                "product_ids": tuple(set(found_products)),
+                "warehouse_ids": tuple(set(found_warehouses)),
+            },
+        ).fetchall()
+
+        # Map counts
+        count_map = {}
+        for row in count_rows:
+            key = (row.product_id, row.warehouse_id)
+            count_map[key] = row.lot_count
         alloc_map = {}
         for row in alloc_rows:
             key = (row.product_id, row.warehouse_id)
@@ -298,6 +322,8 @@ class InventoryService:
         for idx, row in enumerate(result):
             key = (row.product_id, row.warehouse_id)
             allocs = alloc_map.get(key, {"soft": 0.0, "hard": 0.0})
+            # Use query result if available (supplier filtered), else lookup map
+            lot_count = getattr(row, "lot_count", count_map.get(key, 0))
 
             responses.append(
                 InventoryItemResponse(
@@ -309,6 +335,7 @@ class InventoryService:
                     available_quantity=row.available_quantity,
                     soft_allocated_quantity=Decimal(str(allocs["soft"])),
                     hard_allocated_quantity=Decimal(str(allocs["hard"])),
+                    lot_count=lot_count,
                     last_updated=row.last_updated,
                     product_name=row.product_name,
                     product_code=row.product_code,
@@ -391,6 +418,16 @@ class InventoryService:
             elif ar.allocation_type == "hard":
                 hard_qty += float(ar.qty)
 
+        # Get count
+        count_query = """
+            SELECT COUNT(id) as cnt FROM lots 
+            WHERE product_id = :pid AND warehouse_id = :wid 
+            AND current_quantity > 0 AND status = 'active'
+        """
+        count_res = self.db.execute(
+            text(count_query), {"pid": product_id, "wid": warehouse_id}
+        ).scalar()
+
         return InventoryItemResponse(
             id=1,  # Dummy ID
             product_id=row.product_id,
@@ -400,6 +437,7 @@ class InventoryService:
             available_quantity=row.available_quantity,
             soft_allocated_quantity=Decimal(str(soft_qty)),
             hard_allocated_quantity=Decimal(str(hard_qty)),
+            lot_count=count_res or 0,
             last_updated=row.last_updated,
             product_name=row.product_name,
             product_code=row.product_code,

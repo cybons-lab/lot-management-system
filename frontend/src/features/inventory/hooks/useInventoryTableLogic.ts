@@ -19,10 +19,8 @@ export function useInventoryTableLogic() {
   const toggleRow = useCallback((productId: number, warehouseId: number) => {
     const key = `${productId}-${warehouseId}`;
     setExpandedRows((prev) => {
-      const newExpanded = new Set(prev);
-      if (newExpanded.has(key)) {
-        newExpanded.delete(key);
-      } else {
+      const newExpanded = new Set<string>();
+      if (!prev.has(key)) {
         newExpanded.add(key);
       }
       return newExpanded;

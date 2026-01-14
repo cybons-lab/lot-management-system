@@ -20981,6 +20981,11 @@
             "title": "Hard Allocated Quantity",
             "default": "0"
           },
+          "lot_count": {
+            "type": "integer",
+            "title": "Lot Count",
+            "default": 0
+          },
           "last_updated": {
             "type": "string",
             "format": "date-time",
