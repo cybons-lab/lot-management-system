@@ -2,7 +2,9 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { ROUTES } from "@/constants/routes";
+import { getLots } from "@/features/inventory/api";
 import { useLotActions } from "@/features/inventory/hooks/useLotActions";
+import { normalizeLot, type LotUI } from "@/shared/libs/normalize";
 
 /**
  * InventoryTable のビジネスロジックを管理するカスタムフック
@@ -10,11 +12,77 @@ import { useLotActions } from "@/features/inventory/hooks/useLotActions";
 export function useInventoryTableLogic() {
   const navigate = useNavigate();
 
-  // ロット操作ロジック（編集、ロック、ロック解除）
-  const lotActions = useLotActions();
-
   // 展開状態管理（製品ID-倉庫IDのキー）
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const [lotsCache, setLotsCache] = useState<Map<string, LotUI[]>>(new Map());
+  const [loadingLots, setLoadingLots] = useState<Set<string>>(new Set());
+
+  const fetchLotsForItem = useCallback(
+    async (
+      productId: number,
+      warehouseId: number,
+      options?: {
+        force?: boolean;
+      },
+    ) => {
+      const key = `${productId}-${warehouseId}`;
+
+      if (!options?.force) {
+        if (lotsCache.has(key)) return lotsCache.get(key) ?? [];
+        if (loadingLots.has(key)) return [];
+      }
+
+      setLoadingLots((prev) => new Set(prev).add(key));
+
+      try {
+        const response = await getLots({
+          product_id: productId,
+          warehouse_id: warehouseId,
+          with_stock: false,
+        });
+
+        const normalizedLots = (response ?? []).map((item) =>
+          normalizeLot(
+            item as unknown as Record<string, unknown> & {
+              lot_id: number;
+              product_id: number;
+              warehouse_id: number;
+            },
+          ),
+        );
+
+        setLotsCache((prev) => {
+          const next = new Map(prev);
+          next.set(key, normalizedLots);
+          return next;
+        });
+
+        return normalizedLots;
+      } finally {
+        setLoadingLots((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      }
+    },
+    [lotsCache, loadingLots],
+  );
+
+  const refetchLots = useCallback(() => {
+    setLotsCache(new Map());
+
+    expandedRows.forEach((key) => {
+      const [productId, warehouseId] = key.split("-").map(Number);
+      if (!Number.isNaN(productId) && !Number.isNaN(warehouseId)) {
+        void fetchLotsForItem(productId, warehouseId, { force: true });
+      }
+    });
+  }, [expandedRows, fetchLotsForItem]);
+
+  // ロット操作ロジック（編集、ロック、ロック解除）
+  const lotActions = useLotActions({ onLotsChanged: refetchLots });
 
   const toggleRow = useCallback((productId: number, warehouseId: number) => {
     const key = `${productId}-${warehouseId}`;
@@ -36,11 +104,16 @@ export function useInventoryTableLogic() {
 
   const getLotsForItem = useCallback(
     (productId: number, warehouseId: number) => {
-      return lotActions.allLots.filter(
-        (lot) => lot.product_id === productId && lot.warehouse_id === warehouseId,
-      );
+      return lotsCache.get(`${productId}-${warehouseId}`) ?? [];
     },
-    [lotActions.allLots],
+    [lotsCache],
+  );
+
+  const isLotsLoading = useCallback(
+    (productId: number, warehouseId: number) => {
+      return loadingLots.has(`${productId}-${warehouseId}`);
+    },
+    [loadingLots],
   );
 
   const handleViewDetail = useCallback(
@@ -54,7 +127,10 @@ export function useInventoryTableLogic() {
     ...lotActions,
     toggleRow,
     isRowExpanded,
+    fetchLotsForItem,
     getLotsForItem,
+    isLotsLoading,
     handleViewDetail,
+    refetchLots,
   };
 }

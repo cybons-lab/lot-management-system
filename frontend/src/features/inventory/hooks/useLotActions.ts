@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import { useLotsQuery } from "@/hooks/api";
 import { useUpdateLot, useLockLot, useUnlockLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
 import type { LotUI } from "@/shared/libs/normalize";
@@ -9,19 +8,25 @@ import type { LotUI } from "@/shared/libs/normalize";
 /**
  * ロット操作（編集、ロック、ロック解除）のロジックを管理するカスタムフック
  */
-export function useLotActions() {
+interface LotActionsOptions {
+  onLotsChanged?: () => void;
+}
+
+export function useLotActions(options?: LotActionsOptions) {
   const editDialog = useDialog();
   const lockDialog = useDialog();
   const [selectedLot, setSelectedLot] = useState<LotUI | null>(null);
 
-  const { data: allLots = [], refetch: refetchLots } = useLotsQuery({});
+  const notifyLotsChanged = useCallback(() => {
+    options?.onLotsChanged?.();
+  }, [options]);
 
   const updateLotMutation = useUpdateLot(selectedLot?.id ?? 0, {
     onSuccess: () => {
       toast.success("ロットを更新しました");
       editDialog.close();
       setSelectedLot(null);
-      refetchLots();
+      notifyLotsChanged();
     },
     onError: (error) => toast.error(`更新に失敗しました: ${error.message}`),
   });
@@ -31,7 +36,7 @@ export function useLotActions() {
       toast.success("ロットをロックしました");
       lockDialog.close();
       setSelectedLot(null);
-      refetchLots();
+      notifyLotsChanged();
     },
     onError: (error) => toast.error(`ロックに失敗しました: ${error.message}`),
   });
@@ -39,7 +44,7 @@ export function useLotActions() {
   const unlockLotMutation = useUnlockLot({
     onSuccess: () => {
       toast.success("ロットのロックを解除しました");
-      refetchLots();
+      notifyLotsChanged();
     },
     onError: (error) => toast.error(`ロック解除に失敗しました: ${error.message}`),
   });
@@ -81,8 +86,6 @@ export function useLotActions() {
 
   return {
     selectedLot,
-    allLots,
-    refetchLots,
     editDialog,
     lockDialog,
     updateLotMutation,

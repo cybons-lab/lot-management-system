@@ -42,7 +42,9 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
     handleUnlockLot,
     toggleRow,
     isRowExpanded,
+    fetchLotsForItem,
     getLotsForItem,
+    isLotsLoading,
     handleViewDetail,
     handleCloseEdit,
     handleCloseLock,
@@ -89,6 +91,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
       const item = data.find((i) => getItemKey(i) === added);
       if (item) {
         toggleRow(item.product_id, item.warehouse_id);
+        void fetchLotsForItem(item.product_id, item.warehouse_id);
       }
       return;
     }
@@ -233,11 +236,14 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
   // eslint-disable-next-line max-lines-per-function
   const renderExpandedRow = (item: InventoryItem) => {
     const lots = getLotsForItem(item.product_id, item.warehouse_id);
+    const loadingLots = isLotsLoading(item.product_id, item.warehouse_id);
 
     return (
       <div className="px-8 py-4">
         <h4 className="mb-3 text-sm font-semibold text-gray-700">ロット一覧 ({lots.length}件)</h4>
-        {lots.length > 0 ? (
+        {loadingLots && lots.length === 0 ? (
+          <p className="text-sm text-gray-500">ロットを取得中...</p>
+        ) : lots.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
