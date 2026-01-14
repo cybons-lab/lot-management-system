@@ -190,17 +190,14 @@ def scenario_lot_strategy(
     if scenario == "normal":
         qty_range = (100, 500)
         expiry_days = (60, 365)
-        allocated_pct = 0.2
         status = "active"
     elif scenario == "shortage":
         qty_range = (5, 30)
         expiry_days = (30, 180)
-        allocated_pct = 0.1
         status = "active"
     elif scenario == "expiring":
         qty_range = (50, 200)
         expiry_days = (1, 29)
-        allocated_pct = 0.15
         status = "active"
     elif scenario == "expired":
         qty_range = (100, 300)
