@@ -130,14 +130,17 @@
     - パフォーマンス最適化（読み取り専用は軽量）
 """
 
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.application.services.assignments.assignment_service import UserSupplierAssignmentService
 from app.application.services.auth.auth_service import AuthService
+from app.application.services.export.export_service import ExportService
 from app.application.services.inventory.lot_service import LotService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
@@ -153,6 +156,117 @@ from app.presentation.schemas.inventory.inventory_schema import (
 
 
 router = APIRouter(prefix="/lots", tags=["lots"])
+
+
+@dataclass
+class LotExportRow:
+    """ロットエクスポート用の軽量データクラス."""
+
+    ロット番号: str
+    先方品番: str
+    製品名: str
+    仕入先コード: str
+    仕入先名: str
+    倉庫コード: str
+    倉庫名: str
+    現在在庫: str
+    引当済数量: str
+    ロック数量: str
+    単位: str
+    入荷日: str
+    有効期限: str
+    ステータス: str
+    検査ステータス: str
+    ロック理由: str
+
+    @classmethod
+    def from_lot(cls, lot: LotResponse) -> "LotExportRow":
+        """LotResponseからエクスポート行を生成."""
+        # ステータスの日本語変換
+        status_map = {
+            "active": "有効",
+            "depleted": "在庫切れ",
+            "expired": "期限切れ",
+            "quarantine": "隔離",
+            "locked": "ロック中",
+        }
+        inspection_map = {
+            "not_required": "不要",
+            "pending": "検査待ち",
+            "passed": "合格",
+            "failed": "不合格",
+        }
+
+        return cls(
+            ロット番号=lot.lot_number,
+            先方品番=lot.product_code or "",
+            製品名=lot.product_name or "",
+            仕入先コード=lot.supplier_code or "",
+            仕入先名=lot.supplier_name or "",
+            倉庫コード=lot.warehouse_code or "",
+            倉庫名=lot.warehouse_name or "",
+            現在在庫=str(lot.current_quantity),
+            引当済数量=str(lot.allocated_quantity),
+            ロック数量=str(lot.locked_quantity),
+            単位=lot.unit,
+            入荷日=str(lot.received_date) if lot.received_date else "",
+            有効期限=str(lot.expiry_date) if lot.expiry_date else "",
+            ステータス=status_map.get(lot.status.value if lot.status else "", lot.status.value if lot.status else ""),
+            検査ステータス=inspection_map.get(lot.inspection_status or "", lot.inspection_status or ""),
+            ロック理由=lot.lock_reason or "",
+        )
+
+
+@router.get("/export/download")
+def export_lots(
+    product_id: int | None = None,
+    product_code: str | None = None,
+    supplier_code: str | None = None,
+    warehouse_code: str | None = None,
+    expiry_from: date | None = None,
+    expiry_to: date | None = None,
+    with_stock: bool = True,
+    db: Session = Depends(get_db),
+) -> Response:
+    """ロット一覧をExcelファイルとしてエクスポート.
+
+    Args:
+        product_id: 製品ID（フィルタ）
+        product_code: 製品コード（フィルタ）
+        supplier_code: 仕入先コード（フィルタ）
+        warehouse_code: 倉庫コード（フィルタ）
+        expiry_from: 有効期限開始日（フィルタ）
+        expiry_to: 有効期限終了日（フィルタ）
+        with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）
+        db: データベースセッション
+
+    Returns:
+        Response: Excelファイル（application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）
+    """
+    service = LotService(db)
+    lots = service.list_lots(
+        skip=0,
+        limit=10000,  # エクスポート用に十分な件数を取得
+        product_id=product_id,
+        product_code=product_code,
+        supplier_code=supplier_code,
+        warehouse_code=warehouse_code,
+        expiry_from=expiry_from,
+        expiry_to=expiry_to,
+        with_stock=with_stock,
+        primary_supplier_ids=None,
+    )
+
+    # Export rows
+    rows = [LotExportRow.from_lot(lot) for lot in lots]
+    export_service = ExportService()
+    excel_bytes = export_service.export_to_excel(rows)
+
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=lots.xlsx"},
+    )
 
 
 @router.get("", response_model=list[LotResponse])

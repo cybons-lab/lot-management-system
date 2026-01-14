@@ -48,10 +48,18 @@ export function ProductDetailPage() {
       };
       updateProduct(
         { id: productCode, data: updateData },
-        { onSuccess: () => setIsEditing(false) },
+        {
+          onSuccess: () => {
+            setIsEditing(false);
+            // コードが変更された場合は新しいURLにリダイレクト
+            if (data.product_code !== productCode) {
+              navigate(`/products/${data.product_code}`);
+            }
+          },
+        },
       );
     },
-    [productCode, updateProduct],
+    [productCode, updateProduct, navigate],
   );
 
   const handleDelete = useCallback(() => {

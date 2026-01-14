@@ -5,6 +5,7 @@ forecast_history).
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.application.services.common.export_service import ExportService
 from app.application.services.forecasts.forecast_import_service import ForecastImportService
 from app.application.services.forecasts.forecast_service import ForecastService
 from app.presentation.api.deps import get_db
@@ -20,6 +21,44 @@ from app.presentation.schemas.forecasts.forecast_schema import (
 
 
 router = APIRouter(prefix="/forecasts", tags=["forecasts"])
+
+
+# ============================================================
+# Export Schema for cleaner Excel output
+# ============================================================
+
+
+class ForecastExportRow:
+    """フォーキャストエクスポート用の軽量データクラス."""
+
+    def __init__(self, forecast: ForecastResponse, group_snapshot_at: str | None = None):
+        self.得意先コード = forecast.customer_code or ""
+        self.得意先名 = forecast.customer_name or ""
+        self.納入先コード = forecast.delivery_place_code or ""
+        self.納入先名 = forecast.delivery_place_name or ""
+        self.先方品番 = forecast.product_code or ""
+        self.商品名 = forecast.product_name or ""
+        self.予測日 = str(forecast.forecast_date)
+        self.予測数量 = float(forecast.forecast_quantity)
+        self.単位 = forecast.unit or ""
+        self.予測期間 = forecast.forecast_period or ""
+        self.スナップショット日時 = group_snapshot_at or ""
+
+    def model_dump(self):
+        """Pydantic互換のdictメソッド."""
+        return {
+            "得意先コード": self.得意先コード,
+            "得意先名": self.得意先名,
+            "納入先コード": self.納入先コード,
+            "納入先名": self.納入先名,
+            "先方品番": self.先方品番,
+            "商品名": self.商品名,
+            "予測日": self.予測日,
+            "予測数量": self.予測数量,
+            "単位": self.単位,
+            "予測期間": self.予測期間,
+            "スナップショット日時": self.スナップショット日時,
+        }
 
 
 @router.get("", response_model=ForecastListResponse)
@@ -52,6 +91,45 @@ def list_forecasts(
         delivery_place_id=delivery_place_id,
         product_id=product_id,
     )
+
+
+@router.get("/export/download")
+def export_forecasts(
+    customer_id: int | None = None,
+    delivery_place_id: int | None = None,
+    product_id: int | None = None,
+    db: Session = Depends(get_db),
+):
+    """フォーキャストをExcelでエクスポート.
+
+    グループ化されたフォーキャストを明細レベルに展開してExcelファイルとして出力します。
+
+    Args:
+        customer_id: 得意先IDでフィルタ
+        delivery_place_id: 納入先IDでフィルタ
+        product_id: 製品IDでフィルタ
+        db: データベースセッション
+
+    Returns:
+        StreamingResponse: Excelファイル
+    """
+    service = ForecastService(db)
+    result = service.get_forecasts(
+        skip=0,
+        limit=10000,  # エクスポート用に大きめの上限
+        customer_id=customer_id,
+        delivery_place_id=delivery_place_id,
+        product_id=product_id,
+    )
+
+    # グループを展開して明細レベルに変換
+    export_data = []
+    for group in result.items:
+        snapshot_str = group.snapshot_at.isoformat() if group.snapshot_at else ""
+        for forecast in group.forecasts:
+            export_data.append(ForecastExportRow(forecast, snapshot_str))
+
+    return ExportService.export_to_excel(export_data, "forecasts")
 
 
 @router.get("/history", response_model=list[ForecastHistoryResponse])

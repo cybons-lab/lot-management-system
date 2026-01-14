@@ -111,15 +111,6 @@ export function ConfirmedLinesPage() {
         onToggle={handleToggle}
         onToggleAll={handleToggleAll}
       />
-
-      {/* Bottom Action Bar */}
-      <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-6 py-3 shadow-sm">
-        <div className="text-sm text-slate-600">選択: {selectedIds.length}件</div>
-        <Button onClick={handleRegister} disabled={selectedIds.length === 0 || isRegistering}>
-          <Send className="mr-2 h-4 w-4" />
-          {isRegistering ? "登録中..." : "SAP一括登録"}
-        </Button>
-      </div>
     </div>
   );
 }
