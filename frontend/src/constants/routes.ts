@@ -91,6 +91,7 @@ export const ROUTES = {
   RPA: {
     ROOT: "/rpa",
     GENERIC_CLOUD_FLOW: "/rpa/generic-cloud-flow",
+    SMARTREAD: "/rpa/smartread",
     MATERIAL_DELIVERY_NOTE: {
       ROOT: "/rpa/material-delivery-note",
       STEP1: "/rpa/material-delivery-note/step1",
