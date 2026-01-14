@@ -282,7 +282,9 @@ class InventoryService:
             },
         ).fetchall()
 
-        # 2b. Lot Count Aggregation Query (Active lots only)
+        # 2b. Lot Count Aggregation Query
+        # IMPORTANT: This must match the /api/lots endpoint's default behavior
+        # which is with_stock=True (current_quantity > 0)
         count_query = """
             SELECT
                 l.product_id,
@@ -291,7 +293,7 @@ class InventoryService:
             FROM lots l
             WHERE l.product_id IN :product_ids
               AND l.warehouse_id IN :warehouse_ids
-              AND l.status = 'active'
+              AND l.current_quantity > 0 AND l.status = 'active'
             GROUP BY l.product_id, l.warehouse_id
         """
         count_rows = self.db.execute(
@@ -418,11 +420,11 @@ class InventoryService:
             elif ar.allocation_type == "hard":
                 hard_qty += float(ar.qty)
 
-        # Get count
+        # Get count (must match /api/lots default behavior: with_stock=True)
         count_query = """
             SELECT COUNT(id) as cnt FROM lots 
             WHERE product_id = :pid AND warehouse_id = :wid 
-            AND status = 'active'
+            AND current_quantity > 0 AND status = 'active'
         """
         count_res = self.db.execute(
             text(count_query), {"pid": product_id, "wid": warehouse_id}
