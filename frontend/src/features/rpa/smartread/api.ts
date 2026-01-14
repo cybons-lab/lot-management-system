@@ -102,10 +102,7 @@ export async function deleteConfig(configId: number): Promise<void> {
 /**
  * ファイルをSmartRead APIで解析
  */
-export async function analyzeFile(
-  configId: number,
-  file: File,
-): Promise<SmartReadAnalyzeResponse> {
+export async function analyzeFile(configId: number, file: File): Promise<SmartReadAnalyzeResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -149,9 +146,7 @@ export async function downloadCsv(
   const headers = Object.keys(flatData[0] || {});
   const csvRows = [
     headers.join(","),
-    ...flatData.map((row) =>
-      headers.map((h) => JSON.stringify(row[h] ?? "")).join(","),
-    ),
+    ...flatData.map((row) => headers.map((h) => JSON.stringify(row[h] ?? "")).join(",")),
   ];
   const csvContent = csvRows.join("\n");
 
@@ -169,10 +164,7 @@ export async function downloadCsv(
 /**
  * ネストされたオブジェクトをフラット化
  */
-function flattenObject(
-  obj: Record<string, unknown>,
-  prefix: string = "",
-): Record<string, unknown> {
+function flattenObject(obj: Record<string, unknown>, prefix: string = ""): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
   for (const key of Object.keys(obj)) {
