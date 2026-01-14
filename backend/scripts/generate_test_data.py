@@ -18,7 +18,7 @@ Scenarios covered:
 import os
 import random
 import sys
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
@@ -101,7 +101,7 @@ def customer_strategy(draw, customer_id: int):
         id=customer_id,
         customer_code=f"C{1000 + customer_id}",
         customer_name=faker.company(),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
 
 
@@ -132,7 +132,7 @@ def product_strategy(draw, product_id: int):
         external_unit=unit_config["external"],
         qty_per_internal_unit=unit_config["factor"],
         consumption_limit_days=draw(st.integers(min_value=30, max_value=180)),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
 
 
@@ -148,7 +148,7 @@ def warehouse_strategy(draw, warehouse_id: int):
         warehouse_code=f"W{10 + warehouse_id}",
         warehouse_name=f"{faker.city()}倉庫",
         warehouse_type=draw(st.sampled_from(["internal", "external", "supplier"])),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
 
 
@@ -217,11 +217,10 @@ def scenario_lot_strategy(
         received_date=date.today() - timedelta(days=draw(st.integers(min_value=1, max_value=90))),
         expiry_date=expiry_date,
         current_quantity=current_qty,
-        allocated_quantity=allocated_qty,
         unit=draw(st.sampled_from(["PCS", "BOX", "SET"])),
         status=status,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
 
 
