@@ -691,7 +691,16 @@ def generate_test_data():
                         unit=unit,
                         converted_quantity=converted_qty,
                         delivery_place_id=delivery_place_id,
-                        status="pending",
+                        status=random.choices(
+                            ["pending", "allocated", "shipped", "completed", "cancelled", "on_hold"],
+                            weights=[50, 20, 10, 5, 5, 10],
+                            k=1,
+                        )[0],
+                        order_type=random.choices(
+                            ["FORECAST_LINKED", "ORDER", "KANBAN"],
+                            weights=[70, 20, 10],
+                            k=1,
+                        )[0],
                         created_at=datetime.utcnow(),
                         updated_at=datetime.utcnow(),
                     )
@@ -742,7 +751,16 @@ def generate_test_data():
                     unit=unit,
                     converted_quantity=converted_qty,
                     delivery_place_id=delivery_place_id,
-                    status="pending",
+                    status=random.choices(
+                        ["pending", "allocated", "shipped", "completed", "cancelled", "on_hold"],
+                        weights=[40, 30, 10, 5, 5, 10],
+                        k=1,
+                    )[0],
+                    order_type=random.choices(
+                        ["SPOT", "KANBAN", "ORDER"],
+                        weights=[60, 30, 10],
+                        k=1,
+                    )[0],
                     created_at=datetime.utcnow(),
                     updated_at=datetime.utcnow(),
                 )
