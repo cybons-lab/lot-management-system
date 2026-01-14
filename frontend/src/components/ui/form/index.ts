@@ -28,3 +28,4 @@ export {
   FormMessage,
   FormField,
 } from "./form-components";
+export { Switch } from "./switch";
