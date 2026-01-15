@@ -289,6 +289,8 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         data = [ForecastResponse.model_validate(f).model_dump() for f in forecast_list]
         return data, "forecasts"
 
+@router.get("/targets", response_model=list[ExportTarget])
+def list_export_targets() -> list[dict[str, str]]:
     """エクスポート可能なターゲット一覧を取得.
 
     Returns:
