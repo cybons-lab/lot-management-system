@@ -14,9 +14,10 @@ Revises: b2_lot_master_tables
 Create Date: 2026-01-15
 """
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -82,9 +83,7 @@ def upgrade() -> None:
     )
 
     # Add unique constraint for receipt_key
-    op.create_unique_constraint(
-        "uq_lot_receipts_receipt_key", "lot_receipts", ["receipt_key"]
-    )
+    op.create_unique_constraint("uq_lot_receipts_receipt_key", "lot_receipts", ["receipt_key"])
 
     # ============================================================
     # 4. Drop old unique constraint (allow multiple receipts per lot_number)
@@ -152,12 +151,8 @@ def upgrade() -> None:
         comment="出庫明細 - どのreceiptから何個出庫したか",
     )
 
-    op.create_index(
-        "idx_withdrawal_lines_withdrawal", "withdrawal_lines", ["withdrawal_id"]
-    )
-    op.create_index(
-        "idx_withdrawal_lines_lot_receipt", "withdrawal_lines", ["lot_receipt_id"]
-    )
+    op.create_index("idx_withdrawal_lines_withdrawal", "withdrawal_lines", ["withdrawal_id"])
+    op.create_index("idx_withdrawal_lines_lot_receipt", "withdrawal_lines", ["lot_receipt_id"])
     op.create_index(
         "idx_withdrawal_lines_receipt_date",
         "withdrawal_lines",

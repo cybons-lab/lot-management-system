@@ -10,13 +10,14 @@ Revises: fe8a7a830d22
 Create Date: 2026-01-15
 """
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
 revision = "b1_prep_short_names"
-down_revision = "fe8a7a830d22"
+down_revision = "29360a34fdee"
 branch_labels = None
 depends_on = None
 
@@ -54,12 +55,8 @@ def upgrade() -> None:
     )
 
     # Populate initial short_name values (first 10 characters)
-    op.execute(
-        "UPDATE suppliers SET short_name = LEFT(supplier_name, 10) WHERE short_name IS NULL"
-    )
-    op.execute(
-        "UPDATE customers SET short_name = LEFT(customer_name, 10) WHERE short_name IS NULL"
-    )
+    op.execute("UPDATE suppliers SET short_name = LEFT(supplier_name, 10) WHERE short_name IS NULL")
+    op.execute("UPDATE customers SET short_name = LEFT(customer_name, 10) WHERE short_name IS NULL")
     op.execute(
         "UPDATE warehouses SET short_name = LEFT(warehouse_name, 10) WHERE short_name IS NULL"
     )

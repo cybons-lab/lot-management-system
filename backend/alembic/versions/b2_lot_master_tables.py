@@ -9,9 +9,10 @@ Revises: b1_prep_short_names
 Create Date: 2026-01-15
 """
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -140,9 +141,7 @@ def upgrade() -> None:
     op.create_index(
         "idx_missing_mapping_events_customer", "missing_mapping_events", ["customer_id"]
     )
-    op.create_index(
-        "idx_missing_mapping_events_product", "missing_mapping_events", ["product_id"]
-    )
+    op.create_index("idx_missing_mapping_events_product", "missing_mapping_events", ["product_id"])
     op.create_index(
         "idx_missing_mapping_events_occurred", "missing_mapping_events", ["occurred_at"]
     )

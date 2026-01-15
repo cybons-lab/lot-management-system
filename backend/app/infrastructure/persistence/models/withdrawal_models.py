@@ -262,14 +262,14 @@ class Withdrawal(Base):
     )
 
     # Relationships
-    lot: Mapped["Lot | None"] = relationship("Lot")
-    customer: Mapped["Customer | None"] = relationship("Customer")
-    delivery_place: Mapped["DeliveryPlace | None"] = relationship("DeliveryPlace")
-    user: Mapped["User | None"] = relationship("User", foreign_keys=[withdrawn_by])
-    cancelled_by_user: Mapped["User | None"] = relationship("User", foreign_keys=[cancelled_by])
+    lot: Mapped[Lot | None] = relationship("Lot")
+    customer: Mapped[Customer | None] = relationship("Customer")
+    delivery_place: Mapped[DeliveryPlace | None] = relationship("DeliveryPlace")
+    user: Mapped[User | None] = relationship("User", foreign_keys=[withdrawn_by])
+    cancelled_by_user: Mapped[User | None] = relationship("User", foreign_keys=[cancelled_by])
 
     # B-Plan: Withdrawal lines (FIFO consumption from multiple receipts)
-    lines: Mapped[list["WithdrawalLine"]] = relationship(
+    lines: Mapped[list[WithdrawalLine]] = relationship(
         "WithdrawalLine",
         back_populates="withdrawal",
         cascade="all, delete-orphan",
@@ -279,6 +279,7 @@ class Withdrawal(Base):
     def total_quantity(self) -> Decimal:
         """Total quantity from all lines (B-Plan computed)."""
         if self.lines:
-            return sum(line.quantity for line in self.lines)
+            return sum((line.quantity for line in self.lines), Decimal("0"))
         # Fallback to legacy quantity
-        return self.quantity or Decimal("0")
+        return self.quantity if self.quantity is not None else Decimal("0")
+

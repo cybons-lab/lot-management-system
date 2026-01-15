@@ -213,9 +213,9 @@ class Warehouse(SoftDeleteMixin, Base):
     )
 
     # Relationships
-    lots: Mapped[list["Lot"]] = relationship("Lot", back_populates="warehouse")
-    lot_receipts: Mapped[list["LotReceipt"]] = relationship("LotReceipt", back_populates="warehouse")
-    delivery_routes: Mapped[list["WarehouseDeliveryRoute"]] = relationship(
+    lots: Mapped[list[Lot]] = relationship("Lot", back_populates="warehouse")
+    lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="warehouse")
+    delivery_routes: Mapped[list[WarehouseDeliveryRoute]] = relationship(
         "WarehouseDeliveryRoute", back_populates="warehouse", cascade="all, delete-orphan"
     )
 
@@ -253,19 +253,19 @@ class Supplier(SoftDeleteMixin, Base):
     )
 
     # Relationships
-    lots: Mapped[list["Lot"]] = relationship("Lot", back_populates="supplier")
-    lot_masters: Mapped[list["LotMaster"]] = relationship("LotMaster", back_populates="supplier")
-    lot_receipts: Mapped[list["LotReceipt"]] = relationship("LotReceipt", back_populates="supplier")
-    inbound_plans: Mapped[list["InboundPlan"]] = relationship(
+    lots: Mapped[list[Lot]] = relationship("Lot", back_populates="supplier")
+    lot_masters: Mapped[list[LotMaster]] = relationship("LotMaster", back_populates="supplier")
+    lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="supplier")
+    inbound_plans: Mapped[list[InboundPlan]] = relationship(
         "InboundPlan", back_populates="supplier"
     )
-    customer_items: Mapped[list["CustomerItem"]] = relationship(
+    customer_items: Mapped[list[CustomerItem]] = relationship(
         "CustomerItem", back_populates="supplier"
     )
-    user_assignments: Mapped[list["UserSupplierAssignment"]] = relationship(
+    user_assignments: Mapped[list[UserSupplierAssignment]] = relationship(
         "UserSupplierAssignment", back_populates="supplier", cascade="all, delete-orphan"
     )
-    product_suppliers: Mapped[list["ProductSupplier"]] = relationship(
+    product_suppliers: Mapped[list[ProductSupplier]] = relationship(
         "ProductSupplier", back_populates="supplier", cascade="all, delete-orphan"
     )
 
@@ -415,23 +415,23 @@ class Product(SoftDeleteMixin, Base):
     )
 
     # Relationships
-    lots: Mapped[list["Lot"]] = relationship("Lot", back_populates="product")
-    lot_masters: Mapped[list["LotMaster"]] = relationship("LotMaster", back_populates="product")
-    lot_receipts: Mapped[list["LotReceipt"]] = relationship("LotReceipt", back_populates="product")
-    order_lines: Mapped[list["OrderLine"]] = relationship("OrderLine", back_populates="product")
-    forecast_current: Mapped[list["ForecastCurrent"]] = relationship(
+    lots: Mapped[list[Lot]] = relationship("Lot", back_populates="product")
+    lot_masters: Mapped[list[LotMaster]] = relationship("LotMaster", back_populates="product")
+    lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="product")
+    order_lines: Mapped[list[OrderLine]] = relationship("OrderLine", back_populates="product")
+    forecast_current: Mapped[list[ForecastCurrent]] = relationship(
         "ForecastCurrent", back_populates="product"
     )
-    inbound_plan_lines: Mapped[list["InboundPlanLine"]] = relationship(
+    inbound_plan_lines: Mapped[list[InboundPlanLine]] = relationship(
         "InboundPlanLine", back_populates="product"
     )
-    customer_items: Mapped[list["CustomerItem"]] = relationship(
+    customer_items: Mapped[list[CustomerItem]] = relationship(
         "CustomerItem", back_populates="product"
     )
-    uom_conversions: Mapped[list["ProductUomConversion"]] = relationship(
+    uom_conversions: Mapped[list[ProductUomConversion]] = relationship(
         "ProductUomConversion", back_populates="product"
     )
-    product_suppliers: Mapped[list["ProductSupplier"]] = relationship(
+    product_suppliers: Mapped[list[ProductSupplier]] = relationship(
         "ProductSupplier", back_populates="product", cascade="all, delete-orphan"
     )
 

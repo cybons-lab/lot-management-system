@@ -222,19 +222,19 @@ class LotReceipt(Base):
     __mapper_args__ = {"version_id_col": version}
 
     # Relationships
-    lot_master: Mapped["LotMaster"] = relationship("LotMaster", back_populates="receipts")
-    product: Mapped["Product"] = relationship("Product", back_populates="lot_receipts")
-    warehouse: Mapped["Warehouse"] = relationship("Warehouse", back_populates="lot_receipts")
-    supplier: Mapped["Supplier | None"] = relationship("Supplier", back_populates="lot_receipts")
-    expected_lot: Mapped["ExpectedLot | None"] = relationship(
+    lot_master: Mapped[LotMaster] = relationship("LotMaster", back_populates="receipts")
+    product: Mapped[Product] = relationship("Product", back_populates="lot_receipts")
+    warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lot_receipts")
+    supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_receipts")
+    expected_lot: Mapped[ExpectedLot | None] = relationship(
         "ExpectedLot", back_populates="lot_receipt", uselist=False
     )
     # Note: StockHistory and Adjustment relationships may need to be added
     # in inventory_models.py to avoid circular imports
-    reservations: Mapped[list["LotReservation"]] = relationship(
+    reservations: Mapped[list[LotReservation]] = relationship(
         "LotReservation", back_populates="lot_receipt", cascade="all, delete-orphan"
     )
-    withdrawal_lines: Mapped[list["WithdrawalLine"]] = relationship(
+    withdrawal_lines: Mapped[list[WithdrawalLine]] = relationship(
         "WithdrawalLine", back_populates="lot_receipt", cascade="all, delete-orphan"
     )
 
@@ -243,4 +243,3 @@ class LotReceipt(Base):
             f"<LotReceipt(id={self.id}, lot_number={self.lot_number}, "
             f"received_qty={self.received_quantity})>"
         )
-
