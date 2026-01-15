@@ -5,13 +5,15 @@ Revises: b5_refresh_views, fe8a7a830d22
 Create Date: 2026-01-16 01:46:31.275713
 
 """
-from alembic import op
+
 import sqlalchemy as sa
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = 'd8f000e7240b'
-down_revision = ('b5_refresh_views', 'fe8a7a830d22')
+revision = "d8f000e7240b"
+down_revision = ("b5_refresh_views", "fe8a7a830d22")
 branch_labels = None
 depends_on = None
 

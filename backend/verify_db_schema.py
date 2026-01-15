@@ -1,20 +1,19 @@
-
 import sys
-import os
 from pathlib import Path
-from typing import Any, List, Set, Type
+
 
 # Add backend directory to sys.path
 backend_dir = Path(__file__).resolve().parent
 sys.path.append(str(backend_dir))
 
-from sqlalchemy import inspect, create_engine
-from sqlalchemy.orm import DeclarativeMeta
+from sqlalchemy import create_engine, inspect  # noqa: E402
+
+from app.core.config import settings  # noqa: E402
 
 # Import all models to ensure they are registered with Base.metadata
 # (Assuming models are imported in app/infrastructure/persistence/models/__init__.py)
-from app.infrastructure.persistence.models import Base
-from app.core.config import settings
+from app.infrastructure.persistence.models import Base  # noqa: E402
+
 
 def verify_database_schema():
     print("Connecting to database...")
@@ -42,37 +41,37 @@ def verify_database_schema():
         db_view_names = set(inspector.get_view_names())
         db_all_names = db_table_names.union(db_view_names)
     except Exception:
-         # Some dialects/drivers might not support get_view_names easily or raise error
+        # Some dialects/drivers might not support get_view_names easily or raise error
         db_all_names = db_table_names
 
     print(f"Total tables/views in DB: {len(db_all_names)}")
 
     # Iterate over all models registered in Base
     # Base.registry.mappers contains all mapped classes
-    
+
     missing_tables = []
     missing_columns = []
-    
+
     # We can iterate over Base.metadata.tables which maps table_name -> Table object
     # But checking mapped classes is often better to link back to Model name
-    
+
     # Let's verify based on Base.metadata.tables to ensure we catch everything defined in SQLAlchemy
     for table_name, table in Base.metadata.tables.items():
         print(f"Checking table/view: {table_name} ... ", end="")
-        
+
         if table_name not in db_all_names:
             print("MISSING!")
             missing_tables.append(table_name)
             continue
-        
+
         # Check columns
         db_columns = inspector.get_columns(table_name)
-        db_column_names = {col['name'] for col in db_columns}
-        
+        db_column_names = {col["name"] for col in db_columns}
+
         model_column_names = {col.name for col in table.columns}
-        
+
         missing_in_db = model_column_names - db_column_names
-        
+
         if missing_in_db:
             print(f"INCOMPLETE! Missing columns: {missing_in_db}")
             missing_columns.append((table_name, missing_in_db))
@@ -80,23 +79,24 @@ def verify_database_schema():
             print("OK")
 
     print("\n--- Verification Report ---")
-    
+
     if not missing_tables and not missing_columns:
         print("\n✅ SUCCESS: All defined models and columns exist in the database.")
     else:
         print("\n❌ FAILURE: Schema discrepancies found.")
-        
+
         if missing_tables:
             print(f"\nMissing Tables/Views ({len(missing_tables)}):")
             for t in missing_tables:
                 print(f"  - {t}")
-        
+
         if missing_columns:
             print(f"\nTables with Missing Columns ({len(missing_columns)}):")
             for t, cols in missing_columns:
                 print(f"  - {t}: {cols}")
 
     connection.close()
+
 
 if __name__ == "__main__":
     verify_database_schema()

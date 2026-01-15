@@ -1,26 +1,30 @@
-
 from datetime import date
+
 from sqlalchemy.orm import Session
+
 from app.application.services.inventory.inventory_service import InventoryService
+
 
 def test_get_inventory_items_primary_staff_only(db: Session, service_master_data):
     """Test filtering inventory items by primary staff (current user)."""
-    from app.infrastructure.persistence.models.masters_models import Supplier
+    from app.infrastructure.persistence.models.assignments.assignment_models import (
+        UserSupplierAssignment,
+    )
     from app.infrastructure.persistence.models.inventory_models import Lot
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
-    from app.infrastructure.persistence.models.assignments.assignment_models import UserSupplierAssignment
+    from app.infrastructure.persistence.models.masters_models import Supplier
     from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
     service = InventoryService(db)
     product1 = service_master_data["product1"]
     warehouse = service_master_data["warehouse"]
     user = service_master_data["user"]
-    
+
     # 0. Ensure ProductWarehouse exists
     pw = ProductWarehouse(product_id=product1.id, warehouse_id=warehouse.id)
     db.merge(pw)
     db.flush()
-    
+
     # 1. Create a supplier assigned to the current user
     assigned_supplier = Supplier(
         supplier_code="SUP-ASSIGNED",
@@ -31,9 +35,7 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
 
     # Assign user as primary staff
     assignment = UserSupplierAssignment(
-        user_id=user.id,
-        supplier_id=assigned_supplier.id,
-        is_primary=True
+        user_id=user.id, supplier_id=assigned_supplier.id, is_primary=True
     )
     db.add(assignment)
     db.flush()
@@ -87,22 +89,23 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     db.flush()
 
     # 5. Fetch with primary_staff_only=True
-    items = service.get_inventory_items(
-        primary_staff_only=True,
-        current_user_id=user.id
-    )
+    items = service.get_inventory_items(primary_staff_only=True, current_user_id=user.id)
 
     # 6. Verify results
     # Should only contain item from assigned supplier
     assert len(items) == 1
     assert items[0].total_quantity == 50
-    
+
     # 7. Verify fetch without filter returns both (aggregated by product/warehouse)
     items_all = service.get_inventory_items()
     print(f"DEBUG: All Items: {len(items_all)}")
     for i in items_all:
-        print(f"DEBUG: Item: pid={i.product_id}, wid={i.warehouse_id}, qty={i.total_quantity}, name={i.product_name}")
-        
-    target_all = [i for i in items_all if i.product_id == product1.id and i.warehouse_id == warehouse.id]
+        print(
+            f"DEBUG: Item: pid={i.product_id}, wid={i.warehouse_id}, qty={i.total_quantity}, name={i.product_name}"
+        )
+
+    target_all = [
+        i for i in items_all if i.product_id == product1.id and i.warehouse_id == warehouse.id
+    ]
     assert len(target_all) == 1
     assert target_all[0].total_quantity == 80
