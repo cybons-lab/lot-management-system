@@ -557,7 +557,7 @@ class WithdrawalService:
         return [
             DailyWithdrawalSummary(
                 date=row.ship_date,
-                count=row.count,
+                count=int(row.count),
                 total_quantity=row.total_quantity or Decimal("0"),
             )
             for row in rows

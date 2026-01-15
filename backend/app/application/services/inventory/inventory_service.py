@@ -132,6 +132,7 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
 from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
 from app.presentation.schemas.inventory.inventory_schema import (
+    FilterOption,
     FilterOptions,
     InventoryItemResponse,
     InventoryState,
@@ -639,7 +640,9 @@ class InventoryService:
             )
 
         p_rows = self.db.execute(p_stmt).all()
-        products = [{"id": r.id, "code": r.maker_part_code, "name": r.product_name} for r in p_rows]
+        products = [
+            FilterOption(id=r.id, code=r.maker_part_code, name=r.product_name) for r in p_rows
+        ]
 
         # 2. Suppliers (filtered by product if selected)
         s_stmt = select(Supplier.id, Supplier.supplier_code, Supplier.supplier_name).where(
@@ -654,7 +657,9 @@ class InventoryService:
             )
 
         s_rows = self.db.execute(s_stmt).all()
-        suppliers = [{"id": r.id, "code": r.supplier_code, "name": r.supplier_name} for r in s_rows]
+        suppliers = [
+            FilterOption(id=r.id, code=r.supplier_code, name=r.supplier_name) for r in s_rows
+        ]
 
         # 3. Warehouses (Active only)
         w_stmt = select(Warehouse.id, Warehouse.warehouse_code, Warehouse.warehouse_name).where(
@@ -663,7 +668,7 @@ class InventoryService:
 
         w_rows = self.db.execute(w_stmt).all()
         warehouses = [
-            {"id": r.id, "code": r.warehouse_code, "name": r.warehouse_name} for r in w_rows
+            FilterOption(id=r.id, code=r.warehouse_code, name=r.warehouse_name) for r in w_rows
         ]
 
         return FilterOptions(
@@ -671,3 +676,4 @@ class InventoryService:
             suppliers=suppliers,
             warehouses=warehouses,
         )
+

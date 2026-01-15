@@ -187,7 +187,7 @@ def calculate_allocation(
         if lot.available_qty <= 0:
             decision = AllocationDecision(
                 lot_id=lot.lot_id,
-                lot_number=lot.lot_number,
+                lot_number=lot.lot_number or "",
                 score=None,
                 decision="rejected",
                 reason="在庫不足（利用可能数量0）",
@@ -210,7 +210,7 @@ def calculate_allocation(
             score = _calculate_score(single_fit_lot, request.reference_date)
             decision = AllocationDecision(
                 lot_id=single_fit_lot.lot_id,
-                lot_number=single_fit_lot.lot_number,
+                lot_number=single_fit_lot.lot_number or "",
                 score=score,
                 decision="adopted",
                 reason="Single Lot Fit (完全充足)",
@@ -241,7 +241,7 @@ def calculate_allocation(
             # 完全に引き当て可能
             decision = AllocationDecision(
                 lot_id=lot.lot_id,
-                lot_number=lot.lot_number,
+                lot_number=lot.lot_number or "",
                 score=score,
                 decision="adopted",
                 reason="FEFO採用（完全充足）",
@@ -256,7 +256,7 @@ def calculate_allocation(
             if request.allow_partial:
                 decision = AllocationDecision(
                     lot_id=lot.lot_id,
-                    lot_number=lot.lot_number,
+                    lot_number=lot.lot_number or "",
                     score=score,
                     decision="adopted",
                     reason="FEFO採用（部分充足）",
@@ -269,7 +269,7 @@ def calculate_allocation(
                 # 分納不可ならスキップ（ただし通常はallow_partial=True）
                 decision = AllocationDecision(
                     lot_id=lot.lot_id,
-                    lot_number=lot.lot_number,
+                    lot_number=lot.lot_number or "",
                     score=score,
                     decision="rejected",
                     reason="在庫不足かつ分納不可",

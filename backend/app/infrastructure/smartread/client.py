@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
@@ -122,13 +122,13 @@ class SmartReadClient:
 
         # テンプレートID指定がある場合
         if self.template_ids:
-            payload["templateIds"] = self.template_ids
+            payload["templateIds"] = self.template_ids  # type: ignore[assignment]
 
         headers = self._get_headers()
         response = await client.post(url, json=payload, headers=headers)
         response.raise_for_status()
         data = response.json()
-        return data["taskId"]
+        return cast(str, data["taskId"])
 
     async def _upload_file(
         self, client: httpx.AsyncClient, task_id: str, file_content: bytes, filename: str
@@ -144,7 +144,7 @@ class SmartReadClient:
         response = await client.post(url, files=files, headers=headers)
         response.raise_for_status()
         data = response.json()
-        return data["requestId"]
+        return cast(str, data["requestId"])
 
     async def _poll_results(
         self, client: httpx.AsyncClient, request_id: str, timeout_sec: float
@@ -207,9 +207,9 @@ class SmartReadClient:
         # v3レスポンス構造に合わせて調整が必要だが、とりあえず柔軟に
         # results > formResults ?
         if "results" in response:
-            return response["results"]
+            return cast(list[dict[str, Any]], response["results"])
         if "data" in response:
-            return response["data"]
+            return cast(list[dict[str, Any]], response["data"])
         # Fallback
         return [response]
 

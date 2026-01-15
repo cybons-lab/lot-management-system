@@ -87,53 +87,53 @@ def get_master_attr(
 
 def get_product_name(product: Any, default: str = "") -> str:
     """Get product name with soft-delete handling."""
-    return get_master_attr(product, "product_name", default, master_type="product")
+    return str(get_master_attr(product, "product_name", default, master_type="product"))
 
 
 def get_product_code(product: Any, default: str = "") -> str:
     """Get product code with soft-delete handling."""
-    return get_master_attr(product, "maker_part_code", default, master_type="product")
+    return str(get_master_attr(product, "maker_part_code", default, master_type="product"))
 
 
 def get_customer_name(customer: Any, default: str = "") -> str:
     """Get customer name with soft-delete handling."""
-    return get_master_attr(customer, "customer_name", default, master_type="customer")
+    return str(get_master_attr(customer, "customer_name", default, master_type="customer"))
 
 
 def get_customer_code(customer: Any, default: str = "") -> str:
     """Get customer code with soft-delete handling."""
-    return get_master_attr(customer, "customer_code", default, master_type="customer")
+    return str(get_master_attr(customer, "customer_code", default, master_type="customer"))
 
 
 def get_supplier_name(supplier: Any, default: str = "") -> str:
     """Get supplier name with soft-delete handling."""
-    return get_master_attr(supplier, "supplier_name", default, master_type="supplier")
+    return str(get_master_attr(supplier, "supplier_name", default, master_type="supplier"))
 
 
 def get_supplier_code(supplier: Any, default: str = "") -> str:
     """Get supplier code with soft-delete handling."""
-    return get_master_attr(supplier, "supplier_code", default, master_type="supplier")
+    return str(get_master_attr(supplier, "supplier_code", default, master_type="supplier"))
 
 
 def get_warehouse_name(warehouse: Any, default: str = "") -> str:
     """Get warehouse name with soft-delete handling."""
-    return get_master_attr(warehouse, "warehouse_name", default, master_type="warehouse")
+    return str(get_master_attr(warehouse, "warehouse_name", default, master_type="warehouse"))
 
 
 def get_warehouse_code(warehouse: Any, default: str = "") -> str:
     """Get warehouse code with soft-delete handling."""
-    return get_master_attr(warehouse, "warehouse_code", default, master_type="warehouse")
+    return str(get_master_attr(warehouse, "warehouse_code", default, master_type="warehouse"))
 
 
 def get_delivery_place_name(delivery_place: Any, default: str = "") -> str:
     """Get delivery place name with soft-delete handling."""
-    return get_master_attr(
+    return str(get_master_attr(
         delivery_place, "delivery_place_name", default, master_type="delivery_place"
-    )
+    ))
 
 
 def get_delivery_place_code(delivery_place: Any, default: str = "") -> str:
     """Get delivery place code with soft-delete handling."""
-    return get_master_attr(
+    return str(get_master_attr(
         delivery_place, "delivery_place_code", default, master_type="delivery_place"
-    )
+    ))

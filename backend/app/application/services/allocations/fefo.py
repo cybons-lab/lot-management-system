@@ -325,7 +325,7 @@ def calculate_line_allocations(
                     allocate_qty=allocated_qty_float,
                     expiry_date=allocated_lot.expiry_date,
                     receipt_date=allocated_lot.receipt_date,
-                    lot_number=allocated_lot.lot_number,
+                    lot_number=allocated_lot.lot_number or "",
                 )
             )
 
