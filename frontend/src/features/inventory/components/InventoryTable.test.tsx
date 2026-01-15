@@ -81,7 +81,7 @@ describe("InventoryTable", () => {
     const { container } = render(
       <MemoryRouter>
         <InventoryTable data={mockData} isLoading={false} />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Initial widths should be applied to headers
