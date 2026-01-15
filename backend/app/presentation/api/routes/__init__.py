@@ -37,6 +37,7 @@ from app.presentation.api.routes.integration.sap_router import router as sap_rou
 from app.presentation.api.routes.inventory import (
     adjustments_router,
     inbound_plans_router,
+    intake_history_router,
     lots_router,
     withdrawals_router,
 )
@@ -106,6 +107,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(inbound_plans_router, prefix=prefix)
     app.include_router(adjustments_router, prefix=prefix)
     app.include_router(withdrawals_router, prefix=prefix)
+    app.include_router(intake_history_router, prefix=prefix)
 
     # Master data endpoints
     masters_prefix = f"{prefix}/masters"
@@ -174,6 +176,7 @@ __all__ = [
     # "orders_validate_router",  # Disabled: requires OrderValidation* schemas
     "adjustments_router",
     "inbound_plans_router",
+    "intake_history_router",
     "lots_router",
     "withdrawals_router",
     # Forecasts (1)
