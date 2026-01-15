@@ -110,7 +110,7 @@ class LotReceipt(Base):
     )
     expected_lot_id: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey(\"expected_lots.id\", ondelete=\"SET NULL\"),
+        ForeignKey("expected_lots.id", ondelete="SET NULL"),
         nullable=True,
     )
 

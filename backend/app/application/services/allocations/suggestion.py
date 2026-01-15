@@ -10,6 +10,7 @@ For direct usage:
 
 from datetime import UTC
 from decimal import Decimal
+from typing import cast
 
 from sqlalchemy.orm import Session
 

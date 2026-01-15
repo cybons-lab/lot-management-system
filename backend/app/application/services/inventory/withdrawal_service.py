@@ -557,8 +557,8 @@ class WithdrawalService:
         return [
             DailyWithdrawalSummary(
                 date=row.ship_date,
-                count=int(row.count) if not hasattr(row.count, \"__call__\") else row.count(),
-                total_quantity=row.total_quantity or Decimal(\"0\"),
+                count=int(row.count) if not callable(row.count) else row.count(),
+                total_quantity=row.total_quantity or Decimal("0"),
             )
             for row in rows
         ]
