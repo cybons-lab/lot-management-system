@@ -64,7 +64,7 @@ export function TopProductsChart() {
       isLoading={isLoading}
       error={error instanceof Error ? error : null}
     >
-      <div className="h-full min-h-[280px] w-full">
+      <div className="h-[280px] w-full">
         <ResponsiveContainer width="100%" height="100%" className="cursor-pointer">
           <BarChart
             data={chartData}

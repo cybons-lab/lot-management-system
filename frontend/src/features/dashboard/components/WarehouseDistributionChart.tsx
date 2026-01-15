@@ -54,42 +54,44 @@ export function WarehouseDistributionChart() {
       isLoading={isLoading}
       error={error instanceof Error ? error : null}
     >
-      <ResponsiveContainer width="100%" height={280} className="cursor-pointer">
-        <PieChart>
-          <Pie
-            data={chartData}
-            dataKey="value"
-            nameKey="name"
-            cx="50%"
-            cy="50%"
-            outerRadius={90}
-            innerRadius={50}
-            paddingAngle={2}
-            label={({ name, percent }) =>
-              (percent ?? 0) > 0.05 ? `${name} (${((percent ?? 0) * 100).toFixed(0)}%)` : ""
-            }
-            labelLine={false}
-            onClick={handlePieClick}
-          >
-            {chartData.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]}
-              />
-            ))}
-          </Pie>
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "0.5rem",
-              fontSize: "12px",
-            }}
-            formatter={(value: number) => [value.toLocaleString("ja-JP"), "在庫数"]}
-          />
-          <Legend wrapperStyle={{ fontSize: "11px" }} iconType="circle" />
-        </PieChart>
-      </ResponsiveContainer>
+      <div className="h-[280px] w-full">
+        <ResponsiveContainer width="100%" height="100%" className="cursor-pointer">
+          <PieChart>
+            <Pie
+              data={chartData}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={90}
+              innerRadius={50}
+              paddingAngle={2}
+              label={({ name, percent }) =>
+                (percent ?? 0) > 0.05 ? `${name} (${((percent ?? 0) * 100).toFixed(0)}%)` : ""
+              }
+              labelLine={false}
+              onClick={handlePieClick}
+            >
+              {chartData.map((_, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#fff",
+                border: "1px solid #e5e7eb",
+                borderRadius: "0.5rem",
+                fontSize: "12px",
+              }}
+              formatter={(value: number) => [value.toLocaleString("ja-JP"), "在庫数"]}
+            />
+            <Legend wrapperStyle={{ fontSize: "11px" }} iconType="circle" />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     </ChartContainer>
   );
 }
