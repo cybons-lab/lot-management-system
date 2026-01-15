@@ -171,7 +171,7 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         self.db = db
         self.model = model
         # Check if model supports soft delete
-        self._supports_soft_delete = hasattr(model, "__soft_delete__") and model.__soft_delete__
+        self._supports_soft_delete = hasattr(model, "__soft_delete__") and model.__soft_delete__  # type: ignore[attr-defined]
 
     def _has_soft_delete_mixin(self) -> bool:
         """Check if the model supports soft delete."""

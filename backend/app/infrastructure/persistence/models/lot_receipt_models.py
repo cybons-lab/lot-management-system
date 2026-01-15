@@ -110,13 +110,9 @@ class LotReceipt(Base):
     )
     expected_lot_id: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey("expected_lots.id", ondelete="SET NULL"),
+        ForeignKey(\"expected_lots.id\", ondelete=\"SET NULL\"),
         nullable=True,
     )
-
-    # Legacy columns (kept for migration compatibility)
-    # Note: These should eventually be removed in favor of lot_master
-    lot_number: Mapped[str] = mapped_column(String(100), nullable=False)
 
     # Receipt details
     received_date: Mapped[date] = mapped_column(Date, nullable=False)

@@ -163,7 +163,7 @@ class ReservationRepository:
         """
         stmt = (
             select(LotReservation)
-            .options(joinedload(LotReservation.lot))
+            .options(joinedload(LotReservation.lot))  # type: ignore[attr-defined]
             .where(LotReservation.id == reservation_id)
         )
         return cast(LotReservation | None, self.db.execute(stmt).scalar_one_or_none())

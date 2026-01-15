@@ -24,7 +24,7 @@ class ProductCreate(ProductBase):
     """Payload to create a product."""
 
     # product_code は自動採番されるため任意
-    product_code: str | None = None
+    product_code: str | None = None  # type: ignore[assignment]
 
     # 以下2つは必須
     customer_part_no: str = Field(..., min_length=1, description="先方品番")
