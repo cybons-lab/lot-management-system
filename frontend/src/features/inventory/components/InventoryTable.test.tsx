@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 import { InventoryTable } from "./InventoryTable";
@@ -77,7 +78,11 @@ const mockData: InventoryItem[] = [
 
 describe("InventoryTable", () => {
   it("renders resize handles in headers", () => {
-    const { container } = render(<InventoryTable data={mockData} isLoading={false} />);
+    const { container } = render(
+      <MemoryRouter>
+        <InventoryTable data={mockData} isLoading={false} />
+      </MemoryRouter>
+    );
 
     // Initial widths should be applied to headers
     const headers = screen.getAllByRole("columnheader");
