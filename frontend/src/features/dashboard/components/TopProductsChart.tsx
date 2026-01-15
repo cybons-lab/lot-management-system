@@ -64,46 +64,54 @@ export function TopProductsChart() {
       isLoading={isLoading}
       error={error instanceof Error ? error : null}
     >
-      <ResponsiveContainer width="100%" height={280} className="cursor-pointer">
-        <BarChart
-          data={chartData}
-          layout="vertical"
-          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          onClick={handleBarClick}
+      <div className="h-[280px] w-full">
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          minWidth={0}
+          minHeight={0}
+          className="cursor-pointer"
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            type="number"
-            tick={{ fontSize: 11 }}
-            stroke="#6b7280"
-            tickFormatter={(value) => value.toLocaleString("ja-JP")}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            width={120}
-            tick={{ fontSize: 10 }}
-            stroke="#6b7280"
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "0.5rem",
-              fontSize: "12px",
-            }}
-            formatter={(value: number) => [value.toLocaleString("ja-JP"), "在庫数"]}
-          />
-          <Bar dataKey="quantity" radius={[0, 4, 4, 0]}>
-            {chartData.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={index < 3 ? CHART_COLORS.primary : CHART_COLORS.info}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+          <BarChart
+            data={chartData}
+            layout="vertical"
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            onClick={handleBarClick}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis
+              type="number"
+              tick={{ fontSize: 11 }}
+              stroke="#6b7280"
+              tickFormatter={(value) => value.toLocaleString("ja-JP")}
+            />
+            <YAxis
+              type="category"
+              dataKey="name"
+              width={120}
+              tick={{ fontSize: 10 }}
+              stroke="#6b7280"
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#fff",
+                border: "1px solid #e5e7eb",
+                borderRadius: "0.5rem",
+                fontSize: "12px",
+              }}
+              formatter={(value: number) => [value.toLocaleString("ja-JP"), "在庫数"]}
+            />
+            <Bar dataKey="quantity" radius={[0, 4, 4, 0]}>
+              {chartData.map((_, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={index < 3 ? CHART_COLORS.primary : CHART_COLORS.info}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </ChartContainer>
   );
 }

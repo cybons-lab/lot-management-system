@@ -30,7 +30,7 @@ export function InventoryTrendChart() {
   return (
     <ChartContainer title="在庫推移 (直近6ヶ月) (Mock)" subtitle="モックデータ表示中">
       <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <LineChart
             data={MOCK_DATA}
             margin={{

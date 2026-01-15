@@ -88,6 +88,22 @@
             }
           },
           {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Warehouse Id"
+            }
+          },
+          {
             "name": "warehouse_code",
             "in": "query",
             "required": false,
@@ -145,6 +161,22 @@
               "type": "boolean",
               "default": true,
               "title": "With Stock"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
             }
           },
           {
@@ -1678,6 +1710,17 @@
                 }
               ],
               "title": "Supplier Id"
+            }
+          },
+          {
+            "name": "tab",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(in_stock|no_stock|all)$",
+              "default": "all",
+              "title": "Tab"
             }
           }
         ],
@@ -13202,6 +13245,32 @@
         }
       }
     },
+    "/api/bulk-export/targets": {
+      "get": {
+        "tags": [
+          "bulk-export"
+        ],
+        "summary": "List Export Targets",
+        "description": "エクスポート可能なターゲット一覧を取得.\n\nReturns:\n    list[ExportTarget]: エクスポート可能なデータの一覧",
+        "operationId": "list_export_targets_api_bulk_export_targets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExportTarget"
+                  },
+                  "type": "array",
+                  "title": "Response List Export Targets Api Bulk Export Targets Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/bulk-export/download": {
       "get": {
         "tags": [
@@ -14790,6 +14859,120 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/configs/{config_id}/files": {
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "List Watch Dir Files",
+        "description": "監視フォルダ内のファイル一覧を取得.",
+        "operationId": "list_watch_dir_files_api_rpa_smartread_configs__config_id__files_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response List Watch Dir Files Api Rpa Smartread Configs  Config Id  Files Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/configs/{config_id}/process": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Process Files",
+        "description": "監視フォルダ内の指定ファイルを処理.",
+        "operationId": "process_files_api_rpa_smartread_configs__config_id__process_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadProcessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SmartReadAnalyzeResponse"
+                  },
+                  "title": "Response Process Files Api Rpa Smartread Configs  Config Id  Process Post"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -19264,6 +19447,30 @@
         "title": "ExpectedLotResponse",
         "description": "Response model for expected lots."
       },
+      "ExportTarget": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "description"
+        ],
+        "title": "ExportTarget",
+        "description": "Exportable target definition."
+      },
       "FefoLineAllocation": {
         "properties": {
           "order_line_id": {
@@ -20981,15 +21188,19 @@
             "title": "Hard Allocated Quantity",
             "default": "0"
           },
-          "lot_count": {
+          "active_lot_count": {
             "type": "integer",
-            "title": "Lot Count",
+            "title": "Active Lot Count",
             "default": 0
           },
           "last_updated": {
             "type": "string",
             "format": "date-time",
             "title": "Last Updated"
+          },
+          "inventory_state": {
+            "$ref": "#/components/schemas/InventoryState",
+            "default": "no_lots"
           },
           "product_name": {
             "anyOf": [
@@ -21048,6 +21259,16 @@
         ],
         "title": "InventoryItemResponse",
         "description": "API response model for inventory items (aggregated summary).\n\nThis schema represents a calculated summary of inventory from the\nlots table, aggregated by product and warehouse. It does not map to\na physical table."
+      },
+      "InventoryState": {
+        "type": "string",
+        "enum": [
+          "in_stock",
+          "depleted_only",
+          "no_lots"
+        ],
+        "title": "InventoryState",
+        "description": "在庫状態.\n\n- in_stock: 利用可能在庫あり\n- depleted_only: ロットはあるが利用可能0\n- no_lots: ロット0件"
       },
       "InventoryStats": {
         "properties": {
@@ -26263,12 +26484,6 @@
             "title": "Api Key",
             "description": "APIキー"
           },
-          "request_type": {
-            "type": "string",
-            "title": "Request Type",
-            "description": "リクエストタイプ (sync/async)",
-            "default": "sync"
-          },
           "template_ids": {
             "anyOf": [
               {
@@ -26378,10 +26593,6 @@
             "type": "string",
             "title": "Endpoint"
           },
-          "request_type": {
-            "type": "string",
-            "title": "Request Type"
-          },
           "template_ids": {
             "anyOf": [
               {
@@ -26472,7 +26683,6 @@
           "id",
           "name",
           "endpoint",
-          "request_type",
           "template_ids",
           "export_type",
           "aggregation_type",
@@ -26522,17 +26732,6 @@
               }
             ],
             "title": "Api Key"
-          },
-          "request_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Request Type"
           },
           "template_ids": {
             "anyOf": [
@@ -26626,6 +26825,24 @@
         "type": "object",
         "title": "SmartReadConfigUpdate",
         "description": "設定更新リクエスト."
+      },
+      "SmartReadProcessRequest": {
+        "properties": {
+          "filenames": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filenames",
+            "description": "処理するファイル名のリスト"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filenames"
+        ],
+        "title": "SmartReadProcessRequest",
+        "description": "ファイル処理リクエスト."
       },
       "Step2ExecuteRequest": {
         "properties": {

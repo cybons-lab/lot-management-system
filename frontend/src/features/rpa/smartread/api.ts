@@ -10,7 +10,6 @@ export interface SmartReadConfig {
   name: string;
   endpoint: string;
   api_key: string;
-  request_type: string;
   template_ids: string | null;
   export_type: string;
   aggregation_type: string | null;
@@ -27,7 +26,6 @@ export interface SmartReadConfigCreate {
   name: string;
   endpoint: string;
   api_key: string;
-  request_type?: string;
   template_ids?: string | null;
   export_type?: string;
   aggregation_type?: string | null;
@@ -41,7 +39,6 @@ export interface SmartReadConfigUpdate {
   name?: string;
   endpoint?: string;
   api_key?: string;
-  request_type?: string;
   template_ids?: string | null;
   export_type?: string;
   aggregation_type?: string | null;
@@ -109,6 +106,25 @@ export async function analyzeFile(configId: number, file: File): Promise<SmartRe
   return apiClient
     .post(`rpa/smartread/analyze?config_id=${configId}`, { body: formData })
     .json<SmartReadAnalyzeResponse>();
+}
+
+/**
+ * 監視フォルダ内のファイル一覧を取得
+ */
+export async function getWatchDirFiles(configId: number): Promise<string[]> {
+  return http.get<string[]>(`rpa/smartread/configs/${configId}/files`);
+}
+
+/**
+ * 監視フォルダ内の指定ファイルを処理
+ */
+export async function processWatchDirFiles(
+  configId: number,
+  filenames: string[],
+): Promise<SmartReadAnalyzeResponse[]> {
+  return http.post<SmartReadAnalyzeResponse[]>(`rpa/smartread/configs/${configId}/process`, {
+    filenames,
+  });
 }
 
 /**

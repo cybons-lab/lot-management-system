@@ -292,6 +292,16 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
     raise ValueError(f"Unknown export target: {target}")
 
 
+@router.get("/targets", response_model=list[ExportTarget])
+def list_export_targets() -> list[dict[str, str]]:
+    """エクスポート可能なターゲット一覧を取得.
+
+    Returns:
+        list[ExportTarget]: エクスポート可能なデータの一覧
+    """
+    return EXPORT_TARGETS
+
+
 @router.get("/download")
 def download_bulk_export(
     targets: list[str] = Query(..., description="エクスポート対象のキー（複数指定可）"),
