@@ -10,6 +10,7 @@ from decimal import Decimal
 from app.application.services.allocations.suggestion import AllocationSuggestionService
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
 from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
     DeliveryPlace,
@@ -17,7 +18,6 @@ from app.infrastructure.persistence.models.masters_models import (
     Supplier,
     Warehouse,
 )
-from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
 def test_regenerate_for_periods(db):
@@ -237,7 +237,7 @@ def test_regenerate_single_lot_fit(db):
     )
     db.add(lot_master1)
     db.flush()
-    
+
     lot1 = Lot(
         lot_master_id=lot_master1.id,
         lot_number="LOT_OLD_SMALL",

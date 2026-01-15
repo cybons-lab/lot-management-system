@@ -34,6 +34,7 @@ from .logs_models import BatchJob, BusinessRule, MasterChangeLog, OperationLog
 from .lot_master_model import LotMaster
 from .lot_receipt_models import LotReceipt
 
+
 # Backward compatibility: Lot is now an alias for LotReceipt
 # All existing code using Lot will work with the new lot_receipts table
 Lot = LotReceipt

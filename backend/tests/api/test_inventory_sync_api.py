@@ -91,7 +91,7 @@ def _setup_test_data(db: Session):
         Lot(
             supplier_id=supplier.id,
             product_id=products[i - 1].id,
-            lot_master_id=lot_masters[i-1].id,
+            lot_master_id=lot_masters[i - 1].id,
             lot_number=f"LOT{i:03d}",
             warehouse_id=wh.id,
             current_quantity=100.0 * i,  # 100, 200, 300

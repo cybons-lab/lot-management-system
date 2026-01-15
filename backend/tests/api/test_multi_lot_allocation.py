@@ -16,7 +16,6 @@ from app.infrastructure.persistence.models import (
     DeliveryPlace,
     ForecastCurrent,
     Lot,
-    Lot,
     Product,
     Warehouse,
 )

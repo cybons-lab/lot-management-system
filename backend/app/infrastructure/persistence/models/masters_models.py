@@ -164,7 +164,6 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .assignments.assignment_models import UserSupplierAssignment
     from .forecast_models import ForecastCurrent
     from .inbound_models import InboundPlan, InboundPlanLine
-
     from .lot_master_model import LotMaster
     from .lot_receipt_models import LotReceipt
     from .orders_models import Order, OrderLine

@@ -111,6 +111,7 @@ def setup_test_data(db_session):
 
     # LotMaster
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
+
     lot_master = LotMaster(
         product_id=product.id,
         supplier_id=supplier.id,
@@ -210,6 +211,7 @@ class TestAllocationAPI:
         # この商品のロットを作成（有効在庫あり）
         today = date.today()
         from app.infrastructure.persistence.models.lot_master_model import LotMaster
+
         lot_master_no_forecast = LotMaster(
             product_id=product_no_forecast.id,
             supplier_id=setup_test_data.get("supplier_id"),

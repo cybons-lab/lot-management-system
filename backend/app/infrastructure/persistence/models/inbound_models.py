@@ -288,4 +288,6 @@ class ExpectedLot(Base):
     inbound_plan_line: Mapped[InboundPlanLine] = relationship(
         "InboundPlanLine", back_populates="expected_lots"
     )
-    lot_receipt: Mapped[LotReceipt | None] = relationship("LotReceipt", back_populates="expected_lot", uselist=False)
+    lot_receipt: Mapped[LotReceipt | None] = relationship(
+        "LotReceipt", back_populates="expected_lot", uselist=False
+    )

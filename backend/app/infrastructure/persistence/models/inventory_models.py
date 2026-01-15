@@ -143,7 +143,7 @@ models (ExpiryRule) have been removed.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum as PyEnum
 from typing import TYPE_CHECKING
@@ -151,7 +151,6 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     BigInteger,
     CheckConstraint,
-    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -159,23 +158,21 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
-    UniqueConstraint,
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
+from .lot_receipt_models import LotReceipt
+
+# Alias for backward compatibility
+Lot = LotReceipt
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .forecast_models import ForecastCurrent
-    from .inbound_models import ExpectedLot
-    from .lot_receipt_models import LotReceipt as Lot
-    from .lot_reservations_model import LotReservation
-    from .masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
-
+    from .masters_models import Customer, DeliveryPlace, Product
 
 
 # Valid transaction types
@@ -205,7 +202,6 @@ class LotOriginType(str, PyEnum):
 
 # Lot model has been moved to lot_receipt_models.py (LotReceipt)
 # This alias is maintained for backward compatibility during migration
-from .lot_receipt_models import LotReceipt as Lot
 
 
 class StockHistory(Base):
@@ -247,7 +243,7 @@ class StockHistory(Base):
     )
 
     # Relationships
-    lot: Mapped["LotReceipt"] = relationship("LotReceipt", back_populates="stock_history")
+    lot: Mapped[LotReceipt] = relationship("LotReceipt", back_populates="stock_history")
 
 
 class AdjustmentType(str, PyEnum):
@@ -298,7 +294,7 @@ class Adjustment(Base):
     )
 
     # Relationships
-    lot: Mapped["LotReceipt"] = relationship("LotReceipt", back_populates="adjustments")
+    lot: Mapped[LotReceipt] = relationship("LotReceipt", back_populates="adjustments")
 
 
 class AllocationSuggestion(Base):

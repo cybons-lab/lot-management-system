@@ -370,12 +370,12 @@ class WithdrawalService:
 
         return WithdrawalResponse(
             id=withdrawal.id,
-            lot_id=withdrawal.lot_id,
+            lot_id=withdrawal.lot_id or 0,
             lot_number=lot.lot_number if lot else "",
             product_id=lot.product_id if lot else 0,
             product_name=get_product_name(product),
             product_code=get_product_code(product),
-            quantity=withdrawal.quantity,
+            quantity=withdrawal.quantity or Decimal("0"),
             withdrawal_type=withdrawal_type,
             withdrawal_type_label=WITHDRAWAL_TYPE_LABELS.get(
                 withdrawal_type, str(withdrawal_type.value)
@@ -446,7 +446,7 @@ class WithdrawalService:
 
         # 在庫を復元
         quantity_before = lot.current_quantity
-        new_quantity = lot.current_quantity + withdrawal.quantity
+        new_quantity = lot.current_quantity + (withdrawal.quantity or Decimal("0"))
         lot.current_quantity = new_quantity
         lot.updated_at = utcnow()
 
@@ -458,7 +458,7 @@ class WithdrawalService:
         stock_history = StockHistory(
             lot_id=lot.id,
             transaction_type=StockTransactionType.RETURN,
-            quantity_change=+withdrawal.quantity,  # 戻りはプラス
+            quantity_change=+(withdrawal.quantity or Decimal("0")),  # 戻りはプラス
             quantity_after=new_quantity,
             reference_type="withdrawal_cancellation",
             reference_id=withdrawal.id,
@@ -480,7 +480,7 @@ class WithdrawalService:
             lot_id=lot.id,
             quantity_before=quantity_before,
             quantity_after=new_quantity,
-            quantity_change=+withdrawal.quantity,
+            quantity_change=+(withdrawal.quantity or Decimal("0")),
             reason=f"withdrawal_cancellation:{data.reason.value}",
         )
         EventDispatcher.queue(event)

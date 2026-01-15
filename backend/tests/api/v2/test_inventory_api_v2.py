@@ -4,9 +4,8 @@ from decimal import Decimal
 import pytest
 
 from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
-from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
-from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
+from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
 
 @pytest.fixture

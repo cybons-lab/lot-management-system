@@ -129,7 +129,7 @@ class LotReceipt(Base):
         server_default=text("0"),
         comment="入荷数量（初期入荷時の数量）",
     )
-    
+
     # Backward compatibility: current_quantity -> received_quantity
     current_quantity: Mapped[Decimal] = synonym("received_quantity")
 
@@ -231,27 +231,26 @@ class LotReceipt(Base):
     __mapper_args__ = {"version_id_col": version}
 
     # Relationships
-    lot_master: Mapped["LotMaster"] = relationship("LotMaster", back_populates="receipts")
-    product: Mapped["Product"] = relationship("Product", back_populates="lot_receipts")
-    warehouse: Mapped["Warehouse"] = relationship("Warehouse", back_populates="lot_receipts")
-    supplier: Mapped["Supplier | None"] = relationship("Supplier", back_populates="lot_receipts")
-    expected_lot: Mapped["ExpectedLot | None"] = relationship(
+    lot_master: Mapped[LotMaster] = relationship("LotMaster", back_populates="receipts")
+    product: Mapped[Product] = relationship("Product", back_populates="lot_receipts")
+    warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lot_receipts")
+    supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_receipts")
+    expected_lot: Mapped[ExpectedLot | None] = relationship(
         "ExpectedLot", back_populates="lot_receipt", uselist=False
     )
     # B-Plan: stock_history and adjustments from inventory_models.py
-    stock_history: Mapped[list["StockHistory"]] = relationship(
+    stock_history: Mapped[list[StockHistory]] = relationship(
         "StockHistory", back_populates="lot", cascade="all, delete-orphan"
     )
-    adjustments: Mapped[list["Adjustment"]] = relationship(
+    adjustments: Mapped[list[Adjustment]] = relationship(
         "Adjustment", back_populates="lot", cascade="all, delete-orphan"
     )
-    reservations: Mapped[list["LotReservation"]] = relationship(
+    reservations: Mapped[list[LotReservation]] = relationship(
         "LotReservation", back_populates="lot_receipt", cascade="all, delete-orphan"
     )
-    withdrawal_lines: Mapped[list["WithdrawalLine"]] = relationship(
+    withdrawal_lines: Mapped[list[WithdrawalLine]] = relationship(
         "WithdrawalLine", back_populates="lot_receipt", cascade="all, delete-orphan"
     )
-
 
     def __repr__(self) -> str:
         return (

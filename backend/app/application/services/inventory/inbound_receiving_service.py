@@ -13,8 +13,6 @@ from app.infrastructure.persistence.models.inbound_models import (
 from app.infrastructure.persistence.models.inventory_models import (
     Lot,
     StockHistory,
-    Lot,
-    StockHistory,
     StockTransactionType,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
@@ -92,7 +90,9 @@ class InboundReceivingService:
                         temp_key = None
 
                     # Get or Create LotMaster
-                    lm = self._get_or_create_lot_master(lot_number, line.product_id, plan.supplier_id)
+                    lm = self._get_or_create_lot_master(
+                        lot_number, line.product_id, plan.supplier_id
+                    )
 
                     db_lot = Lot(
                         lot_master_id=lm.id,
@@ -222,7 +222,9 @@ class InboundReceivingService:
 
         return lot_number, temp_key_str
 
-    def _get_or_create_lot_master(self, lot_number: str, product_id: int, supplier_id: int) -> LotMaster:
+    def _get_or_create_lot_master(
+        self, lot_number: str, product_id: int, supplier_id: int
+    ) -> LotMaster:
         """Get existing LotMaster or create a new one."""
         lm = (
             self.db.query(LotMaster)
@@ -241,5 +243,5 @@ class InboundReceivingService:
             )
             self.db.add(lm)
             self.db.flush()
-        
+
         return lm

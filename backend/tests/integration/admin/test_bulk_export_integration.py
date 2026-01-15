@@ -84,7 +84,11 @@ def test_bulk_export_download_all_targets_integration(
     from app.infrastructure.persistence.models import Lot
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
-    lm = LotMaster(product_id=master_data["product1"].id, supplier_id=master_data["supplier"].id, lot_number="LOT-001")
+    lm = LotMaster(
+        product_id=master_data["product1"].id,
+        supplier_id=master_data["supplier"].id,
+        lot_number="LOT-001",
+    )
     db.add(lm)
     db.flush()
 

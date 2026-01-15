@@ -282,4 +282,3 @@ class Withdrawal(Base):
             return sum((line.quantity for line in self.lines), Decimal("0"))
         # Fallback to legacy quantity
         return self.quantity if self.quantity is not None else Decimal("0")
-

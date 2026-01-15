@@ -13,16 +13,9 @@ from app.infrastructure.persistence.models import (
     Lot,
     LotReservation,
     Product,
-    Supplier,
-    Lot,
-    LotReservation,
-    Product,
-    Lot,
-    LotReservation,
-    Product,
+    ProductWarehouse,
     Supplier,
     Warehouse,
-    ProductWarehouse,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
