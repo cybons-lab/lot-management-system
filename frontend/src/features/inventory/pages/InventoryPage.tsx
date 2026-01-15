@@ -233,28 +233,31 @@ export function InventoryPage() {
         {overviewMode === "items" && (
           <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "all"
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                filters.tab === "all"
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
-                }`}
+              }`}
               onClick={() => updateFilter("tab", "all")}
             >
               すべて
             </button>
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "in_stock"
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                filters.tab === "in_stock"
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
-                }`}
+              }`}
               onClick={() => updateFilter("tab", "in_stock")}
             >
               ✅ 在庫あり
             </button>
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "no_stock"
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                filters.tab === "no_stock"
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
-                }`}
+              }`}
               onClick={() => updateFilter("tab", "no_stock")}
             >
               ⚠️ 在庫なし

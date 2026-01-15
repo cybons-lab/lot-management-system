@@ -457,7 +457,7 @@ export function DataTable<T = never>({
                         meta?.align === "center" && "text-center",
                         meta?.align === "right" && "text-right",
                         header.column.getCanSort() &&
-                        "cursor-pointer transition-colors select-none hover:bg-slate-100",
+                          "cursor-pointer transition-colors select-none hover:bg-slate-100",
                         meta?.className,
                       )}
                       style={{ width: header.getSize() }}

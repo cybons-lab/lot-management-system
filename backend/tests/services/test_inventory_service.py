@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.application.services.inventory.inventory_service import InventoryService
 from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
 
 def test_get_inventory_items(db: Session, service_master_data):
@@ -25,6 +26,11 @@ def test_get_inventory_items(db: Session, service_master_data):
         unit="EA",
     )
     db.add(lot1)
+    db.flush()
+
+    # Register to product_warehouse
+    pw = ProductWarehouse(product_id=product1.id, warehouse_id=warehouse.id)
+    db.merge(pw)
     db.flush()
 
     # Create reservation to simulate allocated quantity
@@ -88,6 +94,11 @@ def test_get_inventory_item_by_product_warehouse(db: Session, service_master_dat
     db.add(lot1)
     db.flush()
 
+    # Register to product_warehouse
+    pw = ProductWarehouse(product_id=product1.id, warehouse_id=warehouse.id)
+    db.merge(pw)
+    db.flush()
+
     item = service.get_inventory_item_by_product_warehouse(product1.id, warehouse.id)
     assert item is not None
     assert item.total_quantity == 50
@@ -114,6 +125,11 @@ def test_get_inventory_by_supplier(db: Session, service_master_data):
         unit="EA",
     )
     db.add(lot1)
+    db.flush()
+
+    # Register to product_warehouse
+    pw = ProductWarehouse(product_id=product1.id, warehouse_id=warehouse.id)
+    db.merge(pw)
     db.flush()
 
     results = service.get_inventory_by_supplier()
@@ -169,6 +185,11 @@ def test_get_inventory_by_product(db: Session, service_master_data):
         unit="EA",
     )
     db.add(lot1)
+    db.flush()
+
+    # Register to product_warehouse
+    pw = ProductWarehouse(product_id=product1.id, warehouse_id=warehouse.id)
+    db.merge(pw)
     db.flush()
 
     # Create reservation to simulate allocated quantity

@@ -245,7 +245,9 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
             onClick={(e) => {
               e.stopPropagation();
               // ロット新規登録画面へ遷移（製品・倉庫をプリセット）
-              navigate(`/inventory/adhoc/new?product_id=${item.product_id}&warehouse_id=${item.warehouse_id}`);
+              navigate(
+                `/inventory/adhoc/new?product_id=${item.product_id}&warehouse_id=${item.warehouse_id}`,
+              );
             }}
           >
             <Plus className="mr-1 h-4 w-4" />
@@ -374,8 +376,8 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                           className="h-7 w-7 p-0"
                           disabled={
                             Number(lot.current_quantity) -
-                            Number(lot.allocated_quantity) -
-                            Number(lot.locked_quantity || 0) <=
+                              Number(lot.allocated_quantity) -
+                              Number(lot.locked_quantity || 0) <=
                             0
                           }
                         >
