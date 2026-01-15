@@ -18,10 +18,14 @@ from app.core.config import settings
 
 def verify_database_schema():
     print("Connecting to database...")
-    # Use settings for connection string, or fallback if needed
-    # (Assuming settings.SQLALCHEMY_DATABASE_URI exists and is valid)
+    # Use settings for connection string
+    db_url = settings.DATABASE_URL
+    if not db_url:
+        print("FAILED: settings.DATABASE_URL is not set.")
+        return
+
     try:
-        engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
+        engine = create_engine(str(db_url))
         connection = engine.connect()
         inspector = inspect(engine)
         print("Connected.")
