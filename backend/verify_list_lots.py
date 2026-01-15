@@ -14,18 +14,30 @@ def test_list_lots():
     db = SessionLocal()
     try:
         # Inspect schema
+        # Inspect schema - Full Check
         print("Checking v_lot_details schema...")
         result = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name = 'v_lot_details'"))
-        columns = [row[0] for row in result]
-        print(f"Columns in v_lot_details: {columns}")
+        actual_columns = set([row[0] for row in result])
         
-        required_cols = ['primary_user_id', 'primary_username']
-        for col in required_cols:
-            if col not in columns:
-                print(f"CRITICAL ERROR: {col} column MISSING in view!")
-            else:
-                print(f"OK: {col} column exists.")
+        # Expected columns from VLotDetails model
+        expected_columns = {
+            'lot_id', 'lot_number', 'product_id', 'maker_part_code', 'product_name',
+            'warehouse_id', 'warehouse_code', 'warehouse_name', 'supplier_id',
+            'supplier_code', 'supplier_name', 'received_date', 'expiry_date',
+            'current_quantity', 'allocated_quantity', 'locked_quantity',
+            'available_quantity', 'unit', 'status', 'lock_reason', 'days_to_expiry',
+            'temporary_lot_key', 'primary_user_id', 'primary_username',
+            'primary_user_display_name', 'product_deleted', 'warehouse_deleted',
+            'supplier_deleted', 'created_at', 'updated_at'
+        }
 
+        missing_cols = expected_columns - actual_columns
+        if missing_cols:
+            print(f"CRITICAL ERROR: Missing columns in view: {missing_cols}")
+        else:
+            print("OK: All expected columns exist in view.")
+
+        # Simulate detailed list_lots call
         service = LotService(db)
         print("Calling list_lots()...")
         lots = service.list_lots(limit=10)
