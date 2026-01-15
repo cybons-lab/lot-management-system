@@ -238,24 +238,22 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
     // ロットがない場合は「ロット新規登録」ボタンを優先表示
     if (item.inventory_state === "no_lots") {
       return (
-        <div className="flex flex-col gap-1">
+        <div className="flex justify-end gap-2">
           <Button
             variant="default"
             size="sm"
-            className="whitespace-nowrap text-xs"
             onClick={(e) => {
               e.stopPropagation();
               // ロット新規登録画面へ遷移（製品・倉庫をプリセット）
               navigate(`/inventory/adhoc/new?product_id=${item.product_id}&warehouse_id=${item.warehouse_id}`);
             }}
           >
-            <Plus className="mr-1 h-3 w-3" />
+            <Plus className="mr-1 h-4 w-4" />
             登録
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="text-xs"
             onClick={(e) => {
               e.stopPropagation();
               handleViewDetail(item.product_id, item.warehouse_id);

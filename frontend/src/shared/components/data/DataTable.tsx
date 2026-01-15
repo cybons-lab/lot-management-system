@@ -249,7 +249,7 @@ export function DataTable<T = never>({
           // eslint-disable-next-line jsx-a11y/click-events-have-key-events
           <div onClick={(e) => e.stopPropagation()}>{rowActions(row.original)}</div>
         ),
-        size: 96, // w-24 equivalent
+        size: 180, // Enough for 2 buttons side by side
         enableResizing: false,
         enableHiding: false,
         meta: {
@@ -457,7 +457,7 @@ export function DataTable<T = never>({
                         meta?.align === "center" && "text-center",
                         meta?.align === "right" && "text-right",
                         header.column.getCanSort() &&
-                          "cursor-pointer transition-colors select-none hover:bg-slate-100",
+                        "cursor-pointer transition-colors select-none hover:bg-slate-100",
                         meta?.className,
                       )}
                       style={{ width: header.getSize() }}
