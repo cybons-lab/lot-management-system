@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.application.services.inventory.lot_service import LotService
 from app.domain.lot import LotCandidate
 from app.infrastructure.persistence.models import Lot, LotCurrentStock, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
 @pytest.fixture
@@ -19,6 +20,7 @@ def setup_lot_test_data(db_session: Session):
     # 既存データをクリア
     db_session.query(LotCurrentStock).delete()
     db_session.query(Lot).delete()
+    db_session.query(LotMaster).delete()
     db_session.query(Product).delete()
     db_session.query(Supplier).delete()
     db_session.query(Warehouse).delete()
@@ -54,7 +56,12 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
     prod = data["product"]
 
     # 期限が違うロットを2つ（W1に2つ置く）
+    lm_a = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="A")
+    db_session.add(lm_a)
+    db_session.flush()
+
     lot_a = Lot(
+        lot_master_id=lm_a.id,
         supplier_id=sup.id,
         product_id=prod.id,
         lot_number="A",
@@ -65,7 +72,12 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
         current_quantity=3,
         origin_type="order",  # Explicitly set for FEFO candidate filtering
     )
+    lm_b = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="B")
+    db_session.add(lm_b)
+    db_session.flush()
+
     lot_b = Lot(
+        lot_master_id=lm_b.id,
         supplier_id=sup.id,
         product_id=prod.id,
         lot_number="B",
@@ -77,7 +89,12 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
         origin_type="order",  # Explicitly set for FEFO candidate filtering
     )
     # W2にも1つ（フィルタで除外される想定）
+    lm_c = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="C")
+    db_session.add(lm_c)
+    db_session.flush()
+
     lot_c = Lot(
+        lot_master_id=lm_c.id,
         supplier_id=sup.id,
         product_id=prod.id,
         lot_number="C",

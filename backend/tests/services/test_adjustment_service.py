@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.application.services.inventory.adjustment_service import AdjustmentService
 from app.infrastructure.persistence.models.inventory_models import Lot, StockHistory
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.presentation.schemas.inventory.inventory_schema import AdjustmentCreate
 
 
@@ -17,7 +18,12 @@ def test_create_adjustment_increase(db: Session, service_master_data):
 
     user = service_master_data["user"]
 
+    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-1")
+    db.add(lm)
+    db.flush()
+
     lot = Lot(
+        lot_master_id=lm.id,
         lot_number="LOT-ADJ-1",
         product_id=product.id,
         warehouse_id=warehouse.id,
@@ -71,7 +77,12 @@ def test_create_adjustment_decrease(db: Session, service_master_data):
 
     user = service_master_data["user"]
 
+    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-2")
+    db.add(lm)
+    db.flush()
+
     lot = Lot(
+        lot_master_id=lm.id,
         lot_number="LOT-ADJ-2",
         product_id=product.id,
         warehouse_id=warehouse.id,
@@ -109,7 +120,12 @@ def test_create_adjustment_deplete(db: Session, service_master_data):
 
     user = service_master_data["user"]
 
+    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-3")
+    db.add(lm)
+    db.flush()
+
     lot = Lot(
+        lot_master_id=lm.id,
         lot_number="LOT-ADJ-3",
         product_id=product.id,
         warehouse_id=warehouse.id,
@@ -146,7 +162,12 @@ def test_create_adjustment_negative_balance_error(db: Session, service_master_da
 
     user = service_master_data["user"]
 
+    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-4")
+    db.add(lm)
+    db.flush()
+
     lot = Lot(
+        lot_master_id=lm.id,
         lot_number="LOT-ADJ-4",
         product_id=product.id,
         warehouse_id=warehouse.id,
@@ -194,7 +215,12 @@ def test_get_adjustments_filtering(db: Session, service_master_data):
 
     user = service_master_data["user"]
 
+    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-FILT")
+    db.add(lm)
+    db.flush()
+
     lot = Lot(
+        lot_master_id=lm.id,
         lot_number="LOT-ADJ-FILT",
         product_id=product.id,
         warehouse_id=warehouse.id,
@@ -245,7 +271,12 @@ def test_get_adjustment_by_id(db: Session, service_master_data):
 
     user = service_master_data["user"]
 
+    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-GET")
+    db.add(lm)
+    db.flush()
+
     lot = Lot(
+        lot_master_id=lm.id,
         lot_number="LOT-ADJ-GET",
         product_id=product.id,
         warehouse_id=warehouse.id,

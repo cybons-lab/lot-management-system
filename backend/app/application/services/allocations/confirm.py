@@ -139,7 +139,8 @@ from app.application.services.allocations.utils import (
 from app.application.services.inventory.stock_calculation import get_reserved_quantity
 from app.core.time_utils import utcnow
 from app.infrastructure.external.sap_gateway import SapGateway, get_sap_gateway
-from app.infrastructure.persistence.models import Lot, OrderLine
+from app.infrastructure.persistence.models import OrderLine
+from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -211,7 +212,7 @@ def confirm_reservation(
             reservation.reserved_qty = quantity
             db.flush()
 
-    lot_stmt = select(Lot).where(Lot.id == reservation.lot_id).with_for_update()
+    lot_stmt = select(LotReceipt).where(LotReceipt.id == reservation.lot_id).with_for_update()
     lot = db.execute(lot_stmt).scalar_one_or_none()
     if not lot:
         raise AllocationCommitError("LOT_NOT_FOUND", f"Lot ID {reservation.lot_id} not found")

@@ -10,6 +10,7 @@ For direct usage:
 
 from datetime import UTC
 from decimal import Decimal
+from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -98,7 +99,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
         product_id = order_line.product_id
 
         # Fetch lots
-        lots = self._fetch_available_lots([product_id]).get(product_id, [])
+        lots = self._fetch_available_lots([product_id or 0]).get(product_id or 0, [])
 
         suggestions = []
         allocated_total = Decimal("0")
@@ -108,7 +109,9 @@ class AllocationSuggestionService(AllocationSuggestionBase):
             if needed <= 0:
                 break
 
-            available = get_available_quantity(self.db, lot)
+            from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
+
+            available = get_available_quantity(self.db, cast(LotReceipt, lot))
             if available <= 0:
                 continue
 
@@ -121,7 +124,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 customer_id=order_line.order.customer_id,
                 delivery_place_id=order_line.delivery_place_id,
                 product_id=product_id,
-                lot_id=lot.id,
+                lot_id=lot.lot_id,
                 quantity=alloc_qty,
                 priority=priority_counter,
                 allocation_type="soft",
@@ -154,7 +157,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 AllocationGap(
                     customer_id=order_line.order.customer_id,
                     delivery_place_id=order_line.delivery_place_id,
-                    product_id=product_id,
+                    product_id=product_id or 0,
                     forecast_period="PREVIEW",
                     shortage_quantity=shortage,
                 )

@@ -126,9 +126,17 @@ providing product × warehouse summary information.
 
 from decimal import Decimal
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.presentation.schemas.inventory.inventory_schema import InventoryItemResponse
+from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
+from app.presentation.schemas.inventory.inventory_schema import (
+    FilterOption,
+    FilterOptions,
+    InventoryItemResponse,
+    InventoryState,
+)
 
 
 class InventoryService:
@@ -150,6 +158,8 @@ class InventoryService:
         warehouse_id: int | None = None,
         supplier_id: int | None = None,
         tab: str = "all",
+        primary_staff_only: bool = False,
+        current_user_id: int | None = None,
     ) -> list[InventoryItemResponse]:
         """Get inventory items from v_inventory_summary view with product and
         warehouse names.
@@ -161,45 +171,66 @@ class InventoryService:
             warehouse_id: Filter by warehouse ID
             supplier_id: Filter by supplier ID (filters lots by supplier)
             tab: Tab filter - 'in_stock', 'no_stock', or 'all'
+            primary_staff_only: Filter by primary staff (current user)
+            current_user_id: Current user ID (required if primary_staff_only=True)
 
         Returns:
             List of inventory items
         """
         # Join with products and warehouses to get names
-        # If supplier_id is specified, we join lots to filter by supplier
-        if supplier_id is not None:
+        # If supplier_id is specified or filtering by primary staff, we join lots/views to filter by supplier
+        if supplier_id is not None or primary_staff_only:
             # Need to aggregate lots directly since v_inventory_summary doesn't have supplier_id
+            # Use v_lot_receipt_stock view which handles B-Plan logic (withdrawals, etc.)
             query = """
                 SELECT 
-                    l.product_id, 
-                    l.warehouse_id, 
-                    SUM(l.current_quantity) as total_quantity,
-                    SUM(l.locked_quantity) as allocated_quantity,
-                    SUM(l.current_quantity - l.locked_quantity) as available_quantity,
-                    COUNT(l.id) as lot_count,
-                    MAX(l.updated_at) as last_updated,
-                    p.product_name,
-                    p.maker_part_code AS product_code,
-                    w.warehouse_name,
-                    w.warehouse_code
-                FROM lots l
-                LEFT JOIN products p ON l.product_id = p.id
-                LEFT JOIN warehouses w ON l.warehouse_id = w.id
-                WHERE l.current_quantity > 0 AND l.status = 'active'
-                  AND l.supplier_id = :supplier_id
+                    v.product_id, 
+                    v.warehouse_id, 
+                    SUM(v.remaining_quantity) as total_quantity,  -- physical stock
+                    SUM(v.reserved_quantity) as allocated_quantity,
+                    SUM(v.available_quantity) as available_quantity,
+                    COUNT(v.receipt_id) as lot_count,
+                    MAX(v.updated_at) as last_updated,
+                    v.product_name,
+                    v.product_code,
+                    v.warehouse_name,
+                    v.warehouse_code
+                FROM v_lot_receipt_stock v
             """
-            params = {"supplier_id": supplier_id}
+
+            params = {}
+
+            # If primary staff filter is active, join with user_supplier_assignments table
+            if primary_staff_only and current_user_id:
+                query += " JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
+
+            query += " WHERE v.remaining_quantity > 0 AND v.status = 'active'"
+
+            if supplier_id is not None:
+                query += " AND v.supplier_id = :supplier_id"
+                params["supplier_id"] = supplier_id
+
+            if primary_staff_only and current_user_id:
+                query += " AND usa.user_id = :current_user_id AND usa.is_primary = TRUE"
+                params["current_user_id"] = current_user_id
 
             if product_id is not None:
-                query += " AND l.product_id = :product_id"
+                query += " AND v.product_id = :product_id"
                 params["product_id"] = product_id
 
             if warehouse_id is not None:
-                query += " AND l.warehouse_id = :warehouse_id"
+                query += " AND v.warehouse_id = :warehouse_id"
                 params["warehouse_id"] = warehouse_id
 
-            query += " GROUP BY l.product_id, l.warehouse_id, p.product_name, p.maker_part_code, w.warehouse_name, w.warehouse_code"
-            query += " ORDER BY l.product_id, l.warehouse_id LIMIT :limit OFFSET :skip"
+            query += " GROUP BY v.product_id, v.warehouse_id, v.product_name, v.product_code, v.warehouse_name, v.warehouse_code"
+
+            # Tab filter: HAVING clause after GROUP BY
+            if tab == "in_stock":
+                query += " HAVING SUM(v.available_quantity) > 0"
+            elif tab == "no_stock":
+                query += " HAVING SUM(v.available_quantity) = 0"
+
+            query += " ORDER BY v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
             params["limit"] = limit
             params["skip"] = skip
         else:
@@ -264,6 +295,7 @@ class InventoryService:
         # soft = active, hard = confirmed
         alloc_query = """
             SELECT 
+                r.lot_id,
                 l.product_id,
                 l.warehouse_id,
                 CASE 
@@ -273,11 +305,11 @@ class InventoryService:
                 END as allocation_type,
                 SUM(r.reserved_qty) as qty
             FROM lot_reservations r
-            JOIN lots l ON l.id = r.lot_id
+            JOIN v_lot_receipt_stock l ON l.receipt_id = r.lot_id
             WHERE r.status IN ('active', 'confirmed')
               AND l.product_id IN :product_ids
               AND l.warehouse_id IN :warehouse_ids
-            GROUP BY l.product_id, l.warehouse_id, 
+            GROUP BY r.lot_id, l.product_id, l.warehouse_id, 
                 CASE 
                     WHEN r.status = 'active' THEN 'soft'
                     WHEN r.status = 'confirmed' THEN 'hard'
@@ -298,14 +330,14 @@ class InventoryService:
         # which is with_stock=True (current_quantity > 0)
         count_query = """
             SELECT
-                l.product_id,
-                l.warehouse_id,
-                COUNT(l.id) as lot_count
-            FROM lots l
-            WHERE l.product_id IN :product_ids
-              AND l.warehouse_id IN :warehouse_ids
-              AND l.current_quantity > 0 AND l.status = 'active'
-            GROUP BY l.product_id, l.warehouse_id
+                v.product_id,
+                v.warehouse_id,
+                COUNT(v.receipt_id) as lot_count
+            FROM v_lot_receipt_stock v
+            WHERE v.product_id IN :product_ids
+              AND v.warehouse_id IN :warehouse_ids
+              AND v.remaining_quantity > 0 AND v.status = 'active'
+            GROUP BY v.product_id, v.warehouse_id
         """
         count_rows = self.db.execute(
             text(count_query),
@@ -337,8 +369,20 @@ class InventoryService:
             allocs = alloc_map.get(key, {"soft": 0.0, "hard": 0.0})
             # Use active_lot_count from view, fallback to count_map for supplier-filtered query
             active_lot_count = getattr(row, "active_lot_count", count_map.get(key, 0))
-            # Use inventory_state from view, default to "no_lots"
-            inventory_state = getattr(row, "inventory_state", "no_lots")
+
+            # Compute inventory_state from available data if not in result
+            if hasattr(row, "inventory_state") and row.inventory_state:
+                inventory_state = row.inventory_state
+            else:
+                # Determine state based on available_quantity and lot_count
+                available_qty = float(row.available_quantity or 0)
+                lot_cnt = active_lot_count or 0
+                if lot_cnt == 0:
+                    inventory_state = "no_lots"
+                elif available_qty > 0:
+                    inventory_state = "in_stock"
+                else:
+                    inventory_state = "depleted_only"
 
             responses.append(
                 InventoryItemResponse(
@@ -351,7 +395,7 @@ class InventoryService:
                     soft_allocated_quantity=Decimal(str(allocs["soft"])),
                     hard_allocated_quantity=Decimal(str(allocs["hard"])),
                     active_lot_count=active_lot_count,
-                    inventory_state=inventory_state,
+                    inventory_state=InventoryState(inventory_state),
                     last_updated=row.last_updated,
                     product_name=row.product_name,
                     product_code=row.product_code,
@@ -411,7 +455,7 @@ class InventoryService:
                 END as allocation_type,
                 SUM(r.reserved_qty) as qty
             FROM lot_reservations r
-            JOIN lots l ON l.id = r.lot_id
+            JOIN v_lot_receipt_stock l ON l.receipt_id = r.lot_id
             WHERE r.status IN ('active', 'confirmed')
               AND l.product_id = :product_id
               AND l.warehouse_id = :warehouse_id
@@ -436,9 +480,9 @@ class InventoryService:
 
         # Get count (must match /api/lots default behavior: with_stock=True)
         count_query = """
-            SELECT COUNT(id) as cnt FROM lots 
+            SELECT COUNT(receipt_id) as cnt FROM v_lot_receipt_stock 
             WHERE product_id = :pid AND warehouse_id = :wid 
-            AND current_quantity > 0 AND status = 'active'
+            AND remaining_quantity > 0 AND status = 'active'
         """
         count_res = self.db.execute(
             text(count_query), {"pid": product_id, "wid": warehouse_id}
@@ -453,7 +497,7 @@ class InventoryService:
             available_quantity=row.available_quantity,
             soft_allocated_quantity=Decimal(str(soft_qty)),
             hard_allocated_quantity=Decimal(str(hard_qty)),
-            lot_count=count_res or 0,
+            active_lot_count=count_res or 0,
             last_updated=row.last_updated,
             product_name=row.product_name,
             product_code=row.product_code,
@@ -470,16 +514,15 @@ class InventoryService:
         query = """
             SELECT 
                 l.supplier_id,
-                s.supplier_name,
-                s.supplier_code,
-                SUM(l.current_quantity) as total_quantity,
-                COUNT(l.id) as lot_count,
+                l.supplier_name,
+                l.supplier_code,
+                SUM(l.remaining_quantity) as total_quantity,
+                COUNT(l.receipt_id) as lot_count,
                 COUNT(DISTINCT l.product_id) as product_count
-            FROM lots l
-            JOIN suppliers s ON l.supplier_id = s.id
-            WHERE l.current_quantity > 0 AND l.status = 'active'
-            GROUP BY l.supplier_id, s.supplier_name, s.supplier_code
-            ORDER BY s.supplier_code
+            FROM v_lot_receipt_stock l
+            WHERE l.remaining_quantity > 0 AND l.status = 'active' AND l.supplier_id IS NOT NULL
+            GROUP BY l.supplier_id, l.supplier_name, l.supplier_code
+            ORDER BY l.supplier_code
         """
         from sqlalchemy import text
 
@@ -505,16 +548,15 @@ class InventoryService:
         query = """
             SELECT 
                 l.warehouse_id,
-                w.warehouse_name,
-                w.warehouse_code,
-                SUM(l.current_quantity) as total_quantity,
-                COUNT(l.id) as lot_count,
+                l.warehouse_name,
+                l.warehouse_code,
+                SUM(l.remaining_quantity) as total_quantity,
+                COUNT(l.receipt_id) as lot_count,
                 COUNT(DISTINCT l.product_id) as product_count
-            FROM lots l
-            JOIN warehouses w ON l.warehouse_id = w.id
-            WHERE l.current_quantity > 0 AND l.status = 'active'
-            GROUP BY l.warehouse_id, w.warehouse_name, w.warehouse_code
-            ORDER BY w.warehouse_code
+            FROM v_lot_receipt_stock l
+            WHERE l.remaining_quantity > 0 AND l.status = 'active'
+            GROUP BY l.warehouse_id, l.warehouse_name, l.warehouse_code
+            ORDER BY l.warehouse_code
         """
         from sqlalchemy import text
 
@@ -540,27 +582,17 @@ class InventoryService:
         query = """
             SELECT 
                 l.product_id,
-                p.product_name,
-                p.maker_part_code as product_code,
-                SUM(l.current_quantity) as total_quantity,
-                COALESCE(
-                    (SELECT SUM(r.reserved_qty) FROM lot_reservations r 
-                     WHERE r.lot_id = ANY(ARRAY_AGG(l.id)) AND r.status IN ('active', 'confirmed')),
-                    0
-                ) as allocated_quantity,
-                SUM(GREATEST(l.current_quantity - l.locked_quantity, 0)) - COALESCE(
-                    (SELECT SUM(r.reserved_qty) FROM lot_reservations r 
-                     JOIN lots l2 ON r.lot_id = l2.id 
-                     WHERE l2.product_id = l.product_id AND r.status IN ('active', 'confirmed')),
-                    0
-                ) as available_quantity,
-                COUNT(l.id) as lot_count,
+                l.product_name,
+                l.product_code,
+                SUM(l.remaining_quantity) as total_quantity,
+                SUM(l.reserved_quantity) as allocated_quantity,
+                SUM(l.available_quantity) as available_quantity,
+                COUNT(l.receipt_id) as lot_count,
                 COUNT(DISTINCT l.warehouse_id) as warehouse_count
-            FROM lots l
-            JOIN products p ON l.product_id = p.id
-            WHERE l.current_quantity > 0 AND l.status = 'active'
-            GROUP BY l.product_id, p.product_name, p.maker_part_code
-            ORDER BY p.maker_part_code
+            FROM v_lot_receipt_stock l
+            WHERE l.remaining_quantity > 0 AND l.status = 'active'
+            GROUP BY l.product_id, l.product_name, l.product_code
+            ORDER BY l.product_code
         """
         from sqlalchemy import text
 
@@ -578,3 +610,69 @@ class InventoryService:
             }
             for row in result
         ]
+
+    def get_filter_options(
+        self,
+        product_id: int | None = None,
+        warehouse_id: int | None = None,
+        supplier_id: int | None = None,
+    ) -> FilterOptions:
+        """Get filter options based on current selection (Mutual Filtering).
+
+        Args:
+            product_id: Currently selected product ID
+            warehouse_id: Currently selected warehouse ID
+            supplier_id: Currently selected supplier ID
+
+        Returns:
+            FilterOptions containing compatible products, suppliers, and warehouses
+        """
+        # 1. Products (filtered by supplier if selected)
+        p_stmt = select(Product.id, Product.maker_part_code, Product.product_name).where(
+            Product.valid_to >= "9999-12-31"
+        )
+        if supplier_id:
+            # Filter products supplied by this supplier
+            p_stmt = (
+                p_stmt.join(ProductSupplier, ProductSupplier.product_id == Product.id)
+                .where(ProductSupplier.supplier_id == supplier_id)
+                .where(ProductSupplier.valid_to >= "9999-12-31")
+            )
+
+        p_rows = self.db.execute(p_stmt).all()
+        products = [
+            FilterOption(id=r.id, code=r.maker_part_code, name=r.product_name) for r in p_rows
+        ]
+
+        # 2. Suppliers (filtered by product if selected)
+        s_stmt = select(Supplier.id, Supplier.supplier_code, Supplier.supplier_name).where(
+            Supplier.valid_to >= "9999-12-31"
+        )
+        if product_id:
+            # Filter suppliers supplying this product
+            s_stmt = (
+                s_stmt.join(ProductSupplier, ProductSupplier.supplier_id == Supplier.id)
+                .where(ProductSupplier.product_id == product_id)
+                .where(ProductSupplier.valid_to >= "9999-12-31")
+            )
+
+        s_rows = self.db.execute(s_stmt).all()
+        suppliers = [
+            FilterOption(id=r.id, code=r.supplier_code, name=r.supplier_name) for r in s_rows
+        ]
+
+        # 3. Warehouses (Active only)
+        w_stmt = select(Warehouse.id, Warehouse.warehouse_code, Warehouse.warehouse_name).where(
+            Warehouse.valid_to >= "9999-12-31"
+        )
+
+        w_rows = self.db.execute(w_stmt).all()
+        warehouses = [
+            FilterOption(id=r.id, code=r.warehouse_code, name=r.warehouse_name) for r in w_rows
+        ]
+
+        return FilterOptions(
+            products=products,
+            suppliers=suppliers,
+            warehouses=warehouses,
+        )

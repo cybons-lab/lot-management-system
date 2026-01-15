@@ -47,6 +47,7 @@ from app.presentation.api.routes.masters import (
     delivery_places_router,
     product_mappings_router,
     products_router,
+    status_router,
     supplier_products_router,
     suppliers_router,
     uom_conversions_router,
@@ -147,6 +148,8 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(cloud_flow_router, prefix=prefix)
     app.include_router(layer_code_router, prefix=prefix)
     app.include_router(smartread_router, prefix=prefix)
+
+    app.include_router(status_router, prefix=masters_prefix)
 
     # OCR endpoints
     app.include_router(ocr_router, prefix=prefix)

@@ -1307,15 +1307,17 @@ def upgrade() -> None:
         batch_op.create_index("idx_withdrawals_type", ["withdrawal_type"], unique=False)
 
     # Apply database views from SQL file
-    import pathlib
-
-    views_sql_path = (
-        pathlib.Path(__file__).parent.parent.parent / "sql" / "views" / "create_views.sql"
-    )
-    if views_sql_path.exists():
-        with open(views_sql_path, encoding="utf-8") as f:
-            views_sql = f.read()
-        op.execute(sa.text(views_sql))
+    # NOTE: Commented out because create_views.sql contains references to future tables (lot_receipts)
+    # causing failure during initial migration. Views should be applied via apply_views.py after all migrations.
+    # import pathlib
+    #
+    # views_sql_path = (
+    #     pathlib.Path(__file__).parent.parent.parent / "sql" / "views" / "create_views.sql"
+    # )
+    # if views_sql_path.exists():
+    #     with open(views_sql_path, encoding="utf-8") as f:
+    #         views_sql = f.read()
+    #     op.execute(sa.text(views_sql))
 
     # ### end Alembic commands ###
     # ### end Alembic commands ###

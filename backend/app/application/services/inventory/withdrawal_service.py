@@ -44,10 +44,10 @@
    → joinedload で関連データを一括取得（N+1回避）
 """
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
-from sqlalchemy import or_
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.soft_delete_utils import (
@@ -79,6 +79,7 @@ from app.infrastructure.persistence.models.withdrawal_models import (
 from app.presentation.schemas.inventory.withdrawal_schema import (
     CANCEL_REASON_LABELS,
     WITHDRAWAL_TYPE_LABELS,
+    DailyWithdrawalSummary,
     WithdrawalCancelReason,
     WithdrawalCancelRequest,
     WithdrawalCreate,
@@ -370,12 +371,12 @@ class WithdrawalService:
 
         return WithdrawalResponse(
             id=withdrawal.id,
-            lot_id=withdrawal.lot_id,
+            lot_id=withdrawal.lot_id or 0,
             lot_number=lot.lot_number if lot else "",
             product_id=lot.product_id if lot else 0,
             product_name=get_product_name(product),
             product_code=get_product_code(product),
-            quantity=withdrawal.quantity,
+            quantity=withdrawal.quantity or Decimal("0"),
             withdrawal_type=withdrawal_type,
             withdrawal_type_label=WITHDRAWAL_TYPE_LABELS.get(
                 withdrawal_type, str(withdrawal_type.value)
@@ -446,7 +447,7 @@ class WithdrawalService:
 
         # 在庫を復元
         quantity_before = lot.current_quantity
-        new_quantity = lot.current_quantity + withdrawal.quantity
+        new_quantity = lot.current_quantity + (withdrawal.quantity or Decimal("0"))
         lot.current_quantity = new_quantity
         lot.updated_at = utcnow()
 
@@ -458,7 +459,7 @@ class WithdrawalService:
         stock_history = StockHistory(
             lot_id=lot.id,
             transaction_type=StockTransactionType.RETURN,
-            quantity_change=+withdrawal.quantity,  # 戻りはプラス
+            quantity_change=+(withdrawal.quantity or Decimal("0")),  # 戻りはプラス
             quantity_after=new_quantity,
             reference_type="withdrawal_cancellation",
             reference_id=withdrawal.id,
@@ -480,7 +481,7 @@ class WithdrawalService:
             lot_id=lot.id,
             quantity_before=quantity_before,
             quantity_after=new_quantity,
-            quantity_change=+withdrawal.quantity,
+            quantity_change=+(withdrawal.quantity or Decimal("0")),
             reason=f"withdrawal_cancellation:{data.reason.value}",
         )
         EventDispatcher.queue(event)
@@ -503,3 +504,61 @@ class WithdrawalService:
             raise ValueError(f"出庫（ID={withdrawal.id}）の再取得に失敗しました")
 
         return self._to_response(refreshed)
+
+    def get_calendar_summary(
+        self,
+        year: int,
+        month: int,
+        warehouse_id: int | None = None,
+        product_id: int | None = None,
+        supplier_id: int | None = None,
+    ) -> list[DailyWithdrawalSummary]:
+        """月間の日別出庫集計を取得.
+
+        Args:
+            year: 年
+            month: 月
+            warehouse_id: 倉庫IDフィルタ
+            product_id: 製品IDフィルタ
+            supplier_id: 仕入先IDフィルタ
+
+        Returns:
+            日別集計リスト
+        """
+        start_date = date(year, month, 1)
+        if month == 12:
+            next_month = date(year + 1, 1, 1)
+        else:
+            next_month = date(year, month + 1, 1)
+        end_date = next_month - timedelta(days=1)
+
+        stmt = (
+            select(
+                Withdrawal.ship_date,
+                func.count(Withdrawal.id).label("withdrawal_count"),
+                func.sum(Withdrawal.quantity).label("total_quantity"),
+            )
+            .join(Lot, Withdrawal.lot_id == Lot.id)
+            .where(Withdrawal.ship_date >= start_date)
+            .where(Withdrawal.ship_date <= end_date)
+        )
+
+        if warehouse_id:
+            stmt = stmt.where(Lot.warehouse_id == warehouse_id)
+        if product_id:
+            stmt = stmt.where(Lot.product_id == product_id)
+        if supplier_id:
+            stmt = stmt.where(Lot.supplier_id == supplier_id)
+
+        stmt = stmt.group_by(Withdrawal.ship_date).order_by(Withdrawal.ship_date)
+
+        rows = self.db.execute(stmt).all()
+
+        return [
+            DailyWithdrawalSummary(
+                date=row.ship_date,
+                count=int(row.withdrawal_count),
+                total_quantity=row.total_quantity or Decimal("0"),
+            )
+            for row in rows
+        ]

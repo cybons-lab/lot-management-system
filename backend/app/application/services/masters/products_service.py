@@ -106,7 +106,9 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             .all(),
         )
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> list[Product]:
+    def get_all(
+        self, skip: int = 0, limit: int = 100, *, include_inactive: bool = False
+    ) -> list[Product]:
         """Get all products.
 
         Returns:

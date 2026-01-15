@@ -289,7 +289,7 @@ def manual_allocate(
 
         # Ensure relationships are loaded for response
         db.refresh(reservation)
-        lot = reservation.lot
+        lot = reservation.lot_receipt
         available_qty = get_available_quantity(db, lot)
 
         return ManualAllocationResponse(
@@ -354,7 +354,7 @@ def confirm_allocation(
             allocated_quantity=confirmed_res.reserved_qty,
             allocation_type="hard" if status_str == "confirmed" else "soft",
             status="allocated",
-            confirmed_at=confirmed_res.confirmed_at or confirmed_res.updated_at,
+            confirmed_at=confirmed_res.confirmed_at or confirmed_res.updated_at,  # type: ignore[arg-type]
             confirmed_by=confirmed_res.confirmed_by,
         )
     except ValueError as e:
@@ -544,8 +544,8 @@ def cancel_confirmed_allocation(
 
         # Get lot info for response
         lot_number = None
-        if reservation.lot:
-            lot_number = reservation.lot.lot_number
+        if reservation.lot_receipt:
+            lot_number = reservation.lot_receipt.lot_number
 
         # Get cancel reason label
         cancel_reason_label = cancel.ReservationCancelReason.LABELS.get(

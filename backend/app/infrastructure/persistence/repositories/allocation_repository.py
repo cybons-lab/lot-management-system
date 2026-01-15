@@ -149,7 +149,7 @@ class ReservationRepository:
                 LotReservationHistoryService,
             )
 
-            self._history_service = LotReservationHistoryService(self.db)
+            self._history_service = LotReservationHistoryService(self.db)  # type: ignore[assignment]
         return self._history_service
 
     def find_by_id(self, reservation_id: int) -> LotReservation | None:
@@ -163,7 +163,7 @@ class ReservationRepository:
         """
         stmt = (
             select(LotReservation)
-            .options(joinedload(LotReservation.lot))
+            .options(joinedload(LotReservation.lot))  # type: ignore[attr-defined]
             .where(LotReservation.id == reservation_id)
         )
         return cast(LotReservation | None, self.db.execute(stmt).scalar_one_or_none())

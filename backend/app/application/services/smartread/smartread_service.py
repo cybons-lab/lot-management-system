@@ -91,7 +91,6 @@ class SmartReadService:
         endpoint: str,
         api_key: str,
         name: str = "default",
-        request_type: str = "sync",
         template_ids: str | None = None,
         export_type: str = "json",
         aggregation_type: str | None = None,
@@ -124,7 +123,6 @@ class SmartReadService:
             endpoint=endpoint,
             api_key=api_key,
             name=name,
-            request_type=request_type,
             template_ids=template_ids,
             export_type=export_type,
             aggregation_type=aggregation_type,
@@ -214,7 +212,6 @@ class SmartReadService:
             endpoint=config.endpoint,
             api_key=config.api_key,
             template_ids=template_ids,
-            request_type=config.request_type,
         )
 
         result: SmartReadResult = await client.analyze_file(file_content, filename)
@@ -288,6 +285,102 @@ class SmartReadService:
             content_type="text/csv; charset=utf-8",
             filename=filename,
         )
+
+    def list_files_in_watch_dir(self, config_id: int) -> list[str]:
+        """監視ディレクトリ内のファイル一覧を取得.
+
+        Args:
+            config_id: 設定ID
+
+        Returns:
+            ファイル名のリスト
+        """
+        config = self.get_config(config_id)
+        if not config or not config.watch_dir:
+            return []
+
+        import os
+        from pathlib import Path
+
+        watch_dir = Path(config.watch_dir)
+        if not watch_dir.exists() or not watch_dir.is_dir():
+            return []
+
+        extensions = set()
+        if config.input_exts:
+            extensions = {f".{ext.strip().lower()}" for ext in config.input_exts.split(",")}
+
+        files = []
+        try:
+            for entry in os.scandir(watch_dir):
+                if entry.is_file():
+                    if not extensions or Path(entry.name).suffix.lower() in extensions:
+                        files.append(entry.name)
+        except OSError as e:
+            logger.error(f"Error listing files in {watch_dir}: {e}")
+            return []
+
+        return sorted(files)
+
+    async def process_watch_dir_files(
+        self, config_id: int, filenames: list[str]
+    ) -> list[AnalyzeResult]:
+        """監視ディレクトリ内の指定ファイルを処理.
+
+        Args:
+            config_id: 設定ID
+            filenames: 処理するファイル名のリスト
+
+        Returns:
+            解析結果のリスト
+        """
+        config = self.get_config(config_id)
+        if not config or not config.watch_dir:
+            return []
+
+        import os
+        from pathlib import Path
+
+        watch_dir = Path(config.watch_dir)
+        export_dir = Path(config.export_dir) if config.export_dir else None
+
+        results = []
+        for filename in filenames:
+            file_path = watch_dir / filename
+            if not file_path.exists():
+                results.append(AnalyzeResult(False, filename, [], "File not found"))
+                continue
+
+            try:
+                with open(file_path, "rb") as f:
+                    content = f.read()
+
+                result = await self.analyze_file(config_id, content, filename)
+
+                if result.success and export_dir:
+                    # JSON出力
+                    if not export_dir.exists():
+                        try:
+                            # ディレクトリが存在しない場合は作成を試みる（権限次第）
+                            os.makedirs(export_dir, exist_ok=True)
+                        except OSError as e:
+                            logger.error(f"Failed to create export dir: {e}")
+
+                    if export_dir.exists():
+                        json_name = f"{Path(filename).stem}.json"
+                        json_path = export_dir / json_name
+                        with open(json_path, "w", encoding="utf-8") as f:
+                            import json
+
+                            json.dump(result.data, f, ensure_ascii=False, indent=2)
+
+                results.append(result)
+
+            except Exception as e:
+                logger.error(f"Error processing file {filename}: {e}")
+                results.append(AnalyzeResult(False, filename, [], str(e)))
+
+        return results
 
     def _flatten_data(self, data: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """ネストされたデータをフラット化.

@@ -51,7 +51,7 @@ class CloudFlowService:
             HTTPException: ゲストユーザーの場合
         """
         # ゲストユーザーは実行不可
-        if user.is_guest:
+        if getattr(user, "is_guest", False):
             raise HTTPException(status_code=403, detail="ゲストユーザーは実行できません")
 
         # 実行中のジョブがあるかチェック

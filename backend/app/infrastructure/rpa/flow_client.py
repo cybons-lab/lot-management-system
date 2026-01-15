@@ -3,7 +3,7 @@
 Handles communication with external RPA flows (Power Automate).
 """
 
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
@@ -41,6 +41,6 @@ class RpaFlowClient:
             response.raise_for_status()
 
             try:
-                return response.json()
+                return cast(dict[str, Any], response.json())
             except Exception:
                 return {"status_code": response.status_code, "text": response.text}

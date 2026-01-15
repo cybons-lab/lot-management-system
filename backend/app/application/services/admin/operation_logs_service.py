@@ -100,8 +100,10 @@ class OperationLogService:
         # Note: We fetch all users who have logs.
         # This query might be slow if logs are huge, but distinct user_id count is usually small.
         # Using a subquery for distinct user_id might be better.
-        stmt = select(OperationLog.user_id).where(OperationLog.user_id.is_not(None)).distinct()
-        user_ids = [row[0] for row in self.db.execute(stmt).all()]
+        stmt_users = (
+            select(OperationLog.user_id).where(OperationLog.user_id.is_not(None)).distinct()
+        )
+        user_ids = [row[0] for row in self.db.execute(stmt_users).all()]  # type: ignore[misc]
 
         from app.infrastructure.persistence.models.auth_models import User
 
@@ -112,13 +114,17 @@ class OperationLogService:
                 users.append({"label": u.display_name, "value": str(u.id)})
 
         # 2. Operation Types
-        stmt = select(OperationLog.operation_type).distinct().order_by(OperationLog.operation_type)
-        ops = [row[0] for row in self.db.execute(stmt).all()]
+        stmt_ops = (
+            select(OperationLog.operation_type).distinct().order_by(OperationLog.operation_type)
+        )
+        ops = [row[0] for row in self.db.execute(stmt_ops).all()]  # type: ignore[misc]
         operation_types = [{"label": op, "value": op} for op in ops]
 
         # 3. Target Tables
-        stmt = select(OperationLog.target_table).distinct().order_by(OperationLog.target_table)
-        tables = [row[0] for row in self.db.execute(stmt).all()]
+        stmt_tables = (
+            select(OperationLog.target_table).distinct().order_by(OperationLog.target_table)
+        )
+        tables = [row[0] for row in self.db.execute(stmt_tables).all()]  # type: ignore[misc]
 
         # Simple JP mapping (could be shared, but hardcoded here for now)
         table_map = {

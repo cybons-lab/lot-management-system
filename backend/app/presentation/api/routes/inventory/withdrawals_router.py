@@ -15,6 +15,7 @@ from app.application.services.inventory.lot_reservation_service import (
 from app.application.services.inventory.withdrawal_service import WithdrawalService
 from app.presentation.api.deps import get_db
 from app.presentation.schemas.inventory.withdrawal_schema import (
+    DailyWithdrawalSummary,
     WithdrawalCancelRequest,
     WithdrawalCreate,
     WithdrawalListResponse,
@@ -71,6 +72,38 @@ def list_withdrawals(
         product_id=product_id,
         warehouse_id=warehouse_id,
         search_query=search,
+    )
+
+
+@router.get("/calendar-summary", response_model=list[DailyWithdrawalSummary])
+def get_calendar_summary(
+    year: int = Query(..., description="年"),
+    month: int = Query(..., description="月"),
+    warehouse_id: int | None = Query(None, description="倉庫ID"),
+    product_id: int | None = Query(None, description="製品ID"),
+    supplier_id: int | None = Query(None, description="仕入先ID"),
+    db: Session = Depends(get_db),
+):
+    """月間の日別出庫集計を取得（カレンダー用）.
+
+    Args:
+        year: 年
+        month: 月
+        warehouse_id: 倉庫ID
+        product_id: 製品ID
+        supplier_id: 仕入先ID
+        db: データベースセッション
+
+    Returns:
+        日別集計リスト
+    """
+    service = WithdrawalService(db)
+    return service.get_calendar_summary(
+        year=year,
+        month=month,
+        warehouse_id=warehouse_id,
+        product_id=product_id,
+        supplier_id=supplier_id,
     )
 
 

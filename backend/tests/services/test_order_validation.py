@@ -12,7 +12,7 @@ from app.application.services.orders.validation_service import (
     OrderValidationService,
 )
 from app.domain.errors import InsufficientStockError
-from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models import Lot, LotMaster, Product, Supplier, Warehouse
 
 
 @pytest.fixture()
@@ -37,7 +37,18 @@ def fifo_inventory(db_session):
 
     for idx, (qty, expiry) in enumerate(zip(quantities, expiries, strict=False), start=1):
         print(f"DEBUG: Creating lot {idx} with number LOT{idx:03d}")
+
+        # Create LotMaster first
+        lot_master = LotMaster(
+            lot_number=f"LOT{idx:03d}",
+            product_id=product.id,
+            supplier_id=supplier.id,
+        )
+        db_session.add(lot_master)
+        db_session.flush()
+
         lot = Lot(
+            lot_master_id=lot_master.id,
             supplier_id=supplier.id,
             product_id=product.id,
             lot_number=f"LOT{idx:03d}",
@@ -45,7 +56,7 @@ def fifo_inventory(db_session):
             warehouse_id=warehouse.id,
             received_date=base_date,
             unit="EA",
-            current_quantity=qty,
+            received_quantity=qty,
         )
         # 受入日
         lot.received_date = base_date + timedelta(days=idx - 1)

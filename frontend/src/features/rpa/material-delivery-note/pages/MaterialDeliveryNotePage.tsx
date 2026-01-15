@@ -6,8 +6,11 @@
 import { CheckSquare, Download, FileText, History, Play, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { RpaSettingsModal } from "../../components/RpaSettingsModal";
+
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { useAuth } from "@/features/auth/AuthContext";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -46,9 +49,16 @@ function MenuCard({ title, description, icon, to, variant = "default" }: MenuCar
 }
 
 export function MaterialDeliveryNotePage() {
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes("admin");
+
   return (
     <PageContainer>
-      <PageHeader title="素材納品書発行" subtitle="CSV取込からStep2実行までのワークフロー" />
+      <PageHeader
+        title="素材納品書発行"
+        subtitle="CSV取込からStep2実行までのワークフロー"
+        actions={isAdmin ? <RpaSettingsModal /> : undefined}
+      />
 
       <div className="mx-auto max-w-3xl space-y-4">
         {/* Step1: 進度実績ダウンロード */}

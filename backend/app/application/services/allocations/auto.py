@@ -206,7 +206,7 @@ def auto_reserve_line(
     # Use SSOT for candidate fetching with warehouse filter
     warehouse_id = getattr(line, "warehouse_id", None)
     candidates = _get_fefo_candidates_for_line(
-        db, line.product_id, warehouse_id=warehouse_id, lock=True
+        db, line.product_id or 0, warehouse_id=warehouse_id, lock=True
     )
 
     created_reservations: list[LotReservation] = []
@@ -265,7 +265,7 @@ def _auto_reserve_line_no_commit(
     # Use SSOT for candidate fetching with warehouse filter
     warehouse_id = getattr(line, "warehouse_id", None)
     candidates = _get_fefo_candidates_for_line(
-        db, line.product_id, warehouse_id=warehouse_id, lock=True
+        db, line.product_id or 0, warehouse_id=warehouse_id, lock=True
     )
 
     created_reservations: list[LotReservation] = []

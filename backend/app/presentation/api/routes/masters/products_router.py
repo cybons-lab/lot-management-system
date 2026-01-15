@@ -177,6 +177,8 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     service = ProductService(db)
 
     # Check if exists
+    if product.product_code is None:
+        raise HTTPException(status_code=400, detail="Product code is required")
     existing = service.get_by_code(product.product_code, raise_404=False)
     if existing:
         raise HTTPException(

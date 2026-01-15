@@ -36,6 +36,18 @@ export type InventoryByWarehouseResponse =
 export type InventoryByProductResponse =
   paths["/api/v2/inventory/by-product"]["get"]["responses"][200]["content"]["application/json"][number];
 
+export interface FilterOption {
+  id: number;
+  code: string;
+  name: string;
+}
+
+export interface FilterOptions {
+  products: FilterOption[];
+  suppliers: FilterOption[];
+  warehouses: FilterOption[];
+}
+
 // ===== Lots API Functions =====
 
 /**
@@ -97,7 +109,9 @@ export const getAvailableLots = (params: {
  * Get inventory items list (v2)
  * @endpoint GET /api/v2/inventory/
  */
-export const getInventoryItems = (params?: InventoryItemsListParams & { tab?: string }) => {
+export const getInventoryItems = (
+  params?: InventoryItemsListParams & { tab?: string; primary_staff_only?: boolean },
+) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
@@ -105,6 +119,8 @@ export const getInventoryItems = (params?: InventoryItemsListParams & { tab?: st
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
   if (params?.tab) searchParams.append("tab", params.tab);
+  if (params?.primary_staff_only)
+    searchParams.append("primary_staff_only", params.primary_staff_only.toString());
 
   const queryString = searchParams.toString();
   return http.get<InventoryItem[]>(`v2/inventory/${queryString ? "?" + queryString : ""}`);
@@ -140,4 +156,24 @@ export const getInventoryByWarehouse = () => {
  */
 export const getInventoryByProduct = () => {
   return http.get<InventoryByProductResponse[]>("v2/inventory/by-product");
+};
+
+/**
+ * Get filter options (products, suppliers, warehouses) based on current selection
+ * @endpoint GET /api/v2/inventory/filter-options
+ */
+export const getFilterOptions = (params?: {
+  product_id?: number;
+  warehouse_id?: number;
+  supplier_id?: number;
+}) => {
+  const searchParams = new URLSearchParams();
+  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
+  if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
+
+  const queryString = searchParams.toString();
+  return http.get<FilterOptions>(
+    `v2/inventory/filter-options${queryString ? "?" + queryString : ""}`,
+  );
 };

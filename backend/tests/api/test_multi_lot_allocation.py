@@ -19,6 +19,7 @@ from app.infrastructure.persistence.models import (
     Product,
     Warehouse,
 )
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.main import app
 
 
@@ -28,6 +29,7 @@ def _truncate_all(db: Session):
         AllocationSuggestion,
         ForecastCurrent,
         Lot,
+        LotMaster,
         DeliveryPlace,
         Product,
         Customer,
@@ -36,7 +38,7 @@ def _truncate_all(db: Session):
         try:
             db.query(table).delete()
         except Exception:
-            pass
+            db.rollback()
     db.commit()
 
 
@@ -102,7 +104,12 @@ def test_multi_lot_soft_allocation(test_db: Session, master_data):
 
     # 1. Setup 2 Lots
     # Lot A: Expires earlier (should be picked first), Qty 60
+    lm_a = LotMaster(product_id=product.id, lot_number="LOT-A")
+    test_db.add(lm_a)
+    test_db.flush()
+
     lot_a = Lot(
+        lot_master_id=lm_a.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
         lot_number="LOT-A",
@@ -113,7 +120,12 @@ def test_multi_lot_soft_allocation(test_db: Session, master_data):
         origin_type="order",
     )
     # Lot B: Expires later, Qty 60
+    lm_b = LotMaster(product_id=product.id, lot_number="LOT-B")
+    test_db.add(lm_b)
+    test_db.flush()
+
     lot_b = Lot(
+        lot_master_id=lm_b.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
         lot_number="LOT-B",

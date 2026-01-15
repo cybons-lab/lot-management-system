@@ -12,7 +12,6 @@ class SmartReadConfigCreate(BaseModel):
     name: str = Field(..., max_length=100, description="設定名")
     endpoint: str = Field(..., description="SmartRead APIエンドポイント")
     api_key: str = Field(..., description="APIキー")
-    request_type: str = Field(default="sync", description="リクエストタイプ (sync/async)")
     template_ids: str | None = Field(default=None, description="テンプレートID（カンマ区切り）")
     export_type: str = Field(default="json", description="エクスポートタイプ (json/csv)")
     aggregation_type: str | None = Field(default=None, description="集約タイプ")
@@ -29,7 +28,6 @@ class SmartReadConfigUpdate(BaseModel):
     name: str | None = Field(default=None, max_length=100)
     endpoint: str | None = None
     api_key: str | None = None
-    request_type: str | None = None
     template_ids: str | None = None
     export_type: str | None = None
     aggregation_type: str | None = None
@@ -47,7 +45,6 @@ class SmartReadConfigResponse(BaseModel):
     name: str
     endpoint: str
     # api_key: str  # Security: Do not expose API key
-    request_type: str
     template_ids: str | None
     export_type: str
     aggregation_type: str | None
@@ -75,3 +72,9 @@ class SmartReadAnalyzeResponse(BaseModel):
     filename: str
     data: list[dict[str, Any]]
     error_message: str | None = None
+
+
+class SmartReadProcessRequest(BaseModel):
+    """ファイル処理リクエスト."""
+
+    filenames: list[str] = Field(..., description="処理するファイル名のリスト")

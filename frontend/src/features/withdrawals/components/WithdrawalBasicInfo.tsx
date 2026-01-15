@@ -14,6 +14,7 @@ import {
   SelectValue,
   Textarea,
 } from "@/components/ui";
+import { DatePicker } from "@/components/ui/date-picker";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 
 interface Customer {
@@ -159,12 +160,11 @@ export function WithdrawalBasicInfo({
           name="ship_date"
           control={control}
           render={({ field }) => (
-            <Input
-              id="ship_date"
-              type="date"
+            <DatePicker
               value={field.value}
-              onChange={field.onChange}
+              onChange={(v) => field.onChange(v || "")}
               disabled={isSubmitting}
+              placeholder="出荷日を選択"
             />
           )}
         />

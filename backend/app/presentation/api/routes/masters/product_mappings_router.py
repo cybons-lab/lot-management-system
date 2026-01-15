@@ -89,8 +89,14 @@ def list_product_mappings(
         query = query.filter(ProductMapping.supplier_id == supplier_id)
     if product_id is not None:
         query = query.filter(ProductMapping.product_id == product_id)
-    if is_active is not None:
-        query = query.filter(ProductMapping.is_active == is_active)
+    if is_active is True:
+        from sqlalchemy import func
+
+        query = query.filter(ProductMapping.valid_to > func.current_date())
+    elif is_active is False:
+        from sqlalchemy import func
+
+        query = query.filter(ProductMapping.valid_to <= func.current_date())
 
     mappings = query.order_by(ProductMapping.id).offset(skip).limit(limit).all()
     return mappings

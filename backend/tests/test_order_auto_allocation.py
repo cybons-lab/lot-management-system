@@ -11,6 +11,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import Lot, Order, OrderLine, Product, Warehouse
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
 def test_order_allocation_single_lot_fit(db: Session):
@@ -38,7 +39,16 @@ def test_order_allocation_single_lot_fit(db: Session):
 
     # 2. Setup Lots
     # Lot A: Older (Expiry D+5), Small Qty (50)
+    # Lot A
+    lot_master_a = LotMaster(
+        product_id=product.id,
+        lot_number="LOT-A-SMALL",
+    )
+    db.add(lot_master_a)
+    db.commit()
+
     lot_a = Lot(
+        lot_master_id=lot_master_a.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
         lot_number="LOT-A-SMALL",
@@ -52,7 +62,16 @@ def test_order_allocation_single_lot_fit(db: Session):
     db.add(lot_a)
 
     # Lot B: Newer (Expiry D+10), Large Qty (100)
+    # Lot B
+    lot_master_b = LotMaster(
+        product_id=product.id,
+        lot_number="LOT-B-LARGE",
+    )
+    db.add(lot_master_b)
+    db.commit()
+
     lot_b = Lot(
+        lot_master_id=lot_master_b.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
         lot_number="LOT-B-LARGE",

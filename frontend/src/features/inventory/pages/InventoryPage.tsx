@@ -1,9 +1,9 @@
 import { ArrowUpFromLine, Box, History, Home, List, Package, RefreshCw, Truck } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui";
+import { Button, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { InventoryByProductTable } from "@/features/inventory/components/InventoryByProductTable";
@@ -11,21 +11,14 @@ import { InventoryBySupplierTable } from "@/features/inventory/components/Invent
 import { InventoryByWarehouseTable } from "@/features/inventory/components/InventoryByWarehouseTable";
 import { InventoryTable } from "@/features/inventory/components/InventoryTable";
 import { LotCreateForm } from "@/features/inventory/components/LotCreateForm";
-import { StatCard } from "@/features/inventory/components/StatCard";
 import { useInventoryItems } from "@/features/inventory/hooks";
+import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 import { useInventoryPageState } from "@/features/inventory/hooks/useInventoryPageState";
-import { useInventoryStats } from "@/features/inventory/hooks/useInventoryStats";
-import * as styles from "@/features/inventory/pages/styles";
 import {
   useInventoryByProduct,
   useInventoryBySupplier,
   useInventoryByWarehouse,
 } from "@/hooks/api";
-import {
-  useProductsQuery,
-  useWarehousesQuery,
-  useSuppliersQuery,
-} from "@/hooks/api/useMastersQuery";
 import { useCreateLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
 import { ExportButton } from "@/shared/components/ExportButton";
@@ -33,7 +26,6 @@ import { FormDialog } from "@/shared/components/form";
 import { Section } from "@/shared/components/layout";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-import { fmt } from "@/shared/utils/number";
 
 export function InventoryPage() {
   const navigate = useNavigate();
@@ -43,8 +35,15 @@ export function InventoryPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Page state (Jotai atom - persisted in sessionStorage)
-  const { overviewMode, filters, queryParams, setOverviewMode, updateFilter, setFilters } =
-    useInventoryPageState();
+  const {
+    overviewMode,
+    filters,
+    queryParams,
+    setOverviewMode,
+    updateFilter,
+    setFilters,
+    resetFilters,
+  } = useInventoryPageState();
 
   // Data Fetching
   const {
@@ -57,41 +56,16 @@ export function InventoryPage() {
   const warehouseQuery = useInventoryByWarehouse();
   const productQuery = useInventoryByProduct();
 
-  // Stats
-  const stats = useInventoryStats(inventoryItems);
+  // Stats (removed - KPI cards no longer displayed)
 
-  // Master data for filter options
-  const { data: products = [] } = useProductsQuery();
-  const { data: warehouses = [] } = useWarehousesQuery();
-  const { data: suppliers = [] } = useSuppliersQuery();
-
-  // Generate filter options
-  const productOptions = useMemo(
-    () =>
-      products.map((p) => ({
-        value: String(p.id),
-        label: `${p.product_code} - ${p.product_name} `,
-      })),
-    [products],
-  );
-
-  const warehouseOptions = useMemo(
-    () =>
-      warehouses.map((w) => ({
-        value: String(w.id),
-        label: `${w.warehouse_code} - ${w.warehouse_name} `,
-      })),
-    [warehouses],
-  );
-
-  const supplierOptions = useMemo(
-    () =>
-      suppliers.map((s) => ({
-        value: String(s.id),
-        label: `${s.supplier_code} - ${s.supplier_name} `,
-      })),
-    [suppliers],
-  );
+  // Mutual filtering with auto-selection
+  const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
+    product_id: filters.product_id || undefined,
+    supplier_id: filters.supplier_id || undefined,
+    warehouse_id: filters.warehouse_id || undefined,
+    onAutoSelectSupplier: (id) => updateFilter("supplier_id", id),
+    onAutoSelectProduct: (id) => updateFilter("product_id", id),
+  });
 
   // Lot creation mutation
   const createLotMutation = useCreateLot({
@@ -160,32 +134,6 @@ export function InventoryPage() {
       />
 
       <div className="space-y-6">
-        {/* Stats Cards */}
-        <div className={styles.statsGrid}>
-          <StatCard
-            title="在庫アイテム数"
-            value={fmt(stats.totalItems)}
-            description="製品×倉庫の組み合わせ数"
-          />
-          <StatCard
-            title="総在庫数"
-            value={fmt(stats.totalQuantity)}
-            description="すべての在庫の合計数量"
-            highlight
-          />
-          <StatCard
-            title="利用可能在庫数"
-            value={fmt(stats.totalAvailable)}
-            description="引当可能な在庫数"
-            highlight
-          />
-          <StatCard
-            title="引当済在庫数"
-            value={fmt(stats.totalAllocated)}
-            description="既に引当済の在庫数"
-          />
-        </div>
-
         {/* View Mode Switcher & Actions */}
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
@@ -268,33 +216,58 @@ export function InventoryPage() {
         {/* Filters (Items Only) */}
         {overviewMode === "items" && (
           <Section>
-            <div className="grid grid-cols-4 gap-4">
-              <div>
-                <Label className="mb-2 block text-sm font-medium">仕入先</Label>
-                <SearchableSelect
-                  options={supplierOptions}
-                  value={filters.supplier_id}
-                  onChange={(value) => updateFilter("supplier_id", value)}
-                  placeholder="仕入先を検索..."
-                />
+            <div className="flex flex-col gap-4">
+              {/* Filter Actions Row (Primary Staff Filter) */}
+              <div className="flex justify-end pt-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="primary_staff_only"
+                    checked={filters.primary_staff_only}
+                    onCheckedChange={(checked) => updateFilter("primary_staff_only", !!checked)}
+                  />
+                  <Label
+                    htmlFor="primary_staff_only"
+                    className="cursor-pointer text-sm font-medium"
+                  >
+                    主担当の仕入先のみ
+                  </Label>
+                </div>
               </div>
-              <div>
-                <Label className="mb-2 block text-sm font-medium">倉庫</Label>
-                <SearchableSelect
-                  options={warehouseOptions}
-                  value={filters.warehouse_id}
-                  onChange={(value) => updateFilter("warehouse_id", value)}
-                  placeholder="倉庫を検索..."
-                />
-              </div>
-              <div>
-                <Label className="mb-2 block text-sm font-medium">製品</Label>
-                <SearchableSelect
-                  options={productOptions}
-                  value={filters.product_id}
-                  onChange={(value) => updateFilter("product_id", value)}
-                  placeholder="製品を検索..."
-                />
+
+              {/* Filter Inputs Row */}
+              <div className="grid grid-cols-4 items-end gap-4">
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">仕入先</Label>
+                  <SearchableSelect
+                    options={supplierOptions}
+                    value={filters.supplier_id}
+                    onChange={(value) => updateFilter("supplier_id", value)}
+                    placeholder="仕入先を検索..."
+                  />
+                </div>
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">倉庫</Label>
+                  <SearchableSelect
+                    options={warehouseOptions}
+                    value={filters.warehouse_id}
+                    onChange={(value) => updateFilter("warehouse_id", value)}
+                    placeholder="倉庫を検索..."
+                  />
+                </div>
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">製品</Label>
+                  <SearchableSelect
+                    options={productOptions}
+                    value={filters.product_id}
+                    onChange={(value) => updateFilter("product_id", value)}
+                    placeholder="製品を検索..."
+                  />
+                </div>
+                <div>
+                  <Button variant="outline" onClick={resetFilters} className="w-full">
+                    フィルタをリセット
+                  </Button>
+                </div>
               </div>
             </div>
           </Section>

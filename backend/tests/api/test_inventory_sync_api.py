@@ -6,7 +6,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import BusinessRule, Lot, Product, Warehouse
+from app.infrastructure.persistence.models import (
+    BusinessRule,
+    Lot,
+    Product,
+    ProductWarehouse,
+    Warehouse,
+)
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.main import app
 from app.presentation.api.deps import get_db
 
@@ -31,11 +38,15 @@ def test_db(db: Session):
 
 def _truncate_all(db: Session):
     """テスト用にデータをクリア."""
-    db.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert").delete()
-    db.query(Lot).delete()
-    db.query(Product).delete()
-    db.query(Warehouse).delete()
-    db.flush()  # Flush instead of commit
+    try:
+        db.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert").delete()
+        db.query(Lot).delete()
+        db.query(LotMaster).delete()
+        db.query(Product).delete()
+        db.query(Warehouse).delete()
+        db.flush()  # Flush instead of commit
+    except Exception:
+        db.rollback()
 
 
 def _setup_test_data(db: Session):
@@ -68,11 +79,37 @@ def _setup_test_data(db: Session):
     db.add_all(products)
     db.flush()
 
+    # Create ProductWarehouse records
+    product_warehouses = [
+        ProductWarehouse(
+            product_id=p.id,
+            warehouse_id=wh.id,
+            is_active=True,
+        )
+        for p in products
+    ]
+    db.add_all(product_warehouses)
+    db.flush()
+
+    # Create LotMasters first
+    for i in range(1, 4):
+        lm = LotMaster(
+            product_id=products[i - 1].id,
+            lot_number=f"LOT{i:03d}",
+            supplier_id=supplier.id,
+        )
+        db.add(lm)
+    db.flush()
+
+    # Get LotMaster IDs
+    lot_masters = db.query(LotMaster).order_by(LotMaster.lot_number).all()
+
     # ロットを作成
     lots = [
         Lot(
             supplier_id=supplier.id,
             product_id=products[i - 1].id,
+            lot_master_id=lot_masters[i - 1].id,
             lot_number=f"LOT{i:03d}",
             warehouse_id=wh.id,
             current_quantity=100.0 * i,  # 100, 200, 300

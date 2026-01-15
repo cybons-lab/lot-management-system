@@ -2,6 +2,12 @@
 
 All models strictly follow the DDL v2.2
 (lot_management_ddl_v2_2_id.sql). Legacy models have been removed.
+
+B-Plan additions:
+- LotMaster: Lot number consolidation master
+- LotReceipt: Individual inbound receipts (replaces Lot)
+- WithdrawalLine: FIFO withdrawal tracking
+- MissingMappingEvent: Auto-set failure recording
 """
 
 from .assignments.assignment_models import UserSupplierAssignment
@@ -15,7 +21,6 @@ from .inventory_models import (
     AdjustmentType,
     AllocationSuggestion,
     AllocationTrace,
-    Lot,
     LotOriginType,
     StockHistory,
     StockMovement,  # Backward compatibility alias
@@ -24,6 +29,13 @@ from .inventory_models import (
 )
 from .layer_code_models import LayerCodeMapping
 from .logs_models import BatchJob, BusinessRule, MasterChangeLog, OperationLog
+
+# B-Plan models
+from .lot_master_model import LotMaster
+from .lot_receipt_models import LotReceipt
+
+# Backward compatibility: Lot is now an alias for LotReceipt
+# All existing code using Lot will work with the new lot_receipts table
 from .lot_reservation_history_model import HistoryOperation, LotReservationHistory
 from .lot_reservations_model import (
     LotReservation,
@@ -43,6 +55,7 @@ from .masters_models import (
     Warehouse,
     WarehouseDeliveryRoute,
 )
+from .missing_mapping_model import MissingMappingEvent
 from .order_groups_models import OrderGroup
 from .orders_models import Order, OrderLine
 from .product_supplier_models import ProductSupplier
@@ -68,7 +81,12 @@ from .views_models import (
     VOrderLineContext,
     VProductCodeToId,
 )
+from .withdrawal_line_model import WithdrawalLine
 from .withdrawal_models import Withdrawal, WithdrawalCancelReason, WithdrawalType
+
+
+# Backward compatibility: Lot is now an alias for LotReceipt
+Lot = LotReceipt
 
 
 __all__ = [
@@ -166,4 +184,9 @@ __all__ = [
     "LayerCodeMapping",
     # SmartRead
     "SmartReadConfig",
+    # B-Plan models
+    "LotMaster",
+    "LotReceipt",
+    "WithdrawalLine",
+    "MissingMappingEvent",
 ]

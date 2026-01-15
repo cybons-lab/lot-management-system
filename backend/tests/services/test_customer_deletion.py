@@ -215,6 +215,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
     def test_soft_delete_holds_allocated_orders(self, db_session: Session):
         """Soft delete should put allocated orders on hold."""
         from app.infrastructure.persistence.models.inventory_models import Lot
+        from app.infrastructure.persistence.models.lot_master_model import LotMaster
         from app.infrastructure.persistence.models.lot_reservations_model import (
             LotReservation,
         )
@@ -262,7 +263,12 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         db_session.commit()
 
         # Create lot
+        lm = LotMaster(product_id=product.id, lot_number="SOFT002-LOT")
+        db_session.add(lm)
+        db_session.flush()
+
         lot = Lot(
+            lot_master_id=lm.id,
             lot_number="SOFT002-LOT",
             product_id=product.id,
             warehouse_id=warehouse.id,
@@ -322,6 +328,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         db_session.flush()  # OrderLine削除を先に確定
         db_session.delete(order)
         db_session.delete(lot)
+        db_session.delete(lm)
         db_session.delete(warehouse)
         db_session.delete(delivery_place)
         db_session.delete(product)

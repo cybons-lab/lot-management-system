@@ -352,7 +352,7 @@ class OrderService:
                 resp.customer_valid_to = customer.valid_to if customer else None
 
             # P3: lot_reservations don't have lot_number directly
-            # lot info is available via reservation.lot.lot_number if needed
+            # lot info is available via reservation.lot_receipt.lot_number if needed
 
             response_lines.append(resp)
 

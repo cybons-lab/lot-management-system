@@ -422,12 +422,12 @@ class MaterialDeliveryNoteOrchestrator:
 
         lot_candidates = [
             {
-                "lot_id": lot.id,
+                "lot_id": lot.lot_id,
                 "lot_number": lot.lot_number,
-                "available_qty": float(lot.current_quantity),
+                "available_qty": float(lot.available_quantity),
                 "expiry_date": lot.expiry_date,
                 "received_date": lot.received_date,
-                "supplier_name": lot.supplier.supplier_name if lot.supplier else None,
+                "supplier_name": lot.supplier_name,
             }
             for lot in lots
         ]

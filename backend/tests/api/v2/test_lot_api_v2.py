@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 
 from app.infrastructure.persistence.models import Lot, Product, Warehouse
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
 @pytest.fixture
@@ -35,8 +36,18 @@ def setup_lot_data(db_session):
     db_session.refresh(warehouse)
     db_session.refresh(supplier)
 
+    # Create LotMaster
+    lot_master = LotMaster(
+        product_id=product.id,
+        supplier_id=supplier.id,
+        lot_number="LOT-V2-001",
+    )
+    db_session.add(lot_master)
+    db_session.commit()
+
     # Lot
     lot = Lot(
+        lot_master_id=lot_master.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
@@ -89,9 +100,9 @@ def test_get_available_lots_insufficient_stock(client, setup_lot_data):
 def test_list_lots(client, setup_lot_data):
     """Test /api/v2/lot/ endpoint."""
     response = client.get("/api/v2/lot/")
-    assert response.status_code == 200, (
-        f"Status code: {response.status_code}, Response: {response.text}"
-    )
+    assert (
+        response.status_code == 200
+    ), f"Status code: {response.status_code}, Response: {response.text}"
     data = response.json()
     assert isinstance(data, list)
     assert len(data) >= 1

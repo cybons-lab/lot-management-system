@@ -1,8 +1,9 @@
 -- ============================================================
--- ビュー再作成スクリプト (v2.3: soft-delete対応版)
+-- ビュー再作成スクリプト (v2.4: B-Plan lot_receipts対応版)
 -- ============================================================
 -- 変更履歴:
 -- v2.3: 論理削除されたマスタ参照時のNULL対応（COALESCE追加）
+-- v2.4: lot_receipts対応、v_lot_receipt_stock導入
 
 -- 1. 既存ビューの削除（CASCADEで依存関係もまとめて削除）
 DROP VIEW IF EXISTS public.v_candidate_lots_by_order_line CASCADE;
@@ -18,6 +19,7 @@ DROP VIEW IF EXISTS public.v_order_line_details CASCADE;
 DROP VIEW IF EXISTS public.v_inventory_summary CASCADE;
 DROP VIEW IF EXISTS public.v_lot_details CASCADE;
 DROP VIEW IF EXISTS public.v_lot_allocations CASCADE;
+DROP VIEW IF EXISTS public.v_lot_receipt_stock CASCADE;
 -- 追加ビュー
 DROP VIEW IF EXISTS public.v_supplier_code_to_id CASCADE;
 DROP VIEW IF EXISTS public.v_warehouse_code_to_id CASCADE;
@@ -27,12 +29,6 @@ DROP VIEW IF EXISTS public.v_customer_item_jiku_mappings CASCADE;
 -- 2. 新規ビューの作成
 
 -- ヘルパー: ロットごとの引当数量集計
--- NOTE: ビュー内でのCTEはパフォーマンスに影響する場合があるが、ここでは可読性優先
--- view定義内ではCTE使えない場合もあるので、LATERAL JOINなど検討したが
--- PostgreSQLならCTEで問題ない。
-
--- Per §1.2 invariant: Available = Current - Locked - ConfirmedReserved
--- Only CONFIRMED reservations affect Available Qty
 CREATE VIEW public.v_lot_allocations AS
 SELECT
     lot_id,
@@ -41,16 +37,16 @@ FROM public.lot_reservations
 WHERE status IN ('active', 'confirmed')
 GROUP BY lot_id;
 
--- 現在在庫ビュー
+-- 現在在庫ビュー (互換用、lot_receipts参照)
 CREATE VIEW public.v_lot_current_stock AS
 SELECT
-    l.id AS lot_id,
-    l.product_id,
-    l.warehouse_id,
-    l.current_quantity,
-    l.updated_at AS last_updated
-FROM public.lots l
-WHERE l.current_quantity > 0;
+    lr.id AS lot_id,
+    lr.product_id,
+    lr.warehouse_id,
+    lr.received_quantity AS current_quantity,
+    lr.updated_at AS last_updated
+FROM public.lot_receipts lr
+WHERE lr.received_quantity > 0;
 
 -- 顧客別日次製品ビュー（フォーキャスト連携用）
 CREATE VIEW public.v_customer_daily_products AS
@@ -112,23 +108,104 @@ JOIN public.orders o ON o.customer_id = f.customer_id
 JOIN public.order_lines ol ON ol.order_id = o.id
     AND ol.product_id = f.product_id;
 
+-- v_lot_available_qty (B-Plan: lot_receipts + withdrawal calc)
 CREATE VIEW public.v_lot_available_qty AS
 SELECT 
-    l.id AS lot_id,
-    l.product_id,
-    l.warehouse_id,
-    GREATEST(l.current_quantity - COALESCE(la.allocated_quantity, 0) - l.locked_quantity, 0) AS available_qty,
-    l.received_date AS receipt_date,
-    l.expiry_date,
-    l.status AS lot_status
-FROM public.lots l
-LEFT JOIN public.v_lot_allocations la ON l.id = la.lot_id
+    lr.id AS lot_id,
+    lr.product_id,
+    lr.warehouse_id,
+    GREATEST(
+        lr.received_quantity 
+        - COALESCE(wl_sum.total_withdrawn, 0) 
+        - COALESCE(la.allocated_quantity, 0) 
+        - lr.locked_quantity, 
+        0
+    ) AS available_qty,
+    lr.received_date AS receipt_date,
+    lr.expiry_date,
+    lr.status AS lot_status
+FROM public.lot_receipts lr
+LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
+LEFT JOIN (
+    SELECT wl.lot_receipt_id, SUM(wl.quantity) AS total_withdrawn
+    FROM public.withdrawal_lines wl
+    JOIN public.withdrawals wd ON wl.withdrawal_id = wd.id
+    WHERE wd.cancelled_at IS NULL
+    GROUP BY wl.lot_receipt_id
+) wl_sum ON wl_sum.lot_receipt_id = lr.id
 WHERE 
-    l.status = 'active'
-    AND (l.expiry_date IS NULL OR l.expiry_date >= CURRENT_DATE)
-    AND (l.current_quantity - COALESCE(la.allocated_quantity, 0) - l.locked_quantity) > 0;
+    lr.status = 'active'
+    AND (lr.expiry_date IS NULL OR lr.expiry_date >= CURRENT_DATE)
+    AND (lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity) > 0;
 
+-- v_lot_receipt_stock (B-Plan: Canonical stock view)
+CREATE VIEW public.v_lot_receipt_stock AS
+SELECT
+    lr.id AS receipt_id,
+    lm.id AS lot_master_id,
+    lm.lot_number,
+    lr.product_id,
+    p.maker_part_code AS product_code,
+    p.product_name,
+    lr.warehouse_id,
+    w.warehouse_code,
+    w.warehouse_name,
+    COALESCE(w.short_name, LEFT(w.warehouse_name, 10)) AS warehouse_short_name,
+    lm.supplier_id,
+    s.supplier_code,
+    s.supplier_name,
+    COALESCE(s.short_name, LEFT(s.supplier_name, 10)) AS supplier_short_name,
+    lr.received_date,
+    lr.expiry_date,
+    lr.unit,
+    lr.status,
+    lr.received_quantity AS initial_quantity,
+    COALESCE(wl_sum.total_withdrawn, 0) AS withdrawn_quantity,
+    GREATEST(lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - lr.locked_quantity, 0) AS remaining_quantity,
+    COALESCE(res_sum.total_reserved, 0) AS reserved_quantity,
+    GREATEST(
+        lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) 
+        - lr.locked_quantity - COALESCE(res_sum.total_reserved, 0),
+        0
+    ) AS available_quantity,
+    lr.locked_quantity,
+    lr.lock_reason,
+    lr.inspection_status,
+    lr.receipt_key,
+    lr.created_at,
+    lr.updated_at,
+    CASE 
+        WHEN lr.expiry_date IS NOT NULL 
+        THEN (lr.expiry_date - CURRENT_DATE)::INTEGER 
+        ELSE NULL 
+    END AS days_to_expiry
+FROM public.lot_receipts lr
+JOIN public.lot_master lm ON lr.lot_master_id = lm.id
+LEFT JOIN public.products p ON lr.product_id = p.id
+LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
+LEFT JOIN public.suppliers s ON lm.supplier_id = s.id
+LEFT JOIN (
+    SELECT 
+        wl.lot_receipt_id, 
+        SUM(wl.quantity) AS total_withdrawn
+    FROM public.withdrawal_lines wl
+    JOIN public.withdrawals wd ON wl.withdrawal_id = wd.id
+    WHERE wd.cancelled_at IS NULL
+    GROUP BY wl.lot_receipt_id
+) wl_sum ON wl_sum.lot_receipt_id = lr.id
+LEFT JOIN (
+    SELECT 
+        lot_id, 
+        SUM(reserved_qty) AS total_reserved
+    FROM public.lot_reservations
+    WHERE status IN ('active', 'confirmed')
+    GROUP BY lot_id
+) res_sum ON res_sum.lot_id = lr.id
+WHERE lr.status = 'active';
 
+COMMENT ON VIEW public.v_lot_receipt_stock IS '在庫一覧（残量は集計で算出、current_quantityキャッシュ化対応準備済み）';
+
+-- v_inventory_summary (B-Plan: lot_receipts base)
 CREATE VIEW public.v_inventory_summary AS
 SELECT
   pw.product_id,
@@ -149,88 +226,103 @@ SELECT
 FROM public.product_warehouse pw
 LEFT JOIN (
   SELECT
-    l.product_id,
-    l.warehouse_id,
-    COUNT(*) FILTER (WHERE l.status = 'active') AS active_lot_count,
-    SUM(l.current_quantity) FILTER (WHERE l.status = 'active') AS total_quantity,
-    SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE l.status = 'active') AS allocated_quantity,
-    SUM(l.locked_quantity) FILTER (WHERE l.status = 'active') AS locked_quantity,
+    lr.product_id,
+    lr.warehouse_id,
+    COUNT(*) FILTER (WHERE lr.status = 'active') AS active_lot_count,
+    SUM(lr.received_quantity) FILTER (WHERE lr.status = 'active') AS total_quantity,
+    SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE lr.status = 'active') AS allocated_quantity,
+    SUM(lr.locked_quantity) FILTER (WHERE lr.status = 'active') AS locked_quantity,
     GREATEST(
-      SUM(l.current_quantity) FILTER (WHERE l.status = 'active')
-      - SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE l.status = 'active')
-      - SUM(l.locked_quantity) FILTER (WHERE l.status = 'active'),
+      SUM(lr.received_quantity) FILTER (WHERE lr.status = 'active')
+      - SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE lr.status = 'active')
+      - SUM(lr.locked_quantity) FILTER (WHERE lr.status = 'active'),
       0
     ) AS available_quantity,
     COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
     GREATEST(
-      SUM(l.current_quantity) FILTER (WHERE l.status = 'active')
-      - SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE l.status = 'active')
-      - SUM(l.locked_quantity) FILTER (WHERE l.status = 'active')
+      SUM(lr.received_quantity) FILTER (WHERE lr.status = 'active')
+      - SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE lr.status = 'active')
+      - SUM(lr.locked_quantity) FILTER (WHERE lr.status = 'active')
       + COALESCE(SUM(ipl.planned_quantity), 0),
       0
     ) AS available_with_provisional,
-    MAX(l.updated_at) AS last_updated
-  FROM public.lots l
-  LEFT JOIN public.v_lot_allocations la ON l.id = la.lot_id
-  LEFT JOIN public.inbound_plan_lines ipl ON l.product_id = ipl.product_id
+    MAX(lr.updated_at) AS last_updated
+  FROM public.lot_receipts lr
+  LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
+  LEFT JOIN public.inbound_plan_lines ipl ON lr.product_id = ipl.product_id
   LEFT JOIN public.inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
-  GROUP BY l.product_id, l.warehouse_id
+  GROUP BY lr.product_id, lr.warehouse_id
 ) agg ON agg.product_id = pw.product_id AND agg.warehouse_id = pw.warehouse_id
 WHERE pw.is_active = true;
 
-COMMENT ON VIEW public.v_inventory_summary IS '在庫集計ビュー（product_warehouse起点、ロット0件対応）';
+COMMENT ON VIEW public.v_inventory_summary IS '在庫集計ビュー（product_warehouse起点、lot_receipts対応）';
 
-
+-- v_lot_details (B-Plan: lot_receipts + lot_master)
 CREATE VIEW public.v_lot_details AS
 SELECT
-    l.id AS lot_id,
-    l.lot_number,
-    l.product_id,
+    lr.id AS lot_id,
+    lm.lot_number,
+    lr.product_id,
     COALESCE(p.maker_part_code, '') AS maker_part_code,
     COALESCE(p.product_name, '[削除済み製品]') AS product_name,
-    l.warehouse_id,
+    lr.warehouse_id,
     COALESCE(w.warehouse_code, '') AS warehouse_code,
     COALESCE(w.warehouse_name, '[削除済み倉庫]') AS warehouse_name,
-    l.supplier_id,
+    COALESCE(w.short_name, LEFT(w.warehouse_name, 10)) AS warehouse_short_name,
+    lm.supplier_id,
     COALESCE(s.supplier_code, '') AS supplier_code,
     COALESCE(s.supplier_name, '[削除済み仕入先]') AS supplier_name,
-    l.received_date,
-    l.expiry_date,
-    l.current_quantity,
+    COALESCE(s.short_name, LEFT(s.supplier_name, 10)) AS supplier_short_name,
+    lr.received_date,
+    lr.expiry_date,
+    lr.received_quantity,
+    COALESCE(wl_sum.total_withdrawn, 0) AS withdrawn_quantity,
+    GREATEST(lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - lr.locked_quantity, 0) AS remaining_quantity,
+    GREATEST(lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - lr.locked_quantity, 0) AS current_quantity,
     COALESCE(la.allocated_quantity, 0) AS allocated_quantity,
-    l.locked_quantity,
-    GREATEST(l.current_quantity - COALESCE(la.allocated_quantity, 0) - l.locked_quantity, 0) AS available_quantity,
-    l.unit,
-    l.status,
-    l.lock_reason,
-    CASE WHEN l.expiry_date IS NOT NULL THEN CAST((l.expiry_date - CURRENT_DATE) AS INTEGER) ELSE NULL END AS days_to_expiry,
-    -- 仮入庫識別キー（UUID）
-    l.temporary_lot_key,
-    -- 担当者情報を追加
+    lr.locked_quantity,
+    GREATEST(
+        lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) 
+        - lr.locked_quantity - COALESCE(la.allocated_quantity, 0),
+        0
+    ) AS available_quantity,
+    lr.unit,
+    lr.status,
+    lr.lock_reason,
+    CASE WHEN lr.expiry_date IS NOT NULL THEN CAST((lr.expiry_date - CURRENT_DATE) AS INTEGER) ELSE NULL END AS days_to_expiry,
+    lr.temporary_lot_key,
+    lr.receipt_key,
+    lr.lot_master_id,
     usa_primary.user_id AS primary_user_id,
     u_primary.username AS primary_username,
     u_primary.display_name AS primary_user_display_name,
-    -- 論理削除フラグ（マスタの状態確認用）
     CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS product_deleted,
     CASE WHEN w.valid_to IS NOT NULL AND w.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS warehouse_deleted,
     CASE WHEN s.valid_to IS NOT NULL AND s.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS supplier_deleted,
-    l.created_at,
-    l.updated_at
-FROM public.lots l
-LEFT JOIN public.v_lot_allocations la ON l.id = la.lot_id
-LEFT JOIN public.products p ON l.product_id = p.id
-LEFT JOIN public.warehouses w ON l.warehouse_id = w.id
-LEFT JOIN public.suppliers s ON l.supplier_id = s.id
--- 主担当者を結合
+    lr.created_at,
+    lr.updated_at
+FROM public.lot_receipts lr
+JOIN public.lot_master lm ON lr.lot_master_id = lm.id
+LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
+LEFT JOIN public.products p ON lr.product_id = p.id
+LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
+LEFT JOIN public.suppliers s ON lm.supplier_id = s.id
+LEFT JOIN (
+    SELECT wl.lot_receipt_id, SUM(wl.quantity) AS total_withdrawn
+    FROM public.withdrawal_lines wl
+    JOIN public.withdrawals wd ON wl.withdrawal_id = wd.id
+    WHERE wd.cancelled_at IS NULL
+    GROUP BY wl.lot_receipt_id
+) wl_sum ON wl_sum.lot_receipt_id = lr.id
 LEFT JOIN public.user_supplier_assignments usa_primary
-    ON usa_primary.supplier_id = l.supplier_id
+    ON usa_primary.supplier_id = lm.supplier_id
     AND usa_primary.is_primary = TRUE
 LEFT JOIN public.users u_primary
     ON u_primary.id = usa_primary.user_id;
 
 COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む、soft-delete対応、仮入庫対応）';
 
-
+-- v_candidate_lots_by_order_line (B-Plan)
 CREATE VIEW public.v_candidate_lots_by_order_line AS
 SELECT 
     c.order_line_id,
@@ -253,9 +345,7 @@ ORDER BY
     l.receipt_date, 
     l.lot_id;
 
-
--- v_order_line_details: P3統一により lot_reservations を使用
--- allocations テーブルは廃止済み、lot_reservations が唯一の正
+-- v_order_line_details (Legacy but compatible)
 CREATE VIEW public.v_order_line_details AS
 SELECT
     o.id AS order_id,
@@ -281,9 +371,7 @@ SELECT
     dp.jiku_code,
     ci.external_product_code,
     COALESCE(s.supplier_name, '[削除済み仕入先]') AS supplier_name,
-    -- lot_reservations から集計（ACTIVE + CONFIRMED = 有効な予約）
     COALESCE(res_sum.allocated_qty, 0) AS allocated_quantity,
-    -- 論理削除フラグ
     CASE WHEN c.valid_to IS NOT NULL AND c.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS customer_deleted,
     CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS product_deleted,
     CASE WHEN dp.valid_to IS NOT NULL AND dp.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS delivery_place_deleted
@@ -294,7 +382,6 @@ LEFT JOIN public.products p ON ol.product_id = p.id
 LEFT JOIN public.delivery_places dp ON ol.delivery_place_id = dp.id
 LEFT JOIN public.customer_items ci ON ci.customer_id = o.customer_id AND ci.product_id = ol.product_id
 LEFT JOIN public.suppliers s ON ci.supplier_id = s.id
--- lot_reservations 集計サブクエリ（ORDER タイプ、非リリース状態）
 LEFT JOIN (
     SELECT source_id, SUM(reserved_qty) as allocated_qty
     FROM public.lot_reservations

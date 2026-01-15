@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 
 from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
 
@@ -38,8 +39,18 @@ def setup_inventory_data(db_session):
     pw = ProductWarehouse(product_id=product.id, warehouse_id=warehouse.id)
     db_session.add(pw)
 
+    # Create LotMaster
+    lot_master = LotMaster(
+        product_id=product.id,
+        supplier_id=supplier.id,
+        lot_number="LOT-INV-001",
+    )
+    db_session.add(lot_master)
+    db_session.commit()
+
     # Create lot with stock
     lot = Lot(
+        lot_master_id=lot_master.id,
         product_id=product.id,
         supplier_id=supplier.id,
         warehouse_id=warehouse.id,

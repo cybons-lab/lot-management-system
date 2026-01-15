@@ -8,6 +8,9 @@ from app.presentation.api.v2.inventory.router import router as inventory_router
 from app.presentation.api.v2.lot.router import router as lot_router
 from app.presentation.api.v2.order.router import router as order_router
 from app.presentation.api.v2.reservation.router import router as reservation_router
+from app.presentation.api.v2.withdrawals.default_destination_router import (
+    router as default_destination_router,
+)
 
 
 api_router = APIRouter()
@@ -18,3 +21,4 @@ api_router.include_router(allocation_router, prefix="/allocation", tags=["v2-all
 api_router.include_router(forecast_router, prefix="/forecast", tags=["v2-forecast"])
 api_router.include_router(inventory_router, prefix="/inventory", tags=["v2-inventory"])
 api_router.include_router(reservation_router, prefix="/reservation", tags=["v2-reservation"])
+api_router.include_router(default_destination_router, tags=["v2-withdrawals"])

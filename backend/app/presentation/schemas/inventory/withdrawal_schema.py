@@ -124,3 +124,11 @@ class WithdrawalListResponse(BaseSchema):
     total: int
     page: int
     page_size: int
+
+
+class DailyWithdrawalSummary(BaseSchema):
+    """日別出庫集計（カレンダー用）."""
+
+    date: date
+    count: int
+    total_quantity: Decimal

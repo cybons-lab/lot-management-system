@@ -21,6 +21,7 @@ import type { LotUI } from "@/shared/libs/normalize";
 // Mock API
 vi.mock("../api", () => ({
   createWithdrawal: vi.fn(),
+  getDefaultDestination: vi.fn().mockResolvedValue({ mapping_found: false }),
 }));
 
 // Mock Hooks

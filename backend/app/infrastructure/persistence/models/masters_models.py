@@ -164,7 +164,8 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .assignments.assignment_models import UserSupplierAssignment
     from .forecast_models import ForecastCurrent
     from .inbound_models import InboundPlan, InboundPlanLine
-    from .inventory_models import Lot
+    from .lot_master_model import LotMaster
+    from .lot_receipt_models import LotReceipt
     from .orders_models import Order, OrderLine
     from .product_supplier_models import ProductSupplier
 
@@ -185,6 +186,10 @@ class Warehouse(SoftDeleteMixin, Base):
     warehouse_type: Mapped[str] = mapped_column(String(20), nullable=False)
     default_transport_lead_time_days: Mapped[int | None] = mapped_column(
         Integer, nullable=True, comment="デフォルト輸送リードタイム（日）"
+    )
+    # B-Plan: short_name for compact display
+    short_name: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="短縮表示名（UI省スペース用）"
     )
     valid_to: Mapped[date] = mapped_column(
         Date, nullable=False, server_default=text("'9999-12-31'")
@@ -207,7 +212,8 @@ class Warehouse(SoftDeleteMixin, Base):
     )
 
     # Relationships
-    lots: Mapped[list[Lot]] = relationship("Lot", back_populates="warehouse")
+
+    lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="warehouse")
     delivery_routes: Mapped[list[WarehouseDeliveryRoute]] = relationship(
         "WarehouseDeliveryRoute", back_populates="warehouse", cascade="all, delete-orphan"
     )
@@ -226,6 +232,10 @@ class Supplier(SoftDeleteMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     supplier_code: Mapped[str] = mapped_column(String(50), nullable=False)
     supplier_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    # B-Plan: short_name for compact display
+    short_name: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="短縮表示名（UI省スペース用）"
+    )
     valid_to: Mapped[date] = mapped_column(
         Date, nullable=False, server_default=text("'9999-12-31'")
     )
@@ -242,7 +252,9 @@ class Supplier(SoftDeleteMixin, Base):
     )
 
     # Relationships
-    lots: Mapped[list[Lot]] = relationship("Lot", back_populates="supplier")
+
+    lot_masters: Mapped[list[LotMaster]] = relationship("LotMaster", back_populates="supplier")
+    lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="supplier")
     inbound_plans: Mapped[list[InboundPlan]] = relationship(
         "InboundPlan", back_populates="supplier"
     )
@@ -274,6 +286,10 @@ class Customer(SoftDeleteMixin, Base):
     contact_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     email: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # B-Plan: short_name for compact display
+    short_name: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="短縮表示名（UI省スペース用）"
+    )
     valid_to: Mapped[date] = mapped_column(
         Date, nullable=False, server_default=text("'9999-12-31'")
     )
@@ -398,7 +414,9 @@ class Product(SoftDeleteMixin, Base):
     )
 
     # Relationships
-    lots: Mapped[list[Lot]] = relationship("Lot", back_populates="product")
+
+    lot_masters: Mapped[list[LotMaster]] = relationship("LotMaster", back_populates="product")
+    lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="product")
     order_lines: Mapped[list[OrderLine]] = relationship("OrderLine", back_populates="product")
     forecast_current: Mapped[list[ForecastCurrent]] = relationship(
         "ForecastCurrent", back_populates="product"

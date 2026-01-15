@@ -38,6 +38,19 @@ export function useInventoryPageState() {
     [setState],
   );
 
+  const resetFilters = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      filters: {
+        product_id: "",
+        warehouse_id: "",
+        supplier_id: "",
+        tab: "all",
+        primary_staff_only: false,
+      },
+    }));
+  }, [setState]);
+
   // queryParams変換（API用）
   const queryParams = useMemo(
     () => ({
@@ -45,6 +58,7 @@ export function useInventoryPageState() {
       warehouse_id: state.filters.warehouse_id ? Number(state.filters.warehouse_id) : undefined,
       supplier_id: state.filters.supplier_id ? Number(state.filters.supplier_id) : undefined,
       tab: state.filters.tab,
+      primary_staff_only: state.filters.primary_staff_only,
     }),
     [state.filters],
   );
@@ -56,5 +70,6 @@ export function useInventoryPageState() {
     setOverviewMode,
     setFilters,
     updateFilter,
+    resetFilters,
   };
 }

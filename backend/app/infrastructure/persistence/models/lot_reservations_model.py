@@ -31,7 +31,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .inventory_models import Lot
+    from .lot_receipt_models import LotReceipt
 
 
 class ReservationSourceType(str, PyEnum):
@@ -221,7 +221,7 @@ class LotReservation(Base):
 
     lot_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("lots.id", ondelete="RESTRICT"),
+        ForeignKey("lot_receipts.id", ondelete="RESTRICT"),
         nullable=False,
     )
 
@@ -345,7 +345,7 @@ class LotReservation(Base):
     )
 
     # Relationships
-    lot: Mapped[Lot] = relationship("Lot", back_populates="reservations")
+    lot_receipt: Mapped[LotReceipt] = relationship("LotReceipt", back_populates="reservations")
 
     def __repr__(self) -> str:
         return (
