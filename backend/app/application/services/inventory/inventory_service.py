@@ -128,7 +128,10 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.presentation.schemas.inventory.inventory_schema import InventoryItemResponse
+from app.presentation.schemas.inventory.inventory_schema import (
+    InventoryItemResponse,
+    InventoryState,
+)
 
 
 class InventoryService:
@@ -368,7 +371,7 @@ class InventoryService:
                     soft_allocated_quantity=Decimal(str(allocs["soft"])),
                     hard_allocated_quantity=Decimal(str(allocs["hard"])),
                     active_lot_count=active_lot_count,
-                    inventory_state=inventory_state,
+                    inventory_state=InventoryState(inventory_state),
                     last_updated=row.last_updated,
                     product_name=row.product_name,
                     product_code=row.product_code,
@@ -470,7 +473,7 @@ class InventoryService:
             available_quantity=row.available_quantity,
             soft_allocated_quantity=Decimal(str(soft_qty)),
             hard_allocated_quantity=Decimal(str(hard_qty)),
-            lot_count=count_res or 0,
+            active_lot_count=count_res or 0,
             last_updated=row.last_updated,
             product_name=row.product_name,
             product_code=row.product_code,

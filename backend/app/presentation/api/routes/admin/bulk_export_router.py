@@ -289,12 +289,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         data = [ForecastResponse.model_validate(f).model_dump() for f in forecast_list]
         return data, "forecasts"
 
-    """エクスポート可能なターゲット一覧を取得.
-
-    Returns:
-        list[ExportTarget]: エクスポート可能なデータの一覧
-    """
-    return EXPORT_TARGETS
+    raise ValueError(f"Unknown export target: {target}")
 
 
 @router.get("/download")
