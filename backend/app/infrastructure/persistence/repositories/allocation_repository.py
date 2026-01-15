@@ -149,7 +149,7 @@ class ReservationRepository:
                 LotReservationHistoryService,
             )
 
-            self._history_service = LotReservationHistoryService(self.db)
+            self._history_service = LotReservationHistoryService(self.db)  # type: ignore[assignment]
         return self._history_service
 
     def find_by_id(self, reservation_id: int) -> LotReservation | None:

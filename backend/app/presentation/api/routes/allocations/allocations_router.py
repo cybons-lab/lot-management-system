@@ -354,7 +354,7 @@ def confirm_allocation(
             allocated_quantity=confirmed_res.reserved_qty,
             allocation_type="hard" if status_str == "confirmed" else "soft",
             status="allocated",
-            confirmed_at=confirmed_res.confirmed_at or confirmed_res.updated_at,
+            confirmed_at=confirmed_res.confirmed_at or confirmed_res.updated_at,  # type: ignore[arg-type]
             confirmed_by=confirmed_res.confirmed_by,
         )
     except ValueError as e:

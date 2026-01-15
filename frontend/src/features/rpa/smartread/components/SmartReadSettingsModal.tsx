@@ -90,7 +90,6 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
   const deleteMutation = useDeleteSmartReadConfig();
 
   const form = useForm<ConfigFormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(configFormSchema) as any,
     defaultValues: {
       name: "",
@@ -427,10 +426,11 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                         <TableCell className="max-w-xs truncate">{config.endpoint}</TableCell>
                         <TableCell>
                           <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${config.is_active
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                              config.is_active
                                 ? "bg-green-100 text-green-800"
                                 : "bg-gray-100 text-gray-800"
-                              }`}
+                            }`}
                           >
                             {config.is_active ? "有効" : "無効"}
                           </span>

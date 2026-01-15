@@ -198,7 +198,7 @@ class RelationCheckService:
         try:
             withdrawal_count = (
                 self.db.query(func.count(Withdrawal.id))
-                .filter(Withdrawal.warehouse_id == warehouse_id)
+                .filter(Withdrawal.warehouse_id == warehouse_id)  # type: ignore[attr-defined]
                 .scalar()
             )
             if withdrawal_count > 0:

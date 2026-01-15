@@ -84,7 +84,7 @@ class InboundReceivingService:
                     if is_temporary:
                         lot_number, temp_key = self._generate_temporary_lot_info()
                     else:
-                        lot_number = expected_lot.expected_lot_number
+                        lot_number = expected_lot.expected_lot_number or ""
                         temp_key = None
 
                         temp_key = None

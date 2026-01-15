@@ -413,7 +413,10 @@ class MasterImportService:
                 existing.pack_quantity = pack_quantity
             if special_instructions:
                 existing.special_instructions = special_instructions
-            existing.is_active = is_active
+            if is_active:
+                existing.restore()
+            else:
+                existing.soft_delete()
             return existing
         else:
             pm = ProductMapping(

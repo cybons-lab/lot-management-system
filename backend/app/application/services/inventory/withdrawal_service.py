@@ -535,7 +535,7 @@ class WithdrawalService:
         stmt = (
             select(
                 Withdrawal.ship_date,
-                func.count(Withdrawal.id).label("count"),
+                func.count(Withdrawal.id).label("withdrawal_count"),
                 func.sum(Withdrawal.quantity).label("total_quantity"),
             )
             .join(Lot, Withdrawal.lot_id == Lot.id)
@@ -557,7 +557,7 @@ class WithdrawalService:
         return [
             DailyWithdrawalSummary(
                 date=row.ship_date,
-                count=int(row.count) if not callable(row.count) else row.count(),
+                count=int(row.withdrawal_count),
                 total_quantity=row.total_quantity or Decimal("0"),
             )
             for row in rows

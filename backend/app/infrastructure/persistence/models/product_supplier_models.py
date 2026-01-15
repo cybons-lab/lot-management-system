@@ -34,7 +34,7 @@ class ProductSupplier(SoftDeleteMixin, Base):
     supplier_id = Column(BigInteger, ForeignKey("suppliers.id"), nullable=False)
     is_primary = Column(Boolean, nullable=False, default=False)
     lead_time_days = Column(Integer, nullable=True)
-    valid_to = Column(Date, nullable=False, server_default=text("'9999-12-31'"))
+    valid_to = Column(Date, nullable=False, server_default=text("'9999-12-31'"))  # type: ignore[assignment]
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
