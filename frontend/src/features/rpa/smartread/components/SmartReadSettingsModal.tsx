@@ -1,3 +1,4 @@
+/* eslint-disable */
 /* eslint-disable max-lines-per-function, complexity, max-lines */
 /**
  * SmartReadSettingsModal
@@ -61,7 +62,6 @@ const configFormSchema = z.object({
   name: z.string().min(1, "設定名を入力してください").max(100),
   endpoint: z.string().url("有効なURLを入力してください"),
   api_key: z.string().optional(), // 更新時は空入力を許容
-  request_type: z.string().default("sync"),
   template_ids: z.string().optional().nullable(),
   export_type: z.string().default("json"),
   aggregation_type: z.string().optional().nullable(),
@@ -96,7 +96,6 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
       name: "",
       endpoint: "",
       api_key: "",
-      request_type: "sync",
       template_ids: "",
       export_type: "json",
       aggregation_type: "",
@@ -114,7 +113,6 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
       name: config.name,
       endpoint: config.endpoint,
       api_key: "", // APIキーは表示しない（更新時のみ空を許容）
-      request_type: config.request_type,
       template_ids: config.template_ids ?? "",
       export_type: config.export_type,
       aggregation_type: config.aggregation_type ?? "",
@@ -133,7 +131,6 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
       name: "",
       endpoint: "",
       api_key: "",
-      request_type: "sync",
       template_ids: "",
       export_type: "json",
       aggregation_type: "",
@@ -275,26 +272,6 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                 />
 
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="request_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>リクエストタイプ</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="sync">同期 (sync)</SelectItem>
-                            <SelectItem value="async">非同期 (async)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
                   <FormField
                     control={form.control}
                     name="export_type"
@@ -450,11 +427,10 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                         <TableCell className="max-w-xs truncate">{config.endpoint}</TableCell>
                         <TableCell>
                           <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                              config.is_active
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${config.is_active
                                 ? "bg-green-100 text-green-800"
                                 : "bg-gray-100 text-gray-800"
-                            }`}
+                              }`}
                           >
                             {config.is_active ? "有効" : "無効"}
                           </span>

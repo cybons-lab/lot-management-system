@@ -16,6 +16,7 @@ from app.presentation.schemas.smartread_schema import (
     SmartReadConfigCreate,
     SmartReadConfigResponse,
     SmartReadConfigUpdate,
+    SmartReadProcessRequest,
 )
 
 
@@ -31,6 +32,7 @@ def get_configs(
     _current_user: User = Depends(get_current_user),
 ) -> list[SmartReadConfigResponse]:
     """全設定一覧を取得."""
+    assert db is not None
     service = SmartReadService(db)
     configs = service.get_all_configs()
     return [SmartReadConfigResponse.model_validate(c) for c in configs]
@@ -43,6 +45,7 @@ def get_config(
     _current_user: User = Depends(get_current_user),
 ) -> SmartReadConfigResponse:
     """設定を取得."""
+    assert db is not None
     service = SmartReadService(db)
     config = service.get_config(config_id)
     if not config:
@@ -59,12 +62,12 @@ def create_config(
     _current_user: User = Depends(get_current_user),
 ) -> SmartReadConfigResponse:
     """設定を作成."""
+    assert uow.session is not None
     service = SmartReadService(uow.session)
     config = service.create_config(
         endpoint=request.endpoint,
         api_key=request.api_key,
         name=request.name,
-        request_type=request.request_type,
         template_ids=request.template_ids,
         export_type=request.export_type,
         aggregation_type=request.aggregation_type,
@@ -86,12 +89,13 @@ def update_config(
     _current_user: User = Depends(get_current_user),
 ) -> SmartReadConfigResponse:
     """設定を更新."""
+    assert uow.session is not None
     service = SmartReadService(uow.session)
     update_data = request.model_dump(exclude_unset=True)
     config = service.update_config(config_id, **update_data)
     if not config:
         raise HTTPException(status_code=404, detail="設定が見つかりません")
-    uow.commit()
+    uow.session.commit()
     return SmartReadConfigResponse.model_validate(config)
 
 
@@ -102,10 +106,49 @@ def delete_config(
     _current_user: User = Depends(get_current_user),
 ) -> None:
     """設定を削除."""
+    assert uow.session is not None
     service = SmartReadService(uow.session)
     if not service.delete_config(config_id):
         raise HTTPException(status_code=404, detail="設定が見つかりません")
-    uow.commit()
+    uow.session.commit()
+
+
+# --- ファイル監視・一括処理 ---
+
+
+@router.get("/configs/{config_id}/files", response_model=list[str])
+def list_watch_dir_files(
+    config_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> list[str]:
+    """監視フォルダ内のファイル一覧を取得."""
+    assert db is not None
+    service = SmartReadService(db)
+    return service.list_files_in_watch_dir(config_id)
+
+
+@router.post("/configs/{config_id}/process", response_model=list[SmartReadAnalyzeResponse])
+async def process_files(
+    config_id: int,
+    request: SmartReadProcessRequest,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> list[SmartReadAnalyzeResponse]:
+    """監視フォルダ内の指定ファイルを処理."""
+    assert db is not None
+    service = SmartReadService(db)
+    results = await service.process_watch_dir_files(config_id, request.filenames)
+
+    return [
+        SmartReadAnalyzeResponse(
+            success=r.success,
+            filename=r.filename,
+            data=r.data,
+            error_message=r.error_message,
+        )
+        for r in results
+    ]
 
 
 # --- PDF解析 ---
@@ -128,6 +171,7 @@ async def analyze_file(
     filename = file.filename or "unknown"
 
     service = SmartReadService(db)
+    assert db is not None
     result = await service.analyze_file(config_id, file_content, filename)
 
     return SmartReadAnalyzeResponse(
@@ -149,6 +193,7 @@ def export_to_json(
     _current_user: User = Depends(get_current_user),
 ) -> Response:
     """データをJSONでダウンロード."""
+    assert db is not None
     service = SmartReadService(db)
     result = service.export_to_json(data, filename)
 
@@ -167,6 +212,7 @@ def export_to_csv(
     _current_user: User = Depends(get_current_user),
 ) -> Response:
     """データをCSVでダウンロード."""
+    assert db is not None
     service = SmartReadService(db)
     result = service.export_to_csv(data, filename)
 

@@ -13,6 +13,8 @@ import {
   updateConfig,
   deleteConfig,
   analyzeFile,
+  getWatchDirFiles,
+  processWatchDirFiles,
 } from "./api";
 
 // Query keys
@@ -114,6 +116,46 @@ export function useAnalyzeFile() {
     },
     onError: (error: Error) => {
       toast.error(`解析に失敗しました: ${error.message}`);
+    },
+  });
+}
+
+/**
+ * 監視フォルダ内のファイル一覧を取得
+ */
+export function useWatchDirFiles(configId: number | null) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.config(configId ?? 0), "files"],
+    queryFn: () => getWatchDirFiles(configId!),
+    enabled: !!configId,
+  });
+}
+
+/**
+ * 監視フォルダ内のファイルを処理
+ */
+export function useProcessWatchDirFiles() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ configId, filenames }: { configId: number; filenames: string[] }) =>
+      processWatchDirFiles(configId, filenames),
+    onSuccess: (results, { configId }) => {
+      const successCount = results.filter((r) => r.success).length;
+      if (successCount > 0) {
+        toast.success(`${successCount}件のファイルを処理しました`);
+      }
+
+      const errors = results.filter((r) => !r.success);
+      if (errors.length > 0) {
+        toast.error(`${errors.length}件の処理に失敗しました`);
+      }
+
+      // ファイル一覧を更新
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.config(configId), "files"] });
+    },
+    onError: (error: Error) => {
+      toast.error(`処理に失敗しました: ${error.message}`);
     },
   });
 }

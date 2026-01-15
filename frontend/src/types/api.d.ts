@@ -5349,6 +5349,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/bulk-export/targets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Export Targets
+     * @description エクスポート可能なターゲット一覧を取得.
+     *
+     *     Returns:
+     *         list[ExportTarget]: エクスポート可能なデータの一覧
+     */
+    get: operations["list_export_targets_api_bulk_export_targets_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/bulk-export/download": {
     parameters: {
       query?: never;
@@ -5935,6 +5958,46 @@ export interface paths {
      * @description 設定を削除.
      */
     delete: operations["delete_config_api_rpa_smartread_configs__config_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/files": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Watch Dir Files
+     * @description 監視フォルダ内のファイル一覧を取得.
+     */
+    get: operations["list_watch_dir_files_api_rpa_smartread_configs__config_id__files_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/process": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Process Files
+     * @description 監視フォルダ内の指定ファイルを処理.
+     */
+    post: operations["process_files_api_rpa_smartread_configs__config_id__process_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -8039,6 +8102,18 @@ export interface components {
       expected_lot_id: number;
       /** Inbound Plan Line Id */
       inbound_plan_line_id: number;
+    };
+    /**
+     * ExportTarget
+     * @description Exportable target definition.
+     */
+    ExportTarget: {
+      /** Key */
+      key: string;
+      /** Name */
+      name: string;
+      /** Description */
+      description: string;
     };
     /**
      * FefoLineAllocation
@@ -11068,12 +11143,6 @@ export interface components {
        */
       api_key: string;
       /**
-       * Request Type
-       * @description リクエストタイプ (sync/async)
-       * @default sync
-       */
-      request_type: string;
-      /**
        * Template Ids
        * @description テンプレートID（カンマ区切り）
        */
@@ -11128,8 +11197,6 @@ export interface components {
       name: string;
       /** Endpoint */
       endpoint: string;
-      /** Request Type */
-      request_type: string;
       /** Template Ids */
       template_ids: string | null;
       /** Export Type */
@@ -11168,8 +11235,6 @@ export interface components {
       endpoint?: string | null;
       /** Api Key */
       api_key?: string | null;
-      /** Request Type */
-      request_type?: string | null;
       /** Template Ids */
       template_ids?: string | null;
       /** Export Type */
@@ -11186,6 +11251,17 @@ export interface components {
       description?: string | null;
       /** Is Active */
       is_active?: boolean | null;
+    };
+    /**
+     * SmartReadProcessRequest
+     * @description ファイル処理リクエスト.
+     */
+    SmartReadProcessRequest: {
+      /**
+       * Filenames
+       * @description 処理するファイル名のリスト
+       */
+      filenames: string[];
     };
     /**
      * Step2ExecuteRequest
@@ -20034,6 +20110,26 @@ export interface operations {
       };
     };
   };
+  list_export_targets_api_bulk_export_targets_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExportTarget"][];
+        };
+      };
+    };
+  };
   download_bulk_export_api_bulk_export_download_get: {
     parameters: {
       query: {
@@ -21078,6 +21174,72 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_watch_dir_files_api_rpa_smartread_configs__config_id__files_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string[];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  process_files_api_rpa_smartread_configs__config_id__process_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadProcessRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadAnalyzeResponse"][];
+        };
       };
       /** @description Validation Error */
       422: {

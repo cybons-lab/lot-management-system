@@ -5,7 +5,6 @@ SmartRead APIと通信し、PDF/画像のOCR処理を行う。
 
 from __future__ import annotations
 
-import base64
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -37,7 +36,6 @@ class SmartReadClient:
         endpoint: str,
         api_key: str,
         template_ids: list[str] | None = None,
-        request_type: str = "sync",
     ) -> None:
         """初期化.
 
@@ -45,12 +43,10 @@ class SmartReadClient:
             endpoint: SmartRead APIエンドポイント
             api_key: APIキー
             template_ids: テンプレートID（帳票認識用）
-            request_type: リクエストタイプ（sync/async）
         """
         self.endpoint = endpoint.rstrip("/")
         self.api_key = api_key
         self.template_ids = template_ids or []
-        self.request_type = request_type
 
     async def analyze_file(
         self,
@@ -77,10 +73,10 @@ class SmartReadClient:
             async with httpx.AsyncClient(timeout=timeout) as client:
                 # 1. Task作成
                 task_id = await self._create_task(client)
-                
+
                 # 2. ファイル投入
                 request_id = await self._upload_file(client, task_id, file_content, filename)
-                
+
                 # 3. 結果取得 (ポーリング)
                 # SmartReadは非同期処理のため、結果が出るまで待つ必要があるが
                 # 今回は単純化のため、即時取得を試み、ステータスに応じて待機するロジックが必要
@@ -116,14 +112,14 @@ class SmartReadClient:
     async def _create_task(self, client: httpx.AsyncClient) -> str:
         """Taskを作成してtaskIdを返す."""
         url = f"{self.endpoint}/v3/task"
-        
+
         # requestTypeは 'templateMatching' 固定 (v3仕様)
         # ユーザー指示: "requestTypeはtemplateMatchingを入れる必要がある"
         payload = {
             "name": "Analyze Task",
-            "requestType": "templateMatching"  # Fixed as per requirement
+            "requestType": "templateMatching",  # Fixed as per requirement
         }
-        
+
         # テンプレートID指定がある場合
         if self.template_ids:
             payload["templateIds"] = self.template_ids
@@ -135,58 +131,53 @@ class SmartReadClient:
         return data["taskId"]
 
     async def _upload_file(
-        self, 
-        client: httpx.AsyncClient, 
-        task_id: str, 
-        file_content: bytes, 
-        filename: str
+        self, client: httpx.AsyncClient, task_id: str, file_content: bytes, filename: str
     ) -> str:
         """ファイルをアップロードしてrequestIdを返す."""
         url = f"{self.endpoint}/v3/task/{task_id}/request"
-        headers = {"Authorization": f"apikey {self.api_key}"} # MultipartなのでContent-Typeは自動設定
-        
+        headers = {
+            "Authorization": f"apikey {self.api_key}"
+        }  # MultipartなのでContent-Typeは自動設定
+
         files = {"image": (filename, file_content)}
-        
+
         response = await client.post(url, files=files, headers=headers)
         response.raise_for_status()
         data = response.json()
         return data["requestId"]
 
     async def _poll_results(
-        self, 
-        client: httpx.AsyncClient, 
-        request_id: str, 
-        timeout_sec: float
+        self, client: httpx.AsyncClient, request_id: str, timeout_sec: float
     ) -> SmartReadResult:
         """結果をポーリングして取得."""
-        import time
         import asyncio
-        
+        import time
+
         url = f"{self.endpoint}/v3/request/{request_id}/results"
         headers = self._get_headers()
-        
+
         start_time = time.time()
-        
+
         while True:
             if time.time() - start_time > timeout_sec:
-                 return SmartReadResult(
+                return SmartReadResult(
                     success=False,
                     data=[],
                     raw_response={},
                     error_message="Timeout waiting for results",
                 )
-            
+
             response = await client.get(url, headers=headers)
             response.raise_for_status()
             result = response.json()
-            
+
             # ステータス判定 (ドキュメント未確認だが一般的なフローとして判定)
             # 実際にはレスポンス構造に status フィールドがあるはず
             # ユーザー提供情報ではエンドポイントのみ。
             # 通常、結果エンドポイントは完了するまで pending か 202 を返すことが多い。
             # 仮定: status が 'succeeded' または 'completed'
             status = result.get("status")
-            
+
             if status == "succeeded" or status == "completed":
                 return SmartReadResult(
                     success=True,
@@ -194,13 +185,13 @@ class SmartReadClient:
                     raw_response=result,
                 )
             elif status == "failed":
-                 return SmartReadResult(
+                return SmartReadResult(
                     success=False,
                     data=[],
                     raw_response=result,
                     error_message=f"Analysis failed: {result.get('error')}",
                 )
-            
+
             # 少し待機
             await asyncio.sleep(1)
 
@@ -216,7 +207,7 @@ class SmartReadClient:
         # v3レスポンス構造に合わせて調整が必要だが、とりあえず柔軟に
         # results > formResults ?
         if "results" in response:
-             return response["results"]
+            return response["results"]
         if "data" in response:
             return response["data"]
         # Fallback
@@ -230,7 +221,7 @@ class SmartReadClient:
                 # ユーザーからは明示されていないが、認証ヘッダ修正が必要
                 # Authorization: apikey ...
                 response = await client.get(
-                    f"{self.endpoint}/health", # エンドポイント不明ならルートとか？一旦維持
+                    f"{self.endpoint}/health",  # エンドポイント不明ならルートとか？一旦維持
                     headers={"Authorization": f"apikey {self.api_key}"},
                     timeout=10.0,
                 )

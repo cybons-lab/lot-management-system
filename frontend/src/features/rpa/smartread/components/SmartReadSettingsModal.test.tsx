@@ -29,7 +29,6 @@ describe("SmartReadSettingsModal", () => {
       name: "Test Config 1",
       endpoint: "https://api.test.com",
       api_key: "key1",
-      request_type: "sync",
       export_type: "json",
       is_active: true,
       created_at: "2024-01-01T00:00:00Z",

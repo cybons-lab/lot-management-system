@@ -25,9 +25,6 @@ class SmartReadConfig(Base):
     api_key: Mapped[str] = mapped_column(Text, nullable=False)
 
     # リクエスト設定
-    request_type: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="sync"
-    )  # sync or async
     template_ids: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # カンマ区切りでテンプレートID
