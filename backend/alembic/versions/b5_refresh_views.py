@@ -73,11 +73,11 @@ SELECT
 FROM public.lot_receipts lr
 LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
 LEFT JOIN (
-    SELECT lot_receipt_id, SUM(quantity) AS total_withdrawn
+    SELECT wl.lot_receipt_id, SUM(wl.quantity) AS total_withdrawn
     FROM public.withdrawal_lines wl
     JOIN public.withdrawals wd ON wl.withdrawal_id = wd.id
     WHERE wd.cancelled_at IS NULL
-    GROUP BY lot_receipt_id
+    GROUP BY wl.lot_receipt_id
 ) wl_sum ON wl_sum.lot_receipt_id = lr.id
 WHERE 
     lr.status = 'active'
@@ -190,11 +190,11 @@ LEFT JOIN public.products p ON lr.product_id = p.id
 LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON lm.supplier_id = s.id
 LEFT JOIN (
-    SELECT lot_receipt_id, SUM(quantity) AS total_withdrawn
+    SELECT wl.lot_receipt_id, SUM(wl.quantity) AS total_withdrawn
     FROM public.withdrawal_lines wl
     JOIN public.withdrawals wd ON wl.withdrawal_id = wd.id
     WHERE wd.cancelled_at IS NULL
-    GROUP BY lot_receipt_id
+    GROUP BY wl.lot_receipt_id
 ) wl_sum ON wl_sum.lot_receipt_id = lr.id
 LEFT JOIN public.user_supplier_assignments usa_primary
     ON usa_primary.supplier_id = lm.supplier_id
@@ -275,12 +275,12 @@ LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON lm.supplier_id = s.id
 LEFT JOIN (
     SELECT 
-        lot_receipt_id, 
-        SUM(quantity) AS total_withdrawn
+        wl.lot_receipt_id, 
+        SUM(wl.quantity) AS total_withdrawn
     FROM public.withdrawal_lines wl
     JOIN public.withdrawals wd ON wl.withdrawal_id = wd.id
     WHERE wd.cancelled_at IS NULL
-    GROUP BY lot_receipt_id
+    GROUP BY wl.lot_receipt_id
 ) wl_sum ON wl_sum.lot_receipt_id = lr.id
 LEFT JOIN (
     SELECT 
