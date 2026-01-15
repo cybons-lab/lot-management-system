@@ -2,6 +2,12 @@
 
 All models strictly follow the DDL v2.2
 (lot_management_ddl_v2_2_id.sql). Legacy models have been removed.
+
+B-Plan additions:
+- LotMaster: Lot number consolidation master
+- LotReceipt: Individual inbound receipts (replaces Lot)
+- WithdrawalLine: FIFO withdrawal tracking
+- MissingMappingEvent: Auto-set failure recording
 """
 
 from .assignments.assignment_models import UserSupplierAssignment
@@ -69,6 +75,13 @@ from .views_models import (
     VProductCodeToId,
 )
 from .withdrawal_models import Withdrawal, WithdrawalCancelReason, WithdrawalType
+
+# B-Plan models
+from .lot_master_model import LotMaster
+from .lot_receipt_models import LotReceipt
+from .withdrawal_line_model import WithdrawalLine
+from .missing_mapping_model import MissingMappingEvent
+
 
 
 __all__ = [
@@ -166,4 +179,10 @@ __all__ = [
     "LayerCodeMapping",
     # SmartRead
     "SmartReadConfig",
+    # B-Plan models
+    "LotMaster",
+    "LotReceipt",
+    "WithdrawalLine",
+    "MissingMappingEvent",
 ]
+

@@ -148,6 +148,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from .auth_models import User
     from .inventory_models import Lot
     from .masters_models import Customer, DeliveryPlace
+    from .withdrawal_line_model import WithdrawalLine
 
 
 class WithdrawalType(str, PyEnum):
@@ -184,12 +185,19 @@ class Withdrawal(Base):
     __tablename__ = "withdrawals"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    lot_id: Mapped[int] = mapped_column(
+
+    # B-Plan: lot_id/quantity are nullable (use withdrawal_lines instead)
+    lot_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("lots.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,  # B-Plan: nullable for new workflow
+        comment="レガシー: withdrawal_lines 移行後は未使用",
     )
-    quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
+    quantity: Mapped[Decimal | None] = mapped_column(
+        Numeric(15, 3),
+        nullable=True,  # B-Plan: nullable for new workflow
+        comment="レガシー: withdrawal_lines 移行後は未使用",
+    )
     withdrawal_type: Mapped[WithdrawalType] = mapped_column(String(20), nullable=False)
     customer_id: Mapped[int | None] = mapped_column(
         BigInteger,
@@ -202,6 +210,19 @@ class Withdrawal(Base):
         nullable=True,
     )
     ship_date: Mapped[date] = mapped_column(Date, nullable=False)
+
+    # B-Plan: New date fields
+    due_date: Mapped[date] = mapped_column(
+        Date,
+        nullable=False,
+        comment="納期（必須）",
+    )
+    planned_ship_date: Mapped[date | None] = mapped_column(
+        Date,
+        nullable=True,
+        comment="予定出荷日（任意、LT計算用）",
+    )
+
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     reference_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
     withdrawn_by: Mapped[int | None] = mapped_column(
@@ -236,11 +257,28 @@ class Withdrawal(Base):
         Index("idx_withdrawals_customer", "customer_id"),
         Index("idx_withdrawals_date", "ship_date"),
         Index("idx_withdrawals_type", "withdrawal_type"),
+        # B-Plan: due_date index for calendar queries
+        Index("idx_withdrawals_due_date", "due_date"),
     )
 
     # Relationships
-    lot: Mapped[Lot] = relationship("Lot")
-    customer: Mapped[Customer] = relationship("Customer")
-    delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
-    user: Mapped[User] = relationship("User", foreign_keys=[withdrawn_by])
-    cancelled_by_user: Mapped[User | None] = relationship("User", foreign_keys=[cancelled_by])
+    lot: Mapped["Lot | None"] = relationship("Lot")
+    customer: Mapped["Customer | None"] = relationship("Customer")
+    delivery_place: Mapped["DeliveryPlace | None"] = relationship("DeliveryPlace")
+    user: Mapped["User | None"] = relationship("User", foreign_keys=[withdrawn_by])
+    cancelled_by_user: Mapped["User | None"] = relationship("User", foreign_keys=[cancelled_by])
+
+    # B-Plan: Withdrawal lines (FIFO consumption from multiple receipts)
+    lines: Mapped[list["WithdrawalLine"]] = relationship(
+        "WithdrawalLine",
+        back_populates="withdrawal",
+        cascade="all, delete-orphan",
+    )
+
+    @property
+    def total_quantity(self) -> Decimal:
+        """Total quantity from all lines (B-Plan computed)."""
+        if self.lines:
+            return sum(line.quantity for line in self.lines)
+        # Fallback to legacy quantity
+        return self.quantity or Decimal("0")
