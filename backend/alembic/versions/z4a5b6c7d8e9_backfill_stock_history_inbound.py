@@ -9,8 +9,9 @@ lot_service.create_lot()でStockHistory作成が追加される前に
 作成されたロットには入庫履歴レコードがないため、バックフィルする。
 """
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -29,8 +30,8 @@ def upgrade() -> None:
         SELECT
             lr.id,
             'inbound',
-            lr.current_quantity,
-            lr.current_quantity,
+            lr.received_quantity,
+            lr.received_quantity,
             'migration_backfill',
             COALESCE(lr.received_date, lr.created_at, CURRENT_TIMESTAMP)
         FROM lot_receipts lr
@@ -39,7 +40,7 @@ def upgrade() -> None:
             FROM stock_history
             WHERE transaction_type = 'inbound'
         )
-        AND lr.current_quantity > 0
+        AND lr.received_quantity > 0
         """
     )
 

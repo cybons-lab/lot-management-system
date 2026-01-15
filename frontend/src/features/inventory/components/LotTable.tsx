@@ -72,6 +72,7 @@ export function LotTable({ lots, table, isLoading, error }: LotTableProps) {
         data={paginatedLots}
         columns={columns}
         sort={sortConfig}
+        getRowId={(row) => row.id}
         isLoading={isLoading}
         className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
         getRowClassName={(lot) =>

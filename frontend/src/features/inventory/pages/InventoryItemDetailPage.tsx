@@ -15,6 +15,7 @@ import * as styles from "./styles";
 
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { IntakeHistoryList } from "@/features/intake-history/components/IntakeHistoryList";
 import { ForecastsTab } from "@/features/inventory/components/ForecastsTab";
 import { InboundPlansTab } from "@/features/inventory/components/InboundPlansTab";
 import {
@@ -247,6 +248,7 @@ export function InventoryItemDetailPage() {
           <TabsTrigger value="summary">サマリ</TabsTrigger>
           <TabsTrigger value="lots">ロット一覧 ({itemLots.length})</TabsTrigger>
           <TabsTrigger value="inbound">入荷予定</TabsTrigger>
+          <TabsTrigger value="intake_history">入庫履歴</TabsTrigger>
           <TabsTrigger value="history">出庫履歴</TabsTrigger>
           <TabsTrigger value="forecast">需要予測</TabsTrigger>
         </TabsList>
@@ -300,6 +302,7 @@ export function InventoryItemDetailPage() {
             <DataTable
               data={itemLots}
               columns={lotColumns}
+              getRowId={(row) => row.id}
               isLoading={lotsLoading}
               emptyMessage="該当するロットがありません。"
             />
@@ -309,6 +312,15 @@ export function InventoryItemDetailPage() {
         {/* Tab 3: 入荷予定 */}
         <TabsContent value="inbound" className="space-y-4">
           <InboundPlansTab productId={productIdNum} warehouseId={warehouseIdNum} />
+        </TabsContent>
+
+        {/* Tab: 入庫履歴 */}
+        <TabsContent value="intake_history" className="space-y-4">
+          <IntakeHistoryList
+            productId={productIdNum}
+            warehouseId={warehouseIdNum}
+            isCompact={true}
+          />
         </TabsContent>
 
         {/* Tab 4: 出庫履歴 */}

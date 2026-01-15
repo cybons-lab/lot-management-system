@@ -6,9 +6,8 @@
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 
-import { useIntakeHistory } from "../hooks";
-
 import type { IntakeHistoryResponse } from "../api";
+import { useIntakeHistory } from "../hooks";
 
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
@@ -21,8 +20,10 @@ interface IntakeHistoryListProps {
   searchQuery?: string;
   startDate?: string;
   endDate?: string;
+  isCompact?: boolean;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function IntakeHistoryList({
   supplierId,
   warehouseId,
@@ -30,6 +31,7 @@ export function IntakeHistoryList({
   searchQuery,
   startDate,
   endDate,
+  isCompact = false,
 }: IntakeHistoryListProps) {
   const { data, isLoading, isError, error, refetch } = useIntakeHistory({
     supplier_id: supplierId,
@@ -41,17 +43,19 @@ export function IntakeHistoryList({
     limit: 100,
   });
 
-  const columns: Column<IntakeHistoryResponse>[] = [
+  const allColumns: (Column<IntakeHistoryResponse> & { hidden?: boolean })[] = [
     {
       id: "received_date",
       header: "入庫日",
       cell: (row) => format(new Date(row.received_date), "yyyy/MM/dd"),
       sortable: true,
+      width: 100,
     },
     {
       id: "lot_number",
       header: "ロット番号",
       cell: (row) => <span className="font-mono text-xs">{row.lot_number}</span>,
+      width: 120,
     },
     {
       id: "product",
@@ -62,6 +66,7 @@ export function IntakeHistoryList({
           <span className="text-xs text-slate-500">{row.product_code}</span>
         </div>
       ),
+      hidden: isCompact,
     },
     {
       id: "quantity",
@@ -69,6 +74,7 @@ export function IntakeHistoryList({
       cell: (row) => <span className="font-medium text-green-600">{fmt(row.quantity)}</span>,
       sortable: true,
       align: "right",
+      width: 80,
     },
     {
       id: "supplier",
@@ -79,18 +85,20 @@ export function IntakeHistoryList({
           {row.supplier_code && <span className="text-xs text-slate-500">{row.supplier_code}</span>}
         </div>
       ),
+      hidden: isCompact,
     },
     {
       id: "warehouse",
       header: "倉庫",
       cell: (row) => row.warehouse_name || "-",
+      hidden: isCompact,
     },
     {
       id: "expiry_date",
       header: "有効期限",
-      cell: (row) =>
-        row.expiry_date ? format(new Date(row.expiry_date), "yyyy/MM/dd") : "-",
+      cell: (row) => (row.expiry_date ? format(new Date(row.expiry_date), "yyyy/MM/dd") : "-"),
       sortable: true,
+      width: 100,
     },
     {
       id: "inbound_plan",
@@ -112,6 +120,8 @@ export function IntakeHistoryList({
     },
   ];
 
+  const columns = allColumns.filter((col) => !col.hidden);
+
   if (isLoading) {
     return (
       <div className="flex h-40 items-center justify-center">
@@ -131,6 +141,7 @@ export function IntakeHistoryList({
       <DataTable
         data={data?.intakes || []}
         columns={columns}
+        getRowId={(row) => row.intake_id}
         isLoading={isLoading}
         emptyMessage="入庫履歴はありません"
       />

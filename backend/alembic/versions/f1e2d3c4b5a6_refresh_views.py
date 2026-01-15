@@ -64,13 +64,13 @@ GROUP BY lot_id;
 -- 現在在庫ビュー
 CREATE VIEW public.v_lot_current_stock AS
 SELECT
-    l.id AS lot_id,
-    l.product_id,
-    l.warehouse_id,
-    l.current_quantity,
-    l.updated_at AS last_updated
-FROM public.lots l
-WHERE l.current_quantity > 0;
+    lr.id AS lot_id,
+    lr.product_id,
+    lr.warehouse_id,
+    lr.received_quantity AS current_quantity,
+    lr.updated_at AS last_updated
+FROM public.lot_receipts lr
+WHERE lr.received_quantity > 0;
 
 -- 顧客別日次製品ビュー（フォーキャスト連携用）
 CREATE VIEW public.v_customer_daily_products AS
@@ -134,75 +134,75 @@ JOIN public.order_lines ol ON ol.order_id = o.id
 
 CREATE VIEW public.v_lot_available_qty AS
 SELECT 
-    l.id AS lot_id,
-    l.product_id,
-    l.warehouse_id,
-    GREATEST(l.current_quantity - COALESCE(la.allocated_quantity, 0) - l.locked_quantity, 0) AS available_qty,
-    l.received_date AS receipt_date,
-    l.expiry_date,
-    l.status AS lot_status
-FROM public.lots l
-LEFT JOIN public.v_lot_allocations la ON l.id = la.lot_id
+    lr.id AS lot_id,
+    lr.product_id,
+    lr.warehouse_id,
+    GREATEST(lr.received_quantity - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity, 0) AS available_qty,
+    lr.received_date AS receipt_date,
+    lr.expiry_date,
+    lr.status AS lot_status
+FROM public.lot_receipts lr
+LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
 WHERE 
-    l.status = 'active'
-    AND (l.expiry_date IS NULL OR l.expiry_date >= CURRENT_DATE)
-    AND (l.current_quantity - COALESCE(la.allocated_quantity, 0) - l.locked_quantity) > 0;
+    lr.status = 'active'
+    AND (lr.expiry_date IS NULL OR lr.expiry_date >= CURRENT_DATE)
+    AND (lr.received_quantity - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity) > 0;
 
 
 CREATE VIEW public.v_inventory_summary AS
 SELECT
-    l.product_id,
-    l.warehouse_id,
-    SUM(l.current_quantity) AS total_quantity,
+    lr.product_id,
+    lr.warehouse_id,
+    SUM(lr.received_quantity) AS total_quantity,
     SUM(COALESCE(la.allocated_quantity, 0)) AS allocated_quantity,
-    SUM(l.locked_quantity) AS locked_quantity,
-    GREATEST(SUM(l.current_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(l.locked_quantity), 0) AS available_quantity,
+    SUM(lr.locked_quantity) AS locked_quantity,
+    GREATEST(SUM(lr.received_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(lr.locked_quantity), 0) AS available_quantity,
     -- 入荷予定（仮在庫）
     COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
-    GREATEST(SUM(l.current_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(l.locked_quantity) + COALESCE(SUM(ipl.planned_quantity), 0), 0) AS available_with_provisional,
-    MAX(l.updated_at) AS last_updated,
+    GREATEST(SUM(lr.received_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(lr.locked_quantity) + COALESCE(SUM(ipl.planned_quantity), 0), 0) AS available_with_provisional,
+    MAX(lr.updated_at) AS last_updated,
     -- アクティブロット数
-    COUNT(l.id) AS active_lot_count,
+    COUNT(lr.id) AS active_lot_count,
     -- 在庫状態 (in_stock, depleted_only)
     CASE 
-        WHEN GREATEST(SUM(l.current_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(l.locked_quantity), 0) > 0 THEN 'in_stock'
+        WHEN GREATEST(SUM(lr.received_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(lr.locked_quantity), 0) > 0 THEN 'in_stock'
         ELSE 'depleted_only'
     END AS inventory_state
-FROM public.lots l
-LEFT JOIN public.v_lot_allocations la ON l.id = la.lot_id
-LEFT JOIN public.inbound_plan_lines ipl ON l.product_id = ipl.product_id
+FROM public.lot_receipts lr
+LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
+LEFT JOIN public.inbound_plan_lines ipl ON lr.product_id = ipl.product_id
 LEFT JOIN public.inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
-WHERE l.status = 'active'
-GROUP BY l.product_id, l.warehouse_id;
+WHERE lr.status = 'active'
+GROUP BY lr.product_id, lr.warehouse_id;
 
 COMMENT ON VIEW public.v_inventory_summary IS '在庫集計ビュー（仮在庫含む）';
 
 
 CREATE VIEW public.v_lot_details AS
 SELECT
-    l.id AS lot_id,
-    l.lot_number,
-    l.product_id,
+    lr.id AS lot_id,
+    lr.lot_number,
+    lr.product_id,
     COALESCE(p.maker_part_code, '') AS maker_part_code,
     COALESCE(p.product_name, '[削除済み製品]') AS product_name,
-    l.warehouse_id,
+    lr.warehouse_id,
     COALESCE(w.warehouse_code, '') AS warehouse_code,
     COALESCE(w.warehouse_name, '[削除済み倉庫]') AS warehouse_name,
-    l.supplier_id,
+    lr.supplier_id,
     COALESCE(s.supplier_code, '') AS supplier_code,
     COALESCE(s.supplier_name, '[削除済み仕入先]') AS supplier_name,
-    l.received_date,
-    l.expiry_date,
-    l.current_quantity,
+    lr.received_date,
+    lr.expiry_date,
+    lr.received_quantity,
     COALESCE(la.allocated_quantity, 0) AS allocated_quantity,
-    l.locked_quantity,
-    GREATEST(l.current_quantity - COALESCE(la.allocated_quantity, 0) - l.locked_quantity, 0) AS available_quantity,
-    l.unit,
-    l.status,
-    l.lock_reason,
-    CASE WHEN l.expiry_date IS NOT NULL THEN CAST((l.expiry_date - CURRENT_DATE) AS INTEGER) ELSE NULL END AS days_to_expiry,
+    lr.locked_quantity,
+    GREATEST(lr.received_quantity - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity, 0) AS available_quantity,
+    lr.unit,
+    lr.status,
+    lr.lock_reason,
+    CASE WHEN lr.expiry_date IS NOT NULL THEN CAST((lr.expiry_date - CURRENT_DATE) AS INTEGER) ELSE NULL END AS days_to_expiry,
     -- 仮入庫識別キー（UUID）
-    l.temporary_lot_key,
+    lr.temporary_lot_key,
     -- 担当者情報を追加
     usa_primary.user_id AS primary_user_id,
     u_primary.username AS primary_username,
@@ -211,16 +211,16 @@ SELECT
     CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS product_deleted,
     CASE WHEN w.valid_to IS NOT NULL AND w.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS warehouse_deleted,
     CASE WHEN s.valid_to IS NOT NULL AND s.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS supplier_deleted,
-    l.created_at,
-    l.updated_at
-FROM public.lots l
-LEFT JOIN public.v_lot_allocations la ON l.id = la.lot_id
-LEFT JOIN public.products p ON l.product_id = p.id
-LEFT JOIN public.warehouses w ON l.warehouse_id = w.id
-LEFT JOIN public.suppliers s ON l.supplier_id = s.id
+    lr.created_at,
+    lr.updated_at
+FROM public.lot_receipts lr
+LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
+LEFT JOIN public.products p ON lr.product_id = p.id
+LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
+LEFT JOIN public.suppliers s ON lr.supplier_id = s.id
 -- 主担当者を結合
 LEFT JOIN public.user_supplier_assignments usa_primary
-    ON usa_primary.supplier_id = l.supplier_id
+    ON usa_primary.supplier_id = lr.supplier_id
     AND usa_primary.is_primary = TRUE
 LEFT JOIN public.users u_primary
     ON u_primary.id = usa_primary.user_id;

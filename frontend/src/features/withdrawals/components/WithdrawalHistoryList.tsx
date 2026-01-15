@@ -97,6 +97,7 @@ export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHist
       <DataTable
         data={data?.withdrawals || []}
         columns={columns}
+        getRowId={(row) => row.withdrawal_id}
         isLoading={isLoading}
         emptyMessage="出庫履歴はありません"
       />

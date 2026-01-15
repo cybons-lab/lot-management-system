@@ -17,6 +17,8 @@ import {
   processWatchDirFiles,
 } from "./api";
 
+import { ApiError } from "@/utils/errors/custom-errors";
+
 // Query keys
 const QUERY_KEYS = {
   all: ["smartread"] as const,
@@ -31,6 +33,15 @@ export function useSmartReadConfigs() {
   return useQuery({
     queryKey: QUERY_KEYS.configs(),
     queryFn: getConfigs,
+    // 【設計判断】401/403等の認証系エラーはリトライしても解決しないため抑制
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        return false;
+      }
+      return failureCount < 1;
+    },
+    // キャッシュを長めに保持し、ページ遷移のたびにリクエストが発生するのを抑制
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }
 
@@ -42,6 +53,13 @@ export function useSmartReadConfig(configId: number) {
     queryKey: QUERY_KEYS.config(configId),
     queryFn: () => getConfig(configId),
     enabled: !!configId,
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        return false;
+      }
+      return failureCount < 1;
+    },
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -128,6 +146,13 @@ export function useWatchDirFiles(configId: number | null) {
     queryKey: [...QUERY_KEYS.config(configId ?? 0), "files"],
     queryFn: () => getWatchDirFiles(configId!),
     enabled: !!configId,
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        return false;
+      }
+      return failureCount < 1;
+    },
+    staleTime: 1000 * 60 * 2, // 監視フォルダは少し短めに（2分）
   });
 }
 
