@@ -127,13 +127,17 @@ def get_warehouse_code(warehouse: Any, default: str = "") -> str:
 
 def get_delivery_place_name(delivery_place: Any, default: str = "") -> str:
     """Get delivery place name with soft-delete handling."""
-    return str(get_master_attr(
-        delivery_place, "delivery_place_name", default, master_type="delivery_place"
-    ))
+    return str(
+        get_master_attr(
+            delivery_place, "delivery_place_name", default, master_type="delivery_place"
+        )
+    )
 
 
 def get_delivery_place_code(delivery_place: Any, default: str = "") -> str:
     """Get delivery place code with soft-delete handling."""
-    return str(get_master_attr(
-        delivery_place, "delivery_place_code", default, master_type="delivery_place"
-    ))
+    return str(
+        get_master_attr(
+            delivery_place, "delivery_place_code", default, master_type="delivery_place"
+        )
+    )

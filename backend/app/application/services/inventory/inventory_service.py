@@ -676,4 +676,3 @@ class InventoryService:
             suppliers=suppliers,
             warehouses=warehouses,
         )
-

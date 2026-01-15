@@ -44,4 +44,3 @@ class RpaFlowClient:
                 return cast(dict[str, Any], response.json())
             except Exception:
                 return {"status_code": response.status_code, "text": response.text}
-

@@ -110,6 +110,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 break
 
             from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
+
             available = get_available_quantity(self.db, cast(LotReceipt, lot))
             if available <= 0:
                 continue
