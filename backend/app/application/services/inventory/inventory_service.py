@@ -126,9 +126,13 @@ providing product × warehouse summary information.
 
 from decimal import Decimal
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
 from app.presentation.schemas.inventory.inventory_schema import (
+    FilterOptions,
     InventoryItemResponse,
     InventoryState,
 )
@@ -204,7 +208,7 @@ class InventoryService:
             if supplier_id is not None:
                 query += " AND v.supplier_id = :supplier_id"
                 params["supplier_id"] = supplier_id
-            
+
             if primary_staff_only and current_user_id:
                 query += " AND usa.user_id = :current_user_id AND usa.is_primary = TRUE"
                 params["current_user_id"] = current_user_id
@@ -218,6 +222,13 @@ class InventoryService:
                 params["warehouse_id"] = warehouse_id
 
             query += " GROUP BY v.product_id, v.warehouse_id, v.product_name, v.product_code, v.warehouse_name, v.warehouse_code"
+
+            # Tab filter: HAVING clause after GROUP BY
+            if tab == "in_stock":
+                query += " HAVING SUM(v.available_quantity) > 0"
+            elif tab == "no_stock":
+                query += " HAVING SUM(v.available_quantity) = 0"
+
             query += " ORDER BY v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
             params["limit"] = limit
             params["skip"] = skip
@@ -357,8 +368,20 @@ class InventoryService:
             allocs = alloc_map.get(key, {"soft": 0.0, "hard": 0.0})
             # Use active_lot_count from view, fallback to count_map for supplier-filtered query
             active_lot_count = getattr(row, "active_lot_count", count_map.get(key, 0))
-            # Use inventory_state from view, default to "no_lots"
-            inventory_state = getattr(row, "inventory_state", "no_lots")
+
+            # Compute inventory_state from available data if not in result
+            if hasattr(row, "inventory_state") and row.inventory_state:
+                inventory_state = row.inventory_state
+            else:
+                # Determine state based on available_quantity and lot_count
+                available_qty = float(row.available_quantity or 0)
+                lot_cnt = active_lot_count or 0
+                if lot_cnt == 0:
+                    inventory_state = "no_lots"
+                elif available_qty > 0:
+                    inventory_state = "in_stock"
+                else:
+                    inventory_state = "depleted_only"
 
             responses.append(
                 InventoryItemResponse(
@@ -586,3 +609,65 @@ class InventoryService:
             }
             for row in result
         ]
+
+    def get_filter_options(
+        self,
+        product_id: int | None = None,
+        warehouse_id: int | None = None,
+        supplier_id: int | None = None,
+    ) -> FilterOptions:
+        """Get filter options based on current selection (Mutual Filtering).
+
+        Args:
+            product_id: Currently selected product ID
+            warehouse_id: Currently selected warehouse ID
+            supplier_id: Currently selected supplier ID
+
+        Returns:
+            FilterOptions containing compatible products, suppliers, and warehouses
+        """
+        # 1. Products (filtered by supplier if selected)
+        p_stmt = select(Product.id, Product.maker_part_code, Product.product_name).where(
+            Product.valid_to >= "9999-12-31"
+        )
+        if supplier_id:
+            # Filter products supplied by this supplier
+            p_stmt = (
+                p_stmt.join(ProductSupplier, ProductSupplier.product_id == Product.id)
+                .where(ProductSupplier.supplier_id == supplier_id)
+                .where(ProductSupplier.valid_to >= "9999-12-31")
+            )
+
+        p_rows = self.db.execute(p_stmt).all()
+        products = [{"id": r.id, "code": r.maker_part_code, "name": r.product_name} for r in p_rows]
+
+        # 2. Suppliers (filtered by product if selected)
+        s_stmt = select(Supplier.id, Supplier.supplier_code, Supplier.supplier_name).where(
+            Supplier.valid_to >= "9999-12-31"
+        )
+        if product_id:
+            # Filter suppliers supplying this product
+            s_stmt = (
+                s_stmt.join(ProductSupplier, ProductSupplier.supplier_id == Supplier.id)
+                .where(ProductSupplier.product_id == product_id)
+                .where(ProductSupplier.valid_to >= "9999-12-31")
+            )
+
+        s_rows = self.db.execute(s_stmt).all()
+        suppliers = [{"id": r.id, "code": r.supplier_code, "name": r.supplier_name} for r in s_rows]
+
+        # 3. Warehouses (Active only)
+        w_stmt = select(Warehouse.id, Warehouse.warehouse_code, Warehouse.warehouse_name).where(
+            Warehouse.valid_to >= "9999-12-31"
+        )
+
+        w_rows = self.db.execute(w_stmt).all()
+        warehouses = [
+            {"id": r.id, "code": r.warehouse_code, "name": r.warehouse_name} for r in w_rows
+        ]
+
+        return FilterOptions(
+            products=products,
+            suppliers=suppliers,
+            warehouses=warehouses,
+        )

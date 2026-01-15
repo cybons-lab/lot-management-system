@@ -13,6 +13,7 @@ from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import get_current_user_optional
 from app.presentation.schemas.common.base import BaseSchema
 from app.presentation.schemas.inventory.inventory_schema import (
+    FilterOptions,
     InventoryByProductResponse,
     InventoryBySupplierResponse,
     InventoryByWarehouseResponse,
@@ -27,6 +28,7 @@ class InventoryStats(BaseSchema):
     total_products: int
     total_warehouses: int
     total_quantity: Decimal
+
 
 @router.get("/", response_model=list[InventoryItemResponse])
 async def list_inventory(
@@ -53,6 +55,22 @@ async def list_inventory(
         tab=tab,
         primary_staff_only=primary_staff_only,
         current_user_id=current_user.id if current_user else None,
+    )
+
+
+@router.get("/filter-options", response_model=FilterOptions)
+async def get_filter_options(
+    product_id: int | None = None,
+    warehouse_id: int | None = None,
+    supplier_id: int | None = None,
+    db: Session = Depends(get_db),
+):
+    """Get filter options (products, suppliers, warehouses) based on current selection."""
+    service = InventoryService(db)
+    return service.get_filter_options(
+        product_id=product_id,
+        warehouse_id=warehouse_id,
+        supplier_id=supplier_id,
     )
 
 

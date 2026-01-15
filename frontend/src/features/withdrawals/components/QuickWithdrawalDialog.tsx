@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
-import { createWithdrawal, type WithdrawalCreateRequest } from "../api";
+import { createWithdrawal, getDefaultDestination, type WithdrawalCreateRequest } from "../api";
 import type { DeliveryPlace } from "../hooks/useWithdrawalFormState";
 
 import { Button, Input, Label } from "@/components/ui";
@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { DatePicker } from "@/components/ui/date-picker";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useCustomersQuery } from "@/hooks/api/useMastersQuery";
@@ -92,7 +93,7 @@ export function QuickWithdrawalDialog({
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ダイアログが開くたびにフォームをリセット
+  // ダイアログが開くたびにフォームをリセット＆デフォルト得意先を取得
   useEffect(() => {
     if (open) {
       setFormState({
@@ -105,8 +106,29 @@ export function QuickWithdrawalDialog({
       });
       setDeliveryPlaces([]);
       setErrors({});
+
+      // 製品IDからデフォルトの得意先・納入先を取得
+      if (lot.product_id) {
+        getDefaultDestination({ product_id: lot.product_id })
+          .then((result) => {
+            if (result.mapping_found && result.customer_id) {
+              setFormState((prev) => ({
+                ...prev,
+                customer_id: result.customer_id!,
+                delivery_place_id: result.delivery_place_id || 0,
+              }));
+            } else if (!result.mapping_found) {
+              toast.warning(
+                `製品 (ID: ${lot.product_id}) のマッピングが未設定です。得意先を手動で選択してください。`,
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("デフォルト得意先取得エラー:", error);
+          });
+      }
     }
-  }, [open, today, initialShipDate]);
+  }, [open, today, initialShipDate, lot.product_id]);
 
   // 得意先が変わったら納入先を再取得（レースコンディション対策）
   useEffect(() => {
@@ -311,12 +333,11 @@ export function QuickWithdrawalDialog({
             <Label htmlFor="ship_date" className="mb-2 block text-sm font-medium">
               出荷日 <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="ship_date"
-              type="date"
+            <DatePicker
               value={formState.ship_date}
-              onChange={(e) => updateField("ship_date", e.target.value)}
+              onChange={(v) => updateField("ship_date", v || today)}
               disabled={isSubmitting}
+              placeholder="出荷日を選択"
             />
           </div>
 

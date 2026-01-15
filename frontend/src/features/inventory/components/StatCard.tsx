@@ -8,15 +8,15 @@ interface StatCardProps {
 export function StatCard({ title, value, description, highlight }: StatCardProps) {
   return (
     <div
-      className={`group rounded-xl border bg-white/90 p-6 shadow-sm transition-all duration-200 hover:shadow-md ${
+      className={`group rounded-xl border bg-white/90 p-4 shadow-sm transition-all duration-200 hover:shadow-md ${
         highlight ? "border-blue-200/80 ring-2 ring-blue-50 ring-inset" : "border-slate-200"
       }`}
     >
-      <div className="text-sm font-semibold text-slate-600">{title}</div>
-      <div className={`mt-3 text-3xl font-bold ${highlight ? "text-blue-600" : "text-slate-900"}`}>
+      <div className="text-xs font-semibold text-slate-600">{title}</div>
+      <div className={`mt-2 text-2xl font-bold ${highlight ? "text-blue-600" : "text-slate-900"}`}>
         {value}
       </div>
-      {description && <div className="mt-2 text-xs text-slate-500">{description}</div>}
+      {description && <div className="mt-1 text-xs text-slate-500">{description}</div>}
     </div>
   );
 }

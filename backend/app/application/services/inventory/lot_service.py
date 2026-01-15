@@ -155,6 +155,7 @@ from app.domain.lot import (
 )
 from app.infrastructure.persistence.models import (
     Lot,
+    LotMaster,
     Product,
     StockMovement,
     Supplier,
@@ -480,6 +481,29 @@ class LotService:
                 lot_payload["lot_number"] = self._generate_adhoc_lot_number(
                     lot_create.origin_type.value
                 )
+
+        # B-Plan: Find or create LotMaster
+        # lot_master acts as the canonical source for lot_number
+        lot_master = (
+            self.db.query(LotMaster)
+            .filter(
+                LotMaster.lot_number == lot_payload["lot_number"],
+                LotMaster.product_id == lot_create.product_id,
+                LotMaster.supplier_id == (supplier.id if supplier else None),
+            )
+            .first()
+        )
+
+        if not lot_master:
+            lot_master = LotMaster(
+                lot_number=lot_payload["lot_number"],
+                product_id=lot_create.product_id,
+                supplier_id=supplier.id if supplier else None,
+            )
+            self.db.add(lot_master)
+            self.db.flush()  # Generate ID
+
+        lot_payload["lot_master_id"] = lot_master.id
 
         try:
             db_lot = Lot(**lot_payload)

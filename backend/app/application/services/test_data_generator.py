@@ -47,7 +47,7 @@ def generate_all_test_data(db: Session):
         customers, delivery_places = generate_customers_and_delivery_places(db)
         products = generate_products(db)
 
-        generate_customer_items(db, customers, products, suppliers)
+        generate_customer_items(db, customers, products, suppliers, delivery_places)
 
         # Step 1: Generate forecasts and get totals
         products_with_forecast, forecast_totals = generate_forecasts(

@@ -115,6 +115,8 @@ export interface DataTableProps<T = never> {
   onExpandedRowsChange?: (ids: (string | number)[]) => void;
   /** 展開された行のレンダリング関数 */
   renderExpandedRow?: (row: T) => React.ReactNode;
+  /** ツールバー左側に表示するコンテンツ */
+  headerSlot?: React.ReactNode;
 }
 
 // ============================================
@@ -141,6 +143,7 @@ export function DataTable<T = never>({
   expandedRowIds = [],
   onExpandedRowsChange,
   renderExpandedRow,
+  headerSlot,
 }: DataTableProps<T>) {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
 
@@ -410,7 +413,8 @@ export function DataTable<T = never>({
       )}
     >
       {/* Toolbar */}
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between px-4 py-2">
+        <div>{headerSlot}</div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="ml-auto h-8">

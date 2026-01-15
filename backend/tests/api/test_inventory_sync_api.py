@@ -6,7 +6,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import BusinessRule, Lot, Product, Warehouse
+from app.infrastructure.persistence.models import (
+    BusinessRule,
+    Lot,
+    Product,
+    ProductWarehouse,
+    Warehouse,
+)
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.main import app
 from app.presentation.api.deps import get_db
@@ -71,6 +77,18 @@ def _setup_test_data(db: Session):
         for i in range(1, 4)
     ]
     db.add_all(products)
+    db.flush()
+
+    # Create ProductWarehouse records
+    product_warehouses = [
+        ProductWarehouse(
+            product_id=p.id,
+            warehouse_id=wh.id,
+            is_active=True,
+        )
+        for p in products
+    ]
+    db.add_all(product_warehouses)
     db.flush()
 
     # Create LotMasters first

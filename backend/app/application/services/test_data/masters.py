@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
     CustomerItem,
+    CustomerItemDeliverySetting,
     DeliveryPlace,
     Product,
     Supplier,
@@ -110,16 +111,32 @@ def generate_products(db: Session) -> list[Product]:
 
 
 def generate_customer_items(
-    db: Session, customers: list[Customer], products: list[Product], suppliers: list[Supplier]
+    db: Session,
+    customers: list[Customer],
+    products: list[Product],
+    suppliers: list[Supplier],
+    delivery_places: list[DeliveryPlace] | None = None,
 ):
-    """Generate CustomerItem and ProductSupplier records.
+    """Generate CustomerItem, ProductSupplier, and CustomerItemDeliverySettings records.
 
     Each product is assigned to:
     - 1-2 suppliers (via product_suppliers table)
     - 1-3 customers (via customer_items table)
+    - Default delivery place per customer-product (via customer_item_delivery_settings)
     """
     # Track which products already have suppliers to avoid duplicates
     product_supplier_pairs: set[tuple[int, int]] = set()
+
+    # Get delivery places if not provided
+    if delivery_places is None:
+        delivery_places = db.query(DeliveryPlace).all()
+
+    # Build customer_id -> delivery_places map
+    customer_delivery_map: dict[int, list[DeliveryPlace]] = {}
+    for dp in delivery_places:
+        if dp.customer_id not in customer_delivery_map:
+            customer_delivery_map[dp.customer_id] = []
+        customer_delivery_map[dp.customer_id].append(dp)
 
     for p in products:
         # 1. Assign 1-2 suppliers to this product
@@ -152,15 +169,27 @@ def generate_customer_items(
                 )
                 customers_for_product.extend(additional)
 
-        # Create CustomerItem for each customer that deals with this product
+        # Create CustomerItem and CustomerItemDeliverySettings for each customer
         for c in customers_for_product:
+            external_code = f"EXT-{c.customer_code}-{p.maker_part_code}"
             ci = CustomerItem(
                 customer_id=c.id,
                 product_id=p.id,
-                external_product_code=f"EXT-{c.customer_code}-{p.maker_part_code}",
+                external_product_code=external_code,
                 base_unit="pcs",
                 supplier_id=random.choice(suppliers).id if suppliers else None,
             )
             db.add(ci)
+
+            # Create default delivery setting if customer has delivery places
+            if c.id in customer_delivery_map and customer_delivery_map[c.id]:
+                default_dp = random.choice(customer_delivery_map[c.id])
+                delivery_setting = CustomerItemDeliverySetting(
+                    customer_id=c.id,
+                    external_product_code=external_code,
+                    delivery_place_id=default_dp.id,
+                    is_default=True,
+                )
+                db.add(delivery_setting)
 
     db.commit()

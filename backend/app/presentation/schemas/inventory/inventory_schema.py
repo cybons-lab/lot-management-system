@@ -304,3 +304,19 @@ class InventoryByProductResponse(BaseSchema):
     available_quantity: Decimal
     lot_count: int
     warehouse_count: int
+
+
+class FilterOption(BaseSchema):
+    """Filter option for dropdowns."""
+
+    id: int
+    code: str
+    name: str
+
+
+class FilterOptions(BaseSchema):
+    """Available filter options for inventory."""
+
+    products: list[FilterOption]
+    suppliers: list[FilterOption]
+    warehouses: list[FilterOption]

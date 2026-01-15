@@ -3,7 +3,7 @@
  * InventoryTable - Main inventory table with expandable lot details.
  * Refactored to use DataTable component.
  */
-import { ArrowUpFromLine, History, Lock, Pencil, Plus, Unlock } from "lucide-react";
+import { Calendar, Lock, PackageMinus, Pencil, Plus, Unlock } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -381,7 +381,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                             0
                           }
                         >
-                          <ArrowUpFromLine className="h-4 w-4" />
+                          <PackageMinus className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -390,7 +390,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                           title="履歴"
                           className="h-7 w-7 p-0"
                         >
-                          <History className="h-4 w-4" />
+                          <Calendar className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>
@@ -415,9 +415,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
   }
 
   return (
-    <div className="space-y-4">
-      <div className="text-sm text-gray-600">{data.length} 件の在庫アイテム</div>
-
+    <div>
       <DataTable
         data={data}
         columns={columns}
@@ -428,6 +426,9 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
         expandedRowIds={expandedRowIds}
         onExpandedRowsChange={handleExpandedRowsChange}
         renderExpandedRow={renderExpandedRow}
+        headerSlot={
+          <div className="text-sm font-medium text-gray-700">{data.length} 件の在庫アイテム</div>
+        }
       />
 
       <LotDialogs

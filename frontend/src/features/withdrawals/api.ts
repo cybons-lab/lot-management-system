@@ -116,6 +116,12 @@ export interface WithdrawalResponse {
   cancel_note?: string | null;
 }
 
+export interface DailyWithdrawalSummary {
+  date: string; // YYYY-MM-DD
+  count: number;
+  total_quantity: string; // Decimal string
+}
+
 export interface WithdrawalListResponse {
   withdrawals: WithdrawalResponse[];
   total: number;
@@ -189,4 +195,57 @@ export async function cancelWithdrawal(
   data: WithdrawalCancelRequest,
 ): Promise<WithdrawalResponse> {
   return http.post<WithdrawalResponse>(`${BASE_PATH}/${withdrawalId}/cancel`, data);
+}
+
+/**
+ * 月間の日別出庫集計を取得（カレンダー用）
+ */
+export async function getCalendarSummary(params: {
+  year: number;
+  month: number;
+  warehouse_id?: number;
+  product_id?: number;
+  supplier_id?: number;
+}): Promise<DailyWithdrawalSummary[]> {
+  const searchParams = new URLSearchParams();
+  searchParams.set("year", String(params.year));
+  searchParams.set("month", String(params.month));
+  if (params.warehouse_id !== undefined)
+    searchParams.set("warehouse_id", String(params.warehouse_id));
+  if (params.product_id !== undefined) searchParams.set("product_id", String(params.product_id));
+  if (params.supplier_id !== undefined) searchParams.set("supplier_id", String(params.supplier_id));
+
+  return http.get<DailyWithdrawalSummary[]>(
+    `${BASE_PATH}/calendar-summary?${searchParams.toString()}`,
+  );
+}
+
+// ============ Default Destination API ============
+
+export interface DefaultDestinationResponse {
+  customer_id: number | null;
+  customer_code: string | null;
+  customer_name: string | null;
+  delivery_place_id: number | null;
+  delivery_place_code: string | null;
+  delivery_place_name: string | null;
+  mapping_found: boolean;
+  message: string | null;
+}
+
+/**
+ * 製品IDからデフォルトの得意先・納入先を取得
+ */
+export async function getDefaultDestination(params: {
+  product_id: number;
+  supplier_id?: number;
+}): Promise<DefaultDestinationResponse> {
+  const searchParams = new URLSearchParams();
+  searchParams.set("product_id", String(params.product_id));
+  if (params.supplier_id !== undefined) {
+    searchParams.set("supplier_id", String(params.supplier_id));
+  }
+  return http.get<DefaultDestinationResponse>(
+    `/api/v2/withdrawals/default-destination?${searchParams.toString()}`,
+  );
 }
