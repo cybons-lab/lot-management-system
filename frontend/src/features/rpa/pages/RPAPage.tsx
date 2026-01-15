@@ -1,15 +1,7 @@
-/**
- * RPAPage
- * RPAトップページ - 各種RPA機能へのメニュー
- */
-
 import { FileText, ArrowRight, ScanLine } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { RpaSettingsModal } from "../components/RpaSettingsModal";
-
 import { ROUTES } from "@/constants/routes";
-import { useAuth } from "@/features/auth/AuthContext";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -42,16 +34,9 @@ function RPAMenuCard({ title, description, icon, to }: RPAMenuCardProps) {
 }
 
 export function RPAPage() {
-  const { user } = useAuth();
-  const isAdmin = user?.roles?.includes("admin");
-
   return (
     <PageContainer>
-      <PageHeader
-        title="RPA"
-        subtitle="RPA (Robotic Process Automation) 機能一覧"
-        actions={isAdmin ? <RpaSettingsModal /> : undefined}
-      />
+      <PageHeader title="RPA" />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* 素材納品書発行 */}
