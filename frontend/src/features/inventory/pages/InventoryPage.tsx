@@ -127,6 +127,14 @@ export function InventoryPage() {
             <Button
               size="icon"
               variant="outline"
+              onClick={() => setOverviewMode("intake_history")}
+              title="入庫履歴"
+            >
+              <ArrowDownToLine className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="outline"
               onClick={() => navigate("/inventory/withdrawals")}
               title="出庫履歴"
             >
