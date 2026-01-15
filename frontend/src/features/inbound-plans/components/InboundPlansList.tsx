@@ -415,7 +415,7 @@ export function InboundPlansList({
         <DataTable
           data={paginatedPlans}
           columns={columns}
-          getRowId={(row) => row.id}
+          getRowId={(row) => String(row.id || row.plan_number)}
           rowActions={renderRowActions}
           isLoading={isLoading}
           sort={sort}
