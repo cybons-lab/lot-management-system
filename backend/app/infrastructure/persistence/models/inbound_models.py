@@ -143,7 +143,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .inventory_models import Lot
+    from .lot_receipt_models import LotReceipt
     from .masters_models import Product, Supplier
 
 
@@ -288,4 +288,4 @@ class ExpectedLot(Base):
     inbound_plan_line: Mapped[InboundPlanLine] = relationship(
         "InboundPlanLine", back_populates="expected_lots"
     )
-    lot: Mapped[Lot | None] = relationship("Lot", back_populates="expected_lot", uselist=False)
+    lot_receipt: Mapped[LotReceipt | None] = relationship("LotReceipt", back_populates="expected_lot", uselist=False)

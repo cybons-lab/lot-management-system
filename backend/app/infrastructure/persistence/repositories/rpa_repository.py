@@ -3,12 +3,12 @@ from typing import Any
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models.inventory_models import Lot
 from app.infrastructure.persistence.models.masters_models import CustomerItem, Product
 from app.infrastructure.persistence.models.rpa_models import (
     RpaRun,
     RpaRunItem,
 )
+from app.infrastructure.persistence.models.views_models import VLotDetails
 
 
 class RpaRepository:
@@ -234,17 +234,17 @@ class RpaRepository:
         self,
         product_id: int,
         supplier_id: int | None = None,
-    ) -> list[Lot]:
-        """有効なロットを検索."""
-        query = self.db.query(Lot).filter(
-            Lot.product_id == product_id,
-            Lot.status == "active",
-            Lot.current_quantity > 0,
+    ) -> list[VLotDetails]:
+        """有効なロット詳細を検索."""
+        query = self.db.query(VLotDetails).filter(
+            VLotDetails.product_id == product_id,
+            VLotDetails.status == "active",
+            VLotDetails.available_quantity > 0,
         )
         if supplier_id:
-            query = query.filter(Lot.supplier_id == supplier_id)
+            query = query.filter(VLotDetails.supplier_id == supplier_id)
 
         return query.order_by(
-            Lot.expiry_date.asc().nullslast(),
-            Lot.received_date.asc(),
+            VLotDetails.expiry_date.asc().nullslast(),
+            VLotDetails.received_date.asc(),
         ).all()

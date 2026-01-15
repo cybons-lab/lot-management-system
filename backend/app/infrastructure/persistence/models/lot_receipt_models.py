@@ -49,13 +49,14 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
 
 from app.infrastructure.persistence.models.base_model import Base
 
 
 if TYPE_CHECKING:
     from app.infrastructure.persistence.models.inbound_models import ExpectedLot
+    from app.infrastructure.persistence.models.inventory_models import Adjustment, StockHistory
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
     from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
     from app.infrastructure.persistence.models.masters_models import (
@@ -101,6 +102,7 @@ class LotReceipt(Base):
         ForeignKey("warehouses.id", ondelete="RESTRICT"),
         nullable=False,
     )
+
     supplier_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("suppliers.id", ondelete="SET NULL"),
@@ -111,6 +113,10 @@ class LotReceipt(Base):
         ForeignKey("expected_lots.id", ondelete="SET NULL"),
         nullable=True,
     )
+
+    # Legacy columns (kept for migration compatibility)
+    # Note: These should eventually be removed in favor of lot_master
+    lot_number: Mapped[str] = mapped_column(String(100), nullable=False)
 
     # Receipt details
     received_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -123,6 +129,9 @@ class LotReceipt(Base):
         server_default=text("0"),
         comment="入荷数量（初期入荷時の数量）",
     )
+    
+    # Backward compatibility: current_quantity -> received_quantity
+    current_quantity: Mapped[Decimal] = synonym("received_quantity")
 
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
@@ -222,21 +231,27 @@ class LotReceipt(Base):
     __mapper_args__ = {"version_id_col": version}
 
     # Relationships
-    lot_master: Mapped[LotMaster] = relationship("LotMaster", back_populates="receipts")
-    product: Mapped[Product] = relationship("Product", back_populates="lot_receipts")
-    warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lot_receipts")
-    supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_receipts")
-    expected_lot: Mapped[ExpectedLot | None] = relationship(
+    lot_master: Mapped["LotMaster"] = relationship("LotMaster", back_populates="receipts")
+    product: Mapped["Product"] = relationship("Product", back_populates="lot_receipts")
+    warehouse: Mapped["Warehouse"] = relationship("Warehouse", back_populates="lot_receipts")
+    supplier: Mapped["Supplier | None"] = relationship("Supplier", back_populates="lot_receipts")
+    expected_lot: Mapped["ExpectedLot | None"] = relationship(
         "ExpectedLot", back_populates="lot_receipt", uselist=False
     )
-    # Note: StockHistory and Adjustment relationships may need to be added
-    # in inventory_models.py to avoid circular imports
-    reservations: Mapped[list[LotReservation]] = relationship(
+    # B-Plan: stock_history and adjustments from inventory_models.py
+    stock_history: Mapped[list["StockHistory"]] = relationship(
+        "StockHistory", back_populates="lot", cascade="all, delete-orphan"
+    )
+    adjustments: Mapped[list["Adjustment"]] = relationship(
+        "Adjustment", back_populates="lot", cascade="all, delete-orphan"
+    )
+    reservations: Mapped[list["LotReservation"]] = relationship(
         "LotReservation", back_populates="lot_receipt", cascade="all, delete-orphan"
     )
-    withdrawal_lines: Mapped[list[WithdrawalLine]] = relationship(
+    withdrawal_lines: Mapped[list["WithdrawalLine"]] = relationship(
         "WithdrawalLine", back_populates="lot_receipt", cascade="all, delete-orphan"
     )
+
 
     def __repr__(self) -> str:
         return (

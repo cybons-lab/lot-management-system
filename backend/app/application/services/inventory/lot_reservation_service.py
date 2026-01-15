@@ -21,11 +21,11 @@ from sqlalchemy.orm import Session
 from app.application.services.inventory import stock_calculation
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
-    Lot,
     LotReservation,
     ReservationSourceType,
     ReservationStatus,
 )
+from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
 
 
 if TYPE_CHECKING:
@@ -148,7 +148,7 @@ class LotReservationService:
 
         # Lock the lot row for update to prevent race conditions
         # 【重要】このロックにより在庫の重複割当を防ぐ
-        lot = self.db.query(Lot).filter(Lot.id == lot_id).with_for_update().first()
+        lot = self.db.query(LotReceipt).filter(LotReceipt.id == lot_id).with_for_update().first()
         if not lot:
             raise ReservationLotNotFoundError(lot_id)
 
@@ -243,8 +243,8 @@ class LotReservationService:
         reservation.updated_at = utcnow()
 
         # 関連するLotの更新日時も更新
-        if reservation.lot:
-            reservation.lot.updated_at = utcnow()
+        if reservation.lot_receipt:
+            reservation.lot_receipt.updated_at = utcnow()
 
         return reservation
 
@@ -312,8 +312,8 @@ class LotReservationService:
         reservation.updated_at = utcnow()
 
         # 関連するLotの更新日時も更新
-        if reservation.lot:
-            reservation.lot.updated_at = utcnow()
+        if reservation.lot_receipt:
+            reservation.lot_receipt.updated_at = utcnow()
 
         return reservation
 
@@ -394,7 +394,7 @@ class LotReservationService:
         Raises:
             ReservationLotNotFoundError: If the lot doesn't exist
         """
-        lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
+        lot = self.db.query(LotReceipt).filter(LotReceipt.id == lot_id).first()
         if not lot:
             raise ReservationLotNotFoundError(lot_id)
 
@@ -414,7 +414,7 @@ class LotReservationService:
         Returns:
             Available quantity
         """
-        lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
+        lot = self.db.query(LotReceipt).filter(LotReceipt.id == lot_id).first()
         if not lot:
             return Decimal("0")
 

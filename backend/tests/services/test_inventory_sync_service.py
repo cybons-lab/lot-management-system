@@ -14,8 +14,17 @@ from app.infrastructure.persistence.models import (
     LotReservation,
     Product,
     Supplier,
+    Lot,
+    LotReservation,
+    Product,
+    Lot,
+    LotReservation,
+    Product,
+    Supplier,
     Warehouse,
+    ProductWarehouse,
 )
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
 @pytest.fixture
@@ -25,6 +34,9 @@ def setup_inventory_sync_test_data(db_session: Session):
     db_session.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert").delete()
     db_session.query(LotReservation).delete()
     db_session.query(Lot).delete()
+    db_session.query(Lot).delete()
+    db_session.query(LotMaster).delete()
+    db_session.query(ProductWarehouse).delete()
     db_session.query(Product).delete()
     db_session.query(Warehouse).delete()
     db_session.commit()
@@ -49,6 +61,18 @@ def setup_inventory_sync_test_data(db_session: Session):
     db_session.add_all(products)
     db_session.flush()
 
+    # ProductWarehouseを作成
+    pws = [
+        ProductWarehouse(
+            product_id=p.id,
+            warehouse_id=wh.id,
+            is_active=True,
+        )
+        for p in products
+    ]
+    db_session.add_all(pws)
+    db_session.flush()
+
     # サプライヤーを作成
     supplier = Supplier(supplier_code="SUP001", supplier_name="Test Supplier")
     db_session.add(supplier)
@@ -56,7 +80,12 @@ def setup_inventory_sync_test_data(db_session: Session):
 
     # 商品ごとにロットを作成
     # Product 1: 100個 (差異なし想定)
+    lm1 = LotMaster(product_id=products[0].id, supplier_id=supplier.id, lot_number="LOT001")
+    db_session.add(lm1)
+    db_session.flush()
+
     lot1 = Lot(
+        lot_master_id=lm1.id,
         supplier_id=supplier.id,
         product_id=products[0].id,
         lot_number="LOT001",
@@ -66,7 +95,12 @@ def setup_inventory_sync_test_data(db_session: Session):
         unit="EA",
     )
     # Product 2: 200個 (差異あり想定)
+    lm2 = LotMaster(product_id=products[1].id, supplier_id=supplier.id, lot_number="LOT002")
+    db_session.add(lm2)
+    db_session.flush()
+
     lot2 = Lot(
+        lot_master_id=lm2.id,
         supplier_id=supplier.id,
         product_id=products[1].id,
         lot_number="LOT002",
@@ -76,7 +110,12 @@ def setup_inventory_sync_test_data(db_session: Session):
         unit="EA",
     )
     # Product 3: 50個 (差異なし想定)
+    lm3 = LotMaster(product_id=products[2].id, supplier_id=supplier.id, lot_number="LOT003")
+    db_session.add(lm3)
+    db_session.flush()
+
     lot3 = Lot(
+        lot_master_id=lm3.id,
         supplier_id=supplier.id,
         product_id=products[2].id,
         lot_number="LOT003",

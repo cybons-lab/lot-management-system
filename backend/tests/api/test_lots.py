@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.database import get_db
 from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.main import app
 
 
@@ -23,6 +24,7 @@ def _truncate_all(db: Session):
         db.query(LotReservation).delete()
         db.query(StockHistory).delete()
         db.query(Lot).delete()
+        db.query(LotMaster).delete()
         db.query(Product).delete()
         db.query(Supplier).delete()
         db.query(Warehouse).delete()
@@ -71,10 +73,19 @@ def test_list_lots_filters_by_warehouse_code(test_db: Session):
     test_db.add_all([wh1, wh2, sup, prod])
     test_db.flush()
 
+    test_db.flush()
+
+    # Create LotMasters
+    lm1 = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="L-001")
+    lm2 = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="L-002")
+    test_db.add_all([lm1, lm2])
+    test_db.flush()
+
     # Create lots
     lot1 = Lot(
         supplier_id=sup.id,
         product_id=prod.id,
+        lot_master_id=lm1.id,
         lot_number="L-001",
         warehouse_id=wh1.id,
         received_date=date.today(),
@@ -84,6 +95,7 @@ def test_list_lots_filters_by_warehouse_code(test_db: Session):
     lot2 = Lot(
         supplier_id=sup.id,
         product_id=prod.id,
+        lot_master_id=lm2.id,
         lot_number="L-002",
         warehouse_id=wh2.id,
         received_date=date.today(),
@@ -109,8 +121,15 @@ def test_list_lots_filters_by_product_id(test_db: Session):
     test_db.add_all([wh, sup, product_a, product_b])
     test_db.flush()
 
+    # Create LotMasters
+    lm_a = LotMaster(product_id=product_a.id, supplier_id=sup.id, lot_number="L-A")
+    lm_b = LotMaster(product_id=product_b.id, supplier_id=sup.id, lot_number="L-B")
+    test_db.add_all([lm_a, lm_b])
+    test_db.flush()
+
     lot_a = Lot(
         supplier_id=sup.id,
+        lot_master_id=lm_a.id,
         lot_number="L-A",
         warehouse_id=wh.id,
         received_date=date.today(),
@@ -120,6 +139,7 @@ def test_list_lots_filters_by_product_id(test_db: Session):
     )
     lot_b = Lot(
         supplier_id=sup.id,
+        lot_master_id=lm_b.id,
         lot_number="L-B",
         warehouse_id=wh.id,
         received_date=date.today(),
@@ -149,10 +169,18 @@ def test_list_lots_filters_by_expiry_date(test_db: Session):
     test_db.add_all([wh, sup, prod])
     test_db.flush()
 
+    # Create LotMasters
+    lm1 = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="LOT-EXP-1")
+    lm2 = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="LOT-EXP-2")
+    lm3 = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="LOT-EXP-3")
+    test_db.add_all([lm1, lm2, lm3])
+    test_db.flush()
+
     today = date.today()
     lot1 = Lot(
         supplier_id=sup.id,
         product_id=prod.id,
+        lot_master_id=lm1.id,
         lot_number="LOT-EXP-1",
         warehouse_id=wh.id,
         received_date=today,
@@ -162,6 +190,7 @@ def test_list_lots_filters_by_expiry_date(test_db: Session):
     lot2 = Lot(
         supplier_id=sup.id,
         product_id=prod.id,
+        lot_master_id=lm2.id,
         lot_number="LOT-EXP-2",
         warehouse_id=wh.id,
         received_date=today,
@@ -171,6 +200,7 @@ def test_list_lots_filters_by_expiry_date(test_db: Session):
     lot3 = Lot(
         supplier_id=sup.id,
         product_id=prod.id,
+        lot_master_id=lm3.id,
         lot_number="LOT-EXP-3",
         warehouse_id=wh.id,
         received_date=today,

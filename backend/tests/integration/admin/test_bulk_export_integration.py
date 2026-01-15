@@ -82,8 +82,14 @@ def test_bulk_export_download_all_targets_integration(
     from decimal import Decimal
 
     from app.infrastructure.persistence.models import Lot
+    from app.infrastructure.persistence.models.lot_master_model import LotMaster
+
+    lm = LotMaster(product_id=master_data["product1"].id, supplier_id=master_data["supplier"].id, lot_number="LOT-001")
+    db.add(lm)
+    db.flush()
 
     lot = Lot(
+        lot_master_id=lm.id,
         lot_number="LOT-001",
         product_id=master_data["product1"].id,
         warehouse_id=master_data["warehouse"].id,

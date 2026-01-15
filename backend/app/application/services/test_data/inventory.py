@@ -6,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
 from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
@@ -129,11 +130,26 @@ def generate_lots(
             received_date = today - timedelta(days=random.randint(1, 60))
 
             warehouse = random.choice(warehouses)
+            lot_number = fake.unique.bothify(text="LOT-########")
+            supplier_id = random.choice(suppliers).id if suppliers else None
+
+            # Create LotMaster
+            master = LotMaster(
+                lot_number=lot_number,
+                product_id=p.id,
+                supplier_id=supplier_id,
+                first_receipt_date=received_date,
+                latest_expiry_date=expiry_date,
+            )
+            db.add(master)
+            db.flush()  # Get master.id
+
             lot = Lot(
-                lot_number=fake.unique.bothify(text="LOT-########"),
+                lot_number=lot_number,
+                lot_master_id=master.id,
                 product_id=p.id,
                 warehouse_id=warehouse.id,
-                supplier_id=random.choice(suppliers).id if suppliers else None,
+                supplier_id=supplier_id,
                 received_date=received_date,
                 expiry_date=expiry_date,
                 current_quantity=qty,

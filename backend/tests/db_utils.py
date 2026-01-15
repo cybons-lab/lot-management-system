@@ -23,13 +23,14 @@ VIEW_NAMES: list[str] = [
     "v_customer_code_to_id",
     "v_delivery_place_code_to_id",
     "v_product_code_to_id",
+    "v_supplier_code_to_id",
     "v_forecast_order_pairs",
     "v_lot_available_qty",
     "v_candidate_lots_by_order_line",
-    "v_supplier_code_to_id",
     "v_warehouse_code_to_id",
     "v_user_supplier_assignments",
     "v_customer_item_jiku_mappings",
+    "v_lot_receipt_stock",
 ]
 
 

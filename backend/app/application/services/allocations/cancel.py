@@ -128,11 +128,11 @@ from app.application.services.allocations.utils import (
 )
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
-    Lot,
     OrderLine,
     StockHistory,
     StockTransactionType,
 )
+from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -200,7 +200,7 @@ def release_reservation(db: Session, reservation_id: int, *, commit_db: bool = T
 
     lot = None
     if reservation.lot_id:
-        lot_stmt = select(Lot).where(Lot.id == reservation.lot_id).with_for_update()
+        lot_stmt = select(LotReceipt).where(LotReceipt.id == reservation.lot_id).with_for_update()
         lot = db.execute(lot_stmt).scalar_one_or_none()
 
     reservation.status = ReservationStatus.RELEASED
@@ -345,7 +345,7 @@ def cancel_confirmed_reservation(
     # ロットをロック取得
     lot = None
     if reservation.lot_id:
-        lot_stmt = select(Lot).where(Lot.id == reservation.lot_id).with_for_update()
+        lot_stmt = select(LotReceipt).where(LotReceipt.id == reservation.lot_id).with_for_update()
         lot = db.execute(lot_stmt).scalar_one_or_none()
 
     # CONFIRMED予約の場合、stock_historyに反対仕訳を記録

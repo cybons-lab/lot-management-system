@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import Lot, Product, Role, StockHistory, User, Warehouse
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.main import application
 from app.presentation.api.deps import get_db
 
@@ -73,7 +74,18 @@ def sample_lot(test_db: Session):
     test_db.commit()
     test_db.refresh(prod)
 
+    test_db.refresh(prod)
+
+    # Create LotMaster
+    lot_master = LotMaster(
+        product_id=prod.id,
+        lot_number="LOT-001",
+    )
+    test_db.add(lot_master)
+    test_db.commit()
+
     lot = Lot(
+        lot_master_id=lot_master.id,
         product_id=prod.id,
         warehouse_id=wh.id,
         lot_number="LOT-001",

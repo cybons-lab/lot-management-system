@@ -28,6 +28,7 @@ from app.infrastructure.persistence.models import (
     ReservationStatus,
     Warehouse,
 )
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.main import application
 from app.presentation.api.deps import get_db
 
@@ -40,6 +41,7 @@ def _truncate_all(db: Session):
         OrderLine,
         Order,
         Lot,
+        LotMaster,
         DeliveryPlace,
         Product,
         Customer,
@@ -48,7 +50,7 @@ def _truncate_all(db: Session):
         try:
             db.query(table).delete()
         except Exception:
-            pass
+            db.rollback()
     db.commit()
 
 
@@ -74,6 +76,7 @@ def test_db(db: Session):
     application.dependency_overrides[AuthService.get_current_user] = override_get_current_user
 
     yield db
+    db.rollback()
 
     # Clean after test
     _truncate_all(db)
@@ -124,8 +127,17 @@ def master_data(test_db: Session):
     test_db.commit()
     test_db.refresh(delivery_place)
 
+    # Create LotMaster
+    lot_master = LotMaster(
+        product_id=product.id,
+        lot_number="LOT-001",
+    )
+    test_db.add(lot_master)
+    test_db.commit()
+
     # Create lot with stock
     lot = Lot(
+        lot_master_id=lot_master.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
         lot_number="LOT-001",

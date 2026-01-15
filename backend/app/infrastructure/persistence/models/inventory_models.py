@@ -172,10 +172,13 @@ from .base_model import Base
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .forecast_models import ForecastCurrent
     from .inbound_models import ExpectedLot
+    from .lot_receipt_models import LotReceipt as Lot
     from .lot_reservations_model import LotReservation
     from .masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
 
 
+
+# Valid transaction types
 class StockTransactionType(str, PyEnum):
     """Enumerates valid stock transaction types."""
 
@@ -189,6 +192,7 @@ class StockTransactionType(str, PyEnum):
     WITHDRAWAL = "withdrawal"
 
 
+# Valid lot origin types
 class LotOriginType(str, PyEnum):
     """Enumerates valid lot origin types."""
 
@@ -199,145 +203,9 @@ class LotOriginType(str, PyEnum):
     ADHOC = "adhoc"
 
 
-class Lot(Base):
-    """Represents physical inventory lots (ロット在庫).
-
-    DDL: lots
-    Primary key: id (BIGSERIAL)
-    Foreign keys: product_id, warehouse_id, supplier_id, expected_lot_id
-    """
-
-    __tablename__ = "lots"
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    lot_number: Mapped[str] = mapped_column(String(100), nullable=False)
-    product_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
-    warehouse_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("warehouses.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
-    supplier_id: Mapped[int | None] = mapped_column(
-        BigInteger,
-        ForeignKey("suppliers.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    expected_lot_id: Mapped[int | None] = mapped_column(
-        BigInteger,
-        ForeignKey("expected_lots.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    received_date: Mapped[date] = mapped_column(Date, nullable=False)
-    expiry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    current_quantity: Mapped[Decimal] = mapped_column(
-        Numeric(15, 3), nullable=False, server_default=text("0")
-    )
-    unit: Mapped[str] = mapped_column(String(20), nullable=False)
-    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
-    lock_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    locked_quantity: Mapped[Decimal] = mapped_column(
-        Numeric(15, 3), nullable=False, server_default=text("0")
-    )
-
-    # Inspection certificate fields
-    inspection_status: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default=text("'not_required'")
-    )
-    inspection_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    inspection_cert_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
-
-    version: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        server_default=func.current_timestamp(),
-        onupdate=func.current_timestamp(),
-    )
-
-    # Origin tracking fields for non-order lots
-    origin_type: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default=text("'adhoc'")
-    )
-    origin_reference: Mapped[str | None] = mapped_column(String(255), nullable=True)
-
-    # Temporary lot registration support
-    # 仮入庫時に lot_number が未確定の場合、この UUID で一意識別する
-    # 正式ロット番号確定後も識別子として残す（監査用ではなく、仮→正式の紐付け用）
-    temporary_lot_key: Mapped[str | None] = mapped_column(
-        PG_UUID(as_uuid=True),
-        nullable=True,
-        unique=True,
-        comment="仮入庫時の一意識別キー（UUID）",
-    )
-
-    __table_args__ = (
-        CheckConstraint("current_quantity >= 0", name="chk_lots_current_quantity"),
-        CheckConstraint("locked_quantity >= 0", name="chk_lots_locked_quantity"),
-        CheckConstraint(
-            "status IN ('active','depleted','expired','quarantine','locked')",
-            name="chk_lots_status",
-        ),
-        CheckConstraint(
-            "inspection_status IN ('not_required','pending','passed','failed')",
-            name="chk_lots_inspection_status",
-        ),
-        CheckConstraint(
-            "origin_type IN ('order','forecast','sample','safety_stock','adhoc')",
-            name="chk_lots_origin_type",
-        ),
-        UniqueConstraint(
-            "lot_number",
-            "product_id",
-            "warehouse_id",
-            name="uq_lots_number_product_warehouse",
-        ),
-        UniqueConstraint(
-            "temporary_lot_key",
-            name="uq_lots_temporary_lot_key",
-        ),
-        Index("idx_lots_number", "lot_number"),
-        Index("idx_lots_product_warehouse", "product_id", "warehouse_id"),
-        Index("idx_lots_status", "status"),
-        Index("idx_lots_supplier", "supplier_id"),
-        Index("idx_lots_warehouse", "warehouse_id"),
-        Index("idx_lots_origin_type", "origin_type"),
-        Index(
-            "idx_lots_expiry_date",
-            "expiry_date",
-            postgresql_where=text("expiry_date IS NOT NULL"),
-        ),
-        Index(
-            "idx_lots_temporary_lot_key",
-            "temporary_lot_key",
-            postgresql_where=text("temporary_lot_key IS NOT NULL"),
-        ),
-    )
-
-    __mapper_args__ = {"version_id_col": version}
-
-    # Relationships
-    product: Mapped[Product] = relationship("Product", back_populates="lots")
-    warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lots")
-    supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lots")
-    expected_lot: Mapped[ExpectedLot | None] = relationship(
-        "ExpectedLot", back_populates="lot", uselist=False
-    )
-    stock_history: Mapped[list[StockHistory]] = relationship(
-        "StockHistory", back_populates="lot", cascade="all, delete-orphan"
-    )
-    adjustments: Mapped[list[Adjustment]] = relationship(
-        "Adjustment", back_populates="lot", cascade="all, delete-orphan"
-    )
-    reservations: Mapped[list[LotReservation]] = relationship(
-        "LotReservation", back_populates="lot", cascade="all, delete-orphan"
-    )
+# Lot model has been moved to lot_receipt_models.py (LotReceipt)
+# This alias is maintained for backward compatibility during migration
+from .lot_receipt_models import LotReceipt as Lot
 
 
 class StockHistory(Base):
@@ -353,7 +221,7 @@ class StockHistory(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     lot_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("lots.id", ondelete="CASCADE"),
+        ForeignKey("lot_receipts.id", ondelete="CASCADE"),
         nullable=False,
     )
     transaction_type: Mapped[StockTransactionType] = mapped_column(
@@ -379,8 +247,7 @@ class StockHistory(Base):
     )
 
     # Relationships
-    # Relationships
-    lot: Mapped[Lot] = relationship("Lot", back_populates="stock_history")
+    lot: Mapped["LotReceipt"] = relationship("LotReceipt", back_populates="stock_history")
 
 
 class AdjustmentType(str, PyEnum):
@@ -406,7 +273,7 @@ class Adjustment(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     lot_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("lots.id", ondelete="RESTRICT"),
+        ForeignKey("lot_receipts.id", ondelete="RESTRICT"),
         nullable=False,
     )
     adjustment_type: Mapped[AdjustmentType] = mapped_column(String(20), nullable=False)
@@ -431,8 +298,7 @@ class Adjustment(Base):
     )
 
     # Relationships
-    # Relationships
-    lot: Mapped[Lot] = relationship("Lot", back_populates="adjustments")
+    lot: Mapped["LotReceipt"] = relationship("LotReceipt", back_populates="adjustments")
 
 
 class AllocationSuggestion(Base):
@@ -474,7 +340,7 @@ class AllocationSuggestion(Base):
 
     # ロット側キー
     lot_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("lots.id", ondelete="CASCADE"), nullable=False
+        BigInteger, ForeignKey("lot_receipts.id", ondelete="CASCADE"), nullable=False
     )
     quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
     priority: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
@@ -501,7 +367,7 @@ class AllocationSuggestion(Base):
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
     product: Mapped[Product] = relationship("Product")
-    lot: Mapped[Lot] = relationship("Lot")
+    lot: Mapped[LotReceipt] = relationship("LotReceipt")
     forecast: Mapped[ForecastCurrent | None] = relationship("ForecastCurrent")
 
 
@@ -523,7 +389,7 @@ class AllocationTrace(Base):
     )
     lot_id: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey("lots.id", ondelete="CASCADE"),
+        ForeignKey("lot_receipts.id", ondelete="CASCADE"),
         nullable=True,  # ロットが特定されない場合もある（例: 全ロット期限切れ）
     )
     score: Mapped[Decimal | None] = mapped_column(

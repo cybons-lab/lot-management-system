@@ -164,7 +164,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .assignments.assignment_models import UserSupplierAssignment
     from .forecast_models import ForecastCurrent
     from .inbound_models import InboundPlan, InboundPlanLine
-    from .inventory_models import Lot
+
     from .lot_master_model import LotMaster
     from .lot_receipt_models import LotReceipt
     from .orders_models import Order, OrderLine
@@ -213,7 +213,7 @@ class Warehouse(SoftDeleteMixin, Base):
     )
 
     # Relationships
-    lots: Mapped[list[Lot]] = relationship("Lot", back_populates="warehouse")
+
     lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="warehouse")
     delivery_routes: Mapped[list[WarehouseDeliveryRoute]] = relationship(
         "WarehouseDeliveryRoute", back_populates="warehouse", cascade="all, delete-orphan"
@@ -253,7 +253,7 @@ class Supplier(SoftDeleteMixin, Base):
     )
 
     # Relationships
-    lots: Mapped[list[Lot]] = relationship("Lot", back_populates="supplier")
+
     lot_masters: Mapped[list[LotMaster]] = relationship("LotMaster", back_populates="supplier")
     lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="supplier")
     inbound_plans: Mapped[list[InboundPlan]] = relationship(
@@ -415,7 +415,7 @@ class Product(SoftDeleteMixin, Base):
     )
 
     # Relationships
-    lots: Mapped[list[Lot]] = relationship("Lot", back_populates="product")
+
     lot_masters: Mapped[list[LotMaster]] = relationship("LotMaster", back_populates="product")
     lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="product")
     order_lines: Mapped[list[OrderLine]] = relationship("OrderLine", back_populates="product")

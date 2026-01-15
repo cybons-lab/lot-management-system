@@ -13,8 +13,11 @@ from app.infrastructure.persistence.models.inbound_models import (
 from app.infrastructure.persistence.models.inventory_models import (
     Lot,
     StockHistory,
+    Lot,
+    StockHistory,
     StockTransactionType,
 )
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.presentation.schemas.inventory.inbound_schema import (
     InboundPlanReceiveRequest,
     InboundPlanReceiveResponse,
@@ -86,7 +89,13 @@ class InboundReceivingService:
                         lot_number = expected_lot.expected_lot_number
                         temp_key = None
 
+                        temp_key = None
+
+                    # Get or Create LotMaster
+                    lm = self._get_or_create_lot_master(lot_number, line.product_id, plan.supplier_id)
+
                     db_lot = Lot(
+                        lot_master_id=lm.id,
                         lot_number=lot_number,
                         product_id=line.product_id,
                         warehouse_id=default_warehouse_id,
@@ -120,7 +129,11 @@ class InboundReceivingService:
                 # Create a single lot from plan line (no expected lots)
                 lot_number = self._generate_lot_number(plan.plan_number, line.product_id)
 
+                # Get or Create LotMaster
+                lm = self._get_or_create_lot_master(lot_number, line.product_id, plan.supplier_id)
+
                 db_lot = Lot(
+                    lot_master_id=lm.id,
                     lot_number=lot_number,
                     product_id=line.product_id,
                     warehouse_id=default_warehouse_id,
@@ -208,3 +221,25 @@ class InboundReceivingService:
         lot_number = f"TMP-{today}-{uuid_prefix}"
 
         return lot_number, temp_key_str
+
+    def _get_or_create_lot_master(self, lot_number: str, product_id: int, supplier_id: int) -> LotMaster:
+        """Get existing LotMaster or create a new one."""
+        lm = (
+            self.db.query(LotMaster)
+            .filter(
+                LotMaster.lot_number == lot_number,
+                LotMaster.product_id == product_id,
+            )
+            .first()
+        )
+
+        if not lm:
+            lm = LotMaster(
+                lot_number=lot_number,
+                product_id=product_id,
+                supplier_id=supplier_id,
+            )
+            self.db.add(lm)
+            self.db.flush()
+        
+        return lm

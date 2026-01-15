@@ -66,10 +66,8 @@ class InventorySyncService:
             """
             SELECT 
                 product_id,
-                SUM(current_quantity) as total_quantity
-            FROM lots
-            WHERE status != 'deleted'
-            GROUP BY product_id
+                total_quantity
+            FROM v_inventory_summary
         """
         )
 

@@ -146,7 +146,7 @@ from .base_model import Base
 
 if TYPE_CHECKING:  # pragma: no cover
     from .auth_models import User
-    from .inventory_models import Lot
+    from .lot_receipt_models import LotReceipt
     from .masters_models import Customer, DeliveryPlace
     from .withdrawal_line_model import WithdrawalLine
 
@@ -189,7 +189,7 @@ class Withdrawal(Base):
     # B-Plan: lot_id/quantity are nullable (use withdrawal_lines instead)
     lot_id: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey("lots.id", ondelete="RESTRICT"),
+        ForeignKey("lot_receipts.id", ondelete="RESTRICT"),
         nullable=True,  # B-Plan: nullable for new workflow
         comment="レガシー: withdrawal_lines 移行後は未使用",
     )
@@ -262,7 +262,7 @@ class Withdrawal(Base):
     )
 
     # Relationships
-    lot: Mapped[Lot | None] = relationship("Lot")
+    lot: Mapped[LotReceipt | None] = relationship("LotReceipt")
     customer: Mapped[Customer | None] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace | None] = relationship("DeliveryPlace")
     user: Mapped[User | None] = relationship("User", foreign_keys=[withdrawn_by])

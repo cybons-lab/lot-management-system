@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 
 from app.infrastructure.persistence.models import Lot, Product, Warehouse
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
 @pytest.fixture
@@ -35,8 +36,18 @@ def setup_lot_data(db_session):
     db_session.refresh(warehouse)
     db_session.refresh(supplier)
 
+    # Create LotMaster
+    lot_master = LotMaster(
+        product_id=product.id,
+        supplier_id=supplier.id,
+        lot_number="LOT-V2-001",
+    )
+    db_session.add(lot_master)
+    db_session.commit()
+
     # Lot
     lot = Lot(
+        lot_master_id=lot_master.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,

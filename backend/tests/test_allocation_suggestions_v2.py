@@ -17,6 +17,7 @@ from app.infrastructure.persistence.models.masters_models import (
     Supplier,
     Warehouse,
 )
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
 def test_regenerate_for_periods(db):
@@ -44,7 +45,15 @@ def test_regenerate_for_periods(db):
 
     # Setup Lots (FEFO test)
     # Lot 1: Expires sooner (2025-12-01), Qty 100
+    lot_master1 = LotMaster(
+        product_id=product.id,
+        lot_number="LOT1",
+    )
+    db.add(lot_master1)
+    db.flush()
+
     lot1 = Lot(
+        lot_master_id=lot_master1.id,
         lot_number="LOT1",
         product_id=product.id,
         warehouse_id=warehouse.id,
@@ -58,7 +67,15 @@ def test_regenerate_for_periods(db):
     db.add(lot1)
 
     # Lot 2: Expires later (2026-01-01), Qty 100
+    lot_master2 = LotMaster(
+        product_id=product.id,
+        lot_number="LOT2",
+    )
+    db.add(lot_master2)
+    db.flush()
+
     lot2 = Lot(
+        lot_master_id=lot_master2.id,
         lot_number="LOT2",
         product_id=product.id,
         warehouse_id=warehouse.id,
@@ -132,7 +149,15 @@ def test_regenerate_with_shortage(db):
 
     # Setup Lots (Shortage test)
     # Lot 1: Qty 50
+    lot_master1 = LotMaster(
+        product_id=product.id,
+        lot_number="LOT3",
+    )
+    db.add(lot_master1)
+    db.flush()
+
     lot1 = Lot(
+        lot_master_id=lot_master1.id,
         lot_number="LOT3",
         product_id=product.id,
         warehouse_id=warehouse.id,
@@ -206,7 +231,15 @@ def test_regenerate_single_lot_fit(db):
 
     # Setup Lots
     # Lot 1 (Older): Qty 50. Expires 2025-11-01.
+    lot_master1 = LotMaster(
+        product_id=product.id,
+        lot_number="LOT_OLD_SMALL",
+    )
+    db.add(lot_master1)
+    db.flush()
+    
     lot1 = Lot(
+        lot_master_id=lot_master1.id,
         lot_number="LOT_OLD_SMALL",
         product_id=product.id,
         warehouse_id=warehouse.id,
@@ -220,7 +253,15 @@ def test_regenerate_single_lot_fit(db):
     db.add(lot1)
 
     # Lot 2 (Newer): Qty 100. Expires 2025-12-01.
+    lot_master2 = LotMaster(
+        product_id=product.id,
+        lot_number="LOT_NEW_LARGE",
+    )
+    db.add(lot_master2)
+    db.flush()
+
     lot2 = Lot(
+        lot_master_id=lot_master2.id,
         lot_number="LOT_NEW_LARGE",
         product_id=product.id,
         warehouse_id=warehouse.id,

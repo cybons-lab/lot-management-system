@@ -109,8 +109,19 @@ def setup_test_data(db_session):
     db_session.add(forecast)
     db_session.commit()
 
+    # LotMaster
+    from app.infrastructure.persistence.models.lot_master_model import LotMaster
+    lot_master = LotMaster(
+        product_id=product.id,
+        supplier_id=supplier.id,
+        lot_number="LOT-001",
+    )
+    db_session.add(lot_master)
+    db_session.flush()
+
     # ロット
     lot = Lot(
+        lot_master_id=lot_master.id,
         supplier_id=supplier.id,
         product_id=product.id,
         lot_number="LOT-001",
@@ -198,7 +209,17 @@ class TestAllocationAPI:
 
         # この商品のロットを作成（有効在庫あり）
         today = date.today()
+        from app.infrastructure.persistence.models.lot_master_model import LotMaster
+        lot_master_no_forecast = LotMaster(
+            product_id=product_no_forecast.id,
+            supplier_id=setup_test_data.get("supplier_id"),
+            lot_number="LOT-NO-FORECAST",
+        )
+        db_session.add(lot_master_no_forecast)
+        db_session.flush()
+
         lot_no_forecast = Lot(
+            lot_master_id=lot_master_no_forecast.id,
             supplier_id=setup_test_data.get("supplier_id"),
             product_id=product_no_forecast.id,
             lot_number="LOT-NO-FORECAST",

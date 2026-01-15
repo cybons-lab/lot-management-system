@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.application.services.inventory.inventory_service import InventoryService
 from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
 
@@ -14,8 +15,18 @@ def test_get_inventory_items(db: Session, service_master_data):
     warehouse = service_master_data["warehouse"]
     supplier = service_master_data["supplier"]
 
+    # Create LotMaster
+    lot_master = LotMaster(
+        lot_number="LOT-INV-1",
+        product_id=product1.id,
+        supplier_id=supplier.id,
+    )
+    db.add(lot_master)
+    db.flush()
+
     # Create lots
     lot1 = Lot(
+        lot_master_id=lot_master.id,
         lot_number="LOT-INV-1",
         product_id=product1.id,
         warehouse_id=warehouse.id,
@@ -81,7 +92,17 @@ def test_get_inventory_item_by_product_warehouse(db: Session, service_master_dat
     warehouse = service_master_data["warehouse"]
     supplier = service_master_data["supplier"]
 
+    # Create LotMaster
+    lot_master = LotMaster(
+        lot_number="LOT-INV-2",
+        product_id=product1.id,
+        supplier_id=supplier.id,
+    )
+    db.add(lot_master)
+    db.flush()
+
     lot1 = Lot(
+        lot_master_id=lot_master.id,
         lot_number="LOT-INV-2",
         product_id=product1.id,
         warehouse_id=warehouse.id,
@@ -114,7 +135,17 @@ def test_get_inventory_by_supplier(db: Session, service_master_data):
     warehouse = service_master_data["warehouse"]
     supplier = service_master_data["supplier"]
 
+    # Create LotMaster
+    lot_master = LotMaster(
+        lot_number="LOT-SUP-1",
+        product_id=product1.id,
+        supplier_id=supplier.id,
+    )
+    db.add(lot_master)
+    db.flush()
+
     lot1 = Lot(
+        lot_master_id=lot_master.id,
         lot_number="LOT-SUP-1",
         product_id=product1.id,
         warehouse_id=warehouse.id,
@@ -147,7 +178,17 @@ def test_get_inventory_by_warehouse(db: Session, service_master_data):
     warehouse = service_master_data["warehouse"]
     supplier = service_master_data["supplier"]
 
+    # Create LotMaster
+    lot_master = LotMaster(
+        lot_number="LOT-WH-1",
+        product_id=product1.id,
+        supplier_id=supplier.id,
+    )
+    db.add(lot_master)
+    db.flush()
+
     lot1 = Lot(
+        lot_master_id=lot_master.id,
         lot_number="LOT-WH-1",
         product_id=product1.id,
         warehouse_id=warehouse.id,
@@ -174,7 +215,17 @@ def test_get_inventory_by_product(db: Session, service_master_data):
     warehouse = service_master_data["warehouse"]
     supplier = service_master_data["supplier"]
 
+    # Create LotMaster
+    lot_master = LotMaster(
+        lot_number="LOT-PRD-1",
+        product_id=product1.id,
+        supplier_id=supplier.id,
+    )
+    db.add(lot_master)
+    db.flush()
+
     lot1 = Lot(
+        lot_master_id=lot_master.id,
         lot_number="LOT-PRD-1",
         product_id=product1.id,
         warehouse_id=warehouse.id,
