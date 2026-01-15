@@ -3,8 +3,9 @@
  * InventoryTable - Main inventory table with expandable lot details.
  * Refactored to use DataTable component.
  */
-import { ArrowUpFromLine, History, Lock, Pencil, Unlock } from "lucide-react";
+import { ArrowUpFromLine, History, Lock, Pencil, Plus, Unlock } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui";
 import type { InventoryItem } from "@/features/inventory/api";
@@ -232,7 +233,39 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
   );
 
   // アクションボタン
+  const navigate = useNavigate();
   const renderRowActions = (item: InventoryItem) => {
+    // ロットがない場合は「ロット新規登録」ボタンを優先表示
+    if (item.inventory_state === "no_lots") {
+      return (
+        <div className="flex gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              // ロット新規登録画面へ遷移（製品・倉庫をプリセット）
+              navigate(`/inventory/adhoc/new?product_id=${item.product_id}&warehouse_id=${item.warehouse_id}`);
+            }}
+          >
+            <Plus className="mr-1 h-4 w-4" />
+            ロット登録
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewDetail(item.product_id, item.warehouse_id);
+            }}
+          >
+            詳細
+          </Button>
+        </div>
+      );
+    }
+
+    // 通常の詳細ボタン
     return (
       <Button
         variant="outline"
