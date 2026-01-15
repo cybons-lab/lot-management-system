@@ -44,6 +44,7 @@ export function useInventoryPageState() {
       product_id: state.filters.product_id ? Number(state.filters.product_id) : undefined,
       warehouse_id: state.filters.warehouse_id ? Number(state.filters.warehouse_id) : undefined,
       supplier_id: state.filters.supplier_id ? Number(state.filters.supplier_id) : undefined,
+      tab: state.filters.tab,
     }),
     [state.filters],
   );

@@ -292,10 +292,12 @@ class LotService:
         product_id: int | None = None,
         product_code: str | None = None,
         supplier_code: str | None = None,
+        warehouse_id: int | None = None,
         warehouse_code: str | None = None,
         expiry_from: date | None = None,
         expiry_to: date | None = None,
         with_stock: bool = True,
+        status: str | None = None,
         primary_supplier_ids: list[int] | None = None,
     ) -> list[LotResponse]:
         """List lots using VLotDetails view.
@@ -306,10 +308,13 @@ class LotService:
             product_id: 製品ID
             product_code: 製品コード
             supplier_code: 仕入先コード
+            warehouse_id: 倉庫ID
+            warehouse_code: 倉庫コード
             warehouse_code: 倉庫コード
             expiry_from: 有効期限開始日
             expiry_to: 有効期限終了日
             with_stock: 在庫ありのみ取得するかどうか
+            status: ロットステータス（'active', 'expired', 'depleted' 等）
             primary_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
 
         Returns:
@@ -331,7 +336,10 @@ class LotService:
             if supplier:
                 query = query.filter(VLotDetails.supplier_id == supplier.id)
 
-        if warehouse_code:
+        # warehouse_id takes priority over warehouse_code
+        if warehouse_id is not None:
+            query = query.filter(VLotDetails.warehouse_id == warehouse_id)
+        elif warehouse_code:
             warehouse = (
                 self.db.query(Warehouse).filter(Warehouse.warehouse_code == warehouse_code).first()
             )
@@ -345,6 +353,10 @@ class LotService:
 
         if with_stock:
             query = query.filter(VLotDetails.available_quantity > 0)
+
+        # Status filter (e.g., 'active' to match active_lot_count)
+        if status:
+            query = query.filter(VLotDetails.status == status)
 
         # ソート: 主担当優先 → 製品コード → 仕入先 → 有効期限(FEFO)
         if primary_supplier_ids:

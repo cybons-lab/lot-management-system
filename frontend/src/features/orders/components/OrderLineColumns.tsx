@@ -82,7 +82,7 @@ export function createOrderLineColumns(
         return (
           <div>
             <div
-              className={`truncate font-semibold ${isInactiveCustomer ? "text-slate-500 line-through" : "text-slate-900"}`}
+              className={`truncate font-medium ${isInactiveCustomer ? "text-slate-500 line-through" : "text-slate-900"}`}
               title={row.customer_name ?? ""}
             >
               {row.customer_name}
@@ -106,7 +106,7 @@ export function createOrderLineColumns(
         <div>
           <div className="text-sm font-medium text-slate-600">{row.product_code ?? "–"}</div>
           {row.product_name && (
-            <div className="truncate text-sm font-semibold text-slate-900" title={row.product_name}>
+            <div className="truncate text-sm font-medium text-slate-900" title={row.product_name}>
               {row.product_name}
             </div>
           )}
@@ -125,10 +125,7 @@ export function createOrderLineColumns(
         const deliveryPlaceName = row.delivery_place_name ?? row.delivery_place ?? "納入先未設定";
         return (
           <div>
-            <div
-              className="truncate text-sm font-semibold text-slate-900"
-              title={deliveryPlaceName}
-            >
+            <div className="truncate text-sm font-medium text-slate-900" title={deliveryPlaceName}>
               {deliveryPlaceName}
             </div>
             {row.delivery_place_code && (
@@ -149,7 +146,7 @@ export function createOrderLineColumns(
         const qty = Number(row.order_quantity ?? row.quantity ?? 0);
         return (
           <div className="flex items-baseline justify-end gap-1">
-            <span className="text-base font-semibold text-slate-900 tabular-nums">
+            <span className="text-base font-medium text-slate-900 tabular-nums">
               {qty.toLocaleString()}
             </span>
             <span className="text-xs text-slate-500">{row.unit}</span>
@@ -182,7 +179,7 @@ export function createOrderLineColumns(
         return (
           <div className="flex flex-col items-end">
             <div className="flex items-baseline gap-1">
-              <span className="text-base font-semibold text-slate-900 tabular-nums">
+              <span className="text-base font-medium text-slate-900 tabular-nums">
                 {allocatedQty.toLocaleString()}
               </span>
               <span className="text-xs text-slate-500">{row.unit}</span>
@@ -243,7 +240,7 @@ export function createOrderLineColumns(
       accessor: (row: OrderLineRow) => row.delivery_date ?? row.due_date ?? "",
       cell: (row: OrderLineRow) => {
         const dueDate = row.delivery_date ?? row.due_date ?? null;
-        return <div className="font-semibold text-slate-900">{formatDate(dueDate)}</div>;
+        return <div className="text-slate-900">{formatDate(dueDate)}</div>;
       },
       width: "100px",
     },

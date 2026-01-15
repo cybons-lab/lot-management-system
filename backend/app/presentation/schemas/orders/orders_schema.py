@@ -117,7 +117,7 @@ class OrderLineBase(BaseSchema):
     forecast_id: int | None = Field(None, gt=0, description="紐づく予測ID")
     status: str = Field(
         default="pending",
-        pattern="^(pending|allocated|shipped|completed|cancelled)$",
+        pattern="^(pending|allocated|shipped|completed|cancelled|on_hold)$",
     )
 
     # OCR取込情報
@@ -154,7 +154,9 @@ class OrderLineUpdate(BaseSchema):
     delivery_place_id: int | None = Field(None, gt=0)
     order_type: str | None = Field(None, pattern="^(FORECAST_LINKED|KANBAN|SPOT|ORDER)$")
     forecast_id: int | None = Field(None, gt=0)
-    status: str | None = Field(None, pattern="^(pending|allocated|shipped|completed|cancelled)$")
+    status: str | None = Field(
+        None, pattern="^(pending|allocated|shipped|completed|cancelled|on_hold)$"
+    )
 
 
 class OrderLineResponse(OrderLineBase):

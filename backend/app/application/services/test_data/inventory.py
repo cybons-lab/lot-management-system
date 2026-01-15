@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.inventory_models import Lot
 from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
 from .utils import fake
 
@@ -36,85 +37,126 @@ def generate_lots(
     """
     today = date.today()
 
-    for p in products:
-        # Get forecast total for this product (default to 0 if no forecast)
-        forecast_total = forecast_totals.get(p.id, 0)
+    # Track assigned lots to ensure we don't duplicate logic if called multiple times or for consistency
+    generated_count = 0
 
-        if forecast_total <= 0:
-            # No forecast: create 1-2 lots with reasonable quantities
-            # すべての製品にロットを持たせるため、フォーキャストがなくても複数ロットを生成
-            roll = random.random()
-            if roll < 0.50:
-                lot_count = 1
-            else:
-                lot_count = 2
+    # Edge case assignments (first few products get specific scenarios)
+    edge_case_assignments = {
+        0: "mixed_expiry",  # 1 Active, 1 Expired, 1 Depleted
+        1: "single_expiring",  # 1 Expiring Soon
+        2: "multi_fefo",  # 3 Active with staggered expiry
+        3: "depleted_only",  # 1 Depleted only (Simulates stockout)
+        4: "no_lots",  # No lots at all (Tests lot_count=0 display)
+    }
 
-            base_qty = random.randint(100, 500)
-            if lot_count == 1:
-                lots_to_create = [(base_qty,)]
-            else:
-                first_qty = int(base_qty * random.uniform(0.4, 0.6))
-                second_qty = base_qty - first_qty
-                lots_to_create = [(first_qty,), (second_qty,)]
+    for idx, p in enumerate(products):
+        lots_to_create = []  # List of (scenario, status_override)
+
+        # Determine scenario
+        if idx in edge_case_assignments:
+            scenario = edge_case_assignments[idx]
+            if scenario == "mixed_expiry":
+                lots_to_create = [
+                    ("normal", "active"),
+                    ("expired", "expired"),
+                    ("depleted", "depleted"),
+                ]
+            elif scenario == "single_expiring":
+                lots_to_create = [("expiring", "active")]
+            elif scenario == "multi_fefo":
+                lots_to_create = [("normal", "active")] * 3
+            elif scenario == "depleted_only":
+                lots_to_create = [("depleted", "depleted")]
+            elif scenario == "no_lots":
+                # Register product_warehouse but don't create lots - tests lot_count=0 case
+                warehouse = random.choice(warehouses)
+                existing = (
+                    db.query(ProductWarehouse)
+                    .filter(
+                        ProductWarehouse.product_id == p.id,
+                        ProductWarehouse.warehouse_id == warehouse.id,
+                    )
+                    .first()
+                )
+                if not existing:
+                    db.add(ProductWarehouse(product_id=p.id, warehouse_id=warehouse.id))
+                continue
         else:
-            # Determine lot count distribution
-            # 60% -> 1 lot, 30% -> 2 lots, 10% -> 3 lots
+            # Standard distribution for others
+            # 80% Normal (2-5 lots), 10% Shortage, 5% Expiring, 5% Expired
+            # User Feedback: "Too many products with 1 lot. Want 2-3 lots."
             roll = random.random()
-            if roll < 0.60:
-                lot_count = 1
+            if roll < 0.80:
+                # Normal: 2-5 lots to ensure multiple lots per product/warehouse
+                count = random.choices([2, 3, 4, 5], weights=[30, 40, 20, 10], k=1)[0]
+                lots_to_create = [("normal", "active")] * count
             elif roll < 0.90:
-                lot_count = 2
+                # Shortage: still might want multiple small lots to test fragmentation
+                lots_to_create = [("shortage", "active")] * 2
+            elif roll < 0.95:
+                lots_to_create = [("expiring", "active")] * 2
             else:
-                lot_count = 3
+                lots_to_create = [("expired", "expired")] * 2
 
-            # Total inventory = 70-90% of forecast (to create allocation constraints)
-            inventory_ratio = random.uniform(0.70, 0.90)
-            total_inventory = int(forecast_total * inventory_ratio)
+        # Determine quantities and dates based on scenario
+        for scenario_type, status in lots_to_create:
+            # Base quantity
+            if scenario_type == "normal":
+                qty = Decimal(random.randint(100, 500))
+                expiry_days = random.randint(60, 365)
+            elif scenario_type == "shortage":
+                qty = Decimal(random.randint(5, 30))
+                expiry_days = random.randint(30, 180)
+            elif scenario_type == "expiring":
+                qty = Decimal(random.randint(50, 200))
+                expiry_days = random.randint(1, 14)  # Within 2 weeks
+            elif scenario_type == "expired":
+                qty = Decimal(random.randint(20, 100))
+                expiry_days = random.randint(-60, -1)  # Past
+            elif scenario_type == "depleted":
+                qty = Decimal("0")
+                expiry_days = random.randint(30, 180)
+            else:
+                qty = Decimal("100")
+                expiry_days = 90
 
-            # Distribute inventory across lots
-            if lot_count == 1:
-                lots_to_create = [(total_inventory,)]
-            elif lot_count == 2:
-                # Split: 60-80% in first lot, rest in second
-                first_ratio = random.uniform(0.60, 0.80)
-                first_qty = int(total_inventory * first_ratio)
-                second_qty = total_inventory - first_qty
-                lots_to_create = [(first_qty,), (second_qty,)]
-            else:  # 3 lots
-                # Split into 3 roughly equal parts with variance
-                base = total_inventory // 3
-                lot1 = int(base * random.uniform(0.8, 1.2))
-                lot2 = int(base * random.uniform(0.8, 1.2))
-                lot3 = total_inventory - lot1 - lot2
-                lots_to_create = [(lot1,), (lot2,), (lot3,)]
+            # FEFO Staggering for multi-lot mixed normal
+            if idx == 2 and scenario_type == "normal":  # multi_fefo case
+                # Add extra variance to ensure distinct dates
+                expiry_days += random.randint(-20, 20)
 
-        # CRITICAL: Ensure we never create more than 3 lots per product
-        lots_to_create = lots_to_create[:3]
+            expiry_date = today + timedelta(days=expiry_days)
+            received_date = today - timedelta(days=random.randint(1, 60))
 
-        # DEBUG: Log lot creation
-        print(
-            f"[DEBUG] Product {p.maker_part_code} (id={p.id}): "
-            f"forecast_total={forecast_total}, lot_count={len(lots_to_create)}"
-        )
-
-        # Create the lots
-        for (qty,) in lots_to_create:
-            expiry = today + timedelta(days=random.randint(30, 120))
-
+            warehouse = random.choice(warehouses)
             lot = Lot(
                 lot_number=fake.unique.bothify(text="LOT-########"),
                 product_id=p.id,
-                warehouse_id=random.choice(warehouses).id,
+                warehouse_id=warehouse.id,
                 supplier_id=random.choice(suppliers).id if suppliers else None,
-                received_date=today - timedelta(days=random.randint(1, 30)),
-                expiry_date=expiry,
-                current_quantity=Decimal(qty),
-                unit="pcs",
-                status="active",
+                received_date=received_date,
+                expiry_date=expiry_date,
+                current_quantity=qty,
+                unit=p.internal_unit or "pcs",  # Use product unit
+                status=status,
             )
             db.add(lot)
+            generated_count += 1
+
+            # Also register product_warehouse if not exists
+            existing = (
+                db.query(ProductWarehouse)
+                .filter(
+                    ProductWarehouse.product_id == p.id,
+                    ProductWarehouse.warehouse_id == warehouse.id,
+                )
+                .first()
+            )
+            if not existing:
+                db.add(ProductWarehouse(product_id=p.id, warehouse_id=warehouse.id))
 
     db.commit()
+    print(f"[INFO] Generated {generated_count} lots for {len(products)} products")
 
     # DEBUG: Verify lot counts per product
     lot_counts = (

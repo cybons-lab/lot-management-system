@@ -5194,10 +5194,10 @@ export interface paths {
      * Execute Inventory Sync Direct
      * @description SAP在庫同期を即座に実行する（バッチジョブ経由なし）.
      *
-     *     管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。
-     *     バッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。
+     *     TODO: [MOCK] SAPMockClientを使用しているため、モックステータスヘッダを付与
      *
      *     Args:
+     *         response: FastAPI Response object
      *         db: データベースセッション
      *
      *     Returns:
@@ -5343,29 +5343,6 @@ export interface paths {
      *         HTTPException: ジョブが存在しないか、キャンセルできない状態の場合
      */
     post: operations["cancel_batch_job_api_batch_jobs__job_id__cancel_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/bulk-export/targets": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Export Targets
-     * @description エクスポート可能なターゲット一覧を取得.
-     *
-     *     Returns:
-     *         list[ExportTarget]: エクスポート可能なデータの一覧
-     */
-    get: operations["list_export_targets_api_bulk_export_targets_get"];
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -8064,18 +8041,6 @@ export interface components {
       inbound_plan_line_id: number;
     };
     /**
-     * ExportTarget
-     * @description Exportable target definition.
-     */
-    ExportTarget: {
-      /** Key */
-      key: string;
-      /** Name */
-      name: string;
-      /** Description */
-      description: string;
-    };
-    /**
      * FefoLineAllocation
      * @description FEFO line allocation detail.
      */
@@ -8805,10 +8770,17 @@ export interface components {
        */
       hard_allocated_quantity: string;
       /**
+       * Active Lot Count
+       * @default 0
+       */
+      active_lot_count: number;
+      /**
        * Last Updated
        * Format: date-time
        */
       last_updated: string;
+      /** @default no_lots */
+      inventory_state: components["schemas"]["InventoryState"];
       /** Product Name */
       product_name?: string | null;
       /** Product Code */
@@ -8818,6 +8790,16 @@ export interface components {
       /** Warehouse Code */
       warehouse_code?: string | null;
     };
+    /**
+     * InventoryState
+     * @description 在庫状態.
+     *
+     *     - in_stock: 利用可能在庫あり
+     *     - depleted_only: ロットはあるが利用可能0
+     *     - no_lots: ロット0件
+     * @enum {string}
+     */
+    InventoryState: "in_stock" | "depleted_only" | "no_lots";
     /** InventoryStats */
     InventoryStats: {
       /** Total Products */
@@ -10708,20 +10690,6 @@ export interface components {
       update_data: components["schemas"]["RpaRunItemUpdateRequest"];
     };
     /**
-     * RpaRunCreateResponse
-     * @description RPA Run create response schema.
-     */
-    RpaRunCreateResponse: {
-      /** Id */
-      id: number;
-      /** Status */
-      status: string;
-      /** Item Count */
-      item_count: number;
-      /** Message */
-      message: string;
-    };
-    /**
      * RpaRunItemResponse
      * @description RPA Run Item response schema.
      */
@@ -12299,10 +12267,12 @@ export interface operations {
         product_id?: number | null;
         product_code?: string | null;
         supplier_code?: string | null;
+        warehouse_id?: number | null;
         warehouse_code?: string | null;
         expiry_from?: string | null;
         expiry_to?: string | null;
         with_stock?: boolean;
+        status?: string | null;
         prioritize_primary?: boolean;
       };
       header?: never;
@@ -13088,6 +13058,7 @@ export interface operations {
         product_id?: number | null;
         warehouse_id?: number | null;
         supplier_id?: number | null;
+        tab?: string;
       };
       header?: never;
       path?: never;
@@ -20063,26 +20034,6 @@ export interface operations {
       };
     };
   };
-  list_export_targets_api_bulk_export_targets_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ExportTarget"][];
-        };
-      };
-    };
-  };
   download_bulk_export_api_bulk_export_download_get: {
     parameters: {
       query: {
@@ -20234,7 +20185,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["RpaRunCreateResponse"];
+          "application/json": components["schemas"]["RpaRunResponse"];
         };
       };
       /** @description Validation Error */

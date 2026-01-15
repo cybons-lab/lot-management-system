@@ -148,12 +148,18 @@ export const summarySettingsAtom = atomWithStorage<SummarySettings>(
 export type OverviewMode = "items" | "product" | "supplier" | "warehouse";
 
 /**
+ * タブフィルタタイプ
+ */
+export type InventoryTab = "all" | "in_stock" | "no_stock";
+
+/**
  * アイテムビュー用フィルタ
  */
 export interface InventoryItemFilters {
   product_id: string;
   warehouse_id: string;
   supplier_id: string;
+  tab: InventoryTab;
 }
 
 /**
@@ -171,6 +177,7 @@ export const inventoryPageStateAtom = atomWithStorage<{
       product_id: "",
       warehouse_id: "",
       supplier_id: "",
+      tab: "all",
     },
   },
   createSessionStorageAdapter<{

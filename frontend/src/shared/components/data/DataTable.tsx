@@ -249,7 +249,7 @@ export function DataTable<T = never>({
           // eslint-disable-next-line jsx-a11y/click-events-have-key-events
           <div onClick={(e) => e.stopPropagation()}>{rowActions(row.original)}</div>
         ),
-        size: 96, // w-24 equivalent
+        size: 180, // Enough for 2 buttons side by side
         enableResizing: false,
         enableHiding: false,
         meta: {
@@ -553,7 +553,7 @@ export function DataTable<T = never>({
 
                   {/* 展開された行 */}
                   {row.getIsExpanded() && renderExpandedRow && (
-                    <tr className="bg-slate-50/50">
+                    <tr className="border-l-4 border-l-blue-500 bg-blue-50/50">
                       <td colSpan={row.getVisibleCells().length} className="p-0">
                         <div className="border-t border-slate-200 px-4 py-3">
                           {renderExpandedRow(row.original)}

@@ -3,7 +3,9 @@
  * InventoryTable - Main inventory table with expandable lot details.
  * Refactored to use DataTable component.
  */
+import { ArrowUpFromLine, History, Lock, Pencil, Plus, Unlock } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui";
 import type { InventoryItem } from "@/features/inventory/api";
@@ -41,7 +43,9 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
     handleUnlockLot,
     toggleRow,
     isRowExpanded,
+    fetchLotsForItem,
     getLotsForItem,
+    isLotsLoading,
     handleViewDetail,
     handleCloseEdit,
     handleCloseLock,
@@ -88,6 +92,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
       const item = data.find((i) => getItemKey(i) === added);
       if (item) {
         toggleRow(item.product_id, item.warehouse_id);
+        void fetchLotsForItem(item.product_id, item.warehouse_id);
       }
       return;
     }
@@ -151,11 +156,23 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
       {
         id: "lots",
         header: "ロット数",
-        accessor: (row) => {
-          const lots = getLotsForItem(row.product_id, row.warehouse_id);
-          return lots.length;
-        },
-        width: 80,
+        accessor: (row) => row.active_lot_count,
+        cell: (row) => (
+          <div className="flex items-center gap-1.5">
+            <span>{row.active_lot_count}</span>
+            {row.inventory_state === "no_lots" && (
+              <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] text-red-700">
+                ⛔ なし
+              </span>
+            )}
+            {row.inventory_state === "depleted_only" && (
+              <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] text-yellow-700">
+                ⚠️ 0
+              </span>
+            )}
+          </div>
+        ),
+        width: 100,
         align: "right",
         sortable: true,
       },
@@ -212,11 +229,45 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
         sortable: true,
       },
     ],
-    [getLotsForItem],
+    [],
   );
 
   // アクションボタン
+  const navigate = useNavigate();
   const renderRowActions = (item: InventoryItem) => {
+    // ロットがない場合は「ロット新規登録」ボタンを優先表示
+    if (item.inventory_state === "no_lots") {
+      return (
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              // ロット新規登録画面へ遷移（製品・倉庫をプリセット）
+              navigate(
+                `/inventory/adhoc/new?product_id=${item.product_id}&warehouse_id=${item.warehouse_id}`,
+              );
+            }}
+          >
+            <Plus className="mr-1 h-4 w-4" />
+            登録
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewDetail(item.product_id, item.warehouse_id);
+            }}
+          >
+            詳細
+          </Button>
+        </div>
+      );
+    }
+
+    // 通常の詳細ボタン
     return (
       <Button
         variant="outline"
@@ -235,11 +286,14 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
   // eslint-disable-next-line max-lines-per-function
   const renderExpandedRow = (item: InventoryItem) => {
     const lots = getLotsForItem(item.product_id, item.warehouse_id);
+    const loadingLots = isLotsLoading(item.product_id, item.warehouse_id);
 
     return (
       <div className="px-8 py-4">
         <h4 className="mb-3 text-sm font-semibold text-gray-700">ロット一覧 ({lots.length}件)</h4>
-        {lots.length > 0 ? (
+        {loadingLots && lots.length === 0 ? (
+          <p className="text-sm text-gray-500">ロットを取得中...</p>
+        ) : lots.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
@@ -291,7 +345,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                           title="編集"
                           className="h-7 w-7 p-0"
                         >
-                          編
+                          <Pencil className="h-4 w-4" />
                         </Button>
                         {Number(lot.locked_quantity || 0) > 0 ? (
                           <Button
@@ -301,7 +355,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                             title="ロック解除"
                             className="h-7 w-7 p-0"
                           >
-                            解
+                            <Unlock className="h-4 w-4" />
                           </Button>
                         ) : (
                           <Button
@@ -311,7 +365,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                             title="ロック"
                             className="h-7 w-7 p-0"
                           >
-                            ロ
+                            <Lock className="h-4 w-4" />
                           </Button>
                         )}
                         <Button
@@ -327,7 +381,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                             0
                           }
                         >
-                          出
+                          <ArrowUpFromLine className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -336,7 +390,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                           title="履歴"
                           className="h-7 w-7 p-0"
                         >
-                          履
+                          <History className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>

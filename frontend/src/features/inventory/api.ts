@@ -19,8 +19,13 @@ export type LotCreateResponse =
 
 // ===== Inventory Items Types (v2) =====
 
+export type InventoryState = "in_stock" | "depleted_only" | "no_lots";
+
 export type InventoryItem =
-  paths["/api/v2/inventory/"]["get"]["responses"][200]["content"]["application/json"][number];
+  paths["/api/v2/inventory/"]["get"]["responses"][200]["content"]["application/json"][number] & {
+    active_lot_count: number;
+    inventory_state: InventoryState;
+  };
 
 export type InventoryItemsListParams = paths["/api/v2/inventory/"]["get"]["parameters"]["query"];
 
@@ -44,11 +49,14 @@ export const getLots = (params?: LotsGetParams) => {
   if (params?.product_id != null) searchParams.append("product_id", params.product_id.toString());
   if (params?.product_code) searchParams.append("product_code", params.product_code);
   if (params?.supplier_code) searchParams.append("supplier_code", params.supplier_code);
+  if (params?.warehouse_id != null)
+    searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params?.warehouse_code) searchParams.append("warehouse_code", params.warehouse_code);
   if (params?.expiry_from) searchParams.append("expiry_from", params.expiry_from);
   if (params?.expiry_to) searchParams.append("expiry_to", params.expiry_to);
   if (params?.with_stock !== undefined)
     searchParams.append("with_stock", params.with_stock.toString());
+  if (params?.status) searchParams.append("status", params.status);
   if (params?.prioritize_primary !== undefined)
     searchParams.append("prioritize_primary", params.prioritize_primary.toString());
 
@@ -89,13 +97,14 @@ export const getAvailableLots = (params: {
  * Get inventory items list (v2)
  * @endpoint GET /api/v2/inventory/
  */
-export const getInventoryItems = (params?: InventoryItemsListParams) => {
+export const getInventoryItems = (params?: InventoryItemsListParams & { tab?: string }) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
+  if (params?.tab) searchParams.append("tab", params.tab);
 
   const queryString = searchParams.toString();
   return http.get<InventoryItem[]>(`v2/inventory/${queryString ? "?" + queryString : ""}`);

@@ -149,6 +149,7 @@ class InventoryService:
         product_id: int | None = None,
         warehouse_id: int | None = None,
         supplier_id: int | None = None,
+        tab: str = "all",
     ) -> list[InventoryItemResponse]:
         """Get inventory items from v_inventory_summary view with product and
         warehouse names.
@@ -159,6 +160,7 @@ class InventoryService:
             product_id: Filter by product ID
             warehouse_id: Filter by warehouse ID
             supplier_id: Filter by supplier ID (filters lots by supplier)
+            tab: Tab filter - 'in_stock', 'no_stock', or 'all'
 
         Returns:
             List of inventory items
@@ -174,6 +176,7 @@ class InventoryService:
                     SUM(l.current_quantity) as total_quantity,
                     SUM(l.locked_quantity) as allocated_quantity,
                     SUM(l.current_quantity - l.locked_quantity) as available_quantity,
+                    COUNT(l.id) as lot_count,
                     MAX(l.updated_at) as last_updated,
                     p.product_name,
                     p.maker_part_code AS product_code,
@@ -204,10 +207,12 @@ class InventoryService:
                 SELECT 
                     v.product_id, 
                     v.warehouse_id, 
+                    v.active_lot_count,
                     v.total_quantity, 
                     v.allocated_quantity, 
                     v.available_quantity, 
                     v.last_updated,
+                    v.inventory_state,
                     p.product_name,
                     p.maker_part_code AS product_code,
                     w.warehouse_name,
@@ -227,7 +232,14 @@ class InventoryService:
                 query += " AND v.warehouse_id = :warehouse_id"
                 params["warehouse_id"] = warehouse_id
 
-            query += " ORDER BY v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
+            # Tab filter for inventory_state
+            if tab == "in_stock":
+                query += " AND v.inventory_state = 'in_stock'"
+            elif tab == "no_stock":
+                query += " AND v.inventory_state IN ('no_lots', 'depleted_only')"
+            # 'all' or any other value: no filter
+
+            query += " ORDER BY v.available_quantity DESC, v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
             params["limit"] = limit
             params["skip"] = skip
 
@@ -281,8 +293,33 @@ class InventoryService:
             },
         ).fetchall()
 
-        # Map results for O(1) lookup
-        # key: (product_id, warehouse_id) -> { 'soft': 0.0, 'hard': 0.0 }
+        # 2b. Lot Count Aggregation Query
+        # IMPORTANT: This must match the /api/lots endpoint's default behavior
+        # which is with_stock=True (current_quantity > 0)
+        count_query = """
+            SELECT
+                l.product_id,
+                l.warehouse_id,
+                COUNT(l.id) as lot_count
+            FROM lots l
+            WHERE l.product_id IN :product_ids
+              AND l.warehouse_id IN :warehouse_ids
+              AND l.current_quantity > 0 AND l.status = 'active'
+            GROUP BY l.product_id, l.warehouse_id
+        """
+        count_rows = self.db.execute(
+            text(count_query),
+            {
+                "product_ids": tuple(set(found_products)),
+                "warehouse_ids": tuple(set(found_warehouses)),
+            },
+        ).fetchall()
+
+        # Map counts
+        count_map = {}
+        for row in count_rows:
+            key = (row.product_id, row.warehouse_id)
+            count_map[key] = row.lot_count
         alloc_map = {}
         for row in alloc_rows:
             key = (row.product_id, row.warehouse_id)
@@ -298,6 +335,10 @@ class InventoryService:
         for idx, row in enumerate(result):
             key = (row.product_id, row.warehouse_id)
             allocs = alloc_map.get(key, {"soft": 0.0, "hard": 0.0})
+            # Use active_lot_count from view, fallback to count_map for supplier-filtered query
+            active_lot_count = getattr(row, "active_lot_count", count_map.get(key, 0))
+            # Use inventory_state from view, default to "no_lots"
+            inventory_state = getattr(row, "inventory_state", "no_lots")
 
             responses.append(
                 InventoryItemResponse(
@@ -309,6 +350,8 @@ class InventoryService:
                     available_quantity=row.available_quantity,
                     soft_allocated_quantity=Decimal(str(allocs["soft"])),
                     hard_allocated_quantity=Decimal(str(allocs["hard"])),
+                    active_lot_count=active_lot_count,
+                    inventory_state=inventory_state,
                     last_updated=row.last_updated,
                     product_name=row.product_name,
                     product_code=row.product_code,
@@ -391,6 +434,16 @@ class InventoryService:
             elif ar.allocation_type == "hard":
                 hard_qty += float(ar.qty)
 
+        # Get count (must match /api/lots default behavior: with_stock=True)
+        count_query = """
+            SELECT COUNT(id) as cnt FROM lots 
+            WHERE product_id = :pid AND warehouse_id = :wid 
+            AND current_quantity > 0 AND status = 'active'
+        """
+        count_res = self.db.execute(
+            text(count_query), {"pid": product_id, "wid": warehouse_id}
+        ).scalar()
+
         return InventoryItemResponse(
             id=1,  # Dummy ID
             product_id=row.product_id,
@@ -400,6 +453,7 @@ class InventoryService:
             available_quantity=row.available_quantity,
             soft_allocated_quantity=Decimal(str(soft_qty)),
             hard_allocated_quantity=Decimal(str(hard_qty)),
+            lot_count=count_res or 0,
             last_updated=row.last_updated,
             product_name=row.product_name,
             product_code=row.product_code,

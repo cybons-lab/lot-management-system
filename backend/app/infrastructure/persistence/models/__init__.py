@@ -46,6 +46,7 @@ from .masters_models import (
 from .order_groups_models import OrderGroup
 from .orders_models import Order, OrderLine
 from .product_supplier_models import ProductSupplier
+from .product_warehouse_model import ProductWarehouse
 from .rpa_models import RpaRun, RpaRunItem, RpaRunStatus
 from .seed_snapshot_model import SeedSnapshot
 from .smartread_models import SmartReadConfig
@@ -126,6 +127,7 @@ __all__ = [
     "UserRole",
     "UserSupplierAssignment",
     "ProductSupplier",
+    "ProductWarehouse",
     # Logs
     "OperationLog",
     "MasterChangeLog",
