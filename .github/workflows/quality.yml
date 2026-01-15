@@ -2,7 +2,7 @@ name: Code Quality Checks
 
 on:
   push:
-    branches: ["main", "develop", "claude/**"]
+    branches: ["main", "develop", "claude/**", "codex/**"]
   pull_request:
     branches: ["main", "develop"]
 
