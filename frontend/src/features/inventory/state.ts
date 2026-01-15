@@ -160,6 +160,7 @@ export interface InventoryItemFilters {
   warehouse_id: string;
   supplier_id: string;
   tab: InventoryTab;
+  primary_staff_only: boolean;
 }
 
 /**
@@ -178,6 +179,7 @@ export const inventoryPageStateAtom = atomWithStorage<{
       warehouse_id: "",
       supplier_id: "",
       tab: "all",
+      primary_staff_only: false,
     },
   },
   createSessionStorageAdapter<{

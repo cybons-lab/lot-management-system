@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui";
+import { Button, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { InventoryByProductTable } from "@/features/inventory/components/InventoryByProductTable";
@@ -43,7 +43,7 @@ export function InventoryPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Page state (Jotai atom - persisted in sessionStorage)
-  const { overviewMode, filters, queryParams, setOverviewMode, updateFilter, setFilters } =
+  const { overviewMode, filters, queryParams, setOverviewMode, updateFilter, setFilters, resetFilters } =
     useInventoryPageState();
 
   // Data Fetching
@@ -233,31 +233,28 @@ export function InventoryPage() {
         {overviewMode === "items" && (
           <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                filters.tab === "all"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "all"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
               onClick={() => updateFilter("tab", "all")}
             >
               すべて
             </button>
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                filters.tab === "in_stock"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "in_stock"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
               onClick={() => updateFilter("tab", "in_stock")}
             >
               ✅ 在庫あり
             </button>
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                filters.tab === "no_stock"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "no_stock"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
               onClick={() => updateFilter("tab", "no_stock")}
             >
               ⚠️ 在庫なし
@@ -268,33 +265,58 @@ export function InventoryPage() {
         {/* Filters (Items Only) */}
         {overviewMode === "items" && (
           <Section>
-            <div className="grid grid-cols-4 gap-4">
-              <div>
-                <Label className="mb-2 block text-sm font-medium">仕入先</Label>
-                <SearchableSelect
-                  options={supplierOptions}
-                  value={filters.supplier_id}
-                  onChange={(value) => updateFilter("supplier_id", value)}
-                  placeholder="仕入先を検索..."
-                />
+            <div className="flex flex-col gap-4">
+              {/* Filter Actions Row (Primary Staff Filter) */}
+              <div className="flex justify-end pt-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="primary_staff_only"
+                    checked={filters.primary_staff_only}
+                    onCheckedChange={(checked) => updateFilter("primary_staff_only", !!checked)}
+                  />
+                  <Label
+                    htmlFor="primary_staff_only"
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    主担当の仕入先のみ
+                  </Label>
+                </div>
               </div>
-              <div>
-                <Label className="mb-2 block text-sm font-medium">倉庫</Label>
-                <SearchableSelect
-                  options={warehouseOptions}
-                  value={filters.warehouse_id}
-                  onChange={(value) => updateFilter("warehouse_id", value)}
-                  placeholder="倉庫を検索..."
-                />
-              </div>
-              <div>
-                <Label className="mb-2 block text-sm font-medium">製品</Label>
-                <SearchableSelect
-                  options={productOptions}
-                  value={filters.product_id}
-                  onChange={(value) => updateFilter("product_id", value)}
-                  placeholder="製品を検索..."
-                />
+
+              {/* Filter Inputs Row */}
+              <div className="grid grid-cols-4 gap-4 items-end">
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">仕入先</Label>
+                  <SearchableSelect
+                    options={supplierOptions}
+                    value={filters.supplier_id}
+                    onChange={(value) => updateFilter("supplier_id", value)}
+                    placeholder="仕入先を検索..."
+                  />
+                </div>
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">倉庫</Label>
+                  <SearchableSelect
+                    options={warehouseOptions}
+                    value={filters.warehouse_id}
+                    onChange={(value) => updateFilter("warehouse_id", value)}
+                    placeholder="倉庫を検索..."
+                  />
+                </div>
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">製品</Label>
+                  <SearchableSelect
+                    options={productOptions}
+                    value={filters.product_id}
+                    onChange={(value) => updateFilter("product_id", value)}
+                    placeholder="製品を検索..."
+                  />
+                </div>
+                <div>
+                  <Button variant="outline" onClick={resetFilters} className="w-full">
+                    フィルタをリセット
+                  </Button>
+                </div>
               </div>
             </div>
           </Section>

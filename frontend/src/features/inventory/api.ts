@@ -97,7 +97,9 @@ export const getAvailableLots = (params: {
  * Get inventory items list (v2)
  * @endpoint GET /api/v2/inventory/
  */
-export const getInventoryItems = (params?: InventoryItemsListParams & { tab?: string }) => {
+export const getInventoryItems = (
+  params?: InventoryItemsListParams & { tab?: string; primary_staff_only?: boolean },
+) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
@@ -105,6 +107,8 @@ export const getInventoryItems = (params?: InventoryItemsListParams & { tab?: st
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
   if (params?.tab) searchParams.append("tab", params.tab);
+  if (params?.primary_staff_only)
+    searchParams.append("primary_staff_only", params.primary_staff_only.toString());
 
   const queryString = searchParams.toString();
   return http.get<InventoryItem[]>(`v2/inventory/${queryString ? "?" + queryString : ""}`);

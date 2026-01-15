@@ -150,6 +150,8 @@ class InventoryService:
         warehouse_id: int | None = None,
         supplier_id: int | None = None,
         tab: str = "all",
+        primary_staff_only: bool = False,
+        current_user_id: int | None = None,
     ) -> list[InventoryItemResponse]:
         """Get inventory items from v_inventory_summary view with product and
         warehouse names.
@@ -161,13 +163,15 @@ class InventoryService:
             warehouse_id: Filter by warehouse ID
             supplier_id: Filter by supplier ID (filters lots by supplier)
             tab: Tab filter - 'in_stock', 'no_stock', or 'all'
+            primary_staff_only: Filter by primary staff (current user)
+            current_user_id: Current user ID (required if primary_staff_only=True)
 
         Returns:
             List of inventory items
         """
         # Join with products and warehouses to get names
-        # If supplier_id is specified, we join lots to filter by supplier
-        if supplier_id is not None:
+        # If supplier_id is specified or filtering by primary staff, we join lots/views to filter by supplier
+        if supplier_id is not None or primary_staff_only:
             # Need to aggregate lots directly since v_inventory_summary doesn't have supplier_id
             # Use v_lot_receipt_stock view which handles B-Plan logic (withdrawals, etc.)
             query = """
@@ -184,10 +188,23 @@ class InventoryService:
                     v.warehouse_name,
                     v.warehouse_code
                 FROM v_lot_receipt_stock v
-                WHERE v.remaining_quantity > 0 AND v.status = 'active'
-                  AND v.supplier_id = :supplier_id
             """
-            params = {"supplier_id": supplier_id}
+
+            params = {}
+
+            # If primary staff filter is active, join with user_supplier_assignments table
+            if primary_staff_only and current_user_id:
+                query += " JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
+
+            query += " WHERE v.remaining_quantity > 0 AND v.status = 'active'"
+
+            if supplier_id is not None:
+                query += " AND v.supplier_id = :supplier_id"
+                params["supplier_id"] = supplier_id
+            
+            if primary_staff_only and current_user_id:
+                query += " AND usa.user_id = :current_user_id AND usa.is_primary = TRUE"
+                params["current_user_id"] = current_user_id
 
             if product_id is not None:
                 query += " AND v.product_id = :product_id"
