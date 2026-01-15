@@ -3,7 +3,6 @@ import {
   ArrowUpFromLine,
   Box,
   Calendar,
-  History,
   Home,
   List,
   Package,
@@ -125,20 +124,20 @@ export function InventoryPage() {
           <div className="flex gap-2">
             <ExportButton apiPath="lots/export/download" filePrefix="lots" size="sm" />
             <Button
-              size="icon"
               variant="outline"
+              size="sm"
               onClick={() => setOverviewMode("intake_history")}
-              title="入庫履歴"
             >
-              <ArrowDownToLine className="h-4 w-4" />
+              <ArrowDownToLine className="mr-2 h-4 w-4" />
+              入庫履歴
             </Button>
             <Button
-              size="icon"
               variant="outline"
+              size="sm"
               onClick={() => navigate("/inventory/withdrawals")}
-              title="出庫履歴"
             >
-              <History className="h-4 w-4" />
+              <ArrowUpFromLine className="mr-2 h-4 w-4" />
+              出庫履歴
             </Button>
             <Button
               variant="outline"
