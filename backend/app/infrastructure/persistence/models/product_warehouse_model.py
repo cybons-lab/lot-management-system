@@ -15,10 +15,14 @@ class ProductWarehouse(Base):
     __tablename__ = "product_warehouse"
 
     product_id = Column(BigInteger, ForeignKey("products.id", ondelete="CASCADE"), primary_key=True)
-    warehouse_id = Column(BigInteger, ForeignKey("warehouses.id", ondelete="CASCADE"), primary_key=True)
+    warehouse_id = Column(
+        BigInteger, ForeignKey("warehouses.id", ondelete="CASCADE"), primary_key=True
+    )
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
 
     def __repr__(self) -> str:
         return f"<ProductWarehouse product={self.product_id} warehouse={self.warehouse_id}>"

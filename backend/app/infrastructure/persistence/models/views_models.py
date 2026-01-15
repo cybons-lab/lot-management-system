@@ -272,4 +272,3 @@ class VInventorySummary(Base):
     available_with_provisional: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     last_updated: Mapped[datetime | None] = mapped_column(DateTime)
     inventory_state: Mapped[str] = mapped_column(String(20), default="no_lots")
-
