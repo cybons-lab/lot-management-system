@@ -160,7 +160,14 @@ SELECT
     -- 入荷予定（仮在庫）
     COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
     GREATEST(SUM(l.current_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(l.locked_quantity) + COALESCE(SUM(ipl.planned_quantity), 0), 0) AS available_with_provisional,
-    MAX(l.updated_at) AS last_updated
+    MAX(l.updated_at) AS last_updated,
+    -- アクティブロット数
+    COUNT(l.id) AS active_lot_count,
+    -- 在庫状態 (in_stock, depleted_only)
+    CASE 
+        WHEN GREATEST(SUM(l.current_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(l.locked_quantity), 0) > 0 THEN 'in_stock'
+        ELSE 'depleted_only'
+    END AS inventory_state
 FROM public.lots l
 LEFT JOIN public.v_lot_allocations la ON l.id = la.lot_id
 LEFT JOIN public.inbound_plan_lines ipl ON l.product_id = ipl.product_id
