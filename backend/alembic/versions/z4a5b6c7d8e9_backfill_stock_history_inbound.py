@@ -25,11 +25,25 @@ def upgrade() -> None:
     """Insert INBOUND records for lots without intake history."""
     bind = op.get_bind()
     inspector = sa.inspect(bind)
-    source_table = "lot_receipts" if inspector.has_table("lot_receipts") else "lots"
+
+    if inspector.has_table("lot_receipts"):
+        source_table = "lot_receipts"
+        columns = [c["name"] for c in inspector.get_columns("lot_receipts")]
+        if "received_quantity" in columns:
+            qty_col = "lr.received_quantity"
+        else:
+            print(
+                "WARNING: lot_receipts table found but received_quantity column missing. Using current+locked."
+            )
+            qty_col = "(lr.current_quantity + lr.locked_quantity)"
+    else:
+        source_table = "lots"
+        # lotsテーブルにはreceived_quantityがないため、現在の在庫数合計で代用
+        qty_col = "(lr.current_quantity + lr.locked_quantity)"
 
     op.execute(
         sa.text(
-            """
+            f"""
             INSERT INTO stock_history (
                 lot_id,
                 transaction_type,
@@ -41,8 +55,8 @@ def upgrade() -> None:
             SELECT
                 lr.id,
                 'inbound',
-                lr.received_quantity,
-                lr.received_quantity,
+                {qty_col},
+                {qty_col},
                 'migration_backfill',
                 COALESCE(lr.received_date, lr.created_at, CURRENT_TIMESTAMP)
             FROM {source_table} lr
@@ -51,8 +65,8 @@ def upgrade() -> None:
                 FROM stock_history
                 WHERE transaction_type = 'inbound'
             )
-            AND lr.received_quantity > 0
-            """.format(source_table=source_table)
+            AND {qty_col} > 0
+            """
         )
     )
 
