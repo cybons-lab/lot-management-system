@@ -123,19 +123,11 @@ export function InventoryPage() {
         actions={
           <div className="flex gap-2">
             <ExportButton apiPath="lots/export/download" filePrefix="lots" size="sm" />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setOverviewMode("intake_history")}
-            >
+            <Button variant="outline" size="sm" onClick={() => setOverviewMode("intake_history")}>
               <ArrowDownToLine className="mr-2 h-4 w-4" />
               入庫履歴
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/inventory/withdrawals")}
-            >
+            <Button variant="outline" size="sm" onClick={() => navigate("/inventory/withdrawals")}>
               <ArrowUpFromLine className="mr-2 h-4 w-4" />
               出庫履歴
             </Button>
