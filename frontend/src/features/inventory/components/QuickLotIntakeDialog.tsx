@@ -20,10 +20,10 @@ import {
   DialogTitle,
 } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
-import { useLotsQuery } from "@/hooks/api";
 import { useProducts } from "@/features/products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
 import { useWarehouses } from "@/features/warehouses/hooks";
+import { useLotsQuery } from "@/hooks/api";
 import { createStockMovement } from "@/services/api/lot-service";
 
 type IntakeMode = "existing" | "new";
@@ -196,6 +196,8 @@ export function QuickLotIntakeDialog({ open, onOpenChange, onSuccess }: QuickLot
       received_date: receivedDate,
       expiry_date: expiryDate || undefined,
       current_quantity: Number(newQuantity),
+      allocated_quantity: 0,
+      locked_quantity: 0,
       unit,
       origin_type: "adhoc",
       status: "active",
