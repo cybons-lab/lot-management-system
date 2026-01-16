@@ -65,15 +65,13 @@ export async function getIntakeHistory(
   params?: IntakeHistoryListParams,
 ): Promise<IntakeHistoryListResponse> {
   const searchParams = new URLSearchParams();
-  if (params?.skip !== undefined) searchParams.set("skip", String(params.skip));
-  if (params?.limit !== undefined) searchParams.set("limit", String(params.limit));
-  if (params?.supplier_id !== undefined) searchParams.set("supplier_id", String(params.supplier_id));
-  if (params?.warehouse_id !== undefined)
-    searchParams.set("warehouse_id", String(params.warehouse_id));
-  if (params?.product_id !== undefined) searchParams.set("product_id", String(params.product_id));
-  if (params?.start_date) searchParams.set("start_date", params.start_date);
-  if (params?.end_date) searchParams.set("end_date", params.end_date);
-  if (params?.search) searchParams.set("search", params.search);
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") {
+        searchParams.set(key, String(value));
+      }
+    });
+  }
 
   const query = searchParams.toString();
   const url = query ? `${BASE_PATH}?${query}` : BASE_PATH;

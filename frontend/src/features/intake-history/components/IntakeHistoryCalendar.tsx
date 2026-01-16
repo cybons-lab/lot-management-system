@@ -20,9 +20,8 @@ import { ja } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Package, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { useIntakeCalendarSummary } from "../hooks";
-
 import type { DailyIntakeSummary } from "../api";
+import { useIntakeCalendarSummary } from "../hooks";
 
 import { Button } from "@/components/ui";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
@@ -64,14 +63,7 @@ interface CalendarDayProps {
   onHover: (dateKey: string | null) => void;
 }
 
-function CalendarDay({
-  day,
-  stat,
-  isCurrentMonth,
-  isToday,
-  isHovered,
-  onHover,
-}: CalendarDayProps) {
+function CalendarDay({ day, stat, isCurrentMonth, isToday, isHovered, onHover }: CalendarDayProps) {
   const dateKey = format(day, "yyyy-MM-dd");
   const dateNumberClass = getDateNumberClass(isToday, isCurrentMonth, day.getDay());
   const cellClass = getDayCellClass(isCurrentMonth, isToday, isHovered);
@@ -188,7 +180,7 @@ function WeekdayHeader() {
       {WEEK_DAYS.map((day, i) => (
         <div
           key={day}
-          className={`py-3 text-center text-xs font-semibold uppercase tracking-wider ${
+          className={`py-3 text-center text-xs font-semibold tracking-wider uppercase ${
             i === 0 ? "text-red-400" : i === 6 ? "text-blue-400" : "text-slate-500"
           }`}
         >
@@ -229,6 +221,15 @@ function LoadingSpinner() {
   );
 }
 
+function useCalendarDays(currentMonth: Date) {
+  return useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(endOfMonth(currentMonth));
+    return eachDayOfInterval({ start: startDate, end: endDate });
+  }, [currentMonth]);
+}
+
 export function IntakeHistoryCalendar({
   supplierId,
   warehouseId,
@@ -237,28 +238,20 @@ export function IntakeHistoryCalendar({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth() + 1;
-
   const { data, isLoading, isError, error, refetch } = useIntakeCalendarSummary({
-    year,
-    month,
+    year: currentMonth.getFullYear(),
+    month: currentMonth.getMonth() + 1,
     supplier_id: supplierId,
     warehouse_id: warehouseId,
     product_id: productId,
   });
 
-  const monthStart = startOfMonth(currentMonth);
-  const startDate = startOfWeek(monthStart);
-  const endDate = endOfWeek(endOfMonth(currentMonth));
-  const days = eachDayOfInterval({ start: startDate, end: endDate });
+  const days = useCalendarDays(currentMonth);
 
   const dailyStats = useMemo(() => {
-    if (!data) return {};
     const stats: Record<string, DailyStat> = {};
-    data.forEach((item: DailyIntakeSummary) => {
-      const dateKey = item.date.substring(0, 10);
-      stats[dateKey] = {
+    (data || []).forEach((item: DailyIntakeSummary) => {
+      stats[item.date.substring(0, 10)] = {
         count: item.count,
         quantity: Number(item.total_quantity),
       };
@@ -268,13 +261,12 @@ export function IntakeHistoryCalendar({
 
   const monthlyTotal = useMemo(() => {
     return Object.values(dailyStats).reduce(
-      (acc, stat) => ({ count: acc.count + stat.count, quantity: acc.quantity + stat.quantity }),
+      (acc, s) => ({ count: acc.count + s.count, quantity: acc.quantity + s.quantity }),
       { count: 0, quantity: 0 },
     );
   }, [dailyStats]);
 
   if (isLoading) return <LoadingSpinner />;
-
   if (isError) {
     return (
       <div className="p-4">

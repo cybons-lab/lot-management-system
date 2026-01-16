@@ -6,12 +6,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import {
-  getIntakeCalendarSummary,
-  getIntakeHistory,
-  getIntakeHistoryDetail,
-  IntakeHistoryListParams,
-} from "../api";
+import type { IntakeHistoryListParams } from "../api";
+import { getIntakeCalendarSummary, getIntakeHistory, getIntakeHistoryDetail } from "../api";
 
 export const intakeHistoryKeys = {
   all: ["intake-history"] as const,
