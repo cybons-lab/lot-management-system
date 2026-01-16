@@ -18,6 +18,7 @@ from app.infrastructure.persistence.models.masters_models import (
     CustomerItemDeliverySetting,
     DeliveryPlace,
 )
+from app.infrastructure.persistence.models.missing_mapping_model import MissingMappingEvent
 
 
 router = APIRouter(tags=["withdrawals"])
@@ -34,6 +35,29 @@ class DefaultDestinationResponse(BaseModel):
     delivery_place_name: str | None = None
     mapping_found: bool = False
     message: str | None = None
+
+
+def _record_missing_mapping_event(
+    db: Session,
+    *,
+    event_type: str,
+    product_id: int | None,
+    supplier_id: int | None,
+    customer_id: int | None,
+    context_json: dict[str, object] | None,
+) -> None:
+    event = MissingMappingEvent(
+        event_type=event_type,
+        product_id=product_id,
+        supplier_id=supplier_id,
+        customer_id=customer_id,
+        context_json=context_json,
+    )
+    db.add(event)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
 
 
 @router.get("/default-destination", response_model=DefaultDestinationResponse)
@@ -58,6 +82,14 @@ def get_default_destination(
     customer_item = db.execute(query).scalars().first()
 
     if not customer_item:
+        _record_missing_mapping_event(
+            db,
+            event_type="customer_item_mapping_not_found",
+            product_id=product_id,
+            supplier_id=supplier_id,
+            customer_id=None,
+            context_json={"product_id": product_id, "supplier_id": supplier_id},
+        )
         return DefaultDestinationResponse(
             mapping_found=False,
             message=f"product_id={product_id} のマッピングが見つかりません",
@@ -66,6 +98,19 @@ def get_default_destination(
     # Step 2: Get Customer info
     customer = db.get(Customer, customer_item.customer_id)
     if not customer:
+        _record_missing_mapping_event(
+            db,
+            event_type="customer_not_found",
+            product_id=product_id,
+            supplier_id=supplier_id,
+            customer_id=customer_item.customer_id,
+            context_json={
+                "product_id": product_id,
+                "supplier_id": supplier_id,
+                "customer_id": customer_item.customer_id,
+                "external_product_code": customer_item.external_product_code,
+            },
+        )
         return DefaultDestinationResponse(
             mapping_found=False,
             message=f"customer_id={customer_item.customer_id} が見つかりません",
@@ -92,6 +137,20 @@ def get_default_destination(
             delivery_place_id = delivery_place.id
             delivery_place_code = delivery_place.delivery_place_code
             delivery_place_name = delivery_place.delivery_place_name
+    if delivery_place_id is None:
+        _record_missing_mapping_event(
+            db,
+            event_type="delivery_place_not_found",
+            product_id=product_id,
+            supplier_id=supplier_id,
+            customer_id=customer.id,
+            context_json={
+                "product_id": product_id,
+                "supplier_id": supplier_id,
+                "customer_id": customer.id,
+                "external_product_code": customer_item.external_product_code,
+            },
+        )
 
     return DefaultDestinationResponse(
         customer_id=customer.id,

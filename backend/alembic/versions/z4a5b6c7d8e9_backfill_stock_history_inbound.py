@@ -23,25 +23,37 @@ depends_on = None
 
 def upgrade() -> None:
     """Insert INBOUND records for lots without intake history."""
-    # Raw SQL for data migration
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    source_table = "lot_receipts" if inspector.has_table("lot_receipts") else "lots"
+
     op.execute(
-        """
-        INSERT INTO stock_history (lot_id, transaction_type, quantity_change, quantity_after, reference_type, transaction_date)
-        SELECT
-            lr.id,
-            'inbound',
-            lr.received_quantity,
-            lr.received_quantity,
-            'migration_backfill',
-            COALESCE(lr.received_date, lr.created_at, CURRENT_TIMESTAMP)
-        FROM lot_receipts lr
-        WHERE lr.id NOT IN (
-            SELECT DISTINCT lot_id
-            FROM stock_history
-            WHERE transaction_type = 'inbound'
+        sa.text(
+            """
+            INSERT INTO stock_history (
+                lot_id,
+                transaction_type,
+                quantity_change,
+                quantity_after,
+                reference_type,
+                transaction_date
+            )
+            SELECT
+                lr.id,
+                'inbound',
+                lr.received_quantity,
+                lr.received_quantity,
+                'migration_backfill',
+                COALESCE(lr.received_date, lr.created_at, CURRENT_TIMESTAMP)
+            FROM {source_table} lr
+            WHERE lr.id NOT IN (
+                SELECT DISTINCT lot_id
+                FROM stock_history
+                WHERE transaction_type = 'inbound'
+            )
+            AND lr.received_quantity > 0
+            """.format(source_table=source_table)
         )
-        AND lr.received_quantity > 0
-        """
     )
 
 

@@ -82,3 +82,32 @@ export async function lockLot(id: number, reason: string, quantity?: number): Pr
 export async function unlockLot(id: number, quantity?: number): Promise<LotResponse> {
   return http.post<LotResponse>(`${BASE_PATH}/${id}/unlock`, { quantity });
 }
+
+export type StockMovementType = "inbound" | "allocation" | "shipment" | "adjustment" | "return";
+
+export interface StockMovementCreate {
+  lot_id: number;
+  transaction_type: StockMovementType;
+  quantity_change: number;
+  quantity_after: number;
+  reference_type?: string | null;
+  reference_id?: number | null;
+  transaction_date?: string | null;
+}
+
+export interface StockMovementResponse {
+  history_id: number;
+  lot_id: number;
+  transaction_type: StockMovementType;
+  quantity_change: number;
+  quantity_after: number;
+  reference_type?: string | null;
+  reference_id?: number | null;
+  transaction_date: string;
+}
+
+export async function createStockMovement(
+  data: StockMovementCreate,
+): Promise<StockMovementResponse> {
+  return http.post<StockMovementResponse>(`${BASE_PATH}/movements`, data);
+}

@@ -22,7 +22,7 @@ import { InventoryByProductTable } from "@/features/inventory/components/Invento
 import { InventoryBySupplierTable } from "@/features/inventory/components/InventoryBySupplierTable";
 import { InventoryByWarehouseTable } from "@/features/inventory/components/InventoryByWarehouseTable";
 import { InventoryTable } from "@/features/inventory/components/InventoryTable";
-import { LotCreateForm } from "@/features/inventory/components/LotCreateForm";
+import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { useInventoryItems } from "@/features/inventory/hooks";
 import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 import { useInventoryPageState } from "@/features/inventory/hooks/useInventoryPageState";
@@ -31,17 +31,15 @@ import {
   useInventoryBySupplier,
   useInventoryByWarehouse,
 } from "@/hooks/api";
-import { useCreateLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
 import { ExportButton } from "@/shared/components/ExportButton";
-import { FormDialog } from "@/shared/components/form";
 import { Section } from "@/shared/components/layout";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function InventoryPage() {
   const navigate = useNavigate();
-  // Lot creation dialog
+  // Lot quick intake dialog
   const createDialog = useDialog();
   // Refresh loading state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -79,16 +77,6 @@ export function InventoryPage() {
     warehouse_id: filters.warehouse_id || undefined,
     onAutoSelectSupplier: (id) => updateFilter("supplier_id", id),
     onAutoSelectProduct: (id) => updateFilter("product_id", id),
-  });
-
-  // Lot creation mutation
-  const createLotMutation = useCreateLot({
-    onSuccess: () => {
-      toast.success("ロットを作成しました");
-      createDialog.close();
-      refetchItems();
-    },
-    onError: (error) => toast.error(`作成に失敗しました: ${error.message} `),
   });
 
   const handleRefresh = async () => {
@@ -142,6 +130,10 @@ export function InventoryPage() {
             <Button size="sm" onClick={() => navigate("/inventory/adhoc/new")}>
               <Package className="mr-2 h-4 w-4" />
               ロット新規登録
+            </Button>
+            <Button size="sm" variant="outline" onClick={createDialog.open}>
+              <Package className="mr-2 h-4 w-4" />
+              ロット簡易登録
             </Button>
           </div>
         }
@@ -417,24 +409,11 @@ export function InventoryPage() {
         )}
       </div>
 
-      {/* Lot Creation Dialog */}
-      <FormDialog
+      <QuickLotIntakeDialog
         open={createDialog.isOpen}
-        onClose={createDialog.close}
-        title="ロット新規登録"
-        description="新しいロットを登録します"
-        size="lg"
-      >
-        <LotCreateForm
-          onSubmit={async (data) => {
-            await createLotMutation.mutateAsync(
-              data as Parameters<typeof createLotMutation.mutateAsync>[0],
-            );
-          }}
-          onCancel={createDialog.close}
-          isSubmitting={createLotMutation.isPending}
-        />
-      </FormDialog>
+        onOpenChange={(open) => (open ? createDialog.open() : createDialog.close())}
+        onSuccess={refetchItems}
+      />
     </PageContainer>
   );
 }
