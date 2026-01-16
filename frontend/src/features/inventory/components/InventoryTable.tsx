@@ -3,7 +3,7 @@
  * InventoryTable - Main inventory table with expandable lot details.
  * Refactored to use DataTable component.
  */
-import { Calendar, Lock, PackageMinus, Pencil, Plus, Unlock } from "lucide-react";
+import { ArrowDownToLine, Calendar, Lock, PackageMinus, Pencil, Plus, Unlock } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -12,6 +12,7 @@ import type { InventoryItem } from "@/features/inventory/api";
 import { LoadingState, EmptyState } from "@/features/inventory/components/InventoryTableComponents";
 import { LotEditForm, type LotUpdateData } from "@/features/inventory/components/LotEditForm";
 import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
+import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { useInventoryTableLogic } from "@/features/inventory/hooks/useInventoryTableLogic";
 import { QuickWithdrawalDialog, WithdrawalHistoryDialog } from "@/features/withdrawals/components";
 import type { Column } from "@/shared/components/data/DataTable";
@@ -68,6 +69,20 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
   const handleHistoryLot = (lot: LotUI) => {
     setSelectedHistoryLot(lot);
     setHistoryDialogOpen(true);
+  };
+
+  // ロット簡易登録ダイアログ用の状態
+  const [quickIntakeDialogOpen, setQuickIntakeDialogOpen] = useState(false);
+  const [quickIntakeItem, setQuickIntakeItem] = useState<InventoryItem | null>(null);
+
+  const handleQuickIntake = (item: InventoryItem) => {
+    setQuickIntakeItem(item);
+    setQuickIntakeDialogOpen(true);
+  };
+
+  const handleQuickIntakeSuccess = () => {
+    refetchLots();
+    onRefresh?.();
   };
 
   const handleWithdrawalSuccess = () => {
@@ -267,18 +282,32 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
       );
     }
 
-    // 通常の詳細ボタン
+    // 通常のアクションボタン（入庫 + 詳細）
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleViewDetail(item.product_id, item.warehouse_id);
-        }}
-      >
-        詳細
-      </Button>
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleQuickIntake(item);
+          }}
+          title="ロット入庫"
+        >
+          <ArrowDownToLine className="mr-1 h-4 w-4" />
+          入庫
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViewDetail(item.product_id, item.warehouse_id);
+          }}
+        >
+          詳細
+        </Button>
+      </div>
     );
   };
 
@@ -460,6 +489,15 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
           onWithdrawalSuccess={handleWithdrawalSuccess}
         />
       )}
+
+      {/* ロット簡易登録ダイアログ */}
+      <QuickLotIntakeDialog
+        open={quickIntakeDialogOpen}
+        onOpenChange={setQuickIntakeDialogOpen}
+        onSuccess={handleQuickIntakeSuccess}
+        initialProductId={quickIntakeItem?.product_id}
+        initialWarehouseId={quickIntakeItem?.warehouse_id}
+      />
     </div>
   );
 }

@@ -3,7 +3,7 @@
  *
  * 既存ロットへの追加入庫 or 新規ロット作成を1つのダイアログで行う簡易登録フォーム。
  */
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function, complexity */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -35,23 +35,39 @@ interface QuickLotIntakeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  /** Pre-selected product ID for new lot mode */
+  initialProductId?: number;
+  /** Pre-selected warehouse ID for new lot mode */
+  initialWarehouseId?: number;
+  /** Pre-selected supplier ID for new lot mode */
+  initialSupplierId?: number;
 }
 
 const DEFAULT_UNIT = "EA";
 
-export function QuickLotIntakeDialog({ open, onOpenChange, onSuccess }: QuickLotIntakeDialogProps) {
+export function QuickLotIntakeDialog({
+  open,
+  onOpenChange,
+  onSuccess,
+  initialProductId,
+  initialWarehouseId,
+  initialSupplierId,
+}: QuickLotIntakeDialogProps) {
   const queryClient = useQueryClient();
   const today = new Date().toISOString().split("T")[0];
-  const [mode, setMode] = useState<IntakeMode>("existing");
+
+  // If initial values are provided, default to "new" mode
+  const hasInitialValues = initialProductId !== undefined || initialWarehouseId !== undefined;
+  const [mode, setMode] = useState<IntakeMode>(hasInitialValues ? "new" : "existing");
 
   const [existingLotId, setExistingLotId] = useState<string>("");
   const [existingQuantity, setExistingQuantity] = useState<string>("");
   const [existingDate, setExistingDate] = useState<string>(today);
 
   const [lotNumber, setLotNumber] = useState<string>("");
-  const [productId, setProductId] = useState<string>("");
-  const [warehouseId, setWarehouseId] = useState<string>("");
-  const [supplierId, setSupplierId] = useState<string>("");
+  const [productId, setProductId] = useState<string>(initialProductId?.toString() ?? "");
+  const [warehouseId, setWarehouseId] = useState<string>(initialWarehouseId?.toString() ?? "");
+  const [supplierId, setSupplierId] = useState<string>(initialSupplierId?.toString() ?? "");
   const [newQuantity, setNewQuantity] = useState<string>("");
   const [unit, setUnit] = useState<string>(DEFAULT_UNIT);
   const [receivedDate, setReceivedDate] = useState<string>(today);
@@ -68,20 +84,22 @@ export function QuickLotIntakeDialog({ open, onOpenChange, onSuccess }: QuickLot
 
   useEffect(() => {
     if (open) {
-      setMode("existing");
+      // If initial values are provided, default to "new" mode with pre-selected values
+      const hasPreset = initialProductId !== undefined || initialWarehouseId !== undefined;
+      setMode(hasPreset ? "new" : "existing");
       setExistingLotId("");
       setExistingQuantity("");
       setExistingDate(today);
       setLotNumber("");
-      setProductId("");
-      setWarehouseId("");
-      setSupplierId("");
+      setProductId(initialProductId?.toString() ?? "");
+      setWarehouseId(initialWarehouseId?.toString() ?? "");
+      setSupplierId(initialSupplierId?.toString() ?? "");
       setNewQuantity("");
       setUnit(DEFAULT_UNIT);
       setReceivedDate(today);
       setExpiryDate("");
     }
-  }, [open, today]);
+  }, [open, today, initialProductId, initialWarehouseId, initialSupplierId]);
 
   const lotOptions = useMemo(
     () =>
