@@ -37,7 +37,7 @@ async def list_inventory(
     product_id: int | None = None,
     warehouse_id: int | None = None,
     supplier_id: int | None = None,
-    tab: str = Query(default="all", regex="^(in_stock|no_stock|all)$"),
+    tab: str = Query(default="all", pattern="^(in_stock|no_stock|all)$"),
     primary_staff_only: bool = Query(default=False),
     current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),

@@ -36,6 +36,7 @@ test.describe("Lot Allocation", () => {
         contentType: "application/json",
         json: [
           {
+            id: 100,
             order_line_id: 100,
             order_id: 1,
             order_number: "ORD-001",
@@ -59,6 +60,21 @@ test.describe("Lot Allocation", () => {
       });
     });
 
+    // Mock Order Detail
+    await page.route("**/v2/orders/*", async (route) => {
+      console.log("MOCK MATCHED: v2/orders/detail");
+      await route.fulfill({
+        json: {
+          id: 1,
+          order_number: "ORD-001",
+          customer_id: 1,
+          customer_name: "Test Customer",
+          status: "open",
+          order_lines: [],
+        },
+      });
+    });
+
     // Mock Allocation Candidates
     await page.route("**/v2/lot/available*", async (route) => {
       console.log("MOCK MATCHED: v2/lot/available");
@@ -67,9 +83,12 @@ test.describe("Lot Allocation", () => {
           {
             lot_id: 1,
             lot_code: "LOT-001",
+            lot_number: "LOT-001",
             available_qty: 50,
+            available_quantity: 50,
             expiry_date: "2025-12-31",
             warehouse_code: "Main Warehouse",
+            warehouse_name: "Main Warehouse",
             product_code: "PROD-001",
           },
         ],
@@ -91,8 +110,10 @@ test.describe("Lot Allocation", () => {
       console.log("DEBUG: Empty state is NOT visible");
     }
 
-    // We check for a real customer name that exists in the database. Use partial match to be more robust.
-    await expect(page.locator("td:has-text('岡本建設')").first()).toBeVisible({ timeout: 20000 });
+    // We check for a real customer name that is returned by the mock.
+    await expect(page.locator("td:has-text('Test Customer')").first()).toBeVisible({
+      timeout: 20000,
+    });
 
     // 3. Click Allocate button.
     await page.getByRole("button", { name: "引当" }).first().click();
