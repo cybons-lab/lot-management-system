@@ -47,6 +47,10 @@ vi.mock("@/features/inventory/components/LotLockDialog", () => ({
   LotLockDialog: () => <div>LotLockDialog</div>,
 }));
 
+vi.mock("@/features/inventory/components/QuickLotIntakeDialog", () => ({
+  QuickLotIntakeDialog: () => <div>QuickLotIntakeDialog</div>,
+}));
+
 vi.mock("@/features/withdrawals/components", () => ({
   QuickWithdrawalDialog: () => <div>QuickWithdrawalDialog</div>,
   WithdrawalHistoryDialog: () => <div>WithdrawalHistoryDialog</div>,

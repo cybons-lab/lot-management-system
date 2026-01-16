@@ -33,6 +33,7 @@ import { InventoryLayout } from "@/features/inventory/pages/InventoryLayout";
 import { InventoryPage } from "@/features/inventory/pages/InventoryPage";
 import { LotDetailPage } from "@/features/inventory/pages/LotDetailPage";
 import { MovesPage } from "@/features/inventory/pages/MovesPage";
+import { StockHistoryPage } from "@/features/inventory/pages/StockHistoryPage";
 import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPage";
 import { MastersPage } from "@/features/masters/pages/MastersPage";
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
@@ -81,6 +82,7 @@ function InventoryRoutes() {
         <Route path="adjustments" element={<AdjustmentsListPage />} />
         <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
         <Route path="adhoc/new" element={<AdhocLotCreatePage />} />
+        <Route path="history" element={<StockHistoryPage />} />
         <Route path="withdrawals" element={<WithdrawalsListPage />} />
         <Route path="withdrawals/new" element={<WithdrawalCreatePage />} />
       </Route>

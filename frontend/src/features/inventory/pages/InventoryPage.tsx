@@ -1,15 +1,4 @@
-import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  Box,
-  Calendar,
-  Home,
-  List,
-  Package,
-  RefreshCw,
-  Table,
-  Truck,
-} from "lucide-react";
+import { ArrowUpFromLine, Box, History, Home, List, Package, RefreshCw, Truck } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -17,12 +6,10 @@ import { toast } from "sonner";
 import { Button, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
-import { IntakeHistoryCalendar, IntakeHistoryList } from "@/features/intake-history";
 import { InventoryByProductTable } from "@/features/inventory/components/InventoryByProductTable";
 import { InventoryBySupplierTable } from "@/features/inventory/components/InventoryBySupplierTable";
 import { InventoryByWarehouseTable } from "@/features/inventory/components/InventoryByWarehouseTable";
 import { InventoryTable } from "@/features/inventory/components/InventoryTable";
-import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { useInventoryItems } from "@/features/inventory/hooks";
 import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 import { useInventoryPageState } from "@/features/inventory/hooks/useInventoryPageState";
@@ -31,7 +18,6 @@ import {
   useInventoryBySupplier,
   useInventoryByWarehouse,
 } from "@/hooks/api";
-import { useDialog } from "@/hooks/ui";
 import { ExportButton } from "@/shared/components/ExportButton";
 import { Section } from "@/shared/components/layout";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
@@ -39,12 +25,8 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function InventoryPage() {
   const navigate = useNavigate();
-  // Lot quick intake dialog
-  const createDialog = useDialog();
   // Refresh loading state
   const [isRefreshing, setIsRefreshing] = useState(false);
-  // Intake history view mode (list or calendar)
-  const [intakeViewMode, setIntakeViewMode] = useState<"list" | "calendar">("list");
 
   // Page state (Jotai atom - persisted in sessionStorage)
   const {
@@ -111,13 +93,9 @@ export function InventoryPage() {
         actions={
           <div className="flex gap-2">
             <ExportButton apiPath="lots/export/download" filePrefix="lots" size="sm" />
-            <Button variant="outline" size="sm" onClick={() => setOverviewMode("intake_history")}>
-              <ArrowDownToLine className="mr-2 h-4 w-4" />
-              入庫履歴
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/inventory/withdrawals")}>
-              <ArrowUpFromLine className="mr-2 h-4 w-4" />
-              出庫履歴
+            <Button variant="outline" size="sm" onClick={() => navigate("/inventory/history")}>
+              <History className="mr-2 h-4 w-4" />
+              入出庫履歴
             </Button>
             <Button
               variant="outline"
@@ -130,10 +108,6 @@ export function InventoryPage() {
             <Button size="sm" onClick={() => navigate("/inventory/adhoc/new")}>
               <Package className="mr-2 h-4 w-4" />
               ロット新規登録
-            </Button>
-            <Button size="sm" variant="outline" onClick={createDialog.open}>
-              <Package className="mr-2 h-4 w-4" />
-              ロット簡易登録
             </Button>
           </div>
         }
@@ -174,14 +148,6 @@ export function InventoryPage() {
             >
               <Home className="mr-2 h-4 w-4" />
               倉庫別
-            </Button>
-            <Button
-              variant={overviewMode === "intake_history" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setOverviewMode("intake_history")}
-            >
-              <ArrowDownToLine className="mr-2 h-4 w-4" />
-              入庫履歴
             </Button>
           </div>
 
@@ -294,6 +260,7 @@ export function InventoryPage() {
               data={inventoryItems}
               isLoading={isItemsLoading}
               onRefresh={refetchItems}
+              filterSupplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
             />
           )}
           {overviewMode === "supplier" && (
@@ -324,96 +291,7 @@ export function InventoryPage() {
             />
           )}
         </div>
-
-        {/* Intake History Section */}
-        {overviewMode === "intake_history" && (
-          <div className="space-y-4">
-            {/* View Mode Switcher for Intake History */}
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                <Button
-                  variant={intakeViewMode === "list" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setIntakeViewMode("list")}
-                >
-                  <Table className="mr-2 h-4 w-4" />
-                  一覧表示
-                </Button>
-                <Button
-                  variant={intakeViewMode === "calendar" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setIntakeViewMode("calendar")}
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  カレンダー表示
-                </Button>
-              </div>
-            </div>
-
-            {/* Intake History Filters */}
-            <Section>
-              <div className="grid grid-cols-4 items-end gap-4">
-                <div>
-                  <Label className="mb-2 block text-sm font-medium">仕入先</Label>
-                  <SearchableSelect
-                    options={supplierOptions}
-                    value={filters.supplier_id}
-                    onChange={(value) => updateFilter("supplier_id", value)}
-                    placeholder="仕入先を検索..."
-                  />
-                </div>
-                <div>
-                  <Label className="mb-2 block text-sm font-medium">倉庫</Label>
-                  <SearchableSelect
-                    options={warehouseOptions}
-                    value={filters.warehouse_id}
-                    onChange={(value) => updateFilter("warehouse_id", value)}
-                    placeholder="倉庫を検索..."
-                  />
-                </div>
-                <div>
-                  <Label className="mb-2 block text-sm font-medium">製品</Label>
-                  <SearchableSelect
-                    options={productOptions}
-                    value={filters.product_id}
-                    onChange={(value) => updateFilter("product_id", value)}
-                    placeholder="製品を検索..."
-                  />
-                </div>
-                <div>
-                  <Button variant="outline" onClick={resetFilters} className="w-full">
-                    フィルタをリセット
-                  </Button>
-                </div>
-              </div>
-            </Section>
-
-            {/* Intake History Content */}
-            <div className="rounded-md border bg-white shadow-sm">
-              {intakeViewMode === "list" && (
-                <IntakeHistoryList
-                  supplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
-                  warehouseId={filters.warehouse_id ? Number(filters.warehouse_id) : undefined}
-                  productId={filters.product_id ? Number(filters.product_id) : undefined}
-                />
-              )}
-              {intakeViewMode === "calendar" && (
-                <IntakeHistoryCalendar
-                  supplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
-                  warehouseId={filters.warehouse_id ? Number(filters.warehouse_id) : undefined}
-                  productId={filters.product_id ? Number(filters.product_id) : undefined}
-                />
-              )}
-            </div>
-          </div>
-        )}
       </div>
-
-      <QuickLotIntakeDialog
-        open={createDialog.isOpen}
-        onOpenChange={(open) => (open ? createDialog.open() : createDialog.close())}
-        onSuccess={refetchItems}
-      />
     </PageContainer>
   );
 }
