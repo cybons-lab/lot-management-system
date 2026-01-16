@@ -44,8 +44,7 @@ export function WithdrawalHistoryTab() {
   const [filterType, setFilterType] = useState<"all" | WithdrawalType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [selectedWithdrawal, setSelectedWithdrawal] =
-    useState<WithdrawalResponse | null>(null);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<WithdrawalResponse | null>(null);
 
   const { useList } = useWithdrawals();
   const { data, isLoading, isError, error } = useList({
@@ -223,9 +222,7 @@ function WithdrawalTableContent({
   if (withdrawals.length === 0) {
     return (
       <div className="py-8 text-center text-gray-500">
-        {searchQuery.trim()
-          ? "検索条件に一致する出庫履歴がありません"
-          : "出庫履歴がありません"}
+        {searchQuery.trim() ? "検索条件に一致する出庫履歴がありません" : "出庫履歴がありません"}
       </div>
     );
   }

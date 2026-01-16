@@ -9,10 +9,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
-import {
-  IntakeHistoryCalendar,
-  IntakeHistoryList,
-} from "@/features/intake-history";
+import { IntakeHistoryCalendar, IntakeHistoryList } from "@/features/intake-history";
 import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 import { Section } from "@/shared/components/layout";
 
