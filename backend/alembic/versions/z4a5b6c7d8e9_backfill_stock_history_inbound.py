@@ -23,25 +23,51 @@ depends_on = None
 
 def upgrade() -> None:
     """Insert INBOUND records for lots without intake history."""
-    # Raw SQL for data migration
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+
+    if inspector.has_table("lot_receipts"):
+        source_table = "lot_receipts"
+        columns = [c["name"] for c in inspector.get_columns("lot_receipts")]
+        if "received_quantity" in columns:
+            qty_col = "lr.received_quantity"
+        else:
+            print(
+                "WARNING: lot_receipts table found but received_quantity column missing. Using current+locked."
+            )
+            qty_col = "(lr.current_quantity + lr.locked_quantity)"
+    else:
+        source_table = "lots"
+        # lotsテーブルにはreceived_quantityがないため、現在の在庫数合計で代用
+        qty_col = "(lr.current_quantity + lr.locked_quantity)"
+
     op.execute(
-        """
-        INSERT INTO stock_history (lot_id, transaction_type, quantity_change, quantity_after, reference_type, transaction_date)
-        SELECT
-            lr.id,
-            'inbound',
-            lr.received_quantity,
-            lr.received_quantity,
-            'migration_backfill',
-            COALESCE(lr.received_date, lr.created_at, CURRENT_TIMESTAMP)
-        FROM lot_receipts lr
-        WHERE lr.id NOT IN (
-            SELECT DISTINCT lot_id
-            FROM stock_history
-            WHERE transaction_type = 'inbound'
+        sa.text(
+            f"""
+            INSERT INTO stock_history (
+                lot_id,
+                transaction_type,
+                quantity_change,
+                quantity_after,
+                reference_type,
+                transaction_date
+            )
+            SELECT
+                lr.id,
+                'inbound',
+                {qty_col},
+                {qty_col},
+                'migration_backfill',
+                COALESCE(lr.received_date, lr.created_at, CURRENT_TIMESTAMP)
+            FROM {source_table} lr
+            WHERE lr.id NOT IN (
+                SELECT DISTINCT lot_id
+                FROM stock_history
+                WHERE transaction_type = 'inbound'
+            )
+            AND {qty_col} > 0
+            """
         )
-        AND lr.received_quantity > 0
-        """
     )
 
 

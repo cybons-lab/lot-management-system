@@ -1,12 +1,8 @@
 /**
  * QuickWithdrawalDialog
- *
  * 在庫アイテム詳細画面からの簡易出庫ダイアログ
- * - 受注出庫（order_manual）専用
- * - 得意先、出荷日、数量を入力して出庫
  */
-
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity, max-lines */
 import { Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
@@ -35,15 +31,10 @@ import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 
 export interface QuickWithdrawalDialogProps {
-  /** 出庫対象のロット */
   lot: LotUI;
-  /** ダイアログの開閉状態 */
   open: boolean;
-  /** ダイアログの開閉制御 */
   onOpenChange: (open: boolean) => void;
-  /** 出庫成功時のコールバック */
   onSuccess?: () => void;
-  /** 初期出荷日（カレンダーから選択された場合） */
   initialShipDate?: string;
 }
 
@@ -73,17 +64,14 @@ export function QuickWithdrawalDialog({
   const today = new Date().toISOString().split("T")[0];
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
 
-  // 納入先状態
   const [deliveryPlaces, setDeliveryPlaces] = useState<DeliveryPlace[]>([]);
   const [isLoadingDeliveryPlaces, setIsLoadingDeliveryPlaces] = useState(false);
 
-  // 利用可能数量を計算
   const availableQuantity =
     Number(lot.current_quantity) -
     Number(lot.allocated_quantity) -
     Number(lot.locked_quantity || 0);
 
-  // フォーム状態
   const [formState, setFormState] = useState<FormState>({
     customer_id: 0,
     delivery_place_id: 0,
@@ -95,11 +83,10 @@ export function QuickWithdrawalDialog({
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // マッピング状態
   const [mappingNotFound, setMappingNotFound] = useState(false);
+  const [deliveryPlaceNotFound, setDeliveryPlaceNotFound] = useState(false);
   const [isSetupDialogOpen, setIsSetupDialogOpen] = useState(false);
 
-  // ダイアログが開くたびにフォームをリセット＆デフォルト得意先を取得
   useEffect(() => {
     if (open) {
       setFormState({
@@ -113,6 +100,7 @@ export function QuickWithdrawalDialog({
       setDeliveryPlaces([]);
       setErrors({});
       setMappingNotFound(false);
+      setDeliveryPlaceNotFound(false);
 
       // 製品IDからデフォルトの得意先・納入先を取得
       if (lot.product_id) {
@@ -125,9 +113,16 @@ export function QuickWithdrawalDialog({
                 delivery_place_id: result.delivery_place_id || 0,
               }));
               setMappingNotFound(false);
+              if (!result.delivery_place_id) {
+                setDeliveryPlaceNotFound(true);
+                toast.warning("納入先の自動選択ができませんでした。手動で選択してください。");
+              } else {
+                setDeliveryPlaceNotFound(false);
+              }
             } else {
               // マッピングが見つからない、または得意先IDが空の場合
               setMappingNotFound(true);
+              setDeliveryPlaceNotFound(false);
               if (!result.mapping_found) {
                 toast.warning(
                   `製品 (ID: ${lot.product_id}) のマッピングが未設定です。設定を行ってください。`,
@@ -139,6 +134,7 @@ export function QuickWithdrawalDialog({
             console.error("デフォルト得意先取得エラー:", error);
             // エラーが発生した場合（404等）も、マッピング未設定として扱う
             setMappingNotFound(true);
+            setDeliveryPlaceNotFound(false);
           });
       }
     }
@@ -196,6 +192,12 @@ export function QuickWithdrawalDialog({
   const updateField = useCallback(
     <K extends keyof FormState>(key: K, value: FormState[K]) => {
       setFormState((prev) => ({ ...prev, [key]: value }));
+      if (key === "delivery_place_id" && Number(value) > 0) {
+        setDeliveryPlaceNotFound(false);
+      }
+      if (key === "customer_id") {
+        setDeliveryPlaceNotFound(false);
+      }
       // エラーをクリア
       if (key in errors) {
         setErrors((prev) => ({ ...prev, [key]: undefined }));
@@ -281,6 +283,12 @@ export function QuickWithdrawalDialog({
               >
                 今すぐ設定する
               </Button>
+            </div>
+          )}
+          {deliveryPlaceNotFound && (
+            <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+              <AlertCircle className="h-4 w-4" />
+              <span>納入先の自動選択ができませんでした。手動で選択してください。</span>
             </div>
           )}
 
