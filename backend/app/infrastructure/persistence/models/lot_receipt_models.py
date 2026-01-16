@@ -143,6 +143,18 @@ class LotReceipt(Base):
     inspection_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     inspection_cert_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
+    # Financial and Logistical details (Phase 1 Expansion)
+    shipping_date: Mapped[date | None] = mapped_column(Date, nullable=True, comment="出荷予定日")
+    cost_price: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 2), nullable=True, comment="仕入単価"
+    )
+    sales_price: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 2), nullable=True, comment="販売単価"
+    )
+    tax_rate: Mapped[Decimal | None] = mapped_column(
+        Numeric(5, 2), nullable=True, comment="適用税率"
+    )
+
     version: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()

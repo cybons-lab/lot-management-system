@@ -124,26 +124,34 @@ def test_create_lot_success(client: TestClient, setup_lot_data):
     supplier = setup_lot_data["supplier"]
 
     payload = {
-        "lot_number": "NEW-LOT-001",
         "product_id": product.id,
         "warehouse_id": warehouse.id,
+        "lot_number": "LOT-001",
         "supplier_code": supplier.supplier_code,
-        "received_date": date.today().isoformat(),
-        "current_quantity": 50.0,
-        "unit": "EA",
-        "origin_type": "adhoc",
+        "received_date": "2024-01-01",
+        "expiry_date": "2024-12-31",
+        "current_quantity": 100.0,
+        "unit": "pcs",
+        "origin_type": "order",
+        "origin_reference": "PO-12345",
+        # New Phase 1 fields
+        "shipping_date": "2024-02-01",
+        "cost_price": 500.0,
+        "sales_price": 800.0,
+        "tax_rate": 0.10,
     }
 
     response = client.post("/api/v2/lot/", json=payload)
-
     assert response.status_code == 201
     data = response.json()
-    assert data["lot_number"] == "NEW-LOT-001"
+    assert data["lot_number"] == "LOT-001"
     assert data["product_id"] == product.id
+    assert float(data["sales_price"]) == 800.0
+    assert float(data["tax_rate"]) == 0.10
     assert data["warehouse_id"] == warehouse.id
     assert data["status"] == "active"
     # Ensure current_quantity matches (handle potential string serialization of Decimal)
-    assert float(data["current_quantity"]) == 50.0
+    assert float(data["current_quantity"]) == 100.0
 
     # Verify supplier resolution
     assert data["supplier_name"] == supplier.supplier_name

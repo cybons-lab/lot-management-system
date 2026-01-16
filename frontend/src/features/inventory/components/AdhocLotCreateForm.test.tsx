@@ -23,16 +23,16 @@ const mockSuppliers = [
 // Mock pointer capture and layout methods for Radix UI (still good to have)
 Object.assign(window.HTMLElement.prototype, {
   hasPointerCapture: () => false,
-  setPointerCapture: () => {},
-  releasePointerCapture: () => {},
-  scrollIntoView: () => {},
+  setPointerCapture: () => { },
+  releasePointerCapture: () => { },
+  scrollIntoView: () => { },
 });
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe() { }
+  unobserve() { }
+  disconnect() { }
 };
 
 // Mock Radix Select to bypass JSDOM interaction issues
@@ -93,6 +93,10 @@ describe("AdhocLotCreateForm", () => {
     expect(screen.getByLabelText(/数量/)).toBeInTheDocument();
     expect(screen.getByLabelText(/単位/)).toBeInTheDocument();
     expect(screen.getByLabelText(/入荷日/)).toBeInTheDocument();
+    expect(screen.getByLabelText("出荷予定日")).toBeInTheDocument();
+    expect(screen.getByLabelText("仕入単価")).toBeInTheDocument();
+    expect(screen.getByLabelText("販売単価")).toBeInTheDocument();
+    expect(screen.getByLabelText("税率")).toBeInTheDocument();
   });
 
   it("shows validation errors for empty required fields on submit", async () => {
@@ -137,10 +141,21 @@ describe("AdhocLotCreateForm", () => {
     const receivedDateInput = screen.getByLabelText(/入荷日/);
     fireEvent.change(receivedDateInput, { target: { value: "2025-01-01" } });
 
-    // 7. Select Origin Type (Default "adhoc")
-    // Use the first mock select to verify or change if needed.
     const originSelect = selects[0];
     expect(originSelect).toHaveValue("adhoc");
+
+    // 8. Fill Financials (New Phase 1)
+    const shippingDateInput = screen.getByLabelText("出荷予定日");
+    fireEvent.change(shippingDateInput, { target: { value: "2025-02-01" } });
+
+    const costPriceInput = screen.getByLabelText("仕入単価");
+    await user.type(costPriceInput, "500");
+
+    const salesPriceInput = screen.getByLabelText("販売単価");
+    await user.type(salesPriceInput, "800");
+
+    const taxRateInput = screen.getByLabelText("税率");
+    await user.type(taxRateInput, "0.1");
 
     // Check submit button enabled
     const submitButton = screen.getByRole("button", { name: "入庫登録" });
@@ -159,6 +174,10 @@ describe("AdhocLotCreateForm", () => {
           unit: "EA",
           received_date: "2025-01-01",
           origin_type: "adhoc",
+          shipping_date: "2025-02-01",
+          cost_price: 500,
+          sales_price: 800,
+          tax_rate: 0.1,
         }),
       );
     });

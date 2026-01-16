@@ -90,6 +90,12 @@ class LotBase(BaseSchema):
     # 仮入庫時に付与されるUUID。正式ロット番号確定後も識別子として残る
     temporary_lot_key: str | None = None
 
+    # Financial and Logistical details (Phase 1 Expansion)
+    shipping_date: date | None = None
+    cost_price: Decimal | None = None
+    sales_price: Decimal | None = None
+    tax_rate: Decimal | None = None
+
 
 class LotCreate(LotBase):
     """Payload for creating lots.
@@ -136,6 +142,12 @@ class LotUpdate(BaseSchema):
     # Origin tracking fields (optional for updates)
     origin_type: LotOriginType | None = None
     origin_reference: str | None = None
+
+    # Financial and Logistical details (Phase 1 Expansion)
+    shipping_date: date | None = None
+    cost_price: Decimal | None = None
+    sales_price: Decimal | None = None
+    tax_rate: Decimal | None = None
 
 
 class LotResponse(LotBase, TimestampMixin):
