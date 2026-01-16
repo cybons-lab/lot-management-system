@@ -156,26 +156,34 @@ class LotResponse(LotBase, TimestampMixin):
     id: int = Field(serialization_alias="lot_id")
 
     # Joined fields from v_lot_details view (COALESCE ensures non-null for deleted masters)
-    product_name: str
-    product_code: str
-    supplier_name: str
-    is_primary_supplier: bool = False
-
-    # Optional joined fields
+    product_name: str | None = None
+    product_code: str | None = None
+    supplier_name: str | None = None
+    supplier_code: str | None = None
     warehouse_name: str | None = None
     warehouse_code: str | None = None
-    supplier_code: str | None = None
-    last_updated: datetime | None = None
 
-    # User assignment fields
-    primary_user_id: int | None = None
-    primary_username: str | None = None
-    primary_user_display_name: str | None = None
+    is_primary_supplier: bool = False
 
-    # Soft-delete status flags for related masters
+    # Soft delete status
     product_deleted: bool = False
     warehouse_deleted: bool = False
     supplier_deleted: bool = False
+
+
+class LotListResponse(BaseSchema):
+    """API response model for paginated list of lots."""
+
+    items: list[LotResponse]
+    total: int
+    page: int
+    size: int
+
+
+class LotLabelRequest(BaseSchema):
+    """Payload for requesting lot labels."""
+
+    lot_ids: list[int]
 
 
 class StockTransactionType(str, Enum):

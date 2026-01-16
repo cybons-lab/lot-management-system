@@ -28,13 +28,22 @@ DROP VIEW IF EXISTS public.v_customer_item_jiku_mappings CASCADE;
 
 -- 2. 新規ビューの作成
 
--- ヘルパー: ロットごとの引当数量集計
+-- ヘルパー: ロットごとの引当数量集計 (CONFIRMEDのみ)
 CREATE VIEW public.v_lot_allocations AS
 SELECT
     lot_id,
     SUM(reserved_qty) as allocated_quantity
 FROM public.lot_reservations
-WHERE status IN ('active', 'confirmed')
+WHERE status = 'confirmed'
+GROUP BY lot_id;
+
+-- ヘルパー: ロットごとの予約数量集計 (ACTIVEのみ)
+CREATE VIEW public.v_lot_active_reservations AS
+SELECT
+    lot_id,
+    SUM(reserved_qty) as reserved_quantity_active
+FROM public.lot_reservations
+WHERE status = 'active'
 GROUP BY lot_id;
 
 -- 現在在庫ビュー (互換用、lot_receipts参照)
@@ -280,6 +289,7 @@ SELECT
     GREATEST(lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - lr.locked_quantity, 0) AS remaining_quantity,
     GREATEST(lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - lr.locked_quantity, 0) AS current_quantity,
     COALESCE(la.allocated_quantity, 0) AS allocated_quantity,
+    COALESCE(lar.reserved_quantity_active, 0) AS reserved_quantity_active,
     lr.locked_quantity,
     GREATEST(
         lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) 
@@ -293,6 +303,17 @@ SELECT
     lr.temporary_lot_key,
     lr.receipt_key,
     lr.lot_master_id,
+    
+    -- Origin Tracking
+    lr.origin_type,
+    lr.origin_reference,
+
+    -- Financial & Logistic
+    lr.shipping_date,
+    lr.cost_price,
+    lr.sales_price,
+    lr.tax_rate,
+
     usa_primary.user_id AS primary_user_id,
     u_primary.username AS primary_username,
     u_primary.display_name AS primary_user_display_name,
@@ -304,6 +325,7 @@ SELECT
 FROM public.lot_receipts lr
 JOIN public.lot_master lm ON lr.lot_master_id = lm.id
 LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
+LEFT JOIN public.v_lot_active_reservations lar ON lr.id = lar.lot_id
 LEFT JOIN public.products p ON lr.product_id = p.id
 LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON lm.supplier_id = s.id
@@ -320,7 +342,7 @@ LEFT JOIN public.user_supplier_assignments usa_primary
 LEFT JOIN public.users u_primary
     ON u_primary.id = usa_primary.user_id;
 
-COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む、soft-delete対応、仮入庫対応）';
+COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む、soft-delete対応、仮入庫対応）Phase1拡張版';
 
 -- v_candidate_lots_by_order_line (B-Plan)
 CREATE VIEW public.v_candidate_lots_by_order_line AS

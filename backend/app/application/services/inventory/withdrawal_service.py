@@ -69,6 +69,7 @@ from app.infrastructure.persistence.models import (
     Customer,
     DeliveryPlace,
     Lot,
+    LotMaster,
     Product,
     StockHistory,
     StockTransactionType,
@@ -166,9 +167,12 @@ class WithdrawalService:
             query = query.outerjoin(Withdrawal.customer)
             query = query.outerjoin(Withdrawal.delivery_place)
 
+            # LotMaster needed for lot_number search
+            query = query.join(LotMaster, Lot.lot_master_id == LotMaster.id)
+
             query = query.filter(
                 or_(
-                    Lot.lot_number.ilike(term),
+                    LotMaster.lot_number.ilike(term),
                     Product.maker_part_code.ilike(term),
                     Product.product_name.ilike(term),
                     Product.maker_item_code.ilike(term),

@@ -39,6 +39,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v2/lot/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search Lots
+     * @description Search lots with pagination and filtering.
+     */
+    get: operations["search_lots_api_v2_lot_search_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v2/lot/{lot_id}": {
     parameters: {
       query?: never;
@@ -67,6 +87,26 @@ export interface paths {
     put?: never;
     /** Adjust Lot Quantity */
     post: operations["adjust_lot_quantity_api_v2_lot__lot_id__adjust_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/lot/labels/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Download Labels
+     * @description Generate and download PDF labels for selected lots.
+     */
+    post: operations["download_labels_api_v2_lot_labels_download_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -400,6 +440,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v2/inventory/filter-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Filter Options
+     * @description Get filter options (products, suppliers, warehouses) based on current selection.
+     */
+    get: operations["get_filter_options_api_v2_inventory_filter_options_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v2/inventory/{product_id}/{warehouse_id}": {
     parameters: {
       query?: never;
@@ -528,6 +588,31 @@ export interface paths {
     };
     /** Reservations By Source */
     get: operations["reservations_by_source_api_v2_reservation_by_source__source_type___source_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/withdrawals/default-destination": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Default Destination
+     * @description 製品IDからデフォルトの得意先・納入先を取得する.
+     *
+     *     1. customer_items テーブルから product_id でマッピングを検索
+     *     2. 見つかれば customer_id を取得
+     *     3. customer_item_delivery_settings の is_default=True レコードから delivery_place_id を取得
+     *     4. マッピングが無い場合は mapping_found=False を返す
+     */
+    get: operations["get_default_destination_api_v2_withdrawals_default_destination_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1889,6 +1974,37 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/withdrawals/calendar-summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Calendar Summary
+     * @description 月間の日別出庫集計を取得（カレンダー用）.
+     *
+     *     Args:
+     *         year: 年
+     *         month: 月
+     *         warehouse_id: 倉庫ID
+     *         product_id: 製品ID
+     *         supplier_id: 仕入先ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         日別集計リスト
+     */
+    get: operations["get_calendar_summary_api_withdrawals_calendar_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/withdrawals/{withdrawal_id}": {
     parameters: {
       query?: never;
@@ -1949,6 +2065,101 @@ export interface paths {
      *         HTTPException: 出庫が見つからない場合
      */
     post: operations["cancel_withdrawal_api_withdrawals__withdrawal_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/intake-history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Intake History
+     * @description 入庫履歴一覧を取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         supplier_id: 仕入先IDでフィルタ
+     *         warehouse_id: 倉庫IDでフィルタ
+     *         product_id: 製品IDでフィルタ
+     *         start_date: 開始日
+     *         end_date: 終了日
+     *         search: 検索キーワード
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         入庫履歴一覧
+     */
+    get: operations["list_intake_history_api_intake_history_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/intake-history/calendar-summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Calendar Summary
+     * @description 月間の日別入庫集計を取得（カレンダー用）.
+     *
+     *     Args:
+     *         year: 年
+     *         month: 月
+     *         warehouse_id: 倉庫ID
+     *         product_id: 製品ID
+     *         supplier_id: 仕入先ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         日別集計リスト
+     */
+    get: operations["get_calendar_summary_api_intake_history_calendar_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/intake-history/{intake_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Intake History Detail
+     * @description 入庫履歴詳細を取得.
+     *
+     *     Args:
+     *         intake_id: 入庫履歴ID (StockHistory ID)
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         入庫履歴詳細
+     *
+     *     Raises:
+     *         HTTPException: 入庫履歴が見つからない場合
+     */
+    get: operations["get_intake_history_detail_api_intake_history__intake_id__get"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -6066,6 +6277,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Master Status
+     * @description Get master data status including unmapped counts.
+     */
+    get: operations["get_master_status_api_masters_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/ocr/import": {
     parameters: {
       query?: never;
@@ -7969,6 +8200,36 @@ export interface components {
       email?: string | null;
     };
     /**
+     * DailyIntakeSummary
+     * @description 日別入庫集計（カレンダー用）.
+     */
+    DailyIntakeSummary: {
+      /**
+       * Date
+       * Format: date
+       */
+      date: string;
+      /** Count */
+      count: number;
+      /** Total Quantity */
+      total_quantity: string;
+    };
+    /**
+     * DailyWithdrawalSummary
+     * @description 日別出庫集計（カレンダー用）.
+     */
+    DailyWithdrawalSummary: {
+      /**
+       * Date
+       * Format: date
+       */
+      date: string;
+      /** Count */
+      count: number;
+      /** Total Quantity */
+      total_quantity: string;
+    };
+    /**
      * DashboardStatsResponse
      * @description ダッシュボード統計レスポンス.
      */
@@ -7981,6 +8242,31 @@ export interface components {
       unallocated_orders: number;
       /** Allocation Rate */
       allocation_rate: number;
+    };
+    /**
+     * DefaultDestinationResponse
+     * @description Response model for default destination lookup.
+     */
+    DefaultDestinationResponse: {
+      /** Customer Id */
+      customer_id?: number | null;
+      /** Customer Code */
+      customer_code?: string | null;
+      /** Customer Name */
+      customer_name?: string | null;
+      /** Delivery Place Id */
+      delivery_place_id?: number | null;
+      /** Delivery Place Code */
+      delivery_place_code?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /**
+       * Mapping Found
+       * @default false
+       */
+      mapping_found: boolean;
+      /** Message */
+      message?: string | null;
     };
     /**
      * DeliveryPlaceCreate
@@ -8180,14 +8466,16 @@ export interface components {
       warnings?: string[];
     };
     /**
-     * FilterOption
-     * @description フィルタ選択肢.
+     * FilterOptions
+     * @description Available filter options for inventory.
      */
-    FilterOption: {
-      /** Label */
-      label: string;
-      /** Value */
-      value: string;
+    FilterOptions: {
+      /** Products */
+      products: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      /** Suppliers */
+      suppliers: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      /** Warehouses */
+      warehouses: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
     };
     /**
      * ForecastBulkImportItem
@@ -8751,6 +9039,87 @@ export interface components {
       notes?: string | null;
     };
     /**
+     * IntakeHistoryListResponse
+     * @description 入庫履歴一覧レスポンス.
+     */
+    IntakeHistoryListResponse: {
+      /** Intakes */
+      intakes: components["schemas"]["IntakeHistoryResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+    };
+    /**
+     * IntakeHistoryResponse
+     * @description 入庫履歴レスポンス.
+     */
+    IntakeHistoryResponse: {
+      /** Intake Id */
+      intake_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Lot Number */
+      lot_number: string;
+      /** Product Id */
+      product_id: number;
+      /** Product Name */
+      product_name: string;
+      /** Product Code */
+      product_code: string;
+      /** Supplier Id */
+      supplier_id?: number | null;
+      /** Supplier Name */
+      supplier_name?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
+      /** Warehouse Id */
+      warehouse_id: number;
+      /** Warehouse Name */
+      warehouse_name: string;
+      /** Warehouse Code */
+      warehouse_code?: string | null;
+      /**
+       * Quantity
+       * @description 入庫数量
+       */
+      quantity: string;
+      /**
+       * Received Date
+       * Format: date
+       * @description 入庫日
+       */
+      received_date: string;
+      /**
+       * Expiry Date
+       * @description 有効期限
+       */
+      expiry_date?: string | null;
+      /**
+       * Inbound Plan Number
+       * @description 入庫計画番号
+       */
+      inbound_plan_number?: string | null;
+      /**
+       * Sap Po Number
+       * @description SAP購買注文番号
+       */
+      sap_po_number?: string | null;
+      /**
+       * Transaction Date
+       * Format: date-time
+       * @description トランザクション日時
+       */
+      transaction_date: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
      * InventoryByProductResponse
      * @description Inventory aggregated by product (across all warehouses).
      */
@@ -9049,12 +9418,42 @@ export interface components {
       origin_reference?: string | null;
       /** Temporary Lot Key */
       temporary_lot_key?: string | null;
+      /** Shipping Date */
+      shipping_date?: string | null;
+      /** Cost Price */
+      cost_price?: number | string | null;
+      /** Sales Price */
+      sales_price?: number | string | null;
+      /** Tax Rate */
+      tax_rate?: number | string | null;
       /** Product Code */
       product_code?: string | null;
       /** Supplier Code */
       supplier_code?: string | null;
       /** Warehouse Code */
       warehouse_code?: string | null;
+    };
+    /**
+     * LotLabelRequest
+     * @description Payload for requesting lot labels.
+     */
+    LotLabelRequest: {
+      /** Lot Ids */
+      lot_ids: number[];
+    };
+    /**
+     * LotListResponse
+     * @description API response model for paginated list of lots.
+     */
+    LotListResponse: {
+      /** Items */
+      items: components["schemas"]["LotResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Size */
+      size: number;
     };
     /**
      * LotLock
@@ -9143,33 +9542,33 @@ export interface components {
       origin_reference?: string | null;
       /** Temporary Lot Key */
       temporary_lot_key?: string | null;
+      /** Shipping Date */
+      shipping_date?: string | null;
+      /** Cost Price */
+      cost_price?: string | null;
+      /** Sales Price */
+      sales_price?: string | null;
+      /** Tax Rate */
+      tax_rate?: string | null;
       /** Lot Id */
       lot_id: number;
       /** Product Name */
-      product_name: string;
+      product_name?: string | null;
       /** Product Code */
-      product_code: string;
+      product_code?: string | null;
       /** Supplier Name */
-      supplier_name: string;
+      supplier_name?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
+      /** Warehouse Name */
+      warehouse_name?: string | null;
+      /** Warehouse Code */
+      warehouse_code?: string | null;
       /**
        * Is Primary Supplier
        * @default false
        */
       is_primary_supplier: boolean;
-      /** Warehouse Name */
-      warehouse_name?: string | null;
-      /** Warehouse Code */
-      warehouse_code?: string | null;
-      /** Supplier Code */
-      supplier_code?: string | null;
-      /** Last Updated */
-      last_updated?: string | null;
-      /** Primary User Id */
-      primary_user_id?: number | null;
-      /** Primary Username */
-      primary_username?: string | null;
-      /** Primary User Display Name */
-      primary_user_display_name?: string | null;
       /**
        * Product Deleted
        * @default false
@@ -9248,6 +9647,14 @@ export interface components {
       origin_type?: components["schemas"]["LotOriginType"] | null;
       /** Origin Reference */
       origin_reference?: string | null;
+      /** Shipping Date */
+      shipping_date?: string | null;
+      /** Cost Price */
+      cost_price?: number | string | null;
+      /** Sales Price */
+      sales_price?: number | string | null;
+      /** Tax Rate */
+      tax_rate?: number | string | null;
     };
     /** ManualAllocationItem */
     ManualAllocationItem: {
@@ -9652,11 +10059,11 @@ export interface components {
      */
     OperationLogFiltersResponse: {
       /** Users */
-      users: components["schemas"]["FilterOption"][];
+      users: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
       /** Operation Types */
-      operation_types: components["schemas"]["FilterOption"][];
+      operation_types: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
       /** Target Tables */
-      target_tables: components["schemas"]["FilterOption"][];
+      target_tables: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
     };
     /**
      * OperationLogListResponse
@@ -12285,6 +12692,28 @@ export interface components {
       assignments?: components["schemas"]["UserAssignmentSchema"][];
     };
     /**
+     * FilterOption
+     * @description Filter option for dropdowns.
+     */
+    app__presentation__schemas__inventory__inventory_schema__FilterOption: {
+      /** Id */
+      id: number;
+      /** Code */
+      code: string;
+      /** Name */
+      name: string;
+    };
+    /**
+     * FilterOption
+     * @description フィルタ選択肢.
+     */
+    app__presentation__schemas__system__operation_logs_schema__FilterOption: {
+      /** Label */
+      label: string;
+      /** Value */
+      value: string;
+    };
+    /**
      * UserResponse
      * @description Schema for user response (DDL: users).
      */
@@ -12446,6 +12875,58 @@ export interface operations {
       };
     };
   };
+  search_lots_api_v2_lot_search_get: {
+    parameters: {
+      query?: {
+        /** @description Keyword search (lot number, product code/name, etc.) */
+        q?: string | null;
+        /** @description Page number */
+        page?: number;
+        /** @description Page size */
+        size?: number;
+        /** @description Sort field */
+        sort_by?: string;
+        /** @description Sort order */
+        sort_order?: string;
+        /** @description Filter by Product ID */
+        product_id?: number | null;
+        /** @description Filter by Warehouse ID */
+        warehouse_id?: number | null;
+        /** @description Filter by Supplier Code */
+        supplier_code?: string | null;
+        /** @description Filter by Expiry Date (From) */
+        expiry_from?: string | null;
+        /** @description Filter by Expiry Date (To) */
+        expiry_to?: string | null;
+        /** @description Filter by Status */
+        status?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_lot_api_v2_lot__lot_id__get: {
     parameters: {
       query?: never;
@@ -12500,6 +12981,37 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["AdjustmentResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  download_labels_api_v2_lot_labels_download_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LotLabelRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -13135,6 +13647,7 @@ export interface operations {
         warehouse_id?: number | null;
         supplier_id?: number | null;
         tab?: string;
+        primary_staff_only?: boolean;
       };
       header?: never;
       path?: never;
@@ -13149,6 +13662,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["InventoryItemResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_filter_options_api_v2_inventory_filter_options_get: {
+    parameters: {
+      query?: {
+        product_id?: number | null;
+        warehouse_id?: number | null;
+        supplier_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FilterOptions"];
         };
       };
       /** @description Validation Error */
@@ -13344,6 +13890,40 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ReservationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_default_destination_api_v2_withdrawals_default_destination_get: {
+    parameters: {
+      query: {
+        /** @description 製品ID */
+        product_id: number;
+        /** @description 仕入先ID (任意) */
+        supplier_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DefaultDestinationResponse"];
         };
       };
       /** @description Validation Error */
@@ -15138,6 +15718,46 @@ export interface operations {
       };
     };
   };
+  get_calendar_summary_api_withdrawals_calendar_summary_get: {
+    parameters: {
+      query: {
+        /** @description 年 */
+        year: number;
+        /** @description 月 */
+        month: number;
+        /** @description 倉庫ID */
+        warehouse_id?: number | null;
+        /** @description 製品ID */
+        product_id?: number | null;
+        /** @description 仕入先ID */
+        supplier_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DailyWithdrawalSummary"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_withdrawal_api_withdrawals__withdrawal_id__get: {
     parameters: {
       query?: never;
@@ -15191,6 +15811,123 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["WithdrawalResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_intake_history_api_intake_history_get: {
+    parameters: {
+      query?: {
+        /** @description スキップ件数 */
+        skip?: number;
+        /** @description 取得件数上限 */
+        limit?: number;
+        /** @description 仕入先IDでフィルタ */
+        supplier_id?: number | null;
+        /** @description 倉庫IDでフィルタ */
+        warehouse_id?: number | null;
+        /** @description 製品IDでフィルタ */
+        product_id?: number | null;
+        /** @description 開始日（入庫日） */
+        start_date?: string | null;
+        /** @description 終了日（入庫日） */
+        end_date?: string | null;
+        /** @description キーワード検索（ロット番号、製品名、仕入先名） */
+        search?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IntakeHistoryListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_calendar_summary_api_intake_history_calendar_summary_get: {
+    parameters: {
+      query: {
+        /** @description 年 */
+        year: number;
+        /** @description 月 */
+        month: number;
+        /** @description 倉庫ID */
+        warehouse_id?: number | null;
+        /** @description 製品ID */
+        product_id?: number | null;
+        /** @description 仕入先ID */
+        supplier_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DailyIntakeSummary"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_intake_history_detail_api_intake_history__intake_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        intake_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IntakeHistoryResponse"];
         };
       };
       /** @description Validation Error */
@@ -21360,6 +22097,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_master_status_api_masters_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
     };

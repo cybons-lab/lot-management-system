@@ -189,7 +189,8 @@ class InboundReceivingService:
         # Count existing lots for this plan and product
         count = (
             self.db.query(func.count(Lot.id))
-            .filter(Lot.lot_number.like(f"{plan_number}-{product_id}-%"))
+            .join(LotMaster)
+            .filter(LotMaster.lot_number.like(f"{plan_number}-{product_id}-%"))
             .scalar()
         )
 

@@ -21,7 +21,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from random import Random
 
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta  # type: ignore
 
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
 from app.infrastructure.persistence.models.masters_models import Product

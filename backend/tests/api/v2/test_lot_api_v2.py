@@ -50,7 +50,6 @@ def setup_lot_data(db_session):
         product_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        lot_number="LOT-V2-001",
         current_quantity=Decimal("100.0"),
         unit="EA",
         received_date=date.today(),
@@ -252,3 +251,29 @@ def test_create_lot_duplicate(client: TestClient, setup_lot_data):
     assert data2["lot_number"] == "DUP-LOT"
     # They should have different IDs (Note: LotResponse aliases id to lot_id)
     assert data1["lot_id"] != data2["lot_id"]
+
+
+# ==========================================
+# GET /api/v2/lot/{id} Tests
+# ==========================================
+
+
+def test_get_lot_by_id_success(client: TestClient, setup_lot_data):
+    """Test retrieving a specific lot by ID."""
+    lot = setup_lot_data["lot"]
+    product = setup_lot_data["product"]
+
+    response = client.get(f"/api/v2/lot/{lot.id}")
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["lot_id"] == lot.id
+    assert data["lot_number"] == "LOT-V2-001"
+    assert data["product_id"] == product.id
+    assert float(data["current_quantity"]) == 100.0
+
+
+def test_get_lot_by_id_not_found(client: TestClient):
+    """Test retrieving a non-existent lot."""
+    response = client.get("/api/v2/lot/999999")
+    assert response.status_code == 404

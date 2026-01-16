@@ -343,6 +343,220 @@
         }
       }
     },
+    "/api/v2/lot/search": {
+      "get": {
+        "tags": [
+          "v2-lot"
+        ],
+        "summary": "Search Lots",
+        "description": "Search lots with pagination and filtering.",
+        "operationId": "search_lots_api_v2_lot_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keyword search (lot number, product code/name, etc.)",
+              "title": "Q"
+            },
+            "description": "Keyword search (lot number, product code/name, etc.)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "Page size",
+              "default": 100,
+              "title": "Size"
+            },
+            "description": "Page size"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Sort field",
+              "default": "expiry_date",
+              "title": "Sort By"
+            },
+            "description": "Sort field"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(asc|desc)$",
+              "description": "Sort order",
+              "default": "asc",
+              "title": "Sort Order"
+            },
+            "description": "Sort order"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by Product ID",
+              "title": "Product Id"
+            },
+            "description": "Filter by Product ID"
+          },
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by Warehouse ID",
+              "title": "Warehouse Id"
+            },
+            "description": "Filter by Warehouse ID"
+          },
+          {
+            "name": "supplier_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by Supplier Code",
+              "title": "Supplier Code"
+            },
+            "description": "Filter by Supplier Code"
+          },
+          {
+            "name": "expiry_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by Expiry Date (From)",
+              "title": "Expiry From"
+            },
+            "description": "Filter by Expiry Date (From)"
+          },
+          {
+            "name": "expiry_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by Expiry Date (To)",
+              "title": "Expiry To"
+            },
+            "description": "Filter by Expiry Date (To)"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by Status",
+              "title": "Status"
+            },
+            "description": "Filter by Status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LotListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v2/lot/{lot_id}": {
       "get": {
         "tags": [
@@ -423,6 +637,41 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/lot/labels/download": {
+      "post": {
+        "tags": [
+          "v2-lot"
+        ],
+        "summary": "Download Labels",
+        "description": "Generate and download PDF labels for selected lots.",
+        "operationId": "download_labels_api_v2_lot_labels_download_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LotLabelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -1640,6 +1889,11 @@
         ],
         "summary": "List Inventory",
         "operationId": "list_inventory_api_v2_inventory__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "skip",
@@ -1722,6 +1976,16 @@
               "default": "all",
               "title": "Tab"
             }
+          },
+          {
+            "name": "primary_staff_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Primary Staff Only"
+            }
           }
         ],
         "responses": {
@@ -1735,6 +1999,88 @@
                     "$ref": "#/components/schemas/InventoryItemResponse"
                   },
                   "title": "Response List Inventory Api V2 Inventory  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/inventory/filter-options": {
+      "get": {
+        "tags": [
+          "v2-inventory"
+        ],
+        "summary": "Get Filter Options",
+        "description": "Get filter options (products, suppliers, warehouses) based on current selection.",
+        "operationId": "get_filter_options_api_v2_inventory_filter_options_get",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Warehouse Id"
+            }
+          },
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilterOptions"
                 }
               }
             }
@@ -2008,6 +2354,70 @@
                     "$ref": "#/components/schemas/ReservationResponse"
                   },
                   "title": "Response Reservations By Source Api V2 Reservation By Source  Source Type   Source Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/withdrawals/default-destination": {
+      "get": {
+        "tags": [
+          "v2-withdrawals",
+          "withdrawals"
+        ],
+        "summary": "Get Default Destination",
+        "description": "製品IDからデフォルトの得意先・納入先を取得する.\n\n1. customer_items テーブルから product_id でマッピングを検索\n2. 見つかれば customer_id を取得\n3. customer_item_delivery_settings の is_default=True レコードから delivery_place_id を取得\n4. マッピングが無い場合は mapping_found=False を返す",
+        "operationId": "get_default_destination_api_v2_withdrawals_default_destination_get",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "製品ID",
+              "title": "Product Id"
+            },
+            "description": "製品ID"
+          },
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "仕入先ID (任意)",
+              "title": "Supplier Id"
+            },
+            "description": "仕入先ID (任意)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultDestinationResponse"
                 }
               }
             }
@@ -5445,6 +5855,120 @@
         }
       }
     },
+    "/api/withdrawals/calendar-summary": {
+      "get": {
+        "tags": [
+          "withdrawals"
+        ],
+        "summary": "Get Calendar Summary",
+        "description": "月間の日別出庫集計を取得（カレンダー用）.\n\nArgs:\n    year: 年\n    month: 月\n    warehouse_id: 倉庫ID\n    product_id: 製品ID\n    supplier_id: 仕入先ID\n    db: データベースセッション\n\nReturns:\n    日別集計リスト",
+        "operationId": "get_calendar_summary_api_withdrawals_calendar_summary_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "年",
+              "title": "Year"
+            },
+            "description": "年"
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "月",
+              "title": "Month"
+            },
+            "description": "月"
+          },
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "倉庫ID",
+              "title": "Warehouse Id"
+            },
+            "description": "倉庫ID"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "製品ID",
+              "title": "Product Id"
+            },
+            "description": "製品ID"
+          },
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "仕入先ID",
+              "title": "Supplier Id"
+            },
+            "description": "仕入先ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DailyWithdrawalSummary"
+                  },
+                  "title": "Response Get Calendar Summary Api Withdrawals Calendar Summary Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/withdrawals/{withdrawal_id}": {
       "get": {
         "tags": [
@@ -5524,6 +6048,334 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/WithdrawalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/intake-history": {
+      "get": {
+        "tags": [
+          "intake-history"
+        ],
+        "summary": "List Intake History",
+        "description": "入庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    supplier_id: 仕入先IDでフィルタ\n    warehouse_id: 倉庫IDでフィルタ\n    product_id: 製品IDでフィルタ\n    start_date: 開始日\n    end_date: 終了日\n    search: 検索キーワード\n    db: データベースセッション\n\nReturns:\n    入庫履歴一覧",
+        "operationId": "list_intake_history_api_intake_history_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "スキップ件数",
+              "default": 0,
+              "title": "Skip"
+            },
+            "description": "スキップ件数"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "取得件数上限",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "取得件数上限"
+          },
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "仕入先IDでフィルタ",
+              "title": "Supplier Id"
+            },
+            "description": "仕入先IDでフィルタ"
+          },
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "倉庫IDでフィルタ",
+              "title": "Warehouse Id"
+            },
+            "description": "倉庫IDでフィルタ"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "製品IDでフィルタ",
+              "title": "Product Id"
+            },
+            "description": "製品IDでフィルタ"
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "開始日（入庫日）",
+              "title": "Start Date"
+            },
+            "description": "開始日（入庫日）"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "終了日（入庫日）",
+              "title": "End Date"
+            },
+            "description": "終了日（入庫日）"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "キーワード検索（ロット番号、製品名、仕入先名）",
+              "title": "Search"
+            },
+            "description": "キーワード検索（ロット番号、製品名、仕入先名）"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntakeHistoryListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/intake-history/calendar-summary": {
+      "get": {
+        "tags": [
+          "intake-history"
+        ],
+        "summary": "Get Calendar Summary",
+        "description": "月間の日別入庫集計を取得（カレンダー用）.\n\nArgs:\n    year: 年\n    month: 月\n    warehouse_id: 倉庫ID\n    product_id: 製品ID\n    supplier_id: 仕入先ID\n    db: データベースセッション\n\nReturns:\n    日別集計リスト",
+        "operationId": "get_calendar_summary_api_intake_history_calendar_summary_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "年",
+              "title": "Year"
+            },
+            "description": "年"
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "月",
+              "title": "Month"
+            },
+            "description": "月"
+          },
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "倉庫ID",
+              "title": "Warehouse Id"
+            },
+            "description": "倉庫ID"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "製品ID",
+              "title": "Product Id"
+            },
+            "description": "製品ID"
+          },
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "仕入先ID",
+              "title": "Supplier Id"
+            },
+            "description": "仕入先ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DailyIntakeSummary"
+                  },
+                  "title": "Response Get Calendar Summary Api Intake History Calendar Summary Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/intake-history/{intake_id}": {
+      "get": {
+        "tags": [
+          "intake-history"
+        ],
+        "summary": "Get Intake History Detail",
+        "description": "入庫履歴詳細を取得.\n\nArgs:\n    intake_id: 入庫履歴ID (StockHistory ID)\n    db: データベースセッション\n\nReturns:\n    入庫履歴詳細\n\nRaises:\n    HTTPException: 入庫履歴が見つからない場合",
+        "operationId": "get_intake_history_detail_api_intake_history__intake_id__get",
+        "parameters": [
+          {
+            "name": "intake_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Intake Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntakeHistoryResponse"
                 }
               }
             }
@@ -15175,6 +16027,23 @@
         }
       }
     },
+    "/api/masters/status": {
+      "get": {
+        "summary": "Get Master Status",
+        "description": "Get master data status including unmapped counts.",
+        "operationId": "get_master_status_api_masters_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ocr/import": {
       "post": {
         "tags": [
@@ -19110,6 +19979,58 @@
         "title": "CustomerUpdate",
         "description": "Update customer request."
       },
+      "DailyIntakeSummary": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "total_quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "count",
+          "total_quantity"
+        ],
+        "title": "DailyIntakeSummary",
+        "description": "日別入庫集計（カレンダー用）."
+      },
+      "DailyWithdrawalSummary": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "total_quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "count",
+          "total_quantity"
+        ],
+        "title": "DailyWithdrawalSummary",
+        "description": "日別出庫集計（カレンダー用）."
+      },
       "DashboardStatsResponse": {
         "properties": {
           "total_stock": {
@@ -19138,6 +20059,95 @@
         ],
         "title": "DashboardStatsResponse",
         "description": "ダッシュボード統計レスポンス."
+      },
+      "DefaultDestinationResponse": {
+        "properties": {
+          "customer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Id"
+          },
+          "customer_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Code"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
+          },
+          "delivery_place_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Id"
+          },
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name"
+          },
+          "mapping_found": {
+            "type": "boolean",
+            "title": "Mapping Found",
+            "default": false
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "title": "DefaultDestinationResponse",
+        "description": "Response model for default destination lookup."
       },
       "DeliveryPlaceCreate": {
         "properties": {
@@ -19610,24 +20620,38 @@
         "title": "FefoPreviewResponse",
         "description": "FEFO preview response."
       },
-      "FilterOption": {
+      "FilterOptions": {
         "properties": {
-          "label": {
-            "type": "string",
-            "title": "Label"
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+            },
+            "type": "array",
+            "title": "Products"
           },
-          "value": {
-            "type": "string",
-            "title": "Value"
+          "suppliers": {
+            "items": {
+              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+            },
+            "type": "array",
+            "title": "Suppliers"
+          },
+          "warehouses": {
+            "items": {
+              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+            },
+            "type": "array",
+            "title": "Warehouses"
           }
         },
         "type": "object",
         "required": [
-          "label",
-          "value"
+          "products",
+          "suppliers",
+          "warehouses"
         ],
-        "title": "FilterOption",
-        "description": "フィルタ選択肢."
+        "title": "FilterOptions",
+        "description": "Available filter options for inventory."
       },
       "ForecastBulkImportItem": {
         "properties": {
@@ -21010,6 +22034,195 @@
         "title": "InboundPlanUpdate",
         "description": "Mutable fields for inbound plans."
       },
+      "IntakeHistoryListResponse": {
+        "properties": {
+          "intakes": {
+            "items": {
+              "$ref": "#/components/schemas/IntakeHistoryResponse"
+            },
+            "type": "array",
+            "title": "Intakes"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intakes",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "IntakeHistoryListResponse",
+        "description": "入庫履歴一覧レスポンス."
+      },
+      "IntakeHistoryResponse": {
+        "properties": {
+          "intake_id": {
+            "type": "integer",
+            "title": "Intake Id"
+          },
+          "lot_id": {
+            "type": "integer",
+            "title": "Lot Id"
+          },
+          "lot_number": {
+            "type": "string",
+            "title": "Lot Number"
+          },
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name"
+          },
+          "product_code": {
+            "type": "string",
+            "title": "Product Code"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code"
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id"
+          },
+          "warehouse_name": {
+            "type": "string",
+            "title": "Warehouse Name"
+          },
+          "warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Code"
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity",
+            "description": "入庫数量"
+          },
+          "received_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Received Date",
+            "description": "入庫日"
+          },
+          "expiry_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Date",
+            "description": "有効期限"
+          },
+          "inbound_plan_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inbound Plan Number",
+            "description": "入庫計画番号"
+          },
+          "sap_po_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Po Number",
+            "description": "SAP購買注文番号"
+          },
+          "transaction_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Transaction Date",
+            "description": "トランザクション日時"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intake_id",
+          "lot_id",
+          "lot_number",
+          "product_id",
+          "product_name",
+          "product_code",
+          "warehouse_id",
+          "warehouse_name",
+          "quantity",
+          "received_date",
+          "transaction_date",
+          "created_at"
+        ],
+        "title": "IntakeHistoryResponse",
+        "description": "入庫履歴レスポンス."
+      },
       "InventoryByProductResponse": {
         "properties": {
           "product_id": {
@@ -21680,6 +22893,63 @@
             ],
             "title": "Temporary Lot Key"
           },
+          "shipping_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Date"
+          },
+          "cost_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Price"
+          },
+          "sales_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sales Price"
+          },
+          "tax_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Rate"
+          },
           "product_code": {
             "anyOf": [
               {
@@ -21723,6 +22993,55 @@
         ],
         "title": "LotCreate",
         "description": "Payload for creating lots.\n\n仮入庫対応:\n- lot_number を空 or None で送信すると、サーバー側で TMP-YYYYMMDD-XXXX 形式の\n  暫定ロット番号と temporary_lot_key (UUID) が自動採番される\n- 正式ロット番号が判明次第、update_lot で lot_number を更新可能"
+      },
+      "LotLabelRequest": {
+        "properties": {
+          "lot_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Lot Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lot_ids"
+        ],
+        "title": "LotLabelRequest",
+        "description": "Payload for requesting lot labels."
+      },
+      "LotListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LotResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "size"
+        ],
+        "title": "LotListResponse",
+        "description": "API response model for paginated list of lots."
       },
       "LotLock": {
         "properties": {
@@ -21930,26 +23249,101 @@
             ],
             "title": "Temporary Lot Key"
           },
+          "shipping_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Date"
+          },
+          "cost_price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Price"
+          },
+          "sales_price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sales Price"
+          },
+          "tax_rate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Rate"
+          },
           "lot_id": {
             "type": "integer",
             "title": "Lot Id"
           },
           "product_name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Product Name"
           },
           "product_code": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Product Code"
           },
           "supplier_name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Supplier Name"
           },
-          "is_primary_supplier": {
-            "type": "boolean",
-            "title": "Is Primary Supplier",
-            "default": false
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code"
           },
           "warehouse_name": {
             "anyOf": [
@@ -21973,61 +23367,10 @@
             ],
             "title": "Warehouse Code"
           },
-          "supplier_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier Code"
-          },
-          "last_updated": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Updated"
-          },
-          "primary_user_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Primary User Id"
-          },
-          "primary_username": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Primary Username"
-          },
-          "primary_user_display_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Primary User Display Name"
+          "is_primary_supplier": {
+            "type": "boolean",
+            "title": "Is Primary Supplier",
+            "default": false
           },
           "product_deleted": {
             "type": "boolean",
@@ -22053,10 +23396,7 @@
           "warehouse_id",
           "received_date",
           "unit",
-          "lot_id",
-          "product_name",
-          "product_code",
-          "supplier_name"
+          "lot_id"
         ],
         "title": "LotResponse",
         "description": "API response model for lots."
@@ -22270,6 +23610,63 @@
               }
             ],
             "title": "Origin Reference"
+          },
+          "shipping_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Date"
+          },
+          "cost_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Price"
+          },
+          "sales_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sales Price"
+          },
+          "tax_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Rate"
           }
         },
         "type": "object",
@@ -22938,21 +24335,21 @@
         "properties": {
           "users": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
             },
             "type": "array",
             "title": "Users"
           },
           "operation_types": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
             },
             "type": "array",
             "title": "Operation Types"
           },
           "target_tables": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
             },
             "type": "array",
             "title": "Target Tables"
@@ -29001,6 +30398,49 @@
         ],
         "title": "UserResponse",
         "description": "User response schema."
+      },
+      "app__presentation__schemas__inventory__inventory_schema__FilterOption": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "title": "FilterOption",
+        "description": "Filter option for dropdowns."
+      },
+      "app__presentation__schemas__system__operation_logs_schema__FilterOption": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "FilterOption",
+        "description": "フィルタ選択肢."
       },
       "app__presentation__schemas__system__users_schema__UserResponse": {
         "properties": {

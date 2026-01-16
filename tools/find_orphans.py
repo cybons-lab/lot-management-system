@@ -1,7 +1,6 @@
-import os
 import re
 from pathlib import Path
-from typing import Set, List, Dict
+from typing import Set
 
 # Configuration
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()

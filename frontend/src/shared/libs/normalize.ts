@@ -79,6 +79,13 @@ type LotResponse = components["schemas"]["LotResponse"] & {
   delivery_place_id?: number | null;
   delivery_place_code?: string | null;
   delivery_place_name?: string | null;
+  // Phase 1 Fields (Manual extension until OpenAPI update)
+  origin_type?: string | null;
+  origin_reference?: string | null;
+  shipping_date?: string | null;
+  cost_price?: number | string | null;
+  sales_price?: number | string | null;
+  tax_rate?: number | string | null;
 };
 type ProductResponse = components["schemas"]["ProductOut"];
 
@@ -161,6 +168,16 @@ export interface LotUI extends Record<string, unknown> {
   primary_user_id?: number | null;
   primary_username?: string | null;
   primary_user_display_name?: string | null;
+
+  // Low-level tracking
+  origin_type: "adhoc" | "manual" | "migration" | "delivery_fulfillment";
+  origin_reference: string | null;
+
+  // Financials
+  shipping_date: string | null;
+  cost_price: string | null;
+  sales_price: string | null;
+  tax_rate: string | null;
 
   // Soft-delete status flags for related masters
   product_deleted?: boolean;
@@ -266,6 +283,15 @@ export function normalizeLot(
     inspection_status: lot.inspection_status ?? "not_required",
     inspection_date: lot.inspection_date ?? null,
     inspection_cert_number: lot.inspection_cert_number ?? null,
+
+    // Phase 1 Fields
+    origin_type:
+      (lot.origin_type as "adhoc" | "manual" | "migration" | "delivery_fulfillment") ?? "adhoc",
+    origin_reference: lot.origin_reference ?? null,
+    shipping_date: lot.shipping_date ?? null,
+    cost_price: lot.cost_price != null ? String(lot.cost_price) : null,
+    sales_price: lot.sales_price != null ? String(lot.sales_price) : null,
+    tax_rate: lot.tax_rate != null ? String(lot.tax_rate) : null,
 
     // Legacy fields (for backward compatibility)
     id: lot.lot_id,

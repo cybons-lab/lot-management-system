@@ -17,6 +17,7 @@ VIEW_NAMES: list[str] = [
     "v_lot_details",
     "v_order_line_details",
     "v_lot_allocations",
+    "v_lot_active_reservations",
     "v_lot_current_stock",
     "v_customer_daily_products",
     "v_order_line_context",

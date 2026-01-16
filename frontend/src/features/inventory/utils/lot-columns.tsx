@@ -137,5 +137,24 @@ export function createLotColumns(): Column<LotUI>[] {
       sortable: true,
       align: "center",
     },
+    {
+      id: "origin",
+      header: "発生源",
+      cell: (lot) => (
+        <div className="flex flex-col text-xs">
+          <span className="font-medium">{lot.origin_type}</span>
+          {lot.origin_reference && <span className="text-slate-500">{lot.origin_reference}</span>}
+        </div>
+      ),
+      sortable: false,
+      enableHiding: true,
+    },
+    {
+      id: "shipping_date",
+      header: "出荷日",
+      cell: (lot) => formatDate(lot.shipping_date),
+      sortable: true,
+      enableHiding: true,
+    },
   ];
 }

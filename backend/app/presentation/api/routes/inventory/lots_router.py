@@ -412,7 +412,7 @@ def get_lot(lot_id: int, db: Session = Depends(get_db)):
         response.supplier_code = lot.supplier.supplier_code
 
     response.current_quantity = lot.current_quantity or Decimal("0")
-    response.last_updated = lot.updated_at
+
     return response
 
 

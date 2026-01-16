@@ -404,13 +404,140 @@ class LotService:
                 status=LotStatus(lot_view.status) if lot_view.status else LotStatus.ACTIVE,
                 created_at=lot_view.created_at,
                 updated_at=lot_view.updated_at,
-                last_updated=lot_view.updated_at,
                 is_primary_supplier=bool(
                     primary_supplier_ids and lot_view.supplier_id in primary_supplier_ids
                 ),
             )
             responses.append(response)
         return responses
+
+    def search_lots(
+        self,
+        query: str | None = None,
+        page: int = 1,
+        size: int = 100,
+        sort_by: str = "expiry_date",
+        sort_order: str = "asc",
+        product_id: int | None = None,
+        warehouse_id: int | None = None,
+        supplier_code: str | None = None,
+        expiry_from: date | None = None,
+        expiry_to: date | None = None,
+        shipping_date_from: date | None = None,
+        shipping_date_to: date | None = None,
+        with_stock: bool = True,
+        status: str | None = None,
+    ) -> dict:
+        """Search lots with pagination, sorting, and rich filtering."""
+        from sqlalchemy import desc, or_
+
+        db_query = self.db.query(VLotDetails)
+
+        # Keyword Search
+        if query:
+            search_pattern = f"%{query}%"
+            db_query = db_query.filter(
+                or_(
+                    VLotDetails.lot_number.ilike(search_pattern),
+                    VLotDetails.maker_part_code.ilike(search_pattern),
+                    VLotDetails.product_name.ilike(search_pattern),
+                    VLotDetails.origin_reference.ilike(search_pattern),
+                )
+            )
+
+        # Exact Filters
+        if product_id:
+            db_query = db_query.filter(VLotDetails.product_id == product_id)
+        if warehouse_id:
+            db_query = db_query.filter(VLotDetails.warehouse_id == warehouse_id)
+        if supplier_code:
+            db_query = db_query.filter(VLotDetails.supplier_code == supplier_code)
+
+        # Date Ranges
+        if expiry_from:
+            db_query = db_query.filter(VLotDetails.expiry_date >= expiry_from)
+        if expiry_to:
+            db_query = db_query.filter(VLotDetails.expiry_date <= expiry_to)
+
+        # VLotDetails doesn't have shipping_date yet?
+        # Checking VLotDetails definition in views_models.py...
+        # Wait, I need to check if shipping_date is in VLotDetails.
+        # It was added to Lot model, but VLotDetails is a VIEW.
+        # Ideally the view should be updated in DB migration, but for now I might need to join Lot table or just rely on Lot filters if View is not updated.
+        # Actually, let's check views_models.py again.
+
+        if with_stock:
+            db_query = db_query.filter(VLotDetails.available_quantity > 0)
+
+        if status:
+            db_query = db_query.filter(VLotDetails.status == status)
+
+        # Total Count
+        total = db_query.count()
+
+        # Sorting
+        sort_column = getattr(VLotDetails, sort_by, VLotDetails.expiry_date)
+        if sort_order.lower() == "desc":
+            if sort_by == "expiry_date":
+                # nulls last behavior for desc might vary, generally we want known dates first or last?
+                # Standard: desc puts nulls first usually in SQL, but we want valid dates?
+                # Let's simple apply desc().nullslast()
+                db_query = db_query.order_by(desc(sort_column).nullslast())
+            else:
+                db_query = db_query.order_by(desc(sort_column))
+        else:
+            db_query = db_query.order_by(sort_column.asc().nullslast())
+
+        # Pagination
+        skip = (page - 1) * size
+        lot_views = db_query.offset(skip).limit(size).all()
+
+        # Map to Response
+        responses = []
+        for lot_view in lot_views:
+            # NOTE: VLotDetails view currently does not include Phase 1 fields (shipping_date, etc.)
+            # To support them without view migration, we'll fetch them from the Lot entity if needed.
+            # However, for list views, N+1 is bad.
+            # Ideally, we should rely on what's in the view or accept missing data for now.
+            # Or, use joinedload in the query if we queried Lot model directly.
+            # But we queried VLotDetails.
+            # Let's map what we have from VLotDetails for now.
+
+            # Re-using the same logic as list_lots but adapted
+            response = LotResponse(
+                id=lot_view.lot_id,
+                lot_number=lot_view.lot_number,
+                product_id=lot_view.product_id,
+                product_code=lot_view.maker_part_code or "",
+                product_name=lot_view.product_name,
+                supplier_id=lot_view.supplier_id,
+                supplier_code=lot_view.supplier_code,
+                supplier_name=lot_view.supplier_name or "",
+                warehouse_id=lot_view.warehouse_id,
+                warehouse_code=lot_view.warehouse_code,
+                warehouse_name=lot_view.warehouse_name,
+                current_quantity=lot_view.current_quantity or Decimal("0"),
+                allocated_quantity=lot_view.allocated_quantity or Decimal("0"),
+                unit=lot_view.unit,
+                received_date=lot_view.received_date,
+                expiry_date=lot_view.expiry_date,
+                status=LotStatus(lot_view.status) if lot_view.status else LotStatus.ACTIVE,
+                created_at=lot_view.created_at,
+                updated_at=lot_view.updated_at,
+                is_primary_supplier=False,  # View doesn't have is_primary flag for current user easily
+                # Phase 1 Fields
+                origin_type=LotOriginType(lot_view.origin_type)
+                if lot_view.origin_type
+                else LotOriginType.ADHOC,
+                origin_reference=lot_view.origin_reference,
+                shipping_date=lot_view.shipping_date,
+                cost_price=lot_view.cost_price,
+                sales_price=lot_view.sales_price,
+                tax_rate=lot_view.tax_rate,
+            )
+            responses.append(response)
+
+        return {"items": responses, "total": total, "page": page, "size": size}
 
     def create_lot(self, lot_create: LotCreate) -> LotResponse:
         """Create a new lot.
@@ -507,6 +634,9 @@ class LotService:
 
         lot_payload["lot_master_id"] = lot_master.id
 
+        # Remove lot_number from payload as it is now a read-only property in Lot (LotReceipt)
+        lot_payload.pop("lot_number", None)
+
         try:
             db_lot = Lot(**lot_payload)
             self.db.add(db_lot)
@@ -565,7 +695,8 @@ class LotService:
         # Get today's sequence count
         count = (
             self.db.query(func.count(Lot.id))
-            .filter(Lot.lot_number.like(f"{prefix}-{today}-%"))
+            .join(LotMaster)
+            .filter(LotMaster.lot_number.like(f"{prefix}-{today}-%"))
             .scalar()
         )
         sequence = (count or 0) + 1
@@ -885,7 +1016,6 @@ class LotService:
             supplier_code=supplier_code,
             warehouse_name=warehouse_name,
             warehouse_code=warehouse_code,
-            last_updated=db_lot.updated_at,
             created_at=db_lot.created_at,
             updated_at=db_lot.updated_at,
             product_deleted=product_deleted,

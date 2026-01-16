@@ -23,6 +23,7 @@ from app.infrastructure.persistence.models import (
     ExpectedLot,
     InboundPlanLine,
     Lot,
+    LotMaster,
     Product,
     StockHistory,
     StockTransactionType,
@@ -106,9 +107,12 @@ class IntakeHistoryService:
             query = query.outerjoin(Lot.supplier)
             query = query.outerjoin(Lot.warehouse)
 
+            # LotMaster is required for lot_number search
+            query = query.join(LotMaster, Lot.lot_master_id == LotMaster.id)
+
             query = query.filter(
                 or_(
-                    Lot.lot_number.ilike(term),
+                    LotMaster.lot_number.ilike(term),
                     Product.maker_part_code.ilike(term),
                     Product.product_name.ilike(term),
                     Product.maker_item_code.ilike(term),

@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.time_utils import utcnow
-from app.infrastructure.persistence.models import Lot
+from app.infrastructure.persistence.models import Lot, LotMaster
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -215,7 +215,9 @@ class ReservationRepository:
         Returns:
             アクティブな予約エンティティのリスト
         """
-        lot = self.db.execute(select(Lot).where(Lot.lot_number == lot_number)).scalar_one_or_none()
+        lot = self.db.execute(
+            select(Lot).join(Lot.lot_master).where(LotMaster.lot_number == lot_number)
+        ).scalar_one_or_none()
         if not lot:
             return []
         return self.find_active_by_lot_id(lot.id)

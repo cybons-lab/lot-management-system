@@ -6,6 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.application.services.assignments.assignment_service import (
@@ -22,6 +23,8 @@ from app.presentation.schemas.inventory.inventory_schema import (
     AdjustmentCreate,
     AdjustmentResponse,
     LotCreate,
+    LotLabelRequest,
+    LotListResponse,
     LotResponse,
 )
 
@@ -97,6 +100,39 @@ async def get_available_lots(
     return [AvailableLotResponse.model_validate(candidate) for candidate in candidates]
 
 
+@router.get("/search", response_model=LotListResponse)
+async def search_lots(
+    q: str | None = Query(None, description="Keyword search (lot number, product code/name, etc.)"),
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(100, ge=1, le=1000, description="Page size"),
+    sort_by: str = Query("expiry_date", description="Sort field"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    product_id: int | None = Query(None, description="Filter by Product ID"),
+    warehouse_id: int | None = Query(None, description="Filter by Warehouse ID"),
+    supplier_code: str | None = Query(None, description="Filter by Supplier Code"),
+    expiry_from: date | None = Query(None, description="Filter by Expiry Date (From)"),
+    expiry_to: date | None = Query(None, description="Filter by Expiry Date (To)"),
+    status: str | None = Query(None, description="Filter by Status"),
+    db: Session = Depends(get_db),
+):
+    """Search lots with pagination and filtering."""
+    service = LotService(db)
+    result = service.search_lots(
+        query=q,
+        page=page,
+        size=size,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        product_id=product_id,
+        warehouse_id=warehouse_id,
+        supplier_code=supplier_code,
+        expiry_from=expiry_from,
+        expiry_to=expiry_to,
+        status=status,
+    )
+    return result
+
+
 @router.get("/{lot_id}", response_model=LotResponse)
 async def get_lot(lot_id: int, db: Session = Depends(get_db)):
     service = LotService(db)
@@ -136,3 +172,25 @@ async def adjust_lot_quantity(
         return created
     except ValueError as exc:  # pragma: no cover - passthrough to HTTP
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/labels/download", response_class=Response)
+async def download_labels(
+    request: LotLabelRequest,
+    db: Session = Depends(get_db),
+):
+    """Generate and download PDF labels for selected lots."""
+    from datetime import datetime
+
+    from app.application.services.inventory.label_service import LabelService
+
+    service = LabelService(db)
+    pdf_buffer = service.generate_label_pdf(request.lot_ids)
+
+    filename = f"lot_labels_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+
+    return Response(
+        content=pdf_buffer.getvalue(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
