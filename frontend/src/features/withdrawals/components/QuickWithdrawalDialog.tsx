@@ -1,12 +1,8 @@
 /**
  * QuickWithdrawalDialog
- *
  * 在庫アイテム詳細画面からの簡易出庫ダイアログ
- * - 受注出庫（order_manual）専用
- * - 得意先、出荷日、数量を入力して出庫
  */
-
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity, max-lines */
 import { Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
@@ -35,15 +31,10 @@ import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 
 export interface QuickWithdrawalDialogProps {
-  /** 出庫対象のロット */
   lot: LotUI;
-  /** ダイアログの開閉状態 */
   open: boolean;
-  /** ダイアログの開閉制御 */
   onOpenChange: (open: boolean) => void;
-  /** 出庫成功時のコールバック */
   onSuccess?: () => void;
-  /** 初期出荷日（カレンダーから選択された場合） */
   initialShipDate?: string;
 }
 
@@ -73,17 +64,14 @@ export function QuickWithdrawalDialog({
   const today = new Date().toISOString().split("T")[0];
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
 
-  // 納入先状態
   const [deliveryPlaces, setDeliveryPlaces] = useState<DeliveryPlace[]>([]);
   const [isLoadingDeliveryPlaces, setIsLoadingDeliveryPlaces] = useState(false);
 
-  // 利用可能数量を計算
   const availableQuantity =
     Number(lot.current_quantity) -
     Number(lot.allocated_quantity) -
     Number(lot.locked_quantity || 0);
 
-  // フォーム状態
   const [formState, setFormState] = useState<FormState>({
     customer_id: 0,
     delivery_place_id: 0,
@@ -95,12 +83,10 @@ export function QuickWithdrawalDialog({
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // マッピング状態
   const [mappingNotFound, setMappingNotFound] = useState(false);
   const [deliveryPlaceNotFound, setDeliveryPlaceNotFound] = useState(false);
   const [isSetupDialogOpen, setIsSetupDialogOpen] = useState(false);
 
-  // ダイアログが開くたびにフォームをリセット＆デフォルト得意先を取得
   useEffect(() => {
     if (open) {
       setFormState({
