@@ -29,11 +29,16 @@ def upgrade() -> None:
             "system_client_logs",
             sa.Column("id", sa.BigInteger(), nullable=False),
             sa.Column("user_id", sa.BigInteger(), nullable=True),
-            sa.Column("level", sa.String(length=20), server_default=sa.text("'info'"), nullable=False),
+            sa.Column(
+                "level", sa.String(length=20), server_default=sa.text("'info'"), nullable=False
+            ),
             sa.Column("message", sa.Text(), nullable=False),
             sa.Column("user_agent", sa.String(length=255), nullable=True),
             sa.Column(
-                "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+                "created_at",
+                sa.DateTime(),
+                server_default=sa.text("CURRENT_TIMESTAMP"),
+                nullable=False,
             ),
             sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="SET NULL"),
             sa.PrimaryKeyConstraint("id"),

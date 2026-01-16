@@ -61,11 +61,14 @@ service.release(res_id)
 db.commit()
 
 res = db.get(LotReservation, res_id)
-print(f"[State] Status is now: {res.status}")
-if res.status == "released":
-    print("WARNING: Confirmed reservation was RELEASED directly (V-03 Confirmed?)")
+if res is not None:
+    print(f"[State] Status is now: {res.status}")
+    if res.status == "released":
+        print("WARNING: Confirmed reservation was RELEASED directly (V-03 Confirmed?)")
+    else:
+        print(f"SAFE: Status is {res.status}")
 else:
-    print(f"SAFE: Status is {res.status}")
+    print("ERROR: Reservation not found after release operation")
 
 print("[Test] Attempting to re-confirm RELEASED reservation...")
 try:

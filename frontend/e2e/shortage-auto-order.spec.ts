@@ -20,6 +20,7 @@ test.describe("Shortage & Auto Order", () => {
       await route.fulfill({
         json: [
           {
+            id: 200,
             order_line_id: 200,
             order_id: 2,
             order_number: "SHRT-001",
@@ -39,6 +40,20 @@ test.describe("Shortage & Auto Order", () => {
       });
     });
 
+    // Mock Order Detail
+    await page.route("**/v2/orders/*", async (route) => {
+      await route.fulfill({
+        json: {
+          id: 2,
+          order_number: "SHRT-001",
+          customer_id: 2,
+          customer_name: "Shortage Inc.",
+          status: "open",
+          order_lines: [],
+        },
+      });
+    });
+
     // Mock Inventory (Only 50 available)
     await page.route("**/v2/lot/available*", async (route) => {
       await route.fulfill({
@@ -46,9 +61,12 @@ test.describe("Shortage & Auto Order", () => {
           {
             lot_id: 10,
             lot_code: "LOT-010",
+            lot_number: "LOT-010",
             available_qty: 50, // Supply < Demand
+            available_quantity: 50,
             expiry_date: "2025-12-31",
             warehouse_code: "Main Warehouse",
+            warehouse_name: "Main Warehouse",
             product_code: "PROD-SHORT",
           },
         ],

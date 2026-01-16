@@ -61,7 +61,7 @@ test.describe("UI Audit Screenshots", () => {
     await page.getByRole("combobox").click();
     await page.getByRole("option").first().click();
     await page.getByRole("button", { name: "ログイン" }).click();
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/dashboard");
   });
 
   for (const route of ROUTES) {

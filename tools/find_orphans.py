@@ -13,7 +13,7 @@ FRONTEND_EXTENSIONS = {".ts", ".tsx"}
 FRONTEND_ENTRY_POINTS = {
     "main.tsx",
     "vite-env.d.ts",
-    "App.tsx", # Often imported by main.tsx but good to whitelist
+    "App.tsx",  # Often imported by main.tsx but good to whitelist
 }
 FRONTEND_IGNORE_PATTERNS = {
     r"\.test\.tsx?$",
@@ -34,7 +34,10 @@ BACKEND_IGNORE_PATTERNS = {
     r"migrations/.*",
 }
 
-def get_all_files(root_dir: Path, extensions: Set[str], ignore_patterns: Set[str]) -> Set[Path]:
+
+def get_all_files(
+    root_dir: Path, extensions: Set[str], ignore_patterns: Set[str]
+) -> Set[Path]:
     all_files = set()
     for ext in extensions:
         for path in root_dir.rglob(f"*{ext}"):
@@ -45,17 +48,19 @@ def get_all_files(root_dir: Path, extensions: Set[str], ignore_patterns: Set[str
             all_files.add(path)
     return all_files
 
+
 def resolve_frontend_import(import_path: str, current_file: Path) -> Path | None:
     # Handle alias
     if import_path.startswith("@/"):
         return FRONTEND_ROOT / import_path[2:]
-    
+
     # Handle relative imports
     if import_path.startswith("."):
         return (current_file.parent / import_path).resolve()
-    
+
     # Ignore node_modules (non-relative, non-alias)
     return None
+
 
 def find_frontend_imports(file_path: Path) -> Set[Path]:
     imports = set()
@@ -90,23 +95,24 @@ def find_frontend_imports(file_path: Path) -> Set[Path]:
                         break
     return imports
 
+
 def resolve_backend_import(import_path: str, current_file: Path) -> Path | None:
     # Convert dot notation to path
     # app.models.user -> app/models/user.py
-    
+
     # Remove leading dots for relative imports
     relative_level = 0
     while import_path.startswith("."):
         import_path = import_path[1:]
         relative_level += 1
-    
+
     if relative_level > 0:
         # Relative import
         # .models -> current_dir/models.py
         base_dir = current_file.parent
         for _ in range(relative_level - 1):
             base_dir = base_dir.parent
-        
+
         parts = import_path.split(".")
         candidate_base = base_dir.joinpath(*parts)
     else:
@@ -114,7 +120,7 @@ def resolve_backend_import(import_path: str, current_file: Path) -> Path | None:
         # app.models -> backend/app/models.py
         # But wait, imports in backend usually start with "app." or are relative
         if import_path.startswith("app."):
-            parts = import_path.split(".")[1:] # remove 'app'
+            parts = import_path.split(".")[1:]  # remove 'app'
             candidate_base = BACKEND_ROOT.joinpath(*parts)
         else:
             # Might be third party or root level
@@ -122,18 +128,19 @@ def resolve_backend_import(import_path: str, current_file: Path) -> Path | None:
 
     # Try finding the file
     # It could be a file.py or a package/__init__.py
-    
+
     # Case 1: file.py
     candidate = candidate_base.with_suffix(".py")
     if candidate.exists():
         return candidate
-    
+
     # Case 2: package/__init__.py
     candidate = candidate_base / "__init__.py"
     if candidate.exists():
         return candidate
-        
+
     return None
+
 
 def find_backend_imports(file_path: Path) -> Set[Path]:
     imports = set()
@@ -147,8 +154,8 @@ def find_backend_imports(file_path: Path) -> Set[Path]:
     # from ... import ...
     # import ...
     patterns = [
-        r'from\s+([\w\.]+)\s+import',
-        r'import\s+([\w\.]+)',
+        r"from\s+([\w\.]+)\s+import",
+        r"import\s+([\w\.]+)",
     ]
 
     for pattern in patterns:
@@ -159,12 +166,15 @@ def find_backend_imports(file_path: Path) -> Set[Path]:
                 imports.add(resolved)
     return imports
 
+
 def main():
     print("=== Orphan File Detection Report ===\n")
 
     # --- Frontend Analysis ---
     print("Checking Frontend (frontend/src)...")
-    fe_files = get_all_files(FRONTEND_ROOT, FRONTEND_EXTENSIONS, FRONTEND_IGNORE_PATTERNS)
+    fe_files = get_all_files(
+        FRONTEND_ROOT, FRONTEND_EXTENSIONS, FRONTEND_IGNORE_PATTERNS
+    )
     fe_referenced = set()
 
     for f in fe_files:
@@ -210,6 +220,7 @@ def main():
             print(f"  - {orphan}")
     else:
         print("No orphan files found in Backend.")
+
 
 if __name__ == "__main__":
     main()
