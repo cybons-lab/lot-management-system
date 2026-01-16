@@ -26,13 +26,21 @@ interface InventoryTableProps {
   isLoading: boolean;
   onRowClick?: (item: InventoryItem) => void;
   onRefresh?: () => void;
+  /** Supplier ID from page filter - passed to quick intake dialog */
+  filterSupplierId?: number;
 }
 
 /** 複合キー生成 */
 const getItemKey = (item: InventoryItem) => `${item.product_id}-${item.warehouse_id}`;
 
 // eslint-disable-next-line max-lines-per-function
-export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: InventoryTableProps) {
+export function InventoryTable({
+  data,
+  isLoading,
+  onRowClick,
+  onRefresh,
+  filterSupplierId,
+}: InventoryTableProps) {
   const {
     selectedLot,
     editDialog,
@@ -497,6 +505,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
         onSuccess={handleQuickIntakeSuccess}
         initialProductId={quickIntakeItem?.product_id}
         initialWarehouseId={quickIntakeItem?.warehouse_id}
+        initialSupplierId={filterSupplierId}
       />
     </div>
   );

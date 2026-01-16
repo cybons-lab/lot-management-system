@@ -269,6 +269,7 @@ export function InventoryPage() {
               data={inventoryItems}
               isLoading={isItemsLoading}
               onRefresh={refetchItems}
+              filterSupplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
             />
           )}
           {overviewMode === "supplier" && (
