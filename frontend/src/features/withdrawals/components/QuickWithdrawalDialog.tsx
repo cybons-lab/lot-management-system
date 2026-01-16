@@ -7,12 +7,14 @@
  */
 
 /* eslint-disable max-lines-per-function, complexity */
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
 import { createWithdrawal, getDefaultDestination, type WithdrawalCreateRequest } from "../api";
 import type { DeliveryPlace } from "../hooks/useWithdrawalFormState";
+
+import { QuickMappingSetupDialog } from "./QuickMappingSetupDialog";
 
 import { Button, Input, Label } from "@/components/ui";
 import {
@@ -93,6 +95,10 @@ export function QuickWithdrawalDialog({
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // マッピング状態
+  const [mappingNotFound, setMappingNotFound] = useState(false);
+  const [isSetupDialogOpen, setIsSetupDialogOpen] = useState(false);
+
   // ダイアログが開くたびにフォームをリセット＆デフォルト得意先を取得
   useEffect(() => {
     if (open) {
@@ -106,6 +112,7 @@ export function QuickWithdrawalDialog({
       });
       setDeliveryPlaces([]);
       setErrors({});
+      setMappingNotFound(false);
 
       // 製品IDからデフォルトの得意先・納入先を取得
       if (lot.product_id) {
@@ -117,14 +124,21 @@ export function QuickWithdrawalDialog({
                 customer_id: result.customer_id!,
                 delivery_place_id: result.delivery_place_id || 0,
               }));
-            } else if (!result.mapping_found) {
-              toast.warning(
-                `製品 (ID: ${lot.product_id}) のマッピングが未設定です。得意先を手動で選択してください。`,
-              );
+              setMappingNotFound(false);
+            } else {
+              // マッピングが見つからない、または得意先IDが空の場合
+              setMappingNotFound(true);
+              if (!result.mapping_found) {
+                toast.warning(
+                  `製品 (ID: ${lot.product_id}) のマッピングが未設定です。設定を行ってください。`,
+                );
+              }
             }
           })
           .catch((error) => {
             console.error("デフォルト得意先取得エラー:", error);
+            // エラーが発生した場合（404等）も、マッピング未設定として扱う
+            setMappingNotFound(true);
           });
       }
     }
@@ -151,7 +165,10 @@ export function QuickWithdrawalDialog({
         // レスポンス時点でcustomer_idが変わっていないか確認
         if (formState.customer_id === customerId) {
           setDeliveryPlaces(places);
-          updateField("delivery_place_id", 0);
+          // 既存の選択が新しいリストに含まれていない場合のみリセット
+          if (!places.some((p) => p.id === formState.delivery_place_id)) {
+            updateField("delivery_place_id", 0);
+          }
         }
       })
       .catch((error) => {
@@ -249,6 +266,24 @@ export function QuickWithdrawalDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* マッピング警告 */}
+          {mappingNotFound && (
+            <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                <span>マッピング設定が見つかりません</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 border-amber-300 bg-amber-100 text-[10px] hover:bg-amber-200"
+                onClick={() => setIsSetupDialogOpen(true)}
+              >
+                今すぐ設定する
+              </Button>
+            </div>
+          )}
+
           {/* ロット情報表示 */}
           <div className="rounded-lg border bg-slate-50 p-3">
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -402,6 +437,24 @@ export function QuickWithdrawalDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* マッピング設定ダイアログ */}
+      <QuickMappingSetupDialog
+        productId={lot.product_id}
+        productName={lot.product_name || "不明な製品"}
+        productCode={lot.product_code || String(lot.product_id)}
+        defaultUnit={lot.unit}
+        open={isSetupDialogOpen}
+        onOpenChange={setIsSetupDialogOpen}
+        onSuccess={(cid, dpid) => {
+          setFormState((prev) => ({
+            ...prev,
+            customer_id: cid,
+            delivery_place_id: dpid,
+          }));
+          setMappingNotFound(false);
+        }}
+      />
     </Dialog>
   );
 }

@@ -21,4 +21,6 @@ api_router.include_router(allocation_router, prefix="/allocation", tags=["v2-all
 api_router.include_router(forecast_router, prefix="/forecast", tags=["v2-forecast"])
 api_router.include_router(inventory_router, prefix="/inventory", tags=["v2-inventory"])
 api_router.include_router(reservation_router, prefix="/reservation", tags=["v2-reservation"])
-api_router.include_router(default_destination_router, tags=["v2-withdrawals"])
+api_router.include_router(
+    default_destination_router, prefix="/withdrawals", tags=["v2-withdrawals"]
+)

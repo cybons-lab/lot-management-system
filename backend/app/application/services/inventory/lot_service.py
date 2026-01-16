@@ -157,7 +157,9 @@ from app.infrastructure.persistence.models import (
     Lot,
     LotMaster,
     Product,
+    StockHistory,
     StockMovement,
+    StockTransactionType,
     Supplier,
     VLotDetails,
     Warehouse,
@@ -508,6 +510,20 @@ class LotService:
         try:
             db_lot = Lot(**lot_payload)
             self.db.add(db_lot)
+            self.db.flush()  # Generate ID for StockHistory
+
+            # Create stock history record for intake tracking
+            if db_lot.current_quantity and db_lot.current_quantity > 0:
+                stock_history = StockHistory(
+                    lot_id=db_lot.id,
+                    transaction_type=StockTransactionType.INBOUND,
+                    quantity_change=db_lot.current_quantity,
+                    quantity_after=db_lot.current_quantity,
+                    reference_type="adhoc_intake",
+                    reference_id=db_lot.id,
+                )
+                self.db.add(stock_history)
+
             self.db.commit()
             self.db.refresh(db_lot)
         except IntegrityError as exc:

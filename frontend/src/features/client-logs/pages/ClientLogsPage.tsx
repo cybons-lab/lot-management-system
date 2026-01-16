@@ -5,8 +5,9 @@
  */
 
 import { RefreshCw, AlertCircle } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
+import { ClientLogDetailDialog } from "../components/ClientLogDetailDialog";
 import { useClientLogs } from "../hooks";
 
 import { Button, Badge } from "@/components/ui";
@@ -38,6 +39,9 @@ interface ClientLog {
 
 // eslint-disable-next-line max-lines-per-function
 export function ClientLogsPage() {
+  const [selectedLog, setSelectedLog] = useState<ClientLog | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const {
     data: logs = [],
     isLoading,
@@ -68,11 +72,7 @@ export function ClientLogsPage() {
         id: "message",
         header: "メッセージ",
         accessor: (row) => row.message,
-        cell: (row) => (
-          <div className="max-w-md truncate font-mono" title={row.message}>
-            {row.message}
-          </div>
-        ),
+        cell: (row) => <div className="max-w-md truncate font-mono">{row.message}</div>,
         sortable: true,
       },
       {
@@ -96,6 +96,11 @@ export function ClientLogsPage() {
     ],
     [],
   );
+
+  const handleRowClick = (log: ClientLog) => {
+    setSelectedLog(log);
+    setIsDialogOpen(true);
+  };
 
   return (
     <PageContainer>
@@ -134,10 +139,13 @@ export function ClientLogsPage() {
             data={logs}
             columns={columns}
             getRowId={(row) => row.id}
+            onRowClick={handleRowClick}
             emptyMessage="クライアントログがありません"
           />
         </div>
       )}
+
+      <ClientLogDetailDialog log={selectedLog} open={isDialogOpen} onOpenChange={setIsDialogOpen} />
     </PageContainer>
   );
 }

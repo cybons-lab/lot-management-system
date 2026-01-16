@@ -246,6 +246,6 @@ export async function getDefaultDestination(params: {
     searchParams.set("supplier_id", String(params.supplier_id));
   }
   return http.get<DefaultDestinationResponse>(
-    `/api/v2/withdrawals/default-destination?${searchParams.toString()}`,
+    `v2/withdrawals/default-destination?${searchParams.toString()}`,
   );
 }

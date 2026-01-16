@@ -10,6 +10,7 @@ import { useState, useRef } from "react";
 
 import { downloadJson, downloadCsv, type SmartReadAnalyzeResponse } from "../api";
 import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
+import { ApiError } from "@/utils/errors/custom-errors";
 import {
   useSmartReadConfigs,
   useAnalyzeFile,
@@ -55,7 +56,7 @@ export function SmartReadPage() {
   const [selectedWatchFiles, setSelectedWatchFiles] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: configs, isLoading: configsLoading } = useSmartReadConfigs();
+  const { data: configs, isLoading: configsLoading, error: configsError } = useSmartReadConfigs();
   const analyzeMutation = useAnalyzeFile();
   const {
     data: watchFiles,
@@ -63,6 +64,10 @@ export function SmartReadPage() {
     refetch: refetchWatchFiles,
   } = useWatchDirFiles(selectedConfigId);
   const processWatchFilesMutation = useProcessWatchDirFiles();
+
+  const isAuthError =
+    configsError instanceof ApiError &&
+    (configsError.status === 401 || configsError.status === 403);
 
   const activeConfigs = configs?.filter((c) => c.is_active) ?? [];
 
@@ -176,11 +181,23 @@ export function SmartReadPage() {
                     <Loader2 className="h-4 w-4 animate-spin" />
                     設定を読み込み中...
                   </div>
-                ) : activeConfigs.length === 0 ? (
+                ) : configsError ? (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>設定がありません</AlertTitle>
-                    <AlertDescription>
+                    <AlertTitle>設定の取得に失敗しました</AlertTitle>
+                    <AlertDescription className="flex items-center justify-between">
+                      <span>
+                        {isAuthError
+                          ? "認証エラーが発生しました。再度ログインしてください。"
+                          : configsError.message}
+                      </span>
+                    </AlertDescription>
+                  </Alert>
+                ) : activeConfigs.length === 0 ? (
+                  <Alert variant="default" className="border-amber-200 bg-amber-50">
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                    <AlertTitle className="text-amber-800">設定がありません</AlertTitle>
+                    <AlertDescription className="text-amber-700">
                       AI-OCR設定を追加してください。右上の「設定」ボタンから追加できます。
                     </AlertDescription>
                   </Alert>

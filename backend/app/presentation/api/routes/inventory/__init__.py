@@ -4,6 +4,9 @@ from app.presentation.api.routes.inventory.adjustments_router import router as a
 from app.presentation.api.routes.inventory.inbound_plans_router import (
     router as inbound_plans_router,
 )
+from app.presentation.api.routes.inventory.intake_history_router import (
+    router as intake_history_router,
+)
 from app.presentation.api.routes.inventory.lots_router import router as lots_router
 from app.presentation.api.routes.inventory.withdrawals_router import (
     router as withdrawals_router,
@@ -13,6 +16,7 @@ from app.presentation.api.routes.inventory.withdrawals_router import (
 __all__ = [
     "adjustments_router",
     "inbound_plans_router",
+    "intake_history_router",
     "lots_router",
     "withdrawals_router",
 ]

@@ -20,7 +20,7 @@ from app.infrastructure.persistence.models.masters_models import (
 )
 
 
-router = APIRouter(prefix="/v2/withdrawals", tags=["withdrawals"])
+router = APIRouter(tags=["withdrawals"])
 
 
 class DefaultDestinationResponse(BaseModel):
