@@ -53,6 +53,20 @@ DROP VIEW IF EXISTS public.v_customer_item_jiku_mappings CASCADE;
 
 -- Per §1.2 invariant: Available = Current - Locked - ConfirmedReserved
 -- Only CONFIRMED reservations affect Available Qty
+-- 現在在庫ビュー
+CREATE VIEW public.v_lot_current_stock AS
+SELECT
+    lr.id AS lot_id,
+    lr.product_id,
+    lr.warehouse_id,
+    lr.current_quantity,
+    lr.updated_at AS last_updated
+FROM public.lots lr
+WHERE lr.current_quantity > 0;
+
+-- 54行目付近
+-- Per §1.2 invariant: Available = Current - Locked - ConfirmedReserved
+-- Only CONFIRMED reservations affect Available Qty
 CREATE VIEW public.v_lot_allocations AS
 SELECT
     lot_id,
@@ -61,16 +75,6 @@ FROM public.lot_reservations
 WHERE status IN ('active', 'confirmed')
 GROUP BY lot_id;
 
--- 現在在庫ビュー
-CREATE VIEW public.v_lot_current_stock AS
-SELECT
-    lr.id AS lot_id,
-    lr.product_id,
-    lr.warehouse_id,
-    lr.received_quantity AS current_quantity,
-    lr.updated_at AS last_updated
-FROM public.lot_receipts lr
-WHERE lr.received_quantity > 0;
 
 -- 顧客別日次製品ビュー（フォーキャスト連携用）
 CREATE VIEW public.v_customer_daily_products AS
@@ -79,6 +83,7 @@ SELECT DISTINCT
     f.product_id
 FROM public.forecast_current f
 WHERE f.forecast_period IS NOT NULL;
+
 
 -- 受注明細コンテキストビュー
 CREATE VIEW public.v_order_line_context AS
@@ -137,38 +142,38 @@ SELECT
     lr.id AS lot_id,
     lr.product_id,
     lr.warehouse_id,
-    GREATEST(lr.received_quantity - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity, 0) AS available_qty,
+    GREATEST((lr.current_quantity + lr.locked_quantity) - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity, 0) AS available_qty,
     lr.received_date AS receipt_date,
     lr.expiry_date,
     lr.status AS lot_status
-FROM public.lot_receipts lr
+FROM public.lots lr
 LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
 WHERE 
     lr.status = 'active'
     AND (lr.expiry_date IS NULL OR lr.expiry_date >= CURRENT_DATE)
-    AND (lr.received_quantity - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity) > 0;
+    AND ((lr.current_quantity + lr.locked_quantity) - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity) > 0;
 
 
 CREATE VIEW public.v_inventory_summary AS
 SELECT
     lr.product_id,
     lr.warehouse_id,
-    SUM(lr.received_quantity) AS total_quantity,
+    SUM(lr.current_quantity + lr.locked_quantity) AS total_quantity,
     SUM(COALESCE(la.allocated_quantity, 0)) AS allocated_quantity,
     SUM(lr.locked_quantity) AS locked_quantity,
-    GREATEST(SUM(lr.received_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(lr.locked_quantity), 0) AS available_quantity,
+    GREATEST(SUM(lr.current_quantity + lr.locked_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(lr.locked_quantity), 0) AS available_quantity,
     -- 入荷予定（仮在庫）
     COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
-    GREATEST(SUM(lr.received_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(lr.locked_quantity) + COALESCE(SUM(ipl.planned_quantity), 0), 0) AS available_with_provisional,
+    GREATEST(SUM(lr.current_quantity + lr.locked_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(lr.locked_quantity) + COALESCE(SUM(ipl.planned_quantity), 0), 0) AS available_with_provisional,
     MAX(lr.updated_at) AS last_updated,
     -- アクティブロット数
     COUNT(lr.id) AS active_lot_count,
     -- 在庫状態 (in_stock, depleted_only)
     CASE 
-        WHEN GREATEST(SUM(lr.received_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(lr.locked_quantity), 0) > 0 THEN 'in_stock'
+        WHEN GREATEST(SUM(lr.current_quantity + lr.locked_quantity) - SUM(COALESCE(la.allocated_quantity, 0)) - SUM(lr.locked_quantity), 0) > 0 THEN 'in_stock'
         ELSE 'depleted_only'
     END AS inventory_state
-FROM public.lot_receipts lr
+FROM public.lots lr
 LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
 LEFT JOIN public.inbound_plan_lines ipl ON lr.product_id = ipl.product_id
 LEFT JOIN public.inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
@@ -193,10 +198,10 @@ SELECT
     COALESCE(s.supplier_name, '[削除済み仕入先]') AS supplier_name,
     lr.received_date,
     lr.expiry_date,
-    lr.received_quantity,
+    (lr.current_quantity + lr.locked_quantity) AS received_quantity,
     COALESCE(la.allocated_quantity, 0) AS allocated_quantity,
     lr.locked_quantity,
-    GREATEST(lr.received_quantity - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity, 0) AS available_quantity,
+    GREATEST((lr.current_quantity + lr.locked_quantity) - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity, 0) AS available_quantity,
     lr.unit,
     lr.status,
     lr.lock_reason,
@@ -213,7 +218,7 @@ SELECT
     CASE WHEN s.valid_to IS NOT NULL AND s.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS supplier_deleted,
     lr.created_at,
     lr.updated_at
-FROM public.lot_receipts lr
+FROM public.lots lr
 LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
 LEFT JOIN public.products p ON lr.product_id = p.id
 LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
