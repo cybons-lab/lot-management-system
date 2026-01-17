@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.application.services.rpa.orchestrator import MaterialDeliveryNoteOrchestrator
+from app.application.services.system_config_service import ConfigKeys, SystemConfigService
 from app.infrastructure.persistence.models.rpa_models import RpaRun, RpaRunItem, RpaRunStatus
 from app.infrastructure.rpa.flow_client import RpaFlowClient
 
@@ -106,6 +107,97 @@ class TestMaterialDeliveryNoteOrchestrator:
         assert item.lock_flag is True
 
         mock_client.call_flow.assert_awaited_once()
+
+    def test_batch_update_items_completes_and_transitions(
+        self, orchestrator: MaterialDeliveryNoteOrchestrator, db: Session
+    ):
+        run = RpaRun(status=RpaRunStatus.DRAFT, rpa_type="material_delivery_note")
+        db.add(run)
+        db.commit()
+
+        item1 = RpaRunItem(run_id=run.id, row_no=1, issue_flag=True, complete_flag=False)
+        item2 = RpaRunItem(run_id=run.id, row_no=2, issue_flag=True, complete_flag=False)
+        db.add_all([item1, item2])
+        db.commit()
+
+        result = orchestrator.batch_update_items(
+            run_id=run.id,
+            item_ids=[item1.id, item2.id],
+            issue_flag=False,
+            complete_flag=True,
+        )
+
+        assert result is not None
+
+        db.refresh(run)
+        assert run.status == RpaRunStatus.READY_FOR_STEP2
+
+        refreshed_items = (
+            db.query(RpaRunItem).filter(RpaRunItem.run_id == run.id).order_by(RpaRunItem.row_no).all()
+        )
+        assert all(item.issue_flag is False for item in refreshed_items)
+        assert all(item.complete_flag is True for item in refreshed_items)
+
+    def test_update_item_result_marks_run_complete(
+        self, orchestrator: MaterialDeliveryNoteOrchestrator, db: Session
+    ):
+        run = RpaRun(status=RpaRunStatus.STEP2_RUNNING, rpa_type="material_delivery_note")
+        db.add(run)
+        db.commit()
+
+        item = RpaRunItem(
+            run_id=run.id,
+            row_no=1,
+            issue_flag=True,
+            result_status="pending",
+        )
+        db.add(item)
+        db.commit()
+
+        updated = orchestrator.update_item_result(
+            run_id=run.id,
+            item_id=item.id,
+            result_status="success",
+            sap_registered=True,
+        )
+
+        assert updated is not None
+        assert updated.result_status == "success"
+        assert updated.sap_registered is True
+
+        db.refresh(run)
+        assert run.status == RpaRunStatus.STEP3_DONE_WAITING_EXTERNAL
+
+    @pytest.mark.asyncio
+    async def test_execute_step2_uses_config_flow_url(
+        self, orchestrator: MaterialDeliveryNoteOrchestrator, db: Session
+    ):
+        run = RpaRun(status=RpaRunStatus.READY_FOR_STEP2, rpa_type="material_delivery_note")
+        db.add(run)
+        db.commit()
+
+        item = RpaRunItem(run_id=run.id, row_no=1, issue_flag=True)
+        db.add(item)
+        db.commit()
+
+        config_service = SystemConfigService(db)
+        config_service.set(ConfigKeys.CLOUD_FLOW_URL_MATERIAL_DELIVERY, "http://configured-flow")
+
+        mock_client = AsyncMock(spec=RpaFlowClient)
+        mock_client.call_flow.return_value = {"status": "ok"}
+        orchestrator.flow_client = mock_client
+
+        result = await orchestrator.execute_step2(
+            run_id=run.id,
+            flow_url=None,
+            json_payload={},
+            start_date=None,
+            end_date=None,
+        )
+
+        assert result["status"] == "success"
+        mock_client.call_flow.assert_awaited_once()
+        assert mock_client.call_flow.await_args.args[0] == "http://configured-flow"
 
     def test_csv_parser_integration(self, orchestrator: MaterialDeliveryNoteOrchestrator):
         # Test valid CSV parsing interaction integration
