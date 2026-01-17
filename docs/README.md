@@ -20,6 +20,7 @@
 | **Operations** | [runbook.md](ops/runbook.md) | 運用手順（監視、データ補正） |
 | | [troubleshooting.md](ops/troubleshooting.md) | トラブルシューティングガイド |
 | **Testing** | [test_strategy.md](testing/test_strategy.md) | テスト戦略、観点 |
+| | [test_catalog.md](testing/test_catalog.md) | テスト資産の一覧（配置・種別・実行方法） |
 | **Development** | [setup.md](dev/setup.md) | 開発環境セットアップ手順 |
 | **Tasks** | [backlog.md](tasks/backlog.md) | 未完了タスクのバックログ |
 | | [TODO.md](TODO.md) | 未実装APIなどのTODO |
