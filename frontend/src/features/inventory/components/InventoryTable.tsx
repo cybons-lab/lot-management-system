@@ -3,20 +3,20 @@
  * Refactored to use DataTable component.
  */
 import { ArrowDownToLine, Plus } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui";
 import type { InventoryItem } from "@/features/inventory/api";
 import { InventoryLotList } from "@/features/inventory/components/InventoryLotList";
 import { inventoryColumns } from "@/features/inventory/components/InventoryTableColumns";
-import { LoadingState, EmptyState } from "@/features/inventory/components/InventoryTableComponents";
+import { EmptyState, LoadingState } from "@/features/inventory/components/InventoryTableComponents";
 import { InventoryTableDialogs } from "@/features/inventory/components/InventoryTableDialogs";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
+import { useInventoryDialogs } from "@/features/inventory/hooks/useInventoryDialogs";
 import { useInventoryTableLogic } from "@/features/inventory/hooks/useInventoryTableLogic";
 import { QuickWithdrawalDialog, WithdrawalHistoryDialog } from "@/features/withdrawals/components";
 import { DataTable } from "@/shared/components/data/DataTable";
-import type { LotUI } from "@/shared/libs/normalize";
 
 interface InventoryTableProps {
   data: InventoryItem[];
@@ -58,39 +58,21 @@ export function InventoryTable({
     refetchLots,
   } = useInventoryTableLogic();
 
-  // 簡易出庫ダイアログ用の状態
-  const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
-  const [selectedWithdrawalLot, setSelectedWithdrawalLot] = useState<LotUI | null>(null);
+  // ダイアログ状態管理（排他的に1つだけ開く）
+  const {
+    openWithdrawal,
+    openHistory,
+    openQuickIntake,
+    close: closeDialog,
+    isWithdrawalOpen,
+    isHistoryOpen,
+    isQuickIntakeOpen,
+    withdrawalLot,
+    historyLot,
+    quickIntakeItem,
+  } = useInventoryDialogs();
 
-  const handleWithdrawLot = (lot: LotUI) => {
-    setSelectedWithdrawalLot(lot);
-    setWithdrawalDialogOpen(true);
-  };
-
-  // 履歴ダイアログ用の状態
-  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
-  const [selectedHistoryLot, setSelectedHistoryLot] = useState<LotUI | null>(null);
-
-  const handleHistoryLot = (lot: LotUI) => {
-    setSelectedHistoryLot(lot);
-    setHistoryDialogOpen(true);
-  };
-
-  // ロット簡易登録ダイアログ用の状態
-  const [quickIntakeDialogOpen, setQuickIntakeDialogOpen] = useState(false);
-  const [quickIntakeItem, setQuickIntakeItem] = useState<InventoryItem | null>(null);
-
-  const handleQuickIntake = (item: InventoryItem) => {
-    setQuickIntakeItem(item);
-    setQuickIntakeDialogOpen(true);
-  };
-
-  const handleQuickIntakeSuccess = () => {
-    refetchLots();
-    onRefresh?.();
-  };
-
-  const handleWithdrawalSuccess = () => {
+  const handleSuccess = () => {
     refetchLots();
     onRefresh?.();
   };
@@ -170,7 +152,7 @@ export function InventoryTable({
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            handleQuickIntake(item);
+            openQuickIntake(item);
           }}
           title="ロット入庫"
         >
@@ -204,8 +186,8 @@ export function InventoryTable({
         onEdit={handleEditLot}
         onUnlock={handleUnlockLot}
         onLock={handleLockLot}
-        onWithdraw={handleWithdrawLot}
-        onHistory={handleHistoryLot}
+        onWithdraw={openWithdrawal}
+        onHistory={openHistory}
       />
     );
   };
@@ -248,30 +230,30 @@ export function InventoryTable({
       />
 
       {/* 簡易出庫ダイアログ */}
-      {selectedWithdrawalLot && (
+      {withdrawalLot && (
         <QuickWithdrawalDialog
-          lot={selectedWithdrawalLot}
-          open={withdrawalDialogOpen}
-          onOpenChange={setWithdrawalDialogOpen}
-          onSuccess={handleWithdrawalSuccess}
+          lot={withdrawalLot}
+          open={isWithdrawalOpen}
+          onOpenChange={(open) => !open && closeDialog()}
+          onSuccess={handleSuccess}
         />
       )}
 
       {/* 履歴カレンダーダイアログ */}
-      {selectedHistoryLot && (
+      {historyLot && (
         <WithdrawalHistoryDialog
-          lot={selectedHistoryLot}
-          open={historyDialogOpen}
-          onOpenChange={setHistoryDialogOpen}
-          onWithdrawalSuccess={handleWithdrawalSuccess}
+          lot={historyLot}
+          open={isHistoryOpen}
+          onOpenChange={(open) => !open && closeDialog()}
+          onWithdrawalSuccess={handleSuccess}
         />
       )}
 
       {/* ロット簡易登録ダイアログ */}
       <QuickLotIntakeDialog
-        open={quickIntakeDialogOpen}
-        onOpenChange={setQuickIntakeDialogOpen}
-        onSuccess={handleQuickIntakeSuccess}
+        open={isQuickIntakeOpen}
+        onOpenChange={(open) => !open && closeDialog()}
+        onSuccess={handleSuccess}
         initialProductId={quickIntakeItem?.product_id}
         initialWarehouseId={quickIntakeItem?.warehouse_id}
         initialSupplierId={filterSupplierId}
