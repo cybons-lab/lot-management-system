@@ -241,8 +241,11 @@ class LotService:
             received_quantity=lot_view.received_quantity,
             remaining_quantity=lot_view.remaining_quantity or Decimal("0"),
             # Compat field (Remaining)
+            # Compat field (Remaining)
             current_quantity=lot_view.remaining_quantity or Decimal("0"),
             allocated_quantity=lot_view.allocated_quantity or Decimal("0"),
+            reserved_quantity_active=getattr(lot_view, "reserved_quantity_active", Decimal("0")),
+            available_quantity=getattr(lot_view, "available_quantity", Decimal("0")),
             locked_quantity=lot_view.locked_quantity or Decimal("0"),
             unit=lot_view.unit,
             received_date=lot_view.received_date,
@@ -458,6 +461,10 @@ class LotService:
                 remaining_quantity=lot_view.remaining_quantity or Decimal("0"),
                 current_quantity=lot_view.remaining_quantity or Decimal("0"),
                 allocated_quantity=lot_view.allocated_quantity or Decimal("0"),
+                reserved_quantity_active=getattr(
+                    lot_view, "reserved_quantity_active", Decimal("0")
+                ),
+                available_quantity=getattr(lot_view, "available_quantity", Decimal("0")),
                 unit=lot_view.unit,
                 received_date=lot_view.received_date,
                 expiry_date=lot_view.expiry_date,
@@ -578,6 +585,10 @@ class LotService:
                 warehouse_name=lot_view.warehouse_name,
                 current_quantity=lot_view.current_quantity or Decimal("0"),
                 allocated_quantity=lot_view.allocated_quantity or Decimal("0"),
+                reserved_quantity_active=getattr(
+                    lot_view, "reserved_quantity_active", Decimal("0")
+                ),
+                available_quantity=getattr(lot_view, "available_quantity", Decimal("0")),
                 unit=lot_view.unit,
                 received_date=lot_view.received_date,
                 expiry_date=lot_view.expiry_date,

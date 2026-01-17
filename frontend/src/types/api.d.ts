@@ -8466,16 +8466,28 @@ export interface components {
       warnings?: string[];
     };
     /**
+     * FilterOption
+     * @description Filter option for dropdowns.
+     */
+    FilterOption: {
+      /** Id */
+      id: number;
+      /** Code */
+      code: string;
+      /** Name */
+      name: string;
+    };
+    /**
      * FilterOptions
      * @description Available filter options for inventory.
      */
     FilterOptions: {
       /** Products */
-      products: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      products: components["schemas"]["FilterOption"][];
       /** Suppliers */
-      suppliers: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      suppliers: components["schemas"]["FilterOption"][];
       /** Warehouses */
-      warehouses: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      warehouses: components["schemas"]["FilterOption"][];
     };
     /**
      * ForecastBulkImportItem
@@ -9388,6 +9400,16 @@ export interface components {
        */
       current_quantity: number | string;
       /**
+       * Received Quantity
+       * @default 0
+       */
+      received_quantity: number | string;
+      /**
+       * Remaining Quantity
+       * @default 0
+       */
+      remaining_quantity: number | string;
+      /**
        * Allocated Quantity
        * @default 0
        */
@@ -9512,6 +9534,16 @@ export interface components {
        */
       current_quantity: string;
       /**
+       * Received Quantity
+       * @default 0
+       */
+      received_quantity: string;
+      /**
+       * Remaining Quantity
+       * @default 0
+       */
+      remaining_quantity: string;
+      /**
        * Allocated Quantity
        * @default 0
        */
@@ -9569,6 +9601,16 @@ export interface components {
        * @default false
        */
       is_primary_supplier: boolean;
+      /**
+       * Available Quantity
+       * @default 0
+       */
+      available_quantity: string;
+      /**
+       * Reserved Quantity Active
+       * @default 0
+       */
+      reserved_quantity_active: string;
       /**
        * Product Deleted
        * @default false
@@ -11949,7 +11991,7 @@ export interface components {
        * @default bearer
        */
       token_type: string;
-      user: components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
+      user: components["schemas"]["UserResponse"];
     };
     /**
      * TransportLeadTimeResponse
@@ -12113,6 +12155,22 @@ export interface components {
        * @description パスワード（平文）
        */
       password: string;
+    };
+    /**
+     * UserResponse
+     * @description User response schema.
+     */
+    UserResponse: {
+      /** Id */
+      id: number;
+      /** Username */
+      username: string;
+      /** Display Name */
+      display_name: string;
+      /** Roles */
+      roles?: string[];
+      /** Assignments */
+      assignments?: components["schemas"]["UserAssignmentSchema"][];
     };
     /**
      * UserRoleAssignment
@@ -12675,34 +12733,6 @@ export interface components {
      * @enum {string}
      */
     WithdrawalType: "order_manual" | "internal_use" | "disposal" | "return" | "sample" | "other";
-    /**
-     * UserResponse
-     * @description User response schema.
-     */
-    app__presentation__schemas__auth__auth_schemas__UserResponse: {
-      /** Id */
-      id: number;
-      /** Username */
-      username: string;
-      /** Display Name */
-      display_name: string;
-      /** Roles */
-      roles?: string[];
-      /** Assignments */
-      assignments?: components["schemas"]["UserAssignmentSchema"][];
-    };
-    /**
-     * FilterOption
-     * @description Filter option for dropdowns.
-     */
-    app__presentation__schemas__inventory__inventory_schema__FilterOption: {
-      /** Id */
-      id: number;
-      /** Code */
-      code: string;
-      /** Name */
-      name: string;
-    };
     /**
      * FilterOption
      * @description フィルタ選択肢.
@@ -18998,7 +19028,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
+          "application/json": components["schemas"]["UserResponse"];
         };
       };
     };

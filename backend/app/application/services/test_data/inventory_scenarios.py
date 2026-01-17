@@ -128,7 +128,7 @@ SCENARIOS: list[InventoryScenario] = [
 
 
 def _default_value_for_column(column) -> object:
-    if isinstance(column.type, (String, Text)):
+    if isinstance(column.type, String | Text):
         return "test"
     if isinstance(column.type, Boolean):
         return False
@@ -138,7 +138,7 @@ def _default_value_for_column(column) -> object:
         return datetime.now()
     if isinstance(column.type, Numeric):
         return Decimal("0")
-    if isinstance(column.type, (BigInteger, Integer)):
+    if isinstance(column.type, BigInteger | Integer):
         return 0
     return None
 
@@ -157,12 +157,20 @@ def _set_required_fields(instance, values: dict[str, object]) -> None:
 
 
 def _resolve_outbound_models(db: Session):
+    """Resolve outbound models if tables exist, otherwise return None.
+
+    Returns:
+        Tuple of (OutboundInstruction, OutboundAllocation) or (None, None) if tables don't exist.
+    """
     engine = db.get_bind()
     inspector = inspect(engine)
     tables = set(inspector.get_table_names())
-    missing = {name for name in ("outbound_instructions", "outbound_allocations") if name not in tables}
+    missing = {
+        name for name in ("outbound_instructions", "outbound_allocations") if name not in tables
+    }
     if missing:
-        raise RuntimeError(f"Missing outbound tables: {', '.join(sorted(missing))}")
+        # Tables don't exist - this is expected if outbound feature is not yet implemented
+        return None, None
 
     base = automap_base()
     base.prepare(autoload_with=engine)
@@ -319,6 +327,8 @@ def _clear_existing_reservations(db: Session, lot_id: int) -> None:
 
 
 def _clear_existing_allocations(db: Session, OutboundAllocation, lot_id: int) -> None:
+    if OutboundAllocation is None:
+        return
     db.query(OutboundAllocation).filter(OutboundAllocation.lot_id == lot_id).delete()
 
 
@@ -348,6 +358,10 @@ def _create_outbound_allocation(
     quantity: Decimal,
     scenario: InventoryScenario,
 ) -> None:
+    if OutboundInstruction is None or OutboundAllocation is None:
+        # Outbound tables don't exist - skip allocation creation
+        return
+
     instruction = OutboundInstruction()
     _set_required_fields(
         instruction,
@@ -452,13 +466,6 @@ def _print_verification_summary(db: Session) -> None:
         provisional_total = sum((row[0] for row in provisional_reserved), Decimal("0"))
         available = lot.received_quantity - confirmed_total - lot.locked_quantity
         print(
-            "  - {key}: received={received}, confirmed={confirmed}, provisional={provisional}, "
-            "locked={locked}, available={available}".format(
-                key=scenario.key,
-                received=lot.received_quantity,
-                confirmed=confirmed_total,
-                provisional=provisional_total,
-                locked=lot.locked_quantity,
-                available=available,
-            )
+            f"  - {scenario.key}: received={lot.received_quantity}, confirmed={confirmed_total}, provisional={provisional_total}, "
+            f"locked={lot.locked_quantity}, available={available}"
         )

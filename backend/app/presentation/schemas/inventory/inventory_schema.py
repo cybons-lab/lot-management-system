@@ -169,6 +169,10 @@ class LotResponse(LotBase, TimestampMixin):
 
     is_primary_supplier: bool = False
 
+    # Computed fields from view
+    available_quantity: Decimal = Decimal("0")
+    reserved_quantity_active: Decimal = Decimal("0")
+
     # Soft delete status
     product_deleted: bool = False
     warehouse_deleted: bool = False
