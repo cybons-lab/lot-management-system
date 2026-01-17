@@ -70,6 +70,6 @@ class InProcessLotClient(LotContextClient):
         if not lot:
             # TODO: Define specific exception for reference lookup
             raise ValueError(f"Lot not found: {lot_reference}")
-        
+
         # Then use get_lot_details to get full view model
         return self.lot_service.get_lot_details(lot.id)

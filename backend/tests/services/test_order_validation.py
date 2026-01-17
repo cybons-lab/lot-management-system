@@ -12,7 +12,13 @@ from app.application.services.orders.validation_service import (
     OrderValidationService,
 )
 from app.domain.errors import InsufficientStockError
-from app.infrastructure.persistence.models import LotReceipt, LotMaster, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models import (
+    LotMaster,
+    LotReceipt,
+    Product,
+    Supplier,
+    Warehouse,
+)
 
 
 @pytest.fixture()
@@ -56,6 +62,7 @@ def fifo_inventory(db_session):
             received_date=base_date,
             unit="EA",
             received_quantity=qty,
+            origin_type="order",
         )
         # 受入日
         lot.received_date = base_date + timedelta(days=idx - 1)

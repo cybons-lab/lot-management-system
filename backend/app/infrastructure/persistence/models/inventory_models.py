@@ -167,9 +167,6 @@ from .base_model import Base
 from .lot_receipt_models import LotReceipt
 
 
-
-
-
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .forecast_models import ForecastCurrent
     from .masters_models import Customer, DeliveryPlace, Product

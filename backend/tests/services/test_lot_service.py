@@ -10,7 +10,13 @@ from sqlalchemy.orm import Session
 
 from app.application.services.inventory.lot_service import LotService
 from app.domain.lot import LotCandidate
-from app.infrastructure.persistence.models import LotReceipt, LotCurrentStock, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models import (
+    LotCurrentStock,
+    LotReceipt,
+    Product,
+    Supplier,
+    Warehouse,
+)
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
@@ -175,7 +181,7 @@ class TestCreateLot:
             product_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
-            current_quantity=Decimal("100"),
+            received_quantity=Decimal("100"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,
         )
@@ -203,7 +209,7 @@ class TestCreateLot:
             product_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
-            current_quantity=Decimal("10"),
+            received_quantity=Decimal("10"),
             unit="EA",
             origin_type=LotOriginType.SAMPLE,
             origin_reference="キャンペーン用サンプル",
@@ -229,7 +235,7 @@ class TestCreateLot:
             product_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
-            current_quantity=Decimal("500"),
+            received_quantity=Decimal("500"),
             unit="EA",
             origin_type=LotOriginType.SAFETY_STOCK,
         )
@@ -254,7 +260,7 @@ class TestCreateLot:
             warehouse_id=data["warehouse"].id,
             supplier_code="SUP-TEST",
             received_date=date.today(),
-            current_quantity=Decimal("50"),
+            received_quantity=Decimal("50"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,
         )
@@ -280,7 +286,7 @@ class TestCreateLot:
             warehouse_id=data["warehouse"].id,
             supplier_code=None,
             received_date=date.today(),
-            current_quantity=Decimal("25"),
+            received_quantity=Decimal("25"),
             unit="EA",
             origin_type=LotOriginType.SAMPLE,
         )
@@ -306,7 +312,7 @@ class TestCreateLot:
             warehouse_id=data["warehouse"].id,
             supplier_code="INVALID-SUPPLIER",
             received_date=date.today(),
-            current_quantity=Decimal("50"),
+            received_quantity=Decimal("50"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,
         )
@@ -331,7 +337,7 @@ class TestCreateLot:
             product_id=99999,  # 存在しないID
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
-            current_quantity=Decimal("50"),
+            received_quantity=Decimal("50"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,
         )
@@ -354,7 +360,7 @@ class TestCreateLot:
             product_id=data["product"].id,
             warehouse_id=99999,  # 存在しないID
             received_date=date.today(),
-            current_quantity=Decimal("50"),
+            received_quantity=Decimal("50"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,
         )
@@ -379,7 +385,7 @@ class TestCreateLot:
             product_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
-            current_quantity=Decimal("100"),
+            received_quantity=Decimal("100"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,
         )
@@ -413,7 +419,7 @@ class TestCreateLot:
             product_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
-            current_quantity=Decimal("100"),
+            received_quantity=Decimal("100"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,
         )
@@ -427,7 +433,7 @@ class TestCreateLot:
             product_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
-            current_quantity=Decimal("50"),
+            received_quantity=Decimal("50"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,
         )
@@ -457,7 +463,7 @@ class TestCreateLot:
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
             expiry_date=expiry,
-            current_quantity=Decimal("100"),
+            received_quantity=Decimal("100"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,
         )
@@ -481,7 +487,7 @@ class TestCreateLot:
             product_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
-            current_quantity=Decimal("100"),
+            received_quantity=Decimal("100"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,
         )

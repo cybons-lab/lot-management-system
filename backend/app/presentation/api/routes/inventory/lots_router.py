@@ -132,7 +132,6 @@
 
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response

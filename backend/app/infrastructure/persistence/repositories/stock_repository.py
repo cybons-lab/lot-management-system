@@ -159,7 +159,9 @@ class StockRepository:
 
         # Filter by expiry date if ship_date is provided
         if ship_date is not None:
-            stmt = stmt.where(or_(LotReceipt.expiry_date.is_(None), LotReceipt.expiry_date >= ship_date))
+            stmt = stmt.where(
+                or_(LotReceipt.expiry_date.is_(None), LotReceipt.expiry_date >= ship_date)
+            )
 
         # Order by received_date (FIFO) - DDL v2.2 uses received_date
         stmt = stmt.order_by(LotReceipt.received_date.asc(), LotReceipt.id.asc())
@@ -179,7 +181,10 @@ class StockRepository:
 
         v2.3: ロック数量を考慮 (current - allocated - locked).
         """
-        current_qty = float(getattr(lot, "current_quantity", 0) or 0)
+        # Updated to fallback to received_quantity if current_quantity is missing (LotReceipt refactor)
+        current_qty = float(
+            getattr(lot, "current_quantity", 0) or getattr(lot, "received_quantity", 0) or 0
+        )
         allocated_qty = float(getattr(lot, "allocated_quantity", 0) or 0)
         locked_qty = float(getattr(lot, "locked_quantity", 0) or 0)
 

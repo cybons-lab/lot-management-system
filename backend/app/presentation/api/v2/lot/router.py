@@ -136,18 +136,8 @@ async def search_lots(
 @router.get("/{lot_id}", response_model=LotResponse)
 async def get_lot(lot_id: int, db: Session = Depends(get_db)):
     service = LotService(db)
-    lot = service.get_lot(lot_id)
-    response = LotResponse.model_validate(lot)
-    if lot.product:
-        response.product_name = lot.product.product_name
-        response.product_code = lot.product.maker_part_code
-    if lot.warehouse:
-        response.warehouse_name = lot.warehouse.warehouse_name
-        response.warehouse_code = lot.warehouse.warehouse_code
-    if lot.supplier:
-        response.supplier_name = lot.supplier.supplier_name
-        response.supplier_code = lot.supplier.supplier_code
-    return response
+    # Use get_lot_details to fetch from view with full calculations (e.g. current_quantity)
+    return service.get_lot_details(lot_id)
 
 
 @router.post("/", response_model=LotResponse, status_code=status.HTTP_201_CREATED)

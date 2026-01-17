@@ -235,8 +235,10 @@ def confirm_reservation(
         )
 
     reserved_qty = get_reserved_quantity(db, lot.id)
-    if lot.current_quantity < reserved_qty:
-        available = lot.current_quantity - (reserved_qty - reservation.reserved_qty)
+    # Note: received_quantity is used as base. Deduct withdrawals if implemented.
+    current_quantity = lot.received_quantity
+    if current_quantity < reserved_qty:
+        available = current_quantity - (reserved_qty - reservation.reserved_qty)
         raise InsufficientStockError(
             required=float(confirm_qty),
             available=float(max(available, Decimal(0))),

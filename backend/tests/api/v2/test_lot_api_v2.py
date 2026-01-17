@@ -50,10 +50,11 @@ def setup_lot_data(db_session):
         product_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=Decimal("100.0"),
+        received_quantity=Decimal("100.0"),
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=90),
+        origin_type="order",
     )
     db_session.add(lot)
     db_session.commit()

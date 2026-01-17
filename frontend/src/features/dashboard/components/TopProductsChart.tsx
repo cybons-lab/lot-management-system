@@ -36,7 +36,8 @@ const TOOLTIP_STYLE = {
   fontSize: "12px",
 } as const;
 
-const formatTooltipValue = (value: number | undefined) =>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const formatTooltipValue = (value: any) =>
   [value?.toLocaleString("ja-JP") ?? "0", "在庫数"] as const;
 
 export function TopProductsChart() {

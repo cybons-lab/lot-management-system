@@ -150,7 +150,7 @@ def master_data(test_db: Session):
         lot_master_id=lot_master.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
-        current_quantity=Decimal("100.000"),
+        received_quantity=Decimal("100.000"),
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=90),

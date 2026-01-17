@@ -54,7 +54,7 @@ def setup_inventory_data(db_session):
         product_id=product.id,
         supplier_id=supplier.id,
         warehouse_id=warehouse.id,
-        current_quantity=Decimal("100.0"),
+        received_quantity=Decimal("100.0"),
         unit="EA",
         status="active",
         received_date=date.today(),

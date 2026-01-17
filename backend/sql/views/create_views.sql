@@ -19,6 +19,7 @@ DROP VIEW IF EXISTS public.v_order_line_details CASCADE;
 DROP VIEW IF EXISTS public.v_inventory_summary CASCADE;
 DROP VIEW IF EXISTS public.v_lot_details CASCADE;
 DROP VIEW IF EXISTS public.v_lot_allocations CASCADE;
+DROP VIEW IF EXISTS public.v_lot_active_reservations CASCADE;
 DROP VIEW IF EXISTS public.v_lot_receipt_stock CASCADE;
 -- 追加ビュー
 DROP VIEW IF EXISTS public.v_supplier_code_to_id CASCADE;
@@ -287,6 +288,8 @@ SELECT
     lr.received_quantity,
     COALESCE(wl_sum.total_withdrawn, 0) AS withdrawn_quantity,
     GREATEST(lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - lr.locked_quantity, 0) AS remaining_quantity,
+    -- current_quantity (Compatibility alias for remaining_quantity in this view)
+    GREATEST(lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - lr.locked_quantity, 0) AS current_quantity,
     COALESCE(la.allocated_quantity, 0) AS allocated_quantity,
     COALESCE(lar.reserved_quantity_active, 0) AS reserved_quantity_active,
     lr.locked_quantity,
@@ -298,6 +301,9 @@ SELECT
     lr.unit,
     lr.status,
     lr.lock_reason,
+    lr.inspection_status,
+    lr.inspection_date,
+    lr.inspection_cert_number,
     CASE WHEN lr.expiry_date IS NOT NULL THEN CAST((lr.expiry_date - CURRENT_DATE) AS INTEGER) ELSE NULL END AS days_to_expiry,
     lr.temporary_lot_key,
     lr.receipt_key,

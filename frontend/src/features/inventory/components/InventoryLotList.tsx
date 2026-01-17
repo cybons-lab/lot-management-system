@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 
+import { InventoryLotActions } from "./InventoryLotActions";
+
 import { DataTable } from "@/shared/components/data/DataTable";
 import type { LotUI } from "@/shared/libs/normalize";
 import { formatDecimal, parseDecimal } from "@/shared/utils/decimal";
 
-import { InventoryLotActions } from "./InventoryLotActions";
 
 interface InventoryLotListProps {
   lots: LotUI[];
@@ -84,7 +85,6 @@ export function InventoryLotList({
   onWithdraw,
   onHistory,
 }: InventoryLotListProps) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const columns = useMemo(() => LOT_COLUMNS, []);
 
   return (

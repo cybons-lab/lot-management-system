@@ -68,8 +68,8 @@ from app.domain.events import EventDispatcher, StockChangedEvent
 from app.infrastructure.persistence.models import (
     Customer,
     DeliveryPlace,
-    LotReceipt,
     LotMaster,
+    LotReceipt,
     Product,
     StockHistory,
     StockTransactionType,
@@ -248,7 +248,9 @@ class WithdrawalService:
             ValueError: ロットが見つからない、利用可能数量が不足している場合
         """
         # ロットを取得（ロック付き）- joinedloadはFOR UPDATEと互換性がないため分離
-        lot = self.db.query(LotReceipt).filter(LotReceipt.id == data.lot_id).with_for_update().first()
+        lot = (
+            self.db.query(LotReceipt).filter(LotReceipt.id == data.lot_id).with_for_update().first()
+        )
 
         if not lot:
             raise ReservationLotNotFoundError(data.lot_id)
@@ -303,15 +305,15 @@ class WithdrawalService:
         self.db.add(withdrawal)
         self.db.flush()
 
-        # ロットの現在数量を減算
-        lot.current_quantity = new_quantity
+        # B-Plan: current_quantityは計算フィールドなので直接更新しない
+        # received_quantityベースで残量はViewで計算される
         lot.updated_at = utcnow()
 
         # 数量がゼロになった場合はステータスを更新
         if new_quantity == Decimal("0"):
             lot.status = "depleted"
 
-        # stock_historyに記録
+        # stock_historyに記録（イベントログとして残す）
         stock_history = StockHistory(
             lot_id=lot.id,
             transaction_type=StockTransactionType.WITHDRAWAL,
@@ -444,22 +446,27 @@ class WithdrawalService:
             return self.get_withdrawal_by_id(withdrawal_id)  # type: ignore
 
         # ロットを取得（ロック付き）
-        lot = self.db.query(LotReceipt).filter(LotReceipt.id == withdrawal.lot_id).with_for_update().first()
+        lot = (
+            self.db.query(LotReceipt)
+            .filter(LotReceipt.id == withdrawal.lot_id)
+            .with_for_update()
+            .first()
+        )
 
         if not lot:
             raise ValueError(f"ロット（ID={withdrawal.lot_id}）が見つかりません")
 
-        # 在庫を復元
+        # B-Plan: 在庫計算のためquantity_beforeとnew_quantityは計算するが、
+        # lot.current_quantityへの代入は行わない（計算フィールドのため）
         quantity_before = lot.current_quantity
         new_quantity = lot.current_quantity + (withdrawal.quantity or Decimal("0"))
-        lot.current_quantity = new_quantity
         lot.updated_at = utcnow()
 
         # depletedだった場合はactiveに戻す
         if lot.status == "depleted":
             lot.status = "active"
 
-        # stock_historyにRETURNトランザクションを記録（反対仕訳）
+        # stock_historyにRETURNトランザクションを記録（反対仕訳・イベントログ）
         stock_history = StockHistory(
             lot_id=lot.id,
             transaction_type=StockTransactionType.RETURN,

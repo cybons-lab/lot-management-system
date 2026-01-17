@@ -6,8 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.forecast_models import Forecast
-from app.infrastructure.persistence.models.inventory_models import LotReceipt
-from app.infrastructure.persistence.models.inventory_models import StockMovement
+from app.infrastructure.persistence.models.inventory_models import LotReceipt, StockMovement
 from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
 from app.infrastructure.persistence.models.masters_models import (
     Customer,

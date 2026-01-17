@@ -34,7 +34,7 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     pool_pre_ping=True,  # Verify connections before using
-    echo=False,  # Set to True for SQL query debugging
+    echo=True,  # Set to True for SQL query debugging
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -46,6 +46,13 @@ def db_engine():
     if os.getenv("TEST_DB_PRE_INITIALIZED"):
         yield engine
         return
+
+    # Ensure all models are imported so Base.metadata is populated
+    # Importing the package triggers __init__.py which imports all models
+    import app.infrastructure.persistence.models  # noqa: F401
+
+    print("DEBUG: Conftest - Imported Models.")
+    print(f"DEBUG: Base.metadata.tables keys: {list(Base.metadata.tables.keys())}")
 
     create_core_tables(engine)
 
@@ -113,6 +120,8 @@ def client(db) -> Generator[TestClient]:
                     # (test fixture's transaction rollback handles cleanup)
                     self.session.flush()
                 # Don't rollback on error - let test fixture handle it
+
+        yield TestUnitOfWork(db)
 
     def override_get_current_user():
         """Override to return no user (or a default valid user if needed)."""

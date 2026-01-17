@@ -116,7 +116,7 @@ class LotRepository:
 
     def find_by_id(self, lot_id: int) -> LotReceipt | None:
         """Return a lot by its primary key."""
-        stmt: Select[tuple[Lot]] = (
+        stmt: Select[tuple[LotReceipt]] = (
             select(LotReceipt)
             .options(joinedload(LotReceipt.product), joinedload(LotReceipt.warehouse))
             .where(LotReceipt.id == lot_id)
@@ -296,20 +296,26 @@ class LotRepository:
             # 理由: origin_typeがNULLのロット = 通常入荷品（デフォルト）
             # → NULLを'normal'として扱うことで、通常入荷品は除外されない
             # → SQLAlchemyのnotin_()はNULLを特殊扱いするため、COALESCE必須
-            query = query.filter(func.coalesce(LotReceipt.origin_type, "normal").notin_(excluded_origins))
+            query = query.filter(
+                func.coalesce(LotReceipt.origin_type, "normal").notin_(excluded_origins)
+            )
 
         # Expiry filter with safety margin
         if exclude_expired:
             from sqlalchemy import or_
 
             min_expiry_date = date.today() + timedelta(days=safety_days)
-            query = query.filter(or_(LotReceipt.expiry_date.is_(None), LotReceipt.expiry_date >= min_expiry_date))
+            query = query.filter(
+                or_(LotReceipt.expiry_date.is_(None), LotReceipt.expiry_date >= min_expiry_date)
+            )
 
         # Locked filter
         if exclude_locked:
             from sqlalchemy import or_
 
-            query = query.filter(or_(LotReceipt.locked_quantity.is_(None), LotReceipt.locked_quantity == 0))
+            query = query.filter(
+                or_(LotReceipt.locked_quantity.is_(None), LotReceipt.locked_quantity == 0)
+            )
 
         # Ordering by policy
         # 【設計意図】ソート順の詳細な根拠:

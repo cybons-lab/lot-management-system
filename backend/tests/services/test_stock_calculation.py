@@ -12,8 +12,8 @@ from app.application.services.inventory.stock_calculation import (
     get_reserved_quantity,
 )
 from app.infrastructure.persistence.models import (
-    LotReceipt,
     LotMaster,
+    LotReceipt,
     LotReservation,
     Product,
     ReservationSourceType,

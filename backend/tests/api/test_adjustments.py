@@ -8,7 +8,14 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import LotReceipt, Product, Role, StockHistory, User, Warehouse
+from app.infrastructure.persistence.models import (
+    LotReceipt,
+    Product,
+    Role,
+    StockHistory,
+    User,
+    Warehouse,
+)
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.main import application
 from app.presentation.api.deps import get_db
@@ -88,8 +95,7 @@ def sample_lot(test_db: Session):
         lot_master_id=lot_master.id,
         product_id=prod.id,
         warehouse_id=wh.id,
-        lot_number="LOT-001",
-        current_quantity=Decimal("100.000"),
+        received_quantity=Decimal("100.000"),
         unit="EA",
         received_date=date.today(),
     )

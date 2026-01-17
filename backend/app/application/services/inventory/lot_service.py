@@ -253,7 +253,9 @@ class LotService:
             inspection_status=lot_view.inspection_status or "not_required",
             inspection_date=lot_view.inspection_date,
             inspection_cert_number=lot_view.inspection_cert_number,
-            origin_type=LotOriginType(lot_view.origin_type) if lot_view.origin_type else LotOriginType.ORDER,
+            origin_type=LotOriginType(lot_view.origin_type)
+            if lot_view.origin_type
+            else LotOriginType.ORDER,
             origin_reference=lot_view.origin_reference,
             temporary_lot_key=lot_view.temporary_lot_key,
             shipping_date=lot_view.shipping_date,
@@ -698,8 +700,10 @@ class LotService:
         # Remove remaining_quantity as it is not in LotReceipt model (it's in LotBase schema)
         lot_payload.pop("remaining_quantity", None)
         # Compatibility: Map current_quantity from Schema (Initial) to received_quantity in Model
-        if "current_quantity" in lot_payload:
-            lot_payload["received_quantity"] = lot_payload.pop("current_quantity")
+        # Only overwrite if received_quantity is not set (or 0) AND current_quantity is set (and > 0)
+        current_qty = lot_payload.pop("current_quantity", Decimal("0"))
+        if lot_payload.get("received_quantity", Decimal("0")) == Decimal("0") and current_qty > 0:
+            lot_payload["received_quantity"] = current_qty
 
         try:
             db_lot = LotReceipt(**lot_payload)
@@ -818,6 +822,14 @@ class LotService:
             updates["warehouse_id"] = warehouse.id
 
         updates.pop("warehouse_code", None)
+
+        # Special handling for lot_number (on LotMaster)
+        if "lot_number" in updates:
+            db_lot.lot_master.lot_number = updates.pop("lot_number")
+
+        # Compatibility: Map current_quantity to received_quantity
+        if "current_quantity" in updates:
+            updates["received_quantity"] = updates.pop("current_quantity")
 
         for key, value in updates.items():
             setattr(db_lot, key, value)
@@ -958,11 +970,12 @@ class LotService:
                     current_qty,
                 )
 
-            lot.current_quantity = Decimal(str(projected_quantity))
+            # B-Plan: lot.current_quantityは計算フィールドなので直接更新しない
+            # quantity_afterとdb_movement.quantity_afterは計算値を使用
             lot.updated_at = utcnow()
-            quantity_after = lot.current_quantity
+            quantity_after = Decimal(str(projected_quantity))
 
-            db_movement.quantity_after = lot.current_quantity
+            db_movement.quantity_after = Decimal(str(projected_quantity))
 
         self.db.commit()
         self.db.refresh(db_movement)
@@ -996,7 +1009,11 @@ class LotService:
         """
         db_lot = (
             self.db.query(LotReceipt)
-            .options(joinedload(LotReceipt.product), joinedload(LotReceipt.warehouse), joinedload(LotReceipt.supplier))
+            .options(
+                joinedload(LotReceipt.product),
+                joinedload(LotReceipt.warehouse),
+                joinedload(LotReceipt.supplier),
+            )
             .filter(LotReceipt.id == lot_id)
             .first()
         )
@@ -1056,8 +1073,8 @@ class LotService:
             supplier_code=supplier_code,
             supplier_name=supplier_name or "",
             received_quantity=db_lot.received_quantity,
-            remaining_quantity=db_lot.received_quantity, # Default to received for fresh lots / simple conversion
-            current_quantity=db_lot.received_quantity, 
+            remaining_quantity=db_lot.received_quantity,  # Default to received for fresh lots / simple conversion
+            current_quantity=db_lot.received_quantity,
             allocated_quantity=Decimal("0"),
             locked_quantity=db_lot.locked_quantity or Decimal("0"),
             expected_lot_id=db_lot.expected_lot_id,

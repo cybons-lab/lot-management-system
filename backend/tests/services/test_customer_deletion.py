@@ -271,7 +271,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
             lot_master_id=lm.id,
             product_id=product.id,
             warehouse_id=warehouse.id,
-            current_quantity=Decimal("1000"),
+            received_quantity=Decimal("1000"),
             received_date=date.today(),
             unit="EA",
         )

@@ -111,7 +111,7 @@ def _setup_test_data(db: Session):
             product_id=products[i - 1].id,
             lot_master_id=lot_masters[i - 1].id,
             warehouse_id=wh.id,
-            current_quantity=100.0 * i,  # 100, 200, 300
+            received_quantity=100.0 * i,  # 100, 200, 300
             unit="EA",
             received_date=date.today(),
             status="active",

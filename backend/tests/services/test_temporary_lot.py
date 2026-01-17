@@ -60,24 +60,24 @@ class TestTemporaryLotRegistration:
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",
-            current_quantity=Decimal("100"),
+            received_quantity=Decimal("100"),
         )
 
         response = service.create_lot(lot_create)
 
         # Verify TMP-format lot number
-        assert response.lot_number.startswith("TMP-"), (
-            f"Expected TMP- prefix, got {response.lot_number}"
-        )
+        assert response.lot_number.startswith(
+            "TMP-"
+        ), f"Expected TMP- prefix, got {response.lot_number}"
 
         # Verify format: TMP-YYYYMMDD-XXXXXXXX
         parts = response.lot_number.split("-")
         assert len(parts) == 3, f"Expected 3 parts in TMP lot number, got {parts}"
         assert parts[0] == "TMP"
         assert len(parts[1]) == 8, f"Expected 8-digit date, got {parts[1]}"  # YYYYMMDD
-        assert len(parts[2]) == 8, (
-            f"Expected 8-char UUID prefix, got {parts[2]}"
-        )  # UUID first 8 chars
+        assert (
+            len(parts[2]) == 8
+        ), f"Expected 8-char UUID prefix, got {parts[2]}"  # UUID first 8 chars
 
         # Verify temporary_lot_key is set (UUID format)
         assert response.temporary_lot_key is not None
@@ -101,7 +101,7 @@ class TestTemporaryLotRegistration:
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",
-            current_quantity=Decimal("100"),
+            received_quantity=Decimal("100"),
         )
 
         response = service.create_lot(lot_create)
@@ -127,7 +127,7 @@ class TestTemporaryLotRegistration:
                 warehouse_id=warehouse.id,
                 received_date=date.today(),
                 unit="PCS",
-                current_quantity=Decimal(f"{(i + 1) * 10}"),
+                received_quantity=Decimal(f"{(i + 1) * 10}"),
             )
 
             response = service.create_lot(lot_create)
@@ -180,7 +180,7 @@ class TestTemporaryLotUpdate:
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",
-            current_quantity=Decimal("50"),
+            received_quantity=Decimal("50"),
         )
         response = service.create_lot(lot_create)
 

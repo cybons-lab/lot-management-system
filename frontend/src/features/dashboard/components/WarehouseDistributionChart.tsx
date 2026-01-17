@@ -92,8 +92,9 @@ export function WarehouseDistributionChart() {
                 borderRadius: "0.5rem",
                 fontSize: "12px",
               }}
-              formatter={(value: number | undefined) =>
-                value !== undefined ? [value.toLocaleString("ja-JP"), "在庫数"] : ["0", "在庫数"]
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              formatter={(value: any) =>
+                [value?.toLocaleString("ja-JP") ?? "0", "在庫数"]
               }
             />
             <Legend wrapperStyle={{ fontSize: "11px" }} iconType="circle" />

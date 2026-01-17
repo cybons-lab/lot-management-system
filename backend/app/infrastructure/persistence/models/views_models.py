@@ -167,6 +167,7 @@ class VLotDetails(Base):
     expiry_date: Mapped[date | None] = mapped_column(Date)
     received_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     remaining_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    current_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     reserved_quantity_active: Mapped[Decimal] = mapped_column(Numeric(15, 3), default=Decimal(0))
     locked_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
@@ -175,6 +176,12 @@ class VLotDetails(Base):
     status: Mapped[str] = mapped_column(String(20))
     lock_reason: Mapped[str | None] = mapped_column(String)
     days_to_expiry: Mapped[int | None] = mapped_column(Integer)
+
+    # Inspection details
+    inspection_status: Mapped[str] = mapped_column(String, default="not_required")
+    inspection_date: Mapped[date | None] = mapped_column(Date)
+    inspection_cert_number: Mapped[str | None] = mapped_column(String)
+
     # 仮入庫識別キー（UUID）
     temporary_lot_key: Mapped[str | None] = mapped_column(String)
 

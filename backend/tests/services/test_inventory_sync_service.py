@@ -81,7 +81,7 @@ def setup_inventory_sync_test_data(db_session: Session):
         supplier_id=supplier.id,
         product_id=products[0].id,
         warehouse_id=wh.id,
-        current_quantity=Decimal("100"),
+        received_quantity=Decimal("100"),
         received_date=datetime.now().date(),
         unit="EA",
     )
@@ -95,7 +95,7 @@ def setup_inventory_sync_test_data(db_session: Session):
         supplier_id=supplier.id,
         product_id=products[1].id,
         warehouse_id=wh.id,
-        current_quantity=Decimal("200"),
+        received_quantity=Decimal("200"),
         received_date=datetime.now().date(),
         unit="EA",
     )
@@ -109,7 +109,7 @@ def setup_inventory_sync_test_data(db_session: Session):
         supplier_id=supplier.id,
         product_id=products[2].id,
         warehouse_id=wh.id,
-        current_quantity=Decimal("50"),
+        received_quantity=Decimal("50"),
         received_date=datetime.now().date(),
         unit="EA",
     )

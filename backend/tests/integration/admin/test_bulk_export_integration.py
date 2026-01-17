@@ -97,7 +97,7 @@ def test_bulk_export_download_all_targets_integration(
         product_id=master_data["product1"].id,
         warehouse_id=master_data["warehouse"].id,
         supplier_id=master_data["supplier"].id,
-        current_quantity=Decimal("100"),
+        received_quantity=Decimal("100"),
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today(),
