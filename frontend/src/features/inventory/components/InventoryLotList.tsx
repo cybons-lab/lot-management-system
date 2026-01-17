@@ -6,7 +6,6 @@ import { DataTable } from "@/shared/components/data/DataTable";
 import type { LotUI } from "@/shared/libs/normalize";
 import { formatDecimal, parseDecimal } from "@/shared/utils/decimal";
 
-
 interface InventoryLotListProps {
   lots: LotUI[];
   isLoading: boolean;
@@ -23,9 +22,7 @@ const LOT_COLUMNS = [
   {
     id: "lot_number",
     header: "ロット番号",
-    accessor: (row: LotUI) => (
-      <span className="font-medium text-gray-900">{row.lot_number}</span>
-    ),
+    accessor: (row: LotUI) => <span className="font-medium text-gray-900">{row.lot_number}</span>,
   },
   {
     id: "current_quantity",
@@ -107,9 +104,7 @@ export function InventoryLotList({
           />
         )}
         headerSlot={
-          <h4 className="mb-3 text-sm font-semibold text-gray-700">
-            ロット一覧 ({lots.length}件)
-          </h4>
+          <h4 className="mb-3 text-sm font-semibold text-gray-700">ロット一覧 ({lots.length}件)</h4>
         }
         enableVirtualization
         scrollAreaHeight="400px"

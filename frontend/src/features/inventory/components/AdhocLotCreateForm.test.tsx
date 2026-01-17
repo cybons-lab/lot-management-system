@@ -23,16 +23,16 @@ const mockSuppliers = [
 // Mock pointer capture and layout methods for Radix UI (still good to have)
 Object.assign(window.HTMLElement.prototype, {
   hasPointerCapture: () => false,
-  setPointerCapture: () => { },
-  releasePointerCapture: () => { },
-  scrollIntoView: () => { },
+  setPointerCapture: () => {},
+  releasePointerCapture: () => {},
+  scrollIntoView: () => {},
 });
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  observe() { }
-  unobserve() { }
-  disconnect() { }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
 };
 
 // Mock Radix Select to bypass JSDOM interaction issues

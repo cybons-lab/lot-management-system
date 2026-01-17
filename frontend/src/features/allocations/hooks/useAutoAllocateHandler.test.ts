@@ -45,9 +45,8 @@ describe("useAutoAllocateHandler", () => {
     vi.clearAllMocks();
 
     // Reset mock implementations
-    const { calculateAutoAllocation, getAllocatedQuantity, getOrderQuantity } = await import(
-      "../utils/allocationCalculations"
-    );
+    const { calculateAutoAllocation, getAllocatedQuantity, getOrderQuantity } =
+      await import("../utils/allocationCalculations");
 
     vi.mocked(getAllocatedQuantity).mockReturnValue(0);
     vi.mocked(getOrderQuantity).mockReturnValue(10);
@@ -112,9 +111,8 @@ describe("useAutoAllocateHandler", () => {
   });
 
   it("calls calculateAutoAllocation with correct parameters", async () => {
-    const { calculateAutoAllocation, getAllocatedQuantity, getOrderQuantity } = await import(
-      "../utils/allocationCalculations"
-    );
+    const { calculateAutoAllocation, getAllocatedQuantity, getOrderQuantity } =
+      await import("../utils/allocationCalculations");
 
     const { result } = renderHook(() =>
       useAutoAllocateHandler({

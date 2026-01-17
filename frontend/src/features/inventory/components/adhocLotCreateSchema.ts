@@ -40,15 +40,24 @@ export const adhocLotCreateSchema = z.object({
   cost_price: z
     .string()
     .optional()
-    .refine((val) => !val || !isNaN(Number(val)) && Number(val) >= 0, "0以上の数値を入力してください"),
+    .refine(
+      (val) => !val || (!isNaN(Number(val)) && Number(val) >= 0),
+      "0以上の数値を入力してください",
+    ),
   sales_price: z
     .string()
     .optional()
-    .refine((val) => !val || !isNaN(Number(val)) && Number(val) >= 0, "0以上の数値を入力してください"),
+    .refine(
+      (val) => !val || (!isNaN(Number(val)) && Number(val) >= 0),
+      "0以上の数値を入力してください",
+    ),
   tax_rate: z
     .string()
     .optional()
-    .refine((val) => !val || !isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 1, "0〜1の数値を入力してください"),
+    .refine(
+      (val) => !val || (!isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 1),
+      "0〜1の数値を入力してください",
+    ),
 });
 
 export type AdhocLotFormData = z.infer<typeof adhocLotCreateSchema>;

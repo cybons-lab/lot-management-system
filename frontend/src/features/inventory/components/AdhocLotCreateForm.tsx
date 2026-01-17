@@ -320,23 +320,47 @@ export function AdhocLotCreateForm({
         </div>
 
         {/* Row 5: Financials */}
-        <div className="col-span-2 border-t pt-4 mt-2">
+        <div className="col-span-2 mt-2 border-t pt-4">
           <Label className="mb-2 block text-base font-semibold">価格・税率情報</Label>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="cost_price">仕入単価</Label>
-              <Input id="cost_price" type="number" step="0.01" {...register("cost_price")} placeholder="0.00" />
-              {errors.cost_price && <p className="mt-1 text-sm text-red-600">{errors.cost_price.message}</p>}
+              <Input
+                id="cost_price"
+                type="number"
+                step="0.01"
+                {...register("cost_price")}
+                placeholder="0.00"
+              />
+              {errors.cost_price && (
+                <p className="mt-1 text-sm text-red-600">{errors.cost_price.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="sales_price">販売単価</Label>
-              <Input id="sales_price" type="number" step="0.01" {...register("sales_price")} placeholder="0.00" />
-              {errors.sales_price && <p className="mt-1 text-sm text-red-600">{errors.sales_price.message}</p>}
+              <Input
+                id="sales_price"
+                type="number"
+                step="0.01"
+                {...register("sales_price")}
+                placeholder="0.00"
+              />
+              {errors.sales_price && (
+                <p className="mt-1 text-sm text-red-600">{errors.sales_price.message}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="tax_rate">税率</Label>
-              <Input id="tax_rate" type="number" step="0.01" {...register("tax_rate")} placeholder="0.10" />
-              {errors.tax_rate && <p className="mt-1 text-sm text-red-600">{errors.tax_rate.message}</p>}
+              <Input
+                id="tax_rate"
+                type="number"
+                step="0.01"
+                {...register("tax_rate")}
+                placeholder="0.10"
+              />
+              {errors.tax_rate && (
+                <p className="mt-1 text-sm text-red-600">{errors.tax_rate.message}</p>
+              )}
             </div>
           </div>
         </div>

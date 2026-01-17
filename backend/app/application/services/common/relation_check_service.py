@@ -100,7 +100,9 @@ class RelationCheckService:
 
         # ロットチェック
         lot_count = (
-            self.db.query(func.count(LotReceipt.id)).filter(LotReceipt.supplier_id == supplier_id).scalar()
+            self.db.query(func.count(LotReceipt.id))
+            .filter(LotReceipt.supplier_id == supplier_id)
+            .scalar()
         )
         if lot_count > 0:
             return True
@@ -147,7 +149,11 @@ class RelationCheckService:
         from app.infrastructure.persistence.models.orders_models import OrderLine
 
         # ロットチェック
-        lot_count = self.db.query(func.count(LotReceipt.id)).filter(LotReceipt.product_id == product_id).scalar()
+        lot_count = (
+            self.db.query(func.count(LotReceipt.id))
+            .filter(LotReceipt.product_id == product_id)
+            .scalar()
+        )
         if lot_count > 0:
             return True
 
@@ -189,7 +195,9 @@ class RelationCheckService:
 
         # ロットチェック
         lot_count = (
-            self.db.query(func.count(LotReceipt.id)).filter(LotReceipt.warehouse_id == warehouse_id).scalar()
+            self.db.query(func.count(LotReceipt.id))
+            .filter(LotReceipt.warehouse_id == warehouse_id)
+            .scalar()
         )
         if lot_count > 0:
             return True
@@ -233,7 +241,10 @@ class RelationCheckService:
             from app.infrastructure.persistence.models.inventory_models import LotReceipt
 
             summary["lots"] = (
-                self.db.query(func.count(LotReceipt.id)).filter(LotReceipt.supplier_id == entity_id).scalar() or 0
+                self.db.query(func.count(LotReceipt.id))
+                .filter(LotReceipt.supplier_id == entity_id)
+                .scalar()
+                or 0
             )
             summary["inbound_plans"] = (
                 self.db.query(func.count(InboundPlan.id))
@@ -247,7 +258,10 @@ class RelationCheckService:
             from app.infrastructure.persistence.models.orders_models import OrderLine
 
             summary["lots"] = (
-                self.db.query(func.count(LotReceipt.id)).filter(LotReceipt.product_id == entity_id).scalar() or 0
+                self.db.query(func.count(LotReceipt.id))
+                .filter(LotReceipt.product_id == entity_id)
+                .scalar()
+                or 0
             )
             summary["order_lines"] = (
                 self.db.query(func.count(OrderLine.id))
@@ -260,7 +274,9 @@ class RelationCheckService:
             from app.infrastructure.persistence.models.inventory_models import LotReceipt
 
             summary["lots"] = (
-                self.db.query(func.count(LotReceipt.id)).filter(LotReceipt.warehouse_id == entity_id).scalar()
+                self.db.query(func.count(LotReceipt.id))
+                .filter(LotReceipt.warehouse_id == entity_id)
+                .scalar()
                 or 0
             )
 

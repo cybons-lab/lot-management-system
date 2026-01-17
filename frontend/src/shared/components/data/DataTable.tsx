@@ -11,11 +11,28 @@ import {
 // @ts-expect-error - type resolution issue with @tanstack/react-virtual in monorepo
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { VirtualItem } from "@tanstack/virtual-core";
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, ChevronRight, Settings2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronDown,
+  ChevronRight,
+  Settings2,
+} from "lucide-react";
 import * as React from "react";
 import { useMemo } from "react";
 
-import { Button, Checkbox, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, Skeleton } from "@/components/ui";
+import {
+  Button,
+  Checkbox,
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Skeleton,
+} from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 // ============================================
@@ -428,10 +445,16 @@ export function DataTable<T = never>({
           "relative rounded-lg border border-slate-200 bg-white shadow-md",
           enableVirtualization ? "overflow-y-auto" : "overflow-x-auto",
         )}
-        style={enableVirtualization ? { height: scrollAreaHeight ?? "600px", overflowAnchor: 'none' } : {}}
+        style={
+          enableVirtualization
+            ? { height: scrollAreaHeight ?? "600px", overflowAnchor: "none" }
+            : {}
+        }
       >
         <table className="responsive-table w-full" style={{ tableLayout: "fixed" }}>
-          <thead className={cn("border-b bg-slate-50", enableVirtualization && "sticky top-0 z-10")}>
+          <thead
+            className={cn("border-b bg-slate-50", enableVirtualization && "sticky top-0 z-10")}
+          >
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -442,11 +465,11 @@ export function DataTable<T = never>({
                     <th
                       key={header.id}
                       className={cn(
-                        "relative px-4 py-3 text-left text-sm font-semibold text-slate-700 bg-slate-50",
+                        "relative bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700",
                         meta?.align === "center" && "text-center",
                         meta?.align === "right" && "text-right",
                         header.column.getCanSort() &&
-                        "cursor-pointer transition-colors select-none hover:bg-slate-100",
+                          "cursor-pointer transition-colors select-none hover:bg-slate-100",
                         meta?.className,
                       )}
                       style={{ width: header.getSize() }}
@@ -490,7 +513,10 @@ export function DataTable<T = never>({
             <tbody>
               {paddingTop > 0 && (
                 <tr>
-                  <td style={{ height: `${paddingTop}px` }} colSpan={table.getVisibleLeafColumns().length} />
+                  <td
+                    style={{ height: `${paddingTop}px` }}
+                    colSpan={table.getVisibleLeafColumns().length}
+                  />
                 </tr>
               )}
               {virtualRows.map((virtualItem: VirtualItem) => {
@@ -558,7 +584,10 @@ export function DataTable<T = never>({
               })}
               {paddingBottom > 0 && (
                 <tr>
-                  <td style={{ height: `${paddingBottom}px` }} colSpan={table.getVisibleLeafColumns().length} />
+                  <td
+                    style={{ height: `${paddingBottom}px` }}
+                    colSpan={table.getVisibleLeafColumns().length}
+                  />
                 </tr>
               )}
             </tbody>

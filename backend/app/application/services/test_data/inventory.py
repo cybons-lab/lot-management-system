@@ -193,7 +193,9 @@ def generate_lots(
 
 
 def get_any_lot_id(db: Session, product_id: int, required_qty: Decimal | None = None) -> int | None:
-    query = db.query(LotReceipt).filter(LotReceipt.product_id == product_id, LotReceipt.status == "active")
+    query = db.query(LotReceipt).filter(
+        LotReceipt.product_id == product_id, LotReceipt.status == "active"
+    )
 
     if required_qty is not None:
         query = query.filter(LotReceipt.current_quantity >= required_qty)

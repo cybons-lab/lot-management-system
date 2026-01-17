@@ -93,9 +93,7 @@ export function WarehouseDistributionChart() {
                 fontSize: "12px",
               }}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={(value: any) =>
-                [value?.toLocaleString("ja-JP") ?? "0", "在庫数"]
-              }
+              formatter={(value: any) => [value?.toLocaleString("ja-JP") ?? "0", "在庫数"]}
             />
             <Legend wrapperStyle={{ fontSize: "11px" }} iconType="circle" />
           </PieChart>

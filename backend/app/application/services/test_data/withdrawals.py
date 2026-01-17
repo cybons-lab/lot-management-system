@@ -21,7 +21,9 @@ def generate_withdrawals(
     - For each picked lot, create 1-2 withdrawal records
     - Vary the withdrawal_type and quantities
     """
-    lots = db.query(LotReceipt).all()  # Get ALL lots (even depleted/expired/etc should have history)
+    lots = db.query(
+        LotReceipt
+    ).all()  # Get ALL lots (even depleted/expired/etc should have history)
     if not lots:
         return
 
