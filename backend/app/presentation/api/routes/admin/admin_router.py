@@ -141,7 +141,7 @@ def reset_database(
         raise  # Let global handler format the response
 
 
-# NOTE: Test data generation is now handled by /api/admin/generate-test-data
+# NOTE: Test data generation is handled by /api/admin/test-data/generate
 # which uses the refactored test_data_generator service
 
 

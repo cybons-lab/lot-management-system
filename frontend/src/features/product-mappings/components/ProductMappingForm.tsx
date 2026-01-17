@@ -2,7 +2,7 @@
  * ProductMappingForm - 商品マスタ登録/編集フォーム
  */
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui";
@@ -71,7 +71,7 @@ export function ProductMappingForm({
   isEdit = false,
 }: ProductMappingFormProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     defaultValues: {
       customer_id: initialData?.customer_id ?? 0,
       customer_part_code: initialData?.customer_part_code ?? "",
@@ -85,7 +85,7 @@ export function ProductMappingForm({
     },
   });
 
-  const handleSubmit = (data: FormValues) => {
+  const handleSubmit: SubmitHandler<FormValues> = (data) => {
     onSubmit({
       ...data,
       pack_unit: data.pack_unit || undefined,

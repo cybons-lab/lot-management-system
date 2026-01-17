@@ -117,6 +117,7 @@ def generate_withdrawals(
                 customer_id=customer_id,
                 delivery_place_id=delivery_place_id,
                 ship_date=ship_date,
+                due_date=ship_date,  # Uses ship_date as due_date for test data
                 reason=fake.sentence(nb_words=6),
                 reference_number=fake.bothify(text="REF-#####"),
                 withdrawn_at=datetime.combine(ship_date, datetime.min.time())
