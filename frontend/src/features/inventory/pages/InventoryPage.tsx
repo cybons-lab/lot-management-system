@@ -9,7 +9,7 @@ import {
   Search,
   Truck,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -71,6 +71,40 @@ export function InventoryPage() {
     onAutoSelectSupplier: (id) => updateFilter("supplier_id", id),
     onAutoSelectProduct: (id) => updateFilter("product_id", id),
   });
+
+  const filteredSupplierData = useMemo(() => {
+    let data = supplierQuery.data || [];
+    if (filters.supplier_id) {
+      data = data.filter((row) => row.supplier_id === Number(filters.supplier_id));
+    }
+    if (filters.primary_staff_only) {
+      data = data.filter((row) => row.is_primary_supplier);
+    }
+    return data;
+  }, [supplierQuery.data, filters.supplier_id, filters.primary_staff_only]);
+
+  const filteredWarehouseData = useMemo(() => {
+    let data = warehouseQuery.data || [];
+    if (filters.warehouse_id) {
+      data = data.filter((row) => row.warehouse_id === Number(filters.warehouse_id));
+    }
+    return data;
+  }, [warehouseQuery.data, filters.warehouse_id]);
+
+  const filteredProductData = useMemo(() => {
+    let data = productQuery.data || [];
+    if (filters.product_id) {
+      data = data.filter((row) => row.product_id === Number(filters.product_id));
+    }
+    return data;
+  }, [productQuery.data, filters.product_id]);
+
+  const showFilters = overviewMode !== "lots";
+  const showTabFilters = overviewMode === "items";
+  const showSupplierFilter = overviewMode === "items" || overviewMode === "supplier";
+  const showWarehouseFilter = overviewMode === "items" || overviewMode === "warehouse";
+  const showProductFilter = overviewMode === "items" || overviewMode === "product";
+  const showPrimaryStaffOnly = overviewMode === "items" || overviewMode === "supplier";
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -177,7 +211,7 @@ export function InventoryPage() {
         </div>
 
         {/* Tab Filters (Items Only) */}
-        {overviewMode === "items" && (
+        {showTabFilters && (
           <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
             <button
               className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
@@ -212,56 +246,64 @@ export function InventoryPage() {
           </div>
         )}
 
-        {/* Filters (Items Only) */}
-        {overviewMode === "items" && (
+        {/* Filters */}
+        {showFilters && (
           <Section>
             <div className="flex flex-col gap-4">
               {/* Filter Actions Row (Primary Staff Filter) */}
-              <div className="flex justify-end pt-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="primary_staff_only"
-                    checked={filters.primary_staff_only}
-                    onCheckedChange={(checked) => updateFilter("primary_staff_only", !!checked)}
-                  />
-                  <Label
-                    htmlFor="primary_staff_only"
-                    className="cursor-pointer text-sm font-medium"
-                  >
-                    主担当の仕入先のみ
-                  </Label>
+              {showPrimaryStaffOnly && (
+                <div className="flex justify-end pt-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="primary_staff_only"
+                      checked={filters.primary_staff_only}
+                      onCheckedChange={(checked) => updateFilter("primary_staff_only", !!checked)}
+                    />
+                    <Label
+                      htmlFor="primary_staff_only"
+                      className="cursor-pointer text-sm font-medium"
+                    >
+                      主担当の仕入先のみ
+                    </Label>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Filter Inputs Row */}
-              <div className="grid grid-cols-4 items-end gap-4">
-                <div>
-                  <Label className="mb-2 block text-sm font-medium">仕入先</Label>
-                  <SearchableSelect
-                    options={supplierOptions}
-                    value={filters.supplier_id}
-                    onChange={(value) => updateFilter("supplier_id", value)}
-                    placeholder="仕入先を検索..."
-                  />
-                </div>
-                <div>
-                  <Label className="mb-2 block text-sm font-medium">倉庫</Label>
-                  <SearchableSelect
-                    options={warehouseOptions}
-                    value={filters.warehouse_id}
-                    onChange={(value) => updateFilter("warehouse_id", value)}
-                    placeholder="倉庫を検索..."
-                  />
-                </div>
-                <div>
-                  <Label className="mb-2 block text-sm font-medium">製品</Label>
-                  <SearchableSelect
-                    options={productOptions}
-                    value={filters.product_id}
-                    onChange={(value) => updateFilter("product_id", value)}
-                    placeholder="製品を検索..."
-                  />
-                </div>
+              <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {showSupplierFilter && (
+                  <div>
+                    <Label className="mb-2 block text-sm font-medium">仕入先</Label>
+                    <SearchableSelect
+                      options={supplierOptions}
+                      value={filters.supplier_id}
+                      onChange={(value) => updateFilter("supplier_id", value)}
+                      placeholder="仕入先を検索..."
+                    />
+                  </div>
+                )}
+                {showWarehouseFilter && (
+                  <div>
+                    <Label className="mb-2 block text-sm font-medium">倉庫</Label>
+                    <SearchableSelect
+                      options={warehouseOptions}
+                      value={filters.warehouse_id}
+                      onChange={(value) => updateFilter("warehouse_id", value)}
+                      placeholder="倉庫を検索..."
+                    />
+                  </div>
+                )}
+                {showProductFilter && (
+                  <div>
+                    <Label className="mb-2 block text-sm font-medium">製品</Label>
+                    <SearchableSelect
+                      options={productOptions}
+                      value={filters.product_id}
+                      onChange={(value) => updateFilter("product_id", value)}
+                      placeholder="製品を検索..."
+                    />
+                  </div>
+                )}
                 <div>
                   <Button variant="outline" onClick={resetFilters} className="w-full">
                     フィルタをリセット
@@ -284,7 +326,7 @@ export function InventoryPage() {
           )}
           {overviewMode === "supplier" && (
             <InventoryBySupplierTable
-              data={supplierQuery.data || []}
+              data={filteredSupplierData}
               onViewDetail={(supplierId) => {
                 setFilters({ ...filters, supplier_id: String(supplierId) });
                 setOverviewMode("items");
@@ -293,7 +335,7 @@ export function InventoryPage() {
           )}
           {overviewMode === "warehouse" && (
             <InventoryByWarehouseTable
-              data={warehouseQuery.data || []}
+              data={filteredWarehouseData}
               onViewDetail={(warehouseId) => {
                 setFilters({ ...filters, warehouse_id: String(warehouseId) });
                 setOverviewMode("items");
@@ -302,7 +344,7 @@ export function InventoryPage() {
           )}
           {overviewMode === "product" && (
             <InventoryByProductTable
-              data={productQuery.data || []}
+              data={filteredProductData}
               onViewDetail={(productId) => {
                 setFilters({ ...filters, product_id: String(productId) });
                 setOverviewMode("items");

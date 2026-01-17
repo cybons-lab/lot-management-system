@@ -4,7 +4,7 @@ B-Plan: The lots table is renamed to lot_receipts.
 - current_quantity → received_quantity (入荷数量)
 - Links to lot_master via lot_master_id
 - receipt_key for unique identification
-- Remaining quantity computed from withdrawal_lines
+- Remaining quantity computed from consumed_quantity (backfilled from withdrawal_lines)
 
 Design rationale:
 1. なぜ Lot を LotReceipt にリネームするか
@@ -56,7 +56,7 @@ from app.infrastructure.persistence.models.base_model import Base
 
 if TYPE_CHECKING:
     from app.infrastructure.persistence.models.inbound_models import ExpectedLot
-    from app.infrastructure.persistence.models.inventory_models import Adjustment, StockHistory
+    from app.infrastructure.persistence.models.inventory_models import Adjustment, StockMovement
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
     from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
     from app.infrastructure.persistence.models.masters_models import (
@@ -128,6 +128,12 @@ class LotReceipt(Base):
         server_default=text("0"),
         comment="入荷数量（初期入荷時の数量）",
     )
+    consumed_quantity: Mapped[Decimal] = mapped_column(
+        Numeric(15, 3),
+        nullable=False,
+        server_default=text("0"),
+        comment="消費済み数量（出庫確定分の累積）",
+    )
 
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
@@ -190,6 +196,7 @@ class LotReceipt(Base):
 
     __table_args__ = (
         CheckConstraint("received_quantity >= 0", name="chk_lot_receipts_received_quantity"),
+        CheckConstraint("consumed_quantity >= 0", name="chk_lot_receipts_consumed_quantity"),
         CheckConstraint("locked_quantity >= 0", name="chk_lot_receipts_locked_quantity"),
         CheckConstraint(
             "origin_type IN ('order','forecast','sample','safety_stock','adhoc')",
@@ -240,8 +247,8 @@ class LotReceipt(Base):
         "ExpectedLot", back_populates="lot_receipt", uselist=False
     )
     # B-Plan: stock_history and adjustments from inventory_models.py
-    stock_history: Mapped[list[StockHistory]] = relationship(
-        "StockHistory", back_populates="lot", cascade="all, delete-orphan"
+    stock_history: Mapped[list[StockMovement]] = relationship(
+        "StockMovement", back_populates="lot", cascade="all, delete-orphan"
     )
     adjustments: Mapped[list[Adjustment]] = relationship(
         "Adjustment", back_populates="lot", cascade="all, delete-orphan"

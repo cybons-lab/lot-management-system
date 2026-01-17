@@ -11,6 +11,7 @@ import { createLotColumns } from "../utils/lot-columns";
 import { DataTable } from "@/shared/components/data/DataTable";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import type { LotUI } from "@/shared/libs/normalize";
+import { getLotStatuses } from "@/shared/utils/status";
 
 export interface LotTableProps {
   /** ロット一覧データ */
@@ -96,9 +97,14 @@ export function LotTable({
         selectedIds={selectedIds}
         onSelectionChange={(ids) => onSelectionChange?.(ids as number[])}
         className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
-        getRowClassName={(lot) =>
-          lot.status === "locked" ? "bg-amber-50/70 hover:bg-amber-100" : ""
-        }
+        getRowClassName={(lot) => {
+          const [primaryStatus] = getLotStatuses(lot);
+          if (primaryStatus === "expired") return "bg-red-50/70 hover:bg-red-100";
+          if (primaryStatus === "rejected") return "bg-rose-50/70 hover:bg-rose-100";
+          if (primaryStatus === "qc_hold") return "bg-amber-50/70 hover:bg-amber-100";
+          if (primaryStatus === "empty") return "bg-slate-50/70 hover:bg-slate-100";
+          return "";
+        }}
         emptyMessage="ロットがありません。新規登録ボタンから最初のロットを作成してください。"
       />
 

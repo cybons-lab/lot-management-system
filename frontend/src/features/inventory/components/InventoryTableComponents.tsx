@@ -53,7 +53,7 @@ export function LotTableRow({
   onHistory,
 }: LotTableRowProps) {
   const statuses = getLotStatuses(lot);
-  const isLocked = statuses.includes("locked");
+  const isLocked = lot.status === "locked";
   const availableQty =
     lot.available_quantity !== undefined
       ? Number(lot.available_quantity)
@@ -79,7 +79,7 @@ export function LotTableRow({
       <td className="py-2">
         <div className="flex items-center gap-1">
           {statuses.map((s) => (
-            <LotStatusIcon key={s} status={s as "locked" | "available" | "depleted"} />
+            <LotStatusIcon key={s} status={s} />
           ))}
         </div>
       </td>

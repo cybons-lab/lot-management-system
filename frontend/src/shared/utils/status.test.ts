@@ -29,35 +29,34 @@ describe("getLotStatuses", () => {
     });
   });
 
-  describe("locked status", () => {
-    it("returns locked for locked status", () => {
+  describe("lock/quarantine status", () => {
+    it("returns qc_hold for locked status", () => {
       const lot = { status: "locked", current_quantity: 100 };
-      expect(getLotStatuses(lot)).toContain("locked");
+      expect(getLotStatuses(lot)).toContain("qc_hold");
     });
 
-    it("locked takes priority over other statuses", () => {
-      const lot = { status: "locked", current_quantity: 100 };
-      const statuses = getLotStatuses(lot);
-      expect(statuses[0]).toBe("locked");
+    it("returns qc_hold for quarantine status", () => {
+      const lot = { status: "quarantine", current_quantity: 100 };
+      expect(getLotStatuses(lot)).toContain("qc_hold");
     });
   });
 
   describe("inspection status", () => {
-    it("returns inspection_failed for failed inspection", () => {
+    it("returns rejected for failed inspection", () => {
       const lot = { inspection_status: "failed", current_quantity: 100 };
-      expect(getLotStatuses(lot)).toContain("inspection_failed");
+      expect(getLotStatuses(lot)).toContain("rejected");
     });
 
-    it("returns inspection_pending for pending inspection", () => {
+    it("returns qc_hold for pending inspection", () => {
       const lot = { inspection_status: "pending", current_quantity: 100 };
-      expect(getLotStatuses(lot)).toContain("inspection_pending");
+      expect(getLotStatuses(lot)).toContain("qc_hold");
     });
 
     it("does not include inspection status for passed", () => {
       const lot = { inspection_status: "passed", current_quantity: 100 };
       const statuses = getLotStatuses(lot);
-      expect(statuses).not.toContain("inspection_failed");
-      expect(statuses).not.toContain("inspection_pending");
+      expect(statuses).not.toContain("rejected");
+      expect(statuses).not.toContain("qc_hold");
     });
   });
 
@@ -85,14 +84,14 @@ describe("getLotStatuses", () => {
   });
 
   describe("quantity status", () => {
-    it("returns depleted for zero quantity", () => {
+    it("returns empty for zero quantity", () => {
       const lot = { current_quantity: 0 };
-      expect(getLotStatuses(lot)).toContain("depleted");
+      expect(getLotStatuses(lot)).toContain("empty");
     });
 
-    it("returns depleted for negative quantity", () => {
+    it("returns empty for negative quantity", () => {
       const lot = { current_quantity: -5 };
-      expect(getLotStatuses(lot)).toContain("depleted");
+      expect(getLotStatuses(lot)).toContain("empty");
     });
 
     it("returns available for positive quantity", () => {
@@ -105,9 +104,9 @@ describe("getLotStatuses", () => {
       expect(getLotStatuses(lot)).toContain("available");
     });
 
-    it("handles null quantity as depleted", () => {
+    it("handles null quantity as empty", () => {
       const lot = { current_quantity: null };
-      expect(getLotStatuses(lot)).toContain("depleted");
+      expect(getLotStatuses(lot)).toContain("empty");
     });
   });
 
@@ -121,22 +120,19 @@ describe("getLotStatuses", () => {
       };
       const statuses = getLotStatuses(lot);
 
-      // Expected order: locked, inspection_pending, expired, depleted
-      expect(statuses.indexOf("locked") as number).toBeLessThan(
-        statuses.indexOf("inspection_pending") as number,
-      );
-      expect(statuses.indexOf("inspection_pending") as number).toBeLessThan(
-        statuses.indexOf("expired") as number,
-      );
+      // Expected order: expired, qc_hold, empty
       expect(statuses.indexOf("expired") as number).toBeLessThan(
-        statuses.indexOf("depleted") as number,
+        statuses.indexOf("qc_hold") as number,
+      );
+      expect(statuses.indexOf("qc_hold") as number).toBeLessThan(
+        statuses.indexOf("empty") as number,
       );
     });
 
     it("returns first status as the primary status", () => {
       const lot = { status: "locked", current_quantity: 100 };
       const statuses = getLotStatuses(lot);
-      expect(statuses[0]).toBe("locked" as LotStatus);
+      expect(statuses[0]).toBe("qc_hold" as LotStatus);
     });
   });
 
@@ -148,9 +144,7 @@ describe("getLotStatuses", () => {
         current_quantity: 100,
       };
       const statuses = getLotStatuses(lot);
-      expect(statuses).toContain("locked");
-      expect(statuses).toContain("inspection_pending");
-      expect(statuses).toContain("available");
+      expect(statuses).toContain("qc_hold");
     });
 
     it("removes duplicates", () => {
@@ -165,13 +159,13 @@ describe("getLotStatuses", () => {
     it("handles empty lot object", () => {
       const lot = {};
       const statuses = getLotStatuses(lot);
-      expect(statuses).toContain("depleted");
+      expect(statuses).toContain("empty");
     });
 
     it("handles lot with only status field", () => {
       const lot = { status: "active" };
       const statuses = getLotStatuses(lot);
-      expect(statuses).toContain("depleted"); // No quantity
+      expect(statuses).toContain("empty"); // No quantity
     });
 
     it("active lot with positive quantity returns available", () => {

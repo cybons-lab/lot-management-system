@@ -22,8 +22,8 @@ from .inventory_models import (
     AllocationSuggestion,
     AllocationTrace,
     LotOriginType,
-    StockHistory,
-    StockMovement,  # Backward compatibility alias
+    StockHistory,  # Backward compatibility alias
+    StockMovement,
     StockMovementReason,  # Backward compatibility alias
     StockTransactionType,
 )
@@ -105,6 +105,7 @@ __all__ = [
     # Inventory
     "LotReceipt",
     "LotOriginType",
+    "StockMovement",
     "StockHistory",
     "StockTransactionType",
     "Adjustment",
@@ -166,7 +167,7 @@ __all__ = [
     "VProductCodeToId",
     "VInventorySummary",
     # Backward compatibility aliases
-    "StockMovement",
+    "StockHistory",
     "StockMovementReason",
     # RPA
     "RpaRun",

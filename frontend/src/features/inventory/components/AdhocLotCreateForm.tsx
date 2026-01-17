@@ -147,235 +147,305 @@ export function AdhocLotCreateForm({
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+      <div className="rounded-lg border bg-white p-4">
+        <h3 className="text-base font-semibold text-slate-900">基本情報</h3>
+        <p className="mt-1 text-sm text-slate-500">必須項目を先に入力してください。</p>
+      </div>
       {/* Manual Lot Number Input */}
       <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
         ロット番号は手動で入力してください。
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        {/* Row 0: Lot Number */}
-        <div className="col-span-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="lot_number">ロット番号 *</Label>
-            <span className="text-muted-foreground text-xs">(例: LOT-2025-001)</span>
-          </div>
-          <Input id="lot_number" {...register("lot_number")} placeholder="" className="font-mono" />
-          {errors.lot_number && (
-            <p className="mt-1 text-sm text-red-600">{errors.lot_number.message}</p>
-          )}
-        </div>
-
-        {/* Row 1: Lot Type & Supplier */}
-        {/* ロット種別 */}
-        <div>
-          <Label htmlFor="origin_type">ロット種別 *</Label>
-          <Controller
-            name="origin_type"
-            control={control}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="種別を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ADHOC_ORIGIN_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
-
-        {/* 仕入先（任意だが製品絞り込みに使用） */}
-        <div>
-          <Label htmlFor="supplier_code">仕入先（製品絞り込み）</Label>
-          <Controller
-            name="supplier_code"
-            control={control}
-            render={({ field }) => (
-              <SearchableSelect
-                options={[
-                  { value: "none", label: "指定なし（全製品表示）" },
-                  ...suppliers.map((supplier) => ({
-                    value: supplier.supplier_code,
-                    label: `${supplier.supplier_code} - ${supplier.supplier_name}`,
-                  })),
-                ]}
-                value={field.value ?? "none"}
-                onChange={field.onChange}
-                placeholder="仕入先を検索..."
-              />
-            )}
-          />
-        </div>
-
-        {/* 製品選択 */}
-        <div>
-          <Label htmlFor="product_id">製品 *</Label>
-          <Controller
-            name="product_id"
-            control={control}
-            render={({ field }) => (
-              <SearchableSelect
-                options={filteredProducts.map((product) => ({
-                  value: product.id.toString(),
-                  label: `${product.product_code} - ${product.product_name}`,
-                }))}
-                value={field.value}
-                onChange={field.onChange}
-                placeholder="製品を検索..."
-              />
-            )}
-          />
-          {selectedSupplier !== "none" && filteredProducts.length === 0 && (
-            <p className="mt-1 text-xs text-red-500">
-              この仕入先に関連付けられた製品はありません。
-            </p>
-          )}
-          {errors.product_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.product_id.message}</p>
-          )}
-        </div>
-
-        {/* 倉庫選択 */}
-        <div>
-          <Label htmlFor="warehouse_id">倉庫 *</Label>
-          <Controller
-            name="warehouse_id"
-            control={control}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="倉庫を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouses.map((warehouse) => (
-                    <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
-                      {warehouse.warehouse_code} - {warehouse.warehouse_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {errors.warehouse_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.warehouse_id.message}</p>
-          )}
-        </div>
-
-        {/* Row 3: Quantity & Unit */}
-        {/* 数量 */}
-        <div>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="current_quantity">数量 *</Label>
-            <span className="text-muted-foreground text-xs">(例: 1000)</span>
-          </div>
-          <Input
-            id="current_quantity"
-            type="number"
-            {...register("current_quantity")}
-            min="0"
-            step="0.001"
-            placeholder=""
-          />
-          {errors.current_quantity && (
-            <p className="mt-1 text-sm text-red-600">{errors.current_quantity.message}</p>
-          )}
-        </div>
-
-        {/* 単位（コンボボックス） */}
-        <div>
-          <Label htmlFor="unit">単位 *</Label>
-          <Input id="unit" {...register("unit")} placeholder="例: EA" list="unit-options" />
-          <datalist id="unit-options">
-            <option value="EA" />
-            <option value="KG" />
-            <option value="CAN" />
-          </datalist>
-          {errors.unit && <p className="mt-1 text-sm text-red-600">{errors.unit.message}</p>}
-        </div>
-
-        {/* Row 4: Dates */}
-        {/* 入荷日 */}
-        <div>
-          <Label htmlFor="received_date">入荷日 *</Label>
-          <Input id="received_date" type="date" {...register("received_date")} />
-          {errors.received_date && (
-            <p className="mt-1 text-sm text-red-600">{errors.received_date.message}</p>
-          )}
-        </div>
-
-        {/* 有効期限 */}
-        <div>
-          <Label htmlFor="expiry_date">有効期限</Label>
-          <Input id="expiry_date" type="date" {...register("expiry_date")} />
-        </div>
-
-        {/* 出荷予定日 */}
-        <div>
-          <Label htmlFor="shipping_date">出荷予定日</Label>
-          <Input id="shipping_date" type="date" {...register("shipping_date")} />
-        </div>
-
-        {/* Row 5: Financials */}
-        <div className="col-span-2 mt-2 border-t pt-4">
-          <Label className="mb-2 block text-base font-semibold">価格・税率情報</Label>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="cost_price">仕入単価</Label>
-              <Input
-                id="cost_price"
-                type="number"
-                step="0.01"
-                {...register("cost_price")}
-                placeholder="0.00"
-              />
-              {errors.cost_price && (
-                <p className="mt-1 text-sm text-red-600">{errors.cost_price.message}</p>
-              )}
+      <div className="rounded-lg border bg-white p-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* Row 0: Lot Number */}
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="lot_number">ロット番号 *</Label>
+              <span className="text-xs text-slate-500">(例: LOT-2025-001)</span>
+              <span className="text-xs font-medium text-red-500">必須</span>
             </div>
-            <div>
-              <Label htmlFor="sales_price">販売単価</Label>
-              <Input
-                id="sales_price"
-                type="number"
-                step="0.01"
-                {...register("sales_price")}
-                placeholder="0.00"
-              />
-              {errors.sales_price && (
-                <p className="mt-1 text-sm text-red-600">{errors.sales_price.message}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="tax_rate">税率</Label>
-              <Input
-                id="tax_rate"
-                type="number"
-                step="0.01"
-                {...register("tax_rate")}
-                placeholder="0.10"
-              />
-              {errors.tax_rate && (
-                <p className="mt-1 text-sm text-red-600">{errors.tax_rate.message}</p>
-              )}
-            </div>
+            <Input
+              id="lot_number"
+              {...register("lot_number")}
+              placeholder=""
+              className="font-mono"
+            />
+            {errors.lot_number && (
+              <p className="mt-1 text-sm text-red-600">{errors.lot_number.message}</p>
+            )}
           </div>
-        </div>
 
-        {/* Row 6: Reference */}
-        {/* 備考（origin_reference） */}
-        <div className="col-span-2">
-          <Label htmlFor="origin_reference">備考（参照情報）</Label>
-          <Input
-            id="origin_reference"
-            {...register("origin_reference")}
-            placeholder="例: キャンペーン用サンプル、チケット#123"
-          />
+          {/* Row 1: Lot Type & Supplier */}
+          {/* ロット種別 */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="origin_type">ロット種別 *</Label>
+              <span className="text-xs font-medium text-red-500">必須</span>
+            </div>
+            <Controller
+              name="origin_type"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="種別を選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ADHOC_ORIGIN_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+
+          {/* 仕入先（任意だが製品絞り込みに使用） */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="supplier_code">仕入先（製品絞り込み）</Label>
+              <span className="text-xs text-slate-400">任意</span>
+            </div>
+            <Controller
+              name="supplier_code"
+              control={control}
+              render={({ field }) => (
+                <SearchableSelect
+                  options={[
+                    { value: "none", label: "指定なし（全製品表示）" },
+                    ...suppliers.map((supplier) => ({
+                      value: supplier.supplier_code,
+                      label: `${supplier.supplier_code} - ${supplier.supplier_name}`,
+                    })),
+                  ]}
+                  value={field.value ?? "none"}
+                  onChange={field.onChange}
+                  placeholder="仕入先を検索..."
+                />
+              )}
+            />
+          </div>
+
+          {/* 製品選択 */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="product_id">製品 *</Label>
+              <span className="text-xs font-medium text-red-500">必須</span>
+            </div>
+            <Controller
+              name="product_id"
+              control={control}
+              render={({ field }) => (
+                <SearchableSelect
+                  options={filteredProducts.map((product) => ({
+                    value: product.id.toString(),
+                    label: `${product.product_code} - ${product.product_name}`,
+                  }))}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="製品を検索..."
+                />
+              )}
+            />
+            {selectedSupplier !== "none" && filteredProducts.length === 0 && (
+              <p className="mt-1 text-xs text-red-500">
+                この仕入先に関連付けられた製品はありません。
+              </p>
+            )}
+            {errors.product_id && (
+              <p className="mt-1 text-sm text-red-600">{errors.product_id.message}</p>
+            )}
+          </div>
+
+          {/* 倉庫選択 */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="warehouse_id">倉庫 *</Label>
+              <span className="text-xs font-medium text-red-500">必須</span>
+            </div>
+            <Controller
+              name="warehouse_id"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="倉庫を選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses.map((warehouse) => (
+                      <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
+                        {warehouse.warehouse_code} - {warehouse.warehouse_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.warehouse_id && (
+              <p className="mt-1 text-sm text-red-600">{errors.warehouse_id.message}</p>
+            )}
+          </div>
         </div>
       </div>
+
+      <div className="rounded-lg border bg-white p-4">
+        <h3 className="text-base font-semibold text-slate-900">数量・単位</h3>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* Row 3: Quantity & Unit */}
+          {/* 数量 */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="current_quantity">数量 *</Label>
+              <span className="text-xs text-slate-500">(例: 1000)</span>
+              <span className="text-xs font-medium text-red-500">必須</span>
+            </div>
+            <Input
+              id="current_quantity"
+              type="number"
+              inputMode="decimal"
+              {...register("current_quantity")}
+              min="0"
+              step="0.001"
+              placeholder=""
+            />
+            {errors.current_quantity && (
+              <p className="mt-1 text-sm text-red-600">{errors.current_quantity.message}</p>
+            )}
+          </div>
+
+          {/* 単位（コンボボックス） */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="unit">単位 *</Label>
+              <span className="text-xs font-medium text-red-500">必須</span>
+            </div>
+            <Input id="unit" {...register("unit")} placeholder="例: EA" list="unit-options" />
+            <datalist id="unit-options">
+              <option value="EA" />
+              <option value="KG" />
+              <option value="CAN" />
+            </datalist>
+            {errors.unit && <p className="mt-1 text-sm text-red-600">{errors.unit.message}</p>}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-white p-4">
+        <h3 className="text-base font-semibold text-slate-900">日付</h3>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {/* Row 4: Dates */}
+          {/* 入荷日 */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="received_date">入荷日 *</Label>
+              <span className="text-xs font-medium text-red-500">必須</span>
+            </div>
+            <Input id="received_date" type="date" {...register("received_date")} />
+            {errors.received_date && (
+              <p className="mt-1 text-sm text-red-600">{errors.received_date.message}</p>
+            )}
+          </div>
+
+          {/* 有効期限 */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="expiry_date">有効期限</Label>
+              <span className="text-xs text-slate-400">任意</span>
+            </div>
+            <Input id="expiry_date" type="date" {...register("expiry_date")} />
+          </div>
+
+          {/* 出荷予定日 */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="shipping_date">出荷予定日</Label>
+              <span className="text-xs text-slate-400">任意</span>
+            </div>
+            <Input id="shipping_date" type="date" {...register("shipping_date")} />
+          </div>
+        </div>
+      </div>
+
+      <details className="rounded-lg border bg-white p-4">
+        <summary className="cursor-pointer text-base font-semibold text-slate-900">
+          任意項目（価格・備考）
+        </summary>
+        <div className="mt-4 space-y-4">
+          {/* Row 5: Financials */}
+          <div>
+            <Label className="mb-2 block text-base font-semibold">価格・税率情報</Label>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="cost_price">仕入単価</Label>
+                  <span className="text-xs text-slate-400">任意</span>
+                </div>
+                <Input
+                  id="cost_price"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  {...register("cost_price")}
+                  placeholder="0.00"
+                />
+                {errors.cost_price && (
+                  <p className="mt-1 text-sm text-red-600">{errors.cost_price.message}</p>
+                )}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="sales_price">販売単価</Label>
+                  <span className="text-xs text-slate-400">任意</span>
+                </div>
+                <Input
+                  id="sales_price"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  {...register("sales_price")}
+                  placeholder="0.00"
+                />
+                {errors.sales_price && (
+                  <p className="mt-1 text-sm text-red-600">{errors.sales_price.message}</p>
+                )}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="tax_rate">税率</Label>
+                  <span className="text-xs text-slate-400">任意</span>
+                </div>
+                <Input
+                  id="tax_rate"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  {...register("tax_rate")}
+                  placeholder="0.10"
+                />
+                {errors.tax_rate && (
+                  <p className="mt-1 text-sm text-red-600">{errors.tax_rate.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Row 6: Reference */}
+          {/* 備考（origin_reference） */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="origin_reference">備考（参照情報）</Label>
+              <span className="text-xs text-slate-400">任意</span>
+            </div>
+            <Input
+              id="origin_reference"
+              {...register("origin_reference")}
+              placeholder="例: キャンペーン用サンプル、チケット#123"
+            />
+          </div>
+        </div>
+      </details>
       <div className="flex justify-end space-x-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           キャンセル
