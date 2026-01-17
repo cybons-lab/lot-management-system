@@ -29,6 +29,16 @@ interface ChartData {
   code: string;
 }
 
+const TOOLTIP_STYLE = {
+  backgroundColor: "#fff",
+  border: "1px solid #e5e7eb",
+  borderRadius: "0.5rem",
+  fontSize: "12px",
+} as const;
+
+const formatTooltipValue = (value: number | undefined) =>
+  [value?.toLocaleString("ja-JP") ?? "0", "在庫数"] as const;
+
 export function TopProductsChart() {
   const navigate = useNavigate();
   const { data, isLoading, error } = useInventoryByProduct();
@@ -92,15 +102,7 @@ export function TopProductsChart() {
               tick={{ fontSize: 10 }}
               stroke="#6b7280"
             />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#fff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "0.5rem",
-                fontSize: "12px",
-              }}
-              formatter={(value: number) => [value.toLocaleString("ja-JP"), "在庫数"]}
-            />
+            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={formatTooltipValue} />
             <Bar dataKey="quantity" radius={[0, 4, 4, 0]}>
               {chartData.map((_, index) => (
                 <Cell

@@ -92,7 +92,9 @@ export function WarehouseDistributionChart() {
                 borderRadius: "0.5rem",
                 fontSize: "12px",
               }}
-              formatter={(value: number) => [value.toLocaleString("ja-JP"), "在庫数"]}
+              formatter={(value: number | undefined) =>
+                value !== undefined ? [value.toLocaleString("ja-JP"), "在庫数"] : ["0", "在庫数"]
+              }
             />
             <Legend wrapperStyle={{ fontSize: "11px" }} iconType="circle" />
           </PieChart>
