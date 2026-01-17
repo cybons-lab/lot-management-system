@@ -21,6 +21,8 @@
 | | [troubleshooting.md](ops/troubleshooting.md) | トラブルシューティングガイド |
 | **Testing** | [test_strategy.md](testing/test_strategy.md) | テスト戦略、観点 |
 | **Development** | [setup.md](dev/setup.md) | 開発環境セットアップ手順 |
+| **Tasks** | [backlog.md](tasks/backlog.md) | 未完了タスクのバックログ |
+| | [TODO.md](TODO.md) | 未実装APIなどのTODO |
 
 ## 読み進め方
 
@@ -32,4 +34,3 @@
 ## 補足
 - 本ドキュメントはリポジトリのコード (`backend/`, `frontend/`) およびDB定義を正本として作成されています。
 - 仕様が不明確な点は `要確認ポイント` として別途リストアップされています。
-
