@@ -240,8 +240,8 @@ class LotService:
             # Explicit fields
             received_quantity=lot_view.received_quantity,
             remaining_quantity=lot_view.remaining_quantity or Decimal("0"),
-            # Compat field (Remaining)
-            # Compat field (Remaining)
+            # 互換性フィールド (Remaining)
+            # 互換性フィールド (Remaining)
             current_quantity=lot_view.remaining_quantity or Decimal("0"),
             allocated_quantity=lot_view.allocated_quantity or Decimal("0"),
             reserved_quantity_active=getattr(lot_view, "reserved_quantity_active", Decimal("0")),
@@ -331,13 +331,14 @@ class LotService:
         )
 
     def validate_lot_availability(self, lot_id: int, required_qty: float) -> None:
-        """Validate lot availability.
+        """ロットの在庫利用可能性を検証します。.
 
-        Uses lot_reservations for available quantity calculation.
+
+        lot_reservations を使用して利用可能数量を計算します。
         """
         lot = self.get_lot(lot_id)
 
-        # 利用可能在庫を計算 (using lot_reservations)
+        # 利用可能在庫を計算 (lot_reservationsを使用)
         available_qty = float(get_available_quantity(self.db, lot))
 
         StockValidator.validate_sufficient_stock(lot_id, required_qty, available_qty)
@@ -346,7 +347,7 @@ class LotService:
     # --- New Methods Extracted from Router ---
 
     def get_all(self, skip: int = 0, limit: int = 100) -> list[LotResponse]:
-        """Get all lots (for bulk export)."""
+        """全ロットを取得します (一括エクスポート用)。."""
         return self.list_lots(skip=skip, limit=limit)
 
     def list_lots(
@@ -562,15 +563,12 @@ class LotService:
         # Map to Response
         responses = []
         for lot_view in lot_views:
-            # NOTE: VLotDetails view currently does not include Phase 1 fields (shipping_date, etc.)
-            # To support them without view migration, we'll fetch them from the Lot entity if needed.
-            # However, for list views, N+1 is bad.
-            # Ideally, we should rely on what's in the view or accept missing data for now.
-            # Or, use joinedload in the query if we queried Lot model directly.
-            # But we queried VLotDetails.
-            # Let's map what we have from VLotDetails for now.
+            # 注意: VLotDetails ビューには現在、Phase 1 フィールド (shipping_date など) が含まれていません。
+            # ビューのマイグレーションなしでこれらをサポートするには、必要に応じて Lot エンティティから取得しますが、
+            # リスト表示での N+1 問題は避けるべきです。
+            # 理想的にはビューを更新すべきですが、現時点では欠落を許容するか、ビューからあるものをマッピングします。
 
-            # Re-using the same logic as list_lots but adapted
+            # list_lots と同様のロジックを適用
             response = LotResponse(
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number,

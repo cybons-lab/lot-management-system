@@ -1,4 +1,4 @@
-"""Inventory scenario test data generator."""
+"""在庫シナリオテストデータジェネレーター。."""
 
 from __future__ import annotations
 
@@ -157,10 +157,13 @@ def _set_required_fields(instance, values: dict[str, object]) -> None:
 
 
 def _resolve_outbound_models(db: Session):
-    """Resolve outbound models if tables exist, otherwise return None.
+    """テーブルが存在する場合に出庫関連モデルを解決します。存在しない場合はNoneを返します。.
+
+
+
 
     Returns:
-        Tuple of (OutboundInstruction, OutboundAllocation) or (None, None) if tables don't exist.
+        (OutboundInstruction, OutboundAllocation) のタプル、またはテーブルが存在しない場合は (None, None)。
     """
     engine = db.get_bind()
     inspector = inspect(engine)
@@ -169,7 +172,7 @@ def _resolve_outbound_models(db: Session):
         name for name in ("outbound_instructions", "outbound_allocations") if name not in tables
     }
     if missing:
-        # Tables don't exist - this is expected if outbound feature is not yet implemented
+        # テーブルが存在しない - 出庫機能が未実装の場合は想定内
         return None, None
 
     base = automap_base()
@@ -359,7 +362,7 @@ def _create_outbound_allocation(
     scenario: InventoryScenario,
 ) -> None:
     if OutboundInstruction is None or OutboundAllocation is None:
-        # Outbound tables don't exist - skip allocation creation
+        # 出庫テーブルが存在しない - 引当作成をスキップ
         return
 
     instruction = OutboundInstruction()
