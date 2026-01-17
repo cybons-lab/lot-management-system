@@ -92,6 +92,8 @@ interface DataTableProps<T> {
   getRowClassName?: (row: T) => string;
   /** 展開可能な行を有効化 */
   expandable?: boolean;
+  /** 展開モード */
+  expandMode?: "single" | "multi";
   /** 展開された行のID配列 */
   expandedRowIds?: (string | number)[];
   /** 展開状態変更時のコールバック */
@@ -127,6 +129,7 @@ export function DataTable<T = never>({
   className,
   getRowClassName,
   expandable = false,
+  expandMode = "multi",
   expandedRowIds = [],
   onExpandedRowsChange,
   renderExpandedRow,
@@ -322,6 +325,12 @@ export function DataTable<T = never>({
         const expandedIdList = Object.keys(nextExpanded).filter(
           (id) => (nextExpanded as Record<string, boolean>)[id],
         );
+        if (expandMode === "single" && expandedIdList.length > 1) {
+          const currentSet = new Set(expandedRowIds.map(String));
+          const added = expandedIdList.find((id) => !currentSet.has(id));
+          onExpandedRowsChange(added ? [added] : [expandedIdList[0]]);
+          return;
+        }
         onExpandedRowsChange(expandedIdList);
       }
     },

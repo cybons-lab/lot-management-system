@@ -4,7 +4,7 @@
  */
 import { useMemo } from "react";
 
-import type { InventoryByProductResponse } from "../types/InventoryAggregationTypes";
+import type { InventoryByProductResponse } from "../api";
 
 import { Button } from "@/components/ui";
 import type { Column } from "@/shared/components/data/DataTable";

@@ -1,24 +1,14 @@
 import { useAtom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { LotFilterBar } from "./LotFilterBar";
 import { LotTable } from "./LotTable";
 import type { LotTableProps } from "./LotTable";
 
+import { lotSearchStateAtom } from "@/features/inventory/state";
 import { useLotLabel } from "@/features/inventory/hooks/useLotLabel";
 import { useLotSearch } from "@/hooks/api/useLotSearch";
 import { useDebounce } from "@/hooks/ui/useDebounce";
-
-// Persist search state
-const lotSearchStateAtom = atomWithStorage("lotSearchState", {
-  q: "",
-  page: 1,
-  size: 20,
-  sort_by: "expiry_date",
-  sort_order: "asc" as "asc" | "desc",
-  status: "active",
-});
 
 export function LotSearchPanel() {
   const [searchState, setSearchState] = useAtom(lotSearchStateAtom);
@@ -26,9 +16,11 @@ export function LotSearchPanel() {
   const debouncedQuery = useDebounce(inputValue, 500);
 
   // Update query when debounce finishes
-  if (debouncedQuery !== searchState.q) {
-    setSearchState((prev) => ({ ...prev, q: debouncedQuery, page: 1 }));
-  }
+  useEffect(() => {
+    if (debouncedQuery !== searchState.q) {
+      setSearchState((prev) => ({ ...prev, q: debouncedQuery, page: 1 }));
+    }
+  }, [debouncedQuery, searchState.q, setSearchState]);
 
   const { data, isLoading, error } = useLotSearch({
     q: searchState.q,

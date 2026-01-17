@@ -172,10 +172,11 @@ SELECT
     lr.received_quantity AS initial_quantity,
     COALESCE(wl_sum.total_withdrawn, 0) AS withdrawn_quantity,
     GREATEST(lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - lr.locked_quantity, 0) AS remaining_quantity,
-    COALESCE(res_sum.total_reserved, 0) AS reserved_quantity,
+    COALESCE(la.allocated_quantity, 0) AS reserved_quantity,
+    COALESCE(lar.reserved_quantity_active, 0) AS reserved_quantity_active,
     GREATEST(
         lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) 
-        - lr.locked_quantity - COALESCE(res_sum.total_reserved, 0),
+        - lr.locked_quantity - COALESCE(la.allocated_quantity, 0),
         0
     ) AS available_quantity,
     lr.locked_quantity,
@@ -203,14 +204,8 @@ LEFT JOIN (
     WHERE wd.cancelled_at IS NULL
     GROUP BY wl.lot_receipt_id
 ) wl_sum ON wl_sum.lot_receipt_id = lr.id
-LEFT JOIN (
-    SELECT 
-        lot_id, 
-        SUM(reserved_qty) AS total_reserved
-    FROM public.lot_reservations
-    WHERE status IN ('active', 'confirmed')
-    GROUP BY lot_id
-) res_sum ON res_sum.lot_id = lr.id
+LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
+LEFT JOIN public.v_lot_active_reservations lar ON lr.id = lar.lot_id
 WHERE lr.status = 'active';
 
 COMMENT ON VIEW public.v_lot_receipt_stock IS '在庫一覧（残量は集計で算出、current_quantityキャッシュ化対応準備済み）';
@@ -236,32 +231,23 @@ SELECT
 FROM public.product_warehouse pw
 LEFT JOIN (
   SELECT
-    lr.product_id,
-    lr.warehouse_id,
-    COUNT(*) FILTER (WHERE lr.status = 'active') AS active_lot_count,
-    SUM(lr.received_quantity) FILTER (WHERE lr.status = 'active') AS total_quantity,
-    SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE lr.status = 'active') AS allocated_quantity,
-    SUM(lr.locked_quantity) FILTER (WHERE lr.status = 'active') AS locked_quantity,
-    GREATEST(
-      SUM(lr.received_quantity) FILTER (WHERE lr.status = 'active')
-      - SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE lr.status = 'active')
-      - SUM(lr.locked_quantity) FILTER (WHERE lr.status = 'active'),
-      0
-    ) AS available_quantity,
+    lrs.product_id,
+    lrs.warehouse_id,
+    COUNT(*) AS active_lot_count,
+    SUM(lrs.remaining_quantity) AS total_quantity,
+    SUM(lrs.reserved_quantity) AS allocated_quantity,
+    SUM(lrs.locked_quantity) AS locked_quantity,
+    SUM(lrs.available_quantity) AS available_quantity,
     COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
     GREATEST(
-      SUM(lr.received_quantity) FILTER (WHERE lr.status = 'active')
-      - SUM(COALESCE(la.allocated_quantity, 0)) FILTER (WHERE lr.status = 'active')
-      - SUM(lr.locked_quantity) FILTER (WHERE lr.status = 'active')
-      + COALESCE(SUM(ipl.planned_quantity), 0),
+      SUM(lrs.available_quantity) + COALESCE(SUM(ipl.planned_quantity), 0),
       0
     ) AS available_with_provisional,
-    MAX(lr.updated_at) AS last_updated
-  FROM public.lot_receipts lr
-  LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
-  LEFT JOIN public.inbound_plan_lines ipl ON lr.product_id = ipl.product_id
+    MAX(lrs.updated_at) AS last_updated
+  FROM public.v_lot_receipt_stock lrs
+  LEFT JOIN public.inbound_plan_lines ipl ON lrs.product_id = ipl.product_id
   LEFT JOIN public.inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
-  GROUP BY lr.product_id, lr.warehouse_id
+  GROUP BY lrs.product_id, lrs.warehouse_id
 ) agg ON agg.product_id = pw.product_id AND agg.warehouse_id = pw.warehouse_id
 WHERE pw.is_active = true;
 

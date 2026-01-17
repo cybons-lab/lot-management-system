@@ -5,7 +5,7 @@
 import { Crown } from "lucide-react";
 import { useMemo } from "react";
 
-import type { InventoryBySupplierResponse } from "../types/InventoryAggregationTypes";
+import type { InventoryBySupplierResponse } from "../api";
 
 import { Badge, Button } from "@/components/ui";
 import type { Column } from "@/shared/components/data/DataTable";

@@ -151,7 +151,10 @@ export interface LotUI extends Record<string, unknown> {
   expiry_date: string;
   current_quantity: string; // DDL v2.2: DECIMAL as string
   allocated_quantity: string; // DDL v2.2: DECIMAL as string
+  reserved_quantity_active?: string; // ACTIVE予約（未確定）
   locked_quantity?: string; // Optional: may not be present in all responses
+  remaining_quantity?: string; // 残量（動的計算）
+  available_quantity?: string; // 利用可能（残量 - ロック - 確定引当）
   unit: string;
   status: "active" | "depleted" | "expired" | "quarantine" | "locked"; // Match API type
   lock_reason?: string | null; // Optional: only present when locked
@@ -271,7 +274,19 @@ export function normalizeLot(
     expiry_date: S(lot.expiry_date),
     current_quantity: S(lot.current_quantity, "0"),
     allocated_quantity: S(lot.allocated_quantity, "0"),
+    reserved_quantity_active:
+      (lot as Record<string, unknown>).reserved_quantity_active != null
+        ? S((lot as Record<string, unknown>).reserved_quantity_active as string)
+        : undefined,
     locked_quantity: lot.locked_quantity ?? undefined,
+    remaining_quantity:
+      (lot as Record<string, unknown>).remaining_quantity != null
+        ? S((lot as Record<string, unknown>).remaining_quantity as string)
+        : undefined,
+    available_quantity:
+      (lot as Record<string, unknown>).available_quantity != null
+        ? S((lot as Record<string, unknown>).available_quantity as string)
+        : undefined,
     unit: S(lot.unit, "EA"),
     status: (lot.status as "active" | "depleted" | "expired" | "quarantine" | "locked") ?? "active",
     lock_reason: lot.lock_reason ?? null,
