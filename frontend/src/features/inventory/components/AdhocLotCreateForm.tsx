@@ -73,7 +73,7 @@ interface AdhocLotCreateFormProps {
 /**
  * 入庫登録（旧アドホックロット作成）フォーム
  */
-// eslint-disable-next-line max-lines-per-function -- Form component with many fields
+// eslint-disable-next-line max-lines-per-function, complexity -- Form component with many fields
 export function AdhocLotCreateForm({
   onSubmit,
   onCancel,

@@ -19,9 +19,21 @@ Design rationale:
 from __future__ import annotations
 
 from datetime import date, datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Date, DateTime, ForeignKey, Index, String, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Numeric,
+    String,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.persistence.models.base_model import Base
@@ -58,6 +70,14 @@ class LotMaster(Base):
         BigInteger,
         ForeignKey("suppliers.id", ondelete="SET NULL"),
         nullable=True,
+    )
+
+    # Aggregated values
+    total_quantity: Mapped[Decimal] = mapped_column(
+        Numeric(15, 3),
+        nullable=False,
+        server_default=text("0"),
+        comment="合計入荷数量（受け入れ時）",
     )
 
     # Cached aggregate values (for display)

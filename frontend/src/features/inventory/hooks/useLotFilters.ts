@@ -41,6 +41,7 @@
 import { useMemo } from "react";
 
 import type { LotUI } from "@/shared/libs/normalize";
+import { parseDecimal } from "@/shared/utils/decimal";
 
 /**
  * フィルター値の型定義
@@ -82,8 +83,8 @@ function matchesSearch(lot: LotUI, search: string): boolean {
 function matchesStatus(lot: LotUI, status: string): boolean {
   if (status === "all") return true;
 
-  const qty = Number(lot.current_quantity);
-  const isActive = qty > 0;
+  const qty = parseDecimal(lot.current_quantity);
+  const isActive = qty.gt(0);
 
   if (status === "active") return isActive;
   if (status === "inactive") return !isActive;
@@ -122,7 +123,7 @@ function matchesFilter(lot: LotUI, filters: LotFilterValues): boolean {
   }
 
   // 在庫ありフィルター
-  if (filters.hasStock && Number(lot.current_quantity) <= 0) {
+  if (filters.hasStock && parseDecimal(lot.current_quantity).lte(0)) {
     return false;
   }
 
