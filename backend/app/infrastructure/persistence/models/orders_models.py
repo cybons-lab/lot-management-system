@@ -195,10 +195,10 @@ class Order(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'open'"))
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
@@ -210,8 +210,8 @@ class Order(Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    locked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    lock_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    locked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lock_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # OCR取込情報
     ocr_source_filename: Mapped[str | None] = mapped_column(
@@ -285,10 +285,10 @@ class OrderLine(Base):
         Numeric(15, 3), nullable=True
     )  # Quantity in Product's internal_unit
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
+        DateTime(timezone=True), nullable=False, server_default=func.current_timestamp()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),

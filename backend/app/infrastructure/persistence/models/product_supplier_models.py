@@ -1,7 +1,5 @@
 """ProductSupplier model for product-supplier relationships."""
 
-from datetime import datetime
-
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -16,6 +14,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.base_model import Base
 from app.infrastructure.persistence.models.soft_delete_mixin import SoftDeleteMixin
 
@@ -35,8 +34,8 @@ class ProductSupplier(SoftDeleteMixin, Base):
     is_primary = Column(Boolean, nullable=False, default=False)
     lead_time_days = Column(Integer, nullable=True)
     valid_to = Column(Date, nullable=False, server_default=text("'9999-12-31'"))  # type: ignore[assignment]
-    created_at = Column(DateTime, nullable=False, default=datetime.now)
-    updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow)
 
     # Relationships
     product = relationship("Product", back_populates="product_suppliers")

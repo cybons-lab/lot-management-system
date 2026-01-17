@@ -4,10 +4,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 from enum import Enum
 from threading import Lock
 from typing import Any
+
+from app.core.time_utils import utcnow
 
 
 class JobStatus(str, Enum):
@@ -43,19 +44,19 @@ class JobInfo:
         self.logs: list[str] = []
         self.result: dict[str, Any] | None = None
         self.error: str | None = None
-        self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self.created_at = utcnow()
+        self.updated_at = utcnow()
 
     def add_log(self, message: str):
         """ログを追加."""
-        self.logs.append(f"[{datetime.utcnow().isoformat()}] {message}")
-        self.updated_at = datetime.utcnow()
+        self.logs.append(f"[{utcnow().isoformat()}] {message}")
+        self.updated_at = utcnow()
 
     def update_progress(self, phase: JobPhase, pct: int):
         """進捗を更新."""
         self.phase = phase
         self.progress_pct = pct
-        self.updated_at = datetime.utcnow()
+        self.updated_at = utcnow()
 
     def set_completed(self, result: dict[str, Any]):
         """完了を設定."""
@@ -63,13 +64,13 @@ class JobInfo:
         self.phase = JobPhase.DONE
         self.progress_pct = 100
         self.result = result
-        self.updated_at = datetime.utcnow()
+        self.updated_at = utcnow()
 
     def set_failed(self, error: str):
         """失敗を設定."""
         self.status = JobStatus.FAILED
         self.error = error
-        self.updated_at = datetime.utcnow()
+        self.updated_at = utcnow()
 
     def to_dict(self) -> dict[str, Any]:
         """辞書に変換."""
@@ -114,7 +115,7 @@ class JobTracker:
             for key, value in kwargs.items():
                 if hasattr(job, key):
                     setattr(job, key, value)
-            job.updated_at = datetime.utcnow()
+            job.updated_at = utcnow()
 
     def add_log(self, task_id: str, message: str):
         """ログを追加."""
@@ -136,7 +137,7 @@ class JobTracker:
             job = self._jobs.get(task_id)
             if job:
                 job.status = JobStatus.RUNNING
-                job.updated_at = datetime.utcnow()
+                job.updated_at = utcnow()
 
     def set_completed(self, task_id: str, result: dict[str, Any]):
         """ジョブを完了にする."""

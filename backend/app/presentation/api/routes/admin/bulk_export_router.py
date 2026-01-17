@@ -377,6 +377,15 @@ def _generate_excel_bytes(data: list[dict[str, Any]]) -> bytes:
         raise ImportError("pandas is required for export")
 
     df = pd.DataFrame(data)
+
+    # Convert timezone-aware datetimes to timezone-naive for Excel compatibility
+    for col in df.columns:
+        # Check if column is datetime-like
+        if pd.api.types.is_datetime64_any_dtype(df[col]):
+            # If it has timezone info, strip it (keep wall time)
+            if df[col].dt.tz is not None:
+                df[col] = df[col].dt.tz_localize(None)
+
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
         df.to_excel(writer, index=False, sheet_name="Sheet1")
