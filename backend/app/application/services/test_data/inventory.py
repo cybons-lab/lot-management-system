@@ -145,14 +145,13 @@ def generate_lots(
             db.flush()  # Get master.id
 
             lot = LotReceipt(
-                lot_number=lot_number,
                 lot_master_id=master.id,
                 product_id=p.id,
                 warehouse_id=warehouse.id,
                 supplier_id=supplier_id,
                 received_date=received_date,
                 expiry_date=expiry_date,
-                current_quantity=qty,
+                received_quantity=qty,
                 unit=p.internal_unit or "pcs",  # Use product unit
                 status=status,
             )
@@ -198,15 +197,22 @@ def get_any_lot_id(db: Session, product_id: int, required_qty: Decimal | None = 
     )
 
     if required_qty is not None:
-        query = query.filter(LotReceipt.current_quantity >= required_qty)
+        query = query.filter(
+            (LotReceipt.received_quantity - LotReceipt.consumed_quantity) >= required_qty
+        )
 
-    lot = query.order_by(LotReceipt.current_quantity.desc(), LotReceipt.id.asc()).first()
+    lot = query.order_by(
+        (LotReceipt.received_quantity - LotReceipt.consumed_quantity).desc(), LotReceipt.id.asc()
+    ).first()
 
     if not lot and required_qty is not None:
         lot = (
             db.query(LotReceipt)
             .filter(LotReceipt.product_id == product_id, LotReceipt.status == "active")
-            .order_by(LotReceipt.current_quantity.desc(), LotReceipt.id.asc())
+            .order_by(
+                (LotReceipt.received_quantity - LotReceipt.consumed_quantity).desc(),
+                LotReceipt.id.asc(),
+            )
             .first()
         )
 

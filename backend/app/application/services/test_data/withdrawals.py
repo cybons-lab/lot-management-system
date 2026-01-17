@@ -129,7 +129,7 @@ def generate_withdrawals(
 
             # Update lot quantity (simulating manual withdrawal)
             if not is_cancelled:  # Only reduce if NOT cancelled
-                lot.current_quantity -= qty
+                lot.consumed_quantity += qty
 
             withdrawal_count += 1
 

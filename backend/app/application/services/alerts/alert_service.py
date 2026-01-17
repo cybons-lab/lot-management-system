@@ -107,7 +107,8 @@ class AlertService:
                 and_(
                     LotReceipt.expiry_date.isnot(None),
                     LotReceipt.status.in_(["active"]),  # Only active lots
-                    LotReceipt.current_quantity > 0,  # Only with stock
+                    (LotReceipt.received_quantity - LotReceipt.consumed_quantity)
+                    > 0,  # Only with stock
                 )
             )
             .all()

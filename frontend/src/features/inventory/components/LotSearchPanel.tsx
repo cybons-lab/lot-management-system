@@ -5,8 +5,8 @@ import { LotFilterBar } from "./LotFilterBar";
 import { LotTable } from "./LotTable";
 import type { LotTableProps } from "./LotTable";
 
-import { lotSearchStateAtom } from "@/features/inventory/state";
 import { useLotLabel } from "@/features/inventory/hooks/useLotLabel";
+import { lotSearchStateAtom, type LotSearchState } from "@/features/inventory/state";
 import { useLotSearch } from "@/hooks/api/useLotSearch";
 import { useDebounce } from "@/hooks/ui/useDebounce";
 
@@ -31,40 +31,7 @@ export function LotSearchPanel() {
     status: searchState.status === "all" ? undefined : searchState.status,
   });
 
-  const handlePageChange = (newPage: number) => {
-    setSearchState((prev) => ({ ...prev, page: newPage }));
-  };
-
-  const handlePageSizeChange = (newSize: number) => {
-    setSearchState((prev) => ({ ...prev, size: newSize, page: 1 }));
-  };
-
-  const handleSortChange = (column: string) => {
-    setSearchState((prev) => {
-      if (prev.sort_by === column) {
-        return { ...prev, sort_order: prev.sort_order === "asc" ? "desc" : "asc" };
-      }
-      return { ...prev, sort_by: column, sort_order: "asc" };
-    });
-  };
-
-  // Table adapter
-  const tableAdapter = {
-    sortData: <T,>(d: T[]) => d, // Server-side sorted
-    paginateData: <T,>(d: T[]) => d, // Server-side paginated
-    calculatePagination: () => ({
-      page: searchState.page,
-      pageSize: searchState.size,
-      totalItems: data?.total ?? 0,
-      totalPages: Math.ceil((data?.total ?? 0) / searchState.size),
-    }),
-    sort: {
-      column: searchState.sort_by,
-      direction: searchState.sort_order,
-    },
-    setPage: handlePageChange,
-    setPageSize: handlePageSizeChange,
-  };
+  const { tableAdapter, handleSortChange } = useTableController(searchState, setSearchState, data);
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { downloadLabels, isDownloading } = useLotLabel();
@@ -102,4 +69,46 @@ export function LotSearchPanel() {
       </div>
     </div>
   );
+}
+
+function useTableController(
+  searchState: LotSearchState,
+  setSearchState: React.Dispatch<React.SetStateAction<LotSearchState>>,
+  data: { total: number } | undefined,
+) {
+  const handlePageChange = (newPage: number) => {
+    setSearchState((prev) => ({ ...prev, page: newPage }));
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setSearchState((prev) => ({ ...prev, size: newSize, page: 1 }));
+  };
+
+  const handleSortChange = (column: string) => {
+    setSearchState((prev) => {
+      if (prev.sort_by === column) {
+        return { ...prev, sort_order: prev.sort_order === "asc" ? "desc" : "asc" };
+      }
+      return { ...prev, sort_by: column, sort_order: "asc" };
+    });
+  };
+
+  const tableAdapter = {
+    sortData: <T,>(d: T[]) => d,
+    paginateData: <T,>(d: T[]) => d,
+    calculatePagination: () => ({
+      page: searchState.page,
+      pageSize: searchState.size,
+      totalItems: data?.total ?? 0,
+      totalPages: Math.ceil((data?.total ?? 0) / searchState.size),
+    }),
+    sort: {
+      column: searchState.sort_by,
+      direction: searchState.sort_order,
+    },
+    setPage: handlePageChange,
+    setPageSize: handlePageSizeChange,
+  };
+
+  return { tableAdapter, handleSortChange };
 }

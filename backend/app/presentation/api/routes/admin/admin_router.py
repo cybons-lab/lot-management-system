@@ -57,7 +57,11 @@ def get_dashboard_stats(
     try:
         # lots テーブルから直接在庫を集計
         total_stock_result = db.execute(
-            select(func.coalesce(func.sum(LotReceipt.current_quantity), 0.0))
+            select(
+                func.coalesce(
+                    func.sum(LotReceipt.received_quantity - LotReceipt.consumed_quantity), 0.0
+                )
+            )
         )
         total_stock = total_stock_result.scalar_one()
     except SQLAlchemyError as e:

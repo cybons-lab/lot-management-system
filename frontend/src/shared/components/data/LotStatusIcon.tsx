@@ -7,9 +7,8 @@
 
 import { Package, PackageX, AlertCircle, Clock, Calendar } from "lucide-react";
 
-import type { LotStatus } from "@/shared/utils/status";
-
 import { cn } from "@/shared/libs/utils";
+import type { LotStatus } from "@/shared/utils/status";
 
 export type LotStatusIconType = LotStatus;
 

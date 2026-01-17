@@ -42,7 +42,7 @@ import { cn } from "@/shared/libs/utils";
 /** カラム定義の型 */
 export interface Column<T> {
   id: string;
-  header: string;
+  header: string | React.ReactNode;
   accessor?: (row: T) => React.ReactNode;
   cell?: (row: T) => React.ReactNode;
   width?: string | number;
@@ -215,9 +215,9 @@ export function DataTable<T = never>({
     columns.forEach((col) => {
       defs.push({
         id: col.id,
-        header: col.header,
+        header: col.header as string | ((props: unknown) => React.ReactNode), // Relaxed for TanStack
         // accessorの互換性
-        accessorFn: col.accessor ? (row) => col.accessor!(row) : undefined,
+        ...(col.accessor ? { accessorFn: (row) => col.accessor!(row) } : {}),
         cell: (info) => {
           if (col.cell) {
             return col.cell(info.row.original);
@@ -439,7 +439,7 @@ export function DataTable<T = never>({
                     checked={column.getIsVisible()}
                     onCheckedChange={(value: boolean) => column.toggleVisibility(!!value)}
                   >
-                    {column.columnDef.header as string}
+                    {column.columnDef.header as React.ReactNode}
                   </DropdownMenuCheckboxItem>
                 );
               })}

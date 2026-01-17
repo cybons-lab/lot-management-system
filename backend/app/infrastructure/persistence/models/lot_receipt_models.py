@@ -49,6 +49,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.persistence.models.base_model import Base
@@ -94,6 +95,15 @@ class LotReceipt(Base):
     def lot_number(self) -> str:
         """Get lot number from lot_master (read-only accessor)."""
         return self.lot_master.lot_number if self.lot_master else ""
+
+    @hybrid_property
+    def current_quantity(self) -> Decimal:
+        """Get current remaining quantity (received - consumed)."""
+        return self.received_quantity - self.consumed_quantity
+
+    @current_quantity.expression
+    def current_quantity(cls):  # type: ignore[no-redef]
+        return cls.received_quantity - cls.consumed_quantity
 
     product_id: Mapped[int] = mapped_column(
         BigInteger,
