@@ -88,9 +88,7 @@ export function LotTableRow({
         {fmt(Number(lot.reserved_quantity_active || 0))}
       </td>
       <td className="py-2 text-right text-gray-700">{fmt(Number(lot.allocated_quantity))}</td>
-      <td className="py-2 text-right text-gray-700">
-        {fmt(Number(lot.locked_quantity || 0))}
-      </td>
+      <td className="py-2 text-right text-gray-700">{fmt(Number(lot.locked_quantity || 0))}</td>
       <td className="py-2">
         <div className="flex items-center justify-end gap-1">
           {onWithdraw && (

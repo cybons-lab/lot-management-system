@@ -28,13 +28,7 @@ export type LotStatus = "expired" | "rejected" | "qc_hold" | "empty" | "availabl
  *
  * この優先順位により、最も重要な警告を先頭に表示できる。
  */
-const LOT_STATUS_PRIORITY: LotStatus[] = [
-  "expired",
-  "rejected",
-  "qc_hold",
-  "empty",
-  "available",
-];
+const LOT_STATUS_PRIORITY: LotStatus[] = ["expired", "rejected", "qc_hold", "empty", "available"];
 
 /**
  * Lot オブジェクトから判定に必要な最小限のフィールド

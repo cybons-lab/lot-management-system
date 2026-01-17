@@ -23,6 +23,9 @@ uv sync
 ```bash
 cd frontend
 
+# コードフォーマットの適用（これ重要！）
+npm run format
+
 # TypeScriptの型チェック
 npm run typecheck
 
@@ -61,8 +64,8 @@ uv run mypy app/
 
 // turbo
 ```bash
-# Frontend Typecheck & Lint
-cd frontend && npm run typecheck && npm run lint
+# Frontend Format & Typecheck & Lint
+cd frontend && npm run format && npm run typecheck && npm run lint
 
 # Backend Format & Lint & Typecheck
 cd backend && uv run ruff format --check app/ && uv run ruff check app/ && uv run mypy app/
