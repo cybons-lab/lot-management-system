@@ -39,6 +39,7 @@ backend/app/application/services/test_data/
 │   ├── edge_cases.py        # エッジケース集約
 │   ├── cancellation.py      # 取り消し系シナリオ
 │   ├── time_series.py       # 時系列パターン
+│   ├── traceability.py      # トレーサビリティシナリオ（ロット履歴追跡）
 │   └── stress_test.py       # 大量データシナリオ
 ├── generators/              # 既存モジュールをリファクタ
 │   ├── __init__.py
@@ -417,6 +418,8 @@ EDGE_CASE_DISTRIBUTION = {
 | 2.4 | `edge_cases/inbound_edge_cases.py` - 入荷予定エッジケース |
 | 2.5 | `edge_cases/allocation_edge_cases.py` - 割当エッジケース |
 | 2.6 | 取り消しデータ専用生成器 |
+| 2.7 | `scenarios/traceability.py` - トレーサビリティシナリオ生成 |
+| 2.8 | ロット-受注-フォーキャスト紐付けデータ生成 |
 
 ### Phase 3: 時系列拡張
 
@@ -643,6 +646,255 @@ CHANGE_HISTORY_SCENARIOS = {
 }
 ```
 
+### 8.3 トレーサビリティデータ生成
+
+**目的**: ロットを起点としたデータの紐付け（追跡可能性）を検証するためのテストデータ
+
+#### 8.3.1 トレーサビリティ関連テーブル
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        ロット中心のトレーサビリティ                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   InboundPlan ──→ ExpectedLot ──→ LotReceipt (入荷元)               │
+│                                        │                            │
+│                                        ▼                            │
+│   ForecastCurrent ←── LotReservation ──┤ (予約関係)                 │
+│   (source_type=forecast)               │                            │
+│                                        │                            │
+│   OrderLine ←──────── LotReservation ──┤ (割当関係)                 │
+│   (source_type=order)                  │                            │
+│                                        │                            │
+│                                        ▼                            │
+│                                   Withdrawal (出庫履歴)              │
+│                                        │                            │
+│                                        ▼                            │
+│                              Customer / DeliveryPlace               │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+#### 8.3.2 ロット履歴シナリオ（製品別・ロット別）
+
+```python
+LOT_TRACEABILITY_SCENARIOS = {
+    # シナリオ1: 完全なライフサイクル
+    "full_lifecycle": {
+        "description": "入荷→予約→割当→出荷の完全フロー",
+        "data": {
+            "inbound_plan": {"status": "received", "quantity": 100},
+            "lot_receipt": {"received_quantity": 100, "status": "active"},
+            "reservations": [
+                {"source_type": "forecast", "source_id": "forecast_1", "qty": 30},
+                {"source_type": "order", "source_id": "order_line_1", "qty": 50},
+            ],
+            "withdrawals": [
+                {"type": "ORDER_AUTO", "quantity": 50, "order_line_id": "order_line_1"},
+                {"type": "SAMPLE", "quantity": 5, "customer_id": "customer_1"},
+            ],
+        },
+        "expected_current_qty": 45,  # 100 - 50 - 5
+    },
+
+    # シナリオ2: 複数受注への分割割当
+    "multi_order_allocation": {
+        "description": "1ロットから複数受注への割当",
+        "data": {
+            "lot_receipt": {"received_quantity": 200, "status": "active"},
+            "reservations": [
+                {"source_type": "order", "source_id": "order_line_1", "qty": 50},
+                {"source_type": "order", "source_id": "order_line_2", "qty": 70},
+                {"source_type": "order", "source_id": "order_line_3", "qty": 30},
+            ],
+            "withdrawals": [
+                {"type": "ORDER_AUTO", "quantity": 50, "order_line_id": "order_line_1"},
+                {"type": "ORDER_AUTO", "quantity": 70, "order_line_id": "order_line_2"},
+            ],
+        },
+        "expected_current_qty": 80,  # 200 - 50 - 70
+        "expected_reserved_qty": 30,  # order_line_3 pending
+    },
+
+    # シナリオ3: フォーキャスト→受注の変換
+    "forecast_to_order_conversion": {
+        "description": "フォーキャスト予約が受注予約に変換",
+        "data": {
+            "lot_receipt": {"received_quantity": 100, "status": "active"},
+            "reservations": [
+                {"source_type": "forecast", "source_id": "forecast_1", "qty": 40, "status": "released"},
+                {"source_type": "order", "source_id": "order_line_1", "qty": 40, "status": "active"},
+            ],
+        },
+        "note": "フォーキャスト予約がreleased、同数量の受注予約がactive",
+    },
+
+    # シナリオ4: 部分出荷と残在庫
+    "partial_shipment": {
+        "description": "部分出荷後の残在庫追跡",
+        "data": {
+            "lot_receipt": {"received_quantity": 100, "status": "active"},
+            "reservations": [
+                {"source_type": "order", "source_id": "order_line_1", "qty": 100, "status": "active"},
+            ],
+            "withdrawals": [
+                {"type": "ORDER_AUTO", "quantity": 60, "ship_date": "2025-01-10"},
+            ],
+        },
+        "expected_current_qty": 40,
+        "expected_reserved_qty": 100,  # 予約はまだ全数
+        "note": "予約100、出荷60、残40がまだ予約済み（部分出荷状態）",
+    },
+
+    # シナリオ5: キャンセルと予約解除
+    "cancellation_flow": {
+        "description": "受注キャンセルによる予約解除",
+        "data": {
+            "lot_receipt": {"received_quantity": 100, "status": "active"},
+            "reservations": [
+                {"source_type": "order", "source_id": "order_line_1", "qty": 50, "status": "released",
+                 "cancel_reason": "customer_request"},
+            ],
+        },
+        "expected_available_qty": 100,  # 予約解除で全数利用可能
+    },
+
+    # シナリオ6: 同一製品・複数ロット（FEFO検証用）
+    "multi_lot_fefo": {
+        "description": "同一製品の複数ロットへの分散割当",
+        "data": {
+            "lots": [
+                {"lot_number": "LOT-001", "expiry": "2025-02-01", "qty": 50},
+                {"lot_number": "LOT-002", "expiry": "2025-03-01", "qty": 80},
+                {"lot_number": "LOT-003", "expiry": "2025-04-01", "qty": 100},
+            ],
+            "order": {"quantity": 100},
+            "expected_allocation": [
+                {"lot": "LOT-001", "qty": 50},  # 先に期限の近いロットから
+                {"lot": "LOT-002", "qty": 50},  # 残りを次のロットから
+            ],
+        },
+    },
+}
+```
+
+#### 8.3.3 出庫履歴の詳細追跡
+
+```python
+WITHDRAWAL_HISTORY_SCENARIOS = {
+    # 製品別出庫履歴
+    "product_withdrawal_history": {
+        "description": "製品Aの全ロットからの出庫履歴",
+        "product_id": "PRD-001",
+        "history": [
+            {"date": "2024-12-01", "lot": "LOT-A1", "qty": 30, "type": "ORDER_AUTO", "customer": "顧客A"},
+            {"date": "2024-12-05", "lot": "LOT-A1", "qty": 20, "type": "ORDER_AUTO", "customer": "顧客B"},
+            {"date": "2024-12-10", "lot": "LOT-A2", "qty": 50, "type": "ORDER_AUTO", "customer": "顧客A"},
+            {"date": "2024-12-15", "lot": "LOT-A1", "qty": 10, "type": "SAMPLE", "customer": "顧客C"},
+            {"date": "2024-12-20", "lot": "LOT-A2", "qty": 5, "type": "DISPOSAL", "reason": "品質不良"},
+        ],
+        "summary": {
+            "total_withdrawn": 115,
+            "by_lot": {"LOT-A1": 60, "LOT-A2": 55},
+            "by_customer": {"顧客A": 80, "顧客B": 20, "顧客C": 10},
+            "by_type": {"ORDER_AUTO": 100, "SAMPLE": 10, "DISPOSAL": 5},
+        },
+    },
+
+    # 顧客別出庫履歴
+    "customer_withdrawal_history": {
+        "description": "顧客Aへの全製品出庫履歴",
+        "customer_id": "CUST-001",
+        "history": [
+            {"date": "2024-12-01", "product": "PRD-001", "lot": "LOT-A1", "qty": 30},
+            {"date": "2024-12-10", "product": "PRD-001", "lot": "LOT-A2", "qty": 50},
+            {"date": "2024-12-12", "product": "PRD-002", "lot": "LOT-B1", "qty": 100},
+            {"date": "2024-12-18", "product": "PRD-003", "lot": "LOT-C1", "qty": 25},
+        ],
+    },
+
+    # ロット別出庫履歴（取り消し含む）
+    "lot_withdrawal_with_cancellation": {
+        "description": "取り消しを含むロット出庫履歴",
+        "lot_id": "LOT-001",
+        "history": [
+            {"date": "2024-12-01", "qty": 30, "type": "ORDER_AUTO", "status": "completed"},
+            {"date": "2024-12-05", "qty": 20, "type": "ORDER_AUTO", "status": "cancelled",
+             "cancelled_at": "2024-12-06", "cancel_reason": "顧客キャンセル"},
+            {"date": "2024-12-10", "qty": 15, "type": "SAMPLE", "status": "completed"},
+        ],
+        "net_withdrawn": 45,  # 30 + 15 (キャンセル分は除外)
+    },
+}
+```
+
+#### 8.3.4 受注-ロット紐付けシナリオ
+
+```python
+ORDER_LOT_LINKAGE_SCENARIOS = {
+    # 単一ロット割当
+    "single_lot_order": {
+        "order_line": {"product": "PRD-001", "quantity": 50},
+        "allocation": [
+            {"lot": "LOT-001", "qty": 50, "status": "confirmed"},
+        ],
+    },
+
+    # 複数ロット分割割当
+    "multi_lot_split": {
+        "order_line": {"product": "PRD-001", "quantity": 120},
+        "allocation": [
+            {"lot": "LOT-001", "qty": 50, "status": "confirmed"},  # LOT-001は50で完売
+            {"lot": "LOT-002", "qty": 70, "status": "confirmed"},  # 残りをLOT-002から
+        ],
+    },
+
+    # 部分割当（在庫不足）
+    "partial_allocation": {
+        "order_line": {"product": "PRD-001", "quantity": 200},
+        "allocation": [
+            {"lot": "LOT-001", "qty": 50, "status": "confirmed"},
+            {"lot": "LOT-002", "qty": 80, "status": "confirmed"},
+        ],
+        "unallocated": 70,  # 200 - 50 - 80 = 70が未割当
+    },
+
+    # 割当変更（ロット差し替え）
+    "allocation_change": {
+        "order_line": {"product": "PRD-001", "quantity": 50},
+        "original_allocation": {"lot": "LOT-001", "qty": 50, "status": "released"},
+        "new_allocation": {"lot": "LOT-002", "qty": 50, "status": "active"},
+        "reason": "品質問題によるロット変更",
+    },
+}
+```
+
+#### 8.3.5 フォーキャスト-ロット紐付けシナリオ
+
+```python
+FORECAST_LOT_LINKAGE_SCENARIOS = {
+    # フォーキャスト予約
+    "forecast_reservation": {
+        "forecast": {"product": "PRD-001", "customer": "CUST-001", "qty": 100, "period": "2025-02"},
+        "reservation": {"lot": "LOT-001", "qty": 100, "status": "active"},
+    },
+
+    # フォーキャスト→実績の紐付け
+    "forecast_to_actual": {
+        "forecast": {"product": "PRD-001", "qty": 100, "period": "2025-01"},
+        "reservations": [
+            {"lot": "LOT-001", "qty": 60, "source_type": "forecast", "status": "released"},
+            {"lot": "LOT-002", "qty": 40, "source_type": "forecast", "status": "released"},
+        ],
+        "actual_orders": [
+            {"qty": 55, "lot": "LOT-001"},  # フォーキャストより5少ない
+            {"qty": 50, "lot": "LOT-002"},  # フォーキャストより10多い
+        ],
+        "variance": {"LOT-001": -5, "LOT-002": +10, "total": +5},
+    },
+}
+```
+
 ---
 
 ## 9. 検証とモニタリング
@@ -667,6 +919,13 @@ VALIDATION_CHECKS = [
     "historical_data_completeness",  # 過去データの完全性
     "future_forecasts_exist",  # 将来予測が存在
     "seasonal_patterns_present",  # 季節パターンが含まれる
+
+    # トレーサビリティ
+    "lot_withdrawal_history_exists",  # ロット別出庫履歴が存在
+    "order_lot_linkage_exists",  # 受注-ロット紐付けが存在
+    "forecast_lot_linkage_exists",  # フォーキャスト-ロット紐付けが存在
+    "multi_lot_allocation_exists",  # 複数ロット分割割当が存在
+    "allocation_cancellation_history_exists",  # 割当キャンセル履歴が存在
 ]
 ```
 
