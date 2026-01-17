@@ -35,6 +35,50 @@ const LOT_COLUMNS = [
     align: "right" as const,
   },
   {
+    id: "available_quantity",
+    header: (
+      <span title="利用可能 = 残量 − ロック − 確定引当" className="cursor-help">
+        利用可能
+      </span>
+    ),
+    accessor: (row: LotUI) => (
+      <span className="font-mono text-gray-700">
+        {formatDecimal(parseDecimal(row.available_quantity ?? "0"), 2)}
+      </span>
+    ),
+    align: "right" as const,
+  },
+  {
+    id: "reserved_quantity_active",
+    header: "予約（未確定）",
+    accessor: (row: LotUI) => (
+      <span className="font-mono text-gray-700">
+        {formatDecimal(parseDecimal(row.reserved_quantity_active ?? "0"), 2)}
+      </span>
+    ),
+    align: "right" as const,
+  },
+  {
+    id: "allocated_quantity",
+    header: "確定引当",
+    accessor: (row: LotUI) => (
+      <span className="font-mono text-gray-700">
+        {formatDecimal(parseDecimal(row.allocated_quantity), 2)}
+      </span>
+    ),
+    align: "right" as const,
+  },
+  {
+    id: "locked_quantity",
+    header: "ロック",
+    accessor: (row: LotUI) => (
+      <span className="font-mono text-gray-700">
+        {formatDecimal(parseDecimal(row.locked_quantity ?? "0"), 2)}
+      </span>
+    ),
+    align: "right" as const,
+  },
+  {
     id: "unit",
     header: "単位",
     accessor: (row: LotUI) => <span className="text-gray-600">{row.unit}</span>,

@@ -3,13 +3,7 @@
  * src/shared/utils/status.ts
  */
 
-export type LotStatus =
-  | "locked"
-  | "inspection_failed"
-  | "inspection_pending"
-  | "expired"
-  | "depleted"
-  | "available";
+export type LotStatus = "expired" | "rejected" | "qc_hold" | "empty" | "available";
 
 /**
  * ステータス表示の優先順位
@@ -17,41 +11,24 @@ export type LotStatus =
  *
  * 【設計意図】なぜこの優先順位なのか:
  *
- * 1. locked（最優先）
- *    理由: ロック状態は手動操作で設定される特別な状態
- *    用途: 品質問題や顧客専用在庫など、引当を完全に禁止する必要がある
- *    → 他のすべてのステータスより優先して表示
+ * 1. expired（最優先）
+ *    理由: 有効期限切れは誤出庫の重大リスク
  *
- * 2. inspection_failed（2番目）
- *    理由: 検査不合格品は出荷できない（法的・品質的に重大）
- *    → 在庫があっても使えないことを明確に示す必要がある
+ * 2. rejected
+ *    理由: 検査不合格/廃棄は出庫不可
  *
- * 3. inspection_pending（3番目）
- *    理由: 検査待ちの在庫は「条件付きで使えない」状態
- *    → 検査が完了すれば使える可能性があるため、failedより優先度は低い
+ * 3. qc_hold
+ *    理由: 検査待ち/保留中は出庫不可だが、解除される可能性がある
  *
- * 4. expired（4番目）
- *    理由: 有効期限切れは顧客クレームに直結
- *    → depleted（在庫なし）より深刻な問題
+ * 4. empty
+ *    理由: 在庫0は出庫不可だが入荷で解消可能
  *
- * 5. depleted（5番目）
- *    理由: 在庫0は引当不可だが、入荷すれば使える
- *    → expired等の品質問題より優先度は低い
- *
- * 6. available（最下位）
+ * 5. available（最下位）
  *    理由: 他に問題がなければ「引当可能」
- *    → デフォルトの正常状態
  *
  * この優先順位により、最も重要な警告を先頭に表示できる。
  */
-const LOT_STATUS_PRIORITY: LotStatus[] = [
-  "locked",
-  "inspection_failed",
-  "inspection_pending",
-  "expired",
-  "depleted",
-  "available",
-];
+const LOT_STATUS_PRIORITY: LotStatus[] = ["expired", "rejected", "qc_hold", "empty", "available"];
 
 /**
  * Lot オブジェクトから判定に必要な最小限のフィールド
@@ -95,29 +72,28 @@ type LotLike = {
  *
  * @example
  * getLotStatuses({ status: 'locked', current_quantity: 10 })
- * // => ['locked']
+ * // => ['qc_hold']
  *
  * getLotStatuses({ status: 'active', current_quantity: 0 })
- * // => ['depleted']
+ * // => ['empty']
  *
  * getLotStatuses({ status: 'active', current_quantity: 50, inspection_status: 'pending' })
- * // => ['inspection_pending', 'available']
+ * // => ['qc_hold']
  */
 export function getLotStatuses(lot: LotLike | null | undefined): LotStatus[] {
   if (!lot) return ["available"]; // デフォルト
 
   const statuses: LotStatus[] = [];
 
-  // ロック状態の判定（最優先）
-  if (lot.status === "locked") {
-    statuses.push("locked");
+  // 検査・保留状態の判定
+  if (lot.inspection_status === "failed") {
+    statuses.push("rejected");
+  } else if (lot.inspection_status === "pending") {
+    statuses.push("qc_hold");
   }
 
-  // 検査ステータスの判定
-  if (lot.inspection_status === "failed") {
-    statuses.push("inspection_failed");
-  } else if (lot.inspection_status === "pending") {
-    statuses.push("inspection_pending");
+  if (lot.status === "quarantine" || lot.status === "locked") {
+    statuses.push("qc_hold");
   }
 
   // 有効期限の判定
@@ -134,8 +110,8 @@ export function getLotStatuses(lot: LotLike | null | undefined): LotStatus[] {
   // 在庫数の判定
   const qty = Number(lot.current_quantity ?? 0);
   if (qty <= 0) {
-    statuses.push("depleted");
-  } else {
+    statuses.push("empty");
+  } else if (statuses.length === 0) {
     statuses.push("available");
   }
 

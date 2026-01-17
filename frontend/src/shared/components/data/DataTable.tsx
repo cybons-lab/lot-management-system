@@ -42,7 +42,7 @@ import { cn } from "@/shared/libs/utils";
 /** カラム定義の型 */
 export interface Column<T> {
   id: string;
-  header: string;
+  header: string | React.ReactNode;
   accessor?: (row: T) => React.ReactNode;
   cell?: (row: T) => React.ReactNode;
   width?: string | number;
@@ -92,6 +92,8 @@ interface DataTableProps<T> {
   getRowClassName?: (row: T) => string;
   /** 展開可能な行を有効化 */
   expandable?: boolean;
+  /** 展開モード */
+  expandMode?: "single" | "multi";
   /** 展開された行のID配列 */
   expandedRowIds?: (string | number)[];
   /** 展開状態変更時のコールバック */
@@ -127,6 +129,7 @@ export function DataTable<T = never>({
   className,
   getRowClassName,
   expandable = false,
+  expandMode = "multi",
   expandedRowIds = [],
   onExpandedRowsChange,
   renderExpandedRow,
@@ -212,9 +215,9 @@ export function DataTable<T = never>({
     columns.forEach((col) => {
       defs.push({
         id: col.id,
-        header: col.header,
+        header: col.header as string | ((props: unknown) => React.ReactNode), // Relaxed for TanStack
         // accessorの互換性
-        accessorFn: col.accessor ? (row) => col.accessor!(row) : undefined,
+        ...(col.accessor ? { accessorFn: (row) => col.accessor!(row) } : {}),
         cell: (info) => {
           if (col.cell) {
             return col.cell(info.row.original);
@@ -322,6 +325,12 @@ export function DataTable<T = never>({
         const expandedIdList = Object.keys(nextExpanded).filter(
           (id) => (nextExpanded as Record<string, boolean>)[id],
         );
+        if (expandMode === "single" && expandedIdList.length > 1) {
+          const currentSet = new Set(expandedRowIds.map(String));
+          const added = expandedIdList.find((id) => !currentSet.has(id));
+          onExpandedRowsChange(added ? [added] : [expandedIdList[0]]);
+          return;
+        }
         onExpandedRowsChange(expandedIdList);
       }
     },
@@ -430,7 +439,7 @@ export function DataTable<T = never>({
                     checked={column.getIsVisible()}
                     onCheckedChange={(value: boolean) => column.toggleVisibility(!!value)}
                   >
-                    {column.columnDef.header as string}
+                    {column.columnDef.header as React.ReactNode}
                   </DropdownMenuCheckboxItem>
                 );
               })}

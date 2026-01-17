@@ -95,7 +95,7 @@ export function useLotColumns({
           return (
             <div className="flex items-center gap-1">
               {statuses.map((s) => (
-                <LotStatusIcon key={s} status={s as "locked" | "available" | "depleted"} />
+                <LotStatusIcon key={s} status={s} />
               ))}
             </div>
           );

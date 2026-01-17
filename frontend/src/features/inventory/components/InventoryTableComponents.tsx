@@ -53,11 +53,13 @@ export function LotTableRow({
   onHistory,
 }: LotTableRowProps) {
   const statuses = getLotStatuses(lot);
-  const isLocked = statuses.includes("locked");
+  const isLocked = lot.status === "locked";
   const availableQty =
-    Number(lot.current_quantity) -
-    Number(lot.allocated_quantity) -
-    Number(lot.locked_quantity || 0);
+    lot.available_quantity !== undefined
+      ? Number(lot.available_quantity)
+      : Number(lot.current_quantity) -
+        Number(lot.allocated_quantity) -
+        Number(lot.locked_quantity || 0);
 
   return (
     <tr className={`border-b border-gray-100 hover:bg-gray-100 ${isLocked ? "opacity-60" : ""}`}>
@@ -77,10 +79,16 @@ export function LotTableRow({
       <td className="py-2">
         <div className="flex items-center gap-1">
           {statuses.map((s) => (
-            <LotStatusIcon key={s} status={s as "locked" | "available" | "depleted"} />
+            <LotStatusIcon key={s} status={s} />
           ))}
         </div>
       </td>
+      <td className="py-2 text-right text-gray-700">{fmt(Number(availableQty))}</td>
+      <td className="py-2 text-right text-gray-700">
+        {fmt(Number(lot.reserved_quantity_active || 0))}
+      </td>
+      <td className="py-2 text-right text-gray-700">{fmt(Number(lot.allocated_quantity))}</td>
+      <td className="py-2 text-right text-gray-700">{fmt(Number(lot.locked_quantity || 0))}</td>
       <td className="py-2">
         <div className="flex items-center justify-end gap-1">
           {onWithdraw && (
@@ -170,6 +178,8 @@ export function ExpandedLotDetails({
   onWithdrawLot,
   onHistoryLot,
 }: ExpandedLotDetailsProps) {
+  const availableTooltip = "利用可能 = 残量 − ロック − 確定引当";
+
   return (
     <tr>
       <td colSpan={10} className="bg-gray-50 p-0">
@@ -185,6 +195,15 @@ export function ExpandedLotDetails({
                   <th className="pb-2 text-left font-medium text-gray-600">入荷日</th>
                   <th className="pb-2 text-left font-medium text-gray-600">有効期限</th>
                   <th className="pb-2 text-left font-medium text-gray-600">ステータス</th>
+                  <th
+                    className="pb-2 text-right font-medium text-gray-600"
+                    title={availableTooltip}
+                  >
+                    利用可能
+                  </th>
+                  <th className="pb-2 text-right font-medium text-gray-600">予約（未確定）</th>
+                  <th className="pb-2 text-right font-medium text-gray-600">確定引当</th>
+                  <th className="pb-2 text-right font-medium text-gray-600">ロック</th>
                   <th className="pb-2 text-right font-medium text-gray-600">操作</th>
                 </tr>
               </thead>

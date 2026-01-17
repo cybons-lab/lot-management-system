@@ -6,10 +6,15 @@
  * - リロード後も状態が復元される
  */
 
-import { useAtom } from "jotai";
-import { useCallback, useMemo } from "react";
+import { useAtom, useAtomValue } from "jotai";
+import { useCallback } from "react";
 
-import { inventoryPageStateAtom, type OverviewMode, type InventoryItemFilters } from "../state";
+import {
+  inventoryPageQueryParamsAtom,
+  inventoryPageStateAtom,
+  type InventoryItemFilters,
+  type OverviewMode,
+} from "../state";
 
 export function useInventoryPageState() {
   const [state, setState] = useAtom(inventoryPageStateAtom);
@@ -52,16 +57,7 @@ export function useInventoryPageState() {
   }, [setState]);
 
   // queryParams変換（API用）
-  const queryParams = useMemo(
-    () => ({
-      product_id: state.filters.product_id ? Number(state.filters.product_id) : undefined,
-      warehouse_id: state.filters.warehouse_id ? Number(state.filters.warehouse_id) : undefined,
-      supplier_id: state.filters.supplier_id ? Number(state.filters.supplier_id) : undefined,
-      tab: state.filters.tab,
-      primary_staff_only: state.filters.primary_staff_only,
-    }),
-    [state.filters],
-  );
+  const queryParams = useAtomValue(inventoryPageQueryParamsAtom);
 
   return {
     overviewMode: state.overviewMode,

@@ -73,6 +73,7 @@ from app.infrastructure.persistence.models import (
     Product,
     StockHistory,
     StockTransactionType,
+    WithdrawalLine,
 )
 from app.infrastructure.persistence.models.withdrawal_models import (
     Withdrawal,
@@ -305,8 +306,16 @@ class WithdrawalService:
         self.db.add(withdrawal)
         self.db.flush()
 
+        withdrawal_line = WithdrawalLine(
+            withdrawal_id=withdrawal.id,
+            lot_receipt_id=lot.id,
+            quantity=data.quantity,
+        )
+        self.db.add(withdrawal_line)
+
         # B-Plan: current_quantityは計算フィールドなので直接更新しない
         # received_quantityベースで残量はViewで計算される
+        lot.consumed_quantity = (lot.consumed_quantity or Decimal("0")) + data.quantity
         lot.updated_at = utcnow()
 
         # 数量がゼロになった場合はステータスを更新
@@ -455,6 +464,18 @@ class WithdrawalService:
 
         if not lot:
             raise ValueError(f"ロット（ID={withdrawal.lot_id}）が見つかりません")
+
+        reverse_quantity = withdrawal.quantity
+        if reverse_quantity is None:
+            reverse_quantity = (
+                self.db.query(func.coalesce(func.sum(WithdrawalLine.quantity), 0))
+                .filter(WithdrawalLine.withdrawal_id == withdrawal.id)
+                .scalar()
+            )
+        if reverse_quantity:
+            lot.consumed_quantity = max(
+                (lot.consumed_quantity or Decimal("0")) - reverse_quantity, Decimal("0")
+            )
 
         # B-Plan: 在庫計算のためquantity_beforeとnew_quantityは計算するが、
         # lot.current_quantityへの代入は行わない（計算フィールドのため）

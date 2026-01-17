@@ -6,6 +6,7 @@
  * - URLにクエリパラメータは出さない
  */
 
+import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 
 // ============================================
@@ -48,6 +49,18 @@ export interface LotTableSettings {
 export interface SummarySettings {
   /** 表示する統計期間（日数） */
   periodDays?: number;
+}
+
+/**
+ * ロット検索の一覧状態
+ */
+export interface LotSearchState {
+  q: string;
+  page: number;
+  size: number;
+  sort_by: string;
+  sort_order: "asc" | "desc";
+  status: string;
 }
 
 // ============================================
@@ -138,6 +151,24 @@ export const summarySettingsAtom = atomWithStorage<SummarySettings>(
   { getOnInit: true },
 );
 
+/**
+ * ロット検索パネルの状態
+ * キー: inv:lotSearchState
+ */
+export const lotSearchStateAtom = atomWithStorage<LotSearchState>(
+  "inv:lotSearchState",
+  {
+    q: "",
+    page: 1,
+    size: 20,
+    sort_by: "expiry_date",
+    sort_order: "asc",
+    status: "active",
+  },
+  createSessionStorageAdapter<LotSearchState>(),
+  { getOnInit: true },
+);
+
 // ============================================
 // Inventory Page State
 // ============================================
@@ -188,3 +219,18 @@ export const inventoryPageStateAtom = atomWithStorage<{
   }>(),
   { getOnInit: true },
 );
+
+/**
+ * 在庫ページのAPIクエリパラメータ（派生）
+ */
+export const inventoryPageQueryParamsAtom = atom((get) => {
+  const { filters } = get(inventoryPageStateAtom);
+
+  return {
+    product_id: filters.product_id ? Number(filters.product_id) : undefined,
+    warehouse_id: filters.warehouse_id ? Number(filters.warehouse_id) : undefined,
+    supplier_id: filters.supplier_id ? Number(filters.supplier_id) : undefined,
+    tab: filters.tab,
+    primary_staff_only: filters.primary_staff_only,
+  };
+});

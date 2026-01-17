@@ -6,14 +6,15 @@ providing product × warehouse summary information.
 【設計意図】在庫サマリーサービスの設計判断:
 
 1. なぜ v_inventory_summary ビューを使うのか（L83-112）
-   理由: 在庫サマリー取得のパフォーマンス最適化
+   理由: 在庫サマリー取得のパフォーマンス最適化 + SSOT整合
    業務的背景:
    - 自動車部品商社: 数万件のロットから製品×倉庫の在庫サマリーを表示
    - リアルタイム計算: SELECT SUM(current_quantity) GROUP BY ... は高負荷
    → v_inventory_summary ビューで事前集計（Materialized View相当）
    実装:
-   - v_inventory_summary: 製品×倉庫ごとの在庫合計を集計
+   - v_inventory_summary: v_lot_receipt_stock を基準に集計
    - total_quantity, allocated_quantity, available_quantity を計算済み
+   - available = on_hand - locked - confirmed（予約/activeは減算しない）
    メリット:
    - 在庫一覧画面の表示速度向上（100倍以上の高速化）
 
@@ -22,9 +23,9 @@ providing product × warehouse summary information.
    業務的背景:
    - 営業担当者: 自分の担当サプライヤーの在庫のみを表示したい
    - v_inventory_summary: 製品×倉庫でグループ化（サプライヤーは含まれない）
-   → supplier_id フィルタ時は lots テーブルを直接集計
+   → supplier_id フィルタ時は v_lot_receipt_stock を直接集計
    実装:
-   - supplier_id 指定時: SELECT SUM() FROM lots WHERE supplier_id = ?
+   - supplier_id 指定時: SELECT SUM() FROM v_lot_receipt_stock WHERE supplier_id = ?
    - 未指定時: SELECT FROM v_inventory_summary
    トレードオフ:
    - supplier_id フィルタ時は若干遅い（リアルタイム集計）

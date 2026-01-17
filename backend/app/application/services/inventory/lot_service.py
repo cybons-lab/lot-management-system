@@ -157,7 +157,6 @@ from app.infrastructure.persistence.models import (
     LotMaster,
     LotReceipt,
     Product,
-    StockHistory,
     StockMovement,
     StockTransactionType,
     Supplier,
@@ -708,11 +707,11 @@ class LotService:
         try:
             db_lot = LotReceipt(**lot_payload)
             self.db.add(db_lot)
-            self.db.flush()  # Generate ID for StockHistory
+            self.db.flush()  # Generate ID for StockMovement
 
             # Create stock history record for intake tracking
             if db_lot.received_quantity and db_lot.received_quantity > 0:
-                stock_history = StockHistory(
+                stock_movement = StockMovement(
                     lot_id=db_lot.id,
                     transaction_type=StockTransactionType.INBOUND,
                     quantity_change=db_lot.received_quantity,
@@ -720,7 +719,7 @@ class LotService:
                     reference_type="adhoc_intake",
                     reference_id=db_lot.id,
                 )
-                self.db.add(stock_history)
+                self.db.add(stock_movement)
 
             self.db.commit()
             self.db.refresh(db_lot)

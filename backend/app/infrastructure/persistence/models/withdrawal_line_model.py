@@ -9,8 +9,8 @@ Design rationale:
    - 1出庫 = N明細 で「どのreceiptから何個出庫したか」を記録
 
 2. 在庫残量の計算
-   - lot_receipts.received_quantity - SUM(withdrawal_lines.quantity) = 残量
-   - 集計で算出（将来キャッシュ化への備えあり）
+   - lot_receipts.received_quantity - consumed_quantity = 残量
+   - withdrawal_lines は消費履歴の監査用（再計算用）として保持
 
 3. lot_receipt_id の ON DELETE RESTRICT
    - 出庫履歴がある lot_receipt は削除不可

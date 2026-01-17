@@ -89,24 +89,23 @@ export function InventoryTable({
     const currentSet = new Set(expandedRowIds);
 
     // 新しく展開された行
-    const added = [...idsSet].find((id) => !currentSet.has(id));
-    if (added) {
+    const addedIds = [...idsSet].filter((id) => !currentSet.has(id));
+    addedIds.forEach((added) => {
       const item = data.find((i) => getItemKey(i) === added);
       if (item) {
         toggleRow(item.product_id, item.warehouse_id);
         void fetchLotsForItem(item.product_id, item.warehouse_id);
       }
-      return;
-    }
+    });
 
     // 折りたたまれた行
-    const removed = [...currentSet].find((id) => !idsSet.has(id));
-    if (removed) {
+    const removedIds = [...currentSet].filter((id) => !idsSet.has(id));
+    removedIds.forEach((removed) => {
       const item = data.find((i) => getItemKey(i) === removed);
       if (item) {
         toggleRow(item.product_id, item.warehouse_id);
       }
-    }
+    });
   };
 
   // アクションボタン
@@ -209,6 +208,7 @@ export function InventoryTable({
         onRowClick={onRowClick}
         rowActions={renderRowActions}
         expandable
+        expandMode="single"
         expandedRowIds={expandedRowIds}
         onExpandedRowsChange={handleExpandedRowsChange}
         renderExpandedRow={renderExpandedRow}

@@ -201,8 +201,8 @@ class LotOriginType(str, PyEnum):
 # This alias is maintained for backward compatibility during migration
 
 
-class StockHistory(Base):
-    """Tracks all stock transactions against lots (在庫履歴).
+class StockMovement(Base):
+    """Append-only stock ledger entries (在庫台帳).
 
     DDL: stock_history
     Primary key: id (BIGSERIAL)
@@ -412,8 +412,8 @@ class AllocationTrace(Base):
     )
 
 
-# Backward compatibility aliases (to be removed in later refactors)
-StockMovement = StockHistory
+# Backward compatibility alias (read model naming)
+StockHistory = StockMovement
 StockMovementReason = StockTransactionType
 
 # LotCurrentStock alias for backward compatibility if needed, though InventoryItem is preferred.
