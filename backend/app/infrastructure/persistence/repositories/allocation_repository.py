@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.time_utils import utcnow
-from app.infrastructure.persistence.models import Lot, LotMaster
+from app.infrastructure.persistence.models import LotMaster, LotReceipt
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -216,7 +216,7 @@ class ReservationRepository:
             アクティブな予約エンティティのリスト
         """
         lot = self.db.execute(
-            select(Lot).join(Lot.lot_master).where(LotMaster.lot_number == lot_number)
+            select(LotReceipt).join(LotReceipt.lot_master).where(LotMaster.lot_number == lot_number)
         ).scalar_one_or_none()
         if not lot:
             return []
@@ -345,7 +345,7 @@ class ReservationRepository:
         """
         self.update_status(reservation, ReservationStatus.RELEASED)
 
-    def get_lot(self, lot_id: int) -> Lot | None:
+    def get_lot(self, lot_id: int) -> LotReceipt | None:
         """ロットを取得.
 
         Args:
@@ -354,8 +354,8 @@ class ReservationRepository:
         Returns:
             ロットエンティティ（存在しない場合はNone）
         """
-        stmt = select(Lot).where(Lot.id == lot_id)
-        return cast(Lot | None, self.db.execute(stmt).scalar_one_or_none())
+        stmt = select(LotReceipt).where(LotReceipt.id == lot_id)
+        return cast(LotReceipt | None, self.db.execute(stmt).scalar_one_or_none())
 
 
 # Backward compatibility alias

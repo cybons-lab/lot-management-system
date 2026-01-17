@@ -6,10 +6,10 @@ def test_label_service_pdf_generation(db_session, setup_search_data):
     service = LabelService(db_session)
     # setup_search_data creates lots with ids [1, 2, 3] usually
     # We can fetch first 2 lots
-    from app.infrastructure.persistence.models import Lot
+    from app.infrastructure.persistence.models import LotReceipt
 
-    lots = db_session.query(Lot).limit(2).all()
-    ids = [lot.lot_id for lot in lots]
+    lots = db_session.query(LotReceipt).limit(2).all()
+    ids = [lot.id for lot in lots]
 
     pdf_buffer = service.generate_label_pdf(ids)
     content = pdf_buffer.getvalue()
@@ -20,10 +20,10 @@ def test_label_service_pdf_generation(db_session, setup_search_data):
 
 def test_download_labels_api(client, db_session, setup_search_data):
     """Test API endpoint."""
-    from app.infrastructure.persistence.models import Lot
+    from app.infrastructure.persistence.models import LotReceipt
 
-    lots = db_session.query(Lot).limit(2).all()
-    ids = [lot.lot_id for lot in lots]
+    lots = db_session.query(LotReceipt).limit(2).all()
+    ids = [lot.id for lot in lots]
 
     response = client.post("/api/v2/lot/labels/download", json={"lot_ids": ids})
 

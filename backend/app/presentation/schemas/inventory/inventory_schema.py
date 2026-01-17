@@ -70,7 +70,11 @@ class LotBase(BaseSchema):
     expected_lot_id: int | None = None
     received_date: date
     expiry_date: date | None = None
+    # Backward compatibility: current_quantity maps to received_quantity in input (Create),
+    # but maps to remaining_quantity in output (Response).
     current_quantity: Decimal = Decimal("0")
+    received_quantity: Decimal = Decimal("0")
+    remaining_quantity: Decimal = Decimal("0")
     allocated_quantity: Decimal = Decimal("0")
     locked_quantity: Decimal = Decimal("0")
     unit: str

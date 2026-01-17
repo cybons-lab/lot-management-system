@@ -11,7 +11,7 @@ from app.infrastructure.persistence.models.inbound_models import (
     InboundPlanStatus,
 )
 from app.infrastructure.persistence.models.inventory_models import (
-    Lot,
+    LotReceipt,
     StockHistory,
     StockTransactionType,
 )
@@ -94,16 +94,15 @@ class InboundReceivingService:
                         lot_number, line.product_id, plan.supplier_id
                     )
 
-                    db_lot = Lot(
+                    db_lot = LotReceipt(
                         lot_master_id=lm.id,
-                        lot_number=lot_number,
                         product_id=line.product_id,
                         warehouse_id=default_warehouse_id,
                         supplier_id=plan.supplier_id,
                         expected_lot_id=expected_lot.id,
                         received_date=request.received_at.date(),
                         expiry_date=expected_lot.expected_expiry_date,
-                        current_quantity=expected_lot.expected_quantity,
+                        received_quantity=expected_lot.expected_quantity,
                         unit=line.unit,
                         status="active",
                         temporary_lot_key=temp_key,
@@ -132,16 +131,15 @@ class InboundReceivingService:
                 # Get or Create LotMaster
                 lm = self._get_or_create_lot_master(lot_number, line.product_id, plan.supplier_id)
 
-                db_lot = Lot(
+                db_lot = LotReceipt(
                     lot_master_id=lm.id,
-                    lot_number=lot_number,
                     product_id=line.product_id,
                     warehouse_id=default_warehouse_id,
                     supplier_id=plan.supplier_id,
                     expected_lot_id=None,
                     received_date=request.received_at.date(),
                     expiry_date=None,
-                    current_quantity=line.planned_quantity,
+                    received_quantity=line.planned_quantity,
                     unit=line.unit,
                     status="active",
                 )
@@ -188,7 +186,7 @@ class InboundReceivingService:
         # Simple implementation: plan_number + product_id + sequence
         # Count existing lots for this plan and product
         count = (
-            self.db.query(func.count(Lot.id))
+            self.db.query(func.count(LotReceipt.id))
             .join(LotMaster)
             .filter(LotMaster.lot_number.like(f"{plan_number}-{product_id}-%"))
             .scalar()

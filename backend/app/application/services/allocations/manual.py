@@ -132,7 +132,7 @@ from app.application.services.allocations.utils import (
 )
 from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.core.time_utils import utcnow
-from app.infrastructure.persistence.models import Lot, OrderLine
+from app.infrastructure.persistence.models import LotReceipt, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -182,7 +182,7 @@ def create_manual_reservation(
     if not line:
         raise ValueError(f"OrderLine {order_line_id} not found")
 
-    lot = db.query(Lot).filter(Lot.id == lot_id).with_for_update().first()
+    lot = db.query(LotReceipt).filter(LotReceipt.id == lot_id).with_for_update().first()
     if not lot:
         raise ValueError(f"Lot {lot_id} not found")
 

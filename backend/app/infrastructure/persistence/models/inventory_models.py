@@ -167,8 +167,7 @@ from .base_model import Base
 from .lot_receipt_models import LotReceipt
 
 
-# Alias for backward compatibility
-Lot = LotReceipt
+
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only

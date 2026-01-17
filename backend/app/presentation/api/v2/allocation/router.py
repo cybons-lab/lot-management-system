@@ -19,7 +19,7 @@ from app.application.services.allocations.actions import (
 from app.application.services.allocations.fefo import preview_fefo_allocation
 from app.application.services.allocations.schemas import AllocationNotFoundError
 from app.application.services.inventory.stock_calculation import get_available_quantity
-from app.infrastructure.persistence.models import Lot, OrderLine
+from app.infrastructure.persistence.models import LotReceipt, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -116,7 +116,7 @@ async def manual_allocate(request: ManualAllocationRequest, db: Session = Depend
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
-    lot = db.query(Lot).filter(Lot.id == request.lot_id).first()
+    lot = db.query(LotReceipt).filter(LotReceipt.id == request.lot_id).first()
     available = get_available_quantity(db, lot) if lot else Decimal("0")
 
     # P3: Map LotReservation fields to response
@@ -169,7 +169,7 @@ async def list_allocations_by_order(order_id: int, db: Session = Depends(get_db)
     lot_ids = {res.lot_id for res in reservations if res.lot_id}
     lots = {}
     if lot_ids:
-        lots = {l.id: l for l in db.query(Lot).filter(Lot.id.in_(lot_ids)).all()}
+        lots = {l.id: l for l in db.query(LotReceipt).filter(LotReceipt.id.in_(lot_ids)).all()}
 
     for res in reservations:
         lot = lots.get(res.lot_id) if res.lot_id else None

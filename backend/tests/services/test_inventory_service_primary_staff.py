@@ -10,7 +10,7 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     from app.infrastructure.persistence.models.assignments.assignment_models import (
         UserSupplierAssignment,
     )
-    from app.infrastructure.persistence.models.inventory_models import Lot
+    from app.infrastructure.persistence.models.inventory_models import LotReceipt
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
     from app.infrastructure.persistence.models.masters_models import Supplier
     from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
@@ -52,9 +52,8 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     db.add(lot_master1)
     db.flush()
 
-    lot1 = Lot(
+    lot1 = LotReceipt(
         lot_master_id=lot_master1.id,
-        lot_number="LOT-ASSIGNED",
         product_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=assigned_supplier.id,
@@ -74,9 +73,8 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     db.add(lot_master2)
     db.flush()
 
-    lot2 = Lot(
+    lot2 = LotReceipt(
         lot_master_id=lot_master2.id,
-        lot_number="LOT-UNASSIGNED",
         product_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=unassigned_supplier.id,

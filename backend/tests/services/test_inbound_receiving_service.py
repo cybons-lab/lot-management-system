@@ -10,7 +10,7 @@ from app.infrastructure.persistence.models.inbound_models import (
     InboundPlan,
     InboundPlanLine,
 )
-from app.infrastructure.persistence.models.inventory_models import Lot, StockHistory
+from app.infrastructure.persistence.models.inventory_models import LotReceipt, StockHistory
 from app.presentation.schemas.inventory.inbound_schema import InboundPlanReceiveRequest
 
 
@@ -60,9 +60,9 @@ def test_receive_inbound_plan_with_expected_lots(db: Session, service_master_dat
         assert len(response.created_lot_ids) == 1
 
         # Verify lot creation
-        lot = db.query(Lot).filter(Lot.id == response.created_lot_ids[0]).first()
+        lot = db.query(LotReceipt).filter(LotReceipt.id == response.created_lot_ids[0]).first()
         assert lot.lot_number == "LOT-RCV-001"
-        assert lot.current_quantity == 100
+        assert lot.received_quantity == 100
         assert lot.warehouse_id == warehouse.id
         assert lot.status == "active"
 
@@ -111,10 +111,10 @@ def test_receive_inbound_plan_without_expected_lots(db: Session, service_master_
         assert response.success is True
         assert len(response.created_lot_ids) == 1
 
-        lot = db.query(Lot).filter(Lot.id == response.created_lot_ids[0]).first()
+        lot = db.query(LotReceipt).filter(LotReceipt.id == response.created_lot_ids[0]).first()
         # Lot number should be generated: plan_number-product_id-001
         assert lot.lot_number == f"IP-RCV-AUTO-{product.id}-001"
-        assert lot.current_quantity == 50
+        assert lot.received_quantity == 50
 
 
 def test_receive_inbound_plan_not_found(db: Session):

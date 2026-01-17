@@ -11,7 +11,8 @@ from app.application.services.common.base_service import BaseService
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.inventory_models import (
     Adjustment,
-    Lot,
+    Adjustment,
+    LotReceipt,
     StockHistory,
     StockTransactionType,
 )
@@ -182,7 +183,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
             - stock_historyレコードを作成
         """
         # Get lot
-        lot = self.db.query(Lot).filter(Lot.id == adjustment.lot_id).first()
+        lot = self.db.query(LotReceipt).filter(LotReceipt.id == adjustment.lot_id).first()
 
         if not lot:
             raise ValueError(f"Lot with id={adjustment.lot_id} not found")

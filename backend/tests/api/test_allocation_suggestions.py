@@ -21,7 +21,7 @@ from app.infrastructure.persistence.models import (
     AllocationSuggestion,
     Customer,
     DeliveryPlace,
-    Lot,
+    LotReceipt,
     Order,
     OrderLine,
     Product,
@@ -38,7 +38,7 @@ def _truncate_all(db: Session):
         AllocationSuggestion,
         OrderLine,
         Order,
-        Lot,
+        LotReceipt,
         LotMaster,
         DeliveryPlace,
         Product,
@@ -146,11 +146,10 @@ def master_data(test_db: Session):
     test_db.commit()
 
     # Create lot with stock
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lot_master.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
-        lot_number="LOT-001",
         current_quantity=Decimal("100.000"),
         unit="EA",
         received_date=date.today(),

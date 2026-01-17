@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.application.services.inventory.lot_service import LotService
 from app.application.services.inventory.stock_calculation import get_reserved_quantity
 from app.domain.lot import LotCandidate
-from app.infrastructure.persistence.models import Lot, LotMaster, Product, Warehouse
+from app.infrastructure.persistence.models import LotMaster, LotReceipt, Product, Warehouse
 from app.presentation.schemas.inventory.inventory_schema import LotResponse
 
 
@@ -74,7 +74,7 @@ class InProcessLotClient(LotContextClient):
 
     async def get_lot_by_reference(self, lot_reference: str) -> LotResponse:
         lot = (
-            self.db.query(Lot).join(LotMaster).filter(LotMaster.lot_number == lot_reference).first()
+            self.db.query(LotReceipt).join(LotMaster).filter(LotMaster.lot_number == lot_reference).first()
         )
         if not lot:
             # TODO: Define specific exception for reference lookup

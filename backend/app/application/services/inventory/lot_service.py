@@ -154,8 +154,8 @@ from app.domain.lot import (
     StockValidator,
 )
 from app.infrastructure.persistence.models import (
-    Lot,
     LotMaster,
+    LotReceipt,
     Product,
     StockHistory,
     StockMovement,
@@ -193,14 +193,14 @@ class LotService:
         self.db = db
         self.repository = LotRepository(db)
 
-    def get_lot(self, lot_id: int) -> Lot:
+    def get_lot(self, lot_id: int) -> LotReceipt:
         """ロットを取得.
 
         Args:
             lot_id: ロットID
 
         Returns:
-            Lot: ロットエンティティ
+            LotReceipt: ロットエンティティ
 
         Raises:
             LotNotFoundError: ロットが存在しない場合
@@ -209,6 +209,63 @@ class LotService:
         if not lot:
             raise LotNotFoundError(lot_id)
         return lot
+
+    def get_lot_details(self, lot_id: int) -> LotResponse:
+        """ロット詳細を取得（VLotDetailsビュー使用）.
+
+        Args:
+            lot_id: ロットID
+
+        Returns:
+            LotResponse: ロット詳細情報（結合済み、計算済み）
+
+        Raises:
+            LotNotFoundError: ロットが存在しない場合
+        """
+        lot_view = self.db.query(VLotDetails).filter(VLotDetails.lot_id == lot_id).first()
+        if not lot_view:
+            raise LotNotFoundError(lot_id)
+
+        return LotResponse(
+            id=lot_view.lot_id,
+            lot_number=lot_view.lot_number,
+            product_id=lot_view.product_id,
+            product_code=lot_view.maker_part_code or "",
+            product_name=lot_view.product_name,
+            supplier_id=lot_view.supplier_id,
+            supplier_code=lot_view.supplier_code,
+            supplier_name=lot_view.supplier_name or "",
+            warehouse_id=lot_view.warehouse_id,
+            warehouse_code=lot_view.warehouse_code,
+            warehouse_name=lot_view.warehouse_name,
+            # Explicit fields
+            received_quantity=lot_view.received_quantity,
+            remaining_quantity=lot_view.remaining_quantity or Decimal("0"),
+            # Compat field (Remaining)
+            current_quantity=lot_view.remaining_quantity or Decimal("0"),
+            allocated_quantity=lot_view.allocated_quantity or Decimal("0"),
+            locked_quantity=lot_view.locked_quantity or Decimal("0"),
+            unit=lot_view.unit,
+            received_date=lot_view.received_date,
+            expiry_date=lot_view.expiry_date,
+            status=LotStatus(lot_view.status) if lot_view.status else LotStatus.ACTIVE,
+            lock_reason=lot_view.lock_reason,
+            inspection_status=lot_view.inspection_status or "not_required",
+            inspection_date=lot_view.inspection_date,
+            inspection_cert_number=lot_view.inspection_cert_number,
+            origin_type=LotOriginType(lot_view.origin_type) if lot_view.origin_type else LotOriginType.ORDER,
+            origin_reference=lot_view.origin_reference,
+            temporary_lot_key=lot_view.temporary_lot_key,
+            shipping_date=lot_view.shipping_date,
+            cost_price=lot_view.cost_price,
+            sales_price=lot_view.sales_price,
+            tax_rate=lot_view.tax_rate,
+            product_deleted=lot_view.product_deleted,
+            warehouse_deleted=lot_view.warehouse_deleted,
+            supplier_deleted=lot_view.supplier_deleted,
+            created_at=lot_view.created_at,
+            updated_at=lot_view.updated_at,
+        )
 
     def get_fefo_candidates(
         self,
@@ -396,7 +453,9 @@ class LotService:
                 warehouse_id=lot_view.warehouse_id,
                 warehouse_code=lot_view.warehouse_code,
                 warehouse_name=lot_view.warehouse_name,
-                current_quantity=lot_view.current_quantity or Decimal("0"),
+                received_quantity=lot_view.received_quantity,
+                remaining_quantity=lot_view.remaining_quantity or Decimal("0"),
+                current_quantity=lot_view.remaining_quantity or Decimal("0"),
                 allocated_quantity=lot_view.allocated_quantity or Decimal("0"),
                 unit=lot_view.unit,
                 received_date=lot_view.received_date,
@@ -636,19 +695,24 @@ class LotService:
 
         # Remove lot_number from payload as it is now a read-only property in Lot (LotReceipt)
         lot_payload.pop("lot_number", None)
+        # Remove remaining_quantity as it is not in LotReceipt model (it's in LotBase schema)
+        lot_payload.pop("remaining_quantity", None)
+        # Compatibility: Map current_quantity from Schema (Initial) to received_quantity in Model
+        if "current_quantity" in lot_payload:
+            lot_payload["received_quantity"] = lot_payload.pop("current_quantity")
 
         try:
-            db_lot = Lot(**lot_payload)
+            db_lot = LotReceipt(**lot_payload)
             self.db.add(db_lot)
             self.db.flush()  # Generate ID for StockHistory
 
             # Create stock history record for intake tracking
-            if db_lot.current_quantity and db_lot.current_quantity > 0:
+            if db_lot.received_quantity and db_lot.received_quantity > 0:
                 stock_history = StockHistory(
                     lot_id=db_lot.id,
                     transaction_type=StockTransactionType.INBOUND,
-                    quantity_change=db_lot.current_quantity,
-                    quantity_after=db_lot.current_quantity,
+                    quantity_change=db_lot.received_quantity,
+                    quantity_after=db_lot.received_quantity,
                     reference_type="adhoc_intake",
                     reference_id=db_lot.id,
                 )
@@ -694,7 +758,7 @@ class LotService:
 
         # Get today's sequence count
         count = (
-            self.db.query(func.count(Lot.id))
+            self.db.query(func.count(LotReceipt.id))
             .join(LotMaster)
             .filter(LotMaster.lot_number.like(f"{prefix}-{today}-%"))
             .scalar()
@@ -731,7 +795,7 @@ class LotService:
 
     def update_lot(self, lot_id: int, lot_update: LotUpdate) -> LotResponse:
         """Update an existing lot."""
-        db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
+        db_lot = self.db.query(LotReceipt).filter(LotReceipt.id == lot_id).first()
         if not db_lot:
             raise LotNotFoundError(lot_id)
 
@@ -774,7 +838,7 @@ class LotService:
 
     def delete_lot(self, lot_id: int) -> None:
         """Delete a lot."""
-        db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
+        db_lot = self.db.query(LotReceipt).filter(LotReceipt.id == lot_id).first()
         if not db_lot:
             raise LotNotFoundError(lot_id)
 
@@ -783,7 +847,7 @@ class LotService:
 
     def lock_lot(self, lot_id: int, lock_data: LotLock) -> LotResponse:
         """Lock lot quantity."""
-        db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
+        db_lot = self.db.query(LotReceipt).filter(LotReceipt.id == lot_id).first()
         if not db_lot:
             raise LotNotFoundError(lot_id)
 
@@ -824,7 +888,7 @@ class LotService:
 
     def unlock_lot(self, lot_id: int, unlock_data: LotLock | None = None) -> LotResponse:
         """Unlock lot quantity."""
-        db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
+        db_lot = self.db.query(LotReceipt).filter(LotReceipt.id == lot_id).first()
         if not db_lot:
             raise LotNotFoundError(lot_id)
 
@@ -865,7 +929,7 @@ class LotService:
         quantity_before = Decimal("0")
 
         if movement.lot_id is not None:
-            lot = self.db.query(Lot).filter(Lot.id == movement.lot_id).first()
+            lot = self.db.query(LotReceipt).filter(LotReceipt.id == movement.lot_id).first()
             if not lot:
                 raise LotNotFoundError(movement.lot_id)
             quantity_before = lot.current_quantity or Decimal("0")
@@ -931,9 +995,9 @@ class LotService:
         load).
         """
         db_lot = (
-            self.db.query(Lot)
-            .options(joinedload(Lot.product), joinedload(Lot.warehouse), joinedload(Lot.supplier))
-            .filter(Lot.id == lot_id)
+            self.db.query(LotReceipt)
+            .options(joinedload(LotReceipt.product), joinedload(LotReceipt.warehouse), joinedload(LotReceipt.supplier))
+            .filter(LotReceipt.id == lot_id)
             .first()
         )
         if not db_lot:
@@ -989,12 +1053,16 @@ class LotService:
             product_id=db_lot.product_id,
             warehouse_id=db_lot.warehouse_id,
             supplier_id=db_lot.supplier_id,
+            supplier_code=supplier_code,
+            supplier_name=supplier_name or "",
+            received_quantity=db_lot.received_quantity,
+            remaining_quantity=db_lot.received_quantity, # Default to received for fresh lots / simple conversion
+            current_quantity=db_lot.received_quantity, 
+            allocated_quantity=Decimal("0"),
+            locked_quantity=db_lot.locked_quantity or Decimal("0"),
             expected_lot_id=db_lot.expected_lot_id,
             received_date=db_lot.received_date,
             expiry_date=db_lot.expiry_date,
-            current_quantity=db_lot.current_quantity or Decimal("0"),
-            allocated_quantity=Decimal("0"),  # Lotモデルにはないため固定値
-            locked_quantity=db_lot.locked_quantity or Decimal("0"),
             unit=db_lot.unit,
             status=LotStatus(db_lot.status) if db_lot.status else LotStatus.ACTIVE,
             lock_reason=db_lot.lock_reason,
@@ -1012,8 +1080,6 @@ class LotService:
             tax_rate=db_lot.tax_rate,
             product_name=product_name,
             product_code=product_code,
-            supplier_name=supplier_name,
-            supplier_code=supplier_code,
             warehouse_name=warehouse_name,
             warehouse_code=warehouse_code,
             created_at=db_lot.created_at,

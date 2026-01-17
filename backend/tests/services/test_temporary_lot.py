@@ -12,7 +12,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.application.services.inventory.lot_service import LotService
-from app.infrastructure.persistence.models import Lot, Product, Warehouse
+from app.infrastructure.persistence.models import LotReceipt, Product, Warehouse
 from app.presentation.schemas.inventory.inventory_schema import LotCreate
 
 
@@ -84,7 +84,7 @@ class TestTemporaryLotRegistration:
         assert "-" in response.temporary_lot_key, "Expected UUID format with dashes"
 
         # Verify lot is in database
-        db_lot = db.query(Lot).filter(Lot.id == response.id).first()
+        db_lot = db.query(LotReceipt).filter(LotReceipt.id == response.id).first()
         assert db_lot is not None
         assert db_lot.temporary_lot_key is not None
 
@@ -145,7 +145,7 @@ class TestTemporaryLotUpdate:
     """Tests for updating temporary lots to official lot numbers."""
 
     @pytest.fixture
-    def temp_lot(self, db: Session) -> Lot:
+    def temp_lot(self, db: Session) -> LotReceipt:
         """Create a temporary lot for testing."""
         # First ensure we have product and warehouse
         product = db.query(Product).filter(Product.id == 99002).first()
@@ -184,9 +184,9 @@ class TestTemporaryLotUpdate:
         )
         response = service.create_lot(lot_create)
 
-        return db.query(Lot).filter(Lot.id == response.id).first()
+        return db.query(LotReceipt).filter(LotReceipt.id == response.id).first()
 
-    def test_update_temporary_lot_to_official(self, db: Session, temp_lot: Lot):
+    def test_update_temporary_lot_to_official(self, db: Session, temp_lot: LotReceipt):
         """Test updating a temporary lot number to an official one."""
         from app.presentation.schemas.inventory.inventory_schema import LotUpdate
 

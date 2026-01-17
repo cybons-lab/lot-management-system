@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.application.services.batch.inventory_sync_service import InventorySyncService
 from app.infrastructure.persistence.models import (
     BusinessRule,
-    Lot,
+    LotReceipt,
     LotReservation,
     Product,
     ProductWarehouse,
@@ -26,8 +26,7 @@ def setup_inventory_sync_test_data(db_session: Session):
     # 既存データをクリア
     db_session.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert").delete()
     db_session.query(LotReservation).delete()
-    db_session.query(Lot).delete()
-    db_session.query(Lot).delete()
+    db_session.query(LotReceipt).delete()
     db_session.query(LotMaster).delete()
     db_session.query(ProductWarehouse).delete()
     db_session.query(Product).delete()
@@ -77,11 +76,10 @@ def setup_inventory_sync_test_data(db_session: Session):
     db_session.add(lm1)
     db_session.flush()
 
-    lot1 = Lot(
+    lot1 = LotReceipt(
         lot_master_id=lm1.id,
         supplier_id=supplier.id,
         product_id=products[0].id,
-        lot_number="LOT001",
         warehouse_id=wh.id,
         current_quantity=Decimal("100"),
         received_date=datetime.now().date(),
@@ -92,11 +90,10 @@ def setup_inventory_sync_test_data(db_session: Session):
     db_session.add(lm2)
     db_session.flush()
 
-    lot2 = Lot(
+    lot2 = LotReceipt(
         lot_master_id=lm2.id,
         supplier_id=supplier.id,
         product_id=products[1].id,
-        lot_number="LOT002",
         warehouse_id=wh.id,
         current_quantity=Decimal("200"),
         received_date=datetime.now().date(),
@@ -107,11 +104,10 @@ def setup_inventory_sync_test_data(db_session: Session):
     db_session.add(lm3)
     db_session.flush()
 
-    lot3 = Lot(
+    lot3 = LotReceipt(
         lot_master_id=lm3.id,
         supplier_id=supplier.id,
         product_id=products[2].id,
-        lot_number="LOT003",
         warehouse_id=wh.id,
         current_quantity=Decimal("50"),
         received_date=datetime.now().date(),

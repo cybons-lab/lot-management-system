@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.forecast_models import Forecast
-from app.infrastructure.persistence.models.inventory_models import LotReceipt as Lot
+from app.infrastructure.persistence.models.inventory_models import LotReceipt
 from app.infrastructure.persistence.models.inventory_models import StockMovement
 from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
 from app.infrastructure.persistence.models.masters_models import (
@@ -41,7 +41,7 @@ def get_db_counts(db: Session = Depends(get_db)):
     counts["forecasts"] = db.scalar(select(func.count()).select_from(Forecast)) or 0
 
     # 在庫テーブル
-    counts["lots"] = db.scalar(select(func.count()).select_from(Lot)) or 0
+    counts["lots"] = db.scalar(select(func.count()).select_from(LotReceipt)) or 0
     counts["stock_movements"] = db.scalar(select(func.count()).select_from(StockMovement)) or 0
 
     # 受注テーブル

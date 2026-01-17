@@ -287,7 +287,6 @@ SELECT
     lr.received_quantity,
     COALESCE(wl_sum.total_withdrawn, 0) AS withdrawn_quantity,
     GREATEST(lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - lr.locked_quantity, 0) AS remaining_quantity,
-    GREATEST(lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - lr.locked_quantity, 0) AS current_quantity,
     COALESCE(la.allocated_quantity, 0) AS allocated_quantity,
     COALESCE(lar.reserved_quantity_active, 0) AS reserved_quantity_active,
     lr.locked_quantity,

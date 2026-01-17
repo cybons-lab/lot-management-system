@@ -129,8 +129,7 @@ class LotReceipt(Base):
         comment="入荷数量（初期入荷時の数量）",
     )
 
-    # Backward compatibility: current_quantity -> received_quantity
-    current_quantity: Mapped[Decimal] = synonym("received_quantity")
+
 
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))

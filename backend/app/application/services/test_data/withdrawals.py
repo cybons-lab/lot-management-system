@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.inventory_models import LotReceipt
 from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace
 from app.infrastructure.persistence.models.withdrawal_models import Withdrawal, WithdrawalType
 
@@ -21,7 +21,7 @@ def generate_withdrawals(
     - For each picked lot, create 1-2 withdrawal records
     - Vary the withdrawal_type and quantities
     """
-    lots = db.query(Lot).all()  # Get ALL lots (even depleted/expired/etc should have history)
+    lots = db.query(LotReceipt).all()  # Get ALL lots (even depleted/expired/etc should have history)
     if not lots:
         return
 

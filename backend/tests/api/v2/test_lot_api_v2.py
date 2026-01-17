@@ -4,7 +4,7 @@ from decimal import Decimal
 import pytest
 from fastapi.testclient import TestClient
 
-from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models import LotReceipt, Product, Supplier, Warehouse
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
@@ -45,7 +45,7 @@ def setup_lot_data(db_session):
     db_session.commit()
 
     # Lot
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lot_master.id,
         product_id=product.id,
         warehouse_id=warehouse.id,

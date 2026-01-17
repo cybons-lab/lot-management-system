@@ -10,7 +10,7 @@ from app.infrastructure.persistence.models.inbound_models import (
     InboundPlanLine,
     InboundPlanStatus,
 )
-from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.inventory_models import LotReceipt
 from app.infrastructure.persistence.models.masters_models import Product, Supplier
 
 from .utils import fake
@@ -25,7 +25,7 @@ def generate_inbound_plans(db: Session, products: list[Product], suppliers: list
 
     # 1. Past Received Plans (Last 30 days)
     # We create plans and link them to existing Lots to simulate history
-    lots = db.query(Lot).all()
+    lots = db.query(LotReceipt).all()
     if lots:
         # Pick 30% of lots to have an inbound history
         for lot in random.sample(lots, int(len(lots) * 0.3)):

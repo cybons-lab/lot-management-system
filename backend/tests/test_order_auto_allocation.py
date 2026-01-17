@@ -10,7 +10,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Lot, Order, OrderLine, Product, Warehouse
+from app.infrastructure.persistence.models import LotReceipt, Order, OrderLine, Product, Warehouse
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
@@ -47,11 +47,10 @@ def test_order_allocation_single_lot_fit(db: Session):
     db.add(lot_master_a)
     db.commit()
 
-    lot_a = Lot(
+    lot_a = LotReceipt(
         lot_master_id=lot_master_a.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
-        lot_number="LOT-A-SMALL",
         current_quantity=Decimal("50"),
         expiry_date=today + timedelta(days=5),
         received_date=today,
@@ -70,11 +69,10 @@ def test_order_allocation_single_lot_fit(db: Session):
     db.add(lot_master_b)
     db.commit()
 
-    lot_b = Lot(
+    lot_b = LotReceipt(
         lot_master_id=lot_master_b.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
-        lot_number="LOT-B-LARGE",
         current_quantity=Decimal("100"),
         expiry_date=today + timedelta(days=10),
         received_date=today,

@@ -165,7 +165,8 @@ class VLotDetails(Base):
     supplier_name: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
     received_date: Mapped[date] = mapped_column(Date)
     expiry_date: Mapped[date | None] = mapped_column(Date)
-    current_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    received_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    remaining_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     reserved_quantity_active: Mapped[Decimal] = mapped_column(Numeric(15, 3), default=Decimal(0))
     locked_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))

@@ -15,7 +15,7 @@ from app.infrastructure.persistence.models import (
     Customer,
     DeliveryPlace,
     ForecastCurrent,
-    Lot,
+    LotReceipt,
     Product,
     Warehouse,
 )
@@ -28,7 +28,7 @@ def _truncate_all(db: Session):
     for table in [
         AllocationSuggestion,
         ForecastCurrent,
-        Lot,
+        LotReceipt,
         LotMaster,
         DeliveryPlace,
         Product,
@@ -108,11 +108,10 @@ def test_multi_lot_soft_allocation(test_db: Session, master_data):
     test_db.add(lm_a)
     test_db.flush()
 
-    lot_a = Lot(
+    lot_a = LotReceipt(
         lot_master_id=lm_a.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
-        lot_number="LOT-A",
         current_quantity=Decimal("60.000"),
         unit="EA",
         received_date=date.today(),
@@ -124,11 +123,10 @@ def test_multi_lot_soft_allocation(test_db: Session, master_data):
     test_db.add(lm_b)
     test_db.flush()
 
-    lot_b = Lot(
+    lot_b = LotReceipt(
         lot_master_id=lm_b.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
-        lot_number="LOT-B",
         current_quantity=Decimal("60.000"),
         unit="EA",
         received_date=date.today(),

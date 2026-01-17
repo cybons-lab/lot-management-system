@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models import (
     Customer,
     DeliveryPlace,
-    Lot,
+    LotReceipt,
     LotReservation,
     Order,
     OrderLine,
@@ -40,7 +40,7 @@ def _truncate_all(db: Session):
         LotReservation,
         OrderLine,
         Order,
-        Lot,
+        LotReceipt,
         LotMaster,
         DeliveryPlace,
         Product,
@@ -136,11 +136,10 @@ def master_data(test_db: Session):
     test_db.commit()
 
     # Create lot with stock
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lot_master.id,
         product_id=product.id,
         warehouse_id=warehouse.id,
-        lot_number="LOT-001",
         current_quantity=Decimal("100.000"),
         unit="EA",
         received_date=date.today(),
@@ -551,7 +550,7 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
         get_reserved_quantity,
     )
 
-    lot = test_db.get(Lot, master_data["lot"].id)
+    lot = test_db.get(LotReceipt, master_data["lot"].id)
     assert lot is not None
     assert get_reserved_quantity(test_db, lot.id) == Decimal("50.000")
 

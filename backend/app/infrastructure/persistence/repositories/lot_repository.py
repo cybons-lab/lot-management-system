@@ -8,7 +8,7 @@ from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.infrastructure.persistence.models import (
-    Lot,
+    LotReceipt,
     Product,
     Supplier,
     Warehouse,
@@ -114,14 +114,14 @@ class LotRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def find_by_id(self, lot_id: int) -> Lot | None:
+    def find_by_id(self, lot_id: int) -> LotReceipt | None:
         """Return a lot by its primary key."""
         stmt: Select[tuple[Lot]] = (
-            select(Lot)
-            .options(joinedload(Lot.product), joinedload(Lot.warehouse))
-            .where(Lot.id == lot_id)
+            select(LotReceipt)
+            .options(joinedload(LotReceipt.product), joinedload(LotReceipt.warehouse))
+            .where(LotReceipt.id == lot_id)
         )
-        return cast(Lot | None, self.db.execute(stmt).scalar_one_or_none())
+        return cast(LotReceipt | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_available_lots(
         self,
@@ -129,10 +129,10 @@ class LotRepository:
         warehouse_code: str | None = None,
         min_quantity: float = 0.0,
         excluded_origin_types: list[str] | None = None,
-    ) -> Sequence[Lot]:
+    ) -> Sequence[LotReceipt]:
         """Fetch lots that have stock remaining for a product.
 
-        v2.2: Uses Lot.current_quantity - Lot.allocated_quantity directly.
+        v2.2: Uses LotReceipt.current_quantity - LotReceipt.allocated_quantity directly.
         v2.3: Supports origin_type filtering.
 
         【設計意図】なぜ利用可能数量の判定をPython側で行うのか:
@@ -163,21 +163,21 @@ class LotRepository:
             return []
 
         # First, get all active lots for this product
-        stmt: Select[tuple[Lot]] = select(Lot).where(
-            Lot.product_id == product.id,
-            Lot.status == "active",
+        stmt: Select[tuple[LotReceipt]] = select(LotReceipt).where(
+            LotReceipt.product_id == product.id,
+            LotReceipt.status == "active",
         )
 
         # Filter by origin_type
         if excluded_origin_types:
-            stmt = stmt.where(Lot.origin_type.not_in(excluded_origin_types))
+            stmt = stmt.where(LotReceipt.origin_type.not_in(excluded_origin_types))
 
         if warehouse_code:
             warehouse = (
                 self.db.query(Warehouse).filter(Warehouse.warehouse_code == warehouse_code).first()
             )
             if warehouse:
-                stmt = stmt.where(Lot.warehouse_id == warehouse.id)
+                stmt = stmt.where(LotReceipt.warehouse_id == warehouse.id)
             else:
                 return []
 
@@ -202,7 +202,7 @@ class LotRepository:
         warehouse_id: int,
         receipt_date: date | None = None,
         expiry_date: date | None = None,
-    ) -> Lot:
+    ) -> LotReceipt:
         """Create a lot placeholder using known identifiers."""
         warehouse: Warehouse | None = self.db.get(Warehouse, warehouse_id)
         product: Product | None = None
@@ -214,7 +214,7 @@ class LotRepository:
             product_stmt = select(Product).where(Product.maker_part_code == product_code)
             product = self.db.execute(product_stmt).scalar_one_or_none()
 
-        lot = Lot(
+        lot = LotReceipt(
             supplier_id=supplier.id if supplier else None,
             supplier_code=supplier.supplier_code if supplier else supplier_code,
             product_id=product.id if product else None,
@@ -269,17 +269,17 @@ class LotRepository:
         from app.domain.lot import LotCandidate
 
         query = (
-            self.db.query(Lot)
+            self.db.query(LotReceipt)
             .filter(
-                Lot.product_id == product_id,
-                Lot.status == "active",
+                LotReceipt.product_id == product_id,
+                LotReceipt.status == "active",
             )
-            .options(joinedload(Lot.product), joinedload(Lot.warehouse))
+            .options(joinedload(LotReceipt.product), joinedload(LotReceipt.warehouse))
         )
 
         # Warehouse filter
         if warehouse_id is not None:
-            query = query.filter(Lot.warehouse_id == warehouse_id)
+            query = query.filter(LotReceipt.warehouse_id == warehouse_id)
 
         # Origin type filters
         # 【設計】サンプル品・臨時品の除外オプション
@@ -296,20 +296,20 @@ class LotRepository:
             # 理由: origin_typeがNULLのロット = 通常入荷品（デフォルト）
             # → NULLを'normal'として扱うことで、通常入荷品は除外されない
             # → SQLAlchemyのnotin_()はNULLを特殊扱いするため、COALESCE必須
-            query = query.filter(func.coalesce(Lot.origin_type, "normal").notin_(excluded_origins))
+            query = query.filter(func.coalesce(LotReceipt.origin_type, "normal").notin_(excluded_origins))
 
         # Expiry filter with safety margin
         if exclude_expired:
             from sqlalchemy import or_
 
             min_expiry_date = date.today() + timedelta(days=safety_days)
-            query = query.filter(or_(Lot.expiry_date.is_(None), Lot.expiry_date >= min_expiry_date))
+            query = query.filter(or_(LotReceipt.expiry_date.is_(None), LotReceipt.expiry_date >= min_expiry_date))
 
         # Locked filter
         if exclude_locked:
             from sqlalchemy import or_
 
-            query = query.filter(or_(Lot.locked_quantity.is_(None), Lot.locked_quantity == 0))
+            query = query.filter(or_(LotReceipt.locked_quantity.is_(None), LotReceipt.locked_quantity == 0))
 
         # Ordering by policy
         # 【設計意図】ソート順の詳細な根拠:
@@ -331,21 +331,21 @@ class LotRepository:
         #    → テストの再現性、デバッグの容易性のため、決定的なソートが必須
         if policy == AllocationPolicy.FEFO:
             query = query.order_by(
-                nulls_last(Lot.expiry_date.asc()),  # Expiry date first, NULL last
-                Lot.received_date.asc(),  # Then by receipt date
-                Lot.id.asc(),  # Final tiebreaker for deterministic sort
+                nulls_last(LotReceipt.expiry_date.asc()),  # Expiry date first, NULL last
+                LotReceipt.received_date.asc(),  # Then by receipt date
+                LotReceipt.id.asc(),  # Final tiebreaker for deterministic sort
             )
         else:  # FIFO
             query = query.order_by(
-                Lot.received_date.asc(),  # Receipt date first
-                Lot.id.asc(),  # Final tiebreaker
+                LotReceipt.received_date.asc(),  # Receipt date first
+                LotReceipt.id.asc(),  # Final tiebreaker
             )
 
         # Locking
         if lock_mode == LockMode.FOR_UPDATE:
-            query = query.with_for_update(of=Lot)
+            query = query.with_for_update(of=LotReceipt)
         elif lock_mode == LockMode.FOR_UPDATE_SKIP_LOCKED:
-            query = query.with_for_update(skip_locked=True, of=Lot)
+            query = query.with_for_update(skip_locked=True, of=LotReceipt)
 
         lots = query.all()
 

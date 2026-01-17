@@ -12,7 +12,7 @@ from app.application.services.inventory.stock_calculation import (
     get_reserved_quantity,
 )
 from app.infrastructure.persistence.models import (
-    Lot,
+    LotReceipt,
     LotMaster,
     LotReservation,
     Product,
@@ -48,12 +48,11 @@ def stock_test_data(db_session: Session):
     db_session.flush()
 
     # Lot (Initial state: 100 qty, no locks)
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lm.id,
         product_id=prod.id,
         warehouse_id=wh.id,
-        lot_number="LOT-CALC-001",
-        current_quantity=Decimal("100.0"),
+        received_quantity=Decimal("100.0"),
         locked_quantity=Decimal("0.0"),
         unit="EA",
         received_date=date.today(),

@@ -3,7 +3,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 
 from app.application.services.inventory.inventory_service import InventoryService
-from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.inventory_models import LotReceipt
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
@@ -25,13 +25,12 @@ def test_get_inventory_items(db: Session, service_master_data):
     db.flush()
 
     # Create lots
-    lot1 = Lot(
+    lot1 = LotReceipt(
         lot_master_id=lot_master.id,
-        lot_number="LOT-INV-1",
         product_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=100,
+        received_quantity=100,
         received_date=date.today(),
         status="active",
         unit="EA",
@@ -56,7 +55,7 @@ def test_get_inventory_items(db: Session, service_master_data):
         source_type=ReservationSourceType.ORDER,
         source_id=1,  # Dummy ID
         reserved_qty=10,
-        status=ReservationStatus.ACTIVE,
+        status=ReservationStatus.CONFIRMED,
     )
     db.add(res)
     db.flush()
@@ -101,13 +100,12 @@ def test_get_inventory_item_by_product_warehouse(db: Session, service_master_dat
     db.add(lot_master)
     db.flush()
 
-    lot1 = Lot(
+    lot1 = LotReceipt(
         lot_master_id=lot_master.id,
-        lot_number="LOT-INV-2",
         product_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=50,
+        received_quantity=50,
         received_date=date.today(),
         status="active",
         unit="EA",
@@ -144,13 +142,12 @@ def test_get_inventory_by_supplier(db: Session, service_master_data):
     db.add(lot_master)
     db.flush()
 
-    lot1 = Lot(
+    lot1 = LotReceipt(
         lot_master_id=lot_master.id,
-        lot_number="LOT-SUP-1",
         product_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=30,
+        received_quantity=30,
         received_date=date.today(),
         status="active",
         unit="EA",
@@ -187,13 +184,12 @@ def test_get_inventory_by_warehouse(db: Session, service_master_data):
     db.add(lot_master)
     db.flush()
 
-    lot1 = Lot(
+    lot1 = LotReceipt(
         lot_master_id=lot_master.id,
-        lot_number="LOT-WH-1",
         product_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=40,
+        received_quantity=40,
         received_date=date.today(),
         status="active",
         unit="EA",
@@ -224,13 +220,12 @@ def test_get_inventory_by_product(db: Session, service_master_data):
     db.add(lot_master)
     db.flush()
 
-    lot1 = Lot(
+    lot1 = LotReceipt(
         lot_master_id=lot_master.id,
-        lot_number="LOT-PRD-1",
         product_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=60,
+        received_quantity=60,
         received_date=date.today(),
         status="active",
         unit="EA",
@@ -255,7 +250,7 @@ def test_get_inventory_by_product(db: Session, service_master_data):
         source_type=ReservationSourceType.ORDER,
         source_id=2,  # Dummy ID
         reserved_qty=5,
-        status=ReservationStatus.ACTIVE,
+        status=ReservationStatus.CONFIRMED,
     )
     db.add(res)
     db.flush()

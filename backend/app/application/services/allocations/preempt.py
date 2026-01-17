@@ -135,7 +135,7 @@ from app.application.services.allocations.utils import (
     update_order_line_status,
 )
 from app.core.time_utils import utcnow
-from app.infrastructure.persistence.models import Lot, OrderLine
+from app.infrastructure.persistence.models import LotReceipt, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -143,7 +143,7 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
 )
 
 
-def _get_available_quantity_for_preempt(db: Session, lot: Lot) -> Decimal:
+def _get_available_quantity_for_preempt(db: Session, lot: LotReceipt) -> Decimal:
     """Get available quantity for preemption check."""
     from app.application.services.inventory.stock_calculation import get_available_quantity
 
@@ -169,7 +169,7 @@ def preempt_soft_reservations_for_hard(
     Returns:
         list[dict]: 解除された予約情報のリスト
     """
-    lot_stmt = select(Lot).where(Lot.id == lot_id).with_for_update()
+    lot_stmt = select(LotReceipt).where(LotReceipt.id == lot_id).with_for_update()
     lot = db.execute(lot_stmt).scalar_one_or_none()
     if not lot:
         return []

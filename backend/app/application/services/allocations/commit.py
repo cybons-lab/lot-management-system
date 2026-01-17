@@ -141,7 +141,7 @@ from app.application.services.allocations.utils import (
 )
 from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.core.time_utils import utcnow
-from app.infrastructure.persistence.models import Lot, Order, OrderLine
+from app.infrastructure.persistence.models import LotReceipt, Order, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -217,7 +217,7 @@ def persist_reservation_entities(
             created.append(existing_reservation)
             continue
 
-        lot_stmt = select(Lot).where(Lot.id == alloc_plan.lot_id).with_for_update()
+        lot_stmt = select(LotReceipt).where(LotReceipt.id == alloc_plan.lot_id).with_for_update()
         lot = db.execute(lot_stmt).scalar_one_or_none()
         if not lot:
             raise AllocationCommitError(f"Lot {alloc_plan.lot_id} not found")

@@ -118,7 +118,7 @@ from datetime import date
 from sqlalchemy import Select, or_, select
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Lot
+from app.infrastructure.persistence.models import LotReceipt
 
 
 class StockRepository:
@@ -133,7 +133,7 @@ class StockRepository:
         warehouse_id: int,
         ship_date: date | None,
         for_update: bool = True,
-    ) -> list[Lot]:
+    ) -> list[LotReceipt]:
         """Fetch candidate lots in FIFO order with optional row locking.
 
         v2.2: Updated to use product_id and warehouse_id (DDL compliant).
@@ -148,33 +148,33 @@ class StockRepository:
         Returns:
             List of candidate lots in FIFO order
         """
-        stmt: Select[tuple[Lot]] = (
-            select(Lot)
-            .where(Lot.product_id == product_id)
-            .where(Lot.warehouse_id == warehouse_id)
-            .where(Lot.status == "active")  # DDL v2.2 compliant
+        stmt: Select[tuple[LotReceipt]] = (
+            select(LotReceipt)
+            .where(LotReceipt.product_id == product_id)
+            .where(LotReceipt.warehouse_id == warehouse_id)
+            .where(LotReceipt.status == "active")  # DDL v2.2 compliant
             # v2.3: 検査合格または検査不要のロットのみ対象
-            .where(Lot.inspection_status.in_(["not_required", "passed"]))
+            .where(LotReceipt.inspection_status.in_(["not_required", "passed"]))
         )
 
         # Filter by expiry date if ship_date is provided
         if ship_date is not None:
-            stmt = stmt.where(or_(Lot.expiry_date.is_(None), Lot.expiry_date >= ship_date))
+            stmt = stmt.where(or_(LotReceipt.expiry_date.is_(None), LotReceipt.expiry_date >= ship_date))
 
         # Order by received_date (FIFO) - DDL v2.2 uses received_date
-        stmt = stmt.order_by(Lot.received_date.asc(), Lot.id.asc())
+        stmt = stmt.order_by(LotReceipt.received_date.asc(), LotReceipt.id.asc())
 
         # Row locking for PostgreSQL/MySQL
         bind = self._db.get_bind()
         dialect_name = bind.dialect.name if bind is not None else ""
         if for_update and dialect_name in {"postgresql", "mysql"}:
-            stmt = stmt.with_for_update(skip_locked=True, of=Lot)
+            stmt = stmt.with_for_update(skip_locked=True, of=LotReceipt)
 
-        result: Sequence[Lot] = self._db.execute(stmt).scalars().all()
+        result: Sequence[LotReceipt] = self._db.execute(stmt).scalars().all()
         return list(result)
 
     @staticmethod
-    def calc_available_qty(lot: Lot) -> int:
+    def calc_available_qty(lot: LotReceipt) -> int:
         """Calculate allocatable quantity for a lot.
 
         v2.3: ロック数量を考慮 (current - allocated - locked).

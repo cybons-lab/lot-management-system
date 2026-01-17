@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.application.services.inventory.lot_service import LotService
 from app.domain.lot import LotCandidate
-from app.infrastructure.persistence.models import Lot, LotCurrentStock, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models import LotReceipt, LotCurrentStock, Product, Supplier, Warehouse
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
@@ -19,7 +19,7 @@ def setup_lot_test_data(db_session: Session):
     """ロットテスト用の基本データをセットアップ"""
     # 既存データをクリア
     db_session.query(LotCurrentStock).delete()
-    db_session.query(Lot).delete()
+    db_session.query(LotReceipt).delete()
     db_session.query(LotMaster).delete()
     db_session.query(Product).delete()
     db_session.query(Supplier).delete()
@@ -60,32 +60,30 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
     db_session.add(lm_a)
     db_session.flush()
 
-    lot_a = Lot(
+    lot_a = LotReceipt(
         lot_master_id=lm_a.id,
         supplier_id=sup.id,
         product_id=prod.id,
-        lot_number="A",
         warehouse_id=wh1.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=10),
         unit="EA",
-        current_quantity=3,
+        received_quantity=3,
         origin_type="order",  # Explicitly set for FEFO candidate filtering
     )
     lm_b = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="B")
     db_session.add(lm_b)
     db_session.flush()
 
-    lot_b = Lot(
+    lot_b = LotReceipt(
         lot_master_id=lm_b.id,
         supplier_id=sup.id,
         product_id=prod.id,
-        lot_number="B",
         warehouse_id=wh1.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=20),
         unit="EA",
-        current_quantity=2,
+        received_quantity=2,
         origin_type="order",  # Explicitly set for FEFO candidate filtering
     )
     # W2にも1つ（フィルタで除外される想定）
@@ -93,16 +91,15 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
     db_session.add(lm_c)
     db_session.flush()
 
-    lot_c = Lot(
+    lot_c = LotReceipt(
         lot_master_id=lm_c.id,
         supplier_id=sup.id,
         product_id=prod.id,
-        lot_number="C",
         warehouse_id=wh2.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=5),
         unit="EA",
-        current_quantity=9,
+        received_quantity=9,
         origin_type="order",  # Explicitly set for FEFO candidate filtering
     )
     db_session.add_all([lot_a, lot_b, lot_c])
@@ -137,7 +134,7 @@ class TestCreateLot:
 
         db_session.query(StockHistory).delete()
         db_session.query(LotCurrentStock).delete()
-        db_session.query(Lot).delete()
+        db_session.query(LotReceipt).delete()
         db_session.query(LotMaster).delete()
         db_session.query(Product).delete()
         db_session.query(Supplier).delete()

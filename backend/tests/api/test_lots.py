@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.database import get_db
-from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models import LotReceipt, Product, Supplier, Warehouse
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.main import app
 
@@ -23,7 +23,7 @@ def _truncate_all(db: Session):
     try:
         db.query(LotReservation).delete()
         db.query(StockHistory).delete()
-        db.query(Lot).delete()
+        db.query(LotReceipt).delete()
         db.query(LotMaster).delete()
         db.query(Product).delete()
         db.query(Supplier).delete()
@@ -82,21 +82,19 @@ def test_list_lots_filters_by_warehouse_code(test_db: Session):
     test_db.flush()
 
     # Create lots
-    lot1 = Lot(
+    lot1 = LotReceipt(
         supplier_id=sup.id,
         product_id=prod.id,
         lot_master_id=lm1.id,
-        lot_number="L-001",
         warehouse_id=wh1.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=30),
         unit="EA",
     )
-    lot2 = Lot(
+    lot2 = LotReceipt(
         supplier_id=sup.id,
         product_id=prod.id,
         lot_master_id=lm2.id,
-        lot_number="L-002",
         warehouse_id=wh2.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=40),
@@ -127,20 +125,18 @@ def test_list_lots_filters_by_product_id(test_db: Session):
     test_db.add_all([lm_a, lm_b])
     test_db.flush()
 
-    lot_a = Lot(
+    lot_a = LotReceipt(
         supplier_id=sup.id,
         lot_master_id=lm_a.id,
-        lot_number="L-A",
         warehouse_id=wh.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=15),
         product_id=product_a.id,
         unit="EA",
     )
-    lot_b = Lot(
+    lot_b = LotReceipt(
         supplier_id=sup.id,
         lot_master_id=lm_b.id,
-        lot_number="L-B",
         warehouse_id=wh.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=25),
@@ -177,31 +173,28 @@ def test_list_lots_filters_by_expiry_date(test_db: Session):
     test_db.flush()
 
     today = date.today()
-    lot1 = Lot(
+    lot1 = LotReceipt(
         supplier_id=sup.id,
         product_id=prod.id,
         lot_master_id=lm1.id,
-        lot_number="LOT-EXP-1",
         warehouse_id=wh.id,
         received_date=today,
         expiry_date=today + timedelta(days=10),
         unit="EA",
     )
-    lot2 = Lot(
+    lot2 = LotReceipt(
         supplier_id=sup.id,
         product_id=prod.id,
         lot_master_id=lm2.id,
-        lot_number="LOT-EXP-2",
         warehouse_id=wh.id,
         received_date=today,
         expiry_date=today + timedelta(days=30),
         unit="EA",
     )
-    lot3 = Lot(
+    lot3 = LotReceipt(
         supplier_id=sup.id,
         product_id=prod.id,
         lot_master_id=lm3.id,
-        lot_number="LOT-EXP-3",
         warehouse_id=wh.id,
         received_date=today,
         expiry_date=today + timedelta(days=60),

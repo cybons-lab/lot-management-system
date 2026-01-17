@@ -8,14 +8,14 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Lot, Product, Role, StockHistory, User, Warehouse
+from app.infrastructure.persistence.models import LotReceipt, Product, Role, StockHistory, User, Warehouse
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.main import application
 from app.presentation.api.deps import get_db
 
 
 def _truncate_all(db: Session):
-    for table in [StockHistory, Lot, Product, Warehouse, User, Role]:
+    for table in [StockHistory, LotReceipt, Product, Warehouse, User, Role]:
         try:
             db.query(table).delete()
         except Exception:
@@ -84,7 +84,7 @@ def sample_lot(test_db: Session):
     test_db.add(lot_master)
     test_db.commit()
 
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lot_master.id,
         product_id=prod.id,
         warehouse_id=wh.id,
@@ -102,7 +102,7 @@ def sample_lot(test_db: Session):
     return lot
 
 
-def test_create_adjustment_success(test_db: Session, sample_lot: Lot):
+def test_create_adjustment_success(test_db: Session, sample_lot: LotReceipt):
     """Test creating an adjustment."""
     client = TestClient(application)
 
@@ -121,7 +121,7 @@ def test_create_adjustment_success(test_db: Session, sample_lot: Lot):
     assert float(data["adjusted_quantity"]) == 10.0
 
 
-def test_create_adjustment_negative_quantity(test_db: Session, sample_lot: Lot):
+def test_create_adjustment_negative_quantity(test_db: Session, sample_lot: LotReceipt):
     """Test creating adjustment with negative quantity."""
     client = TestClient(application)
 
@@ -137,7 +137,7 @@ def test_create_adjustment_negative_quantity(test_db: Session, sample_lot: Lot):
     assert response.status_code == 201
 
 
-def test_create_adjustment_invalid_lot_returns_400(test_db: Session, sample_lot: Lot):
+def test_create_adjustment_invalid_lot_returns_400(test_db: Session, sample_lot: LotReceipt):
     """Test creating adjustment for non-existent lot."""
     client = TestClient(application)
 
@@ -153,7 +153,7 @@ def test_create_adjustment_invalid_lot_returns_400(test_db: Session, sample_lot:
     assert response.status_code == 422
 
 
-def test_list_adjustments_success(test_db: Session, sample_lot: Lot):
+def test_list_adjustments_success(test_db: Session, sample_lot: LotReceipt):
     """Test listing adjustments."""
     client = TestClient(application)
 
@@ -172,7 +172,7 @@ def test_list_adjustments_success(test_db: Session, sample_lot: Lot):
     assert len(response.json()) >= 1
 
 
-def test_list_adjustments_with_lot_filter(test_db: Session, sample_lot: Lot):
+def test_list_adjustments_with_lot_filter(test_db: Session, sample_lot: LotReceipt):
     """Test listing adjustments filtered by lot_id."""
     client = TestClient(application)
 
@@ -192,7 +192,7 @@ def test_list_adjustments_with_lot_filter(test_db: Session, sample_lot: Lot):
     assert all(adj["lot_id"] == sample_lot.id for adj in data)
 
 
-def test_list_adjustments_with_type_filter(test_db: Session, sample_lot: Lot):
+def test_list_adjustments_with_type_filter(test_db: Session, sample_lot: LotReceipt):
     """Test listing adjustments filtered by type."""
     client = TestClient(application)
 
