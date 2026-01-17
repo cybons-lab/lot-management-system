@@ -28,7 +28,7 @@ def clear_data(db: Session):
         "orders",
         "forecast_current",
         "forecast_history",
-        "lots",
+        "lot_receipts",
         "customer_items",
         "products",
         "delivery_places",

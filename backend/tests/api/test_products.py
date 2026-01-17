@@ -17,7 +17,7 @@ def _truncate_all(db: Session):
         # Use DELETE instead of TRUNCATE to avoid transaction issues
         # Order matters due to foreign keys
         db.execute(text("DELETE FROM stock_movements"))
-        db.execute(text("DELETE FROM lots"))
+        db.execute(text("DELETE FROM lot_receipts"))
         db.execute(text("DELETE FROM products"))
         db.commit()
     except Exception:

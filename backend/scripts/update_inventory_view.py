@@ -40,7 +40,7 @@ def main():
                 COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
                 (SUM(l.current_quantity) - SUM(l.allocated_quantity) + COALESCE(SUM(ipl.planned_quantity), 0)) AS available_with_provisional,
                 MAX(l.updated_at) AS last_updated
-            FROM lots l
+            FROM lot_receipts l
             LEFT JOIN inbound_plan_lines ipl ON l.product_id = ipl.product_id
             LEFT JOIN inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
             WHERE l.status = 'active'
