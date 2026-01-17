@@ -102,7 +102,7 @@ class LotReceipt(Base):
         return self.received_quantity - self.consumed_quantity
 
     @current_quantity.expression
-    def current_quantity(cls):  # type: ignore[no-redef]
+    def current_quantity_expr(cls):
         return cls.received_quantity - cls.consumed_quantity
 
     product_id: Mapped[int] = mapped_column(

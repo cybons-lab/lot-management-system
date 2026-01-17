@@ -92,3 +92,11 @@ dev = [
     "types-python-jose>=3.3.4",
     "types-pyyaml>=6.0.12.20250915",
 ]
+
+[tool.mypy]
+ignore_missing_imports = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+
+[[tool.mypy.overrides]]
+module = "reportlab.*"
+ignore_missing_imports = true
