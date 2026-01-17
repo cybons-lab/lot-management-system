@@ -30,27 +30,14 @@ backend/
 │   ├── core/
 │   │   ├── config.py        # 設定管理
 │   │   └── database.py      # DB接続
-│   ├── models/
-│   │   ├── base_model.py    # SQLAlchemy Base
-│   │   ├── masters.py       # マスタモデル
-│   │   ├── inventory.py     # 在庫モデル
-│   │   ├── sales.py         # 販売モデル
-│   │   └── logs.py          # ログモデル
-│   ├── schemas/
-│   │   ├── base.py          # 基底スキーマ
-│   │   ├── masters.py       # マスタスキーマ
-│   │   ├── inventory.py     # 在庫スキーマ
-│   │   ├── sales.py         # 販売スキーマ
-│   │   └── integration.py   # 連携スキーマ
-│   └── api/
-│       ├── deps.py          # 依存性注入
-│       └── routes/
-│           ├── masters.py   # マスタAPI
-│           ├── lots.py      # ロットAPI
-│           ├── receipts.py  # 入荷API
-│           ├── orders.py    # 受注API
-│           ├── integration.py # 連携API
-│           └── admin.py     # 管理API
+│   ├── infrastructure/
+│   │   └── persistence/     # SQLAlchemyモデル
+│   ├── presentation/
+│   │   ├── schemas/         # Pydanticスキーマ
+│   │   └── api/
+│   │       ├── deps.py      # 依存性注入
+│   │       ├── routes/      # ルータ群（機能別）
+│   │       └── v2/          # v2 API
 ├── requirements.txt
 ├── .env.example
 └── README.md
@@ -132,14 +119,14 @@ ruff check app/ && ruff format --check app/
 
 ### ロット・在庫管理
 
-- `GET /api/lots` - ロット一覧(在庫付き)
-- `POST /api/lots` - ロット登録
+- `GET /api/lots` - ロット（入荷実体）一覧
+- `POST /api/lots` - ロット（入荷実体）登録
 - `POST /api/lots/movements` - 在庫変動記録
 
 ### 入荷管理
 
-- `GET /api/receipts` - 入荷伝票一覧
-- `POST /api/receipts` - 入荷伝票作成(一括)
+- `GET /api/inbound-plans` - 入荷予定一覧
+- `POST /api/inbound-plans` - 入荷予定作成
 
 ### 受注管理
 
@@ -161,7 +148,7 @@ ruff check app/ && ruff format --check app/
 
 ## データベーススキーマ
 
-### テーブル構成 (15 テーブル + 1 サマリテーブル)
+### テーブル構成（主要テーブル）
 
 **マスタ**
 
@@ -170,28 +157,31 @@ ruff check app/ && ruff format --check app/
 - `customers` - 得意先
 - `products` - 製品
 - `product_uom_conversions` - 単位換算
+- `customer_items` - 得意先品目
+- `delivery_places` - 納入先
 
 **在庫**
 
-- `lots` - ロット
-- `stock_movements` - 在庫変動履歴(イベントソーシング)
-- `lot_current_stock` - 現在在庫(サマリ)
-- `receipt_headers` - 入荷伝票ヘッダ
-- `receipt_lines` - 入荷伝票明細
-- `expiry_rules` - 有効期限ルール
+- `lot_master` - ロット番号名寄せ
+- `lot_receipts` - 入荷実体
+- `stock_history` - 在庫履歴
+- `adjustments` - 在庫調整
+- `lot_reservations` - ロット予約
+- `allocation_suggestions` - 引当推奨（一次データ）
 
 **販売**
 
 - `orders` - 受注ヘッダ
 - `order_lines` - 受注明細
-- `allocations` - 引当
-- `shipping` - 出荷
-- `purchase_requests` - 仮発注
+- `order_groups` - 受注グループ
+- `allocation_traces` - 引当トレース
 
 **ログ**
 
-- `ocr_submissions` - OCR 取込ログ
-- `sap_sync_logs` - SAP 連携ログ
+- `operation_logs` - 操作ログ
+- `master_change_logs` - マスタ変更ログ
+
+詳細は `docs/db/schema.md` を参照してください。
 
 ## 使用例
 

@@ -234,13 +234,15 @@ erDiagram
 
 ## 6. 在庫管理 (Inventory Management)
 
-物理在庫(ロット)の状態と履歴管理。
+物理在庫(ロット)の状態と履歴管理。現行設計では「ロット番号の名寄せ」と「入荷実体」を分離し、
+`lot_master` と `lot_receipts` の2テーブルで表現する。
 
 ### 6.1 テーブル一覧
 
 | テーブル名 | 和名 | 説明 | 備考 |
 | :--- | :--- | :--- | :--- |
-| **lots** | ロット在庫 | 在庫の最小管理単位（物理ロット）。 | ロット番号、数量、有効期限、ステータス |
+| **lot_master** | ロット番号名寄せ | 同一ロット番号の名寄せマスタ。 | `lot_number` + `product_id` で一意 |
+| **lot_receipts** | 入荷実体 | 入荷1件を表す物理ロット。 | `lot_master` に紐づく |
 | **stock_history** | 在庫履歴 | ロットに対する全ての数量変動ログ。 | 入出庫、調整、移動履歴 |
 | **adjustments** | 在庫調整 | 棚卸やロスなどの数量調整記録。 | |
 
@@ -248,23 +250,38 @@ erDiagram
 
 ```mermaid
 erDiagram
-    warehouses ||--o{ lots : "stores"
-    products ||--o{ lots : "is_instance_of"
-    suppliers ||--o{ lots : "originates_from"
-    lots ||--o{ stock_history : "logs"
-    lots ||--o{ adjustments : "adjusted_by"
+    products ||--o{ lot_master : "is_master_of"
+    suppliers ||--o{ lot_master : "originates_from (optional)"
 
-    lots {
+    lot_master ||--o{ lot_receipts : "aggregates"
+    warehouses ||--o{ lot_receipts : "stores"
+    products ||--o{ lot_receipts : "is_instance_of"
+    suppliers ||--o{ lot_receipts : "originates_from"
+    lot_receipts ||--o{ stock_history : "logs"
+    lot_receipts ||--o{ adjustments : "adjusted_by"
+
+    lot_master {
         bigint id PK
         string lot_number
         bigint product_id FK
+        bigint supplier_id FK
+        decimal total_quantity
+        date first_receipt_date
+        date latest_expiry_date
+    }
+    lot_receipts {
+        bigint id PK
+        bigint lot_master_id FK
+        bigint product_id FK
         bigint warehouse_id FK
         bigint supplier_id FK
-        decimal current_quantity
+        decimal received_quantity
+        decimal consumed_quantity
         date received_date
         date expiry_date
         string status "active/depleted/expired/..."
         string temporary_lot_key "UUID (仮入庫用)"
+        string receipt_key "UUID (入荷識別)"
     }
     stock_history {
         bigint id PK
@@ -299,7 +316,7 @@ erDiagram
 
 ```mermaid
 erDiagram
-    lots ||--o{ lot_reservations : "reserved"
+    lot_receipts ||--o{ lot_reservations : "reserved"
     
     %% 論理的な参照であり外部キー制約がない場合もあるが関係を示す
     order_lines ||..|| lot_reservations : "source (if type=order)"
