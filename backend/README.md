@@ -297,7 +297,7 @@ Model Layer (SQLAlchemy ORM)
 > ルーターのprefix/tagsは統一済み。既存のAPI仕様は変更していません。
 
 ## テスト状況（確定）
-- ✅ `pytest`: **25件 PASS**（回帰完了）
+- ✅ `pytest`: 回帰完了
 - 今後の改善候補:
   - SQLAlchemy 2.0 記法の徹底（`declarative_base` → `sqlalchemy.orm.declarative_base` など）
   - Pydantic v2の`Config`記法の整理
@@ -350,7 +350,7 @@ flowchart TD
 
 ## テスト状況
 
-- ✅ `pytest`：**25件 PASS**（既存API入出力・丸め・状態遷移の回帰確認を含む）
+- ✅ `pytest`：既存API入出力・丸め・状態遷移の回帰確認を含む
 - ⚠️ 警告（将来のメンテ性向上のため任意対応）
   - `declarative_base()` → `sqlalchemy.orm.declarative_base()` 置換
   - Pydantic v2: `class Config` → `model_config = ConfigDict(...)`
