@@ -75,14 +75,45 @@ pytest
 
 ## CI/CD
 
-GitHubActionsなどのCIでは、同様にテストDBを起動してからテストを実行します：
+### GitHub Actions
+
+GitHub Actionsでは、`services:` セクションでPostgreSQLを直接起動します（`.github/workflows/ci.yml` 参照）：
 
 ```yaml
-- name: Start test database
-  run: docker compose --profile test up -d db-postgres-test
+services:
+  postgres:
+    image: postgres:15
+    env:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: lot_management_test
+    ports:
+      - 5432:5432
+```
 
-- name: Run tests
-  run: docker compose exec backend pytest
+接続URLは `localhost:5432` を使用：
+```
+TEST_DATABASE_URL=postgresql+psycopg2://testuser:testpass@localhost:5432/lot_management_test
+```
+
+### ローカルDocker環境でのCI模擬
+
+ローカルでDockerを使ってテストを実行する場合：
+
+```bash
+# 1. テストDBを起動
+docker compose --profile test up -d db-postgres-test
+
+# 2. テストを実行
+docker compose exec backend uv run pytest
+
+# 3. テスト後、テストDBを停止（オプション）
+docker compose --profile test down
+```
+
+**注意:** テストDBが起動していないとテストは失敗します。エラー例：
+```
+sqlalchemy.exc.OperationalError: could not translate host name "db-postgres-test" to address
 ```
 
 ## トラブルシューティング
