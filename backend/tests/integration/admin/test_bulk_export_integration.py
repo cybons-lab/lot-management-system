@@ -154,7 +154,7 @@ def test_bulk_export_download_all_targets_integration(
         "uom_conversions",
         "warehouse_delivery_routes",
         "customer_item_delivery_settings",
-        "lots",  # API key remains "lots" for backward compatibility
+        "lot_receipts",  # Renamed from "lots" to match Phase 1 schema
         "orders",
         "forecasts",
         "users",
