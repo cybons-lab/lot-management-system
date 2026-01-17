@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from .test_data.forecasts import generate_forecasts, generate_reservations
 from .test_data.inbound import generate_inbound_plans
 from .test_data.inventory import generate_lots
+from .test_data.inventory_scenarios import generate_inventory_scenarios
 from .test_data.masters import (
     generate_customer_items,
     generate_customers_and_delivery_places,
@@ -29,6 +30,7 @@ __all__ = [
     "generate_products",
     "generate_customer_items",
     "generate_lots",
+    "generate_inventory_scenarios",
     "generate_forecasts",
     "generate_reservations",
     "generate_orders",
@@ -56,6 +58,9 @@ def generate_all_test_data(db: Session):
 
         # Step 2: Generate lots based on forecast totals
         generate_lots(db, products, warehouses, suppliers, forecast_totals)
+
+        # Step 2.5: Generate inventory scenarios for UI/testing
+        generate_inventory_scenarios(db)
 
         # Step 3: Generate reservations (requires lots to exist)
         generate_reservations(db)

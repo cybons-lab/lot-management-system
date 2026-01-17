@@ -216,6 +216,8 @@ export function QuickLotIntakeDialog({
       supplier_id: supplierId ? Number(supplierId) : undefined,
       received_date: receivedDate,
       expiry_date: expiryDate || undefined,
+      received_quantity: Number(newQuantity),
+      remaining_quantity: Number(newQuantity),
       current_quantity: Number(newQuantity),
       allocated_quantity: 0,
       locked_quantity: 0,

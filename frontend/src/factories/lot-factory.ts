@@ -30,6 +30,10 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
     received_date: receivedDate.toISOString().split("T")[0], // DDL v2.2
     expiry_date: expiryDate.toISOString().split("T")[0],
     current_quantity: String(currentQty), // DDL v2.2: DECIMAL as string
+    received_quantity: String(currentQty), // DDL v2.2
+    remaining_quantity: String(currentQty), // DDL v2.2
+    available_quantity: String(currentQty), // Calculated: current - allocated - locked (assuming 0 allocated/locked for basic mock)
+    reserved_quantity_active: "0",
     allocated_quantity: String(allocatedQty), // DDL v2.2: DECIMAL as string
     unit: faker.helpers.arrayElement(["EA", "CASE", "BOX"]),
     status: faker.helpers.arrayElement(["active", "depleted", "expired", "quarantine"]), // DDL v2.2

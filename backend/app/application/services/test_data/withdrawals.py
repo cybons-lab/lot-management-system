@@ -21,9 +21,15 @@ def generate_withdrawals(
     - For each picked lot, create 1-2 withdrawal records
     - Vary the withdrawal_type and quantities
     """
-    lots = db.query(
-        LotReceipt
-    ).all()  # Get ALL lots (even depleted/expired/etc should have history)
+    # Get ALL lots except inventory scenarios (which are for UI testing)
+    lots = (
+        db.query(LotReceipt)
+        .filter(
+            ~LotReceipt.origin_reference.like("inventory-scenario-%")
+            | (LotReceipt.origin_reference.is_(None))
+        )
+        .all()
+    )
     if not lots:
         return
 

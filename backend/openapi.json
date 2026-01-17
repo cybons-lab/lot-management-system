@@ -11139,7 +11139,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__presentation__schemas__auth__auth_schemas__UserResponse"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -20620,25 +20620,49 @@
         "title": "FefoPreviewResponse",
         "description": "FEFO preview response."
       },
+      "FilterOption": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "title": "FilterOption",
+        "description": "Filter option for dropdowns."
+      },
       "FilterOptions": {
         "properties": {
           "products": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Products"
           },
           "suppliers": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Suppliers"
           },
           "warehouses": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Warehouses"
@@ -22794,6 +22818,32 @@
             "title": "Current Quantity",
             "default": "0"
           },
+          "received_quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Received Quantity",
+            "default": "0"
+          },
+          "remaining_quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Remaining Quantity",
+            "default": "0"
+          },
           "allocated_quantity": {
             "anyOf": [
               {
@@ -23164,6 +23214,18 @@
             "title": "Current Quantity",
             "default": "0"
           },
+          "received_quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Received Quantity",
+            "default": "0"
+          },
+          "remaining_quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Remaining Quantity",
+            "default": "0"
+          },
           "allocated_quantity": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
@@ -23371,6 +23433,18 @@
             "type": "boolean",
             "title": "Is Primary Supplier",
             "default": false
+          },
+          "available_quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Available Quantity",
+            "default": "0"
+          },
+          "reserved_quantity_active": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Reserved Quantity Active",
+            "default": "0"
           },
           "product_deleted": {
             "type": "boolean",
@@ -28832,7 +28906,7 @@
             "default": "bearer"
           },
           "user": {
-            "$ref": "#/components/schemas/app__presentation__schemas__auth__auth_schemas__UserResponse"
+            "$ref": "#/components/schemas/UserResponse"
           }
         },
         "type": "object",
@@ -29100,6 +29174,44 @@
         ],
         "title": "UserCreate",
         "description": "Schema for creating a user."
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "assignments": {
+            "items": {
+              "$ref": "#/components/schemas/UserAssignmentSchema"
+            },
+            "type": "array",
+            "title": "Assignments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "display_name"
+        ],
+        "title": "UserResponse",
+        "description": "User response schema."
       },
       "UserRoleAssignment": {
         "properties": {
@@ -30360,68 +30472,6 @@
         ],
         "title": "WithdrawalType",
         "description": "出庫タイプ."
-      },
-      "app__presentation__schemas__auth__auth_schemas__UserResponse": {
-        "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "username": {
-            "type": "string",
-            "title": "Username"
-          },
-          "display_name": {
-            "type": "string",
-            "title": "Display Name"
-          },
-          "roles": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Roles"
-          },
-          "assignments": {
-            "items": {
-              "$ref": "#/components/schemas/UserAssignmentSchema"
-            },
-            "type": "array",
-            "title": "Assignments"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "username",
-          "display_name"
-        ],
-        "title": "UserResponse",
-        "description": "User response schema."
-      },
-      "app__presentation__schemas__inventory__inventory_schema__FilterOption": {
-        "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "code": {
-            "type": "string",
-            "title": "Code"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "code",
-          "name"
-        ],
-        "title": "FilterOption",
-        "description": "Filter option for dropdowns."
       },
       "app__presentation__schemas__system__operation_logs_schema__FilterOption": {
         "properties": {

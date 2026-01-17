@@ -59,6 +59,8 @@ export function AdhocLotCreatePage() {
         received_date: data.received_date,
         expiry_date: data.expiry_date,
         current_quantity: data.current_quantity,
+        received_quantity: data.current_quantity, // Initial receipt amount
+        remaining_quantity: data.current_quantity, // Initial remaining amount
         unit: data.unit,
         origin_type: data.origin_type,
         origin_reference: data.origin_reference,
