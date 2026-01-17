@@ -121,17 +121,17 @@ def _query_lots_with_fallback(db: Session, product_id: int, strategy: str, limit
     results = _query_lots_from_view(db, product_id, strategy, limit)
 
     if not results:
-        from app.infrastructure.persistence.models import Lot
+        from app.infrastructure.persistence.models import LotReceipt
 
         # Query lots (filtering will happen in Python)
-        lot_query = db.query(Lot).filter(
-            Lot.product_id == product_id,
+        lot_query = db.query(LotReceipt).filter(
+            LotReceipt.product_id == product_id,
         )
         if strategy == "fefo":
             lot_query = lot_query.order_by(
-                Lot.expiry_date.asc().nulls_last(),
-                Lot.received_date.asc(),
-                Lot.id.asc(),
+                LotReceipt.expiry_date.asc().nulls_last(),
+                LotReceipt.received_date.asc(),
+                LotReceipt.id.asc(),
             )
         all_lots = lot_query.limit(limit * 2).all()  # Get more to filter
         # Filter using lot_reservations
@@ -198,9 +198,9 @@ def _enrich_lot_details(db: Session, candidates: list[CandidateLotItem]) -> None
         return
 
     lot_ids = [c.lot_id for c in candidates]
-    from app.infrastructure.persistence.models import Lot
+    from app.infrastructure.persistence.models import LotReceipt
 
-    lots = db.query(Lot).filter(Lot.id.in_(lot_ids)).all()
+    lots = db.query(LotReceipt).filter(LotReceipt.id.in_(lot_ids)).all()
     lot_map = {lot.id: lot for lot in lots}
 
     for candidate in candidates:

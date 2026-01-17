@@ -469,7 +469,7 @@ def bulk_cancel(
 
 
 @router.post("/bulk-auto-allocate", response_model=BulkAutoAllocateResponse)
-def bulk_auto_allocate(
+async def bulk_auto_allocate(
     request: BulkAutoAllocateRequest,
     db: Session = Depends(get_db),
     current_user: User | None = Depends(AuthService.get_current_user_optional),

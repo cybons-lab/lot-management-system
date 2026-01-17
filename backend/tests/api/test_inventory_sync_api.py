@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import (
     BusinessRule,
-    Lot,
+    LotReceipt,
     Product,
     ProductWarehouse,
     Warehouse,
@@ -40,7 +40,7 @@ def _truncate_all(db: Session):
     """テスト用にデータをクリア."""
     try:
         db.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert").delete()
-        db.query(Lot).delete()
+        db.query(LotReceipt).delete()
         db.query(LotMaster).delete()
         db.query(Product).delete()
         db.query(Warehouse).delete()
@@ -106,13 +106,12 @@ def _setup_test_data(db: Session):
 
     # ロットを作成
     lots = [
-        Lot(
+        LotReceipt(
             supplier_id=supplier.id,
             product_id=products[i - 1].id,
             lot_master_id=lot_masters[i - 1].id,
-            lot_number=f"LOT{i:03d}",
             warehouse_id=wh.id,
-            current_quantity=100.0 * i,  # 100, 200, 300
+            received_quantity=100.0 * i,  # 100, 200, 300
             unit="EA",
             received_date=date.today(),
             status="active",

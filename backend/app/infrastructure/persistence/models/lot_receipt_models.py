@@ -49,7 +49,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.persistence.models.base_model import Base
 
@@ -89,8 +89,11 @@ class LotReceipt(Base):
         comment="lot_masterへのFK",
     )
 
-    # Legacy: lot_number is kept for transition, but lot_master.lot_number is canonical
-    lot_number: Mapped[str] = mapped_column(String(100), nullable=False)
+    # Legacy: lot_number column is removed. Use lot_master.lot_number.
+    @property
+    def lot_number(self) -> str:
+        """Get lot number from lot_master (read-only accessor)."""
+        return self.lot_master.lot_number if self.lot_master else ""
 
     product_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -126,9 +129,6 @@ class LotReceipt(Base):
         comment="入荷数量（初期入荷時の数量）",
     )
 
-    # Backward compatibility: current_quantity -> received_quantity
-    current_quantity: Mapped[Decimal] = synonym("received_quantity")
-
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
     lock_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -142,6 +142,18 @@ class LotReceipt(Base):
     )
     inspection_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     inspection_cert_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    # Financial and Logistical details (Phase 1 Expansion)
+    shipping_date: Mapped[date | None] = mapped_column(Date, nullable=True, comment="出荷予定日")
+    cost_price: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 2), nullable=True, comment="仕入単価"
+    )
+    sales_price: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 2), nullable=True, comment="販売単価"
+    )
+    tax_rate: Mapped[Decimal | None] = mapped_column(
+        Numeric(5, 2), nullable=True, comment="適用税率"
+    )
 
     version: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
     created_at: Mapped[datetime] = mapped_column(
@@ -180,21 +192,13 @@ class LotReceipt(Base):
         CheckConstraint("received_quantity >= 0", name="chk_lot_receipts_received_quantity"),
         CheckConstraint("locked_quantity >= 0", name="chk_lot_receipts_locked_quantity"),
         CheckConstraint(
-            "status IN ('active','depleted','expired','quarantine','locked')",
-            name="chk_lot_receipts_status",
-        ),
-        CheckConstraint(
-            "inspection_status IN ('not_required','pending','passed','failed')",
-            name="chk_lot_receipts_inspection_status",
-        ),
-        CheckConstraint(
             "origin_type IN ('order','forecast','sample','safety_stock','adhoc')",
             name="chk_lot_receipts_origin_type",
         ),
         UniqueConstraint("receipt_key", name="uq_lot_receipts_receipt_key"),
         UniqueConstraint("temporary_lot_key", name="uq_lot_receipts_temporary_lot_key"),
         # Partial unique index for expected_lot_id (defined in migration)
-        Index("idx_lot_receipts_number", "lot_number"),
+        # idx_lot_receipts_number is removed (lot_number column dropped)
         Index("idx_lot_receipts_product_warehouse", "product_id", "warehouse_id"),
         Index("idx_lot_receipts_status", "status"),
         Index("idx_lot_receipts_supplier", "supplier_id"),
@@ -211,11 +215,12 @@ class LotReceipt(Base):
             "temporary_lot_key",
             postgresql_where=text("temporary_lot_key IS NOT NULL"),
         ),
+        # Renamed to FEFO allocation and added expiry_date
         Index(
-            "idx_lot_receipts_fifo_allocation",
+            "idx_lot_receipts_fefo_allocation",
             "product_id",
             "warehouse_id",
-            "status",
+            "expiry_date",  # Added for FEFO
             "received_date",
             "id",
             postgresql_where=text(

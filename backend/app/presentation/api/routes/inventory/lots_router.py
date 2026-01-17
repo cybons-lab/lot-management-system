@@ -132,7 +132,6 @@
 
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
@@ -362,58 +361,9 @@ def get_lot(lot_id: int, db: Session = Depends(get_db)):
     Raises:
         HTTPException: ロットが存在しない場合（404）
     """
-    # Note: Service.get_lot returns Lot model, but for Response we need to build it with joined fields.
-    # The service now has a internal _build_lot_response method used by create/update,
-    # but strictly get_lot in service currently returns the ORM model without explicit joined load in the same way (it uses repository).
-    # However, to be consistent with previous router logic which used joinedload options,
-    # we should check if service.get_lot is sufficient or if we should use the new service method _build_lot_response equivalent.
-    # The extended service implementation I just added has _build_lot_response.
-    # But I didn't expose it as public `get_lot_details` or similar.
-    # Wait, I added `get_lot` in `LotService` long ago (it was existing).
-    # And I added `_build_lot_response` recently.
-    # I should have updated `get_lot` or added `get_lot_response` to service to return LotResponse.
-    # For now, I will use the service's newly added logic if I can, OR just use the repo find_by_id which has joinedload options.
-    # The existing `LotService.get_lot` uses `repository.find_by_id` which HAS `joinedload` options!
-    # So `LotResponse.model_validate(service.get_lot(lot_id))` should work if we handle the manual mapping of names.
-    # The previous router code did manual mapping of product_name etc.
-    # My new `_build_lot_response` inside service DOES that manual mapping.
-    # I should probably expose `_build_lot_response` logic as `get_lot_with_details` public method.
-    # But since I can't modify service again in this tool call seamlessly without context switch...
-    # I will stick to calling `service.get_lot` and doing mapping here OR using the private method if I dare (bad practice).
-    # Actually, let's look at `LotService.get_lot` again from my memory/context.
-    # It returns `Lot` model.
-    # And `LotRepository.find_by_id` has `joinedload`.
-
-    # So validation from attributes works for basic fields.
-    # But the manual mapping of `product_name` from relation was done in router.
-    # I moved that manual mapping logic to `_build_lot_response` in service.
-    # It seems I forgot to add a PUBLIC `get_lot_response` method in service.
-    # I will modify the router to manually map for now, OR rely on `model_validate` with `from_attributes=True` and getters.
-    # `LotResponse` schema seems to have `product_name` fields that need to be populated.
-    # Let's check `LotResponse` schema again? No I can't.
-    # Assuming the router code was doing it manually means it's needed.
-
-    # I will implement the mapping logic here for `get_lot` to be safe, using `service.get_lot`.
+    # Use generic get_lot_details from service which handles VLotDetails join logic consistently
     service = LotService(db)
-    lot = service.get_lot(lot_id)
-
-    response = LotResponse.model_validate(lot)
-
-    if lot.product:
-        response.product_name = lot.product.product_name
-        response.product_code = lot.product.product_code  # type: ignore[attr-defined]
-
-    if lot.warehouse:
-        response.warehouse_name = lot.warehouse.warehouse_name
-        response.warehouse_code = lot.warehouse.warehouse_code
-
-    if lot.supplier:
-        response.supplier_name = lot.supplier.supplier_name
-        response.supplier_code = lot.supplier.supplier_code
-
-    response.current_quantity = lot.current_quantity or Decimal("0")
-    response.last_updated = lot.updated_at
-    return response
+    return service.get_lot_details(lot_id)
 
 
 @router.put("/{lot_id}", response_model=LotResponse)

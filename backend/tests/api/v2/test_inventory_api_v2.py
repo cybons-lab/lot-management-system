@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models import LotReceipt, Product, Supplier, Warehouse
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
@@ -49,13 +49,12 @@ def setup_inventory_data(db_session):
     db_session.commit()
 
     # Create lot with stock
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lot_master.id,
         product_id=product.id,
         supplier_id=supplier.id,
         warehouse_id=warehouse.id,
-        lot_number="LOT-INV-001",
-        current_quantity=Decimal("100.0"),
+        received_quantity=Decimal("100.0"),
         unit="EA",
         status="active",
         received_date=date.today(),

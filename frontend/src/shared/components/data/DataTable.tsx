@@ -1,101 +1,84 @@
-/**
- * DataTable.tsx
- *
- * 汎用データテーブルコンポーネント (TanStack Table Refactor)
- * - カラム定義ベースの表示
- * - ソート機能 (Controlled)
- * - 行選択機能 (Controlled)
- * - アクションボタン
- * - レスポンシブ対応
- * - 列幅変更機能 (New)
- */
-
 import {
-  useReactTable,
+  type ColumnDef,
+  type ExpandedState,
+  type SortingState,
+  type VisibilityState,
+  flexRender,
   getCoreRowModel,
   getExpandedRowModel,
-  flexRender,
-  type ColumnDef,
-  type SortingState,
-  type ExpandedState,
-  type VisibilityState,
+  useReactTable,
 } from "@tanstack/react-table";
+// @ts-expect-error - type resolution issue with @tanstack/react-virtual in monorepo
+import { useVirtualizer } from "@tanstack/react-virtual";
+import type { VirtualItem } from "@tanstack/virtual-core";
 import {
-  ArrowUpDown,
-  ArrowUp,
   ArrowDown,
-  ChevronRight,
+  ArrowUp,
+  ArrowUpDown,
   ChevronDown,
+  ChevronRight,
   Settings2,
 } from "lucide-react";
 import * as React from "react";
 import { useMemo } from "react";
 
-import { Button } from "@/components/ui";
-import { Checkbox } from "@/components/ui";
 import {
+  Button,
+  Checkbox,
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/display/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+  Skeleton,
+} from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 // ============================================
 // 型定義
 // ============================================
 
-export interface Column<T = never> {
-  /** カラムID */
+/** カラム定義の型 */
+export interface Column<T> {
   id: string;
-  /** ヘッダーラベル */
   header: string;
-  /** セルのレンダー関数 */
+  accessor?: (row: T) => React.ReactNode;
   cell?: (row: T) => React.ReactNode;
-  /** データアクセサ */
-  accessor?: (row: T) => unknown;
-  /** カラム幅 */
   width?: string | number;
-  /** 最小幅 */
   minWidth?: string | number;
-  /** ソート可能かどうか */
-  sortable?: boolean;
-  /** テキスト配置 */
   align?: "left" | "center" | "right";
-  /** 追加のCSSClass */
   className?: string;
-  /** 非表示を許可するかどうか (デフォルト: true) */
+  sortable?: boolean;
   enableHiding?: boolean;
 }
 
+/** ソート設定の型 */
 export interface SortConfig {
   column: string;
   direction: "asc" | "desc";
 }
 
-export interface DataTableProps<T = never> {
-  /** 表示データ */
+interface DataTableProps<T> {
+  /** データ配列 */
   data: T[];
   /** カラム定義 */
   columns: Column<T>[];
-  /** ソート設定 */
+  /** ソート状態 */
   sort?: SortConfig;
   /** ソート変更時のコールバック */
   onSortChange?: (sort: SortConfig) => void;
-  /** 行選択を有効化 */
+  /** 選択可能かどうか */
   selectable?: boolean;
   /** 選択された行のID配列 */
   selectedIds?: (string | number)[];
-  /** 行選択変更時のコールバック */
-  onSelectionChange?: (ids: (string | number)[]) => void;
-  /** 行のID取得関数 */
+  /** 選択変更時のコールバック */
+  onSelectionChange?: (selectedIds: (string | number)[]) => void;
+  /** 行ID取得関数（デフォルトは row.id） */
   getRowId?: (row: T) => string | number;
-  /** 行クリック時のコールバック */
+  /** 行クリック時のアクション */
   onRowClick?: (row: T) => void;
-  /** 行のアクションボタン */
+  /** 行内のアクションボタンレンダリング関数 */
   rowActions?: (row: T) => React.ReactNode;
   /** ホバー時に表示するアクション */
   renderHoverActions?: (row: T) => React.ReactNode;
@@ -117,6 +100,10 @@ export interface DataTableProps<T = never> {
   renderExpandedRow?: (row: T) => React.ReactNode;
   /** ツールバー左側に表示するコンテンツ */
   headerSlot?: React.ReactNode;
+  /** 仮想スクロールを有効化 */
+  enableVirtualization?: boolean;
+  /** 仮想スクロール時の表示エリアの高さ */
+  scrollAreaHeight?: string | number;
 }
 
 // ============================================
@@ -144,6 +131,8 @@ export function DataTable<T = never>({
   onExpandedRowsChange,
   renderExpandedRow,
   headerSlot,
+  enableVirtualization = false,
+  scrollAreaHeight,
 }: DataTableProps<T>) {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
 
@@ -274,10 +263,6 @@ export function DataTable<T = never>({
   const rowSelection = useMemo(() => {
     const selection: Record<string, boolean> = {};
     selectedIds.forEach((id) => {
-      // TanStack Table uses row index by default but we can configure it to use rowId
-      // However, here we are mapping external ID to selection state.
-      // We need to map row ID to table row ID.
-      // But wait, Tanstack table `getRowId` option can solve this.
       selection[String(id)] = true;
     });
     return selection;
@@ -306,8 +291,6 @@ export function DataTable<T = never>({
     getRowId: (row) => String(getRowId(row)),
     getRowCanExpand: () => expandable && !!renderExpandedRow,
     onSortingChange: (updaterOrValue) => {
-      // Controlled mode: we only call onSortChange
-      // We need to calculate next state to determine direction
       if (typeof updaterOrValue === "function") {
         const next = updaterOrValue(sorting);
         if (next.length > 0 && onSortChange) {
@@ -324,8 +307,6 @@ export function DataTable<T = never>({
       if (!onSelectionChange) return;
       const nextSelection =
         typeof updaterOrValue === "function" ? updaterOrValue(rowSelection) : updaterOrValue;
-      // Preserve numeric IDs if getRowId returns numbers
-      // Object.keys() always returns strings, so we parse back to numbers if the original IDs were numeric
       const selectedIdList = Object.keys(nextSelection).filter(
         (id) => nextSelection[id as unknown as keyof typeof nextSelection],
       );
@@ -335,9 +316,7 @@ export function DataTable<T = never>({
       if (!onExpandedRowsChange) return;
       const nextExpanded =
         typeof updaterOrValue === "function" ? updaterOrValue(expanded) : updaterOrValue;
-      // Cast to Record for safe index access (ExpandedState is either boolean or Record)
       if (typeof nextExpanded === "boolean") {
-        // If true, all rows are expanded - but we don't support that pattern
         onExpandedRowsChange([]);
       } else {
         const expandedIdList = Object.keys(nextExpanded).filter(
@@ -348,7 +327,7 @@ export function DataTable<T = never>({
     },
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    manualSorting: true, // Server-side or external sorting
+    manualSorting: true,
   });
 
   // Sort Icon Helper
@@ -360,6 +339,26 @@ export function DataTable<T = never>({
       <ArrowDown className="ml-1 h-4 w-4" />
     );
   };
+
+  // Virtualization
+  const parentRef = React.useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: table.getRowModel().rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 60,
+    overscan: 10,
+    enabled: enableVirtualization,
+  });
+
+  const rows = table.getRowModel().rows;
+  const virtualRows = enableVirtualization ? rowVirtualizer.getVirtualItems() : [];
+
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
+  const paddingBottom =
+    virtualRows.length > 0
+      ? rowVirtualizer.getTotalSize() - virtualRows[virtualRows.length - 1].end
+      : 0;
 
   // ローディング表示
   if (isLoading) {
@@ -406,12 +405,7 @@ export function DataTable<T = never>({
   }
 
   return (
-    <div
-      className={cn(
-        "relative flex flex-col gap-2", // Changed to flex-col to accommodate toolbar
-        className,
-      )}
-    >
+    <div className={cn("relative flex flex-col gap-2", className)}>
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2">
         <div>{headerSlot}</div>
@@ -444,9 +438,23 @@ export function DataTable<T = never>({
         </DropdownMenu>
       </div>
 
-      <div className="relative overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-md">
+      {/* Main Table Container */}
+      <div
+        ref={parentRef}
+        className={cn(
+          "relative rounded-lg border border-slate-200 bg-white shadow-md",
+          enableVirtualization ? "overflow-y-auto" : "overflow-x-auto",
+        )}
+        style={
+          enableVirtualization
+            ? { height: scrollAreaHeight ?? "600px", overflowAnchor: "none" }
+            : {}
+        }
+      >
         <table className="responsive-table w-full" style={{ tableLayout: "fixed" }}>
-          <thead className="border-b bg-slate-50">
+          <thead
+            className={cn("border-b bg-slate-50", enableVirtualization && "sticky top-0 z-10")}
+          >
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -457,7 +465,7 @@ export function DataTable<T = never>({
                     <th
                       key={header.id}
                       className={cn(
-                        "relative px-4 py-3 text-left text-sm font-semibold text-slate-700",
+                        "relative bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700",
                         meta?.align === "center" && "text-center",
                         meta?.align === "right" && "text-right",
                         header.column.getCanSort() &&
@@ -499,76 +507,158 @@ export function DataTable<T = never>({
               </tr>
             ))}
           </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => {
-              const customClassName = getRowClassName?.(row.original);
 
-              return (
-                <React.Fragment key={row.id}>
-                  <tr
-                    className={cn(
-                      "relative transition-all duration-150",
-                      "group", // Added group class here
-                      // ストライプ効果
-                      row.index % 2 === 0 ? "bg-white" : "bg-slate-50/30",
-                      // ホバー効果
-                      (onRowClick || renderHoverActions) && "hover:bg-blue-50/30",
-                      onRowClick && "cursor-pointer",
-                      // 選択状態
-                      row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/80",
-                      customClassName,
-                    )}
-                    onClick={() => onRowClick?.(row.original)}
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      const meta = cell.column.columnDef.meta as
-                        | { align?: string; className?: string }
-                        | undefined;
-                      return (
-                        <td
-                          key={cell.id}
-                          className={cn(
-                            "overflow-hidden px-4 py-3 text-sm text-slate-900",
-                            meta?.align === "center" && "text-center",
-                            meta?.align === "right" && "text-right",
-                            meta?.className,
-                          )}
-                          style={{ maxWidth: 0 }}
-                          data-label={
-                            typeof cell.column.columnDef.header === "string"
-                              ? cell.column.columnDef.header
-                              : undefined
-                          }
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          {enableVirtualization ? (
+            /* Virtualized Body */
+            <tbody>
+              {paddingTop > 0 && (
+                <tr>
+                  <td
+                    style={{ height: `${paddingTop}px` }}
+                    colSpan={table.getVisibleLeafColumns().length}
+                  />
+                </tr>
+              )}
+              {virtualRows.map((virtualItem: VirtualItem) => {
+                const row = rows[virtualItem.index];
+                const customClassName = getRowClassName?.(row.original);
+                return (
+                  <React.Fragment key={row.id}>
+                    <tr
+                      data-index={virtualItem.index}
+                      ref={rowVirtualizer.measureElement}
+                      className={cn(
+                        "relative transition-all duration-150",
+                        "group",
+                        row.index % 2 === 0 ? "bg-white" : "bg-slate-50/30",
+                        (onRowClick || renderHoverActions) && "hover:bg-blue-50/30",
+                        onRowClick && "cursor-pointer",
+                        row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/80",
+                        customClassName,
+                      )}
+                      onClick={() => onRowClick?.(row.original)}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        const meta = cell.column.columnDef.meta as
+                          | { align?: string; className?: string }
+                          | undefined;
+                        return (
+                          <td
+                            key={cell.id}
+                            className={cn(
+                              "overflow-hidden px-4 py-3 text-sm text-slate-900",
+                              meta?.align === "center" && "text-center",
+                              meta?.align === "right" && "text-right",
+                              meta?.className,
+                            )}
+                            style={{ maxWidth: 0 }}
+                            data-label={
+                              typeof cell.column.columnDef.header === "string"
+                                ? cell.column.columnDef.header
+                                : undefined
+                            }
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        );
+                      })}
+                      {renderHoverActions && (
+                        <td className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:opacity-100">
+                          <div className="pointer-events-auto flex gap-1 rounded-md border border-slate-200 bg-white p-1.5 shadow-lg">
+                            {renderHoverActions(row.original)}
+                          </div>
                         </td>
-                      );
-                    })}
-
-                    {/* ホバーアクション */}
-                    {renderHoverActions && (
-                      <td className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:opacity-100">
-                        <div className="pointer-events-auto flex gap-1 rounded-md border border-slate-200 bg-white p-1.5 shadow-lg">
-                          {renderHoverActions(row.original)}
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-
-                  {/* 展開された行 */}
-                  {row.getIsExpanded() && renderExpandedRow && (
-                    <tr className="border-l-4 border-l-blue-500 bg-blue-50/50">
-                      <td colSpan={row.getVisibleCells().length} className="p-0">
-                        <div className="border-t border-slate-200 px-4 py-3">
-                          {renderExpandedRow(row.original)}
-                        </div>
-                      </td>
+                      )}
                     </tr>
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </tbody>
+                    {row.getIsExpanded() && renderExpandedRow && (
+                      <tr className="border-l-4 border-l-blue-500 bg-blue-50/50">
+                        <td colSpan={row.getVisibleCells().length} className="p-0">
+                          <div className="border-t border-slate-200 px-4 py-3">
+                            {renderExpandedRow(row.original)}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+              {paddingBottom > 0 && (
+                <tr>
+                  <td
+                    style={{ height: `${paddingBottom}px` }}
+                    colSpan={table.getVisibleLeafColumns().length}
+                  />
+                </tr>
+              )}
+            </tbody>
+          ) : (
+            /* Normal Body */
+            <tbody>
+              {table.getRowModel().rows.map((row) => {
+                const customClassName = getRowClassName?.(row.original);
+
+                return (
+                  <React.Fragment key={row.id}>
+                    <tr
+                      className={cn(
+                        "relative transition-all duration-150",
+                        "group",
+                        row.index % 2 === 0 ? "bg-white" : "bg-slate-50/30",
+                        (onRowClick || renderHoverActions) && "hover:bg-blue-50/30",
+                        onRowClick && "cursor-pointer",
+                        row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/80",
+                        customClassName,
+                      )}
+                      onClick={() => onRowClick?.(row.original)}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        const meta = cell.column.columnDef.meta as
+                          | { align?: string; className?: string }
+                          | undefined;
+                        return (
+                          <td
+                            key={cell.id}
+                            className={cn(
+                              "overflow-hidden px-4 py-3 text-sm text-slate-900",
+                              meta?.align === "center" && "text-center",
+                              meta?.align === "right" && "text-right",
+                              meta?.className,
+                            )}
+                            style={{ maxWidth: 0 }}
+                            data-label={
+                              typeof cell.column.columnDef.header === "string"
+                                ? cell.column.columnDef.header
+                                : undefined
+                            }
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        );
+                      })}
+
+                      {renderHoverActions && (
+                        <td className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:opacity-100">
+                          <div className="pointer-events-auto flex gap-1 rounded-md border border-slate-200 bg-white p-1.5 shadow-lg">
+                            {renderHoverActions(row.original)}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+
+                    {row.getIsExpanded() && renderExpandedRow && (
+                      <tr className="border-l-4 border-l-blue-500 bg-blue-50/50">
+                        <td colSpan={row.getVisibleCells().length} className="p-0">
+                          <div className="border-t border-slate-200 px-4 py-3">
+                            {renderExpandedRow(row.original)}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          )}
         </table>
       </div>
     </div>

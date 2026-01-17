@@ -145,7 +145,7 @@ export const summarySettingsAtom = atomWithStorage<SummarySettings>(
 /**
  * ページビューモード
  */
-export type OverviewMode = "items" | "product" | "supplier" | "warehouse";
+export type OverviewMode = "items" | "supplier" | "warehouse" | "product" | "lots";
 
 /**
  * タブフィルタタイプ

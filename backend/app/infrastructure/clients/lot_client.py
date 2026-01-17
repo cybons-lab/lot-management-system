@@ -8,9 +8,8 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.application.services.inventory.lot_service import LotService
-from app.application.services.inventory.stock_calculation import get_reserved_quantity
 from app.domain.lot import LotCandidate
-from app.infrastructure.persistence.models import Lot, Product, Warehouse
+from app.infrastructure.persistence.models import LotMaster, LotReceipt, Product, Warehouse
 from app.presentation.schemas.inventory.inventory_schema import LotResponse
 
 
@@ -49,43 +48,28 @@ class InProcessLotClient(LotContextClient):
             warehouse = self.db.get(Warehouse, warehouse_id)
             warehouse_code = warehouse.warehouse_code if warehouse else None
 
-        lots = self.lot_service.repository.find_available_lots(
+        candidates = self.lot_service.get_fefo_candidates(
             product_code=product.maker_part_code,
             warehouse_code=warehouse_code,
-            min_quantity=float(min_quantity),
+            exclude_expired=True,
         )
 
-        candidates: list[LotCandidate] = []
-        for lot in lots:
-            reserved = get_reserved_quantity(self.db, lot.id)
-            candidates.append(
-                LotCandidate(
-                    lot_id=lot.id,
-                    lot_code=lot.lot_number,
-                    lot_number=lot.lot_number,
-                    product_code=lot.product.maker_part_code if lot.product else "",
-                    warehouse_code=lot.warehouse.warehouse_code if lot.warehouse else "",
-                    available_qty=float((lot.current_quantity or Decimal("0")) - reserved),
-                    expiry_date=lot.expiry_date,
-                    receipt_date=lot.received_date,
-                )
-            )
+        if min_quantity > 0:
+            candidates = [c for c in candidates if c.available_qty >= float(min_quantity)]
+
         return candidates
 
     async def get_lot_by_reference(self, lot_reference: str) -> LotResponse:
-        lot = self.db.query(Lot).filter(Lot.lot_number == lot_reference).first()
+        # First find the lot to get ID
+        lot = (
+            self.db.query(LotReceipt)
+            .join(LotMaster)
+            .filter(LotMaster.lot_number == lot_reference)
+            .first()
+        )
         if not lot:
             # TODO: Define specific exception for reference lookup
             raise ValueError(f"Lot not found: {lot_reference}")
 
-        response = LotResponse.model_validate(lot)
-        if lot.product:
-            response.product_code = lot.product.maker_part_code
-            response.product_name = lot.product.product_name
-        if lot.warehouse:
-            response.warehouse_code = lot.warehouse.warehouse_code
-            response.warehouse_name = lot.warehouse.warehouse_name
-        if lot.supplier:
-            response.supplier_code = lot.supplier.supplier_code
-            response.supplier_name = lot.supplier.supplier_name
-        return response
+        # Then use get_lot_details to get full view model
+        return self.lot_service.get_lot_details(lot.id)

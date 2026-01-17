@@ -1,4 +1,14 @@
-import { ArrowUpFromLine, Box, History, Home, List, Package, RefreshCw, Truck } from "lucide-react";
+import {
+  ArrowUpFromLine,
+  Box,
+  History,
+  Home,
+  List,
+  Package,
+  RefreshCw,
+  Search,
+  Truck,
+} from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -10,6 +20,7 @@ import { InventoryByProductTable } from "@/features/inventory/components/Invento
 import { InventoryBySupplierTable } from "@/features/inventory/components/InventoryBySupplierTable";
 import { InventoryByWarehouseTable } from "@/features/inventory/components/InventoryByWarehouseTable";
 import { InventoryTable } from "@/features/inventory/components/InventoryTable";
+import { LotSearchPanel } from "@/features/inventory/components/LotSearchPanel";
 import { useInventoryItems } from "@/features/inventory/hooks";
 import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 import { useInventoryPageState } from "@/features/inventory/hooks/useInventoryPageState";
@@ -148,6 +159,14 @@ export function InventoryPage() {
             >
               <Home className="mr-2 h-4 w-4" />
               倉庫別
+            </Button>
+            <Button
+              variant={overviewMode === "lots" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setOverviewMode("lots")}
+            >
+              <Search className="mr-2 h-4 w-4" />
+              ロット検索
             </Button>
           </div>
 
@@ -290,6 +309,7 @@ export function InventoryPage() {
               }}
             />
           )}
+          {overviewMode === "lots" && <LotSearchPanel />}
         </div>
       </div>
     </PageContainer>

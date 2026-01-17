@@ -80,7 +80,7 @@ EXPORT_TARGETS: list[dict[str, str]] = [
         "description": "顧客納入先ごとの出荷票設定",
     },
     # トランザクションデータ
-    {"key": "lots", "name": "ロット一覧", "description": "在庫ロットデータ"},
+    {"key": "lot_receipts", "name": "ロット入庫記録", "description": "ロット入庫記録データ"},
     {"key": "orders", "name": "受注一覧", "description": "受注データ"},
     {"key": "forecasts", "name": "フォーキャスト", "description": "需要予測データ"},
     # システムデータ
@@ -264,14 +264,14 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         user_data = [UserResponse.model_validate(u).model_dump() for u in users]
         return user_data, "users"
 
-    if target == "lots":
+    if target == "lot_receipts":
         from app.presentation.schemas.inventory.inventory_schema import LotResponse
 
         lot_service = LotService(db)
         lot_list = lot_service.get_all(limit=10000)
         data = [LotResponse.model_validate(l).model_dump() for l in lot_list]
         # Ensure we return objects that pandas can handle nicely via ExportService._prepare_data
-        return data, "lots"
+        return data, "lot_receipts"
 
     if target == "orders":
         from app.presentation.schemas.orders.orders_schema import OrderLineResponse

@@ -112,7 +112,7 @@ from decimal import Decimal
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Lot
+from app.infrastructure.persistence.models import LotReceipt
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationStatus,
@@ -186,14 +186,14 @@ def get_reserved_quantity(db: Session, lot_id: int) -> Decimal:
     return get_confirmed_reserved_quantity(db, lot_id)
 
 
-def get_available_quantity(db: Session, lot: Lot) -> Decimal:
+def get_available_quantity(db: Session, lot: LotReceipt) -> Decimal:
     """Calculate available quantity for a lot.
 
-    available = current_quantity - reserved_quantity - locked_quantity
+    available = received_quantity - reserved_quantity - locked_quantity
     """
     reserved = get_reserved_quantity(db, lot.id)
     locked = lot.locked_quantity or Decimal(0)
-    current = lot.current_quantity or Decimal(0)
+    current = lot.received_quantity or Decimal(0)
     return current - reserved - locked
 
 
@@ -202,20 +202,20 @@ def get_available_quantity_by_id(db: Session, lot_id: int) -> Decimal:
 
     available = current_quantity - reserved_quantity - locked_quantity
     """
-    lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    lot = db.query(LotReceipt).filter(LotReceipt.id == lot_id).first()
     if not lot:
         return Decimal(0)
     return get_available_quantity(db, lot)
 
 
-def get_allocatable_quantity(db: Session, lot: Lot) -> Decimal:
+def get_allocatable_quantity(db: Session, lot: LotReceipt) -> Decimal:
     """Calculate allocatable quantity (excluding locked).
 
     allocatable = current_quantity - reserved_quantity
     Used for allocation where locked stock might still be considered.
     """
     reserved = get_reserved_quantity(db, lot.id)
-    current = lot.current_quantity or Decimal(0)
+    current = lot.received_quantity or Decimal(0)
     return current - reserved
 
 

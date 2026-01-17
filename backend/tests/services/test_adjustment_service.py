@@ -4,7 +4,8 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.application.services.inventory.adjustment_service import AdjustmentService
-from app.infrastructure.persistence.models.inventory_models import Lot, StockHistory
+from app.application.services.inventory.stock_calculation import get_available_quantity
+from app.infrastructure.persistence.models.inventory_models import LotReceipt, StockHistory
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.presentation.schemas.inventory.inventory_schema import AdjustmentCreate
 
@@ -22,13 +23,12 @@ def test_create_adjustment_increase(db: Session, service_master_data):
     db.add(lm)
     db.flush()
 
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lm.id,
-        lot_number="LOT-ADJ-1",
         product_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=100,
+        received_quantity=100,
         received_date=date.today(),
         status="active",
         unit="EA",
@@ -51,7 +51,7 @@ def test_create_adjustment_increase(db: Session, service_master_data):
 
     # Verify lot quantity updated
     db.refresh(lot)
-    assert lot.current_quantity == 110
+    assert get_available_quantity(db, lot) == 110
 
     # Verify stock history created
     history = (
@@ -81,13 +81,12 @@ def test_create_adjustment_decrease(db: Session, service_master_data):
     db.add(lm)
     db.flush()
 
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lm.id,
-        lot_number="LOT-ADJ-2",
         product_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=100,
+        received_quantity=100,
         received_date=date.today(),
         status="active",
         unit="EA",
@@ -108,7 +107,7 @@ def test_create_adjustment_decrease(db: Session, service_master_data):
     assert result.adjusted_quantity == -10
 
     db.refresh(lot)
-    assert lot.current_quantity == 90
+    assert get_available_quantity(db, lot) == 90
 
 
 def test_create_adjustment_deplete(db: Session, service_master_data):
@@ -124,13 +123,12 @@ def test_create_adjustment_deplete(db: Session, service_master_data):
     db.add(lm)
     db.flush()
 
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lm.id,
-        lot_number="LOT-ADJ-3",
         product_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=10,
+        received_quantity=10,
         received_date=date.today(),
         status="active",
         unit="EA",
@@ -149,7 +147,7 @@ def test_create_adjustment_deplete(db: Session, service_master_data):
     service.create_adjustment(adj_data)
 
     db.refresh(lot)
-    assert lot.current_quantity == 0
+    assert get_available_quantity(db, lot) == 0
     assert lot.status == "depleted"
 
 
@@ -166,13 +164,12 @@ def test_create_adjustment_negative_balance_error(db: Session, service_master_da
     db.add(lm)
     db.flush()
 
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lm.id,
-        lot_number="LOT-ADJ-4",
         product_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=10,
+        received_quantity=10,
         received_date=date.today(),
         status="active",
         unit="EA",
@@ -219,13 +216,12 @@ def test_get_adjustments_filtering(db: Session, service_master_data):
     db.add(lm)
     db.flush()
 
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lm.id,
-        lot_number="LOT-ADJ-FILT",
         product_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=100,
+        received_quantity=100,
         received_date=date.today(),
         status="active",
         unit="EA",
@@ -275,13 +271,12 @@ def test_get_adjustment_by_id(db: Session, service_master_data):
     db.add(lm)
     db.flush()
 
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lm.id,
-        lot_number="LOT-ADJ-GET",
         product_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
-        current_quantity=100,
+        received_quantity=100,
         received_date=date.today(),
         status="active",
         unit="EA",

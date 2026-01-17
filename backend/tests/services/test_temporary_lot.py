@@ -12,7 +12,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.application.services.inventory.lot_service import LotService
-from app.infrastructure.persistence.models import Lot, Product, Warehouse
+from app.infrastructure.persistence.models import LotReceipt, Product, Warehouse
 from app.presentation.schemas.inventory.inventory_schema import LotCreate
 
 
@@ -60,31 +60,31 @@ class TestTemporaryLotRegistration:
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",
-            current_quantity=Decimal("100"),
+            received_quantity=Decimal("100"),
         )
 
         response = service.create_lot(lot_create)
 
         # Verify TMP-format lot number
-        assert response.lot_number.startswith("TMP-"), (
-            f"Expected TMP- prefix, got {response.lot_number}"
-        )
+        assert response.lot_number.startswith(
+            "TMP-"
+        ), f"Expected TMP- prefix, got {response.lot_number}"
 
         # Verify format: TMP-YYYYMMDD-XXXXXXXX
         parts = response.lot_number.split("-")
         assert len(parts) == 3, f"Expected 3 parts in TMP lot number, got {parts}"
         assert parts[0] == "TMP"
         assert len(parts[1]) == 8, f"Expected 8-digit date, got {parts[1]}"  # YYYYMMDD
-        assert len(parts[2]) == 8, (
-            f"Expected 8-char UUID prefix, got {parts[2]}"
-        )  # UUID first 8 chars
+        assert (
+            len(parts[2]) == 8
+        ), f"Expected 8-char UUID prefix, got {parts[2]}"  # UUID first 8 chars
 
         # Verify temporary_lot_key is set (UUID format)
         assert response.temporary_lot_key is not None
         assert "-" in response.temporary_lot_key, "Expected UUID format with dashes"
 
         # Verify lot is in database
-        db_lot = db.query(Lot).filter(Lot.id == response.id).first()
+        db_lot = db.query(LotReceipt).filter(LotReceipt.id == response.id).first()
         assert db_lot is not None
         assert db_lot.temporary_lot_key is not None
 
@@ -101,7 +101,7 @@ class TestTemporaryLotRegistration:
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",
-            current_quantity=Decimal("100"),
+            received_quantity=Decimal("100"),
         )
 
         response = service.create_lot(lot_create)
@@ -127,7 +127,7 @@ class TestTemporaryLotRegistration:
                 warehouse_id=warehouse.id,
                 received_date=date.today(),
                 unit="PCS",
-                current_quantity=Decimal(f"{(i + 1) * 10}"),
+                received_quantity=Decimal(f"{(i + 1) * 10}"),
             )
 
             response = service.create_lot(lot_create)
@@ -145,7 +145,7 @@ class TestTemporaryLotUpdate:
     """Tests for updating temporary lots to official lot numbers."""
 
     @pytest.fixture
-    def temp_lot(self, db: Session) -> Lot:
+    def temp_lot(self, db: Session) -> LotReceipt:
         """Create a temporary lot for testing."""
         # First ensure we have product and warehouse
         product = db.query(Product).filter(Product.id == 99002).first()
@@ -180,13 +180,13 @@ class TestTemporaryLotUpdate:
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",
-            current_quantity=Decimal("50"),
+            received_quantity=Decimal("50"),
         )
         response = service.create_lot(lot_create)
 
-        return db.query(Lot).filter(Lot.id == response.id).first()
+        return db.query(LotReceipt).filter(LotReceipt.id == response.id).first()
 
-    def test_update_temporary_lot_to_official(self, db: Session, temp_lot: Lot):
+    def test_update_temporary_lot_to_official(self, db: Session, temp_lot: LotReceipt):
         """Test updating a temporary lot number to an official one."""
         from app.presentation.schemas.inventory.inventory_schema import LotUpdate
 

@@ -5,7 +5,7 @@ from decimal import Decimal
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.inventory_models import LotReceipt
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
 from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
@@ -144,7 +144,7 @@ def generate_lots(
             db.add(master)
             db.flush()  # Get master.id
 
-            lot = Lot(
+            lot = LotReceipt(
                 lot_number=lot_number,
                 lot_master_id=master.id,
                 product_id=p.id,
@@ -176,9 +176,9 @@ def generate_lots(
 
     # DEBUG: Verify lot counts per product
     lot_counts = (
-        db.query(Lot.product_id, func.count(Lot.id).label("count"))
-        .group_by(Lot.product_id)
-        .having(func.count(Lot.id) > 3)
+        db.query(LotReceipt.product_id, func.count(LotReceipt.id).label("count"))
+        .group_by(LotReceipt.product_id)
+        .having(func.count(LotReceipt.id) > 3)
         .all()
     )
 
@@ -193,18 +193,20 @@ def generate_lots(
 
 
 def get_any_lot_id(db: Session, product_id: int, required_qty: Decimal | None = None) -> int | None:
-    query = db.query(Lot).filter(Lot.product_id == product_id, Lot.status == "active")
+    query = db.query(LotReceipt).filter(
+        LotReceipt.product_id == product_id, LotReceipt.status == "active"
+    )
 
     if required_qty is not None:
-        query = query.filter(Lot.current_quantity >= required_qty)
+        query = query.filter(LotReceipt.current_quantity >= required_qty)
 
-    lot = query.order_by(Lot.current_quantity.desc(), Lot.id.asc()).first()
+    lot = query.order_by(LotReceipt.current_quantity.desc(), LotReceipt.id.asc()).first()
 
     if not lot and required_qty is not None:
         lot = (
-            db.query(Lot)
-            .filter(Lot.product_id == product_id, Lot.status == "active")
-            .order_by(Lot.current_quantity.desc(), Lot.id.asc())
+            db.query(LotReceipt)
+            .filter(LotReceipt.product_id == product_id, LotReceipt.status == "active")
+            .order_by(LotReceipt.current_quantity.desc(), LotReceipt.id.asc())
             .first()
         )
 

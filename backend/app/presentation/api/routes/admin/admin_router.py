@@ -14,7 +14,7 @@ from app.core.config import settings
 from app.core.database import truncate_all_tables
 from app.infrastructure.persistence.models import (
     Customer,
-    Lot,
+    LotReceipt,
     Order,
     OrderLine,
     Role,
@@ -56,7 +56,9 @@ def get_dashboard_stats(
     """
     try:
         # lots テーブルから直接在庫を集計
-        total_stock_result = db.execute(select(func.coalesce(func.sum(Lot.current_quantity), 0.0)))
+        total_stock_result = db.execute(
+            select(func.coalesce(func.sum(LotReceipt.current_quantity), 0.0))
+        )
         total_stock = total_stock_result.scalar_one()
     except SQLAlchemyError as e:
         logger.warning("在庫集計に失敗したため 0 扱いにします: %s", e)

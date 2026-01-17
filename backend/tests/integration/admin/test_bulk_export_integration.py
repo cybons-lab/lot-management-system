@@ -81,7 +81,7 @@ def test_bulk_export_download_all_targets_integration(
     from datetime import date
     from decimal import Decimal
 
-    from app.infrastructure.persistence.models import Lot
+    from app.infrastructure.persistence.models import LotReceipt
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
     lm = LotMaster(
@@ -92,13 +92,12 @@ def test_bulk_export_download_all_targets_integration(
     db.add(lm)
     db.flush()
 
-    lot = Lot(
+    lot = LotReceipt(
         lot_master_id=lm.id,
-        lot_number="LOT-001",
         product_id=master_data["product1"].id,
         warehouse_id=master_data["warehouse"].id,
         supplier_id=master_data["supplier"].id,
-        current_quantity=Decimal("100"),
+        received_quantity=Decimal("100"),
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today(),
@@ -155,7 +154,7 @@ def test_bulk_export_download_all_targets_integration(
         "uom_conversions",
         "warehouse_delivery_routes",
         "customer_item_delivery_settings",
-        "lots",
+        "lot_receipts",  # Renamed from "lots" to match Phase 1 schema
         "orders",
         "forecasts",
         "users",

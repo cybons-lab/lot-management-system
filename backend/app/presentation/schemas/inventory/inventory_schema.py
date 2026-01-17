@@ -70,7 +70,11 @@ class LotBase(BaseSchema):
     expected_lot_id: int | None = None
     received_date: date
     expiry_date: date | None = None
+    # Backward compatibility: current_quantity maps to received_quantity in input (Create),
+    # but maps to remaining_quantity in output (Response).
     current_quantity: Decimal = Decimal("0")
+    received_quantity: Decimal = Decimal("0")
+    remaining_quantity: Decimal = Decimal("0")
     allocated_quantity: Decimal = Decimal("0")
     locked_quantity: Decimal = Decimal("0")
     unit: str
@@ -89,6 +93,12 @@ class LotBase(BaseSchema):
     # Temporary lot registration support
     # 仮入庫時に付与されるUUID。正式ロット番号確定後も識別子として残る
     temporary_lot_key: str | None = None
+
+    # Financial and Logistical details (Phase 1 Expansion)
+    shipping_date: date | None = None
+    cost_price: Decimal | None = None
+    sales_price: Decimal | None = None
+    tax_rate: Decimal | None = None
 
 
 class LotCreate(LotBase):
@@ -137,6 +147,12 @@ class LotUpdate(BaseSchema):
     origin_type: LotOriginType | None = None
     origin_reference: str | None = None
 
+    # Financial and Logistical details (Phase 1 Expansion)
+    shipping_date: date | None = None
+    cost_price: Decimal | None = None
+    sales_price: Decimal | None = None
+    tax_rate: Decimal | None = None
+
 
 class LotResponse(LotBase, TimestampMixin):
     """API response model for lots."""
@@ -144,26 +160,34 @@ class LotResponse(LotBase, TimestampMixin):
     id: int = Field(serialization_alias="lot_id")
 
     # Joined fields from v_lot_details view (COALESCE ensures non-null for deleted masters)
-    product_name: str
-    product_code: str
-    supplier_name: str
-    is_primary_supplier: bool = False
-
-    # Optional joined fields
+    product_name: str | None = None
+    product_code: str | None = None
+    supplier_name: str | None = None
+    supplier_code: str | None = None
     warehouse_name: str | None = None
     warehouse_code: str | None = None
-    supplier_code: str | None = None
-    last_updated: datetime | None = None
 
-    # User assignment fields
-    primary_user_id: int | None = None
-    primary_username: str | None = None
-    primary_user_display_name: str | None = None
+    is_primary_supplier: bool = False
 
-    # Soft-delete status flags for related masters
+    # Soft delete status
     product_deleted: bool = False
     warehouse_deleted: bool = False
     supplier_deleted: bool = False
+
+
+class LotListResponse(BaseSchema):
+    """API response model for paginated list of lots."""
+
+    items: list[LotResponse]
+    total: int
+    page: int
+    size: int
+
+
+class LotLabelRequest(BaseSchema):
+    """Payload for requesting lot labels."""
+
+    lot_ids: list[int]
 
 
 class StockTransactionType(str, Enum):

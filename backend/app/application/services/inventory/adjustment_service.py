@@ -11,7 +11,7 @@ from app.application.services.common.base_service import BaseService
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.inventory_models import (
     Adjustment,
-    Lot,
+    LotReceipt,
     StockHistory,
     StockTransactionType,
 )
@@ -182,18 +182,18 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
             - stock_historyレコードを作成
         """
         # Get lot
-        lot = self.db.query(Lot).filter(Lot.id == adjustment.lot_id).first()
+        lot = self.db.query(LotReceipt).filter(LotReceipt.id == adjustment.lot_id).first()
 
         if not lot:
             raise ValueError(f"Lot with id={adjustment.lot_id} not found")
 
         # Calculate new quantity
-        new_quantity = lot.current_quantity + adjustment.adjusted_quantity
+        new_quantity = lot.received_quantity + adjustment.adjusted_quantity
 
         if new_quantity < Decimal("0"):
             raise ValueError(
                 f"Adjustment would result in negative quantity. "
-                f"Current: {lot.current_quantity}, Adjustment: {adjustment.adjusted_quantity}"
+                f"Current: {lot.received_quantity}, Adjustment: {adjustment.adjusted_quantity}"
             )
 
         # Create adjustment record
@@ -209,7 +209,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         self.db.flush()  # Get ID for stock_history reference (but don't commit yet)
 
         # Update lot quantity
-        lot.current_quantity = new_quantity
+        lot.received_quantity = new_quantity
         lot.updated_at = utcnow()
 
         # Update lot status if necessary

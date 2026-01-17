@@ -12,7 +12,7 @@ import { DataTable } from "@/shared/components/data/DataTable";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import type { LotUI } from "@/shared/libs/normalize";
 
-interface LotTableProps {
+export interface LotTableProps {
   /** ロット一覧データ */
   lots: LotUI[];
   /** テーブル状態管理フック */
@@ -36,6 +36,14 @@ interface LotTableProps {
   isLoading: boolean;
   /** エラー状態 */
   error: Error | null;
+  /** ソート変更時のコールバック */
+  onSortChange?: (column: string) => void;
+  /** 行選択（チェックボックス）を表示するか */
+  selectable?: boolean;
+  /** 選択された行のID配列 */
+  selectedIds?: number[];
+  /** 選択変更時のコールバック */
+  onSelectionChange?: (ids: number[]) => void;
 }
 
 /**
@@ -51,7 +59,16 @@ function getSortConfig(sort: { column: string | null; direction: "asc" | "desc" 
 /**
  * ロット一覧テーブル
  */
-export function LotTable({ lots, table, isLoading, error }: LotTableProps) {
+export function LotTable({
+  lots,
+  table,
+  isLoading,
+  error,
+  onSortChange,
+  selectable = false,
+  selectedIds = [],
+  onSelectionChange,
+}: LotTableProps) {
   // カラム定義
   const columns = useMemo(() => createLotColumns(), []);
 
@@ -72,8 +89,12 @@ export function LotTable({ lots, table, isLoading, error }: LotTableProps) {
         data={paginatedLots}
         columns={columns}
         sort={sortConfig}
+        onSortChange={(sort) => onSortChange?.(sort.column)}
         getRowId={(row) => row.id}
         isLoading={isLoading}
+        selectable={selectable}
+        selectedIds={selectedIds}
+        onSelectionChange={(ids) => onSelectionChange?.(ids as number[])}
         className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
         getRowClassName={(lot) =>
           lot.status === "locked" ? "bg-amber-50/70 hover:bg-amber-100" : ""

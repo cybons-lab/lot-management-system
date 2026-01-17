@@ -10,7 +10,7 @@ from app.application.services.allocations.suggestion import AllocationSuggestion
 from app.application.services.forecasts.forecast_import_service import ForecastImportService
 from app.application.services.forecasts.forecast_service import ForecastService
 from app.core.database import get_db
-from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion, Lot
+from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion, LotReceipt
 from app.presentation.schemas.allocations.allocation_suggestions_schema import (
     AllocationSuggestionListResponse,
     AllocationSuggestionPreviewResponse,
@@ -255,7 +255,7 @@ def get_allocation_suggestions_by_group(
     lot_ids = list(lot_totals.keys())
     lots = []
     if lot_ids:
-        lots = db.query(Lot).filter(Lot.id.in_(lot_ids)).all()
+        lots = db.query(LotReceipt).filter(LotReceipt.id.in_(lot_ids)).all()
 
     lot_map = {lot.id: lot for lot in lots}
 

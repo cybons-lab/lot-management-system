@@ -22,7 +22,8 @@ from app.application.services.common.soft_delete_utils import (
 from app.infrastructure.persistence.models import (
     ExpectedLot,
     InboundPlanLine,
-    Lot,
+    LotMaster,
+    LotReceipt,
     Product,
     StockHistory,
     StockTransactionType,
@@ -77,11 +78,11 @@ class IntakeHistoryService:
             self.db.query(StockHistory)
             .filter(StockHistory.transaction_type == StockTransactionType.INBOUND)
             .options(
-                joinedload(StockHistory.lot).joinedload(Lot.product),
-                joinedload(StockHistory.lot).joinedload(Lot.warehouse),
-                joinedload(StockHistory.lot).joinedload(Lot.supplier),
+                joinedload(StockHistory.lot).joinedload(LotReceipt.product),
+                joinedload(StockHistory.lot).joinedload(LotReceipt.warehouse),
+                joinedload(StockHistory.lot).joinedload(LotReceipt.supplier),
                 joinedload(StockHistory.lot)
-                .joinedload(Lot.expected_lot)
+                .joinedload(LotReceipt.expected_lot)
                 .joinedload(ExpectedLot.inbound_plan_line)
                 .joinedload(InboundPlanLine.inbound_plan),
             )
@@ -91,24 +92,27 @@ class IntakeHistoryService:
         if supplier_id is not None or warehouse_id is not None or product_id is not None:
             query = query.join(StockHistory.lot)
             if supplier_id is not None:
-                query = query.filter(Lot.supplier_id == supplier_id)
+                query = query.filter(LotReceipt.supplier_id == supplier_id)
             if warehouse_id is not None:
-                query = query.filter(Lot.warehouse_id == warehouse_id)
+                query = query.filter(LotReceipt.warehouse_id == warehouse_id)
             if product_id is not None:
-                query = query.filter(Lot.product_id == product_id)
+                query = query.filter(LotReceipt.product_id == product_id)
 
         if search_query:
             term = f"%{search_query}%"
             # 検索に必要なテーブルを結合
             if supplier_id is None and warehouse_id is None and product_id is None:
                 query = query.join(StockHistory.lot)
-            query = query.join(Lot.product)
-            query = query.outerjoin(Lot.supplier)
-            query = query.outerjoin(Lot.warehouse)
+            query = query.join(LotReceipt.product)
+            query = query.outerjoin(LotReceipt.supplier)
+            query = query.outerjoin(LotReceipt.warehouse)
+
+            # LotMaster is required for lot_number search
+            query = query.join(LotMaster, LotReceipt.lot_master_id == LotMaster.id)
 
             query = query.filter(
                 or_(
-                    Lot.lot_number.ilike(term),
+                    LotMaster.lot_number.ilike(term),
                     Product.maker_part_code.ilike(term),
                     Product.product_name.ilike(term),
                     Product.maker_item_code.ilike(term),
@@ -151,11 +155,11 @@ class IntakeHistoryService:
             .filter(StockHistory.id == intake_id)
             .filter(StockHistory.transaction_type == StockTransactionType.INBOUND)
             .options(
-                joinedload(StockHistory.lot).joinedload(Lot.product),
-                joinedload(StockHistory.lot).joinedload(Lot.warehouse),
-                joinedload(StockHistory.lot).joinedload(Lot.supplier),
+                joinedload(StockHistory.lot).joinedload(LotReceipt.product),
+                joinedload(StockHistory.lot).joinedload(LotReceipt.warehouse),
+                joinedload(StockHistory.lot).joinedload(LotReceipt.supplier),
                 joinedload(StockHistory.lot)
-                .joinedload(Lot.expected_lot)
+                .joinedload(LotReceipt.expected_lot)
                 .joinedload(ExpectedLot.inbound_plan_line)
                 .joinedload(InboundPlanLine.inbound_plan),
             )
@@ -241,18 +245,18 @@ class IntakeHistoryService:
                 func.count(StockHistory.id).label("intake_count"),
                 func.sum(StockHistory.quantity_change).label("total_quantity"),
             )
-            .join(Lot, StockHistory.lot_id == Lot.id)
+            .join(LotReceipt, StockHistory.lot_id == LotReceipt.id)
             .where(StockHistory.transaction_type == StockTransactionType.INBOUND)
             .where(func.date(StockHistory.transaction_date) >= start_date)
             .where(func.date(StockHistory.transaction_date) <= end_date)
         )
 
         if warehouse_id:
-            stmt = stmt.where(Lot.warehouse_id == warehouse_id)
+            stmt = stmt.where(LotReceipt.warehouse_id == warehouse_id)
         if product_id:
-            stmt = stmt.where(Lot.product_id == product_id)
+            stmt = stmt.where(LotReceipt.product_id == product_id)
         if supplier_id:
-            stmt = stmt.where(Lot.supplier_id == supplier_id)
+            stmt = stmt.where(LotReceipt.supplier_id == supplier_id)
 
         stmt = stmt.group_by(func.date(StockHistory.transaction_date)).order_by(
             func.date(StockHistory.transaction_date)

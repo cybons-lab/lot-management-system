@@ -165,16 +165,36 @@ class VLotDetails(Base):
     supplier_name: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
     received_date: Mapped[date] = mapped_column(Date)
     expiry_date: Mapped[date | None] = mapped_column(Date)
+    received_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    remaining_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     current_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    reserved_quantity_active: Mapped[Decimal] = mapped_column(Numeric(15, 3), default=Decimal(0))
     locked_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     available_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     unit: Mapped[str] = mapped_column(String(20))
     status: Mapped[str] = mapped_column(String(20))
     lock_reason: Mapped[str | None] = mapped_column(String)
     days_to_expiry: Mapped[int | None] = mapped_column(Integer)
+
+    # Inspection details
+    inspection_status: Mapped[str] = mapped_column(String, default="not_required")
+    inspection_date: Mapped[date | None] = mapped_column(Date)
+    inspection_cert_number: Mapped[str | None] = mapped_column(String)
+
     # 仮入庫識別キー（UUID）
     temporary_lot_key: Mapped[str | None] = mapped_column(String)
+
+    # Origin tracking
+    origin_type: Mapped[str | None] = mapped_column(String)
+    origin_reference: Mapped[str | None] = mapped_column(String)
+
+    # Financial and Logistical details
+    shipping_date: Mapped[date | None] = mapped_column(Date)
+    cost_price: Mapped[Decimal | None] = mapped_column(Numeric(15, 3))
+    sales_price: Mapped[Decimal | None] = mapped_column(Numeric(15, 3))
+    tax_rate: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+
     # 担当者情報
     primary_user_id: Mapped[int | None] = mapped_column(Integer)
     primary_username: Mapped[str | None] = mapped_column(String)

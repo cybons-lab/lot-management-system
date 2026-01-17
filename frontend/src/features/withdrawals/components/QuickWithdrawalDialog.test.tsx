@@ -157,6 +157,14 @@ describe("QuickWithdrawalDialog", () => {
     inspection_status: "not_required",
     inspection_date: null,
     inspection_cert_number: null,
+    origin_type: "adhoc",
+    origin_reference: null,
+    shipping_date: null,
+    cost_price: null,
+    selling_price: null,
+    sales_price: null,
+    tax_rate: null,
+    customer_name: null,
   };
 
   const mockCustomers = [

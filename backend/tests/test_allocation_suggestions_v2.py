@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from app.application.services.allocations.suggestion import AllocationSuggestionService
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
-from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.inventory_models import LotReceipt
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
@@ -52,14 +52,13 @@ def test_regenerate_for_periods(db):
     db.add(lot_master1)
     db.flush()
 
-    lot1 = Lot(
+    lot1 = LotReceipt(
         lot_master_id=lot_master1.id,
-        lot_number="LOT1",
         product_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
         expiry_date=date(2026, 12, 1),
-        current_quantity=Decimal("100"),
+        received_quantity=Decimal("100"),
         unit="EA",
         status="active",
         origin_type="order",
@@ -74,14 +73,13 @@ def test_regenerate_for_periods(db):
     db.add(lot_master2)
     db.flush()
 
-    lot2 = Lot(
+    lot2 = LotReceipt(
         lot_master_id=lot_master2.id,
-        lot_number="LOT2",
         product_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
         expiry_date=date(2027, 1, 1),
-        current_quantity=Decimal("100"),
+        received_quantity=Decimal("100"),
         unit="EA",
         status="active",
         origin_type="order",
@@ -156,14 +154,13 @@ def test_regenerate_with_shortage(db):
     db.add(lot_master1)
     db.flush()
 
-    lot1 = Lot(
+    lot1 = LotReceipt(
         lot_master_id=lot_master1.id,
-        lot_number="LOT3",
         product_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
         expiry_date=date(2026, 12, 1),
-        current_quantity=Decimal("50"),
+        received_quantity=Decimal("50"),
         unit="EA",
         status="active",
         origin_type="order",
@@ -238,14 +235,13 @@ def test_regenerate_single_lot_fit(db):
     db.add(lot_master1)
     db.flush()
 
-    lot1 = Lot(
+    lot1 = LotReceipt(
         lot_master_id=lot_master1.id,
-        lot_number="LOT_OLD_SMALL",
         product_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
         expiry_date=date(2026, 11, 1),
-        current_quantity=Decimal("50"),
+        received_quantity=Decimal("50"),
         unit="EA",
         status="active",
         origin_type="order",
@@ -260,14 +256,13 @@ def test_regenerate_single_lot_fit(db):
     db.add(lot_master2)
     db.flush()
 
-    lot2 = Lot(
+    lot2 = LotReceipt(
         lot_master_id=lot_master2.id,
-        lot_number="LOT_NEW_LARGE",
         product_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 2, 1),
         expiry_date=date(2026, 12, 1),
-        current_quantity=Decimal("100"),
+        received_quantity=Decimal("100"),
         unit="EA",
         status="active",
         origin_type="order",

@@ -103,6 +103,71 @@ export const getAvailableLots = (params: {
   return http.get<AvailableLotResponse[]>(`v2/lot/available?${queryString}`);
 };
 
+/**
+ * ロット検索 (v2) - Server-Side Pagination & Filtering
+ */
+export type LotSearchResponse = {
+  items: LotResponse[];
+  total: number;
+  page: number;
+  size: number;
+};
+export type LotSearchParams = {
+  q?: string;
+  page?: number;
+  size?: number;
+  sort_by?: string;
+  sort_order?: "asc" | "desc";
+
+  product_id?: number;
+  warehouse_id?: number;
+  supplier_code?: string;
+
+  expiry_from?: string; // YYYY-MM-DD
+  expiry_to?: string;
+
+  status?: string;
+};
+
+export const searchLots = (params: LotSearchParams) => {
+  const searchParams = new URLSearchParams();
+  if (params.q) searchParams.append("q", params.q);
+  if (params.page !== undefined) searchParams.append("page", params.page.toString());
+  if (params.size !== undefined) searchParams.append("size", params.size.toString());
+  if (params.sort_by) searchParams.append("sort_by", params.sort_by);
+  if (params.sort_order) searchParams.append("sort_order", params.sort_order);
+
+  if (params.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
+  if (params.supplier_code) searchParams.append("supplier_code", params.supplier_code);
+
+  if (params.expiry_from) searchParams.append("expiry_from", params.expiry_from);
+  if (params.expiry_to) searchParams.append("expiry_to", params.expiry_to);
+
+  if (params.status) searchParams.append("status", params.status);
+
+  const queryString = searchParams.toString();
+  return http.get<LotSearchResponse>(`v2/lot/search?${queryString}`);
+};
+
+/**
+ * ロットラベルPDFダウンロード (v2)
+ */
+export const downloadLotLabels = async (lotIds: number[]) => {
+  const response = await http.post<Blob>(
+    "v2/lot/labels/download",
+    { lot_ids: lotIds },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // @ts-expect-error http client might not support responseType directly in types but underlying fetch/axios does
+      responseType: "blob",
+    },
+  );
+  return response as unknown as Blob;
+};
+
 // ===== Inventory Items API Functions =====
 
 /**

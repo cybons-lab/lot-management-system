@@ -34,7 +34,7 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     pool_pre_ping=True,  # Verify connections before using
-    echo=False,  # Set to True for SQL query debugging
+    echo=True,  # Set to True for SQL query debugging
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -46,6 +46,13 @@ def db_engine():
     if os.getenv("TEST_DB_PRE_INITIALIZED"):
         yield engine
         return
+
+    # Ensure all models are imported so Base.metadata is populated
+    # Importing the package triggers __init__.py which imports all models
+    import app.infrastructure.persistence.models  # noqa: F401
+
+    print("DEBUG: Conftest - Imported Models.")
+    print(f"DEBUG: Base.metadata.tables keys: {list(Base.metadata.tables.keys())}")
 
     create_core_tables(engine)
 
@@ -116,12 +123,49 @@ def client(db) -> Generator[TestClient]:
 
         yield TestUnitOfWork(db)
 
+    def override_get_current_user():
+        """Override to return no user (or a default valid user if needed)."""
+        return None
+
     application.dependency_overrides[api_deps.get_db] = override_get_db
     application.dependency_overrides[core_database.get_db] = override_get_db
     application.dependency_overrides[api_deps.get_uow] = override_get_uow
-    with TestClient(application) as c:
-        yield c
+    with TestClient(application) as client:
+        yield client
     application.dependency_overrides.clear()
+
+
+@pytest.fixture
+def setup_search_data(db_session):
+    """Setup basic master data for search and label tests."""
+    from app.infrastructure.persistence.models import Product, Supplier, Warehouse
+
+    # Supplier
+    supplier = Supplier(supplier_code="sup-search", supplier_name="Search Supplier")
+    db_session.add(supplier)
+    db_session.flush()
+
+    # Product
+    product = Product(
+        maker_part_code="SEARCH-PROD-001",
+        product_name="Search Test Product",
+        base_unit="EA",
+    )
+    db_session.add(product)
+
+    # Warehouse
+    warehouse = Warehouse(
+        warehouse_code="WH-SEARCH",
+        warehouse_name="Search Warehouse",
+        warehouse_type="internal",
+    )
+    db_session.add(warehouse)
+    db_session.commit()
+    db_session.refresh(product)
+    db_session.refresh(warehouse)
+    db_session.refresh(supplier)
+
+    return {"product": product, "warehouse": warehouse, "supplier": supplier}
 
 
 @pytest.fixture

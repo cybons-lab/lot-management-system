@@ -85,10 +85,6 @@ from .withdrawal_line_model import WithdrawalLine
 from .withdrawal_models import Withdrawal, WithdrawalCancelReason, WithdrawalType
 
 
-# Backward compatibility: Lot is now an alias for LotReceipt
-Lot = LotReceipt
-
-
 __all__ = [
     # Base
     "Base",
@@ -107,7 +103,7 @@ __all__ = [
     "ProductMapping",
     "WarehouseDeliveryRoute",
     # Inventory
-    "Lot",
+    "LotReceipt",
     "LotOriginType",
     "StockHistory",
     "StockTransactionType",

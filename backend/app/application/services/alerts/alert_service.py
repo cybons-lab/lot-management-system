@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Lot, Order, OrderLine
+from app.infrastructure.persistence.models import LotReceipt, Order, OrderLine
 from app.presentation.schemas.alerts.alert_schema import (
     AlertCategory,
     AlertItem,
@@ -102,12 +102,12 @@ class AlertService:
         # B3: Expiry date alerts
         # Query lots with expiry dates
         lots_with_expiry = (
-            self.db.query(Lot)
+            self.db.query(LotReceipt)
             .filter(
                 and_(
-                    Lot.expiry_date.isnot(None),
-                    Lot.status.in_(["active"]),  # Only active lots
-                    Lot.current_quantity > 0,  # Only with stock
+                    LotReceipt.expiry_date.isnot(None),
+                    LotReceipt.status.in_(["active"]),  # Only active lots
+                    LotReceipt.current_quantity > 0,  # Only with stock
                 )
             )
             .all()

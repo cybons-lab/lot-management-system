@@ -68,7 +68,8 @@ from app.domain.events import EventDispatcher, StockChangedEvent
 from app.infrastructure.persistence.models import (
     Customer,
     DeliveryPlace,
-    Lot,
+    LotMaster,
+    LotReceipt,
     Product,
     StockHistory,
     StockTransactionType,
@@ -131,7 +132,7 @@ class WithdrawalService:
             出庫履歴一覧
         """
         query = self.db.query(Withdrawal).options(
-            joinedload(Withdrawal.lot).joinedload(Lot.product),
+            joinedload(Withdrawal.lot).joinedload(LotReceipt.product),
             joinedload(Withdrawal.customer),
             joinedload(Withdrawal.delivery_place),
             joinedload(Withdrawal.user),
@@ -145,9 +146,9 @@ class WithdrawalService:
         if product_id is not None or warehouse_id is not None:
             query = query.join(Withdrawal.lot)
             if product_id is not None:
-                query = query.filter(Lot.product_id == product_id)
+                query = query.filter(LotReceipt.product_id == product_id)
             if warehouse_id is not None:
-                query = query.filter(Lot.warehouse_id == warehouse_id)
+                query = query.filter(LotReceipt.warehouse_id == warehouse_id)
 
         if search_query:
             term = f"%{search_query}%"
@@ -160,15 +161,18 @@ class WithdrawalService:
             # LotとProductは結合必須
             if product_id is None and warehouse_id is None:  # 上ですでに結合していない場合
                 query = query.join(Withdrawal.lot)
-            query = query.join(Lot.product)
+            query = query.join(LotReceipt.product)
 
             # CustomerとDeliveryPlaceは外部結合（存在しない場合もあるため）
             query = query.outerjoin(Withdrawal.customer)
             query = query.outerjoin(Withdrawal.delivery_place)
 
+            # LotMaster needed for lot_number search
+            query = query.join(LotMaster, LotReceipt.lot_master_id == LotMaster.id)
+
             query = query.filter(
                 or_(
-                    Lot.lot_number.ilike(term),
+                    LotMaster.lot_number.ilike(term),
                     Product.maker_part_code.ilike(term),
                     Product.product_name.ilike(term),
                     Product.maker_item_code.ilike(term),
@@ -216,7 +220,7 @@ class WithdrawalService:
         withdrawal = (
             self.db.query(Withdrawal)
             .options(
-                joinedload(Withdrawal.lot).joinedload(Lot.product),
+                joinedload(Withdrawal.lot).joinedload(LotReceipt.product),
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),
@@ -244,7 +248,9 @@ class WithdrawalService:
             ValueError: ロットが見つからない、利用可能数量が不足している場合
         """
         # ロットを取得（ロック付き）- joinedloadはFOR UPDATEと互換性がないため分離
-        lot = self.db.query(Lot).filter(Lot.id == data.lot_id).with_for_update().first()
+        lot = (
+            self.db.query(LotReceipt).filter(LotReceipt.id == data.lot_id).with_for_update().first()
+        )
 
         if not lot:
             raise ReservationLotNotFoundError(data.lot_id)
@@ -299,15 +305,15 @@ class WithdrawalService:
         self.db.add(withdrawal)
         self.db.flush()
 
-        # ロットの現在数量を減算
-        lot.current_quantity = new_quantity
+        # B-Plan: current_quantityは計算フィールドなので直接更新しない
+        # received_quantityベースで残量はViewで計算される
         lot.updated_at = utcnow()
 
         # 数量がゼロになった場合はステータスを更新
         if new_quantity == Decimal("0"):
             lot.status = "depleted"
 
-        # stock_historyに記録
+        # stock_historyに記録（イベントログとして残す）
         stock_history = StockHistory(
             lot_id=lot.id,
             transaction_type=StockTransactionType.WITHDRAWAL,
@@ -336,7 +342,7 @@ class WithdrawalService:
         refreshed = (
             self.db.query(Withdrawal)
             .options(
-                joinedload(Withdrawal.lot).joinedload(Lot.product),
+                joinedload(Withdrawal.lot).joinedload(LotReceipt.product),
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),
@@ -440,22 +446,27 @@ class WithdrawalService:
             return self.get_withdrawal_by_id(withdrawal_id)  # type: ignore
 
         # ロットを取得（ロック付き）
-        lot = self.db.query(Lot).filter(Lot.id == withdrawal.lot_id).with_for_update().first()
+        lot = (
+            self.db.query(LotReceipt)
+            .filter(LotReceipt.id == withdrawal.lot_id)
+            .with_for_update()
+            .first()
+        )
 
         if not lot:
             raise ValueError(f"ロット（ID={withdrawal.lot_id}）が見つかりません")
 
-        # 在庫を復元
+        # B-Plan: 在庫計算のためquantity_beforeとnew_quantityは計算するが、
+        # lot.current_quantityへの代入は行わない（計算フィールドのため）
         quantity_before = lot.current_quantity
         new_quantity = lot.current_quantity + (withdrawal.quantity or Decimal("0"))
-        lot.current_quantity = new_quantity
         lot.updated_at = utcnow()
 
         # depletedだった場合はactiveに戻す
         if lot.status == "depleted":
             lot.status = "active"
 
-        # stock_historyにRETURNトランザクションを記録（反対仕訳）
+        # stock_historyにRETURNトランザクションを記録（反対仕訳・イベントログ）
         stock_history = StockHistory(
             lot_id=lot.id,
             transaction_type=StockTransactionType.RETURN,
@@ -490,7 +501,7 @@ class WithdrawalService:
         refreshed = (
             self.db.query(Withdrawal)
             .options(
-                joinedload(Withdrawal.lot).joinedload(Lot.product),
+                joinedload(Withdrawal.lot).joinedload(LotReceipt.product),
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),
@@ -538,17 +549,17 @@ class WithdrawalService:
                 func.count(Withdrawal.id).label("withdrawal_count"),
                 func.sum(Withdrawal.quantity).label("total_quantity"),
             )
-            .join(Lot, Withdrawal.lot_id == Lot.id)
+            .join(LotReceipt, Withdrawal.lot_id == LotReceipt.id)
             .where(Withdrawal.ship_date >= start_date)
             .where(Withdrawal.ship_date <= end_date)
         )
 
         if warehouse_id:
-            stmt = stmt.where(Lot.warehouse_id == warehouse_id)
+            stmt = stmt.where(LotReceipt.warehouse_id == warehouse_id)
         if product_id:
-            stmt = stmt.where(Lot.product_id == product_id)
+            stmt = stmt.where(LotReceipt.product_id == product_id)
         if supplier_id:
-            stmt = stmt.where(Lot.supplier_id == supplier_id)
+            stmt = stmt.where(LotReceipt.supplier_id == supplier_id)
 
         stmt = stmt.group_by(Withdrawal.ship_date).order_by(Withdrawal.ship_date)
 
