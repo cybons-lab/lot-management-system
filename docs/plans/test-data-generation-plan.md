@@ -778,26 +778,639 @@ LOT_TRACEABILITY_SCENARIOS = {
 }
 ```
 
-#### 8.3.3 出庫履歴の詳細追跡
+#### 8.3.3 手動出庫シナリオ（受注経由ではない出庫）
+
+**重要**: 受注システムを経由しない出庫パターン。紙ベースのデータ、ロット管理画面からの直接出庫など。
+
+```python
+MANUAL_WITHDRAWAL_SCENARIOS = {
+    # ========================================
+    # 手動出庫タイプ別シナリオ
+    # ========================================
+
+    # 1. 紙データ→手動登録→出庫
+    "paper_based_manual_order": {
+        "description": "FAXや紙で来た注文を手動でロットから払い出す",
+        "type": "ORDER_MANUAL",
+        "flow": [
+            "紙注文書受領",
+            "ロット管理画面で対象ロット選択",
+            "手動出庫登録（reference_number: 紙注文書番号）",
+            "出庫完了",
+        ],
+        "data": {
+            "lot": "LOT-001",
+            "quantity": 50,
+            "withdrawal_type": "order_manual",
+            "customer_id": "CUST-001",
+            "delivery_place_id": "DP-001",
+            "reference_number": "FAX-2025-001234",
+            "reason": "紙注文書（FAX）による出荷",
+        },
+        "note": "受注テーブルにレコードなし、Withdrawalのみ",
+    },
+
+    # 2. サンプル出荷（営業用）
+    "sample_shipment": {
+        "description": "営業担当がサンプルとして顧客に提供",
+        "type": "SAMPLE",
+        "data": {
+            "lot": "LOT-001",
+            "quantity": 5,
+            "withdrawal_type": "sample",
+            "customer_id": "CUST-002",
+            "reason": "新製品サンプル提供（営業: 山田）",
+            "reference_number": "SAMPLE-2025-0001",
+        },
+    },
+
+    # 3. 社内使用（検査・試作）
+    "internal_use_testing": {
+        "description": "品質検査や試作のための社内消費",
+        "type": "INTERNAL_USE",
+        "data": {
+            "lot": "LOT-001",
+            "quantity": 10,
+            "withdrawal_type": "internal_use",
+            "customer_id": None,  # 顧客なし
+            "delivery_place_id": None,
+            "reason": "品質検査用サンプル（検査部門）",
+            "reference_number": "QC-2025-0001",
+        },
+    },
+
+    # 4. 廃棄処理（期限切れ）
+    "disposal_expired": {
+        "description": "期限切れロットの廃棄",
+        "type": "DISPOSAL",
+        "data": {
+            "lot": "LOT-EXPIRED-001",
+            "quantity": 100,  # 残全数を廃棄
+            "withdrawal_type": "disposal",
+            "customer_id": None,
+            "reason": "有効期限切れ（2025-01-01期限）",
+            "reference_number": "DISP-2025-0001",
+        },
+    },
+
+    # 5. 廃棄処理（品質不良）
+    "disposal_quality_issue": {
+        "description": "品質検査NGによる廃棄",
+        "type": "DISPOSAL",
+        "data": {
+            "lot": "LOT-001",
+            "quantity": 20,
+            "withdrawal_type": "disposal",
+            "reason": "品質検査NG（異物混入）",
+            "reference_number": "QA-REJECT-2025-0001",
+        },
+    },
+
+    # 6. 返品受入（顧客から戻ってきた在庫）
+    "return_from_customer": {
+        "description": "顧客からの返品を受け入れ（マイナス出庫として記録）",
+        "type": "RETURN",
+        "note": "返品は別途入荷処理で在庫戻しする設計の場合もある",
+        "data": {
+            "withdrawal_type": "return",
+            "customer_id": "CUST-001",
+            "reason": "顧客都合返品（品番相違）",
+            "reference_number": "RET-2025-0001",
+        },
+    },
+
+    # 7. その他（特殊ケース）
+    "other_special_case": {
+        "description": "分類困難な特殊出庫",
+        "type": "OTHER",
+        "data": {
+            "lot": "LOT-001",
+            "quantity": 3,
+            "withdrawal_type": "other",
+            "reason": "展示会用貸出（要返却）",
+            "reference_number": "EXHIBIT-2025-001",
+        },
+    },
+}
+```
+
+#### 8.3.4 分納・複数回入出庫シナリオ
+
+**重要**: 同一ロット/同一受注に対する複数回の入出庫パターン
+
+```python
+PARTIAL_DELIVERY_SCENARIOS = {
+    # ========================================
+    # 分納（同一ロットの複数回出庫）
+    # ========================================
+
+    # 1. 同一ロットからの時間差出庫
+    "same_lot_multiple_withdrawals": {
+        "description": "同一ロットから異なる日に複数回出庫",
+        "lot": "LOT-001",
+        "initial_qty": 200,
+        "withdrawals": [
+            {"date": "2025-01-05", "qty": 50, "type": "ORDER_MANUAL", "customer": "CUST-A"},
+            {"date": "2025-01-08", "qty": 30, "type": "ORDER_MANUAL", "customer": "CUST-B"},
+            {"date": "2025-01-12", "qty": 40, "type": "SAMPLE", "customer": "CUST-C"},
+            {"date": "2025-01-15", "qty": 20, "type": "ORDER_MANUAL", "customer": "CUST-A"},
+        ],
+        "remaining_qty": 60,  # 200 - 50 - 30 - 40 - 20
+        "note": "同一ロットでも出庫先・日付・タイプが異なる",
+    },
+
+    # 2. 受注に対する部分出荷（複数回）
+    "order_partial_shipments": {
+        "description": "1つの受注を複数回に分けて出荷",
+        "order": {"order_line_id": "OL-001", "quantity": 100},
+        "shipments": [
+            {"date": "2025-01-05", "lot": "LOT-001", "qty": 40, "status": "shipped"},
+            {"date": "2025-01-10", "lot": "LOT-001", "qty": 30, "status": "shipped"},
+            {"date": "2025-01-15", "lot": "LOT-002", "qty": 30, "status": "shipped"},  # ロット切替
+        ],
+        "total_shipped": 100,
+        "note": "最後の出荷でロットが切り替わるケース",
+    },
+
+    # 3. 分割入荷（同一入荷予定の複数回入荷）
+    "inbound_partial_receipts": {
+        "description": "1つの入荷予定を複数回に分けて入荷",
+        "inbound_plan": {"plan_id": "IP-001", "planned_qty": 500},
+        "receipts": [
+            {"date": "2025-01-05", "lot": "LOT-NEW-001", "qty": 200},
+            {"date": "2025-01-08", "lot": "LOT-NEW-001", "qty": 150},  # 同一ロット追加入荷
+            {"date": "2025-01-12", "lot": "LOT-NEW-002", "qty": 150},  # 別ロットで残り入荷
+        ],
+        "total_received": 500,
+        "note": "同一ロットへの追加入荷と、別ロットでの入荷が混在",
+    },
+
+    # 4. 同一ロットへの追加入荷
+    "lot_additional_receipt": {
+        "description": "既存ロットへの追加入荷（同一ロット番号で数量増加）",
+        "lot": "LOT-001",
+        "receipts": [
+            {"date": "2025-01-01", "qty": 100, "type": "initial"},
+            {"date": "2025-01-10", "qty": 50, "type": "additional"},
+            {"date": "2025-01-20", "qty": 30, "type": "additional"},
+        ],
+        "total_received": 180,
+        "note": "同一ロット番号で受入数量が増加していくケース",
+    },
+
+    # ========================================
+    # 複数ロットからの払出
+    # ========================================
+
+    # 5. 1出庫→複数ロット（WithdrawalLine使用）
+    "single_withdrawal_multi_lot": {
+        "description": "1回の出庫で複数ロットから払い出す（FIFO）",
+        "withdrawal": {"id": "W-001", "total_qty": 150},
+        "lines": [
+            {"lot": "LOT-001", "qty": 50, "expiry": "2025-02-01"},   # 先に期限近いロット
+            {"lot": "LOT-002", "qty": 80, "expiry": "2025-03-01"},   # 次に期限近いロット
+            {"lot": "LOT-003", "qty": 20, "expiry": "2025-04-01"},   # 残りを別ロットから
+        ],
+        "note": "WithdrawalLineで各ロットからの出庫数を記録",
+    },
+
+    # 6. 1受注→複数ロット割当
+    "single_order_multi_lot_allocation": {
+        "description": "1つの受注明細に複数ロットを割り当て",
+        "order_line": {"id": "OL-001", "product": "PRD-001", "quantity": 200},
+        "allocations": [
+            {"lot": "LOT-001", "qty": 80, "expiry": "2025-02-01"},
+            {"lot": "LOT-002", "qty": 100, "expiry": "2025-03-01"},
+            {"lot": "LOT-003", "qty": 20, "expiry": "2025-04-01"},
+        ],
+        "note": "LotReservationが3件作成される",
+    },
+
+    # 7. 複数受注→同一ロット
+    "multi_order_same_lot": {
+        "description": "複数の受注が同一ロットから割り当てられる",
+        "lot": {"id": "LOT-001", "qty": 300},
+        "orders": [
+            {"order_line": "OL-001", "customer": "CUST-A", "qty": 100},
+            {"order_line": "OL-002", "customer": "CUST-B", "qty": 80},
+            {"order_line": "OL-003", "customer": "CUST-A", "qty": 50},
+        ],
+        "remaining_qty": 70,  # 300 - 100 - 80 - 50
+    },
+
+    # ========================================
+    # 部分納品後のキャンセル
+    # ========================================
+
+    # 8. 受注：部分出荷後に残りキャンセル
+    "order_partial_then_cancel": {
+        "description": "分納予定の受注で一部出荷後、残りをキャンセル",
+        "order_line": {"id": "OL-001", "quantity": 100},
+        "timeline": [
+            {"date": "2025-01-05", "action": "ship", "qty": 40, "lot": "LOT-001"},
+            {"date": "2025-01-10", "action": "ship", "qty": 30, "lot": "LOT-001"},
+            {"date": "2025-01-15", "action": "cancel_remaining", "qty": 30,
+             "reason": "顧客都合キャンセル", "cancel_reason": "customer_request"},
+        ],
+        "final_state": {
+            "shipped_qty": 70,
+            "cancelled_qty": 30,
+            "status": "partial_shipped",  # or "closed"
+        },
+        "lot_impact": {
+            "LOT-001": {"reserved_released": 30},  # 残予約30が解除される
+        },
+    },
+
+    # 9. 受注：出荷後にロット差し替え
+    "order_lot_change_after_partial_ship": {
+        "description": "部分出荷後、品質問題でロットを差し替え",
+        "order_line": {"id": "OL-001", "quantity": 100},
+        "timeline": [
+            {"date": "2025-01-05", "action": "allocate", "lot": "LOT-001", "qty": 100},
+            {"date": "2025-01-08", "action": "ship", "qty": 50, "lot": "LOT-001"},
+            {"date": "2025-01-10", "action": "quality_issue", "lot": "LOT-001",
+             "note": "LOT-001に品質問題発覚"},
+            {"date": "2025-01-10", "action": "release_allocation", "lot": "LOT-001", "qty": 50},
+            {"date": "2025-01-10", "action": "allocate", "lot": "LOT-002", "qty": 50},
+            {"date": "2025-01-12", "action": "ship", "qty": 50, "lot": "LOT-002"},
+        ],
+        "final_state": {
+            "total_shipped": 100,
+            "lots_used": ["LOT-001", "LOT-002"],
+        },
+    },
+
+    # 10. 入荷：部分入荷後に残りキャンセル
+    "inbound_partial_then_cancel": {
+        "description": "入荷予定500個のうち300個入荷後、残り200はサプライヤー都合でキャンセル",
+        "inbound_plan": {"plan_id": "IP-001", "planned_qty": 500},
+        "timeline": [
+            {"date": "2025-01-05", "action": "receive", "lot": "LOT-NEW-001", "qty": 200},
+            {"date": "2025-01-10", "action": "receive", "lot": "LOT-NEW-001", "qty": 100},
+            {"date": "2025-01-15", "action": "cancel_remaining", "qty": 200,
+             "reason": "サプライヤー生産遅延により残数キャンセル"},
+        ],
+        "final_state": {
+            "received_qty": 300,
+            "cancelled_qty": 200,
+            "status": "partial_received",
+        },
+        "impact": "フォーキャスト予約への影響（在庫不足発生の可能性）",
+    },
+
+    # 11. 入荷：入荷日変更（前倒し/後ろ倒し）
+    "inbound_date_change": {
+        "description": "入荷予定日の変更",
+        "inbound_plan": {"plan_id": "IP-001", "original_date": "2025-01-15"},
+        "changes": [
+            {"date": "2025-01-10", "action": "reschedule", "new_date": "2025-01-20",
+             "reason": "輸送遅延"},
+            {"date": "2025-01-18", "action": "reschedule", "new_date": "2025-01-22",
+             "reason": "通関遅延"},
+            {"date": "2025-01-22", "action": "receive", "qty": 500},
+        ],
+        "note": "予定日変更履歴を追跡",
+    },
+
+    # 12. 入荷：数量変更（増減）
+    "inbound_quantity_change": {
+        "description": "入荷予定数量の変更",
+        "inbound_plan": {"plan_id": "IP-001", "original_qty": 500},
+        "changes": [
+            {"date": "2025-01-08", "action": "qty_reduce", "new_qty": 400,
+             "reason": "サプライヤー生産数変更"},
+            {"date": "2025-01-12", "action": "qty_reduce", "new_qty": 350,
+             "reason": "輸送中破損"},
+            {"date": "2025-01-15", "action": "receive", "qty": 350},
+        ],
+        "final_state": {
+            "planned_qty": 350,
+            "received_qty": 350,
+            "variance": -150,
+        },
+    },
+
+    # 13. 入荷：ロット番号変更
+    "inbound_lot_number_change": {
+        "description": "入荷予定のロット番号がサプライヤーから変更通知",
+        "inbound_plan": {"plan_id": "IP-001"},
+        "expected_lot": {"original": "EXP-LOT-001", "changed_to": "SUP-LOT-2025-A001"},
+        "timeline": [
+            {"date": "2025-01-10", "action": "lot_change_notice",
+             "reason": "サプライヤーシステム変更によるロット番号体系変更"},
+            {"date": "2025-01-15", "action": "receive", "lot": "SUP-LOT-2025-A001", "qty": 500},
+        ],
+    },
+
+    # 14. 受注：数量変更（増減）
+    "order_quantity_change": {
+        "description": "受注数量の変更（追加注文/減少）",
+        "order_line": {"id": "OL-001", "original_qty": 100},
+        "timeline": [
+            {"date": "2025-01-05", "action": "allocate", "lot": "LOT-001", "qty": 100},
+            {"date": "2025-01-08", "action": "qty_increase", "new_qty": 150,
+             "reason": "顧客追加注文"},
+            {"date": "2025-01-08", "action": "allocate_additional", "lot": "LOT-002", "qty": 50},
+            {"date": "2025-01-12", "action": "qty_decrease", "new_qty": 120,
+             "reason": "顧客数量減"},
+            {"date": "2025-01-12", "action": "release_allocation", "lot": "LOT-002", "qty": 30},
+        ],
+        "final_state": {
+            "quantity": 120,
+            "allocations": [
+                {"lot": "LOT-001", "qty": 100},
+                {"lot": "LOT-002", "qty": 20},
+            ],
+        },
+    },
+
+    # 15. 複合：受注変更＋入荷遅延＋ロット差し替え
+    "complex_order_inbound_lot_change": {
+        "description": "現実的な複合シナリオ",
+        "scenario": [
+            {"date": "2025-01-01", "action": "order_received", "qty": 200, "delivery": "2025-01-20"},
+            {"date": "2025-01-02", "action": "allocate", "lot": "LOT-001", "qty": 100},
+            {"date": "2025-01-02", "action": "reserve_future", "inbound": "IP-001", "qty": 100,
+             "note": "入荷予定在庫を予約"},
+            {"date": "2025-01-10", "action": "inbound_delayed", "inbound": "IP-001",
+             "new_date": "2025-01-25", "note": "入荷遅延で納期に間に合わない"},
+            {"date": "2025-01-10", "action": "split_order",
+             "part1": {"qty": 100, "delivery": "2025-01-20", "lot": "LOT-001"},
+             "part2": {"qty": 100, "delivery": "2025-01-28", "inbound": "IP-001"}},
+            {"date": "2025-01-20", "action": "ship", "qty": 100, "lot": "LOT-001"},
+            {"date": "2025-01-25", "action": "receive_inbound", "lot": "LOT-NEW-001", "qty": 150},
+            {"date": "2025-01-28", "action": "ship", "qty": 100, "lot": "LOT-NEW-001"},
+        ],
+        "note": "入荷遅延により受注を分割、一部先行出荷",
+    },
+}
+```
+
+#### 8.3.5 極端なエッジケース・異常系シナリオ
+
+```python
+EXTREME_EDGE_CASES = {
+    # ========================================
+    # 数量境界系
+    # ========================================
+
+    "zero_remaining_after_exact_consumption": {
+        "description": "ピッタリ消費で残0になるケース",
+        "lot": {"received": 100, "consumed": 100},
+        "expected": {"remaining": 0, "status": "depleted"},
+    },
+
+    "one_remaining_after_consumption": {
+        "description": "残り1個（最小在庫）",
+        "lot": {"received": 100, "consumed": 99},
+        "expected": {"remaining": 1, "status": "active"},
+        "test": "残り1個に対する割当可否",
+    },
+
+    "decimal_precision_edge": {
+        "description": "小数点以下の精度テスト",
+        "lot": {"received": "100.001", "consumed": "100.000"},
+        "expected": {"remaining": "0.001"},
+        "test": "小数点3桁の精度が保たれるか",
+    },
+
+    "large_quantity": {
+        "description": "大量在庫（上限テスト）",
+        "lot": {"received": 999999.999},
+        "test": "Numeric(15,3)の上限近くで正常動作するか",
+    },
+
+    # ========================================
+    # 日付境界系
+    # ========================================
+
+    "expiry_today": {
+        "description": "本日期限切れ",
+        "lot": {"expiry_date": "TODAY"},
+        "test": "当日期限の表示・警告",
+    },
+
+    "expiry_yesterday": {
+        "description": "昨日期限切れ（1日超過）",
+        "lot": {"expiry_date": "TODAY - 1"},
+        "test": "期限切れ判定の境界",
+    },
+
+    "expiry_tomorrow": {
+        "description": "明日期限",
+        "lot": {"expiry_date": "TODAY + 1"},
+        "test": "期限直前の警告",
+    },
+
+    "delivery_date_past": {
+        "description": "納期過ぎ受注（遅延）",
+        "order": {"delivery_date": "TODAY - 7"},
+        "test": "納期遅延の警告・フラグ",
+    },
+
+    "year_boundary": {
+        "description": "年またぎデータ",
+        "data": {
+            "forecast_period": "2024-12",
+            "order_date": "2024-12-31",
+            "delivery_date": "2025-01-05",
+        },
+        "test": "年度またぎの計算",
+    },
+
+    "leap_year": {
+        "description": "うるう年境界",
+        "data": {
+            "date": "2024-02-29",
+            "expiry": "2025-02-28",  # 翌年は2/29がない
+        },
+    },
+
+    # ========================================
+    # ステータス遷移異常系
+    # ========================================
+
+    "cancelled_then_reactivated": {
+        "description": "キャンセル後に再有効化（通常は不可）",
+        "order": {
+            "history": [
+                {"status": "pending", "date": "2025-01-01"},
+                {"status": "cancelled", "date": "2025-01-05"},
+                {"status": "pending", "date": "2025-01-06"},  # 異常遷移
+            ],
+        },
+        "test": "不正遷移の検出",
+    },
+
+    "depleted_lot_with_positive_reservation": {
+        "description": "枯渇ロットに予約が残っている（データ不整合）",
+        "lot": {"status": "depleted", "remaining": 0},
+        "reservation": {"qty": 50, "status": "active"},
+        "test": "不整合検出",
+    },
+
+    "over_allocation": {
+        "description": "在庫以上の割当（オーバーアロケーション）",
+        "lot": {"remaining": 100},
+        "reservations": [
+            {"qty": 60, "source": "order_1"},
+            {"qty": 60, "source": "order_2"},  # 合計120 > 100
+        ],
+        "test": "オーバーアロケーション警告",
+    },
+
+    # ========================================
+    # マスタ変更系
+    # ========================================
+
+    "product_discontinued": {
+        "description": "製品廃番後も在庫が残っている",
+        "product": {"status": "discontinued", "discontinued_at": "2024-12-01"},
+        "lot": {"qty": 50, "status": "active"},
+        "test": "廃番製品の在庫処理",
+    },
+
+    "customer_inactive_with_open_orders": {
+        "description": "非アクティブ顧客にオープン受注がある",
+        "customer": {"status": "inactive"},
+        "orders": [{"status": "pending"}, {"status": "allocated"}],
+        "test": "顧客停止時の受注処理",
+    },
+
+    "supplier_change_during_inbound": {
+        "description": "入荷予定中にサプライヤー変更",
+        "inbound": {"supplier_id": 1, "status": "planned"},
+        "change": {"new_supplier_id": 2, "reason": "サプライヤー変更"},
+    },
+
+    # ========================================
+    # 同時処理系（競合状態のテストデータ）
+    # ========================================
+
+    "concurrent_allocation_to_same_lot": {
+        "description": "同一ロットへの同時割当リクエスト",
+        "lot": {"remaining": 100},
+        "requests": [
+            {"order": "OL-001", "qty": 80, "timestamp": "09:00:00.001"},
+            {"order": "OL-002", "qty": 80, "timestamp": "09:00:00.002"},
+        ],
+        "expected": "1つは成功、1つは在庫不足で失敗",
+    },
+
+    "concurrent_withdrawal_and_reservation": {
+        "description": "出庫処理と予約処理の競合",
+        "lot": {"remaining": 50},
+        "concurrent": [
+            {"action": "withdraw", "qty": 50},
+            {"action": "reserve", "qty": 30},
+        ],
+    },
+
+    # ========================================
+    # 複合異常系
+    # ========================================
+
+    "order_for_nonexistent_product": {
+        "description": "存在しない製品への受注（マスタ不整合）",
+        "order": {"product_id": 99999},
+        "test": "外部キー制約違反の検出",
+    },
+
+    "forecast_without_customer_item_mapping": {
+        "description": "顧客-製品マッピングなしのフォーキャスト",
+        "forecast": {"customer_id": 1, "product_id": 1},
+        "customer_item": None,  # マッピングなし
+        "test": "マッピング欠落の検出",
+    },
+
+    "multiple_lot_masters_same_number": {
+        "description": "同一ロット番号で複数のLotMaster（重複）",
+        "lots": [
+            {"lot_number": "LOT-001", "product": "PRD-001"},
+            {"lot_number": "LOT-001", "product": "PRD-002"},  # 異なる製品
+        ],
+        "test": "ロット番号の一意性（製品跨ぎ）",
+    },
+
+    # ========================================
+    # 出庫取り消し後の状態
+    # ========================================
+
+    "withdrawal_cancel_restore_stock": {
+        "description": "出庫取り消しで在庫が戻る",
+        "timeline": [
+            {"action": "receive", "qty": 100},
+            {"action": "withdraw", "qty": 30},  # 残70
+            {"action": "cancel_withdrawal", "qty": 30},  # 取り消し→残100に戻る
+        ],
+        "expected": {"remaining": 100},
+    },
+
+    "double_cancellation": {
+        "description": "同一出庫の二重取り消し（不正操作）",
+        "withdrawal": {"id": "W-001", "cancelled_at": "2025-01-05"},
+        "attempt": {"cancel_again": "2025-01-06"},
+        "expected": "エラー（既に取り消し済み）",
+    },
+
+    # ========================================
+    # 予約ステータス遷移
+    # ========================================
+
+    "reservation_expired_temporary": {
+        "description": "仮予約の期限切れ",
+        "reservation": {
+            "status": "temporary",
+            "created_at": "2025-01-01 09:00:00",
+            "expires_at": "2025-01-01 10:00:00",  # 1時間後に期限切れ
+        },
+        "test": "一時予約の自動解放",
+    },
+
+    "confirmed_reservation_cancelled": {
+        "description": "確定済み予約のキャンセル（SAP連携必要）",
+        "reservation": {
+            "status": "confirmed",
+            "sap_document_no": "SAP-001",
+        },
+        "cancel": {
+            "reason": "customer_request",
+            "requires_sap_reversal": True,
+        },
+    },
+}
+```
+
+#### 8.3.6 出庫履歴の詳細追跡
 
 ```python
 WITHDRAWAL_HISTORY_SCENARIOS = {
-    # 製品別出庫履歴
+    # 製品別出庫履歴（全タイプ混在）
     "product_withdrawal_history": {
-        "description": "製品Aの全ロットからの出庫履歴",
+        "description": "製品Aの全ロットからの出庫履歴（手動含む）",
         "product_id": "PRD-001",
         "history": [
-            {"date": "2024-12-01", "lot": "LOT-A1", "qty": 30, "type": "ORDER_AUTO", "customer": "顧客A"},
-            {"date": "2024-12-05", "lot": "LOT-A1", "qty": 20, "type": "ORDER_AUTO", "customer": "顧客B"},
-            {"date": "2024-12-10", "lot": "LOT-A2", "qty": 50, "type": "ORDER_AUTO", "customer": "顧客A"},
-            {"date": "2024-12-15", "lot": "LOT-A1", "qty": 10, "type": "SAMPLE", "customer": "顧客C"},
-            {"date": "2024-12-20", "lot": "LOT-A2", "qty": 5, "type": "DISPOSAL", "reason": "品質不良"},
+            # 受注経由の自動出庫
+            {"date": "2024-12-01", "lot": "LOT-A1", "qty": 30, "type": "ORDER_AUTO", "customer": "顧客A", "order_line": "OL-001"},
+            {"date": "2024-12-05", "lot": "LOT-A1", "qty": 20, "type": "ORDER_AUTO", "customer": "顧客B", "order_line": "OL-002"},
+            # 手動出庫（紙注文）
+            {"date": "2024-12-08", "lot": "LOT-A1", "qty": 15, "type": "ORDER_MANUAL", "customer": "顧客C", "reference": "FAX-001"},
+            # サンプル
+            {"date": "2024-12-10", "lot": "LOT-A2", "qty": 5, "type": "SAMPLE", "customer": "顧客D"},
+            # 社内使用
+            {"date": "2024-12-12", "lot": "LOT-A2", "qty": 10, "type": "INTERNAL_USE", "reason": "品質検査"},
+            # 廃棄
+            {"date": "2024-12-15", "lot": "LOT-A1", "qty": 8, "type": "DISPOSAL", "reason": "品質不良"},
+            # 受注経由（複数ロット払出）
+            {"date": "2024-12-20", "lot": "LOT-A2", "qty": 40, "type": "ORDER_AUTO", "customer": "顧客A", "order_line": "OL-003",
+             "multi_lot": True, "other_lots": [{"lot": "LOT-A3", "qty": 10}]},
         ],
         "summary": {
-            "total_withdrawn": 115,
-            "by_lot": {"LOT-A1": 60, "LOT-A2": 55},
-            "by_customer": {"顧客A": 80, "顧客B": 20, "顧客C": 10},
-            "by_type": {"ORDER_AUTO": 100, "SAMPLE": 10, "DISPOSAL": 5},
+            "total_withdrawn": 138,
+            "by_lot": {"LOT-A1": 73, "LOT-A2": 55, "LOT-A3": 10},
+            "by_customer": {"顧客A": 80, "顧客B": 20, "顧客C": 15, "顧客D": 5, "社内": 18},
+            "by_type": {"ORDER_AUTO": 100, "ORDER_MANUAL": 15, "SAMPLE": 5, "INTERNAL_USE": 10, "DISPOSAL": 8},
         },
     },
 
@@ -806,10 +1419,10 @@ WITHDRAWAL_HISTORY_SCENARIOS = {
         "description": "顧客Aへの全製品出庫履歴",
         "customer_id": "CUST-001",
         "history": [
-            {"date": "2024-12-01", "product": "PRD-001", "lot": "LOT-A1", "qty": 30},
-            {"date": "2024-12-10", "product": "PRD-001", "lot": "LOT-A2", "qty": 50},
-            {"date": "2024-12-12", "product": "PRD-002", "lot": "LOT-B1", "qty": 100},
-            {"date": "2024-12-18", "product": "PRD-003", "lot": "LOT-C1", "qty": 25},
+            {"date": "2024-12-01", "product": "PRD-001", "lot": "LOT-A1", "qty": 30, "type": "ORDER_AUTO"},
+            {"date": "2024-12-10", "product": "PRD-001", "lot": "LOT-A2", "qty": 50, "type": "ORDER_AUTO"},
+            {"date": "2024-12-12", "product": "PRD-002", "lot": "LOT-B1", "qty": 100, "type": "ORDER_MANUAL"},  # 紙注文
+            {"date": "2024-12-18", "product": "PRD-003", "lot": "LOT-C1", "qty": 25, "type": "SAMPLE"},
         ],
     },
 
@@ -819,11 +1432,27 @@ WITHDRAWAL_HISTORY_SCENARIOS = {
         "lot_id": "LOT-001",
         "history": [
             {"date": "2024-12-01", "qty": 30, "type": "ORDER_AUTO", "status": "completed"},
-            {"date": "2024-12-05", "qty": 20, "type": "ORDER_AUTO", "status": "cancelled",
-             "cancelled_at": "2024-12-06", "cancel_reason": "顧客キャンセル"},
-            {"date": "2024-12-10", "qty": 15, "type": "SAMPLE", "status": "completed"},
+            {"date": "2024-12-05", "qty": 20, "type": "ORDER_MANUAL", "status": "cancelled",
+             "cancelled_at": "2024-12-06", "cancel_reason": "input_error"},
+            {"date": "2024-12-08", "qty": 15, "type": "SAMPLE", "status": "completed"},
+            {"date": "2024-12-10", "qty": 10, "type": "DISPOSAL", "status": "cancelled",
+             "cancelled_at": "2024-12-10", "cancel_reason": "wrong_lot"},
+            {"date": "2024-12-12", "qty": 25, "type": "ORDER_AUTO", "status": "completed"},
         ],
-        "net_withdrawn": 45,  # 30 + 15 (キャンセル分は除外)
+        "net_withdrawn": 70,  # 30 + 15 + 25 (キャンセル分は除外)
+    },
+
+    # 複数ロット払出の履歴
+    "multi_lot_withdrawal_history": {
+        "description": "複数ロットから払い出した出庫の履歴",
+        "withdrawal_id": "W-001",
+        "lines": [
+            {"lot": "LOT-001", "qty": 50, "consumed_at": "2024-12-15 09:00:00"},
+            {"lot": "LOT-002", "qty": 80, "consumed_at": "2024-12-15 09:00:00"},
+            {"lot": "LOT-003", "qty": 20, "consumed_at": "2024-12-15 09:00:00"},
+        ],
+        "total": 150,
+        "note": "WithdrawalLineテーブルに3レコード",
     },
 }
 ```
