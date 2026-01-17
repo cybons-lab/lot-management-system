@@ -128,6 +128,17 @@ export function InventoryLotList({
 }: InventoryLotListProps) {
   const columns = useMemo(() => LOT_COLUMNS, []);
 
+  // ロット数に応じて高さを動的に計算
+  // ヘッダー行 (50px) + ロット行 (各60px) + 下パディング (5px)
+  // 最大400pxまで
+  const scrollAreaHeight = useMemo(() => {
+    const headerHeight = 50;
+    const rowHeight = 60;
+    const bottomPadding = 5;
+    const calculatedHeight = headerHeight + lots.length * rowHeight + bottomPadding;
+    return `${Math.min(calculatedHeight, 400)}px`;
+  }, [lots.length]);
+
   return (
     <div className="px-8 py-4">
       <DataTable
@@ -151,7 +162,7 @@ export function InventoryLotList({
           <h4 className="mb-3 text-sm font-semibold text-gray-700">ロット一覧 ({lots.length}件)</h4>
         }
         enableVirtualization
-        scrollAreaHeight="400px"
+        scrollAreaHeight={scrollAreaHeight}
       />
     </div>
   );

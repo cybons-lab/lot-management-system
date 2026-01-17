@@ -2,7 +2,6 @@
 
 from typing import cast
 
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
@@ -26,28 +25,23 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
     def __init__(self, db: Session):
         """Initialize service with database session."""
         super().__init__(db=db, model=User)
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def _hash_password(self, password: str) -> str:
         """Hash a password using bcrypt."""
-        try:
-            return cast(str, self.pwd_context.hash(password))
-        except Exception:
-            # Fallback for test environment where bcrypt might fail
-            # Return a dummy hash that looks somewhat real but is deterministic
-            import hashlib
+        import bcrypt
 
-            h = hashlib.sha256(password.encode()).hexdigest()
-            return f"$2b$12$fallback{h}"
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """Verify a password against a hash."""
-        if hashed_password.startswith("$2b$12$fallback"):
-            import hashlib
+        import bcrypt
 
-            h = hashlib.sha256(plain_password.encode()).hexdigest()
-            return hashed_password == f"$2b$12$fallback{h}"
-        return cast(bool, self.pwd_context.verify(plain_password, hashed_password))
+        try:
+            return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+        except ValueError:
+            # Handle invalid hash format (e.g. from legacy or test fallbacks)
+            return False
 
     def get_all(
         self, skip: int = 0, limit: int = 100, *, include_inactive: bool = False

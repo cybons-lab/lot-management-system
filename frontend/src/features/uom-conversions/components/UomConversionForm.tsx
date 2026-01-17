@@ -55,7 +55,7 @@ export function UomConversionForm({
   isSubmitting = false,
 }: UomConversionFormProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     defaultValues: { product_id: 0, external_unit: "", factor: 1 },
   });
 

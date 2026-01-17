@@ -72,7 +72,7 @@ export function WarehouseDeliveryRouteForm({
   const availableWarehouses = warehouses.filter((w) => w.warehouse_type !== "supplier");
 
   const { register, handleSubmit, formState, setValue, watch } = useForm<RouteFormData>({
-    resolver: zodResolver(routeFormSchema),
+    resolver: zodResolver(routeFormSchema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     defaultValues: {
       warehouse_id: route?.warehouse_id ?? 0,
       delivery_place_id: route?.delivery_place_id ?? 0,

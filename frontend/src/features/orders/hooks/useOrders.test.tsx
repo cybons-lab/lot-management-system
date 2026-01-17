@@ -60,8 +60,11 @@ describe("useOrders Hooks", () => {
   );
 
   describe("useOrdersList", () => {
-    it.skip("fetches and normalizes orders list (SKIPPED: initialData issue)", async () => {
-      vi.mocked(ordersApi.getOrders).mockImplementation(async () => [mockOrderResponse] as any);
+    it.skip("fetches and normalizes orders list", async () => {
+      vi.mocked(ordersApi.getOrders).mockImplementation(async () => {
+        console.log("TEST: Mock getOrders called");
+        return [mockOrderResponse] as any;
+      });
 
       const { result } = renderHook(() => useOrdersList({}), { wrapper });
 
@@ -73,6 +76,11 @@ describe("useOrders Hooks", () => {
       // Wait for the query to resolve with mocked data
       await waitFor(
         () => {
+          if (result.current.isError) {
+            console.error("Query Error:", result.current.error);
+          }
+          expect(result.current.isError).toBe(false);
+          expect(result.current.data?.length).toBeGreaterThan(0);
           expect(result.current.data).toHaveLength(1);
         },
         { timeout: 3000 },

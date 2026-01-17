@@ -41,7 +41,7 @@ export function useInventoryTableLogic() {
           product_id: productId,
           warehouse_id: warehouseId,
           with_stock: false,
-          status: "active",
+          // Show all lot statuses (active, depleted, expired, locked)
         });
 
         const normalizedLots = (response ?? []).map((item) =>
@@ -89,11 +89,12 @@ export function useInventoryTableLogic() {
   const toggleRow = useCallback((productId: number, warehouseId: number) => {
     const key = `${productId}-${warehouseId}`;
     setExpandedRows((prev) => {
-      const newExpanded = new Set<string>();
-      if (!prev.has(key)) {
-        newExpanded.add(key);
+      // If clicking on the already expanded row, close it
+      if (prev.has(key)) {
+        return new Set();
       }
-      return newExpanded;
+      // Otherwise, close all others and open this one (single mode)
+      return new Set([key]);
     });
   }, []);
 
@@ -134,5 +135,6 @@ export function useInventoryTableLogic() {
     isLotsLoading,
     handleViewDetail,
     refetchLots,
+    setExpandedRows,
   };
 }

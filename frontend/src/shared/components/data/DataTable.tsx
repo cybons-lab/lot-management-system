@@ -582,7 +582,7 @@ export function DataTable<T = never>({
                     {row.getIsExpanded() && renderExpandedRow && (
                       <tr className="border-l-4 border-l-blue-500 bg-blue-50/50">
                         <td colSpan={row.getVisibleCells().length} className="p-0">
-                          <div className="border-t border-slate-200 px-4 py-3">
+                          <div className="border-t border-slate-200 px-4 py-1.5">
                             {renderExpandedRow(row.original)}
                           </div>
                         </td>
@@ -657,7 +657,7 @@ export function DataTable<T = never>({
                     {row.getIsExpanded() && renderExpandedRow && (
                       <tr className="border-l-4 border-l-blue-500 bg-blue-50/50">
                         <td colSpan={row.getVisibleCells().length} className="p-0">
-                          <div className="border-t border-slate-200 px-4 py-3">
+                          <div className="border-t border-slate-200 px-4 py-1.5">
                             {renderExpandedRow(row.original)}
                           </div>
                         </td>

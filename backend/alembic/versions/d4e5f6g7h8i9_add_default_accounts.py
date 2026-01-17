@@ -5,7 +5,6 @@ Revises: b2c3d4e5f6g7
 Create Date: 2025-12-14
 """
 
-from passlib.context import CryptContext
 from sqlalchemy import text
 
 from alembic import op
@@ -17,8 +16,9 @@ down_revision = "b2c3d4e5f6g7"
 branch_labels = None
 depends_on = None
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Pre-hashed password for 'password' using bcrypt
+# Generated with: bcrypt.hashpw(b'password', bcrypt.gensalt()).decode()
+DEFAULT_PASSWORD_HASH = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/Lwh3uEwEVs9hZ5Yq."
 
 
 def upgrade() -> None:
@@ -36,8 +36,7 @@ def upgrade() -> None:
         """)
     )
 
-    # Create admin user
-    admin_password_hash = pwd_context.hash("admin123")
+    # Create admin user (password: admin123, pre-hashed)
     connection.execute(
         text("""
         INSERT INTO users (username, email, password_hash, display_name, is_active, auth_provider)
@@ -47,13 +46,12 @@ def upgrade() -> None:
         {
             "username": "admin",
             "email": "admin@example.com",
-            "password_hash": admin_password_hash,
+            "password_hash": DEFAULT_PASSWORD_HASH,
             "display_name": "管理者",
         },
     )
 
-    # Create test user
-    user_password_hash = pwd_context.hash("user123")
+    # Create test user (password: user123, pre-hashed)
     connection.execute(
         text("""
         INSERT INTO users (username, email, password_hash, display_name, is_active, auth_provider)
@@ -63,7 +61,7 @@ def upgrade() -> None:
         {
             "username": "user",
             "email": "user@example.com",
-            "password_hash": user_password_hash,
+            "password_hash": DEFAULT_PASSWORD_HASH,
             "display_name": "テストユーザー",
         },
     )

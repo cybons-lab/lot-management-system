@@ -47,7 +47,7 @@ export function WarehouseForm({
     setValue,
     watch,
   } = useForm<WarehouseFormData>({
-    resolver: zodResolver(warehouseFormSchema),
+    resolver: zodResolver(warehouseFormSchema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     defaultValues: {
       warehouse_code: warehouse?.warehouse_code ?? "",
       warehouse_name: warehouse?.warehouse_name ?? "",

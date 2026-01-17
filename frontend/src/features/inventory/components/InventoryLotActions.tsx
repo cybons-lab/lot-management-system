@@ -2,7 +2,7 @@ import { Calendar, Lock, PackageMinus, Pencil, Unlock } from "lucide-react";
 
 import { Button } from "@/components/ui";
 import type { LotUI } from "@/shared/libs/normalize";
-import { calculateAvailable } from "@/shared/utils/decimal";
+import { parseDecimal } from "@/shared/utils/decimal";
 
 interface InventoryLotActionsProps {
   lot: LotUI;
@@ -28,11 +28,8 @@ export function InventoryLotActions({
     warehouse_name: lot.warehouse_name || warehouseNameFallback,
   };
 
-  const available = calculateAvailable(
-    lot.current_quantity,
-    lot.allocated_quantity,
-    lot.locked_quantity,
-  );
+  // Use available_quantity from DB instead of recalculating
+  const available = parseDecimal(lot.available_quantity ?? "0");
 
   return (
     <div className="flex items-center justify-end gap-1">

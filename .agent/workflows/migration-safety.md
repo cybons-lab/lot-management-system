@@ -22,7 +22,11 @@ docker exec lot-db-postgres pg_dump -U admin -d lot_management --no-owner --no-a
 # 新規マイグレーション生成
 cd backend && uv run alembic revision --autogenerate -m "description"
 
-# マイグレーション適用
+# 自動安全性チェック（テストDBで検証）
+# ⚠️ PR作成前に必ず実行すること
+./tools/check_migration_safety.sh
+
+# マイグレーション適用（開発環境）
 cd backend && uv run alembic upgrade head
 ```
 

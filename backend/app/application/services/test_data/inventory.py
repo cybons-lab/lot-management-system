@@ -152,8 +152,10 @@ def generate_lots(
                 received_date=received_date,
                 expiry_date=expiry_date,
                 received_quantity=qty,
+                consumed_quantity=Decimal("0"),  # Initialize to 0
                 unit=p.internal_unit or "pcs",  # Use product unit
                 status=status,
+                locked_quantity=Decimal("0"),  # Initialize to 0
             )
             db.add(lot)
             generated_count += 1

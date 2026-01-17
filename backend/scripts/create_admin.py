@@ -1,19 +1,17 @@
 import os
 import sys
 
+import bcrypt
+
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from passlib.context import CryptContext
-
 from app.core.database import SessionLocal
 from app.infrastructure.persistence.models import Role, User, UserRole
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
 
 def create_admin():

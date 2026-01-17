@@ -47,7 +47,6 @@ export function InventoryTable({
     handleEditLot,
     handleLockLot,
     handleUnlockLot,
-    toggleRow,
     isRowExpanded,
     fetchLotsForItem,
     getLotsForItem,
@@ -56,6 +55,7 @@ export function InventoryTable({
     handleCloseEdit,
     handleCloseLock,
     refetchLots,
+    setExpandedRows,
   } = useInventoryTableLogic();
 
   // ダイアログ状態管理（排他的に1つだけ開く）
@@ -84,28 +84,20 @@ export function InventoryTable({
 
   // 展開状態変更ハンドラー
   const handleExpandedRowsChange = (ids: (string | number)[]) => {
-    // 変更を検出して対応する行をトグル
     const idsSet = new Set(ids.map(String));
     const currentSet = new Set(expandedRowIds);
 
-    // 新しく展開された行
+    // 新しく展開された行のロットデータを取得
     const addedIds = [...idsSet].filter((id) => !currentSet.has(id));
     addedIds.forEach((added) => {
       const item = data.find((i) => getItemKey(i) === added);
       if (item) {
-        toggleRow(item.product_id, item.warehouse_id);
         void fetchLotsForItem(item.product_id, item.warehouse_id);
       }
     });
 
-    // 折りたたまれた行
-    const removedIds = [...currentSet].filter((id) => !idsSet.has(id));
-    removedIds.forEach((removed) => {
-      const item = data.find((i) => getItemKey(i) === removed);
-      if (item) {
-        toggleRow(item.product_id, item.warehouse_id);
-      }
-    });
+    // 展開状態を直接更新
+    setExpandedRows(new Set(ids.map(String)));
   };
 
   // アクションボタン
