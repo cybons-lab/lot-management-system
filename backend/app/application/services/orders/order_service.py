@@ -133,7 +133,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from typing import cast
 
 from sqlalchemy import case, exists, select
@@ -240,8 +240,6 @@ class OrderService:
             stmt = stmt.join(Customer, Order.customer_id == Customer.id).where(
                 Customer.customer_code == customer_code
             )
-        if status:
-            stmt = stmt.where(Order.status == status)
         if status:
             stmt = stmt.where(Order.status == status)
         if date_from:
@@ -479,7 +477,6 @@ class OrderService:
         order.status = "cancelled"
 
         self.db.flush()
-        self.db.flush()
 
     def acquire_lock(self, order_id: int, user_id: int) -> dict:
         """Acquire edit lock for an order."""
@@ -489,7 +486,9 @@ class OrderService:
         if not order:
             raise OrderNotFoundError(order_id)
 
-        now = datetime.utcnow()
+        from app.core.time_utils import utcnow
+
+        now = utcnow()
 
         # Check existing lock
         if order.locked_by_user_id and order.lock_expires_at:

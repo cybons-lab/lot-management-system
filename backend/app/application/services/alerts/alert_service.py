@@ -4,12 +4,13 @@ Provides functions to detect and collect various types of alerts from
 the database, including order, inventory, lot, and forecast alerts.
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import LotReceipt, Order, OrderLine
 from app.presentation.schemas.alerts.alert_schema import (
     AlertCategory,
@@ -48,8 +49,8 @@ class AlertService:
         alerts: list[AlertItem] = []
 
         # A1: Unforecasted order stale alert
-        # Condition: No forecast_group_id, status=pending, created >30min ago
-        threshold_time = datetime.utcnow() - timedelta(minutes=30)
+        # Condition: No forecast_group_id, status=open, created >30min ago
+        threshold_time = utcnow() - timedelta(minutes=30)
 
         stale_unforecasted_orders = (
             self.db.query(Order)
@@ -68,7 +69,7 @@ class AlertService:
         )
 
         for order in stale_unforecasted_orders:
-            alert_id = f"alert_order_{order.id}_{datetime.utcnow().strftime('%Y%m%d%H%M')}"
+            alert_id = f"alert_order_{order.id}_{utcnow().strftime('%Y%m%d%H%M')}"
             alerts.append(
                 AlertItem(
                     id=alert_id,
@@ -97,7 +98,7 @@ class AlertService:
             List of lot alerts
         """
         alerts: list[AlertItem] = []
-        today = datetime.utcnow().date()
+        today = utcnow().date()
 
         # B3: Expiry date alerts
         # Query lots with expiry dates
@@ -141,7 +142,7 @@ class AlertService:
                             f"ロット {lot.lot_number} の有効期限まで残り {days_until_expiry} 日です。"
                             f"期限: {lot.expiry_date.strftime('%Y-%m-%d')}"
                         ),
-                        occurred_at=datetime.utcnow(),
+                        occurred_at=utcnow(),
                         target=AlertTargetLot(resource_type="lot", id=lot.id),
                     )
                 )

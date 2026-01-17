@@ -123,6 +123,13 @@ class Settings(BaseSettings):
     # データベース設定
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
 
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        if not v:
+            raise ValueError("DATABASE_URL must be set")
+        return v
+
     # CORS設定 - 修正版
     # 環境変数が設定されていない場合はデフォルト値を使用
     # 環境変数がある場合はカンマ区切り文字列として受け取る
