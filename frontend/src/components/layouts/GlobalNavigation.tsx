@@ -18,6 +18,7 @@ import {
   HelpCircle,
   ChevronDown,
   Download,
+  Calendar,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -42,6 +43,7 @@ interface NavItem {
   color?: string;
   activeColor?: string;
   requireAdmin?: boolean;
+  requireRoles?: string[];
   subItems?: { title: string; href: string }[];
 }
 
@@ -97,6 +99,12 @@ const navItems: NavItem[] = [
     icon: Database,
   },
   {
+    title: "カレンダー",
+    href: ROUTES.CALENDAR,
+    icon: Calendar,
+    requireRoles: ["admin", "user"],
+  },
+  {
     title: "エクスポート",
     href: "/admin/export",
     icon: Download,
@@ -119,7 +127,13 @@ function NavItems({ user, currentPath }: { currentPath: string; user: User | nul
   return (
     <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
       {navItems
-        .filter((item) => !item.requireAdmin || user?.roles?.includes("admin"))
+        .filter((item) => {
+          if (item.requireAdmin && !user?.roles?.includes("admin")) return false;
+          if (item.requireRoles && !item.requireRoles.some((role) => user?.roles?.includes(role))) {
+            return false;
+          }
+          return true;
+        })
         .map((item) => {
           const Icon = item.icon;
 
