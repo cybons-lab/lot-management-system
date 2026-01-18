@@ -347,11 +347,108 @@ erDiagram
     }
 ```
 
-## 8. システム・権限・RPA (System & Auth & RPA)
+## 8. 需要予測 (Demand Forecasting)
+
+顧客需要予測データの管理。
+
+### 8.1 テーブル一覧
+
+| テーブル名 | 和名 | 説明 | 備考 |
+| :--- | :--- | :--- | :--- |
+| **forecast_current** | 現行予測 | 最新の需要予測データ。 | 引当対象となる予測 |
+| **forecast_history** | 予測履歴 | 過去の予測データのアーカイブ。 | 予測精度分析用 |
+
+### 8.2 ER図 (Mermaid)
+
+```mermaid
+erDiagram
+    customers ||--o{ forecast_current : "forecasts"
+    delivery_places ||--o{ forecast_current : "forecasts_for"
+    products ||--o{ forecast_current : "forecasted"
+    forecast_current ||..o{ allocation_suggestions : "allocated_by"
+
+    customers ||--o{ forecast_history : "forecasts_archived"
+    delivery_places ||--o{ forecast_history : "forecasts_for_archived"
+    products ||--o{ forecast_history : "forecasted_archived"
+
+    forecast_current {
+        bigint id PK
+        bigint customer_id FK
+        bigint delivery_place_id FK
+        bigint product_id FK
+        date forecast_date
+        decimal forecast_quantity
+        string unit
+        string forecast_period "YYYY-MM"
+        datetime snapshot_at "取得日時"
+    }
+    forecast_history {
+        bigint id PK
+        bigint customer_id FK
+        bigint delivery_place_id FK
+        bigint product_id FK
+        date forecast_date
+        decimal forecast_quantity
+        string unit
+        string forecast_period
+        datetime snapshot_at
+        datetime archived_at
+    }
+```
+
+## 9. 出荷・出庫 (Withdrawal & Shipment)
+
+在庫からの出庫実績管理。
+
+### 9.1 テーブル一覧
+
+| テーブル名 | 和名 | 説明 | 備考 |
+| :--- | :--- | :--- | :--- |
+| **withdrawals** | 出庫ヘッダ | 出庫伝票のヘッダ情報。 | 受注手動、内部使用、廃棄など |
+| **withdrawal_lines** | 出庫明細 | 出庫伝票の明細行。 | ロットごとの出庫数量 |
+
+### 9.2 ER図 (Mermaid)
+
+```mermaid
+erDiagram
+    customers ||--o{ withdrawals : "ships_to"
+    delivery_places ||--o{ withdrawals : "ships_to"
+    users ||--o{ withdrawals : "withdraws"
+    users ||--o{ withdrawals : "cancels"
+
+    withdrawals ||--o{ withdrawal_lines : "contains"
+    lot_receipts ||--o{ withdrawal_lines : "withdrawn_from"
+
+    withdrawals {
+        bigint id PK
+        string withdrawal_type "order_manual/internal_use/disposal/return/sample/other"
+        bigint customer_id FK
+        bigint delivery_place_id FK
+        date ship_date
+        date due_date "納期"
+        date planned_ship_date "予定出荷日"
+        text reason
+        string reference_number
+        bigint withdrawn_by FK
+        datetime withdrawn_at
+        datetime cancelled_at
+        bigint cancelled_by FK
+        string cancel_reason
+        text cancel_note
+    }
+    withdrawal_lines {
+        bigint id PK
+        bigint withdrawal_id FK
+        bigint lot_receipt_id FK
+        decimal quantity
+    }
+```
+
+## 10. システム・権限・RPA (System & Auth & RPA)
 
 システム管理、認証、およびRPA連携ログ。
 
-### 8.1 テーブル一覧
+### 10.1 テーブル一覧
 
 | テーブル名 | 和名 | 説明 | 備考 |
 | :--- | :--- | :--- | :--- |
@@ -363,7 +460,7 @@ erDiagram
 | **rpa_runs** | RPA実行 | 素材納品書RPAなどの実行ジョブヘッダ。 | |
 | **rpa_run_items** | RPA実行詳細 | RPA処理対象の明細行（CSV行）。 | ステータス管理 |
 
-### 8.2 ER図 (Mermaid)
+### 10.2 ER図 (Mermaid)
 
 ```mermaid
 erDiagram
@@ -404,5 +501,266 @@ erDiagram
         int row_no
         bool issue_flag
         bool complete_flag
+    }
+```
+
+## 11. バッチ処理・業務ルール (Batch & Business Rules)
+
+バッチジョブ管理と業務ルールエンジン。
+
+### 11.1 テーブル一覧
+
+| テーブル名 | 和名 | 説明 | 備考 |
+| :--- | :--- | :--- | :--- |
+| **batch_jobs** | バッチジョブ | バッチ処理の実行ジョブ管理。 | 引当推奨、在庫同期、レポート生成など |
+| **business_rules** | 業務ルール | ビジネスルールの定義。 | 引当、期限警告、かんばん、在庫同期アラート |
+
+### 11.2 ER図 (Mermaid)
+
+```mermaid
+erDiagram
+    batch_jobs {
+        bigint id PK
+        string job_name
+        string job_type "allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation"
+        string status "pending/running/completed/failed"
+        jsonb parameters
+        text result_message
+        datetime started_at
+        datetime completed_at
+    }
+    business_rules {
+        bigint id PK
+        string rule_code
+        string rule_name
+        string rule_type "allocation/expiry_warning/kanban/inventory_sync_alert/other"
+        jsonb rule_parameters
+        bool is_active
+    }
+```
+
+## 12. Power Automate連携 (Cloud Flow Integration)
+
+Microsoft Power Automate連携設定とジョブ管理。
+
+### 12.1 テーブル一覧
+
+| テーブル名 | 和名 | 説明 | 備考 |
+| :--- | :--- | :--- | :--- |
+| **cloud_flow_configs** | クラウドフロー設定 | Power Automate設定のキーバリューストア。 | エンドポイントURL、認証情報など |
+| **cloud_flow_jobs** | クラウドフロージョブ | Power Automate実行ジョブ履歴。 | データエクスポートなどの実行管理 |
+
+### 12.2 ER図 (Mermaid)
+
+```mermaid
+erDiagram
+    users ||--o{ cloud_flow_jobs : "requests"
+
+    cloud_flow_configs {
+        bigint id PK
+        string config_key "Unique"
+        text config_value
+        text description
+    }
+    cloud_flow_jobs {
+        bigint id PK
+        string job_type
+        string status "pending/running/completed/failed"
+        date start_date
+        date end_date
+        bigint requested_by_user_id FK
+        datetime requested_at
+        datetime started_at
+        datetime completed_at
+        text result_message
+        text error_message
+    }
+```
+
+## 13. マッピング・マスタ変更 (Mappings & Master Change Tracking)
+
+レイヤーコードマッピング、製品-仕入先関係、倉庫-製品関係、マスタ変更ログ。
+
+### 13.1 テーブル一覧
+
+| テーブル名 | 和名 | 説明 | 備考 |
+| :--- | :--- | :--- | :--- |
+| **layer_code_mappings** | レイヤーコードマッピング | レイヤーコードとメーカー名の紐付け。 | |
+| **product_suppliers** | 製品-仕入先関係 | 製品ごとの仕入先設定。 | 主仕入先フラグ、リードタイム |
+| **product_warehouse** | 製品-倉庫関係 | 製品ごとの保管可能倉庫設定。 | |
+| **master_change_logs** | マスタ変更ログ | マスタデータ変更の監査ログ。 | 変更前後の値をJSONで保存 |
+| **warehouse_delivery_routes** | 倉庫-納入先経路 | 倉庫から納入先への輸送経路設定。 | 輸送リードタイム |
+
+### 13.2 ER図 (Mermaid)
+
+```mermaid
+erDiagram
+    products ||--o{ product_suppliers : "supplied_by"
+    suppliers ||--o{ product_suppliers : "supplies"
+
+    products ||--o{ product_warehouse : "stored_at"
+    warehouses ||--o{ product_warehouse : "stores"
+
+    users ||--o{ master_change_logs : "changes"
+
+    warehouses ||--o{ warehouse_delivery_routes : "ships_from"
+    delivery_places ||--o{ warehouse_delivery_routes : "ships_to"
+    products ||--o{ warehouse_delivery_routes : "routed (optional)"
+
+    layer_code_mappings {
+        string layer_code PK
+        string maker_name
+    }
+    product_suppliers {
+        bigint id PK
+        bigint product_id FK
+        bigint supplier_id FK
+        bool is_primary
+        int lead_time_days
+        date valid_to
+    }
+    product_warehouse {
+        bigint product_id PK,FK
+        bigint warehouse_id PK,FK
+        bool is_active
+    }
+    master_change_logs {
+        bigint id PK
+        string table_name
+        bigint record_id
+        string change_type "insert/update/delete"
+        jsonb old_values
+        jsonb new_values
+        bigint changed_by FK
+        datetime changed_at
+    }
+    warehouse_delivery_routes {
+        bigint id PK
+        bigint warehouse_id FK
+        bigint delivery_place_id FK
+        bigint product_id FK "Optional"
+        int transport_lead_time_days
+        bool is_active
+        text notes
+    }
+```
+
+## 14. エラー追跡・監査ログ (Error Tracking & Audit Logs)
+
+マッピングエラー、操作ログ、引当履歴、クライアントログ。
+
+### 14.1 テーブル一覧
+
+| テーブル名 | 和名 | 説明 | 備考 |
+| :--- | :--- | :--- | :--- |
+| **missing_mapping_events** | マッピング欠損イベント | マッピングエラーのトラッキング。 | 納入先未設定、次区マッピング未設定など |
+| **operation_logs** | 操作ログ | ユーザー操作の監査ログ。 | 作成、更新、削除、ログイン、エクスポート |
+| **lot_reservation_history** | ロット予約履歴 | ロット予約の変更履歴。 | INSERT/UPDATE/DELETE操作の追跡 |
+| **system_client_logs** | クライアントログ | フロントエンドからのエラーログ。 | ブラウザ側のエラー収集 |
+
+### 14.2 ER図 (Mermaid)
+
+```mermaid
+erDiagram
+    customers ||--o{ missing_mapping_events : "has_issues"
+    products ||--o{ missing_mapping_events : "has_issues"
+    suppliers ||--o{ missing_mapping_events : "has_issues"
+    users ||--o{ missing_mapping_events : "creates"
+    users ||--o{ missing_mapping_events : "resolves"
+
+    users ||--o{ operation_logs : "performs"
+
+    lot_reservations ||..o{ lot_reservation_history : "tracked"
+
+    users ||--o{ system_client_logs : "generates"
+
+    missing_mapping_events {
+        bigint id PK
+        bigint customer_id FK
+        bigint product_id FK
+        bigint supplier_id FK
+        string event_type "delivery_place_not_found/jiku_mapping_not_found 等"
+        datetime occurred_at
+        jsonb context_json
+        bigint created_by FK
+        datetime resolved_at
+        bigint resolved_by FK
+        text resolution_note
+    }
+    operation_logs {
+        bigint id PK
+        bigint user_id FK
+        string operation_type "create/update/delete/login/logout/export"
+        string target_table
+        bigint target_id
+        jsonb changes
+        string ip_address
+    }
+    lot_reservation_history {
+        bigint id PK
+        bigint reservation_id FK
+        string operation "INSERT/UPDATE/DELETE"
+        bigint lot_id
+        string source_type
+        bigint source_id
+        decimal reserved_qty
+        string status
+        string sap_document_no
+        bigint old_lot_id
+        string old_source_type
+        bigint old_source_id
+        decimal old_reserved_qty
+        string old_status
+        string old_sap_document_no
+        string changed_by
+        datetime changed_at
+        string change_reason
+    }
+    system_client_logs {
+        bigint id PK
+        bigint user_id FK
+        string level "info/warn/error"
+        text message
+        string user_agent
+    }
+```
+
+## 15. OCR・テストデータ (OCR & Test Data)
+
+OCR設定とテストデータスナップショット管理。
+
+### 15.1 テーブル一覧
+
+| テーブル名 | 和名 | 説明 | 備考 |
+| :--- | :--- | :--- | :--- |
+| **smartread_configs** | SmartRead設定 | OCR (SmartRead) 連携設定。 | エンドポイント、APIキー、テンプレート |
+| **seed_snapshots** | テストデータスナップショット | テストデータ生成のスナップショット管理。 | パラメータ、プロファイル、サマリ保存 |
+
+### 15.2 ER図 (Mermaid)
+
+```mermaid
+erDiagram
+    smartread_configs {
+        bigint id PK
+        text endpoint
+        text api_key
+        text template_ids
+        string export_type "json/csv"
+        string aggregation_type
+        text watch_dir
+        text export_dir
+        string input_exts "pdf,png,jpg,jpeg"
+        string name
+        text description
+        bool is_active
+    }
+    seed_snapshots {
+        int id PK
+        string name "スナップショット名"
+        datetime created_at
+        jsonb params_json "展開後の最終パラメータ"
+        jsonb profile_json "使用したプロファイル設定"
+        text csv_dir "CSVエクスポートディレクトリ"
+        jsonb summary_json "生成結果のサマリ"
     }
 ```
