@@ -4,8 +4,8 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 import { getFilterOptions } from "@/features/inventory/api";
+import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 
 vi.mock("@/features/inventory/api", () => ({
   getFilterOptions: vi.fn(),

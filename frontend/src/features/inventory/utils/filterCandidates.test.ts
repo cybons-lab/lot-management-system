@@ -73,4 +73,50 @@ describe("getDependentFilterUpdates", () => {
 
     expect(updates).toEqual({ product_id: "", supplier_id: "" });
   });
+
+  // R2 requirement tests: Clear ONLY invalid filters, regardless of lastTouched
+  it("does not clear valid product when supplier is changed", () => {
+    const updates = getDependentFilterUpdates({
+      lastTouched: "supplier",
+      filters: baseFilters,
+      options: baseOptions,
+    });
+
+    // Product remains valid in options, so it should NOT be cleared
+    expect(updates).toEqual({});
+  });
+
+  it("clears only invalid filters regardless of lastTouched", () => {
+    const updates = getDependentFilterUpdates({
+      lastTouched: "product", // Touched product, but we check ALL fields
+      filters: { product_id: "1", supplier_id: "99", warehouse_id: "999" },
+      options: baseOptions,
+    });
+
+    // Only invalid supplier and warehouse should be cleared
+    // Valid product should be preserved
+    expect(updates).toEqual({ supplier_id: "", warehouse_id: "" });
+  });
+
+  it("preserves all valid filters even with lastTouched set", () => {
+    const updates = getDependentFilterUpdates({
+      lastTouched: "warehouse",
+      filters: baseFilters, // All valid
+      options: baseOptions,
+    });
+
+    // All filters are valid, none should be cleared
+    expect(updates).toEqual({});
+  });
+
+  it("clears all invalid filters at once", () => {
+    const updates = getDependentFilterUpdates({
+      lastTouched: null,
+      filters: { product_id: "99", supplier_id: "98", warehouse_id: "999" },
+      options: baseOptions,
+    });
+
+    // All filters are invalid
+    expect(updates).toEqual({ product_id: "", supplier_id: "", warehouse_id: "" });
+  });
 });

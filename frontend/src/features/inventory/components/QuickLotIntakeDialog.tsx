@@ -203,6 +203,10 @@ export function QuickLotIntakeDialog({
       toast.error("製品と倉庫を選択してください");
       return;
     }
+    if (!supplierId && supplierOptions.length > 1) {
+      toast.error("仕入先を選択してください");
+      return;
+    }
     if (!newQuantity || Number(newQuantity) <= 0) {
       toast.error("入庫数量を入力してください");
       return;
@@ -303,6 +307,7 @@ export function QuickLotIntakeDialog({
               isLoadingWarehouses={isLoadingWarehouses}
               isLoadingSuppliers={isLoadingSuppliers}
               isSubmitting={isSubmitting}
+              hasInitialSupplier={!!initialSupplierId}
             />
           )}
         </div>

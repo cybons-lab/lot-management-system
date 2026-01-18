@@ -53,7 +53,6 @@ export function useInventoryPageState() {
         tab: "all",
         primary_staff_only: false,
         candidate_mode: "stock",
-        group_by: "supplier_product_warehouse",
       },
     }));
   }, [setState]);

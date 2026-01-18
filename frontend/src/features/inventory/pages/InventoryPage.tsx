@@ -26,7 +26,10 @@ import { LotSearchPanel } from "@/features/inventory/components/LotSearchPanel";
 import { useInventoryItems } from "@/features/inventory/hooks";
 import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 import { useInventoryPageState } from "@/features/inventory/hooks/useInventoryPageState";
-import { type FilterField, getDependentFilterUpdates } from "@/features/inventory/utils/filterCandidates";
+import {
+  type FilterField,
+  getDependentFilterUpdates,
+} from "@/features/inventory/utils/filterCandidates";
 import {
   useInventoryByProduct,
   useInventoryBySupplier,
@@ -113,14 +116,7 @@ export function InventoryPage() {
     if (Object.keys(updates).length > 0) {
       setFilters({ ...filters, ...updates });
     }
-  }, [
-    filters,
-    lastTouched,
-    productOptions,
-    setFilters,
-    supplierOptions,
-    warehouseOptions,
-  ]);
+  }, [filters, lastTouched, productOptions, setFilters, supplierOptions, warehouseOptions]);
 
   useEffect(() => {
     if (filters.candidate_mode === "stock" && filters.tab === "no_stock") {
@@ -281,72 +277,45 @@ export function InventoryPage() {
           </Button>
         </div>
 
-        {/* Tab Filters and Group By Toggle (Items Only) */}
+        {/* Tab Filters (Items Only) */}
         {showTabFilters && (
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Tab Filter */}
-            <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
-              <button
-                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "all"
+          <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
+            <button
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                filters.tab === "all"
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
-                  }`}
-                onClick={() => updateFilter("tab", "all")}
-              >
-                すべて
-              </button>
-              <button
-                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "in_stock"
+              }`}
+              onClick={() => updateFilter("tab", "all")}
+            >
+              すべて
+            </button>
+            <button
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                filters.tab === "in_stock"
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
-                  }`}
-                onClick={() => updateFilter("tab", "in_stock")}
-              >
-                ✅ 在庫あり
-              </button>
-              <button
-                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${filters.tab === "no_stock"
+              }`}
+              onClick={() => updateFilter("tab", "in_stock")}
+            >
+              ✅ 在庫あり
+            </button>
+            <button
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                filters.tab === "no_stock"
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
-                  } ${filters.candidate_mode === "stock" ? "cursor-not-allowed opacity-50" : ""}`}
-                disabled={filters.candidate_mode === "stock"}
-                onClick={() => updateFilter("tab", "no_stock")}
-                title={
-                  filters.candidate_mode === "stock"
-                    ? "在庫あり基準では在庫なしタブは利用できません"
-                    : undefined
-                }
-              >
-                ⚠️ 在庫なし
-              </button>
-            </div>
-
-            {/* Group By Toggle */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-600">表示単位:</span>
-              <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
-                <button
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${filters.group_by === "supplier_product_warehouse"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  onClick={() => updateFilter("group_by", "supplier_product_warehouse")}
-                  title="仕入先 × 製品 × 倉庫で表示（同じ製品でも仕入先ごとに別行）"
-                >
-                  仕入先別
-                </button>
-                <button
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${filters.group_by === "product_warehouse"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  onClick={() => updateFilter("group_by", "product_warehouse")}
-                  title="製品 × 倉庫で表示（仕入先を集約）"
-                >
-                  製品別
-                </button>
-              </div>
-            </div>
+              } ${filters.candidate_mode === "stock" ? "cursor-not-allowed opacity-50" : ""}`}
+              disabled={filters.candidate_mode === "stock"}
+              onClick={() => updateFilter("tab", "no_stock")}
+              title={
+                filters.candidate_mode === "stock"
+                  ? "在庫あり基準では在庫なしタブは利用できません"
+                  : undefined
+              }
+            >
+              ⚠️ 在庫なし
+            </button>
           </div>
         )}
 
@@ -361,10 +330,7 @@ export function InventoryPage() {
                     className="h-9 rounded-md border border-slate-300 bg-transparent px-3 text-sm"
                     value={filters.candidate_mode}
                     onChange={(event) =>
-                      updateFilter(
-                        "candidate_mode",
-                        event.target.value as "stock" | "master",
-                      )
+                      updateFilter("candidate_mode", event.target.value as "stock" | "master")
                     }
                   >
                     <option value="stock">在庫あり</option>
@@ -460,8 +426,9 @@ export function InventoryPage() {
                 isLoading={isItemsLoading}
                 onRefresh={refetchItems}
                 filterSupplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
-                headerContent={`ページ ${page} (全${totalCount}件中 ${(page - 1) * pageSize + 1
-                  }-${Math.min(page * pageSize, totalCount)}件を表示)`}
+                headerContent={`ページ ${page} (全${totalCount}件中 ${
+                  (page - 1) * pageSize + 1
+                }-${Math.min(page * pageSize, totalCount)}件を表示)`}
               />
               {/* Pagination Controls */}
               <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">

@@ -26,6 +26,8 @@ interface NewLotIntakeFormProps {
   isLoadingWarehouses: boolean;
   isLoadingSuppliers: boolean;
   isSubmitting: boolean;
+  /** Whether supplier was auto-selected from row context */
+  hasInitialSupplier?: boolean;
 }
 
 export function NewLotIntakeForm({
@@ -52,6 +54,7 @@ export function NewLotIntakeForm({
   isLoadingWarehouses,
   isLoadingSuppliers,
   isSubmitting,
+  hasInitialSupplier = false,
 }: NewLotIntakeFormProps) {
   return (
     <div className="space-y-4 rounded-md border p-4">
@@ -96,6 +99,11 @@ export function NewLotIntakeForm({
             placeholder={isLoadingSuppliers ? "読み込み中..." : "仕入先を選択"}
             disabled={isLoadingSuppliers || isSubmitting}
           />
+          {!hasInitialSupplier && !supplierId && supplierOptions.length > 1 && (
+            <p className="mt-1 text-xs text-amber-600">
+              この組み合わせには複数の仕入先があります。選択してください。
+            </p>
+          )}
         </div>
         <div>
           <Label htmlFor="new_quantity">入庫数量 *</Label>

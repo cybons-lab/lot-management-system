@@ -416,3 +416,165 @@ def test_get_filter_options_stock_mode_mutuality(db: Session, service_master_dat
     master_warehouse_ids = {w.id for w in master_options.warehouses}
     assert warehouse1.id in master_warehouse_ids
     assert warehouse2.id in master_warehouse_ids
+
+
+def test_get_inventory_items_group_by_supplier_product_warehouse(db: Session, service_master_data):
+    """Test supplier × product × warehouse grouping returns separate rows."""
+    service = InventoryService(db)
+    product1 = service_master_data["product1"]
+    warehouse = service_master_data["warehouse"]
+    supplier1 = service_master_data["supplier"]
+
+    # Create another supplier
+    supplier2 = Supplier(supplier_code="SUP-002", supplier_name="Supplier 2")
+    db.add(supplier2)
+    db.flush()
+
+    # Create lot masters for each supplier
+    master1 = LotMaster(
+        lot_number="LOT-GROUP-1",
+        product_id=product1.id,
+        supplier_id=supplier1.id,
+    )
+    master2 = LotMaster(
+        lot_number="LOT-GROUP-2",
+        product_id=product1.id,
+        supplier_id=supplier2.id,
+    )
+    db.add(master1)
+    db.add(master2)
+    db.flush()
+
+    # Create lots with same product and warehouse, different suppliers
+    lot1 = LotReceipt(
+        lot_master_id=master1.id,
+        product_id=product1.id,
+        warehouse_id=warehouse.id,
+        supplier_id=supplier1.id,
+        received_quantity=100,
+        received_date=date.today(),
+        status="active",
+        unit="EA",
+    )
+    lot2 = LotReceipt(
+        lot_master_id=master2.id,
+        product_id=product1.id,
+        warehouse_id=warehouse.id,
+        supplier_id=supplier2.id,
+        received_quantity=200,
+        received_date=date.today(),
+        status="active",
+        unit="EA",
+    )
+    db.add(lot1)
+    db.add(lot2)
+    db.flush()
+
+    # Register to product_warehouse
+    pw = ProductWarehouse(product_id=product1.id, warehouse_id=warehouse.id)
+    db.merge(pw)
+    db.flush()
+
+    # Test with supplier_product_warehouse grouping (default)
+    response = service.get_inventory_items(
+        product_id=product1.id,
+        warehouse_id=warehouse.id,
+        group_by="supplier_product_warehouse",
+    )
+    items = response.items
+
+    # Should return 2 rows (one per supplier)
+    assert len(items) == 2
+
+    # Verify each row has supplier info
+    supplier_ids = {item.supplier_id for item in items}
+    assert supplier1.id in supplier_ids
+    assert supplier2.id in supplier_ids
+
+    # Verify quantities
+    item1 = next((i for i in items if i.supplier_id == supplier1.id), None)
+    item2 = next((i for i in items if i.supplier_id == supplier2.id), None)
+    assert item1 is not None
+    assert item2 is not None
+    assert item1.total_quantity == 100
+    assert item2.total_quantity == 200
+
+
+def test_get_inventory_items_group_by_product_warehouse_with_multiple_suppliers(
+    db: Session, service_master_data
+):
+    """Test product × warehouse grouping aggregates multiple suppliers."""
+    service = InventoryService(db)
+    product1 = service_master_data["product1"]
+    warehouse = service_master_data["warehouse"]
+    supplier1 = service_master_data["supplier"]
+
+    # Create another supplier
+    supplier2 = Supplier(supplier_code="SUP-003", supplier_name="Supplier 3")
+    db.add(supplier2)
+    db.flush()
+
+    # Create lot masters for each supplier
+    master1 = LotMaster(
+        lot_number="LOT-AGG-1",
+        product_id=product1.id,
+        supplier_id=supplier1.id,
+    )
+    master2 = LotMaster(
+        lot_number="LOT-AGG-2",
+        product_id=product1.id,
+        supplier_id=supplier2.id,
+    )
+    db.add(master1)
+    db.add(master2)
+    db.flush()
+
+    # Create lots with same product and warehouse, different suppliers
+    lot1 = LotReceipt(
+        lot_master_id=master1.id,
+        product_id=product1.id,
+        warehouse_id=warehouse.id,
+        supplier_id=supplier1.id,
+        received_quantity=100,
+        received_date=date.today(),
+        status="active",
+        unit="EA",
+    )
+    lot2 = LotReceipt(
+        lot_master_id=master2.id,
+        product_id=product1.id,
+        warehouse_id=warehouse.id,
+        supplier_id=supplier2.id,
+        received_quantity=200,
+        received_date=date.today(),
+        status="active",
+        unit="EA",
+    )
+    db.add(lot1)
+    db.add(lot2)
+    db.flush()
+
+    # Register to product_warehouse
+    pw = ProductWarehouse(product_id=product1.id, warehouse_id=warehouse.id)
+    db.merge(pw)
+    db.flush()
+
+    # Test with product_warehouse grouping
+    response = service.get_inventory_items(
+        product_id=product1.id,
+        warehouse_id=warehouse.id,
+        group_by="product_warehouse",
+    )
+    items = response.items
+
+    # Should return 1 aggregated row
+    assert len(items) == 1
+
+    item = items[0]
+    # Total quantity should be sum of both suppliers
+    assert item.total_quantity == 300
+
+    # NOTE: suppliers_summary implementation is future work
+    # Currently, product_warehouse grouping does not populate suppliers_summary
+    # This test verifies that aggregation works correctly
+    # TODO: Implement suppliers_summary population in inventory_service.py

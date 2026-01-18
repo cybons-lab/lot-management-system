@@ -255,7 +255,7 @@ export function InventoryTable({
         onSuccess={handleSuccess}
         initialProductId={quickIntakeItem?.product_id}
         initialWarehouseId={quickIntakeItem?.warehouse_id}
-        initialSupplierId={filterSupplierId}
+        initialSupplierId={quickIntakeItem?.supplier_id ?? filterSupplierId}
       />
     </div>
   );
