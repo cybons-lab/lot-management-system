@@ -1978,6 +1978,19 @@
             }
           },
           {
+            "name": "group_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(supplier_product_warehouse|product_warehouse)$",
+              "description": "Grouping mode: 'supplier_product_warehouse' (default) or 'product_warehouse'",
+              "default": "supplier_product_warehouse",
+              "title": "Group By"
+            },
+            "description": "Grouping mode: 'supplier_product_warehouse' (default) or 'product_warehouse'"
+          },
+          {
             "name": "primary_staff_only",
             "in": "query",
             "required": false,
@@ -24111,6 +24124,49 @@
               }
             ],
             "title": "Warehouse Code"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code"
+          },
+          "suppliers_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuppliersSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -24124,7 +24180,7 @@
           "last_updated"
         ],
         "title": "InventoryItemResponse",
-        "description": "API response model for inventory items (aggregated summary).\n\nThis schema represents a calculated summary of inventory from the\nlots table, aggregated by product and warehouse. It does not map to\na physical table."
+        "description": "API response model for inventory items (aggregated summary).\n\nThis schema represents a calculated summary of inventory from the\nlots table, aggregated by product and warehouse (or supplier × product × warehouse).\nIt does not map to a physical table."
       },
       "InventoryListResponse": {
         "properties": {
@@ -30813,6 +30869,35 @@
         "type": "object",
         "title": "SupplierUpdate",
         "description": "Update supplier request."
+      },
+      "SuppliersSummary": {
+        "properties": {
+          "primary_supplier_id": {
+            "type": "integer",
+            "title": "Primary Supplier Id"
+          },
+          "primary_supplier_code": {
+            "type": "string",
+            "title": "Primary Supplier Code"
+          },
+          "primary_supplier_name": {
+            "type": "string",
+            "title": "Primary Supplier Name"
+          },
+          "other_count": {
+            "type": "integer",
+            "title": "Other Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "primary_supplier_id",
+          "primary_supplier_code",
+          "primary_supplier_name"
+        ],
+        "title": "SuppliersSummary",
+        "description": "製品×倉庫ビューで複数サプライヤーをまとめる場合の情報.\n\nUsed when group_by='product_warehouse' and multiple suppliers exist\nfor the same product/warehouse combination."
       },
       "SupplyDataImport": {
         "properties": {

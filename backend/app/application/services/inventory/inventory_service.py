@@ -163,9 +163,9 @@ class InventoryService:
         tab: str = "all",
         primary_staff_only: bool = False,
         current_user_id: int | None = None,
+        group_by: str = "supplier_product_warehouse",
     ) -> InventoryListResponse:
-        """Get inventory items from v_inventory_summary view with product and
-        warehouse names.
+        """Get inventory items from v_lot_receipt_stock view with grouping.
 
         Args:
             skip: Number of records to skip (pagination)
@@ -176,6 +176,7 @@ class InventoryService:
             tab: Tab filter - 'in_stock', 'no_stock', or 'all'
             primary_staff_only: Filter by primary staff (current user)
             current_user_id: Current user ID (required if primary_staff_only=True)
+            group_by: Grouping mode - 'supplier_product_warehouse' (default) or 'product_warehouse'
 
         Returns:
             InventoryListResponse containing items and total count
@@ -184,141 +185,97 @@ class InventoryService:
 
         total = 0
 
-        # Join with products and warehouses to get names
-        # If supplier_id is specified or filtering by primary staff, we join lots/views to filter by supplier
-        if supplier_id is not None or primary_staff_only:
-            # Need to aggregate lots directly since v_inventory_summary doesn't have supplier_id
-            # Use v_lot_receipt_stock view which handles B-Plan logic (withdrawals, etc.)
+        # Always use v_lot_receipt_stock view which handles B-Plan logic
+        # and includes supplier information needed for group_by modes
 
-            # Base logic for WHERE clause
-            where_clauses = ["v.remaining_quantity > 0", "v.status = 'active'"]
-            params = {}
+        # Base logic for WHERE clause
+        where_clauses = ["v.remaining_quantity > 0", "v.status = 'active'"]
+        params: dict[str, int | str] = {}
 
-            if primary_staff_only and current_user_id:
-                pass  # logic handled in JOIN
+        if supplier_id is not None:
+            where_clauses.append("v.supplier_id = :supplier_id")
+            params["supplier_id"] = supplier_id
 
-            if supplier_id is not None:
-                where_clauses.append("v.supplier_id = :supplier_id")
-                params["supplier_id"] = supplier_id
+        if product_id is not None:
+            where_clauses.append("v.product_id = :product_id")
+            params["product_id"] = product_id
 
-            if primary_staff_only and current_user_id:
-                where_clauses.append("usa.user_id = :current_user_id")
-                where_clauses.append("usa.is_primary = TRUE")
-                params["current_user_id"] = current_user_id
+        if warehouse_id is not None:
+            where_clauses.append("v.warehouse_id = :warehouse_id")
+            params["warehouse_id"] = warehouse_id
 
-            if product_id is not None:
-                where_clauses.append("v.product_id = :product_id")
-                params["product_id"] = product_id
+        # JOIN for primary_staff_only filter
+        join_assignment = ""
+        if primary_staff_only and current_user_id:
+            join_assignment = (
+                " JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
+            )
+            where_clauses.append("usa.user_id = :current_user_id")
+            where_clauses.append("usa.is_primary = TRUE")
+            params["current_user_id"] = current_user_id
 
-            if warehouse_id is not None:
-                where_clauses.append("v.warehouse_id = :warehouse_id")
-                params["warehouse_id"] = warehouse_id
+        where_str = " AND ".join(where_clauses)
 
-            where_str = " AND ".join(where_clauses)
+        # HAVING clause for tab filter
+        having_clause = ""
+        if tab == "in_stock":
+            having_clause = " HAVING SUM(v.available_quantity) > 0"
+        elif tab == "no_stock":
+            having_clause = " HAVING SUM(v.available_quantity) = 0"
 
-            # --- Total Count Query ---
-            count_query = "SELECT COUNT(*) FROM (SELECT 1 FROM v_lot_receipt_stock v"
+        # Determine GROUP BY based on group_by parameter
+        use_supplier_grouping = group_by == "supplier_product_warehouse"
 
-            if primary_staff_only and current_user_id:
-                count_query += (
-                    " JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
-                )
-
-            count_query += f" WHERE {where_str}"
-            count_query += " GROUP BY v.product_id, v.warehouse_id"
-
-            # Tab filter: HAVING clause
-            if tab == "in_stock":
-                count_query += " HAVING SUM(v.available_quantity) > 0"
-            elif tab == "no_stock":
-                count_query += " HAVING SUM(v.available_quantity) = 0"
-
-            count_query += ") as sub"
-
-            total = self.db.execute(text(count_query), params).scalar() or 0
-
-            # --- Data Query ---
-            query = """
-                SELECT 
-                    v.product_id, 
-                    v.warehouse_id, 
-                    SUM(v.remaining_quantity) as total_quantity,  -- physical stock
-                    SUM(v.reserved_quantity) as allocated_quantity,
-                    SUM(v.available_quantity) as available_quantity,
-                    COUNT(v.receipt_id) as lot_count,
-                    MAX(v.updated_at) as last_updated,
-                    v.product_name,
-                    v.product_code,
-                    v.warehouse_name,
-                    v.warehouse_code
-                FROM v_lot_receipt_stock v
-            """
-
-            if primary_staff_only and current_user_id:
-                query += " JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
-
-            query += f" WHERE {where_str}"
-
-            query += " GROUP BY v.product_id, v.warehouse_id, v.product_name, v.product_code, v.warehouse_name, v.warehouse_code"
-
-            # Tab filter: HAVING clause after GROUP BY
-            if tab == "in_stock":
-                query += " HAVING SUM(v.available_quantity) > 0"
-            elif tab == "no_stock":
-                query += " HAVING SUM(v.available_quantity) = 0"
-
-            query += " ORDER BY v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
-            params["limit"] = limit
-            params["skip"] = skip
+        if use_supplier_grouping:
+            # Supplier × Product × Warehouse grouping (default, supplier-centric)
+            group_by_cols = "v.supplier_id, v.product_id, v.warehouse_id"
+            group_by_full = f"{group_by_cols}, v.product_name, v.product_code, v.warehouse_name, v.warehouse_code, v.supplier_name, v.supplier_code"
+            select_supplier = ", v.supplier_id, v.supplier_name, v.supplier_code"
+            order_by = "v.supplier_id, v.product_id, v.warehouse_id"
         else:
-            # Base logic for WHERE clause
-            where_clauses = ["1=1"]
-            params = {}
+            # Product × Warehouse grouping (aggregates across suppliers)
+            group_by_cols = "v.product_id, v.warehouse_id"
+            group_by_full = f"{group_by_cols}, v.product_name, v.product_code, v.warehouse_name, v.warehouse_code"
+            select_supplier = ""
+            order_by = "v.product_id, v.warehouse_id"
 
-            if product_id is not None:
-                where_clauses.append("v.product_id = :product_id")
-                params["product_id"] = product_id
-
-            if warehouse_id is not None:
-                where_clauses.append("v.warehouse_id = :warehouse_id")
-                params["warehouse_id"] = warehouse_id
-
-            # Tab filter for inventory_state
-            if tab == "in_stock":
-                where_clauses.append("v.inventory_state = 'in_stock'")
-            elif tab == "no_stock":
-                where_clauses.append("v.inventory_state IN ('no_lots', 'depleted_only')")
-
-            where_str = " AND ".join(where_clauses)
-
-            # --- Total Count Query ---
-            count_query = f"SELECT COUNT(*) FROM v_inventory_summary v WHERE {where_str}"
-            total = self.db.execute(text(count_query), params).scalar() or 0
-
-            # --- Data Query ---
-            query = f"""
-                SELECT 
-                    v.product_id, 
-                    v.warehouse_id, 
-                    v.active_lot_count,
-                    v.total_quantity, 
-                    v.allocated_quantity, 
-                    v.available_quantity, 
-                    v.last_updated,
-                    v.inventory_state,
-                    p.product_name,
-                    p.maker_part_code AS product_code,
-                    w.warehouse_name,
-                    w.warehouse_code
-                FROM v_inventory_summary v
-                LEFT JOIN products p ON v.product_id = p.id
-                LEFT JOIN warehouses w ON v.warehouse_id = w.id
+        # --- Total Count Query ---
+        count_query = f"""
+            SELECT COUNT(*) FROM (
+                SELECT 1 FROM v_lot_receipt_stock v
+                {join_assignment}
                 WHERE {where_str}
-            """
+                GROUP BY {group_by_cols}
+                {having_clause}
+            ) as sub
+        """
+        total = self.db.execute(text(count_query), params).scalar() or 0
 
-            query += " ORDER BY v.available_quantity DESC, v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
-            params["limit"] = limit
-            params["skip"] = skip
+        # --- Data Query ---
+        query = f"""
+            SELECT 
+                v.product_id, 
+                v.warehouse_id, 
+                SUM(v.remaining_quantity) as total_quantity,
+                SUM(v.reserved_quantity) as allocated_quantity,
+                SUM(v.available_quantity) as available_quantity,
+                COUNT(v.receipt_id) as lot_count,
+                MAX(v.updated_at) as last_updated,
+                v.product_name,
+                v.product_code,
+                v.warehouse_name,
+                v.warehouse_code
+                {select_supplier}
+            FROM v_lot_receipt_stock v
+            {join_assignment}
+            WHERE {where_str}
+            GROUP BY {group_by_full}
+            {having_clause}
+            ORDER BY {order_by}
+            LIMIT :limit OFFSET :skip
+        """
+        params["limit"] = limit
+        params["skip"] = skip
 
         # 1. Base Summary Query
         result = self.db.execute(text(query), params).fetchall()
@@ -440,6 +397,10 @@ class InventoryService:
                         product_code=row.product_code,
                         warehouse_name=row.warehouse_name,
                         warehouse_code=row.warehouse_code,
+                        # Supplier fields (present when group_by='supplier_product_warehouse')
+                        supplier_id=getattr(row, "supplier_id", None),
+                        supplier_name=getattr(row, "supplier_name", None),
+                        supplier_code=getattr(row, "supplier_code", None),
                     )
                 )
 

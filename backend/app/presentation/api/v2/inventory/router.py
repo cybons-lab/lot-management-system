@@ -39,6 +39,11 @@ async def list_inventory(
     warehouse_id: int | None = None,
     supplier_id: int | None = None,
     tab: str = Query(default="all", pattern="^(in_stock|no_stock|all)$"),
+    group_by: str = Query(
+        default="supplier_product_warehouse",
+        pattern="^(supplier_product_warehouse|product_warehouse)$",
+        description="Grouping mode: 'supplier_product_warehouse' (default) or 'product_warehouse'",
+    ),
     primary_staff_only: bool = Query(default=False),
     current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
@@ -54,6 +59,7 @@ async def list_inventory(
         warehouse_id=warehouse_id,
         supplier_id=supplier_id,
         tab=tab,
+        group_by=group_by,
         primary_staff_only=primary_staff_only,
         current_user_id=current_user.id if current_user else None,
     )
