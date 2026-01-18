@@ -165,7 +165,7 @@ class InventoryService:
         tab: str = "all",
         primary_staff_only: bool = False,
         current_user_id: int | None = None,
-        group_by: str = "supplier_product_warehouse",
+        group_by: str = "product_warehouse",
     ) -> InventoryListResponse:
         """Get inventory items from v_lot_receipt_stock view with grouping.
 
@@ -178,7 +178,7 @@ class InventoryService:
             tab: Tab filter - 'in_stock', 'no_stock', or 'all'
             primary_staff_only: Filter by primary staff (current user)
             current_user_id: Current user ID (required if primary_staff_only=True)
-            group_by: Grouping mode - 'supplier_product_warehouse' (default) or 'product_warehouse'
+            group_by: Grouping mode - 'product_warehouse' (default) or 'supplier_product_warehouse'
 
         Returns:
             InventoryListResponse containing items and total count
@@ -229,13 +229,13 @@ class InventoryService:
         use_supplier_grouping = group_by == "supplier_product_warehouse"
 
         if use_supplier_grouping:
-            # Supplier × Product × Warehouse grouping (default, supplier-centric)
+            # Supplier × Product × Warehouse grouping (supplier-centric view)
             group_by_cols = "v.supplier_id, v.product_id, v.warehouse_id"
             group_by_full = f"{group_by_cols}, v.product_name, v.product_code, v.warehouse_name, v.warehouse_code, v.supplier_name, v.supplier_code"
             select_supplier = ", v.supplier_id, v.supplier_name, v.supplier_code"
             order_by = "v.supplier_id, v.product_id, v.warehouse_id"
         else:
-            # Product × Warehouse grouping (aggregates across suppliers)
+            # Product × Warehouse grouping (default, aggregates across suppliers)
             group_by_cols = "v.product_id, v.warehouse_id"
             group_by_full = f"{group_by_cols}, v.product_name, v.product_code, v.warehouse_name, v.warehouse_code"
             select_supplier = ""
