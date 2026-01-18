@@ -5862,8 +5862,13 @@
           "withdrawals"
         ],
         "summary": "Create Withdrawal",
-        "description": "出庫を登録.\n\n- ロットの現在数量から出庫数量を減算\n- 利用可能数量（current - allocated - locked）以内であること\n- stock_historyにWITHDRAWALトランザクションを記録\n\nArgs:\n    data: 出庫登録リクエスト\n    db: データベースセッション\n\nReturns:\n    作成された出庫レコード\n\nRaises:\n    HTTPException: バリデーションエラー",
+        "description": "出庫を登録.\n\n- ロットの現在数量から出庫数量を減算\n- 利用可能数量（current - allocated - locked）以内であること\n- stock_historyにWITHDRAWALトランザクションを記録\n\nArgs:\n    data: 出庫登録リクエスト\n    db: データベースセッション\n    current_user: 現在のログインユーザー\n\nReturns:\n    作成された出庫レコード\n\nRaises:\n    HTTPException: バリデーションエラー",
         "operationId": "create_withdrawal_api_withdrawals_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -22003,47 +22008,42 @@
       },
       "FilterOption": {
         "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "code": {
+          "label": {
             "type": "string",
-            "title": "Code"
+            "title": "Label"
           },
-          "name": {
+          "value": {
             "type": "string",
-            "title": "Name"
+            "title": "Value"
           }
         },
         "type": "object",
         "required": [
-          "id",
-          "code",
-          "name"
+          "label",
+          "value"
         ],
         "title": "FilterOption",
-        "description": "Filter option for dropdowns."
+        "description": "フィルタ選択肢."
       },
       "FilterOptions": {
         "properties": {
           "products": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
             },
             "type": "array",
             "title": "Products"
           },
           "suppliers": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
             },
             "type": "array",
             "title": "Suppliers"
           },
           "warehouses": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
             },
             "type": "array",
             "title": "Warehouses"
@@ -25191,36 +25191,6 @@
             ],
             "title": "Expiry Date"
           },
-          "current_quantity": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Current Quantity"
-          },
-          "allocated_quantity": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Allocated Quantity"
-          },
           "unit": {
             "anyOf": [
               {
@@ -25357,7 +25327,7 @@
         },
         "type": "object",
         "title": "LotUpdate",
-        "description": "Mutable fields for lot updates.\n\n仮入庫対応:\n- lot_number を更新して TMP-... から正式ロット番号に変更可能"
+        "description": "Mutable fields for lot updates.\n\n仮入庫対応:\n- lot_number を更新して TMP-... から正式ロット番号に変更可能\n\nIMPORTANT: 数量フィールド(current_quantity, allocated_quantity)は含まない\n- 数量の変更は入出庫操作を通してのみ行う\n- stock_historyとの整合性を保つため"
       },
       "ManualAllocationItem": {
         "properties": {
@@ -26021,21 +25991,21 @@
         "properties": {
           "users": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Users"
           },
           "operation_types": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Operation Types"
           },
           "target_tables": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Target Tables"
@@ -32354,24 +32324,29 @@
         "title": "WithdrawalType",
         "description": "出庫タイプ."
       },
-      "app__presentation__schemas__system__operation_logs_schema__FilterOption": {
+      "app__presentation__schemas__inventory__inventory_schema__FilterOption": {
         "properties": {
-          "label": {
-            "type": "string",
-            "title": "Label"
+          "id": {
+            "type": "integer",
+            "title": "Id"
           },
-          "value": {
+          "code": {
             "type": "string",
-            "title": "Value"
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
           }
         },
         "type": "object",
         "required": [
-          "label",
-          "value"
+          "id",
+          "code",
+          "name"
         ],
         "title": "FilterOption",
-        "description": "フィルタ選択肢."
+        "description": "Filter option for dropdowns."
       },
       "app__presentation__schemas__system__users_schema__UserResponse": {
         "properties": {

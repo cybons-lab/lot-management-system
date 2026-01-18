@@ -54,16 +54,16 @@ export function LotEditFields({ initialData }: LotEditFieldsProps) {
       </div>
 
       <div>
-        <Label htmlFor="quantity">現在数量</Label>
+        <Label htmlFor="current_quantity">現在数量（参照のみ）</Label>
         <Input
-          id="quantity"
-          name="quantity"
-          type="number"
-          required
-          min="0"
-          step="0.001"
+          id="current_quantity"
+          name="current_quantity"
+          type="text"
           defaultValue={initialData.current_quantity}
+          disabled
+          className="bg-gray-100"
         />
+        <p className="mt-1 text-xs text-gray-500">※数量の変更は入出庫操作を通して行ってください</p>
       </div>
 
       <div>
