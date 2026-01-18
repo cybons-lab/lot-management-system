@@ -13,6 +13,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Label,
 } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { http } from "@/shared/api/http-client";
@@ -37,18 +43,92 @@ export function AdminPage() {
   const [isResetting, setIsResetting] = useState(false);
   const [isInventorySyncing, setIsInventorySyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<InventorySyncResult | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState("");
+
+  // Test Data Generation State
+  const [presets, setPresets] = useState<
+    Array<{
+      id: string;
+      description: string;
+      options: object;
+    }>
+  >([]);
+  const [selectedPresetId, setSelectedPresetId] = useState("quick");
+
+  // Load presets when dialog opens
+  const loadPresets = async () => {
+    try {
+      const data = await http.get<
+        Array<{
+          id: string;
+          description: string;
+          options: object;
+        }>
+      >("/admin/test-data/presets");
+      setPresets(data);
+    } catch (e) {
+      console.error("Failed to load presets", e);
+      // Fallback
+      setPresets([
+        { id: "quick", description: "開発中の素早い確認 (Small, Strict)", options: {} },
+        { id: "full_coverage", description: "網羅的テスト (Medium, Strict)", options: {} },
+      ]);
+    }
+  };
+
+  const handleOpenGenerateDialog = () => {
+    setShowGenerateConfirm(true);
+    loadPresets();
+  };
 
   const handleGenerateTestData = async () => {
     setIsGenerating(true);
+    setProgress(0);
+    setProgressMessage("リクエスト送信中...");
+
     try {
-      await http.post("admin/test-data/generate");
-      toast.success("テストデータを生成しました");
+      const res = await http.post<{ job_id: string }>("admin/test-data/generate", {
+        preset_id: selectedPresetId,
+      });
+
+      const jobId = res.job_id;
+
+      const poll = async () => {
+        try {
+          const job = await http.get<{
+            status: string;
+            progress: number;
+            message: string;
+            error?: string;
+          }>(`admin/test-data/progress/${jobId}`);
+          setProgress(job.progress);
+          setProgressMessage(job.message || "処理中...");
+
+          if (job.status === "completed") {
+            toast.success("テストデータを生成しました");
+            setIsGenerating(false);
+            setShowGenerateConfirm(false);
+          } else if (job.status === "failed") {
+            toast.error(`生成に失敗しました: ${job.error}`);
+            setIsGenerating(false);
+          } else {
+            // Continue polling
+            setTimeout(poll, 1000);
+          }
+        } catch (e) {
+          console.error("Polling failed", e);
+          toast.error("進捗確認に失敗しました");
+          setIsGenerating(false);
+        }
+      };
+
+      // Start polling
+      poll();
     } catch (e) {
-      toast.error("テストデータ生成に失敗しました");
+      toast.error("データ生成の開始に失敗しました");
       console.error(e);
-    } finally {
       setIsGenerating(false);
-      setShowGenerateConfirm(false);
     }
   };
 
@@ -129,7 +209,7 @@ export function AdminPage() {
             <Button
               variant="destructive"
               className="w-full justify-start"
-              onClick={() => setShowGenerateConfirm(true)}
+              onClick={() => handleOpenGenerateDialog()}
             >
               テストデータ生成（開発用）
             </Button>
@@ -192,8 +272,46 @@ export function AdminPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>テストデータを生成しますか？</AlertDialogTitle>
             <AlertDialogDescription>
-              既存のデータ（マスタ・在庫・受注など）は全て削除され、新しいテストデータで上書きされます。
-              この操作は取り消せません。
+              <div className="space-y-4 py-4">
+                {isGenerating ? (
+                  <div className="space-y-2">
+                    <Label>
+                      生成中... {progress}% ({progressMessage})
+                    </Label>
+                    <div className="h-2.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                      <div
+                        className="h-2.5 rounded-full bg-blue-600 transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      この処理には数分かかる場合があります。画面を閉じないでください。
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label>生成プリセット</Label>
+                      <Select value={selectedPresetId} onValueChange={setSelectedPresetId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="プリセットを選択" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {presets.map((preset) => (
+                            <SelectItem key={preset.id} value={preset.id}>
+                              {preset.id} - {preset.description}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <p>
+                      既存のデータ（マスタ・在庫・受注など）は全て削除され、新しいテストデータで上書きされます。
+                      この操作は取り消せません。
+                    </p>
+                  </>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

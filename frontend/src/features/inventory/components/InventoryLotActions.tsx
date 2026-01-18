@@ -15,7 +15,6 @@ interface InventoryLotActionsProps {
   onArchive?: (lot: LotUI) => void;
 }
 
-// eslint-disable-next-line max-lines-per-function
 export function InventoryLotActions({
   lot,
   warehouseNameFallback,
@@ -85,19 +84,16 @@ export function InventoryLotActions({
       >
         <Calendar className="h-4 w-4" />
       </Button>
-      {/* Archive Button (only for depleted or expired lots) */}
-      {(lot.status === "depleted" || lot.status === "expired") &&
-        parseDecimal(lot.current_quantity).eq(0) && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onArchive?.(lotWithWarehouseName)} // Optional chaining for safe call
-            title="アーカイブ"
-            className="h-7 w-7 p-0 text-gray-400 hover:text-red-500"
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
-        )}
+      {/* Archive Button - always visible, dialog handles confirmation for lots with quantity */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onArchive?.(lotWithWarehouseName)}
+        title="アーカイブ"
+        className="h-7 w-7 p-0 text-gray-400 hover:text-red-500"
+      >
+        <Archive className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

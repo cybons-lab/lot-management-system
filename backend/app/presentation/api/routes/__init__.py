@@ -70,6 +70,7 @@ from app.presentation.api.routes.rpa import (
     rpa_router,
     smartread_router,
 )
+from app.presentation.api.routes.system.calendar_router import router as calendar_router
 from app.presentation.api.routes.system.system_router import router as system_router
 from app.presentation.api.v2 import api_router as api_v2_router
 
@@ -128,6 +129,7 @@ def register_all_routers(app: FastAPI) -> None:
     # Auth & User management
     app.include_router(auth_router, prefix=f"{prefix}/auth")
     app.include_router(system_router, prefix=f"{prefix}/system")
+    app.include_router(calendar_router, prefix=prefix)
     app.include_router(users_router, prefix=prefix)
     app.include_router(roles_router, prefix=prefix)
     app.include_router(assignments_router, prefix=prefix)
@@ -198,6 +200,7 @@ __all__ = [
     "roles_router",
     "users_router",
     "test_data_router",
+    "calendar_router",
     "master_import_router",
     # Auth & System (2)
     "auth_router",

@@ -32,6 +32,11 @@ npm run typecheck
 # Lint (ESLint) の実行
 npm run lint
 
+# 型定義の更新と確認 (重要！バックエンドの変更を反映)
+npm run typegen:full
+# git diff で差分がないことを確認してください（差分があればコミットが必要です）
+
+
 # テストの実行（関連ファイルのみ実行する場合はこれ）
 npm test
 
@@ -64,8 +69,8 @@ uv run mypy app/
 
 // turbo
 ```bash
-# Frontend Format & Typecheck & Lint
-cd frontend && npm run format && npm run typecheck && npm run lint
+# Frontend Format & Typecheck & Lint & Typegen
+cd frontend && npm run format && npm run typegen:full && npm run typecheck && npm run lint
 
 # Backend Format & Lint & Typecheck
 cd backend && uv run ruff format --check app/ && uv run ruff check app/ && uv run mypy app/

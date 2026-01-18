@@ -19,6 +19,7 @@ def generate_withdrawals(
     customers: list[Customer],
     delivery_places: list[DeliveryPlace],
     options: object = None,
+    calendar: object = None,
 ):
     """Generate withdrawal history for some lots.
 
@@ -45,8 +46,13 @@ def generate_withdrawals(
         include_patterns = True
 
     if include_patterns:
-        _generate_withdrawals_from_patterns(db, lots, customers, delivery_places)
+        _generate_withdrawals_from_patterns(db, lots, customers, delivery_places, calendar)
         return
+
+    # Determine history length from options
+    history_months = 6
+    if options and hasattr(options, "history_months"):
+        history_months = options.history_months
 
     # Default random strategy
     # Select 90% of lots to have history
@@ -56,48 +62,47 @@ def generate_withdrawals(
     withdrawal_count = 0
 
     for lot in selected_lots:
-        # Create 1-4 withdrawals per lot
-        num_records = random.randint(1, 4)
+        # Determine number of withdrawals based on history length and randomness
+        # E.g., 3-10 per year per lot for small items, maybe more for active ones
+        # Use history_months to scale
 
-        for _ in range(num_records):
-            # If depleted/0 qty, we can still have history (it explains why it is 0)
-            # If active, we should check we don't withdraw more than available IF we update current_quantity
-            # However, for test data history generation (past events), we can assume they happened.
-            # But the current_quantity should reflect them.
-            # If current_quantity is already set by inventory strategy, we should be careful.
-            # Inventory strategy sets the *current* state.
-            # So withdrawal history generation should either:
-            # 1. Be "past" history that already resulted in the current state (complex to calc backwards)
-            # 2. Be "extra" history for depleted lots, or just records that don't affect current qty (if assumed already processed)
-            # 3. Or we subtract from current_qty.
+        # Base count: 0.5 to 2.0 per month
+        avg_per_month = random.uniform(0.5, 2.0)
+        num_records = int(avg_per_month * history_months)
+        if num_records < 1:
+            num_records = 1
 
-            # The previous implementation subtracted from lots.current_quantity (lines 78).
-            # This implies the inventory.py created the "start" quantity, and this reduces it.
-            # For "Depleted" lots created with 0 qty in inventory.py, we can't subtract.
-            # So for Depleted lots, we probably shouldn't create withdrawals that *reduce* quantity further (impossible).
-            # We can create withdrawals that *explain* the depletion if we started with >0.
-            # But here we assume the lot object has the Final state from inventory.py?
-            # Yes, db.commit() was called in inventory.py.
+        # Max cap to avoid too many DB records in huge tests unless stressed
+        if num_records > 50 and (not options or getattr(options, "scale", "small") != "large"):
+            num_records = 50
 
-            # Strategy: Only withdraw from lots that have quantity > 0.
-            # For depleted lots, we skip generating *reducing* withdrawals,
-            # OR we imply they were generated *after* depletion? No.
+        # Generate timestamps distributed over history_months
+        # Create a list of relative days ago
+        max_days = history_months * 30
+        days_ago_list = [random.randint(1, max_days) for _ in range(num_records)]
+        days_ago_list.sort(reverse=True)  # Oldest first
 
+        for days_ago in days_ago_list:
             if lot.current_quantity <= 0:
-                # If lot is depleted/0, maybe add a "history" record that brought it to 0?
-                # But we don't know the starting qty.
-                # Let's skip depletion logic complexity and just withdraw from active lots with > 0 qty.
                 break
 
             # Withdrawal type distribution
-            w_type = random.choices(list(WithdrawalType), weights=[20, 30, 20, 10, 15, 5], k=1)[0]
+            # Definition Order: ORDER_MANUAL, INTERNAL_USE, DISPOSAL, RETURN, SAMPLE, OTHER
+            # Target Dist: ORDER_MANUAL: 50%, INTERNAL: 20%, SAMPLE: 15%, Others: rest
+            w_type = random.choices(list(WithdrawalType), weights=[50, 20, 5, 5, 15, 5], k=1)[0]
 
-            # Determine quantity (10-30% of current or max 50)
-            max_w_qty = float(lot.current_quantity) * 0.5
+            # Determine quantity (2-10% of current limit)
+            # Small withdrawals to allow multiple history records
+            max_w_qty = float(lot.current_quantity) * 0.1
             if max_w_qty < 1.0:
-                max_w_qty = float(lot.current_quantity)  # Take all if small
+                max_w_qty = float(lot.current_quantity)  # Take all if small (depletes it)
 
-            qty = Decimal(str(round(random.uniform(1, max(1.1, max_w_qty)), 2)))
+            # Lower bound 1 or 0.1
+            min_qty = 1.0
+            if max_w_qty < 1.0:
+                min_qty = max_w_qty
+
+            qty = Decimal(str(round(random.uniform(min_qty, max_w_qty), 2)))
 
             if qty > lot.current_quantity:
                 qty = lot.current_quantity
@@ -115,10 +120,13 @@ def generate_withdrawals(
                 if dps:
                     delivery_place_id = random.choice(dps).id
 
-            ship_date = today - timedelta(days=random.randint(1, 60))
+            ship_date = today - timedelta(days=days_ago)
 
-            # 10% Cancellation chance
-            is_cancelled = random.random() < 0.1
+            if calendar and hasattr(calendar, "adjust_date"):
+                ship_date = calendar.adjust_date(ship_date)
+
+            # 5% Cancellation chance (reduced from 10%)
+            is_cancelled = random.random() < 0.05
             cancelled_at = None
             cancelled_by = None
             cancel_reason = None
@@ -127,10 +135,6 @@ def generate_withdrawals(
                 cancelled_at = datetime.utcnow()
                 cancelled_by = 1  # Admin
                 cancel_reason = "Test data cancellation"
-                # If cancelled, it technically returns to stock.
-                # So we shouldn't subtract from current_quantity IF it is cancelled.
-                # Or rather, we subtract, then add back?
-                # Simplest: If cancelled, do NOT subtract from current_quantity logic below.
 
             withdrawal = Withdrawal(
                 lot_id=lot.id,
@@ -139,7 +143,7 @@ def generate_withdrawals(
                 customer_id=customer_id,
                 delivery_place_id=delivery_place_id,
                 ship_date=ship_date,
-                due_date=ship_date,  # Uses ship_date as due_date for test data
+                due_date=ship_date,
                 reason=fake.sentence(nb_words=6),
                 reference_number=fake.bothify(text="REF-#####"),
                 withdrawn_at=datetime.combine(ship_date, datetime.min.time())
@@ -151,7 +155,7 @@ def generate_withdrawals(
             db.add(withdrawal)
             db.flush()  # Get ID
 
-            # Create Withdrawal Line (Required for demand estimation)
+            # Create Withdrawal Line
             line = WithdrawalLine(
                 withdrawal_id=withdrawal.id,
                 lot_receipt_id=lot.id,
@@ -162,11 +166,15 @@ def generate_withdrawals(
             # Update lot quantity (simulating manual withdrawal)
             if not is_cancelled:  # Only reduce if NOT cancelled
                 lot.consumed_quantity += qty
+                # Note: lot.current_quantity is a property (received - consumed - allocated)
+                # So updating consumed_quantity updates current_quantity.
 
             withdrawal_count += 1
 
     db.commit()
-    print(f"[INFO] Generated {withdrawal_count} withdrawal history records")
+    print(
+        f"[INFO] Generated {withdrawal_count} withdrawal history records over {history_months} months"
+    )
 
 
 def _generate_withdrawals_from_patterns(
@@ -174,6 +182,7 @@ def _generate_withdrawals_from_patterns(
     lots: list[LotReceipt],
     customers: list[Customer],
     delivery_places: list[DeliveryPlace],
+    calendar: object = None,
 ):
     """Generate withdrawals based on defined demand patterns."""
     # Group lots by product
@@ -209,6 +218,11 @@ def _generate_withdrawals_from_patterns(
             # Skip future dates (shouldn't happen with this logic)
             if current_date >= today:
                 continue
+
+            # Skip non-business days if calendar provided
+            if calendar and hasattr(calendar, "is_business_day"):
+                if not calendar.is_business_day(current_date):
+                    continue
 
             # Calculate demand for this day based on scenario
             qty = Decimal(str(daily_demand))

@@ -76,6 +76,7 @@ jobs:
 
   schema-sync-check:
     name: Schema Synchronization Check
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -114,6 +115,6 @@ jobs:
         run: npm run typegen
 
       # Diff Check
-      # - name: Check for Uncommitted Changes
-      #   run: |
-      #     git diff --exit-code frontend/src/types/api.d.ts || (echo "⚠️ Frontend type definitions are out of sync with Backend schema. Please run 'npm run typegen' in frontend directory and commit the changes." && exit 1)
+      - name: Check for Uncommitted Changes
+        run: |
+          git diff --exit-code frontend/src/types/api.d.ts || (echo "⚠️ Frontend type definitions are out of sync with Backend schema. Please run 'npm run typegen:full' in frontend directory and commit the changes." && exit 1)

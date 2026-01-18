@@ -71,6 +71,9 @@ export const ROUTES = {
     BULK_LOAD: "/masters/bulk-load",
   },
 
+  // Calendar
+  CALENDAR: "/calendar",
+
   // Settings - New (v2.2)
   SETTINGS: {
     USERS: "/settings/users",

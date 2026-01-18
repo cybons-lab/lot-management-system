@@ -18,6 +18,7 @@ import {
   HelpCircle,
   ChevronDown,
   Download,
+  Calendar,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -42,6 +43,7 @@ interface NavItem {
   color?: string;
   activeColor?: string;
   requireAdmin?: boolean;
+  requireRoles?: string[];
   subItems?: { title: string; href: string }[];
 }
 
@@ -97,6 +99,12 @@ const navItems: NavItem[] = [
     icon: Database,
   },
   {
+    title: "カレンダー",
+    href: ROUTES.CALENDAR,
+    icon: Calendar,
+    requireRoles: ["admin", "user"],
+  },
+  {
     title: "エクスポート",
     href: "/admin/export",
     icon: Download,
@@ -115,85 +123,99 @@ const navItems: NavItem[] = [
 
 // --- Sub-components ---
 
-function NavItems({ user, currentPath }: { currentPath: string; user: User | null }) {
+function NavItemDropdown({ item, currentPath }: { item: NavItem; currentPath: string }) {
+  const Icon = item.icon;
+  const isSubActive = item.subItems?.some(
+    (sub) => currentPath === sub.href || currentPath.startsWith(sub.href),
+  );
+
   return (
-    <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
-      {navItems
-        .filter((item) => !item.requireAdmin || user?.roles?.includes("admin"))
-        .map((item) => {
-          const Icon = item.icon;
-
-          if (item.subItems) {
-            const isSubActive = item.subItems.some(
-              (sub) => currentPath === sub.href || currentPath.startsWith(sub.href),
-            );
-
-            return (
-              <DropdownMenu key={item.title}>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 outline-none",
-                      isSubActive
-                        ? "bg-gray-100 text-gray-900"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                    )}
-                  >
-                    <Icon
-                      className={cn(
-                        "h-4 w-4 transition-colors",
-                        isSubActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
-                      )}
-                    />
-                    <span className="hidden lg:inline">{item.title}</span>
-                    <ChevronDown className="h-3 w-3 opacity-50" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48">
-                  {item.subItems.map((sub) => (
-                    <DropdownMenuItem key={sub.href} asChild>
-                      <Link
-                        to={sub.href}
-                        className={cn(
-                          "w-full cursor-pointer",
-                          currentPath === sub.href && "bg-gray-100 font-bold",
-                        )}
-                      >
-                        {sub.title}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            );
-          }
-
-          const isActive =
-            currentPath === item.href ||
-            (item.href !== "/dashboard" && item.href && currentPath.startsWith(item.href));
-
-          return (
+    <DropdownMenu key={item.title}>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200 outline-none",
+            isSubActive
+              ? "bg-gray-100 text-gray-900"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+          )}
+        >
+          <Icon
+            className={cn(
+              "h-4 w-4 transition-colors",
+              isSubActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
+            )}
+          />
+          <span className="hidden lg:inline">{item.title}</span>
+          <ChevronDown className="h-3 w-3 opacity-50" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-48">
+        {item.subItems?.map((sub) => (
+          <DropdownMenuItem key={sub.href} asChild>
             <Link
-              key={item.href}
-              to={item.href || "#"}
+              to={sub.href}
               className={cn(
-                "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200",
-                isActive
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                "w-full cursor-pointer",
+                currentPath === sub.href && "bg-gray-100 font-bold",
               )}
             >
-              <Icon
-                className={cn(
-                  "h-4 w-4 transition-colors",
-                  isActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
-                )}
-              />
-              <span className="hidden lg:inline">{item.title}</span>
+              {sub.title}
             </Link>
-          );
-        })}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function NavItemSingle({ item, currentPath }: { item: NavItem; currentPath: string }) {
+  const Icon = item.icon;
+  const isActive =
+    currentPath === item.href ||
+    (item.href !== "/dashboard" && item.href && currentPath.startsWith(item.href));
+
+  return (
+    <Link
+      to={item.href || "#"}
+      className={cn(
+        "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200",
+        isActive
+          ? "bg-gray-100 text-gray-900"
+          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+      )}
+    >
+      <Icon
+        className={cn(
+          "h-4 w-4 transition-colors",
+          isActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
+        )}
+      />
+      <span className="hidden lg:inline">{item.title}</span>
+    </Link>
+  );
+}
+
+function NavItems({ user, currentPath }: { currentPath: string; user: User | null }) {
+  const visibleItems = navItems.filter((item) => {
+    if (item.requireAdmin && !user?.roles?.includes("admin")) return false;
+    if (item.requireRoles && !item.requireRoles.some((role) => user?.roles?.includes(role))) {
+      return false;
+    }
+    return true;
+  });
+
+  return (
+    <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
+      {visibleItems.map((item) => {
+        if (item.subItems) {
+          return <NavItemDropdown key={item.title} item={item} currentPath={currentPath} />;
+        }
+        return (
+          <NavItemSingle key={item.title || item.href} item={item} currentPath={currentPath} />
+        );
+      })}
     </nav>
   );
 }

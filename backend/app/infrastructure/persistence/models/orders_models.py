@@ -170,6 +170,7 @@ from .base_model import Base
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .auth_models import User
+    from .lot_reservations_model import LotReservation
     from .masters_models import Customer, Product
     from .order_groups_models import OrderGroup
 
@@ -384,29 +385,17 @@ class OrderLine(Base):
     )
     product: Mapped[Product] = relationship("Product", back_populates="order_lines")
 
-    # P3: lot_reservations accessed via property to avoid complex primaryjoin
-    # NOTE: underscore prefix prevents Pydantic from_attributes from reading this
+    # P3: Relationship to LotReservation for efficient loading (avoid N+1)
+    lot_reservations: Mapped[list[LotReservation]] = relationship(
+        "LotReservation",
+        primaryjoin="and_(foreign(LotReservation.source_id) == OrderLine.id, LotReservation.source_type == 'order')",
+        viewonly=True,
+    )
+
     @property
     def _lot_reservations(self) -> list:
-        """Get lot reservations for this order line from the session."""
-        from sqlalchemy.orm import object_session
-
-        from app.infrastructure.persistence.models.lot_reservations_model import (
-            LotReservation,
-        )
-
-        session = object_session(self)
-        if session is None:
-            return []
-
-        return (
-            session.query(LotReservation)
-            .filter(
-                LotReservation.source_type == "order",
-                LotReservation.source_id == self.id,
-            )
-            .all()
-        )
+        """Deprecated: Use self.lot_reservations relationship instead."""
+        return self.lot_reservations
 
     @property
     def allocated_quantity(self) -> Decimal:
@@ -414,8 +403,9 @@ class OrderLine(Base):
 
         P3: lot_reservations is the single source of truth.
         """
-        reservations = self._lot_reservations
-        return sum((r.reserved_qty for r in reservations), Decimal("0"))
+        # If lot_reservations is eager loaded, this is fast.
+        # If not, it triggers 1 query (still better than manual session query inside loop if managed well)
+        return sum((r.reserved_qty for r in self.lot_reservations), Decimal("0"))
 
 
 # NOTE: Allocation class removed in P3.

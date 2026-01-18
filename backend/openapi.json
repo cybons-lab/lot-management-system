@@ -11182,7 +11182,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__presentation__schemas__auth__auth_schemas__UserResponse"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -11302,6 +11302,559 @@
             }
           }
         }
+      }
+    },
+    "/api/calendar/holidays": {
+      "get": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "List Holiday Calendars",
+        "operationId": "list_holiday_calendars_api_calendar_holidays_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HolidayCalendarResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Holiday Calendars Api Calendar Holidays Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Create Holiday Calendar",
+        "operationId": "create_holiday_calendar_api_calendar_holidays_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HolidayCalendarCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HolidayCalendarResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/calendar/holidays/{holiday_id}": {
+      "put": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Update Holiday Calendar",
+        "operationId": "update_holiday_calendar_api_calendar_holidays__holiday_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "holiday_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Holiday Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HolidayCalendarUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HolidayCalendarResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Delete Holiday Calendar",
+        "operationId": "delete_holiday_calendar_api_calendar_holidays__holiday_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "holiday_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Holiday Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/company-days": {
+      "get": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "List Company Calendar",
+        "operationId": "list_company_calendar_api_calendar_company_days_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CompanyCalendarResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Company Calendar Api Calendar Company Days Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Create Company Calendar",
+        "operationId": "create_company_calendar_api_calendar_company_days_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanyCalendarCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyCalendarResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/calendar/company-days/{company_calendar_id}": {
+      "put": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Update Company Calendar",
+        "operationId": "update_company_calendar_api_calendar_company_days__company_calendar_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_calendar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Company Calendar Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanyCalendarUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyCalendarResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Delete Company Calendar",
+        "operationId": "delete_company_calendar_api_calendar_company_days__company_calendar_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_calendar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Company Calendar Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/original-delivery-dates": {
+      "get": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "List Original Delivery Calendar",
+        "operationId": "list_original_delivery_calendar_api_calendar_original_delivery_dates_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OriginalDeliveryCalendarResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Original Delivery Calendar Api Calendar Original Delivery Dates Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Create Original Delivery Calendar",
+        "operationId": "create_original_delivery_calendar_api_calendar_original_delivery_dates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OriginalDeliveryCalendarCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OriginalDeliveryCalendarResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/calendar/original-delivery-dates/{delivery_calendar_id}": {
+      "put": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Update Original Delivery Calendar",
+        "operationId": "update_original_delivery_calendar_api_calendar_original_delivery_dates__delivery_calendar_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "delivery_calendar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Delivery Calendar Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OriginalDeliveryCalendarUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OriginalDeliveryCalendarResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Delete Original Delivery Calendar",
+        "operationId": "delete_original_delivery_calendar_api_calendar_original_delivery_dates__delivery_calendar_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "delivery_calendar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Delivery Calendar Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/business-day-calc": {
+      "post": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Calculate Business Day",
+        "operationId": "calculate_business_day_api_calendar_business_day_calc_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BusinessDayCalculationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessDayCalculationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/users/template/download": {
@@ -11474,7 +12027,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/UserResponse"
+                    "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
                   },
                   "title": "Response List Users Api Users Get"
                 }
@@ -11521,7 +12074,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
                 }
               }
             }
@@ -11625,7 +12178,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
                 }
               }
             }
@@ -12623,7 +13176,7 @@
     "/api/admin/test-data/generate": {
       "post": {
         "summary": "Generate Test Data Endpoint",
-        "description": "Generate test data for development.\n\nWARNING: This will DELETE all existing data in related tables.",
+        "description": "Generate test data in background.\n\nReturns a job_id to track progress.\nWARNING: This will DELETE all existing data in related tables.",
         "operationId": "generate_test_data_endpoint_api_admin_test_data_generate_post",
         "requestBody": {
           "content": {
@@ -12642,6 +13195,44 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/test-data/progress/{job_id}": {
+      "get": {
+        "summary": "Get Progress",
+        "description": "Get generation progress.",
+        "operationId": "get_progress_api_admin_test_data_progress__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -18014,6 +18605,78 @@
         "title": "BulkUpsertSummary",
         "description": "Bulk upsert summary statistics."
       },
+      "BusinessDayCalculationRequest": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "起算日"
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Days",
+            "description": "営業日数"
+          },
+          "direction": {
+            "type": "string",
+            "pattern": "^(after|before)$",
+            "title": "Direction",
+            "description": "after/before"
+          },
+          "include_start": {
+            "type": "boolean",
+            "title": "Include Start",
+            "description": "起算日を含める",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_date",
+          "days",
+          "direction"
+        ],
+        "title": "BusinessDayCalculationRequest",
+        "description": "Request for business day calculation."
+      },
+      "BusinessDayCalculationResponse": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "result_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Result Date"
+          },
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          },
+          "include_start": {
+            "type": "boolean",
+            "title": "Include Start"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_date",
+          "result_date",
+          "days",
+          "direction",
+          "include_start"
+        ],
+        "title": "BusinessDayCalculationResponse",
+        "description": "Response for business day calculation."
+      },
       "BusinessRuleCreate": {
         "properties": {
           "rule_code": {
@@ -18706,6 +19369,138 @@
         "type": "object",
         "title": "CloudFlowQueueStatus",
         "description": "現在のキュー状態."
+      },
+      "CompanyCalendarCreate": {
+        "properties": {
+          "calendar_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Calendar Date",
+            "description": "会社カレンダー日"
+          },
+          "is_workday": {
+            "type": "boolean",
+            "title": "Is Workday",
+            "description": "稼働日ならtrue、休日ならfalse"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          }
+        },
+        "type": "object",
+        "required": [
+          "calendar_date",
+          "is_workday"
+        ],
+        "title": "CompanyCalendarCreate",
+        "description": "Create request for company calendar."
+      },
+      "CompanyCalendarResponse": {
+        "properties": {
+          "calendar_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Calendar Date",
+            "description": "会社カレンダー日"
+          },
+          "is_workday": {
+            "type": "boolean",
+            "title": "Is Workday",
+            "description": "稼働日ならtrue、休日ならfalse"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "calendar_date",
+          "is_workday",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CompanyCalendarResponse",
+        "description": "Response schema for company calendar."
+      },
+      "CompanyCalendarUpdate": {
+        "properties": {
+          "calendar_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar Date",
+            "description": "会社カレンダー日"
+          },
+          "is_workday": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Workday",
+            "description": "稼働日ならtrue、休日ならfalse"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          }
+        },
+        "type": "object",
+        "title": "CompanyCalendarUpdate",
+        "description": "Update request for company calendar."
       },
       "ConfirmedOrderLineResponse": {
         "properties": {
@@ -21208,42 +22003,47 @@
       },
       "FilterOption": {
         "properties": {
-          "label": {
-            "type": "string",
-            "title": "Label"
+          "id": {
+            "type": "integer",
+            "title": "Id"
           },
-          "value": {
+          "code": {
             "type": "string",
-            "title": "Value"
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
           }
         },
         "type": "object",
         "required": [
-          "label",
-          "value"
+          "id",
+          "code",
+          "name"
         ],
         "title": "FilterOption",
-        "description": "フィルタ選択肢."
+        "description": "Filter option for dropdowns."
       },
       "FilterOptions": {
         "properties": {
           "products": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Products"
           },
           "suppliers": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Suppliers"
           },
           "warehouses": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Warehouses"
@@ -21964,6 +22764,17 @@
               }
             ],
             "title": "Base Date"
+          },
+          "history_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History Months"
           }
         },
         "type": "object",
@@ -22188,6 +22999,114 @@
         ],
         "title": "HardAllocationConfirmResponse",
         "description": "Hard allocation confirm response."
+      },
+      "HolidayCalendarCreate": {
+        "properties": {
+          "holiday_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Holiday Date",
+            "description": "祝日"
+          },
+          "holiday_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holiday Name",
+            "description": "祝日名"
+          }
+        },
+        "type": "object",
+        "required": [
+          "holiday_date"
+        ],
+        "title": "HolidayCalendarCreate",
+        "description": "Create request for holiday calendar."
+      },
+      "HolidayCalendarResponse": {
+        "properties": {
+          "holiday_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Holiday Date",
+            "description": "祝日"
+          },
+          "holiday_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holiday Name",
+            "description": "祝日名"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "holiday_date",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "HolidayCalendarResponse",
+        "description": "Response schema for holiday calendar."
+      },
+      "HolidayCalendarUpdate": {
+        "properties": {
+          "holiday_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holiday Date",
+            "description": "祝日"
+          },
+          "holiday_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holiday Name",
+            "description": "祝日名"
+          }
+        },
+        "type": "object",
+        "title": "HolidayCalendarUpdate",
+        "description": "Update request for holiday calendar."
       },
       "ImportResultDetail": {
         "properties": {
@@ -25102,21 +26021,21 @@
         "properties": {
           "users": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
             },
             "type": "array",
             "title": "Users"
           },
           "operation_types": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
             },
             "type": "array",
             "title": "Operation Types"
           },
           "target_tables": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
             },
             "type": "array",
             "title": "Target Tables"
@@ -26277,6 +27196,114 @@
         ],
         "title": "OrderWithLinesResponse",
         "description": "Order with lines response."
+      },
+      "OriginalDeliveryCalendarCreate": {
+        "properties": {
+          "delivery_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Delivery Date",
+            "description": "配信日"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          }
+        },
+        "type": "object",
+        "required": [
+          "delivery_date"
+        ],
+        "title": "OriginalDeliveryCalendarCreate",
+        "description": "Create request for original delivery calendar."
+      },
+      "OriginalDeliveryCalendarResponse": {
+        "properties": {
+          "delivery_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Delivery Date",
+            "description": "配信日"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "delivery_date",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OriginalDeliveryCalendarResponse",
+        "description": "Response schema for original delivery calendar."
+      },
+      "OriginalDeliveryCalendarUpdate": {
+        "properties": {
+          "delivery_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Date",
+            "description": "配信日"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          }
+        },
+        "type": "object",
+        "title": "OriginalDeliveryCalendarUpdate",
+        "description": "Update request for original delivery calendar."
       },
       "ProductBulkRow": {
         "properties": {
@@ -29760,7 +30787,7 @@
             "default": "bearer"
           },
           "user": {
-            "$ref": "#/components/schemas/app__presentation__schemas__auth__auth_schemas__UserResponse"
+            "$ref": "#/components/schemas/UserResponse"
           }
         },
         "type": "object",
@@ -30031,71 +31058,41 @@
       },
       "UserResponse": {
         "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "username": {
             "type": "string",
-            "maxLength": 50,
-            "minLength": 3,
-            "title": "Username",
-            "description": "ユーザー名"
-          },
-          "email": {
-            "type": "string",
-            "maxLength": 255,
-            "format": "email",
-            "title": "Email",
-            "description": "メールアドレス"
+            "title": "Username"
           },
           "display_name": {
             "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Display Name",
-            "description": "表示名"
+            "title": "Display Name"
           },
-          "is_active": {
-            "type": "boolean",
-            "title": "Is Active",
-            "description": "有効フラグ",
-            "default": true
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles"
           },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id"
-          },
-          "last_login_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Login At"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
+          "assignments": {
+            "items": {
+              "$ref": "#/components/schemas/UserAssignmentSchema"
+            },
+            "type": "array",
+            "title": "Assignments"
           }
         },
         "type": "object",
         "required": [
+          "id",
           "username",
-          "email",
-          "display_name",
-          "user_id",
-          "created_at",
-          "updated_at"
+          "display_name"
         ],
         "title": "UserResponse",
-        "description": "Schema for user response (DDL: users)."
+        "description": "User response schema."
       },
       "UserRoleAssignment": {
         "properties": {
@@ -31357,67 +32354,92 @@
         "title": "WithdrawalType",
         "description": "出庫タイプ."
       },
-      "app__presentation__schemas__auth__auth_schemas__UserResponse": {
+      "app__presentation__schemas__system__operation_logs_schema__FilterOption": {
         "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
+          "label": {
+            "type": "string",
+            "title": "Label"
           },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "FilterOption",
+        "description": "フィルタ選択肢."
+      },
+      "app__presentation__schemas__system__users_schema__UserResponse": {
+        "properties": {
           "username": {
             "type": "string",
-            "title": "Username"
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
+            "description": "ユーザー名"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email",
+            "title": "Email",
+            "description": "メールアドレス"
           },
           "display_name": {
             "type": "string",
-            "title": "Display Name"
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Display Name",
+            "description": "表示名"
           },
-          "roles": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Roles"
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "有効フラグ",
+            "default": true
           },
-          "assignments": {
-            "items": {
-              "$ref": "#/components/schemas/UserAssignmentSchema"
-            },
-            "type": "array",
-            "title": "Assignments"
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           }
         },
         "type": "object",
         "required": [
-          "id",
           "username",
-          "display_name"
+          "email",
+          "display_name",
+          "user_id",
+          "created_at",
+          "updated_at"
         ],
         "title": "UserResponse",
-        "description": "User response schema."
-      },
-      "app__presentation__schemas__inventory__inventory_schema__FilterOption": {
-        "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "code": {
-            "type": "string",
-            "title": "Code"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "code",
-          "name"
-        ],
-        "title": "FilterOption",
-        "description": "Filter option for dropdowns."
+        "description": "Schema for user response (DDL: users)."
       }
     },
     "securitySchemes": {

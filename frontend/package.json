@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typegen:curl": "curl -s http://localhost:8000/api/openapi.json -o ../backend/openapi.json && npm run typegen",
+    "typegen:full": "(cd ../backend && uv run python scripts/export_openapi.py) && npm run typegen",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typegen": "openapi-typescript ../backend/openapi.json -o src/types/api.d.ts && prettier --write src/types/api.d.ts",
     "doc:fe": "typedoc --options typedoc.json",
@@ -20,7 +21,13 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:smoke": "playwright test --project=smoke",
+    "test:e2e:headed": "playwright test --project=chromium --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "PWDEBUG=1 playwright test --project=chromium",
+    "test:ci": "npm run test:run && npm run test:e2e:smoke"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
