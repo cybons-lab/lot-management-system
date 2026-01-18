@@ -1,10 +1,16 @@
-import { useAtom } from "jotai";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 
-import { useLotDataProcessing } from "@/features/inventory/hooks/useLotDataProcessing";
 import { useLotMutations } from "@/features/inventory/hooks/useLotMutations";
 import { lotFiltersAtom, lotTableSettingsAtom } from "@/features/inventory/state";
-import { useLotsQuery } from "@/hooks/api";
+import {
+  inventoryLotsGroupedAtom,
+  inventoryLotsQueryParamsAtom,
+  inventoryLotsRawDataAtom,
+  inventoryLotsRawLoadableAtom,
+  inventoryLotsSortedAtom,
+} from "@/features/inventory/state/atoms";
 import { useDebounce } from "@/hooks/ui/useDebounce";
 
 /**
@@ -13,10 +19,16 @@ import { useDebounce } from "@/hooks/ui/useDebounce";
 export function useLotListLogic() {
   const [filters, setFilters] = useAtom(lotFiltersAtom);
   const [tableSettings, setTableSettings] = useAtom(lotTableSettingsAtom);
+  const lotsQueryParams = useAtomValue(inventoryLotsQueryParamsAtom);
+  const lotsLoadable = useAtomValue(inventoryLotsRawLoadableAtom);
+  const allLots = useAtomValue(inventoryLotsRawDataAtom);
+  const sortedLots = useAtomValue(inventoryLotsSortedAtom);
+  const groupedLots = useAtomValue(inventoryLotsGroupedAtom);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState(filters.search ?? "");
   const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (debouncedSearchTerm !== filters.search) {
@@ -25,23 +37,9 @@ export function useLotListLogic() {
     }
   }, [debouncedSearchTerm, filters.search, setFilters, setTableSettings]);
 
-  const {
-    data: allLots = [],
-    isLoading,
-    error,
-    refetch,
-  } = useLotsQuery({
-    with_stock: filters.inStockOnly || undefined,
-    product_code: filters.productCode ?? undefined,
-    delivery_place_code: filters.warehouseCode ?? undefined,
-  });
-
   const mutations = useLotMutations(allLots);
-  const { sortedLots, groupedLots } = useLotDataProcessing(
-    allLots,
-    filters.search ?? "",
-    tableSettings,
-  );
+  const isLoading = lotsLoadable.state === "loading";
+  const error = lotsLoadable.state === "hasError" ? lotsLoadable.error : null;
 
   const handleFilterChange = useCallback(
     (key: string, value: unknown) => {
@@ -62,6 +60,10 @@ export function useLotListLogic() {
     });
     setTableSettings({ ...tableSettings, page: 0 });
   }, [tableSettings, setFilters, setTableSettings]);
+
+  const refetch = useCallback(async () => {
+    await queryClient.refetchQueries({ queryKey: ["lots", lotsQueryParams] });
+  }, [queryClient, lotsQueryParams]);
 
   return {
     filters,
