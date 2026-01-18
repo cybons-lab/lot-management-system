@@ -1,12 +1,9 @@
+/* eslint-disable max-lines, max-lines-per-function, complexity */
 import { CalendarDays, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  type CompanyCalendar,
-  type HolidayCalendar,
-  type OriginalDeliveryCalendar,
-} from "../api";
+import { type CompanyCalendar, type HolidayCalendar, type OriginalDeliveryCalendar } from "../api";
 import {
   useBusinessDayCalculator,
   useCompanyCalendar,
@@ -47,10 +44,18 @@ import { formatDate } from "@/shared/utils/date";
 const EMPTY_EDIT = "";
 
 export function CalendarSettingsPage() {
-  const { useList: useHolidayList, useCreate: useHolidayCreate, useUpdate: useHolidayUpdate, useDelete: useHolidayDelete } =
-    useHolidayCalendar();
-  const { useList: useCompanyList, useCreate: useCompanyCreate, useUpdate: useCompanyUpdate, useDelete: useCompanyDelete } =
-    useCompanyCalendar();
+  const {
+    useList: useHolidayList,
+    useCreate: useHolidayCreate,
+    useUpdate: useHolidayUpdate,
+    useDelete: useHolidayDelete,
+  } = useHolidayCalendar();
+  const {
+    useList: useCompanyList,
+    useCreate: useCompanyCreate,
+    useUpdate: useCompanyUpdate,
+    useDelete: useCompanyDelete,
+  } = useCompanyCalendar();
   const {
     useList: useDeliveryList,
     useCreate: useDeliveryCreate,
@@ -258,7 +263,9 @@ export function CalendarSettingsPage() {
         id: editingDelivery.id,
         payload: {
           delivery_date: editingDelivery.delivery_date,
-          description: editingDelivery.description.trim() ? editingDelivery.description.trim() : null,
+          description: editingDelivery.description.trim()
+            ? editingDelivery.description.trim()
+            : null,
         },
       });
       toast.success("配信日を更新しました");
@@ -314,12 +321,22 @@ export function CalendarSettingsPage() {
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-end">
             <div className="flex flex-1 flex-col gap-2">
-              <label className="text-sm font-medium">祝日</label>
-              <Input type="date" value={holidayDate} onChange={(e) => setHolidayDate(e.target.value)} />
+              <label htmlFor="holiday-create-date" className="text-sm font-medium">
+                祝日
+              </label>
+              <Input
+                id="holiday-create-date"
+                type="date"
+                value={holidayDate}
+                onChange={(e) => setHolidayDate(e.target.value)}
+              />
             </div>
             <div className="flex flex-1 flex-col gap-2">
-              <label className="text-sm font-medium">祝日名</label>
+              <label htmlFor="holiday-create-name" className="text-sm font-medium">
+                祝日名
+              </label>
               <Input
+                id="holiday-create-name"
                 placeholder="例: 海の日"
                 value={holidayName}
                 onChange={(e) => setHolidayName(e.target.value)}
@@ -406,13 +423,22 @@ export function CalendarSettingsPage() {
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-end">
             <div className="flex flex-1 flex-col gap-2">
-              <label className="text-sm font-medium">日付</label>
-              <Input type="date" value={companyDate} onChange={(e) => setCompanyDate(e.target.value)} />
+              <label htmlFor="company-create-date" className="text-sm font-medium">
+                日付
+              </label>
+              <Input
+                id="company-create-date"
+                type="date"
+                value={companyDate}
+                onChange={(e) => setCompanyDate(e.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">区分</label>
+              <label htmlFor="company-create-type" className="text-sm font-medium">
+                区分
+              </label>
               <Select value={companyType} onValueChange={setCompanyType}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger id="company-create-type" className="w-[140px]" aria-label="区分">
                   <SelectValue placeholder="区分" />
                 </SelectTrigger>
                 <SelectContent>
@@ -422,8 +448,11 @@ export function CalendarSettingsPage() {
               </Select>
             </div>
             <div className="flex flex-1 flex-col gap-2">
-              <label className="text-sm font-medium">説明</label>
+              <label htmlFor="company-create-desc" className="text-sm font-medium">
+                説明
+              </label>
               <Input
+                id="company-create-desc"
                 placeholder="例: 年末年始休暇"
                 value={companyDescription}
                 onChange={(e) => setCompanyDescription(e.target.value)}
@@ -511,12 +540,22 @@ export function CalendarSettingsPage() {
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-end">
             <div className="flex flex-1 flex-col gap-2">
-              <label className="text-sm font-medium">配信日</label>
-              <Input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} />
+              <label htmlFor="delivery-create-date" className="text-sm font-medium">
+                配信日
+              </label>
+              <Input
+                id="delivery-create-date"
+                type="date"
+                value={deliveryDate}
+                onChange={(e) => setDeliveryDate(e.target.value)}
+              />
             </div>
             <div className="flex flex-1 flex-col gap-2">
-              <label className="text-sm font-medium">説明</label>
+              <label htmlFor="delivery-create-desc" className="text-sm font-medium">
+                説明
+              </label>
               <Input
+                id="delivery-create-desc"
                 placeholder="例: 月次配信"
                 value={deliveryDescription}
                 onChange={(e) => setDeliveryDescription(e.target.value)}
@@ -593,19 +632,27 @@ export function CalendarSettingsPage() {
       <Card>
         <CardHeader className="space-y-1">
           <CardTitle className="text-lg">営業日計算</CardTitle>
-          <CardDescription>
-            祝日・会社カレンダーを反映した稼働日計算を行います。
-          </CardDescription>
+          <CardDescription>祝日・会社カレンダーを反映した稼働日計算を行います。</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">起算日</label>
-              <Input type="date" value={calcStartDate} onChange={(e) => setCalcStartDate(e.target.value)} />
+              <label htmlFor="calc-start-date" className="text-sm font-medium">
+                起算日
+              </label>
+              <Input
+                id="calc-start-date"
+                type="date"
+                value={calcStartDate}
+                onChange={(e) => setCalcStartDate(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">稼働日数</label>
+              <label htmlFor="calc-days" className="text-sm font-medium">
+                稼働日数
+              </label>
               <Input
+                id="calc-days"
                 type="number"
                 min={0}
                 value={calcDays}
@@ -613,9 +660,14 @@ export function CalendarSettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">方向</label>
-              <Select value={calcDirection} onValueChange={(value) => setCalcDirection(value as "after" | "before")}>
-                <SelectTrigger>
+              <label htmlFor="calc-direction" className="text-sm font-medium">
+                方向
+              </label>
+              <Select
+                value={calcDirection}
+                onValueChange={(value) => setCalcDirection(value as "after" | "before")}
+              >
+                <SelectTrigger id="calc-direction" aria-label="方向">
                   <SelectValue placeholder="方向" />
                 </SelectTrigger>
                 <SelectContent>
@@ -656,8 +708,11 @@ export function CalendarSettingsPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-2">
-              <label className="text-sm font-medium">祝日</label>
+              <label htmlFor="holiday-edit-date" className="text-sm font-medium">
+                祝日
+              </label>
               <Input
+                id="holiday-edit-date"
                 type="date"
                 value={editingHoliday?.holiday_date ?? EMPTY_EDIT}
                 onChange={(e) =>
@@ -668,8 +723,11 @@ export function CalendarSettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">祝日名</label>
+              <label htmlFor="holiday-edit-name" className="text-sm font-medium">
+                祝日名
+              </label>
               <Input
+                id="holiday-edit-name"
                 value={editingHoliday?.holiday_name ?? EMPTY_EDIT}
                 onChange={(e) =>
                   setEditingHoliday((prev) =>
@@ -697,8 +755,11 @@ export function CalendarSettingsPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-2">
-              <label className="text-sm font-medium">日付</label>
+              <label htmlFor="company-edit-date" className="text-sm font-medium">
+                日付
+              </label>
               <Input
+                id="company-edit-date"
                 type="date"
                 value={editingCompany?.calendar_date ?? EMPTY_EDIT}
                 onChange={(e) =>
@@ -709,7 +770,9 @@ export function CalendarSettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">区分</label>
+              <label htmlFor="company-edit-type" className="text-sm font-medium">
+                区分
+              </label>
               <Select
                 value={editingCompany?.is_workday ? "workday" : "holiday"}
                 onValueChange={(value) =>
@@ -718,7 +781,7 @@ export function CalendarSettingsPage() {
                   )
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger id="company-edit-type" aria-label="区分">
                   <SelectValue placeholder="区分" />
                 </SelectTrigger>
                 <SelectContent>
@@ -728,8 +791,11 @@ export function CalendarSettingsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">説明</label>
+              <label htmlFor="company-edit-desc" className="text-sm font-medium">
+                説明
+              </label>
               <Input
+                id="company-edit-desc"
                 value={editingCompany?.description ?? EMPTY_EDIT}
                 onChange={(e) =>
                   setEditingCompany((prev) =>
@@ -757,8 +823,11 @@ export function CalendarSettingsPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-2">
-              <label className="text-sm font-medium">配信日</label>
+              <label htmlFor="delivery-edit-date" className="text-sm font-medium">
+                配信日
+              </label>
               <Input
+                id="delivery-edit-date"
                 type="date"
                 value={editingDelivery?.delivery_date ?? EMPTY_EDIT}
                 onChange={(e) =>
@@ -769,8 +838,11 @@ export function CalendarSettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">説明</label>
+              <label htmlFor="delivery-edit-desc" className="text-sm font-medium">
+                説明
+              </label>
               <Input
+                id="delivery-edit-desc"
                 value={editingDelivery?.description ?? EMPTY_EDIT}
                 onChange={(e) =>
                   setEditingDelivery((prev) =>

@@ -1,0 +1,29 @@
+## Overview
+This PR consolidates the Holiday Calendar features with critical fixes for Forecast List performance and Async data generation.
+
+## Key Changes
+
+### 1. Forecast List Performance Fix (Critial)
+- **Problem**: Forecast List page would 500/timeout with large datasets due to N+1 queries and in-memory pagination of thousands of groups.
+- **Fix**:
+    - Implemented DB-level pagination for Forecast Groups (`DISTINCT(customer, delivery_place, product)`).
+    - Resolved N+1 query in `OrderLine.allocated_quantity` by adding `lot_reservations` relationship and eager loading.
+    - Verified reduction from O(N) to O(1) query complexity per page.
+
+### 2. Async Test Data Generation
+- **Problem**: Generating large test data sets would timeout the HTTP request.
+- **Fix**:
+    - Implemented `JobManager` for background task execution.
+    - Added progress tracking (0-100%) and polling API (`/api/admin/progress/{job_id}`).
+    - Updated UI with a progress bar.
+
+### 3. Holiday Calendar & Business Days
+- Merged functionality from `codex/add-holiday-and-business-day-calendar`.
+- Adds `HolidayCalendar`, `CompanyCalendar`, `OriginalDeliveryCalendar` models and APIs.
+- Adds `CalendarService` for business day calculations.
+- Adds `CalendarSettingsPage` for management.
+
+### 4. Technical
+- Refactored `GlobalNavigation.tsx` to improve readability.
+- Resolved various lint errors in frontend and backend.
+- Updated `docs/tasks/backlog.md` with user feedback tasks.

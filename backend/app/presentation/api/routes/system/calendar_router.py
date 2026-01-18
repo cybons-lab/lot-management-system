@@ -155,9 +155,7 @@ def delete_original_delivery_calendar(
     return None
 
 
-@router.post(
-    "/calendar/business-day-calc", response_model=BusinessDayCalculationResponse
-)
+@router.post("/calendar/business-day-calc", response_model=BusinessDayCalculationResponse)
 def calculate_business_day(
     payload: BusinessDayCalculationRequest,
     _: User = Depends(get_current_user_or_above),
