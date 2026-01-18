@@ -96,7 +96,7 @@ class TestDataOrchestrator:
             for p in PRESETS.values()
         ]
 
-    def generate(self, db: Session, options_dict: dict):
+    def generate(self, db: Session, options_dict: dict, progress_callback=None):
         """Execute generation."""
         # 1. オプション解析
         preset_id = options_dict.get("preset_id", "quick")
@@ -121,7 +121,7 @@ class TestDataOrchestrator:
         # または、Global Context にセットするか (あまり良くない)
         # ここでは generate_all_test_data のシグネチャを変えて渡す
         logger.info(f"Starting test data generation with options: {options}")
-        generate_all_test_data(db, options=options)
+        generate_all_test_data(db, options=options, progress_callback=progress_callback)
         logger.info("Test data generation completed.")
 
     def _check_safety(self, db: Session):

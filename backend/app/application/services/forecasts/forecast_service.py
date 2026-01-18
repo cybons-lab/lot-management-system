@@ -135,7 +135,7 @@ from collections import defaultdict
 from decimal import Decimal
 from typing import cast
 
-from sqlalchemy import and_
+from sqlalchemy import and_, tuple_
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
@@ -203,24 +203,59 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         """Get current forecasts grouped by customer × delivery_place ×
         product.
         """
-        query = self.db.query(ForecastCurrent).options(
-            joinedload(ForecastCurrent.customer),
-            joinedload(ForecastCurrent.delivery_place),
-            joinedload(ForecastCurrent.product),
-        )
-
-        if customer_id is not None:
-            query = query.filter(ForecastCurrent.customer_id == customer_id)
-        if delivery_place_id is not None:
-            query = query.filter(ForecastCurrent.delivery_place_id == delivery_place_id)
-        if product_id is not None:
-            query = query.filter(ForecastCurrent.product_id == product_id)
-
-        query = query.order_by(
+        # Step 1: Query unique groups (paginated) to limit data volume
+        groups_query = self.db.query(
             ForecastCurrent.customer_id,
             ForecastCurrent.delivery_place_id,
             ForecastCurrent.product_id,
-            ForecastCurrent.forecast_date,
+        ).distinct()
+
+        if customer_id is not None:
+            groups_query = groups_query.filter(ForecastCurrent.customer_id == customer_id)
+        if delivery_place_id is not None:
+            groups_query = groups_query.filter(
+                ForecastCurrent.delivery_place_id == delivery_place_id
+            )
+        if product_id is not None:
+            groups_query = groups_query.filter(ForecastCurrent.product_id == product_id)
+
+        # Sort for consistent pagination (essential for deterministic limit/offset)
+        groups_query = groups_query.order_by(
+            ForecastCurrent.customer_id,
+            ForecastCurrent.delivery_place_id,
+            ForecastCurrent.product_id,
+        )
+
+        total_groups = groups_query.count()
+
+        # Paginate groups
+        unique_groups = groups_query.offset(skip).limit(limit).all()
+
+        if not unique_groups:
+            return ForecastListResponse(items=[], total=total_groups)
+
+        # Step 2: Fetch forecasts matching these groups only
+        # Use simple IN check assuming DB supports tuple IN or construct OR
+        filters = tuple_(
+            ForecastCurrent.customer_id,
+            ForecastCurrent.delivery_place_id,
+            ForecastCurrent.product_id,
+        ).in_(unique_groups)
+
+        query = (
+            self.db.query(ForecastCurrent)
+            .options(
+                joinedload(ForecastCurrent.customer),
+                joinedload(ForecastCurrent.delivery_place),
+                joinedload(ForecastCurrent.product),
+            )
+            .filter(filters)
+            .order_by(
+                ForecastCurrent.customer_id,
+                ForecastCurrent.delivery_place_id,
+                ForecastCurrent.product_id,
+                ForecastCurrent.forecast_date,
+            )
         )
 
         forecasts = query.all()
@@ -233,7 +268,12 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
 
         # Build response
         items: list[ForecastGroupResponse] = []
-        for (cust_id, dp_id, prod_id), forecast_list in grouped.items():
+
+        # Iterate over paginated unique groups to preserve order
+        for group_tuple in unique_groups:
+            cust_id, dp_id, prod_id = group_tuple
+            forecast_list = grouped.get((cust_id, dp_id, prod_id))
+
             if not forecast_list:
                 continue
 
@@ -274,6 +314,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             ]
 
             # Fetch related orders for this group (FORECAST_LINKED only)
+            # Since unique_groups is limited to 100, this loop runs max 100 times.
             related_orders_query = (
                 self.db.query(Order)
                 .join(OrderLine)
@@ -282,13 +323,13 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                         Order.customer_id == cust_id,
                         OrderLine.product_id == prod_id,
                         OrderLine.delivery_place_id == dp_id,
-                        OrderLine.order_type == "FORECAST_LINKED",  # 仮受注のみ
-                        Order.status != "closed",  # 完了済みは除外
+                        OrderLine.order_type == "FORECAST_LINKED",
+                        Order.status != "closed",
                     )
                 )
                 .options(
                     joinedload(Order.order_lines).selectinload(OrderLine.product),
-                    # Note: allocations removed in P3 migration - now using lot_reservations
+                    joinedload(Order.order_lines).selectinload(OrderLine.lot_reservations),
                     joinedload(Order.customer),
                 )
                 .distinct()
@@ -317,11 +358,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                 )
             )
 
-        # Apply pagination
-        total = len(items)
-        paginated_items = items[skip : skip + limit]
-
-        return ForecastListResponse(items=paginated_items, total=total)
+        return ForecastListResponse(items=items, total=total_groups)
 
     def get_forecast_by_id(self, forecast_id: int) -> ForecastResponse | None:
         """Get single forecast entry by ID."""

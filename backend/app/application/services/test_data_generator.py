@@ -42,7 +42,7 @@ __all__ = [
 ]
 
 
-def generate_all_test_data(db: Session, options: object = None):
+def generate_all_test_data(db: Session, options: object = None, progress_callback=None):
     # options: GenerateOptions (avoid circular import type hint if needed, or use object)
     if options is None:
         # Default fallback
@@ -51,7 +51,12 @@ def generate_all_test_data(db: Session, options: object = None):
         options = GenerateOptions()
 
     try:
+        if progress_callback:
+            progress_callback(5, "Clearing old data...")
         clear_data(db)
+
+        if progress_callback:
+            progress_callback(10, "Generating Calendar data...")
 
         # Step 0: Generate Calendar Data
         generate_calendars(db, options)
@@ -60,6 +65,8 @@ def generate_all_test_data(db: Session, options: object = None):
         # Initialize Wrapper
         calendar = TestDataCalendar(db)
 
+        if progress_callback:
+            progress_callback(15, "Generating Masters (Warehouses, Suppliers, Customers, Items)...")
         warehouses = generate_warehouses(db, options)
         suppliers = generate_suppliers(db, options)
         customers, delivery_places = generate_customers_and_delivery_places(db, options)
@@ -68,30 +75,44 @@ def generate_all_test_data(db: Session, options: object = None):
         generate_customer_items(db, customers, products, suppliers, delivery_places, options)
 
         # Step 1: Generate forecasts and get totals
+        if progress_callback:
+            progress_callback(30, "Generating Forecasts...")
         products_with_forecast, forecast_totals = generate_forecasts(
             db, customers, products, delivery_places
         )
 
         # Step 2: Generate lots based on forecast totals
+        if progress_callback:
+            progress_callback(40, "Generating Inventory Lots...")
         generate_lots(db, products, warehouses, suppliers, forecast_totals)
 
         # Step 2.5: Generate inventory scenarios for UI/testing
         generate_inventory_scenarios(db)
 
         # Step 3: Generate reservations (requires lots to exist)
+        if progress_callback:
+            progress_callback(50, "Generating Reservations...")
         generate_reservations(db)
 
         # Step 4: Generate orders (diverse types + reservations)
+        if progress_callback:
+            progress_callback(60, "Generating Orders (this may take a while)...")
         generate_orders(
             db, customers, products, products_with_forecast, delivery_places, options, calendar
         )
 
         # Step 5: Generate withdrawal history (requires lots and customers)
+        if progress_callback:
+            progress_callback(80, "Generating Withdrawal History...")
         generate_withdrawals(db, customers, delivery_places, options, calendar)
 
         # Step 6: Generate inbound plans and link past plans to lots
+        if progress_callback:
+            progress_callback(90, "Generating Inbound Plans...")
         generate_inbound_plans(db, products, suppliers, options, calendar)
 
+        if progress_callback:
+            progress_callback(100, "Completed!")
         return True
     except Exception as e:
         db.rollback()

@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
+from app.application.services.job_manager import job_manager
 from app.application.services.test_data.orchestrator import TestDataOrchestrator
-from app.presentation.api.deps import get_db
+from app.core.database import SessionLocal
 
 
 router = APIRouter()
@@ -29,31 +29,57 @@ def get_presets():
 
 @router.post("/generate")
 def generate_test_data_endpoint(
-    request: GenerateRequest | None = None, db: Session = Depends(get_db)
+    background_tasks: BackgroundTasks,
+    request: GenerateRequest | None = None,
 ):
-    """Generate test data for development.
+    """Generate test data in background.
 
+    Returns a job_id to track progress.
     WARNING: This will DELETE all existing data in related tables.
     """
     try:
         if request is None:
             request = GenerateRequest()
 
-        # Pydantic model to dict, filtering None to allow defaults in logic
         options_dict = request.dict(exclude_unset=True)
-        orchestrator.generate(db, options_dict)
+        job_id = job_manager.create_job()
+
+        def run_generation():
+            def cb(p, m):
+                job_manager.update_job(job_id, progress=p, message=m)
+
+            try:
+                # Use a new session for background task
+                with SessionLocal() as session:
+                    orchestrator.generate(session, options_dict, progress_callback=cb)
+
+                job_manager.update_job(
+                    job_id, status="completed", progress=100, message="Completed"
+                )
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Test data generation failed: {e}")
+                job_manager.update_job(job_id, status="failed", error=str(e))
+
+        background_tasks.add_task(run_generation)
+
         return {
             "success": True,
-            "message": "Test data generated successfully",
+            "message": "Test data generation started in background",
+            "job_id": job_id,
             "options": options_dict,
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
-        # Safety check failed
         raise HTTPException(status_code=403, detail=str(e))
-    except Exception as e:
-        import logging
 
-        logging.getLogger(__name__).exception(f"Test data generation failed: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error during data generation")
+
+@router.get("/progress/{job_id}")
+def get_progress(job_id: str):
+    """Get generation progress."""
+    job = job_manager.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job

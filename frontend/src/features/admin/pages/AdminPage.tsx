@@ -43,6 +43,8 @@ export function AdminPage() {
   const [isResetting, setIsResetting] = useState(false);
   const [isInventorySyncing, setIsInventorySyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<InventorySyncResult | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState("");
 
   // Test Data Generation State
   const [presets, setPresets] = useState<
@@ -82,17 +84,51 @@ export function AdminPage() {
 
   const handleGenerateTestData = async () => {
     setIsGenerating(true);
+    setProgress(0);
+    setProgressMessage("リクエスト送信中...");
+
     try {
-      await http.post("admin/test-data/generate", {
+      const res = await http.post<{ job_id: string }>("admin/test-data/generate", {
         preset_id: selectedPresetId,
       });
-      toast.success("テストデータを生成しました");
+
+      const jobId = res.job_id;
+
+      const poll = async () => {
+        try {
+          const job = await http.get<{
+            status: string;
+            progress: number;
+            message: string;
+            error?: string;
+          }>(`admin/test-data/progress/${jobId}`);
+          setProgress(job.progress);
+          setProgressMessage(job.message || "処理中...");
+
+          if (job.status === "completed") {
+            toast.success("テストデータを生成しました");
+            setIsGenerating(false);
+            setShowGenerateConfirm(false);
+          } else if (job.status === "failed") {
+            toast.error(`生成に失敗しました: ${job.error}`);
+            setIsGenerating(false);
+          } else {
+            // Continue polling
+            setTimeout(poll, 1000);
+          }
+        } catch (e) {
+          console.error("Polling failed", e);
+          toast.error("進捗確認に失敗しました");
+          setIsGenerating(false);
+        }
+      };
+
+      // Start polling
+      poll();
     } catch (e) {
-      toast.error("テストデータ生成に失敗しました");
+      toast.error("データ生成の開始に失敗しました");
       console.error(e);
-    } finally {
       setIsGenerating(false);
-      setShowGenerateConfirm(false);
     }
   };
 
@@ -237,25 +273,44 @@ export function AdminPage() {
             <AlertDialogTitle>テストデータを生成しますか？</AlertDialogTitle>
             <AlertDialogDescription>
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>生成プリセット</Label>
-                  <Select value={selectedPresetId} onValueChange={setSelectedPresetId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="プリセットを選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {presets.map((preset) => (
-                        <SelectItem key={preset.id} value={preset.id}>
-                          {preset.id} - {preset.description}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <p>
-                  既存のデータ（マスタ・在庫・受注など）は全て削除され、新しいテストデータで上書きされます。
-                  この操作は取り消せません。
-                </p>
+                {isGenerating ? (
+                  <div className="space-y-2">
+                    <Label>
+                      生成中... {progress}% ({progressMessage})
+                    </Label>
+                    <div className="h-2.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                      <div
+                        className="h-2.5 rounded-full bg-blue-600 transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      この処理には数分かかる場合があります。画面を閉じないでください。
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label>生成プリセット</Label>
+                      <Select value={selectedPresetId} onValueChange={setSelectedPresetId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="プリセットを選択" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {presets.map((preset) => (
+                            <SelectItem key={preset.id} value={preset.id}>
+                              {preset.id} - {preset.description}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <p>
+                      既存のデータ（マスタ・在庫・受注など）は全て削除され、新しいテストデータで上書きされます。
+                      この操作は取り消せません。
+                    </p>
+                  </>
+                )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
