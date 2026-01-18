@@ -130,8 +130,10 @@ from decimal import Decimal
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
+from app.infrastructure.persistence.models.assignments.assignment_models import (
+    UserSupplierAssignment,
+)
 from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
-from app.infrastructure.persistence.models.assignments.assignment_models import UserSupplierAssignment
 from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
 from app.presentation.schemas.inventory.inventory_schema import (
     InventoryFilterOption,
@@ -767,7 +769,9 @@ class InventoryService:
 
         join_assignment = ""
         if primary_staff_only and current_user_id:
-            join_assignment = "JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
+            join_assignment = (
+                "JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
+            )
             where_clauses.append("usa.user_id = :current_user_id")
             where_clauses.append("usa.is_primary = TRUE")
             params["current_user_id"] = current_user_id
