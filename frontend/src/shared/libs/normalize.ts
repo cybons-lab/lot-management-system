@@ -156,7 +156,7 @@ export interface LotUI extends Record<string, unknown> {
   remaining_quantity?: string; // 残量（動的計算）
   available_quantity?: string; // 利用可能（残量 - ロック - 確定引当）
   unit: string;
-  status: "active" | "depleted" | "expired" | "quarantine" | "locked"; // Match API type
+  status: "active" | "depleted" | "expired" | "quarantine" | "locked" | "archived"; // Match API type
   lock_reason?: string | null; // Optional: only present when locked
   expected_lot_id: number | null; // DDL v2.2
   created_at: string;
@@ -288,7 +288,9 @@ export function normalizeLot(
         ? S((lot as Record<string, unknown>).available_quantity as string)
         : undefined,
     unit: S(lot.unit, "EA"),
-    status: (lot.status as "active" | "depleted" | "expired" | "quarantine" | "locked") ?? "active",
+    status:
+      (lot.status as "active" | "depleted" | "expired" | "quarantine" | "locked" | "archived") ??
+      "active",
     lock_reason: lot.lock_reason ?? null,
     expected_lot_id: lot.expected_lot_id ?? null,
     created_at: S(lot.created_at),

@@ -40,16 +40,23 @@ __all__ = [
 ]
 
 
-def generate_all_test_data(db: Session):
+def generate_all_test_data(db: Session, options: object = None):
+    # options: GenerateOptions (avoid circular import type hint if needed, or use object)
+    if options is None:
+        # Default fallback
+        from .test_data.orchestrator import GenerateOptions
+
+        options = GenerateOptions()
+
     try:
         clear_data(db)
 
-        warehouses = generate_warehouses(db)
-        suppliers = generate_suppliers(db)
-        customers, delivery_places = generate_customers_and_delivery_places(db)
-        products = generate_products(db)
+        warehouses = generate_warehouses(db, options)
+        suppliers = generate_suppliers(db, options)
+        customers, delivery_places = generate_customers_and_delivery_places(db, options)
+        products = generate_products(db, options)
 
-        generate_customer_items(db, customers, products, suppliers, delivery_places)
+        generate_customer_items(db, customers, products, suppliers, delivery_places, options)
 
         # Step 1: Generate forecasts and get totals
         products_with_forecast, forecast_totals = generate_forecasts(
@@ -66,13 +73,13 @@ def generate_all_test_data(db: Session):
         generate_reservations(db)
 
         # Step 4: Generate orders (diverse types + reservations)
-        generate_orders(db, customers, products, products_with_forecast, delivery_places)
+        generate_orders(db, customers, products, products_with_forecast, delivery_places, options)
 
         # Step 5: Generate withdrawal history (requires lots and customers)
-        generate_withdrawals(db, customers, delivery_places)
+        generate_withdrawals(db, customers, delivery_places, options)
 
         # Step 6: Generate inbound plans and link past plans to lots
-        generate_inbound_plans(db, products, suppliers)
+        generate_inbound_plans(db, products, suppliers, options)
 
         return True
     except Exception as e:

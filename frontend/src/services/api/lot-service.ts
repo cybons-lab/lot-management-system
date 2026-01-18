@@ -83,6 +83,13 @@ export async function unlockLot(id: number, quantity?: number): Promise<LotRespo
   return http.post<LotResponse>(`${BASE_PATH}/${id}/unlock`, { quantity });
 }
 
+/**
+ * ロットをアーカイブ
+ */
+export async function archiveLot(id: number): Promise<LotResponse> {
+  return http.patch<LotResponse>(`${BASE_PATH}/${id}/archive`, {});
+}
+
 export type StockMovementType = "inbound" | "allocation" | "shipment" | "adjustment" | "return";
 
 export interface StockMovementCreate {

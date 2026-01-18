@@ -344,6 +344,29 @@ class LotService:
         StockValidator.validate_sufficient_stock(lot_id, required_qty, available_qty)
         StockValidator.validate_not_expired(lot_id, lot.expiry_date)
 
+    def archive_lot(self, lot_id: int) -> LotResponse:
+        """Archive a depleted or expired lot.
+
+        Archived lots are hidden from default views but retained for traceability.
+        """
+        lot = self.get_lot(lot_id)
+
+        # Validation: Must interpret current_quantity correctly
+        # In LotReceipt, current_quantity is a hybrid property.
+        if lot.current_quantity > 0:
+            from app.domain.lot import LotValidationError
+
+            raise LotValidationError("在庫が残っているロットはアーカイブできません")
+
+        # Update status
+        # Note: status is a string column in DB
+        lot.status = LotStatus.ARCHIVED.value
+        self.db.add(lot)
+        self.db.commit()
+        self.db.refresh(lot)
+
+        return self.get_lot_details(lot.id)
+
     # --- New Methods Extracted from Router ---
 
     def get_all(self, skip: int = 0, limit: int = 100) -> list[LotResponse]:

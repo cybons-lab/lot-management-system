@@ -21,6 +21,7 @@ class LotStatus(str, Enum):
     EXPIRED = "expired"
     QUARANTINE = "quarantine"
     LOCKED = "locked"
+    ARCHIVED = "archived"
 
 
 class LotOriginType(str, Enum):

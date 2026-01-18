@@ -1,18 +1,24 @@
 import random
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import cast
 
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.inventory_models import LotReceipt
 from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace
+from app.infrastructure.persistence.models.withdrawal_line_model import WithdrawalLine
 from app.infrastructure.persistence.models.withdrawal_models import Withdrawal, WithdrawalType
 
+from .scenarios.demand_patterns import DEMAND_PATTERN_SCENARIOS
 from .utils import fake
 
 
 def generate_withdrawals(
-    db: Session, customers: list[Customer], delivery_places: list[DeliveryPlace]
+    db: Session,
+    customers: list[Customer],
+    delivery_places: list[DeliveryPlace],
+    options: object = None,
 ):
     """Generate withdrawal history for some lots.
 
@@ -33,6 +39,16 @@ def generate_withdrawals(
     if not lots:
         return
 
+    # Determine if we should use demand patterns
+    include_patterns = False
+    if options and hasattr(options, "include_demand_patterns") and options.include_demand_patterns:
+        include_patterns = True
+
+    if include_patterns:
+        _generate_withdrawals_from_patterns(db, lots, customers, delivery_places)
+        return
+
+    # Default random strategy
     # Select 90% of lots to have history
     selected_lots = random.sample(lots, int(len(lots) * 0.9))
     today = date.today()
@@ -133,6 +149,15 @@ def generate_withdrawals(
                 cancel_reason=cancel_reason,
             )
             db.add(withdrawal)
+            db.flush()  # Get ID
+
+            # Create Withdrawal Line (Required for demand estimation)
+            line = WithdrawalLine(
+                withdrawal_id=withdrawal.id,
+                lot_receipt_id=lot.id,
+                quantity=qty,
+            )
+            db.add(line)
 
             # Update lot quantity (simulating manual withdrawal)
             if not is_cancelled:  # Only reduce if NOT cancelled
@@ -142,3 +167,131 @@ def generate_withdrawals(
 
     db.commit()
     print(f"[INFO] Generated {withdrawal_count} withdrawal history records")
+
+
+def _generate_withdrawals_from_patterns(
+    db: Session,
+    lots: list[LotReceipt],
+    customers: list[Customer],
+    delivery_places: list[DeliveryPlace],
+):
+    """Generate withdrawals based on defined demand patterns."""
+    # Group lots by product
+    lots_by_product: dict[int, list[LotReceipt]] = {}
+    for lot in lots:
+        if lot.product_id not in lots_by_product:
+            lots_by_product[lot.product_id] = []
+        lots_by_product[lot.product_id].append(lot)
+
+    today = date.today()
+    patterns = list(DEMAND_PATTERN_SCENARIOS.keys())
+
+    withdrawal_count = 0
+
+    for _product_id, product_lots in lots_by_product.items():
+        if not product_lots:
+            continue
+
+        # Assign a random pattern
+        pattern_key = random.choice(patterns)
+        scenario = DEMAND_PATTERN_SCENARIOS[pattern_key]
+
+        # Determine parameters
+        daily_demand = cast(int, scenario.get("daily_demand", scenario.get("base_demand", 10)))
+        duration = cast(int, scenario.get("duration_days", 180))
+
+        # Generate history for each day in duration
+        for i in range(duration):
+            # Working backwards from yesterday
+            day_offset = duration - i
+            current_date = today - timedelta(days=day_offset)
+
+            # Skip future dates (shouldn't happen with this logic)
+            if current_date >= today:
+                continue
+
+            # Calculate demand for this day based on scenario
+            qty = Decimal(str(daily_demand))
+
+            # Apply Noise/Variance
+            variance = cast(float, scenario.get("variance", 0.1))
+            noise = random.uniform(1.0 - variance, 1.0 + variance)
+            qty = qty * Decimal(str(noise))
+
+            # Apply Trend
+            trend = cast(float, scenario.get("trend", 0))
+            if trend != 0:
+                # Simple linear trend: (1 + trend * months)
+                months_passed = i / 30.0
+                qty = qty * Decimal(str(1.0 + trend * months_passed))
+
+            # Apply Seasonality
+            peak_months = cast(list[int], scenario.get("peak_months", []))
+            if peak_months and current_date.month in peak_months:
+                factor = Decimal(str(scenario.get("peak_factor", 1.0)))
+                qty = qty * factor
+
+            # Apply Weekly Pattern
+            day_factors = cast(dict[int, float], scenario.get("day_factors", {}))
+            if day_factors:
+                weekday = current_date.weekday()  # 0=Mon, 6=Sun
+                factor = Decimal(str(day_factors.get(weekday, 1.0)))
+                qty = qty * factor
+
+            # Apply Spikes
+            spike_days = cast(list[int], scenario.get("spike_days", []))
+            # Map duration index to spike days approximately
+            # (Simplification: just check if 'i' matches a spike day index)
+            if i in spike_days:
+                factor = Decimal(str(scenario.get("spike_factor", 1.0)))
+                qty = qty * factor
+
+            # Skip if low demand
+            if qty < 1:
+                continue
+
+            # Round to 2 decimals
+            qty = round(qty, 2)
+
+            # Create Withdrawal
+            target_lot = random.choice(product_lots)
+
+            # Customer info
+            customer_id = None
+            delivery_place_id = None
+            if customers:
+                customer = random.choice(customers)
+                customer_id = customer.id
+                dps = [dp for dp in delivery_places if dp.customer_id == customer.id]
+                if dps:
+                    delivery_place_id = random.choice(dps).id
+
+            withdrawal = Withdrawal(
+                lot_id=None,
+                quantity=None,
+                withdrawal_type=WithdrawalType.ORDER_MANUAL,
+                customer_id=customer_id,
+                delivery_place_id=delivery_place_id,
+                ship_date=current_date,
+                due_date=current_date,
+                reason=f"Scenario: {scenario['description']}",
+                reference_number=f"SCEN-{pattern_key}-{i}",
+                withdrawn_at=datetime.combine(current_date, datetime.min.time())
+                + timedelta(hours=12),
+            )
+            db.add(withdrawal)
+            db.flush()
+
+            line = WithdrawalLine(
+                withdrawal_id=withdrawal.id,
+                lot_receipt_id=target_lot.id,
+                quantity=qty,
+            )
+            db.add(line)
+
+            target_lot.consumed_quantity += qty
+
+            withdrawal_count += 1
+
+    db.commit()
+    print(f"[INFO] Generated {withdrawal_count} withdrawal history records from patterns")

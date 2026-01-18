@@ -1,11 +1,15 @@
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models.inventory_models import LotReceipt
+from app.infrastructure.persistence.models.inventory_models import (
+    LotReceipt,
+    StockMovement,
+    StockTransactionType,
+)
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
 from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
@@ -158,6 +162,18 @@ def generate_lots(
                 locked_quantity=Decimal("0"),  # Initialize to 0
             )
             db.add(lot)
+            db.flush()  # Get lot.id
+
+            # Create intake history (StockMovement)
+            movement = StockMovement(
+                lot_id=lot.id,
+                transaction_type=StockTransactionType.INBOUND,
+                quantity_change=qty,
+                quantity_after=qty,
+                transaction_date=datetime.combine(received_date, datetime.min.time()),
+                reference_type="initial_load",
+            )
+            db.add(movement)
             generated_count += 1
 
             # Also register product_warehouse if not exists

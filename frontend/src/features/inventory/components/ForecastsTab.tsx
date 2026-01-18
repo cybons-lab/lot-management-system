@@ -1,86 +1,40 @@
-import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
 
-import { ForecastGroupList } from "./ForecastGroupList";
-import { ForecastSummaryCards } from "./ForecastSummaryCards";
-
-import { Button } from "@/components/ui";
-import { ROUTES } from "@/constants/routes";
-import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui";
+import { DemandForecastChart } from "@/features/demand/components/DemandForecastChart";
+import { useDemandForecast } from "@/features/demand/hooks/useDemandForecast";
 
 interface ForecastsTabProps {
   productId: number;
 }
 
 export function ForecastsTab({ productId }: ForecastsTabProps) {
-  const {
-    data: forecastData,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["forecasts", productId],
-    queryFn: async () => {
-      const { getForecasts } = await import("@/features/forecasts/api");
-      return getForecasts({ product_id: productId, limit: 100 });
-    },
-  });
+  const { data: forecast, isLoading, error } = useDemandForecast({ product_id: productId });
 
-  const navigate = useNavigate();
-
-  if (isLoading) {
+  if (error) {
     return (
-      <div className="flex h-32 items-center justify-center">
-        <div className="text-gray-500">読み込み中...</div>
-      </div>
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>エラー</AlertTitle>
+        <AlertDescription>
+          需要予測データの取得に失敗しました: {(error as Error).message}
+        </AlertDescription>
+      </Alert>
     );
   }
-
-  if (isError) {
-    return (
-      <QueryErrorFallback
-        error={error}
-        resetError={refetch}
-        title="需要予測データの取得に失敗しました"
-      />
-    );
-  }
-
-  const totalQuantity =
-    forecastData?.items.reduce(
-      (sum: number, group: { forecasts?: { forecast_quantity: string | number }[] }) => {
-        return (
-          sum +
-          (group.forecasts ?? []).reduce(
-            (s: number, f: { forecast_quantity: string | number }) =>
-              s + Number(f.forecast_quantity),
-            0,
-          )
-        );
-      },
-      0,
-    ) || 0;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">需要予測</h3>
-        <Button variant="outline" size="sm" onClick={() => navigate(ROUTES.FORECASTS.LIST)}>
-          需要予測一覧へ
-        </Button>
-      </div>
+      <DemandForecastChart forecast={forecast} isLoading={isLoading} />
 
-      {forecastData && forecastData.items.length > 0 ? (
-        <>
-          <ForecastSummaryCards forecastData={forecastData} totalQuantity={totalQuantity} />
-          <ForecastGroupList forecastData={forecastData} />
-        </>
-      ) : (
-        <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <p className="text-gray-500">需要予測データがありません</p>
-        </div>
-      )}
+      <div className="text-sm text-gray-500 rounded-md bg-slate-50 p-4 border border-slate-200">
+        <h4 className="font-medium mb-1">予測モデルについて</h4>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>平均予測: 過去30日の移動平均に季節係数を適用したモデルです。</li>
+          <li>EWMA: 指数平滑移動平均 (α=0.3) を使用しています。</li>
+          <li>※ 外れ値（特異な需要）は自動的に除外または補正されています。</li>
+        </ul>
+      </div>
     </div>
   );
 }

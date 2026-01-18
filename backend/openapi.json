@@ -3047,6 +3047,49 @@
         }
       }
     },
+    "/api/lots/{lot_id}/archive": {
+      "patch": {
+        "tags": [
+          "lots"
+        ],
+        "summary": "Archive Lot",
+        "description": "Archive a lot.\n\nThe lot must be fully depleted (current_quantity = 0).\nArchived lots are excluded from default list views but remain in the database.",
+        "operationId": "archive_lot_api_lots__lot_id__archive_patch",
+        "parameters": [
+          {
+            "name": "lot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Lot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LotResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/lots/{lot_id}/movements": {
       "get": {
         "tags": [
@@ -11139,7 +11182,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/app__presentation__schemas__auth__auth_schemas__UserResponse"
                 }
               }
             }
@@ -11431,7 +11474,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
+                    "$ref": "#/components/schemas/UserResponse"
                   },
                   "title": "Response List Users Api Users Get"
                 }
@@ -11478,7 +11521,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -11582,7 +11625,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -12560,17 +12603,416 @@
         }
       }
     },
-    "/api/admin/test-data/generate": {
-      "post": {
-        "summary": "Generate Test Data Endpoint",
-        "description": "Generate test data for development.\n\nWARNING: This will DELETE all existing data in related tables.",
-        "operationId": "generate_test_data_endpoint_api_admin_test_data_generate_post",
+    "/api/admin/test-data/presets": {
+      "get": {
+        "summary": "Get Presets",
+        "description": "Available test data generation presets.",
+        "operationId": "get_presets_api_admin_test_data_presets_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/test-data/generate": {
+      "post": {
+        "summary": "Generate Test Data Endpoint",
+        "description": "Generate test data for development.\n\nWARNING: This will DELETE all existing data in related tables.",
+        "operationId": "generate_test_data_endpoint_api_admin_test_data_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/GenerateRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/replenishment/recommendations/run": {
+      "post": {
+        "summary": "Run Replenishment Recommendations",
+        "description": "Run replenishment calculation and return recommendations.",
+        "operationId": "run_replenishment_recommendations_api_admin_replenishment_recommendations_run_post",
+        "parameters": [
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Warehouse ID",
+              "title": "Warehouse Id"
+            },
+            "description": "Warehouse ID"
+          },
+          {
+            "name": "as_of_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of Date"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "moving_average_seasonal",
+              "title": "Method"
+            }
+          },
+          {
+            "name": "product_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Ids"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReplenishmentRecommendation"
+                  },
+                  "title": "Response Run Replenishment Recommendations Api Admin Replenishment Recommendations Run Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/replenishment/recommendations": {
+      "get": {
+        "summary": "Get Recommendations",
+        "description": "Get existing recommendations (Placeholder: currently re-runs calculation).\n\nSince we decided on minimal persistence for Phase 1, we will re-run the calculation\nor return an empty list if not persisted.\nFor this implementation, we will perform a 'dry run' lookalike or just re-run.",
+        "operationId": "get_recommendations_api_admin_replenishment_recommendations_get",
+        "parameters": [
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Warehouse ID",
+              "title": "Warehouse Id"
+            },
+            "description": "Warehouse ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReplenishmentRecommendation"
+                  },
+                  "title": "Response Get Recommendations Api Admin Replenishment Recommendations Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/replenishment/explain/{id}": {
+      "get": {
+        "summary": "Explain Recommendation",
+        "description": "Get explanation for a specific recommendation.\n\nSince we don't persist, we cannot fetch by ID unless we cache it.\nFor Phase 1 (Minimal), this might return a dummy or require re-run params.\n\nTODO: Implement persistence.",
+        "operationId": "explain_recommendation_api_admin_replenishment_explain__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/demand/forecast": {
+      "get": {
+        "summary": "Get Demand Forecast",
+        "description": "Get demand forecast for a product.",
+        "operationId": "get_demand_forecast_api_admin_demand_forecast_get",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Warehouse Id"
+            }
+          },
+          {
+            "name": "horizon_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30,
+              "title": "Horizon Days"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "moving_average_seasonal",
+              "title": "Method"
+            }
+          },
+          {
+            "name": "as_of_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemandForecast"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/demand/history": {
+      "get": {
+        "summary": "Get Demand History",
+        "description": "Get demand history for a product.",
+        "operationId": "get_demand_history_api_admin_demand_history_get",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Start Date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "End Date"
+            }
+          },
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Warehouse Id"
+            }
+          },
+          {
+            "name": "include_non_demand",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Non Demand"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetHistoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -19979,6 +20421,62 @@
         "title": "CustomerUpdate",
         "description": "Update customer request."
       },
+      "DailyDemand": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "quantity"
+        ],
+        "title": "DailyDemand"
+      },
+      "DailyForecast": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity"
+          },
+          "is_holiday": {
+            "type": "boolean",
+            "title": "Is Holiday",
+            "default": false
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "quantity"
+        ],
+        "title": "DailyForecast"
+      },
       "DailyIntakeSummary": {
         "properties": {
           "date": {
@@ -20346,6 +20844,94 @@
         "title": "DeliveryPlaceUpdate",
         "description": "Update delivery place request."
       },
+      "DemandForecast": {
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "warehouse_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Id"
+          },
+          "as_of_date": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of Date"
+          },
+          "horizon_days": {
+            "type": "integer",
+            "title": "Horizon Days"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total"
+          },
+          "avg_daily": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Avg Daily"
+          },
+          "std_daily": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Std Daily"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "data_points_used": {
+            "type": "integer",
+            "title": "Data Points Used"
+          },
+          "daily_forecasts": {
+            "items": {
+              "$ref": "#/components/schemas/DailyForecast"
+            },
+            "type": "array",
+            "title": "Daily Forecasts"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "warehouse_id",
+          "as_of_date",
+          "horizon_days",
+          "total",
+          "avg_daily",
+          "std_daily",
+          "method",
+          "confidence",
+          "data_points_used"
+        ],
+        "title": "DemandForecast"
+      },
       "ExpectedLotCreate": {
         "properties": {
           "expected_lot_number": {
@@ -20622,47 +21208,42 @@
       },
       "FilterOption": {
         "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "code": {
+          "label": {
             "type": "string",
-            "title": "Code"
+            "title": "Label"
           },
-          "name": {
+          "value": {
             "type": "string",
-            "title": "Name"
+            "title": "Value"
           }
         },
         "type": "object",
         "required": [
-          "id",
-          "code",
-          "name"
+          "label",
+          "value"
         ],
         "title": "FilterOption",
-        "description": "Filter option for dropdowns."
+        "description": "フィルタ選択肢."
       },
       "FilterOptions": {
         "properties": {
           "products": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
             },
             "type": "array",
             "title": "Products"
           },
           "suppliers": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
             },
             "type": "array",
             "title": "Suppliers"
           },
           "warehouses": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
             },
             "type": "array",
             "title": "Warehouses"
@@ -21310,6 +21891,117 @@
         "type": "object",
         "title": "ForecastUpdate",
         "description": "Mutable fields for updating a forecast entry."
+      },
+      "GenerateRequest": {
+        "properties": {
+          "preset_id": {
+            "type": "string",
+            "title": "Preset Id",
+            "default": "quick"
+          },
+          "scale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scale"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "include_demand_patterns": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Include Demand Patterns"
+          },
+          "include_stockout_scenarios": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Include Stockout Scenarios"
+          },
+          "include_lt_variance": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Include Lt Variance"
+          },
+          "base_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Date"
+          }
+        },
+        "type": "object",
+        "title": "GenerateRequest"
+      },
+      "GetHistoryResponse": {
+        "properties": {
+          "daily_demands": {
+            "items": {
+              "$ref": "#/components/schemas/DailyDemand"
+            },
+            "type": "array",
+            "title": "Daily Demands"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total"
+          },
+          "avg_daily": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Avg Daily"
+          },
+          "std_daily": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Std Daily"
+          }
+        },
+        "type": "object",
+        "required": [
+          "daily_demands",
+          "total",
+          "avg_daily",
+          "std_daily"
+        ],
+        "title": "GetHistoryResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -23482,7 +24174,8 @@
           "depleted",
           "expired",
           "quarantine",
-          "locked"
+          "locked",
+          "archived"
         ],
         "title": "LotStatus",
         "description": "Valid lot lifecycle statuses."
@@ -24409,21 +25102,21 @@
         "properties": {
           "users": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Users"
           },
           "operation_types": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Operation Types"
           },
           "target_tables": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Target Tables"
@@ -26464,6 +27157,167 @@
         "type": "object",
         "title": "ProductUpdate",
         "description": "Payload to partially update a product."
+      },
+      "ReplenishmentRecommendation": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "title": "Warehouse Id"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "title": "Supplier Id"
+          },
+          "recommended_order_qty": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Recommended Order Qty"
+          },
+          "recommended_order_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Recommended Order Date"
+          },
+          "expected_arrival_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Expected Arrival Date"
+          },
+          "reorder_point": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Reorder Point"
+          },
+          "safety_stock": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Safety Stock"
+          },
+          "target_stock": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Target Stock"
+          },
+          "current_on_hand": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Current On Hand"
+          },
+          "current_reserved": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Current Reserved"
+          },
+          "current_available": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Current Available"
+          },
+          "pending_inbound": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Pending Inbound"
+          },
+          "avg_daily_demand": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Avg Daily Demand"
+          },
+          "demand_forecast_horizon": {
+            "type": "integer",
+            "title": "Demand Forecast Horizon"
+          },
+          "demand_forecast_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Demand Forecast Total"
+          },
+          "lead_time_days": {
+            "type": "integer",
+            "title": "Lead Time Days"
+          },
+          "lead_time_std": {
+            "type": "number",
+            "title": "Lead Time Std"
+          },
+          "moq": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moq"
+          },
+          "lot_size": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot Size"
+          },
+          "constraints_applied": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Constraints Applied"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "draft"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "product_id",
+          "warehouse_id",
+          "supplier_id",
+          "recommended_order_qty",
+          "recommended_order_date",
+          "expected_arrival_date",
+          "reorder_point",
+          "safety_stock",
+          "target_stock",
+          "current_on_hand",
+          "current_reserved",
+          "current_available",
+          "pending_inbound",
+          "avg_daily_demand",
+          "demand_forecast_horizon",
+          "demand_forecast_total",
+          "lead_time_days",
+          "lead_time_std"
+        ],
+        "title": "ReplenishmentRecommendation"
       },
       "ReservationCancelRequest": {
         "properties": {
@@ -28906,7 +29760,7 @@
             "default": "bearer"
           },
           "user": {
-            "$ref": "#/components/schemas/UserResponse"
+            "$ref": "#/components/schemas/app__presentation__schemas__auth__auth_schemas__UserResponse"
           }
         },
         "type": "object",
@@ -29177,41 +30031,71 @@
       },
       "UserResponse": {
         "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
           "username": {
             "type": "string",
-            "title": "Username"
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
+            "description": "ユーザー名"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email",
+            "title": "Email",
+            "description": "メールアドレス"
           },
           "display_name": {
             "type": "string",
-            "title": "Display Name"
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Display Name",
+            "description": "表示名"
           },
-          "roles": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Roles"
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "有効フラグ",
+            "default": true
           },
-          "assignments": {
-            "items": {
-              "$ref": "#/components/schemas/UserAssignmentSchema"
-            },
-            "type": "array",
-            "title": "Assignments"
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           }
         },
         "type": "object",
         "required": [
-          "id",
           "username",
-          "display_name"
+          "email",
+          "display_name",
+          "user_id",
+          "created_at",
+          "updated_at"
         ],
         "title": "UserResponse",
-        "description": "User response schema."
+        "description": "Schema for user response (DDL: users)."
       },
       "UserRoleAssignment": {
         "properties": {
@@ -30473,92 +31357,67 @@
         "title": "WithdrawalType",
         "description": "出庫タイプ."
       },
-      "app__presentation__schemas__system__operation_logs_schema__FilterOption": {
+      "app__presentation__schemas__auth__auth_schemas__UserResponse": {
         "properties": {
-          "label": {
-            "type": "string",
-            "title": "Label"
+          "id": {
+            "type": "integer",
+            "title": "Id"
           },
-          "value": {
-            "type": "string",
-            "title": "Value"
-          }
-        },
-        "type": "object",
-        "required": [
-          "label",
-          "value"
-        ],
-        "title": "FilterOption",
-        "description": "フィルタ選択肢."
-      },
-      "app__presentation__schemas__system__users_schema__UserResponse": {
-        "properties": {
           "username": {
             "type": "string",
-            "maxLength": 50,
-            "minLength": 3,
-            "title": "Username",
-            "description": "ユーザー名"
-          },
-          "email": {
-            "type": "string",
-            "maxLength": 255,
-            "format": "email",
-            "title": "Email",
-            "description": "メールアドレス"
+            "title": "Username"
           },
           "display_name": {
             "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Display Name",
-            "description": "表示名"
+            "title": "Display Name"
           },
-          "is_active": {
-            "type": "boolean",
-            "title": "Is Active",
-            "description": "有効フラグ",
-            "default": true
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles"
           },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id"
-          },
-          "last_login_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Login At"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
+          "assignments": {
+            "items": {
+              "$ref": "#/components/schemas/UserAssignmentSchema"
+            },
+            "type": "array",
+            "title": "Assignments"
           }
         },
         "type": "object",
         "required": [
+          "id",
           "username",
-          "email",
-          "display_name",
-          "user_id",
-          "created_at",
-          "updated_at"
+          "display_name"
         ],
         "title": "UserResponse",
-        "description": "Schema for user response (DDL: users)."
+        "description": "User response schema."
+      },
+      "app__presentation__schemas__inventory__inventory_schema__FilterOption": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "title": "FilterOption",
+        "description": "Filter option for dropdowns."
       }
     },
     "securitySchemes": {

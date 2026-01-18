@@ -19,9 +19,11 @@ from app.presentation.api.routes.admin import (
     batch_jobs_router,
     bulk_export_router,
     business_rules_router,
+    demand_router,
     health_router,
     master_import_router,
     operation_logs_router,
+    replenishment_router,
     roles_router,
     test_data_router,
     users_router,
@@ -134,6 +136,8 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(admin_router, prefix=prefix)
     app.include_router(admin_healthcheck_router, prefix=prefix)
     app.include_router(test_data_router, prefix=f"{prefix}/admin/test-data")
+    app.include_router(replenishment_router, prefix=f"{prefix}/admin/replenishment")
+    app.include_router(demand_router, prefix=f"{prefix}/admin/demand")
     app.include_router(master_import_router, prefix=f"{prefix}/admin")
     app.include_router(health_router, prefix=prefix)
 

@@ -406,6 +406,10 @@ class Product(SoftDeleteMixin, Base):
     maker_item_code: Mapped[str | None] = mapped_column(
         String(100), nullable=True, comment="メーカー品番（仕入先の品番）"
     )
+    # Decision D1: Frequency/Scale of demand
+    qty_scale: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="1", comment="数量スケール（1=通常, 10=小ロット等）"
+    )
 
     __table_args__ = (
         UniqueConstraint("maker_part_code", name="uq_products_maker_part_code"),

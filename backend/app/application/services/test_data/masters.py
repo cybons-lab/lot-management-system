@@ -1,4 +1,5 @@
 import random
+from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
@@ -6,8 +7,10 @@ from app.infrastructure.persistence.models.masters_models import (
     Customer,
     CustomerItem,
     CustomerItemDeliverySetting,
+    CustomerItemJikuMapping,
     DeliveryPlace,
     Product,
+    ProductUomConversion,
     Supplier,
     Warehouse,
 )
@@ -16,10 +19,21 @@ from app.infrastructure.persistence.models.product_supplier_models import Produc
 from .utils import fake
 
 
-def generate_warehouses(db: Session) -> list[Warehouse]:
+def generate_warehouses(db: Session, options: object = None) -> list[Warehouse]:
     warehouses = []
-    # 4-8 warehouses
-    count = random.randint(4, 8)
+
+    # Scale logic
+    scale = "small"
+    if options and hasattr(options, "scale"):
+        scale = options.scale
+
+    if scale == "medium":
+        count = random.randint(8, 12)
+    elif scale == "large":
+        count = random.randint(15, 20)
+    else:  # small
+        count = random.randint(4, 8)
+
     types = ["internal", "external", "supplier"]
 
     for _ in range(count):
@@ -35,10 +49,20 @@ def generate_warehouses(db: Session) -> list[Warehouse]:
     return warehouses
 
 
-def generate_suppliers(db: Session) -> list[Supplier]:
+def generate_suppliers(db: Session, options: object = None) -> list[Supplier]:
     suppliers = []
-    # 3-5 suppliers
-    count = random.randint(3, 5)
+
+    # Scale logic
+    scale = "small"
+    if options and hasattr(options, "scale"):
+        scale = options.scale
+
+    if scale == "medium":
+        count = random.randint(10, 20)
+    elif scale == "large":
+        count = random.randint(30, 50)
+    else:  # small
+        count = random.randint(3, 5)
 
     for _ in range(count):
         s = Supplier(
@@ -53,13 +77,22 @@ def generate_suppliers(db: Session) -> list[Supplier]:
 
 
 def generate_customers_and_delivery_places(
-    db: Session,
+    db: Session, options: object = None
 ) -> tuple[list[Customer], list[DeliveryPlace]]:
     customers = []
     delivery_places = []
 
-    # 5-10 customers
-    count = random.randint(5, 10)
+    # Scale logic
+    scale = "small"
+    if options and hasattr(options, "scale"):
+        scale = options.scale
+
+    if scale == "medium":
+        count = random.randint(20, 40)
+    elif scale == "large":
+        count = random.randint(100, 200)
+    else:  # small
+        count = random.randint(5, 10)
     for _ in range(count):
         from datetime import date, timedelta
 
@@ -91,10 +124,20 @@ def generate_customers_and_delivery_places(
     return customers, delivery_places
 
 
-def generate_products(db: Session) -> list[Product]:
+def generate_products(db: Session, options: object = None) -> list[Product]:
     products = []
-    # ~20 products
-    count = 20
+
+    # Scale logic
+    scale = "small"
+    if options and hasattr(options, "scale"):
+        scale = options.scale
+
+    if scale == "medium":
+        count = random.randint(80, 120)
+    elif scale == "large":
+        count = random.randint(300, 500)
+    else:  # small
+        count = 20
 
     for _ in range(count):
         p = Product(
@@ -106,6 +149,16 @@ def generate_products(db: Session) -> list[Product]:
         products.append(p)
 
     db.add_all(products)
+    db.flush()
+
+    # Generate UOM conversions (KG conversion) for 60% of products
+    for p in products:
+        if random.random() < 0.6:
+            # 1 PCS = 15-25 KG
+            factor = Decimal(random.randint(15, 25))
+            conv = ProductUomConversion(product_id=p.id, external_unit="KG", factor=factor)
+            db.add(conv)
+
     db.commit()
     return products
 
@@ -116,6 +169,7 @@ def generate_customer_items(
     products: list[Product],
     suppliers: list[Supplier],
     delivery_places: list[DeliveryPlace] | None = None,
+    options: object = None,
 ):
     """Generate CustomerItem, ProductSupplier, and CustomerItemDeliverySettings records.
 
@@ -191,5 +245,21 @@ def generate_customer_items(
                     is_default=True,
                 )
                 db.add(delivery_setting)
+
+                # Create Jiku mappings (70% chance)
+                if random.random() < 0.7:
+                    # Map Jiku code 'A', 'B' to specific delivery places
+                    jiku_codes = ["A", "B", "C"]
+                    for jiku in random.sample(jiku_codes, random.randint(1, 2)):
+                        # Pick a random delivery place of this customer
+                        target_dp = random.choice(customer_delivery_map[c.id])
+                        jiku_map = CustomerItemJikuMapping(
+                            customer_id=c.id,
+                            external_product_code=external_code,
+                            jiku_code=jiku,
+                            delivery_place_id=target_dp.id,
+                            is_default=(jiku == "A"),  # 'A' is default if present
+                        )
+                        db.add(jiku_map)
 
     db.commit()

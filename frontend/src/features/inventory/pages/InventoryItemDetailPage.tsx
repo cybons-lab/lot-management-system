@@ -1,23 +1,24 @@
-/**
- * InventoryItemDetailPage (v2.2 - Phase D-6 + Phase 3 + Phase 4)
- * Inventory item detail page (product × warehouse) with tabbed interface
- */
-
+/* eslint-disable max-lines */
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowUpFromLine, History } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+import { InventoryLotActions } from "../components/InventoryLotActions";
+import { LotArchiveDialog } from "../components/LotArchiveDialog";
+import { LotEditForm, type LotUpdateData } from "../components/LotEditForm";
+import { LotLockDialog } from "../components/LotLockDialog";
 import { useInventoryItem, inventoryItemKeys } from "../hooks";
+import { useLotActions } from "../hooks/useLotActions";
 
 import * as styles from "./styles";
 
-import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
+import { Button, Checkbox, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { IntakeHistoryList } from "@/features/intake-history/components/IntakeHistoryList";
 import { ForecastsTab } from "@/features/inventory/components/ForecastsTab";
 import { InboundPlansTab } from "@/features/inventory/components/InboundPlansTab";
+import { ReplenishmentTab } from "@/features/inventory/components/ReplenishmentTab";
 import {
   QuickWithdrawalDialog,
   WithdrawalHistoryDialog,
@@ -26,8 +27,10 @@ import {
 import { useLotsQuery } from "@/hooks/api";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
+import { FormDialog } from "@/shared/components/form";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import type { LotUI } from "@/shared/libs/normalize";
+import { calculateAvailable } from "@/shared/utils/decimal";
 import { fmt } from "@/shared/utils/number";
 import { getLotStatuses } from "@/shared/utils/status";
 
@@ -37,6 +40,7 @@ export function InventoryItemDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("summary");
+  const [showArchived, setShowArchived] = useState(false);
 
   // 簡易出庫ダイアログ用の状態
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
@@ -46,6 +50,10 @@ export function InventoryItemDetailPage() {
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedLotForHistory, setSelectedLotForHistory] = useState<LotUI | null>(null);
 
+  // アーカイブ確認ダイアログ用の状態
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [selectedLotForArchive, setSelectedLotForArchive] = useState<LotUI | null>(null);
+
   const productIdNum = productId ? Number(productId) : 0;
   const warehouseIdNum = warehouseId ? Number(warehouseId) : 0;
 
@@ -53,8 +61,13 @@ export function InventoryItemDetailPage() {
 
   // 全ロット取得してフィルタリング
   const { data: allLots = [], isLoading: lotsLoading, refetch: refetchLots } = useLotsQuery({});
+
+  // フィルタリングロジック
   const itemLots = allLots.filter(
-    (lot) => lot.product_id === productIdNum && lot.warehouse_id === warehouseIdNum,
+    (lot) =>
+      lot.product_id === productIdNum &&
+      lot.warehouse_id === warehouseIdNum &&
+      (showArchived || lot.status !== "archived"),
   );
 
   const handleBack = () => {
@@ -78,18 +91,43 @@ export function InventoryItemDetailPage() {
     setHistoryDialogOpen(true);
   };
 
-  // 出庫成功時のハンドラ
+  // アーカイブ確認ダイアログを開く
+  const handleOpenArchive = (lot: LotUI) => {
+    setSelectedLotForArchive(lot);
+    setArchiveDialogOpen(true);
+  };
+
   const handleWithdrawalSuccess = () => {
     refetchLots();
-    // 在庫サマリも更新（総数量、利用可能数量が変わるため）
     queryClient.invalidateQueries({
       queryKey: inventoryItemKeys.detail(productIdNum, warehouseIdNum),
     });
-    // 出庫履歴リストも更新
     queryClient.invalidateQueries({
       queryKey: ["withdrawals", "list", { productId: productIdNum, warehouseId: warehouseIdNum }],
     });
   };
+
+  // 統一されたロット操作フックを使用
+  const {
+    selectedLot,
+    editDialog,
+    lockDialog,
+    updateLotMutation,
+    lockLotMutation,
+    handleEditLot,
+    handleLockLot,
+    handleUnlockLot,
+    handleCloseEdit,
+    handleCloseLock,
+    archiveLot,
+  } = useLotActions({
+    onLotsChanged: () => {
+      refetchLots();
+      queryClient.invalidateQueries({
+        queryKey: inventoryItemKeys.detail(productIdNum, warehouseIdNum),
+      });
+    },
+  });
 
   // ロットテーブルのカラム定義
   const lotColumns: Column<LotUI>[] = [
@@ -139,7 +177,7 @@ export function InventoryItemDetailPage() {
       cell: (lot) => {
         const statuses = getLotStatuses(lot);
         return (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 overflow-visible">
             {statuses.map((s) => (
               <LotStatusIcon key={s} status={s} />
             ))}
@@ -152,35 +190,17 @@ export function InventoryItemDetailPage() {
     {
       id: "actions",
       header: "操作",
-      cell: (lot) => {
-        const availableQty =
-          Number(lot.current_quantity) -
-          Number(lot.allocated_quantity) -
-          Number(lot.locked_quantity || 0);
-        return (
-          <div className="flex items-center justify-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleOpenWithdrawal(lot)}
-              disabled={availableQty <= 0}
-              className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
-              title="出庫"
-            >
-              <ArrowUpFromLine className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleOpenHistory(lot)}
-              className="h-8 w-8 p-0"
-              title="出庫履歴"
-            >
-              <History className="h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
+      cell: (lot) => (
+        <InventoryLotActions
+          lot={lot}
+          onWithdraw={handleOpenWithdrawal}
+          onEdit={handleEditLot}
+          onLock={handleLockLot}
+          onUnlock={handleUnlockLot}
+          onHistory={handleOpenHistory}
+          onArchive={handleOpenArchive}
+        />
+      ),
       align: "center",
     },
   ];
@@ -251,6 +271,7 @@ export function InventoryItemDetailPage() {
           <TabsTrigger value="intake_history">入庫履歴</TabsTrigger>
           <TabsTrigger value="history">出庫履歴</TabsTrigger>
           <TabsTrigger value="forecast">需要予測</TabsTrigger>
+          <TabsTrigger value="replenishment">発注提案</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: サマリ */}
@@ -298,6 +319,21 @@ export function InventoryItemDetailPage() {
 
         {/* Tab 2: ロット一覧 */}
         <TabsContent value="lots" className="space-y-4">
+          <div className="flex justify-end p-2 bg-white rounded-t-lg border-b border-gray-100">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={(checked) => setShowArchived(checked as boolean)}
+              />
+              <label
+                htmlFor="show-archived"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600"
+              >
+                アーカイブ済みのロットを表示
+              </label>
+            </div>
+          </div>
           <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
             <DataTable
               data={itemLots}
@@ -332,6 +368,11 @@ export function InventoryItemDetailPage() {
         <TabsContent value="forecast" className="space-y-4">
           <ForecastsTab productId={productIdNum} />
         </TabsContent>
+
+        {/* Tab 6: 発注提案 */}
+        <TabsContent value="replenishment" className="space-y-4">
+          <ReplenishmentTab productId={productIdNum} warehouseId={warehouseIdNum} />
+        </TabsContent>
       </Tabs>
 
       {/* 簡易出庫ダイアログ */}
@@ -353,8 +394,62 @@ export function InventoryItemDetailPage() {
           onWithdrawalSuccess={handleWithdrawalSuccess}
         />
       )}
+
+      {/* 編集ダイアログ */}
+      {selectedLot && (
+        <FormDialog
+          open={editDialog.isOpen}
+          onClose={handleCloseEdit}
+          title="ロット編集"
+          description={`ロット ${selectedLot.lot_number} を編集します`}
+          size="lg"
+        >
+          <LotEditForm
+            initialData={selectedLot}
+            onSubmit={async (data: LotUpdateData) => {
+              await updateLotMutation.mutateAsync(data);
+            }}
+            onCancel={handleCloseEdit}
+            isSubmitting={updateLotMutation.isPending}
+          />
+        </FormDialog>
+      )}
+
+      {/* ロック確認ダイアログ */}
+      {selectedLot && (
+        <LotLockDialog
+          open={lockDialog.isOpen}
+          onClose={handleCloseLock}
+          onConfirm={async (reason, quantity) => {
+            await lockLotMutation.mutateAsync({ id: selectedLot.id, reason, quantity });
+          }}
+          isSubmitting={lockLotMutation.isPending}
+          lotNumber={selectedLot.lot_number}
+          availableQuantity={calculateAvailable(
+            selectedLot.current_quantity,
+            selectedLot.allocated_quantity,
+            selectedLot.locked_quantity,
+          ).toNumber()}
+        />
+      )}
+
+      {/* アーカイブ確認ダイアログ */}
+      {selectedLotForArchive && (
+        <LotArchiveDialog
+          lot={selectedLotForArchive}
+          open={archiveDialogOpen}
+          onOpenChange={setArchiveDialogOpen}
+          onConfirm={async () => {
+            const confirmedLot = selectedLotForArchive;
+            await archiveLot(confirmedLot.id);
+            refetchLots();
+            queryClient.invalidateQueries({
+              queryKey: inventoryItemKeys.detail(productIdNum, warehouseIdNum),
+            });
+          }}
+          isSubmitting={false}
+        />
+      )}
     </div>
   );
 }
-
-// Sub Components removed (extracted to separate files)

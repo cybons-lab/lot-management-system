@@ -47,6 +47,7 @@ export function InventoryTable({
     handleEditLot,
     handleLockLot,
     handleUnlockLot,
+    handleArchiveLot,
     isRowExpanded,
     fetchLotsForItem,
     getLotsForItem,
@@ -179,6 +180,7 @@ export function InventoryTable({
         onLock={handleLockLot}
         onWithdraw={openWithdrawal}
         onHistory={openHistory}
+        onArchive={handleArchiveLot}
       />
     );
   };
