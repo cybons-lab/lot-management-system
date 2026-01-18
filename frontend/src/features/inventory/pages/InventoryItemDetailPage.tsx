@@ -59,16 +59,19 @@ export function InventoryItemDetailPage() {
 
   const { data: item, isLoading, isError } = useInventoryItem(productIdNum, warehouseIdNum);
 
-  // 全ロット取得してフィルタリング
-  const { data: allLots = [], isLoading: lotsLoading, refetch: refetchLots } = useLotsQuery({});
+  // サーバー側フィルタリングでロット取得
+  const {
+    data: allLots = [],
+    isLoading: lotsLoading,
+    refetch: refetchLots,
+  } = useLotsQuery({
+    product_id: productIdNum,
+    warehouse_id: warehouseIdNum,
+    status: showArchived ? undefined : "active", // アーカイブ表示時は全取得、それ以外はactiveのみ
+  });
 
-  // フィルタリングロジック
-  const itemLots = allLots.filter(
-    (lot) =>
-      lot.product_id === productIdNum &&
-      lot.warehouse_id === warehouseIdNum &&
-      (showArchived || lot.status !== "archived"),
-  );
+  // サーバー側でフィルタリング済みのため、クライアント側フィルタは不要
+  const itemLots = allLots;
 
   const handleBack = () => {
     navigate(ROUTES.INVENTORY.SUMMARY);
@@ -136,6 +139,16 @@ export function InventoryItemDetailPage() {
       header: "ロット番号",
       cell: (lot) => <span className="font-medium">{lot.lot_number}</span>,
       sortable: true,
+    },
+    {
+      id: "supplier",
+      header: "仕入先",
+      cell: (lot) => {
+        const supplierDisplay: string = (lot.supplier_name || lot.supplier_code || "-") as string;
+        return <span className="text-sm text-gray-700">{supplierDisplay}</span>;
+      },
+      sortable: true,
+      align: "left",
     },
     {
       id: "current_quantity",
@@ -267,7 +280,10 @@ export function InventoryItemDetailPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="summary">サマリ</TabsTrigger>
-          <TabsTrigger value="lots">ロット一覧 ({itemLots.length})</TabsTrigger>
+          <TabsTrigger value="lots">
+            ロット一覧 (
+            {showArchived ? allLots.length : (item?.active_lot_count ?? itemLots.length)})
+          </TabsTrigger>
           <TabsTrigger value="inbound">入荷予定</TabsTrigger>
           <TabsTrigger value="intake_history">入庫履歴</TabsTrigger>
           <TabsTrigger value="history">出庫履歴</TabsTrigger>

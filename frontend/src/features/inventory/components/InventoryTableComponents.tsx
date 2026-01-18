@@ -64,6 +64,9 @@ export function LotTableRow({
   return (
     <tr className={`border-b border-gray-100 hover:bg-gray-100 ${isLocked ? "opacity-60" : ""}`}>
       <td className="py-2 font-medium text-gray-900">{lot.lot_number}</td>
+      <td className="py-2 text-sm text-gray-700">
+        {(lot.supplier_name || lot.supplier_code || "-") as string}
+      </td>
       <td className="py-2 text-right font-semibold">{fmt(Number(lot.current_quantity))}</td>
       <td className="py-2 text-gray-600">{lot.unit}</td>
       <td className="py-2 text-gray-600">
@@ -190,6 +193,7 @@ export function ExpandedLotDetails({
               <thead>
                 <tr className="border-b border-gray-200">
                   <th className="pb-2 text-left font-medium text-gray-600">ロット番号</th>
+                  <th className="pb-2 text-left font-medium text-gray-600">仕入先</th>
                   <th className="pb-2 text-right font-medium text-gray-600">現在在庫</th>
                   <th className="pb-2 text-left font-medium text-gray-600">単位</th>
                   <th className="pb-2 text-left font-medium text-gray-600">入荷日</th>
