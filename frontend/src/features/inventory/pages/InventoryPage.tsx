@@ -338,6 +338,7 @@ export function InventoryPage() {
                 isLoading={isItemsLoading}
                 onRefresh={refetchItems}
                 filterSupplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
+                headerContent={`ページ ${page} (表示件数: ${inventoryItems.length})`}
               />
               {/* Pagination Controls */}
               <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
