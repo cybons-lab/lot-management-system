@@ -117,5 +117,4 @@
 
 ## 参照ドキュメント
 - [testing.md](./testing.md) - テスト実行ガイド
-- [comprehensive-test-strategy.md](./plans/comprehensive-test-strategy.md) - 詳細なテスト戦略計画
-
+- [comprehensive-test-strategy.md](./plan/comprehensive-test-strategy.md) - 詳細なテスト戦略計画

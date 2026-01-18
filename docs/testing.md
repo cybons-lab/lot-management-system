@@ -272,4 +272,4 @@ assert get_response.json()["customer_code"] == data["customer_code"]
 
 - [Playwright公式ドキュメント](https://playwright.dev/)
 - [pytest公式ドキュメント](https://docs.pytest.org/)
-- [comprehensive-test-strategy.md](./plans/comprehensive-test-strategy.md) - 詳細なテスト戦略計画
+- [comprehensive-test-strategy.md](./plan/comprehensive-test-strategy.md) - 詳細なテスト戦略計画

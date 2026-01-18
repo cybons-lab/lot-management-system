@@ -23,7 +23,7 @@
 | | [test_catalog.md](testing/test_catalog.md) | テスト資産の一覧（配置・種別・実行方法） |
 | **Development** | [setup.md](dev/setup.md) | 開発環境セットアップ手順 |
 | **Tasks** | [backlog.md](tasks/backlog.md) | 未完了タスクのバックログ |
-| | [TODO.md](TODO.md) | 未実装APIなどのTODO |
+| | [TODO.md](tasks/TODO.md) | 未実装APIなどのTODO |
 
 ## 読み進め方
 
