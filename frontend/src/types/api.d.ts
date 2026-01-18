@@ -9788,8 +9788,8 @@ export interface components {
      * @description API response model for inventory items (aggregated summary).
      *
      *     This schema represents a calculated summary of inventory from the
-     *     lots table, aggregated by product and warehouse. It does not map to
-     *     a physical table.
+     *     lots table, aggregated by product and warehouse (or supplier × product × warehouse).
+     *     It does not map to a physical table.
      */
     InventoryItemResponse: {
       /** Inventory Item Id */
@@ -9834,6 +9834,13 @@ export interface components {
       warehouse_name?: string | null;
       /** Warehouse Code */
       warehouse_code?: string | null;
+      /** Supplier Id */
+      supplier_id?: number | null;
+      /** Supplier Name */
+      supplier_name?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
+      suppliers_summary?: components["schemas"]["SuppliersSummary"] | null;
     };
     /**
      * InventoryListResponse
@@ -12726,6 +12733,26 @@ export interface components {
       supplier_name?: string | null;
     };
     /**
+     * SuppliersSummary
+     * @description 製品×倉庫ビューで複数サプライヤーをまとめる場合の情報.
+     *
+     *     Used when group_by='product_warehouse' and multiple suppliers exist
+     *     for the same product/warehouse combination.
+     */
+    SuppliersSummary: {
+      /** Primary Supplier Id */
+      primary_supplier_id: number;
+      /** Primary Supplier Code */
+      primary_supplier_code: string;
+      /** Primary Supplier Name */
+      primary_supplier_name: string;
+      /**
+       * Other Count
+       * @default 0
+       */
+      other_count: number;
+    };
+    /**
      * SupplyDataImport
      * @description Supply-side import data (suppliers + products + product_suppliers).
      */
@@ -14415,6 +14442,8 @@ export interface operations {
         warehouse_id?: number | null;
         supplier_id?: number | null;
         tab?: string;
+        /** @description Grouping mode: 'supplier_product_warehouse' (default) or 'product_warehouse' */
+        group_by?: string;
         primary_staff_only?: boolean;
       };
       header?: never;

@@ -192,6 +192,7 @@ export interface InventoryItemFilters {
   supplier_id: string;
   tab: InventoryTab;
   primary_staff_only: boolean;
+  candidate_mode: "stock" | "master";
 }
 
 /**
@@ -211,6 +212,7 @@ export const inventoryPageStateAtom = atomWithStorage<{
       supplier_id: "",
       tab: "all",
       primary_staff_only: false,
+      candidate_mode: "stock",
     },
   },
   createSessionStorageAdapter<{

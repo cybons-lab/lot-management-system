@@ -90,8 +90,8 @@ describe("InventoryTable", () => {
 
     // Initial widths should be applied to headers
     const headers = screen.getAllByRole("columnheader");
-    // 10 columns: expander, product, warehouse, lots, total, soft, hard, available, updated, actions
-    expect(headers).toHaveLength(10);
+    // 11 columns: expander, product, supplier, warehouse, lots, total, soft, hard, available, updated, actions
+    expect(headers).toHaveLength(11);
 
     // Check product header width (default 200)
     // We need to match the exact text or use index.

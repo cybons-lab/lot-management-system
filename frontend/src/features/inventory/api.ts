@@ -21,10 +21,25 @@ export type LotCreateResponse =
 
 export type InventoryState = "in_stock" | "depleted_only" | "no_lots";
 
+export type GroupByMode = "supplier_product_warehouse" | "product_warehouse";
+
+export interface SuppliersSummary {
+  primary_supplier_id: number;
+  primary_supplier_code: string;
+  primary_supplier_name: string;
+  other_count: number;
+}
+
 export type InventoryItem =
   paths["/api/v2/inventory/"]["get"]["responses"][200]["content"]["application/json"]["items"][number] & {
     active_lot_count: number;
     inventory_state: InventoryState;
+    // Supplier fields (present when group_by='supplier_product_warehouse')
+    supplier_id?: number;
+    supplier_name?: string;
+    supplier_code?: string;
+    // Aggregated suppliers (for product_warehouse grouping with multiple suppliers)
+    suppliers_summary?: SuppliersSummary;
   };
 
 export type InventoryListResponse = {
@@ -53,6 +68,7 @@ export interface FilterOptions {
   products: FilterOption[];
   suppliers: FilterOption[];
   warehouses: FilterOption[];
+  effective_tab?: string;
 }
 
 // ===== Lots API Functions =====
@@ -182,7 +198,11 @@ export const downloadLotLabels = async (lotIds: number[]) => {
  * @endpoint GET /api/v2/inventory/
  */
 export const getInventoryItems = (
-  params?: InventoryItemsListParams & { tab?: string; primary_staff_only?: boolean },
+  params?: InventoryItemsListParams & {
+    tab?: string;
+    primary_staff_only?: boolean;
+    group_by?: string;
+  },
 ) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
@@ -191,6 +211,7 @@ export const getInventoryItems = (
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
   if (params?.tab) searchParams.append("tab", params.tab);
+  if (params?.group_by) searchParams.append("group_by", params.group_by);
   if (params?.primary_staff_only)
     searchParams.append("primary_staff_only", params.primary_staff_only.toString());
 
@@ -238,11 +259,18 @@ export const getFilterOptions = (params?: {
   product_id?: number;
   warehouse_id?: number;
   supplier_id?: number;
+  tab?: string;
+  primary_staff_only?: boolean;
+  mode?: "stock" | "master";
 }) => {
   const searchParams = new URLSearchParams();
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
+  if (params?.tab) searchParams.append("tab", params.tab);
+  if (params?.primary_staff_only)
+    searchParams.append("primary_staff_only", params.primary_staff_only.toString());
+  if (params?.mode) searchParams.append("mode", params.mode);
 
   const queryString = searchParams.toString();
   return http.get<FilterOptions>(

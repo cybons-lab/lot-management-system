@@ -22,6 +22,55 @@ export const inventoryColumns: Column<InventoryItem>[] = [
     sortable: true,
   },
   {
+    id: "supplier",
+    header: "仕入先",
+    accessor: (row) => {
+      if (row.supplier_code) {
+        return `${row.supplier_name} (${row.supplier_code})`;
+      }
+      if (row.suppliers_summary) {
+        const { primary_supplier_code, other_count } = row.suppliers_summary;
+        return other_count > 0 ? `${primary_supplier_code} +${other_count}` : primary_supplier_code;
+      }
+      return "-";
+    },
+    cell: (row) => {
+      if (row.supplier_code) {
+        return (
+          <div className="flex flex-col">
+            <span
+              className="block truncate font-medium text-slate-700"
+              title={row.supplier_name || ""}
+            >
+              {row.supplier_name || "名称未設定"}
+            </span>
+            <span className="text-[11px] text-slate-500">{row.supplier_code || "-"}</span>
+          </div>
+        );
+      }
+      if (row.suppliers_summary) {
+        const { primary_supplier_name, primary_supplier_code, other_count } = row.suppliers_summary;
+        return (
+          <div className="flex flex-col">
+            <span
+              className="block truncate font-medium text-slate-700"
+              title={primary_supplier_name}
+            >
+              {primary_supplier_name}
+              {other_count > 0 && (
+                <span className="ml-1 text-[10px] text-blue-600">+{other_count}社</span>
+              )}
+            </span>
+            <span className="text-[11px] text-slate-500">{primary_supplier_code}</span>
+          </div>
+        );
+      }
+      return <span className="text-slate-400">-</span>;
+    },
+    width: 180,
+    sortable: true,
+  },
+  {
     id: "warehouse",
     header: "倉庫",
     accessor: (row) =>

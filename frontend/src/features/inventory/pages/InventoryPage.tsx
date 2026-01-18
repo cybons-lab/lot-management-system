@@ -86,9 +86,24 @@ export function InventoryPage() {
     product_id: filters.product_id || undefined,
     supplier_id: filters.supplier_id || undefined,
     warehouse_id: filters.warehouse_id || undefined,
+    tab: filters.tab,
+    primary_staff_only: filters.primary_staff_only,
+    mode: filters.candidate_mode,
     onAutoSelectSupplier: (id) => updateFilter("supplier_id", id),
     onAutoSelectProduct: (id) => updateFilter("product_id", id),
   });
+
+  // Note: Auto-clearing of invalid filters is NOT needed here because:
+  // 1. The filter-options API endpoint only returns valid combinations
+  // 2. SearchableSelect prevents selecting invalid options
+  // 3. Auto-selection in useFilterOptions handles single-option cases
+  // So filters naturally stay valid without explicit clearing logic
+
+  useEffect(() => {
+    if (filters.candidate_mode === "stock" && filters.tab === "no_stock") {
+      updateFilter("tab", "in_stock");
+    }
+  }, [filters.candidate_mode, filters.tab, updateFilter]);
 
   const filteredSupplierData = useMemo(() => {
     let data = supplierQuery.data || [];
@@ -123,6 +138,13 @@ export function InventoryPage() {
   const showWarehouseFilter = overviewMode === "items" || overviewMode === "warehouse";
   const showProductFilter = overviewMode === "items" || overviewMode === "product";
   const showPrimaryStaffOnly = overviewMode === "items" || overviewMode === "supplier";
+
+  const handleFilterChange = <K extends keyof typeof filters>(
+    key: K,
+    value: (typeof filters)[K],
+  ) => {
+    updateFilter(key as keyof typeof filters, value);
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -256,8 +278,14 @@ export function InventoryPage() {
                 filters.tab === "no_stock"
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
-              }`}
+              } ${filters.candidate_mode === "stock" ? "cursor-not-allowed opacity-50" : ""}`}
+              disabled={filters.candidate_mode === "stock"}
               onClick={() => updateFilter("tab", "no_stock")}
+              title={
+                filters.candidate_mode === "stock"
+                  ? "在庫あり基準では在庫なしタブは利用できません"
+                  : undefined
+              }
             >
               ⚠️ 在庫なし
             </button>
@@ -268,14 +296,32 @@ export function InventoryPage() {
         {showFilters && (
           <Section>
             <div className="flex flex-col gap-4">
-              {/* Filter Actions Row (Primary Staff Filter) */}
-              {showPrimaryStaffOnly && (
-                <div className="flex justify-end pt-2">
+              <div className="flex flex-wrap items-start justify-between gap-4 pt-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Label className="text-sm font-medium">候補の基準</Label>
+                  <select
+                    className="h-9 rounded-md border border-slate-300 bg-transparent px-3 text-sm"
+                    value={filters.candidate_mode}
+                    onChange={(event) =>
+                      updateFilter("candidate_mode", event.target.value as "stock" | "master")
+                    }
+                  >
+                    <option value="stock">在庫あり</option>
+                    <option value="master">マスタ</option>
+                  </select>
+                  <span className="text-xs text-slate-500">
+                    在庫一覧の候補は在庫あり基準です（必要ならマスタ検索に切替）
+                  </span>
+                </div>
+
+                {showPrimaryStaffOnly && (
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="primary_staff_only"
                       checked={filters.primary_staff_only}
-                      onCheckedChange={(checked) => updateFilter("primary_staff_only", !!checked)}
+                      onCheckedChange={(checked) =>
+                        handleFilterChange("primary_staff_only", !!checked)
+                      }
                     />
                     <Label
                       htmlFor="primary_staff_only"
@@ -284,7 +330,12 @@ export function InventoryPage() {
                       主担当の仕入先のみ
                     </Label>
                   </div>
-                </div>
+                )}
+              </div>
+              {filters.candidate_mode === "master" && (
+                <p className="text-xs text-amber-600">
+                  マスタ基準のため、在庫がない組み合わせでは一覧が空になる場合があります
+                </p>
               )}
 
               {/* Filter Inputs Row */}
@@ -295,13 +346,7 @@ export function InventoryPage() {
                     <SearchableSelect
                       options={supplierOptions}
                       value={filters.supplier_id}
-                      onChange={(value) =>
-                        setFilters({
-                          ...filters,
-                          supplier_id: value,
-                          product_id: "", // 仕入先変更時は製品選択をクリア
-                        })
-                      }
+                      onChange={(value) => handleFilterChange("supplier_id", value)}
                       placeholder="仕入先を検索..."
                     />
                   </div>
@@ -312,13 +357,7 @@ export function InventoryPage() {
                     <SearchableSelect
                       options={warehouseOptions}
                       value={filters.warehouse_id}
-                      onChange={(value) =>
-                        setFilters({
-                          ...filters,
-                          warehouse_id: value,
-                          product_id: "", // 倉庫変更時は製品選択をクリア
-                        })
-                      }
+                      onChange={(value) => handleFilterChange("warehouse_id", value)}
                       placeholder="倉庫を検索..."
                     />
                   </div>
@@ -329,7 +368,7 @@ export function InventoryPage() {
                     <SearchableSelect
                       options={productOptions}
                       value={filters.product_id}
-                      onChange={(value) => updateFilter("product_id", value)}
+                      onChange={(value) => handleFilterChange("product_id", value)}
                       placeholder="製品を検索..."
                     />
                   </div>

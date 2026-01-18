@@ -52,6 +52,7 @@ export function useInventoryPageState() {
         supplier_id: "",
         tab: "all",
         primary_staff_only: false,
+        candidate_mode: "stock",
       },
     }));
   }, [setState]);

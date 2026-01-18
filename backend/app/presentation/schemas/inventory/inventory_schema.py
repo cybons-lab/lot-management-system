@@ -266,12 +266,25 @@ class AdjustmentResponse(AdjustmentBase):
     adjusted_at: datetime
 
 
+class SuppliersSummary(BaseSchema):
+    """製品×倉庫ビューで複数サプライヤーをまとめる場合の情報.
+
+    Used when group_by='product_warehouse' and multiple suppliers exist
+    for the same product/warehouse combination.
+    """
+
+    primary_supplier_id: int
+    primary_supplier_code: str
+    primary_supplier_name: str
+    other_count: int = 0  # Number of additional suppliers
+
+
 class InventoryItemResponse(BaseSchema):
     """API response model for inventory items (aggregated summary).
 
     This schema represents a calculated summary of inventory from the
-    lots table, aggregated by product and warehouse. It does not map to
-    a physical table.
+    lots table, aggregated by product and warehouse (or supplier × product × warehouse).
+    It does not map to a physical table.
     """
 
     id: int = Field(serialization_alias="inventory_item_id")
@@ -291,6 +304,14 @@ class InventoryItemResponse(BaseSchema):
     product_code: str | None = None
     warehouse_name: str | None = None
     warehouse_code: str | None = None
+
+    # Supplier fields (for supplier_product_warehouse grouping)
+    supplier_id: int | None = None
+    supplier_name: str | None = None
+    supplier_code: str | None = None
+
+    # Aggregated suppliers (for product_warehouse grouping with multiple suppliers)
+    suppliers_summary: SuppliersSummary | None = None
 
 
 # Backwards compatibility aliases so existing imports continue to work during
@@ -363,6 +384,10 @@ class InventoryFilterOptions(BaseSchema):
     products: list[InventoryFilterOption]
     suppliers: list[InventoryFilterOption]
     warehouses: list[InventoryFilterOption]
+    effective_tab: str = Field(
+        "all",
+        description="Resolved tab after applying mode-specific coercion (e.g., stock mode).",
+    )
 
 
 class LotArchiveRequest(BaseSchema):

@@ -95,6 +95,7 @@ export function IntakeHistoryTab() {
     product_id: productId || undefined,
     supplier_id: supplierId || undefined,
     warehouse_id: warehouseId || undefined,
+    mode: "master",
   });
 
   const handleResetFilters = () => {
