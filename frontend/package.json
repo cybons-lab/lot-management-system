@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typegen:curl": "curl -s http://localhost:8000/api/openapi.json -o ../backend/openapi.json && npm run typegen",
+    "typegen:full": "(cd ../backend && uv run python scripts/export_openapi.py) && npm run typegen",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typegen": "openapi-typescript ../backend/openapi.json -o src/types/api.d.ts && prettier --write src/types/api.d.ts",
     "doc:fe": "typedoc --options typedoc.json",
