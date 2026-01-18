@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui";
+import { intakeHistoryKeys } from "@/features/intake-history/hooks/useIntakeHistory";
 import { useProducts } from "@/features/products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
 import { useWarehouses } from "@/features/warehouses/hooks";
@@ -149,6 +150,7 @@ export function QuickLotIntakeDialog({
     onSuccess: () => {
       toast.success("既存ロットに追加入庫しました");
       queryClient.invalidateQueries({ queryKey: ["lots"] });
+      queryClient.invalidateQueries({ queryKey: intakeHistoryKeys.all });
       onSuccess?.();
       onOpenChange(false);
     },
@@ -162,6 +164,7 @@ export function QuickLotIntakeDialog({
     onSuccess: () => {
       toast.success("新規ロットを登録しました");
       queryClient.invalidateQueries({ queryKey: ["lots"] });
+      queryClient.invalidateQueries({ queryKey: intakeHistoryKeys.all });
       onSuccess?.();
       onOpenChange(false);
     },

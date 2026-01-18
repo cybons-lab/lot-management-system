@@ -647,7 +647,11 @@ class LotService:
 
         # Supplier validation: required only for ORDER origin type
         supplier = None
-        if lot_create.supplier_code:
+        if lot_create.supplier_id is not None:
+            supplier = self.db.query(Supplier).filter(Supplier.id == lot_create.supplier_id).first()
+            if not supplier:
+                raise LotSupplierNotFoundError(f"ID={lot_create.supplier_id}")
+        elif lot_create.supplier_code:
             supplier = (
                 self.db.query(Supplier)
                 .filter(Supplier.supplier_code == lot_create.supplier_code)
