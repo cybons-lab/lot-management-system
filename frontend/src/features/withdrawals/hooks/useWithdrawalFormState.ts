@@ -101,11 +101,14 @@ export function useWithdrawalFormState({
         ...prev,
         lot_id: preselectedLot.lot_id,
       }));
-      if (preselectedLot.supplier_id != null) {
-        setFilters((prev) => ({ ...prev, supplier_id: preselectedLot.supplier_id! }));
-      }
-      if (preselectedLot.product_id) {
-        setFilters((prev) => ({ ...prev, product_id: preselectedLot.product_id }));
+      if (preselectedLot.supplier_id != null || preselectedLot.product_id) {
+        setFilters((prev) => ({
+          ...prev,
+          ...(preselectedLot.supplier_id != null
+            ? { supplier_id: preselectedLot.supplier_id }
+            : {}),
+          ...(preselectedLot.product_id ? { product_id: preselectedLot.product_id } : {}),
+        }));
       }
     }
   }, [preselectedLot]);
@@ -114,13 +117,16 @@ export function useWithdrawalFormState({
   // Use ref to track current customer_id for race condition prevention
   const customerIdRef = useRef(filters.customer_id);
   customerIdRef.current = filters.customer_id;
+  const resetDeliveryPlaces = useCallback(() => {
+    setDeliveryPlaces([]);
+    setFilters((prev) => ({ ...prev, delivery_place_id: 0 }));
+  }, []);
 
   useEffect(() => {
     const currentCustomerId = filters.customer_id;
 
     if (!currentCustomerId) {
-      setDeliveryPlaces([]);
-      setFilters((prev) => ({ ...prev, delivery_place_id: 0 }));
+      resetDeliveryPlaces();
       return;
     }
 
@@ -162,7 +168,7 @@ export function useWithdrawalFormState({
     return () => {
       abortController.abort();
     };
-  }, [filters.customer_id]);
+  }, [filters.customer_id, resetDeliveryPlaces]);
 
   // Reset product filter when supplier changes if product is no longer available
   useEffect(() => {
@@ -244,6 +250,7 @@ export function useWithdrawalFormState({
   // Validation
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
+    const isOrderManual = formData.withdrawal_type === "order_manual";
 
     if (!formData.lot_id || formData.lot_id <= 0) {
       newErrors.lot_id = "ロットを選択してください";
@@ -255,7 +262,7 @@ export function useWithdrawalFormState({
       newErrors.quantity = `利用可能数量（${availableQuantity}）を超えています`;
     }
 
-    if (formData.withdrawal_type === "order_manual") {
+    if (isOrderManual) {
       if (!formData.customer_id || formData.customer_id <= 0) {
         newErrors.customer_id = "得意先を選択してください";
       }
