@@ -116,7 +116,8 @@ export function InventoryPage() {
     if (Object.keys(updates).length > 0) {
       setFilters({ ...filters, ...updates });
     }
-  }, [filters, lastTouched, productOptions, setFilters, supplierOptions, warehouseOptions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productOptions, supplierOptions, warehouseOptions]);
 
   useEffect(() => {
     if (filters.candidate_mode === "stock" && filters.tab === "no_stock") {
