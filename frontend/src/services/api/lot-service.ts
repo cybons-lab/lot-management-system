@@ -7,7 +7,7 @@ import { http } from "@/shared/api/http-client";
 import type { LotResponse } from "@/shared/types/aliases";
 import type { LotCreateInput, LotUpdateInput, LotSearchParams } from "@/utils/validators";
 
-const BASE_PATH = "/lots";
+const BASE_PATH = "lots";
 
 /**
  * ロット一覧を取得
@@ -85,9 +85,14 @@ export async function unlockLot(id: number, quantity?: number): Promise<LotRespo
 
 /**
  * ロットをアーカイブ
+ *
+ * @param id ロットID
+ * @param lotNumber 確認用ロット番号（在庫がある場合は必須）
  */
-export async function archiveLot(id: number): Promise<LotResponse> {
-  return http.patch<LotResponse>(`${BASE_PATH}/${id}/archive`, {});
+export async function archiveLot(id: number, lotNumber?: string): Promise<LotResponse> {
+  return http.patch<LotResponse>(`${BASE_PATH}/${id}/archive`, {
+    lot_number: lotNumber,
+  });
 }
 
 export type StockMovementType = "inbound" | "allocation" | "shipment" | "adjustment" | "return";

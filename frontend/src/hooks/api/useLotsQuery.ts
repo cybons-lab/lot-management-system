@@ -11,13 +11,13 @@ import { getLots } from "@/features/inventory/api";
 import { normalizeLot, type LotUI } from "@/shared/libs/normalize";
 import type { paths } from "@/types/api";
 
-type LotsQueryBase = paths["/api/lots"]["get"]["parameters"]["query"];
+type LotsQueryBase = paths["/api/v2/lot/"]["get"]["parameters"]["query"];
 
 /** クエリパラメータ（納品場所コードフィルタを含む拡張版） */
 type LotsQuery = LotsQueryBase & { delivery_place_code?: string | null };
 
 type LotResponseBase =
-  paths["/api/lots"]["get"]["responses"][200]["content"]["application/json"][number];
+  paths["/api/v2/lot/"]["get"]["responses"][200]["content"]["application/json"][number];
 
 /** ロットレスポンス（納品場所情報とロック情報を含む拡張版） */
 type LotResponse = LotResponseBase & {

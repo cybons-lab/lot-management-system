@@ -90,17 +90,17 @@ export function SupplierDetailPage() {
 
   return (
     <div className={styles.root}>
-      <PageHeader
-        title={isEditing ? "仕入先編集" : "仕入先詳細"}
-        subtitle={supplier.supplier_code}
-        actions={
-          <div className={styles.actionBar}>
-            <Button variant="outline" size="sm" onClick={handleBack}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              一覧に戻る
-            </Button>
-            {!isEditing && (
-              <>
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={handleBack} className="gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          仕入先一覧
+        </Button>
+        <PageHeader
+          title={isEditing ? "仕入先編集" : "仕入先詳細"}
+          subtitle={supplier.supplier_code}
+          actions={
+            !isEditing && (
+              <div className={styles.actionBar}>
                 <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
                   <Edit className="mr-2 h-4 w-4" />
                   編集
@@ -109,11 +109,11 @@ export function SupplierDetailPage() {
                   <Trash2 className="mr-2 h-4 w-4" />
                   削除
                 </Button>
-              </>
-            )}
-          </div>
-        }
-      />
+              </div>
+            )
+          }
+        />
+      </div>
 
       <div className="rounded-lg border bg-white p-6 shadow-sm">
         {isEditing ? (

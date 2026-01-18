@@ -31,7 +31,8 @@ export const useLotMutations = () => {
   });
 
   const archiveMutation = useMutation({
-    mutationFn: (id: number) => lotService.archiveLot(id),
+    mutationFn: ({ id, lotNumber }: { id: number; lotNumber?: string }) =>
+      lotService.archiveLot(id, lotNumber),
     onSuccess: () => {
       toast.success("ロットをアーカイブしました");
       queryClient.invalidateQueries({ queryKey: ["lots"] });

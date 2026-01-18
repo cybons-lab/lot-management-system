@@ -25,6 +25,8 @@ interface InventoryTableProps {
   onRefresh?: () => void;
   /** Supplier ID from page filter - passed to quick intake dialog */
   filterSupplierId?: number;
+  /** Custom header content (replaces default count display) */
+  headerContent?: React.ReactNode;
 }
 
 /** 複合キー生成 */
@@ -37,6 +39,7 @@ export function InventoryTable({
   onRowClick,
   onRefresh,
   filterSupplierId,
+  headerContent,
 }: InventoryTableProps) {
   const {
     selectedLot,
@@ -207,7 +210,9 @@ export function InventoryTable({
         onExpandedRowsChange={handleExpandedRowsChange}
         renderExpandedRow={renderExpandedRow}
         headerSlot={
-          <div className="text-sm font-medium text-gray-700">{data.length} 件の在庫アイテム</div>
+          <div className="text-sm font-medium text-gray-700">
+            {headerContent ?? `${data.length} 件の在庫アイテム`}
+          </div>
         }
         enableVirtualization
         scrollAreaHeight="calc(100vh - 280px)"

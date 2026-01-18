@@ -845,10 +845,23 @@ export interface paths {
     head?: never;
     /**
      * Archive Lot
-     * @description Archive a lot.
+     * @description Archive a lot with optional confirmation.
      *
-     *     The lot must be fully depleted (current_quantity = 0).
+     *     For lots with remaining inventory, lot_number confirmation is required
+     *     in the request body to prevent accidental archiving.
+     *
      *     Archived lots are excluded from default list views but remain in the database.
+     *
+     *     Args:
+     *         lot_id: ロットID
+     *         request: アーカイブリクエスト（在庫がある場合はlot_number必須）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         LotResponse: アーカイブされたロット情報
+     *
+     *     Raises:
+     *         HTTPException: ロット番号不一致または在庫があるのに確認なし
      */
     patch: operations["archive_lot_api_lots__lot_id__archive_patch"];
     trace?: never;
@@ -1983,6 +1996,7 @@ export interface paths {
      *     Args:
      *         data: 出庫登録リクエスト
      *         db: データベースセッション
+     *         current_user: 現在のログインユーザー
      *
      *     Returns:
      *         作成された出庫レコード
@@ -8951,15 +8965,13 @@ export interface components {
     };
     /**
      * FilterOption
-     * @description Filter option for dropdowns.
+     * @description フィルタ選択肢.
      */
     FilterOption: {
-      /** Id */
-      id: number;
-      /** Code */
-      code: string;
-      /** Name */
-      name: string;
+      /** Label */
+      label: string;
+      /** Value */
+      value: string;
     };
     /**
      * FilterOptions
@@ -8967,11 +8979,11 @@ export interface components {
      */
     FilterOptions: {
       /** Products */
-      products: components["schemas"]["FilterOption"][];
+      products: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
       /** Suppliers */
-      suppliers: components["schemas"]["FilterOption"][];
+      suppliers: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
       /** Warehouses */
-      warehouses: components["schemas"]["FilterOption"][];
+      warehouses: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
     };
     /**
      * ForecastBulkImportItem
@@ -9914,6 +9926,20 @@ export interface components {
       username?: string | null;
     };
     /**
+     * LotArchiveRequest
+     * @description Request body for archiving a lot with confirmation.
+     *
+     *     Requires lot_number for confirmation to prevent accidental archiving
+     *     of lots with remaining inventory.
+     */
+    LotArchiveRequest: {
+      /**
+       * Lot Number
+       * @description ロット番号（確認用）
+       */
+      lot_number: string;
+    };
+    /**
      * LotCandidateResponse
      * @description ロット候補のレスポンス.
      */
@@ -10240,6 +10266,10 @@ export interface components {
      *
      *     仮入庫対応:
      *     - lot_number を更新して TMP-... から正式ロット番号に変更可能
+     *
+     *     IMPORTANT: 数量フィールド(current_quantity, allocated_quantity)は含まない
+     *     - 数量の変更は入出庫操作を通してのみ行う
+     *     - stock_historyとの整合性を保つため
      */
     LotUpdate: {
       /** Lot Number */
@@ -10252,10 +10282,6 @@ export interface components {
       received_date?: string | null;
       /** Expiry Date */
       expiry_date?: string | null;
-      /** Current Quantity */
-      current_quantity?: number | string | null;
-      /** Allocated Quantity */
-      allocated_quantity?: number | string | null;
       /** Unit */
       unit?: string | null;
       status?: components["schemas"]["LotStatus"] | null;
@@ -10680,11 +10706,11 @@ export interface components {
      */
     OperationLogFiltersResponse: {
       /** Users */
-      users: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
+      users: components["schemas"]["FilterOption"][];
       /** Operation Types */
-      operation_types: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
+      operation_types: components["schemas"]["FilterOption"][];
       /** Target Tables */
-      target_tables: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
+      target_tables: components["schemas"]["FilterOption"][];
     };
     /**
      * OperationLogListResponse
@@ -13444,13 +13470,15 @@ export interface components {
     WithdrawalType: "order_manual" | "internal_use" | "disposal" | "return" | "sample" | "other";
     /**
      * FilterOption
-     * @description フィルタ選択肢.
+     * @description Filter option for dropdowns.
      */
-    app__presentation__schemas__system__operation_logs_schema__FilterOption: {
-      /** Label */
-      label: string;
-      /** Value */
-      value: string;
+    app__presentation__schemas__inventory__inventory_schema__FilterOption: {
+      /** Id */
+      id: number;
+      /** Code */
+      code: string;
+      /** Name */
+      name: string;
     };
     /**
      * UserResponse
@@ -14962,7 +14990,11 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["LotArchiveRequest"] | null;
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {

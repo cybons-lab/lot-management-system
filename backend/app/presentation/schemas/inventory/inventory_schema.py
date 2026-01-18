@@ -125,6 +125,10 @@ class LotUpdate(BaseSchema):
 
     仮入庫対応:
     - lot_number を更新して TMP-... から正式ロット番号に変更可能
+
+    IMPORTANT: 数量フィールド(current_quantity, allocated_quantity)は含まない
+    - 数量の変更は入出庫操作を通してのみ行う
+    - stock_historyとの整合性を保つため
     """
 
     # Allow updating lot_number (for converting temporary to official)
@@ -134,8 +138,8 @@ class LotUpdate(BaseSchema):
     expected_lot_id: int | None = None
     received_date: date | None = None
     expiry_date: date | None = None
-    current_quantity: Decimal | None = None
-    allocated_quantity: Decimal | None = None
+    # current_quantity: Removed - use intake/withdrawal operations
+    # allocated_quantity: Removed - managed by allocation system
     unit: str | None = None
     status: LotStatus | None = None
 
@@ -349,3 +353,13 @@ class FilterOptions(BaseSchema):
     products: list[FilterOption]
     suppliers: list[FilterOption]
     warehouses: list[FilterOption]
+
+
+class LotArchiveRequest(BaseSchema):
+    """Request body for archiving a lot with confirmation.
+
+    Requires lot_number for confirmation to prevent accidental archiving
+    of lots with remaining inventory.
+    """
+
+    lot_number: str = Field(..., description="ロット番号（確認用）")

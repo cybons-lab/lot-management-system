@@ -146,6 +146,7 @@ from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.routes.auth.auth_router import get_current_user_optional
 from app.presentation.schemas.inventory.inventory_schema import (
+    LotArchiveRequest,
     LotCreate,
     LotLock,
     LotResponse,
@@ -455,17 +456,32 @@ def unlock_lot(lot_id: int, unlock_data: LotLock | None = None, db: Session = De
 @router.patch("/{lot_id}/archive", response_model=LotResponse)
 def archive_lot(
     lot_id: int,
+    request: LotArchiveRequest | None = None,
     db: Session = Depends(get_db),
     # TODO: Add permission check
     # current_user: User = Depends(get_current_active_user),
 ) -> Any:
-    """Archive a lot.
+    """Archive a lot with optional confirmation.
 
-    The lot must be fully depleted (current_quantity = 0).
+    For lots with remaining inventory, lot_number confirmation is required
+    in the request body to prevent accidental archiving.
+
     Archived lots are excluded from default list views but remain in the database.
+
+    Args:
+        lot_id: ロットID
+        request: アーカイブリクエスト（在庫がある場合はlot_number必須）
+        db: データベースセッション
+
+    Returns:
+        LotResponse: アーカイブされたロット情報
+
+    Raises:
+        HTTPException: ロット番号不一致または在庫があるのに確認なし
     """
     service = LotService(db)
-    return service.archive_lot(lot_id)
+    confirmation_lot_number = request.lot_number if request else None
+    return service.archive_lot(lot_id, confirmation_lot_number)
 
 
 # ===== Stock Movements =====

@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -42,6 +43,10 @@ export function InventoryItemDetailPage() {
   const [activeTab, setActiveTab] = useState("summary");
   const [showArchived, setShowArchived] = useState(false);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
   // 簡易出庫ダイアログ用の状態
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [selectedLotForWithdrawal, setSelectedLotForWithdrawal] = useState<LotUI | null>(null);
@@ -59,16 +64,31 @@ export function InventoryItemDetailPage() {
 
   const { data: item, isLoading, isError } = useInventoryItem(productIdNum, warehouseIdNum);
 
-  // 全ロット取得してフィルタリング
-  const { data: allLots = [], isLoading: lotsLoading, refetch: refetchLots } = useLotsQuery({});
+  // サーバー側フィルタリングでロット取得
+  const {
+    data: allLots = [],
+    isLoading: lotsLoading,
+    refetch: refetchLots,
+  } = useLotsQuery({
+    product_id: productIdNum,
+    warehouse_id: warehouseIdNum,
+    status: showArchived ? undefined : "active", // アーカイブ表示時は全取得、それ以外はactiveのみ
+    skip: (page - 1) * pageSize,
+    limit: pageSize,
+  });
 
-  // フィルタリングロジック
-  const itemLots = allLots.filter(
-    (lot) =>
-      lot.product_id === productIdNum &&
-      lot.warehouse_id === warehouseIdNum &&
-      (showArchived || lot.status !== "archived"),
-  );
+  // サーバー側でフィルタリング済みのため、クライアント側フィルタは不要
+  const itemLots = allLots;
+
+  // Pagination logic
+  const totalCount = showArchived ? undefined : item?.active_lot_count;
+  const hasNextPage =
+    totalCount != null ? page * pageSize < totalCount : itemLots.length === pageSize;
+  const hasPrevPage = page > 1;
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
   const handleBack = () => {
     navigate(ROUTES.INVENTORY.SUMMARY);
@@ -136,6 +156,16 @@ export function InventoryItemDetailPage() {
       header: "ロット番号",
       cell: (lot) => <span className="font-medium">{lot.lot_number}</span>,
       sortable: true,
+    },
+    {
+      id: "supplier",
+      header: "仕入先",
+      cell: (lot) => {
+        const supplierDisplay: string = (lot.supplier_name || lot.supplier_code || "-") as string;
+        return <span className="text-sm text-gray-700">{supplierDisplay}</span>;
+      },
+      sortable: true,
+      align: "left",
     },
     {
       id: "current_quantity",
@@ -227,14 +257,15 @@ export function InventoryItemDetailPage() {
   return (
     <div className={styles.root}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={handleBack} className="gap-2">
+          <span className="text-lg">←</span>
+          在庫管理
+        </Button>
         <PageHeader
           title="在庫詳細"
           subtitle={`${item.product_name || "名称未設定"} (${item.product_code || "-"}) / ${item.warehouse_name || "名称未設定"} (${item.warehouse_code || "-"})`}
         />
-        <Button variant="outline" onClick={handleBack}>
-          一覧に戻る
-        </Button>
       </div>
 
       {/* Basic Info Card */}
@@ -266,7 +297,10 @@ export function InventoryItemDetailPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="summary">サマリ</TabsTrigger>
-          <TabsTrigger value="lots">ロット一覧 ({itemLots.length})</TabsTrigger>
+          <TabsTrigger value="lots">
+            ロット一覧 (
+            {showArchived ? allLots.length : (item?.active_lot_count ?? itemLots.length)})
+          </TabsTrigger>
           <TabsTrigger value="inbound">入荷予定</TabsTrigger>
           <TabsTrigger value="intake_history">入庫履歴</TabsTrigger>
           <TabsTrigger value="history">出庫履歴</TabsTrigger>
@@ -324,7 +358,10 @@ export function InventoryItemDetailPage() {
               <Checkbox
                 id="show-archived"
                 checked={showArchived}
-                onCheckedChange={(checked) => setShowArchived(checked as boolean)}
+                onCheckedChange={(checked) => {
+                  setShowArchived(checked as boolean);
+                  setPage(1);
+                }}
               />
               <label
                 htmlFor="show-archived"
@@ -342,6 +379,57 @@ export function InventoryItemDetailPage() {
               isLoading={lotsLoading}
               emptyMessage="該当するロットがありません。"
             />
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
+              <div className="flex items-center gap-4 text-sm text-slate-500">
+                <div className="flex items-center gap-2">
+                  <span>表示件数:</span>
+                  <select
+                    className="h-8 rounded-md border border-slate-300 bg-transparent px-2 text-sm"
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setPage(1);
+                    }}
+                  >
+                    {[10, 20, 50, 100].map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {totalCount != null ? (
+                  <>
+                    全 {fmt(totalCount)} 件中 {fmt((page - 1) * pageSize + 1)} -{" "}
+                    {fmt(Math.min(page * pageSize, totalCount))} 件を表示
+                  </>
+                ) : (
+                  <>ページ {page}</>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={!hasPrevPage || lotsLoading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="sr-only">前へ</span>
+                </Button>
+                <div className="text-sm font-medium text-slate-600">Page {page}</div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={!hasNextPage || lotsLoading}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only">次へ</span>
+                </Button>
+              </div>
+            </div>
           </div>
         </TabsContent>
 
@@ -439,9 +527,9 @@ export function InventoryItemDetailPage() {
           lot={selectedLotForArchive}
           open={archiveDialogOpen}
           onOpenChange={setArchiveDialogOpen}
-          onConfirm={async () => {
+          onConfirm={async (lotNumber) => {
             const confirmedLot = selectedLotForArchive;
-            await archiveLot(confirmedLot.id);
+            await archiveLot({ id: confirmedLot.id, lotNumber });
             refetchLots();
             queryClient.invalidateQueries({
               queryKey: inventoryItemKeys.detail(productIdNum, warehouseIdNum),

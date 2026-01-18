@@ -344,19 +344,30 @@ class LotService:
         StockValidator.validate_sufficient_stock(lot_id, required_qty, available_qty)
         StockValidator.validate_not_expired(lot_id, lot.expiry_date)
 
-    def archive_lot(self, lot_id: int) -> LotResponse:
-        """Archive a depleted or expired lot.
+    def archive_lot(self, lot_id: int, confirmation_lot_number: str | None = None) -> LotResponse:
+        """Archive a lot with optional confirmation for lots with remaining inventory.
 
         Archived lots are hidden from default views but retained for traceability.
+
+        Args:
+            lot_id: ロットID
+            confirmation_lot_number: 確認用ロット番号（在庫がある場合は必須）
+
+        Raises:
+            LotValidationError: ロット番号が一致しない、または在庫がある場合に確認がない
         """
         lot = self.get_lot(lot_id)
 
-        # Validation: Must interpret current_quantity correctly
-        # In LotReceipt, current_quantity is a hybrid property.
+        # Validation: If lot has inventory, require lot_number confirmation
         if lot.current_quantity > 0:
             from app.domain.lot import LotValidationError
 
-            raise LotValidationError("在庫が残っているロットはアーカイブできません")
+            if not confirmation_lot_number:
+                raise LotValidationError("在庫が残っているロットはアーカイブできません")
+
+            # Verify lot_number matches (case-sensitive)
+            if lot.lot_master.lot_number != confirmation_lot_number:
+                raise LotValidationError("ロット番号が一致しません")
 
         # Update status
         # Note: status is a string column in DB

@@ -52,6 +52,7 @@ def generate_lots(
         2: "multi_fefo",  # 3 Active with staggered expiry
         3: "depleted_only",  # 1 Depleted only (Simulates stockout)
         4: "no_lots",  # No lots at all (Tests lot_count=0 display)
+        5: "archived_lots",  # 2 Archived lots (Tests archive filter)
     }
 
     for idx, p in enumerate(products):
@@ -86,6 +87,8 @@ def generate_lots(
                 if not existing:
                     db.add(ProductWarehouse(product_id=p.id, warehouse_id=warehouse.id))
                 continue
+            elif scenario == "archived_lots":
+                lots_to_create = [("archived", "archived"), ("archived", "archived")]
         else:
             # Standard distribution for others
             # 80% Normal (2-5 lots), 10% Shortage, 5% Expiring, 5% Expired
@@ -121,6 +124,9 @@ def generate_lots(
             elif scenario_type == "depleted":
                 qty = Decimal("0")
                 expiry_days = random.randint(30, 180)
+            elif scenario_type == "archived":
+                qty = Decimal("0")  # Archived lots must be depleted
+                expiry_days = random.randint(-90, -30)  # Past expiry
             else:
                 qty = Decimal("100")
                 expiry_days = 90

@@ -1,6 +1,8 @@
 import {
   ArrowUpFromLine,
   Box,
+  ChevronLeft,
+  ChevronRight,
   History,
   Home,
   List,
@@ -9,7 +11,7 @@ import {
   Search,
   Truck,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -50,12 +52,25 @@ export function InventoryPage() {
     resetFilters,
   } = useInventoryPageState();
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
+
   // Data Fetching
   const {
     data: inventoryItems = [],
     isLoading: isItemsLoading,
     refetch: refetchItems,
-  } = useInventoryItems(queryParams);
+  } = useInventoryItems({
+    ...queryParams,
+    skip: (page - 1) * pageSize,
+    limit: pageSize,
+  });
 
   const supplierQuery = useInventoryBySupplier();
   const warehouseQuery = useInventoryByWarehouse();
@@ -317,12 +332,58 @@ export function InventoryPage() {
         {/* Tables */}
         <div className="rounded-md border bg-white shadow-sm">
           {overviewMode === "items" && (
-            <InventoryTable
-              data={inventoryItems}
-              isLoading={isItemsLoading}
-              onRefresh={refetchItems}
-              filterSupplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
-            />
+            <>
+              <InventoryTable
+                data={inventoryItems}
+                isLoading={isItemsLoading}
+                onRefresh={refetchItems}
+                filterSupplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
+                headerContent={`ページ ${page} (表示件数: ${inventoryItems.length})`}
+              />
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
+                <div className="flex items-center gap-4 text-sm text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <span>表示件数:</span>
+                    <select
+                      className="h-8 rounded-md border border-slate-300 bg-transparent px-2 text-sm"
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setPage(1);
+                      }}
+                    >
+                      {[20, 50, 100].map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>ページ {page}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page <= 1 || isItemsLoading}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="sr-only">前へ</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page + 1)}
+                    disabled={inventoryItems.length < pageSize || isItemsLoading}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    <span className="sr-only">次へ</span>
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
           {overviewMode === "supplier" && (
             <InventoryBySupplierTable

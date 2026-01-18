@@ -11,11 +11,14 @@ import type { LotUI } from "@/shared/libs/normalize";
 
 /**
  * ロット更新データの型定義
+ *
+ * IMPORTANT: 数量フィールドは含まない
+ * - 数量の変更は入出庫操作を通してのみ行う
  */
 export interface LotUpdateData {
   supplier_code?: string;
   delivery_place_code?: string;
-  quantity?: number;
+  // quantity: Removed - use intake/withdrawal operations
   lot_unit?: string;
   receipt_date?: string;
   expiry_date?: string;
@@ -43,7 +46,7 @@ export function LotEditForm({ initialData, onSubmit, onCancel, isSubmitting }: L
     const data: LotUpdateData = {
       // supplier_code: formData.get("supplier_code") as string, // 今回は更新対象外とする（ID管理のため複雑になる）
       // delivery_place_code: formData.get("delivery_place_code") as string,
-      quantity: Number(formData.get("quantity")),
+      // quantity: Removed - quantity changes only through intake/withdrawal operations
       lot_unit: formData.get("lot_unit") as string,
       receipt_date: formData.get("receipt_date") as string,
       expiry_date: (formData.get("expiry_date") as string) || undefined,
