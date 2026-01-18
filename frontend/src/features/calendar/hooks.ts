@@ -86,23 +86,20 @@ export function useOriginalDeliveryCalendar() {
     useMutation({
       mutationFn: (payload: OriginalDeliveryCalendarCreate) =>
         calendarApi.createOriginalDeliveryDate(payload),
-      onSuccess: () =>
-        queryClient.invalidateQueries({ queryKey: ["originalDeliveryCalendar"] }),
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: ["originalDeliveryCalendar"] }),
     });
 
   const useUpdate = () =>
     useMutation({
       mutationFn: ({ id, payload }: { id: number; payload: OriginalDeliveryCalendarUpdate }) =>
         calendarApi.updateOriginalDeliveryDate(id, payload),
-      onSuccess: () =>
-        queryClient.invalidateQueries({ queryKey: ["originalDeliveryCalendar"] }),
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: ["originalDeliveryCalendar"] }),
     });
 
   const useDelete = () =>
     useMutation({
       mutationFn: (id: number) => calendarApi.deleteOriginalDeliveryDate(id),
-      onSuccess: () =>
-        queryClient.invalidateQueries({ queryKey: ["originalDeliveryCalendar"] }),
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: ["originalDeliveryCalendar"] }),
     });
 
   return { useList, useCreate, useUpdate, useDelete };
@@ -110,6 +107,7 @@ export function useOriginalDeliveryCalendar() {
 
 export function useBusinessDayCalculator() {
   return useMutation({
-    mutationFn: (payload: BusinessDayCalculationRequest) => calendarApi.calculateBusinessDay(payload),
+    mutationFn: (payload: BusinessDayCalculationRequest) =>
+      calendarApi.calculateBusinessDay(payload),
   });
 }

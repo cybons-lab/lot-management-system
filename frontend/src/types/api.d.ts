@@ -4208,6 +4208,131 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/calendar/holidays": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Holiday Calendars */
+    get: operations["list_holiday_calendars_api_calendar_holidays_get"];
+    put?: never;
+    /** Create Holiday Calendar */
+    post: operations["create_holiday_calendar_api_calendar_holidays_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/calendar/holidays/{holiday_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update Holiday Calendar */
+    put: operations["update_holiday_calendar_api_calendar_holidays__holiday_id__put"];
+    post?: never;
+    /** Delete Holiday Calendar */
+    delete: operations["delete_holiday_calendar_api_calendar_holidays__holiday_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/calendar/company-days": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Company Calendar */
+    get: operations["list_company_calendar_api_calendar_company_days_get"];
+    put?: never;
+    /** Create Company Calendar */
+    post: operations["create_company_calendar_api_calendar_company_days_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/calendar/company-days/{company_calendar_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update Company Calendar */
+    put: operations["update_company_calendar_api_calendar_company_days__company_calendar_id__put"];
+    post?: never;
+    /** Delete Company Calendar */
+    delete: operations["delete_company_calendar_api_calendar_company_days__company_calendar_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/calendar/original-delivery-dates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Original Delivery Calendar */
+    get: operations["list_original_delivery_calendar_api_calendar_original_delivery_dates_get"];
+    put?: never;
+    /** Create Original Delivery Calendar */
+    post: operations["create_original_delivery_calendar_api_calendar_original_delivery_dates_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/calendar/original-delivery-dates/{delivery_calendar_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update Original Delivery Calendar */
+    put: operations["update_original_delivery_calendar_api_calendar_original_delivery_dates__delivery_calendar_id__put"];
+    post?: never;
+    /** Delete Original Delivery Calendar */
+    delete: operations["delete_original_delivery_calendar_api_calendar_original_delivery_dates__delivery_calendar_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/calendar/business-day-calc": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Calculate Business Day */
+    post: operations["calculate_business_day_api_calendar_business_day_calc_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/users/template/download": {
     parameters: {
       query?: never;
@@ -4860,11 +4985,32 @@ export interface paths {
     put?: never;
     /**
      * Generate Test Data Endpoint
-     * @description Generate test data for development.
+     * @description Generate test data in background.
      *
+     *     Returns a job_id to track progress.
      *     WARNING: This will DELETE all existing data in related tables.
      */
     post: operations["generate_test_data_endpoint_api_admin_test_data_generate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/test-data/progress/{job_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Progress
+     * @description Get generation progress.
+     */
+    get: operations["get_progress_api_admin_test_data_progress__job_id__get"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -7296,6 +7442,56 @@ export interface components {
       failed: number;
     };
     /**
+     * BusinessDayCalculationRequest
+     * @description Request for business day calculation.
+     */
+    BusinessDayCalculationRequest: {
+      /**
+       * Start Date
+       * Format: date
+       * @description 起算日
+       */
+      start_date: string;
+      /**
+       * Days
+       * @description 営業日数
+       */
+      days: number;
+      /**
+       * Direction
+       * @description after/before
+       */
+      direction: string;
+      /**
+       * Include Start
+       * @description 起算日を含める
+       * @default false
+       */
+      include_start: boolean;
+    };
+    /**
+     * BusinessDayCalculationResponse
+     * @description Response for business day calculation.
+     */
+    BusinessDayCalculationResponse: {
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string;
+      /**
+       * Result Date
+       * Format: date
+       */
+      result_date: string;
+      /** Days */
+      days: number;
+      /** Direction */
+      direction: string;
+      /** Include Start */
+      include_start: boolean;
+    };
+    /**
      * BusinessRuleCreate
      * @description 業務ルール作成スキーマ.
      */
@@ -7605,6 +7801,83 @@ export interface components {
       pending_jobs: components["schemas"]["CloudFlowJobResponse"][];
       /** Your Position */
       your_position?: number | null;
+    };
+    /**
+     * CompanyCalendarCreate
+     * @description Create request for company calendar.
+     */
+    CompanyCalendarCreate: {
+      /**
+       * Calendar Date
+       * Format: date
+       * @description 会社カレンダー日
+       */
+      calendar_date: string;
+      /**
+       * Is Workday
+       * @description 稼働日ならtrue、休日ならfalse
+       */
+      is_workday: boolean;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+    };
+    /**
+     * CompanyCalendarResponse
+     * @description Response schema for company calendar.
+     */
+    CompanyCalendarResponse: {
+      /**
+       * Calendar Date
+       * Format: date
+       * @description 会社カレンダー日
+       */
+      calendar_date: string;
+      /**
+       * Is Workday
+       * @description 稼働日ならtrue、休日ならfalse
+       */
+      is_workday: boolean;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * CompanyCalendarUpdate
+     * @description Update request for company calendar.
+     */
+    CompanyCalendarUpdate: {
+      /**
+       * Calendar Date
+       * @description 会社カレンダー日
+       */
+      calendar_date?: string | null;
+      /**
+       * Is Workday
+       * @description 稼働日ならtrue、休日ならfalse
+       */
+      is_workday?: boolean | null;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
     };
     /**
      * ConfirmedOrderLineResponse
@@ -8678,13 +8951,15 @@ export interface components {
     };
     /**
      * FilterOption
-     * @description フィルタ選択肢.
+     * @description Filter option for dropdowns.
      */
     FilterOption: {
-      /** Label */
-      label: string;
-      /** Value */
-      value: string;
+      /** Id */
+      id: number;
+      /** Code */
+      code: string;
+      /** Name */
+      name: string;
     };
     /**
      * FilterOptions
@@ -8692,11 +8967,11 @@ export interface components {
      */
     FilterOptions: {
       /** Products */
-      products: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      products: components["schemas"]["FilterOption"][];
       /** Suppliers */
-      suppliers: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      suppliers: components["schemas"]["FilterOption"][];
       /** Warehouses */
-      warehouses: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      warehouses: components["schemas"]["FilterOption"][];
     };
     /**
      * ForecastBulkImportItem
@@ -8947,6 +9222,8 @@ export interface components {
       include_lt_variance?: boolean | null;
       /** Base Date */
       base_date?: string | null;
+      /** History Months */
+      history_months?: number | null;
     };
     /** GetHistoryResponse */
     GetHistoryResponse: {
@@ -9048,6 +9325,68 @@ export interface components {
       confirmed_at: string;
       /** Confirmed By */
       confirmed_by?: string | null;
+    };
+    /**
+     * HolidayCalendarCreate
+     * @description Create request for holiday calendar.
+     */
+    HolidayCalendarCreate: {
+      /**
+       * Holiday Date
+       * Format: date
+       * @description 祝日
+       */
+      holiday_date: string;
+      /**
+       * Holiday Name
+       * @description 祝日名
+       */
+      holiday_name?: string | null;
+    };
+    /**
+     * HolidayCalendarResponse
+     * @description Response schema for holiday calendar.
+     */
+    HolidayCalendarResponse: {
+      /**
+       * Holiday Date
+       * Format: date
+       * @description 祝日
+       */
+      holiday_date: string;
+      /**
+       * Holiday Name
+       * @description 祝日名
+       */
+      holiday_name?: string | null;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * HolidayCalendarUpdate
+     * @description Update request for holiday calendar.
+     */
+    HolidayCalendarUpdate: {
+      /**
+       * Holiday Date
+       * @description 祝日
+       */
+      holiday_date?: string | null;
+      /**
+       * Holiday Name
+       * @description 祝日名
+       */
+      holiday_name?: string | null;
     };
     /**
      * ImportResultDetail
@@ -10341,11 +10680,11 @@ export interface components {
      */
     OperationLogFiltersResponse: {
       /** Users */
-      users: components["schemas"]["FilterOption"][];
+      users: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
       /** Operation Types */
-      operation_types: components["schemas"]["FilterOption"][];
+      operation_types: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
       /** Target Tables */
-      target_tables: components["schemas"]["FilterOption"][];
+      target_tables: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
     };
     /**
      * OperationLogListResponse
@@ -10834,6 +11173,68 @@ export interface components {
       lock_expires_at?: string | null;
       /** Lines */
       lines?: components["schemas"]["OrderLineResponse"][];
+    };
+    /**
+     * OriginalDeliveryCalendarCreate
+     * @description Create request for original delivery calendar.
+     */
+    OriginalDeliveryCalendarCreate: {
+      /**
+       * Delivery Date
+       * Format: date
+       * @description 配信日
+       */
+      delivery_date: string;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+    };
+    /**
+     * OriginalDeliveryCalendarResponse
+     * @description Response schema for original delivery calendar.
+     */
+    OriginalDeliveryCalendarResponse: {
+      /**
+       * Delivery Date
+       * Format: date
+       * @description 配信日
+       */
+      delivery_date: string;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * OriginalDeliveryCalendarUpdate
+     * @description Update request for original delivery calendar.
+     */
+    OriginalDeliveryCalendarUpdate: {
+      /**
+       * Delivery Date
+       * @description 配信日
+       */
+      delivery_date?: string | null;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
     };
     /**
      * ProductBulkRow
@@ -12299,7 +12700,7 @@ export interface components {
        * @default bearer
        */
       token_type: string;
-      user: components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
+      user: components["schemas"]["UserResponse"];
     };
     /**
      * TransportLeadTimeResponse
@@ -12466,45 +12867,19 @@ export interface components {
     };
     /**
      * UserResponse
-     * @description Schema for user response (DDL: users).
+     * @description User response schema.
      */
     UserResponse: {
-      /**
-       * Username
-       * @description ユーザー名
-       */
+      /** Id */
+      id: number;
+      /** Username */
       username: string;
-      /**
-       * Email
-       * Format: email
-       * @description メールアドレス
-       */
-      email: string;
-      /**
-       * Display Name
-       * @description 表示名
-       */
+      /** Display Name */
       display_name: string;
-      /**
-       * Is Active
-       * @description 有効フラグ
-       * @default true
-       */
-      is_active: boolean;
-      /** User Id */
-      user_id: number;
-      /** Last Login At */
-      last_login_at?: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
+      /** Roles */
+      roles?: string[];
+      /** Assignments */
+      assignments?: components["schemas"]["UserAssignmentSchema"][];
     };
     /**
      * UserRoleAssignment
@@ -13068,32 +13443,56 @@ export interface components {
      */
     WithdrawalType: "order_manual" | "internal_use" | "disposal" | "return" | "sample" | "other";
     /**
-     * UserResponse
-     * @description User response schema.
+     * FilterOption
+     * @description フィルタ選択肢.
      */
-    app__presentation__schemas__auth__auth_schemas__UserResponse: {
-      /** Id */
-      id: number;
-      /** Username */
-      username: string;
-      /** Display Name */
-      display_name: string;
-      /** Roles */
-      roles?: string[];
-      /** Assignments */
-      assignments?: components["schemas"]["UserAssignmentSchema"][];
+    app__presentation__schemas__system__operation_logs_schema__FilterOption: {
+      /** Label */
+      label: string;
+      /** Value */
+      value: string;
     };
     /**
-     * FilterOption
-     * @description Filter option for dropdowns.
+     * UserResponse
+     * @description Schema for user response (DDL: users).
      */
-    app__presentation__schemas__inventory__inventory_schema__FilterOption: {
-      /** Id */
-      id: number;
-      /** Code */
-      code: string;
-      /** Name */
-      name: string;
+    app__presentation__schemas__system__users_schema__UserResponse: {
+      /**
+       * Username
+       * @description ユーザー名
+       */
+      username: string;
+      /**
+       * Email
+       * Format: email
+       * @description メールアドレス
+       */
+      email: string;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name: string;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** User Id */
+      user_id: number;
+      /** Last Login At */
+      last_login_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
     };
   };
   responses: never;
@@ -19369,7 +19768,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
+          "application/json": components["schemas"]["UserResponse"];
         };
       };
     };
@@ -19445,6 +19844,390 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ClientLogResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_holiday_calendars_api_calendar_holidays_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HolidayCalendarResponse"][];
+        };
+      };
+    };
+  };
+  create_holiday_calendar_api_calendar_holidays_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HolidayCalendarCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HolidayCalendarResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_holiday_calendar_api_calendar_holidays__holiday_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        holiday_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HolidayCalendarUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HolidayCalendarResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_holiday_calendar_api_calendar_holidays__holiday_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        holiday_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_company_calendar_api_calendar_company_days_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CompanyCalendarResponse"][];
+        };
+      };
+    };
+  };
+  create_company_calendar_api_calendar_company_days_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CompanyCalendarCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CompanyCalendarResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_company_calendar_api_calendar_company_days__company_calendar_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        company_calendar_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CompanyCalendarUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CompanyCalendarResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_company_calendar_api_calendar_company_days__company_calendar_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        company_calendar_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_original_delivery_calendar_api_calendar_original_delivery_dates_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OriginalDeliveryCalendarResponse"][];
+        };
+      };
+    };
+  };
+  create_original_delivery_calendar_api_calendar_original_delivery_dates_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OriginalDeliveryCalendarCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OriginalDeliveryCalendarResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_original_delivery_calendar_api_calendar_original_delivery_dates__delivery_calendar_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        delivery_calendar_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OriginalDeliveryCalendarUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OriginalDeliveryCalendarResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_original_delivery_calendar_api_calendar_original_delivery_dates__delivery_calendar_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        delivery_calendar_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  calculate_business_day_api_calendar_business_day_calc_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BusinessDayCalculationRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BusinessDayCalculationResponse"];
         };
       };
       /** @description Validation Error */
@@ -19543,7 +20326,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"][];
+          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"][];
         };
       };
       /** @description Validation Error */
@@ -19576,7 +20359,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"];
+          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"];
         };
       };
       /** @description Validation Error */
@@ -19642,7 +20425,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"];
+          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"];
         };
       };
       /** @description Validation Error */
@@ -20331,6 +21114,37 @@ export interface operations {
         "application/json": components["schemas"]["GenerateRequest"] | null;
       };
     };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_progress_api_admin_test_data_progress__job_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        job_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
     responses: {
       /** @description Successful Response */
       200: {

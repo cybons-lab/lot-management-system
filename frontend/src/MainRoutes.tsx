@@ -265,7 +265,7 @@ export function MainRoutes() {
       {MasterRoutes()}
       {AdminRoutes()}
 
-      {/* Calendar */} 
+      {/* Calendar */}
       <Route
         path={ROUTES.CALENDAR}
         element={
