@@ -5,6 +5,8 @@ Refactored: Split into smaller modules for better maintainability.
 
 from sqlalchemy.orm import Session
 
+from .test_data.calendar_wrapper import TestDataCalendar
+from .test_data.calendars import generate_calendars
 from .test_data.forecasts import generate_forecasts, generate_reservations
 from .test_data.inbound import generate_inbound_plans
 from .test_data.inventory import generate_lots
@@ -51,6 +53,13 @@ def generate_all_test_data(db: Session, options: object = None):
     try:
         clear_data(db)
 
+        # Step 0: Generate Calendar Data
+        generate_calendars(db, options)
+        db.commit()  # Ensure data is committed before Wrapper loads it
+
+        # Initialize Wrapper
+        calendar = TestDataCalendar(db)
+
         warehouses = generate_warehouses(db, options)
         suppliers = generate_suppliers(db, options)
         customers, delivery_places = generate_customers_and_delivery_places(db, options)
@@ -73,13 +82,15 @@ def generate_all_test_data(db: Session, options: object = None):
         generate_reservations(db)
 
         # Step 4: Generate orders (diverse types + reservations)
-        generate_orders(db, customers, products, products_with_forecast, delivery_places, options)
+        generate_orders(
+            db, customers, products, products_with_forecast, delivery_places, options, calendar
+        )
 
         # Step 5: Generate withdrawal history (requires lots and customers)
-        generate_withdrawals(db, customers, delivery_places, options)
+        generate_withdrawals(db, customers, delivery_places, options, calendar)
 
         # Step 6: Generate inbound plans and link past plans to lots
-        generate_inbound_plans(db, products, suppliers, options)
+        generate_inbound_plans(db, products, suppliers, options, calendar)
 
         return True
     except Exception as e:

@@ -25,6 +25,7 @@ def generate_orders(
     products_with_forecast: list[Product],
     delivery_places: list[DeliveryPlace],
     options: object = None,
+    calendar: object = None,
 ):
     """Generate orders based on forecast data.
 
@@ -98,9 +99,15 @@ def generate_orders(
             ocr_filename = f"OCR_{date.today().strftime('%Y%m%d')}_{random.randint(1000, 9999)}.pdf"
 
         # Create Order Header
+        order_date = date.today()
+        if calendar and hasattr(calendar, "adjust_date"):
+            order_date = calendar.adjust_date(
+                order_date, forward=False
+            )  # Use previous business day if today is holiday
+
         order = Order(
             customer_id=customer_id,
-            order_date=date.today(),
+            order_date=order_date,
             ocr_source_filename=ocr_filename,
             status="open",  # Default
         )
@@ -146,6 +153,9 @@ def generate_orders(
 
             # Determine delivery date and quantity based on scenario
             delivery_date = fc.forecast_date
+            if calendar and hasattr(calendar, "adjust_date"):
+                delivery_date = calendar.adjust_date(delivery_date)
+
             qty = base_qty
 
             # 90% match forecast exactly, 10% variance
@@ -164,8 +174,12 @@ def generate_orders(
                     qty = base_qty * Decimal(str(random.uniform(0.70, 0.90)))
                 elif anomaly == "early":
                     delivery_date = fc.forecast_date - timedelta(days=random.randint(1, 2))
+                    if calendar and hasattr(calendar, "adjust_date"):
+                        delivery_date = calendar.adjust_date(delivery_date)
                 elif anomaly == "late":
                     delivery_date = fc.forecast_date + timedelta(days=random.randint(1, 2))
+                    if calendar and hasattr(calendar, "adjust_date"):
+                        delivery_date = calendar.adjust_date(delivery_date)
 
             qty = Decimal(str(int(qty)))
             if qty <= 0:

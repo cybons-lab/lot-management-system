@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
@@ -29,11 +30,7 @@ class CalendarService:
         self.db = db
 
     def list_holidays(self) -> list[HolidayCalendar]:
-        return (
-            self.db.query(HolidayCalendar)
-            .order_by(HolidayCalendar.holiday_date.asc())
-            .all()
-        )
+        return self.db.query(HolidayCalendar).order_by(HolidayCalendar.holiday_date.asc()).all()
 
     def create_holiday(self, payload: HolidayCalendarCreate) -> HolidayCalendar:
         existing = (
@@ -69,7 +66,7 @@ class CalendarService:
             setattr(holiday, key, value)
         self._commit_or_raise()
         self.db.refresh(holiday)
-        return holiday
+        return holiday  # type: ignore
 
     def delete_holiday(self, holiday_id: int) -> None:
         holiday = self._get_or_404(HolidayCalendar, holiday_id, "祝日が見つかりません")
@@ -77,11 +74,7 @@ class CalendarService:
         self._commit_or_raise()
 
     def list_company_calendar(self) -> list[CompanyCalendar]:
-        return (
-            self.db.query(CompanyCalendar)
-            .order_by(CompanyCalendar.calendar_date.asc())
-            .all()
-        )
+        return self.db.query(CompanyCalendar).order_by(CompanyCalendar.calendar_date.asc()).all()
 
     def create_company_calendar(self, payload: CompanyCalendarCreate) -> CompanyCalendar:
         existing = (
@@ -121,7 +114,7 @@ class CalendarService:
             setattr(company_date, key, value)
         self._commit_or_raise()
         self.db.refresh(company_date)
-        return company_date
+        return company_date  # type: ignore
 
     def delete_company_calendar(self, company_calendar_id: int) -> None:
         company_date = self._get_or_404(
@@ -179,7 +172,7 @@ class CalendarService:
             setattr(delivery_date, key, value)
         self._commit_or_raise()
         self.db.refresh(delivery_date)
-        return delivery_date
+        return delivery_date  # type: ignore
 
     def delete_original_delivery_calendar(self, delivery_calendar_id: int) -> None:
         delivery_date = self._get_or_404(
@@ -191,12 +184,9 @@ class CalendarService:
     def calculate_business_day(self, payload: BusinessDayCalculationRequest) -> date:
         if payload.days == 0:
             return payload.start_date
-        holiday_dates = {
-            holiday.holiday_date for holiday in self.db.query(HolidayCalendar).all()
-        }
+        holiday_dates = {holiday.holiday_date for holiday in self.db.query(HolidayCalendar).all()}
         company_overrides = {
-            entry.calendar_date: entry.is_workday
-            for entry in self.db.query(CompanyCalendar).all()
+            entry.calendar_date: entry.is_workday for entry in self.db.query(CompanyCalendar).all()
         }
 
         def is_business_day(target_date: date) -> bool:
@@ -225,7 +215,7 @@ class CalendarService:
 
         return current
 
-    def _get_or_404(self, model: type, record_id: int, message: str):
+    def _get_or_404(self, model: Any, record_id: int, message: str) -> Any:
         record = self.db.query(model).filter(model.id == record_id).first()
         if not record:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)

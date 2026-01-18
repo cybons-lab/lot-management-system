@@ -19,6 +19,7 @@ def generate_withdrawals(
     customers: list[Customer],
     delivery_places: list[DeliveryPlace],
     options: object = None,
+    calendar: object = None,
 ):
     """Generate withdrawal history for some lots.
 
@@ -45,7 +46,7 @@ def generate_withdrawals(
         include_patterns = True
 
     if include_patterns:
-        _generate_withdrawals_from_patterns(db, lots, customers, delivery_places)
+        _generate_withdrawals_from_patterns(db, lots, customers, delivery_places, calendar)
         return
 
     # Determine history length from options
@@ -121,6 +122,9 @@ def generate_withdrawals(
 
             ship_date = today - timedelta(days=days_ago)
 
+            if calendar and hasattr(calendar, "adjust_date"):
+                ship_date = calendar.adjust_date(ship_date)
+
             # 5% Cancellation chance (reduced from 10%)
             is_cancelled = random.random() < 0.05
             cancelled_at = None
@@ -178,6 +182,7 @@ def _generate_withdrawals_from_patterns(
     lots: list[LotReceipt],
     customers: list[Customer],
     delivery_places: list[DeliveryPlace],
+    calendar: object = None,
 ):
     """Generate withdrawals based on defined demand patterns."""
     # Group lots by product
@@ -213,6 +218,11 @@ def _generate_withdrawals_from_patterns(
             # Skip future dates (shouldn't happen with this logic)
             if current_date >= today:
                 continue
+
+            # Skip non-business days if calendar provided
+            if calendar and hasattr(calendar, "is_business_day"):
+                if not calendar.is_business_day(current_date):
+                    continue
 
             # Calculate demand for this day based on scenario
             qty = Decimal(str(daily_demand))

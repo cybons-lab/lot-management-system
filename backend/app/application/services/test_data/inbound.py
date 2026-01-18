@@ -19,7 +19,11 @@ from .utils import fake
 
 
 def generate_inbound_plans(
-    db: Session, products: list[Product], suppliers: list[Supplier], options: object = None
+    db: Session,
+    products: list[Product],
+    suppliers: list[Supplier],
+    options: object = None,
+    calendar: object = None,
 ):
     """Generate inbound plans: some in the future (planned), some in the past (received)."""
     if not products or not suppliers:
@@ -59,6 +63,10 @@ def generate_inbound_plans(
                 scenario = LT_SCENARIOS[scenario_key]
                 variance = cast(int, scenario.get("variance", 0))
                 planned_date = arrival_date - timedelta(days=variance)
+
+            # Adjust planned_date to business day if calendar is provided
+            if calendar and hasattr(calendar, "adjust_date"):
+                planned_date = calendar.adjust_date(planned_date)
 
             plan = InboundPlan(
                 plan_number=fake.unique.bothify(text="IP-PAST-#####"),
@@ -126,6 +134,9 @@ def generate_inbound_plans(
         days_ago = random.randint(1, history_months * 30)
         plan_date = today - timedelta(days=days_ago)
 
+        if calendar and hasattr(calendar, "adjust_date"):
+            plan_date = calendar.adjust_date(plan_date)
+
         # 10% Cancelled
         status = InboundPlanStatus.RECEIVED
         if random.random() < 0.1:
@@ -162,6 +173,9 @@ def generate_inbound_plans(
         supplier = random.choice(suppliers)
         # Next 3 months max
         arrival_date = today + timedelta(days=random.randint(1, 90))
+
+        if calendar and hasattr(calendar, "adjust_date"):
+            arrival_date = calendar.adjust_date(arrival_date)
 
         plan = InboundPlan(
             plan_number=fake.unique.bothify(text="IP-FUT-#####"),
