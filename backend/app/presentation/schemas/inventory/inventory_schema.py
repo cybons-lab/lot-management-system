@@ -349,7 +349,7 @@ class InventoryByProductResponse(BaseSchema):
     warehouse_count: int
 
 
-class FilterOption(BaseSchema):
+class InventoryFilterOption(BaseSchema):
     """Filter option for dropdowns."""
 
     id: int
@@ -357,12 +357,12 @@ class FilterOption(BaseSchema):
     name: str
 
 
-class FilterOptions(BaseSchema):
+class InventoryFilterOptions(BaseSchema):
     """Available filter options for inventory."""
 
-    products: list[FilterOption]
-    suppliers: list[FilterOption]
-    warehouses: list[FilterOption]
+    products: list[InventoryFilterOption]
+    suppliers: list[InventoryFilterOption]
+    warehouses: list[InventoryFilterOption]
 
 
 class LotArchiveRequest(BaseSchema):

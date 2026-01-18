@@ -6629,26 +6629,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/{full_path}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Serve Spa
-     * @description SPA フォールバック: 未知のパスは index.html を返す.
-     */
-    get: operations["serve_spa__full_path__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7115,6 +7095,22 @@ export interface components {
        * @description 倉庫名
        */
       warehouse_name?: string | null;
+    };
+    /**
+     * AuthUserResponse
+     * @description User response schema.
+     */
+    AuthUserResponse: {
+      /** Id */
+      id: number;
+      /** Username */
+      username: string;
+      /** Display Name */
+      display_name: string;
+      /** Roles */
+      roles?: string[];
+      /** Assignments */
+      assignments?: components["schemas"]["UserAssignmentSchema"][];
     };
     /** AvailableLotResponse */
     AvailableLotResponse: {
@@ -8964,30 +8960,6 @@ export interface components {
       warnings?: string[];
     };
     /**
-     * FilterOption
-     * @description Filter option for dropdowns.
-     */
-    FilterOption: {
-      /** Id */
-      id: number;
-      /** Code */
-      code: string;
-      /** Name */
-      name: string;
-    };
-    /**
-     * FilterOptions
-     * @description Available filter options for inventory.
-     */
-    FilterOptions: {
-      /** Products */
-      products: components["schemas"]["FilterOption"][];
-      /** Suppliers */
-      suppliers: components["schemas"]["FilterOption"][];
-      /** Warehouses */
-      warehouses: components["schemas"]["FilterOption"][];
-    };
-    /**
      * ForecastBulkImportItem
      * @description Single item for bulk import.
      */
@@ -9786,6 +9758,30 @@ export interface components {
       lot_count: number;
       /** Product Count */
       product_count: number;
+    };
+    /**
+     * InventoryFilterOption
+     * @description Filter option for dropdowns.
+     */
+    InventoryFilterOption: {
+      /** Id */
+      id: number;
+      /** Code */
+      code: string;
+      /** Name */
+      name: string;
+    };
+    /**
+     * InventoryFilterOptions
+     * @description Available filter options for inventory.
+     */
+    InventoryFilterOptions: {
+      /** Products */
+      products: components["schemas"]["InventoryFilterOption"][];
+      /** Suppliers */
+      suppliers: components["schemas"]["InventoryFilterOption"][];
+      /** Warehouses */
+      warehouses: components["schemas"]["InventoryFilterOption"][];
     };
     /**
      * InventoryItemResponse
@@ -10717,16 +10713,26 @@ export interface components {
       lines: components["schemas"]["OcrImportLineResult"][];
     };
     /**
+     * OperationLogFilterOption
+     * @description フィルタ選択肢.
+     */
+    OperationLogFilterOption: {
+      /** Label */
+      label: string;
+      /** Value */
+      value: string;
+    };
+    /**
      * OperationLogFiltersResponse
      * @description 操作ログフィルタ選択肢レスポンス.
      */
     OperationLogFiltersResponse: {
       /** Users */
-      users: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
+      users: components["schemas"]["OperationLogFilterOption"][];
       /** Operation Types */
-      operation_types: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
+      operation_types: components["schemas"]["OperationLogFilterOption"][];
       /** Target Tables */
-      target_tables: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
+      target_tables: components["schemas"]["OperationLogFilterOption"][];
     };
     /**
      * OperationLogListResponse
@@ -12731,6 +12737,48 @@ export interface components {
       suppliers?: components["schemas"]["SupplierImportRow"][];
     };
     /**
+     * SystemUserResponse
+     * @description Schema for user response (DDL: users).
+     */
+    SystemUserResponse: {
+      /**
+       * Username
+       * @description ユーザー名
+       */
+      username: string;
+      /**
+       * Email
+       * Format: email
+       * @description メールアドレス
+       */
+      email: string;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name: string;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** User Id */
+      user_id: number;
+      /** Last Login At */
+      last_login_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
      * TokenResponse
      * @description Token response schema.
      */
@@ -12742,7 +12790,7 @@ export interface components {
        * @default bearer
        */
       token_type: string;
-      user: components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
+      user: components["schemas"]["AuthUserResponse"];
     };
     /**
      * TransportLeadTimeResponse
@@ -12906,48 +12954,6 @@ export interface components {
        * @description パスワード（平文）
        */
       password: string;
-    };
-    /**
-     * UserResponse
-     * @description Schema for user response (DDL: users).
-     */
-    UserResponse: {
-      /**
-       * Username
-       * @description ユーザー名
-       */
-      username: string;
-      /**
-       * Email
-       * Format: email
-       * @description メールアドレス
-       */
-      email: string;
-      /**
-       * Display Name
-       * @description 表示名
-       */
-      display_name: string;
-      /**
-       * Is Active
-       * @description 有効フラグ
-       * @default true
-       */
-      is_active: boolean;
-      /** User Id */
-      user_id: number;
-      /** Last Login At */
-      last_login_at?: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
     };
     /**
      * UserRoleAssignment
@@ -13517,32 +13523,6 @@ export interface components {
      * @enum {string}
      */
     WithdrawalType: "order_manual" | "internal_use" | "disposal" | "return" | "sample" | "other";
-    /**
-     * UserResponse
-     * @description User response schema.
-     */
-    app__presentation__schemas__auth__auth_schemas__UserResponse: {
-      /** Id */
-      id: number;
-      /** Username */
-      username: string;
-      /** Display Name */
-      display_name: string;
-      /** Roles */
-      roles?: string[];
-      /** Assignments */
-      assignments?: components["schemas"]["UserAssignmentSchema"][];
-    };
-    /**
-     * FilterOption
-     * @description フィルタ選択肢.
-     */
-    app__presentation__schemas__system__operation_logs_schema__FilterOption: {
-      /** Label */
-      label: string;
-      /** Value */
-      value: string;
-    };
   };
   responses: never;
   parameters: never;
@@ -14482,7 +14462,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["FilterOptions"];
+          "application/json": components["schemas"]["InventoryFilterOptions"];
         };
       };
       /** @description Validation Error */
@@ -19821,7 +19801,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
+          "application/json": components["schemas"]["AuthUserResponse"];
         };
       };
     };
@@ -20379,7 +20359,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"][];
+          "application/json": components["schemas"]["SystemUserResponse"][];
         };
       };
       /** @description Validation Error */
@@ -20412,7 +20392,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"];
+          "application/json": components["schemas"]["SystemUserResponse"];
         };
       };
       /** @description Validation Error */
@@ -20478,7 +20458,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"];
+          "application/json": components["schemas"]["SystemUserResponse"];
         };
       };
       /** @description Validation Error */
@@ -23580,37 +23560,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["OcrImportResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  serve_spa__full_path__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        full_path: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
         };
       };
       /** @description Validation Error */

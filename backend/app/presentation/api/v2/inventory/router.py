@@ -13,10 +13,10 @@ from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import get_current_user_optional
 from app.presentation.schemas.common.base import BaseSchema
 from app.presentation.schemas.inventory.inventory_schema import (
-    FilterOptions,
     InventoryByProductResponse,
     InventoryBySupplierResponse,
     InventoryByWarehouseResponse,
+    InventoryFilterOptions,
     InventoryItemResponse,
     InventoryListResponse,
 )
@@ -59,7 +59,7 @@ async def list_inventory(
     )
 
 
-@router.get("/filter-options", response_model=FilterOptions)
+@router.get("/filter-options", response_model=InventoryFilterOptions)
 async def get_filter_options(
     product_id: int | None = None,
     warehouse_id: int | None = None,

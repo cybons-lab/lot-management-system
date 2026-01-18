@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, decode_access_token
 from app.infrastructure.persistence.models.auth_models import User
-from app.presentation.schemas.auth.auth_schemas import LoginRequest, TokenResponse, UserResponse
+from app.presentation.schemas.auth.auth_schemas import AuthUserResponse, LoginRequest, TokenResponse
 
 
 router = APIRouter()
@@ -117,7 +117,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     }
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=AuthUserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
     """Get current user info."""
     roles = [ur.role.role_code for ur in current_user.user_roles]

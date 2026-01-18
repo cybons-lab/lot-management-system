@@ -8,8 +8,8 @@ from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
 from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.system.users_schema import (
+    SystemUserResponse,
     UserCreate,
-    UserResponse,
     UserRoleAssignment,
     UserUpdate,
     UserWithRoles,
@@ -81,7 +81,7 @@ def bulk_create_users(
     }
 
 
-@router.get("", response_model=list[UserResponse])
+@router.get("", response_model=list[SystemUserResponse])
 def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -125,13 +125,13 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
     # Add role codes
     role_codes = service.get_user_roles(user_id)
-    user_dict = UserResponse.model_validate(user).model_dump()
+    user_dict = SystemUserResponse.model_validate(user).model_dump()
     user_dict["role_codes"] = role_codes
 
     return UserWithRoles(**user_dict)
 
 
-@router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=SystemUserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """ユーザー作成.
 
@@ -160,7 +160,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return service.create(user)
 
 
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put("/{user_id}", response_model=SystemUserResponse)
 def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     """ユーザー更新.
 
@@ -220,7 +220,7 @@ def assign_user_roles(user_id: int, assignment: UserRoleAssignment, db: Session 
 
     # Add role codes
     role_codes = service.get_user_roles(user_id)
-    user_dict = UserResponse.model_validate(user).model_dump()
+    user_dict = SystemUserResponse.model_validate(user).model_dump()
     user_dict["role_codes"] = role_codes
 
     return UserWithRoles(**user_dict)
@@ -231,7 +231,7 @@ def export_users(format: str = "csv", db: Session = Depends(get_db)):
     """Export users to CSV or Excel."""
     service = UserService(db)
     users = service.get_all()
-    data = [UserResponse.model_validate(u).model_dump() for u in users]
+    data = [SystemUserResponse.model_validate(u).model_dump() for u in users]
 
     if format == "xlsx":
         return ExportService.export_to_excel(data, "users")

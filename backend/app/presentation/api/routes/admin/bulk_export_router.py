@@ -259,9 +259,9 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
 
         user_service = UserService(db)
         users = user_service.get_all(limit=10000)
-        from app.presentation.schemas.system.users_schema import UserResponse
+        from app.presentation.schemas.system.users_schema import SystemUserResponse
 
-        user_data = [UserResponse.model_validate(u).model_dump() for u in users]
+        user_data = [SystemUserResponse.model_validate(u).model_dump() for u in users]
         return user_data, "users"
 
     if target == "lot_receipts":

@@ -56,7 +56,7 @@ class MasterChangeLogListResponse(BaseModel):
     page_size: int
 
 
-class FilterOption(BaseModel):
+class OperationLogFilterOption(BaseModel):
     """フィルタ選択肢."""
 
     label: str
@@ -66,6 +66,6 @@ class FilterOption(BaseModel):
 class OperationLogFiltersResponse(BaseModel):
     """操作ログフィルタ選択肢レスポンス."""
 
-    users: list[FilterOption]
-    operation_types: list[FilterOption]
-    target_tables: list[FilterOption]
+    users: list[OperationLogFilterOption]
+    operation_types: list[OperationLogFilterOption]
+    target_tables: list[OperationLogFilterOption]

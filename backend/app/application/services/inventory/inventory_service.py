@@ -133,8 +133,8 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
 from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
 from app.presentation.schemas.inventory.inventory_schema import (
-    FilterOption,
-    FilterOptions,
+    InventoryFilterOption,
+    InventoryFilterOptions,
     InventoryItemResponse,
     InventoryListResponse,
     InventoryState,
@@ -656,7 +656,7 @@ class InventoryService:
         product_id: int | None = None,
         warehouse_id: int | None = None,
         supplier_id: int | None = None,
-    ) -> FilterOptions:
+    ) -> InventoryFilterOptions:
         """Get filter options based on current selection (Mutual Filtering).
 
         Args:
@@ -681,7 +681,8 @@ class InventoryService:
 
         p_rows = self.db.execute(p_stmt).all()
         products = [
-            FilterOption(id=r.id, code=r.maker_part_code, name=r.product_name) for r in p_rows
+            InventoryFilterOption(id=r.id, code=r.maker_part_code, name=r.product_name)
+            for r in p_rows
         ]
 
         # 2. Suppliers (filtered by product if selected)
@@ -698,7 +699,8 @@ class InventoryService:
 
         s_rows = self.db.execute(s_stmt).all()
         suppliers = [
-            FilterOption(id=r.id, code=r.supplier_code, name=r.supplier_name) for r in s_rows
+            InventoryFilterOption(id=r.id, code=r.supplier_code, name=r.supplier_name)
+            for r in s_rows
         ]
 
         # 3. Warehouses (Active only)
@@ -708,10 +710,11 @@ class InventoryService:
 
         w_rows = self.db.execute(w_stmt).all()
         warehouses = [
-            FilterOption(id=r.id, code=r.warehouse_code, name=r.warehouse_name) for r in w_rows
+            InventoryFilterOption(id=r.id, code=r.warehouse_code, name=r.warehouse_name)
+            for r in w_rows
         ]
 
-        return FilterOptions(
+        return InventoryFilterOptions(
             products=products,
             suppliers=suppliers,
             warehouses=warehouses,

@@ -12,7 +12,7 @@ class UserAssignmentSchema(BaseSchema):
     is_primary: bool
 
 
-class UserResponse(BaseSchema):
+class AuthUserResponse(BaseSchema):
     """User response schema."""
 
     id: int
@@ -27,7 +27,7 @@ class TokenResponse(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
-    user: UserResponse
+    user: AuthUserResponse
 
 
 class LoginRequest(BaseModel):
