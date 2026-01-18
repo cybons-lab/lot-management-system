@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AdminGuard } from "@/components/auth/AdminGuard";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
 // Pages
 import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
@@ -12,6 +13,7 @@ import { SeedSnapshotsPage } from "@/features/admin/pages/SeedSnapshotsPage";
 import { PrimaryAssignmentsPage } from "@/features/assignments/pages/PrimaryAssignmentsPage";
 import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
 import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
+import { CalendarSettingsPage } from "@/features/calendar";
 import { ClientLogsPage } from "@/features/client-logs";
 import { CustomerItemsListPage } from "@/features/customer-items/pages/CustomerItemsListPage";
 import { CustomersListPage, CustomerDetailPage } from "@/features/customers";
@@ -262,6 +264,16 @@ export function MainRoutes() {
       {InventoryRoutes()}
       {MasterRoutes()}
       {AdminRoutes()}
+
+      {/* Calendar */} 
+      <Route
+        path={ROUTES.CALENDAR}
+        element={
+          <RoleGuard roles={["admin", "user"]}>
+            <CalendarSettingsPage />
+          </RoleGuard>
+        }
+      />
 
       {/* RPA */}
       <Route path={ROUTES.RPA.ROOT} element={<RPAPage />} />
