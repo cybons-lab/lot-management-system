@@ -3,13 +3,12 @@
 Manages transport lead times from warehouses to delivery places.
 """
 
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.masters_models import (
     DeliveryPlace,
     Product,
@@ -277,7 +276,7 @@ def update_route(
     for field, value in update_data.items():
         setattr(route, field, value)
 
-    route.updated_at = datetime.utcnow()
+    route.updated_at = utcnow()
 
     db.commit()
     db.refresh(route)

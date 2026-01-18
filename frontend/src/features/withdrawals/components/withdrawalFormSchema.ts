@@ -22,7 +22,8 @@ export const withdrawalFormSchema = z.object({
   }),
   customer_id: z.number().min(1, "得意先を選択してください"),
   delivery_place_id: z.number().min(1, "納入場所を選択してください"),
-  ship_date: z.string().min(1, "出荷日を入力してください"),
+  ship_date: z.string().optional(),
+  due_date: z.string().min(1, "納期を入力してください"),
   reason: z.string().optional(),
   reference_number: z.string().optional(),
 });
@@ -38,7 +39,8 @@ export const WITHDRAWAL_FORM_DEFAULTS: WithdrawalFormData = {
   withdrawal_type: "order_manual",
   customer_id: 0,
   delivery_place_id: 0,
-  ship_date: new Date().toISOString().split("T")[0],
+  ship_date: "",
+  due_date: new Date().toISOString().split("T")[0],
   reason: "",
   reference_number: "",
 };

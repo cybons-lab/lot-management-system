@@ -125,6 +125,9 @@ export function InventoryItemDetailPage() {
     queryClient.invalidateQueries({
       queryKey: ["withdrawals", "list", { productId: productIdNum, warehouseId: warehouseIdNum }],
     });
+    queryClient.invalidateQueries({
+      queryKey: inventoryItemKeys.lists(),
+    });
   };
 
   // 統一されたロット操作フックを使用
@@ -140,6 +143,7 @@ export function InventoryItemDetailPage() {
     handleCloseEdit,
     handleCloseLock,
     archiveLot,
+    isArchiving,
   } = useLotActions({
     onLotsChanged: () => {
       refetchLots();
@@ -534,8 +538,11 @@ export function InventoryItemDetailPage() {
             queryClient.invalidateQueries({
               queryKey: inventoryItemKeys.detail(productIdNum, warehouseIdNum),
             });
+            queryClient.invalidateQueries({
+              queryKey: inventoryItemKeys.lists(),
+            });
           }}
-          isSubmitting={false}
+          isSubmitting={isArchiving}
         />
       )}
     </div>

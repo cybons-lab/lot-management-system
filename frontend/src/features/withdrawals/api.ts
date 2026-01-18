@@ -71,7 +71,8 @@ export interface WithdrawalCreateRequest {
   withdrawal_type: WithdrawalType;
   customer_id?: number; // Required only for order_manual
   delivery_place_id?: number; // Optional
-  ship_date: string; // YYYY-MM-DD
+  ship_date?: string; // YYYY-MM-DD
+  due_date: string; // YYYY-MM-DD
   reason?: string;
   reference_number?: string;
 }

@@ -42,6 +42,7 @@ interface FormState {
   customer_id: number;
   delivery_place_id: number;
   ship_date: string;
+  due_date: string;
   quantity: number;
   reference_number: string;
   reason: string;
@@ -62,7 +63,6 @@ export function QuickWithdrawalDialog({
 }: QuickWithdrawalDialogProps) {
   const { user } = useAuth();
   const today = new Date().toISOString().split("T")[0];
-  const initialShipDateValue = initialShipDate || today;
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
 
   const [deliveryPlaces, setDeliveryPlaces] = useState<DeliveryPlace[]>([]);
@@ -76,7 +76,8 @@ export function QuickWithdrawalDialog({
   const [formState, setFormState] = useState<FormState>({
     customer_id: 0,
     delivery_place_id: 0,
-    ship_date: today,
+    ship_date: "", // Optional
+    due_date: today,
     quantity: 0,
     reference_number: "",
     reason: "",
@@ -92,19 +93,20 @@ export function QuickWithdrawalDialog({
   const deliveryPlacesRequestIdRef = useRef(0);
 
   const buildInitialFormState = useCallback(
-    (shipDate: string): FormState => ({
+    (shipDate: string | undefined): FormState => ({
       customer_id: 0,
       delivery_place_id: 0,
-      ship_date: shipDate,
+      ship_date: shipDate || "",
+      due_date: today,
       quantity: 0,
       reference_number: "",
       reason: "",
     }),
-    [],
+    [today],
   );
 
   const resetFormState = useCallback(
-    (shipDate: string) => {
+    (shipDate?: string) => {
       setFormState(buildInitialFormState(shipDate));
       setDeliveryPlaces([]);
       setErrors({});
@@ -122,7 +124,7 @@ export function QuickWithdrawalDialog({
 
   useEffect(() => {
     if (open) {
-      resetFormState(initialShipDateValue);
+      resetFormState(initialShipDate);
 
       // 製品IDからデフォルトの得意先・納入先を取得
       if (lot.product_id) {
@@ -160,7 +162,7 @@ export function QuickWithdrawalDialog({
           });
       }
     }
-  }, [open, initialShipDateValue, lot.product_id, resetFormState]);
+  }, [open, initialShipDate, lot.product_id, resetFormState]);
 
   useEffect(() => {
     deliveryPlaceIdRef.current = formState.delivery_place_id;
@@ -286,7 +288,8 @@ export function QuickWithdrawalDialog({
         withdrawal_type: "order_manual",
         customer_id: formState.customer_id,
         delivery_place_id: formState.delivery_place_id || undefined,
-        ship_date: formState.ship_date,
+        ship_date: formState.ship_date || undefined,
+        due_date: formState.due_date,
         reason: formState.reason || undefined,
         reference_number: formState.reference_number || undefined,
       };
@@ -415,16 +418,29 @@ export function QuickWithdrawalDialog({
             )}
           </div>
 
+          {/* 納期 */}
+          <div>
+            <Label htmlFor="due_date" className="mb-2 block text-sm font-medium">
+              納期 <span className="text-red-500">*</span>
+            </Label>
+            <DatePicker
+              value={formState.due_date}
+              onChange={(v) => updateField("due_date", v || today)}
+              disabled={isSubmitting}
+              placeholder="納期を選択"
+            />
+          </div>
+
           {/* 出荷日 */}
           <div>
             <Label htmlFor="ship_date" className="mb-2 block text-sm font-medium">
-              出荷日 <span className="text-red-500">*</span>
+              出荷日
             </Label>
             <DatePicker
               value={formState.ship_date}
-              onChange={(v) => updateField("ship_date", v || today)}
+              onChange={(v) => updateField("ship_date", v || "")}
               disabled={isSubmitting}
-              placeholder="出荷日を選択"
+              placeholder="出荷日を選択（任意）"
             />
           </div>
 

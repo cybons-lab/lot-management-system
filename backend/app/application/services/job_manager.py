@@ -1,7 +1,8 @@
 import threading
 import uuid
-from datetime import datetime
 from typing import Any
+
+from app.core.time_utils import utcnow
 
 
 class JobManager:
@@ -23,7 +24,7 @@ class JobManager:
                 "status": "pending",
                 "progress": 0,
                 "message": "Initializing...",
-                "created_at": datetime.now(),
+                "created_at": utcnow(),
                 "result": None,
                 "error": None,
             }

@@ -81,7 +81,9 @@ def test_list_inventory(client, setup_inventory_data):
     response = client.get("/api/v2/inventory/")
     assert response.status_code == 200
     data = response.json()
-    assert isinstance(data, list)
+    assert "items" in data
+    assert "total" in data
+    assert isinstance(data["items"], list)
 
 
 def test_get_inventory_item(client, setup_inventory_data):

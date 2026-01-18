@@ -66,7 +66,8 @@ class WithdrawalCreate(BaseSchema):
     withdrawal_type: WithdrawalType = Field(..., description="出庫タイプ")
     customer_id: int | None = Field(None, description="得意先ID（受注手動の場合必須）")
     delivery_place_id: int | None = Field(None, description="納入場所ID（任意）")
-    ship_date: date = Field(..., description="出荷日")
+    ship_date: date | None = Field(None, description="出荷日")
+    due_date: date = Field(..., description="納期")
     reason: str | None = Field(None, description="備考")
     reference_number: str | None = Field(
         None, max_length=100, description="参照番号（SAP受注番号など）"
@@ -100,7 +101,8 @@ class WithdrawalResponse(BaseSchema):
     delivery_place_id: int | None = None
     delivery_place_name: str | None = None
     delivery_place_code: str | None = None
-    ship_date: date
+    ship_date: date | None = None
+    due_date: date
     reason: str | None
     reference_number: str | None
     withdrawn_by: int | None = None

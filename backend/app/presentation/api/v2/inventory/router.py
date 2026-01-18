@@ -18,6 +18,7 @@ from app.presentation.schemas.inventory.inventory_schema import (
     InventoryBySupplierResponse,
     InventoryByWarehouseResponse,
     InventoryItemResponse,
+    InventoryListResponse,
 )
 
 
@@ -30,7 +31,7 @@ class InventoryStats(BaseSchema):
     total_quantity: Decimal
 
 
-@router.get("/", response_model=list[InventoryItemResponse])
+@router.get("/", response_model=InventoryListResponse)
 async def list_inventory(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=1000),

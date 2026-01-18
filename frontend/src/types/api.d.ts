@@ -8965,13 +8965,15 @@ export interface components {
     };
     /**
      * FilterOption
-     * @description フィルタ選択肢.
+     * @description Filter option for dropdowns.
      */
     FilterOption: {
-      /** Label */
-      label: string;
-      /** Value */
-      value: string;
+      /** Id */
+      id: number;
+      /** Code */
+      code: string;
+      /** Name */
+      name: string;
     };
     /**
      * FilterOptions
@@ -8979,11 +8981,11 @@ export interface components {
      */
     FilterOptions: {
       /** Products */
-      products: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      products: components["schemas"]["FilterOption"][];
       /** Suppliers */
-      suppliers: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      suppliers: components["schemas"]["FilterOption"][];
       /** Warehouses */
-      warehouses: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
+      warehouses: components["schemas"]["FilterOption"][];
     };
     /**
      * ForecastBulkImportItem
@@ -9836,6 +9838,20 @@ export interface components {
       warehouse_name?: string | null;
       /** Warehouse Code */
       warehouse_code?: string | null;
+    };
+    /**
+     * InventoryListResponse
+     * @description API response model for paginated list of inventory items.
+     */
+    InventoryListResponse: {
+      /** Items */
+      items: components["schemas"]["InventoryItemResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Size */
+      size: number;
     };
     /**
      * InventoryState
@@ -10706,11 +10722,11 @@ export interface components {
      */
     OperationLogFiltersResponse: {
       /** Users */
-      users: components["schemas"]["FilterOption"][];
+      users: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
       /** Operation Types */
-      operation_types: components["schemas"]["FilterOption"][];
+      operation_types: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
       /** Target Tables */
-      target_tables: components["schemas"]["FilterOption"][];
+      target_tables: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
     };
     /**
      * OperationLogListResponse
@@ -12726,7 +12742,7 @@ export interface components {
        * @default bearer
        */
       token_type: string;
-      user: components["schemas"]["UserResponse"];
+      user: components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
     };
     /**
      * TransportLeadTimeResponse
@@ -12893,19 +12909,45 @@ export interface components {
     };
     /**
      * UserResponse
-     * @description User response schema.
+     * @description Schema for user response (DDL: users).
      */
     UserResponse: {
-      /** Id */
-      id: number;
-      /** Username */
+      /**
+       * Username
+       * @description ユーザー名
+       */
       username: string;
-      /** Display Name */
+      /**
+       * Email
+       * Format: email
+       * @description メールアドレス
+       */
+      email: string;
+      /**
+       * Display Name
+       * @description 表示名
+       */
       display_name: string;
-      /** Roles */
-      roles?: string[];
-      /** Assignments */
-      assignments?: components["schemas"]["UserAssignmentSchema"][];
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** User Id */
+      user_id: number;
+      /** Last Login At */
+      last_login_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
     };
     /**
      * UserRoleAssignment
@@ -13350,10 +13392,15 @@ export interface components {
       delivery_place_id?: number | null;
       /**
        * Ship Date
-       * Format: date
        * @description 出荷日
        */
-      ship_date: string;
+      ship_date?: string | null;
+      /**
+       * Due Date
+       * Format: date
+       * @description 納期
+       */
+      due_date: string;
       /**
        * Reason
        * @description 備考
@@ -13421,11 +13468,13 @@ export interface components {
       delivery_place_name?: string | null;
       /** Delivery Place Code */
       delivery_place_code?: string | null;
+      /** Ship Date */
+      ship_date?: string | null;
       /**
-       * Ship Date
+       * Due Date
        * Format: date
        */
-      ship_date: string;
+      due_date: string;
       /** Reason */
       reason: string | null;
       /** Reference Number */
@@ -13469,58 +13518,30 @@ export interface components {
      */
     WithdrawalType: "order_manual" | "internal_use" | "disposal" | "return" | "sample" | "other";
     /**
-     * FilterOption
-     * @description Filter option for dropdowns.
+     * UserResponse
+     * @description User response schema.
      */
-    app__presentation__schemas__inventory__inventory_schema__FilterOption: {
+    app__presentation__schemas__auth__auth_schemas__UserResponse: {
       /** Id */
       id: number;
-      /** Code */
-      code: string;
-      /** Name */
-      name: string;
+      /** Username */
+      username: string;
+      /** Display Name */
+      display_name: string;
+      /** Roles */
+      roles?: string[];
+      /** Assignments */
+      assignments?: components["schemas"]["UserAssignmentSchema"][];
     };
     /**
-     * UserResponse
-     * @description Schema for user response (DDL: users).
+     * FilterOption
+     * @description フィルタ選択肢.
      */
-    app__presentation__schemas__system__users_schema__UserResponse: {
-      /**
-       * Username
-       * @description ユーザー名
-       */
-      username: string;
-      /**
-       * Email
-       * Format: email
-       * @description メールアドレス
-       */
-      email: string;
-      /**
-       * Display Name
-       * @description 表示名
-       */
-      display_name: string;
-      /**
-       * Is Active
-       * @description 有効フラグ
-       * @default true
-       */
-      is_active: boolean;
-      /** User Id */
-      user_id: number;
-      /** Last Login At */
-      last_login_at?: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
+    app__presentation__schemas__system__operation_logs_schema__FilterOption: {
+      /** Label */
+      label: string;
+      /** Value */
+      value: string;
     };
   };
   responses: never;
@@ -14428,7 +14449,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["InventoryItemResponse"][];
+          "application/json": components["schemas"]["InventoryListResponse"];
         };
       };
       /** @description Validation Error */
@@ -19800,7 +19821,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"];
+          "application/json": components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
         };
       };
     };
@@ -20358,7 +20379,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"][];
+          "application/json": components["schemas"]["UserResponse"][];
         };
       };
       /** @description Validation Error */
@@ -20391,7 +20412,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"];
+          "application/json": components["schemas"]["UserResponse"];
         };
       };
       /** @description Validation Error */
@@ -20457,7 +20478,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"];
+          "application/json": components["schemas"]["UserResponse"];
         };
       };
       /** @description Validation Error */

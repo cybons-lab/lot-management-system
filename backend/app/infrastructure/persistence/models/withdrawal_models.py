@@ -209,7 +209,7 @@ class Withdrawal(Base):
         ForeignKey("delivery_places.id", ondelete="RESTRICT"),
         nullable=True,
     )
-    ship_date: Mapped[date] = mapped_column(Date, nullable=False)
+    ship_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     # B-Plan: New date fields
     due_date: Mapped[date] = mapped_column(

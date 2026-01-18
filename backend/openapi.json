@@ -1994,11 +1994,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InventoryItemResponse"
-                  },
-                  "title": "Response List Inventory Api V2 Inventory  Get"
+                  "$ref": "#/components/schemas/InventoryListResponse"
                 }
               }
             }
@@ -11204,7 +11200,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/app__presentation__schemas__auth__auth_schemas__UserResponse"
                 }
               }
             }
@@ -12049,7 +12045,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
+                    "$ref": "#/components/schemas/UserResponse"
                   },
                   "title": "Response List Users Api Users Get"
                 }
@@ -12096,7 +12092,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -12200,7 +12196,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
             }
@@ -22025,42 +22021,47 @@
       },
       "FilterOption": {
         "properties": {
-          "label": {
-            "type": "string",
-            "title": "Label"
+          "id": {
+            "type": "integer",
+            "title": "Id"
           },
-          "value": {
+          "code": {
             "type": "string",
-            "title": "Value"
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
           }
         },
         "type": "object",
         "required": [
-          "label",
-          "value"
+          "id",
+          "code",
+          "name"
         ],
         "title": "FilterOption",
-        "description": "フィルタ選択肢."
+        "description": "Filter option for dropdowns."
       },
       "FilterOptions": {
         "properties": {
           "products": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Products"
           },
           "suppliers": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Suppliers"
           },
           "warehouses": {
             "items": {
-              "$ref": "#/components/schemas/app__presentation__schemas__inventory__inventory_schema__FilterOption"
+              "$ref": "#/components/schemas/FilterOption"
             },
             "type": "array",
             "title": "Warehouses"
@@ -24125,6 +24126,38 @@
         "title": "InventoryItemResponse",
         "description": "API response model for inventory items (aggregated summary).\n\nThis schema represents a calculated summary of inventory from the\nlots table, aggregated by product and warehouse. It does not map to\na physical table."
       },
+      "InventoryListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "size"
+        ],
+        "title": "InventoryListResponse",
+        "description": "API response model for paginated list of inventory items."
+      },
       "InventoryState": {
         "type": "string",
         "enum": [
@@ -26023,21 +26056,21 @@
         "properties": {
           "users": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
             },
             "type": "array",
             "title": "Users"
           },
           "operation_types": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
             },
             "type": "array",
             "title": "Operation Types"
           },
           "target_tables": {
             "items": {
-              "$ref": "#/components/schemas/FilterOption"
+              "$ref": "#/components/schemas/app__presentation__schemas__system__operation_logs_schema__FilterOption"
             },
             "type": "array",
             "title": "Target Tables"
@@ -30789,7 +30822,7 @@
             "default": "bearer"
           },
           "user": {
-            "$ref": "#/components/schemas/UserResponse"
+            "$ref": "#/components/schemas/app__presentation__schemas__auth__auth_schemas__UserResponse"
           }
         },
         "type": "object",
@@ -31060,41 +31093,71 @@
       },
       "UserResponse": {
         "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
           "username": {
             "type": "string",
-            "title": "Username"
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
+            "description": "ユーザー名"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email",
+            "title": "Email",
+            "description": "メールアドレス"
           },
           "display_name": {
             "type": "string",
-            "title": "Display Name"
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Display Name",
+            "description": "表示名"
           },
-          "roles": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Roles"
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "有効フラグ",
+            "default": true
           },
-          "assignments": {
-            "items": {
-              "$ref": "#/components/schemas/UserAssignmentSchema"
-            },
-            "type": "array",
-            "title": "Assignments"
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           }
         },
         "type": "object",
         "required": [
-          "id",
           "username",
-          "display_name"
+          "email",
+          "display_name",
+          "user_id",
+          "created_at",
+          "updated_at"
         ],
         "title": "UserResponse",
-        "description": "User response schema."
+        "description": "Schema for user response (DDL: users)."
       },
       "UserRoleAssignment": {
         "properties": {
@@ -32001,10 +32064,23 @@
             "description": "納入場所ID（任意）"
           },
           "ship_date": {
-            "type": "string",
-            "format": "date",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Ship Date",
             "description": "出荷日"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Due Date",
+            "description": "納期"
           },
           "reason": {
             "anyOf": [
@@ -32049,7 +32125,7 @@
           "lot_id",
           "quantity",
           "withdrawal_type",
-          "ship_date"
+          "due_date"
         ],
         "title": "WithdrawalCreate",
         "description": "出庫登録リクエスト."
@@ -32192,9 +32268,21 @@
             "title": "Delivery Place Code"
           },
           "ship_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ship Date"
+          },
+          "due_date": {
             "type": "string",
             "format": "date",
-            "title": "Ship Date"
+            "title": "Due Date"
           },
           "reason": {
             "anyOf": [
@@ -32334,7 +32422,7 @@
           "quantity",
           "withdrawal_type",
           "withdrawal_type_label",
-          "ship_date",
+          "due_date",
           "reason",
           "reference_number",
           "withdrawn_at",
@@ -32356,97 +32444,62 @@
         "title": "WithdrawalType",
         "description": "出庫タイプ."
       },
-      "app__presentation__schemas__inventory__inventory_schema__FilterOption": {
+      "app__presentation__schemas__auth__auth_schemas__UserResponse": {
         "properties": {
           "id": {
             "type": "integer",
             "title": "Id"
           },
-          "code": {
+          "username": {
             "type": "string",
-            "title": "Code"
+            "title": "Username"
           },
-          "name": {
+          "display_name": {
             "type": "string",
-            "title": "Name"
+            "title": "Display Name"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "assignments": {
+            "items": {
+              "$ref": "#/components/schemas/UserAssignmentSchema"
+            },
+            "type": "array",
+            "title": "Assignments"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "code",
-          "name"
+          "username",
+          "display_name"
         ],
-        "title": "FilterOption",
-        "description": "Filter option for dropdowns."
+        "title": "UserResponse",
+        "description": "User response schema."
       },
-      "app__presentation__schemas__system__users_schema__UserResponse": {
+      "app__presentation__schemas__system__operation_logs_schema__FilterOption": {
         "properties": {
-          "username": {
+          "label": {
             "type": "string",
-            "maxLength": 50,
-            "minLength": 3,
-            "title": "Username",
-            "description": "ユーザー名"
+            "title": "Label"
           },
-          "email": {
+          "value": {
             "type": "string",
-            "maxLength": 255,
-            "format": "email",
-            "title": "Email",
-            "description": "メールアドレス"
-          },
-          "display_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Display Name",
-            "description": "表示名"
-          },
-          "is_active": {
-            "type": "boolean",
-            "title": "Is Active",
-            "description": "有効フラグ",
-            "default": true
-          },
-          "user_id": {
-            "type": "integer",
-            "title": "User Id"
-          },
-          "last_login_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Login At"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
+            "title": "Value"
           }
         },
         "type": "object",
         "required": [
-          "username",
-          "email",
-          "display_name",
-          "user_id",
-          "created_at",
-          "updated_at"
+          "label",
+          "value"
         ],
-        "title": "UserResponse",
-        "description": "Schema for user response (DDL: users)."
+        "title": "FilterOption",
+        "description": "フィルタ選択肢."
       }
     },
     "securitySchemes": {

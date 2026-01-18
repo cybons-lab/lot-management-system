@@ -101,7 +101,7 @@ jobs:
 
   e2e-smoke:
     name: E2E Smoke Tests (P0)
-    if: false
+
     runs-on: ubuntu-latest
     needs: [frontend-tests, backend-tests]
     timeout-minutes: 15

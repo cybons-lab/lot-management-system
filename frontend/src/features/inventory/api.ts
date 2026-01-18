@@ -22,10 +22,17 @@ export type LotCreateResponse =
 export type InventoryState = "in_stock" | "depleted_only" | "no_lots";
 
 export type InventoryItem =
-  paths["/api/v2/inventory/"]["get"]["responses"][200]["content"]["application/json"][number] & {
+  paths["/api/v2/inventory/"]["get"]["responses"][200]["content"]["application/json"]["items"][number] & {
     active_lot_count: number;
     inventory_state: InventoryState;
   };
+
+export type InventoryListResponse = {
+  items: InventoryItem[];
+  total: number;
+  page: number;
+  size: number;
+};
 
 export type InventoryItemsListParams = paths["/api/v2/inventory/"]["get"]["parameters"]["query"];
 
@@ -188,7 +195,7 @@ export const getInventoryItems = (
     searchParams.append("primary_staff_only", params.primary_staff_only.toString());
 
   const queryString = searchParams.toString();
-  return http.get<InventoryItem[]>(`v2/inventory/${queryString ? "?" + queryString : ""}`);
+  return http.get<InventoryListResponse>(`v2/inventory/${queryString ? "?" + queryString : ""}`);
 };
 
 /**

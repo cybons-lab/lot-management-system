@@ -151,20 +151,40 @@ export function WithdrawalBasicInfo({
         )}
       </div>
 
-      {/* 出荷日 */}
+      {/* 納期 */}
       <div>
-        <Label htmlFor="ship_date" className="mb-2 block text-sm font-medium">
-          出荷日 <span className="text-red-500">*</span>
+        <Label htmlFor="due_date" className="mb-2 block text-sm font-medium">
+          納期 <span className="text-red-500">*</span>
         </Label>
         <Controller
-          name="ship_date"
+          name="due_date"
           control={control}
           render={({ field }) => (
             <DatePicker
               value={field.value}
               onChange={(v) => field.onChange(v || "")}
               disabled={isSubmitting}
-              placeholder="出荷日を選択"
+              placeholder="納期を選択"
+            />
+          )}
+        />
+        {errors.due_date && <p className="mt-1 text-sm text-red-600">{errors.due_date.message}</p>}
+      </div>
+
+      {/* 出荷日 */}
+      <div>
+        <Label htmlFor="ship_date" className="mb-2 block text-sm font-medium">
+          出荷日
+        </Label>
+        <Controller
+          name="ship_date"
+          control={control}
+          render={({ field }) => (
+            <DatePicker
+              value={field.value || ""}
+              onChange={(v) => field.onChange(v || "")}
+              disabled={isSubmitting}
+              placeholder="出荷日を選択（任意）"
             />
           )}
         />

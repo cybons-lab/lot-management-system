@@ -301,6 +301,16 @@ StockMovementResponse = StockHistoryResponse
 # LotCurrentStockResponse was an alias for InventoryItemResponse.
 # This alias is deprecated and will be removed in a future version.
 LotCurrentStockResponse = InventoryItemResponse
+# This alias is deprecated and will be removed in a future version.
+
+
+class InventoryListResponse(BaseSchema):
+    """API response model for paginated list of inventory items."""
+
+    items: list[InventoryItemResponse]
+    total: int
+    page: int
+    size: int
 
 
 class InventoryBySupplierResponse(BaseSchema):

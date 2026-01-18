@@ -69,7 +69,7 @@ def create_daily_forecasts(
         ...     product=product_instance,
         ...     start_date=date(2025, 1, 1),
         ...     end_date=date(2025, 1, 31),
-        ...     now=datetime.utcnow(),
+        ...     now=utcnow(),
         ...     rng=rng,
         ... )
         >>> # Returns ~18-25 entries (60-80% of 31 days)
@@ -168,7 +168,7 @@ def create_jyun_forecasts_from_daily(
         ...     product=product_instance,
         ...     target_month=date(2025, 1, 1),
         ...     period_totals=period_totals,
-        ...     now=datetime.utcnow(),
+        ...     now=utcnow(),
         ...     rng=rng,
         ... )
         >>> # Returns 2 entries with quantities ≈ 600±25%, 700±25%
@@ -250,7 +250,7 @@ def create_monthly_forecasts_from_daily(
         ...     product=product_instance,
         ...     target_month=date(2025, 1, 1),
         ...     period_totals=period_totals,
-        ...     now=datetime.utcnow(),
+        ...     now=utcnow(),
         ... )
         >>> # Returns 1 entry with quantity = 1500
     """

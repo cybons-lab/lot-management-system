@@ -87,7 +87,8 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     db.flush()
 
     # 5. Fetch with primary_staff_only=True
-    items = service.get_inventory_items(primary_staff_only=True, current_user_id=user.id)
+    response = service.get_inventory_items(primary_staff_only=True, current_user_id=user.id)
+    items = response.items
 
     # 6. Verify results
     # Should only contain item from assigned supplier
@@ -95,7 +96,8 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     assert items[0].total_quantity == 50
 
     # 7. Verify fetch without filter returns both (aggregated by product/warehouse)
-    items_all = service.get_inventory_items()
+    response_all = service.get_inventory_items()
+    items_all = response_all.items
     print(f"DEBUG: All Items: {len(items_all)}")
     for i in items_all:
         print(
