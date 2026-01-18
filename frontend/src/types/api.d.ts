@@ -845,10 +845,23 @@ export interface paths {
     head?: never;
     /**
      * Archive Lot
-     * @description Archive a lot.
+     * @description Archive a lot with optional confirmation.
      *
-     *     The lot must be fully depleted (current_quantity = 0).
+     *     For lots with remaining inventory, lot_number confirmation is required
+     *     in the request body to prevent accidental archiving.
+     *
      *     Archived lots are excluded from default list views but remain in the database.
+     *
+     *     Args:
+     *         lot_id: ロットID
+     *         request: アーカイブリクエスト（在庫がある場合はlot_number必須）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         LotResponse: アーカイブされたロット情報
+     *
+     *     Raises:
+     *         HTTPException: ロット番号不一致または在庫があるのに確認なし
      */
     patch: operations["archive_lot_api_lots__lot_id__archive_patch"];
     trace?: never;
@@ -9913,6 +9926,20 @@ export interface components {
       username?: string | null;
     };
     /**
+     * LotArchiveRequest
+     * @description Request body for archiving a lot with confirmation.
+     *
+     *     Requires lot_number for confirmation to prevent accidental archiving
+     *     of lots with remaining inventory.
+     */
+    LotArchiveRequest: {
+      /**
+       * Lot Number
+       * @description ロット番号（確認用）
+       */
+      lot_number: string;
+    };
+    /**
      * LotCandidateResponse
      * @description ロット候補のレスポンス.
      */
@@ -14963,7 +14990,11 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["LotArchiveRequest"] | null;
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {

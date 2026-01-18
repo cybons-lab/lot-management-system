@@ -19,7 +19,7 @@ interface LotArchiveDialogProps {
   lot: LotUI;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => Promise<void>;
+  onConfirm: (lotNumber?: string) => Promise<void>;
   isSubmitting: boolean;
 }
 
@@ -80,7 +80,9 @@ export function LotArchiveDialog({
   const hasQuantity = currentQuantity.gt(0);
 
   const handleConfirm = async () => {
-    await onConfirm();
+    // 在庫がある場合は確認用ロット番号を渡す
+    const lotNumberToConfirm = hasQuantity ? confirmInput : undefined;
+    await onConfirm(lotNumberToConfirm);
     setConfirmInput("");
     onOpenChange(false);
   };

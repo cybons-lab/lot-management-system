@@ -3053,7 +3053,7 @@
           "lots"
         ],
         "summary": "Archive Lot",
-        "description": "Archive a lot.\n\nThe lot must be fully depleted (current_quantity = 0).\nArchived lots are excluded from default list views but remain in the database.",
+        "description": "Archive a lot with optional confirmation.\n\nFor lots with remaining inventory, lot_number confirmation is required\nin the request body to prevent accidental archiving.\n\nArchived lots are excluded from default list views but remain in the database.\n\nArgs:\n    lot_id: ロットID\n    request: アーカイブリクエスト（在庫がある場合はlot_number必須）\n    db: データベースセッション\n\nReturns:\n    LotResponse: アーカイブされたロット情報\n\nRaises:\n    HTTPException: ロット番号不一致または在庫があるのに確認なし",
         "operationId": "archive_lot_api_lots__lot_id__archive_patch",
         "parameters": [
           {
@@ -3066,6 +3066,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/LotArchiveRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -24298,6 +24315,21 @@
         "type": "object",
         "title": "LoginRequest",
         "description": "Login request (Simplified for dev)."
+      },
+      "LotArchiveRequest": {
+        "properties": {
+          "lot_number": {
+            "type": "string",
+            "title": "Lot Number",
+            "description": "ロット番号（確認用）"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lot_number"
+        ],
+        "title": "LotArchiveRequest",
+        "description": "Request body for archiving a lot with confirmation.\n\nRequires lot_number for confirmation to prevent accidental archiving\nof lots with remaining inventory."
       },
       "LotCandidateResponse": {
         "properties": {

@@ -440,9 +440,9 @@ export function InventoryItemDetailPage() {
           lot={selectedLotForArchive}
           open={archiveDialogOpen}
           onOpenChange={setArchiveDialogOpen}
-          onConfirm={async () => {
+          onConfirm={async (lotNumber) => {
             const confirmedLot = selectedLotForArchive;
-            await archiveLot(confirmedLot.id);
+            await archiveLot({ id: confirmedLot.id, lotNumber });
             refetchLots();
             queryClient.invalidateQueries({
               queryKey: inventoryItemKeys.detail(productIdNum, warehouseIdNum),

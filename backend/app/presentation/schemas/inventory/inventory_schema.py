@@ -353,3 +353,13 @@ class FilterOptions(BaseSchema):
     products: list[FilterOption]
     suppliers: list[FilterOption]
     warehouses: list[FilterOption]
+
+
+class LotArchiveRequest(BaseSchema):
+    """Request body for archiving a lot with confirmation.
+
+    Requires lot_number for confirmation to prevent accidental archiving
+    of lots with remaining inventory.
+    """
+
+    lot_number: str = Field(..., description="ロット番号（確認用）")

@@ -80,13 +80,36 @@ export function useLotActions(options?: LotActionsOptions) {
 
   const handleArchiveLot = useCallback(
     async (lot: LotUI) => {
-      if (
-        confirm(
-          `ロット ${lot.lot_number} をアーカイブしますか?\nアーカイブされたロットは通常の一覧からは非表示になります。`,
-        )
-      ) {
-        await archiveLot(lot.id);
+      const hasInventory = Number(lot.current_quantity) > 0;
+
+      if (hasInventory) {
+        // 在庫がある場合はロット番号の確認が必要
+        const confirmMessage = `ロット ${lot.lot_number} には在庫が残っています。\n\nアーカイブを続行するには、ロット番号を入力してください:`;
+        const inputLotNumber = prompt(confirmMessage);
+
+        if (!inputLotNumber) {
+          // キャンセルまたは空入力
+          return;
+        }
+
+        if (inputLotNumber !== lot.lot_number) {
+          toast.error("ロット番号が一致しません");
+          return;
+        }
+
+        // ロット番号が一致した場合、確認用ロット番号付きでアーカイブ
+        await archiveLot({ id: lot.id, lotNumber: inputLotNumber });
         notifyLotsChanged();
+      } else {
+        // 在庫がない場合は通常の確認のみ
+        if (
+          confirm(
+            `ロット ${lot.lot_number} をアーカイブしますか?\nアーカイブされたロットは通常の一覧からは非表示になります。`,
+          )
+        ) {
+          await archiveLot({ id: lot.id });
+          notifyLotsChanged();
+        }
       }
     },
     [archiveLot, notifyLotsChanged],
