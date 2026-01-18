@@ -172,7 +172,10 @@ export function QuickWithdrawalDialog({
       })
       .then((places) => {
         // レスポンス時点でcustomer_idが変わっていないか確認
-        if (deliveryPlacesRequestIdRef.current === requestId && customerIdRef.current === customerId) {
+        if (
+          deliveryPlacesRequestIdRef.current === requestId &&
+          customerIdRef.current === customerId
+        ) {
           setDeliveryPlaces(places);
           // 既存の選択が新しいリストに含まれていない場合のみリセット
           if (!places.some((p) => p.id === deliveryPlaceIdRef.current)) {
@@ -225,7 +228,6 @@ export function QuickWithdrawalDialog({
     [errors],
   );
 
-  // バリデーション
   // バリデーション
   const validate = useCallback((): boolean => {
     const newErrors: FormErrors = {};
