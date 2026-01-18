@@ -1,35 +1,15 @@
 # ロット数表示バグ修正 - 作業引き継ぎドキュメント
 
-## 現在のブランチ
-`feature/ui-improvements-and-test-data` (PR #404)
+**区分:** タスク  
+**最終更新:** 記載なし
 
----
+## 概要
 
-## 完了済みの作業
+現在のブランチは `feature/ui-improvements-and-test-data` (PR #404) です。
 
-### 1. バックエンド: `lot_count` を Inventory API に追加
-- **ファイル**: `backend/app/presentation/schemas/inventory/inventory_schema.py`
-- **ファイル**: `backend/app/application/services/inventory/inventory_service.py`
-- `InventoryItemResponse` に `lot_count: int = 0` を追加
-- クエリ: `current_quantity > 0 AND status = 'active'` でカウント
+## 対応状況
 
-### 2. フロントエンド: カラムで `row.lot_count` を使用
-- **ファイル**: `frontend/src/features/inventory/components/InventoryTable.tsx`
-- accessor を `getLotsForItem(...).length` から `row.lot_count` に変更
-
-### 3. バックエンド: Lots API に `warehouse_id` を追加
-- **ファイル**: `backend/app/presentation/api/v2/lot/router.py`
-- **ファイル**: `backend/app/application/services/inventory/lot_service.py`
-- `warehouse_id` パラメータを追加（IDで直接フィルタ可能に）
-
-### 4. UI改善
-- アコーディオン展開（1行のみ）
-- 展開行に青い背景
-- 受注テーブルのフォント太さ軽減
-
----
-
-## 残りのタスク
+### 未対応
 
 ### タスク1: フロントエンド - オンデマンドでロットを取得
 
@@ -111,9 +91,33 @@ WHERE allocated_quantity > current_quantity;
   );
   ```
 
+### 対応済み
+
+### 完了済みの作業
+
+#### 1. バックエンド: `lot_count` を Inventory API に追加
+- **ファイル**: `backend/app/presentation/schemas/inventory/inventory_schema.py`
+- **ファイル**: `backend/app/application/services/inventory/inventory_service.py`
+- `InventoryItemResponse` に `lot_count: int = 0` を追加
+- クエリ: `current_quantity > 0 AND status = 'active'` でカウント
+
+#### 2. フロントエンド: カラムで `row.lot_count` を使用
+- **ファイル**: `frontend/src/features/inventory/components/InventoryTable.tsx`
+- accessor を `getLotsForItem(...).length` から `row.lot_count` に変更
+
+#### 3. バックエンド: Lots API に `warehouse_id` を追加
+- **ファイル**: `backend/app/presentation/api/v2/lot/router.py`
+- **ファイル**: `backend/app/application/services/inventory/lot_service.py`
+- `warehouse_id` パラメータを追加（IDで直接フィルタ可能に）
+
+#### 4. UI改善
+- アコーディオン展開（1行のみ）
+- 展開行に青い背景
+- 受注テーブルのフォント太さ軽減
+
 ---
 
-## API動作確認済み
+### API動作確認済み
 
 ```bash
 # warehouse_id フィルタが動作することを確認
@@ -124,14 +128,14 @@ curl "http://localhost:8000/api/v2/lot/?product_id=1&warehouse_id=4&with_stock=f
 
 ---
 
-## テスト結果（データ不整合発見前）
+### テスト結果（データ不整合発見前）
 - Backend: 301 passed
 - Frontend: 481 passed
 - CI: 5/5 checks passed
 
 ---
 
-## 参照すべきファイル
+### 参照すべきファイル
 | ファイル | 用途 |
 |---------|------|
 | `frontend/src/features/inventory/hooks/useInventoryTableLogic.ts` | ロット取得ロジック（要修正） |

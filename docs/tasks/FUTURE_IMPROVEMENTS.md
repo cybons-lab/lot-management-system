@@ -1,16 +1,25 @@
 # Future Improvements
 
+**区分:** タスク  
+**最終更新:** 記載なし
+
+## 概要
+
 このファイルには、将来的に実装すべき改善タスクをリストします。
 
-## テスト環境の改善
+## 対応状況
 
-### テストDBでAlembic Migrationsを実行
+### 未対応
 
-**優先度**: Medium
-**難易度**: Medium
+### テスト環境の改善
+
+#### テストDBでAlembic Migrationsを実行
+
+**優先度**: Medium  
+**難易度**: Medium  
 **想定工数**: 2-3日
 
-#### 背景
+##### 背景
 
 現在、テスト環境では `Base.metadata.create_all()` でテーブルを作成しているため、本番環境（Alembic Migrations使用）と以下の差異が発生します：
 
@@ -27,7 +36,7 @@
 4. **Migration自体のバグ検出不可**
    - Migrationのバグ（依存関係エラー、SQLエラー等）をテストで検出できない
 
-#### 問題点
+##### 問題点
 
 2026-01-18時点で、Alembic Migrationsをテストで実行しようとすると以下の問題が発生：
 
@@ -39,7 +48,7 @@
    - `consumed_quantity` migration (`a1b2c3d4e5f7`) が `lot_receipts` テーブル不在でエラー
    - 先行するmigrationが正しく実行されていない可能性
 
-#### 解決策（将来実装時）
+##### 解決策（将来実装時）
 
 **前提条件**: Migrationファイルの整理・統合が完了していること
 
@@ -74,19 +83,19 @@ def db_engine():
             del os.environ["DATABASE_URL"]
 ```
 
-#### メリット
+##### メリット
 
 - ✅ テストと本番で完全に同じスキーマ
 - ✅ Migration bugs の検出
 - ✅ server_default, triggers, constraints の差異検出
 - ✅ 本番環境と同じデータで回帰テスト可能
 
-#### デメリット
+##### デメリット
 
 - ❌ テスト起動時間が増加（初回migration実行分）
 - ❌ Migrationが複雑な場合、テストが壊れやすい
 
-#### 実装タイミング
+##### 実装タイミング
 
 以下のいずれかの条件を満たした時点で実装：
 
@@ -101,7 +110,7 @@ def db_engine():
 3. **Migration関連のバグが頻発**
    - テスト環境で検出できない問題が増えた場合
 
-#### 暫定対策（現在実装済み）
+##### 暫定対策（現在実装済み）
 
 1. **アプリケーション層でのデフォルト値設定**
    - `consumed_quantity=Decimal("0")` を全LotReceipt作成箇所で明示設定
@@ -115,17 +124,21 @@ def db_engine():
 3. **ドキュメント化**
    - この差異を明確に記録（このファイル）
 
-#### 関連Issue
+##### 関連Issue
 
 - #xxx (将来作成予定): Migrate to Alembic-based test database setup
 
-#### 参考リンク
+##### 参考リンク
 
 - [Alembic Documentation - Running Tests](https://alembic.sqlalchemy.org/en/latest/cookbook.html#test-with-migrations)
 - [SQLAlchemy Testing Guide](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html#joining-a-session-into-an-external-transaction-such-as-for-test-suites)
 
 ---
 
-## その他の改善タスク
+### その他の改善タスク
 
 （今後追加予定）
+
+### 対応済み
+
+- なし

@@ -1,8 +1,9 @@
 # 在庫・ロット管理改善 追加タスク計画
 
+**区分:** 実行計画  
 **作成日**: 2026-01-16  
 **基準ドキュメント**: `docs/reviews/inventory-lot-management-review_merged.md`  
-**対象**: 既存計画（`docs/plans/inventory-lot-improvement-plan.md`）に未反映だった項目
+**対象**: 既存計画（`docs/plan/inventory-lot-improvement-plan.md`）に未反映だった項目
 
 ---
 
@@ -95,6 +96,27 @@ Jotaiの状態管理改善もこの計画に含める。
 - ✅ **D3** レンダリング中の状態更新を解消
 - ✅ **C1** 計測と方式決定（現状維持 + 改善優先）
 - ✅ **C2** `consumed_quantity` 導入
+
+## 対応状況
+
+### 対応済み
+- A1: 展開行の単一展開実装（拡張余地つき）
+- A2: ロット行の詳細情報（判断材料）追加
+- A3: ロットステータス表現の拡張（段階導入）
+- A4: フィルターのビュー非依存化
+- A5: ロット登録フォームの入力負荷低減
+- B1: StockHistory / StockMovement の統一
+- B2: v1/v2 型定義の統一
+- B3: 在庫サマリとロット詳細のSSOT統一
+- C1: 計測と方式決定（現状維持 + 改善優先）
+- C2: `consumed_quantity` 導入
+- D1: Inventory状態のJotai整理
+- D2: 派生atomによるqueryParams管理
+- D3: レンダリング中の状態更新を解消
+- D4: 状態管理ガイドラインの文書化（Inventory適用）
+
+### 未対応
+- なし
 
 ## Phase A: UI/UX 改善（追加分）
 

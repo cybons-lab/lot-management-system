@@ -1,6 +1,7 @@
 # 在庫・ロット管理改善 実行計画
 
-**作成日**: 2026-01-16
+**区分:** 実行計画  
+**作成日**: 2026-01-16  
 **基準ドキュメント**: `docs/reviews/inventory-lot-management-review_merged.md`
 
 ---
@@ -37,6 +38,29 @@
 | Task 0.7: CI/CDパイプライン強化 | ⬜ 未着手 | |
 
 ---
+
+## 対応状況
+
+### 対応済み
+- Task 0.1: ロット簡易登録エラーの修正
+- Task 0.2: ロット作成ユニットテスト追加
+
+### 未対応
+- Task 0.3: API 統合テストの追加
+- Task 0.4: フロントエンドフォームテストの追加
+- Task 0.5: 在庫計算精度テストの追加
+- Task 0.6: E2E テストの追加（ロット管理フロー）
+- Task 0.7: CI/CD パイプラインの強化
+- Task 1.1: `LotReceipt.lot_number` カラム削除
+- Task 1.2: FEFO インデックス最適化
+- Task 1.3: `allocated_quantity` 計算の統一
+- Task 2.1: `Lot` エイリアス廃止
+- Task 2.2: `current_quantity` synonym 廃止
+- Task 2.3: `InventoryTable.tsx` の分割
+- Task 3.1: サーバーサイドページネーション導入
+- Task 3.2: バーチャルスクロール導入
+- Task 3.3: `decimal.js` 導入
+- Task 4.1: `lot_master` 集計値の自動同期トリガー
 
 ## Phase 0: 品質基盤整備（最優先）
 
