@@ -22,6 +22,7 @@ interface InboundPlanTableProps {
   plans: InboundPlan[];
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function InboundPlanTable({ plans }: InboundPlanTableProps) {
   // 列定義
   const columns = useMemo<Column<InboundPlan>[]>(
@@ -93,8 +94,20 @@ export function InboundPlanTable({ plans }: InboundPlanTableProps) {
     [],
   );
 
+  // Deduplicate plans
+  const uniquePlans = useMemo(() => {
+    const seen = new Set();
+    return plans.filter((plan) => {
+      if (seen.has(plan.id)) {
+        return false;
+      }
+      seen.add(plan.id);
+      return true;
+    });
+  }, [plans]);
+
   // TOP10のみ表示
-  const top10Plans = plans.slice(0, 10);
+  const top10Plans = uniquePlans.slice(0, 10);
 
   return (
     <DataTable

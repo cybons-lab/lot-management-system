@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 
 import { getWithdrawals, type WithdrawalResponse } from "../api";
 
@@ -78,6 +79,16 @@ export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHist
     },
   ];
 
+  // Deduplicate data
+  const uniqueData = useMemo(() => {
+    const seen = new Set();
+    return (data?.withdrawals || []).filter((item) => {
+      if (seen.has(item.withdrawal_id)) return false;
+      seen.add(item.withdrawal_id);
+      return true;
+    });
+  }, [data?.withdrawals]);
+
   if (isLoading) {
     return (
       <div className="flex h-40 items-center justify-center">
@@ -95,7 +106,7 @@ export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHist
   return (
     <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <DataTable
-        data={data?.withdrawals || []}
+        data={uniqueData}
         columns={columns}
         getRowId={(row) => row.withdrawal_id}
         isLoading={isLoading}

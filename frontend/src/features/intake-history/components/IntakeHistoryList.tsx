@@ -6,6 +6,7 @@
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useMemo } from "react";
 
 import type { IntakeHistoryResponse } from "../api";
 import { useIntakeHistory } from "../hooks";
@@ -128,6 +129,16 @@ export function IntakeHistoryList({
 
   const columns = allColumns.filter((col) => !col.hidden);
 
+  // Deduplicate intakes
+  const uniqueIntakes = useMemo(() => {
+    const seen = new Set();
+    return (data?.intakes || []).filter((item) => {
+      if (seen.has(item.intake_id)) return false;
+      seen.add(item.intake_id);
+      return true;
+    });
+  }, [data?.intakes]);
+
   if (isLoading) {
     return (
       <div className="flex h-40 items-center justify-center">
@@ -145,7 +156,7 @@ export function IntakeHistoryList({
   return (
     <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <DataTable
-        data={data?.intakes || []}
+        data={uniqueIntakes}
         columns={columns}
         getRowId={(row) => row.intake_id}
         isLoading={isLoading}
