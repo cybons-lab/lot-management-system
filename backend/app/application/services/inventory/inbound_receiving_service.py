@@ -1,5 +1,7 @@
 """Inbound receiving service layer."""
 
+from decimal import Decimal
+
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
@@ -103,6 +105,7 @@ class InboundReceivingService:
                         received_date=request.received_at.date(),
                         expiry_date=expected_lot.expected_expiry_date,
                         received_quantity=expected_lot.expected_quantity,
+                        consumed_quantity=Decimal("0"),
                         unit=line.unit,
                         status="active",
                         temporary_lot_key=temp_key,
@@ -140,6 +143,7 @@ class InboundReceivingService:
                     received_date=request.received_at.date(),
                     expiry_date=None,
                     received_quantity=line.planned_quantity,
+                    consumed_quantity=Decimal("0"),
                     unit=line.unit,
                     status="active",
                 )

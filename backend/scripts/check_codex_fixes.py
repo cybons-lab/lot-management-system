@@ -97,7 +97,8 @@ class TestCodexFixes(unittest.TestCase):
                     quantity=Decimal("10"),
                     withdrawal_type=WithdrawalType.INTERNAL_USE,
                     ship_date=date.today(),
-                )
+                ),
+                withdrawn_by=1,
             )
         print("[Pass] Withdrawal: ReservationLotNotFoundError raised.")
 
@@ -122,7 +123,8 @@ class TestCodexFixes(unittest.TestCase):
                     quantity=Decimal("20"),
                     withdrawal_type=WithdrawalType.INTERNAL_USE,
                     ship_date=date.today(),
-                )
+                ),
+                withdrawn_by=1,
             )
         print("[Pass] Withdrawal: ReservationInsufficientStockError raised.")
 

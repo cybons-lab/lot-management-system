@@ -736,6 +736,10 @@ class LotService:
         if lot_payload.get("received_quantity", Decimal("0")) == Decimal("0") and current_qty > 0:
             lot_payload["received_quantity"] = current_qty
 
+        # Set consumed_quantity to 0 for new lots (NOT NULL constraint)
+        if "consumed_quantity" not in lot_payload:
+            lot_payload["consumed_quantity"] = Decimal("0")
+
         try:
             db_lot = LotReceipt(**lot_payload)
             self.db.add(db_lot)

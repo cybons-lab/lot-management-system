@@ -13,7 +13,9 @@ from app.application.services.inventory.lot_reservation_service import (
     ReservationLotNotFoundError,
 )
 from app.application.services.inventory.withdrawal_service import WithdrawalService
+from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.deps import get_db
+from app.presentation.api.routes.auth.auth_router import get_current_user
 from app.presentation.schemas.inventory.withdrawal_schema import (
     DailyWithdrawalSummary,
     WithdrawalCancelRequest,
@@ -140,6 +142,7 @@ def get_withdrawal(
 def create_withdrawal(
     data: WithdrawalCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """出庫を登録.
 
@@ -150,6 +153,7 @@ def create_withdrawal(
     Args:
         data: 出庫登録リクエスト
         db: データベースセッション
+        current_user: 現在のログインユーザー
 
     Returns:
         作成された出庫レコード
@@ -160,7 +164,7 @@ def create_withdrawal(
     service = WithdrawalService(db)
 
     try:
-        return service.create_withdrawal(data)
+        return service.create_withdrawal(data, withdrawn_by=current_user.id)
     except ReservationLotNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

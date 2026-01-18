@@ -236,11 +236,16 @@ class WithdrawalService:
 
         return self._to_response(withdrawal)
 
-    def create_withdrawal(self, data: WithdrawalCreate) -> WithdrawalResponse:
+    def create_withdrawal(
+        self,
+        data: WithdrawalCreate,
+        withdrawn_by: int,
+    ) -> WithdrawalResponse:
         """出庫を登録.
 
         Args:
             data: 出庫登録リクエスト
+            withdrawn_by: 出庫担当者のユーザーID
 
         Returns:
             作成された出庫レコード
@@ -301,7 +306,7 @@ class WithdrawalService:
             ship_date=data.ship_date,
             reason=data.reason,
             reference_number=data.reference_number,
-            withdrawn_by=data.withdrawn_by,
+            withdrawn_by=withdrawn_by,
         )
         self.db.add(withdrawal)
         self.db.flush()
