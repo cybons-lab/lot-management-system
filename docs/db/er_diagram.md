@@ -5,17 +5,19 @@
 ```mermaid
 erDiagram
     %% Master Data
-    Products ||--o{ Lots : "has"
+    Products ||--o{ LotMaster : "master_of"
     Products ||--o{ OrderLines : "ordered"
-    Warehouses ||--o{ Lots : "stored_in"
-    Suppliers ||--o{ Lots : "supplied"
+    Warehouses ||--o{ LotReceipts : "stored_in"
+    Suppliers ||--o{ LotMaster : "mastered_by (optional)"
+    Suppliers ||--o{ LotReceipts : "supplied"
     Customers ||--o{ Orders : "places"
     DeliveryPlaces ||--o{ Orders : "ships_to"
 
     %% Inventory
-    Lots ||--o{ StockHistory : "history"
-    Lots ||--o{ Adjustments : "adjusted"
-    Lots ||--o{ LotReservations : "reserved"
+    LotMaster ||--o{ LotReceipts : "aggregates"
+    LotReceipts ||--o{ StockHistory : "history"
+    LotReceipts ||--o{ Adjustments : "adjusted"
+    LotReceipts ||--o{ LotReservations : "reserved"
 
     %% Orders
     Orders ||--o{ OrderLines : "contains"
@@ -23,15 +25,22 @@ erDiagram
     %% Reservation / Allocation
     OrderLines ||--o{ LotReservations : "reserves (source_id)"
     OrderLines ||--o{ AllocationTraces : "traced_in"
-    Lots ||--o{ AllocationTraces : "candidate_for"
+    LotReceipts ||--o{ AllocationTraces : "candidate_for"
     
     %% Inbound
-    ExpectedLots ||--o| Lots : "becomes"
+    ExpectedLots ||--o| LotReceipts : "becomes"
 
-    lots {
+    lot_master {
         bigint id PK
         string lot_number
-        decimal current_quantity
+        bigint product_id FK
+    }
+    
+    lot_receipts {
+        bigint id PK
+        bigint lot_master_id FK
+        decimal received_quantity
+        decimal consumed_quantity
         string status
     }
     
