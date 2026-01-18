@@ -1,7 +1,7 @@
 """add consumed_quantity to lot_receipts and update views
 
 Revision ID: a1b2c3d4e5f6
-Revises: z4a5b6c7d8e9
+Revises: d8f000e7240b
 Create Date: 2026-01-18 00:00:00.000000
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "a1b2c3d4e5f7"
-down_revision = "z4a5b6c7d8e9"
+down_revision = "d8f000e7240b"  # After B-Plan merge (lot_receipts table exists)
 branch_labels = None
 depends_on = None
 
@@ -93,10 +93,6 @@ SELECT
     lr.lot_master_id,
     lr.origin_type,
     lr.origin_reference,
-    lr.shipping_date,
-    lr.cost_price,
-    lr.sales_price,
-    lr.tax_rate,
     usa_primary.user_id AS primary_user_id,
     u_primary.username AS primary_username,
     u_primary.display_name AS primary_user_display_name,
@@ -207,10 +203,6 @@ SELECT
     lr.lot_master_id,
     lr.origin_type,
     lr.origin_reference,
-    lr.shipping_date,
-    lr.cost_price,
-    lr.sales_price,
-    lr.tax_rate,
     usa_primary.user_id AS primary_user_id,
     u_primary.username AS primary_username,
     u_primary.display_name AS primary_user_display_name,
