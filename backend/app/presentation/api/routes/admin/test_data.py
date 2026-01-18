@@ -18,6 +18,7 @@ class GenerateRequest(BaseModel):
     include_stockout_scenarios: bool | None = None
     include_lt_variance: bool | None = None
     base_date: str | None = None
+    history_months: int | None = None
 
 
 @router.get("/presets")

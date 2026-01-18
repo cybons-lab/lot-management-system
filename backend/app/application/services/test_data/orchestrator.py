@@ -20,6 +20,7 @@ class GenerateOptions:
     include_stockout_scenarios: bool = False
     include_lt_variance: bool = False
     base_date: str | None = None  # YYYY-MM-DD
+    history_months: int = 6  # Default history length
 
 
 @dataclass
@@ -32,13 +33,27 @@ class Preset:
 PRESETS = {
     "quick": Preset(
         id="quick",
-        description="開発中の素早い確認 (Small, Strict)",
-        options=GenerateOptions(scale="small", mode="strict"),
+        description="開発中の素早い確認 (Small, Strict, 3-month history)",
+        options=GenerateOptions(scale="small", mode="strict", history_months=3),
     ),
     "full_coverage": Preset(
         id="full_coverage",
-        description="網羅的テスト (Medium, Strict)",
-        options=GenerateOptions(scale="medium", mode="strict"),
+        description="網羅的テスト (Medium, Strict, 12-month history, LT variance)",
+        options=GenerateOptions(
+            scale="medium", mode="strict", history_months=12, include_lt_variance=True
+        ),
+    ),
+    "stress_test": Preset(
+        id="stress_test",
+        description="負荷検証 (Large, Strict, 36-month history)",
+        options=GenerateOptions(
+            scale="large",
+            mode="strict",
+            history_months=36,
+            include_demand_patterns=True,
+            include_stockout_scenarios=True,
+            include_lt_variance=True,
+        ),
     ),
     "warning_focus": Preset(
         id="warning_focus",
@@ -52,18 +67,22 @@ PRESETS = {
     ),
     "replenishment_test": Preset(
         id="replenishment_test",
-        description="発注検証 (Medium, Strict, Demand Patterns, Replenishment Scenarios)",
+        description="発注検証 (Medium, Strict, 24-month history, LT variance)",
         options=GenerateOptions(
             scale="medium",
             mode="strict",
+            history_months=24,
             include_demand_patterns=True,
             include_stockout_scenarios=True,
+            include_lt_variance=True,
         ),
     ),
     "forecast_test": Preset(
         id="forecast_test",
-        description="予測検証 (Medium, Strict, Demand Patterns)",
-        options=GenerateOptions(scale="medium", mode="strict", include_demand_patterns=True),
+        description="予測検証 (Medium, Strict, 12-month history)",
+        options=GenerateOptions(
+            scale="medium", mode="strict", history_months=12, include_demand_patterns=True
+        ),
     ),
 }
 

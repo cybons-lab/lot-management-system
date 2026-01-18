@@ -13,6 +13,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Label,
 } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { http } from "@/shared/api/http-client";
@@ -38,10 +44,48 @@ export function AdminPage() {
   const [isInventorySyncing, setIsInventorySyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<InventorySyncResult | null>(null);
 
+  // Test Data Generation State
+  const [presets, setPresets] = useState<
+    Array<{
+      id: string;
+      description: string;
+      options: object;
+    }>
+  >([]);
+  const [selectedPresetId, setSelectedPresetId] = useState("quick");
+
+  // Load presets when dialog opens
+  const loadPresets = async () => {
+    try {
+      const data = await http.get<
+        Array<{
+          id: string;
+          description: string;
+          options: object;
+        }>
+      >("/admin/test-data/presets");
+      setPresets(data);
+    } catch (e) {
+      console.error("Failed to load presets", e);
+      // Fallback
+      setPresets([
+        { id: "quick", description: "開発中の素早い確認 (Small, Strict)", options: {} },
+        { id: "full_coverage", description: "網羅的テスト (Medium, Strict)", options: {} },
+      ]);
+    }
+  };
+
+  const handleOpenGenerateDialog = () => {
+    setShowGenerateConfirm(true);
+    loadPresets();
+  };
+
   const handleGenerateTestData = async () => {
     setIsGenerating(true);
     try {
-      await http.post("admin/test-data/generate");
+      await http.post("admin/test-data/generate", {
+        preset_id: selectedPresetId,
+      });
       toast.success("テストデータを生成しました");
     } catch (e) {
       toast.error("テストデータ生成に失敗しました");
@@ -129,7 +173,7 @@ export function AdminPage() {
             <Button
               variant="destructive"
               className="w-full justify-start"
-              onClick={() => setShowGenerateConfirm(true)}
+              onClick={() => handleOpenGenerateDialog()}
             >
               テストデータ生成（開発用）
             </Button>
@@ -192,8 +236,27 @@ export function AdminPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>テストデータを生成しますか？</AlertDialogTitle>
             <AlertDialogDescription>
-              既存のデータ（マスタ・在庫・受注など）は全て削除され、新しいテストデータで上書きされます。
-              この操作は取り消せません。
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>生成プリセット</Label>
+                  <Select value={selectedPresetId} onValueChange={setSelectedPresetId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="プリセットを選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {presets.map((preset) => (
+                        <SelectItem key={preset.id} value={preset.id}>
+                          {preset.id} - {preset.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p>
+                  既存のデータ（マスタ・在庫・受注など）は全て削除され、新しいテストデータで上書きされます。
+                  この操作は取り消せません。
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
