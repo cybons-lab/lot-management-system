@@ -27,10 +27,6 @@ import { useInventoryItems } from "@/features/inventory/hooks";
 import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 import { useInventoryPageState } from "@/features/inventory/hooks/useInventoryPageState";
 import {
-  type FilterField,
-  getDependentFilterUpdates,
-} from "@/features/inventory/utils/filterCandidates";
-import {
   useInventoryByProduct,
   useInventoryBySupplier,
   useInventoryByWarehouse,
@@ -44,7 +40,6 @@ export function InventoryPage() {
   const navigate = useNavigate();
   // Refresh loading state
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastTouched, setLastTouched] = useState<FilterField | null>(null);
 
   // Page state (Jotai atom - persisted in sessionStorage)
   const {
@@ -98,26 +93,11 @@ export function InventoryPage() {
     onAutoSelectProduct: (id) => updateFilter("product_id", id),
   });
 
-  useEffect(() => {
-    const updates = getDependentFilterUpdates({
-      lastTouched,
-      filters: {
-        product_id: filters.product_id,
-        supplier_id: filters.supplier_id,
-        warehouse_id: filters.warehouse_id,
-      },
-      options: {
-        productOptions,
-        supplierOptions,
-        warehouseOptions,
-      },
-    });
-
-    if (Object.keys(updates).length > 0) {
-      setFilters({ ...filters, ...updates });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productOptions, supplierOptions, warehouseOptions]);
+  // Note: Auto-clearing of invalid filters is NOT needed here because:
+  // 1. The filter-options API endpoint only returns valid combinations
+  // 2. SearchableSelect prevents selecting invalid options
+  // 3. Auto-selection in useFilterOptions handles single-option cases
+  // So filters naturally stay valid without explicit clearing logic
 
   useEffect(() => {
     if (filters.candidate_mode === "stock" && filters.tab === "no_stock") {
@@ -163,14 +143,6 @@ export function InventoryPage() {
     key: K,
     value: (typeof filters)[K],
   ) => {
-    const mapping: Record<string, FilterField> = {
-      product_id: "product",
-      supplier_id: "supplier",
-      warehouse_id: "warehouse",
-    };
-    if (key in mapping) {
-      setLastTouched(mapping[key as keyof typeof mapping]);
-    }
     updateFilter(key as keyof typeof filters, value);
   };
 
@@ -402,14 +374,7 @@ export function InventoryPage() {
                   </div>
                 )}
                 <div>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setLastTouched(null);
-                      resetFilters();
-                    }}
-                    className="w-full"
-                  >
+                  <Button variant="outline" onClick={resetFilters} className="w-full">
                     フィルタをリセット
                   </Button>
                 </div>
