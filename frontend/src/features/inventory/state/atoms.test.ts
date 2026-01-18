@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import type { LotTableSettings } from "@/features/inventory/state";
 import {
   calculateInventoryKpi,
   filterLotsBySearchTerm,
   sortLots,
 } from "@/features/inventory/state/atoms";
-import type { LotTableSettings } from "@/features/inventory/state";
 import type { LotUI } from "@/shared/libs/normalize";
 
 const createLot = (overrides: Partial<LotUI>): LotUI => ({

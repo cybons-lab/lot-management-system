@@ -29,15 +29,14 @@ import { atom } from "jotai";
 import { loadable } from "jotai/utils";
 
 import { getLots, type LotResponse, type LotsGetParams } from "@/features/inventory/api";
-import { groupLotsByProduct, type ProductGroup } from "@/features/inventory/utils/groupLots";
-import { normalizeLot, type LotUI } from "@/shared/libs/normalize";
-import { queryClient } from "@/shared/libs/query-client";
-
 import {
   lotFiltersAtom,
   lotTableSettingsAtom,
   type LotTableSettings,
 } from "@/features/inventory/state";
+import { groupLotsByProduct, type ProductGroup } from "@/features/inventory/utils/groupLots";
+import { normalizeLot, type LotUI } from "@/shared/libs/normalize";
+import { queryClient } from "@/shared/libs/query-client";
 
 type LotsQueryParams = LotsGetParams & { delivery_place_code?: string | null };
 

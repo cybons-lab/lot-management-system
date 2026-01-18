@@ -12,6 +12,9 @@ interface TableSettings {
 
 /**
  * ロットデータのフィルタリング、ソート、ページネーション、グループ化を管理
+ *
+ * @deprecated Inventory画面では state/atoms.ts の derived atoms を使用してください。
+ * このhookは後方互換性のため残されていますが、新規コードでは使用しないでください。
  */
 export function useLotDataProcessing(
   allLots: LotUI[],
