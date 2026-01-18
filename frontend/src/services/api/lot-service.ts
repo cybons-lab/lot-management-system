@@ -7,7 +7,7 @@ import { http } from "@/shared/api/http-client";
 import type { LotResponse } from "@/shared/types/aliases";
 import type { LotCreateInput, LotUpdateInput, LotSearchParams } from "@/utils/validators";
 
-const BASE_PATH = "/lots";
+const BASE_PATH = "lots";
 
 /**
  * ロット一覧を取得
