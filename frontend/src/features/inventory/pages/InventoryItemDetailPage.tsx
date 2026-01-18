@@ -227,14 +227,15 @@ export function InventoryItemDetailPage() {
   return (
     <div className={styles.root}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={handleBack} className="gap-2">
+          <span className="text-lg">←</span>
+          在庫管理
+        </Button>
         <PageHeader
           title="在庫詳細"
           subtitle={`${item.product_name || "名称未設定"} (${item.product_code || "-"}) / ${item.warehouse_name || "名称未設定"} (${item.warehouse_code || "-"})`}
         />
-        <Button variant="outline" onClick={handleBack}>
-          一覧に戻る
-        </Button>
       </div>
 
       {/* Basic Info Card */}

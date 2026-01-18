@@ -5,11 +5,13 @@
  */
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 import type { IntakeHistoryResponse } from "../api";
 import { useIntakeHistory } from "../hooks";
 
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { fmt } from "@/shared/utils/number";
 
@@ -33,6 +35,9 @@ export function IntakeHistoryList({
   endDate,
   isCompact = false,
 }: IntakeHistoryListProps) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+
   const { data, isLoading, isError, error, refetch } = useIntakeHistory({
     supplier_id: supplierId,
     warehouse_id: warehouseId,
@@ -40,7 +45,8 @@ export function IntakeHistoryList({
     search: searchQuery,
     start_date: startDate,
     end_date: endDate,
-    limit: 100,
+    skip: (page - 1) * pageSize,
+    limit: pageSize,
   });
 
   const allColumns: (Column<IntakeHistoryResponse> & { hidden?: boolean })[] = [
@@ -145,6 +151,18 @@ export function IntakeHistoryList({
         isLoading={isLoading}
         emptyMessage="入庫履歴はありません"
       />
+      {data && data.total > 0 && (
+        <TablePagination
+          currentPage={page}
+          pageSize={pageSize}
+          totalCount={data.total}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(1);
+          }}
+        />
+      )}
     </div>
   );
 }
