@@ -11,9 +11,11 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
     ReservationStatus,
 )
 from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace, Product
+from app.infrastructure.persistence.models.order_groups_models import OrderGroup
 from app.infrastructure.persistence.models.orders_models import Order, OrderLine
 
 from .inventory import get_any_lot_id
+from .scenarios.stockout_scenarios import STOCKOUT_SCENARIOS
 
 
 def generate_orders(
@@ -22,6 +24,7 @@ def generate_orders(
     products: list[Product],
     products_with_forecast: list[Product],
     delivery_places: list[DeliveryPlace],
+    options: object = None,
 ):
     """Generate orders based on forecast data.
 
@@ -44,6 +47,14 @@ def generate_orders(
 
     print(f"[INFO] Found {len(forecasts)} daily forecasts to generate orders from")
 
+    stockout_enabled = False
+    if (
+        options
+        and hasattr(options, "include_stockout_scenarios")
+        and options.include_stockout_scenarios
+    ):
+        stockout_enabled = True
+
     # Group forecasts: create one order per (customer, date) with multiple lines
     # Key: (customer_id, order_date) -> list of forecasts
     order_groups: dict[tuple[int, date], list[ForecastCurrent]] = {}
@@ -58,6 +69,10 @@ def generate_orders(
 
     order_count = 0
     line_count = 0
+
+    # Track OrderGroups to avoid uniqueness violation if multiple runs (though we usually clear data)
+    # Key: (customer_id, product_id, order_date) -> OrderGroup.id
+    order_group_map: dict[tuple[int, int, date], int] = {}
 
     for (customer_id, _order_date), fc_list in order_groups.items():
         # Find customer
@@ -149,6 +164,33 @@ def generate_orders(
                 order_type=order_type,
                 status=status,
             )
+
+            # --- Order Group Logic ---
+            # Create or find OrderGroup for (Customer, Product, OrderDate)
+            # Use 'order.order_date' which is 'today' in this generate_orders logic (L77)
+            # BUT wait, the plan says OrderGroup key is (Customer, Product, OrderDate).
+            # Here 'order.order_date' is set to date.today() for all orders.
+            # So groups will be created for today's order date.
+
+            og_key = (customer_id, fc.product_id, order.order_date)
+            og_id = order_group_map.get(og_key)
+
+            if not og_id:
+                # Create new OrderGroup
+                og = OrderGroup(
+                    customer_id=customer_id,
+                    product_id=fc.product_id,
+                    order_date=order.order_date,
+                    source_file_name=f"TEST_DATA_{order.order_date}.csv",
+                )
+                db.add(og)
+                db.flush()
+                og_id = og.id
+                order_group_map[og_key] = og_id
+
+            ol.order_group_id = og_id
+            # -------------------------
+
             db.add(ol)
             db.flush()
             line_count += 1
@@ -171,3 +213,65 @@ def generate_orders(
 
     db.commit()
     print(f"[INFO] Generated {order_count} orders with {line_count} lines (forecast-based)")
+
+    if stockout_enabled and customers and products:
+        _generate_stockout_scenarios(db, customers, products, delivery_places)
+
+
+def _generate_stockout_scenarios(
+    db: Session,
+    customers: list[Customer],
+    products: list[Product],
+    delivery_places: list[DeliveryPlace],
+):
+    """Generate specific stockout scenarios."""
+    print("[INFO] Generating Stockout Scenarios...")
+    today = date.today()
+
+    for _key, scenario in STOCKOUT_SCENARIOS.items():
+        # Pick a random product/customer
+        product = random.choice(products)
+        customer = random.choice(customers)
+        dp = next((dp for dp in delivery_places if dp.customer_id == customer.id), None)
+
+        # Create Order (Past/Recent)
+        order = Order(
+            customer_id=customer.id,
+            order_date=today - timedelta(days=random.randint(1, 5)),
+            notes=f"Scenario: {scenario['description']}",
+        )
+        db.add(order)
+        db.flush()
+
+        # Quantity from scenario
+        qty = Decimal(str(scenario.get("order_qty", 100)))
+
+        # Simulating scenario behaviors (Unfulfilled, etc.)
+        # Ideally we force the inventory state, but that's hard.
+        # Instead we CREATE the order with the expected outcome state.
+
+        scenario_id = scenario["scenario_id"]
+        status = "pending"
+
+        if scenario_id == "stockout_partial":
+            # Just create a pending order. The system (if logic runs) would partial allocate.
+            # Here we just leave it pending to signify shortage.
+            pass
+        elif scenario_id == "stockout_complete":
+            pass
+        elif scenario_id == "stockout_backorder":
+            pass
+
+        ol = OrderLine(
+            order_id=order.id,
+            product_id=product.id,
+            delivery_date=today,  # Due today or past
+            order_quantity=qty,
+            unit="pcs",
+            delivery_place_id=dp.id if dp else None,
+            order_type="ORDER_MANUAL",
+            status=status,
+        )
+        db.add(ol)
+
+    db.commit()

@@ -132,6 +132,7 @@
 
 from dataclasses import dataclass
 from datetime import date
+from typing import Any
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
@@ -449,6 +450,22 @@ def unlock_lot(lot_id: int, unlock_data: LotLock | None = None, db: Session = De
     """
     service = LotService(db)
     return service.unlock_lot(lot_id, unlock_data)
+
+
+@router.patch("/{lot_id}/archive", response_model=LotResponse)
+def archive_lot(
+    lot_id: int,
+    db: Session = Depends(get_db),
+    # TODO: Add permission check
+    # current_user: User = Depends(get_current_active_user),
+) -> Any:
+    """Archive a lot.
+
+    The lot must be fully depleted (current_quantity = 0).
+    Archived lots are excluded from default list views but remain in the database.
+    """
+    service = LotService(db)
+    return service.archive_lot(lot_id)
 
 
 # ===== Stock Movements =====

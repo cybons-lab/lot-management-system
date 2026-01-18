@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
+import { useLotMutations } from "@/hooks/api/useLotMutations";
 import { useUpdateLot, useLockLot, useUnlockLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
 import type { LotUI } from "@/shared/libs/normalize";
@@ -12,6 +13,7 @@ interface LotActionsOptions {
   onLotsChanged?: () => void;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function useLotActions(options?: LotActionsOptions) {
   const editDialog = useDialog();
   const lockDialog = useDialog();
@@ -49,6 +51,8 @@ export function useLotActions(options?: LotActionsOptions) {
     onError: (error) => toast.error(`ロック解除に失敗しました: ${error.message}`),
   });
 
+  const { archiveLot } = useLotMutations();
+
   const handleEditLot = useCallback(
     (lot: LotUI) => {
       setSelectedLot(lot);
@@ -74,6 +78,20 @@ export function useLotActions(options?: LotActionsOptions) {
     [unlockLotMutation],
   );
 
+  const handleArchiveLot = useCallback(
+    async (lot: LotUI) => {
+      if (
+        confirm(
+          `ロット ${lot.lot_number} をアーカイブしますか?\nアーカイブされたロットは通常の一覧からは非表示になります。`,
+        )
+      ) {
+        await archiveLot(lot.id);
+        notifyLotsChanged();
+      }
+    },
+    [archiveLot, notifyLotsChanged],
+  );
+
   const handleCloseEdit = useCallback(() => {
     editDialog.close();
     setSelectedLot(null);
@@ -93,7 +111,9 @@ export function useLotActions(options?: LotActionsOptions) {
     handleEditLot,
     handleLockLot,
     handleUnlockLot,
+    handleArchiveLot,
     handleCloseEdit,
     handleCloseLock,
+    archiveLot,
   };
 }

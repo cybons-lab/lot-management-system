@@ -1,6 +1,7 @@
 import random
 from datetime import date, timedelta
 from decimal import Decimal
+from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -13,15 +14,22 @@ from app.infrastructure.persistence.models.inbound_models import (
 from app.infrastructure.persistence.models.inventory_models import LotReceipt
 from app.infrastructure.persistence.models.masters_models import Product, Supplier
 
+from .scenarios.lt_scenarios import LT_SCENARIOS
 from .utils import fake
 
 
-def generate_inbound_plans(db: Session, products: list[Product], suppliers: list[Supplier]):
+def generate_inbound_plans(
+    db: Session, products: list[Product], suppliers: list[Supplier], options: object = None
+):
     """Generate inbound plans: some in the future (planned), some in the past (received)."""
     if not products or not suppliers:
         return
 
     today = date.today()
+
+    lt_variance_enabled = False
+    if options and hasattr(options, "include_lt_variance") and options.include_lt_variance:
+        lt_variance_enabled = True
 
     # 1. Past Received Plans (Last 30 days)
     # We create plans and link them to existing Lots to simulate history
@@ -35,11 +43,27 @@ def generate_inbound_plans(db: Session, products: list[Product], suppliers: list
 
             arrival_date = lot.received_date
 
+            # If LT variance enabled, tweak arrival_date vs (simulated) original plan
+            # But here we create the "Plan" record.
+            # If arrival_date is ACTUAL (from lot), we should set planned_arrival_date differently?
+            # Yes. For "LT Early" scenario: Planned = Actual + 3 days.
+            # For "LT Late": Planned = Actual - 3 days.
+
+            planned_date = arrival_date
+            if lt_variance_enabled:
+                # Randomly assign a scenario
+                scenario_key = random.choice(list(LT_SCENARIOS.keys()))
+                scenario = LT_SCENARIOS[scenario_key]
+                variance = cast(int, scenario.get("variance", 0))
+                # If variance > 0 (Late): Actual > Planned. So Planned = Actual - Variance
+                # If variance < 0 (Early): Actual < Planned. So Planned = Actual - Variance (minus negative = plus)
+                planned_date = arrival_date - timedelta(days=variance)
+
             plan = InboundPlan(
                 plan_number=fake.unique.bothify(text="IP-PAST-#####"),
                 sap_po_number=fake.unique.bothify(text="PO-#####"),
                 supplier_id=supplier.id,
-                planned_arrival_date=arrival_date,
+                planned_arrival_date=planned_date,
                 status=InboundPlanStatus.RECEIVED,
                 notes="Generated from lot history",
             )
@@ -96,13 +120,15 @@ def generate_inbound_plans(db: Session, products: list[Product], suppliers: list
             db.add(line)
             db.flush()
 
-            expected = ExpectedLot(
-                inbound_plan_line_id=line.id,
-                expected_lot_number=fake.bothify(text="EXP-LOT-#####"),
-                expected_quantity=qty,
-                expected_expiry_date=arrival_date + timedelta(days=90),
-            )
-            db.add(expected)
+            # Link ExpectedLot (50% chance, to test cases where lot is not yet known)
+            if random.random() < 0.5:
+                expected = ExpectedLot(
+                    inbound_plan_line_id=line.id,
+                    expected_lot_number=fake.bothify(text="EXP-LOT-#####"),
+                    expected_quantity=qty,
+                    expected_expiry_date=arrival_date + timedelta(days=90),
+                )
+                db.add(expected)
 
     db.commit()
     print("[INFO] Generated inbound plans (past and future)")

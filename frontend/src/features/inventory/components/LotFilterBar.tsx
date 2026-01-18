@@ -52,6 +52,7 @@ export function LotFilterBar({
           <SelectItem value="all">すべて</SelectItem>
           <SelectItem value="depleted">在庫なし (Depleted)</SelectItem>
           <SelectItem value="expired">期限切れ</SelectItem>
+          <SelectItem value="archived">アーカイブ済み</SelectItem>
         </SelectContent>
       </Select>
 

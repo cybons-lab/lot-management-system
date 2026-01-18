@@ -1,4 +1,4 @@
-import { Calendar, Lock, PackageMinus, Pencil, Unlock } from "lucide-react";
+import { Calendar, Lock, PackageMinus, Pencil, Unlock, Archive } from "lucide-react";
 
 import { Button } from "@/components/ui";
 import type { LotUI } from "@/shared/libs/normalize";
@@ -12,8 +12,10 @@ interface InventoryLotActionsProps {
   onLock: (lot: LotUI) => void;
   onWithdraw: (lot: LotUI) => void;
   onHistory: (lot: LotUI) => void;
+  onArchive?: (lot: LotUI) => void;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function InventoryLotActions({
   lot,
   warehouseNameFallback,
@@ -22,6 +24,7 @@ export function InventoryLotActions({
   onLock,
   onWithdraw,
   onHistory,
+  onArchive,
 }: InventoryLotActionsProps) {
   const lotWithWarehouseName = {
     ...lot,
@@ -82,6 +85,19 @@ export function InventoryLotActions({
       >
         <Calendar className="h-4 w-4" />
       </Button>
+      {/* Archive Button (only for depleted or expired lots) */}
+      {(lot.status === "depleted" || lot.status === "expired") &&
+        parseDecimal(lot.current_quantity).eq(0) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onArchive?.(lotWithWarehouseName)} // Optional chaining for safe call
+            title="アーカイブ"
+            className="h-7 w-7 p-0 text-gray-400 hover:text-red-500"
+          >
+            <Archive className="h-4 w-4" />
+          </Button>
+        )}
     </div>
   );
 }

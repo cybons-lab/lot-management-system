@@ -830,6 +830,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/lots/{lot_id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Archive Lot
+     * @description Archive a lot.
+     *
+     *     The lot must be fully depleted (current_quantity = 0).
+     *     Archived lots are excluded from default list views but remain in the database.
+     */
+    patch: operations["archive_lot_api_lots__lot_id__archive_patch"];
+    trace?: never;
+  };
   "/api/lots/{lot_id}/movements": {
     parameters: {
       query?: never;
@@ -4806,6 +4829,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/admin/test-data/presets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Presets
+     * @description Available test data generation presets.
+     */
+    get: operations["get_presets_api_admin_test_data_presets_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/admin/test-data/generate": {
     parameters: {
       query?: never;
@@ -4822,6 +4865,115 @@ export interface paths {
      *     WARNING: This will DELETE all existing data in related tables.
      */
     post: operations["generate_test_data_endpoint_api_admin_test_data_generate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/replenishment/recommendations/run": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Run Replenishment Recommendations
+     * @description Run replenishment calculation and return recommendations.
+     */
+    post: operations["run_replenishment_recommendations_api_admin_replenishment_recommendations_run_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/replenishment/recommendations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Recommendations
+     * @description Get existing recommendations (Placeholder: currently re-runs calculation).
+     *
+     *     Since we decided on minimal persistence for Phase 1, we will re-run the calculation
+     *     or return an empty list if not persisted.
+     *     For this implementation, we will perform a 'dry run' lookalike or just re-run.
+     */
+    get: operations["get_recommendations_api_admin_replenishment_recommendations_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/replenishment/explain/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Explain Recommendation
+     * @description Get explanation for a specific recommendation.
+     *
+     *     Since we don't persist, we cannot fetch by ID unless we cache it.
+     *     For Phase 1 (Minimal), this might return a dummy or require re-run params.
+     *
+     *     TODO: Implement persistence.
+     */
+    get: operations["explain_recommendation_api_admin_replenishment_explain__id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/demand/forecast": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Demand Forecast
+     * @description Get demand forecast for a product.
+     */
+    get: operations["get_demand_forecast_api_admin_demand_forecast_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/demand/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Demand History
+     * @description Get demand history for a product.
+     */
+    get: operations["get_demand_history_api_admin_demand_history_get"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -8199,6 +8351,33 @@ export interface components {
       /** Email */
       email?: string | null;
     };
+    /** DailyDemand */
+    DailyDemand: {
+      /**
+       * Date
+       * Format: date
+       */
+      date: string;
+      /** Quantity */
+      quantity: string;
+    };
+    /** DailyForecast */
+    DailyForecast: {
+      /**
+       * Date
+       * Format: date
+       */
+      date: string;
+      /** Quantity */
+      quantity: string;
+      /**
+       * Is Holiday
+       * @default false
+       */
+      is_holiday: boolean;
+      /** Notes */
+      notes?: string | null;
+    };
     /**
      * DailyIntakeSummary
      * @description 日別入庫集計（カレンダー用）.
@@ -8354,6 +8533,38 @@ export interface components {
       /** Customer Id */
       customer_id?: number | null;
     };
+    /** DemandForecast */
+    DemandForecast: {
+      /** Product Id */
+      product_id: number;
+      /** Warehouse Id */
+      warehouse_id: number | null;
+      /**
+       * As Of Date
+       * Format: date
+       */
+      as_of_date: string;
+      /** Horizon Days */
+      horizon_days: number;
+      /** Total */
+      total: string;
+      /** Avg Daily */
+      avg_daily: string;
+      /** Std Daily */
+      std_daily: string;
+      /** Method */
+      method: string;
+      /** Confidence */
+      confidence: number;
+      /** Data Points Used */
+      data_points_used: number;
+      /** Daily Forecasts */
+      daily_forecasts?: components["schemas"]["DailyForecast"][];
+      /** Details */
+      details?: {
+        [key: string]: unknown;
+      } | null;
+    };
     /**
      * ExpectedLotCreate
      * @description Payload for creating expected lots.
@@ -8467,15 +8678,13 @@ export interface components {
     };
     /**
      * FilterOption
-     * @description Filter option for dropdowns.
+     * @description フィルタ選択肢.
      */
     FilterOption: {
-      /** Id */
-      id: number;
-      /** Code */
-      code: string;
-      /** Name */
-      name: string;
+      /** Label */
+      label: string;
+      /** Value */
+      value: string;
     };
     /**
      * FilterOptions
@@ -8483,11 +8692,11 @@ export interface components {
      */
     FilterOptions: {
       /** Products */
-      products: components["schemas"]["FilterOption"][];
+      products: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
       /** Suppliers */
-      suppliers: components["schemas"]["FilterOption"][];
+      suppliers: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
       /** Warehouses */
-      warehouses: components["schemas"]["FilterOption"][];
+      warehouses: components["schemas"]["app__presentation__schemas__inventory__inventory_schema__FilterOption"][];
     };
     /**
      * ForecastBulkImportItem
@@ -8718,6 +8927,37 @@ export interface components {
       forecast_quantity?: number | string | null;
       /** Unit */
       unit?: string | null;
+    };
+    /** GenerateRequest */
+    GenerateRequest: {
+      /**
+       * Preset Id
+       * @default quick
+       */
+      preset_id: string;
+      /** Scale */
+      scale?: string | null;
+      /** Mode */
+      mode?: string | null;
+      /** Include Demand Patterns */
+      include_demand_patterns?: boolean | null;
+      /** Include Stockout Scenarios */
+      include_stockout_scenarios?: boolean | null;
+      /** Include Lt Variance */
+      include_lt_variance?: boolean | null;
+      /** Base Date */
+      base_date?: string | null;
+    };
+    /** GetHistoryResponse */
+    GetHistoryResponse: {
+      /** Daily Demands */
+      daily_demands: components["schemas"]["DailyDemand"][];
+      /** Total */
+      total: string;
+      /** Avg Daily */
+      avg_daily: string;
+      /** Std Daily */
+      std_daily: string;
     };
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -9632,7 +9872,7 @@ export interface components {
      * @description Valid lot lifecycle statuses.
      * @enum {string}
      */
-    LotStatus: "active" | "depleted" | "expired" | "quarantine" | "locked";
+    LotStatus: "active" | "depleted" | "expired" | "quarantine" | "locked" | "archived";
     /**
      * LotSuggestionsResponse
      * @description ロット候補一覧のレスポンス.
@@ -10101,11 +10341,11 @@ export interface components {
      */
     OperationLogFiltersResponse: {
       /** Users */
-      users: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
+      users: components["schemas"]["FilterOption"][];
       /** Operation Types */
-      operation_types: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
+      operation_types: components["schemas"]["FilterOption"][];
       /** Target Tables */
-      target_tables: components["schemas"]["app__presentation__schemas__system__operation_logs_schema__FilterOption"][];
+      target_tables: components["schemas"]["FilterOption"][];
     };
     /**
      * OperationLogListResponse
@@ -11006,6 +11246,74 @@ export interface components {
       maker_item_code?: string | null;
       /** Is Active */
       is_active?: boolean | null;
+    };
+    /** ReplenishmentRecommendation */
+    ReplenishmentRecommendation: {
+      /** Id */
+      id: string;
+      /** Product Id */
+      product_id: number;
+      /** Warehouse Id */
+      warehouse_id: number;
+      /** Supplier Id */
+      supplier_id: number;
+      /** Recommended Order Qty */
+      recommended_order_qty: string;
+      /**
+       * Recommended Order Date
+       * Format: date
+       */
+      recommended_order_date: string;
+      /**
+       * Expected Arrival Date
+       * Format: date
+       */
+      expected_arrival_date: string;
+      /** Reorder Point */
+      reorder_point: string;
+      /** Safety Stock */
+      safety_stock: string;
+      /** Target Stock */
+      target_stock: string;
+      /** Current On Hand */
+      current_on_hand: string;
+      /** Current Reserved */
+      current_reserved: string;
+      /** Current Available */
+      current_available: string;
+      /** Pending Inbound */
+      pending_inbound: string;
+      /** Avg Daily Demand */
+      avg_daily_demand: string;
+      /** Demand Forecast Horizon */
+      demand_forecast_horizon: number;
+      /** Demand Forecast Total */
+      demand_forecast_total: string;
+      /** Lead Time Days */
+      lead_time_days: number;
+      /** Lead Time Std */
+      lead_time_std: number;
+      /** Moq */
+      moq?: string | null;
+      /** Lot Size */
+      lot_size?: string | null;
+      /** Constraints Applied */
+      constraints_applied?: string[];
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at?: string;
+      /**
+       * Status
+       * @default draft
+       */
+      status: string;
+      /**
+       * Explanation
+       * @default
+       */
+      explanation: string;
     };
     /**
      * ReservationCancelRequest
@@ -11991,7 +12299,7 @@ export interface components {
        * @default bearer
        */
       token_type: string;
-      user: components["schemas"]["UserResponse"];
+      user: components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
     };
     /**
      * TransportLeadTimeResponse
@@ -12158,19 +12466,45 @@ export interface components {
     };
     /**
      * UserResponse
-     * @description User response schema.
+     * @description Schema for user response (DDL: users).
      */
     UserResponse: {
-      /** Id */
-      id: number;
-      /** Username */
+      /**
+       * Username
+       * @description ユーザー名
+       */
       username: string;
-      /** Display Name */
+      /**
+       * Email
+       * Format: email
+       * @description メールアドレス
+       */
+      email: string;
+      /**
+       * Display Name
+       * @description 表示名
+       */
       display_name: string;
-      /** Roles */
-      roles?: string[];
-      /** Assignments */
-      assignments?: components["schemas"]["UserAssignmentSchema"][];
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** User Id */
+      user_id: number;
+      /** Last Login At */
+      last_login_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
     };
     /**
      * UserRoleAssignment
@@ -12734,56 +13068,32 @@ export interface components {
      */
     WithdrawalType: "order_manual" | "internal_use" | "disposal" | "return" | "sample" | "other";
     /**
-     * FilterOption
-     * @description フィルタ選択肢.
+     * UserResponse
+     * @description User response schema.
      */
-    app__presentation__schemas__system__operation_logs_schema__FilterOption: {
-      /** Label */
-      label: string;
-      /** Value */
-      value: string;
+    app__presentation__schemas__auth__auth_schemas__UserResponse: {
+      /** Id */
+      id: number;
+      /** Username */
+      username: string;
+      /** Display Name */
+      display_name: string;
+      /** Roles */
+      roles?: string[];
+      /** Assignments */
+      assignments?: components["schemas"]["UserAssignmentSchema"][];
     };
     /**
-     * UserResponse
-     * @description Schema for user response (DDL: users).
+     * FilterOption
+     * @description Filter option for dropdowns.
      */
-    app__presentation__schemas__system__users_schema__UserResponse: {
-      /**
-       * Username
-       * @description ユーザー名
-       */
-      username: string;
-      /**
-       * Email
-       * Format: email
-       * @description メールアドレス
-       */
-      email: string;
-      /**
-       * Display Name
-       * @description 表示名
-       */
-      display_name: string;
-      /**
-       * Is Active
-       * @description 有効フラグ
-       * @default true
-       */
-      is_active: boolean;
-      /** User Id */
-      user_id: number;
-      /** Last Login At */
-      last_login_at?: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
+    app__presentation__schemas__inventory__inventory_schema__FilterOption: {
+      /** Id */
+      id: number;
+      /** Code */
+      code: string;
+      /** Name */
+      name: string;
     };
   };
   responses: never;
@@ -14223,6 +14533,37 @@ export interface operations {
         "application/json": components["schemas"]["LotLock"] | null;
       };
     };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  archive_lot_api_lots__lot_id__archive_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
     responses: {
       /** @description Successful Response */
       200: {
@@ -19028,7 +19369,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"];
+          "application/json": components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
         };
       };
     };
@@ -19202,7 +19543,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"][];
+          "application/json": components["schemas"]["UserResponse"][];
         };
       };
       /** @description Validation Error */
@@ -19235,7 +19576,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"];
+          "application/json": components["schemas"]["UserResponse"];
         };
       };
       /** @description Validation Error */
@@ -19301,7 +19642,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"];
+          "application/json": components["schemas"]["UserResponse"];
         };
       };
       /** @description Validation Error */
@@ -19958,7 +20299,7 @@ export interface operations {
       };
     };
   };
-  generate_test_data_endpoint_api_admin_test_data_generate_post: {
+  get_presets_api_admin_test_data_presets_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -19974,6 +20315,207 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+    };
+  };
+  generate_test_data_endpoint_api_admin_test_data_generate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["GenerateRequest"] | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  run_replenishment_recommendations_api_admin_replenishment_recommendations_run_post: {
+    parameters: {
+      query: {
+        /** @description Warehouse ID */
+        warehouse_id: number;
+        as_of_date?: string | null;
+        method?: string;
+        product_ids?: number[] | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReplenishmentRecommendation"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_recommendations_api_admin_replenishment_recommendations_get: {
+    parameters: {
+      query: {
+        /** @description Warehouse ID */
+        warehouse_id: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReplenishmentRecommendation"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  explain_recommendation_api_admin_replenishment_explain__id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_demand_forecast_api_admin_demand_forecast_get: {
+    parameters: {
+      query: {
+        product_id: number;
+        warehouse_id?: number | null;
+        horizon_days?: number;
+        method?: string;
+        as_of_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DemandForecast"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_demand_history_api_admin_demand_history_get: {
+    parameters: {
+      query: {
+        product_id: number;
+        start_date: string;
+        end_date: string;
+        warehouse_id?: number | null;
+        include_non_demand?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetHistoryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
