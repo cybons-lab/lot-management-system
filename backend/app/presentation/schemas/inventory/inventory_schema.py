@@ -363,6 +363,10 @@ class InventoryFilterOptions(BaseSchema):
     products: list[InventoryFilterOption]
     suppliers: list[InventoryFilterOption]
     warehouses: list[InventoryFilterOption]
+    effective_tab: str = Field(
+        "all",
+        description="Resolved tab after applying mode-specific coercion (e.g., stock mode).",
+    )
 
 
 class LotArchiveRequest(BaseSchema):

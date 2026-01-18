@@ -53,6 +53,7 @@ export interface FilterOptions {
   products: FilterOption[];
   suppliers: FilterOption[];
   warehouses: FilterOption[];
+  effective_tab?: string;
 }
 
 // ===== Lots API Functions =====
@@ -238,11 +239,18 @@ export const getFilterOptions = (params?: {
   product_id?: number;
   warehouse_id?: number;
   supplier_id?: number;
+  tab?: string;
+  primary_staff_only?: boolean;
+  mode?: "stock" | "master";
 }) => {
   const searchParams = new URLSearchParams();
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
+  if (params?.tab) searchParams.append("tab", params.tab);
+  if (params?.primary_staff_only)
+    searchParams.append("primary_staff_only", params.primary_staff_only.toString());
+  if (params?.mode) searchParams.append("mode", params.mode);
 
   const queryString = searchParams.toString();
   return http.get<FilterOptions>(

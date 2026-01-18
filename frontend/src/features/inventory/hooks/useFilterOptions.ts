@@ -10,6 +10,9 @@ interface UseFilterOptionsParams {
   product_id?: string;
   supplier_id?: string;
   warehouse_id?: string;
+  tab?: string;
+  primary_staff_only?: boolean;
+  mode?: "stock" | "master";
   onAutoSelectSupplier?: (supplierId: string) => void;
   onAutoSelectProduct?: (productId: string) => void;
 }
@@ -18,16 +21,30 @@ export function useFilterOptions({
   product_id,
   supplier_id,
   warehouse_id,
+  tab,
+  primary_staff_only,
+  mode = "stock",
   onAutoSelectSupplier,
   onAutoSelectProduct,
 }: UseFilterOptionsParams) {
   const { data, isLoading } = useQuery<FilterOptions>({
-    queryKey: ["filter-options", product_id, supplier_id, warehouse_id],
+    queryKey: [
+      "filter-options",
+      product_id,
+      supplier_id,
+      warehouse_id,
+      tab,
+      primary_staff_only,
+      mode,
+    ],
     queryFn: () =>
       getFilterOptions({
         product_id: product_id ? Number(product_id) : undefined,
         supplier_id: supplier_id ? Number(supplier_id) : undefined,
         warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+        tab,
+        primary_staff_only,
+        mode,
       }),
     staleTime: 30000, // 30秒間キャッシュ
   });
