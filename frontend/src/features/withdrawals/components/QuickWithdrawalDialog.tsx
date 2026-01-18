@@ -62,6 +62,7 @@ export function QuickWithdrawalDialog({
 }: QuickWithdrawalDialogProps) {
   const { user } = useAuth();
   const today = new Date().toISOString().split("T")[0];
+  const initialShipDateValue = initialShipDate || today;
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
 
   const [deliveryPlaces, setDeliveryPlaces] = useState<DeliveryPlace[]>([]);
@@ -90,20 +91,38 @@ export function QuickWithdrawalDialog({
   const customerIdRef = useRef(formState.customer_id);
   const deliveryPlacesRequestIdRef = useRef(0);
 
-  useEffect(() => {
-    if (open) {
-      setFormState({
-        customer_id: 0,
-        delivery_place_id: 0,
-        ship_date: initialShipDate || today,
-        quantity: 0,
-        reference_number: "",
-        reason: "",
-      });
+  const buildInitialFormState = useCallback(
+    (shipDate: string): FormState => ({
+      customer_id: 0,
+      delivery_place_id: 0,
+      ship_date: shipDate,
+      quantity: 0,
+      reference_number: "",
+      reason: "",
+    }),
+    [],
+  );
+
+  const resetFormState = useCallback(
+    (shipDate: string) => {
+      setFormState(buildInitialFormState(shipDate));
       setDeliveryPlaces([]);
       setErrors({});
       setMappingNotFound(false);
       setDeliveryPlaceNotFound(false);
+    },
+    [buildInitialFormState],
+  );
+
+  const isLatestDeliveryPlaceRequest = useCallback(
+    (requestId: number, customerId: number) =>
+      deliveryPlacesRequestIdRef.current === requestId && customerIdRef.current === customerId,
+    [],
+  );
+
+  useEffect(() => {
+    if (open) {
+      resetFormState(initialShipDateValue);
 
       // 製品IDからデフォルトの得意先・納入先を取得
       if (lot.product_id) {
@@ -141,7 +160,7 @@ export function QuickWithdrawalDialog({
           });
       }
     }
-  }, [open, today, initialShipDate, lot.product_id]);
+  }, [open, initialShipDateValue, lot.product_id, resetFormState]);
 
   useEffect(() => {
     deliveryPlaceIdRef.current = formState.delivery_place_id;
@@ -150,6 +169,15 @@ export function QuickWithdrawalDialog({
   useEffect(() => {
     customerIdRef.current = formState.customer_id;
   }, [formState.customer_id]);
+
+  const clearFieldError = useCallback(<K extends keyof FormErrors>(key: K) => {
+    setErrors((prev) => {
+      if (!(key in prev)) {
+        return prev;
+      }
+      return { ...prev, [key]: undefined };
+    });
+  }, []);
 
   // 得意先が変わったら納入先を再取得（レースコンディション対策）
   useEffect(() => {
@@ -172,10 +200,7 @@ export function QuickWithdrawalDialog({
       })
       .then((places) => {
         // レスポンス時点でcustomer_idが変わっていないか確認
-        if (
-          deliveryPlacesRequestIdRef.current === requestId &&
-          customerIdRef.current === customerId
-        ) {
+        if (isLatestDeliveryPlaceRequest(requestId, customerId)) {
           setDeliveryPlaces(places);
           // 既存の選択が新しいリストに含まれていない場合のみリセット
           if (!places.some((p) => p.id === deliveryPlaceIdRef.current)) {
@@ -187,19 +212,13 @@ export function QuickWithdrawalDialog({
         // AbortErrorは無視
         if ((error as Error).name !== "AbortError") {
           console.error("納入先取得エラー:", error);
-          if (
-            deliveryPlacesRequestIdRef.current === requestId &&
-            customerIdRef.current === customerId
-          ) {
+          if (isLatestDeliveryPlaceRequest(requestId, customerId)) {
             setDeliveryPlaces([]);
           }
         }
       })
       .finally(() => {
-        if (
-          deliveryPlacesRequestIdRef.current === requestId &&
-          customerIdRef.current === customerId
-        ) {
+        if (isLatestDeliveryPlaceRequest(requestId, customerId)) {
           setIsLoadingDeliveryPlaces(false);
         }
       });
@@ -221,11 +240,11 @@ export function QuickWithdrawalDialog({
         setDeliveryPlaceNotFound(false);
       }
       // エラーをクリア
-      if (key in errors) {
-        setErrors((prev) => ({ ...prev, [key]: undefined }));
+      if (key === "customer_id" || key === "delivery_place_id" || key === "quantity") {
+        clearFieldError(key);
       }
     },
-    [errors],
+    [clearFieldError],
   );
 
   // バリデーション
