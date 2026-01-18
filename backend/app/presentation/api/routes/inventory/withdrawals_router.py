@@ -13,6 +13,7 @@ from app.application.services.inventory.lot_reservation_service import (
     ReservationLotNotFoundError,
 )
 from app.application.services.inventory.withdrawal_service import WithdrawalService
+from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import get_current_user
 from app.presentation.schemas.inventory.withdrawal_schema import (
@@ -22,7 +23,6 @@ from app.presentation.schemas.inventory.withdrawal_schema import (
     WithdrawalListResponse,
     WithdrawalResponse,
 )
-from app.infrastructure.persistence.models.auth_models import User
 
 
 router = APIRouter(prefix="/withdrawals", tags=["withdrawals"])
@@ -153,6 +153,7 @@ def create_withdrawal(
     Args:
         data: 出庫登録リクエスト
         db: データベースセッション
+        current_user: 現在のログインユーザー
 
     Returns:
         作成された出庫レコード

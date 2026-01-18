@@ -5,6 +5,8 @@
  * リファクタリング済み: ロジックをフックに分離し、UIをサブコンポーネント化
  */
 
+import { toast } from "sonner";
+
 import type { WithdrawalCreateRequest } from "../api";
 import { useWithdrawalForm } from "../hooks/useWithdrawalForm";
 
@@ -14,7 +16,6 @@ import { WithdrawalLotSelection } from "./WithdrawalLotSelection";
 
 import { Button } from "@/components/ui";
 import type { LotUI } from "@/shared/libs/normalize";
-import { toast } from "sonner";
 
 interface WithdrawalFormProps {
   /** 事前選択されたロット（ロット詳細ページからの遷移時） */
@@ -63,18 +64,13 @@ export function WithdrawalForm({
   } = form;
 
   const customerId = watch("customer_id");
-
   const onFormSubmit = async (data: WithdrawalFormData) => {
-    // 利用可能数量チェック (Hook内でもチェック可能だが、念のためここでもガード)
-    if (data.quantity > availableQuantity) {
-      return;
-    }
+    if (data.quantity > availableQuantity) return;
     if (!user?.id) {
       toast.error("ログインしてください");
       return;
     }
-
-    const request: WithdrawalCreateRequest = {
+    await onSubmit({
       lot_id: data.lot_id,
       quantity: data.quantity,
       withdrawal_type: data.withdrawal_type,
@@ -83,9 +79,7 @@ export function WithdrawalForm({
       ship_date: data.ship_date,
       reason: data.reason || undefined,
       reference_number: data.reference_number || undefined,
-    };
-
-    await onSubmit(request);
+    });
   };
 
   return (
@@ -112,8 +106,6 @@ export function WithdrawalForm({
         availableQuantity={availableQuantity}
         quantityError={quantityError}
       />
-
-      {/* ボタン */}
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           キャンセル

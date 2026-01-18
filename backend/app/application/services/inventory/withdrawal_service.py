@@ -245,6 +245,7 @@ class WithdrawalService:
 
         Args:
             data: 出庫登録リクエスト
+            withdrawn_by: 出庫担当者のユーザーID
 
         Returns:
             作成された出庫レコード
