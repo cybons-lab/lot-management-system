@@ -1,5 +1,6 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import Order
 
 
@@ -18,8 +19,8 @@ def test_acquire_lock_success(
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=utcnow(),
+        updated_at=utcnow(),
     )
     db_session.add(order)
     db_session.commit()
@@ -43,15 +44,16 @@ def test_acquire_lock_renew(
 ):
     """自分のロック再取得（延長）"""
     # customer = master_data["customer"]
+    now = utcnow()
     order = Order(
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=now,
+        updated_at=now,
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.utcnow(),
-        lock_expires_at=datetime.utcnow() + timedelta(minutes=5),
+        locked_at=now,
+        lock_expires_at=now + timedelta(minutes=5),
     )
     db_session.add(order)
     db_session.commit()
@@ -67,15 +69,16 @@ def test_acquire_lock_conflict(
     """他人のロックによる競合"""
     # customer = master_data["customer"]
     # normal_user locks the order
+    now = utcnow()
     order = Order(
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=now,
+        updated_at=now,
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.utcnow(),
-        lock_expires_at=datetime.utcnow() + timedelta(minutes=10),
+        locked_at=now,
+        lock_expires_at=now + timedelta(minutes=10),
     )
     db_session.add(order)
     db_session.commit()
@@ -95,15 +98,16 @@ def test_acquire_lock_expired(
     """期限切れロックの上書き"""
     # customer = master_data["customer"]
     # normal_user locked, but expired
+    now = utcnow()
     order = Order(
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.utcnow() - timedelta(minutes=10),
-        lock_expires_at=datetime.utcnow() - timedelta(minutes=1),  # Expired
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        locked_at=now - timedelta(minutes=10),
+        lock_expires_at=now - timedelta(minutes=1),  # Expired
+        created_at=now,
+        updated_at=now,
     )
     db_session.add(order)
     db_session.commit()
@@ -119,15 +123,16 @@ def test_release_lock_success(
 ):
     """ロック解放成功"""
     # customer = master_data["customer"]
+    now = utcnow()
     order = Order(
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=now,
+        updated_at=now,
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.utcnow(),
-        lock_expires_at=datetime.utcnow() + timedelta(minutes=10),
+        locked_at=now,
+        lock_expires_at=now + timedelta(minutes=10),
     )
     db_session.add(order)
     db_session.commit()
@@ -147,15 +152,16 @@ def test_release_lock_forbidden(
 ):
     """他人のロック解放不可"""
     # customer = master_data["customer"]
+    now = utcnow()
     order = Order(
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=now,
+        updated_at=now,
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.utcnow(),
-        lock_expires_at=datetime.utcnow() + timedelta(minutes=5),  # Active
+        locked_at=now,
+        lock_expires_at=now + timedelta(minutes=5),  # Active
     )
     db_session.add(order)
     db_session.commit()

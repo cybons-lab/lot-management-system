@@ -170,14 +170,13 @@ async def download_labels(
     db: Session = Depends(get_db),
 ):
     """Generate and download PDF labels for selected lots."""
-    from datetime import datetime
-
     from app.application.services.inventory.label_service import LabelService
+    from app.core.time_utils import utcnow
 
     service = LabelService(db)
     pdf_buffer = service.generate_label_pdf(request.lot_ids)
 
-    filename = f"lot_labels_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+    filename = f"lot_labels_{utcnow().strftime('%Y%m%d%H%M%S')}.pdf"
 
     return Response(
         content=pdf_buffer.getvalue(),

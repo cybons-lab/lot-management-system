@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 from sqlalchemy import BigInteger, Boolean, Date, DateTime, Integer, Numeric, String, Text, inspect
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
     LotMaster,
     LotReceipt,
@@ -135,7 +136,7 @@ def _default_value_for_column(column) -> object:
     if isinstance(column.type, Date):
         return date.today()
     if isinstance(column.type, DateTime):
-        return datetime.now()
+        return utcnow()
     if isinstance(column.type, Numeric):
         return Decimal("0")
     if isinstance(column.type, BigInteger | Integer):

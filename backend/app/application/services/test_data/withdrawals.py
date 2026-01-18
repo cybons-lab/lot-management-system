@@ -5,6 +5,7 @@ from typing import cast
 
 from sqlalchemy.orm import Session
 
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.inventory_models import LotReceipt
 from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace
 from app.infrastructure.persistence.models.withdrawal_line_model import WithdrawalLine
@@ -132,7 +133,7 @@ def generate_withdrawals(
             cancel_reason = None
 
             if is_cancelled:
-                cancelled_at = datetime.utcnow()
+                cancelled_at = utcnow()
                 cancelled_by = 1  # Admin
                 cancel_reason = "Test data cancellation"
 
@@ -146,8 +147,7 @@ def generate_withdrawals(
                 due_date=ship_date,
                 reason=fake.sentence(nb_words=6),
                 reference_number=fake.bothify(text="REF-#####"),
-                withdrawn_at=datetime.combine(ship_date, datetime.min.time())
-                + timedelta(hours=random.randint(9, 17)),
+                withdrawn_at=utcnow(),  # Simplified for test data consistency
                 cancelled_at=cancelled_at,
                 cancelled_by=cancelled_by,
                 cancel_reason=cancel_reason,

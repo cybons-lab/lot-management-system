@@ -77,6 +77,7 @@ export function WithdrawalForm({
       customer_id: data.customer_id,
       delivery_place_id: data.delivery_place_id,
       ship_date: data.ship_date,
+      due_date: data.due_date,
       reason: data.reason || undefined,
       reference_number: data.reference_number || undefined,
     });

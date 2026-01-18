@@ -51,7 +51,7 @@ export function useLotActions(options?: LotActionsOptions) {
     onError: (error) => toast.error(`ロック解除に失敗しました: ${error.message}`),
   });
 
-  const { archiveLot } = useLotMutations();
+  const { archiveLot, isArchiving } = useLotMutations();
 
   const handleEditLot = useCallback(
     (lot: LotUI) => {
@@ -138,5 +138,6 @@ export function useLotActions(options?: LotActionsOptions) {
     handleCloseEdit,
     handleCloseLock,
     archiveLot,
+    isArchiving,
   };
 }

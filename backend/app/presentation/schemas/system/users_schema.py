@@ -34,7 +34,7 @@ class UserUpdate(BaseSchema):
     password: str | None = Field(None, min_length=8, description="パスワード（平文）")
 
 
-class UserResponse(UserBase):
+class SystemUserResponse(UserBase):
     """Schema for user response (DDL: users)."""
 
     id: int = Field(..., serialization_alias="user_id")
@@ -43,7 +43,7 @@ class UserResponse(UserBase):
     updated_at: datetime
 
 
-class UserWithRoles(UserResponse):
+class UserWithRoles(SystemUserResponse):
     """Schema for user with assigned roles."""
 
     role_codes: list[str] = Field(default_factory=list, description="割り当てられたロールコード")
@@ -64,7 +64,7 @@ class SupplierAssignmentInfo(BaseSchema):
     is_primary: bool = Field(..., description="主担当フラグ")
 
 
-class UserWithSuppliers(UserResponse):
+class UserWithSuppliers(SystemUserResponse):
     """Schema for user with assigned suppliers (for authentication context)."""
 
     supplier_assignments: list[SupplierAssignmentInfo] = Field(

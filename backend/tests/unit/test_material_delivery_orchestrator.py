@@ -133,7 +133,10 @@ class TestMaterialDeliveryNoteOrchestrator:
         assert run.status == RpaRunStatus.READY_FOR_STEP2
 
         refreshed_items = (
-            db.query(RpaRunItem).filter(RpaRunItem.run_id == run.id).order_by(RpaRunItem.row_no).all()
+            db.query(RpaRunItem)
+            .filter(RpaRunItem.run_id == run.id)
+            .order_by(RpaRunItem.row_no)
+            .all()
         )
         assert all(item.issue_flag is False for item in refreshed_items)
         assert all(item.complete_flag is True for item in refreshed_items)

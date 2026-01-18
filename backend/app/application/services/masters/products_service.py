@@ -136,9 +136,10 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             # P + YYYYMMDD + HHMMSS + Random3
             import random
             import string
-            from datetime import datetime
 
-            now = datetime.now()
+            from app.core.time_utils import utcnow
+
+            now = utcnow()
             date_str = now.strftime("%Y%m%d%H%M%S")
             rand_str = "".join(random.choices(string.ascii_uppercase + string.digits, k=3))
             auto_code = f"P{date_str}{rand_str}"

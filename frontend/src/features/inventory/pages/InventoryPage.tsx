@@ -63,7 +63,7 @@ export function InventoryPage() {
 
   // Data Fetching
   const {
-    data: inventoryItems = [],
+    data,
     isLoading: isItemsLoading,
     refetch: refetchItems,
   } = useInventoryItems({
@@ -71,6 +71,9 @@ export function InventoryPage() {
     skip: (page - 1) * pageSize,
     limit: pageSize,
   });
+
+  const inventoryItems = data?.items ?? [];
+  const totalCount = data?.total ?? 0;
 
   const supplierQuery = useInventoryBySupplier();
   const warehouseQuery = useInventoryByWarehouse();
@@ -292,7 +295,13 @@ export function InventoryPage() {
                     <SearchableSelect
                       options={supplierOptions}
                       value={filters.supplier_id}
-                      onChange={(value) => updateFilter("supplier_id", value)}
+                      onChange={(value) =>
+                        setFilters({
+                          ...filters,
+                          supplier_id: value,
+                          product_id: "", // 仕入先変更時は製品選択をクリア
+                        })
+                      }
                       placeholder="仕入先を検索..."
                     />
                   </div>
@@ -303,7 +312,13 @@ export function InventoryPage() {
                     <SearchableSelect
                       options={warehouseOptions}
                       value={filters.warehouse_id}
-                      onChange={(value) => updateFilter("warehouse_id", value)}
+                      onChange={(value) =>
+                        setFilters({
+                          ...filters,
+                          warehouse_id: value,
+                          product_id: "", // 倉庫変更時は製品選択をクリア
+                        })
+                      }
                       placeholder="倉庫を検索..."
                     />
                   </div>
@@ -338,7 +353,9 @@ export function InventoryPage() {
                 isLoading={isItemsLoading}
                 onRefresh={refetchItems}
                 filterSupplierId={filters.supplier_id ? Number(filters.supplier_id) : undefined}
-                headerContent={`ページ ${page} (表示件数: ${inventoryItems.length})`}
+                headerContent={`ページ ${page} (全${totalCount}件中 ${
+                  (page - 1) * pageSize + 1
+                }-${Math.min(page * pageSize, totalCount)}件を表示)`}
               />
               {/* Pagination Controls */}
               <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
@@ -360,7 +377,9 @@ export function InventoryPage() {
                       ))}
                     </select>
                   </div>
-                  <div>ページ {page}</div>
+                  <div>
+                    ページ {page} / {Math.ceil(totalCount / pageSize)}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -372,6 +391,7 @@ export function InventoryPage() {
                     <ChevronLeft className="h-4 w-4" />
                     <span className="sr-only">前へ</span>
                   </Button>
+
                   <Button
                     variant="outline"
                     size="sm"

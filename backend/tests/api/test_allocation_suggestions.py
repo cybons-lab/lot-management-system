@@ -8,7 +8,7 @@ Tests cover:
 """
 
 import os
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -17,6 +17,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.database import get_db
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
     AllocationSuggestion,
     Customer,
@@ -182,7 +183,7 @@ def test_preview_allocation_suggestions_order_mode_success(test_db: Session, mas
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()

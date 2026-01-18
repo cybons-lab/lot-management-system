@@ -44,6 +44,7 @@ export interface WithdrawalFormData {
   customer_id: number;
   delivery_place_id: number;
   ship_date: string;
+  due_date: string;
   reason: string;
   reference_number: string;
 }
@@ -87,7 +88,8 @@ export function useWithdrawalFormState({
     withdrawal_type: "order_manual",
     customer_id: 0,
     delivery_place_id: 0,
-    ship_date: today,
+    ship_date: "",
+    due_date: today,
     reason: "",
     reference_number: "",
   });
@@ -268,8 +270,8 @@ export function useWithdrawalFormState({
       }
     }
 
-    if (!formData.ship_date) {
-      newErrors.ship_date = "出荷日を入力してください";
+    if (!formData.due_date) {
+      newErrors.due_date = "納期を入力してください";
     }
 
     setErrors(newErrors);
@@ -296,6 +298,7 @@ export function useWithdrawalFormState({
         customer_id: formData.customer_id || undefined,
         delivery_place_id: formData.delivery_place_id || undefined,
         ship_date: formData.ship_date,
+        due_date: formData.due_date,
         reason: formData.reason || undefined,
         reference_number: formData.reference_number || undefined,
       };

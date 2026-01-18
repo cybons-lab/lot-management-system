@@ -133,9 +133,10 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
 from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
 from app.presentation.schemas.inventory.inventory_schema import (
-    FilterOption,
-    FilterOptions,
+    InventoryFilterOption,
+    InventoryFilterOptions,
     InventoryItemResponse,
+    InventoryListResponse,
     InventoryState,
 )
 
@@ -161,7 +162,7 @@ class InventoryService:
         tab: str = "all",
         primary_staff_only: bool = False,
         current_user_id: int | None = None,
-    ) -> list[InventoryItemResponse]:
+    ) -> InventoryListResponse:
         """Get inventory items from v_inventory_summary view with product and
         warehouse names.
 
@@ -176,13 +177,66 @@ class InventoryService:
             current_user_id: Current user ID (required if primary_staff_only=True)
 
         Returns:
-            List of inventory items
+            InventoryListResponse containing items and total count
         """
+        from sqlalchemy import text
+
+        total = 0
+
         # Join with products and warehouses to get names
         # If supplier_id is specified or filtering by primary staff, we join lots/views to filter by supplier
         if supplier_id is not None or primary_staff_only:
             # Need to aggregate lots directly since v_inventory_summary doesn't have supplier_id
             # Use v_lot_receipt_stock view which handles B-Plan logic (withdrawals, etc.)
+
+            # Base logic for WHERE clause
+            where_clauses = ["v.remaining_quantity > 0", "v.status = 'active'"]
+            params = {}
+
+            if primary_staff_only and current_user_id:
+                pass  # logic handled in JOIN
+
+            if supplier_id is not None:
+                where_clauses.append("v.supplier_id = :supplier_id")
+                params["supplier_id"] = supplier_id
+
+            if primary_staff_only and current_user_id:
+                where_clauses.append("usa.user_id = :current_user_id")
+                where_clauses.append("usa.is_primary = TRUE")
+                params["current_user_id"] = current_user_id
+
+            if product_id is not None:
+                where_clauses.append("v.product_id = :product_id")
+                params["product_id"] = product_id
+
+            if warehouse_id is not None:
+                where_clauses.append("v.warehouse_id = :warehouse_id")
+                params["warehouse_id"] = warehouse_id
+
+            where_str = " AND ".join(where_clauses)
+
+            # --- Total Count Query ---
+            count_query = "SELECT COUNT(*) FROM (SELECT 1 FROM v_lot_receipt_stock v"
+
+            if primary_staff_only and current_user_id:
+                count_query += (
+                    " JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
+                )
+
+            count_query += f" WHERE {where_str}"
+            count_query += " GROUP BY v.product_id, v.warehouse_id"
+
+            # Tab filter: HAVING clause
+            if tab == "in_stock":
+                count_query += " HAVING SUM(v.available_quantity) > 0"
+            elif tab == "no_stock":
+                count_query += " HAVING SUM(v.available_quantity) = 0"
+
+            count_query += ") as sub"
+
+            total = self.db.execute(text(count_query), params).scalar() or 0
+
+            # --- Data Query ---
             query = """
                 SELECT 
                     v.product_id, 
@@ -199,29 +253,10 @@ class InventoryService:
                 FROM v_lot_receipt_stock v
             """
 
-            params = {}
-
-            # If primary staff filter is active, join with user_supplier_assignments table
             if primary_staff_only and current_user_id:
                 query += " JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
 
-            query += " WHERE v.remaining_quantity > 0 AND v.status = 'active'"
-
-            if supplier_id is not None:
-                query += " AND v.supplier_id = :supplier_id"
-                params["supplier_id"] = supplier_id
-
-            if primary_staff_only and current_user_id:
-                query += " AND usa.user_id = :current_user_id AND usa.is_primary = TRUE"
-                params["current_user_id"] = current_user_id
-
-            if product_id is not None:
-                query += " AND v.product_id = :product_id"
-                params["product_id"] = product_id
-
-            if warehouse_id is not None:
-                query += " AND v.warehouse_id = :warehouse_id"
-                params["warehouse_id"] = warehouse_id
+            query += f" WHERE {where_str}"
 
             query += " GROUP BY v.product_id, v.warehouse_id, v.product_name, v.product_code, v.warehouse_name, v.warehouse_code"
 
@@ -235,7 +270,32 @@ class InventoryService:
             params["limit"] = limit
             params["skip"] = skip
         else:
-            query = """
+            # Base logic for WHERE clause
+            where_clauses = ["1=1"]
+            params = {}
+
+            if product_id is not None:
+                where_clauses.append("v.product_id = :product_id")
+                params["product_id"] = product_id
+
+            if warehouse_id is not None:
+                where_clauses.append("v.warehouse_id = :warehouse_id")
+                params["warehouse_id"] = warehouse_id
+
+            # Tab filter for inventory_state
+            if tab == "in_stock":
+                where_clauses.append("v.inventory_state = 'in_stock'")
+            elif tab == "no_stock":
+                where_clauses.append("v.inventory_state IN ('no_lots', 'depleted_only')")
+
+            where_str = " AND ".join(where_clauses)
+
+            # --- Total Count Query ---
+            count_query = f"SELECT COUNT(*) FROM v_inventory_summary v WHERE {where_str}"
+            total = self.db.execute(text(count_query), params).scalar() or 0
+
+            # --- Data Query ---
+            query = f"""
                 SELECT 
                     v.product_id, 
                     v.warehouse_id, 
@@ -252,160 +312,139 @@ class InventoryService:
                 FROM v_inventory_summary v
                 LEFT JOIN products p ON v.product_id = p.id
                 LEFT JOIN warehouses w ON v.warehouse_id = w.id
-                WHERE 1=1
+                WHERE {where_str}
             """
-            params = {}
-
-            if product_id is not None:
-                query += " AND v.product_id = :product_id"
-                params["product_id"] = product_id
-
-            if warehouse_id is not None:
-                query += " AND v.warehouse_id = :warehouse_id"
-                params["warehouse_id"] = warehouse_id
-
-            # Tab filter for inventory_state
-            if tab == "in_stock":
-                query += " AND v.inventory_state = 'in_stock'"
-            elif tab == "no_stock":
-                query += " AND v.inventory_state IN ('no_lots', 'depleted_only')"
-            # 'all' or any other value: no filter
 
             query += " ORDER BY v.available_quantity DESC, v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
             params["limit"] = limit
             params["skip"] = skip
 
-        from sqlalchemy import text
-
         # 1. Base Summary Query
         result = self.db.execute(text(query), params).fetchall()
 
-        if not result:
-            return []
-
-        # 2. Detail Allocation Aggregation Query
-        # Fetch detailed allocation breakdown for these products/warehouses
-        # We need to filter exactly the items we found in the first page
-        found_products = [r.product_id for r in result]
-        found_warehouses = [r.warehouse_id for r in result]
-
-        if not found_products:
-            return []
-
-        # P3: allocations table replaced by lot_reservations
-        # soft = active, hard = confirmed
-        alloc_query = """
-            SELECT 
-                r.lot_id,
-                l.product_id,
-                l.warehouse_id,
-                CASE 
-                    WHEN r.status = 'active' THEN 'soft'
-                    WHEN r.status = 'confirmed' THEN 'hard'
-                    ELSE 'soft'
-                END as allocation_type,
-                SUM(r.reserved_qty) as qty
-            FROM lot_reservations r
-            JOIN v_lot_receipt_stock l ON l.receipt_id = r.lot_id
-            WHERE r.status IN ('active', 'confirmed')
-              AND l.product_id IN :product_ids
-              AND l.warehouse_id IN :warehouse_ids
-            GROUP BY r.lot_id, l.product_id, l.warehouse_id, 
-                CASE 
-                    WHEN r.status = 'active' THEN 'soft'
-                    WHEN r.status = 'confirmed' THEN 'hard'
-                    ELSE 'soft'
-                END
-        """
-
-        alloc_rows = self.db.execute(
-            text(alloc_query),
-            {
-                "product_ids": tuple(set(found_products)),
-                "warehouse_ids": tuple(set(found_warehouses)),
-            },
-        ).fetchall()
-
-        # 2b. Lot Count Aggregation Query
-        # IMPORTANT: This must match the /api/lots endpoint's default behavior
-        # which is with_stock=True (current_quantity > 0)
-        count_query = """
-            SELECT
-                v.product_id,
-                v.warehouse_id,
-                COUNT(v.receipt_id) as lot_count
-            FROM v_lot_receipt_stock v
-            WHERE v.product_id IN :product_ids
-              AND v.warehouse_id IN :warehouse_ids
-              AND v.remaining_quantity > 0 AND v.status = 'active'
-            GROUP BY v.product_id, v.warehouse_id
-        """
-        count_rows = self.db.execute(
-            text(count_query),
-            {
-                "product_ids": tuple(set(found_products)),
-                "warehouse_ids": tuple(set(found_warehouses)),
-            },
-        ).fetchall()
-
-        # Map counts
-        count_map = {}
-        for row in count_rows:
-            key = (row.product_id, row.warehouse_id)
-            count_map[key] = row.lot_count
-        alloc_map = {}
-        for row in alloc_rows:
-            key = (row.product_id, row.warehouse_id)
-            if key not in alloc_map:
-                alloc_map[key] = {"soft": 0.0, "hard": 0.0}
-
-            atype = row.allocation_type  # 'soft' or 'hard'
-            if atype in alloc_map[key]:
-                alloc_map[key][atype] += float(row.qty)
-
-        # 3. Construct Response
         responses = []
-        for idx, row in enumerate(result):
-            key = (row.product_id, row.warehouse_id)
-            allocs = alloc_map.get(key, {"soft": 0.0, "hard": 0.0})
-            # Use active_lot_count from view, fallback to count_map for supplier-filtered query
-            active_lot_count = getattr(row, "active_lot_count", count_map.get(key, 0))
+        if result:
+            # 2. Detail Allocation Aggregation Query
+            # Fetch detailed allocation breakdown for these products/warehouses
+            # We need to filter exactly the items we found in the first page
+            found_products = [r.product_id for r in result]
+            found_warehouses = [r.warehouse_id for r in result]
 
-            # Compute inventory_state from available data if not in result
-            if hasattr(row, "inventory_state") and row.inventory_state:
-                inventory_state = row.inventory_state
-            else:
-                # Determine state based on available_quantity and lot_count
-                available_qty = float(row.available_quantity or 0)
-                lot_cnt = active_lot_count or 0
-                if lot_cnt == 0:
-                    inventory_state = "no_lots"
-                elif available_qty > 0:
-                    inventory_state = "in_stock"
+            # P3: allocations table replaced by lot_reservations
+            # soft = active, hard = confirmed
+            alloc_query = """
+                SELECT 
+                    r.lot_id,
+                    l.product_id,
+                    l.warehouse_id,
+                    CASE 
+                        WHEN r.status = 'active' THEN 'soft'
+                        WHEN r.status = 'confirmed' THEN 'hard'
+                        ELSE 'soft'
+                    END as allocation_type,
+                    SUM(r.reserved_qty) as qty
+                FROM lot_reservations r
+                JOIN v_lot_receipt_stock l ON l.receipt_id = r.lot_id
+                WHERE r.status IN ('active', 'confirmed')
+                  AND l.product_id IN :product_ids
+                  AND l.warehouse_id IN :warehouse_ids
+                GROUP BY r.lot_id, l.product_id, l.warehouse_id, 
+                    CASE 
+                        WHEN r.status = 'active' THEN 'soft'
+                        WHEN r.status = 'confirmed' THEN 'hard'
+                        ELSE 'soft'
+                    END
+            """
+
+            alloc_rows = self.db.execute(
+                text(alloc_query),
+                {
+                    "product_ids": tuple(set(found_products)),
+                    "warehouse_ids": tuple(set(found_warehouses)),
+                },
+            ).fetchall()
+
+            # 2b. Lot Count Aggregation Query
+            # IMPORTANT: This must match the /api/lots endpoint's default behavior
+            # which is with_stock=True (current_quantity > 0)
+            count_query_details = """
+                SELECT
+                    v.product_id,
+                    v.warehouse_id,
+                    COUNT(v.receipt_id) as lot_count
+                FROM v_lot_receipt_stock v
+                WHERE v.product_id IN :product_ids
+                  AND v.warehouse_id IN :warehouse_ids
+                  AND v.remaining_quantity > 0 AND v.status = 'active'
+                GROUP BY v.product_id, v.warehouse_id
+            """
+            count_rows_details = self.db.execute(
+                text(count_query_details),
+                {
+                    "product_ids": tuple(set(found_products)),
+                    "warehouse_ids": tuple(set(found_warehouses)),
+                },
+            ).fetchall()
+
+            # Map counts
+            count_map = {}
+            for row in count_rows_details:
+                key = (row.product_id, row.warehouse_id)
+                count_map[key] = row.lot_count
+            alloc_map = {}
+            for row in alloc_rows:
+                key = (row.product_id, row.warehouse_id)
+                if key not in alloc_map:
+                    alloc_map[key] = {"soft": 0.0, "hard": 0.0}
+
+                atype = row.allocation_type  # 'soft' or 'hard'
+                if atype in alloc_map[key]:
+                    alloc_map[key][atype] += float(row.qty)
+
+            # 3. Construct Response
+            for idx, row in enumerate(result):
+                key = (row.product_id, row.warehouse_id)
+                allocs = alloc_map.get(key, {"soft": 0.0, "hard": 0.0})
+                # Use active_lot_count from view, fallback to count_map for supplier-filtered query
+                active_lot_count = getattr(row, "active_lot_count", count_map.get(key, 0))
+
+                # Compute inventory_state from available data if not in result
+                if hasattr(row, "inventory_state") and row.inventory_state:
+                    inventory_state = row.inventory_state
                 else:
-                    inventory_state = "depleted_only"
+                    # Determine state based on available_quantity and lot_count
+                    available_qty = float(row.available_quantity or 0)
+                    lot_cnt = active_lot_count or 0
+                    if lot_cnt == 0:
+                        inventory_state = "no_lots"
+                    elif available_qty > 0:
+                        inventory_state = "in_stock"
+                    else:
+                        inventory_state = "depleted_only"
 
-            responses.append(
-                InventoryItemResponse(
-                    id=idx + 1,
-                    product_id=row.product_id,
-                    warehouse_id=row.warehouse_id,
-                    total_quantity=row.total_quantity,
-                    allocated_quantity=row.allocated_quantity,
-                    available_quantity=row.available_quantity,
-                    soft_allocated_quantity=Decimal(str(allocs["soft"])),
-                    hard_allocated_quantity=Decimal(str(allocs["hard"])),
-                    active_lot_count=active_lot_count,
-                    inventory_state=InventoryState(inventory_state),
-                    last_updated=row.last_updated,
-                    product_name=row.product_name,
-                    product_code=row.product_code,
-                    warehouse_name=row.warehouse_name,
-                    warehouse_code=row.warehouse_code,
+                responses.append(
+                    InventoryItemResponse(
+                        id=idx + 1,
+                        product_id=row.product_id,
+                        warehouse_id=row.warehouse_id,
+                        total_quantity=row.total_quantity,
+                        allocated_quantity=row.allocated_quantity,
+                        available_quantity=row.available_quantity,
+                        soft_allocated_quantity=Decimal(str(allocs["soft"])),
+                        hard_allocated_quantity=Decimal(str(allocs["hard"])),
+                        active_lot_count=active_lot_count,
+                        inventory_state=InventoryState(inventory_state),
+                        last_updated=row.last_updated,
+                        product_name=row.product_name,
+                        product_code=row.product_code,
+                        warehouse_name=row.warehouse_name,
+                        warehouse_code=row.warehouse_code,
+                    )
                 )
-            )
 
-        return responses
+        return InventoryListResponse(
+            items=responses, total=total, page=skip // limit + 1 if limit > 0 else 1, size=limit
+        )
 
     def get_inventory_item_by_product_warehouse(
         self, product_id: int, warehouse_id: int
@@ -617,7 +656,7 @@ class InventoryService:
         product_id: int | None = None,
         warehouse_id: int | None = None,
         supplier_id: int | None = None,
-    ) -> FilterOptions:
+    ) -> InventoryFilterOptions:
         """Get filter options based on current selection (Mutual Filtering).
 
         Args:
@@ -642,7 +681,8 @@ class InventoryService:
 
         p_rows = self.db.execute(p_stmt).all()
         products = [
-            FilterOption(id=r.id, code=r.maker_part_code, name=r.product_name) for r in p_rows
+            InventoryFilterOption(id=r.id, code=r.maker_part_code, name=r.product_name)
+            for r in p_rows
         ]
 
         # 2. Suppliers (filtered by product if selected)
@@ -659,7 +699,8 @@ class InventoryService:
 
         s_rows = self.db.execute(s_stmt).all()
         suppliers = [
-            FilterOption(id=r.id, code=r.supplier_code, name=r.supplier_name) for r in s_rows
+            InventoryFilterOption(id=r.id, code=r.supplier_code, name=r.supplier_name)
+            for r in s_rows
         ]
 
         # 3. Warehouses (Active only)
@@ -669,10 +710,11 @@ class InventoryService:
 
         w_rows = self.db.execute(w_stmt).all()
         warehouses = [
-            FilterOption(id=r.id, code=r.warehouse_code, name=r.warehouse_name) for r in w_rows
+            InventoryFilterOption(id=r.id, code=r.warehouse_code, name=r.warehouse_name)
+            for r in w_rows
         ]
 
-        return FilterOptions(
+        return InventoryFilterOptions(
             products=products,
             suppliers=suppliers,
             warehouses=warehouses,

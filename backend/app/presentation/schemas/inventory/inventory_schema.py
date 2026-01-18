@@ -301,6 +301,16 @@ StockMovementResponse = StockHistoryResponse
 # LotCurrentStockResponse was an alias for InventoryItemResponse.
 # This alias is deprecated and will be removed in a future version.
 LotCurrentStockResponse = InventoryItemResponse
+# This alias is deprecated and will be removed in a future version.
+
+
+class InventoryListResponse(BaseSchema):
+    """API response model for paginated list of inventory items."""
+
+    items: list[InventoryItemResponse]
+    total: int
+    page: int
+    size: int
 
 
 class InventoryBySupplierResponse(BaseSchema):
@@ -339,7 +349,7 @@ class InventoryByProductResponse(BaseSchema):
     warehouse_count: int
 
 
-class FilterOption(BaseSchema):
+class InventoryFilterOption(BaseSchema):
     """Filter option for dropdowns."""
 
     id: int
@@ -347,12 +357,12 @@ class FilterOption(BaseSchema):
     name: str
 
 
-class FilterOptions(BaseSchema):
+class InventoryFilterOptions(BaseSchema):
     """Available filter options for inventory."""
 
-    products: list[FilterOption]
-    suppliers: list[FilterOption]
-    warehouses: list[FilterOption]
+    products: list[InventoryFilterOption]
+    suppliers: list[InventoryFilterOption]
+    warehouses: list[InventoryFilterOption]
 
 
 class LotArchiveRequest(BaseSchema):

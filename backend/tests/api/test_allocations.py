@@ -9,13 +9,14 @@ Tests cover:
 - Error scenarios (validation, not found, conflicts)
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
     Customer,
     DeliveryPlace,
@@ -173,7 +174,7 @@ def test_drag_assign_success(test_db: Session, master_data: dict):
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -218,7 +219,7 @@ def test_drag_assign_with_deprecated_field(test_db: Session, master_data: dict):
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -255,7 +256,7 @@ def test_drag_assign_missing_quantity_returns_400(test_db: Session, master_data:
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -292,7 +293,7 @@ def test_drag_assign_insufficient_stock_returns_400(test_db: Session, master_dat
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -335,7 +336,7 @@ def test_cancel_allocation_success(test_db: Session, master_data: dict):
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -396,7 +397,7 @@ def test_preview_allocations_success(test_db: Session, master_data: dict):
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -450,7 +451,7 @@ def test_commit_allocation_success(test_db: Session, master_data: dict):
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -505,7 +506,7 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -564,7 +565,7 @@ def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -626,7 +627,7 @@ def test_confirm_hard_allocation_already_confirmed(test_db: Session, master_data
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -650,7 +651,7 @@ def test_confirm_hard_allocation_already_confirmed(test_db: Session, master_data
         source_id=order_line.id,
         reserved_qty=Decimal("10.000"),
         status=ReservationStatus.CONFIRMED,
-        confirmed_at=datetime.utcnow(),
+        confirmed_at=utcnow(),
     )
     test_db.add(reservation)
     test_db.commit()
@@ -687,7 +688,7 @@ def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_dat
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -760,7 +761,7 @@ def test_confirm_batch_success(test_db: Session, master_data: dict):
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -820,7 +821,7 @@ def test_confirm_batch_partial_failure(test_db: Session, master_data: dict):
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
     )
     test_db.add(order)
     test_db.commit()

@@ -65,7 +65,9 @@ def test_get_inventory_items(db: Session, service_master_data):
     # Let's see if flush is enough. If not, we might need to commit (but db fixture rolls back).
     # The view definition in conftest.py uses `FROM lots`, so it should see uncommitted changes in the same transaction.
 
-    items = service.get_inventory_items()
+    response = service.get_inventory_items()
+    items = response.items
+    # items = response.items
 
     # Filter for our test data
     target_items = [
@@ -79,7 +81,9 @@ def test_get_inventory_items(db: Session, service_master_data):
     assert item.available_quantity == 90  # 100 - 10
 
     # Test filtering
-    items_filtered = service.get_inventory_items(product_id=product1.id)
+    # Test filtering
+    response_filtered = service.get_inventory_items(product_id=product1.id)
+    items_filtered = response_filtered.items
     assert len(items_filtered) >= 1
     assert items_filtered[0].product_id == product1.id
 

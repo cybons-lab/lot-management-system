@@ -156,6 +156,8 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
 
+from app.core.time_utils import utcnow
+
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +186,7 @@ class EndpointMetrics:
         self.total_duration_ms += duration_ms
         self.response_times.append(duration_ms)
         self.status_codes[status_code] += 1
-        self.last_request_time = datetime.now()
+        self.last_request_time = utcnow()
 
         if status_code >= 400:
             self.error_count += 1

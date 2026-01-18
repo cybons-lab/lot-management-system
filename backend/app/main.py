@@ -214,7 +214,7 @@ if FRONTEND_DIST.exists() and FRONTEND_DIST.is_dir():
     # index.html 以外の静的ファイル
     application.mount("/static", StaticFiles(directory=str(FRONTEND_DIST)), name="static")
 
-    @application.get("/{full_path:path}")
+    @application.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str):
         """SPA フォールバック: 未知のパスは index.html を返す."""
         # API パスは除外（既にルーター登録済み）
@@ -235,7 +235,7 @@ if FRONTEND_DIST.exists() and FRONTEND_DIST.is_dir():
 
 else:
     # 開発環境: シンプルなルートエンドポイント
-    @application.get("/")
+    @application.get("/", include_in_schema=False)
     def root():
         """ルートエンドポイント（開発環境用）."""
         return {
