@@ -59,6 +59,7 @@ export function useWithdrawalForm({ preselectedLot, lots }: UseWithdrawalFormPro
   // Watch fields
   const lotId = watch("lot_id");
   const customerId = watch("customer_id");
+  const deliveryPlaceId = watch("delivery_place_id");
   const quantity = watch("quantity");
 
   // Effect: Update lot_id if preselectedLot changes
@@ -71,7 +72,13 @@ export function useWithdrawalForm({ preselectedLot, lots }: UseWithdrawalFormPro
   // Effect: Fetch Delivery Places when Customer changes
   // Use ref to track current customerId for race condition prevention
   const customerIdRef = useRef(customerId);
+  const deliveryPlaceIdRef = useRef(deliveryPlaceId);
+  const deliveryPlacesRequestIdRef = useRef(0);
   customerIdRef.current = customerId;
+
+  useEffect(() => {
+    deliveryPlaceIdRef.current = deliveryPlaceId;
+  }, [deliveryPlaceId]);
 
   useEffect(() => {
     if (!customerId) {
@@ -82,6 +89,8 @@ export function useWithdrawalForm({ preselectedLot, lots }: UseWithdrawalFormPro
 
     const abortController = new AbortController();
     const currentCustomerId = customerId;
+    const requestId = deliveryPlacesRequestIdRef.current + 1;
+    deliveryPlacesRequestIdRef.current = requestId;
     setIsLoadingDeliveryPlaces(true);
 
     http
@@ -90,9 +99,14 @@ export function useWithdrawalForm({ preselectedLot, lots }: UseWithdrawalFormPro
       })
       .then((places) => {
         // Check if customerId hasn't changed during the request
-        if (customerIdRef.current === currentCustomerId) {
+        if (
+          deliveryPlacesRequestIdRef.current === requestId &&
+          customerIdRef.current === currentCustomerId
+        ) {
           setDeliveryPlaces(places);
-          setValue("delivery_place_id", 0);
+          if (!places.some((place) => place.id === deliveryPlaceIdRef.current)) {
+            setValue("delivery_place_id", 0);
+          }
         }
       })
       .catch((error) => {
@@ -100,13 +114,19 @@ export function useWithdrawalForm({ preselectedLot, lots }: UseWithdrawalFormPro
         if ((error as Error).name !== "AbortError") {
           console.error("納入先取得エラー:", error);
           toast.error("納入先の取得に失敗しました");
-          if (customerIdRef.current === currentCustomerId) {
+          if (
+            deliveryPlacesRequestIdRef.current === requestId &&
+            customerIdRef.current === currentCustomerId
+          ) {
             setDeliveryPlaces([]);
           }
         }
       })
       .finally(() => {
-        if (customerIdRef.current === currentCustomerId) {
+        if (
+          deliveryPlacesRequestIdRef.current === requestId &&
+          customerIdRef.current === currentCustomerId
+        ) {
           setIsLoadingDeliveryPlaces(false);
         }
       });

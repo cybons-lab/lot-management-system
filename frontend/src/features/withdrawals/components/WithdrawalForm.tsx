@@ -14,6 +14,7 @@ import { WithdrawalLotSelection } from "./WithdrawalLotSelection";
 
 import { Button } from "@/components/ui";
 import type { LotUI } from "@/shared/libs/normalize";
+import { toast } from "sonner";
 
 interface WithdrawalFormProps {
   /** 事前選択されたロット（ロット詳細ページからの遷移時） */
@@ -68,6 +69,10 @@ export function WithdrawalForm({
     if (data.quantity > availableQuantity) {
       return;
     }
+    if (!user?.id) {
+      toast.error("ログインしてください");
+      return;
+    }
 
     const request: WithdrawalCreateRequest = {
       lot_id: data.lot_id,
@@ -78,7 +83,6 @@ export function WithdrawalForm({
       ship_date: data.ship_date,
       reason: data.reason || undefined,
       reference_number: data.reference_number || undefined,
-      withdrawn_by: user?.id ?? 1,
     };
 
     await onSubmit(request);
@@ -114,7 +118,7 @@ export function WithdrawalForm({
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           キャンセル
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting || !user?.id}>
           {isSubmitting ? "登録中..." : "出庫登録"}
         </Button>
       </div>

@@ -135,7 +135,12 @@ export function useWithdrawalFormState({
         // Check if customer_id hasn't changed during the request
         if (customerIdRef.current === currentCustomerId) {
           setDeliveryPlaces(places);
-          setFilters((prev) => ({ ...prev, delivery_place_id: 0 }));
+          setFilters((prev) => {
+            if (!places.some((place) => place.id === prev.delivery_place_id)) {
+              return { ...prev, delivery_place_id: 0 };
+            }
+            return prev;
+          });
         }
       })
       .catch((error) => {
@@ -272,6 +277,10 @@ export function useWithdrawalFormState({
       if (!validate()) {
         return;
       }
+      if (!user?.id) {
+        toast.error("ログインしてください");
+        return;
+      }
 
       const request: WithdrawalCreateRequest = {
         lot_id: formData.lot_id,
@@ -282,7 +291,6 @@ export function useWithdrawalFormState({
         ship_date: formData.ship_date,
         reason: formData.reason || undefined,
         reference_number: formData.reference_number || undefined,
-        withdrawn_by: user?.id ?? 1,
       };
 
       await onSubmit(request);

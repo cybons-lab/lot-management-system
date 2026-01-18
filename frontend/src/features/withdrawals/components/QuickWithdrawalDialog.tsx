@@ -4,7 +4,7 @@
  */
 /* eslint-disable max-lines-per-function, complexity, max-lines */
 import { Loader2, AlertCircle } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 
 import { createWithdrawal, getDefaultDestination, type WithdrawalCreateRequest } from "../api";
@@ -86,6 +86,9 @@ export function QuickWithdrawalDialog({
   const [mappingNotFound, setMappingNotFound] = useState(false);
   const [deliveryPlaceNotFound, setDeliveryPlaceNotFound] = useState(false);
   const [isSetupDialogOpen, setIsSetupDialogOpen] = useState(false);
+  const deliveryPlaceIdRef = useRef(formState.delivery_place_id);
+  const customerIdRef = useRef(formState.customer_id);
+  const deliveryPlacesRequestIdRef = useRef(0);
 
   useEffect(() => {
     if (open) {
@@ -140,6 +143,14 @@ export function QuickWithdrawalDialog({
     }
   }, [open, today, initialShipDate, lot.product_id]);
 
+  useEffect(() => {
+    deliveryPlaceIdRef.current = formState.delivery_place_id;
+  }, [formState.delivery_place_id]);
+
+  useEffect(() => {
+    customerIdRef.current = formState.customer_id;
+  }, [formState.customer_id]);
+
   // 得意先が変わったら納入先を再取得（レースコンディション対策）
   useEffect(() => {
     const customerId = formState.customer_id;
@@ -151,6 +162,8 @@ export function QuickWithdrawalDialog({
     }
 
     const abortController = new AbortController();
+    const requestId = deliveryPlacesRequestIdRef.current + 1;
+    deliveryPlacesRequestIdRef.current = requestId;
     setIsLoadingDeliveryPlaces(true);
 
     http
@@ -159,10 +172,10 @@ export function QuickWithdrawalDialog({
       })
       .then((places) => {
         // レスポンス時点でcustomer_idが変わっていないか確認
-        if (formState.customer_id === customerId) {
+        if (deliveryPlacesRequestIdRef.current === requestId && customerIdRef.current === customerId) {
           setDeliveryPlaces(places);
           // 既存の選択が新しいリストに含まれていない場合のみリセット
-          if (!places.some((p) => p.id === formState.delivery_place_id)) {
+          if (!places.some((p) => p.id === deliveryPlaceIdRef.current)) {
             updateField("delivery_place_id", 0);
           }
         }
@@ -171,13 +184,19 @@ export function QuickWithdrawalDialog({
         // AbortErrorは無視
         if ((error as Error).name !== "AbortError") {
           console.error("納入先取得エラー:", error);
-          if (formState.customer_id === customerId) {
+          if (
+            deliveryPlacesRequestIdRef.current === requestId &&
+            customerIdRef.current === customerId
+          ) {
             setDeliveryPlaces([]);
           }
         }
       })
       .finally(() => {
-        if (formState.customer_id === customerId) {
+        if (
+          deliveryPlacesRequestIdRef.current === requestId &&
+          customerIdRef.current === customerId
+        ) {
           setIsLoadingDeliveryPlaces(false);
         }
       });
@@ -235,6 +254,11 @@ export function QuickWithdrawalDialog({
 
     setIsSubmitting(true);
     try {
+      if (!user?.id) {
+        toast.error("ログインしてください");
+        return;
+      }
+
       const request: WithdrawalCreateRequest = {
         lot_id: lot.lot_id,
         quantity: formState.quantity,
@@ -244,7 +268,6 @@ export function QuickWithdrawalDialog({
         ship_date: formState.ship_date,
         reason: formState.reason || undefined,
         reference_number: formState.reference_number || undefined,
-        withdrawn_by: user?.id ?? 1,
       };
 
       await createWithdrawal(request);
@@ -439,7 +462,10 @@ export function QuickWithdrawalDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             キャンセル
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting || availableQuantity <= 0}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || availableQuantity <= 0 || !user?.id}
+          >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             出庫登録
           </Button>

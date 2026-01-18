@@ -74,7 +74,6 @@ export interface WithdrawalCreateRequest {
   ship_date: string; // YYYY-MM-DD
   reason?: string;
   reference_number?: string;
-  withdrawn_by?: number;
 }
 
 export interface WithdrawalCancelRequest {
