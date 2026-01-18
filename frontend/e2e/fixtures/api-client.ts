@@ -118,7 +118,43 @@ export class ApiClient {
       data: options || {},
     });
 
-    // This endpoint may not exist yet, so handle gracefully
+    // Handle asynchronous generation (202 Accepted)
+    if (response.status() === 202) {
+      const { job_id } = (await response.json()) as { job_id: string };
+      console.log(`Test data generation started (Job ID: ${job_id}). Waiting for completion...`);
+
+      let attempts = 0;
+      // Wait up to 120 seconds for large datasets
+      while (attempts < 120) {
+        const progressResponse = await this.request.get(
+          `${API_BASE_URL}/api/admin/progress/${job_id}`,
+          {
+            headers: this.getHeaders(),
+          },
+        );
+
+        if (progressResponse.ok()) {
+          const statusData = (await progressResponse.json()) as {
+            status: string;
+            message?: string;
+          };
+          if (statusData.status === "completed") {
+            console.log("Test data generation completed.");
+            return;
+          }
+          if (statusData.status === "failed") {
+            throw new Error(`Test data generation failed: ${statusData.message}`);
+          }
+        }
+
+        // Wait 1 second before next check
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        attempts++;
+      }
+      throw new Error("Test data generation timed out");
+    }
+
+    // This endpoint may not exist yet or failed, so handle gracefully if strict mode not required
     if (!response.ok()) {
       console.warn("Test data generation not available, skipping...");
     }
