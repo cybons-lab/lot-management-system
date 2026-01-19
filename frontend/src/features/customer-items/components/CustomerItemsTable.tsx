@@ -3,7 +3,7 @@
  * Refactored to use DataTable component.
  * OCR-SAP変換フィールド対応版 + チェックボックス選択対応
  */
-import { Building2, CheckCircle, Package, RotateCcw, Trash2, XCircle } from "lucide-react";
+import { Building2, CheckCircle, Package, Pencil, RotateCcw, Trash2, XCircle } from "lucide-react";
 import { useMemo } from "react";
 
 import type { CustomerItem } from "../api";
@@ -15,6 +15,7 @@ import { DataTable } from "@/shared/components/data/DataTable";
 interface CustomerItemsTableProps {
   items: CustomerItem[];
   isLoading: boolean;
+  onEdit: (item: CustomerItem) => void;
   onSoftDelete: (item: CustomerItem) => void;
   onPermanentDelete: (item: CustomerItem) => void;
   onRestore: (item: CustomerItem) => void;
@@ -40,6 +41,7 @@ const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.external_
 export function CustomerItemsTable({
   items,
   isLoading,
+  onEdit,
   onSoftDelete,
   onPermanentDelete,
   onRestore,
@@ -234,17 +236,32 @@ export function CustomerItemsTable({
     }
 
     return (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={(e) => {
-          e.stopPropagation();
-          onSoftDelete(item);
-        }}
-        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center justify-end gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(item);
+          }}
+          title="編集"
+          className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700"
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSoftDelete(item);
+          }}
+          title="削除"
+          className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     );
   };
 

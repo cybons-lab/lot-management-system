@@ -6,14 +6,16 @@
  */
 import { Package, Plus, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
-import type { CustomerItem } from "../api";
+import type { CustomerItem, UpdateCustomerItemRequest } from "../api";
 import { CustomerItemBulkImportDialog } from "../components/CustomerItemBulkImportDialog";
 import { CustomerItemDetailDialog } from "../components/CustomerItemDetailDialog";
 import { CustomerItemExportButton } from "../components/CustomerItemExportButton";
 import { CustomerItemForm } from "../components/CustomerItemForm";
 import { CustomerItemsFilter } from "../components/CustomerItemsFilter";
 import { CustomerItemsTable } from "../components/CustomerItemsTable";
+import { useUpdateCustomerItem } from "../hooks";
 import { useCustomerItemsPage } from "../hooks/useCustomerItemsPage";
 
 import {
@@ -78,6 +80,11 @@ export function CustomerItemsListPage() {
   const [selectedItem, setSelectedItem] = useState<CustomerItem | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
+  // 編集ダイアログ用
+  const [editingItem, setEditingItem] = useState<CustomerItem | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { mutate: updateCustomerItem, isPending: isUpdating } = useUpdateCustomerItem();
+
   // 選択機能（管理者は全アイテム、非管理者はアクティブのみ）
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
@@ -99,6 +106,32 @@ export function CustomerItemsListPage() {
   const handleRowClick = (item: CustomerItem) => {
     setSelectedItem(item);
     setIsDetailDialogOpen(true);
+  };
+
+  const handleEdit = (item: CustomerItem) => {
+    setEditingItem(item);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdate = (data: UpdateCustomerItemRequest) => {
+    if (!editingItem) return;
+    updateCustomerItem(
+      {
+        customerId: editingItem.customer_id,
+        externalProductCode: editingItem.external_product_code,
+        data,
+      },
+      {
+        onSuccess: () => {
+          setIsEditDialogOpen(false);
+          setEditingItem(null);
+          toast.success("得意先品番マッピングを更新しました");
+        },
+        onError: (error) => {
+          toast.error(`更新に失敗しました: ${error.message}`);
+        },
+      },
+    );
   };
 
   const executeSoftDelete = (endDate: string | null) => {
@@ -256,6 +289,7 @@ export function CustomerItemsListPage() {
       <CustomerItemsTable
         items={filteredItems}
         isLoading={isLoading}
+        onEdit={handleEdit}
         onSoftDelete={openSoftDelete}
         onPermanentDelete={openPermanentDelete}
         onRestore={openRestore}
@@ -291,7 +325,23 @@ export function CustomerItemsListPage() {
         item={selectedItem}
         open={isDetailDialogOpen}
         onOpenChange={setIsDetailDialogOpen}
+        onEdit={handleEdit}
       />
+
+      {/* 編集ダイアログ */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>得意先品番マッピング編集</DialogTitle>
+          </DialogHeader>
+          <CustomerItemForm
+            item={editingItem}
+            onSubmit={handleUpdate}
+            onCancel={() => setIsEditDialogOpen(false)}
+            isSubmitting={isUpdating}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Delete/Restore Dialogs */}
       <SoftDeleteDialog
