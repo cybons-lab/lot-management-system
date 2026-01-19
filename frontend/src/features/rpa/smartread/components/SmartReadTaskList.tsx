@@ -19,8 +19,18 @@ export function SmartReadTaskList({
   selectedTaskId,
   onSelectTask,
 }: SmartReadTaskListProps) {
-  const { data: taskListResponse, isLoading } = useSmartReadTasks(configId);
+  const { data: taskListResponse, isLoading, error } = useSmartReadTasks(configId);
   const tasks = taskListResponse?.tasks ?? [];
+
+  console.log("[SmartReadTaskList] Render", {
+    configId,
+    isLoading,
+    error,
+    tasksLength: tasks.length,
+  });
+  if (error) {
+    console.error("[SmartReadTaskList] Error fetching tasks:", error);
+  }
 
   if (!configId) {
     return (

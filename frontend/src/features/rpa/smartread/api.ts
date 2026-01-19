@@ -174,7 +174,17 @@ export interface SmartReadTransformResponse {
  * タスク一覧を取得
  */
 export async function getTasks(configId: number): Promise<SmartReadTaskListResponse> {
-  return http.get<SmartReadTaskListResponse>(`rpa/smartread/tasks?config_id=${configId}`);
+  console.log(`[SmartRead API] Fetching tasks for configId: ${configId}`);
+  try {
+    const res = await http.get<SmartReadTaskListResponse>(
+      `rpa/smartread/tasks?config_id=${configId}`,
+    );
+    console.log(`[SmartRead API] Fetched tasks:`, res);
+    return res;
+  } catch (error) {
+    console.error(`[SmartRead API] Error fetching tasks:`, error);
+    throw error;
+  }
 }
 
 /**
