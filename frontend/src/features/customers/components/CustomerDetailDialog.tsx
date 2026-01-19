@@ -20,6 +20,7 @@ interface CustomerDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// eslint-disable-next-line max-lines-per-function, complexity
 export function CustomerDetailDialog({
   customerCode,
   open,

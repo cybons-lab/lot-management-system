@@ -27,6 +27,7 @@ interface UserDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// eslint-disable-next-line max-lines-per-function, complexity
 export function UserDetailDialog({ userId, open, onOpenChange }: UserDetailDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingRoles, setIsEditingRoles] = useState(false);

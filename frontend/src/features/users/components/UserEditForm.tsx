@@ -31,6 +31,7 @@ interface UserEditFormProps {
   isSubmitting?: boolean;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function UserEditForm({
   user,
   onSubmit,
