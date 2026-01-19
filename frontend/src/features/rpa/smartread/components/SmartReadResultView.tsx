@@ -42,7 +42,7 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     configId,
     taskId,
     exportId,
-    isExportDone: exportStatus?.state === "COMPLETED",
+    isExportDone: exportStatus?.state === "COMPLETED" || exportStatus?.state === "SUCCEEDED",
   });
 
   useEffect(() => {

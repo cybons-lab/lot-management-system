@@ -27,14 +27,12 @@ export function SmartReadCsvTable({ data, errors, className }: SmartReadCsvTable
   const headers = Object.keys(data[0]);
 
   // エラーを (row, field) で高速検索できるようにマップ化
-  // rowはバックエンドから1-indexedで来るか0-indexedで来るか確認が必要だが、
-  // transformer.pyの実装を見ると `row = i + 1` (enumerateのindex+1) となっているため、1-indexed。
-  // 一方、表示用のmap indexは0-indexedなので、調整が必要。
+  // rowはバックエンドのenumerate()から来るため0-indexed。
+  // 表示用のmap indexも0-indexedなので、そのまま使える。
   const errorMap = new Map<string, string>();
   errors.forEach((e) => {
-    // e.rowは1-indexed。keyは `${ rowIndex }-${ fieldName }` とする。
-    // rowIndexは e.row - 1
-    errorMap.set(`${e.row - 1}-${e.field}`, e.message);
+    // e.rowは0-indexed。keyは `${ rowIndex }-${ fieldName }` とする。
+    errorMap.set(`${e.row}-${e.field}`, e.message);
   });
 
   return (
