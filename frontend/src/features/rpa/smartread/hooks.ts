@@ -15,6 +15,13 @@ import {
   analyzeFile,
   getWatchDirFiles,
   processWatchDirFiles,
+  getTasks,
+  getManagedTasks,
+  createExport,
+  getExportStatus,
+  getExportCsvData,
+  transformCsv,
+  updateSkipToday,
 } from "./api";
 
 import { ApiError } from "@/utils/errors/custom-errors";
@@ -181,6 +188,192 @@ export function useProcessWatchDirFiles() {
     },
     onError: (error: Error) => {
       toast.error(`処理に失敗しました: ${error.message}`);
+    },
+  });
+}
+
+// ==================== タスク・Export ====================
+
+/**
+ * タスク一覧を取得
+ */
+export function useSmartReadTasks(configId: number | null, enabled: boolean = false) {
+  return useQuery({
+    queryKey: configId ? [...QUERY_KEYS.config(configId), "tasks"] : [],
+    queryFn: () => (configId ? getTasks(configId) : Promise.resolve({ tasks: [] })),
+    enabled: !!configId && enabled,
+    staleTime: Infinity, // キャッシュを永続化（手動更新のみ）
+  });
+}
+
+/**
+ * 管理タスク一覧を取得
+ */
+export function useManagedTasks(configId: number | null, enabled: boolean = true) {
+  return useQuery({
+    queryKey: configId ? [...QUERY_KEYS.config(configId), "managed-tasks"] : [],
+    queryFn: () => (configId ? getManagedTasks(configId) : Promise.resolve([])),
+    enabled: !!configId && enabled,
+    staleTime: 1000 * 60 * 5, // 5分キャッシュ
+  });
+}
+
+/**
+ * エクスポートを作成
+ */
+export function useCreateExport() {
+  return useMutation({
+    mutationFn: ({
+      configId,
+      taskId,
+      exportType = "csv",
+    }: {
+      configId: number;
+      taskId: string;
+      exportType?: string;
+    }) => createExport(configId, taskId, exportType),
+    onError: (error: Error) => {
+      toast.error(`エクスポート作成に失敗しました: ${error.message}`);
+    },
+  });
+}
+
+/**
+ * エクスポート状態を取得
+ */
+export function useExportStatus(
+  configId: number | null,
+  taskId: string | null,
+  exportId: string | null,
+  enabled: boolean = true,
+) {
+  return useQuery({
+    queryKey:
+      configId && taskId && exportId
+        ? [...QUERY_KEYS.config(configId), "export", taskId, exportId]
+        : [],
+    queryFn: () =>
+      configId && taskId && exportId
+        ? getExportStatus(configId, taskId, exportId)
+        : Promise.resolve(null),
+    enabled: !!configId && !!taskId && !!exportId && enabled,
+    refetchInterval: (query) => {
+      // RUNNING状態なら5秒ごとにポーリング
+      const data = query.state.data;
+      if (data && data.state === "RUNNING") {
+        return 5000;
+      }
+      return false;
+    },
+  });
+}
+
+/**
+ * エクスポートからCSVデータを取得
+ */
+export function useExportCsvData(options: {
+  configId: number | null;
+  taskId: string | null;
+  exportId: string | null;
+  isExportDone?: boolean;
+  saveToDb?: boolean;
+  taskDate?: string;
+}) {
+  const { configId, taskId, exportId, isExportDone = false, saveToDb = true, taskDate } = options;
+
+  return useQuery({
+    queryKey:
+      configId && taskId && exportId
+        ? [...QUERY_KEYS.config(configId), "csv", taskId, exportId, saveToDb, taskDate]
+        : [],
+    queryFn: () =>
+      configId && taskId && exportId
+        ? getExportCsvData({ configId, taskId, exportId, saveToDb, taskDate })
+        : Promise.resolve(null),
+    enabled: !!configId && !!taskId && !!exportId && isExportDone,
+    staleTime: 1000 * 60 * 10, // CSVデータは10分キャッシュ
+  });
+}
+
+/**
+ * 横持ち→縦持ち変換
+ */
+export function useTransformCsv() {
+  return useMutation({
+    mutationFn: ({
+      wideData,
+      skipEmpty = true,
+    }: {
+      wideData: Record<string, unknown>[];
+      skipEmpty?: boolean;
+    }) => transformCsv(wideData, skipEmpty),
+    onError: (error: Error) => {
+      toast.error(`変換に失敗しました: ${error.message}`);
+    },
+  });
+}
+
+/**
+ * JSONダウンロード
+ */
+export const downloadJson = (data: unknown, filename: string) => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * CSVダウンロード
+ */
+export const downloadCsv = (data: Record<string, unknown>[], filename: string) => {
+  if (data.length === 0) return;
+
+  const headers = Object.keys(data[0]);
+  const csvContent = [
+    headers.join(","),
+    ...data.map((row) =>
+      headers
+        .map((header) => {
+          const cell = row[header] === null || row[header] === undefined ? "" : row[header];
+          return JSON.stringify(cell); // Escape quotes
+        })
+        .join(","),
+    ),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * skip_todayフラグを更新
+ */
+export function useUpdateSkipToday() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ taskId, skipToday }: { taskId: string; skipToday: boolean }) =>
+      updateSkipToday(taskId, skipToday),
+    onSuccess: (_, { taskId }) => {
+      // 管理タスク一覧を更新
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.all, "managed-tasks"] });
+      toast.success(`タスク ${taskId} のスキップ設定を${_.skip_today ? "有効" : "無効"}にしました`);
+    },
+    onError: (error: Error) => {
+      toast.error(`スキップ設定の更新に失敗しました: ${error.message}`);
     },
   });
 }

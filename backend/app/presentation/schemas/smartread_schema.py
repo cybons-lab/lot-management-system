@@ -20,6 +20,7 @@ class SmartReadConfigCreate(BaseModel):
     input_exts: str | None = Field(default="pdf,png,jpg,jpeg", description="対応拡張子")
     description: str | None = Field(default=None, description="説明")
     is_active: bool = Field(default=True, description="有効/無効")
+    is_default: bool = Field(default=False, description="デフォルト設定")
 
 
 class SmartReadConfigUpdate(BaseModel):
@@ -36,6 +37,7 @@ class SmartReadConfigUpdate(BaseModel):
     input_exts: str | None = None
     description: str | None = None
     is_active: bool | None = None
+    is_default: bool | None = None
 
 
 class SmartReadConfigResponse(BaseModel):
@@ -53,6 +55,7 @@ class SmartReadConfigResponse(BaseModel):
     input_exts: str | None
     description: str | None
     is_active: bool
+    is_default: bool
     created_at: datetime
     updated_at: datetime
 
@@ -78,3 +81,106 @@ class SmartReadProcessRequest(BaseModel):
     """ファイル処理リクエスト."""
 
     filenames: list[str] = Field(..., description="処理するファイル名のリスト")
+
+
+# ==================== タスク・Export系スキーマ ====================
+
+
+class SmartReadTaskResponse(BaseModel):
+    """タスクレスポンス."""
+
+    task_id: str
+    name: str
+    status: str  # RUNNING | SUCCEEDED | FAILED
+    created_at: str | None = None
+    request_count: int = 0
+
+
+class SmartReadTaskListResponse(BaseModel):
+    """タスク一覧レスポンス."""
+
+    tasks: list[SmartReadTaskResponse]
+
+
+class SmartReadExportResponse(BaseModel):
+    """エクスポートレスポンス."""
+
+    export_id: str
+    state: str  # RUNNING | SUCCEEDED | FAILED
+    task_id: str | None = None
+    error_message: str | None = None
+
+
+class SmartReadExportRequest(BaseModel):
+    """エクスポート作成リクエスト."""
+
+    export_type: str = Field(default="csv", description="エクスポート形式 (csv/json)")
+
+
+class SmartReadTransformRequest(BaseModel):
+    """CSV横→縦変換リクエスト."""
+
+    wide_data: list[dict[str, Any]] = Field(..., description="横持ちデータ")
+    skip_empty: bool = Field(default=True, description="空明細をスキップするか")
+
+
+class SmartReadValidationError(BaseModel):
+    """バリデーションエラー."""
+
+    row: int
+    field: str
+    message: str
+    value: str | None = None
+
+
+class SmartReadTransformResponse(BaseModel):
+    """CSV横→縦変換レスポンス."""
+
+    long_data: list[dict[str, Any]] = Field(..., description="縦持ちデータ")
+    errors: list[SmartReadValidationError] = Field(
+        default_factory=list, description="バリデーションエラー"
+    )
+
+
+class SmartReadCsvDataResponse(BaseModel):
+    """CSVデータレスポンス."""
+
+    wide_data: list[dict[str, Any]] = Field(..., description="横持ちデータ（OCR結果）")
+    long_data: list[dict[str, Any]] = Field(..., description="縦持ちデータ（変換後）")
+    errors: list[SmartReadValidationError] = Field(
+        default_factory=list, description="バリデーションエラー"
+    )
+    filename: str | None = Field(default=None, description="CSVファイル名")
+
+
+# ==================== タスク管理系スキーマ ====================
+
+
+class SmartReadTaskCreateRequest(BaseModel):
+    """タスク作成リクエスト."""
+
+    config_id: int = Field(..., description="設定ID")
+    task_date: str = Field(..., description="タスク日付 (YYYY-MM-DD)")
+    name: str | None = Field(default=None, description="タスク名")
+
+
+class SmartReadTaskDetailResponse(BaseModel):
+    """タスク詳細レスポンス."""
+
+    id: int
+    config_id: int
+    task_id: str
+    task_date: str
+    name: str | None
+    state: str | None
+    synced_at: str | None
+    skip_today: bool
+    created_at: str
+
+    model_config = {"from_attributes": True}
+
+
+class SmartReadSkipTodayRequest(BaseModel):
+    """skip_todayフラグ更新リクエスト."""
+
+    skip_today: bool = Field(..., description="今日スキップするか")

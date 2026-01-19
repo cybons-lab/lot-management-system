@@ -5,119 +5,58 @@
  * SmartRead OCR PDFインポートページ
  */
 
-import { Upload, Download, FileText, Settings, Loader2, AlertCircle, RotateCw } from "lucide-react";
-import { useState, useRef } from "react";
+import { Settings, Loader2, AlertCircle, RefreshCw, FileText } from "lucide-react";
+import { useState } from "react";
 
-import { downloadJson, downloadCsv, type SmartReadAnalyzeResponse } from "../api";
-import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
 import {
   useSmartReadConfigs,
-  useAnalyzeFile,
   useWatchDirFiles,
   useProcessWatchDirFiles,
+  useSmartReadTasks,
 } from "../hooks";
+import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
+import { SmartReadResultView } from "../components/SmartReadResultView";
+import { SmartReadTaskList } from "../components/SmartReadTaskList";
+import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
+import { SmartReadManagedTaskList } from "../components/SmartReadManagedTaskList";
 
+import { Button } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { Checkbox } from "@/components/ui";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui";
 import {
-  Button,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-  Checkbox,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function SmartReadPage() {
   const [selectedConfigId, setSelectedConfigId] = useState<number | null>(null);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [analyzeResult, setAnalyzeResult] = useState<SmartReadAnalyzeResponse | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedWatchFiles, setSelectedWatchFiles] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("import");
 
   const { data: configs, isLoading: configsLoading } = useSmartReadConfigs();
-  const analyzeMutation = useAnalyzeFile();
   const {
     data: watchFiles,
     isLoading: isWatchFilesLoading,
     refetch: refetchWatchFiles,
   } = useWatchDirFiles(selectedConfigId);
   const processWatchFilesMutation = useProcessWatchDirFiles();
+  const { refetch: refetchTasks } = useSmartReadTasks(selectedConfigId, false);
+
+  console.log("[SmartReadPage] Render", { selectedConfigId, activeTab, configs });
 
   const activeConfigs = configs?.filter((c) => c.is_active) ?? [];
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      setSelectedFiles(Array.from(files));
-      setAnalyzeResult(null);
-    }
-  };
-
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const files = event.dataTransfer.files;
-    if (files && files.length > 0) {
-      setSelectedFiles(Array.from(files));
-      setAnalyzeResult(null);
-    }
-  };
-
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  const handleAnalyze = async () => {
-    if (!selectedConfigId || selectedFiles.length === 0) return;
-
-    // 選択された全ファイルを1ファイルずつ処理
-    // TODO: 将来的にはバックエンドにFormDataで複数ファイル一括送信対応が望ましい
-    let lastResult: SmartReadAnalyzeResponse | null = null;
-    for (const file of selectedFiles) {
-      const result = await analyzeMutation.mutateAsync({
-        configId: selectedConfigId,
-        file: file,
-      });
-      lastResult = result;
-    }
-    if (lastResult) {
-      setAnalyzeResult(lastResult);
-    }
-  };
-
-  const handleDownloadJson = () => {
-    if (!analyzeResult?.data) return;
-    const filename = analyzeResult.filename.replace(/\.[^/.]+$/, "") || "export";
-    downloadJson(analyzeResult.data, `${filename}.json`);
-  };
-
-  const handleDownloadCsv = () => {
-    if (!analyzeResult?.data) return;
-    const filename = analyzeResult.filename.replace(/\.[^/.]+$/, "") || "export";
-    downloadCsv(analyzeResult.data, `${filename}.csv`);
-  };
 
   const handleProcessWatchFiles = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0) return;
@@ -131,17 +70,10 @@ export function SmartReadPage() {
     const successFilenames = results.filter((r) => r.success).map((r) => r.filename);
     setSelectedWatchFiles((prev) => prev.filter((f) => !successFilenames.includes(f)));
 
-    // Refresh file list
+    // Refresh file list and task list, then switch to history
     refetchWatchFiles();
-
-    // Show result of the last processed file if any
-    if (results.length > 0) {
-      const lastResult = results[results.length - 1];
-      if (lastResult.success) {
-        setAnalyzeResult(lastResult);
-        setSelectedFiles([]); // Clear manual file selection to avoid confusion
-      }
-    }
+    refetchTasks();
+    setActiveTab("history");
   };
 
   const toggleWatchFile = (filename: string) => {
@@ -159,6 +91,16 @@ export function SmartReadPage() {
     }
   };
 
+  const handleAnalyzeSuccess = () => {
+    refetchTasks();
+    setActiveTab("history");
+  };
+
+  const handleSelectTask = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setActiveTab("detail");
+  };
+
   return (
     <PageContainer>
       <PageHeader
@@ -172,9 +114,9 @@ export function SmartReadPage() {
         }
       />
 
-      <div className="space-y-4">
-        {/* Config Selection - Shared across tabs */}
-        <Card>
+      <div className="flex h-[calc(100vh-12rem)] flex-col gap-4">
+        {/* Config Selection - Always visible */}
+        <Card className="shrink-0">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium whitespace-nowrap">AI-OCR設定</label>
@@ -197,8 +139,8 @@ export function SmartReadPage() {
                     value={selectedConfigId?.toString() ?? ""}
                     onValueChange={(value: string) => {
                       setSelectedConfigId(Number(value));
-                      setSelectedWatchFiles([]); // Reset selection on config change
-                      setAnalyzeResult(null);
+                      setSelectedWatchFiles([]); // Reset selection
+                      setSelectedTaskId(null); // Reset task selection
                     }}
                   >
                     <SelectTrigger>
@@ -218,291 +160,176 @@ export function SmartReadPage() {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="upload" className="w-full" onValueChange={() => setAnalyzeResult(null)}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="upload">ファイル読み込み</TabsTrigger>
-            <TabsTrigger value="watch">監視フォルダ</TabsTrigger>
+        {/* Tabs Layout */}
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex-1 flex flex-col min-h-0"
+        >
+          <TabsList className="grid w-full grid-cols-4 shrink-0">
+            <TabsTrigger value="import">1. インポート</TabsTrigger>
+            <TabsTrigger value="history">2. 履歴</TabsTrigger>
+            <TabsTrigger value="managed">3. 管理タスク</TabsTrigger>
+            <TabsTrigger value="detail">4. 結果詳細</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="upload" className="space-y-4">
-            {/* Original Upload UI */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>ファイルアップロード</CardTitle>
-                  <CardDescription>解析するPDFまたは画像ファイルを選択してください</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Drop Zone */}
-                  <div
-                    className="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-indigo-400 hover:bg-indigo-50/50"
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf,.png,.jpg,.jpeg"
-                      multiple
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-600">
-                      クリックまたはドラッグ&ドロップでファイルを選択
-                    </p>
-                    <p className="mt-1 text-xs text-gray-400">PDF, PNG, JPG, JPEG形式に対応</p>
-                  </div>
-
-                  {selectedFiles.length > 0 && (
-                    <div className="space-y-2">
-                      {selectedFiles.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-3 rounded-lg border bg-gray-50 p-3"
-                        >
-                          <FileText className="h-8 w-8 text-indigo-600" />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium">{file.name}</p>
-                            <p className="text-xs text-gray-500">
-                              {(file.size / 1024).toFixed(1)} KB
-                            </p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-                              if (selectedFiles.length === 1) {
-                                setAnalyzeResult(null);
-                              }
-                            }}
-                          >
-                            削除
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <Button
-                    className="w-full"
-                    disabled={
-                      !selectedConfigId || selectedFiles.length === 0 || analyzeMutation.isPending
-                    }
-                    onClick={handleAnalyze}
-                  >
-                    {analyzeMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        解析中...
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="mr-2 h-4 w-4" />
-                        解析開始
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Analysis Result (Right Column) */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>解析結果</CardTitle>
-                  <CardDescription>AI-OCR APIから取得した解析結果を表示します</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {!analyzeResult ? (
-                    <div className="flex h-64 flex-col items-center justify-center text-gray-400">
-                      <FileText className="h-16 w-16" />
-                      <p className="mt-4 text-sm">ファイルを選択して解析を開始してください</p>
-                    </div>
-                  ) : !analyzeResult.success ? (
-                    <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>解析エラー</AlertTitle>
-                      <AlertDescription>
-                        {analyzeResult.error_message || "不明なエラーが発生しました"}
-                      </AlertDescription>
-                    </Alert>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={handleDownloadJson}>
-                          <Download className="mr-2 h-4 w-4" />
-                          JSONダウンロード
-                        </Button>
-                        <Button variant="outline" onClick={handleDownloadCsv}>
-                          <Download className="mr-2 h-4 w-4" />
-                          CSVダウンロード
-                        </Button>
-                      </div>
-                      <div className="rounded-lg border bg-gray-50 p-4">
-                        <h4 className="mb-2 text-sm font-medium">結果プレビュー</h4>
-                        <pre className="max-h-96 overflow-auto rounded bg-white p-3 text-xs">
-                          {JSON.stringify(analyzeResult.data, null, 2)}
-                        </pre>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="rounded-lg border p-3">
-                          <p className="text-gray-500">ファイル名</p>
-                          <p className="font-medium">{analyzeResult.filename}</p>
-                        </div>
-                        <div className="rounded-lg border p-3">
-                          <p className="text-gray-500">抽出項目数</p>
-                          <p className="font-medium">{analyzeResult.data.length} 件</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="watch" className="space-y-4">
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Left: File List */}
-              <Card className="lg:col-span-1">
-                <CardHeader>
+          {/* Tab 1: Import (Watch Folder & Upload) */}
+          <TabsContent value="import" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
+            <div className="grid grid-cols-2 gap-4 h-full">
+              {/* Watch Folder */}
+              <Card className="flex flex-col h-full">
+                <CardHeader className="py-3 px-4">
                   <div className="flex items-center justify-between">
-                    <CardTitle>監視フォルダ内ファイル</CardTitle>
+                    <CardTitle className="text-base">監視フォルダ</CardTitle>
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8"
                       onClick={() => refetchWatchFiles()}
-                      disabled={!selectedConfigId || isWatchFilesLoading}
+                      disabled={!selectedConfigId}
                     >
-                      <RotateCw
-                        className={`h-4 w-4 ${isWatchFilesLoading ? "animate-spin" : ""}`}
-                      />
+                      <RefreshCw className="h-4 w-4" />
                     </Button>
                   </div>
-                  <CardDescription>
-                    設定された監視フォルダ（入力フォルダ）内のファイル一覧
-                  </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-1 flex-col gap-4 overflow-hidden p-0">
                   {!selectedConfigId ? (
-                    <div className="py-8 text-center text-gray-500">設定を選択してください</div>
+                    <div className="flex h-full items-center justify-center p-4 text-center text-sm text-gray-400">
+                      設定を選択してください
+                    </div>
                   ) : isWatchFilesLoading ? (
-                    <div className="flex justify-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                    <div className="flex h-full items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                     </div>
                   ) : !watchFiles || watchFiles.length === 0 ? (
-                    <div className="py-8 text-center text-gray-500">ファイルが見つかりません</div>
+                    <div className="flex h-full items-center justify-center p-4 text-center text-sm text-gray-400">
+                      ファイルはありません
+                    </div>
                   ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-500">{watchFiles.length} ファイル</div>
+                    <>
+                      <div className="border-b px-4 py-2 bg-gray-50/50">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="select-all"
+                            checked={
+                              watchFiles.length > 0 &&
+                              selectedWatchFiles.length === watchFiles.length
+                            }
+                            onCheckedChange={toggleAllWatchFiles}
+                          />
+                          <label
+                            htmlFor="select-all"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            すべて選択
+                          </label>
+                        </div>
+                      </div>
+                      <ScrollArea className="flex-1">
+                        <div className="p-2 space-y-1">
+                          {watchFiles.map((file) => (
+                            <div
+                              key={file}
+                              className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
+                              onClick={() => toggleWatchFile(file)}
+                            >
+                              <Checkbox
+                                checked={selectedWatchFiles.includes(file)}
+                                onCheckedChange={() => toggleWatchFile(file)}
+                              />
+                              <span className="text-sm truncate" title={file}>
+                                {file}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                      <div className="p-4 border-t">
                         <Button
+                          className="w-full"
                           size="sm"
-                          onClick={handleProcessWatchFiles}
                           disabled={
                             selectedWatchFiles.length === 0 || processWatchFilesMutation.isPending
                           }
+                          onClick={handleProcessWatchFiles}
                         >
-                          {processWatchFilesMutation.isPending ? (
+                          {processWatchFilesMutation.isPending && (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <FileText className="mr-2 h-4 w-4" />
                           )}
-                          選択したファイルを処理 ({selectedWatchFiles.length})
+                          選択ファイルを処理
                         </Button>
                       </div>
-                      <div className="rounded-md border">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-12">
-                                <Checkbox
-                                  checked={
-                                    watchFiles.length > 0 &&
-                                    selectedWatchFiles.length === watchFiles.length
-                                  }
-                                  onCheckedChange={toggleAllWatchFiles}
-                                />
-                              </TableHead>
-                              <TableHead>ファイル名</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {watchFiles.map((filename) => (
-                              <TableRow key={filename}>
-                                <TableCell>
-                                  <Checkbox
-                                    checked={selectedWatchFiles.includes(filename)}
-                                    onCheckedChange={() => toggleWatchFile(filename)}
-                                  />
-                                </TableCell>
-                                <TableCell className="font-medium">{filename}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Right: Results (Reused logic or simplified list) */}
-              <Card className="lg:col-span-1">
-                <CardHeader>
-                  <CardTitle>処理結果</CardTitle>
-                  <CardDescription>最新の処理結果を表示します</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Reuse the result display logic from pure upload tab, mostly */}
-                  {!analyzeResult ? (
-                    <div className="flex h-64 flex-col items-center justify-center text-gray-400">
-                      <FileText className="h-16 w-16" />
-                      <p className="mt-4 text-sm">ファイルを選択して処理を実行してください</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <Alert variant={analyzeResult.success ? "default" : "destructive"}>
-                        {analyzeResult.success ? (
-                          <FileText className="h-4 w-4" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4" />
-                        )}
-                        <AlertTitle>{analyzeResult.success ? "処理完了" : "処理エラー"}</AlertTitle>
-                        <AlertDescription>
-                          {analyzeResult.filename}{" "}
-                          {analyzeResult.success
-                            ? "の処理が完了しました"
-                            : `の処理に失敗しました: ${analyzeResult.error_message}`}
-                        </AlertDescription>
-                      </Alert>
+              {/* Upload Panel */}
+              <div className="h-full">
+                {!selectedConfigId ? (
+                  <Card className="h-full flex items-center justify-center text-gray-400">
+                    <p>設定を選択してください</p>
+                  </Card>
+                ) : (
+                  <SmartReadUploadPanel
+                    configId={selectedConfigId}
+                    onAnalyzeSuccess={handleAnalyzeSuccess}
+                  />
+                )}
+              </div>
+            </div>
+          </TabsContent>
 
-                      {analyzeResult.success && (
-                        <>
-                          <div className="flex gap-2">
-                            <Button variant="outline" onClick={handleDownloadJson}>
-                              <Download className="mr-2 h-4 w-4" />
-                              JSON
-                            </Button>
-                            <Button variant="outline" onClick={handleDownloadCsv}>
-                              <Download className="mr-2 h-4 w-4" />
-                              CSV
-                            </Button>
-                          </div>
-                          <div className="rounded-lg border bg-gray-50 p-4">
-                            <h4 className="mb-2 text-sm font-medium">結果プレビュー</h4>
-                            <pre className="max-h-96 overflow-auto rounded bg-white p-3 text-xs">
-                              {JSON.stringify(analyzeResult.data, null, 2)}
-                            </pre>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+          {/* Tab 2: History (Task List) */}
+          <TabsContent value="history" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
+            <Card className="h-full flex flex-col">
+              <CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-base">処理履歴</CardTitle>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => refetchTasks()}
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-hidden p-0">
+                <SmartReadTaskList
+                  configId={selectedConfigId}
+                  selectedTaskId={selectedTaskId}
+                  onSelectTask={handleSelectTask}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab 3: Managed Tasks (DB-saved Tasks) */}
+          <TabsContent value="managed" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
+            <div className="h-full overflow-auto">
+              <SmartReadManagedTaskList configId={selectedConfigId} />
+            </div>
+          </TabsContent>
+
+          {/* Tab 4: Detail (Result View) */}
+          <TabsContent value="detail" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
+            <div className="h-full">
+              {!selectedConfigId ? (
+                <Card className="h-full flex items-center justify-center text-gray-400">
+                  <p>設定を選択してください</p>
+                </Card>
+              ) : selectedTaskId ? (
+                <SmartReadResultView configId={selectedConfigId} taskId={selectedTaskId} />
+              ) : (
+                <Card className="h-full flex items-center justify-center text-gray-400">
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="h-8 w-8 text-gray-300" />
+                    <p>履歴タブからタスクを選択してください</p>
+                  </div>
+                </Card>
+              )}
             </div>
           </TabsContent>
         </Tabs>

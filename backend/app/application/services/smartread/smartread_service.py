@@ -6,16 +6,24 @@ PDFや画像のOCR処理とエクスポート機能を提供する。
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import json
 import logging
 from dataclasses import dataclass
+from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import SmartReadConfig
+from app.infrastructure.persistence.models.smartread_models import (
+    SmartReadExportHistory,
+    SmartReadLongData,
+    SmartReadTask,
+    SmartReadWideData,
+)
 from app.infrastructure.smartread.client import (
     SmartReadClient,
     SmartReadResult,
@@ -454,3 +462,501 @@ class SmartReadService:
             else:
                 items.append((new_key, v))
         return dict(items)
+
+    # ==================== タスク・Export API ====================
+
+    def _get_client(self, config_id: int) -> tuple[SmartReadClient | None, SmartReadConfig | None]:
+        """設定からクライアントを取得."""
+        config = self.get_config(config_id)
+        if not config:
+            return None, None
+
+        template_ids = None
+        if config.template_ids:
+            template_ids = [t.strip() for t in config.template_ids.split(",") if t.strip()]
+
+        client = SmartReadClient(
+            endpoint=config.endpoint,
+            api_key=config.api_key,
+            template_ids=template_ids,
+        )
+        return client, config
+
+    async def get_tasks(self, config_id: int) -> list:
+        """タスク一覧を取得.
+
+        Args:
+            config_id: 設定ID
+
+        Returns:
+            タスク一覧
+        """
+        client, _ = self._get_client(config_id)
+        if not client:
+            return []
+
+        return await client.get_tasks()
+
+    async def create_export(
+        self,
+        config_id: int,
+        task_id: str,
+        export_type: str = "csv",
+    ):
+        """エクスポートを作成.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_type: エクスポート形式
+
+        Returns:
+            エクスポート情報
+        """
+        client, _ = self._get_client(config_id)
+        if not client:
+            return None
+
+        return await client.create_export(task_id, export_type)
+
+    async def get_export_status(
+        self,
+        config_id: int,
+        task_id: str,
+        export_id: str,
+    ):
+        """エクスポート状態を取得.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_id: エクスポートID
+
+        Returns:
+            エクスポート情報
+        """
+        client, _ = self._get_client(config_id)
+        if not client:
+            return None
+
+        return await client.get_export_status(task_id, export_id)
+
+    async def get_export_csv_data(
+        self,
+        config_id: int,
+        task_id: str,
+        export_id: str,
+        save_to_db: bool = True,
+        task_date: date | None = None,
+    ) -> dict[str, Any] | None:
+        """エクスポートからCSVデータを取得し、横持ち・縦持ち両方を返す.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_id: エクスポートID
+            save_to_db: DBに保存するか
+            task_date: タスク日付（指定がない場合は今日）
+
+        Returns:
+            横持ち・縦持ちデータとエラー
+        """
+        import zipfile
+
+        from app.application.services.smartread.csv_transformer import (
+            SmartReadCsvTransformer,
+        )
+
+        client, _ = self._get_client(config_id)
+        if not client:
+            return None
+
+        # ZIPダウンロード
+        zip_data = await client.download_export(task_id, export_id)
+        if not zip_data:
+            return None
+
+        # ZIP展開→CSV抽出
+        wide_data: list[dict[str, Any]] = []
+        csv_filename: str | None = None
+
+        try:
+            with zipfile.ZipFile(io.BytesIO(zip_data)) as zf:
+                for name in zf.namelist():
+                    if name.endswith(".csv"):
+                        csv_filename = name
+                        with zf.open(name) as f:
+                            # CSVを読み込み
+                            reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig"))
+                            for row in reader:
+                                wide_data.append(dict(row))
+                        break  # 最初のCSVのみ処理
+
+        except Exception as e:
+            logger.error(f"Failed to extract CSV from ZIP: {e}")
+            return None
+
+        # 横持ち→縦持ち変換
+        transformer = SmartReadCsvTransformer()
+        result = transformer.transform_to_long(wide_data)
+
+        # DBに保存
+        if save_to_db and wide_data:
+            if task_date is None:
+                task_date = date.today()
+
+            self._save_wide_and_long_data(
+                config_id=config_id,
+                task_id=task_id,
+                export_id=export_id,
+                task_date=task_date,
+                wide_data=wide_data,
+                long_data=result.long_data,
+                filename=csv_filename,
+            )
+
+        # export_dirが設定されている場合、縦持ちデータをCSV出力
+        config = self.get_config(config_id)
+        if config and config.export_dir and result.long_data:
+            self._save_long_data_to_csv(
+                export_dir=config.export_dir,
+                long_data=result.long_data,
+                task_id=task_id,
+                task_date=task_date if task_date else date.today(),
+            )
+
+        # request_id調査用ログ出力
+        self._log_export_investigation(
+            task_id=task_id,
+            export_id=export_id,
+            csv_filename=csv_filename,
+            wide_row_count=len(wide_data),
+            long_row_count=len(result.long_data),
+        )
+
+        # エクスポート履歴をDBに記録
+        self._record_export_history(
+            config_id=config_id,
+            task_id=task_id,
+            export_id=export_id,
+            task_date=task_date if task_date else date.today(),
+            filename=csv_filename,
+            wide_row_count=len(wide_data),
+            long_row_count=len(result.long_data),
+            status="SUCCESS",
+        )
+
+        return {
+            "wide_data": wide_data,
+            "long_data": result.long_data,
+            "errors": result.errors,
+            "filename": csv_filename,
+        }
+
+    def _calculate_row_fingerprint(self, row_data: dict[str, Any]) -> str:
+        """行データからfingerprintを計算.
+
+        Args:
+            row_data: 行データ
+
+        Returns:
+            SHA256ハッシュ値
+        """
+        # JSONにして安定したソート順でハッシュ化
+        content_str = json.dumps(row_data, sort_keys=True, ensure_ascii=False)
+        return hashlib.sha256(content_str.encode("utf-8")).hexdigest()
+
+    def _save_wide_and_long_data(
+        self,
+        config_id: int,
+        task_id: str,
+        export_id: str,
+        task_date: date,
+        wide_data: list[dict[str, Any]],
+        long_data: list[dict[str, Any]],
+        filename: str | None,
+    ) -> None:
+        """横持ち・縦持ちデータをDBに保存.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_id: エクスポートID
+            task_date: タスク日付
+            wide_data: 横持ちデータ
+            long_data: 縦持ちデータ
+            filename: ファイル名
+        """
+        # 横持ちデータを行単位で保存（重複排除）
+        saved_wide_ids: list[int] = []
+
+        for row_index, row in enumerate(wide_data):
+            fingerprint = self._calculate_row_fingerprint(row)
+
+            # 既存レコードをチェック
+            stmt = select(SmartReadWideData).where(
+                SmartReadWideData.config_id == config_id,
+                SmartReadWideData.task_date == task_date,
+                SmartReadWideData.row_fingerprint == fingerprint,
+            )
+            existing = self.session.execute(stmt).scalar_one_or_none()
+
+            if existing:
+                logger.debug(f"Row {row_index} already exists (fingerprint: {fingerprint[:8]}...)")
+                saved_wide_ids.append(existing.id)
+                continue
+
+            # 新規保存
+            wide_record = SmartReadWideData(
+                config_id=config_id,
+                task_id=task_id,
+                export_id=export_id,
+                task_date=task_date,
+                filename=filename,
+                row_index=row_index,
+                content=row,
+                row_fingerprint=fingerprint,
+            )
+            self.session.add(wide_record)
+            self.session.flush()
+            saved_wide_ids.append(wide_record.id)
+
+        # 縦持ちデータを保存
+        for long_index, long_row in enumerate(long_data):
+            # 対応するwide_data_idを取得（行インデックスが一致するもの）
+            wide_data_id = None
+            if long_index < len(saved_wide_ids):
+                wide_data_id = saved_wide_ids[long_index]
+
+            long_record = SmartReadLongData(
+                wide_data_id=wide_data_id,
+                config_id=config_id,
+                task_id=task_id,
+                task_date=task_date,
+                row_index=long_index,
+                content=long_row,
+                status="PENDING",
+            )
+            self.session.add(long_record)
+
+        self.session.flush()
+        logger.info(
+            f"Saved {len(saved_wide_ids)} wide rows and {len(long_data)} long rows "
+            f"for task {task_id} on {task_date}"
+        )
+
+    # ==================== タスク管理 ====================
+
+    def get_or_create_task(
+        self,
+        config_id: int,
+        task_id: str,
+        task_date: date,
+        name: str | None = None,
+        state: str | None = None,
+    ) -> SmartReadTask:
+        """タスクを取得または作成.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            task_date: タスク日付
+            name: タスク名
+            state: ステータス
+
+        Returns:
+            タスクレコード
+        """
+        stmt = select(SmartReadTask).where(SmartReadTask.task_id == task_id)
+        task = self.session.execute(stmt).scalar_one_or_none()
+
+        if task:
+            # 既存タスクを更新
+            if name:
+                task.name = name
+            if state:
+                task.state = state
+            self.session.flush()
+            return task
+
+        # 新規作成
+        task = SmartReadTask(
+            config_id=config_id,
+            task_id=task_id,
+            task_date=task_date,
+            name=name,
+            state=state,
+        )
+        self.session.add(task)
+        self.session.flush()
+        return task
+
+    def update_task_synced_at(self, task_id: str) -> None:
+        """タスクのsynced_atを更新.
+
+        Args:
+            task_id: タスクID
+        """
+        stmt = select(SmartReadTask).where(SmartReadTask.task_id == task_id)
+        task = self.session.execute(stmt).scalar_one_or_none()
+        if task:
+            task.synced_at = datetime.now()
+            self.session.flush()
+
+    def get_task_by_date(self, config_id: int, task_date: date) -> SmartReadTask | None:
+        """指定日のタスクを取得.
+
+        Args:
+            config_id: 設定ID
+            task_date: タスク日付
+
+        Returns:
+            タスクレコード、存在しない場合はNone
+        """
+        stmt = select(SmartReadTask).where(
+            SmartReadTask.config_id == config_id,
+            SmartReadTask.task_date == task_date,
+        )
+        return self.session.execute(stmt).scalar_one_or_none()
+
+    def should_skip_today(self, task_id: str) -> bool:
+        """今日スキップすべきかチェック.
+
+        Args:
+            task_id: タスクID
+
+        Returns:
+            スキップすべき場合True
+        """
+        stmt = select(SmartReadTask).where(SmartReadTask.task_id == task_id)
+        task = self.session.execute(stmt).scalar_one_or_none()
+        return task.skip_today if task else False
+
+    def set_skip_today(self, task_id: str, skip: bool) -> None:
+        """skip_todayフラグを設定.
+
+        Args:
+            task_id: タスクID
+            skip: スキップするか
+        """
+        stmt = select(SmartReadTask).where(SmartReadTask.task_id == task_id)
+        task = self.session.execute(stmt).scalar_one_or_none()
+        if task:
+            task.skip_today = skip
+            self.session.flush()
+
+    def _save_long_data_to_csv(
+        self,
+        export_dir: str,
+        long_data: list[dict[str, Any]],
+        task_id: str,
+        task_date: date,
+    ) -> None:
+        """縦持ちデータをCSVファイルに保存.
+
+        Args:
+            export_dir: 出力先ディレクトリ
+            long_data: 縦持ちデータ
+            task_id: タスクID
+            task_date: タスク日付
+        """
+        import os
+        from pathlib import Path
+
+        if not long_data:
+            return
+
+        try:
+            export_path = Path(export_dir)
+            if not export_path.exists():
+                os.makedirs(export_path, exist_ok=True)
+
+            # ファイル名: long_data_{task_id}_{YYYYMMDD}.csv
+            date_str = task_date.strftime("%Y%m%d")
+            csv_filename = f"long_data_{task_id}_{date_str}.csv"
+            csv_path = export_path / csv_filename
+
+            # CSVとして出力
+            with open(csv_path, "w", encoding="utf-8-sig", newline="") as f:
+                if long_data:
+                    writer = csv.DictWriter(f, fieldnames=long_data[0].keys())
+                    writer.writeheader()
+                    writer.writerows(long_data)
+
+            logger.info(f"Saved long data to CSV: {csv_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to save long data to CSV: {e}")
+
+    def _log_export_investigation(
+        self,
+        task_id: str,
+        export_id: str,
+        csv_filename: str | None,
+        wide_row_count: int,
+        long_row_count: int,
+    ) -> None:
+        """request_id調査用のログを出力.
+
+        Args:
+            task_id: タスクID
+            export_id: エクスポートID
+            csv_filename: CSVファイル名
+            wide_row_count: 横持ちデータ行数
+            long_row_count: 縦持ちデータ行数
+        """
+        logger.info(
+            "[REQUEST_ID_INVESTIGATION] Export processed",
+            extra={
+                "task_id": task_id,
+                "export_id": export_id,
+                "csv_filename": csv_filename,
+                "wide_row_count": wide_row_count,
+                "long_row_count": long_row_count,
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
+
+    def _record_export_history(
+        self,
+        config_id: int,
+        task_id: str,
+        export_id: str,
+        task_date: date,
+        filename: str | None,
+        wide_row_count: int,
+        long_row_count: int,
+        status: str = "SUCCESS",
+        error_message: str | None = None,
+    ) -> None:
+        """エクスポート履歴をDBに記録.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_id: エクスポートID
+            task_date: タスク日付
+            filename: CSVファイル名
+            wide_row_count: 横持ちデータ行数
+            long_row_count: 縦持ちデータ行数
+            status: ステータス (SUCCESS / FAILED)
+            error_message: エラーメッセージ
+        """
+        try:
+            history = SmartReadExportHistory(
+                config_id=config_id,
+                task_id=task_id,
+                export_id=export_id,
+                task_date=task_date,
+                filename=filename,
+                wide_row_count=wide_row_count,
+                long_row_count=long_row_count,
+                status=status,
+                error_message=error_message,
+            )
+            self.session.add(history)
+            self.session.commit()
+            logger.debug(f"Export history recorded: {task_id} / {export_id}")
+        except Exception as e:
+            logger.error(f"Failed to record export history: {e}")
+            self.session.rollback()
