@@ -181,7 +181,11 @@ export function WarehouseDeliveryRoutesListPage() {
   if (isError) {
     return (
       <div className={styles.root}>
-        <PageHeader title="輸送経路マスタ" subtitle="倉庫→納入先の輸送リードタイム管理" />
+        <PageHeader
+          title="輸送経路マスタ"
+          subtitle="倉庫→納入先の輸送リードタイム管理"
+          backLink={{ to: "/masters", label: "マスタ管理" }}
+        />
         <QueryErrorFallback error={error} resetError={refetch} />
       </div>
     );
@@ -192,6 +196,7 @@ export function WarehouseDeliveryRoutesListPage() {
       <PageHeader
         title="輸送経路マスタ"
         subtitle="倉庫→納入先の輸送リードタイム管理"
+        backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
           <Button onClick={() => setIsCreateOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -254,6 +259,7 @@ export function WarehouseDeliveryRoutesListPage() {
               }
               onPageChange={table.setPage}
               onPageSizeChange={table.setPageSize}
+              pageSizeOptions={[25, 50, 75, 100]}
             />
           </div>
         )}

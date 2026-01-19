@@ -206,6 +206,7 @@ export function ProductsListPage() {
         <PageHeader
           title="商品マスタ"
           subtitle="商品の作成・編集・削除、一括インポート/エクスポート"
+          backLink={{ to: "/masters", label: "マスタ管理" }}
         />
         <QueryErrorFallback error={error} resetError={refetch} />
       </div>
@@ -217,6 +218,7 @@ export function ProductsListPage() {
       <PageHeader
         title="商品マスタ"
         subtitle="商品の作成・編集・削除、一括インポート/エクスポート"
+        backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
           <MasterPageActions
             exportApiPath="masters/products/export/download"
@@ -305,7 +307,7 @@ export function ProductsListPage() {
             totalCount={sortedProducts.length}
             onPageChange={table.setPage}
             onPageSizeChange={table.setPageSize}
-            pageSizeOptions={[25, 50, 100]}
+            pageSizeOptions={[25, 50, 75, 100]}
           />
         )}
       </div>
