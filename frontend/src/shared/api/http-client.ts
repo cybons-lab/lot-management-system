@@ -23,7 +23,7 @@
 import ky, { type KyInstance, type Options, type HTTPError } from "ky";
 
 import { logError } from "@/services/error-logger";
-import { createRequestId, getRequestId } from "@/shared/utils/request-id";
+import { createRequestId } from "@/shared/utils/request-id";
 import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
 
 /**
@@ -101,7 +101,7 @@ function handleNetworkError(error: HTTPError, request: Request): HTTPError {
   logError("HTTP", networkError, {
     url: request?.url,
     method: request?.method,
-    request_id: getRequestId(),
+    request_id: request?.headers.get("X-Request-ID") || undefined,
   });
 
   error.message = networkError.message;
@@ -193,7 +193,7 @@ async function handleApiError(
       method: request?.method,
       status,
       response: body,
-      request_id: getRequestId(),
+      request_id: request?.headers.get("X-Request-ID") || undefined,
     });
   }
 

@@ -12,11 +12,11 @@ JSON形式でのログ出力、リクエストコンテキスト管理、セン�
    → 「在庫不足エラーが何件発生したか」等の集計が必要
    問題:
    - テキスト形式ログ: 解析が困難
-   → \"ERROR: Stock insufficient for product ABC\" を正規表現で抽出
+   → "ERROR: Stock insufficient for product ABC" を正規表現で抽出
    → エラーコード、製品ID等の構造化データが取り出しにくい
    解決:
    - JSON形式ログ
-   → {\"level\": \"ERROR\", \"error_code\": \"INSUFFICIENT_STOCK\", \"product_id\": 123}
+   → {"level": "ERROR", "error_code": "INSUFFICIENT_STOCK", "product_id": 123}
    → ログ分析ツール（Elasticsearch, CloudWatch Insights等）で簡単に集計
    メリット:
    - エラー率の計測
@@ -30,13 +30,13 @@ JSON形式でのログ出力、リクエストコンテキスト管理、セン�
    → グローバル変数: 複数リクエストで値が混ざる
    解決:
    - ContextVar: リクエストごとに独立した変数領域
-   → リクエストA: request_id=\"abc-123\"
-   → リクエストB: request_id=\"def-456\"
+   → リクエストA: request_id="abc-123"
+   → リクエストB: request_id="def-456"
    → 互いに影響しない
    実装:
-   - request_id_var = ContextVar(\"request_id\")
-   - request_id_var.set(\"abc-123\")
-   - request_id_var.get() → \"abc-123\"
+   - request_id_var = ContextVar("request_id")
+   - request_id_var.set("abc-123")
+   - request_id_var.get() → "abc-123"
 
 3. CustomJsonFormatter の設計（L23-113）
    理由: ログレコードに自動的にコンテキスト情報を付与
@@ -52,19 +52,19 @@ JSON形式でのログ出力、リクエストコンテキスト管理、セン�
    5. 環境変数（L84）
       → production, staging, development
    6. センシティブ情報マスキング（L87）
-      → password, token等を \"***MASKED***\" に置換
+      → password, token等を "***MASKED***" に置換
    メリット:
    - 全ログに自動的にコンテキスト付与
-   → logger.info(\"Order created\") だけで、request_id, user_id等が記録される
+   → logger.info("Order created") だけで、request_id, user_id等が記録される
 
 4. set_request_context() と clear_request_context() の分離
    理由: ミドルウェアでのコンテキスト管理
    使用例（RequestLoggingMiddleware）:
    ```python
-   set_request_context(request_id=\"abc-123\", user_id=456)
+   set_request_context(request_id="abc-123", user_id=456)
    try:
        # リクエスト処理
-       logger.info(\"Processing order\")  # request_id, user_id が自動付与
+       logger.info("Processing order")  # request_id, user_id が自動付与
    finally:
        clear_request_context()  # リーク防止
    ```
@@ -81,8 +81,8 @@ JSON形式でのログ出力、リクエストコンテキスト管理、セン�
    - _mask_dict_fields(): ネストされた辞書の再帰的マスキング
    例:
    ```python
-   logger.info(\"User login\", extra={\"username\": \"alice\", \"password\": \"secret\"})
-   # 出力: {\"username\": \"alice\", \"password\": \"***MASKED***\"}
+   logger.info("User login", extra={"username": "alice", "password": "secret"})
+   # 出力: {"username": "alice", "password": "***MASKED***"}
    ```
    業務的意義:
    - GDPR/個人情報保護法への準拠
@@ -97,13 +97,13 @@ JSON形式でのログ出力、リクエストコンテキスト管理、セン�
    → ログ分析ツールで集計
    設計:
    - setup_logging() で環境に応じて切り替え
-   → settings.ENVIRONMENT == \"development\" → ColoredConsoleFormatter
+   → settings.ENVIRONMENT == "development" → ColoredConsoleFormatter
    → それ以外 → CustomJsonFormatter
 
 7. request_id の自動付与の重要性（L69-71）
    理由: 分散ログの追跡
    業務シナリオ:
-   - 営業担当: \"受注登録でエラーが出た\"
+   - 営業担当: "受注登録でエラーが出た"
    → リクエストIDを提供
    - システム管理者: request_id でログ検索
    → 該当リクエストの全ログを時系列で確認
@@ -116,13 +116,13 @@ JSON形式でのログ出力、リクエストコンテキスト管理、セン�
 8. user_id と username の記録（L73-79）
    理由: 監査証跡とトラブルシューティング
    用途:
-   - \"誰が\" という情報を全ログに記録
-   → 在庫調整ログ: {\"user_id\": 123, \"username\": \"alice\", \"action\": \"adjust_stock\"}
+   - "誰が" という情報を全ログに記録
+   → 在庫調整ログ: {"user_id": 123, "username": "alice", "action": "adjust_stock"}
    業務的意義:
    - 不正操作の検出
-   → \"誰が大量の在庫を削除したか\" を特定
+   → "誰が大量の在庫を削除したか" を特定
    - 顧客対応
-   → \"営業担当Aが受注を登録した\" ログを確認
+   → "営業担当Aが受注を登録した" ログを確認
 
 9. environment フィールドの記録（L82-84）
    理由: ログの環境識別
@@ -130,31 +130,30 @@ JSON形式でのログ出力、リクエストコンテキスト管理、セン�
    - 本番環境とステージング環境のログが混在
    → environment フィールドで区別
    - ログ分析時のフィルタリング
-   → \"本番環境でのERRORログのみ検索\"
+   → "本番環境でのERRORログのみ検索"
    設計:
    - settings.ENVIRONMENT から取得
-   → \"production\", \"staging\", \"development\"
+   → "production", "staging", "development"
 
 10. file と function フィールドの重要性（L65-66）
     理由: ログ出力箇所の特定
     出力例:
-    - file: \"app/services/order_service.py:123\"
-    - function: \"create_order\"
+    - file: "app/services/order_service.py:123"
+    - function: "create_order"
     用途:
     - エラー発生時に該当コード行を即座に特定
     → ログからソースコードの該当箇所にジャンプ
     業務的意義:
     - トラブルシューティングの高速化
-    - \"どこでエラーが発生したか\" が一目瞭然
+    - "どこでエラーが発生したか" が一目瞭然
 """
 
 import logging
 import sys
-from queue import SimpleQueue
 from contextvars import ContextVar
-from datetime import UTC, datetime
-from logging.handlers import QueueHandler, QueueListener, RotatingFileHandler
+from logging.handlers import QueueListener, RotatingFileHandler
 from pathlib import Path
+from queue import SimpleQueue
 
 import structlog
 from asgi_correlation_id import correlation_id
@@ -190,6 +189,19 @@ class RequestContextFilter(logging.Filter):
         return True
 
 
+class RollbackFilter(logging.Filter):
+    """SQLAlchemyのROLLBACKログのみを許可するフィルタ."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        # WARNING以上は常に許可
+        if record.levelno >= logging.WARNING:
+            return True
+        # INFO以下でもROLLBACKを含む場合は許可
+        if "ROLLBACK" in record.getMessage():
+            return True
+        return False
+
+
 def _add_request_id(_, __, event_dict: dict) -> dict:
     request_id = event_dict.get("request_id") or correlation_id.get()
     if request_id:
@@ -204,6 +216,14 @@ def _add_environment(_, __, event_dict: dict) -> dict:
     return event_dict
 
 
+def _mask_nested_dict(data: dict, sensitive_fields: list[str]) -> None:
+    for key in list(data.keys()):
+        if any(sensitive in key.lower() for sensitive in sensitive_fields):
+            data[key] = "***MASKED***"
+        elif isinstance(data[key], dict):
+            _mask_nested_dict(data[key], sensitive_fields)
+
+
 def _mask_sensitive_fields(sensitive_fields: list[str]):
     def _masker(_, __, event_dict: dict) -> dict:
         for key in list(event_dict.keys()):
@@ -214,14 +234,6 @@ def _mask_sensitive_fields(sensitive_fields: list[str]):
         return event_dict
 
     return _masker
-
-
-def _mask_nested_dict(data: dict, sensitive_fields: list[str]) -> None:
-    for key in list(data.keys()):
-        if any(sensitive in key.lower() for sensitive in sensitive_fields):
-            data[key] = "***MASKED***"
-        elif isinstance(data[key], dict):
-            _mask_nested_dict(data[key], sensitive_fields)
 
 
 def setup_logging(
@@ -255,7 +267,7 @@ def setup_logging(
         _add_request_id,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso", utc=True, key="timestamp"),
-        structlog.processors.add_logger_name,
+        structlog.stdlib.add_logger_name,
         _add_environment,
         _mask_sensitive_fields(sensitive_fields),
         structlog.processors.StackInfoRenderer(),
@@ -275,13 +287,13 @@ def setup_logging(
         _add_request_id,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso", utc=True, key="timestamp"),
-        structlog.processors.add_logger_name,
+        structlog.stdlib.add_logger_name,
         _add_environment,
         _mask_sensitive_fields(sensitive_fields),
     ]
 
     formatter = ProcessorFormatter(
-        processor=JSONRenderer()
+        processor=JSONRenderer(ensure_ascii=False)
         if json_format
         else structlog.dev.ConsoleRenderer(colors=True),
         foreign_pre_chain=foreign_pre_chain,
@@ -332,7 +344,7 @@ def setup_logging(
         root_logger.addHandler(error_handler)
 
     # DB保存用ログハンドラ（WARNING以上）
-    from app.core.server_log_handler import ServerLogDBHandler
+    from app.core.server_log_handler import ServerLogDBHandler, StructlogQueueHandler
 
     global _queue_listener
     if _queue_listener:
@@ -340,7 +352,7 @@ def setup_logging(
         _queue_listener = None
 
     log_queue: SimpleQueue[logging.LogRecord] = SimpleQueue()
-    queue_handler = QueueHandler(log_queue)
+    queue_handler = StructlogQueueHandler(log_queue)
     queue_handler.setLevel(logging.WARNING)
     queue_handler.addFilter(context_filter)
     root_logger.addHandler(queue_handler)
@@ -353,7 +365,13 @@ def setup_logging(
     # サードパーティライブラリのログレベル調整
     logging.getLogger("uvicorn").setLevel(logging.WARNING)
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+
+    # SQLAlchemy: 基本WARNINGだが、ROLLBACKだけはINFOでも出したい
+    # WARN以上 or "ROLLBACK" を含むINFOログを出力
+    sa_logger = logging.getLogger("sqlalchemy.engine")
+    sa_logger.setLevel(logging.INFO)
+    sa_logger.addFilter(RollbackFilter())
+
     logging.getLogger("sqlalchemy.engine.Engine").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
 
@@ -382,6 +400,8 @@ def set_request_context(
         request_id: リクエストID
         user_id: ユーザーID
         username: ユーザー名
+        method: HTTPメソッド
+        path: リクエストパス
     """
     if request_id:
         request_id_var.set(request_id)
@@ -416,7 +436,9 @@ def get_logger(name: str) -> structlog.stdlib.BoundLogger:
     Returns:
         ロガーインスタンス
     """
-    return structlog.get_logger(name)
+    from typing import cast
+
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(name))
 
 
 # 後方互換性のため、旧関数名も保持

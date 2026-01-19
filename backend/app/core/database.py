@@ -75,7 +75,7 @@ logger = logging.getLogger(__name__)
 # --- Engine ---------------------------------------------------------------
 engine = create_engine(
     settings.DATABASE_URL,
-    echo=settings.ENVIRONMENT == "development",  # 開発時はSQLログ
+    echo=False,  # ログ出力は logging.py で制御（sqlalchemy.engine を使用）
 )
 
 # --- Session --------------------------------------------------------------
