@@ -383,9 +383,17 @@ class SmartReadClient:
             async with httpx.AsyncClient(timeout=timeout) as client:
                 url = self._build_api_url("/v3/task")
                 headers = self._get_headers()
+                logger.info(f"Fetching tasks from SmartRead API: {url}")
+
                 response = await client.get(url, headers=headers)
+
+                if response.status_code != 200:
+                    logger.error(f"SmartRead API Error: {response.status_code} - {response.text}")
+
                 response.raise_for_status()
                 data = response.json()
+                logger.info(f"SmartRead API Response Data: {data}")
+                logger.info(f"Fetched {len(data.get('tasks', []))} tasks from SmartRead API")
 
                 tasks = []
                 for item in data.get("tasks", []):
@@ -401,10 +409,13 @@ class SmartReadClient:
                 return tasks
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"Failed to get tasks: {e.response.status_code}")
+            logger.error(f"Failed to get tasks: {e.response.status_code} - {e.response.text}")
             return []
         except Exception as e:
             logger.error(f"Failed to get tasks: {e}")
+            import traceback
+
+            logger.error(traceback.format_exc())
             return []
 
     async def get_task_requests(self, task_id: str, timeout: float = 30.0) -> list[dict[str, Any]]:
