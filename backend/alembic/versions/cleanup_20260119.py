@@ -89,7 +89,7 @@ LEGACY_FILES = [
 def upgrade() -> None:
     """Archive legacy migration files to archive/ directory."""
     versions_dir = Path(__file__).parent
-    archive_dir = versions_dir / "archive"
+    archive_dir = versions_dir.parent / "archive"  # alembic/archive/ (outside versions/)
 
     # Create archive directory if it doesn't exist
     archive_dir.mkdir(exist_ok=True)
@@ -112,7 +112,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Restore legacy migration files from archive/ directory."""
     versions_dir = Path(__file__).parent
-    archive_dir = versions_dir / "archive"
+    archive_dir = versions_dir.parent / "archive"  # alembic/archive/ (outside versions/)
 
     if not archive_dir.exists():
         print("[cleanup_20260119] Archive directory does not exist, nothing to restore.")
