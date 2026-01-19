@@ -197,6 +197,7 @@ export function MastersPage() {
   );
 }
 
+// eslint-disable-next-line max-lines-per-function
 function MasterStatusAlert() {
   const { data: status } = useMasterStatus();
 
@@ -204,8 +205,16 @@ function MasterStatusAlert() {
 
   const hasUnmappedCustomerItems = status.unmapped_customer_items_count > 0;
   const hasUnmappedProducts = status.unmapped_products_count > 0;
+  const hasUnmappedDeliverySettings = status.unmapped_customer_item_delivery_settings_count > 0;
+  const isMissingPrimaryAssignments = !status.current_user_has_primary_assignments;
 
-  if (!hasUnmappedCustomerItems && !hasUnmappedProducts) return null;
+  if (
+    !hasUnmappedCustomerItems &&
+    !hasUnmappedProducts &&
+    !hasUnmappedDeliverySettings &&
+    !isMissingPrimaryAssignments
+  )
+    return null;
 
   return (
     <div className="space-y-4">
@@ -237,6 +246,37 @@ function MasterStatusAlert() {
               className="ml-1 font-medium underline hover:text-red-950"
             >
               仕入先別製品設定を確認
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
+      {hasUnmappedDeliverySettings && (
+        <Alert variant="destructive" className="border-red-200 bg-red-50 text-red-900">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>要確認: 納入先設定が未完了のデータがあります</AlertTitle>
+          <AlertDescription>
+            納入先が設定されていない得意先商品が{" "}
+            <strong>{status.unmapped_customer_item_delivery_settings_count}件</strong> あります。
+            <Link
+              to={ROUTES.MASTERS.CUSTOMER_ITEMS}
+              className="ml-1 font-medium underline hover:text-red-950"
+            >
+              得意先品番マッピングを確認
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
+      {isMissingPrimaryAssignments && (
+        <Alert className="border-blue-200 bg-blue-50 text-blue-900">
+          <AlertCircle className="h-4 w-4 text-blue-900" />
+          <AlertTitle>お知らせ: 主担当が設定されていません</AlertTitle>
+          <AlertDescription>
+            あなたの主担当仕入先が設定されていません。業務を円滑に進めるため、設定を行ってください。
+            <Link
+              to="/masters/primary-assignments"
+              className="ml-1 font-medium underline hover:text-blue-950"
+            >
+              主担当設定を確認
             </Link>
           </AlertDescription>
         </Alert>

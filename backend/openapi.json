@@ -17593,7 +17593,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/ocr/import": {
@@ -20144,6 +20149,19 @@
             "minLength": 1,
             "title": "Customer Name"
           },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
+          },
           "address": {
             "anyOf": [
               {
@@ -20233,6 +20251,19 @@
             "maxLength": 200,
             "minLength": 1,
             "title": "Customer Name"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
           },
           "address": {
             "anyOf": [
@@ -20896,6 +20927,17 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name"
           }
         },
         "type": "object",
@@ -21597,6 +21639,19 @@
             "minLength": 1,
             "title": "Customer Name"
           },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
+          },
           "address": {
             "anyOf": [
               {
@@ -21704,6 +21759,19 @@
               }
             ],
             "title": "Customer Name"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
           },
           "address": {
             "anyOf": [
@@ -22011,6 +22079,19 @@
             "minLength": 1,
             "title": "Delivery Place Name"
           },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
+          },
           "customer_id": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
@@ -22085,6 +22166,19 @@
             "maxLength": 200,
             "minLength": 1,
             "title": "Delivery Place Name"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
           },
           "customer_id": {
             "type": "integer",
@@ -22163,6 +22257,19 @@
               }
             ],
             "title": "Delivery Place Name"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
           },
           "customer_id": {
             "anyOf": [
@@ -31437,6 +31544,19 @@
             "maxLength": 200,
             "minLength": 1,
             "title": "Supplier Name"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
           }
         },
         "type": "object",
@@ -31479,6 +31599,19 @@
             "maxLength": 200,
             "minLength": 1,
             "title": "Supplier Name"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
           }
         },
         "type": "object",
@@ -31681,6 +31814,19 @@
             "minLength": 1,
             "title": "Supplier Name"
           },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -31740,6 +31886,19 @@
               }
             ],
             "title": "Supplier Name"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
           }
         },
         "type": "object",
@@ -32491,6 +32650,19 @@
             ],
             "title": "Default Transport Lead Time Days",
             "description": "デフォルト輸送リードタイム（日）"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
           }
         },
         "type": "object",
@@ -32553,6 +32725,19 @@
             ],
             "title": "Default Transport Lead Time Days",
             "description": "デフォルト輸送リードタイム（日）"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
           }
         },
         "type": "object",
@@ -32849,6 +33034,19 @@
             "title": "Default Transport Lead Time Days",
             "description": "デフォルト輸送リードタイム（日）"
           },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -32935,6 +33133,19 @@
             ],
             "title": "Default Transport Lead Time Days",
             "description": "デフォルト輸送リードタイム（日）"
+          },
+          "short_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Name",
+            "description": "短縮表示名"
           }
         },
         "type": "object",

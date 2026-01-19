@@ -1,22 +1,31 @@
 """Master status router."""
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
+from app.infrastructure.persistence.models.assignments.assignment_models import (
+    UserSupplierAssignment,
+)
+from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.masters_models import (
     CustomerItem,
+    CustomerItemDeliverySetting,
     Product,
 )
 from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
 from app.presentation.api.deps import get_db
+from app.presentation.api.routes.auth.auth_router import get_current_user
 
 
 router = APIRouter()
 
 
 @router.get("/status")
-def get_master_status(db: Session = Depends(get_db)):
+def get_master_status(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Get master data status including unmapped counts."""
     # 1. Unmapped Customer Items (No supplier assigned)
     unmapped_customer_items_count = (
@@ -34,7 +43,40 @@ def get_master_status(db: Session = Depends(get_db)):
         .scalar()
     )
 
+    # 3. Unmapped Customer Item Delivery Settings
+    # customer_items table LEFT JOIN customer_item_delivery_settings
+    # JOIN condition: customer_id AND external_product_code
+    unmapped_customer_item_delivery_settings_count = (
+        db.query(func.count(CustomerItem.customer_id))
+        .outerjoin(
+            CustomerItemDeliverySetting,
+            and_(
+                CustomerItem.customer_id == CustomerItemDeliverySetting.customer_id,
+                CustomerItem.external_product_code
+                == CustomerItemDeliverySetting.external_product_code,
+            ),
+        )
+        .filter(
+            CustomerItemDeliverySetting.id.is_(None),
+            CustomerItem.supplier_id.isnot(None),
+        )
+        .scalar()
+    )
+
+    # 4. Current User Primary Assignment Check
+    current_user_has_primary_assignments = (
+        db.query(UserSupplierAssignment)
+        .filter(
+            UserSupplierAssignment.user_id == current_user.id,
+            UserSupplierAssignment.is_primary.is_(True),
+        )
+        .first()
+        is not None
+    )
+
     return {
         "unmapped_customer_items_count": unmapped_customer_items_count,
         "unmapped_products_count": unmapped_products_count,
+        "unmapped_customer_item_delivery_settings_count": unmapped_customer_item_delivery_settings_count,
+        "current_user_has_primary_assignments": current_user_has_primary_assignments,
     }

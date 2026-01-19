@@ -32,6 +32,13 @@ export function CustomerFormFields({ register, errors }: CustomerFormFieldsProps
         required
       />
       <FormField
+        id="short_name"
+        label="短縮名"
+        register={register("short_name")}
+        error={errors.short_name}
+        placeholder="例: サンプル"
+      />
+      <FormField
         id="address"
         label="住所"
         register={register("address")}

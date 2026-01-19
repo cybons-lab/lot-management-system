@@ -20,6 +20,11 @@ import {
 const warehouseFormSchema = z.object({
   warehouse_code: z.string().min(1, "倉庫コードは必須です").max(50),
   warehouse_name: z.string().min(1, "倉庫名は必須です").max(200),
+  short_name: z
+    .string()
+    .max(50, "短縮名は50文字以内で入力してください")
+    .optional()
+    .or(z.literal("")),
   warehouse_type: z.enum(["internal", "external", "supplier"]),
   default_transport_lead_time_days: z.coerce.number().min(0).optional(),
 });
@@ -51,6 +56,7 @@ export function WarehouseForm({
     defaultValues: {
       warehouse_code: warehouse?.warehouse_code ?? "",
       warehouse_name: warehouse?.warehouse_name ?? "",
+      short_name: warehouse?.short_name ?? "",
       warehouse_type:
         (warehouse?.warehouse_type as "internal" | "external" | "supplier") ?? "internal",
       default_transport_lead_time_days: warehouse?.default_transport_lead_time_days ?? undefined,
@@ -89,6 +95,19 @@ export function WarehouseForm({
         {errors.warehouse_name && (
           <p className={formStyles.error}>{errors.warehouse_name.message}</p>
         )}
+      </div>
+
+      <div className={formStyles.field}>
+        <Label htmlFor="short_name" className={formStyles.label}>
+          短縮名
+        </Label>
+        <Input
+          id="short_name"
+          {...register("short_name")}
+          placeholder="例: 東京1"
+          className={formStyles.input}
+        />
+        {errors.short_name && <p className={formStyles.error}>{errors.short_name.message}</p>}
       </div>
 
       <div className={formStyles.field}>

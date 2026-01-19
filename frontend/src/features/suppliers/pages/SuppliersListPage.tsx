@@ -315,6 +315,7 @@ export function SuppliersListPage() {
         <PageHeader
           title="仕入先マスタ"
           subtitle="仕入先の作成・編集・削除、一括インポート/エクスポート"
+          backLink={{ to: "/masters", label: "マスタ管理" }}
         />
         <QueryErrorFallback error={error} resetError={refetch} />
       </div>
@@ -326,6 +327,7 @@ export function SuppliersListPage() {
       <PageHeader
         title="仕入先マスタ"
         subtitle="仕入先の作成・編集・削除、一括インポート/エクスポート"
+        backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
           <MasterPageActions
             exportApiPath="masters/suppliers/export/download"
@@ -414,7 +416,7 @@ export function SuppliersListPage() {
             totalCount={sortedSuppliers.length}
             onPageChange={table.setPage}
             onPageSizeChange={table.setPageSize}
-            pageSizeOptions={[25, 50, 100]}
+            pageSizeOptions={[25, 50, 75, 100]}
           />
         )}
       </div>

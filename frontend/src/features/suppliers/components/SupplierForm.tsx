@@ -13,6 +13,11 @@ import { Button, Input, Label } from "@/components/ui";
 const supplierFormSchema = z.object({
   supplier_code: z.string().min(1, "仕入先コードは必須です").max(50),
   supplier_name: z.string().min(1, "仕入先名は必須です").max(200),
+  short_name: z
+    .string()
+    .max(50, "短縮名は50文字以内で入力してください")
+    .optional()
+    .or(z.literal("")),
 });
 
 type SupplierFormData = z.infer<typeof supplierFormSchema>;
@@ -24,6 +29,7 @@ export interface SupplierFormProps {
   isSubmitting?: boolean;
 }
 
+// eslint-disable-next-line complexity
 export function SupplierForm({
   supplier,
   onSubmit,
@@ -40,6 +46,7 @@ export function SupplierForm({
     defaultValues: {
       supplier_code: supplier?.supplier_code ?? "",
       supplier_name: supplier?.supplier_name ?? "",
+      short_name: supplier?.short_name ?? "",
     },
   });
 
@@ -69,6 +76,19 @@ export function SupplierForm({
           className={formStyles.input}
         />
         {errors.supplier_name && <p className={formStyles.error}>{errors.supplier_name.message}</p>}
+      </div>
+
+      <div className={formStyles.field}>
+        <Label htmlFor="short_name" className={formStyles.label}>
+          短縮名
+        </Label>
+        <Input
+          id="short_name"
+          {...register("short_name")}
+          placeholder="例: サンプル"
+          className={formStyles.input}
+        />
+        {errors.short_name && <p className={formStyles.error}>{errors.short_name.message}</p>}
       </div>
 
       <div className="flex justify-end gap-2 pt-4">

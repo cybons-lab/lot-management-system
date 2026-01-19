@@ -134,6 +134,10 @@ export function SupplierDetailPage() {
               <p className="text-lg">{supplier.supplier_name}</p>
             </div>
             <div className={styles.form.field}>
+              <span className={styles.form.label}>短縮名</span>
+              <p className="text-lg">{supplier.short_name || "-"}</p>
+            </div>
+            <div className={styles.form.field}>
               <span className={styles.form.label}>作成日時</span>
               <p className="text-gray-600">
                 {new Date(supplier.created_at).toLocaleString("ja-JP")}

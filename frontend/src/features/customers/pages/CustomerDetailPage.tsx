@@ -158,6 +158,10 @@ export function CustomerDetailPage() {
               <p className="text-lg">{customer.customer_name}</p>
             </div>
             <div className={styles.form.field}>
+              <span className={styles.form.label}>短縮名</span>
+              <p className="text-lg">{customer.short_name || "-"}</p>
+            </div>
+            <div className={styles.form.field}>
               <span className={styles.form.label}>作成日時</span>
               <p className="text-gray-600">
                 {new Date(customer.created_at).toLocaleString("ja-JP")}

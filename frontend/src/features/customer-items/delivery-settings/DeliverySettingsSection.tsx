@@ -2,8 +2,11 @@
  * DeliverySettingsSection
  * 得意先品番-納入先別設定の一覧と編集セクション
  */
+import { useQuery } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+
+import { fetchDeliveryPlaces } from "../../delivery-places/api";
 
 import type { CreateDeliverySettingRequest, CustomerItemDeliverySetting } from "./api";
 import { useDeliverySettings } from "./useDeliverySettings";
@@ -26,6 +29,12 @@ export function DeliverySettingsSection({
     customerId,
     externalProductCode,
   );
+
+  const { data: deliveryPlaces = [] } = useQuery({
+    queryKey: ["delivery-places", customerId],
+    queryFn: () => fetchDeliveryPlaces({ customerId }),
+    enabled: Boolean(customerId),
+  });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<CreateDeliverySettingRequest>>({});
@@ -74,6 +83,7 @@ export function DeliverySettingsSection({
         setFormData={setFormData}
         onSubmit={handleSubmit}
         isCreating={isCreating}
+        deliveryPlaces={deliveryPlaces}
       />
     </div>
   );
@@ -93,7 +103,7 @@ function SettingsTable({ settings, onDelete, isDeleting }: SettingsTableProps) {
       <table className="min-w-full divide-y divide-slate-200">
         <thead className="bg-slate-50">
           <tr>
-            <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">納入先ID</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">納入先名</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">次区コード</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">出荷テキスト</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">デフォルト</th>
@@ -103,7 +113,9 @@ function SettingsTable({ settings, onDelete, isDeleting }: SettingsTableProps) {
         <tbody className="divide-y divide-slate-200">
           {settings.map((setting) => (
             <tr key={setting.id} className="hover:bg-slate-50">
-              <td className="px-4 py-2 text-sm">{setting.delivery_place_id ?? "-"}</td>
+              <td className="px-4 py-2 text-sm">
+                {setting.delivery_place_name || setting.delivery_place_id || "-"}
+              </td>
               <td className="px-4 py-2 text-sm">{setting.jiku_code ?? "-"}</td>
               <td className="px-4 py-2 text-sm">
                 <span className="max-w-xs truncate" title={setting.shipment_text ?? undefined}>
@@ -138,6 +150,7 @@ function SettingsTable({ settings, onDelete, isDeleting }: SettingsTableProps) {
   );
 }
 
+// In AddSettingDialogProps and DeliverySettingFormProps interfaces, add deliveryPlaces
 interface AddSettingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -145,6 +158,16 @@ interface AddSettingDialogProps {
   setFormData: (data: Partial<CreateDeliverySettingRequest>) => void;
   onSubmit: (e: React.FormEvent) => void;
   isCreating: boolean;
+  deliveryPlaces: { id: number; delivery_place_name: string }[];
+}
+
+interface DeliverySettingFormProps {
+  formData: Partial<CreateDeliverySettingRequest>;
+  setFormData: (data: Partial<CreateDeliverySettingRequest>) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
+  isCreating: boolean;
+  deliveryPlaces: { id: number; delivery_place_name: string }[];
 }
 
 function AddSettingDialog({
@@ -154,6 +177,7 @@ function AddSettingDialog({
   setFormData,
   onSubmit,
   isCreating,
+  deliveryPlaces,
 }: AddSettingDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -167,18 +191,11 @@ function AddSettingDialog({
           onSubmit={onSubmit}
           onCancel={() => onOpenChange(false)}
           isCreating={isCreating}
+          deliveryPlaces={deliveryPlaces}
         />
       </DialogContent>
     </Dialog>
   );
-}
-
-interface DeliverySettingFormProps {
-  formData: Partial<CreateDeliverySettingRequest>;
-  setFormData: (data: Partial<CreateDeliverySettingRequest>) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  onCancel: () => void;
-  isCreating: boolean;
 }
 
 // eslint-disable-next-line max-lines-per-function -- Form fields are best kept together
@@ -188,16 +205,16 @@ function DeliverySettingForm({
   onSubmit,
   onCancel,
   isCreating,
+  deliveryPlaces,
 }: DeliverySettingFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
         <Label htmlFor="delivery_place_id" className="mb-1 block text-sm">
-          納入先ID
+          納入先
         </Label>
-        <Input
+        <select
           id="delivery_place_id"
-          type="number"
           value={formData.delivery_place_id ?? ""}
           onChange={(e) =>
             setFormData({
@@ -205,19 +222,30 @@ function DeliverySettingForm({
               delivery_place_id: e.target.value ? Number(e.target.value) : null,
             })
           }
-          placeholder="省略時はデフォルト設定"
-        />
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        >
+          <option value="">（選択なし：デフォルト設定）</option>
+          {deliveryPlaces.map((place) => (
+            <option key={place.id} value={place.id}>
+              {place.delivery_place_name}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-slate-500">
+          ※選択しない場合は、次区に一致するすべての納入先に適用されます
+        </p>
       </div>
       <div>
         <Label htmlFor="jiku_code" className="mb-1 block text-sm">
-          次区コード
+          次区コード <span className="text-red-500">*</span>
         </Label>
         <Input
           id="jiku_code"
           type="text"
           value={formData.jiku_code ?? ""}
           onChange={(e) => setFormData({ ...formData, jiku_code: e.target.value || null })}
-          placeholder="省略時は全次区共通"
+          placeholder="次区コードを入力"
+          required
         />
       </div>
       <div>

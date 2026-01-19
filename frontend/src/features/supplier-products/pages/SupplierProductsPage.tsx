@@ -86,8 +86,8 @@ export function SupplierProductsPage() {
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
       <PageHeader
-        title="仕入先商品"
-        subtitle="仕入先別の商品情報を管理します"
+        title="仕入先別製品設定"
+        subtitle="仕入先別の製品情報を管理します"
         actions={
           <MasterPageActions
             exportApiPath="masters/supplier-products/export/download"

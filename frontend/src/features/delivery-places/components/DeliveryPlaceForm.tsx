@@ -26,6 +26,11 @@ import {
 const schema = z.object({
   delivery_place_code: z.string().min(1, "納入先コードは必須です"),
   delivery_place_name: z.string().min(1, "納入先名は必須です"),
+  short_name: z
+    .string()
+    .max(50, "短縮名は50文字以内で入力してください")
+    .optional()
+    .or(z.literal("")),
   customer_id: z.coerce.number().min(1, "得意先を選択してください"),
   jiku_code: z.string().optional(),
 });
@@ -36,6 +41,7 @@ interface DeliveryPlaceFormProps {
   initialData?: {
     delivery_place_code?: string;
     delivery_place_name?: string;
+    short_name?: string | null;
     customer_id?: number;
     jiku_code?: string | null;
   };
@@ -60,6 +66,7 @@ export function DeliveryPlaceForm({
     defaultValues: {
       delivery_place_code: initialData?.delivery_place_code ?? "",
       delivery_place_name: initialData?.delivery_place_name ?? "",
+      short_name: initialData?.short_name ?? "",
       customer_id: initialData?.customer_id ?? 0,
       jiku_code: initialData?.jiku_code ?? "",
     },
@@ -97,6 +104,20 @@ export function DeliveryPlaceForm({
               <FormLabel>納入先名</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="例: 東京第一倉庫" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="short_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>短縮名（任意）</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="例: 東京1" />
               </FormControl>
               <FormMessage />
             </FormItem>

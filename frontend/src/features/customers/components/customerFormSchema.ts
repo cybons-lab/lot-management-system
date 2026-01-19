@@ -14,6 +14,11 @@ export const customerFormSchema = z.object({
     .string()
     .min(1, "得意先名は必須です")
     .max(200, "得意先名は200文字以内で入力してください"),
+  short_name: z
+    .string()
+    .max(50, "短縮名は50文字以内で入力してください")
+    .optional()
+    .or(z.literal("")),
   address: z.string().max(500, "住所は500文字以内で入力してください").optional().or(z.literal("")),
   contact_name: z
     .string()

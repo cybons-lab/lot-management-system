@@ -49,6 +49,7 @@ class CustomerItemDeliverySettingResponse(CustomerItemDeliverySettingBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    delivery_place_name: str | None = None
 
     class Config:
         """Pydantic config."""

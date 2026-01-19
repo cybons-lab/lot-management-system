@@ -141,6 +141,10 @@ export function WarehouseDetailPage() {
               <p className="text-lg">{warehouse.warehouse_name}</p>
             </div>
             <div className={styles.form.field}>
+              <span className={styles.form.label}>短縮名</span>
+              <p className="text-lg">{warehouse.short_name || "-"}</p>
+            </div>
+            <div className={styles.form.field}>
               <span className={styles.form.label}>タイプ</span>
               <p>{warehouseTypeLabels[warehouse.warehouse_type] ?? warehouse.warehouse_type}</p>
             </div>

@@ -29,9 +29,15 @@ class CustomerItemDeliverySettingRepository:
         external_product_code: str,
     ) -> list[CustomerItemDeliverySetting]:
         """Find all settings for a customer item."""
-        stmt = select(CustomerItemDeliverySetting).where(
-            CustomerItemDeliverySetting.customer_id == customer_id,
-            CustomerItemDeliverySetting.external_product_code == external_product_code,
+        from sqlalchemy.orm import joinedload
+
+        stmt = (
+            select(CustomerItemDeliverySetting)
+            .options(joinedload(CustomerItemDeliverySetting.delivery_place))
+            .where(
+                CustomerItemDeliverySetting.customer_id == customer_id,
+                CustomerItemDeliverySetting.external_product_code == external_product_code,
+            )
         )
         return list(self.db.execute(stmt).scalars().all())
 

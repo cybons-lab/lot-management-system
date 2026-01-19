@@ -31,6 +31,7 @@ class WarehouseBase(BaseSchema):
     default_transport_lead_time_days: int | None = Field(
         None, ge=0, description="デフォルト輸送リードタイム（日）"
     )
+    short_name: str | None = Field(None, max_length=50, description="短縮表示名")
 
 
 class WarehouseCreate(WarehouseBase):
@@ -50,6 +51,7 @@ class WarehouseUpdate(BaseSchema):
     default_transport_lead_time_days: int | None = Field(
         None, ge=0, description="デフォルト輸送リードタイム（日）"
     )
+    short_name: str | None = Field(None, max_length=50, description="短縮表示名")
 
 
 class WarehouseResponse(WarehouseBase):
@@ -85,6 +87,7 @@ class SupplierBase(BaseSchema):
 
     supplier_code: str = Field(..., min_length=1, max_length=50)
     supplier_name: str = Field(..., min_length=1, max_length=200)
+    short_name: str | None = Field(None, max_length=50, description="短縮表示名")
 
 
 class SupplierCreate(SupplierBase):
@@ -98,6 +101,7 @@ class SupplierUpdate(BaseSchema):
 
     supplier_code: str | None = Field(None, min_length=1, max_length=50)
     supplier_name: str | None = Field(None, min_length=1, max_length=200)
+    short_name: str | None = Field(None, max_length=50, description="短縮表示名")
 
 
 class SupplierResponse(SupplierBase):
@@ -133,6 +137,7 @@ class CustomerBase(BaseSchema):
 
     customer_code: str = Field(..., min_length=1, max_length=50)
     customer_name: str = Field(..., min_length=1, max_length=200)
+    short_name: str | None = Field(None, max_length=50, description="短縮表示名")
     address: str | None = Field(None, max_length=500)
     contact_name: str | None = Field(None, max_length=100)
     phone: str | None = Field(None, max_length=50)
@@ -150,6 +155,7 @@ class CustomerUpdate(BaseSchema):
 
     customer_code: str | None = Field(None, min_length=1, max_length=50)
     customer_name: str | None = Field(None, min_length=1, max_length=200)
+    short_name: str | None = Field(None, max_length=50, description="短縮表示名")
     address: str | None = Field(None, max_length=500)
     contact_name: str | None = Field(None, max_length=100)
     phone: str | None = Field(None, max_length=50)
@@ -190,6 +196,7 @@ class DeliveryPlaceBase(BaseSchema):
     jiku_code: str | None = Field(None, max_length=50, description="次区コード(SAP連携用)")
     delivery_place_code: str = Field(..., min_length=1, max_length=50)
     delivery_place_name: str = Field(..., min_length=1, max_length=200)
+    short_name: str | None = Field(None, max_length=50, description="短縮表示名")
     customer_id: int = Field(..., gt=0)
 
 
@@ -205,6 +212,7 @@ class DeliveryPlaceUpdate(BaseSchema):
     delivery_place_code: str | None = Field(None, min_length=1, max_length=50)
     jiku_code: str | None = Field(None, max_length=50)
     delivery_place_name: str | None = Field(None, min_length=1, max_length=200)
+    short_name: str | None = Field(None, max_length=50, description="短縮表示名")
     customer_id: int | None = Field(None, gt=0)
 
 

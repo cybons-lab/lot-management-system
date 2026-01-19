@@ -5,6 +5,8 @@ import { http } from "@/shared/api/http-client";
 export interface MasterStatusResponse {
   unmapped_customer_items_count: number;
   unmapped_products_count: number;
+  unmapped_customer_item_delivery_settings_count: number;
+  current_user_has_primary_assignments: boolean;
 }
 
 export const useMasterStatus = () => {

@@ -26,6 +26,7 @@ export interface CustomerFormProps {
 const EMPTY_DEFAULTS: CustomerFormData = {
   customer_code: "",
   customer_name: "",
+  short_name: "",
   address: "",
   contact_name: "",
   phone: "",
@@ -55,6 +56,7 @@ export function CustomerForm({
       ? {
           customer_code: customer.customer_code,
           customer_name: customer.customer_name,
+          short_name: customer.short_name || "",
           address: customer.address || "",
           contact_name: customer.contact_name || "",
           phone: customer.phone || "",
