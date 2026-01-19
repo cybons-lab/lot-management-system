@@ -38,12 +38,12 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
   const createExportMutation = useCreateExport();
   const { data: exportStatus } = useExportStatus(configId, taskId, exportId);
 
-  const { data: csvResult, isLoading: isCsvLoading } = useExportCsvData(
+  const { data: csvResult, isLoading: isCsvLoading } = useExportCsvData({
     configId,
     taskId,
     exportId,
-    exportStatus?.state === "COMPLETED",
-  );
+    isExportDone: exportStatus?.state === "COMPLETED",
+  });
 
   useEffect(() => {
     if (configId && taskId && !exportId) {

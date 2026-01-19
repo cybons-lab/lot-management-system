@@ -16,10 +16,12 @@ import {
   getWatchDirFiles,
   processWatchDirFiles,
   getTasks,
+  getManagedTasks,
   createExport,
   getExportStatus,
   getExportCsvData,
   transformCsv,
+  updateSkipToday,
 } from "./api";
 
 import { ApiError } from "@/utils/errors/custom-errors";
@@ -205,6 +207,18 @@ export function useSmartReadTasks(configId: number | null, enabled: boolean = fa
 }
 
 /**
+ * 管理タスク一覧を取得
+ */
+export function useManagedTasks(configId: number | null, enabled: boolean = true) {
+  return useQuery({
+    queryKey: configId ? [...QUERY_KEYS.config(configId), "managed-tasks"] : [],
+    queryFn: () => (configId ? getManagedTasks(configId) : Promise.resolve([])),
+    enabled: !!configId && enabled,
+    staleTime: 1000 * 60 * 5, // 5分キャッシュ
+  });
+}
+
+/**
  * エクスポートを作成
  */
 export function useCreateExport() {
@@ -257,20 +271,24 @@ export function useExportStatus(
 /**
  * エクスポートからCSVデータを取得
  */
-export function useExportCsvData(
-  configId: number | null,
-  taskId: string | null,
-  exportId: string | null,
-  isExportDone: boolean = false,
-) {
+export function useExportCsvData(options: {
+  configId: number | null;
+  taskId: string | null;
+  exportId: string | null;
+  isExportDone?: boolean;
+  saveToDb?: boolean;
+  taskDate?: string;
+}) {
+  const { configId, taskId, exportId, isExportDone = false, saveToDb = true, taskDate } = options;
+
   return useQuery({
     queryKey:
       configId && taskId && exportId
-        ? [...QUERY_KEYS.config(configId), "csv", taskId, exportId]
+        ? [...QUERY_KEYS.config(configId), "csv", taskId, exportId, saveToDb, taskDate]
         : [],
     queryFn: () =>
       configId && taskId && exportId
-        ? getExportCsvData(configId, taskId, exportId)
+        ? getExportCsvData({ configId, taskId, exportId, saveToDb, taskDate })
         : Promise.resolve(null),
     enabled: !!configId && !!taskId && !!exportId && isExportDone,
     staleTime: 1000 * 60 * 10, // CSVデータは10分キャッシュ
@@ -339,3 +357,23 @@ export const downloadCsv = (data: Record<string, unknown>[], filename: string) =
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 };
+
+/**
+ * skip_todayフラグを更新
+ */
+export function useUpdateSkipToday() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ taskId, skipToday }: { taskId: string; skipToday: boolean }) =>
+      updateSkipToday(taskId, skipToday),
+    onSuccess: (_, { taskId }) => {
+      // 管理タスク一覧を更新
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.all, "managed-tasks"] });
+      toast.success(`タスク ${taskId} のスキップ設定を${_.skip_today ? "有効" : "無効"}にしました`);
+    },
+    onError: (error: Error) => {
+      toast.error(`スキップ設定の更新に失敗しました: ${error.message}`);
+    },
+  });
+}

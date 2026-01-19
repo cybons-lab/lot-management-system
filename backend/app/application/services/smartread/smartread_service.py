@@ -614,6 +614,16 @@ class SmartReadService:
                 filename=csv_filename,
             )
 
+        # export_dirが設定されている場合、縦持ちデータをCSV出力
+        config = self.get_config(config_id)
+        if config and config.export_dir and result.long_data:
+            self._save_long_data_to_csv(
+                export_dir=config.export_dir,
+                long_data=result.long_data,
+                task_id=task_id,
+                task_date=task_date if task_date else date.today(),
+            )
+
         return {
             "wide_data": wide_data,
             "long_data": result.long_data,
@@ -812,3 +822,46 @@ class SmartReadService:
         if task:
             task.skip_today = skip
             self.session.flush()
+
+    def _save_long_data_to_csv(
+        self,
+        export_dir: str,
+        long_data: list[dict[str, Any]],
+        task_id: str,
+        task_date: date,
+    ) -> None:
+        """縦持ちデータをCSVファイルに保存.
+
+        Args:
+            export_dir: 出力先ディレクトリ
+            long_data: 縦持ちデータ
+            task_id: タスクID
+            task_date: タスク日付
+        """
+        import os
+        from pathlib import Path
+
+        if not long_data:
+            return
+
+        try:
+            export_path = Path(export_dir)
+            if not export_path.exists():
+                os.makedirs(export_path, exist_ok=True)
+
+            # ファイル名: long_data_{task_id}_{YYYYMMDD}.csv
+            date_str = task_date.strftime("%Y%m%d")
+            csv_filename = f"long_data_{task_id}_{date_str}.csv"
+            csv_path = export_path / csv_filename
+
+            # CSVとして出力
+            with open(csv_path, "w", encoding="utf-8-sig", newline="") as f:
+                if long_data:
+                    writer = csv.DictWriter(f, fieldnames=long_data[0].keys())
+                    writer.writeheader()
+                    writer.writerows(long_data)
+
+            logger.info(f"Saved long data to CSV: {csv_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to save long data to CSV: {e}")

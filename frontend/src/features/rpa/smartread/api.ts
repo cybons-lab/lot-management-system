@@ -181,6 +181,18 @@ export interface SmartReadTransformResponse {
   errors: SmartReadValidationError[];
 }
 
+export interface SmartReadTaskDetail {
+  id: number;
+  config_id: number;
+  task_id: string;
+  task_date: string;
+  name: string | null;
+  state: string | null;
+  synced_at: string | null;
+  skip_today: boolean;
+  created_at: string;
+}
+
 /**
  * タスク一覧を取得
  */
@@ -194,6 +206,23 @@ export async function getTasks(configId: number): Promise<SmartReadTaskListRespo
     return res;
   } catch (error) {
     console.error(`[SmartRead API] Error fetching tasks:`, error);
+    throw error;
+  }
+}
+
+/**
+ * 管理タスク一覧を取得
+ */
+export async function getManagedTasks(configId: number): Promise<SmartReadTaskDetail[]> {
+  console.log(`[SmartRead API] Fetching managed tasks for configId: ${configId}`);
+  try {
+    const res = await http.get<SmartReadTaskDetail[]>(
+      `rpa/smartread/managed-tasks?config_id=${configId}`,
+    );
+    console.log(`[SmartRead API] Fetched managed tasks:`, res);
+    return res;
+  } catch (error) {
+    console.error(`[SmartRead API] Error fetching managed tasks:`, error);
     throw error;
   }
 }
@@ -227,13 +256,23 @@ export async function getExportStatus(
 /**
  * エクスポートからCSVデータを取得（横持ち・縦持ち両方）
  */
-export async function getExportCsvData(
-  configId: number,
-  taskId: string,
-  exportId: string,
-): Promise<SmartReadCsvDataResponse> {
+export async function getExportCsvData(options: {
+  configId: number;
+  taskId: string;
+  exportId: string;
+  saveToDb?: boolean;
+  taskDate?: string;
+}): Promise<SmartReadCsvDataResponse> {
+  const { configId, taskId, exportId, saveToDb = true, taskDate } = options;
+  const params = new URLSearchParams({
+    config_id: configId.toString(),
+    save_to_db: saveToDb.toString(),
+  });
+  if (taskDate) {
+    params.append("task_date", taskDate);
+  }
   return http.get<SmartReadCsvDataResponse>(
-    `rpa/smartread/tasks/${taskId}/export/${exportId}/csv?config_id=${configId}`,
+    `rpa/smartread/tasks/${taskId}/export/${exportId}/csv?${params}`,
   );
 }
 
@@ -248,4 +287,24 @@ export async function transformCsv(
     wide_data: wideData,
     skip_empty: skipEmpty,
   });
+}
+
+/**
+ * skip_todayフラグを更新
+ */
+export async function updateSkipToday(
+  taskId: string,
+  skipToday: boolean,
+): Promise<SmartReadTaskDetail> {
+  console.log(`[SmartRead API] Updating skip_today for task ${taskId} to ${skipToday}`);
+  try {
+    const res = await http.put<SmartReadTaskDetail>(`rpa/smartread/tasks/${taskId}/skip-today`, {
+      skip_today: skipToday,
+    });
+    console.log(`[SmartRead API] Updated skip_today:`, res);
+    return res;
+  } catch (error) {
+    console.error(`[SmartRead API] Error updating skip_today:`, error);
+    throw error;
+  }
 }
