@@ -47,10 +47,12 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
 
   useEffect(() => {
     if (configId && taskId && !exportId) {
+      console.log(`[ResultView] Initializing export for task ${taskId}...`);
       createExportMutation.mutate(
         { configId, taskId },
         {
           onSuccess: (data) => {
+            console.log(`[ResultView] Export initialized. ID: ${data.export_id}`);
             setExportId(data.export_id);
           },
         },
@@ -58,6 +60,16 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configId, taskId]);
+
+  useEffect(() => {
+    if (csvResult) {
+      const size = JSON.stringify(csvResult).length;
+      console.log(`[ResultView] Data loaded. Size: ${(size / 1024).toFixed(2)} KB`);
+      console.log(`[ResultView] Filename: ${csvResult.filename}`);
+      console.log(`[ResultView] Long data rows: ${csvResult.long_data?.length ?? 0}`);
+      console.log(`[ResultView] Wide data rows: ${csvResult.wide_data?.length ?? 0}`);
+    }
+  }, [csvResult]);
 
   const handleDownloadLong = () => {
     if (!csvResult?.long_data || !csvResult.filename) return;

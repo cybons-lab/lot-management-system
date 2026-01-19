@@ -195,12 +195,12 @@ export function useProcessWatchDirFiles() {
 /**
  * タスク一覧を取得
  */
-export function useSmartReadTasks(configId: number | null) {
+export function useSmartReadTasks(configId: number | null, enabled: boolean = false) {
   return useQuery({
     queryKey: configId ? [...QUERY_KEYS.config(configId), "tasks"] : [],
     queryFn: () => (configId ? getTasks(configId) : Promise.resolve({ tasks: [] })),
-    enabled: !!configId,
-    staleTime: 1000 * 60 * 5, // 5分
+    enabled: !!configId && enabled,
+    staleTime: Infinity, // キャッシュを永続化（手動更新のみ）
   });
 }
 

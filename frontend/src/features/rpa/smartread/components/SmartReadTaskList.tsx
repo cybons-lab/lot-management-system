@@ -19,7 +19,8 @@ export function SmartReadTaskList({
   selectedTaskId,
   onSelectTask,
 }: SmartReadTaskListProps) {
-  const { data: taskListResponse, isLoading, error } = useSmartReadTasks(configId);
+  // TaskListでは enabled=false (手動) だが、キャッシュがあれば表示される
+  const { data: taskListResponse, isLoading, error } = useSmartReadTasks(configId, false);
   const tasks = taskListResponse?.tasks ?? [];
 
   console.log("[SmartReadTaskList] Render", {
