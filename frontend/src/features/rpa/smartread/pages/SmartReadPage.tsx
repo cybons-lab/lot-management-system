@@ -18,6 +18,7 @@ import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
 import { SmartReadResultView } from "../components/SmartReadResultView";
 import { SmartReadTaskList } from "../components/SmartReadTaskList";
 import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
+import { SmartReadManagedTaskList } from "../components/SmartReadManagedTaskList";
 
 import { Button } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
@@ -165,10 +166,11 @@ export function SmartReadPage() {
           onValueChange={setActiveTab}
           className="flex-1 flex flex-col min-h-0"
         >
-          <TabsList className="grid w-full grid-cols-3 shrink-0">
+          <TabsList className="grid w-full grid-cols-4 shrink-0">
             <TabsTrigger value="import">1. インポート</TabsTrigger>
             <TabsTrigger value="history">2. 履歴</TabsTrigger>
-            <TabsTrigger value="detail">3. 結果詳細</TabsTrigger>
+            <TabsTrigger value="managed">3. 管理タスク</TabsTrigger>
+            <TabsTrigger value="detail">4. 結果詳細</TabsTrigger>
           </TabsList>
 
           {/* Tab 1: Import (Watch Folder & Upload) */}
@@ -304,7 +306,14 @@ export function SmartReadPage() {
             </Card>
           </TabsContent>
 
-          {/* Tab 3: Detail (Result View) */}
+          {/* Tab 3: Managed Tasks (DB-saved Tasks) */}
+          <TabsContent value="managed" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
+            <div className="h-full overflow-auto">
+              <SmartReadManagedTaskList configId={selectedConfigId} />
+            </div>
+          </TabsContent>
+
+          {/* Tab 4: Detail (Result View) */}
           <TabsContent value="detail" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
             <div className="h-full">
               {!selectedConfigId ? (
