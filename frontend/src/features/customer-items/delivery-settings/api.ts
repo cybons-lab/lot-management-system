@@ -20,6 +20,7 @@ export interface CustomerItemDeliverySetting {
   valid_to: string | null;
   created_at: string;
   updated_at: string;
+  delivery_place_name: string | null;
 }
 
 export interface CreateDeliverySettingRequest {

@@ -1,63 +1,76 @@
-import { createColumnHelper } from "@tanstack/react-table";
-
 import type { Role } from "../api";
 
 import { Badge, Button } from "@/components/ui";
-
-const columnHelper = createColumnHelper<Role>();
+import type { Column } from "@/shared/components/data/DataTable";
 
 interface RoleColumnsOptions {
   onDelete: (roleId: number) => void;
   isDeleting?: boolean;
 }
 
-export function createRoleColumns({ onDelete, isDeleting = false }: RoleColumnsOptions) {
+export function createRoleColumns({
+  onDelete,
+  isDeleting = false,
+}: RoleColumnsOptions): Column<Role>[] {
   return [
-    columnHelper.accessor("id", {
+    {
+      id: "id",
       header: "ロールID",
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor("role_code", {
+      cell: (row) => <span className="font-medium">{row.id}</span>,
+      sortable: true,
+      width: 100,
+    },
+    {
+      id: "role_code",
       header: "ロールコード",
-      cell: (info) => (
+      cell: (row) => (
         <Badge variant="secondary" className="font-semibold uppercase">
-          {info.getValue()}
+          {row.role_code}
         </Badge>
       ),
-    }),
-    columnHelper.accessor("role_name", {
+      sortable: true,
+      width: 150,
+    },
+    {
+      id: "role_name",
       header: "ロール名",
-      cell: (info) => <span className="whitespace-nowrap">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor("description", {
+      cell: (row) => <span className="whitespace-nowrap">{row.role_name}</span>,
+      sortable: true,
+      width: 150,
+    },
+    {
+      id: "description",
       header: "説明",
-      cell: (info) =>
-        info.getValue() ? (
-          <span className="whitespace-nowrap">{info.getValue()}</span>
+      cell: (row) =>
+        row.description ? (
+          <span className="whitespace-nowrap">{row.description}</span>
         ) : (
           <span className="text-slate-400">-</span>
         ),
-    }),
-    columnHelper.accessor("created_at", {
+      width: 200,
+    },
+    {
+      id: "created_at",
       header: "作成日時",
-      cell: (info) => (
-        <span className="text-slate-600">{new Date(info.getValue()).toLocaleString("ja-JP")}</span>
+      cell: (row) => (
+        <span className="text-slate-600">{new Date(row.created_at).toLocaleString("ja-JP")}</span>
       ),
-      enableSorting: true,
-    }),
-    columnHelper.display({
+      sortable: true,
+      width: 180,
+    },
+    {
       id: "actions",
       header: "操作",
-      cell: ({ row }) => (
+      cell: (row) => (
         <Button
           variant="destructive"
           size="sm"
-          onClick={() => onDelete(row.original.id)}
+          onClick={() => onDelete(row.id)}
           disabled={isDeleting}
         >
           削除
         </Button>
       ),
-    }),
+    },
   ];
 }

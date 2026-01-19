@@ -181,6 +181,7 @@ export function CustomerItemsListPage() {
       <PageHeader
         title="得意先品番マッピング"
         subtitle="得意先品番と製品の紐付け管理"
+        backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
           <div className="flex gap-2">
             <CustomerItemExportButton size="sm" />

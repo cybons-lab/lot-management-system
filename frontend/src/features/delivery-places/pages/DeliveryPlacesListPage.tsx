@@ -77,7 +77,11 @@ export function DeliveryPlacesListPage() {
   if (isError) {
     return (
       <div className="space-y-6 px-6 py-6 md:px-8">
-        <PageHeader title="納入先マスタ" subtitle="納入先の作成・編集・削除" />
+        <PageHeader
+          title="納入先マスタ"
+          subtitle="納入先の作成・編集・削除"
+          backLink={{ to: "/masters", label: "マスタ管理" }}
+        />
         <QueryErrorFallback error={error} resetError={refetch} />
       </div>
     );
@@ -88,6 +92,7 @@ export function DeliveryPlacesListPage() {
       <PageHeader
         title="納入先マスタ"
         subtitle="納入先の作成・編集・削除"
+        backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
           <MasterPageActions
             exportApiPath="masters/delivery-places/export/download"

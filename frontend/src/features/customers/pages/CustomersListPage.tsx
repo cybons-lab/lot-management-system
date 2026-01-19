@@ -342,6 +342,7 @@ export function CustomersListPage() {
         <PageHeader
           title="得意先マスタ"
           subtitle="得意先の作成・編集・削除、一括インポート/エクスポート"
+          backLink={{ to: "/masters", label: "マスタ管理" }}
         />
         <QueryErrorFallback error={error} resetError={refetch} />
       </div>
@@ -353,6 +354,7 @@ export function CustomersListPage() {
       <PageHeader
         title="得意先マスタ"
         subtitle="得意先の作成・編集・削除、一括インポート/エクスポート"
+        backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
           <MasterPageActions
             exportApiPath="masters/customers/export/download"

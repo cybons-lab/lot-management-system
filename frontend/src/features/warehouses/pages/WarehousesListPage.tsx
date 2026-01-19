@@ -200,6 +200,7 @@ export function WarehousesListPage() {
         <PageHeader
           title="倉庫マスタ"
           subtitle="倉庫の作成・編集・削除、一括インポート/エクスポート"
+          backLink={{ to: "/masters", label: "マスタ管理" }}
         />
         <QueryErrorFallback error={error} resetError={refetch} />
       </div>
@@ -211,6 +212,7 @@ export function WarehousesListPage() {
       <PageHeader
         title="倉庫マスタ"
         subtitle="倉庫の作成・編集・削除、一括インポート/エクスポート"
+        backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
           <MasterPageActions
             exportApiPath="masters/warehouses/export/download"

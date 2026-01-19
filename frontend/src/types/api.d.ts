@@ -8074,6 +8074,11 @@ export interface components {
       customer_code: string;
       /** Customer Name */
       customer_name: string;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
       /** Address */
       address?: string | null;
       /** Contact Name */
@@ -8103,6 +8108,11 @@ export interface components {
       customer_code: string;
       /** Customer Name */
       customer_name: string;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
       /** Address */
       address?: string | null;
       /** Contact Name */
@@ -8428,6 +8438,8 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
     };
     /**
      * CustomerItemDeliverySettingUpdate
@@ -8734,6 +8746,11 @@ export interface components {
       customer_code: string;
       /** Customer Name */
       customer_name: string;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
       /** Address */
       address?: string | null;
       /** Contact Name */
@@ -8769,6 +8786,11 @@ export interface components {
       customer_code?: string | null;
       /** Customer Name */
       customer_name?: string | null;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
       /** Address */
       address?: string | null;
       /** Contact Name */
@@ -8888,6 +8910,11 @@ export interface components {
       delivery_place_code: string;
       /** Delivery Place Name */
       delivery_place_name: string;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
       /** Customer Id */
       customer_id: number;
     };
@@ -8926,6 +8953,11 @@ export interface components {
       delivery_place_code: string;
       /** Delivery Place Name */
       delivery_place_name: string;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
       /** Customer Id */
       customer_id: number;
       /** Id */
@@ -8957,6 +8989,11 @@ export interface components {
       jiku_code?: string | null;
       /** Delivery Place Name */
       delivery_place_name?: string | null;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
       /** Customer Id */
       customer_id?: number | null;
     };
@@ -12912,6 +12949,11 @@ export interface components {
       supplier_code: string;
       /** Supplier Name */
       supplier_name: string;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
     };
     /**
      * SupplierBulkUpsertRequest
@@ -12933,6 +12975,11 @@ export interface components {
       supplier_code: string;
       /** Supplier Name */
       supplier_name: string;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
     };
     /**
      * SupplierImportRow
@@ -13033,6 +13080,11 @@ export interface components {
       supplier_code: string;
       /** Supplier Name */
       supplier_name: string;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
       /** Id */
       id: number;
       /**
@@ -13060,6 +13112,11 @@ export interface components {
       supplier_code?: string | null;
       /** Supplier Name */
       supplier_name?: string | null;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
     };
     /**
      * SuppliersSummary
@@ -13486,6 +13543,11 @@ export interface components {
        * @description デフォルト輸送リードタイム（日）
        */
       default_transport_lead_time_days?: number | null;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
     };
     /**
      * WarehouseBulkUpsertRequest
@@ -13517,6 +13579,11 @@ export interface components {
        * @description デフォルト輸送リードタイム（日）
        */
       default_transport_lead_time_days?: number | null;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
     };
     /**
      * WarehouseDeliveryRouteCreate
@@ -13656,6 +13723,11 @@ export interface components {
        * @description デフォルト輸送リードタイム（日）
        */
       default_transport_lead_time_days?: number | null;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
       /** Id */
       id: number;
       /**
@@ -13693,6 +13765,11 @@ export interface components {
        * @description デフォルト輸送リードタイム（日）
        */
       default_transport_lead_time_days?: number | null;
+      /**
+       * Short Name
+       * @description 短縮表示名
+       */
+      short_name?: string | null;
     };
     /**
      * WithdrawalCancelReason

@@ -333,6 +333,10 @@ class DeliveryPlace(SoftDeleteMixin, Base):
     jiku_code: Mapped[str] = mapped_column(String(50), nullable=False, server_default="")
     delivery_place_code: Mapped[str] = mapped_column(String(50), nullable=False)
     delivery_place_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    # B-Plan: short_name for compact display
+    short_name: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="短縮表示名（UI省スペース用）"
+    )
     customer_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("customers.id", ondelete="RESTRICT"),
@@ -753,6 +757,11 @@ class CustomerItemDeliverySetting(Base):
 
     # Relationships
     delivery_place: Mapped[DeliveryPlace | None] = relationship("DeliveryPlace")
+
+    @property
+    def delivery_place_name(self) -> str | None:
+        """Get delivery place name from relationship."""
+        return self.delivery_place.delivery_place_name if self.delivery_place else None
 
 
 class WarehouseDeliveryRoute(Base):

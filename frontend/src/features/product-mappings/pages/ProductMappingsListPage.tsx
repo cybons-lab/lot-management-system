@@ -307,7 +307,11 @@ export function ProductMappingsListPage() {
   if (isError) {
     return (
       <div className="space-y-6 px-6 py-6 md:px-8">
-        <PageHeader title="商品マスタ" subtitle="商品マッピングの作成・編集・削除" />
+        <PageHeader
+          title="商品マスタ"
+          subtitle="商品マッピングの作成・編集・削除"
+          backLink={{ to: "/masters", label: "マスタ管理" }}
+        />
         <QueryErrorFallback error={error} resetError={refetch} />
       </div>
     );
@@ -318,6 +322,7 @@ export function ProductMappingsListPage() {
       <PageHeader
         title="商品マスタ"
         subtitle="商品マッピングの作成・編集・削除"
+        backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
           <MasterPageActions
             exportApiPath="masters/product-mappings/export/download"
@@ -454,7 +459,7 @@ export function ProductMappingsListPage() {
             totalCount={sortedData.length}
             onPageChange={table.setPage}
             onPageSizeChange={table.setPageSize}
-            pageSizeOptions={[25, 50, 100]}
+            pageSizeOptions={[25, 50, 75, 100]}
           />
         )}
       </div>
