@@ -6589,6 +6589,106 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/smartread/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Tasks
+     * @description タスク一覧を取得.
+     */
+    get: operations["get_tasks_api_rpa_smartread_tasks_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/tasks/{task_id}/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Task Export
+     * @description タスクのエクスポートを作成.
+     */
+    post: operations["create_task_export_api_rpa_smartread_tasks__task_id__export_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/tasks/{task_id}/export/{export_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Export Status
+     * @description エクスポート状態を取得.
+     */
+    get: operations["get_export_status_api_rpa_smartread_tasks__task_id__export__export_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/tasks/{task_id}/export/{export_id}/csv": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Export Csv
+     * @description エクスポートからCSVデータを取得し、横持ち・縦持ち両方を返す.
+     */
+    get: operations["get_export_csv_api_rpa_smartread_tasks__task_id__export__export_id__csv_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/transform": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Transform Csv
+     * @description 横持ちCSVを縦持ちに変換.
+     */
+    post: operations["transform_csv_api_rpa_smartread_transform_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/status": {
     parameters: {
       query?: never;
@@ -9782,6 +9882,12 @@ export interface components {
       suppliers: components["schemas"]["InventoryFilterOption"][];
       /** Warehouses */
       warehouses: components["schemas"]["InventoryFilterOption"][];
+      /**
+       * Effective Tab
+       * @description Resolved tab after applying mode-specific coercion (e.g., stock mode).
+       * @default all
+       */
+      effective_tab: string;
     };
     /**
      * InventoryItemResponse
@@ -12466,6 +12572,62 @@ export interface components {
       is_active?: boolean | null;
     };
     /**
+     * SmartReadCsvDataResponse
+     * @description CSVデータレスポンス.
+     */
+    SmartReadCsvDataResponse: {
+      /**
+       * Wide Data
+       * @description 横持ちデータ（OCR結果）
+       */
+      wide_data: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Long Data
+       * @description 縦持ちデータ（変換後）
+       */
+      long_data: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Errors
+       * @description バリデーションエラー
+       */
+      errors?: components["schemas"]["SmartReadValidationError"][];
+      /**
+       * Filename
+       * @description CSVファイル名
+       */
+      filename?: string | null;
+    };
+    /**
+     * SmartReadExportRequest
+     * @description エクスポート作成リクエスト.
+     */
+    SmartReadExportRequest: {
+      /**
+       * Export Type
+       * @description エクスポート形式 (csv/json)
+       * @default csv
+       */
+      export_type: string;
+    };
+    /**
+     * SmartReadExportResponse
+     * @description エクスポートレスポンス.
+     */
+    SmartReadExportResponse: {
+      /** Export Id */
+      export_id: string;
+      /** State */
+      state: string;
+      /** Task Id */
+      task_id?: string | null;
+      /** Error Message */
+      error_message?: string | null;
+    };
+    /**
      * SmartReadProcessRequest
      * @description ファイル処理リクエスト.
      */
@@ -12475,6 +12637,84 @@ export interface components {
        * @description 処理するファイル名のリスト
        */
       filenames: string[];
+    };
+    /**
+     * SmartReadTaskListResponse
+     * @description タスク一覧レスポンス.
+     */
+    SmartReadTaskListResponse: {
+      /** Tasks */
+      tasks: components["schemas"]["SmartReadTaskResponse"][];
+    };
+    /**
+     * SmartReadTaskResponse
+     * @description タスクレスポンス.
+     */
+    SmartReadTaskResponse: {
+      /** Task Id */
+      task_id: string;
+      /** Name */
+      name: string;
+      /** Status */
+      status: string;
+      /** Created At */
+      created_at?: string | null;
+      /**
+       * Request Count
+       * @default 0
+       */
+      request_count: number;
+    };
+    /**
+     * SmartReadTransformRequest
+     * @description CSV横→縦変換リクエスト.
+     */
+    SmartReadTransformRequest: {
+      /**
+       * Wide Data
+       * @description 横持ちデータ
+       */
+      wide_data: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Skip Empty
+       * @description 空明細をスキップするか
+       * @default true
+       */
+      skip_empty: boolean;
+    };
+    /**
+     * SmartReadTransformResponse
+     * @description CSV横→縦変換レスポンス.
+     */
+    SmartReadTransformResponse: {
+      /**
+       * Long Data
+       * @description 縦持ちデータ
+       */
+      long_data: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Errors
+       * @description バリデーションエラー
+       */
+      errors?: components["schemas"]["SmartReadValidationError"][];
+    };
+    /**
+     * SmartReadValidationError
+     * @description バリデーションエラー.
+     */
+    SmartReadValidationError: {
+      /** Row */
+      row: number;
+      /** Field */
+      field: string;
+      /** Message */
+      message: string;
+      /** Value */
+      value?: string | null;
     };
     /**
      * Step2ExecuteRequest
@@ -14478,6 +14718,9 @@ export interface operations {
         product_id?: number | null;
         warehouse_id?: number | null;
         supplier_id?: number | null;
+        tab?: string;
+        primary_staff_only?: boolean;
+        mode?: string;
       };
       header?: never;
       path?: never;
@@ -23536,6 +23779,179 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_tasks_api_rpa_smartread_tasks_get: {
+    parameters: {
+      query: {
+        /** @description 設定ID */
+        config_id: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadTaskListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_task_export_api_rpa_smartread_tasks__task_id__export_post: {
+    parameters: {
+      query: {
+        /** @description 設定ID */
+        config_id: number;
+      };
+      header?: never;
+      path: {
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["SmartReadExportRequest"] | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadExportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_export_status_api_rpa_smartread_tasks__task_id__export__export_id__get: {
+    parameters: {
+      query: {
+        /** @description 設定ID */
+        config_id: number;
+      };
+      header?: never;
+      path: {
+        task_id: string;
+        export_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadExportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_export_csv_api_rpa_smartread_tasks__task_id__export__export_id__csv_get: {
+    parameters: {
+      query: {
+        /** @description 設定ID */
+        config_id: number;
+      };
+      header?: never;
+      path: {
+        task_id: string;
+        export_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadCsvDataResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  transform_csv_api_rpa_smartread_transform_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadTransformRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadTransformResponse"];
         };
       };
       /** @description Validation Error */

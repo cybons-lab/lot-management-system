@@ -16,7 +16,15 @@ from app.presentation.schemas.smartread_schema import (
     SmartReadConfigCreate,
     SmartReadConfigResponse,
     SmartReadConfigUpdate,
+    SmartReadCsvDataResponse,
+    SmartReadExportRequest,
+    SmartReadExportResponse,
     SmartReadProcessRequest,
+    SmartReadTaskListResponse,
+    SmartReadTaskResponse,
+    SmartReadTransformRequest,
+    SmartReadTransformResponse,
+    SmartReadValidationError,
 )
 
 
@@ -220,4 +228,140 @@ def export_to_csv(
         content=result.content,
         media_type=result.content_type,
         headers={"Content-Disposition": f'attachment; filename="{result.filename}"'},
+    )
+
+
+# --- タスク・Export API ---
+
+
+@router.get("/tasks", response_model=SmartReadTaskListResponse)
+async def get_tasks(
+    config_id: int = Query(..., description="設定ID"),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadTaskListResponse:
+    """タスク一覧を取得."""
+    assert db is not None
+    service = SmartReadService(db)
+    tasks = await service.get_tasks(config_id)
+    return SmartReadTaskListResponse(
+        tasks=[
+            SmartReadTaskResponse(
+                task_id=t.task_id,
+                name=t.name,
+                status=t.status,
+                created_at=t.created_at,
+                request_count=t.request_count,
+            )
+            for t in tasks
+        ]
+    )
+
+
+@router.post("/tasks/{task_id}/export", response_model=SmartReadExportResponse)
+async def create_task_export(
+    task_id: str,
+    config_id: int = Query(..., description="設定ID"),
+    request: SmartReadExportRequest | None = None,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadExportResponse:
+    """タスクのエクスポートを作成."""
+    assert db is not None
+    service = SmartReadService(db)
+    export_type = request.export_type if request else "csv"
+    export = await service.create_export(config_id, task_id, export_type)
+
+    if not export:
+        raise HTTPException(status_code=500, detail="エクスポートの作成に失敗しました")
+
+    return SmartReadExportResponse(
+        export_id=export.export_id,
+        state=export.state,
+        task_id=export.task_id,
+        error_message=export.error_message,
+    )
+
+
+@router.get("/tasks/{task_id}/export/{export_id}", response_model=SmartReadExportResponse)
+async def get_export_status(
+    task_id: str,
+    export_id: str,
+    config_id: int = Query(..., description="設定ID"),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadExportResponse:
+    """エクスポート状態を取得."""
+    assert db is not None
+    service = SmartReadService(db)
+    export = await service.get_export_status(config_id, task_id, export_id)
+
+    if not export:
+        raise HTTPException(status_code=404, detail="エクスポートが見つかりません")
+
+    return SmartReadExportResponse(
+        export_id=export.export_id,
+        state=export.state,
+        task_id=export.task_id,
+        error_message=export.error_message,
+    )
+
+
+@router.get("/tasks/{task_id}/export/{export_id}/csv", response_model=SmartReadCsvDataResponse)
+async def get_export_csv(
+    task_id: str,
+    export_id: str,
+    config_id: int = Query(..., description="設定ID"),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadCsvDataResponse:
+    """エクスポートからCSVデータを取得し、横持ち・縦持ち両方を返す."""
+    assert db is not None
+    service = SmartReadService(db)
+    result = await service.get_export_csv_data(config_id, task_id, export_id)
+
+    if not result:
+        raise HTTPException(status_code=404, detail="CSVデータの取得に失敗しました")
+
+    return SmartReadCsvDataResponse(
+        wide_data=result["wide_data"],
+        long_data=result["long_data"],
+        errors=[
+            SmartReadValidationError(
+                row=e.row,
+                field=e.field,
+                message=e.message,
+                value=e.value,
+            )
+            for e in result["errors"]
+        ],
+        filename=result.get("filename"),
+    )
+
+
+# --- CSV変換 API ---
+
+
+@router.post("/transform", response_model=SmartReadTransformResponse)
+def transform_csv(
+    request: SmartReadTransformRequest,
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadTransformResponse:
+    """横持ちCSVを縦持ちに変換."""
+    from app.application.services.smartread.csv_transformer import SmartReadCsvTransformer
+
+    transformer = SmartReadCsvTransformer()
+    result = transformer.transform_to_long(request.wide_data, skip_empty=request.skip_empty)
+
+    return SmartReadTransformResponse(
+        long_data=result.long_data,
+        errors=[
+            SmartReadValidationError(
+                row=e.row,
+                field=e.field,
+                message=e.message,
+                value=e.value,
+            )
+            for e in result.errors
+        ],
     )

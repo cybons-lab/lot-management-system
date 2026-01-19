@@ -454,3 +454,143 @@ class SmartReadService:
             else:
                 items.append((new_key, v))
         return dict(items)
+
+    # ==================== タスク・Export API ====================
+
+    def _get_client(self, config_id: int) -> tuple[SmartReadClient | None, SmartReadConfig | None]:
+        """設定からクライアントを取得."""
+        config = self.get_config(config_id)
+        if not config:
+            return None, None
+
+        template_ids = None
+        if config.template_ids:
+            template_ids = [t.strip() for t in config.template_ids.split(",") if t.strip()]
+
+        client = SmartReadClient(
+            endpoint=config.endpoint,
+            api_key=config.api_key,
+            template_ids=template_ids,
+        )
+        return client, config
+
+    async def get_tasks(self, config_id: int) -> list:
+        """タスク一覧を取得.
+
+        Args:
+            config_id: 設定ID
+
+        Returns:
+            タスク一覧
+        """
+        client, _ = self._get_client(config_id)
+        if not client:
+            return []
+
+        return await client.get_tasks()
+
+    async def create_export(
+        self,
+        config_id: int,
+        task_id: str,
+        export_type: str = "csv",
+    ):
+        """エクスポートを作成.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_type: エクスポート形式
+
+        Returns:
+            エクスポート情報
+        """
+        client, _ = self._get_client(config_id)
+        if not client:
+            return None
+
+        return await client.create_export(task_id, export_type)
+
+    async def get_export_status(
+        self,
+        config_id: int,
+        task_id: str,
+        export_id: str,
+    ):
+        """エクスポート状態を取得.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_id: エクスポートID
+
+        Returns:
+            エクスポート情報
+        """
+        client, _ = self._get_client(config_id)
+        if not client:
+            return None
+
+        return await client.get_export_status(task_id, export_id)
+
+    async def get_export_csv_data(
+        self,
+        config_id: int,
+        task_id: str,
+        export_id: str,
+    ) -> dict[str, Any] | None:
+        """エクスポートからCSVデータを取得し、横持ち・縦持ち両方を返す.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_id: エクスポートID
+
+        Returns:
+            横持ち・縦持ちデータとエラー
+        """
+        import zipfile
+
+        from app.application.services.smartread.csv_transformer import (
+            SmartReadCsvTransformer,
+        )
+
+        client, _ = self._get_client(config_id)
+        if not client:
+            return None
+
+        # ZIPダウンロード
+        zip_data = await client.download_export(task_id, export_id)
+        if not zip_data:
+            return None
+
+        # ZIP展開→CSV抽出
+        wide_data: list[dict[str, Any]] = []
+        csv_filename: str | None = None
+
+        try:
+            with zipfile.ZipFile(io.BytesIO(zip_data)) as zf:
+                for name in zf.namelist():
+                    if name.endswith(".csv"):
+                        csv_filename = name
+                        with zf.open(name) as f:
+                            # CSVを読み込み
+                            reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig"))
+                            for row in reader:
+                                wide_data.append(dict(row))
+                        break  # 最初のCSVのみ処理
+
+        except Exception as e:
+            logger.error(f"Failed to extract CSV from ZIP: {e}")
+            return None
+
+        # 横持ち→縦持ち変換
+        transformer = SmartReadCsvTransformer()
+        result = transformer.transform_to_long(wide_data)
+
+        return {
+            "wide_data": wide_data,
+            "long_data": result.long_data,
+            "errors": result.errors,
+            "filename": csv_filename,
+        }

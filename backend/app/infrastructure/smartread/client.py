@@ -35,6 +35,27 @@ class SmartReadMultiResult:
     results: list[SmartReadResult]
 
 
+@dataclass
+class SmartReadTask:
+    """SmartReadタスク情報."""
+
+    task_id: str
+    name: str
+    status: str  # RUNNING | SUCCEEDED | FAILED
+    created_at: str | None = None
+    request_count: int = 0
+
+
+@dataclass
+class SmartReadExport:
+    """SmartReadエクスポート情報."""
+
+    export_id: str
+    state: str  # RUNNING | SUCCEEDED | FAILED
+    task_id: str | None = None
+    error_message: str | None = None
+
+
 class SmartReadClient:
     """SmartRead OCR APIクライアント.
 
@@ -347,3 +368,213 @@ class SmartReadClient:
                     )
 
         return SmartReadMultiResult(task_id=task_id, results=results)
+
+    # ==================== タスク一覧・Export API ====================
+
+    async def get_tasks(self, timeout: float = 30.0) -> list[SmartReadTask]:
+        """タスク一覧を取得.
+
+        GET /v3/task
+
+        Returns:
+            タスク一覧
+        """
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                url = self._build_api_url("/v3/task")
+                headers = self._get_headers()
+                response = await client.get(url, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+
+                tasks = []
+                for item in data.get("tasks", []):
+                    tasks.append(
+                        SmartReadTask(
+                            task_id=item.get("taskId", ""),
+                            name=item.get("name", ""),
+                            status=item.get("status", "UNKNOWN"),
+                            created_at=item.get("createdAt"),
+                            request_count=item.get("requestCount", 0),
+                        )
+                    )
+                return tasks
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to get tasks: {e.response.status_code}")
+            return []
+        except Exception as e:
+            logger.error(f"Failed to get tasks: {e}")
+            return []
+
+    async def get_task_requests(self, task_id: str, timeout: float = 30.0) -> list[dict[str, Any]]:
+        """タスク内のリクエスト一覧を取得.
+
+        GET /v3/task/{taskId}/request
+
+        Args:
+            task_id: タスクID
+            timeout: タイムアウト秒数
+
+        Returns:
+            リクエスト一覧
+        """
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                url = self._build_api_url(f"/v3/task/{task_id}/request")
+                headers = self._get_headers()
+                response = await client.get(url, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                return cast(list[dict[str, Any]], data.get("requests", []))
+
+        except Exception as e:
+            logger.error(f"Failed to get task requests: {e}")
+            return []
+
+    async def create_export(
+        self,
+        task_id: str,
+        export_type: str = "csv",
+        timeout: float = 30.0,
+    ) -> SmartReadExport | None:
+        """Export作成.
+
+        POST /v3/task/{taskId}/export
+
+        Args:
+            task_id: タスクID
+            export_type: エクスポート形式 (csv, json等)
+            timeout: タイムアウト秒数
+
+        Returns:
+            エクスポート情報
+        """
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                url = self._build_api_url(f"/v3/task/{task_id}/export")
+                headers = self._get_headers()
+                payload = {"exportType": export_type}
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+
+                return SmartReadExport(
+                    export_id=data.get("exportId", ""),
+                    state=data.get("state", "RUNNING"),
+                    task_id=task_id,
+                )
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to create export: {e.response.status_code}")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to create export: {e}")
+            return None
+
+    async def get_export_status(
+        self,
+        task_id: str,
+        export_id: str,
+        timeout: float = 30.0,
+    ) -> SmartReadExport | None:
+        """Export状態を取得.
+
+        GET /v3/task/{taskId}/export/{exportId}
+
+        Args:
+            task_id: タスクID
+            export_id: エクスポートID
+            timeout: タイムアウト秒数
+
+        Returns:
+            エクスポート情報
+        """
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                url = self._build_api_url(f"/v3/task/{task_id}/export/{export_id}")
+                headers = self._get_headers()
+                response = await client.get(url, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+
+                return SmartReadExport(
+                    export_id=export_id,
+                    state=data.get("state", "UNKNOWN"),
+                    task_id=task_id,
+                    error_message=data.get("errorMessage"),
+                )
+
+        except Exception as e:
+            logger.error(f"Failed to get export status: {e}")
+            return None
+
+    async def download_export(
+        self,
+        task_id: str,
+        export_id: str,
+        timeout: float = 120.0,
+    ) -> bytes | None:
+        """Exportをダウンロード（ZIP形式）.
+
+        GET /v3/task/{taskId}/export/{exportId}/download
+
+        Args:
+            task_id: タスクID
+            export_id: エクスポートID
+            timeout: タイムアウト秒数
+
+        Returns:
+            ZIPファイルのバイナリデータ
+        """
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                url = self._build_api_url(f"/v3/task/{task_id}/export/{export_id}/download")
+                headers = {"Authorization": f"apikey {self.api_key}"}
+                response = await client.get(url, headers=headers)
+                response.raise_for_status()
+                return response.content
+
+        except Exception as e:
+            logger.error(f"Failed to download export: {e}")
+            return None
+
+    async def poll_export_until_ready(
+        self,
+        task_id: str,
+        export_id: str,
+        timeout_sec: float = 300.0,
+        poll_interval: float = 5.0,
+    ) -> SmartReadExport | None:
+        """Export完了までポーリング.
+
+        Args:
+            task_id: タスクID
+            export_id: エクスポートID
+            timeout_sec: タイムアウト秒数
+            poll_interval: ポーリング間隔
+
+        Returns:
+            完了したエクスポート情報、またはNone（タイムアウト/失敗）
+        """
+        import asyncio
+        import time
+
+        start_time = time.time()
+
+        while True:
+            if time.time() - start_time > timeout_sec:
+                logger.error("Export polling timeout")
+                return None
+
+            export = await self.get_export_status(task_id, export_id)
+            if export is None:
+                return None
+
+            if export.state == "SUCCEEDED":
+                return export
+            elif export.state == "FAILED":
+                logger.error(f"Export failed: {export.error_message}")
+                return export
+
+            await asyncio.sleep(poll_interval)

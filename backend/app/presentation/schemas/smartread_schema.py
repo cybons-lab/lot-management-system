@@ -78,3 +78,73 @@ class SmartReadProcessRequest(BaseModel):
     """ファイル処理リクエスト."""
 
     filenames: list[str] = Field(..., description="処理するファイル名のリスト")
+
+
+# ==================== タスク・Export系スキーマ ====================
+
+
+class SmartReadTaskResponse(BaseModel):
+    """タスクレスポンス."""
+
+    task_id: str
+    name: str
+    status: str  # RUNNING | SUCCEEDED | FAILED
+    created_at: str | None = None
+    request_count: int = 0
+
+
+class SmartReadTaskListResponse(BaseModel):
+    """タスク一覧レスポンス."""
+
+    tasks: list[SmartReadTaskResponse]
+
+
+class SmartReadExportResponse(BaseModel):
+    """エクスポートレスポンス."""
+
+    export_id: str
+    state: str  # RUNNING | SUCCEEDED | FAILED
+    task_id: str | None = None
+    error_message: str | None = None
+
+
+class SmartReadExportRequest(BaseModel):
+    """エクスポート作成リクエスト."""
+
+    export_type: str = Field(default="csv", description="エクスポート形式 (csv/json)")
+
+
+class SmartReadTransformRequest(BaseModel):
+    """CSV横→縦変換リクエスト."""
+
+    wide_data: list[dict[str, Any]] = Field(..., description="横持ちデータ")
+    skip_empty: bool = Field(default=True, description="空明細をスキップするか")
+
+
+class SmartReadValidationError(BaseModel):
+    """バリデーションエラー."""
+
+    row: int
+    field: str
+    message: str
+    value: str | None = None
+
+
+class SmartReadTransformResponse(BaseModel):
+    """CSV横→縦変換レスポンス."""
+
+    long_data: list[dict[str, Any]] = Field(..., description="縦持ちデータ")
+    errors: list[SmartReadValidationError] = Field(
+        default_factory=list, description="バリデーションエラー"
+    )
+
+
+class SmartReadCsvDataResponse(BaseModel):
+    """CSVデータレスポンス."""
+
+    wide_data: list[dict[str, Any]] = Field(..., description="横持ちデータ（OCR結果）")
+    long_data: list[dict[str, Any]] = Field(..., description="縦持ちデータ（変換後）")
+    errors: list[SmartReadValidationError] = Field(
+        default_factory=list, description="バリデーションエラー"
+    )
+    filename: str | None = Field(default=None, description="CSVファイル名")

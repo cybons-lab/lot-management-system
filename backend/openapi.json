@@ -2033,6 +2033,11 @@
         "summary": "Get Filter Options",
         "description": "Get filter options (products, suppliers, warehouses) based on current selection.",
         "operationId": "get_filter_options_api_v2_inventory_filter_options_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -2080,6 +2085,38 @@
                 }
               ],
               "title": "Supplier Id"
+            }
+          },
+          {
+            "name": "tab",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(in_stock|no_stock|all)$",
+              "default": "all",
+              "title": "Tab"
+            }
+          },
+          {
+            "name": "primary_staff_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Primary Staff Only"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(stock|master)$",
+              "default": "stock",
+              "title": "Mode"
             }
           }
         ],
@@ -17091,6 +17128,315 @@
         }
       }
     },
+    "/api/rpa/smartread/tasks": {
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Get Tasks",
+        "description": "タスク一覧を取得.",
+        "operationId": "get_tasks_api_rpa_smartread_tasks_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "設定ID",
+              "title": "Config Id"
+            },
+            "description": "設定ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadTaskListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/tasks/{task_id}/export": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Create Task Export",
+        "description": "タスクのエクスポートを作成.",
+        "operationId": "create_task_export_api_rpa_smartread_tasks__task_id__export_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "config_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "設定ID",
+              "title": "Config Id"
+            },
+            "description": "設定ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SmartReadExportRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadExportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/tasks/{task_id}/export/{export_id}": {
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Get Export Status",
+        "description": "エクスポート状態を取得.",
+        "operationId": "get_export_status_api_rpa_smartread_tasks__task_id__export__export_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "export_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Export Id"
+            }
+          },
+          {
+            "name": "config_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "設定ID",
+              "title": "Config Id"
+            },
+            "description": "設定ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadExportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/tasks/{task_id}/export/{export_id}/csv": {
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Get Export Csv",
+        "description": "エクスポートからCSVデータを取得し、横持ち・縦持ち両方を返す.",
+        "operationId": "get_export_csv_api_rpa_smartread_tasks__task_id__export__export_id__csv_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "export_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Export Id"
+            }
+          },
+          {
+            "name": "config_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "設定ID",
+              "title": "Config Id"
+            },
+            "description": "設定ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadCsvDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/transform": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Transform Csv",
+        "description": "横持ちCSVを縦持ちに変換.",
+        "operationId": "transform_csv_api_rpa_smartread_transform_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadTransformRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadTransformResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/masters/status": {
       "get": {
         "summary": "Get Master Status",
@@ -24015,6 +24361,12 @@
             },
             "type": "array",
             "title": "Warehouses"
+          },
+          "effective_tab": {
+            "type": "string",
+            "title": "Effective Tab",
+            "description": "Resolved tab after applying mode-specific coercion (e.g., stock mode).",
+            "default": "all"
           }
         },
         "type": "object",
@@ -30288,6 +30640,109 @@
         "title": "SmartReadConfigUpdate",
         "description": "設定更新リクエスト."
       },
+      "SmartReadCsvDataResponse": {
+        "properties": {
+          "wide_data": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Wide Data",
+            "description": "横持ちデータ（OCR結果）"
+          },
+          "long_data": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Long Data",
+            "description": "縦持ちデータ（変換後）"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/SmartReadValidationError"
+            },
+            "type": "array",
+            "title": "Errors",
+            "description": "バリデーションエラー"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename",
+            "description": "CSVファイル名"
+          }
+        },
+        "type": "object",
+        "required": [
+          "wide_data",
+          "long_data"
+        ],
+        "title": "SmartReadCsvDataResponse",
+        "description": "CSVデータレスポンス."
+      },
+      "SmartReadExportRequest": {
+        "properties": {
+          "export_type": {
+            "type": "string",
+            "title": "Export Type",
+            "description": "エクスポート形式 (csv/json)",
+            "default": "csv"
+          }
+        },
+        "type": "object",
+        "title": "SmartReadExportRequest",
+        "description": "エクスポート作成リクエスト."
+      },
+      "SmartReadExportResponse": {
+        "properties": {
+          "export_id": {
+            "type": "string",
+            "title": "Export Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "export_id",
+          "state"
+        ],
+        "title": "SmartReadExportResponse",
+        "description": "エクスポートレスポンス."
+      },
       "SmartReadProcessRequest": {
         "properties": {
           "filenames": {
@@ -30305,6 +30760,150 @@
         ],
         "title": "SmartReadProcessRequest",
         "description": "ファイル処理リクエスト."
+      },
+      "SmartReadTaskListResponse": {
+        "properties": {
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/SmartReadTaskResponse"
+            },
+            "type": "array",
+            "title": "Tasks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tasks"
+        ],
+        "title": "SmartReadTaskListResponse",
+        "description": "タスク一覧レスポンス."
+      },
+      "SmartReadTaskResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "request_count": {
+            "type": "integer",
+            "title": "Request Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "name",
+          "status"
+        ],
+        "title": "SmartReadTaskResponse",
+        "description": "タスクレスポンス."
+      },
+      "SmartReadTransformRequest": {
+        "properties": {
+          "wide_data": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Wide Data",
+            "description": "横持ちデータ"
+          },
+          "skip_empty": {
+            "type": "boolean",
+            "title": "Skip Empty",
+            "description": "空明細をスキップするか",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "wide_data"
+        ],
+        "title": "SmartReadTransformRequest",
+        "description": "CSV横→縦変換リクエスト."
+      },
+      "SmartReadTransformResponse": {
+        "properties": {
+          "long_data": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Long Data",
+            "description": "縦持ちデータ"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/SmartReadValidationError"
+            },
+            "type": "array",
+            "title": "Errors",
+            "description": "バリデーションエラー"
+          }
+        },
+        "type": "object",
+        "required": [
+          "long_data"
+        ],
+        "title": "SmartReadTransformResponse",
+        "description": "CSV横→縦変換レスポンス."
+      },
+      "SmartReadValidationError": {
+        "properties": {
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row",
+          "field",
+          "message"
+        ],
+        "title": "SmartReadValidationError",
+        "description": "バリデーションエラー."
       },
       "Step2ExecuteRequest": {
         "properties": {
