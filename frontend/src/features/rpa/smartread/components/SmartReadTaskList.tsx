@@ -6,7 +6,6 @@ import { CheckCircle, AlertCircle, Loader2, Clock, FileText } from "lucide-react
 import { useSmartReadTasks } from "../hooks";
 
 import { Skeleton } from "@/components/ui";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 interface SmartReadTaskListProps {
@@ -50,7 +49,7 @@ export function SmartReadTaskList({
   }
 
   return (
-    <ScrollArea className="h-full">
+    <div className="h-full overflow-y-auto">
       <div className="flex flex-col divide-y">
         {tasks.map((task) => (
           <div
@@ -97,6 +96,6 @@ export function SmartReadTaskList({
           </div>
         ))}
       </div>
-    </ScrollArea>
+    </div>
   );
 }
