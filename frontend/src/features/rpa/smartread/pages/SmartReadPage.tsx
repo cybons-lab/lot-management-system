@@ -50,7 +50,7 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function SmartReadPage() {
   const [selectedConfigId, setSelectedConfigId] = useState<number | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [analyzeResult, setAnalyzeResult] = useState<SmartReadAnalyzeResponse | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedWatchFiles, setSelectedWatchFiles] = useState<string[]>([]);
@@ -72,9 +72,9 @@ export function SmartReadPage() {
   const activeConfigs = configs?.filter((c) => c.is_active) ?? [];
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      setSelectedFiles(Array.from(files));
       setAnalyzeResult(null);
     }
   };
@@ -82,9 +82,9 @@ export function SmartReadPage() {
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    const file = event.dataTransfer.files?.[0];
-    if (file) {
-      setSelectedFile(file);
+    const files = event.dataTransfer.files;
+    if (files && files.length > 0) {
+      setSelectedFiles(Array.from(files));
       setAnalyzeResult(null);
     }
   };
@@ -95,13 +95,21 @@ export function SmartReadPage() {
   };
 
   const handleAnalyze = async () => {
-    if (!selectedConfigId || !selectedFile) return;
+    if (!selectedConfigId || selectedFiles.length === 0) return;
 
-    const result = await analyzeMutation.mutateAsync({
-      configId: selectedConfigId,
-      file: selectedFile,
-    });
-    setAnalyzeResult(result);
+    // 選択された全ファイルを1ファイルずつ処理
+    // TODO: 将来的にはバックエンドにFormDataで複数ファイル一括送信対応が望ましい
+    let lastResult: SmartReadAnalyzeResponse | null = null;
+    for (const file of selectedFiles) {
+      const result = await analyzeMutation.mutateAsync({
+        configId: selectedConfigId,
+        file: file,
+      });
+      lastResult = result;
+    }
+    if (lastResult) {
+      setAnalyzeResult(lastResult);
+    }
   };
 
   const handleDownloadJson = () => {
@@ -136,7 +144,7 @@ export function SmartReadPage() {
       const lastResult = results[results.length - 1];
       if (lastResult.success) {
         setAnalyzeResult(lastResult);
-        setSelectedFile(null); // Clear manual file selection to avoid confusion
+        setSelectedFiles([]); // Clear manual file selection to avoid confusion
       }
     }
   };
@@ -253,6 +261,7 @@ export function SmartReadPage() {
                       ref={fileInputRef}
                       type="file"
                       accept=".pdf,.png,.jpg,.jpeg"
+                      multiple
                       onChange={handleFileSelect}
                       className="hidden"
                     />
@@ -263,31 +272,42 @@ export function SmartReadPage() {
                     <p className="mt-1 text-xs text-gray-400">PDF, PNG, JPG, JPEG形式に対応</p>
                   </div>
 
-                  {selectedFile && (
-                    <div className="flex items-center gap-3 rounded-lg border bg-gray-50 p-3">
-                      <FileText className="h-8 w-8 text-indigo-600" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{selectedFile.name}</p>
-                        <p className="text-xs text-gray-500">
-                          {(selectedFile.size / 1024).toFixed(1)} KB
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedFile(null);
-                          setAnalyzeResult(null);
-                        }}
-                      >
-                        削除
-                      </Button>
+                  {selectedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      {selectedFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 rounded-lg border bg-gray-50 p-3"
+                        >
+                          <FileText className="h-8 w-8 text-indigo-600" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">{file.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+                              if (selectedFiles.length === 1) {
+                                setAnalyzeResult(null);
+                              }
+                            }}
+                          >
+                            削除
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                   )}
 
                   <Button
                     className="w-full"
-                    disabled={!selectedConfigId || !selectedFile || analyzeMutation.isPending}
+                    disabled={
+                      !selectedConfigId || selectedFiles.length === 0 || analyzeMutation.isPending
+                    }
                     onClick={handleAnalyze}
                   >
                     {analyzeMutation.isPending ? (

@@ -57,10 +57,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui";
 
+// Available endpoint options
+const ENDPOINT_OPTIONS = [
+  { value: "https://api.smartread.jp/v3", label: "SmartRead API v3" },
+  { value: "https://api.smartread.jp/v4", label: "SmartRead API v4" },
+] as const;
+
 // Form validation schema
 const configFormSchema = z.object({
   name: z.string().min(1, "設定名を入力してください").max(100),
-  endpoint: z.string().url("有効なURLを入力してください"),
+  endpoint: z.string().min(1, "エンドポイントを選択してください"),
   api_key: z.string().optional(), // 更新時は空入力を許容
   template_ids: z.string().optional().nullable(),
   export_type: z.string().default("json"),
@@ -242,9 +248,20 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>APIエンドポイント *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://api.ai-ocr.example.com/v1" {...field} />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="エンドポイントを選択" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ENDPOINT_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

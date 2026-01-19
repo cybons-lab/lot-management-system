@@ -23,6 +23,16 @@ class SmartReadResult:
     data: list[dict[str, Any]]
     raw_response: dict[str, Any]
     error_message: str | None = None
+    request_id: str | None = None
+    filename: str | None = None
+
+
+@dataclass
+class SmartReadMultiResult:
+    """SmartRead OCR複数ファイル解析結果."""
+
+    task_id: str
+    results: list[SmartReadResult]
 
 
 class SmartReadClient:
@@ -229,3 +239,90 @@ class SmartReadClient:
         except Exception as e:
             logger.warning(f"SmartRead health check failed: {e}")
             return False
+
+    async def analyze_files(
+        self,
+        files: list[tuple[bytes, str]],
+        timeout: float = 300.0,
+    ) -> SmartReadMultiResult:
+        """複数ファイルを1タスクでSmartRead API (v3) で解析.
+
+        1タスクに複数ファイルを投入し、各ファイルの結果をまとめて返す。
+
+        Args:
+            files: (ファイルデータ, ファイル名) のタプルリスト
+            timeout: タイムアウト秒数
+
+        Returns:
+            SmartReadMultiResult: タスクIDと各ファイルの解析結果
+        """
+        results: list[SmartReadResult] = []
+        task_id = ""
+
+        if not files:
+            return SmartReadMultiResult(task_id="", results=[])
+
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                # 1. Task作成（1回だけ）
+                task_id = await self._create_task(client)
+
+                # 2. 各ファイルを投入
+                request_ids: list[tuple[str, str]] = []  # (request_id, filename)
+                for file_content, filename in files:
+                    try:
+                        request_id = await self._upload_file(
+                            client, task_id, file_content, filename
+                        )
+                        request_ids.append((request_id, filename))
+                    except Exception as e:
+                        logger.error(f"Failed to upload file {filename}: {e}")
+                        results.append(
+                            SmartReadResult(
+                                success=False,
+                                data=[],
+                                raw_response={},
+                                error_message=f"Upload failed: {e!s}",
+                                filename=filename,
+                            )
+                        )
+
+                # 3. 各ファイルの結果を取得
+                for request_id, filename in request_ids:
+                    result = await self._poll_results(client, request_id, timeout)
+                    result.filename = filename
+                    result.request_id = request_id
+                    results.append(result)
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"SmartRead API error: {e.response.status_code} - {e.response.text}")
+            # タスク作成に失敗した場合、未処理ファイルのみエラー結果を追加
+            processed_filenames = {r.filename for r in results}
+            for _, filename in files:
+                if filename not in processed_filenames:
+                    results.append(
+                        SmartReadResult(
+                            success=False,
+                            data=[],
+                            raw_response={},
+                            error_message=f"API Error: {e.response.status_code}",
+                            filename=filename,
+                        )
+                    )
+        except Exception as e:
+            logger.error(f"SmartRead unexpected error: {e}")
+            # 未処理ファイルのみエラー結果を追加（既存の成功結果は保持）
+            processed_filenames = {r.filename for r in results}
+            for _, filename in files:
+                if filename not in processed_filenames:
+                    results.append(
+                        SmartReadResult(
+                            success=False,
+                            data=[],
+                            raw_response={},
+                            error_message=f"Unexpected Error: {e!s}",
+                            filename=filename,
+                        )
+                    )
+
+        return SmartReadMultiResult(task_id=task_id, results=results)

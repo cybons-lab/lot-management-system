@@ -16,7 +16,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import SmartReadConfig
-from app.infrastructure.smartread.client import SmartReadClient, SmartReadResult
+from app.infrastructure.smartread.client import (
+    SmartReadClient,
+    SmartReadResult,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -327,6 +330,8 @@ class SmartReadService:
     ) -> list[AnalyzeResult]:
         """監視ディレクトリ内の指定ファイルを処理.
 
+        複数ファイルを1タスクにまとめてSmartRead APIで処理する。
+
         Args:
             config_id: 設定ID
             filenames: 処理するファイル名のリスト
@@ -344,7 +349,10 @@ class SmartReadService:
         watch_dir = Path(config.watch_dir)
         export_dir = Path(config.export_dir) if config.export_dir else None
 
-        results = []
+        # ファイルを読み込み
+        files_to_process: list[tuple[bytes, str]] = []
+        results: list[AnalyzeResult] = []
+
         for filename in filenames:
             file_path = watch_dir / filename
             if not file_path.exists():
@@ -354,31 +362,53 @@ class SmartReadService:
             try:
                 with open(file_path, "rb") as f:
                     content = f.read()
-
-                result = await self.analyze_file(config_id, content, filename)
-
-                if result.success and export_dir:
-                    # JSON出力
-                    if not export_dir.exists():
-                        try:
-                            # ディレクトリが存在しない場合は作成を試みる（権限次第）
-                            os.makedirs(export_dir, exist_ok=True)
-                        except OSError as e:
-                            logger.error(f"Failed to create export dir: {e}")
-
-                    if export_dir.exists():
-                        json_name = f"{Path(filename).stem}.json"
-                        json_path = export_dir / json_name
-                        with open(json_path, "w", encoding="utf-8") as f:
-                            import json
-
-                            json.dump(result.data, f, ensure_ascii=False, indent=2)
-
-                results.append(result)
-
+                files_to_process.append((content, filename))
             except Exception as e:
-                logger.error(f"Error processing file {filename}: {e}")
+                logger.error(f"Error reading file {filename}: {e}")
                 results.append(AnalyzeResult(False, filename, [], str(e)))
+
+        # ファイルがなければ終了
+        if not files_to_process:
+            return results
+
+        # テンプレートIDをパース
+        template_ids = None
+        if config.template_ids:
+            template_ids = [t.strip() for t in config.template_ids.split(",") if t.strip()]
+
+        client = SmartReadClient(
+            endpoint=config.endpoint,
+            api_key=config.api_key,
+            template_ids=template_ids,
+        )
+
+        # 複数ファイルを1タスクで処理
+        multi_result = await client.analyze_files(files_to_process)
+
+        # 結果を変換
+        for sr_result in multi_result.results:
+            analyze_result = AnalyzeResult(
+                success=sr_result.success,
+                filename=sr_result.filename or "",
+                data=sr_result.data,
+                error_message=sr_result.error_message,
+            )
+
+            # JSON出力
+            if analyze_result.success and export_dir and analyze_result.filename:
+                if not export_dir.exists():
+                    try:
+                        os.makedirs(export_dir, exist_ok=True)
+                    except OSError as e:
+                        logger.error(f"Failed to create export dir: {e}")
+
+                if export_dir.exists():
+                    json_name = f"{Path(analyze_result.filename).stem}.json"
+                    json_path = export_dir / json_name
+                    with open(json_path, "w", encoding="utf-8") as f:
+                        json.dump(analyze_result.data, f, ensure_ascii=False, indent=2)
+
+            results.append(analyze_result)
 
         return results
 
