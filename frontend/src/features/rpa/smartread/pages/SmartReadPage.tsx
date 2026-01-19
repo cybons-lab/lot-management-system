@@ -97,15 +97,19 @@ export function SmartReadPage() {
   const handleAnalyze = async () => {
     if (!selectedConfigId || selectedFiles.length === 0) return;
 
-    // 複数ファイルを監視フォルダと同様にprocessWatchDirFilesで処理
-    // ただし、ファイルアップロードの場合は1ファイルずつanalyzeFileを呼ぶ
-    // TODO: 将来的にはバックエンドにFormDataで複数ファイル送信対応が必要
-    // 現状は最初の1ファイルのみ処理
-    const result = await analyzeMutation.mutateAsync({
-      configId: selectedConfigId,
-      file: selectedFiles[0],
-    });
-    setAnalyzeResult(result);
+    // 選択された全ファイルを1ファイルずつ処理
+    // TODO: 将来的にはバックエンドにFormDataで複数ファイル一括送信対応が望ましい
+    let lastResult: SmartReadAnalyzeResponse | null = null;
+    for (const file of selectedFiles) {
+      const result = await analyzeMutation.mutateAsync({
+        configId: selectedConfigId,
+        file: file,
+      });
+      lastResult = result;
+    }
+    if (lastResult) {
+      setAnalyzeResult(lastResult);
+    }
   };
 
   const handleDownloadJson = () => {

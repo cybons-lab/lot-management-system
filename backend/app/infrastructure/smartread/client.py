@@ -296,34 +296,33 @@ class SmartReadClient:
 
         except httpx.HTTPStatusError as e:
             logger.error(f"SmartRead API error: {e.response.status_code} - {e.response.text}")
-            # タスク作成に失敗した場合
-            return SmartReadMultiResult(
-                task_id=task_id,
-                results=[
-                    SmartReadResult(
-                        success=False,
-                        data=[],
-                        raw_response={},
-                        error_message=f"API Error: {e.response.status_code}",
-                        filename=f[1],
+            # タスク作成に失敗した場合、未処理ファイルのみエラー結果を追加
+            processed_filenames = {r.filename for r in results}
+            for _, filename in files:
+                if filename not in processed_filenames:
+                    results.append(
+                        SmartReadResult(
+                            success=False,
+                            data=[],
+                            raw_response={},
+                            error_message=f"API Error: {e.response.status_code}",
+                            filename=filename,
+                        )
                     )
-                    for f in files
-                ],
-            )
         except Exception as e:
             logger.error(f"SmartRead unexpected error: {e}")
-            return SmartReadMultiResult(
-                task_id=task_id,
-                results=[
-                    SmartReadResult(
-                        success=False,
-                        data=[],
-                        raw_response={},
-                        error_message=f"Unexpected Error: {e!s}",
-                        filename=f[1],
+            # 未処理ファイルのみエラー結果を追加（既存の成功結果は保持）
+            processed_filenames = {r.filename for r in results}
+            for _, filename in files:
+                if filename not in processed_filenames:
+                    results.append(
+                        SmartReadResult(
+                            success=False,
+                            data=[],
+                            raw_response={},
+                            error_message=f"Unexpected Error: {e!s}",
+                            filename=filename,
+                        )
                     )
-                    for f in files
-                ],
-            )
 
         return SmartReadMultiResult(task_id=task_id, results=results)
