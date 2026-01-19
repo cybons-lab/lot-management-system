@@ -140,9 +140,33 @@ def generate_products(db: Session, options: object = None) -> list[Product]:
         count = 20
 
     for _ in range(count):
+        product_name = (
+            random.choice(
+                [
+                    "六角ボルト M6",
+                    "六角ボルト M8",
+                    "六角ボルト M10",
+                    "ワッシャー M6",
+                    "ワッシャー M8",
+                    "ナット M6",
+                    "ナット M8",
+                    "ゴムパッキン A",
+                    "ゴムパッキン B",
+                    "Oリング P-10",
+                    "Oリング P-20",
+                    "樹脂スペーサー",
+                    "金属スペーサー",
+                    "配線ケーブル A",
+                    "配線ケーブル B",
+                    "コネクタ端子",
+                ]
+            )
+            + " "
+            + fake.bothify(text="##")
+        )
         p = Product(
             maker_part_code=fake.unique.bothify(text="PRD-###??"),
-            product_name=fake.unique.bothify(text="Product-####?").upper(),
+            product_name=product_name,
             base_unit="pcs",
             consumption_limit_days=random.choice([30, 60, 90, 120, 180, 365]),
         )

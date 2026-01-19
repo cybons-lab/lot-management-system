@@ -16,7 +16,7 @@ import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRules
 import { CalendarSettingsPage } from "@/features/calendar";
 import { ClientLogsPage } from "@/features/client-logs";
 import { CustomerItemsListPage } from "@/features/customer-items/pages/CustomerItemsListPage";
-import { CustomersListPage, CustomerDetailPage } from "@/features/customers";
+import { CustomersListPage } from "@/features/customers";
 import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
 import { DeliveryPlacesListPage } from "@/features/delivery-places";
 import { ForecastCreatePage } from "@/features/forecasts/pages/ForecastCreatePage";
@@ -43,7 +43,7 @@ import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
 import { ProductMappingsListPage } from "@/features/product-mappings";
-import { ProductsListPage, ProductDetailPage } from "@/features/products";
+import { ProductsListPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { RPAPage } from "@/features/rpa";
 import {
@@ -62,12 +62,11 @@ import {
 import { GenericCloudFlowExecutePage } from "@/features/rpa/pages/GenericCloudFlowExecutePage";
 import { SmartReadPage } from "@/features/rpa/smartread";
 import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
-import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
+import { SuppliersListPage } from "@/features/suppliers";
 import { UomConversionsPage } from "@/features/uom-conversions/pages/UomConversionsPage";
-import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehouseDeliveryRoutesListPage } from "@/features/warehouse-delivery-routes";
-import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
+import { WarehousesListPage } from "@/features/warehouses";
 import { WithdrawalCreatePage, WithdrawalsListPage } from "@/features/withdrawals/pages";
 
 // --- Route Groups ---
@@ -107,13 +106,9 @@ function MasterRoutes() {
       <Route path="/masters/supplier-products" element={<SupplierProductsPage />} />
       <Route path="/masters/uom-conversions" element={<UomConversionsPage />} />
       <Route path={ROUTES.MASTERS.WAREHOUSES} element={<WarehousesListPage />} />
-      <Route path="/warehouses/:warehouseCode" element={<WarehouseDetailPage />} />
       <Route path={ROUTES.MASTERS.SUPPLIERS} element={<SuppliersListPage />} />
-      <Route path="/suppliers/:supplierCode" element={<SupplierDetailPage />} />
       <Route path={ROUTES.MASTERS.CUSTOMERS} element={<CustomersListPage />} />
-      <Route path="/customers/:customerCode" element={<CustomerDetailPage />} />
       <Route path={ROUTES.MASTERS.PRODUCTS} element={<ProductsListPage />} />
-      <Route path="/products/:makerPartCode" element={<ProductDetailPage />} />
       <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
       <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
       <Route path="/masters/primary-assignments" element={<PrimaryAssignmentsPage />} />
@@ -130,14 +125,7 @@ function MasterRoutes() {
           </AdminGuard>
         }
       />
-      <Route
-        path="/settings/users/:id"
-        element={
-          <AdminGuard>
-            <UserDetailPage />
-          </AdminGuard>
-        }
-      />
+
       <Route
         path={ROUTES.SETTINGS.ROLES}
         element={

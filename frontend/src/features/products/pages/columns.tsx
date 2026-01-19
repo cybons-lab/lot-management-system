@@ -36,7 +36,7 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
   return [
     {
       id: "product_code",
-      header: "先方品番",
+      header: "商品コード",
       cell: (row) => (
         <div className="flex items-center gap-2">
           <span className="font-mono text-sm font-medium whitespace-nowrap text-slate-900">

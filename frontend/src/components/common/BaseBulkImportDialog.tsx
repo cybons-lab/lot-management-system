@@ -85,7 +85,7 @@ export function BaseBulkImportDialog({
 }: BaseBulkImportDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(openState) => !openState && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>

@@ -1,9 +1,10 @@
 import { Pencil, Trash2, Truck, RotateCcw } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; removed
 import { toast } from "sonner";
 
 import type { Supplier, SupplierCreate } from "../api";
+import { SupplierDetailDialog } from "../components/SupplierDetailDialog";
 import { SupplierForm } from "../components/SupplierForm";
 import { useSuppliers } from "../hooks";
 
@@ -143,7 +144,8 @@ function createColumns(
 }
 
 export function SuppliersListPage() {
-  const navigate = useNavigate();
+  // navigate removed
+  const [selectedSupplierCode, setSelectedSupplierCode] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "supplier_code", direction: "asc" });
   const [showInactive, setShowInactive] = useState(false);
@@ -191,22 +193,19 @@ export function SuppliersListPage() {
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
-  const handleRowClick = useCallback(
-    (supplier: Supplier) => {
-      navigate(`/suppliers/${supplier.supplier_code}`);
-    },
-    [navigate],
-  );
+  const handleRowClick = useCallback((supplier: Supplier) => {
+    setSelectedSupplierCode(supplier.supplier_code);
+  }, []);
 
   const columns = useMemo(
     () =>
       createColumns(
         (row) => openRestore(row),
         (row) => openPermanentDelete(row),
-        (row) => navigate(`/suppliers/${row.supplier_code}`),
+        (row) => setSelectedSupplierCode(row.supplier_code),
         (row) => openSoftDelete(row),
       ),
-    [navigate, openRestore, openPermanentDelete, openSoftDelete],
+    [openRestore, openPermanentDelete, openSoftDelete],
   );
 
   const filteredSuppliers = useMemo(() => {
@@ -488,6 +487,11 @@ export function SuppliersListPage() {
           description={`選択された ${selectedIds.length} 件の仕入先を無効化します。`}
         />
       )}
+      <SupplierDetailDialog
+        supplierCode={selectedSupplierCode}
+        open={!!selectedSupplierCode}
+        onOpenChange={(open) => !open && setSelectedSupplierCode(null)}
+      />
     </div>
   );
 }

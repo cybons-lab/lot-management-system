@@ -21345,6 +21345,11 @@
             "title": "Customer Name",
             "description": "得意先名"
           },
+          "product_code": {
+            "type": "string",
+            "title": "Product Code",
+            "description": "製品コード(Maker Part Code)"
+          },
           "product_name": {
             "type": "string",
             "title": "Product Name",
@@ -21398,6 +21403,7 @@
           "base_unit",
           "customer_code",
           "customer_name",
+          "product_code",
           "product_name",
           "created_at",
           "updated_at",

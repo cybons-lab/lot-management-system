@@ -4,7 +4,7 @@
  */
 
 // Pages
-export { CustomersListPage, CustomerDetailPage } from "./pages";
+export { CustomersListPage } from "./pages";
 
 // Components
 export { CustomerForm } from "./components/CustomerForm";

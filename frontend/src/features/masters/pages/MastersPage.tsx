@@ -58,8 +58,8 @@ const masterSections: MasterSection[] = [
         color: "bg-purple-50 text-purple-600 hover:bg-purple-100",
       },
       {
-        title: "製品マスタ",
-        description: "社内基準の製品情報を管理",
+        title: "商品マスタ",
+        description: "社内基準の商品情報を管理",
         href: ROUTES.MASTERS.PRODUCTS,
         icon: Package,
         color: "bg-green-50 text-green-600 hover:bg-green-100",
@@ -75,18 +75,18 @@ const masterSections: MasterSection[] = [
   },
   {
     title: "マッピングマスタ",
-    description: "得意先/仕入先と製品の紐付けを管理",
+    description: "得意先/仕入先と商品の紐付けを管理",
     links: [
       {
         title: "得意先品番マッピング",
-        description: "得意先品番と製品/仕入先の紐付け",
+        description: "得意先品番と商品/仕入先の紐付け",
         href: ROUTES.MASTERS.CUSTOMER_ITEMS,
         icon: Database,
         color: "bg-teal-50 text-teal-600 hover:bg-teal-100",
       },
       {
-        title: "仕入先別製品設定",
-        description: "製品と仕入先の関係・主取引先設定",
+        title: "仕入先別商品設定",
+        description: "商品と仕入先の関係・主取引先設定",
         href: "/masters/supplier-products",
         icon: Database,
         color: "bg-cyan-50 text-cyan-600 hover:bg-cyan-100",
@@ -95,11 +95,11 @@ const masterSections: MasterSection[] = [
   },
   {
     title: "変換・設定",
-    description: "製品に紐づく単位や担当の設定",
+    description: "商品に紐づく単位や担当の設定",
     links: [
       {
         title: "単位換算",
-        description: "製品ごとの単位換算係数を管理",
+        description: "商品ごとの単位換算係数を管理",
         href: "/masters/uom-conversions",
         icon: Package,
         color: "bg-indigo-50 text-indigo-600 hover:bg-indigo-100",
@@ -239,13 +239,13 @@ function MasterStatusAlert() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>要確認: マッピング未設定のデータがあります</AlertTitle>
           <AlertDescription>
-            仕入先が設定されていない製品が <strong>{status.unmapped_products_count}件</strong>{" "}
+            仕入先が設定されていない商品が <strong>{status.unmapped_products_count}件</strong>{" "}
             あります。
             <Link
               to="/masters/supplier-products"
               className="ml-1 font-medium underline hover:text-red-950"
             >
-              仕入先別製品設定を確認
+              仕入先別商品設定を確認
             </Link>
           </AlertDescription>
         </Alert>

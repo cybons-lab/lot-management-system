@@ -1,9 +1,10 @@
 import { Users, RotateCcw, Pencil, Trash2 } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; removed
 import { toast } from "sonner";
 
 import type { Customer, CustomerCreate } from "../api";
+import { CustomerDetailDialog } from "../components/CustomerDetailDialog";
 import { CustomerForm } from "../components/CustomerForm";
 import { useCustomers } from "../hooks";
 
@@ -152,7 +153,7 @@ function createColumns(
 }
 
 export function CustomersListPage() {
-  const navigate = useNavigate();
+  // navigate removed as it is no longer used
 
   // State
   const [searchQuery, setSearchQuery] = useState("");
@@ -233,22 +234,21 @@ export function CustomersListPage() {
   // ページネーション
   const paginatedCustomers = table.paginateData(sortedCustomers);
 
-  const handleRowClick = useCallback(
-    (customer: Customer) => {
-      navigate(`/customers/${customer.customer_code}`);
-    },
-    [navigate],
-  );
+  const [selectedCustomerCode, setSelectedCustomerCode] = useState<string | null>(null);
+
+  const handleRowClick = useCallback((customer: Customer) => {
+    setSelectedCustomerCode(customer.customer_code);
+  }, []);
 
   const columns = useMemo(
     () =>
       createColumns(
         (row) => openRestore(row),
         (row) => openPermanentDelete(row),
-        (row) => navigate(`/customers/${row.customer_code}`),
+        (row) => setSelectedCustomerCode(row.customer_code),
         (row) => openSoftDelete(row),
       ),
-    [navigate, openRestore, openPermanentDelete, openSoftDelete],
+    [openRestore, openPermanentDelete, openSoftDelete],
   );
 
   // 新規登録
@@ -519,6 +519,11 @@ export function CustomersListPage() {
           description={`選択された ${selectedIds.length} 件の得意先を無効化します。`}
         />
       )}
+      <CustomerDetailDialog
+        customerCode={selectedCustomerCode}
+        open={!!selectedCustomerCode}
+        onOpenChange={(open) => !open && setSelectedCustomerCode(null)}
+      />
     </div>
   );
 }

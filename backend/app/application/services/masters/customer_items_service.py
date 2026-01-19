@@ -41,6 +41,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "customer_name": item.customer.customer_name,
             "external_product_code": item.external_product_code,
             "product_id": item.product_id,
+            "product_code": item.product.maker_part_code,
             "product_name": item.product.product_name,
             "supplier_id": item.supplier_id,
             "supplier_code": item.supplier.supplier_code if item.supplier else None,
@@ -49,6 +50,20 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "pack_unit": item.pack_unit,
             "pack_quantity": item.pack_quantity,
             "special_instructions": item.special_instructions,
+            # OCR-SAP conversion fields
+            "shipping_document_template": item.shipping_document_template,
+            "sap_notes": item.sap_notes,
+            "maker_part_no": item.maker_part_no,
+            "order_category": item.order_category,
+            "is_procurement_required": item.is_procurement_required,
+            "shipping_slip_text": item.shipping_slip_text,
+            "ocr_conversion_notes": item.ocr_conversion_notes,
+            # SAP cache fields
+            "sap_supplier_code": item.sap_supplier_code,
+            "sap_warehouse_code": item.sap_warehouse_code,
+            "sap_shipping_warehouse": item.sap_shipping_warehouse,
+            "sap_uom": item.sap_uom,
+            # Metadata
             "created_at": item.created_at,
             "updated_at": item.updated_at,
             "valid_to": item.valid_to,
@@ -81,6 +96,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 Customer.customer_code,
                 Customer.customer_name,
                 Product.product_name,
+                Product.maker_part_code,
                 Supplier.supplier_code,
                 Supplier.supplier_name,
             )
@@ -108,6 +124,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 "customer_name": r.customer_name,
                 "external_product_code": r.CustomerItem.external_product_code,
                 "product_id": r.CustomerItem.product_id,
+                "product_code": r.maker_part_code,
                 "product_name": r.product_name,
                 "supplier_id": r.CustomerItem.supplier_id,
                 "supplier_code": r.supplier_code,
@@ -118,6 +135,20 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 if r.CustomerItem.pack_quantity
                 else None,
                 "special_instructions": r.CustomerItem.special_instructions,
+                # OCR-SAP conversion fields
+                "shipping_document_template": r.CustomerItem.shipping_document_template,
+                "sap_notes": r.CustomerItem.sap_notes,
+                "maker_part_no": r.CustomerItem.maker_part_no,
+                "order_category": r.CustomerItem.order_category,
+                "is_procurement_required": r.CustomerItem.is_procurement_required,
+                "shipping_slip_text": r.CustomerItem.shipping_slip_text,
+                "ocr_conversion_notes": r.CustomerItem.ocr_conversion_notes,
+                # SAP cache fields
+                "sap_supplier_code": r.CustomerItem.sap_supplier_code,
+                "sap_warehouse_code": r.CustomerItem.sap_warehouse_code,
+                "sap_shipping_warehouse": r.CustomerItem.sap_shipping_warehouse,
+                "sap_uom": r.CustomerItem.sap_uom,
+                # Metadata
                 "created_at": r.CustomerItem.created_at.isoformat()
                 if r.CustomerItem.created_at
                 else None,

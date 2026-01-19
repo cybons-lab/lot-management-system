@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 
-import type { CreateCustomerItemRequest } from "../api";
+import type { CreateCustomerItemRequest, CustomerItem } from "../api";
 
 import { CustomerItemFormBasicSection } from "./CustomerItemFormBasicSection";
 import { CustomerItemFormOcrSapSection } from "./CustomerItemFormOcrSapSection";
@@ -23,12 +23,14 @@ import { Button } from "@/components/ui";
 import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
 
 interface CustomerItemFormProps {
+  item?: CustomerItem;
   onSubmit: (data: CreateCustomerItemRequest) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
 
 export function CustomerItemForm({
+  item,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -44,7 +46,27 @@ export function CustomerItemForm({
     formState: { errors },
   } = useForm<CustomerItemFormData>({
     resolver: zodResolver(customerItemFormSchema),
-    defaultValues: CUSTOMER_ITEM_FORM_DEFAULTS,
+    defaultValues: item
+      ? {
+          customer_id: item.customer_id,
+          external_product_code: item.external_product_code,
+          product_id: item.product_id,
+          supplier_id: item.supplier_id,
+          base_unit: item.base_unit,
+          pack_unit: item.pack_unit,
+          pack_quantity: item.pack_quantity,
+          special_instructions: item.special_instructions,
+          maker_part_no: item.maker_part_no,
+          order_category: item.order_category,
+          is_procurement_required: item.is_procurement_required,
+          shipping_slip_text: item.shipping_slip_text,
+          ocr_conversion_notes: item.ocr_conversion_notes,
+          sap_supplier_code: item.sap_supplier_code,
+          sap_warehouse_code: item.sap_warehouse_code,
+          sap_shipping_warehouse: item.sap_shipping_warehouse,
+          sap_uom: item.sap_uom,
+        }
+      : CUSTOMER_ITEM_FORM_DEFAULTS,
   });
 
   // Generate select options
@@ -57,7 +79,7 @@ export function CustomerItemForm({
     [customers],
   );
 
-  // 先方品番（製品名）形式のオプション - 先方品番があるもののみ
+  // 先方品番（商品名）形式のオプション - 先方品番があるもののみ
   const productOptions = useMemo(
     () =>
       products
@@ -108,7 +130,7 @@ export function CustomerItemForm({
           キャンセル
         </Button>
         <Button type="submit" disabled={isSubmitting || isLoading}>
-          {isSubmitting ? "登録中..." : "登録"}
+          {isSubmitting ? (item ? "更新中..." : "登録中...") : item ? "更新" : "登録"}
         </Button>
       </div>
     </form>

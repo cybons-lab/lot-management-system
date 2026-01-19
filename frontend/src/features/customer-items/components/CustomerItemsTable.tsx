@@ -3,7 +3,7 @@
  * Refactored to use DataTable component.
  * OCR-SAP変換フィールド対応版 + チェックボックス選択対応
  */
-import { Building2, CheckCircle, Package, RotateCcw, Trash2, XCircle } from "lucide-react";
+import { Building2, CheckCircle, Package, Pencil, RotateCcw, Trash2, XCircle } from "lucide-react";
 import { useMemo } from "react";
 
 import type { CustomerItem } from "../api";
@@ -15,6 +15,7 @@ import { DataTable } from "@/shared/components/data/DataTable";
 interface CustomerItemsTableProps {
   items: CustomerItem[];
   isLoading: boolean;
+  onEdit: (item: CustomerItem) => void;
   onSoftDelete: (item: CustomerItem) => void;
   onPermanentDelete: (item: CustomerItem) => void;
   onRestore: (item: CustomerItem) => void;
@@ -40,6 +41,7 @@ const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.external_
 export function CustomerItemsTable({
   items,
   isLoading,
+  onEdit,
   onSoftDelete,
   onPermanentDelete,
   onRestore,
@@ -63,10 +65,10 @@ export function CustomerItemsTable({
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 shrink-0 text-orange-600" />
               <div className="min-w-[120px]">
-                <div className="font-medium">{row.customer_code}</div>
-                <div className="truncate text-xs text-gray-500" title={row.customer_name}>
+                <div className="font-medium truncate" title={row.customer_name}>
                   {row.customer_name}
                 </div>
+                <div className="text-xs text-gray-500">{row.customer_code}</div>
                 {inactive && (
                   <span className="mt-1 inline-block rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
                     削除済
@@ -81,7 +83,7 @@ export function CustomerItemsTable({
       },
       {
         id: "external_product_code",
-        header: "得意先品番",
+        header: "先方品番",
         accessor: (row) => row.external_product_code,
         cell: (row) => (
           <span className="font-medium whitespace-nowrap">{row.external_product_code}</span>
@@ -91,16 +93,16 @@ export function CustomerItemsTable({
       },
       {
         id: "product",
-        header: "製品",
+        header: "商品",
         accessor: (row) => row.product_name,
         cell: (row) => (
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 shrink-0 text-green-600" />
             <div className="min-w-[120px]">
-              <div className="truncate font-medium" title={row.product_name}>
+              <div className="truncate font-medium text-sm" title={row.product_name}>
                 {row.product_name}
               </div>
-              <div className="text-xs text-gray-500">ID: {row.product_id}</div>
+              <div className="text-xs text-gray-500">{row.product_code}</div>
             </div>
           </div>
         ),
@@ -234,17 +236,32 @@ export function CustomerItemsTable({
     }
 
     return (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={(e) => {
-          e.stopPropagation();
-          onSoftDelete(item);
-        }}
-        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center justify-end gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(item);
+          }}
+          title="編集"
+          className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700"
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSoftDelete(item);
+          }}
+          title="削除"
+          className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     );
   };
 

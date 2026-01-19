@@ -24,7 +24,7 @@ export function CustomerItemBasicTab({ item }: CustomerItemBasicTabProps) {
           <div className="font-medium">{item.external_product_code}</div>
         </div>
         <div>
-          <div className="text-xs text-slate-500">製品</div>
+          <div className="text-xs text-slate-500">商品</div>
           <div className="font-medium">
             {item.product_name} (ID: {item.product_id})
           </div>

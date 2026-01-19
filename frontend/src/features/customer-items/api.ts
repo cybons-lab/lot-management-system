@@ -18,6 +18,7 @@ export interface CustomerItem {
   customer_name: string;
   external_product_code: string;
   product_id: number;
+  product_code: string;
   product_name: string;
   supplier_id: number | null;
   supplier_code: string | null;
