@@ -180,3 +180,30 @@ class BatchJob(Base):
         Index("idx_batch_jobs_type", "job_type"),
         Index("idx_batch_jobs_created", "created_at"),
     )
+
+
+class ServerLog(Base):
+    """サーバ調査ログ（アプリケーションログ保存用）."""
+
+    __tablename__ = "server_logs"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+    level: Mapped[str] = mapped_column(String(20), nullable=False)
+    logger: Mapped[str] = mapped_column(String(255), nullable=False)
+    event: Mapped[str | None] = mapped_column(Text)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    request_id: Mapped[str | None] = mapped_column(String(64))
+    user_id: Mapped[int | None] = mapped_column(BigInteger)
+    username: Mapped[str | None] = mapped_column(String(255))
+    method: Mapped[str | None] = mapped_column(String(16))
+    path: Mapped[str | None] = mapped_column(Text)
+    extra: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
+
+    __table_args__ = (
+        Index("idx_server_logs_created_at", "created_at"),
+        Index("idx_server_logs_level", "level"),
+        Index("idx_server_logs_request_id", "request_id"),
+    )

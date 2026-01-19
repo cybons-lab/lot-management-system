@@ -29,7 +29,7 @@ from .inventory_models import (
     StockTransactionType,
 )
 from .layer_code_models import LayerCodeMapping
-from .logs_models import BatchJob, BusinessRule, MasterChangeLog, OperationLog
+from .logs_models import BatchJob, BusinessRule, MasterChangeLog, OperationLog, ServerLog
 
 # B-Plan models
 from .lot_master_model import LotMaster
@@ -149,6 +149,8 @@ __all__ = [
     "ProductWarehouse",
     # Logs
     "OperationLog",
+    "ServerLog",
+    "ServerLog",
     "MasterChangeLog",
     "BusinessRule",
     "BatchJob",

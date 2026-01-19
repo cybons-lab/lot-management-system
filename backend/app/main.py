@@ -115,6 +115,7 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -131,7 +132,6 @@ from app.core.logging import setup_logging
 from app.domain.errors import DomainError
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.metrics import MetricsMiddleware
-from app.middleware.request_id import RequestIdMiddleware
 from app.presentation.api.routes import register_all_routers
 
 
@@ -175,7 +175,7 @@ application.add_exception_handler(Exception, errors.generic_exception_handler)
 # ミドルウェア登録
 # ========================================
 # 注: add_middlewareは逆順で実行される
-# 実行順: CORS → Metrics → RequestLogging → RequestID
+# 実行順: CORS → Metrics → RequestLogging → CorrelationId
 application.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -189,7 +189,11 @@ application.add_middleware(
     sensitive_headers=settings.LOG_SENSITIVE_FIELDS,
     log_request_body=settings.ENVIRONMENT != "production",
 )
-application.add_middleware(RequestIdMiddleware)
+application.add_middleware(
+    CorrelationIdMiddleware,
+    header_name="X-Request-ID",
+    update_request_header=True,
+)
 
 # ========================================
 # ルーター登録

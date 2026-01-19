@@ -34,6 +34,7 @@ interface ClientLog {
   level: string;
   message: string;
   user_id?: number | null;
+  request_id?: string | null;
   created_at: string;
 }
 

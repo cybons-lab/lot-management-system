@@ -39,6 +39,7 @@ class ClientLog(Base):
     level: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'info'"))
     message: Mapped[str] = mapped_column(Text, nullable=False)
     user_agent: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -46,4 +47,5 @@ class ClientLog(Base):
     __table_args__ = (
         Index("idx_system_client_logs_created_at", "created_at"),
         Index("idx_system_client_logs_user_id", "user_id"),
+        Index("idx_system_client_logs_request_id", "request_id"),
     )

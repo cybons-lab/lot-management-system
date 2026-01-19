@@ -23,6 +23,7 @@
 import ky, { type KyInstance, type Options, type HTTPError } from "ky";
 
 import { logError } from "@/services/error-logger";
+import { createRequestId, getRequestId } from "@/shared/utils/request-id";
 import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
 
 /**
@@ -100,6 +101,7 @@ function handleNetworkError(error: HTTPError, request: Request): HTTPError {
   logError("HTTP", networkError, {
     url: request?.url,
     method: request?.method,
+    request_id: getRequestId(),
   });
 
   error.message = networkError.message;
@@ -191,6 +193,7 @@ async function handleApiError(
       method: request?.method,
       status,
       response: body,
+      request_id: getRequestId(),
     });
   }
 
@@ -244,6 +247,7 @@ export const apiClient: KyInstance = ky.create({
         if (token) {
           request.headers.set("Authorization", `Bearer ${token}`);
         }
+        request.headers.set("X-Request-ID", createRequestId());
         // Note: Request logging removed to reduce console noise
         // Enable by setting VITE_HTTP_DEBUG=true if needed
       },

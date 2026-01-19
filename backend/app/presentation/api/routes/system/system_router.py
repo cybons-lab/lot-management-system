@@ -29,6 +29,7 @@ def create_client_log(
         level=log_in.level,
         message=log_in.message,
         user_agent=log_in.user_agent,
+        request_id=log_in.request_id,
         created_at=datetime.now(UTC),
     )
     db.add(log)
@@ -60,6 +61,7 @@ def get_recent_logs(
             "level": log.level,
             "message": log.message,
             "user_agent": log.user_agent,
+            "request_id": log.request_id,
             "created_at": log.created_at,
         }
         for log, user in logs

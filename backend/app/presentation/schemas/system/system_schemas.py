@@ -11,6 +11,7 @@ class ClientLogCreate(BaseSchema):
     level: str = "info"
     message: str
     user_agent: str | None = None
+    request_id: str | None = None
 
 
 class ClientLogResponse(BaseSchema):
@@ -22,4 +23,5 @@ class ClientLogResponse(BaseSchema):
     level: str
     message: str
     user_agent: str | None
+    request_id: str | None
     created_at: datetime

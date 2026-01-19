@@ -150,12 +150,17 @@ JSON形式でのログ出力、リクエストコンテキスト管理、セン�
 
 import logging
 import sys
+from queue import SimpleQueue
 from contextvars import ContextVar
 from datetime import UTC, datetime
-from logging.handlers import RotatingFileHandler
+from logging.handlers import QueueHandler, QueueListener, RotatingFileHandler
 from pathlib import Path
 
-from pythonjsonlogger import jsonlogger
+import structlog
+from asgi_correlation_id import correlation_id
+from structlog.contextvars import bind_contextvars, clear_contextvars, get_contextvars
+from structlog.processors import JSONRenderer
+from structlog.stdlib import ProcessorFormatter
 
 
 # コンテキスト変数（リクエストごとの情報を保持）
@@ -164,150 +169,59 @@ user_id_var: ContextVar[int | None] = ContextVar("user_id", default=None)
 username_var: ContextVar[str | None] = ContextVar("username", default=None)
 
 
-class CustomJsonFormatter(jsonlogger.JsonFormatter):
-    """カスタムJSONフォーマッタ.
+_queue_listener: QueueListener | None = None
 
-    ログレコードにコンテキスト情報（request_id, user_idなど）を自動付加。
-    """
 
-    def __init__(
-        self,
-        *args,
-        sensitive_fields: list[str] | None = None,
-        **kwargs,
-    ):
-        """初期化.
+class RequestContextFilter(logging.Filter):
+    """構造化ログ向けのコンテキスト情報を LogRecord に埋め込む."""
 
-        Args:
-            *args: 親クラスに渡される位置引数
-            sensitive_fields: マスキング対象フィールドのリスト
-            **kwargs: 親クラスに渡されるキーワード引数
-        """
-        super().__init__(*args, **kwargs)
-        self.sensitive_fields = sensitive_fields or []
-
-    def add_fields(self, log_record: dict, record: logging.LogRecord, message_dict: dict):
-        """ログレコードにフィールドを追加.
-
-        Args:
-            log_record: 出力するログレコード（辞書形式）
-            record: 元のログレコード
-            message_dict: メッセージ辞書
-        """
-        super().add_fields(log_record, record, message_dict)
-
-        # タイムスタンプ（ISO 8601形式）
-        log_record["timestamp"] = datetime.now(UTC).isoformat()
-
-        # ログレベル
-        log_record["level"] = record.levelname
-
-        # ロガー名
-        log_record["logger"] = record.name
-
-        # ファイル情報
-        log_record["file"] = f"{record.pathname}:{record.lineno}"
-        log_record["function"] = record.funcName
-
-        # コンテキスト情報（存在する場合のみ）
-        request_id = request_id_var.get()
+    def filter(self, record: logging.LogRecord) -> bool:
+        context = get_contextvars()
+        request_id = context.get("request_id") or correlation_id.get()
         if request_id:
-            log_record["request_id"] = request_id
+            record.request_id = request_id
 
-        user_id = user_id_var.get()
-        if user_id:
-            log_record["user_id"] = user_id
+        for field in ("user_id", "username", "method", "path"):
+            value = context.get(field)
+            if value is not None:
+                setattr(record, field, value)
 
-        username = username_var.get()
-        if username:
-            log_record["username"] = username
-
-        # 環境変数
-        from app.core.config import settings
-
-        log_record["environment"] = settings.ENVIRONMENT
-
-        # センシティブ情報のマスキング
-        self._mask_sensitive_fields(log_record)
-
-    def _mask_sensitive_fields(self, log_record: dict):
-        """センシティブフィールドをマスキング.
-
-        Args:
-            log_record: ログレコード
-        """
-        for key in list(log_record.keys()):
-            if any(sensitive in key.lower() for sensitive in self.sensitive_fields):
-                log_record[key] = "***MASKED***"
-
-            # ネストされた辞書も再帰的にマスキング
-            if isinstance(log_record[key], dict):
-                self._mask_dict_fields(log_record[key])
-
-    def _mask_dict_fields(self, data: dict):
-        """辞書内のセンシティブフィールドを再帰的にマスキング.
-
-        Args:
-            data: マスキング対象の辞書
-        """
-        for key in list(data.keys()):
-            if any(sensitive in key.lower() for sensitive in self.sensitive_fields):
-                data[key] = "***MASKED***"
-            elif isinstance(data[key], dict):
-                self._mask_dict_fields(data[key])
+        record.event = getattr(record, "event", record.getMessage())
+        return True
 
 
-class ColoredConsoleFormatter(logging.Formatter):
-    """カラー付きコンソールフォーマッタ（開発環境用）."""
+def _add_request_id(_, __, event_dict: dict) -> dict:
+    request_id = event_dict.get("request_id") or correlation_id.get()
+    if request_id:
+        event_dict["request_id"] = request_id
+    return event_dict
 
-    # ANSI カラーコード
-    COLORS = {
-        "DEBUG": "\033[36m",  # シアン
-        "INFO": "\033[32m",  # 緑
-        "WARNING": "\033[33m",  # 黄色
-        "ERROR": "\033[31m",  # 赤
-        "CRITICAL": "\033[1;31m",  # 太字赤
-        "RESET": "\033[0m",  # リセット
-    }
 
-    def format(self, record: logging.LogRecord) -> str:
-        """ログレコードをフォーマット.
+def _add_environment(_, __, event_dict: dict) -> dict:
+    from app.core.config import settings
 
-        Args:
-            record: ログレコード
+    event_dict.setdefault("environment", settings.ENVIRONMENT)
+    return event_dict
 
-        Returns:
-            フォーマット済みログメッセージ
-        """
-        # レベルに応じた色を適用
-        level_color = self.COLORS.get(record.levelname, self.COLORS["RESET"])
-        reset = self.COLORS["RESET"]
 
-        # リクエストIDとユーザー情報を取得
-        request_id = request_id_var.get()
-        username = username_var.get()
+def _mask_sensitive_fields(sensitive_fields: list[str]):
+    def _masker(_, __, event_dict: dict) -> dict:
+        for key in list(event_dict.keys()):
+            if any(sensitive in key.lower() for sensitive in sensitive_fields):
+                event_dict[key] = "***MASKED***"
+            elif isinstance(event_dict[key], dict):
+                _mask_nested_dict(event_dict[key], sensitive_fields)
+        return event_dict
 
-        context_parts = []
-        if request_id:
-            context_parts.append(f"req={request_id[:8]}")
-        if username:
-            context_parts.append(f"user={username}")
+    return _masker
 
-        context_str = f"[{' '.join(context_parts)}] " if context_parts else ""
 
-        # フォーマット
-        log_message = (
-            f"{level_color}{record.levelname:8}{reset} "
-            f"{record.name:30} "
-            f"{context_str}"
-            f"{record.getMessage()}"
-        )
-
-        # 例外情報がある場合は追加
-        if record.exc_info:
-            log_message += f"\n{self.formatException(record.exc_info)}"
-
-        return log_message
+def _mask_nested_dict(data: dict, sensitive_fields: list[str]) -> None:
+    for key in list(data.keys()):
+        if any(sensitive in key.lower() for sensitive in sensitive_fields):
+            data[key] = "***MASKED***"
+        elif isinstance(data[key], dict):
+            _mask_nested_dict(data[key], sensitive_fields)
 
 
 def setup_logging(
@@ -335,6 +249,46 @@ def setup_logging(
     json_format = json_format if json_format is not None else settings.LOG_JSON_FORMAT
     sensitive_fields = sensitive_fields or settings.LOG_SENSITIVE_FIELDS
 
+    # structlog 設定
+    processors = [
+        structlog.contextvars.merge_contextvars,
+        _add_request_id,
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso", utc=True, key="timestamp"),
+        structlog.processors.add_logger_name,
+        _add_environment,
+        _mask_sensitive_fields(sensitive_fields),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ]
+
+    structlog.configure(
+        processors=processors,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
+
+    foreign_pre_chain = [
+        structlog.contextvars.merge_contextvars,
+        _add_request_id,
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso", utc=True, key="timestamp"),
+        structlog.processors.add_logger_name,
+        _add_environment,
+        _mask_sensitive_fields(sensitive_fields),
+    ]
+
+    formatter = ProcessorFormatter(
+        processor=JSONRenderer()
+        if json_format
+        else structlog.dev.ConsoleRenderer(colors=True),
+        foreign_pre_chain=foreign_pre_chain,
+    )
+
+    context_filter = RequestContextFilter()
+
     # ルートロガーの設定
     root_logger = logging.getLogger()
     root_logger.setLevel(level.upper())
@@ -343,19 +297,8 @@ def setup_logging(
     # コンソールハンドラ
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level.upper())
-
-    console_formatter: logging.Formatter
-    if json_format:
-        # JSON形式（本番環境）
-        console_formatter = CustomJsonFormatter(
-            "%(timestamp)s %(level)s %(name)s %(message)s",
-            sensitive_fields=sensitive_fields,
-        )
-    else:
-        # カラー付きテキスト形式（開発環境）
-        console_formatter = ColoredConsoleFormatter()
-
-    console_handler.setFormatter(console_formatter)
+    console_handler.addFilter(context_filter)
+    console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
 
     # ファイルハンドラ（有効な場合）
@@ -371,11 +314,8 @@ def setup_logging(
             encoding="utf-8",
         )
         app_handler.setLevel(logging.DEBUG)
-        app_formatter = CustomJsonFormatter(
-            "%(timestamp)s %(level)s %(name)s %(message)s",
-            sensitive_fields=sensitive_fields,
-        )
-        app_handler.setFormatter(app_formatter)
+        app_handler.addFilter(context_filter)
+        app_handler.setFormatter(formatter)
         root_logger.addHandler(app_handler)
 
         # エラーログ（ERROR以上のみ）
@@ -386,14 +326,36 @@ def setup_logging(
             backupCount=settings.LOG_BACKUP_COUNT,
             encoding="utf-8",
         )
-        error_handler.setLevel(logging.ERROR)
-        error_handler.setFormatter(app_formatter)
+        error_handler.setLevel(logging.WARNING)
+        error_handler.addFilter(context_filter)
+        error_handler.setFormatter(formatter)
         root_logger.addHandler(error_handler)
+
+    # DB保存用ログハンドラ（WARNING以上）
+    from app.core.server_log_handler import ServerLogDBHandler
+
+    global _queue_listener
+    if _queue_listener:
+        _queue_listener.stop()
+        _queue_listener = None
+
+    log_queue: SimpleQueue[logging.LogRecord] = SimpleQueue()
+    queue_handler = QueueHandler(log_queue)
+    queue_handler.setLevel(logging.WARNING)
+    queue_handler.addFilter(context_filter)
+    root_logger.addHandler(queue_handler)
+
+    db_handler = ServerLogDBHandler()
+    db_handler.setLevel(logging.WARNING)
+    _queue_listener = QueueListener(log_queue, db_handler, respect_handler_level=True)
+    _queue_listener.start()
 
     # サードパーティライブラリのログレベル調整
     logging.getLogger("uvicorn").setLevel(logging.WARNING)
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.engine.Engine").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
 
     # 起動ログ
     logger = logging.getLogger(__name__)
@@ -408,7 +370,11 @@ def setup_logging(
 
 
 def set_request_context(
-    request_id: str | None = None, user_id: int | None = None, username: str | None = None
+    request_id: str | None = None,
+    user_id: int | None = None,
+    username: str | None = None,
+    method: str | None = None,
+    path: str | None = None,
 ):
     """リクエストコンテキストを設定.
 
@@ -419,10 +385,18 @@ def set_request_context(
     """
     if request_id:
         request_id_var.set(request_id)
-    if user_id:
+    if user_id is not None:
         user_id_var.set(user_id)
     if username:
         username_var.set(username)
+
+    bind_contextvars(
+        request_id=request_id,
+        user_id=user_id,
+        username=username,
+        method=method,
+        path=path,
+    )
 
 
 def clear_request_context():
@@ -430,9 +404,10 @@ def clear_request_context():
     request_id_var.set(None)
     user_id_var.set(None)
     username_var.set(None)
+    clear_contextvars()
 
 
-def get_logger(name: str) -> logging.Logger:
+def get_logger(name: str) -> structlog.stdlib.BoundLogger:
     """ロガーを取得.
 
     Args:
@@ -441,7 +416,7 @@ def get_logger(name: str) -> logging.Logger:
     Returns:
         ロガーインスタンス
     """
-    return logging.getLogger(name)
+    return structlog.get_logger(name)
 
 
 # 後方互換性のため、旧関数名も保持

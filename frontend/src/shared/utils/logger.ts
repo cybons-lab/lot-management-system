@@ -89,6 +89,7 @@
  */
 
 import { http } from "@/shared/api/http-client";
+import { getRequestId } from "@/shared/utils/request-id";
 
 export type LogLevel = "info" | "warning" | "error";
 
@@ -96,6 +97,7 @@ interface LogPayload {
   level: LogLevel;
   message: string;
   user_agent: string;
+  request_id?: string | null;
 }
 
 export class Logger {
@@ -134,6 +136,7 @@ export class Logger {
       level,
       message,
       user_agent: navigator.userAgent,
+      request_id: getRequestId(),
     };
 
     http.post("system/logs/client", payload).catch((e) => {

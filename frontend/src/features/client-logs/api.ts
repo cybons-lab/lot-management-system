@@ -17,6 +17,7 @@ export interface ClientLog {
   level: "info" | "warning" | "error";
   message: string;
   user_agent: string | null;
+  request_id: string | null;
   created_at: string;
 }
 
