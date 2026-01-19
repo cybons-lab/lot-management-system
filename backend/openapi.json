@@ -19557,6 +19557,17 @@
               }
             ],
             "title": "User Agent"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
           }
         },
         "type": "object",
@@ -19613,6 +19624,17 @@
             ],
             "title": "User Agent"
           },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -19626,6 +19648,7 @@
           "level",
           "message",
           "user_agent",
+          "request_id",
           "created_at"
         ],
         "title": "ClientLogResponse",

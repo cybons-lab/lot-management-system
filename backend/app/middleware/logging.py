@@ -170,6 +170,7 @@ import logging
 import time
 from collections.abc import Callable
 
+from asgi_correlation_id import correlation_id
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -222,15 +223,21 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         Returns:
             HTTPレスポンス
         """
-        # リクエストIDを取得（RequestIdMiddlewareで設定済み）
-        request_id = getattr(request.state, "request_id", None)
+        # リクエストIDを取得（CorrelationIdMiddlewareで設定済み）
+        request_id = correlation_id.get()
 
         # ユーザー情報を取得（認証ミドルウェアで設定される場合）
         user_id = getattr(request.state, "user_id", None)
         username = getattr(request.state, "username", None)
 
         # コンテキストを設定
-        set_request_context(request_id=request_id, user_id=user_id, username=username)
+        set_request_context(
+            request_id=request_id,
+            user_id=user_id,
+            username=username,
+            method=request.method,
+            path=request.url.path,
+        )
 
         # リクエスト開始時刻
         start_time = time.time()
