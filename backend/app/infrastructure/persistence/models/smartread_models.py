@@ -149,3 +149,32 @@ class SmartReadLongData(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
+
+
+class SmartReadExportHistory(Base):
+    """SmartRead エクスポート履歴.
+
+    エクスポート処理の実行履歴を記録する。
+    request_id調査用のトレーサビリティを確保。
+    """
+
+    __tablename__ = "smartread_export_history"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    config_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("smartread_configs.id", ondelete="CASCADE"), nullable=False
+    )
+    task_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    export_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    task_date: Mapped[date] = mapped_column(Date, nullable=False)
+    filename: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    wide_row_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    long_row_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="SUCCESS"
+    )  # SUCCESS / FAILED
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )

@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import SmartReadConfig
 from app.infrastructure.persistence.models.smartread_models import (
+    SmartReadExportHistory,
     SmartReadLongData,
     SmartReadTask,
     SmartReadWideData,
@@ -624,6 +625,27 @@ class SmartReadService:
                 task_date=task_date if task_date else date.today(),
             )
 
+        # request_id調査用ログ出力
+        self._log_export_investigation(
+            task_id=task_id,
+            export_id=export_id,
+            csv_filename=csv_filename,
+            wide_row_count=len(wide_data),
+            long_row_count=len(result.long_data),
+        )
+
+        # エクスポート履歴をDBに記録
+        self._record_export_history(
+            config_id=config_id,
+            task_id=task_id,
+            export_id=export_id,
+            task_date=task_date if task_date else date.today(),
+            filename=csv_filename,
+            wide_row_count=len(wide_data),
+            long_row_count=len(result.long_data),
+            status="SUCCESS",
+        )
+
         return {
             "wide_data": wide_data,
             "long_data": result.long_data,
@@ -865,3 +887,76 @@ class SmartReadService:
 
         except Exception as e:
             logger.error(f"Failed to save long data to CSV: {e}")
+
+    def _log_export_investigation(
+        self,
+        task_id: str,
+        export_id: str,
+        csv_filename: str | None,
+        wide_row_count: int,
+        long_row_count: int,
+    ) -> None:
+        """request_id調査用のログを出力.
+
+        Args:
+            task_id: タスクID
+            export_id: エクスポートID
+            csv_filename: CSVファイル名
+            wide_row_count: 横持ちデータ行数
+            long_row_count: 縦持ちデータ行数
+        """
+        logger.info(
+            "[REQUEST_ID_INVESTIGATION] Export processed",
+            extra={
+                "task_id": task_id,
+                "export_id": export_id,
+                "csv_filename": csv_filename,
+                "wide_row_count": wide_row_count,
+                "long_row_count": long_row_count,
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
+
+    def _record_export_history(
+        self,
+        config_id: int,
+        task_id: str,
+        export_id: str,
+        task_date: date,
+        filename: str | None,
+        wide_row_count: int,
+        long_row_count: int,
+        status: str = "SUCCESS",
+        error_message: str | None = None,
+    ) -> None:
+        """エクスポート履歴をDBに記録.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_id: エクスポートID
+            task_date: タスク日付
+            filename: CSVファイル名
+            wide_row_count: 横持ちデータ行数
+            long_row_count: 縦持ちデータ行数
+            status: ステータス (SUCCESS / FAILED)
+            error_message: エラーメッセージ
+        """
+        try:
+            history = SmartReadExportHistory(
+                config_id=config_id,
+                task_id=task_id,
+                export_id=export_id,
+                task_date=task_date,
+                filename=filename,
+                wide_row_count=wide_row_count,
+                long_row_count=long_row_count,
+                status=status,
+                error_message=error_message,
+            )
+            self.session.add(history)
+            self.session.commit()
+            logger.debug(f"Export history recorded: {task_id} / {export_id}")
+        except Exception as e:
+            logger.error(f"Failed to record export history: {e}")
+            self.session.rollback()
