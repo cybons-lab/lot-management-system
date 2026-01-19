@@ -53,6 +53,8 @@ export function SmartReadPage() {
   const processWatchFilesMutation = useProcessWatchDirFiles();
   const { refetch: refetchTasks } = useSmartReadTasks(selectedConfigId);
 
+  console.log("[SmartReadPage] Render", { selectedConfigId, activeTab });
+
   const activeConfigs = configs?.filter((c) => c.is_active) ?? [];
 
   const handleProcessWatchFiles = async () => {
