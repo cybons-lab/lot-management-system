@@ -15,6 +15,11 @@ import {
   analyzeFile,
   getWatchDirFiles,
   processWatchDirFiles,
+  getTasks,
+  createExport,
+  getExportStatus,
+  getExportCsvData,
+  transformCsv,
 } from "./api";
 
 import { ApiError } from "@/utils/errors/custom-errors";
@@ -184,3 +189,153 @@ export function useProcessWatchDirFiles() {
     },
   });
 }
+
+// ==================== タスク・Export ====================
+
+/**
+ * タスク一覧を取得
+ */
+export function useSmartReadTasks(configId: number | null) {
+  return useQuery({
+    queryKey: configId ? [...QUERY_KEYS.config(configId), "tasks"] : [],
+    queryFn: () => (configId ? getTasks(configId) : Promise.resolve({ tasks: [] })),
+    enabled: !!configId,
+    staleTime: 1000 * 60 * 5, // 5分
+  });
+}
+
+/**
+ * エクスポートを作成
+ */
+export function useCreateExport() {
+  return useMutation({
+    mutationFn: ({
+      configId,
+      taskId,
+      exportType = "csv",
+    }: {
+      configId: number;
+      taskId: string;
+      exportType?: string;
+    }) => createExport(configId, taskId, exportType),
+    onError: (error: Error) => {
+      toast.error(`エクスポート作成に失敗しました: ${error.message}`);
+    },
+  });
+}
+
+/**
+ * エクスポート状態を取得
+ */
+export function useExportStatus(
+  configId: number | null,
+  taskId: string | null,
+  exportId: string | null,
+  enabled: boolean = true,
+) {
+  return useQuery({
+    queryKey:
+      configId && taskId && exportId
+        ? [...QUERY_KEYS.config(configId), "export", taskId, exportId]
+        : [],
+    queryFn: () =>
+      configId && taskId && exportId
+        ? getExportStatus(configId, taskId, exportId)
+        : Promise.resolve(null),
+    enabled: !!configId && !!taskId && !!exportId && enabled,
+    refetchInterval: (query) => {
+      // RUNNING状態なら5秒ごとにポーリング
+      const data = query.state.data;
+      if (data && data.state === "RUNNING") {
+        return 5000;
+      }
+      return false;
+    },
+  });
+}
+
+/**
+ * エクスポートからCSVデータを取得
+ */
+export function useExportCsvData(
+  configId: number | null,
+  taskId: string | null,
+  exportId: string | null,
+  isExportDone: boolean = false,
+) {
+  return useQuery({
+    queryKey:
+      configId && taskId && exportId
+        ? [...QUERY_KEYS.config(configId), "csv", taskId, exportId]
+        : [],
+    queryFn: () =>
+      configId && taskId && exportId
+        ? getExportCsvData(configId, taskId, exportId)
+        : Promise.resolve(null),
+    enabled: !!configId && !!taskId && !!exportId && isExportDone,
+    staleTime: 1000 * 60 * 10, // CSVデータは10分キャッシュ
+  });
+}
+
+/**
+ * 横持ち→縦持ち変換
+ */
+export function useTransformCsv() {
+  return useMutation({
+    mutationFn: ({
+      wideData,
+      skipEmpty = true,
+    }: {
+      wideData: Record<string, unknown>[];
+      skipEmpty?: boolean;
+    }) => transformCsv(wideData, skipEmpty),
+    onError: (error: Error) => {
+      toast.error(`変換に失敗しました: ${error.message}`);
+    },
+  });
+}
+
+/**
+ * JSONダウンロード
+ */
+export const downloadJson = (data: unknown, filename: string) => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * CSVダウンロード
+ */
+export const downloadCsv = (data: Record<string, unknown>[], filename: string) => {
+  if (data.length === 0) return;
+
+  const headers = Object.keys(data[0]);
+  const csvContent = [
+    headers.join(","),
+    ...data.map((row) =>
+      headers
+        .map((header) => {
+          const cell = row[header] === null || row[header] === undefined ? "" : row[header];
+          return JSON.stringify(cell); // Escape quotes
+        })
+        .join(","),
+    ),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};

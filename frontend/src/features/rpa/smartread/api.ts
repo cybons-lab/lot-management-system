@@ -127,74 +127,104 @@ export async function processWatchDirFiles(
   });
 }
 
-/**
- * データをJSONでダウンロード
- */
-export async function downloadJson(
-  data: Record<string, unknown>[],
-  filename: string = "export.json",
-): Promise<void> {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+// 以前の downloadJson, downloadCsv は削除
+// hooks.ts 内の実装を使用する
+
+// ==================== タスク・Export・変換 ====================
+
+export interface SmartReadTask {
+  task_id: string;
+  name: string;
+  status: string;
+  created_at: string | null;
+  request_count: number;
+}
+
+export interface SmartReadTaskListResponse {
+  tasks: SmartReadTask[];
+}
+
+export interface SmartReadExport {
+  export_id: string;
+  state: string;
+  task_id: string | null;
+  error_message: string | null;
+}
+
+export interface SmartReadValidationError {
+  row: number;
+  field: string;
+  message: string;
+  value: string | null;
+}
+
+export interface SmartReadCsvDataResponse {
+  wide_data: Record<string, unknown>[];
+  long_data: Record<string, unknown>[];
+  errors: SmartReadValidationError[];
+  filename: string | null;
+}
+
+export interface SmartReadTransformResponse {
+  long_data: Record<string, unknown>[];
+  errors: SmartReadValidationError[];
 }
 
 /**
- * データをCSVでダウンロード
+ * タスク一覧を取得
  */
-export async function downloadCsv(
-  data: Record<string, unknown>[],
-  filename: string = "export.csv",
-): Promise<void> {
-  if (data.length === 0) {
-    return;
-  }
-
-  // フラット化してCSV生成
-  const flatData = data.map((item) => flattenObject(item));
-  const headers = Object.keys(flatData[0] || {});
-  const csvRows = [
-    headers.join(","),
-    ...flatData.map((row) => headers.map((h) => JSON.stringify(row[h] ?? "")).join(",")),
-  ];
-  const csvContent = csvRows.join("\n");
-
-  const blob = new Blob([csvContent], { type: "text/csv; charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+export async function getTasks(configId: number): Promise<SmartReadTaskListResponse> {
+  return http.get<SmartReadTaskListResponse>(`rpa/smartread/tasks?config_id=${configId}`);
 }
 
 /**
- * ネストされたオブジェクトをフラット化
+ * エクスポートを作成
  */
-function flattenObject(obj: Record<string, unknown>, prefix: string = ""): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
+export async function createExport(
+  configId: number,
+  taskId: string,
+  exportType: string = "csv",
+): Promise<SmartReadExport> {
+  return http.post<SmartReadExport>(`rpa/smartread/tasks/${taskId}/export?config_id=${configId}`, {
+    export_type: exportType,
+  });
+}
 
-  for (const key of Object.keys(obj)) {
-    const newKey = prefix ? `${prefix}_${key}` : key;
-    const value = obj[key];
+/**
+ * エクスポート状態を取得
+ */
+export async function getExportStatus(
+  configId: number,
+  taskId: string,
+  exportId: string,
+): Promise<SmartReadExport> {
+  return http.get<SmartReadExport>(
+    `rpa/smartread/tasks/${taskId}/export/${exportId}?config_id=${configId}`,
+  );
+}
 
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      Object.assign(result, flattenObject(value as Record<string, unknown>, newKey));
-    } else if (Array.isArray(value)) {
-      result[newKey] = JSON.stringify(value);
-    } else {
-      result[newKey] = value;
-    }
-  }
+/**
+ * エクスポートからCSVデータを取得（横持ち・縦持ち両方）
+ */
+export async function getExportCsvData(
+  configId: number,
+  taskId: string,
+  exportId: string,
+): Promise<SmartReadCsvDataResponse> {
+  return http.get<SmartReadCsvDataResponse>(
+    `rpa/smartread/tasks/${taskId}/export/${exportId}/csv?config_id=${configId}`,
+  );
+}
 
-  return result;
+/**
+ * 横持ちデータを縦持ちに変換
+ */
+export async function transformCsv(
+  wideData: Record<string, unknown>[],
+  skipEmpty: boolean = true,
+): Promise<SmartReadTransformResponse> {
+  return http.post<SmartReadTransformResponse>("rpa/smartread/transform", {
+    wide_data: wideData,
+    skip_empty: skipEmpty,
+  });
 }
