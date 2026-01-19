@@ -62,7 +62,15 @@ export interface SmartReadAnalyzeResponse {
  * 全設定一覧を取得
  */
 export async function getConfigs(): Promise<SmartReadConfig[]> {
-  return http.get<SmartReadConfig[]>("rpa/smartread/configs");
+  console.log("[SmartRead API] Fetching configs...");
+  try {
+    const res = await http.get<SmartReadConfig[]>("rpa/smartread/configs");
+    console.log("[SmartRead API] Fetched configs:", res);
+    return res;
+  } catch (error) {
+    console.error("[SmartRead API] Error fetching configs:", error);
+    throw error;
+  }
 }
 
 /**
