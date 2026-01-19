@@ -7821,6 +7821,8 @@ export interface components {
       message: string;
       /** User Agent */
       user_agent?: string | null;
+      /** Request Id */
+      request_id?: string | null;
     };
     /**
      * ClientLogResponse
@@ -7839,6 +7841,8 @@ export interface components {
       message: string;
       /** User Agent */
       user_agent: string | null;
+      /** Request Id */
+      request_id: string | null;
       /**
        * Created At
        * Format: date-time
