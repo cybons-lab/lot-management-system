@@ -162,7 +162,7 @@ def generate_products(db: Session, options: object = None) -> list[Product]:
                 ]
             )
             + " "
-            + fake.bothify(text="##"),
+            + fake.bothify(text="##")
         )
         p = Product(
             maker_part_code=fake.unique.bothify(text="PRD-###??"),

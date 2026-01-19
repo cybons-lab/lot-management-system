@@ -335,7 +335,7 @@ export function CustomerItemsListPage() {
             <DialogTitle>得意先品番マッピング編集</DialogTitle>
           </DialogHeader>
           <CustomerItemForm
-            item={editingItem}
+            item={editingItem ?? undefined}
             onSubmit={handleUpdate}
             onCancel={() => setIsEditDialogOpen(false)}
             isSubmitting={isUpdating}
