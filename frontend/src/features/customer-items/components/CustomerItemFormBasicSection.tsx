@@ -68,7 +68,7 @@ export function CustomerItemFormBasicSection({
           )}
         </div>
 
-        {/* 先方品番（製品）選択 */}
+        {/* 先方品番（商品）選択 */}
         <div>
           <Label htmlFor="product_id" className="mb-2 block text-sm font-medium">
             先方品番 <span className="text-red-500">*</span>

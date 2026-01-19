@@ -41,6 +41,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "customer_name": item.customer.customer_name,
             "external_product_code": item.external_product_code,
             "product_id": item.product_id,
+            "product_code": item.product.maker_part_code,
             "product_name": item.product.product_name,
             "supplier_id": item.supplier_id,
             "supplier_code": item.supplier.supplier_code if item.supplier else None,
@@ -81,6 +82,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 Customer.customer_code,
                 Customer.customer_name,
                 Product.product_name,
+                Product.maker_part_code,
                 Supplier.supplier_code,
                 Supplier.supplier_name,
             )
@@ -108,6 +110,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 "customer_name": r.customer_name,
                 "external_product_code": r.CustomerItem.external_product_code,
                 "product_id": r.CustomerItem.product_id,
+                "product_code": r.maker_part_code,
                 "product_name": r.product_name,
                 "supplier_id": r.CustomerItem.supplier_id,
                 "supplier_code": r.supplier_code,

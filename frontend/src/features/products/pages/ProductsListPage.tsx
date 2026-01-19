@@ -1,10 +1,11 @@
 import { Package, Trash2 } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; removed
 import { toast } from "sonner";
 
 import type { Product } from "../api";
 import { ProductBulkImportDialog } from "../components/ProductBulkImportDialog";
+import { ProductDetailDialog } from "../components/ProductDetailDialog";
 import { ProductForm, type ProductFormOutput } from "../components/ProductForm";
 import { useProducts } from "../hooks/useProducts";
 
@@ -33,7 +34,8 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 type ProductWithValidTo = Product & { valid_to?: string };
 
 export function ProductsListPage() {
-  const navigate = useNavigate();
+  // navigate removed
+  const [selectedProductCode, setSelectedProductCode] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "product_code", direction: "asc" });
   const [showInactive, setShowInactive] = useState(false);
@@ -107,22 +109,19 @@ export function ProductsListPage() {
   // ページネーション
   const paginatedProducts = table.paginateData(sortedProducts);
 
-  const handleRowClick = useCallback(
-    (product: Product) => {
-      navigate(`/products/${product.product_code}`);
-    },
-    [navigate],
-  );
+  const handleRowClick = useCallback((product: Product) => {
+    setSelectedProductCode(product.product_code);
+  }, []);
 
   const columns = useMemo(
     () =>
       createProductColumns({
         onRestore: (row) => openRestore(row),
         onPermanentDelete: (row) => openPermanentDelete(row),
-        onEdit: (row) => navigate(`/products/${row.product_code}`),
+        onEdit: (row) => setSelectedProductCode(row.product_code),
         onSoftDelete: (row) => openSoftDelete(row),
       }),
-    [navigate, openRestore, openPermanentDelete, openSoftDelete],
+    [openRestore, openPermanentDelete, openSoftDelete],
   );
 
   const handleCreate = useCallback(
@@ -374,6 +373,11 @@ export function ProductsListPage() {
           description={`選択された ${selectedIds.length} 件の商品を無効化します。`}
         />
       )}
+      <ProductDetailDialog
+        productCode={selectedProductCode}
+        open={!!selectedProductCode}
+        onOpenChange={(open) => !open && setSelectedProductCode(null)}
+      />
     </div>
   );
 }

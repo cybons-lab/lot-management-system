@@ -117,7 +117,10 @@ export function SAPRegistrationDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[80vh] max-w-3xl overflow-hidden">
+      <DialogContent
+        className="max-h-[80vh] max-w-3xl overflow-hidden"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />

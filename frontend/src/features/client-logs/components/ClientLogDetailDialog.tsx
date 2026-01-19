@@ -27,7 +27,10 @@ export function ClientLogDetailDialog({ log, open, onOpenChange }: ClientLogDeta
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[80vh] max-w-2xl flex-col">
+      <DialogContent
+        className="flex max-h-[80vh] max-w-2xl flex-col"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <div className="flex items-center gap-2">
             <DialogTitle>ログ詳細 (ID: {log.id})</DialogTitle>

@@ -270,7 +270,7 @@ export function QuickMappingSetupDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>マッピング設定</DialogTitle>
           <DialogDescription>「{productName}」のデフォルト先を設定します。</DialogDescription>

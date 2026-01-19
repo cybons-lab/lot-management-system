@@ -86,3 +86,16 @@ export const roleForm = {
   checkboxLabel: "text-sm text-gray-700",
   description: "ml-1 text-gray-500",
 };
+
+// ============================================
+// Form
+// ============================================
+
+export const form = {
+  grid: "grid grid-cols-1 gap-6 md:grid-cols-2",
+  field: "space-y-2",
+  label: "block text-sm font-medium text-gray-900",
+  input:
+    "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+  error: "text-sm text-red-500",
+};

@@ -8616,6 +8616,11 @@ export interface components {
        */
       customer_name: string;
       /**
+       * Product Code
+       * @description 製品コード(Maker Part Code)
+       */
+      product_code: string;
+      /**
        * Product Name
        * @description 製品名
        */

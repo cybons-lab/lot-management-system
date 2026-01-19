@@ -63,10 +63,10 @@ export function CustomerItemsTable({
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 shrink-0 text-orange-600" />
               <div className="min-w-[120px]">
-                <div className="font-medium">{row.customer_code}</div>
-                <div className="truncate text-xs text-gray-500" title={row.customer_name}>
+                <div className="font-medium truncate" title={row.customer_name}>
                   {row.customer_name}
                 </div>
+                <div className="text-xs text-gray-500">{row.customer_code}</div>
                 {inactive && (
                   <span className="mt-1 inline-block rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
                     削除済
@@ -81,7 +81,7 @@ export function CustomerItemsTable({
       },
       {
         id: "external_product_code",
-        header: "得意先品番",
+        header: "先方品番",
         accessor: (row) => row.external_product_code,
         cell: (row) => (
           <span className="font-medium whitespace-nowrap">{row.external_product_code}</span>
@@ -91,16 +91,16 @@ export function CustomerItemsTable({
       },
       {
         id: "product",
-        header: "製品",
+        header: "商品",
         accessor: (row) => row.product_name,
         cell: (row) => (
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 shrink-0 text-green-600" />
             <div className="min-w-[120px]">
-              <div className="truncate font-medium" title={row.product_name}>
+              <div className="truncate font-medium text-sm" title={row.product_name}>
                 {row.product_name}
               </div>
-              <div className="text-xs text-gray-500">ID: {row.product_id}</div>
+              <div className="text-xs text-gray-500">{row.product_code}</div>
             </div>
           </div>
         ),

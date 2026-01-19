@@ -4,10 +4,11 @@
  */
 
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; removed
 import { toast } from "sonner";
 
 import type { CreateUserRequest, User } from "../api";
+import { UserDetailDialog } from "../components/UserDetailDialog";
 import { UserForm } from "../components/UserForm";
 import { useUsers, useCreateUser, useDeleteUser } from "../hooks";
 
@@ -15,7 +16,6 @@ import { createUserColumns } from "./columns";
 
 import { PermanentDeleteDialog } from "@/components/common";
 import { Input } from "@/components/ui";
-import { ROUTES } from "@/constants/routes";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { useTable } from "@/hooks/ui";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
@@ -25,7 +25,8 @@ import { MasterPageActions } from "@/shared/components/layout/MasterPageActions"
 
 // eslint-disable-next-line max-lines-per-function, complexity
 export function UsersListPage() {
-  const navigate = useNavigate();
+  // navigate removed
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
@@ -87,7 +88,7 @@ export function UsersListPage() {
   };
 
   const handleViewDetail = (userId: number) => {
-    navigate(ROUTES.SETTINGS.USERS + `/${userId}`);
+    setSelectedUserId(userId);
   };
 
   const columns = createUserColumns({
@@ -226,6 +227,11 @@ export function UsersListPage() {
         title="ユーザーを削除しますか？"
         description={`${deletingUser?.display_name}（${deletingUser?.username}）を削除します。この操作は取り消せません。`}
         confirmationPhrase={deletingUser?.username || "delete"}
+      />
+      <UserDetailDialog
+        userId={selectedUserId}
+        open={!!selectedUserId}
+        onOpenChange={(open) => !open && setSelectedUserId(null)}
       />
     </PageContainer>
   );

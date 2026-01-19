@@ -57,7 +57,7 @@ export function CustomerItemForm({
     [customers],
   );
 
-  // 先方品番（製品名）形式のオプション - 先方品番があるもののみ
+  // 先方品番（商品名）形式のオプション - 先方品番があるもののみ
   const productOptions = useMemo(
     () =>
       products

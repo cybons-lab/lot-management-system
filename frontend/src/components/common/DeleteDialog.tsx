@@ -194,7 +194,7 @@ export function DeleteDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent data-testid="delete-dialog">
+      <AlertDialogContent data-testid="delete-dialog" onInteractOutside={(e) => e.preventDefault()}>
         <AlertDialogHeader>
           <AlertDialogTitle className={`flex items-center gap-2 ${alertStyles.titleColor}`}>
             <Icon className="h-5 w-5" />

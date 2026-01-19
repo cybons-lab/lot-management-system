@@ -68,6 +68,7 @@ class CustomerItemResponse(CustomerItemBase):
 
     customer_code: str = Field(..., description="得意先コード")
     customer_name: str = Field(..., description="得意先名")
+    product_code: str = Field(..., description="製品コード(Maker Part Code)")
     product_name: str = Field(..., description="製品名")
     supplier_code: str | None = Field(None, description="仕入先コード")
     supplier_name: str | None = Field(None, description="仕入先名")

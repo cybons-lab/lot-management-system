@@ -68,7 +68,7 @@ export function UserSupplierAssignmentDialog({
       <DialogTrigger asChild>
         {trigger || <Button variant="outline">担当仕入先を追加</Button>}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>担当仕入先の追加</DialogTitle>
         </DialogHeader>

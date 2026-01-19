@@ -99,6 +99,7 @@ export function FormDialog({
       <DialogContent
         className={sizeClasses[size]}
         aria-describedby={description ? undefined : "dialog-content"}
+        onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -194,7 +195,7 @@ export function ConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={(open: boolean) => !open && handleCancel()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>

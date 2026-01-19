@@ -1,10 +1,11 @@
 import { Warehouse as WarehouseIcon, Trash2 } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; removed
 import { toast } from "sonner";
 
 import type { Warehouse, WarehouseCreate } from "../api";
 import { WarehouseBulkImportDialog } from "../components/WarehouseBulkImportDialog";
+import { WarehouseDetailDialog } from "../components/WarehouseDetailDialog";
 import { WarehouseForm } from "../components/WarehouseForm";
 import { useWarehouses } from "../hooks";
 
@@ -32,7 +33,8 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 type WarehouseWithValidTo = Warehouse & { valid_to?: string };
 
 export function WarehousesListPage() {
-  const navigate = useNavigate();
+  // navigate removed
+  const [selectedWarehouseCode, setSelectedWarehouseCode] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "warehouse_code", direction: "asc" });
   const [showInactive, setShowInactive] = useState(false);
@@ -101,22 +103,19 @@ export function WarehousesListPage() {
     return sorted;
   }, [filteredWarehouses, sort]);
 
-  const handleRowClick = useCallback(
-    (warehouse: Warehouse) => {
-      navigate(`/warehouses/${warehouse.warehouse_code}`);
-    },
-    [navigate],
-  );
+  const handleRowClick = useCallback((warehouse: Warehouse) => {
+    setSelectedWarehouseCode(warehouse.warehouse_code);
+  }, []);
 
   const columns = useMemo(
     () =>
       createWarehouseColumns({
         onRestore: (row) => openRestore(row),
         onPermanentDelete: (row) => openPermanentDelete(row),
-        onEdit: (row) => navigate(`/warehouses/${row.warehouse_code}`),
+        onEdit: (row) => setSelectedWarehouseCode(row.warehouse_code),
         onSoftDelete: (row) => openSoftDelete(row),
       }),
-    [navigate, openRestore, openPermanentDelete, openSoftDelete],
+    [openRestore, openPermanentDelete, openSoftDelete],
   );
 
   const handleCreate = useCallback(
@@ -358,6 +357,11 @@ export function WarehousesListPage() {
           description={`選択された ${selectedIds.length} 件の倉庫を無効化します。`}
         />
       )}
+      <WarehouseDetailDialog
+        warehouseCode={selectedWarehouseCode}
+        open={!!selectedWarehouseCode}
+        onOpenChange={(open) => !open && setSelectedWarehouseCode(null)}
+      />
     </div>
   );
 }
