@@ -14,12 +14,16 @@ import { createRoleColumns } from "./columns";
 
 import { PermanentDeleteDialog } from "@/components/common";
 import { Button, Input } from "@/components/ui";
-import { TanstackTable } from "@/shared/components";
+import { useTable } from "@/hooks/ui";
+import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function RolesListPage() {
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSort] = useState<SortConfig>({ column: "id", direction: "asc" });
+  const table = useTable({ initialPageSize: 25 });
 
   // 削除ダイアログの状態
   const [deletingRole, setDeletingRole] = useState<Role | null>(null);
@@ -138,14 +142,27 @@ export function RolesListPage() {
           検索条件に一致するロールがありません
         </div>
       ) : (
-        <TanstackTable
-          data={filteredRoles}
-          columns={columns}
-          initialPageSize={25}
-          isLoading={isLoading}
-          pageSizeOptions={[10, 25, 50, 100]}
-          className="overflow-hidden"
-        />
+        <>
+          <DataTable
+            data={table.paginateData(filteredRoles)}
+            columns={columns}
+            sort={sort}
+            onSortChange={setSort}
+            getRowId={(row) => row.id}
+            isLoading={isLoading}
+            emptyMessage="ロールが登録されていません"
+          />
+          {filteredRoles.length > 0 && (
+            <TablePagination
+              currentPage={table.calculatePagination(filteredRoles.length).page ?? 1}
+              pageSize={table.calculatePagination(filteredRoles.length).pageSize ?? 25}
+              totalCount={filteredRoles.length}
+              onPageChange={table.setPage}
+              onPageSizeChange={table.setPageSize}
+              pageSizeOptions={[25, 50, 75, 100]}
+            />
+          )}
+        </>
       )}
 
       <PermanentDeleteDialog

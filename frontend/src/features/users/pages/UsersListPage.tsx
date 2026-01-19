@@ -17,7 +17,9 @@ import { PermanentDeleteDialog } from "@/components/common";
 import { Input } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
-import { TanstackTable } from "@/shared/components";
+import { useTable } from "@/hooks/ui";
+import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { TablePagination } from "@/shared/components/data/TablePagination";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 
@@ -28,6 +30,8 @@ export function UsersListPage() {
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSort] = useState<SortConfig>({ column: "user_id", direction: "asc" });
+  const table = useTable({ initialPageSize: 25 });
 
   // 削除ダイアログの状態
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
@@ -191,14 +195,27 @@ export function UsersListPage() {
           検索条件に一致するユーザーがいません
         </div>
       ) : (
-        <TanstackTable
-          data={filteredUsers}
-          columns={columns}
-          initialPageSize={25}
-          isLoading={isLoading}
-          pageSizeOptions={[10, 25, 50, 100]}
-          className="overflow-hidden"
-        />
+        <>
+          <DataTable
+            data={table.paginateData(filteredUsers)}
+            columns={columns}
+            sort={sort}
+            onSortChange={setSort}
+            getRowId={(row) => row.user_id}
+            isLoading={isLoading}
+            emptyMessage="ユーザーが登録されていません"
+          />
+          {filteredUsers.length > 0 && (
+            <TablePagination
+              currentPage={table.calculatePagination(filteredUsers.length).page ?? 1}
+              pageSize={table.calculatePagination(filteredUsers.length).pageSize ?? 25}
+              totalCount={filteredUsers.length}
+              onPageChange={table.setPage}
+              onPageSizeChange={table.setPageSize}
+              pageSizeOptions={[25, 50, 75, 100]}
+            />
+          )}
+        </>
       )}
 
       <PermanentDeleteDialog

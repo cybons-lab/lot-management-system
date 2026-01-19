@@ -1,10 +1,7 @@
-import { createColumnHelper } from "@tanstack/react-table";
-
 import type { User } from "../api";
 
 import { Badge, Button } from "@/components/ui";
-
-const columnHelper = createColumnHelper<User>();
+import type { Column } from "@/shared/components/data/DataTable";
 
 interface UserColumnsOptions {
   onViewDetail: (userId: number) => void;
@@ -16,51 +13,65 @@ export function createUserColumns({
   onViewDetail,
   onDelete,
   isDeleting = false,
-}: UserColumnsOptions) {
+}: UserColumnsOptions): Column<User>[] {
   return [
-    columnHelper.accessor("user_id", {
+    {
+      id: "user_id",
       header: "ユーザーID",
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor("username", {
+      cell: (row) => <span className="font-medium">{row.user_id}</span>,
+      sortable: true,
+      width: 100,
+    },
+    {
+      id: "username",
       header: "ユーザー名",
-      cell: (info) => <span className="font-medium text-slate-900">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor("email", {
+      cell: (row) => <span className="font-medium text-slate-900">{row.username}</span>,
+      sortable: true,
+      width: 150,
+    },
+    {
+      id: "email",
       header: "メールアドレス",
-      cell: (info) => <span className="whitespace-nowrap">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor("display_name", {
+      cell: (row) => <span className="whitespace-nowrap">{row.email}</span>,
+      sortable: true,
+      width: 200,
+    },
+    {
+      id: "display_name",
       header: "表示名",
-      cell: (info) => <span className="whitespace-nowrap">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor("is_active", {
+      cell: (row) => <span className="whitespace-nowrap">{row.display_name}</span>,
+      sortable: true,
+      width: 150,
+    },
+    {
+      id: "is_active",
       header: "状態",
-      cell: (info) => (
-        <Badge variant={info.getValue() ? "default" : "secondary"}>
-          {info.getValue() ? "有効" : "無効"}
+      cell: (row) => (
+        <Badge variant={row.is_active ? "default" : "secondary"}>
+          {row.is_active ? "有効" : "無効"}
         </Badge>
       ),
-      enableSorting: true,
-    }),
-    columnHelper.display({
+      sortable: true,
+      width: 80,
+    },
+    {
       id: "actions",
       header: "操作",
-      cell: ({ row }) => (
+      cell: (row) => (
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => onViewDetail(row.original.user_id)}>
+          <Button variant="outline" size="sm" onClick={() => onViewDetail(row.user_id)}>
             詳細
           </Button>
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => onDelete(row.original.user_id)}
+            onClick={() => onDelete(row.user_id)}
             disabled={isDeleting}
           >
             削除
           </Button>
         </div>
       ),
-    }),
+    },
   ];
 }
