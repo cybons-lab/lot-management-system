@@ -20,6 +20,8 @@ from app.presentation.schemas.smartread_schema import (
     SmartReadExportRequest,
     SmartReadExportResponse,
     SmartReadProcessRequest,
+    SmartReadSkipTodayRequest,
+    SmartReadTaskDetailResponse,
     SmartReadTaskListResponse,
     SmartReadTaskResponse,
     SmartReadTransformRequest,
@@ -312,16 +314,40 @@ async def get_export_csv(
     task_id: str,
     export_id: str,
     config_id: int = Query(..., description="設定ID"),
-    db: Session = Depends(get_db),
+    save_to_db: bool = Query(default=True, description="DBに保存するか"),
+    task_date: str | None = Query(default=None, description="タスク日付 (YYYY-MM-DD)"),
+    uow: UnitOfWork = Depends(get_uow),
     _current_user: User = Depends(get_current_user),
 ) -> SmartReadCsvDataResponse:
     """エクスポートからCSVデータを取得し、横持ち・縦持ち両方を返す."""
-    assert db is not None
-    service = SmartReadService(db)
-    result = await service.get_export_csv_data(config_id, task_id, export_id)
+    from datetime import date
+
+    assert uow.session is not None
+    service = SmartReadService(uow.session)
+
+    # skip_todayチェック
+    if service.should_skip_today(task_id):
+        raise HTTPException(
+            status_code=403, detail="このタスクは今日スキップする設定になっています"
+        )
+
+    # task_dateをパース
+    parsed_task_date = None
+    if task_date:
+        try:
+            parsed_task_date = date.fromisoformat(task_date)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="無効な日付形式です (YYYY-MM-DD)")
+
+    result = await service.get_export_csv_data(
+        config_id, task_id, export_id, save_to_db=save_to_db, task_date=parsed_task_date
+    )
 
     if not result:
         raise HTTPException(status_code=404, detail="CSVデータの取得に失敗しました")
+
+    if save_to_db:
+        uow.session.commit()
 
     return SmartReadCsvDataResponse(
         wide_data=result["wide_data"],
@@ -364,4 +390,71 @@ def transform_csv(
             )
             for e in result.errors
         ],
+    )
+
+
+# --- タスク管理 API ---
+
+
+@router.get("/managed-tasks", response_model=list[SmartReadTaskDetailResponse])
+def get_managed_tasks(
+    config_id: int = Query(..., description="設定ID"),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> list[SmartReadTaskDetailResponse]:
+    """管理されているタスク一覧を取得."""
+    from app.infrastructure.persistence.models.smartread_models import SmartReadTask
+
+    assert db is not None
+    stmt = SmartReadTask.__table__.select().where(SmartReadTask.config_id == config_id)
+    tasks = db.execute(stmt).fetchall()
+
+    return [
+        SmartReadTaskDetailResponse(
+            id=t.id,
+            config_id=t.config_id,
+            task_id=t.task_id,
+            task_date=t.task_date.isoformat(),
+            name=t.name,
+            state=t.state,
+            synced_at=t.synced_at.isoformat() if t.synced_at else None,
+            skip_today=t.skip_today,
+            created_at=t.created_at.isoformat(),
+        )
+        for t in tasks
+    ]
+
+
+@router.put("/tasks/{task_id}/skip-today", response_model=SmartReadTaskDetailResponse)
+def update_skip_today(
+    task_id: str,
+    request: SmartReadSkipTodayRequest,
+    uow: UnitOfWork = Depends(get_uow),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadTaskDetailResponse:
+    """skip_todayフラグを更新."""
+    assert uow.session is not None
+    service = SmartReadService(uow.session)
+    service.set_skip_today(task_id, request.skip_today)
+    uow.session.commit()
+
+    # 更新後のタスクを取得
+    from app.infrastructure.persistence.models.smartread_models import SmartReadTask
+
+    stmt = SmartReadTask.__table__.select().where(SmartReadTask.task_id == task_id)
+    task = uow.session.execute(stmt).fetchone()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="タスクが見つかりません")
+
+    return SmartReadTaskDetailResponse(
+        id=task.id,
+        config_id=task.config_id,
+        task_id=task.task_id,
+        task_date=task.task_date.isoformat(),
+        name=task.name,
+        state=task.state,
+        synced_at=task.synced_at.isoformat() if task.synced_at else None,
+        skip_today=task.skip_today,
+        created_at=task.created_at.isoformat(),
     )

@@ -151,3 +151,36 @@ class SmartReadCsvDataResponse(BaseModel):
         default_factory=list, description="バリデーションエラー"
     )
     filename: str | None = Field(default=None, description="CSVファイル名")
+
+
+# ==================== タスク管理系スキーマ ====================
+
+
+class SmartReadTaskCreateRequest(BaseModel):
+    """タスク作成リクエスト."""
+
+    config_id: int = Field(..., description="設定ID")
+    task_date: str = Field(..., description="タスク日付 (YYYY-MM-DD)")
+    name: str | None = Field(default=None, description="タスク名")
+
+
+class SmartReadTaskDetailResponse(BaseModel):
+    """タスク詳細レスポンス."""
+
+    id: int
+    config_id: int
+    task_id: str
+    task_date: str
+    name: str | None
+    state: str | None
+    synced_at: str | None
+    skip_today: bool
+    created_at: str
+
+    model_config = {"from_attributes": True}
+
+
+class SmartReadSkipTodayRequest(BaseModel):
+    """skip_todayフラグ更新リクエスト."""
+
+    skip_today: bool = Field(..., description="今日スキップするか")

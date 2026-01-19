@@ -17364,6 +17364,36 @@
               "title": "Config Id"
             },
             "description": "設定ID"
+          },
+          {
+            "name": "save_to_db",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "DBに保存するか",
+              "default": true,
+              "title": "Save To Db"
+            },
+            "description": "DBに保存するか"
+          },
+          {
+            "name": "task_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "タスク日付 (YYYY-MM-DD)",
+              "title": "Task Date"
+            },
+            "description": "タスク日付 (YYYY-MM-DD)"
           }
         ],
         "responses": {
@@ -17435,6 +17465,118 @@
             "OAuth2PasswordBearer": []
           }
         ]
+      }
+    },
+    "/api/rpa/smartread/managed-tasks": {
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Get Managed Tasks",
+        "description": "管理されているタスク一覧を取得.",
+        "operationId": "get_managed_tasks_api_rpa_smartread_managed_tasks_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "設定ID",
+              "title": "Config Id"
+            },
+            "description": "設定ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SmartReadTaskDetailResponse"
+                  },
+                  "title": "Response Get Managed Tasks Api Rpa Smartread Managed Tasks Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/tasks/{task_id}/skip-today": {
+      "put": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Update Skip Today",
+        "description": "skip_todayフラグを更新.",
+        "operationId": "update_skip_today_api_rpa_smartread_tasks__task_id__skip_today_put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadSkipTodayRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadTaskDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/masters/status": {
@@ -30782,6 +30924,96 @@
         ],
         "title": "SmartReadProcessRequest",
         "description": "ファイル処理リクエスト."
+      },
+      "SmartReadSkipTodayRequest": {
+        "properties": {
+          "skip_today": {
+            "type": "boolean",
+            "title": "Skip Today",
+            "description": "今日スキップするか"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skip_today"
+        ],
+        "title": "SmartReadSkipTodayRequest",
+        "description": "skip_todayフラグ更新リクエスト."
+      },
+      "SmartReadTaskDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "config_id": {
+            "type": "integer",
+            "title": "Config Id"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "task_date": {
+            "type": "string",
+            "title": "Task Date"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "synced_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synced At"
+          },
+          "skip_today": {
+            "type": "boolean",
+            "title": "Skip Today"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "config_id",
+          "task_id",
+          "task_date",
+          "name",
+          "state",
+          "synced_at",
+          "skip_today",
+          "created_at"
+        ],
+        "title": "SmartReadTaskDetailResponse",
+        "description": "タスク詳細レスポンス."
       },
       "SmartReadTaskListResponse": {
         "properties": {

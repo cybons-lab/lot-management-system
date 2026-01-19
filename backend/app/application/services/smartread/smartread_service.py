@@ -6,16 +6,23 @@ PDFや画像のOCR処理とエクスポート機能を提供する。
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import json
 import logging
 from dataclasses import dataclass
+from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import SmartReadConfig
+from app.infrastructure.persistence.models.smartread_models import (
+    SmartReadLongData,
+    SmartReadTask,
+    SmartReadWideData,
+)
 from app.infrastructure.smartread.client import (
     SmartReadClient,
     SmartReadResult,
@@ -538,6 +545,8 @@ class SmartReadService:
         config_id: int,
         task_id: str,
         export_id: str,
+        save_to_db: bool = True,
+        task_date: date | None = None,
     ) -> dict[str, Any] | None:
         """エクスポートからCSVデータを取得し、横持ち・縦持ち両方を返す.
 
@@ -545,6 +554,8 @@ class SmartReadService:
             config_id: 設定ID
             task_id: タスクID
             export_id: エクスポートID
+            save_to_db: DBに保存するか
+            task_date: タスク日付（指定がない場合は今日）
 
         Returns:
             横持ち・縦持ちデータとエラー
@@ -588,9 +599,216 @@ class SmartReadService:
         transformer = SmartReadCsvTransformer()
         result = transformer.transform_to_long(wide_data)
 
+        # DBに保存
+        if save_to_db and wide_data:
+            if task_date is None:
+                task_date = date.today()
+
+            self._save_wide_and_long_data(
+                config_id=config_id,
+                task_id=task_id,
+                export_id=export_id,
+                task_date=task_date,
+                wide_data=wide_data,
+                long_data=result.long_data,
+                filename=csv_filename,
+            )
+
         return {
             "wide_data": wide_data,
             "long_data": result.long_data,
             "errors": result.errors,
             "filename": csv_filename,
         }
+
+    def _calculate_row_fingerprint(self, row_data: dict[str, Any]) -> str:
+        """行データからfingerprintを計算.
+
+        Args:
+            row_data: 行データ
+
+        Returns:
+            SHA256ハッシュ値
+        """
+        # JSONにして安定したソート順でハッシュ化
+        content_str = json.dumps(row_data, sort_keys=True, ensure_ascii=False)
+        return hashlib.sha256(content_str.encode("utf-8")).hexdigest()
+
+    def _save_wide_and_long_data(
+        self,
+        config_id: int,
+        task_id: str,
+        export_id: str,
+        task_date: date,
+        wide_data: list[dict[str, Any]],
+        long_data: list[dict[str, Any]],
+        filename: str | None,
+    ) -> None:
+        """横持ち・縦持ちデータをDBに保存.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_id: エクスポートID
+            task_date: タスク日付
+            wide_data: 横持ちデータ
+            long_data: 縦持ちデータ
+            filename: ファイル名
+        """
+        # 横持ちデータを行単位で保存（重複排除）
+        saved_wide_ids: list[int] = []
+
+        for row_index, row in enumerate(wide_data):
+            fingerprint = self._calculate_row_fingerprint(row)
+
+            # 既存レコードをチェック
+            stmt = select(SmartReadWideData).where(
+                SmartReadWideData.config_id == config_id,
+                SmartReadWideData.task_date == task_date,
+                SmartReadWideData.row_fingerprint == fingerprint,
+            )
+            existing = self.session.execute(stmt).scalar_one_or_none()
+
+            if existing:
+                logger.debug(f"Row {row_index} already exists (fingerprint: {fingerprint[:8]}...)")
+                saved_wide_ids.append(existing.id)
+                continue
+
+            # 新規保存
+            wide_record = SmartReadWideData(
+                config_id=config_id,
+                task_id=task_id,
+                export_id=export_id,
+                task_date=task_date,
+                filename=filename,
+                row_index=row_index,
+                content=row,
+                row_fingerprint=fingerprint,
+            )
+            self.session.add(wide_record)
+            self.session.flush()
+            saved_wide_ids.append(wide_record.id)
+
+        # 縦持ちデータを保存
+        for long_index, long_row in enumerate(long_data):
+            # 対応するwide_data_idを取得（行インデックスが一致するもの）
+            wide_data_id = None
+            if long_index < len(saved_wide_ids):
+                wide_data_id = saved_wide_ids[long_index]
+
+            long_record = SmartReadLongData(
+                wide_data_id=wide_data_id,
+                config_id=config_id,
+                task_id=task_id,
+                task_date=task_date,
+                row_index=long_index,
+                content=long_row,
+                status="PENDING",
+            )
+            self.session.add(long_record)
+
+        self.session.flush()
+        logger.info(
+            f"Saved {len(saved_wide_ids)} wide rows and {len(long_data)} long rows "
+            f"for task {task_id} on {task_date}"
+        )
+
+    # ==================== タスク管理 ====================
+
+    def get_or_create_task(
+        self,
+        config_id: int,
+        task_id: str,
+        task_date: date,
+        name: str | None = None,
+        state: str | None = None,
+    ) -> SmartReadTask:
+        """タスクを取得または作成.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            task_date: タスク日付
+            name: タスク名
+            state: ステータス
+
+        Returns:
+            タスクレコード
+        """
+        stmt = select(SmartReadTask).where(SmartReadTask.task_id == task_id)
+        task = self.session.execute(stmt).scalar_one_or_none()
+
+        if task:
+            # 既存タスクを更新
+            if name:
+                task.name = name
+            if state:
+                task.state = state
+            self.session.flush()
+            return task
+
+        # 新規作成
+        task = SmartReadTask(
+            config_id=config_id,
+            task_id=task_id,
+            task_date=task_date,
+            name=name,
+            state=state,
+        )
+        self.session.add(task)
+        self.session.flush()
+        return task
+
+    def update_task_synced_at(self, task_id: str) -> None:
+        """タスクのsynced_atを更新.
+
+        Args:
+            task_id: タスクID
+        """
+        stmt = select(SmartReadTask).where(SmartReadTask.task_id == task_id)
+        task = self.session.execute(stmt).scalar_one_or_none()
+        if task:
+            task.synced_at = datetime.now()
+            self.session.flush()
+
+    def get_task_by_date(self, config_id: int, task_date: date) -> SmartReadTask | None:
+        """指定日のタスクを取得.
+
+        Args:
+            config_id: 設定ID
+            task_date: タスク日付
+
+        Returns:
+            タスクレコード、存在しない場合はNone
+        """
+        stmt = select(SmartReadTask).where(
+            SmartReadTask.config_id == config_id,
+            SmartReadTask.task_date == task_date,
+        )
+        return self.session.execute(stmt).scalar_one_or_none()
+
+    def should_skip_today(self, task_id: str) -> bool:
+        """今日スキップすべきかチェック.
+
+        Args:
+            task_id: タスクID
+
+        Returns:
+            スキップすべき場合True
+        """
+        stmt = select(SmartReadTask).where(SmartReadTask.task_id == task_id)
+        task = self.session.execute(stmt).scalar_one_or_none()
+        return task.skip_today if task else False
+
+    def set_skip_today(self, task_id: str, skip: bool) -> None:
+        """skip_todayフラグを設定.
+
+        Args:
+            task_id: タスクID
+            skip: スキップするか
+        """
+        stmt = select(SmartReadTask).where(SmartReadTask.task_id == task_id)
+        task = self.session.execute(stmt).scalar_one_or_none()
+        if task:
+            task.skip_today = skip
+            self.session.flush()

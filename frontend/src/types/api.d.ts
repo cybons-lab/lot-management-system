@@ -6689,6 +6689,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/smartread/managed-tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Managed Tasks
+     * @description 管理されているタスク一覧を取得.
+     */
+    get: operations["get_managed_tasks_api_rpa_smartread_managed_tasks_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/tasks/{task_id}/skip-today": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Skip Today
+     * @description skip_todayフラグを更新.
+     */
+    put: operations["update_skip_today_api_rpa_smartread_tasks__task_id__skip_today_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/status": {
     parameters: {
       query?: never;
@@ -12647,6 +12687,41 @@ export interface components {
        * @description 処理するファイル名のリスト
        */
       filenames: string[];
+    };
+    /**
+     * SmartReadSkipTodayRequest
+     * @description skip_todayフラグ更新リクエスト.
+     */
+    SmartReadSkipTodayRequest: {
+      /**
+       * Skip Today
+       * @description 今日スキップするか
+       */
+      skip_today: boolean;
+    };
+    /**
+     * SmartReadTaskDetailResponse
+     * @description タスク詳細レスポンス.
+     */
+    SmartReadTaskDetailResponse: {
+      /** Id */
+      id: number;
+      /** Config Id */
+      config_id: number;
+      /** Task Id */
+      task_id: string;
+      /** Task Date */
+      task_date: string;
+      /** Name */
+      name: string | null;
+      /** State */
+      state: string | null;
+      /** Synced At */
+      synced_at: string | null;
+      /** Skip Today */
+      skip_today: boolean;
+      /** Created At */
+      created_at: string;
     };
     /**
      * SmartReadTaskListResponse
@@ -23912,6 +23987,10 @@ export interface operations {
       query: {
         /** @description 設定ID */
         config_id: number;
+        /** @description DBに保存するか */
+        save_to_db?: boolean;
+        /** @description タスク日付 (YYYY-MM-DD) */
+        task_date?: string | null;
       };
       header?: never;
       path: {
@@ -23962,6 +24041,73 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SmartReadTransformResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_managed_tasks_api_rpa_smartread_managed_tasks_get: {
+    parameters: {
+      query: {
+        /** @description 設定ID */
+        config_id: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadTaskDetailResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_skip_today_api_rpa_smartread_tasks__task_id__skip_today_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadSkipTodayRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadTaskDetailResponse"];
         };
       };
       /** @description Validation Error */
