@@ -391,19 +391,22 @@ class SmartReadClient:
                     logger.error(f"SmartRead API Error: {response.status_code} - {response.text}")
 
                 response.raise_for_status()
-                data = response.json()
-                logger.info(f"SmartRead API Response Data: {data}")
-                logger.info(f"Fetched {len(data.get('tasks', []))} tasks from SmartRead API")
+                json_data = response.json()
+                logger.info(f"Fetched {len(json_data.get('data', []))} tasks from SmartRead API")
 
                 tasks = []
-                for item in data.get("tasks", []):
+                for item in json_data.get("data", []):
                     tasks.append(
                         SmartReadTask(
                             task_id=item.get("taskId", ""),
                             name=item.get("name", ""),
-                            status=item.get("status", "UNKNOWN"),
-                            created_at=item.get("createdAt"),
-                            request_count=item.get("requestCount", 0),
+                            status=item.get(
+                                "state", "UNKNOWN"
+                            ),  # 'status' -> 'state' based on sample? Sample says "state": "OCR_RUNNING".
+                            created_at=item.get("created"),  # 'created_at' -> 'created'
+                            request_count=item.get(
+                                "numOfRequests", 0
+                            ),  # 'requestCount' -> 'numOfRequests'
                         )
                     )
                 return tasks
