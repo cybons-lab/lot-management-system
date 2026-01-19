@@ -547,6 +547,9 @@ class SmartReadClient:
                 headers = {"Authorization": f"apikey {self.api_key}"}
                 response = await client.get(url, headers=headers)
                 response.raise_for_status()
+                logger.info(f"Download response status: {response.status_code}")
+                logger.info(f"Download content-type: {response.headers.get('content-type')}")
+                logger.info(f"Download content-length: {len(response.content)} bytes")
                 return response.content
 
         except Exception as e:
