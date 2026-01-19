@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "f30373801237"
-down_revision = "c1bde3065827"
+down_revision = "baseline_20260119"  # Depends on baseline schema
 branch_labels = None
 depends_on = None
 

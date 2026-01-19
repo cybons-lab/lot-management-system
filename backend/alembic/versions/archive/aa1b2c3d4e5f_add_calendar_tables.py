@@ -81,9 +81,7 @@ def upgrade() -> None:
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
-        sa.UniqueConstraint(
-            "delivery_date", name="uq_original_delivery_calendars_date"
-        ),
+        sa.UniqueConstraint("delivery_date", name="uq_original_delivery_calendars_date"),
     )
     op.create_index(
         "idx_original_delivery_calendars_date",
