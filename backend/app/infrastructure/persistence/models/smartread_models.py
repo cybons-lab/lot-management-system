@@ -46,6 +46,7 @@ class SmartReadConfig(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False, default="default")  # 設定名
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)
+    is_default: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False

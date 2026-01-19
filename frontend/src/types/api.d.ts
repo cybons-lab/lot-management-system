@@ -12504,6 +12504,12 @@ export interface components {
        * @default true
        */
       is_active: boolean;
+      /**
+       * Is Default
+       * @description デフォルト設定
+       * @default false
+       */
+      is_default: boolean;
     };
     /**
      * SmartReadConfigResponse
@@ -12532,6 +12538,8 @@ export interface components {
       description: string | null;
       /** Is Active */
       is_active: boolean;
+      /** Is Default */
+      is_default: boolean;
       /**
        * Created At
        * Format: date-time
@@ -12570,6 +12578,8 @@ export interface components {
       description?: string | null;
       /** Is Active */
       is_active?: boolean | null;
+      /** Is Default */
+      is_default?: boolean | null;
     };
     /**
      * SmartReadCsvDataResponse

@@ -18,6 +18,7 @@ export interface SmartReadConfig {
   input_exts: string | null;
   description: string | null;
   is_active: boolean;
+  is_default: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -33,6 +34,7 @@ export interface SmartReadConfigCreate {
   export_dir?: string | null;
   input_exts?: string | null;
   description?: string | null;
+  is_default?: boolean;
 }
 
 export interface SmartReadConfigUpdate {
@@ -47,6 +49,7 @@ export interface SmartReadConfigUpdate {
   input_exts?: string | null;
   description?: string | null;
   is_active?: boolean;
+  is_default?: boolean;
 }
 
 export interface SmartReadAnalyzeResponse {

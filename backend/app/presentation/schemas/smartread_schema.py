@@ -20,6 +20,7 @@ class SmartReadConfigCreate(BaseModel):
     input_exts: str | None = Field(default="pdf,png,jpg,jpeg", description="対応拡張子")
     description: str | None = Field(default=None, description="説明")
     is_active: bool = Field(default=True, description="有効/無効")
+    is_default: bool = Field(default=False, description="デフォルト設定")
 
 
 class SmartReadConfigUpdate(BaseModel):
@@ -36,6 +37,7 @@ class SmartReadConfigUpdate(BaseModel):
     input_exts: str | None = None
     description: str | None = None
     is_active: bool | None = None
+    is_default: bool | None = None
 
 
 class SmartReadConfigResponse(BaseModel):
@@ -53,6 +55,7 @@ class SmartReadConfigResponse(BaseModel):
     input_exts: str | None
     description: str | None
     is_active: bool
+    is_default: bool
     created_at: datetime
     updated_at: datetime
 

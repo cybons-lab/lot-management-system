@@ -30382,6 +30382,12 @@
             "title": "Is Active",
             "description": "有効/無効",
             "default": true
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "デフォルト設定",
+            "default": false
           }
         },
         "type": "object",
@@ -30481,6 +30487,10 @@
             "type": "boolean",
             "title": "Is Active"
           },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -30505,6 +30515,7 @@
           "input_exts",
           "description",
           "is_active",
+          "is_default",
           "created_at",
           "updated_at"
         ],
@@ -30634,6 +30645,17 @@
               }
             ],
             "title": "Is Active"
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default"
           }
         },
         "type": "object",
