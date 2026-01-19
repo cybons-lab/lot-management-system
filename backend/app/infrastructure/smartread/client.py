@@ -58,6 +58,27 @@ class SmartReadClient:
         self.api_key = api_key
         self.template_ids = template_ids or []
 
+    def _build_api_url(self, path: str) -> str:
+        """APIパスを構築.
+
+        エンドポイントに既にバージョン（/v3, /v4等）が含まれている場合は
+        pathからバージョン部分を削除して重複を防ぐ。
+
+        Args:
+            path: APIパス（例: /v3/task）
+
+        Returns:
+            完全なURL
+        """
+        import re
+
+        # エンドポイントの末尾がバージョンパターン（/v3, /v4等）かチェック
+        version_pattern = r"/v\d+$"
+        if re.search(version_pattern, self.endpoint):
+            # エンドポイントにバージョンが含まれている場合、pathからバージョン部分を削除
+            path = re.sub(r"^/v\d+", "", path)
+        return f"{self.endpoint}{path}"
+
     async def analyze_file(
         self,
         file_content: bytes,
@@ -121,7 +142,7 @@ class SmartReadClient:
 
     async def _create_task(self, client: httpx.AsyncClient) -> str:
         """Taskを作成してtaskIdを返す."""
-        url = f"{self.endpoint}/v3/task"
+        url = self._build_api_url("/v3/task")
 
         # requestTypeは 'templateMatching' 固定 (v3仕様)
         # ユーザー指示: "requestTypeはtemplateMatchingを入れる必要がある"
@@ -144,7 +165,7 @@ class SmartReadClient:
         self, client: httpx.AsyncClient, task_id: str, file_content: bytes, filename: str
     ) -> str:
         """ファイルをアップロードしてrequestIdを返す."""
-        url = f"{self.endpoint}/v3/task/{task_id}/request"
+        url = self._build_api_url(f"/v3/task/{task_id}/request")
         headers = {
             "Authorization": f"apikey {self.api_key}"
         }  # MultipartなのでContent-Typeは自動設定
@@ -163,7 +184,7 @@ class SmartReadClient:
         import asyncio
         import time
 
-        url = f"{self.endpoint}/v3/request/{request_id}/results"
+        url = self._build_api_url(f"/v3/request/{request_id}/results")
         headers = self._get_headers()
 
         start_time = time.time()

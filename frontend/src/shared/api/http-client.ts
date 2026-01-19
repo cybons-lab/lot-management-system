@@ -136,6 +136,7 @@ function handleUnauthorizedError(request: Request, errorMessage: string): void {
 
 /**
  * Log API error in development mode
+ * Note: 認証エラー(401/403)はログイン前のページアクセス等で頻発するため抑制
  */
 function logApiErrorDev(
   status: number,
@@ -143,6 +144,11 @@ function logApiErrorDev(
   message: string,
   body: unknown,
 ): void {
+  // 認証エラーはログインしていない状態で発生するのは想定内なのでログ抑制
+  if (status === 401 || status === 403) {
+    return;
+  }
+
   if (import.meta.env.DEV) {
     console.groupCollapsed(`[HTTP] Error: ${status} ${url}`);
     console.error("Message:", message);
@@ -177,13 +183,16 @@ async function handleApiError(
 
   logApiErrorDev(status, request?.url, error.message, body);
 
-  const apiError = createApiError(status, error.message, body);
-  logError("HTTP", apiError, {
-    url: request?.url,
-    method: request?.method,
-    status,
-    response: body,
-  });
+  // 認証エラー(401/403)はログイン前のページアクセス等で頻発するため、エラーログ送信を抑制
+  if (status !== 401 && status !== 403) {
+    const apiError = createApiError(status, error.message, body);
+    logError("HTTP", apiError, {
+      url: request?.url,
+      method: request?.method,
+      status,
+      response: body,
+    });
+  }
 
   return error;
 }
