@@ -1,9 +1,10 @@
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function */
 
-import { Loader2, Download, AlertCircle, Database, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { Download, AlertCircle, RefreshCw, ArrowRightLeft } from "lucide-react";
+import { useState, useEffect } from "react";
 
-import { useSmartReadLongData, downloadJson, downloadCsv, useSyncTaskResults } from "../hooks";
+import { downloadJson, downloadCsv, useSyncTaskResults } from "../hooks";
+import { SmartReadCsvTransformer } from "../utils/csv-transformer";
 
 import { SmartReadCsvTable } from "./SmartReadCsvTable";
 
@@ -30,84 +31,123 @@ interface SmartReadResultViewProps {
 type AnyRecord = Record<string, any>;
 
 export function SmartReadResultView({ configId, taskId }: SmartReadResultViewProps) {
-  const [activeTab, setActiveTab] = useState("long");
+  const [activeTab, setActiveTab] = useState("wide");
 
-  // 同期結果（横持ち・縦持ち両方を含む）
-  const [syncResult, setSyncResult] = useState<{
-    wide_data: AnyRecord[];
-    long_data: AnyRecord[];
-    errors: { row: number; field: string; message: string; value: string | null }[];
-    filename: string | null;
-  } | null>(null);
+  // 横持ちデータ（API/IDBから）
+  const [wideData, setWideData] = useState<AnyRecord[]>([]);
+  // 縦持ちデータ（変換後）
+  const [longData, setLongData] = useState<AnyRecord[]>([]);
+  // 変換エラー
+  const [transformErrors, setTransformErrors] = useState<
+    { row: number; field: string; message: string; value: string | null }[]
+  >([]);
+  // ファイル名
+  const [filename, setFilename] = useState<string | null>(null);
+  // 変換中フラグ
+  const [isTransforming, setIsTransforming] = useState(false);
 
-  // Fetch data directly from DB (Unified flow)
-  const {
-    data: longData,
-    isLoading,
-    refetch,
-    isRefetching,
-  } = useSmartReadLongData(configId, taskId);
   const syncMutation = useSyncTaskResults();
 
+  // API同期して横持ちデータを取得
   const handleSyncFromApi = async () => {
-    // forceSync: true でキャッシュをスキップし、必ずサーバーから取得
+    console.info(`[ResultView] Triggering API sync for task ${taskId}...`);
     const result = await syncMutation.mutateAsync({ configId, taskId, forceSync: true });
-    // 同期結果を保存して横持ちデータも表示可能にする
-    setSyncResult({
-      wide_data: result.wide_data as AnyRecord[],
-      long_data: result.long_data as AnyRecord[],
-      errors: result.errors,
+
+    console.info(`[ResultView] Sync result:`, {
+      wide: result.wide_data.length,
+      long: result.long_data.length,
       filename: result.filename,
     });
+
+    // stateを更新
+    setWideData(result.wide_data as AnyRecord[]);
+    setLongData(result.long_data as AnyRecord[]);
+    setTransformErrors(result.errors);
+    setFilename(result.filename);
+
+    // 横持ちがあれば横持ちタブ、縦持ちがあれば縦持ちタブに切り替え
+    if (result.long_data.length > 0) {
+      setActiveTab("long");
+    } else if (result.wide_data.length > 0) {
+      setActiveTab("wide");
+    }
+  };
+
+  // 横持ち→縦持ち変換
+  const handleTransformToLong = async () => {
+    if (wideData.length === 0) return;
+
+    console.info(`[ResultView] Transforming ${wideData.length} wide rows...`);
+    setIsTransforming(true);
+
+    try {
+      const transformer = new SmartReadCsvTransformer();
+      const result = transformer.transformToLong(wideData, true);
+
+      console.info(`[ResultView] Transform result: ${result.long_data.length} long rows`);
+
+      setLongData(result.long_data);
+      setTransformErrors(result.errors);
+      setActiveTab("long");
+    } catch (e) {
+      console.error(`[ResultView] Transform error:`, e);
+    } finally {
+      setIsTransforming(false);
+    }
   };
 
   const handleDownloadLong = () => {
-    const data = syncResult?.long_data ?? longData?.map((d) => d.content);
-    if (!data || data.length === 0) return;
-    downloadCsv(data, `${taskId}_long.csv`);
+    if (longData.length === 0) return;
+    downloadCsv(longData, `${taskId}_long.csv`);
   };
 
   const handleDownloadWide = () => {
-    if (!syncResult?.wide_data || syncResult.wide_data.length === 0) return;
-    downloadCsv(syncResult.wide_data, `${taskId}_wide.csv`);
+    if (wideData.length === 0) return;
+    downloadCsv(wideData, `${taskId}_wide.csv`);
   };
 
   const handleDownloadJson = () => {
-    const data = syncResult?.long_data ?? longData?.map((d) => d.content);
-    if (!data || data.length === 0) return;
-    downloadJson(data, `${taskId}.json`);
+    if (longData.length === 0) return;
+    downloadJson(longData, `${taskId}.json`);
   };
 
-  // Loading State
-  if (isLoading) {
-    return (
-      <Card className="h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-gray-500">
-          <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
-          <div className="text-center">
-            <p className="font-medium text-lg">データを取得中...</p>
-            <p className="text-sm text-gray-400">データベースから取得しています</p>
-          </div>
-        </div>
-      </Card>
-    );
-  }
+  // IDBからキャッシュを読み込む (初回マウント時)
+  useEffect(() => {
+    const loadFromCache = async () => {
+      try {
+        const { exportCache } = await import("../db/export-cache");
+        const cached = await exportCache.getByTaskId(configId, taskId);
+        if (cached) {
+          console.info(`[ResultView] Loaded from IDB cache:`, {
+            wide: cached.wide_data.length,
+            long: cached.long_data.length,
+          });
+          setWideData(cached.wide_data);
+          setLongData(cached.long_data);
+          setTransformErrors(cached.errors);
+          setFilename(cached.filename);
+          if (cached.long_data.length > 0) {
+            setActiveTab("long");
+          }
+        }
+      } catch (e) {
+        console.warn(`[ResultView] Failed to load from cache:`, e);
+      }
+    };
+    loadFromCache();
+  }, [configId, taskId]);
 
   // No Data State
-  if (!longData || longData.length === 0) {
+  if (wideData.length === 0 && longData.length === 0) {
     return (
       <Card className="h-full flex items-center justify-center">
         <div className="flex flex-col items-center gap-2 text-gray-500">
           <AlertCircle className="h-8 w-8" />
           <p>データが見つかりません</p>
           <p className="text-sm text-gray-400">
-            まだ処理が完了していないか、データが存在しません。
+            「APIから同期」ボタンで横持ちデータを取得してください。
           </p>
           <div className="flex gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <RefreshCw className={isRefetching ? "animate-spin mr-2" : "mr-2"} />
-              再取得 (DB)
-            </Button>
             <Button
               variant="default"
               size="sm"
@@ -123,20 +163,6 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     );
   }
 
-  // データ表示用：syncResult があればそれを優先、なければDB取得データを使用
-  const displayLongData = syncResult?.long_data ?? longData.map((d) => d.content);
-  const displayWideData = syncResult?.wide_data ?? [];
-  const displayErrors =
-    syncResult?.errors ??
-    longData
-      .filter((d) => d.status === "ERROR")
-      .map((d) => ({
-        row: d.row_index,
-        field: "unknown",
-        message: d.error_reason || "Unknown Error",
-        value: "",
-      }));
-
   // Result Display
   return (
     <Card className="h-full flex flex-col">
@@ -147,41 +173,32 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
               <CardTitle className="text-base">処理結果</CardTitle>
               <Badge
                 variant="secondary"
-                className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-100 flex gap-1 items-center"
+                className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-100"
               >
-                <Database className="h-3 w-3" />
-                {syncResult ? "API同期済み" : "DB取得済み"}
+                横: {wideData.length}件 / 縦: {longData.length}件
               </Badge>
             </div>
-            <CardDescription className="flex items-center gap-2">
-              <span>
-                タスク: {taskId} (縦: {displayLongData.length}件, 横: {displayWideData.length}件)
-              </span>
-            </CardDescription>
+            <CardDescription>{filename && <span>ファイル: {filename}</span>}</CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isRefetching}
-              title="DBから再取得"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
-            </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleSyncFromApi}
               disabled={syncMutation.isPending}
-              title="APIから同期"
+              title="APIから再取得"
             >
               <RefreshCw
                 className={`h-4 w-4 mr-1 ${syncMutation.isPending ? "animate-spin" : ""}`}
               />
               API同期
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadJson}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadJson}
+              disabled={longData.length === 0}
+            >
               <Download className="mr-2 h-4 w-4" />
               JSON
             </Button>
@@ -189,12 +206,17 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
               variant="outline"
               size="sm"
               onClick={handleDownloadWide}
-              disabled={displayWideData.length === 0}
+              disabled={wideData.length === 0}
             >
               <Download className="mr-2 h-4 w-4" />
               CSV(横)
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadLong}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadLong}
+              disabled={longData.length === 0}
+            >
               <Download className="mr-2 h-4 w-4" />
               CSV(縦)
             </Button>
@@ -203,29 +225,53 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden min-h-0 p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-          <div className="px-4 border-b">
+          <div className="px-4 border-b flex items-center justify-between">
             <TabsList>
-              <TabsTrigger value="long">縦持ち (Long) - {displayLongData.length}件</TabsTrigger>
-              <TabsTrigger value="wide" disabled={displayWideData.length === 0}>
-                横持ち (Wide) - {displayWideData.length}件
-              </TabsTrigger>
+              <TabsTrigger value="wide">横持ち (Wide) - {wideData.length}件</TabsTrigger>
+              <TabsTrigger value="long">縦持ち (Long) - {longData.length}件</TabsTrigger>
             </TabsList>
+            {activeTab === "wide" && wideData.length > 0 && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleTransformToLong}
+                disabled={isTransforming}
+                className="my-2"
+              >
+                <ArrowRightLeft
+                  className={`h-4 w-4 mr-1 ${isTransforming ? "animate-spin" : ""}`}
+                />
+                縦持ちに変換
+              </Button>
+            )}
           </div>
-          <TabsContent
-            value="long"
-            className="flex-1 overflow-auto p-4 m-0 data-[state=inactive]:hidden"
-          >
-            <SmartReadCsvTable data={displayLongData} errors={displayErrors} />
-          </TabsContent>
           <TabsContent
             value="wide"
             className="flex-1 overflow-auto p-4 m-0 data-[state=inactive]:hidden"
           >
-            {displayWideData.length > 0 ? (
-              <SmartReadCsvTable data={displayWideData} errors={[]} />
+            {wideData.length > 0 ? (
+              <SmartReadCsvTable data={wideData} errors={[]} />
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400">
-                横持ちデータはAPIから同期すると表示されます
+                横持ちデータがありません
+              </div>
+            )}
+          </TabsContent>
+          <TabsContent
+            value="long"
+            className="flex-1 overflow-auto p-4 m-0 data-[state=inactive]:hidden"
+          >
+            {longData.length > 0 ? (
+              <SmartReadCsvTable data={longData} errors={transformErrors} />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+                <p>縦持ちデータがありません</p>
+                {wideData.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={handleTransformToLong}>
+                    <ArrowRightLeft className="h-4 w-4 mr-1" />
+                    横持ちから変換
+                  </Button>
+                )}
               </div>
             )}
           </TabsContent>
