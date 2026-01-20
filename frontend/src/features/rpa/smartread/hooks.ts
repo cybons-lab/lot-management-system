@@ -31,10 +31,18 @@ import {
 import { processFilesAuto } from "./api";
 
 import { ApiError } from "@/utils/errors/custom-errors";
-const QUERY_KEYS = {
+const SMARTREAD_QUERY_KEYS = {
   all: ["smartread"] as const,
-  configs: () => [...QUERY_KEYS.all, "configs"] as const,
-  config: (id: number) => [...QUERY_KEYS.configs(), id] as const,
+  configs: () => [...SMARTREAD_QUERY_KEYS.all, "configs"] as const,
+  config: (id: number) => [...SMARTREAD_QUERY_KEYS.configs(), id] as const,
+  tasks: (id: number) => [...SMARTREAD_QUERY_KEYS.config(id), "tasks"] as const,
+  managedTasks: (id: number) => [...SMARTREAD_QUERY_KEYS.config(id), "managed-tasks"] as const,
+  longData: (id: number, taskId?: string) => {
+    const key = [...SMARTREAD_QUERY_KEYS.config(id), "long-data"];
+    return (taskId ? [...key, taskId] : key) as readonly any[];
+  },
+  requests: (id: number) => [...SMARTREAD_QUERY_KEYS.config(id), "requests"] as const,
+  files: (id: number) => [...SMARTREAD_QUERY_KEYS.config(id), "files"] as const,
 };
 
 /**
@@ -42,7 +50,7 @@ const QUERY_KEYS = {
  */
 export function useSmartReadConfigs() {
   return useQuery({
-    queryKey: QUERY_KEYS.configs(),
+    queryKey: SMARTREAD_QUERY_KEYS.configs(),
     queryFn: getConfigs,
     // 【設計判断】401/403等の認証系エラーはリトライしても解決しないため抑制
     retry: (failureCount, error) => {
@@ -61,7 +69,7 @@ export function useSmartReadConfigs() {
  */
 export function useSmartReadConfig(configId: number) {
   return useQuery({
-    queryKey: QUERY_KEYS.config(configId),
+    queryKey: SMARTREAD_QUERY_KEYS.config(configId),
     queryFn: () => getConfig(configId),
     enabled: !!configId,
     retry: (failureCount, error) => {
@@ -83,7 +91,7 @@ export function useCreateSmartReadConfig() {
   return useMutation({
     mutationFn: (data: SmartReadConfigCreate) => createConfig(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.configs() });
       toast.success("設定を作成しました");
     },
     onError: (error: Error) => {
@@ -102,8 +110,8 @@ export function useUpdateSmartReadConfig() {
     mutationFn: ({ configId, data }: { configId: number; data: SmartReadConfigUpdate }) =>
       updateConfig(configId, data),
     onSuccess: (_, { configId }) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.config(configId) });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.config(configId) });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.configs() });
       toast.success("設定を更新しました");
     },
     onError: (error: Error) => {
@@ -121,7 +129,7 @@ export function useDeleteSmartReadConfig() {
   return useMutation({
     mutationFn: (configId: number) => deleteConfig(configId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.configs() });
       toast.success("設定を削除しました");
     },
     onError: (error: Error) => {
@@ -154,7 +162,7 @@ export function useAnalyzeFile() {
  */
 export function useWatchDirFiles(configId: number | null) {
   return useQuery({
-    queryKey: [...QUERY_KEYS.config(configId ?? 0), "files"],
+    queryKey: SMARTREAD_QUERY_KEYS.files(configId ?? 0),
     queryFn: () => getWatchDirFiles(configId!),
     enabled: !!configId,
     retry: (failureCount, error) => {
@@ -188,7 +196,7 @@ export function useProcessWatchDirFiles() {
       }
 
       // ファイル一覧を更新
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.config(configId), "files"] });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.files(configId) });
     },
     onError: (error: Error) => {
       toast.error(`処理に失敗しました: ${error.message}`);
@@ -198,15 +206,13 @@ export function useProcessWatchDirFiles() {
 
 // ==================== タスク・Export ====================
 
-// ==================== タスク・Export ====================
-
 /**
  * タスク一覧を取得 (SmartRead API)
  * NOTE: 主に "Sync" ボタンから手動で呼び出されることを想定
  */
 export function useSmartReadTasks(configId: number | null, enabled: boolean = false) {
   return useQuery({
-    queryKey: configId ? [...QUERY_KEYS.config(configId), "tasks"] : [],
+    queryKey: SMARTREAD_QUERY_KEYS.tasks(configId ?? 0),
     queryFn: async () => {
       if (!configId) return { tasks: [] };
       console.info(`[SmartRead] Syncing tasks from [SERVER] for config_id=${configId}...`);
@@ -225,7 +231,7 @@ export function useSmartReadTasks(configId: number | null, enabled: boolean = fa
  */
 export function useManagedTasks(configId: number | null, enabled: boolean = true) {
   return useQuery({
-    queryKey: configId ? [...QUERY_KEYS.config(configId), "managed-tasks"] : [],
+    queryKey: SMARTREAD_QUERY_KEYS.managedTasks(configId ?? 0),
     queryFn: async () => {
       if (!configId) return [];
       console.info(`[SmartRead] Fetching tasks from [DB] for config_id=${configId}...`);
@@ -270,7 +276,7 @@ export function useExportStatus(
   return useQuery({
     queryKey:
       configId && taskId && exportId
-        ? [...QUERY_KEYS.config(configId), "export", taskId, exportId]
+        ? [...SMARTREAD_QUERY_KEYS.config(configId), "export", taskId, exportId]
         : [],
     queryFn: () =>
       configId && taskId && exportId
@@ -305,7 +311,7 @@ export function useExportCsvData(options: {
   return useQuery({
     queryKey:
       configId && taskId && exportId
-        ? [...QUERY_KEYS.config(configId), "csv", taskId, exportId, saveToDb, taskDate]
+        ? [...SMARTREAD_QUERY_KEYS.config(configId), "csv", taskId, exportId, saveToDb, taskDate]
         : [],
     queryFn: async () => {
       if (!configId || !taskId || !exportId) {
@@ -468,7 +474,8 @@ export function useUpdateSkipToday() {
       updateSkipToday(taskId, skipToday),
     onSuccess: (_, { taskId }) => {
       // 管理タスク一覧を更新
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.all, "managed-tasks"] });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.managedTasks(0) });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.all });
       toast.success(`タスク ${taskId} のスキップ設定を${_.skip_today ? "有効" : "無効"}にしました`);
     },
     onError: (error: Error) => {
@@ -486,7 +493,7 @@ export function useSmartReadLongData(
   limit: number = 1000,
 ) {
   return useQuery({
-    queryKey: configId ? ["smartread", "long-data", configId, taskId, limit] : [],
+    queryKey: SMARTREAD_QUERY_KEYS.longData(configId ?? 0, taskId),
     queryFn: () =>
       configId
         ? import("./api").then(async (mod) => {
@@ -513,8 +520,8 @@ export function useProcessFilesAuto() {
     onSuccess: (result, { configId }) => {
       toast.success(result.message);
       // リクエスト一覧とファイル一覧を更新
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.config(configId), "requests"] });
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.config(configId), "files"] });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.requests(configId) });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.files(configId) });
     },
     onError: (error: Error) => {
       toast.error(`処理開始に失敗しました: ${error.message}`);
@@ -527,7 +534,7 @@ export function useProcessFilesAuto() {
  */
 export function useSmartReadRequests(configId: number | null, limit: number = 100) {
   return useQuery({
-    queryKey: configId ? [...QUERY_KEYS.config(configId), "requests", limit] : [],
+    queryKey: SMARTREAD_QUERY_KEYS.requests(configId ?? 0),
     queryFn: () => (configId ? getRequests(configId, undefined, limit) : { requests: [] }),
     enabled: !!configId,
     staleTime: 1000 * 30, // 30 seconds
@@ -542,14 +549,14 @@ export function useSmartReadRequestPolling(configId: number | null) {
   // Removed unused completedParams tracking for now
 
   useQuery({
-    queryKey: configId ? [...QUERY_KEYS.config(configId), "requests", "polling"] : [],
+    queryKey: [...SMARTREAD_QUERY_KEYS.requests(configId ?? 0), "polling"],
     queryFn: async () => {
       if (!configId) return;
       const res = await getRequests(configId, "processing", 100); // Poll only processing items
 
       // If we need to detect completion, we might need to fetch 'completed' ones too or rely on the list diff
       // For simplicity, let's just re-fetch the main list
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.config(configId), "requests"] });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.requests(configId) });
 
       return res;
     },
@@ -566,17 +573,41 @@ export function useSyncTaskResults() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ configId, taskId }: { configId: number; taskId: string }) =>
-      syncTaskResults(configId, taskId),
-    onSuccess: (_, { configId, taskId }) => {
-      toast.success("APIから最新データを取得しました");
-      // 縦持ちデータとタスク一覧を更新
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.config(configId), "long-data"] });
+    mutationFn: async ({ configId, taskId }: { configId: number; taskId: string }) => {
+      console.group(`[SmartRead] Syncing task results for ${taskId}`);
+      console.info(`[SmartRead] Triggering backend sync API...`);
+      const startTime = Date.now();
+      try {
+        const res = await syncTaskResults(configId, taskId);
+        const elapsed = (Date.now() - startTime) / 1000;
+        console.info(
+          `[SmartRead] Sync successful! Received ${res.long_data.length} rows in ${elapsed.toFixed(1)}s`,
+        );
+        console.info(`[SmartRead] Filename: ${res.filename || "N/A"}`);
+        return res;
+      } catch (e) {
+        console.error(`[SmartRead] Sync failed after ${(Date.now() - startTime) / 1000}s`, e);
+        throw e;
+      } finally {
+        console.groupEnd();
+      }
+    },
+    onSuccess: (res, { configId, taskId }) => {
+      toast.success(`${res.long_data.length}件のデータを同期しました`);
+
+      // 1. 縦持ちデータ(単一タスク)を無効化 -> これで画面がリロードされる
       queryClient.invalidateQueries({
-        queryKey: [...QUERY_KEYS.config(configId), "long-data", taskId],
+        queryKey: SMARTREAD_QUERY_KEYS.longData(configId, taskId),
       });
+
+      // 2. 全体の縦持ちデータ一覧も念のため無効化
       queryClient.invalidateQueries({
-        queryKey: [...QUERY_KEYS.config(configId), "managed-tasks"],
+        queryKey: SMARTREAD_QUERY_KEYS.longData(configId),
+      });
+
+      // 3. タスク状態（synced_at等）が変わるので管理タスク一覧も更新
+      queryClient.invalidateQueries({
+        queryKey: SMARTREAD_QUERY_KEYS.managedTasks(configId),
       });
     },
     onError: (error: Error) => {

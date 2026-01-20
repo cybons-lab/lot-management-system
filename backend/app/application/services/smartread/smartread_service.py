@@ -845,8 +845,11 @@ class SmartReadService:
         self.session.flush()
         elapsed = time.time() - start_time
         logger.info(
-            f"Saved {new_wide_count} new wide rows (total {len(wide_data)}) and {long_count} long rows "
-            f"to DB (elapsed: {elapsed:.2f}s)"
+            f"[SmartRead] DB SAVE SUCCESS: Config={config_id}, Task={task_id}, Date={task_date}\n"
+            f"  - Wide Rows: {new_wide_count} newly inserted / {len(wide_data)} total\n"
+            f"  - Long Rows: {long_count} inserted\n"
+            f"  - Filename: {filename}\n"
+            f"  - Elapsed: {elapsed:.2f}s"
         )
 
     # ==================== タスク管理 ====================
