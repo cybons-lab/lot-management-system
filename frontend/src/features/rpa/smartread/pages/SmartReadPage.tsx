@@ -6,7 +6,7 @@
  */
 
 import { Settings, Loader2, AlertCircle, RefreshCw, FileText } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   useSmartReadConfigs,
@@ -16,9 +16,9 @@ import {
 } from "../hooks";
 import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
 import { SmartReadResultView } from "../components/SmartReadResultView";
-import { SmartReadTaskList } from "../components/SmartReadTaskList";
 import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
 import { SmartReadManagedTaskList } from "../components/SmartReadManagedTaskList";
+import { SmartReadSavedDataList } from "../components/SmartReadSavedDataList";
 
 import { Button } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
@@ -54,9 +54,17 @@ export function SmartReadPage() {
   const processWatchFilesMutation = useProcessWatchDirFiles();
   const { refetch: refetchTasks } = useSmartReadTasks(selectedConfigId, false);
 
-  console.log("[SmartReadPage] Render", { selectedConfigId, activeTab, configs });
-
   const activeConfigs = configs?.filter((c) => c.is_active) ?? [];
+
+  // Auto-select default config
+  useEffect(() => {
+    if (!configsLoading && activeConfigs.length > 0 && selectedConfigId === null) {
+      const defaultConfig = activeConfigs.find((c) => c.is_default);
+      if (defaultConfig) {
+        setSelectedConfigId(defaultConfig.id);
+      }
+    }
+  }, [configsLoading, activeConfigs, selectedConfigId]);
 
   const handleProcessWatchFiles = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0) return;
@@ -70,10 +78,18 @@ export function SmartReadPage() {
     const successFilenames = results.filter((r) => r.success).map((r) => r.filename);
     setSelectedWatchFiles((prev) => prev.filter((f) => !successFilenames.includes(f)));
 
-    // Refresh file list and task list, then switch to history
+    // Refresh file list and task list, then switch to tasks
     refetchWatchFiles();
-    refetchTasks();
-    setActiveTab("history");
+    refetchTasks(); // This refetches API tasks... wait, we want Managed Tasks now.
+    // Actually `refetchTasks` was `useSmartReadTasks`.
+    // We might need to refetch managed tasks.
+    // But `SmartReadManagedTaskList` handles its own data fetching.
+    // Tricky part: `handleProcessWatchFiles` calls API to process files. This creates tasks in DB (via backend).
+    // So we just need to ensure `ManagedTaskList` refreshes.
+    // We can invalidate the query here.
+
+    // setActiveTab("tasks"); // we will rename "history" to "tasks"
+    setActiveTab("tasks");
   };
 
   const toggleWatchFile = (filename: string) => {
@@ -92,17 +108,17 @@ export function SmartReadPage() {
   };
 
   const handleAnalyzeSuccess = () => {
-    refetchTasks();
-    setActiveTab("history");
+    // refetchTasks(); // same here
+    setActiveTab("tasks");
   };
 
   const handleSelectTask = (taskId: string) => {
     setSelectedTaskId(taskId);
-    setActiveTab("detail");
   };
 
   return (
     <PageContainer>
+      {/* ... PageHeader ... */}
       <PageHeader
         title="AI-OCR PDFインポート"
         subtitle="AI-OCRを使用してPDFや画像を解析し、データを抽出します"
@@ -115,7 +131,8 @@ export function SmartReadPage() {
       />
 
       <div className="flex h-[calc(100vh-12rem)] flex-col gap-4">
-        {/* Config Selection - Always visible */}
+        {/* ... Config Selection ... */}
+        {/* (Keep verify existing code for Config Selection) */}
         <Card className="shrink-0">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -168,9 +185,9 @@ export function SmartReadPage() {
         >
           <TabsList className="grid w-full grid-cols-4 shrink-0">
             <TabsTrigger value="import">1. インポート</TabsTrigger>
-            <TabsTrigger value="history">2. 履歴</TabsTrigger>
-            <TabsTrigger value="managed">3. 管理タスク</TabsTrigger>
-            <TabsTrigger value="detail">4. 結果詳細</TabsTrigger>
+            <TabsTrigger value="tasks">2. タスク</TabsTrigger>
+            <TabsTrigger value="detail">3. 結果詳細</TabsTrigger>
+            <TabsTrigger value="saved">4. 保存済みデータ</TabsTrigger>
           </TabsList>
 
           {/* Tab 1: Import (Watch Folder & Upload) */}
@@ -280,40 +297,19 @@ export function SmartReadPage() {
             </div>
           </TabsContent>
 
-          {/* Tab 2: History (Task List) */}
-          <TabsContent value="history" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
-            <Card className="h-full flex flex-col">
-              <CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-base">処理履歴</CardTitle>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => refetchTasks()}
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 overflow-hidden p-0">
-                <SmartReadTaskList
-                  configId={selectedConfigId}
-                  selectedTaskId={selectedTaskId}
-                  onSelectTask={handleSelectTask}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab 3: Managed Tasks (DB-saved Tasks) */}
-          <TabsContent value="managed" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
-            <div className="h-full overflow-auto">
-              <SmartReadManagedTaskList configId={selectedConfigId} />
+          {/* Tab 2: Tasks (Merged) */}
+          <TabsContent value="tasks" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
+            <div className="h-full overflow-hidden">
+              <SmartReadManagedTaskList
+                configId={selectedConfigId}
+                selectedTaskId={selectedTaskId}
+                onSelectTask={handleSelectTask}
+                onViewDetail={() => setActiveTab("detail")}
+              />
             </div>
           </TabsContent>
 
-          {/* Tab 4: Detail (Result View) */}
+          {/* Tab 3: Detail (Result View) */}
           <TabsContent value="detail" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
             <div className="h-full">
               {!selectedConfigId ? (
@@ -326,10 +322,17 @@ export function SmartReadPage() {
                 <Card className="h-full flex items-center justify-center text-gray-400">
                   <div className="flex flex-col items-center gap-2">
                     <FileText className="h-8 w-8 text-gray-300" />
-                    <p>履歴タブからタスクを選択してください</p>
+                    <p>タスクタブからタスクを選択してください</p>
                   </div>
                 </Card>
               )}
+            </div>
+          </TabsContent>
+
+          {/* Tab 4: Saved Data */}
+          <TabsContent value="saved" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
+            <div className="h-full overflow-hidden">
+              <SmartReadSavedDataList configId={selectedConfigId} />
             </div>
           </TabsContent>
         </Tabs>

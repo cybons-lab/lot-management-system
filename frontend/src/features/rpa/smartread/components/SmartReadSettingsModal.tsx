@@ -76,6 +76,7 @@ const configFormSchema = z.object({
   input_exts: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   is_active: z.boolean().default(true),
+  is_default: z.boolean().default(false),
 });
 
 type ConfigFormData = z.infer<typeof configFormSchema>;
@@ -109,6 +110,7 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
       input_exts: "pdf,png,jpg,jpeg",
       description: "",
       is_active: true,
+      is_default: false,
     },
   });
 
@@ -126,6 +128,7 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
       input_exts: config.input_exts ?? "pdf,png,jpg,jpeg",
       description: config.description ?? "",
       is_active: config.is_active,
+      is_default: config.is_default,
     });
     setIsEditing(true);
   };
@@ -144,6 +147,7 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
       input_exts: "pdf,png,jpg,jpeg",
       description: "",
       is_active: true,
+      is_default: false,
     });
     setIsEditing(true);
   };
@@ -233,6 +237,21 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                         <div className="space-y-0.5">
                           <FormLabel>有効</FormLabel>
                           <FormDescription>この設定を使用可能にする</FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="is_default"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel>デフォルト</FormLabel>
+                          <FormDescription>この設定を既定にする</FormDescription>
                         </div>
                         <FormControl>
                           <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -451,6 +470,11 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                           >
                             {config.is_active ? "有効" : "無効"}
                           </span>
+                          {config.is_default && (
+                            <span className="ml-2 inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                              Default
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">

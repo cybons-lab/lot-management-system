@@ -17740,6 +17740,24 @@
             }
           },
           {
+            "name": "task_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "タスクIDでフィルタ",
+              "title": "Task Id"
+            },
+            "description": "タスクIDでフィルタ"
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,

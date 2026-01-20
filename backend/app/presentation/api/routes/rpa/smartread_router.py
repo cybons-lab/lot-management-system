@@ -571,7 +571,6 @@ async def process_files_auto(
                     _process_request_background,
                     config_id=config_id,
                     request_id=request_record.request_id,
-                    uow=uow,
                 )
 
         except Exception as e:
@@ -589,35 +588,35 @@ async def process_files_auto(
     )
 
 
-async def _process_request_background(config_id: int, request_id: str, uow: UnitOfWork) -> None:
+async def _process_request_background(config_id: int, request_id: str) -> None:
     """バックグラウンドでリクエストをポーリング・処理."""
     import logging
+
+    from app.application.services.common.uow_service import UnitOfWork
+    from app.core.database import SessionLocal
 
     logger = logging.getLogger(__name__)
 
     try:
-        # 新しいセッションでサービスを作成
-        assert uow.session is not None
-        service = SmartReadService(uow.session)
-        request_record = service.get_request_by_id(request_id)
+        # 新しいセッションでUoWを作成
+        with UnitOfWork(SessionLocal) as uow:
+            assert uow.session is not None
+            service = SmartReadService(uow.session)
+            request_record = service.get_request_by_id(request_id)
 
-        if not request_record:
-            logger.error(f"Request not found: {request_id}")
-            return
+            if not request_record:
+                logger.error(f"Request not found: {request_id}")
+                return
 
-        success = await service.poll_and_process_request(config_id, request_record)
+            success = await service.poll_and_process_request(config_id, request_record)
 
-        if success:
-            logger.info(f"Request processed successfully: {request_id}")
-        else:
-            logger.warning(f"Request processing failed: {request_id}")
-
-        uow.session.commit()
+            if success:
+                logger.info(f"Request processed successfully: {request_id}")
+            else:
+                logger.warning(f"Request processing failed: {request_id}")
 
     except Exception as e:
         logger.error(f"Background processing error for {request_id}: {e}")
-        if uow.session is not None:
-            uow.session.rollback()
 
 
 @router.get(
@@ -679,6 +678,7 @@ def get_requests(
 )
 def get_long_data(
     config_id: int,
+    task_id: str | None = Query(default=None, description="タスクIDでフィルタ"),
     limit: int = Query(default=100, le=1000, description="取得件数"),
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
@@ -686,7 +686,7 @@ def get_long_data(
     """縦持ちデータ一覧を取得."""
     assert db is not None
     service = SmartReadService(db)
-    long_data = service.get_long_data_list(config_id, limit=limit)
+    long_data = service.get_long_data_list(config_id, task_id=task_id, limit=limit)
 
     return SmartReadLongDataListResponse(
         data=[

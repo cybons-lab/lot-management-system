@@ -1356,12 +1356,14 @@ class SmartReadService:
     def get_long_data_list(
         self,
         config_id: int,
+        task_id: str | None = None,
         limit: int = 1000,
     ) -> list[SmartReadLongData]:
         """縦持ちデータ一覧を取得.
 
         Args:
             config_id: 設定ID
+            task_id: タスクID（オプション）
             limit: 取得件数
 
         Returns:
@@ -1374,5 +1376,9 @@ class SmartReadService:
             .order_by(SmartReadLongData.created_at.desc())
             .limit(limit)
         )
+
+        if task_id:
+            stmt = stmt.where(SmartReadLongData.task_id == task_id)
+
         result = self.session.execute(stmt)
         return list(result.scalars().all())

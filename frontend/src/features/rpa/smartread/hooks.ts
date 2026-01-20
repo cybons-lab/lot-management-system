@@ -2,8 +2,10 @@
  * SmartRead OCR TanStack Query hooks
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable max-lines */
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React from "react";
 import { toast } from "sonner";
 
 import type { SmartReadConfigCreate, SmartReadConfigUpdate, SmartReadAnalyzeResponse } from "./api";
@@ -24,14 +26,7 @@ import {
   transformCsv,
   updateSkipToday,
 } from "./api";
-import {
-  processFilesAuto,
-  getRequests,
-  getLongData,
-  type SmartReadProcessAutoResponse,
-  type SmartReadRequestListResponse,
-  type SmartReadLongDataListResponse,
-} from "./api";
+import { processFilesAuto, getRequests } from "./api";
 
 import { ApiError } from "@/utils/errors/custom-errors";
 
@@ -203,25 +198,41 @@ export function useProcessWatchDirFiles() {
 
 // ==================== タスク・Export ====================
 
+// ==================== タスク・Export ====================
+
 /**
- * タスク一覧を取得
+ * タスク一覧を取得 (SmartRead API)
+ * NOTE: 主に "Sync" ボタンから手動で呼び出されることを想定
  */
 export function useSmartReadTasks(configId: number | null, enabled: boolean = false) {
   return useQuery({
     queryKey: configId ? [...QUERY_KEYS.config(configId), "tasks"] : [],
-    queryFn: () => (configId ? getTasks(configId) : Promise.resolve({ tasks: [] })),
+    queryFn: async () => {
+      if (!configId) return { tasks: [] };
+      console.info(`[SmartRead] Syncing tasks from [SERVER] for config_id=${configId}...`);
+      const res = await getTasks(configId);
+      console.info(`[SmartRead] Tasks synced from [SERVER]: ${res.tasks.length} items`);
+      return res;
+    },
     enabled: !!configId && enabled,
     staleTime: Infinity, // キャッシュを永続化（手動更新のみ）
   });
 }
 
 /**
- * 管理タスク一覧を取得
+ * 管理タスク一覧を取得 (DB)
+ * NOTE: メインのタスク一覧表示に使用
  */
 export function useManagedTasks(configId: number | null, enabled: boolean = true) {
   return useQuery({
     queryKey: configId ? [...QUERY_KEYS.config(configId), "managed-tasks"] : [],
-    queryFn: () => (configId ? getManagedTasks(configId) : Promise.resolve([])),
+    queryFn: async () => {
+      if (!configId) return [];
+      console.info(`[SmartRead] Fetching tasks from [DB] for config_id=${configId}...`);
+      const res = await getManagedTasks(configId);
+      console.info(`[SmartRead] Tasks loaded from [DB]: ${res.length} items`);
+      return res;
+    },
     enabled: !!configId && enabled,
     staleTime: 1000 * 60 * 5, // 5分キャッシュ
   });
@@ -278,29 +289,108 @@ export function useExportStatus(
 }
 
 /**
- * エクスポートからCSVデータを取得
+ * エクスポートからCSVデータを取得 (キャッシュファースト + クライアント側変換)
+ * NOTE: enabled=false で定義し、明示的な refetch() で実行することを想定
  */
+// eslint-disable-next-line max-lines-per-function
 export function useExportCsvData(options: {
   configId: number | null;
   taskId: string | null;
   exportId: string | null;
-  isExportDone?: boolean;
   saveToDb?: boolean;
   taskDate?: string;
 }) {
-  const { configId, taskId, exportId, isExportDone = false, saveToDb = true, taskDate } = options;
+  const { configId, taskId, exportId, saveToDb = true, taskDate } = options;
 
   return useQuery({
     queryKey:
       configId && taskId && exportId
         ? [...QUERY_KEYS.config(configId), "csv", taskId, exportId, saveToDb, taskDate]
         : [],
-    queryFn: () =>
-      configId && taskId && exportId
-        ? getExportCsvData({ configId, taskId, exportId, saveToDb, taskDate })
-        : Promise.resolve(null),
-    enabled: !!configId && !!taskId && !!exportId && isExportDone,
-    staleTime: 1000 * 60 * 10, // CSVデータは10分キャッシュ
+    queryFn: async () => {
+      if (!configId || !taskId || !exportId) {
+        return null;
+      }
+
+      console.group(`[SmartRead] useExportCsvData: Fetching CSV for ExportID=${exportId}`);
+      try {
+        // 1. Check cache first
+        try {
+          const { exportCache } = await import("./db/export-cache");
+          const cached = await exportCache.get(configId, taskId, exportId);
+
+          if (cached) {
+            console.info(
+              `[SmartRead] Data source: [CACHE] (Hit) | Cached At: ${new Date(cached.cached_at).toLocaleString()}`,
+            );
+            return {
+              wide_data: cached.wide_data,
+              long_data: cached.long_data,
+              errors: cached.errors,
+              filename: cached.filename,
+              source: "cache",
+            };
+          }
+        } catch (e) {
+          console.warn("[SmartRead] Failed to check cache, proceeding to server fetch", e);
+        }
+
+        // 2. Fetch from server
+        console.info(`[SmartRead] Data source: [SERVER] (Cache Miss, Fetching...)`);
+        const serverData = await getExportCsvData({
+          configId,
+          taskId,
+          exportId,
+          saveToDb,
+          taskDate,
+        });
+        console.info(`[SmartRead] Server Response Received. Filename: ${serverData.filename}`);
+
+        // 3. Transform wide to long on client side
+        console.group(`[SmartRead] Auto-Transformation (Wide -> Long)`);
+        const wideData = serverData.wide_data as Array<Record<string, any>>;
+        console.info(`[SmartRead] Input Wide Rows: ${wideData.length}`);
+
+        const { SmartReadCsvTransformer } = await import("./utils/csv-transformer");
+        const transformer = new SmartReadCsvTransformer();
+        const transformResult = transformer.transformToLong(wideData, true);
+
+        console.info(`[SmartRead] Transformation Result:`, {
+          longRows: transformResult.long_data.length,
+          errors: transformResult.errors.length,
+        });
+        console.groupEnd();
+
+        // 4. Cache the result
+        try {
+          console.info(`[SmartRead] Caching result to IndexedDB...`);
+          const { exportCache } = await import("./db/export-cache");
+          await exportCache.set({
+            config_id: configId,
+            task_id: taskId,
+            export_id: exportId,
+            wide_data: serverData.wide_data as Array<Record<string, any>>,
+            long_data: transformResult.long_data,
+            errors: transformResult.errors,
+            filename: serverData.filename,
+          });
+        } catch (e) {
+          console.error("[SmartRead] Failed to cache result", e);
+        }
+
+        return {
+          wide_data: serverData.wide_data,
+          long_data: transformResult.long_data,
+          errors: transformResult.errors,
+          filename: serverData.filename,
+          source: "server",
+        };
+      } finally {
+        console.groupEnd();
+      }
+    },
+    enabled: false, // Explicit trigger only
+    staleTime: Infinity,
   });
 }
 
@@ -387,10 +477,32 @@ export function useUpdateSkipToday() {
   });
 }
 
-// ==================== requestId/results ルート hooks ====================
+/**
+ * 保存済み縦持ちデータを取得
+ */
+export function useSmartReadLongData(
+  configId: number | null,
+  taskId?: string,
+  limit: number = 1000,
+) {
+  return useQuery({
+    queryKey: configId ? ["smartread", "long-data", configId, taskId, limit] : [],
+    queryFn: () =>
+      configId
+        ? import("./api").then(async (mod) => {
+            const res = await mod.getLongData(configId, taskId, limit);
+            return res.data;
+          })
+        : Promise.resolve([]),
+    enabled: !!configId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+// ==================== RequestId/Results Automation Hooks ====================
 
 /**
- * 自動処理（requestIdルート）
+ * ファイルを自動処理 (process-auto)
  */
 export function useProcessFilesAuto() {
   const queryClient = useQueryClient();
@@ -398,100 +510,51 @@ export function useProcessFilesAuto() {
   return useMutation({
     mutationFn: ({ configId, filenames }: { configId: number; filenames: string[] }) =>
       processFilesAuto(configId, filenames),
-    onSuccess: (data: SmartReadProcessAutoResponse, { configId }) => {
-      // リクエスト一覧と管理タスク一覧を更新
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.all, "requests", configId] });
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.all, "managed-tasks"] });
-      toast.success(data.message);
+    onSuccess: (result, { configId }) => {
+      toast.success(result.message);
+      // リクエスト一覧とファイル一覧を更新
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.config(configId), "requests"] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.config(configId), "files"] });
     },
     onError: (error: Error) => {
-      toast.error(`自動処理の開始に失敗しました: ${error.message}`);
+      toast.error(`処理開始に失敗しました: ${error.message}`);
     },
   });
 }
 
 /**
- * リクエスト一覧を取得
+ * リクエスト一覧を取得 (Polling support)
  */
-export function useSmartReadRequests(configId: number, state?: string, limit: number = 100) {
-  return useQuery<SmartReadRequestListResponse>({
-    queryKey: [...QUERY_KEYS.all, "requests", configId, state, limit],
-    queryFn: () => getRequests(configId, state, limit),
+export function useSmartReadRequests(configId: number | null, limit: number = 100) {
+  return useQuery({
+    queryKey: configId ? [...QUERY_KEYS.config(configId), "requests", limit] : [],
+    queryFn: () => (configId ? getRequests(configId, undefined, limit) : { requests: [] }),
     enabled: !!configId,
     staleTime: 1000 * 30, // 30 seconds
-    refetchInterval: 1000 * 10, // 10秒ごとに自動更新（SSE代替）
   });
 }
 
 /**
- * 縦持ちデータ一覧を取得
+ * リクエストのポーリングと状態更新
  */
-export function useSmartReadLongData(configId: number, limit: number = 100) {
-  return useQuery<SmartReadLongDataListResponse>({
-    queryKey: [...QUERY_KEYS.all, "long-data", configId, limit],
-    queryFn: () => getLongData(configId, limit),
-    enabled: !!configId,
-    staleTime: 1000 * 60, // 1 minute
-  });
-}
-
-/**
- * 処理中リクエストのポーリング用hook
- * リクエストが処理中（PENDING, OCR_RUNNING等）の場合、自動的にpollingする
- */
-export function useSmartReadRequestPolling(configId: number, enabled: boolean = true) {
+export function useSmartReadRequestPolling(configId: number | null) {
   const queryClient = useQueryClient();
+  // Removed unused completedParams tracking for now
 
-  // 処理中のリクエストがあるかチェック
-  const requestsQuery = useSmartReadRequests(configId, undefined, 50);
+  useQuery({
+    queryKey: configId ? [...QUERY_KEYS.config(configId), "requests", "polling"] : [],
+    queryFn: async () => {
+      if (!configId) return;
+      const res = await getRequests(configId, "processing", 100); // Poll only processing items
 
-  const hasProcessingRequests =
-    requestsQuery.data?.requests?.some((r) =>
-      ["PENDING", "OCR_RUNNING", "SORTING_RUNNING"].includes(r.state),
-    ) ?? false;
+      // If we need to detect completion, we might need to fetch 'completed' ones too or rely on the list diff
+      // For simplicity, let's just re-fetch the main list
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.config(configId), "requests"] });
 
-  // 処理中のリクエストがある場合、より頻繁にポーリング
-  const { data } = useQuery<SmartReadRequestListResponse>({
-    queryKey: [...QUERY_KEYS.all, "requests-polling", configId],
-    queryFn: () => getRequests(configId, undefined, 50),
-    enabled: enabled && hasProcessingRequests,
-    refetchInterval: hasProcessingRequests ? 3000 : false, // 3秒ごと
-    staleTime: 1000,
+      return res;
+    },
+    enabled: !!configId,
+    refetchInterval: 5000, // Poll every 5 seconds
+    refetchIntervalInBackground: true,
   });
-
-  // 完了したリクエストを検出してトースト通知
-  const prevRequestsRef = React.useRef<Map<string, string>>(new Map());
-
-  React.useEffect(() => {
-    if (!data?.requests) return;
-
-    const prevRequests = prevRequestsRef.current;
-    const newMap = new Map<string, string>();
-
-    for (const req of data.requests) {
-      newMap.set(req.request_id, req.state);
-
-      const prevState = prevRequests.get(req.request_id);
-      if (prevState && prevState !== req.state) {
-        // 状態が変化した
-        if (req.state === "OCR_COMPLETED") {
-          toast.success(`${req.filename || req.request_id} の処理が完了しました`);
-          // 縦持ちデータを更新
-          queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.all, "long-data", configId] });
-        } else if (["OCR_FAILED", "SORTING_FAILED", "TIMEOUT"].includes(req.state)) {
-          toast.error(`${req.filename || req.request_id} の処理に失敗しました`);
-        }
-      }
-    }
-
-    prevRequestsRef.current = newMap;
-  }, [data, configId, queryClient]);
-
-  return {
-    hasProcessingRequests,
-    processingCount:
-      requestsQuery.data?.requests?.filter((r) =>
-        ["PENDING", "OCR_RUNNING", "SORTING_RUNNING"].includes(r.state),
-      )?.length ?? 0,
-  };
 }

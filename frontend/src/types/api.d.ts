@@ -24495,6 +24495,8 @@ export interface operations {
   get_long_data_api_rpa_smartread_configs__config_id__long_data_get: {
     parameters: {
       query?: {
+        /** @description タスクIDでフィルタ */
+        task_id?: string | null;
         /** @description 取得件数 */
         limit?: number;
       };
