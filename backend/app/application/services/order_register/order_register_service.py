@@ -25,6 +25,9 @@ if TYPE_CHECKING:
 class OrderRegisterService:
     """受注登録結果管理サービス."""
 
+    # 固定得意先コード（OCRデータに得意先コードがない場合のデフォルト値）
+    DEFAULT_CUSTOMER_CODE = "100427105"
+
     def __init__(self, session: Session) -> None:
         self.session = session
 
@@ -53,7 +56,7 @@ class OrderRegisterService:
 
             # OCRから必要なフィールドを取得
             material_code = content.get("材質コード")
-            customer_code = content.get("得意先コード")
+            customer_code = content.get("得意先コード") or self.DEFAULT_CUSTOMER_CODE
             jiku_code = content.get("次区")
 
             # マスタ参照（得意先 × 材質 × 次区）
@@ -121,7 +124,9 @@ class OrderRegisterService:
             or (shipping_master.maker_part_no if shipping_master else None),
             # マスタ由来
             source="OCR",
-            customer_code=shipping_master.customer_code if shipping_master else None,
+            customer_code=shipping_master.customer_code
+            if shipping_master
+            else (content.get("得意先コード") or self.DEFAULT_CUSTOMER_CODE),
             customer_name=shipping_master.customer_name if shipping_master else None,
             supplier_code=shipping_master.supplier_code if shipping_master else None,
             supplier_name=shipping_master.supplier_name if shipping_master else None,
