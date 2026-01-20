@@ -484,7 +484,7 @@ class SmartReadService:
         return client, config
 
     async def get_tasks(self, config_id: int) -> list:
-        """タスク一覧を取得.
+        """タスク一覧を取得し、DBに同期.
 
         Args:
             config_id: 設定ID
@@ -496,7 +496,72 @@ class SmartReadService:
         if not client:
             return []
 
-        return await client.get_tasks()
+        api_tasks = await client.get_tasks()
+
+        # DBに同期
+        for api_task in api_tasks:
+            # 日付のパース
+            task_date = date.today()
+            if api_task.created_at:
+                try:
+                    # '2024-01-20T12:34:56.789Z'
+                    dt = datetime.fromisoformat(api_task.created_at.replace("Z", "+00:00"))
+                    task_date = dt.date()
+                except (ValueError, TypeError):
+                    pass
+
+            self.get_or_create_task(
+                config_id=config_id,
+                task_id=api_task.task_id,
+                task_date=task_date,
+                name=api_task.name,
+                state=api_task.status,
+            )
+
+        return api_tasks
+
+    async def sync_task_results(
+        self,
+        config_id: int,
+        task_id: str,
+        export_type: str = "csv",
+        timeout_sec: float = 300.0,
+    ) -> dict[str, Any] | None:
+        """タスクの結果をAPIから同期してDBに保存.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_type: エクスポート形式
+            timeout_sec: タイムアウト秒数
+
+        Returns:
+            同期結果、またはNone
+        """
+        client, _ = self._get_client(config_id)
+        if not client:
+            return None
+
+        # 1. Exportを作成
+        export = await client.create_export(task_id, export_type)
+        if not export:
+            logger.error(f"Failed to create export for task {task_id}")
+            return None
+
+        # 2. 完了まで待機
+        export_ready = await client.poll_export_until_ready(task_id, export.export_id, timeout_sec)
+        if not export_ready or export_ready.state != "SUCCEEDED":
+            logger.error(f"Export did not complete for task {task_id}")
+            return None
+
+        # 3. CSVデータを取得してDBに保存
+        # get_export_csv_data内部で _save_wide_and_long_data が呼ばれる
+        return await self.get_export_csv_data(
+            config_id=config_id,
+            task_id=task_id,
+            export_id=export.export_id,
+            save_to_db=True,
+        )
 
     async def create_export(
         self,

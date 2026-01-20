@@ -3,7 +3,7 @@
 import { Loader2, Download, AlertCircle, Database, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
-import { useSmartReadLongData, downloadJson, downloadCsv } from "../hooks";
+import { useSmartReadLongData, downloadJson, downloadCsv, useSyncTaskResults } from "../hooks";
 
 import { SmartReadCsvTable } from "./SmartReadCsvTable";
 
@@ -36,6 +36,11 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     refetch,
     isRefetching,
   } = useSmartReadLongData(configId, taskId);
+  const syncMutation = useSyncTaskResults();
+
+  const handleSyncFromApi = async () => {
+    await syncMutation.mutateAsync({ configId, taskId });
+  };
 
   const handleDownloadLong = () => {
     if (!longData || longData.length === 0) return;
@@ -78,10 +83,21 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
           <p className="text-sm text-gray-400">
             まだ処理が完了していないか、データが存在しません。
           </p>
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-4">
-            <RefreshCw className={isRefetching ? "animate-spin mr-2" : "mr-2"} />
-            再取得
-          </Button>
+          <div className="flex gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className={isRefetching ? "animate-spin mr-2" : "mr-2"} />
+              再取得 (DB)
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleSyncFromApi}
+              disabled={syncMutation.isPending}
+            >
+              <RefreshCw className={syncMutation.isPending ? "animate-spin mr-2" : "mr-2"} />
+              APIから同期
+            </Button>
+          </div>
         </div>
       </Card>
     );
@@ -110,8 +126,26 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isRefetching}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isRefetching}
+              title="DBから再取得"
+            >
               <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncFromApi}
+              disabled={syncMutation.isPending}
+              title="APIから同期"
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-1 ${syncMutation.isPending ? "animate-spin" : ""}`}
+              />
+              API同期
             </Button>
             <Button variant="outline" size="sm" onClick={handleDownloadJson}>
               <Download className="mr-2 h-4 w-4" />

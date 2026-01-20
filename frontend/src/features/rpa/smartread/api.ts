@@ -2,7 +2,7 @@
  * SmartRead OCR API functions
  */
 
-import { http, apiClient } from "@/shared/api/http-client";
+import { http } from "@/shared/api/http-client";
 
 // Types
 export interface SmartReadConfig {
@@ -115,9 +115,10 @@ export async function analyzeFile(configId: number, file: File): Promise<SmartRe
   const formData = new FormData();
   formData.append("file", file);
 
-  return apiClient
-    .post(`rpa/smartread/analyze?config_id=${configId}`, { body: formData })
-    .json<SmartReadAnalyzeResponse>();
+  return http.postFormData<SmartReadAnalyzeResponse>(
+    `rpa/smartread/analyze?config_id=${configId}`,
+    formData,
+  );
 }
 
 /**
@@ -306,6 +307,19 @@ export async function transformCsv(
     wide_data: wideData,
     skip_empty: skipEmpty,
   });
+}
+
+/**
+ * タスクの結果を強制的に同期 (API -> DB)
+ */
+export async function syncTaskResults(
+  configId: number,
+  taskId: string,
+): Promise<SmartReadCsvDataResponse> {
+  console.log(`[API] Triggering sync for task ${taskId} (config_id=${configId})`);
+  return http.post<SmartReadCsvDataResponse>(
+    `rpa/smartread/tasks/${taskId}/sync?config_id=${configId}`,
+  );
 }
 
 /**

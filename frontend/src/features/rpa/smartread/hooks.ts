@@ -23,14 +23,14 @@ import {
   createExport,
   getExportStatus,
   getExportCsvData,
+  getRequests,
+  syncTaskResults,
   transformCsv,
   updateSkipToday,
 } from "./api";
-import { processFilesAuto, getRequests } from "./api";
+import { processFilesAuto } from "./api";
 
 import { ApiError } from "@/utils/errors/custom-errors";
-
-// Query keys
 const QUERY_KEYS = {
   all: ["smartread"] as const,
   configs: () => [...QUERY_KEYS.all, "configs"] as const,
@@ -556,5 +556,31 @@ export function useSmartReadRequestPolling(configId: number | null) {
     enabled: !!configId,
     refetchInterval: 5000, // Poll every 5 seconds
     refetchIntervalInBackground: true,
+  });
+}
+
+/**
+ * タスクの結果を強制的に同期
+ */
+export function useSyncTaskResults() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ configId, taskId }: { configId: number; taskId: string }) =>
+      syncTaskResults(configId, taskId),
+    onSuccess: (_, { configId, taskId }) => {
+      toast.success("APIから最新データを取得しました");
+      // 縦持ちデータとタスク一覧を更新
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.config(configId), "long-data"] });
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEYS.config(configId), "long-data", taskId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEYS.config(configId), "managed-tasks"],
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(`データの取得に失敗しました: ${error.message}`);
+    },
   });
 }

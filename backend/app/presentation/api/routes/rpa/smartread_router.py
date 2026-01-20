@@ -1,5 +1,6 @@
 """SmartRead OCR router - PDFインポートAPI."""
 
+from datetime import date
 from typing import Annotated
 
 from fastapi import (
@@ -254,13 +255,14 @@ def export_to_csv(
 @router.get("/tasks", response_model=SmartReadTaskListResponse)
 async def get_tasks(
     config_id: int = Query(..., description="設定ID"),
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
     _current_user: User = Depends(get_current_user),
 ) -> SmartReadTaskListResponse:
-    """タスク一覧を取得."""
-    assert db is not None
-    service = SmartReadService(db)
+    """タスク一覧を取得（自動的にDBと同期）."""
+    assert uow.session is not None
+    service = SmartReadService(uow.session)
     tasks = await service.get_tasks(config_id)
+    uow.session.commit()
     return SmartReadTaskListResponse(
         tasks=[
             SmartReadTaskResponse(
@@ -451,17 +453,10 @@ def update_skip_today(
     assert uow.session is not None
     service = SmartReadService(uow.session)
     service.set_skip_today(task_id, request.skip_today)
+    task = service.get_or_create_task(
+        config_id=0, task_id=task_id, task_date=date.today()
+    )  # 日付などは既存レコードから引き継がれる
     uow.session.commit()
-
-    # 更新後のタスクを取得
-    from app.infrastructure.persistence.models.smartread_models import SmartReadTask
-
-    stmt = SmartReadTask.__table__.select().where(SmartReadTask.task_id == task_id)
-    task = uow.session.execute(stmt).fetchone()
-
-    if not task:
-        raise HTTPException(status_code=404, detail="タスクが見つかりません")
-
     return SmartReadTaskDetailResponse(
         id=task.id,
         config_id=task.config_id,
@@ -472,6 +467,39 @@ def update_skip_today(
         synced_at=task.synced_at.isoformat() if task.synced_at else None,
         skip_today=task.skip_today,
         created_at=task.created_at.isoformat(),
+    )
+
+
+@router.post("/tasks/{task_id}/sync", response_model=SmartReadCsvDataResponse)
+async def sync_task_results(
+    task_id: str,
+    config_id: int = Query(..., description="設定ID"),
+    uow: UnitOfWork = Depends(get_uow),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadCsvDataResponse:
+    """タスクの結果をAPIから同期（ダウンロード & DB保存）."""
+    assert uow.session is not None
+    service = SmartReadService(uow.session)
+
+    result = await service.sync_task_results(config_id, task_id)
+    if not result:
+        raise HTTPException(status_code=500, detail="同期処理に失敗しました")
+
+    uow.session.commit()
+
+    return SmartReadCsvDataResponse(
+        wide_data=result["wide_data"],
+        long_data=result["long_data"],
+        errors=[
+            SmartReadValidationError(
+                row=e.row,
+                field=e.field,
+                message=e.message,
+                value=e.value,
+            )
+            for e in result["errors"]
+        ],
+        filename=result.get("filename"),
     )
 
 
