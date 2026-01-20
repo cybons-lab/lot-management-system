@@ -112,10 +112,10 @@ class OrderRegisterService:
             long_data_id=long_data.id,
             curated_master_id=shipping_master.id if shipping_master else None,
             task_date=task_date,
-            # OCR由来
+            # OCR由来 (生データをそのまま保持)
             inbound_no=content.get("入庫No"),
-            delivery_date=self._parse_date(content.get("納期")),
-            delivery_quantity=self._parse_int(content.get("納入量")),
+            delivery_date=content.get("納期"),
+            delivery_quantity=content.get("納入量"),
             item_no=content.get("アイテムNo"),
             quantity_unit=content.get("数量単位"),
             # OCRまたはマスタ
@@ -199,12 +199,24 @@ class OrderRegisterService:
         )
 
     def _parse_date(self, value: str | date | None) -> date | None:
-        """日付をパース."""
+        """日付をパース.
+
+        YYYY-MM-DD または YYYY/MM/DD 形式に対応。
+        """
         if value is None or value == "":
             return None
         if isinstance(value, date):
             return value
-        # TODO: 文字列から日付パース実装
+
+        if isinstance(value, str):
+            # スラッシュをハイフンに置換してISO形式に近くする
+            value = value.replace("/", "-")
+            try:
+                # YYYY-MM-DD
+                return date.fromisoformat(value)
+            except ValueError:
+                # 必要に応じて他の形式（YY-MM-DD等）のパースを追加
+                return None
         return None
 
     def _parse_int(self, value: str | int | None) -> int | None:

@@ -170,8 +170,12 @@ class OrderRegisterRow(Base):
     # OCR由来
     inbound_no: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 入庫No
     shipping_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # 出荷日（生成値）
-    delivery_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # 納期
-    delivery_quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 納入量
+    delivery_date: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )  # 納期 (OCR生データ保持)
+    delivery_quantity: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )  # 納入量 (OCR生データ保持)
     item_no: Mapped[str | None] = mapped_column(String(50), nullable=True)  # アイテムNo
     quantity_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)  # 数量単位
 
