@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import SmartReadConfig
@@ -484,7 +484,7 @@ class SmartReadService:
         return client, config
 
     async def get_tasks(self, config_id: int) -> list:
-        """タスク一覧を取得.
+        """タスク一覧を取得し、DBに同期.
 
         Args:
             config_id: 設定ID
@@ -496,7 +496,112 @@ class SmartReadService:
         if not client:
             return []
 
-        return await client.get_tasks()
+        api_tasks = await client.get_tasks()
+
+        # DBに同期
+        for api_task in api_tasks:
+            # 日付のパース
+            task_date = date.today()
+            if api_task.created_at:
+                try:
+                    # '2024-01-20T12:34:56.789Z'
+                    dt = datetime.fromisoformat(api_task.created_at.replace("Z", "+00:00"))
+                    task_date = dt.date()
+                except (ValueError, TypeError):
+                    pass
+
+            self.get_or_create_task(
+                config_id=config_id,
+                task_id=api_task.task_id,
+                task_date=task_date,
+                name=api_task.name,
+                state=api_task.status,
+            )
+
+        return api_tasks
+
+    async def sync_task_results(
+        self,
+        config_id: int,
+        task_id: str,
+        export_type: str = "csv",
+        timeout_sec: float = 300.0,
+        force: bool = False,
+    ) -> dict[str, Any] | None:
+        """タスクの結果をAPIから同期してDBに保存.
+
+        Args:
+            config_id: 設定ID
+            task_id: タスクID
+            export_type: エクスポート形式
+            timeout_sec: タイムアウト秒数
+            force: 強制的に再取得するか
+
+        Returns:
+            同期結果、またはNone
+        """
+        logger.info(f"[SmartRead] Starting sync for task {task_id} (config_id={config_id})")
+
+        # 0. 既存データの確認 (force=Falseの場合)
+        if not force:
+            from sqlalchemy import select
+
+            from app.infrastructure.persistence.models.smartread_models import (
+                SmartReadLongData,
+                SmartReadWideData,
+            )
+
+            # WideDataがあるか確認
+            stmt_wide = select(SmartReadWideData).where(SmartReadWideData.task_id == task_id)
+            existing_wide = self.session.execute(stmt_wide).scalars().all()
+
+            if existing_wide:
+                logger.info(
+                    f"[SmartRead] Task {task_id} already has {len(existing_wide)} wide rows in DB. Fetching long data..."
+                )
+                stmt_long = select(SmartReadLongData).where(SmartReadLongData.task_id == task_id)
+                existing_long = self.session.execute(stmt_long).scalars().all()
+
+                return {
+                    "wide_data": [w.content for w in existing_wide],
+                    "long_data": [l.content for l in existing_long],
+                    "errors": [],
+                    "filename": existing_wide[0].filename if existing_wide else None,
+                    "from_cache": True,
+                }
+
+        client, _ = self._get_client(config_id)
+        if not client:
+            logger.error(f"[SmartRead] Could not initialize client for config {config_id}")
+            return None
+
+        # 1. Exportを作成
+        logger.info(f"[SmartRead] Creating export for task {task_id}...")
+        export = await client.create_export(task_id, export_type)
+        if not export:
+            logger.error(f"[SmartRead] Failed to create export for task {task_id}")
+            return None
+        logger.info(f"[SmartRead] Export created: {export.export_id}")
+
+        # 2. 完了まで待機
+        logger.info(f"[SmartRead] Polling export {export.export_id} until ready...")
+        export_ready = await client.poll_export_until_ready(task_id, export.export_id, timeout_sec)
+
+        # APIによっては COMPLETED, SUCCEEDED のいずれかが返る
+        if not export_ready or export_ready.state.upper() not in ["COMPLETED", "SUCCEEDED"]:
+            logger.error(
+                f"[SmartRead] Export did not complete for task {task_id}. State: {export_ready.state if export_ready else 'None'}"
+            )
+            return None
+        logger.info(f"[SmartRead] Export is ready. State: {export_ready.state}")
+
+        # 3. CSVデータを取得してDBに保存
+        return await self.get_export_csv_data(
+            config_id=config_id,
+            task_id=task_id,
+            export_id=export.export_id,
+            save_to_db=True,
+        )
 
     async def create_export(
         self,
@@ -589,8 +694,15 @@ class SmartReadService:
                         with zf.open(name) as f:
                             # CSVを読み込み
                             reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig"))
-                            for row in reader:
-                                wide_data.append(dict(row))
+                            rows = list(reader)
+                            if rows:
+                                logger.info(
+                                    f"[SmartRead] CSV columns found: {list(rows[0].keys())}"
+                                )
+                                for row in rows:
+                                    wide_data.append(dict(row))
+                            else:
+                                logger.warning(f"[SmartRead] CSV file {name} is empty (no rows)")
                         break  # 最初のCSVのみ処理
 
         except Exception as e:
@@ -598,8 +710,18 @@ class SmartReadService:
             return None
 
         # 横持ち→縦持ち変換
+        logger.info(f"[SmartRead] Transforming {len(wide_data)} wide rows to long format...")
         transformer = SmartReadCsvTransformer()
         result = transformer.transform_to_long(wide_data)
+        logger.info(
+            f"[SmartRead] Transformation complete: {len(wide_data)} wide -> {len(result.long_data)} long rows"
+        )
+
+        if len(wide_data) > 0 and len(result.long_data) == 0:
+            logger.warning(
+                f"[SmartRead] TRANSFORMATION RESULT IS EMPTY! Check column names. "
+                f"Available columns: {list(wide_data[0].keys()) if wide_data else 'None'}"
+            )
 
         # DBに保存
         if save_to_db and wide_data:
@@ -677,7 +799,7 @@ class SmartReadService:
         long_data: list[dict[str, Any]],
         filename: str | None,
     ) -> None:
-        """横持ち・縦持ちデータをDBに保存.
+        """横持ち・縦持ちデータをDBに保存（高速化版）.
 
         Args:
             config_id: 設定ID
@@ -688,62 +810,96 @@ class SmartReadService:
             long_data: 縦持ちデータ
             filename: ファイル名
         """
-        # 横持ちデータを行単位で保存（重複排除）
-        saved_wide_ids: list[int] = []
+        import time
 
-        for row_index, row in enumerate(wide_data):
-            fingerprint = self._calculate_row_fingerprint(row)
+        start_time = time.time()
 
-            # 既存レコードをチェック
-            stmt = select(SmartReadWideData).where(
-                SmartReadWideData.config_id == config_id,
-                SmartReadWideData.task_date == task_date,
-                SmartReadWideData.row_fingerprint == fingerprint,
+        # 1. すべての指紋を事前に計算
+        fingerprints = [self._calculate_row_fingerprint(row) for row in wide_data]
+
+        # 2. 既存の指紋を一括取得してキャッシュ (N+1解消)
+        stmt = select(SmartReadWideData.id, SmartReadWideData.row_fingerprint).where(
+            SmartReadWideData.config_id == config_id,
+            SmartReadWideData.task_date == task_date,
+            SmartReadWideData.row_fingerprint.in_(fingerprints),
+        )
+        existing_rows = self.session.execute(stmt).all()
+        # fingerprint -> id
+        fingerprint_to_id: dict[str, int] = {r.row_fingerprint: r.id for r in existing_rows}
+
+        # 3. 新規横持ちレコードの作成と保存
+        # 挿入後のIDを取得するため、個別または小バッチでflushする必要があるが、
+        # ここでは1行ずつ追加して最後にまとめてflushする
+        wide_id_by_index: dict[int, int] = {}
+        new_wide_count = 0
+
+        for row_index, (row, fingerprint) in enumerate(zip(wide_data, fingerprints, strict=True)):
+            if fingerprint in fingerprint_to_id:
+                wide_id_by_index[row_index] = fingerprint_to_id[fingerprint]
+            else:
+                wide_record = SmartReadWideData(
+                    config_id=config_id,
+                    task_id=task_id,
+                    export_id=export_id,
+                    task_date=task_date,
+                    filename=filename,
+                    row_index=row_index,
+                    content=row,
+                    row_fingerprint=fingerprint,
+                )
+                self.session.add(wide_record)
+                self.session.flush()  # 1行ずつIDを確定させる
+                wide_id_by_index[row_index] = wide_record.id
+                fingerprint_to_id[fingerprint] = wide_record.id
+                new_wide_count += 1
+
+        # 4. 縦持ちデータの保存（重複防止付き）
+        # 既存の縦持ちデータを削除（同じwide_data_idに対する再変換に対応）
+        wide_ids_to_process = list(wide_id_by_index.values())
+        deleted_count = 0
+        if wide_ids_to_process:
+            delete_stmt = delete(SmartReadLongData).where(
+                SmartReadLongData.wide_data_id.in_(wide_ids_to_process)
             )
-            existing = self.session.execute(stmt).scalar_one_or_none()
+            result = self.session.execute(delete_stmt)
+            # SQLAlchemy 2.0: CursorResult has rowcount attribute
+            deleted_count = result.rowcount if hasattr(result, "rowcount") else 0
+            if deleted_count > 0:
+                logger.info(
+                    f"[SmartRead] Deleted {deleted_count} existing long data rows for wide_data_ids={wide_ids_to_process}"
+                )
 
-            if existing:
-                logger.debug(f"Row {row_index} already exists (fingerprint: {fingerprint[:8]}...)")
-                saved_wide_ids.append(existing.id)
-                continue
+        # 縦持ちデータを再生成して保存
+        from app.application.services.smartread.csv_transformer import SmartReadCsvTransformer
 
-            # 新規保存
-            wide_record = SmartReadWideData(
-                config_id=config_id,
-                task_id=task_id,
-                export_id=export_id,
-                task_date=task_date,
-                filename=filename,
-                row_index=row_index,
-                content=row,
-                row_fingerprint=fingerprint,
-            )
-            self.session.add(wide_record)
-            self.session.flush()
-            saved_wide_ids.append(wide_record.id)
+        transformer = SmartReadCsvTransformer()
 
-        # 縦持ちデータを保存
-        for long_index, long_row in enumerate(long_data):
-            # 対応するwide_data_idを取得（行インデックスが一致するもの）
-            wide_data_id = None
-            if long_index < len(saved_wide_ids):
-                wide_data_id = saved_wide_ids[long_index]
-
-            long_record = SmartReadLongData(
-                wide_data_id=wide_data_id,
-                config_id=config_id,
-                task_id=task_id,
-                task_date=task_date,
-                row_index=long_index,
-                content=long_row,
-                status="PENDING",
-            )
-            self.session.add(long_record)
+        long_count = 0
+        for row_idx, row in enumerate(wide_data):
+            wide_data_id = wide_id_by_index.get(row_idx)
+            # 各行ごとに変換して wide_data_id を紐付け
+            res = transformer.transform_to_long([row])
+            for long_row in res.long_data:
+                long_record = SmartReadLongData(
+                    wide_data_id=wide_data_id,
+                    config_id=config_id,
+                    task_id=task_id,
+                    task_date=task_date,
+                    row_index=row_idx,  # 元の行インデックス
+                    content=long_row,
+                    status="PENDING",
+                )
+                self.session.add(long_record)
+                long_count += 1
 
         self.session.flush()
+        elapsed = time.time() - start_time
         logger.info(
-            f"Saved {len(saved_wide_ids)} wide rows and {len(long_data)} long rows "
-            f"for task {task_id} on {task_date}"
+            f"[SmartRead] DB SAVE SUCCESS: Config={config_id}, Task={task_id}, Date={task_date}\n"
+            f"  - Wide Rows: {new_wide_count} newly inserted / {len(wide_data)} total\n"
+            f"  - Long Rows: {long_count} inserted\n"
+            f"  - Filename: {filename}\n"
+            f"  - Elapsed: {elapsed:.2f}s"
         )
 
     # ==================== タスク管理 ====================

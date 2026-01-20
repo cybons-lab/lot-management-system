@@ -17134,7 +17134,7 @@
           "smartread"
         ],
         "summary": "Get Tasks",
-        "description": "タスク一覧を取得.",
+        "description": "タスク一覧を取得（自動的にDBと同期）.",
         "operationId": "get_tasks_api_rpa_smartread_tasks_get",
         "security": [
           {
@@ -17579,6 +17579,135 @@
         }
       }
     },
+    "/api/rpa/smartread/tasks/{task_id}/sync": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Sync Task Results",
+        "description": "タスクの結果をAPIから同期（ダウンロード & DB保存）.",
+        "operationId": "sync_task_results_api_rpa_smartread_tasks__task_id__sync_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "config_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "設定ID",
+              "title": "Config Id"
+            },
+            "description": "設定ID"
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "強制的に再取得するか",
+              "default": false,
+              "title": "Force"
+            },
+            "description": "強制的に再取得するか"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadCsvDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/tasks/{task_id}/save-long-data": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Save Long Data",
+        "description": "フロントエンドで変換した縦持ちデータをDBに保存.",
+        "operationId": "save_long_data_api_rpa_smartread_tasks__task_id__save_long_data_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadSaveLongDataRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadSaveLongDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rpa/smartread/configs/{config_id}/process-auto": {
       "post": {
         "tags": [
@@ -17888,6 +18017,805 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OcrImportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/order-register": {
+      "get": {
+        "tags": [
+          "Order Register"
+        ],
+        "summary": "List Order Register Rows",
+        "description": "受注登録結果一覧を取得.",
+        "operationId": "list_order_register_rows_api_order_register_get",
+        "parameters": [
+          {
+            "name": "task_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "タスク日付 (YYYY-MM-DD)",
+              "title": "Task Date"
+            },
+            "description": "タスク日付 (YYYY-MM-DD)"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ステータスでフィルタ",
+              "title": "Status"
+            },
+            "description": "ステータスでフィルタ"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderRegisterRowListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/order-register/{row_id}": {
+      "get": {
+        "tags": [
+          "Order Register"
+        ],
+        "summary": "Get Order Register Row",
+        "description": "受注登録結果を取得.",
+        "operationId": "get_order_register_row_api_order_register__row_id__get",
+        "parameters": [
+          {
+            "name": "row_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Row Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderRegisterRowResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/order-register/generate": {
+      "post": {
+        "tags": [
+          "Order Register"
+        ],
+        "summary": "Generate Order Register Rows",
+        "description": "OCRデータから受注登録結果を生成.",
+        "operationId": "generate_order_register_rows_api_order_register_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderRegisterGenerateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderRegisterGenerateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/order-register/{row_id}/lots": {
+      "put": {
+        "tags": [
+          "Order Register"
+        ],
+        "summary": "Update Lot Assignments",
+        "description": "ロット割当を更新.",
+        "operationId": "update_lot_assignments_api_order_register__row_id__lots_put",
+        "parameters": [
+          {
+            "name": "row_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Row Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderRegisterLotAssignmentUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderRegisterRowResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/order-register/export/excel": {
+      "get": {
+        "tags": [
+          "Order Register"
+        ],
+        "summary": "Export Order Register To Excel",
+        "description": "受注登録結果をExcelでエクスポート.\n\nファイル名形式: 受注情報登録_yyyymmddhhMMss.xlsx",
+        "operationId": "export_order_register_to_excel_api_order_register_export_excel_get",
+        "parameters": [
+          {
+            "name": "task_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "タスク日付 (YYYY-MM-DD)",
+              "title": "Task Date"
+            },
+            "description": "タスク日付 (YYYY-MM-DD)"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ステータスでフィルタ",
+              "title": "Status"
+            },
+            "description": "ステータスでフィルタ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipping-masters": {
+      "get": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "List Shipping Masters",
+        "description": "出荷用マスタ一覧を取得.",
+        "operationId": "list_shipping_masters_api_shipping_masters_get",
+        "parameters": [
+          {
+            "name": "customer_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先コードでフィルタ",
+              "title": "Customer Code"
+            },
+            "description": "得意先コードでフィルタ"
+          },
+          {
+            "name": "material_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "材質コードでフィルタ",
+              "title": "Material Code"
+            },
+            "description": "材質コードでフィルタ"
+          },
+          {
+            "name": "jiku_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "次区でフィルタ",
+              "title": "Jiku Code"
+            },
+            "description": "次区でフィルタ"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingMasterCuratedListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Create Shipping Master",
+        "description": "出荷用マスタを新規作成.",
+        "operationId": "create_shipping_master_api_shipping_masters_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShippingMasterCuratedCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingMasterCuratedResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipping-masters/{master_id}": {
+      "get": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Get Shipping Master",
+        "description": "出荷用マスタを取得.",
+        "operationId": "get_shipping_master_api_shipping_masters__master_id__get",
+        "parameters": [
+          {
+            "name": "master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Master Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingMasterCuratedResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Update Shipping Master",
+        "description": "出荷用マスタを更新.",
+        "operationId": "update_shipping_master_api_shipping_masters__master_id__put",
+        "parameters": [
+          {
+            "name": "master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Master Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShippingMasterCuratedUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingMasterCuratedResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Delete Shipping Master",
+        "description": "出荷用マスタを削除.",
+        "operationId": "delete_shipping_master_api_shipping_masters__master_id__delete",
+        "parameters": [
+          {
+            "name": "master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Master Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipping-masters/admin/reset": {
+      "delete": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Reset Shipping Masters",
+        "description": "出荷用マスタデータを全削除（管理者専用）.",
+        "operationId": "reset_shipping_masters_api_shipping_masters_admin_reset_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/api/shipping-masters/import": {
+      "post": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Import Shipping Masters File",
+        "description": "出荷用マスタをExcelファイルからインポート.\n\nExcelファイルをアップロードし、DBに投入する。",
+        "operationId": "import_shipping_masters_file_api_shipping_masters_import_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_shipping_masters_file_api_shipping_masters_import_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingMasterImportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ocr-results": {
+      "get": {
+        "tags": [
+          "OCR Results"
+        ],
+        "summary": "List Ocr Results",
+        "description": "OCR結果一覧を取得（v_ocr_resultsビューから）.",
+        "operationId": "list_ocr_results_api_ocr_results_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "タスク日付 (YYYY-MM-DD)",
+              "title": "Task Date"
+            },
+            "description": "タスク日付 (YYYY-MM-DD)"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ステータスでフィルタ",
+              "title": "Status"
+            },
+            "description": "ステータスでフィルタ"
+          },
+          {
+            "name": "has_error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "エラーのみ表示",
+              "title": "Has Error"
+            },
+            "description": "エラーのみ表示"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OcrResultListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ocr-results/{item_id}": {
+      "get": {
+        "tags": [
+          "OCR Results"
+        ],
+        "summary": "Get Ocr Result",
+        "description": "OCR結果詳細を取得.",
+        "operationId": "get_ocr_result_api_ocr_results__item_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OcrResultItem"
                 }
               }
             }
@@ -19154,6 +20082,21 @@
           "file"
         ],
         "title": "Body_import_from_file_api_admin_master_import_upload_post"
+      },
+      "Body_import_shipping_masters_file_api_shipping_masters_import_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "Excel file (.xlsx)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_shipping_masters_file_api_shipping_masters_import_post"
       },
       "BulkAutoAllocateFailedLine": {
         "properties": {
@@ -27000,6 +27943,374 @@
         "title": "OcrImportResponse",
         "description": "OCR取込レスポンス."
       },
+      "OcrResultItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "wide_data_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wide Data Id"
+          },
+          "config_id": {
+            "type": "integer",
+            "title": "Config Id"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "task_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Task Date"
+          },
+          "request_id_ref": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id Ref"
+          },
+          "row_index": {
+            "type": "integer",
+            "title": "Row Index"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "error_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Reason"
+          },
+          "content": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Content"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "customer_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Code"
+          },
+          "material_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Code"
+          },
+          "jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Code"
+          },
+          "delivery_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Date"
+          },
+          "delivery_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Quantity"
+          },
+          "item_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item No"
+          },
+          "quantity_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Unit"
+          },
+          "inbound_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inbound No"
+          },
+          "lot_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No"
+          },
+          "master_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Id"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name"
+          },
+          "shipping_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Code"
+          },
+          "shipping_warehouse_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Name"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text"
+          },
+          "transport_lt_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Lt Days"
+          },
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No"
+          },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No"
+          },
+          "has_order": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Order"
+          },
+          "master_not_found": {
+            "type": "boolean",
+            "title": "Master Not Found",
+            "default": false
+          },
+          "jiku_format_error": {
+            "type": "boolean",
+            "title": "Jiku Format Error",
+            "default": false
+          },
+          "date_format_error": {
+            "type": "boolean",
+            "title": "Date Format Error",
+            "default": false
+          },
+          "has_error": {
+            "type": "boolean",
+            "title": "Has Error",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "config_id",
+          "task_id",
+          "task_date",
+          "row_index",
+          "status",
+          "created_at"
+        ],
+        "title": "OcrResultItem",
+        "description": "OCR結果アイテム."
+      },
+      "OcrResultListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OcrResultItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "OcrResultListResponse",
+        "description": "OCR結果一覧レスポンス."
+      },
       "OperationLogFilterOption": {
         "properties": {
           "label": {
@@ -28074,6 +29385,490 @@
         ],
         "title": "OrderLineResponse",
         "description": "Order line response (DDL: order_lines)."
+      },
+      "OrderRegisterGenerateRequest": {
+        "properties": {
+          "task_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Task Date",
+            "description": "タスク日付"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_date"
+        ],
+        "title": "OrderRegisterGenerateRequest",
+        "description": "受注登録結果生成リクエスト."
+      },
+      "OrderRegisterGenerateResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "generated_count": {
+            "type": "integer",
+            "title": "Generated Count"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "generated_count"
+        ],
+        "title": "OrderRegisterGenerateResponse",
+        "description": "受注登録結果生成レスポンス."
+      },
+      "OrderRegisterLotAssignmentUpdate": {
+        "properties": {
+          "lot_no_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No 1"
+          },
+          "quantity_1": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity 1"
+          },
+          "lot_no_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No 2"
+          },
+          "quantity_2": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity 2"
+          }
+        },
+        "type": "object",
+        "title": "OrderRegisterLotAssignmentUpdate",
+        "description": "ロット割当更新リクエスト."
+      },
+      "OrderRegisterRowListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderRegisterRowResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "OrderRegisterRowListResponse",
+        "description": "受注登録結果一覧レスポンス."
+      },
+      "OrderRegisterRowResponse": {
+        "properties": {
+          "task_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Task Date",
+            "description": "タスク日付"
+          },
+          "lot_no_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No 1",
+            "description": "ロット番号1"
+          },
+          "quantity_1": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity 1",
+            "description": "数量1"
+          },
+          "lot_no_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No 2",
+            "description": "ロット番号2"
+          },
+          "quantity_2": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity 2",
+            "description": "数量2"
+          },
+          "inbound_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inbound No",
+            "description": "入庫No"
+          },
+          "shipping_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Date",
+            "description": "出荷日"
+          },
+          "delivery_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Date",
+            "description": "納期"
+          },
+          "delivery_quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Quantity",
+            "description": "納入量"
+          },
+          "item_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item No",
+            "description": "アイテムNo"
+          },
+          "quantity_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Unit",
+            "description": "数量単位"
+          },
+          "material_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Code",
+            "description": "材質コード"
+          },
+          "jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Code",
+            "description": "次区"
+          },
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No",
+            "description": "先方品番"
+          },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No",
+            "description": "メーカー品番"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "取得元",
+            "default": "OCR"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text",
+            "description": "出荷票テキスト"
+          },
+          "customer_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Code",
+            "description": "得意先コード"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name",
+            "description": "得意先名"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code",
+            "description": "仕入先コード"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name",
+            "description": "仕入先名称"
+          },
+          "shipping_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Code",
+            "description": "出荷倉庫コード"
+          },
+          "shipping_warehouse_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Name",
+            "description": "出荷倉庫名"
+          },
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code",
+            "description": "納入先コード"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name",
+            "description": "納入先名"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks",
+            "description": "備考"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ステータス",
+            "default": "PENDING"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message",
+            "description": "エラーメッセージ"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "long_data_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Long Data Id"
+          },
+          "curated_master_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Curated Master Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_date",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OrderRegisterRowResponse",
+        "description": "受注登録結果レスポンス."
       },
       "OrderWithLinesResponse": {
         "properties": {
@@ -30781,6 +32576,775 @@
         "title": "ShipmentTextResponse",
         "description": "Response schema for shipment text lookup."
       },
+      "ShippingMasterCuratedCreate": {
+        "properties": {
+          "customer_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Customer Code",
+            "description": "得意先コード"
+          },
+          "material_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Material Code",
+            "description": "材質コード"
+          },
+          "jiku_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Jiku Code",
+            "description": "次区（出荷先区分）"
+          },
+          "warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Code",
+            "description": "倉庫コード"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name",
+            "description": "得意先名"
+          },
+          "delivery_note_product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Note Product Name",
+            "description": "素材納品書記載製品名"
+          },
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No",
+            "description": "先方品番"
+          },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No",
+            "description": "メーカー品番"
+          },
+          "maker_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Code",
+            "description": "メーカーコード"
+          },
+          "maker_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Name",
+            "description": "メーカー名"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code",
+            "description": "仕入先コード"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name",
+            "description": "仕入先名称"
+          },
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code",
+            "description": "納入先コード"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name",
+            "description": "納入先"
+          },
+          "shipping_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Code",
+            "description": "出荷倉庫コード"
+          },
+          "shipping_warehouse_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Name",
+            "description": "出荷倉庫名"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text",
+            "description": "出荷票テキスト"
+          },
+          "transport_lt_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Lt Days",
+            "description": "輸送LT(営業日)"
+          },
+          "has_order": {
+            "type": "boolean",
+            "title": "Has Order",
+            "description": "発注の有無",
+            "default": false
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks",
+            "description": "備考"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_code",
+          "material_code",
+          "jiku_code"
+        ],
+        "title": "ShippingMasterCuratedCreate",
+        "description": "出荷用マスタ新規作成リクエスト."
+      },
+      "ShippingMasterCuratedListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ShippingMasterCuratedResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ShippingMasterCuratedListResponse",
+        "description": "出荷用マスタ一覧レスポンス."
+      },
+      "ShippingMasterCuratedResponse": {
+        "properties": {
+          "customer_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Customer Code",
+            "description": "得意先コード"
+          },
+          "material_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Material Code",
+            "description": "材質コード"
+          },
+          "jiku_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Jiku Code",
+            "description": "次区（出荷先区分）"
+          },
+          "warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Code",
+            "description": "倉庫コード"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name",
+            "description": "得意先名"
+          },
+          "delivery_note_product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Note Product Name",
+            "description": "素材納品書記載製品名"
+          },
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No",
+            "description": "先方品番"
+          },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No",
+            "description": "メーカー品番"
+          },
+          "maker_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Code",
+            "description": "メーカーコード"
+          },
+          "maker_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Name",
+            "description": "メーカー名"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code",
+            "description": "仕入先コード"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name",
+            "description": "仕入先名称"
+          },
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code",
+            "description": "納入先コード"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name",
+            "description": "納入先"
+          },
+          "shipping_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Code",
+            "description": "出荷倉庫コード"
+          },
+          "shipping_warehouse_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Name",
+            "description": "出荷倉庫名"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text",
+            "description": "出荷票テキスト"
+          },
+          "transport_lt_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Lt Days",
+            "description": "輸送LT(営業日)"
+          },
+          "has_order": {
+            "type": "boolean",
+            "title": "Has Order",
+            "description": "発注の有無",
+            "default": false
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks",
+            "description": "備考"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "raw_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Id"
+          },
+          "has_duplicate_warning": {
+            "type": "boolean",
+            "title": "Has Duplicate Warning",
+            "default": false
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_code",
+          "material_code",
+          "jiku_code",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ShippingMasterCuratedResponse",
+        "description": "出荷用マスタレスポンス."
+      },
+      "ShippingMasterCuratedUpdate": {
+        "properties": {
+          "warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Code"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
+          },
+          "delivery_note_product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Note Product Name"
+          },
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No"
+          },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No"
+          },
+          "maker_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Code"
+          },
+          "maker_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Name"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name"
+          },
+          "shipping_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Code"
+          },
+          "shipping_warehouse_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Name"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text"
+          },
+          "transport_lt_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Lt Days"
+          },
+          "has_order": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Order"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks"
+          }
+        },
+        "type": "object",
+        "title": "ShippingMasterCuratedUpdate",
+        "description": "出荷用マスタ更新リクエスト."
+      },
+      "ShippingMasterImportResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "imported_count": {
+            "type": "integer",
+            "title": "Imported Count"
+          },
+          "curated_count": {
+            "type": "integer",
+            "title": "Curated Count"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "imported_count",
+          "curated_count"
+        ],
+        "title": "ShippingMasterImportResponse",
+        "description": "インポートレスポンス."
+      },
       "SmartReadAnalyzeResponse": {
         "properties": {
           "success": {
@@ -31595,6 +34159,98 @@
         ],
         "title": "SmartReadRequestResponse",
         "description": "リクエスト状態レスポンス."
+      },
+      "SmartReadSaveLongDataRequest": {
+        "properties": {
+          "config_id": {
+            "type": "integer",
+            "title": "Config Id",
+            "description": "設定ID"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "description": "タスクID"
+          },
+          "task_date": {
+            "type": "string",
+            "title": "Task Date",
+            "description": "タスク日付 (YYYY-MM-DD)"
+          },
+          "wide_data": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Wide Data",
+            "description": "横持ちデータ"
+          },
+          "long_data": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Long Data",
+            "description": "縦持ちデータ"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename",
+            "description": "ファイル名"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config_id",
+          "task_id",
+          "task_date",
+          "wide_data",
+          "long_data"
+        ],
+        "title": "SmartReadSaveLongDataRequest",
+        "description": "縦持ちデータ保存リクエスト."
+      },
+      "SmartReadSaveLongDataResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "保存成功フラグ"
+          },
+          "saved_wide_count": {
+            "type": "integer",
+            "title": "Saved Wide Count",
+            "description": "保存した横持ちデータ件数"
+          },
+          "saved_long_count": {
+            "type": "integer",
+            "title": "Saved Long Count",
+            "description": "保存した縦持ちデータ件数"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "メッセージ"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "saved_wide_count",
+          "saved_long_count",
+          "message"
+        ],
+        "title": "SmartReadSaveLongDataResponse",
+        "description": "縦持ちデータ保存レスポンス."
       },
       "SmartReadSkipTodayRequest": {
         "properties": {

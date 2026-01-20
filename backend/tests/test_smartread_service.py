@@ -298,6 +298,70 @@ class TestExportHistoryRecording:
         assert mock_session.rollback.called
 
 
+class TestLongDataDuplicatePrevention:
+    """縦持ちデータ重複保存防止のテスト."""
+
+    def test_save_wide_and_long_data_deletes_existing_long_data(
+        self, smartread_service, mock_session
+    ):
+        """同じwide_data_idの縦持ちデータが削除されて再作成される."""
+
+        wide_data = [
+            {"項目1": "値1", "項目2": "値2"},
+        ]
+
+        # 既存の横持ちデータがある（再変換のケース）
+        existing_wide_result = MagicMock()
+        existing_wide_result.row_fingerprint = "fingerprint_001"
+        existing_wide_result.id = 100
+
+        # execute().all() でfingerprintのチェックに使う
+        fingerprint_result = MagicMock()
+        fingerprint_result.id = 100
+        fingerprint_result.row_fingerprint = "fingerprint_001"
+
+        # delete() の実行結果
+        delete_result = MagicMock()
+        delete_result.rowcount = 5  # 5件の縦持ちデータが削除された
+
+        # execute呼び出しの順序を設定
+        mock_session.execute.side_effect = [
+            MagicMock(all=lambda: [fingerprint_result]),  # fingerprint check
+            delete_result,  # DELETE文の実行
+        ]
+
+        with patch(
+            "app.application.services.smartread.csv_transformer.SmartReadCsvTransformer"
+        ) as mock_transformer_class:
+            mock_transformer = MagicMock()
+            mock_transformer.transform_to_long.return_value = MagicMock(
+                long_data=[
+                    {"項目": "項目1", "値": "値1"},
+                    {"項目": "項目1", "値": "値2"},
+                ],
+                errors=[],
+            )
+            mock_transformer_class.return_value = mock_transformer
+
+            smartread_service._save_wide_and_long_data(
+                config_id=1,
+                task_id="task_001",
+                export_id="export_001",
+                task_date=date(2025, 1, 1),
+                wide_data=wide_data,
+                long_data=[
+                    {"項目": "項目1", "値": "値1"},
+                    {"項目": "項目1", "値": "値2"},
+                ],
+                filename="test.csv",
+            )
+
+        # DELETE文が実行されたことを確認
+        assert mock_session.execute.call_count == 2
+        # 新しい縦持ちデータが追加される
+        assert mock_session.add.call_count >= 2
+
+
 class TestSkipTodayEnforcement:
     """skip_todayフラグの強制テスト."""
 

@@ -6,6 +6,7 @@ import {
   Building2,
   UserCheck,
   FilePenLine,
+  Truck,
 } from "lucide-react";
 import { AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -110,6 +111,19 @@ const masterSections: MasterSection[] = [
         href: "/masters/primary-assignments",
         icon: UserCheck,
         color: "bg-amber-50 text-amber-600 hover:bg-amber-100",
+      },
+    ],
+  },
+  {
+    title: "OCR・出荷用マスタ",
+    description: "OCR受注登録で使用する出荷ルール管理",
+    links: [
+      {
+        title: "出荷用マスタデータ",
+        description: "得意先・材質・次区ごとの出荷ルールを管理",
+        href: "/masters/shipping-masters",
+        icon: Truck,
+        color: "bg-sky-50 text-sky-600 hover:bg-sky-100",
       },
     ],
   },

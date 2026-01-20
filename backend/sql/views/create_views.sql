@@ -26,6 +26,7 @@ DROP VIEW IF EXISTS public.v_supplier_code_to_id CASCADE;
 DROP VIEW IF EXISTS public.v_warehouse_code_to_id CASCADE;
 DROP VIEW IF EXISTS public.v_user_supplier_assignments CASCADE;
 DROP VIEW IF EXISTS public.v_customer_item_jiku_mappings CASCADE;
+DROP VIEW IF EXISTS public.v_ocr_results CASCADE;
 
 -- 2. 新規ビューの作成
 
@@ -473,3 +474,85 @@ LEFT JOIN public.customers c ON cijm.customer_id = c.id
 LEFT JOIN public.delivery_places dp ON cijm.delivery_place_id = dp.id;
 
 COMMENT ON VIEW public.v_customer_item_jiku_mappings IS '顧客商品-次区マッピングビュー（soft-delete対応）';
+
+-- ============================================================
+-- OCR結果ビュー（SmartRead縦持ちデータ + 出荷用マスタ）
+-- ============================================================
+
+-- OCR結果ビュー: 縦持ちデータと出荷用マスタをJOINしてリアルタイム表示
+-- デフォルト得意先コード: 100427105（OCRで取得できない場合の補間値）
+CREATE VIEW public.v_ocr_results AS
+SELECT 
+    ld.id,
+    ld.wide_data_id,
+    ld.config_id,
+    ld.task_id,
+    ld.task_date,
+    ld.request_id_ref,
+    ld.row_index,
+    ld.status,
+    ld.error_reason,
+    ld.content,
+    ld.created_at,
+    
+    -- OCR由来（contentから抽出）+ 得意先コード補間
+    COALESCE(ld.content->>'得意先コード', '100427105') AS customer_code,
+    ld.content->>'材質コード' AS material_code,
+    ld.content->>'次区' AS jiku_code,
+    ld.content->>'納期' AS delivery_date,
+    ld.content->>'納入量' AS delivery_quantity,
+    ld.content->>'アイテム' AS item_no,
+    ld.content->>'単位' AS quantity_unit,
+    ld.content->>'入庫No' AS inbound_no,
+    ld.content->>'Lot No' AS lot_no,
+    
+    -- マスタ由来（LEFT JOIN）
+    m.id AS master_id,
+    m.customer_name,
+    m.supplier_code,
+    m.supplier_name,
+    m.delivery_place_code,
+    m.delivery_place_name,
+    m.shipping_warehouse_code,
+    m.shipping_warehouse_name,
+    m.shipping_slip_text,
+    m.transport_lt_days,
+    m.customer_part_no,
+    m.maker_part_no,
+    m.has_order,
+    
+    -- エラーフラグ: マスタ未登録
+    CASE WHEN m.id IS NULL THEN true ELSE false END AS master_not_found,
+    
+    -- バリデーションエラー: 次区フォーマット（アルファベット+数字）
+    CASE 
+        WHEN ld.content->>'次区' IS NOT NULL 
+             AND ld.content->>'次区' !~ '^[A-Za-z][0-9]+$' 
+        THEN true 
+        ELSE false 
+    END AS jiku_format_error,
+    
+    -- バリデーションエラー: 日付フォーマット（YYYY-MM-DD or YYYY/MM/DD）
+    CASE 
+        WHEN ld.content->>'納期' IS NOT NULL 
+             AND ld.content->>'納期' !~ '^\d{4}[-/]\d{1,2}[-/]\d{1,2}$' 
+        THEN true 
+        ELSE false 
+    END AS date_format_error,
+    
+    -- 総合エラーフラグ
+    CASE 
+        WHEN ld.status = 'ERROR' THEN true
+        WHEN m.id IS NULL THEN true
+        WHEN ld.content->>'次区' IS NOT NULL AND ld.content->>'次区' !~ '^[A-Za-z][0-9]+$' THEN true
+        WHEN ld.content->>'納期' IS NOT NULL AND ld.content->>'納期' !~ '^\d{4}[-/]\d{1,2}[-/]\d{1,2}$' THEN true
+        ELSE false
+    END AS has_error
+
+FROM public.smartread_long_data ld
+LEFT JOIN public.shipping_master_curated m 
+    ON COALESCE(ld.content->>'得意先コード', '100427105') = m.customer_code
+    AND ld.content->>'材質コード' = m.material_code
+    AND ld.content->>'次区' = m.jiku_code;
+
+COMMENT ON VIEW public.v_ocr_results IS 'OCR結果ビュー（SmartRead縦持ちデータ + 出荷用マスタJOIN、エラー検出含む）';

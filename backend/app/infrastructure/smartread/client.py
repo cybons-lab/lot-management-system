@@ -41,7 +41,7 @@ class SmartReadTask:
 
     task_id: str
     name: str
-    status: str  # RUNNING | SUCCEEDED | FAILED
+    status: str  # RUNNING | COMPLETED | SUCCEEDED | FAILED
     created_at: str | None = None
     request_count: int = 0
 
@@ -51,7 +51,7 @@ class SmartReadExport:
     """SmartReadエクスポート情報."""
 
     export_id: str
-    state: str  # RUNNING | SUCCEEDED | FAILED
+    state: str  # RUNNING | COMPLETED | SUCCEEDED | FAILED
     task_id: str | None = None
     error_message: str | None = None
 
@@ -130,6 +130,7 @@ class SmartReadClient:
 
         エンドポイントに既にバージョン（/v3, /v4等）が含まれている場合は
         pathからバージョン部分を削除して重複を防ぐ。
+        また、エンドポイントの末尾スラッシュの有無に関わらず正しく結合する。
 
         Args:
             path: APIパス（例: /v3/task）
@@ -139,12 +140,18 @@ class SmartReadClient:
         """
         import re
 
+        # エンドポイントの末尾スラッシュを除去
+        endpoint = self.endpoint.rstrip("/")
+        # パスの先頭スラッシュを確保（後でサブする場合用）
+        path = "/" + path.lstrip("/")
+
         # エンドポイントの末尾がバージョンパターン（/v3, /v4等）かチェック
         version_pattern = r"/v\d+$"
-        if re.search(version_pattern, self.endpoint):
-            # エンドポイントにバージョンが含まれている場合、pathからバージョン部分を削除
+        if re.search(version_pattern, endpoint):
+            # エンドポイントにバージョンが含まれている場合、pathの先頭バージョン部分を削除
             path = re.sub(r"^/v\d+", "", path)
-        return f"{self.endpoint}{path}"
+
+        return f"{endpoint}{path}"
 
     async def analyze_file(
         self,
@@ -627,18 +634,26 @@ class SmartReadClient:
         start_time = time.time()
 
         while True:
-            if time.time() - start_time > timeout_sec:
-                logger.error("Export polling timeout")
+            elapsed = time.time() - start_time
+            if elapsed > timeout_sec:
+                logger.error(
+                    f"Export polling timeout for task {task_id}, export {export_id} after {elapsed:.1f}s"
+                )
                 return None
 
             export = await self.get_export_status(task_id, export_id)
             if export is None:
-                return None
+                logger.warning(f"Could not get export status for {export_id}, will retry...")
+                await asyncio.sleep(poll_interval)
+                continue
 
-            if export.state == "SUCCEEDED":
+            state = export.state.upper()
+            logger.info(f"Export {export_id} state: {state} (elapsed: {elapsed:.1f}s)")
+
+            if state == "COMPLETED" or state == "SUCCEEDED":
                 return export
-            elif export.state == "FAILED":
-                logger.error(f"Export failed: {export.error_message}")
+            elif state == "FAILED":
+                logger.error(f"Export failed for {export_id}: {export.error_message}")
                 return export
 
             await asyncio.sleep(poll_interval)

@@ -93,12 +93,21 @@ class SmartReadCsvTransformer:
         Returns:
             変換結果
         """
+        logger.info(f"[Transformer] Starting transformation of {len(wide_data)} wide rows")
+        if wide_data:
+            logger.info(
+                f"[Transformer] First row keys ({len(wide_data[0])} total): {list(wide_data[0].keys())[:15]}..."
+            )
+
         long_data: list[dict[str, Any]] = []
         errors: list[ValidationError] = []
 
         for row_idx, row in enumerate(wide_data):
             # 共通項目を抽出
             common = self._extract_common_fields(row)
+            logger.debug(
+                f"[Transformer] Row {row_idx}: Common fields extracted: {list(common.keys())}"
+            )
 
             # 共通項目のバリデーション
             common, row_errors = self._validate_common_fields(common, row_idx)
@@ -106,10 +115,14 @@ class SmartReadCsvTransformer:
 
             # 明細を抽出
             details = self._extract_details(row)
+            logger.info(f"[Transformer] Row {row_idx}: {len(details)} details extracted")
 
             for detail_idx, detail in enumerate(details):
                 # 空明細スキップ
                 if skip_empty and self._is_empty_detail(detail):
+                    logger.debug(
+                        f"[Transformer] Row {row_idx}, Detail {detail_idx}: SKIPPED (empty)"
+                    )
                     continue
 
                 # 明細のバリデーション
@@ -123,7 +136,13 @@ class SmartReadCsvTransformer:
                     **detail,
                 }
                 long_data.append(long_row)
+                logger.debug(
+                    f"[Transformer] Row {row_idx}, Detail {detail_idx}: ADDED to long_data"
+                )
 
+        logger.info(
+            f"[Transformer] COMPLETE: {len(wide_data)} wide rows -> {len(long_data)} long rows, {len(errors)} errors"
+        )
         return TransformResult(long_data=long_data, errors=errors)
 
     def _extract_common_fields(self, row: dict[str, Any]) -> dict[str, Any]:
@@ -145,35 +164,70 @@ class SmartReadCsvTransformer:
         for n in range(1, self.max_details + 1):
             detail: dict[str, Any] = {}
 
-            # 通常の明細項目（材質コード1, 納入量1, etc）
+            # 通常の明細項目（材質コード1, 材質コード 1, 納入量1, etc）
             for field_name in DETAIL_FIELDS:
-                key = f"{field_name}{n}"
-                if key in row:
-                    detail[field_name] = self._normalize_value(row[key])
+                # 複数のパターンを試行
+                keys_to_try = [f"{field_name}{n}", f"{field_name} {n}"]
+                if n == 1:
+                    keys_to_try.append(field_name)
 
-            # サブ明細項目（Lot No1-1, Lot No1-2, etc）
+                for key in keys_to_try:
+                    if key in row:
+                        detail[field_name] = self._normalize_value(row[key])
+                        break
+
+            # サブ明細項目（Lot No1-1, Lot No 1-1, Lot No-1, etc）
             for sub_field in SUB_DETAIL_FIELDS:
                 for sub_n in range(1, 5):  # 最大4つのサブ明細
-                    key = f"{sub_field}{n}-{sub_n}"
-                    if key in row:
-                        detail[f"{sub_field}{sub_n}"] = self._normalize_value(row[key])
+                    keys_to_try = [f"{sub_field}{n}-{sub_n}", f"{sub_field} {n}-{sub_n}"]
+                    if n == 1:
+                        keys_to_try.append(f"{sub_field}-{sub_n}")
+
+                    for key in keys_to_try:
+                        if key in row:
+                            detail[f"{sub_field}{sub_n}"] = self._normalize_value(row[key])
+                            break
 
             # 明細が存在する場合のみ追加
-            if detail:
+            is_empty = self._is_empty_detail(detail)
+            if not is_empty:
                 details.append(detail)
+                logger.debug(
+                    f"[Transformer] Detail n={n}: NOT empty, extracted: {list(detail.keys())}"
+                )
+                # 番号付きが見つからず、かつn=1で番号なしでヒットした場合は縦持ちと判断して打ち切り
+                is_vertical = any(
+                    field_name in row
+                    and f"{field_name}1" not in row
+                    and f"{field_name} 1" not in row
+                    for field_name in DETAIL_FIELDS
+                )
+                if is_vertical and n == 1:
+                    logger.debug("[Transformer] Detected vertical format, stopping at n=1")
+                    break
+            else:
+                logger.debug(f"[Transformer] Detail n={n}: EMPTY, detail contents: {detail}")
 
+        logger.debug(f"[Transformer] Total details extracted: {len(details)}")
         return details
 
     def _is_empty_detail(self, detail: dict[str, Any]) -> bool:
         """空明細かどうかを判定.
 
-        材質コード、アイテム、納入量がすべて空または未設定の場合は空明細。
+        全ての明細項目が空または未設定の場合は空明細。
         """
-        material_code = detail.get("材質コード", "")
-        item = detail.get("アイテム", "")
-        quantity = detail.get("納入量", "")
+        if not detail:
+            return True
 
-        return not material_code and not item and not quantity
+        for key, value in detail.items():
+            if key.startswith("エラー_"):
+                continue
+            if value is None:
+                continue
+            if str(value).strip() != "":
+                return False
+
+        return True
 
     def _normalize_value(self, value: Any) -> str:
         """値を正規化.
@@ -216,7 +270,7 @@ class SmartReadCsvTransformer:
                     )
                 )
                 common["エラー_発行日形式"] = 1
-                common["発行日"] = ""
+                # common["発行日"] = ""  # 元の値を保持
             else:
                 common["発行日"] = parsed
                 common["エラー_発行日形式"] = 0
@@ -234,7 +288,7 @@ class SmartReadCsvTransformer:
                     )
                 )
                 common["エラー_納入日形式"] = 1
-                common["納入日"] = ""
+                # common["納入日"] = ""  # 元の値を保持
             else:
                 common["納入日"] = parsed
                 common["エラー_納入日形式"] = 0
@@ -277,6 +331,7 @@ class SmartReadCsvTransformer:
                     )
                 )
                 detail["エラー_納入量"] = 1
+                # detail["納入量"] = parsed  # _parse_quantityはエラー時も値を返すのでそのまま
             else:
                 detail["納入量"] = parsed
                 detail["エラー_納入量"] = 0
@@ -304,7 +359,11 @@ class SmartReadCsvTransformer:
             "%Y-%m-%d",
             "%Y年%m月%d日",
             "%Y.%m.%d",
-            "%Y/%m/%d",
+            "%Y/%m",
+            "%Y-%m",
+            "%Y年%m月",
+            "%Y年",
+            "%Y",
         ]
 
         for fmt in formats:

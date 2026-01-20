@@ -1,6 +1,7 @@
 import { AlertCircle } from "lucide-react";
 
 import type { SmartReadValidationError } from "../api";
+import { sortColumnHeaders } from "../utils/column-order";
 
 import {
   Table,
@@ -23,8 +24,8 @@ export function SmartReadCsvTable({ data, errors, className }: SmartReadCsvTable
     return <div className="p-4 text-center text-gray-500">データがありません</div>;
   }
 
-  // カラムヘッダー取得（データから動的に生成）
-  const headers = Object.keys(data[0]);
+  // カラムヘッダー取得（データから動的に生成し、定義順にソート）
+  const headers = sortColumnHeaders(Object.keys(data[0]));
 
   // エラーを (row, field) で高速検索できるようにマップ化
   // rowはバックエンドのenumerate()から来るため0-indexed。

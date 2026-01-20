@@ -110,6 +110,11 @@ export const ROUTES = {
     },
   },
 
+  // OCR Order Register
+  OCR_RESULTS: {
+    LIST: "/ocr-results",
+  },
+
   HELP: {
     FLOW_MAP: "/help/flow-map",
   },

@@ -267,3 +267,23 @@ class SmartReadLongDataListResponse(BaseModel):
 
     data: list[SmartReadLongDataResponse] = Field(..., description="縦持ちデータ一覧")
     total: int = Field(..., description="総件数")
+
+
+class SmartReadSaveLongDataRequest(BaseModel):
+    """縦持ちデータ保存リクエスト."""
+
+    config_id: int = Field(..., description="設定ID")
+    task_id: str = Field(..., description="タスクID")
+    task_date: str = Field(..., description="タスク日付 (YYYY-MM-DD)")
+    wide_data: list[dict[str, Any]] = Field(..., description="横持ちデータ")
+    long_data: list[dict[str, Any]] = Field(..., description="縦持ちデータ")
+    filename: str | None = Field(default=None, description="ファイル名")
+
+
+class SmartReadSaveLongDataResponse(BaseModel):
+    """縦持ちデータ保存レスポンス."""
+
+    success: bool = Field(..., description="保存成功フラグ")
+    saved_wide_count: int = Field(..., description="保存した横持ちデータ件数")
+    saved_long_count: int = Field(..., description="保存した縦持ちデータ件数")
+    message: str = Field(..., description="メッセージ")

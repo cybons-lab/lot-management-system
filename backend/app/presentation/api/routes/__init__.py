@@ -58,6 +58,8 @@ from app.presentation.api.routes.masters import (
     warehouses_router,
 )
 from app.presentation.api.routes.ocr import router as ocr_router
+from app.presentation.api.routes.ocr_results_router import router as ocr_results_router
+from app.presentation.api.routes.order_register_router import router as order_register_router
 from app.presentation.api.routes.orders import (
     confirmed_lines_router,
     order_lines_router,
@@ -70,6 +72,7 @@ from app.presentation.api.routes.rpa import (
     rpa_router,
     smartread_router,
 )
+from app.presentation.api.routes.shipping_master_router import router as shipping_master_router
 from app.presentation.api.routes.system.calendar_router import router as calendar_router
 from app.presentation.api.routes.system.system_router import router as system_router
 from app.presentation.api.v2 import api_router as api_v2_router
@@ -161,6 +164,15 @@ def register_all_routers(app: FastAPI) -> None:
 
     # OCR endpoints
     app.include_router(ocr_router, prefix=prefix)
+
+    # Order Register endpoints
+    app.include_router(order_register_router, prefix=prefix)
+
+    # Shipping Master endpoints
+    app.include_router(shipping_master_router, prefix=prefix)
+
+    # OCR Results (view-based, realtime)
+    app.include_router(ocr_results_router, prefix=prefix)
 
 
 __all__ = [

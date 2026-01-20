@@ -63,6 +63,7 @@ from .product_supplier_models import ProductSupplier
 from .product_warehouse_model import ProductWarehouse
 from .rpa_models import RpaRun, RpaRunItem, RpaRunStatus
 from .seed_snapshot_model import SeedSnapshot
+from .shipping_master_models import OrderRegisterRow, ShippingMasterCurated, ShippingMasterRaw
 from .smartread_models import SmartReadConfig
 from .soft_delete_mixin import INFINITE_VALID_TO, SoftDeleteMixin
 from .system_config_model import SystemConfig
@@ -192,4 +193,8 @@ __all__ = [
     "LotReceipt",
     "WithdrawalLine",
     "MissingMappingEvent",
+    # Shipping Master (OCR受注登録)
+    "ShippingMasterRaw",
+    "ShippingMasterCurated",
+    "OrderRegisterRow",
 ]
