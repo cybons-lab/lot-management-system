@@ -627,18 +627,26 @@ class SmartReadClient:
         start_time = time.time()
 
         while True:
-            if time.time() - start_time > timeout_sec:
-                logger.error("Export polling timeout")
+            elapsed = time.time() - start_time
+            if elapsed > timeout_sec:
+                logger.error(
+                    f"Export polling timeout for task {task_id}, export {export_id} after {elapsed:.1f}s"
+                )
                 return None
 
             export = await self.get_export_status(task_id, export_id)
             if export is None:
-                return None
+                logger.warning(f"Could not get export status for {export_id}, will retry...")
+                await asyncio.sleep(poll_interval)
+                continue
 
-            if export.state == "SUCCEEDED":
+            state = export.state.upper()
+            logger.info(f"Export {export_id} state: {state} (elapsed: {elapsed:.1f}s)")
+
+            if state == "COMPLETED" or state == "SUCCEEDED":
                 return export
-            elif export.state == "FAILED":
-                logger.error(f"Export failed: {export.error_message}")
+            elif state == "FAILED":
+                logger.error(f"Export failed for {export_id}: {export.error_message}")
                 return export
 
             await asyncio.sleep(poll_interval)

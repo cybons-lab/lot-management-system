@@ -742,7 +742,7 @@ class SmartReadService:
         long_data: list[dict[str, Any]],
         filename: str | None,
     ) -> None:
-        """横持ち・縦持ちデータをDBに保存.
+        """横持ち・縦持ちデータをDBに保存（高速化版）.
 
         Args:
             config_id: 設定ID
@@ -753,62 +753,96 @@ class SmartReadService:
             long_data: 縦持ちデータ
             filename: ファイル名
         """
-        # 横持ちデータを行単位で保存（重複排除）
-        saved_wide_ids: list[int] = []
+        import time
 
-        for row_index, row in enumerate(wide_data):
-            fingerprint = self._calculate_row_fingerprint(row)
+        start_time = time.time()
 
-            # 既存レコードをチェック
-            stmt = select(SmartReadWideData).where(
-                SmartReadWideData.config_id == config_id,
-                SmartReadWideData.task_date == task_date,
-                SmartReadWideData.row_fingerprint == fingerprint,
-            )
-            existing = self.session.execute(stmt).scalar_one_or_none()
+        # 1. すべての指紋を事前に計算
+        fingerprints = [self._calculate_row_fingerprint(row) for row in wide_data]
 
-            if existing:
-                logger.debug(f"Row {row_index} already exists (fingerprint: {fingerprint[:8]}...)")
-                saved_wide_ids.append(existing.id)
-                continue
+        # 2. 既存の指紋を一括取得してキャッシュ (N+1解消)
+        stmt = select(SmartReadWideData.id, SmartReadWideData.row_fingerprint).where(
+            SmartReadWideData.config_id == config_id,
+            SmartReadWideData.task_date == task_date,
+            SmartReadWideData.row_fingerprint.in_(fingerprints),
+        )
+        existing_rows = self.session.execute(stmt).all()
+        # fingerprint -> id
+        fingerprint_to_id: dict[str, int] = {r.row_fingerprint: r.id for r in existing_rows}
 
-            # 新規保存
-            wide_record = SmartReadWideData(
-                config_id=config_id,
-                task_id=task_id,
-                export_id=export_id,
-                task_date=task_date,
-                filename=filename,
-                row_index=row_index,
-                content=row,
-                row_fingerprint=fingerprint,
-            )
-            self.session.add(wide_record)
-            self.session.flush()
-            saved_wide_ids.append(wide_record.id)
+        # 3. 新規横持ちレコードの作成と保存
+        # 挿入後のIDを取得するため、個別または小バッチでflushする必要があるが、
+        # ここでは1行ずつ追加して最後にまとめてflushする
+        wide_id_by_index: dict[int, int] = {}
+        new_wide_count = 0
 
-        # 縦持ちデータを保存
-        for long_index, long_row in enumerate(long_data):
-            # 対応するwide_data_idを取得（行インデックスが一致するもの）
-            wide_data_id = None
-            if long_index < len(saved_wide_ids):
-                wide_data_id = saved_wide_ids[long_index]
+        for row_index, (row, fingerprint) in enumerate(zip(wide_data, fingerprints, strict=True)):
+            if fingerprint in fingerprint_to_id:
+                wide_id_by_index[row_index] = fingerprint_to_id[fingerprint]
+            else:
+                wide_record = SmartReadWideData(
+                    config_id=config_id,
+                    task_id=task_id,
+                    export_id=export_id,
+                    task_date=task_date,
+                    filename=filename,
+                    row_index=row_index,
+                    content=row,
+                    row_fingerprint=fingerprint,
+                )
+                self.session.add(wide_record)
+                self.session.flush()  # 1行ずつIDを確定させる
+                wide_id_by_index[row_index] = wide_record.id
+                fingerprint_to_id[fingerprint] = wide_record.id
+                new_wide_count += 1
 
-            long_record = SmartReadLongData(
-                wide_data_id=wide_data_id,
-                config_id=config_id,
-                task_id=task_id,
-                task_date=task_date,
-                row_index=long_index,
-                content=long_row,
-                status="PENDING",
-            )
-            self.session.add(long_record)
+        # 4. 縦持ちデータの保存
+        # csv_transformer.py の出力（long_data）には元々の row_index (wide_dataのインデックス) が
+        # 含まれていないため、紐付けに工夫が必要。
+        # 本来は transform_to_long に wide_data_id を渡すのがベストだが、
+        # 現状は long_data が wide_data と同じ順序で生成されている前提で
+        # transformer 側のループ構造（各wide行に対して複数のlong行）を考慮して紐付ける。
+
+        # 暫定対応: もし long_data に元情報のヒントがなければ、wide行ごとに回すのが確実
+        # ただし get_export_csv_data で既に全件変換済み。
+        # 正攻法: transformer を wide 行ごとに呼び出すように書き換える。
+
+        # 現在の _save_wide_and_long_data を呼び出している get_export_csv_data 側の
+        # 呼び出し方自体を見直すほうが安全かつ高速。
+        # ここでは最低限、N+1を解消した wide保存のみ実施し、long保存は呼び出し元から
+        # wide_id付きで渡すように変更することを推奨。
+
+        # 現状の long_data (全件) を保存
+        # wide_data の row_index が long_data の各行に紐付くべき。
+        # transform_to_long を見ると、全 wide_data をループしている。
+        # そこで、ここでもう一度再現する。
+        from app.application.services.smartread.csv_transformer import SmartReadCsvTransformer
+
+        transformer = SmartReadCsvTransformer()
+
+        long_count = 0
+        for row_idx, row in enumerate(wide_data):
+            wide_data_id = wide_id_by_index.get(row_idx)
+            # 各行ごとに変換して wide_data_id を紐付け
+            res = transformer.transform_to_long([row])
+            for long_row in res.long_data:
+                long_record = SmartReadLongData(
+                    wide_data_id=wide_data_id,
+                    config_id=config_id,
+                    task_id=task_id,
+                    task_date=task_date,
+                    row_index=row_idx,  # 元の行インデックス
+                    content=long_row,
+                    status="PENDING",
+                )
+                self.session.add(long_record)
+                long_count += 1
 
         self.session.flush()
+        elapsed = time.time() - start_time
         logger.info(
-            f"Saved {len(saved_wide_ids)} wide rows and {len(long_data)} long rows "
-            f"for task {task_id} on {task_date}"
+            f"Saved {new_wide_count} new wide rows (total {len(wide_data)}) and {long_count} long rows "
+            f"to DB (elapsed: {elapsed:.2f}s)"
         )
 
     # ==================== タスク管理 ====================
