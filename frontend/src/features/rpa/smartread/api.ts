@@ -34,6 +34,7 @@ export interface SmartReadConfigCreate {
   export_dir?: string | null;
   input_exts?: string | null;
   description?: string | null;
+  is_active?: boolean;
   is_default?: boolean;
 }
 
@@ -169,6 +170,23 @@ export interface SmartReadValidationError {
   value: string | null;
 }
 
+export interface SmartReadLongData {
+  id: number;
+  config_id: number;
+  task_id: string;
+  task_date: string;
+  row_index: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: Record<string, any>;
+  status: string;
+  error_reason: string | null;
+  created_at: string;
+}
+
+export interface SmartReadLongDataListResponse {
+  data: SmartReadLongData[];
+}
+
 export interface SmartReadCsvDataResponse {
   wide_data: Record<string, unknown>[];
   long_data: Record<string, unknown>[];
@@ -194,35 +212,36 @@ export interface SmartReadTaskDetail {
 }
 
 /**
- * タスク一覧を取得
+ * タスク一覧を取得 (SmartRead APIから + DBに保存)
  */
 export async function getTasks(configId: number): Promise<SmartReadTaskListResponse> {
-  console.log(`[SmartRead API] Fetching tasks for configId: ${configId}`);
+  console.log(`[API] Fetching tasks from SmartRead API for config_id=${configId}`);
   try {
     const res = await http.get<SmartReadTaskListResponse>(
       `rpa/smartread/tasks?config_id=${configId}`,
     );
-    console.log(`[SmartRead API] Fetched tasks:`, res);
+    console.log(`[API] Retrieved ${res.tasks?.length || 0} tasks from SmartRead API`);
+    console.log(`[DB] Tasks saved to database by backend`);
     return res;
   } catch (error) {
-    console.error(`[SmartRead API] Error fetching tasks:`, error);
+    console.error(`[API] Error fetching tasks:`, error);
     throw error;
   }
 }
 
 /**
- * 管理タスク一覧を取得
+ * 管理タスク一覧を取得 (DBから)
  */
 export async function getManagedTasks(configId: number): Promise<SmartReadTaskDetail[]> {
-  console.log(`[SmartRead API] Fetching managed tasks for configId: ${configId}`);
+  console.log(`[DB] Fetching managed tasks from database for config_id=${configId}`);
   try {
     const res = await http.get<SmartReadTaskDetail[]>(
       `rpa/smartread/managed-tasks?config_id=${configId}`,
     );
-    console.log(`[SmartRead API] Fetched managed tasks:`, res);
+    console.log(`[DB] Loaded ${res.length} tasks from database`);
     return res;
   } catch (error) {
-    console.error(`[SmartRead API] Error fetching managed tasks:`, error);
+    console.error(`[DB] Error fetching managed tasks:`, error);
     throw error;
   }
 }
@@ -309,7 +328,7 @@ export async function updateSkipToday(
   }
 }
 
-// ==================== requestId/results ルート ====================
+// ==================== RequestId/Results Automation ====================
 
 export interface SmartReadRequest {
   id: number;
@@ -317,7 +336,7 @@ export interface SmartReadRequest {
   task_id: string;
   task_date: string;
   config_id: number;
-  filename: string | null;
+  filename: string;
   num_of_pages: number | null;
   submitted_at: string;
   state: string;
@@ -330,6 +349,10 @@ export interface SmartReadRequestListResponse {
   requests: SmartReadRequest[];
 }
 
+export interface SmartReadProcessAutoRequest {
+  filenames: string[];
+}
+
 export interface SmartReadProcessAutoResponse {
   task_id: string;
   task_name: string;
@@ -337,43 +360,16 @@ export interface SmartReadProcessAutoResponse {
   message: string;
 }
 
-export interface SmartReadLongDataItem {
-  id: number;
-  config_id: number;
-  task_id: string;
-  task_date: string;
-  request_id_ref: number | null;
-  row_index: number;
-  content: Record<string, unknown>;
-  status: string;
-  error_reason: string | null;
-  created_at: string;
-}
-
-export interface SmartReadLongDataListResponse {
-  data: SmartReadLongDataItem[];
-  total: number;
-}
-
 /**
- * 自動処理（requestIdルート）
+ * 自動処理を開始 (process-auto)
  */
 export async function processFilesAuto(
   configId: number,
   filenames: string[],
 ): Promise<SmartReadProcessAutoResponse> {
-  console.log(`[SmartRead API] Processing files auto for configId: ${configId}`, filenames);
-  try {
-    const res = await http.post<SmartReadProcessAutoResponse>(
-      `rpa/smartread/configs/${configId}/process-auto`,
-      { filenames, use_daily_task: true },
-    );
-    console.log(`[SmartRead API] Process auto response:`, res);
-    return res;
-  } catch (error) {
-    console.error(`[SmartRead API] Error processing files auto:`, error);
-    throw error;
-  }
+  return http.post<SmartReadProcessAutoResponse>(`rpa/smartread/configs/${configId}/process-auto`, {
+    filenames,
+  });
 }
 
 /**
@@ -384,23 +380,32 @@ export async function getRequests(
   state?: string,
   limit: number = 100,
 ): Promise<SmartReadRequestListResponse> {
-  const params = new URLSearchParams({ limit: limit.toString() });
+  const searchParams: Record<string, string | number> = { limit };
   if (state) {
-    params.append("state", state);
+    searchParams.state = state;
   }
-  return http.get<SmartReadRequestListResponse>(
-    `rpa/smartread/configs/${configId}/requests?${params}`,
-  );
+  return http.get<SmartReadRequestListResponse>(`rpa/smartread/configs/${configId}/requests`, {
+    searchParams,
+  });
 }
 
 /**
- * 縦持ちデータ一覧を取得
+ * 縦持ちデータ一覧を取得 (Unified)
  */
 export async function getLongData(
   configId: number,
   limit: number = 100,
 ): Promise<SmartReadLongDataListResponse> {
-  return http.get<SmartReadLongDataListResponse>(
-    `rpa/smartread/configs/${configId}/long-data?limit=${limit}`,
-  );
+  return http.get<SmartReadLongDataListResponse>(`rpa/smartread/configs/${configId}/long-data`, {
+    searchParams: { limit },
+  });
 }
+
+// Alias for compatibility if needed, or remove if unused calls are updated
+export const getSmartReadLongDataList = async (
+  configId: number,
+  limit: number = 1000,
+): Promise<SmartReadLongData[]> => {
+  const res = await getLongData(configId, limit);
+  return res.data;
+};
