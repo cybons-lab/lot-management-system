@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import SmartReadConfig
@@ -853,26 +853,23 @@ class SmartReadService:
                 fingerprint_to_id[fingerprint] = wide_record.id
                 new_wide_count += 1
 
-        # 4. 縦持ちデータの保存
-        # csv_transformer.py の出力（long_data）には元々の row_index (wide_dataのインデックス) が
-        # 含まれていないため、紐付けに工夫が必要。
-        # 本来は transform_to_long に wide_data_id を渡すのがベストだが、
-        # 現状は long_data が wide_data と同じ順序で生成されている前提で
-        # transformer 側のループ構造（各wide行に対して複数のlong行）を考慮して紐付ける。
+        # 4. 縦持ちデータの保存（重複防止付き）
+        # 既存の縦持ちデータを削除（同じwide_data_idに対する再変換に対応）
+        wide_ids_to_process = list(wide_id_by_index.values())
+        deleted_count = 0
+        if wide_ids_to_process:
+            delete_stmt = delete(SmartReadLongData).where(
+                SmartReadLongData.wide_data_id.in_(wide_ids_to_process)
+            )
+            result = self.session.execute(delete_stmt)
+            # SQLAlchemy 2.0: CursorResult has rowcount attribute
+            deleted_count = result.rowcount if hasattr(result, "rowcount") else 0
+            if deleted_count > 0:
+                logger.info(
+                    f"[SmartRead] Deleted {deleted_count} existing long data rows for wide_data_ids={wide_ids_to_process}"
+                )
 
-        # 暫定対応: もし long_data に元情報のヒントがなければ、wide行ごとに回すのが確実
-        # ただし get_export_csv_data で既に全件変換済み。
-        # 正攻法: transformer を wide 行ごとに呼び出すように書き換える。
-
-        # 現在の _save_wide_and_long_data を呼び出している get_export_csv_data 側の
-        # 呼び出し方自体を見直すほうが安全かつ高速。
-        # ここでは最低限、N+1を解消した wide保存のみ実施し、long保存は呼び出し元から
-        # wide_id付きで渡すように変更することを推奨。
-
-        # 現状の long_data (全件) を保存
-        # wide_data の row_index が long_data の各行に紐付くべき。
-        # transform_to_long を見ると、全 wide_data をループしている。
-        # そこで、ここでもう一度再現する。
+        # 縦持ちデータを再生成して保存
         from app.application.services.smartread.csv_transformer import SmartReadCsvTransformer
 
         transformer = SmartReadCsvTransformer()

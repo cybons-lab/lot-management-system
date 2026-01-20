@@ -1,11 +1,10 @@
 /* eslint-disable max-lines-per-function */
 
-import { Download, AlertCircle, RefreshCw, ArrowRightLeft } from "lucide-react";
+import { Download, AlertCircle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 import { downloadJson, downloadCsv, useSyncTaskResults } from "../hooks";
 import { useResultDataLoader } from "../hooks/useResultDataLoader";
-import { useTransformToLong } from "../hooks/useTransformToLong";
 
 import { SmartReadCsvTable } from "./SmartReadCsvTable";
 
@@ -142,8 +141,6 @@ function TabContentDisplay({
   errors,
   dataType,
   onRetry,
-  onTransform,
-  canTransform,
 }: {
   isLoading: boolean;
   hasError: boolean;
@@ -152,8 +149,6 @@ function TabContentDisplay({
   errors: { row: number; field: string; message: string; value: string | null }[];
   dataType: "wide" | "long";
   onRetry: () => void;
-  onTransform?: () => void;
-  canTransform?: boolean;
 }) {
   const label = dataType === "wide" ? "横持ち" : "縦持ち";
 
@@ -188,19 +183,16 @@ function TabContentDisplay({
     <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
       <AlertCircle className="h-8 w-8" />
       <p>{label}データがありません</p>
-      {dataType === "wide" ? (
+      <p className="text-sm text-gray-500">
+        {dataType === "wide"
+          ? "APIから同期ボタンでデータを取得してください"
+          : "横持ちデータの同期時に自動的に変換されます"}
+      </p>
+      {dataType === "wide" && (
         <Button variant="outline" size="sm" onClick={onRetry}>
           <RefreshCw className="h-4 w-4 mr-1" />
           APIから同期
         </Button>
-      ) : (
-        canTransform &&
-        onTransform && (
-          <Button variant="outline" size="sm" onClick={onTransform}>
-            <ArrowRightLeft className="h-4 w-4 mr-1" />
-            横持ちから変換
-          </Button>
-        )
       )}
     </div>
   );
@@ -225,20 +217,7 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
 
   const syncMutation = useSyncTaskResults();
 
-  // 横持ち→縦持ち変換フック
-  const { transformToLong, isTransforming } = useTransformToLong({
-    configId,
-    taskId,
-    wideData,
-    filename,
-    onSuccess: (transformedLongData, errors) => {
-      setLongData(transformedLongData);
-      setTransformErrors(errors);
-      setActiveTab("long");
-    },
-  });
-
-  // API同期して横持ちデータを取得
+  // API同期して横持ち・縦持ちデータを取得（自動変換済み）
   const handleSyncFromApi = async () => {
     console.info(`[ResultView] Triggering API sync for task ${taskId}...`);
     const result = await syncMutation.mutateAsync({ configId, taskId, forceSync: true });
@@ -295,25 +274,11 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
       />
       <CardContent className="flex-1 overflow-hidden min-h-0 p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-          <div className="px-4 border-b flex items-center justify-between">
+          <div className="px-4 border-b">
             <TabsList>
               <TabsTrigger value="wide">横持ち (Wide) - {wideData.length}件</TabsTrigger>
               <TabsTrigger value="long">縦持ち (Long) - {longData.length}件</TabsTrigger>
             </TabsList>
-            {activeTab === "wide" && wideData.length > 0 && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={transformToLong}
-                disabled={isTransforming}
-                className="my-2"
-              >
-                <ArrowRightLeft
-                  className={`h-4 w-4 mr-1 ${isTransforming ? "animate-spin" : ""}`}
-                />
-                縦持ちに変換
-              </Button>
-            )}
           </div>
           <TabsContent
             value="wide"
@@ -341,8 +306,6 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
               errors={transformErrors}
               dataType="long"
               onRetry={handleSyncFromApi}
-              onTransform={transformToLong}
-              canTransform={wideData.length > 0}
             />
           </TabsContent>
         </Tabs>

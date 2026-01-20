@@ -1,5 +1,7 @@
 /**
  * Hook for transforming wide data to long data with DB save
+ * Note: This is mainly for manual re-transformation if needed.
+ * Normal flow uses backend's sync_task_results which auto-transforms.
  */
 
 import { useState } from "react";
