@@ -571,7 +571,6 @@ async def process_files_auto(
                     _process_request_background,
                     config_id=config_id,
                     request_id=request_record.request_id,
-                    uow=uow,
                 )
 
         except Exception as e:
@@ -589,35 +588,37 @@ async def process_files_auto(
     )
 
 
-async def _process_request_background(config_id: int, request_id: str, uow: UnitOfWork) -> None:
+async def _process_request_background(config_id: int, request_id: str) -> None:
     """バックグラウンドでリクエストをポーリング・処理."""
     import logging
+
+    from app.application.services.common.uow_service import UnitOfWork
+    from app.core.database import SessionLocal
 
     logger = logging.getLogger(__name__)
 
     try:
-        # 新しいセッションでサービスを作成
-        assert uow.session is not None
-        service = SmartReadService(uow.session)
-        request_record = service.get_request_by_id(request_id)
+        # 新しいセッションでUoWを作成
+        with UnitOfWork(SessionLocal) as uow:
+            assert uow.session is not None
+            service = SmartReadService(uow.session)
+            request_record = service.get_request_by_id(request_id)
 
-        if not request_record:
-            logger.error(f"Request not found: {request_id}")
-            return
+            if not request_record:
+                logger.error(f"Request not found: {request_id}")
+                return
 
-        success = await service.poll_and_process_request(config_id, request_record)
+            success = await service.poll_and_process_request(config_id, request_record)
 
-        if success:
-            logger.info(f"Request processed successfully: {request_id}")
-        else:
-            logger.warning(f"Request processing failed: {request_id}")
+            if success:
+                logger.info(f"Request processed successfully: {request_id}")
+            else:
+                logger.warning(f"Request processing failed: {request_id}")
 
-        uow.session.commit()
+            uow.commit()
 
     except Exception as e:
         logger.error(f"Background processing error for {request_id}: {e}")
-        if uow.session is not None:
-            uow.session.rollback()
 
 
 @router.get(
