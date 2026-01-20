@@ -38,6 +38,7 @@ import { MovesPage } from "@/features/inventory/pages/MovesPage";
 import { StockHistoryPage } from "@/features/inventory/pages/StockHistoryPage";
 import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPage";
 import { MastersPage } from "@/features/masters/pages/MastersPage";
+import { OcrResultsListPage } from "@/features/ocr-results/pages/OcrResultsListPage";
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
@@ -283,6 +284,9 @@ export function MainRoutes() {
       <Route path="/rpa/material-delivery-note/step3/:runId" element={<Step3DetailPage />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4} element={<Step4ListPage />} />
       <Route path="/rpa/material-delivery-note/step4/:runId" element={<Step4DetailPage />} />
+
+      {/* OCR Results */}
+      <Route path={ROUTES.OCR_RESULTS.LIST} element={<OcrResultsListPage />} />
 
       {/* Help */}
       <Route path={ROUTES.HELP.FLOW_MAP} element={<FlowMapHelpPage />} />

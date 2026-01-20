@@ -1,5 +1,4 @@
-"""出荷用マスタデータ API ルーター."""
-
+import io
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
@@ -136,7 +135,7 @@ async def import_shipping_masters_file(
 
         # Excelファイルを読み込み
         contents = await file.read()
-        workbook = openpyxl.load_workbook(filename=None, data=contents, read_only=True)
+        workbook = openpyxl.load_workbook(io.BytesIO(contents), read_only=True)
         sheet = workbook.active
 
         # ヘッダー行を読み取り（1行目）

@@ -143,7 +143,9 @@ class ExportService:
         return response
 
     @staticmethod
-    def export_to_excel(data: list[Any], filename: str = "export") -> StreamingResponse:
+    def export_to_excel(
+        data: list[Any], filename: str = "export", column_map: dict[str, str] | None = None
+    ) -> StreamingResponse:
         """Export data to Excel (xlsx)."""
         try:
             import openpyxl  # noqa: F401
@@ -153,6 +155,14 @@ class ExportService:
 
         processed_data = ExportService._prepare_data(data)
         df = pd.DataFrame(processed_data)
+
+        # カラムマッピングと順序制御
+        if column_map:
+            # 存在するカラムのみを抽出
+            existing_cols = [c for c in column_map.keys() if c in df.columns]
+            df = df[existing_cols]
+            # リネーム
+            df = df.rename(columns=column_map)
 
         stream = io.BytesIO()
         with pd.ExcelWriter(stream, engine="openpyxl") as writer:

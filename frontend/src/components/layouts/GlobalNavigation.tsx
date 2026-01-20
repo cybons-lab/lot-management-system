@@ -19,6 +19,7 @@ import {
   ChevronDown,
   Download,
   Calendar,
+  FileText,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -72,6 +73,11 @@ const navItems: NavItem[] = [
     title: "受注管理",
     href: ROUTES.ORDERS.LIST,
     icon: ShoppingCart,
+  },
+  {
+    title: "OCR結果",
+    href: ROUTES.OCR_RESULTS.LIST,
+    icon: FileText,
   },
   {
     title: "RPA",

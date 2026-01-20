@@ -21,6 +21,9 @@ from app.infrastructure.persistence.models.smartread_models import SmartReadLong
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
+from app.application.services.calendar_service import CalendarService
+from app.presentation.schemas.calendar.calendar_schemas import BusinessDayCalculationRequest
+
 
 class OrderRegisterService:
     """受注登録結果管理サービス."""
@@ -30,6 +33,7 @@ class OrderRegisterService:
 
     def __init__(self, session: Session) -> None:
         self.session = session
+        self.calendar_service = CalendarService(session)
 
     def generate_from_ocr(self, task_date: date) -> tuple[int, list[str]]:
         """OCR縦持ちデータからマスタ参照して受注登録結果を生成.
@@ -138,12 +142,61 @@ class OrderRegisterService:
             else None,
             delivery_place_code=shipping_master.delivery_place_code if shipping_master else None,
             delivery_place_name=shipping_master.delivery_place_name if shipping_master else None,
-            shipping_slip_text=shipping_master.shipping_slip_text if shipping_master else None,
+            shipping_slip_text=self._format_shipping_slip_text(
+                shipping_master.shipping_slip_text, None, None, None, None
+            )
+            if shipping_master
+            else None,
             remarks=shipping_master.remarks if shipping_master else None,
+            # 出荷日計算
+            shipping_date=self._calculate_shipping_date(
+                self._parse_date(content.get("納期")),
+                shipping_master.transport_lt_days if shipping_master else 0,
+            ),
             # ステータス
             status="PENDING",
         )
         return row
+
+    def _calculate_shipping_date(
+        self, delivery_date: date | None, transport_lt_days: int | None
+    ) -> date | None:
+        """リードタイムを考慮して出荷日を計算."""
+        if not delivery_date or transport_lt_days is None:
+            return delivery_date
+
+        request = BusinessDayCalculationRequest(
+            start_date=delivery_date,
+            days=transport_lt_days,
+            direction="before",
+            include_start=False,
+        )
+        return self.calendar_service.calculate_business_day(request)
+
+    def _format_shipping_slip_text(
+        self,
+        base_text: str | None,
+        lot1: str | None,
+        qty1: int | None,
+        lot2: str | None,
+        qty2: int | None,
+    ) -> str | None:
+        """出荷票テキストのロット部分を置換."""
+        if not base_text:
+            return None
+
+        lot_info = []
+        if lot1:
+            lot_info.append(f"{lot1}({qty1 or 0})")
+        if lot2:
+            lot_info.append(f"{lot2}({qty2 or 0})")
+
+        lot_string = "、".join(lot_info)
+        return (
+            base_text.replace("ロット番号(数量)", lot_string)
+            if lot_string
+            else base_text.replace("ロット番号(数量)", "")
+        )
 
     def _parse_date(self, value: str | date | None) -> date | None:
         """日付をパース."""
@@ -209,6 +262,14 @@ class OrderRegisterService:
         row.quantity_1 = quantity_1
         row.lot_no_2 = lot_no_2
         row.quantity_2 = quantity_2
+
+        # 出荷票テキストを更新（もしマスタが紐づいていれば）
+        if row.curated_master_id:
+            master = self.session.get(ShippingMasterCurated, row.curated_master_id)
+            if master:
+                row.shipping_slip_text = self._format_shipping_slip_text(
+                    master.shipping_slip_text, lot_no_1, quantity_1, lot_no_2, quantity_2
+                )
 
         self.session.flush()
         return row

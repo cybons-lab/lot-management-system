@@ -107,41 +107,42 @@ class ShippingMasterService:
                 warnings.append(f"行{raw.row_index}: キー項目が不足")
                 continue
 
-            curated = ShippingMasterCurated(
-                raw_id=raw.id,
-                customer_code=raw.customer_code,
-                material_code=raw.material_code,
-                jiku_code=raw.jiku_code,
-                warehouse_code=raw.warehouse_code,
-                customer_name=None,  # 既存マスタとは連動しない
-                delivery_note_product_name=raw.delivery_note_product_name,
-                customer_part_no=raw.customer_part_no,
-                maker_part_no=raw.maker_part_no,
-                maker_code=raw.maker_code,
-                maker_name=raw.maker_name,
-                supplier_code=raw.supplier_code,
-                supplier_name=None,  # 既存マスタとは連動しない
-                delivery_place_code=raw.delivery_place_code,
-                delivery_place_name=raw.delivery_place_name,
-                shipping_warehouse_code=raw.warehouse_code,
-                shipping_warehouse_name=raw.shipping_warehouse,
-                shipping_slip_text=raw.shipping_slip_text,
-                transport_lt_days=raw.transport_lt_days,
-                has_order=raw.order_flag == "○" or raw.order_existence == "有",
-                remarks=raw.remarks,
-                has_duplicate_warning=False,
-            )
-
             try:
-                self.session.add(curated)
-                self.session.flush()
-                count += 1
+                with self.session.begin_nested():
+                    curated = ShippingMasterCurated(
+                        raw_id=raw.id,
+                        customer_code=raw.customer_code,
+                        material_code=raw.material_code,
+                        jiku_code=raw.jiku_code,
+                        warehouse_code=raw.warehouse_code,
+                        customer_name=None,
+                        delivery_note_product_name=raw.delivery_note_product_name,
+                        customer_part_no=raw.customer_part_no,
+                        maker_part_no=raw.maker_part_no,
+                        maker_code=raw.maker_code,
+                        maker_name=raw.maker_name,
+                        supplier_code=raw.supplier_code,
+                        supplier_name=None,
+                        delivery_place_code=raw.delivery_place_code,
+                        delivery_place_name=raw.delivery_place_name,
+                        shipping_warehouse_code=raw.warehouse_code,
+                        shipping_warehouse_name=raw.shipping_warehouse,
+                        shipping_slip_text=raw.shipping_slip_text,
+                        transport_lt_days=raw.transport_lt_days,
+                        has_order=raw.order_flag == "○" or raw.order_existence == "有",
+                        remarks=raw.remarks,
+                        has_duplicate_warning=False,
+                    )
+                    self.session.add(curated)
+                    self.session.flush()
+                    count += 1
             except IntegrityError:
-                self.session.rollback()
+                # begin_nested のおかげで、ここに来る時点でこの行の add 分だけがロールバックされている
                 warnings.append(
                     f"行{raw.row_index}: キー重複（{raw.customer_code}/{raw.material_code}/{raw.jiku_code}）"
                 )
 
+        self.session.commit()
         return count, warnings
 
     # ==================== CRUD ====================
