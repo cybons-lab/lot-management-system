@@ -5,8 +5,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { logInfo } from "@/services/error-logger";
-
 import type {
   UsersListParams,
   CreateUserRequest,
@@ -14,6 +12,8 @@ import type {
   UserRoleAssignment,
 } from "../api";
 import { getUsers, getUser, createUser, updateUser, deleteUser, assignUserRoles } from "../api";
+
+import { logInfo } from "@/services/error-logger";
 
 // ===== Query Keys =====
 
@@ -62,7 +62,7 @@ export const useCreateUser = () => {
     mutationFn: (data: CreateUserRequest) => createUser(data),
     onSuccess: (result, data) => {
       logInfo("Users:Create", "ユーザーを作成しました", {
-        userId: result.id,
+        userId: result.user_id,
         username: data.username,
       });
       // Invalidate users list to refetch

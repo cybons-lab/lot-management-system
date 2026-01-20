@@ -4,13 +4,13 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { logInfo } from "@/services/error-logger";
-
 import {
   cancelConfirmedReservation,
   type ReservationCancelRequest,
   type ReservationCancelResponse,
 } from "../../api";
+
+import { logInfo } from "@/services/error-logger";
 
 interface CancelReservationParams {
   allocationId: number;

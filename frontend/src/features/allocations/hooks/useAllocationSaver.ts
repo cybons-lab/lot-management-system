@@ -33,8 +33,6 @@
 import { useMutation, type QueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
-
 import { saveManualAllocations, type ManualAllocationBatchResponse } from "../api";
 import { ALLOCATION_CONSTANTS } from "../constants";
 import { setLineStatusToCommitted } from "../helpers/allocationStatusHelpers";
@@ -44,6 +42,7 @@ import { convertAllocationsToPayload, getOrderId } from "../utils/allocationCalc
 import { allocationCandidatesKeys } from "./api/useAllocationCandidates";
 
 import type { OrderLine } from "@/shared/types/aliases";
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 /**
  * Variables for saveAllocations mutation

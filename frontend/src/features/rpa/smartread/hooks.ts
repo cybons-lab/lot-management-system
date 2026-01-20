@@ -33,8 +33,8 @@ import {
 } from "./api";
 import { processFilesAuto } from "./api";
 
-import { ApiError } from "@/utils/errors/custom-errors";
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
+import { ApiError } from "@/utils/errors/custom-errors";
 const SMARTREAD_QUERY_KEYS = {
   all: ["smartread"] as const,
   configs: () => [...SMARTREAD_QUERY_KEYS.all, "configs"] as const,

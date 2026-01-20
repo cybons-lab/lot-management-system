@@ -10,7 +10,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { bulkAutoAllocate } from "@/features/allocations/api";
-import { logError, logInfo } from "@/services/error-logger";
 import {
   clearGroupSuggestions,
   createForecast,
@@ -18,6 +17,7 @@ import {
   regenerateGroupSuggestions,
   updateForecast,
 } from "@/features/forecasts/api";
+import { logError, logInfo } from "@/services/error-logger";
 
 interface ForecastGroupKey {
   customer_id: number;
@@ -82,9 +82,13 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
       invalidateQueries(groupKey);
     },
     onError: (error) => {
-      logError("Forecasts:AutoAllocate", error instanceof Error ? error : "受注引当に失敗しました", {
-        ...groupKey,
-      });
+      logError(
+        "Forecasts:AutoAllocate",
+        error instanceof Error ? error : "受注引当に失敗しました",
+        {
+          ...groupKey,
+        },
+      );
       toast.error("受注引当に失敗しました");
     },
   });
@@ -156,10 +160,14 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
     },
     onSuccess: (_, variables) => {
       const action = variables.quantity === 0 ? "Delete" : "Update";
-      logInfo(`Forecasts:${action}`, `フォーキャストを${action === "Delete" ? "削除" : "更新"}しました`, {
-        forecastId: variables.forecastId,
-        quantity: variables.quantity,
-      });
+      logInfo(
+        `Forecasts:${action}`,
+        `フォーキャストを${action === "Delete" ? "削除" : "更新"}しました`,
+        {
+          forecastId: variables.forecastId,
+          quantity: variables.quantity,
+        },
+      );
       toast.success(
         variables.quantity === 0 ? "フォーキャストを削除しました" : "フォーキャストを更新しました",
       );

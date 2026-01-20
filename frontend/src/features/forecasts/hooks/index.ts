@@ -5,8 +5,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { logInfo } from "@/services/error-logger";
-
 import type {
   ForecastListParams,
   CreateForecastRequest,
@@ -22,6 +20,8 @@ import {
   deleteForecast,
   bulkImportForecasts,
 } from "../api";
+
+import { logInfo } from "@/services/error-logger";
 
 // ===== Query Keys =====
 
@@ -130,7 +130,8 @@ export const useBulkImportForecasts = () => {
     mutationFn: (data: BulkImportForecastRequest) => bulkImportForecasts(data),
     onSuccess: (result, data) => {
       logInfo("Forecasts:BulkImport", "フォーキャストを一括インポートしました", {
-        importedCount: data.forecasts.length,
+        importedCount: data.items.length,
+        importedResult: result.imported_count,
       });
       queryClient.invalidateQueries({ queryKey: forecastKeys.all });
     },

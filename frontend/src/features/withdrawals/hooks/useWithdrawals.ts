@@ -6,8 +6,6 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { logInfo } from "@/services/error-logger";
-
 import type {
   WithdrawalCancelRequest,
   WithdrawalCreateRequest,
@@ -16,6 +14,8 @@ import type {
   WithdrawalResponse,
 } from "../api";
 import { cancelWithdrawal, createWithdrawal, getWithdrawal, getWithdrawals } from "../api";
+
+import { logInfo } from "@/services/error-logger";
 
 const QUERY_KEY = "withdrawals";
 
@@ -49,7 +49,7 @@ export function useWithdrawals() {
       mutationFn: (data: WithdrawalCreateRequest) => createWithdrawal(data),
       onSuccess: (result, data) => {
         logInfo("Withdrawals:Create", "出庫を登録しました", {
-          withdrawalId: result.id,
+          withdrawalId: result.withdrawal_id,
           lotId: data.lot_id,
           quantity: data.quantity,
         });

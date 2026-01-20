@@ -132,6 +132,44 @@ export async function extractProblemJSON(error: HTTPError): Promise<ProblemJSON 
 }
 
 /**
+ * 在庫不足エラーの詳細メッセージを取得
+ */
+function getInsufficientStockMessage(details: Record<string, unknown>): string | null {
+  const stockDetails = details as unknown as InsufficientStockDetails;
+  if (stockDetails.required !== undefined && stockDetails.available !== undefined) {
+    return `在庫が不足しています（必要: ${stockDetails.required}, 利用可能: ${stockDetails.available}）`;
+  }
+  return null;
+}
+
+/**
+ * Problem+JSONからメッセージを取得
+ */
+function getMessageFromProblem(problem: ProblemJSON): string | null {
+  // エラーコードからメッセージを取得
+  if (problem.error_code && ERROR_CODE_MESSAGES[problem.error_code]) {
+    // 在庫不足エラーの場合、詳細情報を含める
+    if (problem.error_code === "INSUFFICIENT_STOCK" && problem.details) {
+      const detailMessage = getInsufficientStockMessage(problem.details);
+      if (detailMessage) return detailMessage;
+    }
+    return ERROR_CODE_MESSAGES[problem.error_code];
+  }
+
+  // detailフィールドがある場合はそれを使用
+  if (problem.detail && !problem.detail.includes("HTTP Error")) {
+    return problem.detail;
+  }
+
+  // titleフィールドがある場合
+  if (problem.title && problem.title !== "Error") {
+    return problem.title;
+  }
+
+  return null;
+}
+
+/**
  * HTTPErrorからユーザーフレンドリーなメッセージを取得（非同期版）
  * Problem+JSONからエラーコードを解析し、適切なメッセージを返す
  */
@@ -143,27 +181,8 @@ export async function getUserFriendlyMessageAsync(error: unknown): Promise<strin
     // Problem+JSONからエラー情報を取得
     const problem = await extractProblemJSON(httpError);
     if (problem) {
-      // エラーコードからメッセージを取得
-      if (problem.error_code && ERROR_CODE_MESSAGES[problem.error_code]) {
-        // 在庫不足エラーの場合、詳細情報を含める
-        if (problem.error_code === "INSUFFICIENT_STOCK" && problem.details) {
-          const details = problem.details as InsufficientStockDetails;
-          if (details.required !== undefined && details.available !== undefined) {
-            return `在庫が不足しています（必要: ${details.required}, 利用可能: ${details.available}）`;
-          }
-        }
-        return ERROR_CODE_MESSAGES[problem.error_code];
-      }
-
-      // detailフィールドがある場合はそれを使用
-      if (problem.detail && !problem.detail.includes("HTTP Error")) {
-        return problem.detail;
-      }
-
-      // titleフィールドがある場合
-      if (problem.title && problem.title !== "Error") {
-        return problem.title;
-      }
+      const message = getMessageFromProblem(problem);
+      if (message) return message;
     }
 
     // ステータスコードからメッセージを生成
