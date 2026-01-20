@@ -4,6 +4,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { logInfo } from "@/services/error-logger";
+
 import {
   cancelConfirmedReservation,
   type ReservationCancelRequest,
@@ -24,7 +26,11 @@ export function useCancelReservationMutation(options?: {
   return useMutation({
     mutationFn: ({ allocationId, data }: CancelReservationParams) =>
       cancelConfirmedReservation(allocationId, data),
-    onSuccess: (response) => {
+    onSuccess: (response, variables) => {
+      logInfo("Allocations:Cancel", "引当をキャンセルしました", {
+        allocationId: variables.allocationId,
+        reason: variables.data.reason,
+      });
       // Invalidate allocation-related queries
       queryClient.invalidateQueries({ queryKey: ["allocations"] });
       queryClient.invalidateQueries({ queryKey: ["order-detail"] });

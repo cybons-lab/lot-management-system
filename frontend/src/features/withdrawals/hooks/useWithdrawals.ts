@@ -6,6 +6,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { logInfo } from "@/services/error-logger";
+
 import type {
   WithdrawalCancelRequest,
   WithdrawalCreateRequest,
@@ -45,7 +47,12 @@ export function useWithdrawals() {
   const useCreate = () =>
     useMutation({
       mutationFn: (data: WithdrawalCreateRequest) => createWithdrawal(data),
-      onSuccess: () => {
+      onSuccess: (result, data) => {
+        logInfo("Withdrawals:Create", "出庫を登録しました", {
+          withdrawalId: result.id,
+          lotId: data.lot_id,
+          quantity: data.quantity,
+        });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
         // ロット一覧も更新（数量が変わるため）
         queryClient.invalidateQueries({ queryKey: ["lots"] });
@@ -65,7 +72,11 @@ export function useWithdrawals() {
         withdrawalId: number;
         data: WithdrawalCancelRequest;
       }) => cancelWithdrawal(withdrawalId, data),
-      onSuccess: () => {
+      onSuccess: (_, variables) => {
+        logInfo("Withdrawals:Cancel", "出庫を取り消しました", {
+          withdrawalId: variables.withdrawalId,
+          reason: variables.data.reason,
+        });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
         // ロット一覧も更新（数量が戻るため）
         queryClient.invalidateQueries({ queryKey: ["lots"] });

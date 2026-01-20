@@ -5,6 +5,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
+import { logInfo } from "@/services/error-logger";
+
 import type { OrderLine } from "../../types";
 
 import {
@@ -26,7 +28,12 @@ export function useAllocationMutation(
   // 引当保存のMutation
   const createAllocationMutation = useMutation({
     mutationFn: (payload: CreateAllocationPayload) => createAllocations(payload),
-    onSuccess: () => {
+    onSuccess: (_, payload) => {
+      logInfo("Allocations:Create", "引当を保存しました", {
+        orderLineId: payload.order_line_id,
+        productCode: payload.product_code,
+        allocationCount: payload.allocations.length,
+      });
       queryClient.invalidateQueries({ queryKey: ["order-detail", selectedOrderId] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       onSuccess();
