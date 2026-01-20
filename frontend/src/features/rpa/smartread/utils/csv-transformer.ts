@@ -148,31 +148,36 @@ export class SmartReadCsvTransformer {
   private extractSingleDetail(row: Record<string, any>, n: number): Record<string, any> {
     const detail: Record<string, any> = {};
 
-    // Regular detail fields (材質コード1, 納入量1, etc)
+    // Regular detail fields (材質コード1, 材質コード 1, 納入量1, etc)
     for (const fieldName of DETAIL_FIELDS) {
-      let key = `${fieldName}${n}`;
-      // If numbered key not found for n=1, try without number (for vertical CSVs)
-      if (!(key in row) && n === 1) {
-        key = fieldName;
+      // 複数のパターンを試行
+      const keysToTry = [`${fieldName}${n}`, `${fieldName} ${n}`];
+      if (n === 1) {
+        keysToTry.push(fieldName);
       }
 
-      if (key in row) {
-        detail[fieldName] = this.normalizeValue(row[key]);
+      for (const key of keysToTry) {
+        if (key in row) {
+          detail[fieldName] = this.normalizeValue(row[key]);
+          break;
+        }
       }
     }
 
-    // Sub-detail fields (Lot No1-1, Lot No1-2, etc)
+    // Sub-detail fields (Lot No1-1, Lot No 1-1, Lot No-1, etc)
     for (const subField of SUB_DETAIL_FIELDS) {
       for (let subN = 1; subN <= 4; subN++) {
         // Max 4 sub-details
-        let key = `${subField}${n}-${subN}`;
-        // If numbered key not found for n=1, try without page number
-        if (!(key in row) && n === 1) {
-          key = `${subField}-${subN}`;
+        const keysToTry = [`${subField}${n}-${subN}`, `${subField} ${n}-${subN}`];
+        if (n === 1) {
+          keysToTry.push(`${subField}-${subN}`);
         }
 
-        if (key in row) {
-          detail[`${subField}${subN}`] = this.normalizeValue(row[key]);
+        for (const key of keysToTry) {
+          if (key in row) {
+            detail[`${subField}${subN}`] = this.normalizeValue(row[key]);
+            break;
+          }
         }
       }
     }
@@ -180,7 +185,7 @@ export class SmartReadCsvTransformer {
   }
 
   private isVerticalFormat(row: Record<string, any>): boolean {
-    return DETAIL_FIELDS.some((f) => !(f + "1" in row) && f in row);
+    return DETAIL_FIELDS.some((f) => !(f + "1" in row) && !(f + " 1" in row) && f in row);
   }
 
   private isEmptyDetail(detail: Record<string, any>): boolean {
@@ -334,31 +339,45 @@ export class SmartReadCsvTransformer {
 
     // Try various date formats
     const formats = [
-      { regex: /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/, separator: "/" },
-      { regex: /^(\d{4})-(\d{1,2})-(\d{1,2})$/, separator: "-" },
-      { regex: /^(\d{4})年(\d{1,2})月(\d{1,2})日$/, separator: "年月日" },
-      { regex: /^(\d{4})\.(\d{1,2})\.(\d{1,2})$/, separator: "." },
+      { regex: /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/, parts: 3 },
+      { regex: /^(\d{4})-(\d{1,2})-(\d{1,2})$/, parts: 3 },
+      { regex: /^(\d{4})年(\d{1,2})月(\d{1,2})日$/, parts: 3 },
+      { regex: /^(\d{4})\.(\d{1,2})\.(\d{1,2})$/, parts: 3 },
+      { regex: /^(\d{4})\/(\d{1,2})$/, parts: 2 },
+      { regex: /^(\d{4})-(\d{1,2})$/, parts: 2 },
+      { regex: /^(\d{4})年(\d{1,2})月$/, parts: 2 },
+      { regex: /^(\d{4})年$/, parts: 1 },
+      { regex: /^(\d{4})$/, parts: 1 },
     ];
 
-    for (const { regex } of formats) {
+    for (const { regex, parts } of formats) {
       const match = s.match(regex);
       if (match) {
-        const year = parseInt(match[1], 10);
-        const month = parseInt(match[2], 10);
-        const day = parseInt(match[3], 10);
-
-        // Range check
-        if (year < 1900 || year > 9999 || month < 1 || month > 12 || day < 1 || day > 31) {
-          return ["", true];
-        }
-
-        // Format as YYYY/MM/DD
-        const formatted = `${year}/${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}`;
-        return [formatted, false];
+        return this.formatMatchedDate(match, parts);
       }
     }
 
     return ["", true];
+  }
+
+  private formatMatchedDate(match: RegExpMatchArray, parts: number): [string, boolean] {
+    const year = parseInt(match[1], 10);
+    const month = parts >= 2 ? parseInt(match[2], 10) : 1;
+    const day = parts >= 3 ? parseInt(match[3], 10) : 1;
+
+    // Range check
+    if (
+      year < 1900 ||
+      year > 9999 ||
+      (parts >= 2 && (month < 1 || month > 12)) ||
+      (parts >= 3 && (day < 1 || day > 31))
+    ) {
+      return ["", true];
+    }
+
+    // Format as YYYY/MM/DD
+    const formatted = `${year}/${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}`;
+    return [formatted, false];
   }
 
   private parseQuantity(value: string): [string, boolean] {

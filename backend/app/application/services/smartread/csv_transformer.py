@@ -145,34 +145,41 @@ class SmartReadCsvTransformer:
         for n in range(1, self.max_details + 1):
             detail: dict[str, Any] = {}
 
-            # 通常の明細項目（材質コード1, 納入量1, etc）
+            # 通常の明細項目（材質コード1, 材質コード 1, 納入量1, etc）
             for field_name in DETAIL_FIELDS:
-                key = f"{field_name}{n}"
-                # n=1で番号付きが見つからない場合、番号なしを試行（縦持ちCSV対応）
-                if key not in row and n == 1:
-                    key = field_name
+                # 複数のパターンを試行
+                keys_to_try = [f"{field_name}{n}", f"{field_name} {n}"]
+                if n == 1:
+                    keys_to_try.append(field_name)
 
-                if key in row:
-                    detail[field_name] = self._normalize_value(row[key])
+                for key in keys_to_try:
+                    if key in row:
+                        detail[field_name] = self._normalize_value(row[key])
+                        break
 
-            # サブ明細項目（Lot No1-1, Lot No1-2, etc）
+            # サブ明細項目（Lot No1-1, Lot No 1-1, Lot No-1, etc）
             for sub_field in SUB_DETAIL_FIELDS:
                 for sub_n in range(1, 5):  # 最大4つのサブ明細
-                    key = f"{sub_field}{n}-{sub_n}"
-                    # n=1で番号付きが見つからない場合、番号なしを試行
-                    if key not in row and n == 1:
-                        key = f"{sub_field}-{sub_n}"
+                    keys_to_try = [f"{sub_field}{n}-{sub_n}", f"{sub_field} {n}-{sub_n}"]
+                    if n == 1:
+                        keys_to_try.append(f"{sub_field}-{sub_n}")
 
-                    if key in row:
-                        detail[f"{sub_field}{sub_n}"] = self._normalize_value(row[key])
+                    for key in keys_to_try:
+                        if key in row:
+                            detail[f"{sub_field}{sub_n}"] = self._normalize_value(row[key])
+                            break
 
             # 明細が存在する場合のみ追加
             if not self._is_empty_detail(detail):
                 details.append(detail)
-                # 番号なしでヒットした場合は1件のみとしてループ終了（縦持ちCSV）
-                if any(
-                    f"{field_name}1" not in row for field_name in DETAIL_FIELDS if field_name in row
-                ):
+                # 番号付きが見つからず、かつn=1で番号なしでヒットした場合は縦持ちと判断して打ち切り
+                is_vertical = any(
+                    field_name in row
+                    and f"{field_name}1" not in row
+                    and f"{field_name} 1" not in row
+                    for field_name in DETAIL_FIELDS
+                )
+                if is_vertical and n == 1:
                     break
 
         return details
@@ -229,7 +236,7 @@ class SmartReadCsvTransformer:
                     )
                 )
                 common["エラー_発行日形式"] = 1
-                common["発行日"] = ""
+                # common["発行日"] = ""  # 元の値を保持
             else:
                 common["発行日"] = parsed
                 common["エラー_発行日形式"] = 0
@@ -247,7 +254,7 @@ class SmartReadCsvTransformer:
                     )
                 )
                 common["エラー_納入日形式"] = 1
-                common["納入日"] = ""
+                # common["納入日"] = ""  # 元の値を保持
             else:
                 common["納入日"] = parsed
                 common["エラー_納入日形式"] = 0
@@ -290,6 +297,7 @@ class SmartReadCsvTransformer:
                     )
                 )
                 detail["エラー_納入量"] = 1
+                # detail["納入量"] = parsed  # _parse_quantityはエラー時も値を返すのでそのまま
             else:
                 detail["納入量"] = parsed
                 detail["エラー_納入量"] = 0
@@ -317,7 +325,11 @@ class SmartReadCsvTransformer:
             "%Y-%m-%d",
             "%Y年%m月%d日",
             "%Y.%m.%d",
-            "%Y/%m/%d",
+            "%Y/%m",
+            "%Y-%m",
+            "%Y年%m月",
+            "%Y年",
+            "%Y",
         ]
 
         for fmt in formats:
