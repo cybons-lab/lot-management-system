@@ -6729,6 +6729,91 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/smartread/configs/{config_id}/process-auto": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * ファイルを自動処理（requestIdルート）
+     * @description 監視フォルダ内の指定ファイルを自動処理（requestIdルート）.
+     *
+     *     1日1タスク運用で、ファイルをSmartRead APIに投入し、
+     *     バックグラウンドでポーリング・結果処理を実行します。
+     */
+    post: operations["process_files_auto_api_rpa_smartread_configs__config_id__process_auto_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/requests": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * リクエスト一覧を取得
+     * @description リクエスト一覧を取得.
+     */
+    get: operations["get_requests_api_rpa_smartread_configs__config_id__requests_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/long-data": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 縦持ちデータ一覧を取得
+     * @description 縦持ちデータ一覧を取得.
+     */
+    get: operations["get_long_data_api_rpa_smartread_configs__config_id__long_data_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * SSEイベントストリーム（未実装）
+     * @description SSEイベントストリーム（将来実装）.
+     *
+     *     現在はプレースホルダーです。フロントエンドポーリングで代用してください。
+     */
+    get: operations["event_stream_api_rpa_smartread_configs__config_id__events_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/status": {
     parameters: {
       query?: never;
@@ -12724,6 +12809,94 @@ export interface components {
       error_message?: string | null;
     };
     /**
+     * SmartReadLongDataListResponse
+     * @description 縦持ちデータ一覧レスポンス.
+     */
+    SmartReadLongDataListResponse: {
+      /**
+       * Data
+       * @description 縦持ちデータ一覧
+       */
+      data: components["schemas"]["SmartReadLongDataResponse"][];
+      /**
+       * Total
+       * @description 総件数
+       */
+      total: number;
+    };
+    /**
+     * SmartReadLongDataResponse
+     * @description 縦持ちデータレスポンス.
+     */
+    SmartReadLongDataResponse: {
+      /** Id */
+      id: number;
+      /** Config Id */
+      config_id: number;
+      /** Task Id */
+      task_id: string;
+      /** Task Date */
+      task_date: string;
+      /** Request Id Ref */
+      request_id_ref: number | null;
+      /** Row Index */
+      row_index: number;
+      /** Content */
+      content: {
+        [key: string]: unknown;
+      };
+      /** Status */
+      status: string;
+      /** Error Reason */
+      error_reason: string | null;
+      /** Created At */
+      created_at: string;
+    };
+    /**
+     * SmartReadProcessAutoRequest
+     * @description 自動処理リクエスト（requestIdルート用）.
+     */
+    SmartReadProcessAutoRequest: {
+      /**
+       * Filenames
+       * @description 処理するファイル名のリスト
+       */
+      filenames: string[];
+      /**
+       * Use Daily Task
+       * @description 1日1タスク運用を使用するか
+       * @default true
+       */
+      use_daily_task: boolean;
+    };
+    /**
+     * SmartReadProcessAutoResponse
+     * @description 自動処理レスポンス（requestIdルート用）.
+     */
+    SmartReadProcessAutoResponse: {
+      /**
+       * Task Id
+       * @description タスクID
+       */
+      task_id: string;
+      /**
+       * Task Name
+       * @description タスク名 (OCR_YYYYMMDD)
+       */
+      task_name: string;
+      /**
+       * Requests
+       * @description 投入されたリクエスト一覧
+       */
+      requests: components["schemas"]["SmartReadRequestResponse"][];
+      /**
+       * Message
+       * @description メッセージ
+       * @default 処理を開始しました
+       */
+      message: string;
+    };
+    /**
      * SmartReadProcessRequest
      * @description ファイル処理リクエスト.
      */
@@ -12733,6 +12906,47 @@ export interface components {
        * @description 処理するファイル名のリスト
        */
       filenames: string[];
+    };
+    /**
+     * SmartReadRequestListResponse
+     * @description リクエスト一覧レスポンス.
+     */
+    SmartReadRequestListResponse: {
+      /**
+       * Requests
+       * @description リクエスト一覧
+       */
+      requests: components["schemas"]["SmartReadRequestResponse"][];
+    };
+    /**
+     * SmartReadRequestResponse
+     * @description リクエスト状態レスポンス.
+     */
+    SmartReadRequestResponse: {
+      /** Id */
+      id: number;
+      /** Request Id */
+      request_id: string;
+      /** Task Id */
+      task_id: string;
+      /** Task Date */
+      task_date: string;
+      /** Config Id */
+      config_id: number;
+      /** Filename */
+      filename: string | null;
+      /** Num Of Pages */
+      num_of_pages: number | null;
+      /** Submitted At */
+      submitted_at: string;
+      /** State */
+      state: string;
+      /** Error Message */
+      error_message: string | null;
+      /** Completed At */
+      completed_at: string | null;
+      /** Created At */
+      created_at: string;
     };
     /**
      * SmartReadSkipTodayRequest
@@ -24194,6 +24408,142 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SmartReadTaskDetailResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  process_files_auto_api_rpa_smartread_configs__config_id__process_auto_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadProcessAutoRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadProcessAutoResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_requests_api_rpa_smartread_configs__config_id__requests_get: {
+    parameters: {
+      query?: {
+        /** @description 状態でフィルタ */
+        state?: string | null;
+        /** @description 取得件数 */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadRequestListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_long_data_api_rpa_smartread_configs__config_id__long_data_get: {
+    parameters: {
+      query?: {
+        /** @description 取得件数 */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadLongDataListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  event_stream_api_rpa_smartread_configs__config_id__events_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */

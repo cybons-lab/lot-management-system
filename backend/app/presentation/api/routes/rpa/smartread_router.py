@@ -2,7 +2,16 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -19,7 +28,13 @@ from app.presentation.schemas.smartread_schema import (
     SmartReadCsvDataResponse,
     SmartReadExportRequest,
     SmartReadExportResponse,
+    SmartReadLongDataListResponse,
+    SmartReadLongDataResponse,
+    SmartReadProcessAutoRequest,
+    SmartReadProcessAutoResponse,
     SmartReadProcessRequest,
+    SmartReadRequestListResponse,
+    SmartReadRequestResponse,
     SmartReadSkipTodayRequest,
     SmartReadTaskDetailResponse,
     SmartReadTaskListResponse,
@@ -457,4 +472,261 @@ def update_skip_today(
         synced_at=task.synced_at.isoformat() if task.synced_at else None,
         skip_today=task.skip_today,
         created_at=task.created_at.isoformat(),
+    )
+
+
+# ==================== requestId/results ルート API ====================
+
+
+@router.post(
+    "/configs/{config_id}/process-auto",
+    response_model=SmartReadProcessAutoResponse,
+    summary="ファイルを自動処理（requestIdルート）",
+)
+async def process_files_auto(
+    config_id: int,
+    request: SmartReadProcessAutoRequest,
+    background_tasks: BackgroundTasks,
+    uow: UnitOfWork = Depends(get_uow),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadProcessAutoResponse:
+    """監視フォルダ内の指定ファイルを自動処理（requestIdルート）.
+
+    1日1タスク運用で、ファイルをSmartRead APIに投入し、
+    バックグラウンドでポーリング・結果処理を実行します。
+    """
+    from pathlib import Path
+
+    assert uow.session is not None
+    service = SmartReadService(uow.session)
+
+    # 設定確認
+    config = service.get_config(config_id)
+    if not config:
+        raise HTTPException(status_code=404, detail="設定が見つかりません")
+
+    if not config.watch_dir:
+        raise HTTPException(status_code=400, detail="監視ディレクトリが設定されていません")
+
+    # skip_today チェック（日次タスクが既に存在する場合）
+    from datetime import date
+
+    task_date = date.today()
+
+    # 1日1タスクを取得または作成
+    task_id, task_record = await service.get_or_create_daily_task(config_id, task_date)
+    if not task_id or not task_record:
+        raise HTTPException(status_code=500, detail="タスクの取得/作成に失敗しました")
+
+    if task_record.skip_today:
+        raise HTTPException(
+            status_code=403, detail="このタスクは今日スキップする設定になっています"
+        )
+
+    # ファイルを読み込んでリクエスト投入
+    watch_dir = Path(config.watch_dir)
+    submitted_requests: list[SmartReadRequestResponse] = []
+
+    for filename in request.filenames:
+        file_path = watch_dir / filename
+        if not file_path.exists():
+            continue
+
+        try:
+            with open(file_path, "rb") as f:
+                file_content = f.read()
+
+            request_record = await service.submit_ocr_request(
+                config_id=config_id,
+                task_id=task_id,
+                task_record=task_record,
+                file_content=file_content,
+                filename=filename,
+            )
+
+            if request_record:
+                submitted_requests.append(
+                    SmartReadRequestResponse(
+                        id=request_record.id,
+                        request_id=request_record.request_id,
+                        task_id=request_record.task_id,
+                        task_date=request_record.task_date.isoformat(),
+                        config_id=request_record.config_id,
+                        filename=request_record.filename,
+                        num_of_pages=request_record.num_of_pages,
+                        submitted_at=request_record.submitted_at.isoformat(),
+                        state=request_record.state,
+                        error_message=request_record.error_message,
+                        completed_at=(
+                            request_record.completed_at.isoformat()
+                            if request_record.completed_at
+                            else None
+                        ),
+                        created_at=request_record.created_at.isoformat(),
+                    )
+                )
+
+                # バックグラウンドでポーリング・処理を開始
+                background_tasks.add_task(
+                    _process_request_background,
+                    config_id=config_id,
+                    request_id=request_record.request_id,
+                    uow=uow,
+                )
+
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).error(f"Failed to process {filename}: {e}")
+
+    uow.session.commit()
+
+    return SmartReadProcessAutoResponse(
+        task_id=task_id,
+        task_name=task_record.name or f"OCR_{task_date.strftime('%Y%m%d')}",
+        requests=submitted_requests,
+        message=f"{len(submitted_requests)}件のファイルを処理中です",
+    )
+
+
+async def _process_request_background(config_id: int, request_id: str, uow: UnitOfWork) -> None:
+    """バックグラウンドでリクエストをポーリング・処理."""
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        # 新しいセッションでサービスを作成
+        assert uow.session is not None
+        service = SmartReadService(uow.session)
+        request_record = service.get_request_by_id(request_id)
+
+        if not request_record:
+            logger.error(f"Request not found: {request_id}")
+            return
+
+        success = await service.poll_and_process_request(config_id, request_record)
+
+        if success:
+            logger.info(f"Request processed successfully: {request_id}")
+        else:
+            logger.warning(f"Request processing failed: {request_id}")
+
+        uow.session.commit()
+
+    except Exception as e:
+        logger.error(f"Background processing error for {request_id}: {e}")
+        if uow.session is not None:
+            uow.session.rollback()
+
+
+@router.get(
+    "/configs/{config_id}/requests",
+    response_model=SmartReadRequestListResponse,
+    summary="リクエスト一覧を取得",
+)
+def get_requests(
+    config_id: int,
+    state: str | None = Query(default=None, description="状態でフィルタ"),
+    limit: int = Query(default=100, le=1000, description="取得件数"),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadRequestListResponse:
+    """リクエスト一覧を取得."""
+    from sqlalchemy import select
+
+    from app.infrastructure.persistence.models.smartread_models import SmartReadRequest
+
+    assert db is not None
+
+    stmt = (
+        select(SmartReadRequest)
+        .where(SmartReadRequest.config_id == config_id)
+        .order_by(SmartReadRequest.created_at.desc())
+        .limit(limit)
+    )
+
+    if state:
+        stmt = stmt.where(SmartReadRequest.state == state)
+
+    requests = db.execute(stmt).scalars().all()
+
+    return SmartReadRequestListResponse(
+        requests=[
+            SmartReadRequestResponse(
+                id=r.id,
+                request_id=r.request_id,
+                task_id=r.task_id,
+                task_date=r.task_date.isoformat(),
+                config_id=r.config_id,
+                filename=r.filename,
+                num_of_pages=r.num_of_pages,
+                submitted_at=r.submitted_at.isoformat(),
+                state=r.state,
+                error_message=r.error_message,
+                completed_at=r.completed_at.isoformat() if r.completed_at else None,
+                created_at=r.created_at.isoformat(),
+            )
+            for r in requests
+        ]
+    )
+
+
+@router.get(
+    "/configs/{config_id}/long-data",
+    response_model=SmartReadLongDataListResponse,
+    summary="縦持ちデータ一覧を取得",
+)
+def get_long_data(
+    config_id: int,
+    limit: int = Query(default=100, le=1000, description="取得件数"),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadLongDataListResponse:
+    """縦持ちデータ一覧を取得."""
+    assert db is not None
+    service = SmartReadService(db)
+    long_data = service.get_long_data_list(config_id, limit=limit)
+
+    return SmartReadLongDataListResponse(
+        data=[
+            SmartReadLongDataResponse(
+                id=d.id,
+                config_id=d.config_id,
+                task_id=d.task_id,
+                task_date=d.task_date.isoformat(),
+                request_id_ref=d.request_id_ref,
+                row_index=d.row_index,
+                content=d.content,
+                status=d.status,
+                error_reason=d.error_reason,
+                created_at=d.created_at.isoformat(),
+            )
+            for d in long_data
+        ],
+        total=len(long_data),
+    )
+
+
+@router.get(
+    "/configs/{config_id}/events",
+    summary="SSEイベントストリーム（未実装）",
+)
+async def event_stream(
+    config_id: int,
+    _current_user: User = Depends(get_current_user),
+) -> Response:
+    """SSEイベントストリーム（将来実装）.
+
+    現在はプレースホルダーです。フロントエンドポーリングで代用してください。
+    """
+    # TODO: SSE実装（Redis Pub/Sub or in-memory queue）
+    # 現段階ではプレースホルダー
+    return Response(
+        content='event: connected\ndata: {"status": "connected"}\n\n',
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
     )

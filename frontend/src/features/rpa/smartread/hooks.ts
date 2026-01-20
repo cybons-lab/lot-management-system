@@ -3,6 +3,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React from "react";
 import { toast } from "sonner";
 
 import type { SmartReadConfigCreate, SmartReadConfigUpdate, SmartReadAnalyzeResponse } from "./api";
@@ -22,6 +23,14 @@ import {
   getExportCsvData,
   transformCsv,
   updateSkipToday,
+} from "./api";
+import {
+  processFilesAuto,
+  getRequests,
+  getLongData,
+  type SmartReadProcessAutoResponse,
+  type SmartReadRequestListResponse,
+  type SmartReadLongDataListResponse,
 } from "./api";
 
 import { ApiError } from "@/utils/errors/custom-errors";
@@ -376,4 +385,113 @@ export function useUpdateSkipToday() {
       toast.error(`スキップ設定の更新に失敗しました: ${error.message}`);
     },
   });
+}
+
+// ==================== requestId/results ルート hooks ====================
+
+/**
+ * 自動処理（requestIdルート）
+ */
+export function useProcessFilesAuto() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ configId, filenames }: { configId: number; filenames: string[] }) =>
+      processFilesAuto(configId, filenames),
+    onSuccess: (data: SmartReadProcessAutoResponse, { configId }) => {
+      // リクエスト一覧と管理タスク一覧を更新
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.all, "requests", configId] });
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.all, "managed-tasks"] });
+      toast.success(data.message);
+    },
+    onError: (error: Error) => {
+      toast.error(`自動処理の開始に失敗しました: ${error.message}`);
+    },
+  });
+}
+
+/**
+ * リクエスト一覧を取得
+ */
+export function useSmartReadRequests(configId: number, state?: string, limit: number = 100) {
+  return useQuery<SmartReadRequestListResponse>({
+    queryKey: [...QUERY_KEYS.all, "requests", configId, state, limit],
+    queryFn: () => getRequests(configId, state, limit),
+    enabled: !!configId,
+    staleTime: 1000 * 30, // 30 seconds
+    refetchInterval: 1000 * 10, // 10秒ごとに自動更新（SSE代替）
+  });
+}
+
+/**
+ * 縦持ちデータ一覧を取得
+ */
+export function useSmartReadLongData(configId: number, limit: number = 100) {
+  return useQuery<SmartReadLongDataListResponse>({
+    queryKey: [...QUERY_KEYS.all, "long-data", configId, limit],
+    queryFn: () => getLongData(configId, limit),
+    enabled: !!configId,
+    staleTime: 1000 * 60, // 1 minute
+  });
+}
+
+/**
+ * 処理中リクエストのポーリング用hook
+ * リクエストが処理中（PENDING, OCR_RUNNING等）の場合、自動的にpollingする
+ */
+export function useSmartReadRequestPolling(configId: number, enabled: boolean = true) {
+  const queryClient = useQueryClient();
+
+  // 処理中のリクエストがあるかチェック
+  const requestsQuery = useSmartReadRequests(configId, undefined, 50);
+
+  const hasProcessingRequests =
+    requestsQuery.data?.requests?.some((r) =>
+      ["PENDING", "OCR_RUNNING", "SORTING_RUNNING"].includes(r.state),
+    ) ?? false;
+
+  // 処理中のリクエストがある場合、より頻繁にポーリング
+  const { data } = useQuery<SmartReadRequestListResponse>({
+    queryKey: [...QUERY_KEYS.all, "requests-polling", configId],
+    queryFn: () => getRequests(configId, undefined, 50),
+    enabled: enabled && hasProcessingRequests,
+    refetchInterval: hasProcessingRequests ? 3000 : false, // 3秒ごと
+    staleTime: 1000,
+  });
+
+  // 完了したリクエストを検出してトースト通知
+  const prevRequestsRef = React.useRef<Map<string, string>>(new Map());
+
+  React.useEffect(() => {
+    if (!data?.requests) return;
+
+    const prevRequests = prevRequestsRef.current;
+    const newMap = new Map<string, string>();
+
+    for (const req of data.requests) {
+      newMap.set(req.request_id, req.state);
+
+      const prevState = prevRequests.get(req.request_id);
+      if (prevState && prevState !== req.state) {
+        // 状態が変化した
+        if (req.state === "OCR_COMPLETED") {
+          toast.success(`${req.filename || req.request_id} の処理が完了しました`);
+          // 縦持ちデータを更新
+          queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.all, "long-data", configId] });
+        } else if (["OCR_FAILED", "SORTING_FAILED", "TIMEOUT"].includes(req.state)) {
+          toast.error(`${req.filename || req.request_id} の処理に失敗しました`);
+        }
+      }
+    }
+
+    prevRequestsRef.current = newMap;
+  }, [data, configId, queryClient]);
+
+  return {
+    hasProcessingRequests,
+    processingCount:
+      requestsQuery.data?.requests?.filter((r) =>
+        ["PENDING", "OCR_RUNNING", "SORTING_RUNNING"].includes(r.state),
+      )?.length ?? 0,
+  };
 }

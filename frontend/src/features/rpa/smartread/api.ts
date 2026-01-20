@@ -308,3 +308,99 @@ export async function updateSkipToday(
     throw error;
   }
 }
+
+// ==================== requestId/results ルート ====================
+
+export interface SmartReadRequest {
+  id: number;
+  request_id: string;
+  task_id: string;
+  task_date: string;
+  config_id: number;
+  filename: string | null;
+  num_of_pages: number | null;
+  submitted_at: string;
+  state: string;
+  error_message: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface SmartReadRequestListResponse {
+  requests: SmartReadRequest[];
+}
+
+export interface SmartReadProcessAutoResponse {
+  task_id: string;
+  task_name: string;
+  requests: SmartReadRequest[];
+  message: string;
+}
+
+export interface SmartReadLongDataItem {
+  id: number;
+  config_id: number;
+  task_id: string;
+  task_date: string;
+  request_id_ref: number | null;
+  row_index: number;
+  content: Record<string, unknown>;
+  status: string;
+  error_reason: string | null;
+  created_at: string;
+}
+
+export interface SmartReadLongDataListResponse {
+  data: SmartReadLongDataItem[];
+  total: number;
+}
+
+/**
+ * 自動処理（requestIdルート）
+ */
+export async function processFilesAuto(
+  configId: number,
+  filenames: string[],
+): Promise<SmartReadProcessAutoResponse> {
+  console.log(`[SmartRead API] Processing files auto for configId: ${configId}`, filenames);
+  try {
+    const res = await http.post<SmartReadProcessAutoResponse>(
+      `rpa/smartread/configs/${configId}/process-auto`,
+      { filenames, use_daily_task: true },
+    );
+    console.log(`[SmartRead API] Process auto response:`, res);
+    return res;
+  } catch (error) {
+    console.error(`[SmartRead API] Error processing files auto:`, error);
+    throw error;
+  }
+}
+
+/**
+ * リクエスト一覧を取得
+ */
+export async function getRequests(
+  configId: number,
+  state?: string,
+  limit: number = 100,
+): Promise<SmartReadRequestListResponse> {
+  const params = new URLSearchParams({ limit: limit.toString() });
+  if (state) {
+    params.append("state", state);
+  }
+  return http.get<SmartReadRequestListResponse>(
+    `rpa/smartread/configs/${configId}/requests?${params}`,
+  );
+}
+
+/**
+ * 縦持ちデータ一覧を取得
+ */
+export async function getLongData(
+  configId: number,
+  limit: number = 100,
+): Promise<SmartReadLongDataListResponse> {
+  return http.get<SmartReadLongDataListResponse>(
+    `rpa/smartread/configs/${configId}/long-data?limit=${limit}`,
+  );
+}
