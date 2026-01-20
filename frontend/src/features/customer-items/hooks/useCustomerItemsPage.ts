@@ -85,7 +85,7 @@ export function useCustomerItemsPage() {
     const query = searchQuery.toLowerCase();
     return customerItems.filter(
       (item) =>
-        item.external_product_code.toLowerCase().includes(query) ||
+        item.customer_part_no.toLowerCase().includes(query) ||
         item.customer_id.toString().includes(query) ||
         item.product_id.toString().includes(query),
     );
@@ -109,9 +109,9 @@ export function useCustomerItemsPage() {
 
   // Soft Delete Handler
   const handleSoftDelete = useCallback(
-    (customerId: number, externalProductCode: string, endDate?: string) => {
+    (customerId: number, customerPartNo: string, endDate?: string) => {
       softDelete(
-        { customerId, externalProductCode, endDate },
+        { customerId, customerPartNo, endDate },
         {
           onSuccess: () => toast.success("得意先品番マッピングを削除しました"),
           onError: () => toast.error("削除に失敗しました"),
@@ -123,9 +123,9 @@ export function useCustomerItemsPage() {
 
   // Permanent Delete Handler
   const handlePermanentDelete = useCallback(
-    (customerId: number, externalProductCode: string) => {
+    (customerId: number, customerPartNo: string) => {
       permanentDeleteAsync(
-        { customerId, externalProductCode },
+        { customerId, customerPartNo },
         {
           onSuccess: () => toast.success("完全に削除しました"),
           onError: () => toast.error("完全削除に失敗しました"),
@@ -137,7 +137,7 @@ export function useCustomerItemsPage() {
 
   // Bulk Permanent Delete Handler
   const handleBulkPermanentDelete = useCallback(
-    async (items: { customer_id: number; external_product_code: string }[]) => {
+    async (items: { customer_id: number; customer_part_no: string }[]) => {
       if (items.length === 0) return;
 
       setIsBulkDeleting(true);
@@ -146,7 +146,7 @@ export function useCustomerItemsPage() {
           items.map((item) =>
             permanentDeleteAsync({
               customerId: item.customer_id,
-              externalProductCode: item.external_product_code,
+              customerPartNo: item.customer_part_no,
             }),
           ),
         );
@@ -170,7 +170,7 @@ export function useCustomerItemsPage() {
 
   // Bulk Soft Delete Handler
   const handleBulkSoftDelete = useCallback(
-    async (items: { customer_id: number; external_product_code: string }[], endDate?: string) => {
+    async (items: { customer_id: number; customer_part_no: string }[], endDate?: string) => {
       if (items.length === 0) return;
 
       setIsBulkDeleting(true);
@@ -179,7 +179,7 @@ export function useCustomerItemsPage() {
           items.map((item) =>
             softDeleteAsync({
               customerId: item.customer_id,
-              externalProductCode: item.external_product_code,
+              customerPartNo: item.customer_part_no,
               endDate,
             }),
           ),
@@ -204,9 +204,9 @@ export function useCustomerItemsPage() {
 
   // Restore Handler
   const handleRestore = useCallback(
-    (customerId: number, externalProductCode: string) => {
+    (customerId: number, customerPartNo: string) => {
       restore(
-        { customerId, externalProductCode },
+        { customerId, customerPartNo },
         {
           onSuccess: () => toast.success("復元しました"),
           onError: () => toast.error("復元に失敗しました"),

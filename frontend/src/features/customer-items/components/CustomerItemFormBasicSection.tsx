@@ -91,6 +91,30 @@ export function CustomerItemFormBasicSection({
           )}
         </div>
 
+        {/* 先方品番入力 */}
+        <div>
+          <Label htmlFor="customer_part_no" className="mb-2 block text-sm font-medium">
+            先方品番（入力） <span className="text-red-500">*</span>
+          </Label>
+          <Controller
+            name="customer_part_no"
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                id="customer_part_no"
+                type="text"
+                placeholder="先方品番を入力"
+                disabled={isSubmitting}
+                maxLength={100}
+              />
+            )}
+          />
+          {errors.customer_part_no && (
+            <p className="mt-1 text-sm text-red-600">{errors.customer_part_no.message}</p>
+          )}
+        </div>
+
         {/* Base Unit */}
         <div>
           <Label htmlFor="base_unit" className="mb-2 block text-sm font-medium">

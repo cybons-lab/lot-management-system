@@ -11,9 +11,11 @@ class CustomerItemBase(BaseSchema):
     """Base schema for customer items."""
 
     customer_id: int = Field(..., description="得意先ID")
-    external_product_code: str = Field(..., max_length=100, description="得意先品番")
+    customer_part_no: str = Field(..., max_length=100, description="先方品番")
     product_id: int = Field(..., description="製品ID")
     supplier_id: int | None = Field(None, description="仕入先ID")
+    supplier_item_id: int | None = Field(None, description="仕入先品目ID")
+    is_primary: bool = Field(False, description="仕入先品目ごとの代表フラグ")
     base_unit: str = Field(..., max_length=20, description="基本単位")
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")
@@ -44,6 +46,8 @@ class CustomerItemUpdate(BaseSchema):
 
     product_id: int | None = Field(None, description="製品ID")
     supplier_id: int | None = Field(None, description="仕入先ID")
+    supplier_item_id: int | None = Field(None, description="仕入先品目ID")
+    is_primary: bool | None = Field(None, description="仕入先品目ごとの代表フラグ")
     base_unit: str | None = Field(None, max_length=20, description="基本単位")
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")
@@ -66,6 +70,7 @@ class CustomerItemUpdate(BaseSchema):
 class CustomerItemResponse(CustomerItemBase):
     """Schema for customer item response with enriched data."""
 
+    id: int = Field(..., description="得意先品番ID")
     customer_code: str = Field(..., description="得意先コード")
     customer_name: str = Field(..., description="得意先名")
     product_code: str = Field(..., description="製品コード(Maker Part Code)")
@@ -85,11 +90,11 @@ class CustomerItemResponse(CustomerItemBase):
 class CustomerItemBulkRow(BaseSchema):
     """Single row for customer item bulk upsert.
 
-    Upsert uses composite key: (customer_code, external_product_code)
+    Upsert uses composite key: (customer_code, customer_part_no)
     """
 
     customer_code: str = Field(..., description="得意先コード")
-    external_product_code: str = Field(..., max_length=100, description="得意先品番")
+    customer_part_no: str = Field(..., max_length=100, description="先方品番")
     product_code: str = Field(..., description="製品コード")
     supplier_code: str | None = Field(None, description="仕入先コード")
     base_unit: str = Field(..., max_length=20, description="基本単位")

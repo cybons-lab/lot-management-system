@@ -249,22 +249,22 @@ def generate_customer_items(
 
         # Create CustomerItem and CustomerItemDeliverySettings for each customer
         for c in customers_for_product:
-            external_code = f"EXT-{c.customer_code}-{p.maker_part_code}"
+            customer_part_no = f"{c.customer_code}-{p.maker_part_code}"
             ci = CustomerItem(
                 customer_id=c.id,
                 product_id=p.id,
-                external_product_code=external_code,
+                customer_part_no=customer_part_no,
                 base_unit="pcs",
                 supplier_id=random.choice(suppliers).id if suppliers else None,
             )
             db.add(ci)
+            db.flush()
 
             # Create default delivery setting if customer has delivery places
             if c.id in customer_delivery_map and customer_delivery_map[c.id]:
                 default_dp = random.choice(customer_delivery_map[c.id])
                 delivery_setting = CustomerItemDeliverySetting(
-                    customer_id=c.id,
-                    external_product_code=external_code,
+                    customer_item_id=ci.id,
                     delivery_place_id=default_dp.id,
                     is_default=True,
                 )
@@ -278,8 +278,7 @@ def generate_customer_items(
                         # Pick a random delivery place of this customer
                         target_dp = random.choice(customer_delivery_map[c.id])
                         jiku_map = CustomerItemJikuMapping(
-                            customer_id=c.id,
-                            external_product_code=external_code,
+                            customer_item_id=ci.id,
                             jiku_code=jiku,
                             delivery_place_id=target_dp.id,
                             is_default=(jiku == "A"),  # 'A' is default if present

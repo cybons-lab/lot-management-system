@@ -125,7 +125,7 @@ function useQuickMappingForm({
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
   const { mutateAsync: createCustomerItem } = useCreateCustomerItem();
   const [customerId, setCustomerId] = useState(0);
-  const [extCode, setExtCode] = useState(customerPartNo || productCode);
+  const [customerPartNoInput, setCustomerPartNoInput] = useState(customerPartNo || productCode);
   const [dpId, setDpId] = useState(0);
   const [dps, setDps] = useState<DeliveryPlace[]>([]);
   const [loadingDps, setLoadingDps] = useState(false);
@@ -146,18 +146,17 @@ function useQuickMappingForm({
   }, [customerId]);
 
   const onSave = async () => {
-    if (!customerId || !extCode || !dpId) return toast.error("入力不足です");
+    if (!customerId || !customerPartNoInput || !dpId) return toast.error("入力不足です");
     setSubmitting(true);
     try {
-      await createCustomerItem({
+      const customerItem = await createCustomerItem({
         customer_id: customerId,
         product_id: productId,
-        external_product_code: extCode,
+        customer_part_no: customerPartNoInput,
         base_unit: defaultUnit || "CAN",
       });
       await createDeliverySetting({
-        customer_id: customerId,
-        external_product_code: extCode,
+        customer_item_id: customerItem.id,
         delivery_place_id: dpId,
         is_default: true,
       });
@@ -175,8 +174,8 @@ function useQuickMappingForm({
     isLoadingCustomers,
     customerId,
     setCustomerId,
-    extCode,
-    setExtCode,
+    customerPartNoInput,
+    setCustomerPartNoInput,
     dpId,
     setDpId,
     dps,
@@ -222,8 +221,8 @@ const QuickMappingForm = ({
         <div className="space-y-2">
           <Label>先方品番</Label>
           <Input
-            value={f.extCode}
-            onChange={(e) => f.setExtCode(e.target.value)}
+            value={f.customerPartNoInput}
+            onChange={(e) => f.setCustomerPartNoInput(e.target.value)}
             disabled={f.submitting}
           />
         </div>

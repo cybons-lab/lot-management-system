@@ -3,11 +3,11 @@
  */
 import type { CustomerItemBulkRow } from "../types/bulk-operation";
 
-const REQUIRED_HEADERS = ["customer_code", "external_product_code", "product_code", "base_unit"];
+const REQUIRED_HEADERS = ["customer_code", "customer_part_no", "product_code", "base_unit"];
 
 export const CSV_HEADERS = [
   "customer_code",
-  "external_product_code",
+  "customer_part_no",
   "product_code",
   "supplier_code",
   "base_unit",
@@ -51,7 +51,7 @@ function buildRow(headers: string[], values: string[], rowNumber: number) {
   return {
     row: {
       customer_code: rowData["customer_code"] ?? "",
-      external_product_code: rowData["external_product_code"] ?? "",
+      customer_part_no: rowData["customer_part_no"] ?? "",
       product_code: rowData["product_code"] ?? "",
       supplier_code: rowData["supplier_code"] || undefined,
       base_unit: rowData["base_unit"] ?? "",

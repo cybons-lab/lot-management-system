@@ -69,7 +69,7 @@ class RpaRepository:
        → CustomerItem マスタで検索
        → 内部品番（maker_part_code）を取得
        複合キー検索:
-       - customer_id + external_product_code
+       - customer_id + customer_part_no
        用途:
        - 得意先固有の品番を社内品番に変換
 
@@ -214,14 +214,14 @@ class RpaRepository:
     # --- Master / Lot Lookup Methods for Orchestrator Logic ---
 
     def find_customer_item(
-        self, customer_id: int, external_product_code: str
+        self, customer_id: int, customer_part_no: str
     ) -> CustomerItem | None:
         """得意先商品マスタ検索."""
         return (
             self.db.query(CustomerItem)
             .filter(
                 CustomerItem.customer_id == customer_id,
-                CustomerItem.external_product_code == external_product_code,
+                CustomerItem.customer_part_no == customer_part_no,
             )
             .first()
         )

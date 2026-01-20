@@ -27,15 +27,13 @@ router = APIRouter(
     response_model=list[CustomerItemDeliverySettingResponse],
 )
 def list_settings(
-    customer_id: int,
-    external_product_code: str,
+    customer_item_id: int,
     db: Session = Depends(get_db),
 ) -> list[CustomerItemDeliverySettingResponse]:
     """List all delivery settings for a customer item."""
     service = CustomerItemDeliverySettingService(db)
     return service.list_by_customer_item(
-        customer_id=customer_id,
-        external_product_code=external_product_code,
+        customer_item_id=customer_item_id,
     )
 
 
@@ -108,8 +106,7 @@ def get_shipment_text(
     """
     service = CustomerItemDeliverySettingService(db)
     return service.get_shipment_text(
-        customer_id=request.customer_id,
-        product_id=request.product_id,
+        customer_item_id=request.customer_item_id,
         delivery_place_id=request.delivery_place_id,
         jiku_code=request.jiku_code,
     )

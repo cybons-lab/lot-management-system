@@ -53,6 +53,7 @@ from .masters_models import (
     ProductMapping,
     ProductUomConversion,
     Supplier,
+    SupplierItem,
     Warehouse,
     WarehouseDeliveryRoute,
 )
@@ -95,6 +96,7 @@ __all__ = [
     # Masters
     "Warehouse",
     "Supplier",
+    "SupplierItem",
     "Customer",
     "DeliveryPlace",
     "Product",

@@ -19,9 +19,9 @@ import {
 
 const QUERY_KEY = "customer-item-delivery-settings";
 
-export function useDeliverySettings(customerId: number, externalProductCode: string) {
+export function useDeliverySettings(customerItemId: number) {
   const queryClient = useQueryClient();
-  const queryKey = [QUERY_KEY, customerId, externalProductCode];
+  const queryKey = [QUERY_KEY, customerItemId];
 
   const {
     data: settings = [],
@@ -31,8 +31,8 @@ export function useDeliverySettings(customerId: number, externalProductCode: str
     refetch,
   } = useQuery({
     queryKey,
-    queryFn: () => fetchDeliverySettings(customerId, externalProductCode),
-    enabled: Boolean(customerId && externalProductCode),
+    queryFn: () => fetchDeliverySettings(customerItemId),
+    enabled: Boolean(customerItemId),
   });
 
   const createMutation = useMutation({

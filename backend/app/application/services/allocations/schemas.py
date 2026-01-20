@@ -188,3 +188,9 @@ class AllocationNotFoundError(DomainError):
     """Raised when the specified allocation is not found in DB."""
 
     pass
+
+
+class AllocationBlockedError(DomainError):
+    """Raised when allocation is blocked due to missing supplier mapping."""
+
+    pass

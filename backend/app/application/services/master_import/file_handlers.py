@@ -162,7 +162,7 @@ def _parse_customers_sheet(sheet) -> list[dict]:
 
     Expected columns:
     - customer_code, customer_name, delivery_place_code, delivery_place_name,
-    - external_product_code, maker_part_code, supplier_code
+    - customer_part_no, maker_part_code, supplier_code
     """
     rows = list(sheet.iter_rows(values_only=True))
     if not rows:
@@ -206,11 +206,11 @@ def _parse_customers_sheet(sheet) -> list[dict]:
             )
 
         # Add customer item if present
-        ext_code = str(row_dict.get("external_product_code", "")).strip()
-        if ext_code:
+        customer_part_no = str(row_dict.get("customer_part_no", "")).strip()
+        if customer_part_no:
             customer["items"].append(
                 {
-                    "external_product_code": ext_code,
+                    "customer_part_no": customer_part_no,
                     "maker_part_code": str(row_dict.get("maker_part_code", "")).strip(),
                     "supplier_code": str(row_dict.get("supplier_code", "")).strip() or None,
                 }

@@ -25,8 +25,7 @@ class CustomerItemDeliverySettingService:
 
     def get_shipment_text(
         self,
-        customer_id: int,
-        product_id: int,
+        customer_item_id: int,
         delivery_place_id: int | None = None,
         jiku_code: str | None = None,
     ) -> ShipmentTextResponse:
@@ -39,32 +38,16 @@ class CustomerItemDeliverySettingService:
         4. customer_items.shipping_document_template (fallback)
 
         Args:
-            customer_id: Customer ID
-            product_id: Product ID (will be converted to external_product_code)
+            customer_item_id: Customer item ID
             delivery_place_id: Optional delivery place ID
             jiku_code: Optional jiku code
 
         Returns:
             ShipmentTextResponse with shipment_text, packing_note, lead_time_days, source
         """
-        # Convert product_id to external_product_code
-        external_product_code = self.repository.find_external_product_code(
-            customer_id=customer_id,
-            product_id=product_id,
-        )
-
-        if not external_product_code:
-            return ShipmentTextResponse(
-                shipment_text=None,
-                packing_note=None,
-                lead_time_days=None,
-                source="none",
-            )
-
         # Try to find matching delivery setting
         setting = self.repository.find_matching_setting(
-            customer_id=customer_id,
-            external_product_code=external_product_code,
+            customer_item_id=customer_item_id,
             delivery_place_id=delivery_place_id,
             jiku_code=jiku_code,
         )
@@ -79,8 +62,7 @@ class CustomerItemDeliverySettingService:
 
         # Fallback to customer_items.shipping_document_template
         template = self.repository.get_customer_item_template(
-            customer_id=customer_id,
-            external_product_code=external_product_code,
+            customer_item_id=customer_item_id,
         )
 
         if template:
@@ -105,13 +87,11 @@ class CustomerItemDeliverySettingService:
 
     def list_by_customer_item(
         self,
-        customer_id: int,
-        external_product_code: str,
+        customer_item_id: int,
     ) -> list[CustomerItemDeliverySettingResponse]:
         """List all settings for a customer item."""
         settings = self.repository.find_by_customer_item(
-            customer_id=customer_id,
-            external_product_code=external_product_code,
+            customer_item_id=customer_item_id,
         )
         return [CustomerItemDeliverySettingResponse.model_validate(s) for s in settings]
 
@@ -121,8 +101,7 @@ class CustomerItemDeliverySettingService:
     ) -> CustomerItemDeliverySettingResponse:
         """Create a new delivery setting."""
         setting = CustomerItemDeliverySetting(
-            customer_id=data.customer_id,
-            external_product_code=data.external_product_code,
+            customer_item_id=data.customer_item_id,
             delivery_place_id=data.delivery_place_id,
             jiku_code=data.jiku_code,
             shipment_text=data.shipment_text,

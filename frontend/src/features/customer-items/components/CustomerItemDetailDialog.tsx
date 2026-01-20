@@ -77,7 +77,7 @@ export function CustomerItemDetailDialog({
           <TabsContent value="delivery" className="mt-4">
             <DeliverySettingsSection
               customerId={item.customer_id}
-              externalProductCode={item.external_product_code}
+              customerItemId={item.id}
             />
           </TabsContent>
         </Tabs>

@@ -40,6 +40,9 @@ export type InventoryItem =
     supplier_code?: string;
     // Aggregated suppliers (for product_warehouse grouping with multiple suppliers)
     suppliers_summary?: SuppliersSummary;
+    customer_part_no?: string | null;
+    customer_item_id?: number | null;
+    supplier_item_id?: number | null;
   };
 
 export type InventoryListResponse = {

@@ -38,15 +38,15 @@ def test_bulk_export_download_all_targets_integration(
     customer_item = CustomerItem(
         customer_id=master_data["customer"].id,
         product_id=master_data["product1"].id,
-        external_product_code="CP-001",
+        customer_part_no="CP-001",
         base_unit="EA",
     )
     db.add(customer_item)
+    db.flush()
 
     # Customer Item Delivery Settings
     delivery_setting = CustomerItemDeliverySetting(
-        customer_id=master_data["customer"].id,
-        external_product_code="CP-001",  # simplified correlation
+        customer_item_id=customer_item.id,
         delivery_place_id=master_data["delivery_place"].id,
         shipment_text="Shipment Text",
         is_default=True,

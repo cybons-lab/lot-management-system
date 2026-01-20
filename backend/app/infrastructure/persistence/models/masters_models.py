@@ -261,6 +261,9 @@ class Supplier(SoftDeleteMixin, Base):
     customer_items: Mapped[list[CustomerItem]] = relationship(
         "CustomerItem", back_populates="supplier"
     )
+    supplier_items: Mapped[list[SupplierItem]] = relationship(
+        "SupplierItem", back_populates="supplier"
+    )
     user_assignments: Mapped[list[UserSupplierAssignment]] = relationship(
         "UserSupplierAssignment", back_populates="supplier", cascade="all, delete-orphan"
     )
@@ -443,6 +446,57 @@ class Product(SoftDeleteMixin, Base):
     )
 
 
+class SupplierItem(SoftDeleteMixin, Base):
+    """Supplier-specific item master (仕入先品目マスタ).
+
+    DDL: supplier_items
+    Primary key: id (BIGSERIAL)
+    Unique: (supplier_id, maker_part_no)
+    """
+
+    __tablename__ = "supplier_items"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    supplier_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("suppliers.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    maker_part_no: Mapped[str] = mapped_column(String(100), nullable=False)
+    product_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    base_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    internal_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    qty_per_internal_unit: Mapped[Decimal | None] = mapped_column(
+        Numeric(15, 5), nullable=True
+    )
+    has_expiry: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
+    consumption_limit_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.current_timestamp(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.current_timestamp(),
+    )
+
+    __table_args__ = (
+        UniqueConstraint("supplier_id", "maker_part_no", name="uq_supplier_items_key"),
+        Index("idx_supplier_items_supplier", "supplier_id"),
+        Index("idx_supplier_items_maker_part_no", "maker_part_no"),
+        Index("idx_supplier_items_valid_to", "valid_to"),
+    )
+
+    supplier: Mapped[Supplier] = relationship("Supplier")
+    customer_items: Mapped[list["CustomerItem"]] = relationship(
+        "CustomerItem", back_populates="supplier_item"
+    )
+
+
 class CustomerItem(SoftDeleteMixin, Base):
     """Customer-specific product mappings (得意先品番マッピング).
 
@@ -453,7 +507,7 @@ class CustomerItem(SoftDeleteMixin, Base):
     - 参照: v_order_line_details, 出荷表生成処理
 
     DDL: customer_items
-    Primary key: (customer_id, external_product_code)
+    Primary key: id (BIGSERIAL)
     Foreign keys: customer_id -> customers(id), product_id -> products(id), supplier_id -> suppliers(id)
     Supports soft delete via valid_to column.
     See: docs/SCHEMA_GUIDE.md, docs/adr/ADR-003_customer_items_product_mappings.md
@@ -461,15 +515,13 @@ class CustomerItem(SoftDeleteMixin, Base):
 
     __tablename__ = "customer_items"
 
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     customer_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("customers.id", ondelete="CASCADE"),
-        primary_key=True,
         nullable=False,
     )
-    external_product_code: Mapped[str] = mapped_column(
-        String(100), primary_key=True, nullable=False
-    )
+    customer_part_no: Mapped[str] = mapped_column(String(100), nullable=False)
     product_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("products.id", ondelete="RESTRICT"),
@@ -479,6 +531,14 @@ class CustomerItem(SoftDeleteMixin, Base):
         BigInteger,
         ForeignKey("suppliers.id", ondelete="SET NULL"),
         nullable=True,
+    )
+    supplier_item_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
+        nullable=True,
+    )
+    is_primary: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
     )
     base_unit: Mapped[str] = mapped_column(String(20), nullable=False)
     pack_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
@@ -529,16 +589,28 @@ class CustomerItem(SoftDeleteMixin, Base):
     )
 
     __table_args__ = (
+        UniqueConstraint("customer_id", "customer_part_no", name="uq_customer_items_key"),
         Index("idx_customer_items_product", "product_id"),
         Index("idx_customer_items_supplier", "supplier_id"),
+        Index("idx_customer_items_supplier_item", "supplier_item_id"),
+        Index("idx_customer_items_customer_part_no", "customer_part_no"),
         Index("idx_customer_items_valid_to", "valid_to"),
         Index("idx_customer_items_order_category", "order_category"),
+        Index(
+            "uq_customer_items_primary_supplier_item",
+            "supplier_item_id",
+            unique=True,
+            postgresql_where=text("is_primary"),
+        ),
     )
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer", back_populates="customer_items")
     product: Mapped[Product] = relationship("Product", back_populates="customer_items")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="customer_items")
+    supplier_item: Mapped[SupplierItem | None] = relationship(
+        "SupplierItem", back_populates="customer_items"
+    )
 
 
 class ProductMapping(SoftDeleteMixin, Base):
@@ -651,15 +723,18 @@ class CustomerItemJikuMapping(Base):
     DDL: customer_item_jiku_mappings
     Primary key: id (BIGSERIAL)
     Foreign keys:
-        (customer_id, external_product_code) -> customer_items(customer_id, external_product_code)
+        customer_item_id -> customer_items(id)
         delivery_place_id -> delivery_places(id)
     """
 
     __tablename__ = "customer_item_jiku_mappings"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    customer_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    external_product_code: Mapped[str] = mapped_column(String(100), nullable=False)
+    customer_item_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("customer_items.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     jiku_code: Mapped[str] = mapped_column(String(50), nullable=False)
     delivery_place_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -672,15 +747,8 @@ class CustomerItemJikuMapping(Base):
     )
 
     __table_args__ = (
-        ForeignKeyConstraint(
-            ["customer_id", "external_product_code"],
-            ["customer_items.customer_id", "customer_items.external_product_code"],
-            ondelete="CASCADE",
-            name="fk_customer_item_jiku_mappings_customer_item",
-        ),
         UniqueConstraint(
-            "customer_id",
-            "external_product_code",
+            "customer_item_id",
             "jiku_code",
             name="uq_customer_item_jiku",
         ),
@@ -699,15 +767,18 @@ class CustomerItemDeliverySetting(Base):
     DDL: customer_item_delivery_settings
     Primary key: id (BIGSERIAL)
     Foreign keys:
-        (customer_id, external_product_code) -> customer_items
+        customer_item_id -> customer_items
         delivery_place_id -> delivery_places(id)
     """
 
     __tablename__ = "customer_item_delivery_settings"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    customer_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    external_product_code: Mapped[str] = mapped_column(String(100), nullable=False)
+    customer_item_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("customer_items.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     delivery_place_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("delivery_places.id", ondelete="SET NULL"),
@@ -737,20 +808,13 @@ class CustomerItemDeliverySetting(Base):
     )
 
     __table_args__ = (
-        ForeignKeyConstraint(
-            ["customer_id", "external_product_code"],
-            ["customer_items.customer_id", "customer_items.external_product_code"],
-            ondelete="CASCADE",
-            name="fk_customer_item_delivery_settings_customer_item",
-        ),
         UniqueConstraint(
-            "customer_id",
-            "external_product_code",
+            "customer_item_id",
             "delivery_place_id",
             "jiku_code",
             name="uq_customer_item_delivery_settings",
         ),
-        Index("idx_cids_customer_item", "customer_id", "external_product_code"),
+        Index("idx_cids_customer_item", "customer_item_id"),
         Index("idx_cids_delivery_place", "delivery_place_id"),
         Index("idx_cids_jiku_code", "jiku_code"),
     )

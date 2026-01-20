@@ -13,14 +13,17 @@ import { http } from "@/shared/api/http-client";
  * Customer Item
  */
 export interface CustomerItem {
+  id: number;
   customer_id: number;
   customer_code: string;
   customer_name: string;
-  external_product_code: string;
+  customer_part_no: string;
   product_id: number;
   product_code: string;
   product_name: string;
   supplier_id: number | null;
+  supplier_item_id?: number | null;
+  is_primary?: boolean;
   supplier_code: string | null;
   supplier_name: string | null;
   base_unit: string;
@@ -51,9 +54,11 @@ export interface CustomerItem {
  */
 export interface CreateCustomerItemRequest {
   customer_id: number;
-  external_product_code: string;
+  customer_part_no: string;
   product_id: number;
   supplier_id?: number | null;
+  supplier_item_id?: number | null;
+  is_primary?: boolean;
   base_unit: string;
   pack_unit?: string | null;
   pack_quantity?: number | null;
@@ -74,6 +79,8 @@ export interface CreateCustomerItemRequest {
 export interface UpdateCustomerItemRequest {
   product_id?: number;
   supplier_id?: number | null;
+  supplier_item_id?: number | null;
+  is_primary?: boolean;
   base_unit?: string;
   pack_unit?: string | null;
   pack_quantity?: number | null;
@@ -135,53 +142,53 @@ export const createCustomerItem = (data: CreateCustomerItemRequest) => {
 
 /**
  * Update customer item
- * @endpoint PUT /customer-items/{customer_id}/{external_product_code}
+ * @endpoint PUT /customer-items/{customer_id}/{customer_part_no}
  */
 export const updateCustomerItem = (
   customerId: number,
-  externalProductCode: string,
+  customerPartNo: string,
   data: UpdateCustomerItemRequest,
 ) => {
   return http.put<CustomerItem>(
-    `masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
+    `masters/customer-items/${customerId}/${encodeURIComponent(customerPartNo)}`,
     data,
   );
 };
 
 /**
  * Delete customer item (Soft delete)
- * @endpoint DELETE /customer-items/{customer_id}/{external_product_code}
+ * @endpoint DELETE /customer-items/{customer_id}/{customer_part_no}
  */
 export const deleteCustomerItem = (
   customerId: number,
-  externalProductCode: string,
+  customerPartNo: string,
   endDate?: string,
 ) => {
   const searchParams = new URLSearchParams();
   if (endDate) searchParams.append("end_date", endDate);
   const queryString = searchParams.toString();
   return http.delete(
-    `masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}${queryString ? "?" + queryString : ""}`,
+    `masters/customer-items/${customerId}/${encodeURIComponent(customerPartNo)}${queryString ? "?" + queryString : ""}`,
   );
 };
 
 /**
  * Permanently delete customer item
- * @endpoint DELETE /customer-items/{customer_id}/{external_product_code}/permanent
+ * @endpoint DELETE /customer-items/{customer_id}/{customer_part_no}/permanent
  */
-export const permanentDeleteCustomerItem = (customerId: number, externalProductCode: string) => {
+export const permanentDeleteCustomerItem = (customerId: number, customerPartNo: string) => {
   return http.delete(
-    `masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}/permanent`,
+    `masters/customer-items/${customerId}/${encodeURIComponent(customerPartNo)}/permanent`,
   );
 };
 
 /**
  * Restore customer item
- * @endpoint POST /customer-items/{customer_id}/{external_product_code}/restore
+ * @endpoint POST /customer-items/{customer_id}/{customer_part_no}/restore
  */
-export const restoreCustomerItem = (customerId: number, externalProductCode: string) => {
+export const restoreCustomerItem = (customerId: number, customerPartNo: string) => {
   return http.post<CustomerItem>(
-    `masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}/restore`,
+    `masters/customer-items/${customerId}/${encodeURIComponent(customerPartNo)}/restore`,
   );
 };
 

@@ -1,4 +1,6 @@
 import { type InventoryItem } from "@/features/inventory/api";
+import { routes } from "@/constants/routes";
+import { Link } from "react-router-dom";
 import { type Column } from "@/shared/components/data/DataTable";
 import { formatDecimal, parseDecimal } from "@/shared/utils/decimal";
 
@@ -68,6 +70,36 @@ export const inventoryColumns: Column<InventoryItem>[] = [
       return <span className="text-slate-400">-</span>;
     },
     width: 180,
+    sortable: true,
+  },
+  {
+    id: "customer-part",
+    header: "先方品番",
+    accessor: (row) => row.customer_part_no ?? "",
+    cell: (row) => {
+      if (row.customer_part_no) {
+        return (
+          <div className="flex flex-col">
+            <span className="block truncate font-medium text-slate-700">
+              {row.customer_part_no}
+            </span>
+            {row.customer_item_id && (
+              <span className="text-[11px] text-slate-500">ID: {row.customer_item_id}</span>
+            )}
+          </div>
+        );
+      }
+
+      return (
+        <Link
+          to={routes.MASTERS.CUSTOMER_ITEMS}
+          className="text-[11px] text-blue-600 hover:text-blue-700"
+        >
+          マッピング設定
+        </Link>
+      );
+    },
+    width: 160,
     sortable: true,
   },
   {

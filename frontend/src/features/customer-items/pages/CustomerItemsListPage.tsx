@@ -33,14 +33,14 @@ import { useListPageDialogs } from "@/hooks/ui";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 /** CustomerItem用の一意キー生成 */
-const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.external_product_code}`;
+const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.customer_part_no}`;
 
 /** キーをパース */
 const parseItemKey = (key: string) => {
   const [customerIdStr, ...rest] = key.split("-");
   return {
     customer_id: Number(customerIdStr),
-    external_product_code: rest.join("-"),
+    customer_part_no: rest.join("-"),
   };
 };
 
@@ -118,7 +118,7 @@ export function CustomerItemsListPage() {
     updateCustomerItem(
       {
         customerId: editingItem.customer_id,
-        externalProductCode: editingItem.external_product_code,
+        customerPartNo: editingItem.customer_part_no,
         data,
       },
       {
@@ -138,7 +138,7 @@ export function CustomerItemsListPage() {
     if (!deletingItem) return;
     handleSoftDelete(
       deletingItem.customer_id,
-      deletingItem.external_product_code,
+      deletingItem.customer_part_no,
       endDate || undefined,
     );
     closeDeleteDialog();
@@ -146,13 +146,13 @@ export function CustomerItemsListPage() {
 
   const executePermanentDelete = () => {
     if (!deletingItem) return;
-    handlePermanentDelete(deletingItem.customer_id, deletingItem.external_product_code);
+    handlePermanentDelete(deletingItem.customer_id, deletingItem.customer_part_no);
     closeDeleteDialog();
   };
 
   const executeRestore = () => {
     if (!restoringItem) return;
-    handleRestore(restoringItem.customer_id, restoringItem.external_product_code);
+    handleRestore(restoringItem.customer_id, restoringItem.customer_part_no);
     closeDeleteDialog();
   };
 
@@ -361,7 +361,7 @@ export function CustomerItemsListPage() {
         isPending={isPermanentDeleting}
         title="マッピングを完全に削除しますか？"
         description={`${deletingItem?.customer_name} - ${deletingItem?.product_name} の設定を完全に削除します。この操作は取り消せません。`}
-        confirmationPhrase={deletingItem?.external_product_code || "delete"}
+        confirmationPhrase={deletingItem?.customer_part_no || "delete"}
       />
 
       <RestoreDialog

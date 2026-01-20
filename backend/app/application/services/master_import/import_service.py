@@ -170,7 +170,7 @@ class MasterImportService:
                 for item_row in customer_row.items:
                     ci = self._upsert_customer_item(
                         customer.id,
-                        item_row.external_product_code,
+                        item_row.customer_part_no,
                         item_row.maker_part_code,
                         item_row.supplier_code,
                         item_row.base_unit,
@@ -183,7 +183,7 @@ class MasterImportService:
                     else:
                         ci_result.failed += 1
                         ci_result.errors.append(
-                            f"Failed to create customer_item: {item_row.external_product_code}"
+                            f"Failed to create customer_item: {item_row.customer_part_no}"
                         )
 
                 # Process product mappings
@@ -311,7 +311,7 @@ class MasterImportService:
     def _upsert_customer_item(
         self,
         customer_id: int,
-        external_product_code: str,
+        customer_part_no: str,
         maker_part_code: str,
         supplier_code: str | None,
         base_unit: str | None,
@@ -339,7 +339,7 @@ class MasterImportService:
             self.db.query(CustomerItem)
             .filter(
                 CustomerItem.customer_id == customer_id,
-                CustomerItem.external_product_code == external_product_code,
+                CustomerItem.customer_part_no == customer_part_no,
             )
             .first()
         )
@@ -359,7 +359,7 @@ class MasterImportService:
         else:
             ci = CustomerItem(
                 customer_id=customer_id,
-                external_product_code=external_product_code,
+                customer_part_no=customer_part_no,
                 product_id=product.id,
                 supplier_id=supplier_id,
                 base_unit=base_unit,

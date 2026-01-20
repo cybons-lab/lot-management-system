@@ -45,16 +45,12 @@ def get_master_status(
 
     # 3. Unmapped Customer Item Delivery Settings
     # customer_items table LEFT JOIN customer_item_delivery_settings
-    # JOIN condition: customer_id AND external_product_code
+    # JOIN condition: customer_item_id
     unmapped_customer_item_delivery_settings_count = (
         db.query(func.count(CustomerItem.customer_id))
         .outerjoin(
             CustomerItemDeliverySetting,
-            and_(
-                CustomerItem.customer_id == CustomerItemDeliverySetting.customer_id,
-                CustomerItem.external_product_code
-                == CustomerItemDeliverySetting.external_product_code,
-            ),
+            CustomerItem.id == CustomerItemDeliverySetting.customer_item_id,
         )
         .filter(
             CustomerItemDeliverySetting.id.is_(None),

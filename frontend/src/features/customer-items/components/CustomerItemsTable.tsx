@@ -35,7 +35,7 @@ const isInactive = (validTo?: string) => {
 };
 
 /** CustomerItem用の一意キー生成 */
-const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.external_product_code}`;
+const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.customer_part_no}`;
 
 // eslint-disable-next-line max-lines-per-function
 export function CustomerItemsTable({
@@ -82,12 +82,10 @@ export function CustomerItemsTable({
         sortable: true,
       },
       {
-        id: "external_product_code",
+        id: "customer_part_no",
         header: "先方品番",
-        accessor: (row) => row.external_product_code,
-        cell: (row) => (
-          <span className="font-medium whitespace-nowrap">{row.external_product_code}</span>
-        ),
+        accessor: (row) => row.customer_part_no,
+        cell: (row) => <span className="font-medium whitespace-nowrap">{row.customer_part_no}</span>,
         width: 150,
         sortable: true,
       },

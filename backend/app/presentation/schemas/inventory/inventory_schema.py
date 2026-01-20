@@ -313,6 +313,11 @@ class InventoryItemResponse(BaseSchema):
     # Aggregated suppliers (for product_warehouse grouping with multiple suppliers)
     suppliers_summary: SuppliersSummary | None = None
 
+    # Customer part mapping
+    customer_part_no: str | None = None
+    customer_item_id: int | None = None
+    supplier_item_id: int | None = None
+
 
 # Backwards compatibility aliases so existing imports continue to work during
 # the migration to the new schema naming.

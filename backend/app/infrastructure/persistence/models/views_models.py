@@ -255,7 +255,7 @@ class VOrderLineDetails(Base):
     jiku_code: Mapped[str | None] = mapped_column(String)
 
     # 得意先品番
-    external_product_code: Mapped[str | None] = mapped_column(String)
+    customer_part_no: Mapped[str | None] = mapped_column(String)
 
     # 仕入元情報 (COALESCE ensures non-null)
     supplier_name: Mapped[str] = mapped_column(String)

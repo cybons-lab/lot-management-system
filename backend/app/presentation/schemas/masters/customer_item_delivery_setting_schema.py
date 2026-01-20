@@ -10,8 +10,7 @@ from app.presentation.schemas.common.base import BaseSchema
 class CustomerItemDeliverySettingBase(BaseSchema):
     """Base schema for CustomerItemDeliverySetting."""
 
-    customer_id: int
-    external_product_code: str
+    customer_item_id: int
     delivery_place_id: int | None = Field(
         default=None, description="納入先ID（NULLの場合はデフォルト設定）"
     )
@@ -60,8 +59,7 @@ class CustomerItemDeliverySettingResponse(CustomerItemDeliverySettingBase):
 class ShipmentTextRequest(BaseSchema):
     """Request schema for getting shipment text."""
 
-    customer_id: int
-    product_id: int
+    customer_item_id: int
     delivery_place_id: int | None = None
     jiku_code: str | None = None
 

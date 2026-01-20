@@ -17,7 +17,7 @@ CSV_HEADER_MAPPING = {
     "ステータス": "status",
     "出荷先": "jiku_code",  # 次区コード（メインDB: CustomerItemJikuMapping.jiku_code）
     "層別": "layer_code",
-    "材質コード": "external_product_code",  # 先方品番（メインDB: CustomerItem.external_product_code）
+    "材質コード": "external_product_code",  # 先方品番（メインDB: CustomerItem.customer_part_no）
     "納期": "delivery_date",
     "納入量": "delivery_quantity",
     "出荷便": "shipping_vehicle",

@@ -131,6 +131,7 @@ from sqlalchemy.orm import Session
 
 from app.application.services.allocations.fefo import preview_fefo_allocation
 from app.application.services.allocations.schemas import (
+    AllocationBlockedError,
     AllocationCommitError,
     FefoCommitResult,
     FefoLinePlan,
@@ -141,7 +142,7 @@ from app.application.services.allocations.utils import (
 )
 from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.core.time_utils import utcnow
-from app.infrastructure.persistence.models import LotReceipt, Order, OrderLine
+from app.infrastructure.persistence.models import CustomerItem, LotReceipt, Order, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -188,6 +189,21 @@ def persist_reservation_entities(
     line = db.execute(line_stmt).scalar_one_or_none()
     if not line:
         raise AllocationCommitError(f"OrderLine {line_plan.order_line_id} not found")
+
+    customer_item = (
+        db.query(CustomerItem)
+        .filter(
+            CustomerItem.customer_id == line.order.customer_id,
+            CustomerItem.product_id == line.product_id,
+            CustomerItem.supplier_item_id.isnot(None),
+        )
+        .first()
+    )
+    if not customer_item:
+        raise AllocationBlockedError(
+            f"Supplier item mapping is missing for customer_id={line.order.customer_id}, "
+            f"product_id={line.product_id}"
+        )
 
     if line_plan.next_div and not getattr(line, "next_div", None):
         line.next_div = line_plan.next_div  # type: ignore[attr-defined]

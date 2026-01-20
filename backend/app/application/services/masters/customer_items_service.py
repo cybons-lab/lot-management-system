@@ -36,14 +36,17 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         """Enrich customer item with related names."""
         self.db.refresh(item, attribute_names=["customer", "product", "supplier"])
         return {
+            "id": item.id,
             "customer_id": item.customer_id,
             "customer_code": item.customer.customer_code,
             "customer_name": item.customer.customer_name,
-            "external_product_code": item.external_product_code,
+            "customer_part_no": item.customer_part_no,
             "product_id": item.product_id,
             "product_code": item.product.maker_part_code,
             "product_name": item.product.product_name,
             "supplier_id": item.supplier_id,
+            "supplier_item_id": item.supplier_item_id,
+            "is_primary": item.is_primary,
             "supplier_code": item.supplier.supplier_code if item.supplier else None,
             "supplier_name": item.supplier.supplier_name if item.supplier else None,
             "base_unit": item.base_unit,
@@ -119,14 +122,17 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         # Convert to dict with enriched data
         return [
             {
+                "id": r.CustomerItem.id,
                 "customer_id": r.CustomerItem.customer_id,
                 "customer_code": r.customer_code,
                 "customer_name": r.customer_name,
-                "external_product_code": r.CustomerItem.external_product_code,
+                "customer_part_no": r.CustomerItem.customer_part_no,
                 "product_id": r.CustomerItem.product_id,
                 "product_code": r.maker_part_code,
                 "product_name": r.product_name,
                 "supplier_id": r.CustomerItem.supplier_id,
+                "supplier_item_id": r.CustomerItem.supplier_item_id,
+                "is_primary": r.CustomerItem.is_primary,
                 "supplier_code": r.supplier_code,
                 "supplier_name": r.supplier_name,
                 "base_unit": r.CustomerItem.base_unit,
@@ -164,23 +170,23 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         """Get all customer item mappings for a specific customer."""
         return self.get_all(customer_id=customer_id)
 
-    def get_by_key(self, customer_id: int, external_product_code: str) -> CustomerItem | None:
+    def get_by_key(self, customer_id: int, customer_part_no: str) -> CustomerItem | None:
         """Get customer item mapping by composite key."""
         return cast(
             CustomerItem | None,
             self.db.query(CustomerItem)
             .filter(
                 CustomerItem.customer_id == customer_id,
-                CustomerItem.external_product_code == external_product_code,
+                CustomerItem.customer_part_no == customer_part_no,
             )
             .first(),
         )
 
     def update_by_key(
-        self, customer_id: int, external_product_code: str, item: CustomerItemUpdate
+        self, customer_id: int, customer_part_no: str, item: CustomerItemUpdate
     ) -> dict | None:
         """Update an existing customer item mapping by composite key."""
-        db_item = self.get_by_key(customer_id, external_product_code)
+        db_item = self.get_by_key(customer_id, customer_part_no)
         if not db_item:
             return None
 
@@ -193,10 +199,10 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         return self._enrich_item(db_item)
 
     def delete_by_key(
-        self, customer_id: int, external_product_code: str, end_date: date | None = None
+        self, customer_id: int, customer_part_no: str, end_date: date | None = None
     ) -> bool:
         """Soft delete a customer item mapping by composite key."""
-        db_item = self.get_by_key(customer_id, external_product_code)
+        db_item = self.get_by_key(customer_id, customer_part_no)
         if not db_item:
             return False
 
@@ -204,9 +210,9 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         self.db.commit()
         return True
 
-    def permanent_delete_by_key(self, customer_id: int, external_product_code: str) -> bool:
+    def permanent_delete_by_key(self, customer_id: int, customer_part_no: str) -> bool:
         """Permanently delete a customer item mapping by composite key."""
-        db_item = self.get_by_key(customer_id, external_product_code)
+        db_item = self.get_by_key(customer_id, customer_part_no)
         if not db_item:
             return False
 
@@ -214,9 +220,9 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         self.db.commit()
         return True
 
-    def restore_by_key(self, customer_id: int, external_product_code: str) -> dict | None:
+    def restore_by_key(self, customer_id: int, customer_part_no: str) -> dict | None:
         """Restore a soft-deleted customer item mapping."""
-        db_item = self.get_by_key(customer_id, external_product_code)
+        db_item = self.get_by_key(customer_id, customer_part_no)
         if not db_item:
             return None
 
@@ -227,7 +233,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
     def bulk_upsert(self, rows: list[CustomerItemBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert customer items by composite key (customer_code,
-        external_product_code).
+        customer_part_no).
 
         Args:
             rows: List of customer item rows to upsert
@@ -288,7 +294,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                         raise ValueError(f"Supplier code not found: {row.supplier_code}")
 
                 # Check if customer item exists by composite key
-                existing = self.get_by_key(customer_id, row.external_product_code)
+                existing = self.get_by_key(customer_id, row.customer_part_no)
 
                 if existing:
                     # UPDATE
@@ -304,7 +310,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                     # CREATE
                     new_item = CustomerItem(
                         customer_id=customer_id,
-                        external_product_code=row.external_product_code,
+                        customer_part_no=row.customer_part_no,
                         product_id=product_id,
                         supplier_id=supplier_id,
                         base_unit=row.base_unit,
@@ -320,7 +326,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             except Exception as e:
                 summary["failed"] += 1
                 errors.append(
-                    f"customer={row.customer_code}, ext_prod={row.external_product_code}: {str(e)}"
+                    f"customer={row.customer_code}, part_no={row.customer_part_no}: {str(e)}"
                 )
                 self.db.rollback()
                 continue

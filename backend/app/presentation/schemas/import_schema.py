@@ -60,7 +60,7 @@ class DeliveryPlaceImportRow(BaseSchema):
 class CustomerItemImportRow(BaseSchema):
     """Customer item mapping for import."""
 
-    external_product_code: str = Field(..., description="Customer's product code")
+    customer_part_no: str = Field(..., description="Customer's part number")
     maker_part_code: str = Field(
         ..., description="Internal product code (products.maker_part_code)"
     )

@@ -80,13 +80,13 @@ export const useUpdateCustomerItem = () => {
   return useMutation({
     mutationFn: ({
       customerId,
-      externalProductCode,
+      customerPartNo,
       data,
     }: {
       customerId: number;
-      externalProductCode: string;
+      customerPartNo: string;
       data: UpdateCustomerItemRequest;
-    }) => updateCustomerItem(customerId, externalProductCode, data),
+    }) => updateCustomerItem(customerId, customerPartNo, data),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
@@ -103,13 +103,13 @@ export const useDeleteCustomerItem = () => {
   return useMutation({
     mutationFn: ({
       customerId,
-      externalProductCode,
+      customerPartNo,
       endDate,
     }: {
       customerId: number;
-      externalProductCode: string;
+      customerPartNo: string;
       endDate?: string;
-    }) => deleteCustomerItem(customerId, externalProductCode, endDate),
+    }) => deleteCustomerItem(customerId, customerPartNo, endDate),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
@@ -126,11 +126,11 @@ export const usePermanentDeleteCustomerItem = () => {
   return useMutation({
     mutationFn: ({
       customerId,
-      externalProductCode,
+      customerPartNo,
     }: {
       customerId: number;
-      externalProductCode: string;
-    }) => permanentDeleteCustomerItem(customerId, externalProductCode),
+      customerPartNo: string;
+    }) => permanentDeleteCustomerItem(customerId, customerPartNo),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
@@ -147,11 +147,11 @@ export const useRestoreCustomerItem = () => {
   return useMutation({
     mutationFn: ({
       customerId,
-      externalProductCode,
+      customerPartNo,
     }: {
       customerId: number;
-      externalProductCode: string;
-    }) => restoreCustomerItem(customerId, externalProductCode),
+      customerPartNo: string;
+    }) => restoreCustomerItem(customerId, customerPartNo),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });

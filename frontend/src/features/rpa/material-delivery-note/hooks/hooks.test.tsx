@@ -43,7 +43,7 @@ const createMockItem = (overrides: Partial<RpaRunItem> = {}): RpaRunItem => ({
   status: "pending",
   jiku_code: "JIKU001",
   layer_code: "LAYER001",
-  external_product_code: "EXT001",
+  external_product_code: "CUST001",
   delivery_date: "2024-01-15",
   delivery_quantity: 100,
   shipping_vehicle: null,

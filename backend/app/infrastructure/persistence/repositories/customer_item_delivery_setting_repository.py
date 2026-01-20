@@ -25,8 +25,7 @@ class CustomerItemDeliverySettingRepository:
 
     def find_by_customer_item(
         self,
-        customer_id: int,
-        external_product_code: str,
+        customer_item_id: int,
     ) -> list[CustomerItemDeliverySetting]:
         """Find all settings for a customer item."""
         from sqlalchemy.orm import joinedload
@@ -35,16 +34,14 @@ class CustomerItemDeliverySettingRepository:
             select(CustomerItemDeliverySetting)
             .options(joinedload(CustomerItemDeliverySetting.delivery_place))
             .where(
-                CustomerItemDeliverySetting.customer_id == customer_id,
-                CustomerItemDeliverySetting.external_product_code == external_product_code,
+                CustomerItemDeliverySetting.customer_item_id == customer_item_id,
             )
         )
         return list(self.db.execute(stmt).scalars().all())
 
     def find_matching_setting(
         self,
-        customer_id: int,
-        external_product_code: str,
+        customer_item_id: int,
         delivery_place_id: int | None = None,
         jiku_code: str | None = None,
     ) -> CustomerItemDeliverySetting | None:
@@ -58,8 +55,7 @@ class CustomerItemDeliverySettingRepository:
         # 1. Exact match
         if delivery_place_id is not None or jiku_code is not None:
             stmt = select(CustomerItemDeliverySetting).where(
-                CustomerItemDeliverySetting.customer_id == customer_id,
-                CustomerItemDeliverySetting.external_product_code == external_product_code,
+                CustomerItemDeliverySetting.customer_item_id == customer_item_id,
                 CustomerItemDeliverySetting.delivery_place_id == delivery_place_id,
                 CustomerItemDeliverySetting.jiku_code == jiku_code,
             )
@@ -70,8 +66,7 @@ class CustomerItemDeliverySettingRepository:
         # 2. Delivery place only match
         if delivery_place_id is not None:
             stmt = select(CustomerItemDeliverySetting).where(
-                CustomerItemDeliverySetting.customer_id == customer_id,
-                CustomerItemDeliverySetting.external_product_code == external_product_code,
+                CustomerItemDeliverySetting.customer_item_id == customer_item_id,
                 CustomerItemDeliverySetting.delivery_place_id == delivery_place_id,
                 CustomerItemDeliverySetting.jiku_code.is_(None),
             )
@@ -81,8 +76,7 @@ class CustomerItemDeliverySettingRepository:
 
         # 3. Default setting
         stmt = select(CustomerItemDeliverySetting).where(
-            CustomerItemDeliverySetting.customer_id == customer_id,
-            CustomerItemDeliverySetting.external_product_code == external_product_code,
+            CustomerItemDeliverySetting.customer_item_id == customer_item_id,
             CustomerItemDeliverySetting.is_default.is_(True),
         )
         return cast(
@@ -92,25 +86,11 @@ class CustomerItemDeliverySettingRepository:
 
     def get_customer_item_template(
         self,
-        customer_id: int,
-        external_product_code: str,
+        customer_item_id: int,
     ) -> str | None:
         """Get the shipping_document_template from customer_items as fallback."""
         stmt = select(CustomerItem.shipping_document_template).where(
-            CustomerItem.customer_id == customer_id,
-            CustomerItem.external_product_code == external_product_code,
-        )
-        return cast(str | None, self.db.execute(stmt).scalar_one_or_none())
-
-    def find_external_product_code(
-        self,
-        customer_id: int,
-        product_id: int,
-    ) -> str | None:
-        """Get external_product_code from customer_items by customer_id and product_id."""
-        stmt = select(CustomerItem.external_product_code).where(
-            CustomerItem.customer_id == customer_id,
-            CustomerItem.product_id == product_id,
+            CustomerItem.id == customer_item_id,
         )
         return cast(str | None, self.db.execute(stmt).scalar_one_or_none())
 

@@ -103,7 +103,7 @@ def _setup_customer_item(db: Session):
     db.flush()
     item = CustomerItem(
         customer_id=customer.id,
-        external_product_code="EXT-ITEM",
+        customer_part_no="CUST-ITEM",
         product_id=product.id,
         supplier_id=supplier.id,
         base_unit="EA",
@@ -111,11 +111,11 @@ def _setup_customer_item(db: Session):
     db.add(item)
     db.flush()
     return (
-        f"/api/masters/customer-items/{item.customer_id}/{item.external_product_code}/permanent",
+        f"/api/masters/customer-items/{item.customer_id}/{item.customer_part_no}/permanent",
         lambda session: session.query(CustomerItem)
         .filter(
             CustomerItem.customer_id == item.customer_id,
-            CustomerItem.external_product_code == item.external_product_code,
+            CustomerItem.customer_part_no == item.customer_part_no,
         )
         .first(),
     )

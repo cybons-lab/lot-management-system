@@ -151,7 +151,8 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Order, OrderLine, Product
+from app.infrastructure.persistence.models import CustomerItem, Order, OrderLine, Product
+from app.application.services.allocations.schemas import AllocationBlockedError
 
 from .schemas import FefoLinePlan, FefoLotPlan, FefoPreviewResult
 from .utils import (
@@ -384,6 +385,21 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
 
     sorted_lines = sorted(order.order_lines, key=lambda l: l.id)
     for line in sorted_lines:
+        customer_item = (
+            db.query(CustomerItem)
+            .filter(
+                CustomerItem.customer_id == order.customer_id,
+                CustomerItem.product_id == line.product_id,
+                CustomerItem.supplier_item_id.isnot(None),
+            )
+            .first()
+        )
+        if not customer_item:
+            raise AllocationBlockedError(
+                f"Supplier item mapping is missing for customer_id={order.customer_id}, "
+                f"product_id={line.product_id}"
+            )
+
         required_qty = float(
             line.converted_quantity
             if line.converted_quantity is not None

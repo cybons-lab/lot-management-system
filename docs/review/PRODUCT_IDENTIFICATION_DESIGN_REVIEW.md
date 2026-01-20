@@ -597,7 +597,7 @@ maker_item_code: (ほぼ空白、未使用)
 ```sql
 -- テストデータ生成コード (masters.py:252)
 external_product_code: EXT-{customer_code}-{product.maker_part_code}
-                       (例: EXT-CUST-0001-PRD-010oe)
+                       (例: CUST-0001-PRD-010oe)
 ```
 
 ---

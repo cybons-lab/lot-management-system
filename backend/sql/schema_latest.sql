@@ -336,8 +336,7 @@ ALTER SEQUENCE public.cloud_flow_jobs_id_seq OWNED BY public.cloud_flow_jobs.id;
 
 CREATE TABLE public.customer_item_delivery_settings (
     id bigint NOT NULL,
-    customer_id bigint NOT NULL,
-    external_product_code character varying(100) NOT NULL,
+    customer_item_id bigint NOT NULL,
     delivery_place_id bigint,
     jiku_code character varying(50),
     shipment_text text,
@@ -432,8 +431,7 @@ ALTER SEQUENCE public.customer_item_delivery_settings_id_seq OWNED BY public.cus
 
 CREATE TABLE public.customer_item_jiku_mappings (
     id bigint NOT NULL,
-    customer_id bigint NOT NULL,
-    external_product_code character varying(100) NOT NULL,
+    customer_item_id bigint NOT NULL,
     jiku_code character varying(50) NOT NULL,
     delivery_place_id bigint NOT NULL,
     is_default boolean DEFAULT false,
@@ -459,16 +457,57 @@ CREATE SEQUENCE public.customer_item_jiku_mappings_id_seq
 
 ALTER SEQUENCE public.customer_item_jiku_mappings_id_seq OWNED BY public.customer_item_jiku_mappings.id;
 
+--
+-- Name: supplier_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.supplier_items (
+    id bigint NOT NULL,
+    supplier_id bigint NOT NULL,
+    maker_part_no character varying(100) NOT NULL,
+    product_name character varying(255),
+    base_unit character varying(20),
+    internal_unit character varying(20),
+    qty_per_internal_unit numeric(15,5),
+    has_expiry boolean DEFAULT true NOT NULL,
+    consumption_limit_days integer,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+);
+
+
+--
+-- Name: supplier_items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.supplier_items_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: supplier_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.supplier_items_id_seq OWNED BY public.supplier_items.id;
+
 
 --
 -- Name: customer_items; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.customer_items (
+    id bigint NOT NULL,
     customer_id bigint NOT NULL,
-    external_product_code character varying(100) NOT NULL,
+    customer_part_no character varying(100) NOT NULL,
     product_id bigint NOT NULL,
     supplier_id bigint,
+    supplier_item_id bigint,
+    is_primary boolean DEFAULT false NOT NULL,
     base_unit character varying(20) NOT NULL,
     pack_unit character varying(20),
     pack_quantity integer,
@@ -488,6 +527,24 @@ CREATE TABLE public.customer_items (
     sap_shipping_warehouse character varying(50),
     sap_uom character varying(20)
 );
+
+--
+-- Name: customer_items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.customer_items_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: customer_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.customer_items_id_seq OWNED BY public.customer_items.id;
 
 
 --
@@ -914,6 +971,7 @@ CREATE TABLE public.lot_receipts (
     product_id bigint NOT NULL,
     warehouse_id bigint NOT NULL,
     supplier_id bigint,
+    supplier_item_id bigint,
     expected_lot_id bigint,
     received_date date NOT NULL,
     expiry_date date,
@@ -2281,10 +2339,10 @@ CREATE VIEW public.v_customer_daily_products AS
 
 CREATE VIEW public.v_customer_item_jiku_mappings AS
  SELECT cijm.id,
-    cijm.customer_id,
+    ci.customer_id,
     COALESCE(c.customer_code, ''::character varying) AS customer_code,
     COALESCE(c.customer_name, '[削除済み得意先]'::character varying) AS customer_name,
-    cijm.external_product_code,
+    ci.customer_part_no,
     cijm.jiku_code,
     cijm.delivery_place_id,
     COALESCE(dp.delivery_place_code, ''::character varying) AS delivery_place_code,
@@ -2299,8 +2357,9 @@ CREATE VIEW public.v_customer_item_jiku_mappings AS
             WHEN ((dp.valid_to IS NOT NULL) AND (dp.valid_to <= CURRENT_DATE)) THEN true
             ELSE false
         END AS delivery_place_deleted
-   FROM ((public.customer_item_jiku_mappings cijm
-     LEFT JOIN public.customers c ON ((cijm.customer_id = c.id)))
+   FROM (((public.customer_item_jiku_mappings cijm
+     LEFT JOIN public.customer_items ci ON ((cijm.customer_item_id = ci.id)))
+     LEFT JOIN public.customers c ON ((ci.customer_id = c.id)))
      LEFT JOIN public.delivery_places dp ON ((cijm.delivery_place_id = dp.id)));
 
 
@@ -2637,6 +2696,7 @@ CREATE VIEW public.v_lot_receipt_stock AS
     lm.id AS lot_master_id,
     lm.lot_number,
     lr.product_id,
+    lr.supplier_item_id,
     p.maker_part_code AS product_code,
     p.product_name,
     lr.warehouse_id,
@@ -2733,7 +2793,7 @@ CREATE VIEW public.v_order_line_details AS
     COALESCE(dp.delivery_place_code, ''::character varying) AS delivery_place_code,
     COALESCE(dp.delivery_place_name, '[削除済み納入先]'::character varying) AS delivery_place_name,
     dp.jiku_code,
-    ci.external_product_code,
+    ci.customer_part_no,
     COALESCE(s.supplier_name, '[削除済み仕入先]'::character varying) AS supplier_name,
     COALESCE(res_sum.allocated_qty, (0)::numeric) AS allocated_quantity,
         CASE
@@ -3044,12 +3104,24 @@ ALTER TABLE ONLY public.customer_item_delivery_settings ALTER COLUMN id SET DEFA
 
 ALTER TABLE ONLY public.customer_item_jiku_mappings ALTER COLUMN id SET DEFAULT nextval('public.customer_item_jiku_mappings_id_seq'::regclass);
 
+--
+-- Name: customer_items id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_items ALTER COLUMN id SET DEFAULT nextval('public.customer_items_id_seq'::regclass);
+
 
 --
 -- Name: customers id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.customers_id_seq'::regclass);
+
+--
+-- Name: supplier_items id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_items ALTER COLUMN id SET DEFAULT nextval('public.supplier_items_id_seq'::regclass);
 
 
 --
@@ -3390,7 +3462,15 @@ ALTER TABLE ONLY public.customer_item_jiku_mappings
 --
 
 ALTER TABLE ONLY public.customer_items
-    ADD CONSTRAINT customer_items_pkey PRIMARY KEY (customer_id, external_product_code);
+    ADD CONSTRAINT customer_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: customer_items uq_customer_items_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_items
+    ADD CONSTRAINT uq_customer_items_key UNIQUE (customer_id, customer_part_no);
 
 
 --
@@ -3632,6 +3712,20 @@ ALTER TABLE ONLY public.stock_history
 ALTER TABLE ONLY public.suppliers
     ADD CONSTRAINT suppliers_pkey PRIMARY KEY (id);
 
+--
+-- Name: supplier_items supplier_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_items
+    ADD CONSTRAINT supplier_items_pkey PRIMARY KEY (id);
+
+--
+-- Name: supplier_items uq_supplier_items_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_items
+    ADD CONSTRAINT uq_supplier_items_key UNIQUE (supplier_id, maker_part_no);
+
 
 --
 -- Name: system_client_logs system_client_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -3662,7 +3756,7 @@ ALTER TABLE ONLY public.business_rules
 --
 
 ALTER TABLE ONLY public.customer_item_delivery_settings
-    ADD CONSTRAINT uq_customer_item_delivery_settings UNIQUE (customer_id, external_product_code, delivery_place_id, jiku_code);
+    ADD CONSTRAINT uq_customer_item_delivery_settings UNIQUE (customer_item_id, delivery_place_id, jiku_code);
 
 
 --
@@ -3670,7 +3764,7 @@ ALTER TABLE ONLY public.customer_item_delivery_settings
 --
 
 ALTER TABLE ONLY public.customer_item_jiku_mappings
-    ADD CONSTRAINT uq_customer_item_jiku UNIQUE (customer_id, external_product_code, jiku_code);
+    ADD CONSTRAINT uq_customer_item_jiku UNIQUE (customer_item_id, jiku_code);
 
 
 --
@@ -4014,7 +4108,7 @@ CREATE INDEX idx_business_rules_type ON public.business_rules USING btree (rule_
 -- Name: idx_cids_customer_item; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_cids_customer_item ON public.customer_item_delivery_settings USING btree (customer_id, external_product_code);
+CREATE INDEX idx_cids_customer_item ON public.customer_item_delivery_settings USING btree (customer_item_id);
 
 
 --
@@ -4072,12 +4166,30 @@ CREATE INDEX idx_customer_items_product ON public.customer_items USING btree (pr
 
 CREATE INDEX idx_customer_items_supplier ON public.customer_items USING btree (supplier_id);
 
+--
+-- Name: idx_customer_items_supplier_item; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_customer_items_supplier_item ON public.customer_items USING btree (supplier_item_id);
+
+--
+-- Name: idx_customer_items_customer_part_no; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_customer_items_customer_part_no ON public.customer_items USING btree (customer_part_no);
+
 
 --
 -- Name: idx_customer_items_valid_to; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_customer_items_valid_to ON public.customer_items USING btree (valid_to);
+
+--
+-- Name: uq_customer_items_primary_supplier_item; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uq_customer_items_primary_supplier_item ON public.customer_items USING btree (supplier_item_id) WHERE (is_primary);
 
 
 --
@@ -4232,6 +4344,12 @@ CREATE INDEX idx_lot_receipts_status ON public.lot_receipts USING btree (status)
 --
 
 CREATE INDEX idx_lot_receipts_supplier ON public.lot_receipts USING btree (supplier_id);
+
+--
+-- Name: idx_lot_receipts_supplier_item; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_lot_receipts_supplier_item ON public.lot_receipts USING btree (supplier_item_id);
 
 
 --
@@ -4632,6 +4750,23 @@ CREATE INDEX idx_stock_history_type ON public.stock_history USING btree (transac
 
 CREATE INDEX idx_suppliers_valid_to ON public.suppliers USING btree (valid_to);
 
+--
+-- Name: idx_supplier_items_supplier; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_supplier_items_supplier ON public.supplier_items USING btree (supplier_id);
+
+--
+-- Name: idx_supplier_items_maker_part_no; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_supplier_items_maker_part_no ON public.supplier_items USING btree (maker_part_no);
+
+--
+-- Name: idx_supplier_items_valid_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_supplier_items_valid_to ON public.supplier_items USING btree (valid_to);
 
 --
 -- Name: idx_system_client_logs_created_at; Type: INDEX; Schema: public; Owner: -
@@ -4969,6 +5104,13 @@ ALTER TABLE ONLY public.customer_items
 ALTER TABLE ONLY public.customer_items
     ADD CONSTRAINT customer_items_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON DELETE SET NULL;
 
+--
+-- Name: customer_items customer_items_supplier_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_items
+    ADD CONSTRAINT customer_items_supplier_item_id_fkey FOREIGN KEY (supplier_item_id) REFERENCES public.supplier_items(id) ON DELETE RESTRICT;
+
 
 --
 -- Name: delivery_places delivery_places_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
@@ -4991,7 +5133,7 @@ ALTER TABLE ONLY public.expected_lots
 --
 
 ALTER TABLE ONLY public.customer_item_delivery_settings
-    ADD CONSTRAINT fk_customer_item_delivery_settings_customer_item FOREIGN KEY (customer_id, external_product_code) REFERENCES public.customer_items(customer_id, external_product_code) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_customer_item_delivery_settings_customer_item FOREIGN KEY (customer_item_id) REFERENCES public.customer_items(id) ON DELETE CASCADE;
 
 
 --
@@ -4999,7 +5141,7 @@ ALTER TABLE ONLY public.customer_item_delivery_settings
 --
 
 ALTER TABLE ONLY public.customer_item_jiku_mappings
-    ADD CONSTRAINT fk_customer_item_jiku_mappings_customer_item FOREIGN KEY (customer_id, external_product_code) REFERENCES public.customer_items(customer_id, external_product_code) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_customer_item_jiku_mappings_customer_item FOREIGN KEY (customer_item_id) REFERENCES public.customer_items(id) ON DELETE CASCADE;
 
 
 --
@@ -5176,6 +5318,13 @@ ALTER TABLE ONLY public.lot_receipts
 
 ALTER TABLE ONLY public.lot_receipts
     ADD CONSTRAINT lots_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON DELETE SET NULL;
+
+--
+-- Name: lot_receipts lots_supplier_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lot_receipts
+    ADD CONSTRAINT lots_supplier_item_id_fkey FOREIGN KEY (supplier_item_id) REFERENCES public.supplier_items(id) ON DELETE RESTRICT;
 
 
 --
@@ -5471,4 +5620,3 @@ ALTER TABLE ONLY public.withdrawals
 --
 
 \unrestrict wnjTVU7JlRTNXkIetdW69dcGrByWcbQfl7BagdpFjB12StbLEWi89jkIpakq5Ro
-

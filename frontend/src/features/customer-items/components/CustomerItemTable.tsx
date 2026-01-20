@@ -14,7 +14,7 @@ import { DataTable } from "@/shared/components/data/DataTable";
 
 interface CustomerItemTableProps {
   items: CustomerItem[];
-  onDelete: (customerId: number, externalProductCode: string) => void;
+  onDelete: (customerId: number, customerPartNo: string) => void;
   onEdit?: (item: CustomerItem) => void;
   isDeleting?: boolean;
 }
@@ -37,10 +37,10 @@ export function CustomerItemTable({
         sortable: true,
       },
       {
-        id: "external_product_code",
-        header: "得意先品番",
-        accessor: (row) => row.external_product_code,
-        cell: (row) => <span className="font-medium">{row.external_product_code}</span>,
+        id: "customer_part_no",
+        header: "先方品番",
+        accessor: (row) => row.customer_part_no,
+        cell: (row) => <span className="font-medium">{row.customer_part_no}</span>,
         width: 150,
         sortable: true,
       },
@@ -113,7 +113,7 @@ export function CustomerItemTable({
         <Button
           variant="destructive"
           size="sm"
-          onClick={() => onDelete(item.customer_id, item.external_product_code)}
+          onClick={() => onDelete(item.customer_id, item.customer_part_no)}
           disabled={isDeleting}
         >
           削除
@@ -126,7 +126,7 @@ export function CustomerItemTable({
     <DataTable
       data={items}
       columns={columns}
-      getRowId={(row) => `${row.customer_id}-${row.external_product_code}`}
+      getRowId={(row) => `${row.customer_id}-${row.customer_part_no}`}
       rowActions={renderRowActions}
       emptyMessage="得意先品目マッピングがありません"
     />

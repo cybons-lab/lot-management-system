@@ -63,6 +63,7 @@ if TYPE_CHECKING:
     from app.infrastructure.persistence.models.masters_models import (
         Product,
         Supplier,
+        SupplierItem,
         Warehouse,
     )
     from app.infrastructure.persistence.models.withdrawal_line_model import WithdrawalLine
@@ -120,6 +121,12 @@ class LotReceipt(Base):
         BigInteger,
         ForeignKey("suppliers.id", ondelete="SET NULL"),
         nullable=True,
+    )
+    supplier_item_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
+        nullable=True,
+        comment="supplier_itemsへのFK（在庫の真実）",
     )
     expected_lot_id: Mapped[int | None] = mapped_column(
         BigInteger,
@@ -253,6 +260,7 @@ class LotReceipt(Base):
     product: Mapped[Product] = relationship("Product", back_populates="lot_receipts")
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lot_receipts")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_receipts")
+    supplier_item: Mapped[SupplierItem | None] = relationship("SupplierItem")
     expected_lot: Mapped[ExpectedLot | None] = relationship(
         "ExpectedLot", back_populates="lot_receipt", uselist=False
     )

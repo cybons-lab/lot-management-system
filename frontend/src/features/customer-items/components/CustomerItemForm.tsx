@@ -49,7 +49,7 @@ export function CustomerItemForm({
     defaultValues: item
       ? {
           customer_id: item.customer_id,
-          external_product_code: item.external_product_code,
+          customer_part_no: item.customer_part_no,
           product_id: item.product_id,
           supplier_id: item.supplier_id,
           base_unit: item.base_unit,
@@ -95,7 +95,7 @@ export function CustomerItemForm({
   const handleProductSelect = (value: string) => {
     const selected = productOptions.find((opt) => opt.value === value);
     setValue("product_id", value ? Number(value) : 0);
-    setValue("external_product_code", selected?.customer_part_no ?? "");
+    setValue("customer_part_no", selected?.customer_part_no ?? "");
   };
 
   const handleFormSubmit = (data: CustomerItemFormData) => {

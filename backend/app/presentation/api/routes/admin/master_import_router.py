@@ -127,7 +127,7 @@ def download_template(group: str = "supply") -> dict:
                         ],
                         "items": [
                             {
-                                "external_product_code": "EXT-001",
+                                "customer_part_no": "CUST-001",
                                 "maker_part_code": "M001",
                                 "supplier_code": "V001",
                             }

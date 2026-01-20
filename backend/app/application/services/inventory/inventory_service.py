@@ -361,6 +361,87 @@ class InventoryService:
                 if atype in alloc_map[key]:
                     alloc_map[key][atype] += float(row.qty)
 
+            # 2c. Customer part number resolution (allocation target -> primary mapping)
+            customer_part_map: dict[tuple[int, int], dict[str, int | str | None]] = {}
+            supplier_item_map: dict[tuple[int, int], int | None] = {}
+            product_ids = tuple(set(found_products))
+            warehouse_ids = tuple(set(found_warehouses))
+
+            allocation_customer_query = """
+                SELECT DISTINCT ON (l.product_id, l.warehouse_id)
+                    l.product_id,
+                    l.warehouse_id,
+                    l.supplier_item_id,
+                    ci.id AS customer_item_id,
+                    ci.customer_part_no
+                FROM lot_reservations r
+                JOIN lot_receipts l ON l.id = r.lot_id
+                JOIN order_lines ol ON r.source_id = ol.id
+                JOIN orders o ON ol.order_id = o.id
+                JOIN customer_items ci
+                    ON ci.customer_id = o.customer_id
+                   AND ci.product_id = ol.product_id
+                WHERE r.source_type = 'ORDER'
+                  AND r.status IN ('active', 'confirmed')
+                  AND l.product_id IN :product_ids
+                  AND l.warehouse_id IN :warehouse_ids
+                ORDER BY l.product_id, l.warehouse_id,
+                         COALESCE(r.updated_at, r.created_at) DESC,
+                         r.id DESC
+            """
+            allocation_customer_rows = self.db.execute(
+                text(allocation_customer_query),
+                {"product_ids": product_ids, "warehouse_ids": warehouse_ids},
+            ).fetchall()
+            for row in allocation_customer_rows:
+                customer_part_map[(row.product_id, row.warehouse_id)] = {
+                    "customer_part_no": row.customer_part_no,
+                    "customer_item_id": row.customer_item_id,
+                    "supplier_item_id": row.supplier_item_id,
+                }
+
+            recent_supplier_item_query = """
+                SELECT DISTINCT ON (l.product_id, l.warehouse_id)
+                    l.product_id,
+                    l.warehouse_id,
+                    l.supplier_item_id
+                FROM lot_receipts l
+                WHERE l.status = 'active'
+                  AND l.product_id IN :product_ids
+                  AND l.warehouse_id IN :warehouse_ids
+                ORDER BY l.product_id, l.warehouse_id,
+                         l.received_date DESC NULLS LAST,
+                         l.id DESC
+            """
+            recent_supplier_item_rows = self.db.execute(
+                text(recent_supplier_item_query),
+                {"product_ids": product_ids, "warehouse_ids": warehouse_ids},
+            ).fetchall()
+            for row in recent_supplier_item_rows:
+                supplier_item_map[(row.product_id, row.warehouse_id)] = row.supplier_item_id
+
+            primary_customer_map: dict[int, dict[str, int | str]] = {}
+            supplier_item_ids = {
+                supplier_item_id
+                for supplier_item_id in supplier_item_map.values()
+                if supplier_item_id is not None
+            }
+            if supplier_item_ids:
+                primary_customer_query = """
+                    SELECT supplier_item_id, id AS customer_item_id, customer_part_no
+                    FROM customer_items
+                    WHERE is_primary = true AND supplier_item_id IN :supplier_item_ids
+                """
+                primary_customer_rows = self.db.execute(
+                    text(primary_customer_query),
+                    {"supplier_item_ids": tuple(supplier_item_ids)},
+                ).fetchall()
+                for row in primary_customer_rows:
+                    primary_customer_map[row.supplier_item_id] = {
+                        "customer_part_no": row.customer_part_no,
+                        "customer_item_id": row.customer_item_id,
+                    }
+
             # 3. Construct Response
             for idx, row in enumerate(result):
                 key = (row.product_id, row.warehouse_id)
@@ -381,6 +462,22 @@ class InventoryService:
                         inventory_state = "in_stock"
                     else:
                         inventory_state = "depleted_only"
+
+                mapping = customer_part_map.get(key)
+                supplier_item_id = None
+                customer_part_no = None
+                customer_item_id = None
+                if mapping:
+                    supplier_item_id = mapping.get("supplier_item_id")
+                    customer_part_no = mapping.get("customer_part_no")
+                    customer_item_id = mapping.get("customer_item_id")
+                else:
+                    supplier_item_id = supplier_item_map.get(key)
+                    if supplier_item_id is not None:
+                        primary_mapping = primary_customer_map.get(supplier_item_id)
+                        if primary_mapping:
+                            customer_part_no = primary_mapping.get("customer_part_no")
+                            customer_item_id = primary_mapping.get("customer_item_id")
 
                 responses.append(
                     InventoryItemResponse(
@@ -403,6 +500,9 @@ class InventoryService:
                         supplier_id=getattr(row, "supplier_id", None),
                         supplier_name=getattr(row, "supplier_name", None),
                         supplier_code=getattr(row, "supplier_code", None),
+                        customer_part_no=customer_part_no,
+                        customer_item_id=customer_item_id,
+                        supplier_item_id=supplier_item_id,
                     )
                 )
 
@@ -492,6 +592,68 @@ class InventoryService:
             text(count_query), {"pid": product_id, "wid": warehouse_id}
         ).scalar()
 
+        mapping_customer_part_no = None
+        mapping_customer_item_id = None
+        mapping_supplier_item_id = None
+
+        allocation_mapping_query = """
+            SELECT l.supplier_item_id,
+                   ci.id AS customer_item_id,
+                   ci.customer_part_no
+            FROM lot_reservations r
+            JOIN lot_receipts l ON l.id = r.lot_id
+            JOIN order_lines ol ON r.source_id = ol.id
+            JOIN orders o ON ol.order_id = o.id
+            JOIN customer_items ci
+                ON ci.customer_id = o.customer_id
+               AND ci.product_id = ol.product_id
+            WHERE r.source_type = 'ORDER'
+              AND r.status IN ('active', 'confirmed')
+              AND l.product_id = :product_id
+              AND l.warehouse_id = :warehouse_id
+            ORDER BY COALESCE(r.updated_at, r.created_at) DESC, r.id DESC
+            LIMIT 1
+        """
+        allocation_row = self.db.execute(
+            text(allocation_mapping_query),
+            {"product_id": product_id, "warehouse_id": warehouse_id},
+        ).fetchone()
+        if allocation_row:
+            mapping_supplier_item_id = allocation_row.supplier_item_id
+            mapping_customer_item_id = allocation_row.customer_item_id
+            mapping_customer_part_no = allocation_row.customer_part_no
+        else:
+            supplier_item_row = self.db.execute(
+                text(
+                    """
+                    SELECT supplier_item_id
+                    FROM lot_receipts
+                    WHERE status = 'active'
+                      AND product_id = :product_id
+                      AND warehouse_id = :warehouse_id
+                    ORDER BY received_date DESC NULLS LAST, id DESC
+                    LIMIT 1
+                    """
+                ),
+                {"product_id": product_id, "warehouse_id": warehouse_id},
+            ).fetchone()
+            if supplier_item_row and supplier_item_row.supplier_item_id is not None:
+                mapping_supplier_item_id = supplier_item_row.supplier_item_id
+                primary_row = self.db.execute(
+                    text(
+                        """
+                        SELECT id AS customer_item_id, customer_part_no
+                        FROM customer_items
+                        WHERE is_primary = true AND supplier_item_id = :supplier_item_id
+                        LIMIT 1
+                        """
+                    ),
+                    {"supplier_item_id": mapping_supplier_item_id},
+                ).fetchone()
+                if primary_row:
+                    mapping_customer_item_id = primary_row.customer_item_id
+                    mapping_customer_part_no = primary_row.customer_part_no
+
         return InventoryItemResponse(
             id=1,  # Dummy ID
             product_id=row.product_id,
@@ -507,6 +669,9 @@ class InventoryService:
             product_code=row.product_code,
             warehouse_name=row.warehouse_name,
             warehouse_code=row.warehouse_code,
+            customer_part_no=mapping_customer_part_no,
+            customer_item_id=mapping_customer_item_id,
+            supplier_item_id=mapping_supplier_item_id,
         )
 
     def get_inventory_by_supplier(self) -> list[dict]:

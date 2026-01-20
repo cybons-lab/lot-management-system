@@ -18,16 +18,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 interface DeliverySettingsSectionProps {
   customerId: number;
-  externalProductCode: string;
+  customerItemId: number;
 }
 
 export function DeliverySettingsSection({
   customerId,
-  externalProductCode,
+  customerItemId,
 }: DeliverySettingsSectionProps) {
   const { settings, isLoading, create, remove, isCreating, isDeleting } = useDeliverySettings(
-    customerId,
-    externalProductCode,
+    customerItemId,
   );
 
   const { data: deliveryPlaces = [] } = useQuery({
@@ -42,8 +41,7 @@ export function DeliverySettingsSection({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     create({
-      customer_id: customerId,
-      external_product_code: externalProductCode,
+      customer_item_id: customerItemId,
       ...formData,
     });
     setIsFormOpen(false);

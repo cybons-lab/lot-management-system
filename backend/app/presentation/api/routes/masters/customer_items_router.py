@@ -105,7 +105,7 @@ def create_customer_item(item: CustomerItemCreate, db: Session = Depends(get_db)
     service = CustomerItemsService(db)
 
     # Check if mapping already exists
-    existing = service.get_by_key(item.customer_id, item.external_product_code)
+    existing = service.get_by_key(item.customer_id, item.customer_part_no)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -115,10 +115,10 @@ def create_customer_item(item: CustomerItemCreate, db: Session = Depends(get_db)
     return service.create(item)
 
 
-@router.put("/{customer_id}/{external_product_code}", response_model=CustomerItemResponse)
+@router.put("/{customer_id}/{customer_part_no}", response_model=CustomerItemResponse)
 def update_customer_item(
     customer_id: int,
-    external_product_code: str,
+    customer_part_no: str,
     item: CustomerItemUpdate,
     db: Session = Depends(get_db),
 ):
@@ -126,7 +126,7 @@ def update_customer_item(
 
     Args:
         customer_id: 得意先ID
-        external_product_code: 得意先品番
+        customer_part_no: 先方品番
         item: 更新する品番マッピング情報
         db: データベースセッション
 
@@ -137,7 +137,7 @@ def update_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    updated = service.update_by_key(customer_id, external_product_code, item)
+    updated = service.update_by_key(customer_id, customer_part_no, item)
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -146,10 +146,10 @@ def update_customer_item(
     return updated
 
 
-@router.delete("/{customer_id}/{external_product_code}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{customer_id}/{customer_part_no}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_customer_item(
     customer_id: int,
-    external_product_code: str,
+    customer_part_no: str,
     end_date: date | None = Query(None),
     db: Session = Depends(get_db),
 ):
@@ -157,7 +157,7 @@ def delete_customer_item(
 
     Args:
         customer_id: 得意先ID
-        external_product_code: 得意先品番
+        customer_part_no: 先方品番
         end_date: 無効化日（指定がない場合は即時）
         db: データベースセッション
 
@@ -165,7 +165,7 @@ def delete_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    deleted = service.delete_by_key(customer_id, external_product_code, end_date)
+    deleted = service.delete_by_key(customer_id, customer_part_no, end_date)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -175,11 +175,11 @@ def delete_customer_item(
 
 
 @router.delete(
-    "/{customer_id}/{external_product_code}/permanent", status_code=status.HTTP_204_NO_CONTENT
+    "/{customer_id}/{customer_part_no}/permanent", status_code=status.HTTP_204_NO_CONTENT
 )
 def permanent_delete_customer_item(
     customer_id: int,
-    external_product_code: str,
+    customer_part_no: str,
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
@@ -187,7 +187,7 @@ def permanent_delete_customer_item(
 
     Args:
         customer_id: 得意先ID
-        external_product_code: 得意先品番
+        customer_part_no: 先方品番
         current_user: 認証済み管理者ユーザー
         db: データベースセッション
 
@@ -195,7 +195,7 @@ def permanent_delete_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    deleted = service.permanent_delete_by_key(customer_id, external_product_code)
+    deleted = service.permanent_delete_by_key(customer_id, customer_part_no)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -204,15 +204,15 @@ def permanent_delete_customer_item(
     return None
 
 
-@router.post("/{customer_id}/{external_product_code}/restore", response_model=CustomerItemResponse)
+@router.post("/{customer_id}/{customer_part_no}/restore", response_model=CustomerItemResponse)
 def restore_customer_item(
-    customer_id: int, external_product_code: str, db: Session = Depends(get_db)
+    customer_id: int, customer_part_no: str, db: Session = Depends(get_db)
 ):
     """得意先品番マッピング復元.
 
     Args:
         customer_id: 得意先ID
-        external_product_code: 得意先品番
+        customer_part_no: 先方品番
         db: データベースセッション
 
     Returns:
@@ -222,7 +222,7 @@ def restore_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    restored = service.restore_by_key(customer_id, external_product_code)
+    restored = service.restore_by_key(customer_id, customer_part_no)
     if not restored:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -237,7 +237,7 @@ def bulk_upsert_customer_items(
 ):
     """得意先品番マッピング一括登録/更新.
 
-    複合キー（customer_id, external_product_code）で判定し、
+    複合キー（customer_id, customer_part_no）で判定し、
     既存レコードがあれば更新、なければ新規作成します。
 
     Args:

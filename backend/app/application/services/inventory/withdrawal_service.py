@@ -63,9 +63,11 @@ from app.application.services.inventory.lot_reservation_service import (
     ReservationLotNotFoundError,
 )
 from app.application.services.inventory.stock_calculation import get_reserved_quantity
+from app.application.services.allocations.schemas import AllocationBlockedError
 from app.core.time_utils import utcnow
 from app.domain.events import EventDispatcher, StockChangedEvent
 from app.infrastructure.persistence.models import (
+    CustomerItem,
     Customer,
     DeliveryPlace,
     LotMaster,
@@ -292,6 +294,22 @@ class WithdrawalService:
             )
             if not delivery_place:
                 raise ValueError(f"納入場所（ID={data.delivery_place_id}）が見つかりません")
+
+        if data.customer_id:
+            customer_item = (
+                self.db.query(CustomerItem)
+                .filter(
+                    CustomerItem.customer_id == data.customer_id,
+                    CustomerItem.product_id == lot.product_id,
+                    CustomerItem.supplier_item_id.isnot(None),
+                )
+                .first()
+            )
+            if not customer_item:
+                raise AllocationBlockedError(
+                    f"Supplier item mapping is missing for customer_id={data.customer_id}, "
+                    f"product_id={lot.product_id}"
+                )
 
         # 出庫レコード作成
         quantity_before = lot.current_quantity
