@@ -36,7 +36,7 @@ class ExportCacheService {
     if (!this.dbPromise) {
       console.log("[CACHE] Opening IndexedDB database");
       this.dbPromise = openDB(DB_NAME, DB_VERSION, {
-        upgrade(db) {
+        upgrade(db: IDBPDatabase) {
           if (!db.objectStoreNames.contains(STORE_NAME)) {
             console.log("[CACHE] Creating object store");
             const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
@@ -100,8 +100,8 @@ class ExportCacheService {
 
       // Filter by config_id to be safe and Sort by cached_at desc
       const sorted = exports
-        .filter((e) => e.config_id === config_id)
-        .sort((a, b) => b.cached_at - a.cached_at);
+        .filter((e: CachedExport) => e.config_id === config_id)
+        .sort((a: CachedExport, b: CachedExport) => b.cached_at - a.cached_at);
 
       if (sorted.length > 0) {
         console.log(

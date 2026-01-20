@@ -53,6 +53,7 @@
     "date-fns": "^4.1.0",
     "decimal.js": "^10.6.0",
     "framer-motion": "^12.26.2",
+    "idb": "^8.0.3",
     "jotai": "^2.16.2",
     "ky": "^1.14.2",
     "lucide-react": "^0.562.0",
