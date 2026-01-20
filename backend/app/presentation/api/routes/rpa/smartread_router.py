@@ -615,8 +615,6 @@ async def _process_request_background(config_id: int, request_id: str) -> None:
             else:
                 logger.warning(f"Request processing failed: {request_id}")
 
-            uow.commit()
-
     except Exception as e:
         logger.error(f"Background processing error for {request_id}: {e}")
 

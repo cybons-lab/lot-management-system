@@ -347,20 +347,22 @@ export class SmartReadCsvTransformer {
     // Remove commas (1,000 → 1000)
     s = s.replace(/,/g, "");
 
-    try {
-      const num = parseFloat(s);
-      if (num < 0) {
-        return [s, true];
-      }
-
-      // Return as integer if whole number
-      if (Number.isInteger(num)) {
-        return [String(Math.floor(num)), false];
-      }
-
-      return [String(num), false];
-    } catch {
+    // Validate numeric format (integer or decimal)
+    // Supports: 123, 123.45, .45, 123.
+    if (!/^-?\d*\.?\d*$/.test(s) || s === "." || s === "-" || s === "-.") {
       return [s, true];
     }
+
+    const num = parseFloat(s);
+    if (isNaN(num) || num < 0) {
+      return [s, true];
+    }
+
+    // Return as integer if whole number
+    if (Number.isInteger(num)) {
+      return [String(Math.floor(num)), false];
+    }
+
+    return [String(num), false];
   }
 }
