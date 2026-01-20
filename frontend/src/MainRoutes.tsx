@@ -61,6 +61,7 @@ import {
 } from "@/features/rpa/material-delivery-note";
 import { GenericCloudFlowExecutePage } from "@/features/rpa/pages/GenericCloudFlowExecutePage";
 import { SmartReadPage } from "@/features/rpa/smartread";
+import { ShippingMasterListPage } from "@/features/shipping-master/pages/ShippingMasterListPage";
 import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
 import { SuppliersListPage } from "@/features/suppliers";
 import { UomConversionsPage } from "@/features/uom-conversions/pages/UomConversionsPage";
@@ -112,6 +113,7 @@ function MasterRoutes() {
       <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
       <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
       <Route path="/masters/primary-assignments" element={<PrimaryAssignmentsPage />} />
+      <Route path="/masters/shipping-masters" element={<ShippingMasterListPage />} />
       <Route path="/delivery-places" element={<DeliveryPlacesListPage />} />
       <Route path="/product-mappings" element={<ProductMappingsListPage />} />
       <Route path="/warehouse-delivery-routes" element={<WarehouseDeliveryRoutesListPage />} />
