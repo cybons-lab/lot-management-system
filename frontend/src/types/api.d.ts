@@ -7090,6 +7090,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/ocr-results": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Ocr Results
+     * @description OCR結果一覧を取得（v_ocr_resultsビューから）.
+     */
+    get: operations["list_ocr_results_api_ocr_results_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/ocr-results/{item_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Ocr Result
+     * @description OCR結果詳細を取得.
+     */
+    get: operations["get_ocr_result_api_ocr_results__item_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -11240,6 +11280,116 @@ export interface components {
        * @description 明細処理結果
        */
       lines: components["schemas"]["OcrImportLineResult"][];
+    };
+    /**
+     * OcrResultItem
+     * @description OCR結果アイテム.
+     */
+    OcrResultItem: {
+      /** Id */
+      id: number;
+      /** Wide Data Id */
+      wide_data_id?: number | null;
+      /** Config Id */
+      config_id: number;
+      /** Task Id */
+      task_id: string;
+      /**
+       * Task Date
+       * Format: date
+       */
+      task_date: string;
+      /** Request Id Ref */
+      request_id_ref?: number | null;
+      /** Row Index */
+      row_index: number;
+      /** Status */
+      status: string;
+      /** Error Reason */
+      error_reason?: string | null;
+      /** Content */
+      content?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Customer Code */
+      customer_code?: string | null;
+      /** Material Code */
+      material_code?: string | null;
+      /** Jiku Code */
+      jiku_code?: string | null;
+      /** Delivery Date */
+      delivery_date?: string | null;
+      /** Delivery Quantity */
+      delivery_quantity?: string | null;
+      /** Item No */
+      item_no?: string | null;
+      /** Quantity Unit */
+      quantity_unit?: string | null;
+      /** Inbound No */
+      inbound_no?: string | null;
+      /** Lot No */
+      lot_no?: string | null;
+      /** Master Id */
+      master_id?: number | null;
+      /** Customer Name */
+      customer_name?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
+      /** Supplier Name */
+      supplier_name?: string | null;
+      /** Delivery Place Code */
+      delivery_place_code?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /** Shipping Warehouse Code */
+      shipping_warehouse_code?: string | null;
+      /** Shipping Warehouse Name */
+      shipping_warehouse_name?: string | null;
+      /** Shipping Slip Text */
+      shipping_slip_text?: string | null;
+      /** Transport Lt Days */
+      transport_lt_days?: number | null;
+      /** Customer Part No */
+      customer_part_no?: string | null;
+      /** Maker Part No */
+      maker_part_no?: string | null;
+      /** Has Order */
+      has_order?: boolean | null;
+      /**
+       * Master Not Found
+       * @default false
+       */
+      master_not_found: boolean;
+      /**
+       * Jiku Format Error
+       * @default false
+       */
+      jiku_format_error: boolean;
+      /**
+       * Date Format Error
+       * @default false
+       */
+      date_format_error: boolean;
+      /**
+       * Has Error
+       * @default false
+       */
+      has_error: boolean;
+    };
+    /**
+     * OcrResultListResponse
+     * @description OCR結果一覧レスポンス.
+     */
+    OcrResultListResponse: {
+      /** Items */
+      items: components["schemas"]["OcrResultItem"][];
+      /** Total */
+      total: number;
     };
     /**
      * OperationLogFilterOption
@@ -25249,6 +25399,8 @@ export interface operations {
       query: {
         /** @description 設定ID */
         config_id: number;
+        /** @description 強制的に再取得するか */
+        force?: boolean;
       };
       header?: never;
       path: {
@@ -25877,6 +26029,75 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ShippingMasterImportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_ocr_results_api_ocr_results_get: {
+    parameters: {
+      query?: {
+        /** @description タスク日付 (YYYY-MM-DD) */
+        task_date?: string | null;
+        /** @description ステータスでフィルタ */
+        status?: string | null;
+        /** @description エラーのみ表示 */
+        has_error?: boolean | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OcrResultListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_ocr_result_api_ocr_results__item_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        item_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OcrResultItem"];
         };
       };
       /** @description Validation Error */
