@@ -658,8 +658,15 @@ class SmartReadService:
                         with zf.open(name) as f:
                             # CSVを読み込み
                             reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig"))
-                            for row in reader:
-                                wide_data.append(dict(row))
+                            rows = list(reader)
+                            if rows:
+                                logger.info(
+                                    f"[SmartRead] CSV columns found: {list(rows[0].keys())}"
+                                )
+                                for row in rows:
+                                    wide_data.append(dict(row))
+                            else:
+                                logger.warning(f"[SmartRead] CSV file {name} is empty (no rows)")
                         break  # 最初のCSVのみ処理
 
         except Exception as e:
@@ -667,8 +674,18 @@ class SmartReadService:
             return None
 
         # 横持ち→縦持ち変換
+        logger.info(f"[SmartRead] Transforming {len(wide_data)} wide rows to long format...")
         transformer = SmartReadCsvTransformer()
         result = transformer.transform_to_long(wide_data)
+        logger.info(
+            f"[SmartRead] Transformation complete: {len(wide_data)} wide -> {len(result.long_data)} long rows"
+        )
+
+        if len(wide_data) > 0 and len(result.long_data) == 0:
+            logger.warning(
+                f"[SmartRead] TRANSFORMATION RESULT IS EMPTY! Check column names. "
+                f"Available columns: {list(wide_data[0].keys()) if wide_data else 'None'}"
+            )
 
         # DBに保存
         if save_to_db and wide_data:

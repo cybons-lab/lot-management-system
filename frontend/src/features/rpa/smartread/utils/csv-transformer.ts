@@ -129,34 +129,58 @@ export class SmartReadCsvTransformer {
     const details: Array<Record<string, any>> = [];
 
     for (let n = 1; n <= this.maxDetails; n++) {
-      const detail: Record<string, any> = {};
-
-      // Regular detail fields (材質コード1, 納入量1, etc)
-      for (const fieldName of DETAIL_FIELDS) {
-        const key = `${fieldName}${n}`;
-        if (key in row) {
-          detail[fieldName] = this.normalizeValue(row[key]);
-        }
-      }
-
-      // Sub-detail fields (Lot No1-1, Lot No1-2, etc)
-      for (const subField of SUB_DETAIL_FIELDS) {
-        for (let subN = 1; subN <= 4; subN++) {
-          // Max 4 sub-details
-          const key = `${subField}${n}-${subN}`;
-          if (key in row) {
-            detail[`${subField}${subN}`] = this.normalizeValue(row[key]);
-          }
-        }
-      }
+      const detail = this.extractSingleDetail(row, n);
 
       // Only add if detail has data
-      if (Object.keys(detail).length > 0) {
+      if (!this.isEmptyDetail(detail)) {
         details.push(detail);
+
+        // If matched without numbering for n=1, skip further details (it's a vertical row)
+        if (this.isVerticalFormat(row)) {
+          break;
+        }
       }
     }
 
     return details;
+  }
+
+  private extractSingleDetail(row: Record<string, any>, n: number): Record<string, any> {
+    const detail: Record<string, any> = {};
+
+    // Regular detail fields (材質コード1, 納入量1, etc)
+    for (const fieldName of DETAIL_FIELDS) {
+      let key = `${fieldName}${n}`;
+      // If numbered key not found for n=1, try without number (for vertical CSVs)
+      if (!(key in row) && n === 1) {
+        key = fieldName;
+      }
+
+      if (key in row) {
+        detail[fieldName] = this.normalizeValue(row[key]);
+      }
+    }
+
+    // Sub-detail fields (Lot No1-1, Lot No1-2, etc)
+    for (const subField of SUB_DETAIL_FIELDS) {
+      for (let subN = 1; subN <= 4; subN++) {
+        // Max 4 sub-details
+        let key = `${subField}${n}-${subN}`;
+        // If numbered key not found for n=1, try without page number
+        if (!(key in row) && n === 1) {
+          key = `${subField}-${subN}`;
+        }
+
+        if (key in row) {
+          detail[`${subField}${subN}`] = this.normalizeValue(row[key]);
+        }
+      }
+    }
+    return detail;
+  }
+
+  private isVerticalFormat(row: Record<string, any>): boolean {
+    return DETAIL_FIELDS.some((f) => !(f + "1" in row) && f in row);
   }
 
   private isEmptyDetail(detail: Record<string, any>): boolean {

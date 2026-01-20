@@ -148,6 +148,10 @@ class SmartReadCsvTransformer:
             # 通常の明細項目（材質コード1, 納入量1, etc）
             for field_name in DETAIL_FIELDS:
                 key = f"{field_name}{n}"
+                # n=1で番号付きが見つからない場合、番号なしを試行（縦持ちCSV対応）
+                if key not in row and n == 1:
+                    key = field_name
+
                 if key in row:
                     detail[field_name] = self._normalize_value(row[key])
 
@@ -155,12 +159,21 @@ class SmartReadCsvTransformer:
             for sub_field in SUB_DETAIL_FIELDS:
                 for sub_n in range(1, 5):  # 最大4つのサブ明細
                     key = f"{sub_field}{n}-{sub_n}"
+                    # n=1で番号付きが見つからない場合、番号なしを試行
+                    if key not in row and n == 1:
+                        key = f"{sub_field}-{sub_n}"
+
                     if key in row:
                         detail[f"{sub_field}{sub_n}"] = self._normalize_value(row[key])
 
             # 明細が存在する場合のみ追加
-            if detail:
+            if not self._is_empty_detail(detail):
                 details.append(detail)
+                # 番号なしでヒットした場合は1件のみとしてループ終了（縦持ちCSV）
+                if any(
+                    f"{field_name}1" not in row for field_name in DETAIL_FIELDS if field_name in row
+                ):
+                    break
 
         return details
 

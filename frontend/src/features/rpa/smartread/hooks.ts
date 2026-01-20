@@ -583,6 +583,13 @@ export function useSyncTaskResults() {
         console.info(
           `[SmartRead] Sync successful! Received ${res.long_data.length} rows in ${elapsed.toFixed(1)}s`,
         );
+        if (res.wide_data && res.wide_data.length > 0) {
+          console.info(
+            `[SmartRead] Wide Data Sample (1st row keys):`,
+            Object.keys(res.wide_data[0]),
+          );
+          console.info(`[SmartRead] Wide Data Sample (1st row values):`, res.wide_data[0]);
+        }
         console.info(`[SmartRead] Filename: ${res.filename || "N/A"}`);
         return res;
       } catch (e) {
