@@ -143,6 +143,24 @@ function getInsufficientStockMessage(details: Record<string, unknown>): string |
 }
 
 /**
+ * detailフィールドからメッセージを取得
+ */
+function getMessageFromDetail(detail: string): string | null {
+  // detailが文字列の場合
+  if (typeof detail === "string" && !detail.includes("HTTP Error")) {
+    return detail;
+  }
+  // detailがオブジェクトの場合、messageフィールドを取得
+  if (typeof detail === "object" && detail !== null && "message" in detail) {
+    const message = (detail as { message: unknown }).message;
+    if (typeof message === "string") {
+      return message;
+    }
+  }
+  return null;
+}
+
+/**
  * Problem+JSONからメッセージを取得
  */
 function getMessageFromProblem(problem: ProblemJSON): string | null {
@@ -157,8 +175,9 @@ function getMessageFromProblem(problem: ProblemJSON): string | null {
   }
 
   // detailフィールドがある場合はそれを使用
-  if (problem.detail && !problem.detail.includes("HTTP Error")) {
-    return problem.detail;
+  if (problem.detail) {
+    const message = getMessageFromDetail(problem.detail);
+    if (message) return message;
   }
 
   // titleフィールドがある場合
