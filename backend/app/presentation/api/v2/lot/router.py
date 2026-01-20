@@ -106,7 +106,7 @@ async def search_lots(
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(100, ge=1, le=1000, description="Page size"),
     sort_by: str = Query("expiry_date", description="Sort field"),
-    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort order"),
     product_id: int | None = Query(None, description="Filter by Product ID"),
     warehouse_id: int | None = Query(None, description="Filter by Warehouse ID"),
     supplier_code: str | None = Query(None, description="Filter by Supplier Code"),

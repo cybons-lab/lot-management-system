@@ -363,8 +363,21 @@ def setup_logging(
     _queue_listener.start()
 
     # サードパーティライブラリのログレベル調整
-    logging.getLogger("uvicorn").setLevel(logging.WARNING)
-    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+    # Uvicornのログフォーマット設定（時刻表示を追加）
+    uvicorn_logger = logging.getLogger("uvicorn")
+    uvicorn_logger.setLevel(logging.INFO)
+
+    uvicorn_access = logging.getLogger("uvicorn.access")
+    uvicorn_access.setLevel(logging.INFO)
+
+    # Uvicornのログに時刻を追加
+    uvicorn_formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    for handler in uvicorn_logger.handlers:
+        handler.setFormatter(uvicorn_formatter)
+    for handler in uvicorn_access.handlers:
+        handler.setFormatter(uvicorn_formatter)
 
     # SQLAlchemy: 基本WARNINGだが、ROLLBACKだけはINFOでも出したい
     # WARN以上 or "ROLLBACK" を含むINFOログを出力
