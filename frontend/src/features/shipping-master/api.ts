@@ -34,7 +34,7 @@ export const shippingMasterApi = {
     if (params?.limit) searchParams.set("limit", params.limit.toString());
     if (params?.offset) searchParams.set("offset", params.offset.toString());
 
-    const response = await httpClient.get(`api/shipping-masters?${searchParams}`);
+    const response = await httpClient.get(`shipping-masters?${searchParams}`);
     return response.json();
   },
 
@@ -42,7 +42,7 @@ export const shippingMasterApi = {
    * 出荷用マスタ取得
    */
   get: async (id: number): Promise<ShippingMasterCurated> => {
-    const response = await httpClient.get(`api/shipping-masters/${id}`);
+    const response = await httpClient.get(`shipping-masters/${id}`);
     return response.json();
   },
 
@@ -50,7 +50,7 @@ export const shippingMasterApi = {
    * 出荷用マスタ作成
    */
   create: async (data: ShippingMasterCreate): Promise<ShippingMasterCurated> => {
-    const response = await httpClient.post("api/shipping-masters", {
+    const response = await httpClient.post("shipping-masters", {
       json: data,
     });
     return response.json();
@@ -60,7 +60,7 @@ export const shippingMasterApi = {
    * 出荷用マスタ更新
    */
   update: async (id: number, data: ShippingMasterUpdate): Promise<ShippingMasterCurated> => {
-    const response = await httpClient.put(`api/shipping-masters/${id}`, {
+    const response = await httpClient.put(`shipping-masters/${id}`, {
       json: data,
     });
     return response.json();
@@ -70,6 +70,6 @@ export const shippingMasterApi = {
    * 出荷用マスタ削除
    */
   delete: async (id: number): Promise<void> => {
-    await httpClient.delete(`api/shipping-masters/${id}`);
+    await httpClient.delete(`shipping-masters/${id}`);
   },
 };
