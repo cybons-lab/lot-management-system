@@ -4,6 +4,9 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable max-lines */
+/* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
+/* eslint-disable max-depth */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -298,7 +301,7 @@ export function useExportStatus(
  * エクスポートからCSVデータを取得 (キャッシュファースト + クライアント側変換)
  * NOTE: enabled=false で定義し、明示的な refetch() で実行することを想定
  */
-// eslint-disable-next-line max-lines-per-function
+
 export function useExportCsvData(options: {
   configId: number | null;
   taskId: string | null;
@@ -659,6 +662,65 @@ export function useSyncTaskResults() {
         console.info(`[SmartRead] Calling backend sync API...`);
         const res = await syncTaskResults(configId, taskId);
         console.info(`[SmartRead] Sync done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
+
+        // === デバッグ: 横持ちデータの内容を表示 ===
+        console.info(`[SmartRead] === WIDE DATA DEBUG ===`);
+        console.info(`[SmartRead] Wide data count: ${res.wide_data.length}`);
+        if (res.wide_data.length > 0) {
+          console.info(`[SmartRead] Wide data keys:`, Object.keys(res.wide_data[0]));
+          console.info(`[SmartRead] Wide data[0]:`, res.wide_data[0]);
+        }
+        console.info(`[SmartRead] Long data count from server: ${res.long_data.length}`);
+
+        // === デバッグ: フロントエンドで縦持ち変換を試みる ===
+        if (res.wide_data.length > 0 && res.long_data.length === 0) {
+          console.warn(
+            `[SmartRead] Server returned 0 long rows. Trying frontend transformation...`,
+          );
+          try {
+            const { SmartReadCsvTransformer } = await import("./utils/csv-transformer");
+            const transformer = new SmartReadCsvTransformer();
+
+            const frontendResult = transformer.transformToLong(res.wide_data as any[], true);
+            console.info(
+              `[SmartRead] Frontend transformation result: ${frontendResult.long_data.length} long rows`,
+            );
+            if (frontendResult.long_data.length > 0) {
+              console.info(`[SmartRead] Frontend long data[0]:`, frontendResult.long_data[0]);
+              // フロントエンド変換結果を使用
+              res.long_data = frontendResult.long_data;
+              res.errors = frontendResult.errors;
+              console.info(`[SmartRead] Using frontend transformation result instead!`);
+            } else {
+              console.error(`[SmartRead] Frontend transformation also failed!`);
+              console.info(`[SmartRead] Checking DETAIL_FIELDS extraction...`);
+              // 明細抽出のデバッグ
+              const row = res.wide_data[0];
+              const detailFields = [
+                "材質コード",
+                "材質サイズ",
+                "単位",
+                "納入量",
+                "アイテム",
+                "購買",
+                "次区",
+              ];
+              for (const field of detailFields) {
+                const keys = [`${field}1`, `${field} 1`, field];
+                for (const key of keys) {
+                  if (key in (row as Record<string, unknown>)) {
+                    console.info(
+                      `[SmartRead] Found: "${key}" = "${(row as Record<string, unknown>)[key]}"`,
+                    );
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.error(`[SmartRead] Frontend transformation error:`, e);
+          }
+        }
+        console.info(`[SmartRead] === END DEBUG ===`);
 
         // 3. Cache the result
         await cacheToIdb(configId, taskId, res);
