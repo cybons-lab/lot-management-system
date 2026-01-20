@@ -6598,7 +6598,7 @@ export interface paths {
     };
     /**
      * Get Tasks
-     * @description タスク一覧を取得.
+     * @description タスク一覧を取得（自動的にDBと同期）.
      */
     get: operations["get_tasks_api_rpa_smartread_tasks_get"];
     put?: never;
@@ -6723,6 +6723,46 @@ export interface paths {
      */
     put: operations["update_skip_today_api_rpa_smartread_tasks__task_id__skip_today_put"];
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/tasks/{task_id}/sync": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Sync Task Results
+     * @description タスクの結果をAPIから同期（ダウンロード & DB保存）.
+     */
+    post: operations["sync_task_results_api_rpa_smartread_tasks__task_id__sync_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/tasks/{task_id}/save-long-data": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Save Long Data
+     * @description フロントエンドで変換した縦持ちデータをDBに保存.
+     */
+    post: operations["save_long_data_api_rpa_smartread_tasks__task_id__save_long_data_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -6934,6 +6974,28 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/order-register/export/excel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Order Register To Excel
+     * @description 受注登録結果をExcelでエクスポート.
+     *
+     *     ファイル名形式: 受注情報登録_yyyymmddhhMMss.xlsx
+     */
+    get: operations["export_order_register_to_excel_api_order_register_export_excel_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/shipping-masters": {
     parameters: {
       query?: never;
@@ -6986,6 +7048,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/shipping-masters/admin/reset": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Reset Shipping Masters
+     * @description 出荷用マスタデータを全削除（管理者専用）.
+     */
+    delete: operations["reset_shipping_masters_api_shipping_masters_admin_reset_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/shipping-masters/import": {
     parameters: {
       query?: never;
@@ -6996,12 +7078,12 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Import Shipping Masters
-     * @description 出荷用マスタをインポート.
+     * Import Shipping Masters File
+     * @description 出荷用マスタをExcelファイルからインポート.
      *
-     *     Excelから読み込んだデータをJSON形式で受け取り、DBに投入する。
+     *     Excelファイルをアップロードし、DBに投入する。
      */
-    post: operations["import_shipping_masters_api_shipping_masters_import_post"];
+    post: operations["import_shipping_masters_file_api_shipping_masters_import_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -7676,6 +7758,15 @@ export interface components {
        * File
        * Format: binary
        * @description Import file (.xlsx, .json, .yaml, .yml)
+       */
+      file: string;
+    };
+    /** Body_import_shipping_masters_file_api_shipping_masters_import_post */
+    Body_import_shipping_masters_file_api_shipping_masters_import_post: {
+      /**
+       * File
+       * Format: binary
+       * @description Excel file (.xlsx)
        */
       file: string;
     };
@@ -13247,19 +13338,6 @@ export interface components {
       remarks?: string | null;
     };
     /**
-     * ShippingMasterImportRequest
-     * @description Excelインポートリクエスト（JSON形式でデータを受け取る場合）.
-     */
-    ShippingMasterImportRequest: {
-      /**
-       * Rows
-       * @description インポートするデータ行
-       */
-      rows: {
-        [key: string]: unknown;
-      }[];
-    };
-    /**
      * ShippingMasterImportResponse
      * @description インポートレスポンス.
      */
@@ -13626,6 +13704,72 @@ export interface components {
       completed_at: string | null;
       /** Created At */
       created_at: string;
+    };
+    /**
+     * SmartReadSaveLongDataRequest
+     * @description 縦持ちデータ保存リクエスト.
+     */
+    SmartReadSaveLongDataRequest: {
+      /**
+       * Config Id
+       * @description 設定ID
+       */
+      config_id: number;
+      /**
+       * Task Id
+       * @description タスクID
+       */
+      task_id: string;
+      /**
+       * Task Date
+       * @description タスク日付 (YYYY-MM-DD)
+       */
+      task_date: string;
+      /**
+       * Wide Data
+       * @description 横持ちデータ
+       */
+      wide_data: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Long Data
+       * @description 縦持ちデータ
+       */
+      long_data: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Filename
+       * @description ファイル名
+       */
+      filename?: string | null;
+    };
+    /**
+     * SmartReadSaveLongDataResponse
+     * @description 縦持ちデータ保存レスポンス.
+     */
+    SmartReadSaveLongDataResponse: {
+      /**
+       * Success
+       * @description 保存成功フラグ
+       */
+      success: boolean;
+      /**
+       * Saved Wide Count
+       * @description 保存した横持ちデータ件数
+       */
+      saved_wide_count: number;
+      /**
+       * Saved Long Count
+       * @description 保存した縦持ちデータ件数
+       */
+      saved_long_count: number;
+      /**
+       * Message
+       * @description メッセージ
+       */
+      message: string;
     };
     /**
      * SmartReadSkipTodayRequest
@@ -25100,6 +25244,75 @@ export interface operations {
       };
     };
   };
+  sync_task_results_api_rpa_smartread_tasks__task_id__sync_post: {
+    parameters: {
+      query: {
+        /** @description 設定ID */
+        config_id: number;
+      };
+      header?: never;
+      path: {
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadCsvDataResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  save_long_data_api_rpa_smartread_tasks__task_id__save_long_data_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadSaveLongDataRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadSaveLongDataResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   process_files_auto_api_rpa_smartread_configs__config_id__process_auto_post: {
     parameters: {
       query?: never;
@@ -25426,6 +25639,40 @@ export interface operations {
       };
     };
   };
+  export_order_register_to_excel_api_order_register_export_excel_get: {
+    parameters: {
+      query?: {
+        /** @description タスク日付 (YYYY-MM-DD) */
+        task_date?: string | null;
+        /** @description ステータスでフィルタ */
+        status?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_shipping_masters_api_shipping_masters_get: {
     parameters: {
       query?: {
@@ -25592,7 +25839,25 @@ export interface operations {
       };
     };
   };
-  import_shipping_masters_api_shipping_masters_import_post: {
+  reset_shipping_masters_api_shipping_masters_admin_reset_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  import_shipping_masters_file_api_shipping_masters_import_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -25601,7 +25866,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["ShippingMasterImportRequest"];
+        "multipart/form-data": components["schemas"]["Body_import_shipping_masters_file_api_shipping_masters_import_post"];
       };
     };
     responses: {

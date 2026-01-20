@@ -17134,7 +17134,7 @@
           "smartread"
         ],
         "summary": "Get Tasks",
-        "description": "タスク一覧を取得.",
+        "description": "タスク一覧を取得（自動的にDBと同期）.",
         "operationId": "get_tasks_api_rpa_smartread_tasks_get",
         "security": [
           {
@@ -17562,6 +17562,123 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SmartReadTaskDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/tasks/{task_id}/sync": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Sync Task Results",
+        "description": "タスクの結果をAPIから同期（ダウンロード & DB保存）.",
+        "operationId": "sync_task_results_api_rpa_smartread_tasks__task_id__sync_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "config_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "設定ID",
+              "title": "Config Id"
+            },
+            "description": "設定ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadCsvDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/tasks/{task_id}/save-long-data": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Save Long Data",
+        "description": "フロントエンドで変換した縦持ちデータをDBに保存.",
+        "operationId": "save_long_data_api_rpa_smartread_tasks__task_id__save_long_data_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadSaveLongDataRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadSaveLongDataResponse"
                 }
               }
             }
@@ -18136,6 +18253,74 @@
         }
       }
     },
+    "/api/order-register/export/excel": {
+      "get": {
+        "tags": [
+          "Order Register"
+        ],
+        "summary": "Export Order Register To Excel",
+        "description": "受注登録結果をExcelでエクスポート.\n\nファイル名形式: 受注情報登録_yyyymmddhhMMss.xlsx",
+        "operationId": "export_order_register_to_excel_api_order_register_export_excel_get",
+        "parameters": [
+          {
+            "name": "task_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "タスク日付 (YYYY-MM-DD)",
+              "title": "Task Date"
+            },
+            "description": "タスク日付 (YYYY-MM-DD)"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ステータスでフィルタ",
+              "title": "Status"
+            },
+            "description": "ステータスでフィルタ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/shipping-masters": {
       "get": {
         "tags": [
@@ -18415,19 +18600,34 @@
         }
       }
     },
+    "/api/shipping-masters/admin/reset": {
+      "delete": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Reset Shipping Masters",
+        "description": "出荷用マスタデータを全削除（管理者専用）.",
+        "operationId": "reset_shipping_masters_api_shipping_masters_admin_reset_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
     "/api/shipping-masters/import": {
       "post": {
         "tags": [
           "Shipping Master"
         ],
-        "summary": "Import Shipping Masters",
-        "description": "出荷用マスタをインポート.\n\nExcelから読み込んだデータをJSON形式で受け取り、DBに投入する。",
-        "operationId": "import_shipping_masters_api_shipping_masters_import_post",
+        "summary": "Import Shipping Masters File",
+        "description": "出荷用マスタをExcelファイルからインポート.\n\nExcelファイルをアップロードし、DBに投入する。",
+        "operationId": "import_shipping_masters_file_api_shipping_masters_import_post",
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/ShippingMasterImportRequest"
+                "$ref": "#/components/schemas/Body_import_shipping_masters_file_api_shipping_masters_import_post"
               }
             }
           },
@@ -19706,6 +19906,21 @@
           "file"
         ],
         "title": "Body_import_from_file_api_admin_master_import_upload_post"
+      },
+      "Body_import_shipping_masters_file_api_shipping_masters_import_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "Excel file (.xlsx)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_shipping_masters_file_api_shipping_masters_import_post"
       },
       "BulkAutoAllocateFailedLine": {
         "properties": {
@@ -32548,25 +32763,6 @@
         "title": "ShippingMasterCuratedUpdate",
         "description": "出荷用マスタ更新リクエスト."
       },
-      "ShippingMasterImportRequest": {
-        "properties": {
-          "rows": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Rows",
-            "description": "インポートするデータ行"
-          }
-        },
-        "type": "object",
-        "required": [
-          "rows"
-        ],
-        "title": "ShippingMasterImportRequest",
-        "description": "Excelインポートリクエスト（JSON形式でデータを受け取る場合）."
-      },
       "ShippingMasterImportResponse": {
         "properties": {
           "success": {
@@ -33419,6 +33615,98 @@
         ],
         "title": "SmartReadRequestResponse",
         "description": "リクエスト状態レスポンス."
+      },
+      "SmartReadSaveLongDataRequest": {
+        "properties": {
+          "config_id": {
+            "type": "integer",
+            "title": "Config Id",
+            "description": "設定ID"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "description": "タスクID"
+          },
+          "task_date": {
+            "type": "string",
+            "title": "Task Date",
+            "description": "タスク日付 (YYYY-MM-DD)"
+          },
+          "wide_data": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Wide Data",
+            "description": "横持ちデータ"
+          },
+          "long_data": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Long Data",
+            "description": "縦持ちデータ"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename",
+            "description": "ファイル名"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config_id",
+          "task_id",
+          "task_date",
+          "wide_data",
+          "long_data"
+        ],
+        "title": "SmartReadSaveLongDataRequest",
+        "description": "縦持ちデータ保存リクエスト."
+      },
+      "SmartReadSaveLongDataResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "保存成功フラグ"
+          },
+          "saved_wide_count": {
+            "type": "integer",
+            "title": "Saved Wide Count",
+            "description": "保存した横持ちデータ件数"
+          },
+          "saved_long_count": {
+            "type": "integer",
+            "title": "Saved Long Count",
+            "description": "保存した縦持ちデータ件数"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "メッセージ"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "saved_wide_count",
+          "saved_long_count",
+          "message"
+        ],
+        "title": "SmartReadSaveLongDataResponse",
+        "description": "縦持ちデータ保存レスポンス."
       },
       "SmartReadSkipTodayRequest": {
         "properties": {

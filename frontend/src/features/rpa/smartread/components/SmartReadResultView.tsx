@@ -1,10 +1,11 @@
 /* eslint-disable max-lines-per-function */
 
 import { Download, AlertCircle, RefreshCw, ArrowRightLeft } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import { downloadJson, downloadCsv, useSyncTaskResults } from "../hooks";
-import { SmartReadCsvTransformer } from "../utils/csv-transformer";
+import { useResultDataLoader } from "../hooks/useResultDataLoader";
+import { useTransformToLong } from "../hooks/useTransformToLong";
 
 import { SmartReadCsvTable } from "./SmartReadCsvTable";
 
@@ -208,23 +209,34 @@ function TabContentDisplay({
 export function SmartReadResultView({ configId, taskId }: SmartReadResultViewProps) {
   const [activeTab, setActiveTab] = useState("wide");
 
-  // 横持ちデータ（API/IDBから）
-  const [wideData, setWideData] = useState<AnyRecord[]>([]);
-  // 縦持ちデータ（変換後）
-  const [longData, setLongData] = useState<AnyRecord[]>([]);
-  // 変換エラー
-  const [transformErrors, setTransformErrors] = useState<
-    { row: number; field: string; message: string; value: string | null }[]
-  >([]);
-  // ファイル名
-  const [filename, setFilename] = useState<string | null>(null);
-  // 変換中フラグ
-  const [isTransforming, setIsTransforming] = useState(false);
-  // 初期ロード状態
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // データ読み込みフック
+  const {
+    wideData,
+    longData,
+    transformErrors,
+    filename,
+    isInitialLoading,
+    loadError,
+    setWideData,
+    setLongData,
+    setTransformErrors,
+    setFilename,
+  } = useResultDataLoader({ configId, taskId });
 
   const syncMutation = useSyncTaskResults();
+
+  // 横持ち→縦持ち変換フック
+  const { transformToLong, isTransforming } = useTransformToLong({
+    configId,
+    taskId,
+    wideData,
+    filename,
+    onSuccess: (transformedLongData, errors) => {
+      setLongData(transformedLongData);
+      setTransformErrors(errors);
+      setActiveTab("long");
+    },
+  });
 
   // API同期して横持ちデータを取得
   const handleSyncFromApi = async () => {
@@ -251,29 +263,6 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     }
   };
 
-  // 横持ち→縦持ち変換
-  const handleTransformToLong = async () => {
-    if (wideData.length === 0) return;
-
-    console.info(`[ResultView] Transforming ${wideData.length} wide rows...`);
-    setIsTransforming(true);
-
-    try {
-      const transformer = new SmartReadCsvTransformer();
-      const result = transformer.transformToLong(wideData, true);
-
-      console.info(`[ResultView] Transform result: ${result.long_data.length} long rows`);
-
-      setLongData(result.long_data);
-      setTransformErrors(result.errors);
-      setActiveTab("long");
-    } catch (e) {
-      console.error(`[ResultView] Transform error:`, e);
-    } finally {
-      setIsTransforming(false);
-    }
-  };
-
   const handleDownloadLong = () => {
     if (longData.length === 0) return;
     downloadCsv(longData, `${taskId}_long.csv`);
@@ -288,72 +277,6 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     if (longData.length === 0) return;
     downloadJson(longData, `${taskId}.json`);
   };
-
-  // 初回マウント時に自動でデータを取得（IDB → API）
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsInitialLoading(true);
-        setLoadError(null);
-
-        // 1. IDBキャッシュから読み込み
-        try {
-          const { exportCache } = await import("../db/export-cache");
-          const cached = await exportCache.getByTaskId(configId, taskId);
-          if (cached && (cached.wide_data.length > 0 || cached.long_data.length > 0)) {
-            console.info(`[ResultView] Loaded from IDB cache:`, {
-              wide: cached.wide_data.length,
-              long: cached.long_data.length,
-            });
-            setWideData(cached.wide_data);
-            setLongData(cached.long_data);
-            setTransformErrors(cached.errors);
-            setFilename(cached.filename);
-            if (cached.long_data.length > 0) {
-              setActiveTab("long");
-            }
-            setIsInitialLoading(false);
-            return; // キャッシュがあれば完了
-          }
-        } catch (e) {
-          console.warn(`[ResultView] Failed to load from cache:`, e);
-        }
-
-        // 2. キャッシュがない場合、APIから取得
-        console.info(`[ResultView] No cache found, fetching from API...`);
-        try {
-          const result = await syncMutation.mutateAsync({ configId, taskId, forceSync: false });
-
-          console.info(`[ResultView] API fetch result:`, {
-            wide: result.wide_data.length,
-            long: result.long_data.length,
-            filename: result.filename,
-          });
-
-          setWideData(result.wide_data as AnyRecord[]);
-          setLongData(result.long_data as AnyRecord[]);
-          setTransformErrors(result.errors);
-          setFilename(result.filename);
-
-          if (result.long_data.length > 0) {
-            setActiveTab("long");
-          } else if (result.wide_data.length > 0) {
-            setActiveTab("wide");
-          }
-        } catch (error) {
-          console.error(`[ResultView] Failed to fetch from API:`, error);
-          setLoadError(error instanceof Error ? error.message : "データの取得に失敗しました");
-        }
-      } finally {
-        setIsInitialLoading(false);
-      }
-    };
-
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configId, taskId]);
-
-  // ローディング中・エラー時・データなし時でもテーブル構造を維持
 
   // Result Display
   return (
@@ -381,7 +304,7 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
               <Button
                 variant="default"
                 size="sm"
-                onClick={handleTransformToLong}
+                onClick={transformToLong}
                 disabled={isTransforming}
                 className="my-2"
               >
@@ -418,7 +341,7 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
               errors={transformErrors}
               dataType="long"
               onRetry={handleSyncFromApi}
-              onTransform={handleTransformToLong}
+              onTransform={transformToLong}
               canTransform={wideData.length > 0}
             />
           </TabsContent>

@@ -428,3 +428,33 @@ export const getSmartReadLongDataList = async (
   const res = await getLongData(configId, undefined, limit);
   return res.data;
 };
+
+/**
+ * 縦持ちデータをDBに保存 (フロントエンドで変換したデータ用)
+ */
+export interface SmartReadSaveLongDataRequest {
+  config_id: number;
+  task_id: string;
+  task_date: string;
+  wide_data: Record<string, unknown>[];
+  long_data: Record<string, unknown>[];
+  filename: string | null;
+}
+
+export interface SmartReadSaveLongDataResponse {
+  success: boolean;
+  saved_wide_count: number;
+  saved_long_count: number;
+  message: string;
+}
+
+export async function saveLongData(
+  taskId: string,
+  data: SmartReadSaveLongDataRequest,
+): Promise<SmartReadSaveLongDataResponse> {
+  console.log(`[API] Saving long data for task ${taskId}`);
+  return http.post<SmartReadSaveLongDataResponse>(
+    `rpa/smartread/tasks/${taskId}/save-long-data`,
+    data,
+  );
+}

@@ -36,6 +36,8 @@ from app.presentation.schemas.smartread_schema import (
     SmartReadProcessRequest,
     SmartReadRequestListResponse,
     SmartReadRequestResponse,
+    SmartReadSaveLongDataRequest,
+    SmartReadSaveLongDataResponse,
     SmartReadSkipTodayRequest,
     SmartReadTaskDetailResponse,
     SmartReadTaskListResponse,
@@ -501,6 +503,49 @@ async def sync_task_results(
         ],
         filename=result.get("filename"),
     )
+
+
+@router.post("/tasks/{task_id}/save-long-data", response_model=SmartReadSaveLongDataResponse)
+async def save_long_data(
+    task_id: str,
+    request: SmartReadSaveLongDataRequest,
+    uow: UnitOfWork = Depends(get_uow),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadSaveLongDataResponse:
+    """フロントエンドで変換した縦持ちデータをDBに保存."""
+    from datetime import datetime
+
+    assert uow.session is not None
+    service = SmartReadService(uow.session)
+
+    # task_dateをdate型に変換
+    try:
+        task_date = datetime.strptime(request.task_date, "%Y-%m-%d").date()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid task_date format: {e}")
+
+    # 横持ち・縦持ちデータをDBに保存
+    try:
+        service._save_wide_and_long_data(
+            config_id=request.config_id,
+            task_id=task_id,
+            export_id=f"frontend_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            task_date=task_date,
+            wide_data=request.wide_data,
+            long_data=request.long_data,
+            filename=request.filename,
+        )
+        uow.session.commit()
+
+        return SmartReadSaveLongDataResponse(
+            success=True,
+            saved_wide_count=len(request.wide_data),
+            saved_long_count=len(request.long_data),
+            message=f"{len(request.long_data)}件の縦持ちデータを保存しました",
+        )
+    except Exception as e:
+        uow.session.rollback()
+        raise HTTPException(status_code=500, detail=f"保存に失敗しました: {str(e)}")
 
 
 # ==================== requestId/results ルート API ====================
