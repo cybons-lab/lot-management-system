@@ -144,7 +144,12 @@ async def import_shipping_masters_file(
         # データ行を読み取り（2行目以降）
         rows = []
         for row in sheet.iter_rows(min_row=2, values_only=True):
-            row_dict = {headers[i]: row[i] for i in range(len(headers)) if i < len(row)}
+            # セルの値をすべて文字列として取得（None以外）。これによりコード等の前ゼロ消失を防止。
+            row_dict = {
+                headers[i]: str(row[i]) if row[i] is not None else None
+                for i in range(len(headers))
+                if i < len(row)
+            }
             rows.append(row_dict)
 
         # 生データを投入
