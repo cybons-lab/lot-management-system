@@ -39,7 +39,8 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
   const syncMutation = useSyncTaskResults();
 
   const handleSyncFromApi = async () => {
-    await syncMutation.mutateAsync({ configId, taskId });
+    // forceSync: true でキャッシュをスキップし、必ずサーバーから取得
+    await syncMutation.mutateAsync({ configId, taskId, forceSync: true });
   };
 
   const handleDownloadLong = () => {
