@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.application.services.shipping_master import ShippingMasterService
@@ -12,7 +12,6 @@ from app.presentation.schemas.shipping_master_schema import (
     ShippingMasterCuratedListResponse,
     ShippingMasterCuratedResponse,
     ShippingMasterCuratedUpdate,
-    ShippingMasterImportRequest,
     ShippingMasterImportResponse,
 )
 
@@ -110,24 +109,52 @@ async def delete_shipping_master(
 
 
 @router.post("/import", response_model=ShippingMasterImportResponse)
-async def import_shipping_masters(
-    request: ShippingMasterImportRequest,
+async def import_shipping_masters_file(
+    file: Annotated[UploadFile, File(description="Excel file (.xlsx)")],
     service: ShippingMasterService = Depends(get_service),
 ) -> ShippingMasterImportResponse:
-    """出荷用マスタをインポート.
+    """出荷用マスタをExcelファイルからインポート.
 
-    Excelから読み込んだデータをJSON形式で受け取り、DBに投入する。
+    Excelファイルをアップロードし、DBに投入する。
     """
-    # 生データを投入
-    imported_count, errors = service.import_raw_data(request.rows)
+    if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Excelファイル (.xlsx または .xls) をアップロードしてください",
+        )
 
-    # 整形済みデータを生成
-    curated_count, warnings = service.curate_from_raw()
+    try:
+        import openpyxl
 
-    return ShippingMasterImportResponse(
-        success=len(errors) == 0,
-        imported_count=imported_count,
-        curated_count=curated_count,
-        errors=errors,
-        warnings=warnings,
-    )
+        # Excelファイルを読み込み
+        contents = await file.read()
+        workbook = openpyxl.load_workbook(filename=None, data=contents, read_only=True)
+        sheet = workbook.active
+
+        # ヘッダー行を読み取り（1行目）
+        headers = [cell.value for cell in sheet[1]]
+
+        # データ行を読み取り（2行目以降）
+        rows = []
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            row_dict = {headers[i]: row[i] for i in range(len(headers)) if i < len(row)}
+            rows.append(row_dict)
+
+        # 生データを投入
+        imported_count, errors = service.import_raw_data(rows)
+
+        # 整形済みデータを生成
+        curated_count, warnings = service.curate_from_raw()
+
+        return ShippingMasterImportResponse(
+            success=len(errors) == 0,
+            imported_count=imported_count,
+            curated_count=curated_count,
+            errors=errors,
+            warnings=warnings,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"ファイル処理エラー: {str(e)}",
+        ) from e
