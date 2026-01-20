@@ -17,6 +17,7 @@ import {
   regenerateGroupSuggestions,
   updateForecast,
 } from "@/features/forecasts/api";
+import { logError, logInfo } from "@/services/error-logger";
 
 interface ForecastGroupKey {
   customer_id: number;
@@ -69,6 +70,10 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
         delivery_place_id: groupKey.delivery_place_id,
       }),
     onSuccess: (result) => {
+      logInfo("Forecasts:AutoAllocate", "自動引当を実行しました", {
+        ...groupKey,
+        allocatedLines: result.allocated_lines,
+      });
       if (result.allocated_lines > 0) {
         toast.success(result.message);
       } else {
@@ -77,7 +82,13 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
       invalidateQueries(groupKey);
     },
     onError: (error) => {
-      console.error("Auto-allocate failed:", error);
+      logError(
+        "Forecasts:AutoAllocate",
+        error instanceof Error ? error : "受注引当に失敗しました",
+        {
+          ...groupKey,
+        },
+      );
       toast.error("受注引当に失敗しました");
     },
   });
@@ -93,6 +104,11 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
     onSuccess: (result) => {
       const allocated = result.stats.total_allocated_quantity;
       const shortage = result.stats.total_shortage_quantity;
+      logInfo("Forecasts:RegenerateSuggestions", "計画引当を更新しました", {
+        ...groupKey,
+        allocated,
+        shortage,
+      });
       if (shortage > 0) {
         toast.warning(`計画引当を更新しました（不足: ${shortage}）`);
       } else {
@@ -101,7 +117,11 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
       invalidateQueries(groupKey);
     },
     onError: (error) => {
-      console.error("Regenerate suggestions failed:", error);
+      logError(
+        "Forecasts:RegenerateSuggestions",
+        error instanceof Error ? error : "計画引当の更新に失敗しました",
+        { ...groupKey },
+      );
       toast.error("計画引当の更新に失敗しました");
     },
   });
@@ -115,11 +135,16 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
         product_id: groupKey.product_id,
       }),
     onSuccess: (result) => {
+      logInfo("Forecasts:ClearSuggestions", "計画引当をクリアしました", { ...groupKey });
       toast.success(result.message);
       invalidateQueries(groupKey);
     },
     onError: (error) => {
-      console.error("Clear suggestions failed:", error);
+      logError(
+        "Forecasts:ClearSuggestions",
+        error instanceof Error ? error : "計画引当のクリアに失敗しました",
+        { ...groupKey },
+      );
       toast.error("計画引当のクリアに失敗しました");
     },
   });
@@ -134,13 +159,25 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
       return updateForecast(forecastId, { forecast_quantity: quantity });
     },
     onSuccess: (_, variables) => {
+      const action = variables.quantity === 0 ? "Delete" : "Update";
+      logInfo(
+        `Forecasts:${action}`,
+        `フォーキャストを${action === "Delete" ? "削除" : "更新"}しました`,
+        {
+          forecastId: variables.forecastId,
+          quantity: variables.quantity,
+        },
+      );
       toast.success(
         variables.quantity === 0 ? "フォーキャストを削除しました" : "フォーキャストを更新しました",
       );
       invalidateQueries(groupKey);
     },
     onError: (error) => {
-      console.error("Update/Delete forecast failed:", error);
+      logError(
+        "Forecasts:Update",
+        error instanceof Error ? error : "フォーキャストの操作に失敗しました",
+      );
       toast.error("フォーキャストの操作に失敗しました");
     },
   });
@@ -157,12 +194,22 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
         unit: unit,
         forecast_period: data.dateKey.slice(0, 7), // YYYY-MM
       }),
-    onSuccess: () => {
+    onSuccess: (result, data) => {
+      logInfo("Forecasts:Create", "フォーキャストを作成しました", {
+        forecastId: result.id,
+        ...groupKey,
+        date: data.dateKey,
+        quantity: data.quantity,
+      });
       toast.success("フォーキャストを作成しました");
       invalidateQueries(groupKey);
     },
     onError: (error) => {
-      console.error("Create forecast failed:", error);
+      logError(
+        "Forecasts:Create",
+        error instanceof Error ? error : "フォーキャストの作成に失敗しました",
+        { ...groupKey },
+      );
       toast.error("フォーキャストの作成に失敗しました");
     },
   });

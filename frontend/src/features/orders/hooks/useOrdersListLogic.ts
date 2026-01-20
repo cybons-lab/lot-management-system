@@ -7,6 +7,7 @@ import { useCreateOrder } from "@/hooks/mutations";
 import { useDialog, useFilters, useTable } from "@/hooks/ui";
 import { useConfirmedOrderLines } from "@/hooks/useConfirmedOrderLines";
 import { formatOrderCode } from "@/shared/utils/order";
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 type ViewMode = "delivery" | "flat" | "order";
 
@@ -98,8 +99,9 @@ export function useOrdersListLogic() {
       createDialog.close();
       refetch();
     },
-    onError: (error) => {
-      toast.error(`作成に失敗しました: ${error.message}`);
+    onError: async (error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`受注の作成に失敗しました: ${message}`);
     },
   });
 

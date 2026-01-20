@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import * as ordersApi from "@/features/orders/api";
+import { logInfo } from "@/services/error-logger";
 import { normalizeOrder, type OrderUI } from "@/shared/libs/normalize";
 import type { OrderResponse, OrdersListParams } from "@/shared/types/aliases";
 
@@ -63,7 +64,8 @@ export function useUpdateOrderStatus(orderId: number) {
 
   return useMutation({
     mutationFn: (newStatus: string) => ordersApi.updateOrderStatus(orderId, newStatus),
-    onSuccess: () => {
+    onSuccess: (_, newStatus) => {
+      logInfo("Orders:UpdateStatus", "受注ステータスを更新しました", { orderId, newStatus });
       // 注文詳細とリストのキャッシュを無効化
       queryClient.invalidateQueries({ queryKey: ["orders", "detail", orderId] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });

@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { uploadMasterImport } from "../api";
 import type { MasterImportResponse, TemplateGroup } from "../types";
 
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
+
 /**
  * テンプレートをダウンロードするヘルパー関数
  */
@@ -79,8 +81,8 @@ export function useMasterImport() {
         toast.error("インポートに失敗しました。");
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "インポート中にエラーが発生しました";
-      toast.error(message);
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`インポートに失敗しました: ${message}`);
     } finally {
       setIsUploading(false);
     }
@@ -92,9 +94,8 @@ export function useMasterImport() {
       await downloadTemplate(group);
       toast.success("テンプレートをダウンロードしました");
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "テンプレートのダウンロードに失敗しました";
-      toast.error(message);
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`テンプレートのダウンロードに失敗しました: ${message}`);
     } finally {
       setIsDownloadingTemplate(false);
     }

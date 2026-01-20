@@ -21,6 +21,8 @@ import {
   bulkImportForecasts,
 } from "../api";
 
+import { logInfo } from "@/services/error-logger";
+
 // ===== Query Keys =====
 
 export const forecastKeys = {
@@ -76,7 +78,12 @@ export const useCreateForecast = () => {
 
   return useMutation({
     mutationFn: (data: CreateForecastRequest) => createForecast(data),
-    onSuccess: () => {
+    onSuccess: (result, data) => {
+      logInfo("Forecasts:Create", "フォーキャストを作成しました", {
+        forecastId: result.id,
+        productId: data.product_id,
+        customerId: data.customer_id,
+      });
       queryClient.invalidateQueries({ queryKey: forecastKeys.list() });
     },
   });
@@ -91,6 +98,7 @@ export const useUpdateForecast = (id: number) => {
   return useMutation({
     mutationFn: (data: UpdateForecastRequest) => updateForecast(id, data),
     onSuccess: () => {
+      logInfo("Forecasts:Update", "フォーキャストを更新しました", { forecastId: id });
       queryClient.invalidateQueries({ queryKey: forecastKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: forecastKeys.list() });
     },
@@ -105,7 +113,8 @@ export const useDeleteForecast = () => {
 
   return useMutation({
     mutationFn: (id: number) => deleteForecast(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      logInfo("Forecasts:Delete", "フォーキャストを削除しました", { forecastId: id });
       queryClient.invalidateQueries({ queryKey: forecastKeys.list() });
     },
   });
@@ -119,7 +128,11 @@ export const useBulkImportForecasts = () => {
 
   return useMutation({
     mutationFn: (data: BulkImportForecastRequest) => bulkImportForecasts(data),
-    onSuccess: () => {
+    onSuccess: (result, data) => {
+      logInfo("Forecasts:BulkImport", "フォーキャストを一括インポートしました", {
+        importedCount: data.items.length,
+        importedResult: result.imported_count,
+      });
       queryClient.invalidateQueries({ queryKey: forecastKeys.all });
     },
   });

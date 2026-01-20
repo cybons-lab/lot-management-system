@@ -75,13 +75,23 @@ class ErrorLogger {
       logMethod(`[${level.toUpperCase()}] ${source}:`, error, context);
     }
 
-    // Send to backend for error level
-    if (level === "error") {
-      import("@/shared/utils/logger").then(({ Logger }) => {
-        const contextStr = context ? ` | Context: ${JSON.stringify(context)}` : "";
-        Logger.error(`[${source}] ${entry.message}${contextStr}`);
-      });
-    }
+    // Send to backend for all levels (info, warning, error)
+    import("@/shared/utils/logger").then(({ Logger }) => {
+      const contextStr = context ? ` | ${JSON.stringify(context)}` : "";
+      const message = `[${source}] ${entry.message}${contextStr}`;
+
+      switch (level) {
+        case "error":
+          Logger.error(message);
+          break;
+        case "warning":
+          Logger.warning(message);
+          break;
+        case "info":
+          Logger.info(message);
+          break;
+      }
+    });
   }
 
   /**

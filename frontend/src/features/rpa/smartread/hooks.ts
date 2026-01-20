@@ -33,6 +33,7 @@ import {
 } from "./api";
 import { processFilesAuto } from "./api";
 
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 import { ApiError } from "@/utils/errors/custom-errors";
 const SMARTREAD_QUERY_KEYS = {
   all: ["smartread"] as const,
@@ -97,8 +98,9 @@ export function useCreateSmartReadConfig() {
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.configs() });
       toast.success("設定を作成しました");
     },
-    onError: (error: Error) => {
-      toast.error(`設定の作成に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`設定の作成に失敗しました: ${message}`);
     },
   });
 }
@@ -117,8 +119,9 @@ export function useUpdateSmartReadConfig() {
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.configs() });
       toast.success("設定を更新しました");
     },
-    onError: (error: Error) => {
-      toast.error(`設定の更新に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`設定の更新に失敗しました: ${message}`);
     },
   });
 }
@@ -135,8 +138,9 @@ export function useDeleteSmartReadConfig() {
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.configs() });
       toast.success("設定を削除しました");
     },
-    onError: (error: Error) => {
-      toast.error(`設定の削除に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`設定の削除に失敗しました: ${message}`);
     },
   });
 }
@@ -154,8 +158,9 @@ export function useAnalyzeFile() {
         toast.error(`解析に失敗しました: ${result.error_message || "不明なエラー"}`);
       }
     },
-    onError: (error: Error) => {
-      toast.error(`解析に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`解析に失敗しました: ${message}`);
     },
   });
 }
@@ -201,8 +206,9 @@ export function useProcessWatchDirFiles() {
       // ファイル一覧を更新
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.files(configId) });
     },
-    onError: (error: Error) => {
-      toast.error(`処理に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`処理に失敗しました: ${message}`);
     },
   });
 }
@@ -261,8 +267,9 @@ export function useCreateExport() {
       taskId: string;
       exportType?: string;
     }) => createExport(configId, taskId, exportType),
-    onError: (error: Error) => {
-      toast.error(`エクスポート作成に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`エクスポート作成に失敗しました: ${message}`);
     },
   });
 }
@@ -415,8 +422,9 @@ export function useTransformCsv() {
       wideData: Record<string, unknown>[];
       skipEmpty?: boolean;
     }) => transformCsv(wideData, skipEmpty),
-    onError: (error: Error) => {
-      toast.error(`変換に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`変換に失敗しました: ${message}`);
     },
   });
 }
@@ -481,8 +489,9 @@ export function useUpdateSkipToday() {
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.all });
       toast.success(`タスク ${taskId} のスキップ設定を${_.skip_today ? "有効" : "無効"}にしました`);
     },
-    onError: (error: Error) => {
-      toast.error(`スキップ設定の更新に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`スキップ設定の更新に失敗しました: ${message}`);
     },
   });
 }
@@ -526,8 +535,9 @@ export function useProcessFilesAuto() {
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.requests(configId) });
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.files(configId) });
     },
-    onError: (error: Error) => {
-      toast.error(`処理開始に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`処理開始に失敗しました: ${message}`);
     },
   });
 }
@@ -746,8 +756,9 @@ export function useSyncTaskResults() {
       // 3. タスク状態（synced_at等）が変わるので管理タスク一覧も更新
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.managedTasks(configId) });
     },
-    onError: (error: Error) => {
-      toast.error(`データの取得に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`データの取得に失敗しました: ${message}`);
     },
   });
 }

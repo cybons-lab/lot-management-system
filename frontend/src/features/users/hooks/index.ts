@@ -13,6 +13,8 @@ import type {
 } from "../api";
 import { getUsers, getUser, createUser, updateUser, deleteUser, assignUserRoles } from "../api";
 
+import { logInfo } from "@/services/error-logger";
+
 // ===== Query Keys =====
 
 export const userKeys = {
@@ -58,7 +60,11 @@ export const useCreateUser = () => {
 
   return useMutation({
     mutationFn: (data: CreateUserRequest) => createUser(data),
-    onSuccess: () => {
+    onSuccess: (result, data) => {
+      logInfo("Users:Create", "ユーザーを作成しました", {
+        userId: result.user_id,
+        username: data.username,
+      });
       // Invalidate users list to refetch
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
     },
@@ -75,6 +81,7 @@ export const useUpdateUser = () => {
     mutationFn: ({ userId, data }: { userId: number; data: UpdateUserRequest }) =>
       updateUser(userId, data),
     onSuccess: (_, variables) => {
+      logInfo("Users:Update", "ユーザーを更新しました", { userId: variables.userId });
       // Invalidate users list and detail to refetch
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
       queryClient.invalidateQueries({ queryKey: userKeys.detail(variables.userId) });
@@ -90,7 +97,8 @@ export const useDeleteUser = () => {
 
   return useMutation({
     mutationFn: (userId: number) => deleteUser(userId),
-    onSuccess: () => {
+    onSuccess: (_, userId) => {
+      logInfo("Users:Delete", "ユーザーを削除しました", { userId });
       // Invalidate users list to refetch
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
     },
@@ -107,6 +115,10 @@ export const useAssignUserRoles = () => {
     mutationFn: ({ userId, data }: { userId: number; data: UserRoleAssignment }) =>
       assignUserRoles(userId, data),
     onSuccess: (_, variables) => {
+      logInfo("Users:AssignRoles", "ユーザーのロールを更新しました", {
+        userId: variables.userId,
+        roleIds: variables.data.role_ids,
+      });
       // Invalidate user detail to refetch with updated roles
       queryClient.invalidateQueries({ queryKey: userKeys.detail(variables.userId) });
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });

@@ -42,6 +42,7 @@ import { convertAllocationsToPayload, getOrderId } from "../utils/allocationCalc
 import { allocationCandidatesKeys } from "./api/useAllocationCandidates";
 
 import type { OrderLine } from "@/shared/types/aliases";
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 /**
  * Variables for saveAllocations mutation
@@ -102,10 +103,11 @@ export function useAllocationSaver({
         }),
       });
     },
-    onError: (error: unknown) => {
-      // Show error toast
+    onError: async (error: unknown) => {
+      // Show error toast with user-friendly message
+      const message = await getUserFriendlyMessageAsync(error);
       setToast({
-        message: error instanceof Error ? error.message : ALLOCATION_CONSTANTS.MESSAGES.SAVE_ERROR,
+        message,
         variant: "error",
       });
     },

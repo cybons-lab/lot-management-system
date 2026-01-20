@@ -54,6 +54,7 @@ export const ERROR_CODE_MESSAGES: Record<string, string> = {
   LOT_NOT_FOUND: "指定されたロットが見つかりません。",
   LOT_NOT_ACTIVE: "指定されたロットは有効ではありません。",
   LOT_EXPIRED: "指定されたロットは有効期限が切れています。",
+  LOT_LOCKED: "指定されたロットはロックされています。",
   SAP_REGISTRATION_FAILED: "SAP登録に失敗しました。システム管理者に連絡してください。",
   CANNOT_CANCEL_CONFIRMED: "確定済みの予約はキャンセルできません。SAP連携が必要です。",
   INVALID_STATE_TRANSITION: "この状態からの遷移は許可されていません。",
@@ -61,14 +62,40 @@ export const ERROR_CODE_MESSAGES: Record<string, string> = {
   // 競合関連
   CONFLICT: "他のユーザーが同時に操作を行ったため、処理が競合しました。再度お試しください。",
   DUPLICATE: "同じデータが既に存在します。",
+  DUPLICATE_ENTRY: "同じデータが既に登録されています。",
+  DUPLICATE_LOT_NUMBER: "同じロット番号が既に存在します。",
+  DUPLICATE_ORDER: "同じ受注が既に存在します。",
 
   // バリデーション関連
   VALIDATION_ERROR: "入力内容に問題があります。入力値を確認してください。",
+  INVALID_QUANTITY: "数量が不正です。正の数を入力してください。",
+  INVALID_DATE: "日付が不正です。",
+  INVALID_DATE_RANGE: "日付の範囲が不正です。開始日は終了日より前である必要があります。",
+  REQUIRED_FIELD_MISSING: "必須項目が入力されていません。",
+
+  // 受注関連
+  ORDER_NOT_FOUND: "指定された受注が見つかりません。",
+  ORDER_ALREADY_SHIPPED: "この受注は既に出荷済みです。",
+  ORDER_ALREADY_CLOSED: "この受注は既にクローズされています。",
+  ORDER_CANNOT_BE_MODIFIED: "この受注は変更できません。",
+
+  // ユーザー関連
+  USER_NOT_FOUND: "指定されたユーザーが見つかりません。",
+  USER_ALREADY_EXISTS: "このユーザー名は既に使用されています。",
+  INVALID_PASSWORD: "パスワードが正しくありません。",
+  PASSWORD_TOO_WEAK: "パスワードが弱すぎます。より強力なパスワードを設定してください。",
+
+  // OCR関連
+  OCR_PROCESSING_FAILED: "OCR処理に失敗しました。画像を確認してください。",
+  OCR_TIMEOUT: "OCR処理がタイムアウトしました。再度お試しください。",
 
   // 汎用
   NOT_FOUND: "データが見つかりません。既に削除された可能性があります。",
   FORBIDDEN: "この操作を行う権限がありません。",
+  UNAUTHORIZED: "認証が必要です。再度ログインしてください。",
   INTERNAL_SERVER_ERROR: "サーバーエラーが発生しました。しばらく経ってから再度お試しください。",
+  SERVICE_UNAVAILABLE: "サービスが一時的に利用できません。しばらく経ってから再度お試しください。",
+  NETWORK_ERROR: "ネットワークエラーが発生しました。接続を確認してください。",
 };
 
 /**
@@ -105,16 +132,76 @@ export async function extractProblemJSON(error: HTTPError): Promise<ProblemJSON 
 }
 
 /**
- * HTTPErrorからユーザーフレンドリーなメッセージを取得
+ * 在庫不足エラーの詳細メッセージを取得
  */
-export function getUserFriendlyMessage(error: unknown): string {
+function getInsufficientStockMessage(details: Record<string, unknown>): string | null {
+  const stockDetails = details as unknown as InsufficientStockDetails;
+  if (stockDetails.required !== undefined && stockDetails.available !== undefined) {
+    return `在庫が不足しています（必要: ${stockDetails.required}, 利用可能: ${stockDetails.available}）`;
+  }
+  return null;
+}
+
+/**
+ * detailフィールドからメッセージを取得
+ */
+function getMessageFromDetail(detail: string): string | null {
+  // detailが文字列の場合
+  if (typeof detail === "string" && !detail.includes("HTTP Error")) {
+    return detail;
+  }
+  // detailがオブジェクトの場合、messageフィールドを取得
+  if (typeof detail === "object" && detail !== null && "message" in detail) {
+    const message = (detail as { message: unknown }).message;
+    if (typeof message === "string") {
+      return message;
+    }
+  }
+  return null;
+}
+
+/**
+ * Problem+JSONからメッセージを取得
+ */
+function getMessageFromProblem(problem: ProblemJSON): string | null {
+  // エラーコードからメッセージを取得
+  if (problem.error_code && ERROR_CODE_MESSAGES[problem.error_code]) {
+    // 在庫不足エラーの場合、詳細情報を含める
+    if (problem.error_code === "INSUFFICIENT_STOCK" && problem.details) {
+      const detailMessage = getInsufficientStockMessage(problem.details);
+      if (detailMessage) return detailMessage;
+    }
+    return ERROR_CODE_MESSAGES[problem.error_code];
+  }
+
+  // detailフィールドがある場合はそれを使用
+  if (problem.detail) {
+    const message = getMessageFromDetail(problem.detail);
+    if (message) return message;
+  }
+
+  // titleフィールドがある場合
+  if (problem.title && problem.title !== "Error") {
+    return problem.title;
+  }
+
+  return null;
+}
+
+/**
+ * HTTPErrorからユーザーフレンドリーなメッセージを取得（非同期版）
+ * Problem+JSONからエラーコードを解析し、適切なメッセージを返す
+ */
+export async function getUserFriendlyMessageAsync(error: unknown): Promise<string> {
   if (error instanceof Error && "response" in error) {
     const httpError = error as HTTPError;
     const status = httpError.response?.status;
 
-    // まずエラーメッセージをチェック
-    if (httpError.message && !httpError.message.includes("HTTP Error")) {
-      return httpError.message;
+    // Problem+JSONからエラー情報を取得
+    const problem = await extractProblemJSON(httpError);
+    if (problem) {
+      const message = getMessageFromProblem(problem);
+      if (message) return message;
     }
 
     // ステータスコードからメッセージを生成
@@ -123,8 +210,37 @@ export function getUserFriendlyMessage(error: unknown): string {
     }
   }
 
+  // 同期版にフォールバック
+  return getUserFriendlyMessage(error);
+}
+
+/**
+ * HTTPErrorからユーザーフレンドリーなメッセージを取得（同期版）
+ * レスポンスボディを読めない場合はステータスコードからメッセージを生成
+ */
+export function getUserFriendlyMessage(error: unknown): string {
+  if (error instanceof Error && "response" in error) {
+    const httpError = error as HTTPError;
+    const status = httpError.response?.status;
+
+    // ステータスコードからメッセージを生成
+    if (status && STATUS_MESSAGES[status]) {
+      return STATUS_MESSAGES[status];
+    }
+
+    // エラーメッセージをチェック（HTTP Errorは除外）
+    if (httpError.message && !httpError.message.includes("HTTP Error")) {
+      return httpError.message;
+    }
+  }
+
   if (error instanceof Error) {
-    return error.message || "エラーが発生しました。";
+    // 技術的なメッセージをフィルタリング
+    const msg = error.message;
+    if (msg && !msg.includes("HTTP Error") && !msg.includes("fetch")) {
+      return msg;
+    }
+    return "エラーが発生しました。";
   }
 
   return "予期しないエラーが発生しました。";
@@ -221,7 +337,7 @@ export function getToastVariant(error: unknown): "default" | "destructive" {
 }
 
 /**
- * エラーハンドリングのためのヘルパー関数
+ * エラーハンドリングのためのヘルパー関数（同期版）
  *
  * @example
  * ```ts
@@ -245,4 +361,62 @@ export function handleApiError(error: unknown): {
   const isRetryable = isConflictError(error);
 
   return { message, variant, isRetryable };
+}
+
+/**
+ * エラーハンドリングのためのヘルパー関数（非同期版）
+ * Problem+JSONからエラーコードを解析し、より詳細なメッセージを返す
+ *
+ * @example
+ * ```ts
+ * try {
+ *   await confirmAllocation(id);
+ * } catch (error) {
+ *   const { message, variant } = await handleApiErrorAsync(error);
+ *   toast.error(message);
+ * }
+ * ```
+ */
+export async function handleApiErrorAsync(error: unknown): Promise<{
+  message: string;
+  variant: "default" | "destructive";
+  isRetryable: boolean;
+  errorCode?: string;
+}> {
+  const message = await getUserFriendlyMessageAsync(error);
+  const variant = getToastVariant(error);
+
+  // エラーコードを取得
+  let errorCode: string | undefined;
+  if (error instanceof Error && "response" in error) {
+    const problem = await extractProblemJSON(error as HTTPError);
+    errorCode = problem?.error_code ?? undefined;
+  }
+
+  // リトライ可能かどうかを判定（在庫不足や競合は再試行で解決する可能性あり）
+  const isRetryable = isConflictError(error);
+
+  return { message, variant, isRetryable, errorCode };
+}
+
+/**
+ * Mutation用のonErrorハンドラを生成
+ * 操作名を指定すると「{操作名}に失敗しました: {エラーメッセージ}」形式でトーストを表示
+ *
+ * @example
+ * ```ts
+ * const mutation = useMutation({
+ *   mutationFn: createOrder,
+ *   onError: createErrorHandler("受注作成"),
+ * });
+ * ```
+ */
+export function createErrorHandler(
+  operationName: string,
+  toast: { error: (message: string) => void },
+): (error: unknown) => Promise<void> {
+  return async (error: unknown) => {
+    const { message } = await handleApiErrorAsync(error);
+    toast.error(`${operationName}に失敗しました: ${message}`);
+  };
 }

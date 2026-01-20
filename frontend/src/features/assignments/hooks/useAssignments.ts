@@ -10,6 +10,7 @@ import {
   updateAssignment,
 } from "@/shared/api/assignments";
 import type { components } from "@/types/api";
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 type UserSupplierAssignmentUpdate = components["schemas"]["UserSupplierAssignmentUpdate"];
 
@@ -45,8 +46,9 @@ export function useAssignmentMutations() {
       queryClient.invalidateQueries({ queryKey: assignmentKeys.supplier(variables.supplier_id) });
       toast.success("担当割り当てを作成しました");
     },
-    onError: (error) => {
-      toast.error(`担当割り当ての作成に失敗しました: ${error.message}`);
+    onError: async (error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`担当割り当ての作成に失敗しました: ${message}`);
     },
   });
 
@@ -57,8 +59,9 @@ export function useAssignmentMutations() {
       queryClient.invalidateQueries({ queryKey: assignmentKeys.all });
       toast.success("担当割り当てを更新しました");
     },
-    onError: (error) => {
-      toast.error(`担当割り当ての更新に失敗しました: ${error.message}`);
+    onError: async (error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`担当割り当ての更新に失敗しました: ${message}`);
     },
   });
 
@@ -68,8 +71,9 @@ export function useAssignmentMutations() {
       queryClient.invalidateQueries({ queryKey: assignmentKeys.all });
       toast.success("担当割り当てを削除しました");
     },
-    onError: (error) => {
-      toast.error(`担当割り当ての削除に失敗しました: ${error.message}`);
+    onError: async (error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`担当割り当ての削除に失敗しました: ${message}`);
     },
   });
 
@@ -81,8 +85,9 @@ export function useAssignmentMutations() {
       queryClient.invalidateQueries({ queryKey: assignmentKeys.user(variables.userId) });
       toast.success("主担当者を設定しました");
     },
-    onError: (error) => {
-      toast.error(`主担当者の設定に失敗しました: ${error.message}`);
+    onError: async (error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`主担当者の設定に失敗しました: ${message}`);
     },
   });
 
