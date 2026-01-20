@@ -2,8 +2,8 @@
  * 出荷用マスタデータ一覧ページ
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { Plus, Download } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus, Download, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { shippingMasterApi } from "../api";
@@ -12,12 +12,20 @@ import { ShippingMasterImportDialog } from "../components/ShippingMasterImportDi
 import { ShippingMasterTable } from "../components/ShippingMasterTable";
 
 import { Button, Card, CardContent } from "@/components/ui";
+import { useAuth } from "@/features/auth/AuthContext";
+import httpClient from "@/shared/api/http-client";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { type components } from "@/types/api";
 
+/* eslint-disable max-lines-per-function */
 export function ShippingMasterListPage() {
   const [customerCode, setCustomerCode] = useState("");
   const [materialCode, setMaterialCode] = useState("");
   const [jikuCode, setJikuCode] = useState("");
+
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes("admin") ?? false;
+  const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["shipping-masters", { customerCode, materialCode, jikuCode }],
@@ -28,6 +36,41 @@ export function ShippingMasterListPage() {
         jiku_code: jikuCode || undefined,
       }),
   });
+
+  const resetMutation = useMutation({
+    mutationFn: async () => {
+      await httpClient.delete("shipping-masters/admin/reset");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await shippingMasterApi.delete(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
+    },
+  });
+
+  const handleReset = () => {
+    if (window.confirm("全ての出荷用マスタデータを削除します。よろしいですか？")) {
+      resetMutation.mutate();
+    }
+  };
+
+  const handleEdit = (row: components["schemas"]["ShippingMasterCuratedResponse"]) => {
+    // TODO: 編集モーダルまたは編集ページへの遷移を実装
+    console.log("Edit shipping master:", row.id);
+  };
+
+  const handleDelete = (row: components["schemas"]["ShippingMasterCuratedResponse"]) => {
+    if (window.confirm(`出荷用マスタデータ (ID: ${row.id}) を削除します。よろしいですか？`)) {
+      deleteMutation.mutate(row.id);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -46,6 +89,17 @@ export function ShippingMasterListPage() {
       <div className="flex justify-between items-center">
         <div className="text-sm text-muted-foreground">{data && `${data.total}件のデータ`}</div>
         <div className="flex gap-2">
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              disabled={resetMutation.isPending}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              全削除
+            </Button>
+          )}
           <Button variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />
             Excelエクスポート
@@ -61,7 +115,13 @@ export function ShippingMasterListPage() {
       {/* テーブル */}
       <Card>
         <CardContent className="p-0">
-          <ShippingMasterTable items={data?.items || []} isLoading={isLoading} error={error} />
+          <ShippingMasterTable
+            items={data?.items || []}
+            isLoading={isLoading}
+            error={error}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         </CardContent>
       </Card>
     </div>

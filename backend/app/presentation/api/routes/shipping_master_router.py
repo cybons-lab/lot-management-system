@@ -108,6 +108,14 @@ async def delete_shipping_master(
         )
 
 
+@router.delete("/admin/reset", status_code=status.HTTP_204_NO_CONTENT)
+async def reset_shipping_masters(
+    service: ShippingMasterService = Depends(get_service),
+) -> None:
+    """出荷用マスタデータを全削除（管理者専用）."""
+    service.delete_all()  # 全削除メソッドを呼び出す
+
+
 @router.post("/import", response_model=ShippingMasterImportResponse)
 async def import_shipping_masters_file(
     file: Annotated[UploadFile, File(description="Excel file (.xlsx)")],

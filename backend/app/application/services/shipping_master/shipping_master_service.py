@@ -249,3 +249,9 @@ class ShippingMasterService:
         self.session.delete(curated)
         self.session.flush()
         return True
+
+    def delete_all(self) -> None:
+        """全ての出荷用マスタデータを削除（管理者専用）."""
+        self.session.query(ShippingMasterCurated).delete()
+        self.session.query(ShippingMasterRaw).delete()
+        self.session.commit()
