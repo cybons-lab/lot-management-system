@@ -526,6 +526,7 @@ class SmartReadService:
         task_id: str,
         export_type: str = "csv",
         timeout_sec: float = 300.0,
+        force: bool = False,
     ) -> dict[str, Any] | None:
         """タスクの結果をAPIから同期してDBに保存.
 
@@ -534,32 +535,67 @@ class SmartReadService:
             task_id: タスクID
             export_type: エクスポート形式
             timeout_sec: タイムアウト秒数
+            force: 強制的に再取得するか
 
         Returns:
             同期結果、またはNone
         """
+        logger.info(f"[SmartRead] Starting sync for task {task_id} (config_id={config_id})")
+
+        # 0. 既存データの確認 (force=Falseの場合)
+        if not force:
+            from sqlalchemy import select
+
+            from app.infrastructure.persistence.models.smartread_models import (
+                SmartReadLongData,
+                SmartReadWideData,
+            )
+
+            # WideDataがあるか確認
+            stmt_wide = select(SmartReadWideData).where(SmartReadWideData.task_id == task_id)
+            existing_wide = self.session.execute(stmt_wide).scalars().all()
+
+            if existing_wide:
+                logger.info(
+                    f"[SmartRead] Task {task_id} already has {len(existing_wide)} wide rows in DB. Fetching long data..."
+                )
+                stmt_long = select(SmartReadLongData).where(SmartReadLongData.task_id == task_id)
+                existing_long = self.session.execute(stmt_long).scalars().all()
+
+                return {
+                    "wide_data": [w.content for w in existing_wide],
+                    "long_data": [l.content for l in existing_long],
+                    "errors": [],
+                    "filename": existing_wide[0].filename if existing_wide else None,
+                    "from_cache": True,
+                }
+
         client, _ = self._get_client(config_id)
         if not client:
+            logger.error(f"[SmartRead] Could not initialize client for config {config_id}")
             return None
 
         # 1. Exportを作成
+        logger.info(f"[SmartRead] Creating export for task {task_id}...")
         export = await client.create_export(task_id, export_type)
         if not export:
-            logger.error(f"Failed to create export for task {task_id}")
+            logger.error(f"[SmartRead] Failed to create export for task {task_id}")
             return None
+        logger.info(f"[SmartRead] Export created: {export.export_id}")
 
         # 2. 完了まで待機
+        logger.info(f"[SmartRead] Polling export {export.export_id} until ready...")
         export_ready = await client.poll_export_until_ready(task_id, export.export_id, timeout_sec)
 
         # APIによっては COMPLETED, SUCCEEDED のいずれかが返る
         if not export_ready or export_ready.state.upper() not in ["COMPLETED", "SUCCEEDED"]:
             logger.error(
-                f"Export did not complete for task {task_id}. State: {export_ready.state if export_ready else 'None'}"
+                f"[SmartRead] Export did not complete for task {task_id}. State: {export_ready.state if export_ready else 'None'}"
             )
             return None
+        logger.info(f"[SmartRead] Export is ready. State: {export_ready.state}")
 
         # 3. CSVデータを取得してDBに保存
-        # get_export_csv_data内部で _save_wide_and_long_data が呼ばれる
         return await self.get_export_csv_data(
             config_id=config_id,
             task_id=task_id,

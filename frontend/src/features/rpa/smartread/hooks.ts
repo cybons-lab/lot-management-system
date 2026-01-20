@@ -566,6 +566,67 @@ export function useSmartReadRequestPolling(configId: number | null) {
   });
 }
 
+// Helper: Check IDB cache for task results
+async function checkIdbCache(
+  configId: number,
+  taskId: string,
+): Promise<{
+  wide_data: Array<Record<string, any>>;
+  long_data: Array<Record<string, any>>;
+  errors: Array<any>;
+  filename: string | null;
+  source: "cache";
+} | null> {
+  try {
+    console.info(`[SmartRead] Checking IDB cache...`);
+    const { exportCache } = await import("./db/export-cache");
+    const cached = await exportCache.getByTaskId(configId, taskId);
+
+    if (cached && cached.long_data.length > 0) {
+      console.info(
+        `[SmartRead] CACHE HIT! Found ${cached.long_data.length} long rows in IDB. ` +
+          `Cached at: ${new Date(cached.cached_at).toLocaleString()}`,
+      );
+      return {
+        wide_data: cached.wide_data,
+        long_data: cached.long_data,
+        errors: cached.errors,
+        filename: cached.filename,
+        source: "cache" as const,
+      };
+    }
+    console.info(`[SmartRead] Cache miss or empty.`);
+  } catch (e) {
+    console.warn(`[SmartRead] Failed to check IDB cache:`, e);
+  }
+  return null;
+}
+
+// Helper: Cache sync result to IDB
+async function cacheToIdb(
+  configId: number,
+  taskId: string,
+  res: { wide_data: unknown[]; long_data: unknown[]; errors: unknown[]; filename: string | null },
+) {
+  if (res.wide_data.length === 0) return;
+  try {
+    console.info(`[SmartRead] Saving to IDB cache...`);
+    const { exportCache } = await import("./db/export-cache");
+    await exportCache.set({
+      config_id: configId,
+      task_id: taskId,
+      export_id: `sync_${Date.now()}`,
+      wide_data: res.wide_data as Array<Record<string, any>>,
+      long_data: res.long_data as Array<Record<string, any>>,
+      errors: res.errors as Array<any>,
+      filename: res.filename,
+    });
+    console.info(`[SmartRead] Cached to IDB successfully.`);
+  } catch (e) {
+    console.error(`[SmartRead] Failed to cache to IDB:`, e);
+  }
+}
+
 /**
  * タスクの結果を強制的に同期
  */
@@ -573,49 +634,55 @@ export function useSyncTaskResults() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ configId, taskId }: { configId: number; taskId: string }) => {
+    mutationFn: async ({
+      configId,
+      taskId,
+      forceSync = false,
+    }: {
+      configId: number;
+      taskId: string;
+      forceSync?: boolean;
+    }) => {
       console.group(`[SmartRead] Syncing task results for ${taskId}`);
-      console.info(`[SmartRead] Triggering backend sync API...`);
       const startTime = Date.now();
+
       try {
-        const res = await syncTaskResults(configId, taskId);
-        const elapsed = (Date.now() - startTime) / 1000;
-        console.info(
-          `[SmartRead] Sync successful! Received ${res.long_data.length} rows in ${elapsed.toFixed(1)}s`,
-        );
-        if (res.wide_data && res.wide_data.length > 0) {
-          console.info(
-            `[SmartRead] Wide Data Sample (1st row keys):`,
-            Object.keys(res.wide_data[0]),
-          );
-          console.info(`[SmartRead] Wide Data Sample (1st row values):`, res.wide_data[0]);
+        // 1. Check IDB cache first (unless forceSync is true)
+        if (!forceSync) {
+          const cached = await checkIdbCache(configId, taskId);
+          if (cached) return cached;
+        } else {
+          console.info(`[SmartRead] Force sync, skipping cache.`);
         }
-        console.info(`[SmartRead] Filename: ${res.filename || "N/A"}`);
-        return res;
+
+        // 2. Trigger backend sync API
+        console.info(`[SmartRead] Calling backend sync API...`);
+        const res = await syncTaskResults(configId, taskId);
+        console.info(`[SmartRead] Sync done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
+
+        // 3. Cache the result
+        await cacheToIdb(configId, taskId, res);
+
+        return { ...res, source: "server" as const };
       } catch (e) {
-        console.error(`[SmartRead] Sync failed after ${(Date.now() - startTime) / 1000}s`, e);
+        console.error(`[SmartRead] Sync failed`, e);
         throw e;
       } finally {
         console.groupEnd();
       }
     },
     onSuccess: (res, { configId, taskId }) => {
-      toast.success(`${res.long_data.length}件のデータを同期しました`);
+      const src = res.source === "cache" ? "キャッシュ" : "サーバー";
+      toast.success(`${res.long_data.length}件のデータを同期しました (${src})`);
 
       // 1. 縦持ちデータ(単一タスク)を無効化 -> これで画面がリロードされる
-      queryClient.invalidateQueries({
-        queryKey: SMARTREAD_QUERY_KEYS.longData(configId, taskId),
-      });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.longData(configId, taskId) });
 
       // 2. 全体の縦持ちデータ一覧も念のため無効化
-      queryClient.invalidateQueries({
-        queryKey: SMARTREAD_QUERY_KEYS.longData(configId),
-      });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.longData(configId) });
 
       // 3. タスク状態（synced_at等）が変わるので管理タスク一覧も更新
-      queryClient.invalidateQueries({
-        queryKey: SMARTREAD_QUERY_KEYS.managedTasks(configId),
-      });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.managedTasks(configId) });
     },
     onError: (error: Error) => {
       toast.error(`データの取得に失敗しました: ${error.message}`);

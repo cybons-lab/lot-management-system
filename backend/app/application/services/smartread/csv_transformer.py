@@ -93,12 +93,21 @@ class SmartReadCsvTransformer:
         Returns:
             変換結果
         """
+        logger.info(f"[Transformer] Starting transformation of {len(wide_data)} wide rows")
+        if wide_data:
+            logger.info(
+                f"[Transformer] First row keys ({len(wide_data[0])} total): {list(wide_data[0].keys())[:15]}..."
+            )
+
         long_data: list[dict[str, Any]] = []
         errors: list[ValidationError] = []
 
         for row_idx, row in enumerate(wide_data):
             # 共通項目を抽出
             common = self._extract_common_fields(row)
+            logger.debug(
+                f"[Transformer] Row {row_idx}: Common fields extracted: {list(common.keys())}"
+            )
 
             # 共通項目のバリデーション
             common, row_errors = self._validate_common_fields(common, row_idx)
@@ -106,10 +115,14 @@ class SmartReadCsvTransformer:
 
             # 明細を抽出
             details = self._extract_details(row)
+            logger.info(f"[Transformer] Row {row_idx}: {len(details)} details extracted")
 
             for detail_idx, detail in enumerate(details):
                 # 空明細スキップ
                 if skip_empty and self._is_empty_detail(detail):
+                    logger.debug(
+                        f"[Transformer] Row {row_idx}, Detail {detail_idx}: SKIPPED (empty)"
+                    )
                     continue
 
                 # 明細のバリデーション
@@ -123,7 +136,13 @@ class SmartReadCsvTransformer:
                     **detail,
                 }
                 long_data.append(long_row)
+                logger.debug(
+                    f"[Transformer] Row {row_idx}, Detail {detail_idx}: ADDED to long_data"
+                )
 
+        logger.info(
+            f"[Transformer] COMPLETE: {len(wide_data)} wide rows -> {len(long_data)} long rows, {len(errors)} errors"
+        )
         return TransformResult(long_data=long_data, errors=errors)
 
     def _extract_common_fields(self, row: dict[str, Any]) -> dict[str, Any]:
@@ -170,8 +189,12 @@ class SmartReadCsvTransformer:
                             break
 
             # 明細が存在する場合のみ追加
-            if not self._is_empty_detail(detail):
+            is_empty = self._is_empty_detail(detail)
+            if not is_empty:
                 details.append(detail)
+                logger.debug(
+                    f"[Transformer] Detail n={n}: NOT empty, extracted: {list(detail.keys())}"
+                )
                 # 番号付きが見つからず、かつn=1で番号なしでヒットした場合は縦持ちと判断して打ち切り
                 is_vertical = any(
                     field_name in row
@@ -180,8 +203,12 @@ class SmartReadCsvTransformer:
                     for field_name in DETAIL_FIELDS
                 )
                 if is_vertical and n == 1:
+                    logger.debug("[Transformer] Detected vertical format, stopping at n=1")
                     break
+            else:
+                logger.debug(f"[Transformer] Detail n={n}: EMPTY, detail contents: {detail}")
 
+        logger.debug(f"[Transformer] Total details extracted: {len(details)}")
         return details
 
     def _is_empty_detail(self, detail: dict[str, Any]) -> bool:
