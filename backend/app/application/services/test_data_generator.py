@@ -19,6 +19,7 @@ from .test_data.masters import (
     generate_warehouses,
 )
 from .test_data.orders import generate_orders
+from .test_data.smartread import generate_smartread_data
 from .test_data.utils import clear_data
 from .test_data.withdrawals import generate_withdrawals
 
@@ -39,6 +40,7 @@ __all__ = [
     "generate_all_test_data",
     "generate_withdrawals",
     "generate_inbound_plans",
+    "generate_smartread_data",
 ]
 
 
@@ -110,6 +112,11 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
         if progress_callback:
             progress_callback(90, "Generating Inbound Plans...")
         generate_inbound_plans(db, products, suppliers, options, calendar)
+
+        # Step 7: Generate SmartRead sample data
+        if progress_callback:
+            progress_callback(95, "Generating SmartRead Sample Data...")
+        generate_smartread_data(db)
 
         if progress_callback:
             progress_callback(100, "Completed!")

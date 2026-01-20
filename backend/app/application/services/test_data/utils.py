@@ -38,6 +38,12 @@ def clear_data(db: Session):
         "customers",
         "suppliers",
         "warehouses",
+        # SmartRead tables
+        "smartread_long_data",
+        "smartread_wide_data",
+        "smartread_export_history",
+        "smartread_requests",
+        "smartread_tasks",
     ]
 
     for table in tables:
