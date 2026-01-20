@@ -1,10 +1,12 @@
 /* eslint-disable max-lines-per-function */
 
-import { Download, AlertCircle, RefreshCw } from "lucide-react";
+import { Download, AlertCircle, RefreshCw, Database, Repeat, Save } from "lucide-react";
 import { useState } from "react";
 
+import { syncTaskResults } from "../api";
 import { downloadJson, downloadCsv, useSyncTaskResults } from "../hooks";
 import { useResultDataLoader } from "../hooks/useResultDataLoader";
+import { useTransformToLong } from "../hooks/useTransformToLong";
 
 import { SmartReadCsvTable } from "./SmartReadCsvTable";
 
@@ -31,6 +33,7 @@ interface SmartReadResultViewProps {
 type AnyRecord = Record<string, any>;
 
 // ヘッダー表示用コンポーネント
+// eslint-disable-next-line complexity
 function ResultHeader({
   isLoading,
   wideCount,
@@ -42,6 +45,11 @@ function ResultHeader({
   onDownloadWide,
   onDownloadLong,
   isSyncing,
+  onLoadFromDb,
+  onTransformToLong,
+  onSaveToDb,
+  isTransforming,
+  isSaving,
 }: {
   isLoading: boolean;
   wideCount: number;
@@ -53,7 +61,13 @@ function ResultHeader({
   onDownloadWide: () => void;
   onDownloadLong: () => void;
   isSyncing: boolean;
+  onLoadFromDb: () => void;
+  onTransformToLong: () => void;
+  onSaveToDb: () => void;
+  isTransforming: boolean;
+  isSaving: boolean;
 }) {
+  const isDev = import.meta.env.DEV;
   return (
     <CardHeader className="py-4">
       <div className="flex items-center justify-between">
@@ -89,16 +103,58 @@ function ResultHeader({
           </CardDescription>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onSync}
-            disabled={isSyncing || isLoading}
-            title="APIから再取得"
-          >
-            <RefreshCw className={`h-4 w-4 mr-1 ${isSyncing || isLoading ? "animate-spin" : ""}`} />
-            API同期
-          </Button>
+          {isDev ? (
+            <>
+              {/* 開発モード: デバッグ用ボタン */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onLoadFromDb}
+                disabled={isLoading}
+                title="DBから横持ちデータを読み込み"
+              >
+                <Database className="h-4 w-4 mr-1" />
+                DB読込
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onTransformToLong}
+                disabled={wideCount === 0 || isTransforming}
+                title="横持ちデータを縦持ちに変換"
+              >
+                <Repeat className={`h-4 w-4 mr-1 ${isTransforming ? "animate-spin" : ""}`} />
+                縦変換
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onSaveToDb}
+                disabled={longCount === 0 || isSaving}
+                title="縦持ちデータをDBに保存"
+              >
+                <Save className={`h-4 w-4 mr-1 ${isSaving ? "animate-spin" : ""}`} />
+                DB保存
+              </Button>
+              <div className="border-r mx-1" />
+            </>
+          ) : (
+            <>
+              {/* 本番モード: API同期ボタン */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onSync}
+                disabled={isSyncing || isLoading}
+                title="SmartRead APIからデータを取得"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-1 ${isSyncing || isLoading ? "animate-spin" : ""}`}
+                />
+                サーバー取得
+              </Button>
+            </>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -257,6 +313,51 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     downloadJson(longData, `${taskId}.json`);
   };
 
+  // 開発モード専用: DBから読み込み (force=false)
+  const [isLoadingFromDb, setIsLoadingFromDb] = useState(false);
+  const handleLoadFromDb = async () => {
+    try {
+      setIsLoadingFromDb(true);
+      console.info(`[ResultView] Loading from DB (force=false)...`);
+      const result = await syncTaskResults(configId, taskId, false);
+      setWideData(result.wide_data as AnyRecord[]);
+      setLongData(result.long_data as AnyRecord[]);
+      setTransformErrors(result.errors);
+      setFilename(result.filename);
+      if (result.wide_data.length > 0) {
+        setActiveTab("wide");
+      }
+    } catch (error) {
+      console.error(`[ResultView] Load from DB failed:`, error);
+    } finally {
+      setIsLoadingFromDb(false);
+    }
+  };
+
+  // 開発モード専用: 縦持ち変換
+  const { transformToLong, isTransforming } = useTransformToLong({
+    configId,
+    taskId,
+    wideData,
+    filename,
+    onSuccess: (long, errors) => {
+      setLongData(long);
+      setTransformErrors(errors);
+      setActiveTab("long");
+    },
+  });
+
+  // 開発モード専用: DB保存 (useTransformToLong内で自動実行されるが、明示的に呼ぶ場合用)
+  const [isSavingToDb, setIsSavingToDb] = useState(false);
+  const handleSaveToDb = async () => {
+    try {
+      setIsSavingToDb(true);
+      await transformToLong(); // 変換とDB保存を実行
+    } finally {
+      setIsSavingToDb(false);
+    }
+  };
+
   // Result Display
   return (
     <Card className="h-full flex flex-col">
@@ -271,6 +372,11 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
         onDownloadWide={handleDownloadWide}
         onDownloadLong={handleDownloadLong}
         isSyncing={syncMutation.isPending}
+        onLoadFromDb={handleLoadFromDb}
+        onTransformToLong={transformToLong}
+        onSaveToDb={handleSaveToDb}
+        isTransforming={isTransforming}
+        isSaving={isSavingToDb || isLoadingFromDb}
       />
       <CardContent className="flex-1 overflow-hidden min-h-0 p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
