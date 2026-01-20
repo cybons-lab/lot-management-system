@@ -19,6 +19,7 @@ from .test_data.masters import (
     generate_warehouses,
 )
 from .test_data.orders import generate_orders
+from .test_data.shipping_master import generate_shipping_master_data
 from .test_data.smartread import generate_smartread_data
 from .test_data.utils import clear_data
 from .test_data.withdrawals import generate_withdrawals
@@ -41,6 +42,7 @@ __all__ = [
     "generate_withdrawals",
     "generate_inbound_plans",
     "generate_smartread_data",
+    "generate_shipping_master_data",
 ]
 
 
@@ -115,8 +117,13 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
 
         # Step 7: Generate SmartRead sample data
         if progress_callback:
-            progress_callback(95, "Generating SmartRead Sample Data...")
+            progress_callback(92, "Generating SmartRead Sample Data...")
         generate_smartread_data(db)
+
+        # Step 8: Generate Shipping Master data (SmartReadと連動)
+        if progress_callback:
+            progress_callback(97, "Generating Shipping Master Data...")
+        generate_shipping_master_data(db)
 
         if progress_callback:
             progress_callback(100, "Completed!")

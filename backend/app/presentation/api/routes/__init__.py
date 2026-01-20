@@ -58,6 +58,7 @@ from app.presentation.api.routes.masters import (
     warehouses_router,
 )
 from app.presentation.api.routes.ocr import router as ocr_router
+from app.presentation.api.routes.ocr_results_router import router as ocr_results_router
 from app.presentation.api.routes.order_register_router import router as order_register_router
 from app.presentation.api.routes.orders import (
     confirmed_lines_router,
@@ -169,6 +170,9 @@ def register_all_routers(app: FastAPI) -> None:
 
     # Shipping Master endpoints
     app.include_router(shipping_master_router, prefix=prefix)
+
+    # OCR Results (view-based, realtime)
+    app.include_router(ocr_results_router, prefix=prefix)
 
 
 __all__ = [
