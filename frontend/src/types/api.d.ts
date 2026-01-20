@@ -6854,6 +6854,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/order-register": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Order Register Rows
+     * @description 受注登録結果一覧を取得.
+     */
+    get: operations["list_order_register_rows_api_order_register_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/order-register/{row_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Order Register Row
+     * @description 受注登録結果を取得.
+     */
+    get: operations["get_order_register_row_api_order_register__row_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/order-register/generate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate Order Register Rows
+     * @description OCRデータから受注登録結果を生成.
+     */
+    post: operations["generate_order_register_rows_api_order_register_generate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/order-register/{row_id}/lots": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Lot Assignments
+     * @description ロット割当を更新.
+     */
+    put: operations["update_lot_assignments_api_order_register__row_id__lots_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/shipping-masters": {
     parameters: {
       query?: never;
@@ -11520,6 +11600,219 @@ export interface components {
        * @default 0
        */
       allocated_quantity: string;
+    };
+    /**
+     * OrderRegisterGenerateRequest
+     * @description 受注登録結果生成リクエスト.
+     */
+    OrderRegisterGenerateRequest: {
+      /**
+       * Task Date
+       * Format: date
+       * @description タスク日付
+       */
+      task_date: string;
+    };
+    /**
+     * OrderRegisterGenerateResponse
+     * @description 受注登録結果生成レスポンス.
+     */
+    OrderRegisterGenerateResponse: {
+      /** Success */
+      success: boolean;
+      /** Generated Count */
+      generated_count: number;
+      /** Warnings */
+      warnings?: string[];
+    };
+    /**
+     * OrderRegisterLotAssignmentUpdate
+     * @description ロット割当更新リクエスト.
+     */
+    OrderRegisterLotAssignmentUpdate: {
+      /** Lot No 1 */
+      lot_no_1?: string | null;
+      /** Quantity 1 */
+      quantity_1?: number | null;
+      /** Lot No 2 */
+      lot_no_2?: string | null;
+      /** Quantity 2 */
+      quantity_2?: number | null;
+    };
+    /**
+     * OrderRegisterRowListResponse
+     * @description 受注登録結果一覧レスポンス.
+     */
+    OrderRegisterRowListResponse: {
+      /** Items */
+      items: components["schemas"]["OrderRegisterRowResponse"][];
+      /** Total */
+      total: number;
+    };
+    /**
+     * OrderRegisterRowResponse
+     * @description 受注登録結果レスポンス.
+     */
+    OrderRegisterRowResponse: {
+      /**
+       * Task Date
+       * Format: date
+       * @description タスク日付
+       */
+      task_date: string;
+      /**
+       * Lot No 1
+       * @description ロット番号1
+       */
+      lot_no_1?: string | null;
+      /**
+       * Quantity 1
+       * @description 数量1
+       */
+      quantity_1?: number | null;
+      /**
+       * Lot No 2
+       * @description ロット番号2
+       */
+      lot_no_2?: string | null;
+      /**
+       * Quantity 2
+       * @description 数量2
+       */
+      quantity_2?: number | null;
+      /**
+       * Inbound No
+       * @description 入庫No
+       */
+      inbound_no?: string | null;
+      /**
+       * Shipping Date
+       * @description 出荷日
+       */
+      shipping_date?: string | null;
+      /**
+       * Delivery Date
+       * @description 納期
+       */
+      delivery_date?: string | null;
+      /**
+       * Delivery Quantity
+       * @description 納入量
+       */
+      delivery_quantity?: number | null;
+      /**
+       * Item No
+       * @description アイテムNo
+       */
+      item_no?: string | null;
+      /**
+       * Quantity Unit
+       * @description 数量単位
+       */
+      quantity_unit?: string | null;
+      /**
+       * Material Code
+       * @description 材質コード
+       */
+      material_code?: string | null;
+      /**
+       * Jiku Code
+       * @description 次区
+       */
+      jiku_code?: string | null;
+      /**
+       * Customer Part No
+       * @description 先方品番
+       */
+      customer_part_no?: string | null;
+      /**
+       * Maker Part No
+       * @description メーカー品番
+       */
+      maker_part_no?: string | null;
+      /**
+       * Source
+       * @description 取得元
+       * @default OCR
+       */
+      source: string;
+      /**
+       * Shipping Slip Text
+       * @description 出荷票テキスト
+       */
+      shipping_slip_text?: string | null;
+      /**
+       * Customer Code
+       * @description 得意先コード
+       */
+      customer_code?: string | null;
+      /**
+       * Customer Name
+       * @description 得意先名
+       */
+      customer_name?: string | null;
+      /**
+       * Supplier Code
+       * @description 仕入先コード
+       */
+      supplier_code?: string | null;
+      /**
+       * Supplier Name
+       * @description 仕入先名称
+       */
+      supplier_name?: string | null;
+      /**
+       * Shipping Warehouse Code
+       * @description 出荷倉庫コード
+       */
+      shipping_warehouse_code?: string | null;
+      /**
+       * Shipping Warehouse Name
+       * @description 出荷倉庫名
+       */
+      shipping_warehouse_name?: string | null;
+      /**
+       * Delivery Place Code
+       * @description 納入先コード
+       */
+      delivery_place_code?: string | null;
+      /**
+       * Delivery Place Name
+       * @description 納入先名
+       */
+      delivery_place_name?: string | null;
+      /**
+       * Remarks
+       * @description 備考
+       */
+      remarks?: string | null;
+      /**
+       * Status
+       * @description ステータス
+       * @default PENDING
+       */
+      status: string;
+      /**
+       * Error Message
+       * @description エラーメッセージ
+       */
+      error_message?: string | null;
+      /** Id */
+      id: number;
+      /** Long Data Id */
+      long_data_id?: number | null;
+      /** Curated Master Id */
+      curated_master_id?: number | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
     };
     /**
      * OrderWithLinesResponse
@@ -24985,6 +25278,141 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["OcrImportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_order_register_rows_api_order_register_get: {
+    parameters: {
+      query?: {
+        /** @description タスク日付 (YYYY-MM-DD) */
+        task_date?: string | null;
+        /** @description ステータスでフィルタ */
+        status?: string | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderRegisterRowListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_order_register_row_api_order_register__row_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        row_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderRegisterRowResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  generate_order_register_rows_api_order_register_generate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OrderRegisterGenerateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderRegisterGenerateResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_lot_assignments_api_order_register__row_id__lots_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        row_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OrderRegisterLotAssignmentUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderRegisterRowResponse"];
         };
       };
       /** @description Validation Error */
