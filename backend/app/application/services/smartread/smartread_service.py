@@ -550,8 +550,12 @@ class SmartReadService:
 
         # 2. 完了まで待機
         export_ready = await client.poll_export_until_ready(task_id, export.export_id, timeout_sec)
-        if not export_ready or export_ready.state != "SUCCEEDED":
-            logger.error(f"Export did not complete for task {task_id}")
+
+        # APIによっては COMPLETED, SUCCEEDED のいずれかが返る
+        if not export_ready or export_ready.state.upper() not in ["COMPLETED", "SUCCEEDED"]:
+            logger.error(
+                f"Export did not complete for task {task_id}. State: {export_ready.state if export_ready else 'None'}"
+            )
             return None
 
         # 3. CSVデータを取得してDBに保存
