@@ -17904,6 +17904,327 @@
           }
         }
       }
+    },
+    "/api/shipping-masters": {
+      "get": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "List Shipping Masters",
+        "description": "出荷用マスタ一覧を取得.",
+        "operationId": "list_shipping_masters_api_shipping_masters_get",
+        "parameters": [
+          {
+            "name": "customer_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先コードでフィルタ",
+              "title": "Customer Code"
+            },
+            "description": "得意先コードでフィルタ"
+          },
+          {
+            "name": "material_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "材質コードでフィルタ",
+              "title": "Material Code"
+            },
+            "description": "材質コードでフィルタ"
+          },
+          {
+            "name": "jiku_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "次区でフィルタ",
+              "title": "Jiku Code"
+            },
+            "description": "次区でフィルタ"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingMasterCuratedListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Create Shipping Master",
+        "description": "出荷用マスタを新規作成.",
+        "operationId": "create_shipping_master_api_shipping_masters_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShippingMasterCuratedCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingMasterCuratedResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipping-masters/{master_id}": {
+      "get": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Get Shipping Master",
+        "description": "出荷用マスタを取得.",
+        "operationId": "get_shipping_master_api_shipping_masters__master_id__get",
+        "parameters": [
+          {
+            "name": "master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Master Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingMasterCuratedResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Update Shipping Master",
+        "description": "出荷用マスタを更新.",
+        "operationId": "update_shipping_master_api_shipping_masters__master_id__put",
+        "parameters": [
+          {
+            "name": "master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Master Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShippingMasterCuratedUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingMasterCuratedResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Delete Shipping Master",
+        "description": "出荷用マスタを削除.",
+        "operationId": "delete_shipping_master_api_shipping_masters__master_id__delete",
+        "parameters": [
+          {
+            "name": "master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Master Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shipping-masters/import": {
+      "post": {
+        "tags": [
+          "Shipping Master"
+        ],
+        "summary": "Import Shipping Masters",
+        "description": "出荷用マスタをインポート.\n\nExcelから読み込んだデータをJSON形式で受け取り、DBに投入する。",
+        "operationId": "import_shipping_masters_api_shipping_masters_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShippingMasterImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShippingMasterImportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -30780,6 +31101,794 @@
         ],
         "title": "ShipmentTextResponse",
         "description": "Response schema for shipment text lookup."
+      },
+      "ShippingMasterCuratedCreate": {
+        "properties": {
+          "customer_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Customer Code",
+            "description": "得意先コード"
+          },
+          "material_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Material Code",
+            "description": "材質コード"
+          },
+          "jiku_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Jiku Code",
+            "description": "次区（出荷先区分）"
+          },
+          "warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Code",
+            "description": "倉庫コード"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name",
+            "description": "得意先名"
+          },
+          "delivery_note_product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Note Product Name",
+            "description": "素材納品書記載製品名"
+          },
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No",
+            "description": "先方品番"
+          },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No",
+            "description": "メーカー品番"
+          },
+          "maker_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Code",
+            "description": "メーカーコード"
+          },
+          "maker_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Name",
+            "description": "メーカー名"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code",
+            "description": "仕入先コード"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name",
+            "description": "仕入先名称"
+          },
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code",
+            "description": "納入先コード"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name",
+            "description": "納入先"
+          },
+          "shipping_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Code",
+            "description": "出荷倉庫コード"
+          },
+          "shipping_warehouse_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Name",
+            "description": "出荷倉庫名"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text",
+            "description": "出荷票テキスト"
+          },
+          "transport_lt_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Lt Days",
+            "description": "輸送LT(営業日)"
+          },
+          "has_order": {
+            "type": "boolean",
+            "title": "Has Order",
+            "description": "発注の有無",
+            "default": false
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks",
+            "description": "備考"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_code",
+          "material_code",
+          "jiku_code"
+        ],
+        "title": "ShippingMasterCuratedCreate",
+        "description": "出荷用マスタ新規作成リクエスト."
+      },
+      "ShippingMasterCuratedListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ShippingMasterCuratedResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ShippingMasterCuratedListResponse",
+        "description": "出荷用マスタ一覧レスポンス."
+      },
+      "ShippingMasterCuratedResponse": {
+        "properties": {
+          "customer_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Customer Code",
+            "description": "得意先コード"
+          },
+          "material_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Material Code",
+            "description": "材質コード"
+          },
+          "jiku_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Jiku Code",
+            "description": "次区（出荷先区分）"
+          },
+          "warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Code",
+            "description": "倉庫コード"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name",
+            "description": "得意先名"
+          },
+          "delivery_note_product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Note Product Name",
+            "description": "素材納品書記載製品名"
+          },
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No",
+            "description": "先方品番"
+          },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No",
+            "description": "メーカー品番"
+          },
+          "maker_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Code",
+            "description": "メーカーコード"
+          },
+          "maker_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Name",
+            "description": "メーカー名"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code",
+            "description": "仕入先コード"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name",
+            "description": "仕入先名称"
+          },
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code",
+            "description": "納入先コード"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name",
+            "description": "納入先"
+          },
+          "shipping_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Code",
+            "description": "出荷倉庫コード"
+          },
+          "shipping_warehouse_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Name",
+            "description": "出荷倉庫名"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text",
+            "description": "出荷票テキスト"
+          },
+          "transport_lt_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Lt Days",
+            "description": "輸送LT(営業日)"
+          },
+          "has_order": {
+            "type": "boolean",
+            "title": "Has Order",
+            "description": "発注の有無",
+            "default": false
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks",
+            "description": "備考"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "raw_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Id"
+          },
+          "has_duplicate_warning": {
+            "type": "boolean",
+            "title": "Has Duplicate Warning",
+            "default": false
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_code",
+          "material_code",
+          "jiku_code",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ShippingMasterCuratedResponse",
+        "description": "出荷用マスタレスポンス."
+      },
+      "ShippingMasterCuratedUpdate": {
+        "properties": {
+          "warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Code"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
+          },
+          "delivery_note_product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Note Product Name"
+          },
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No"
+          },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No"
+          },
+          "maker_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Code"
+          },
+          "maker_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Name"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name"
+          },
+          "shipping_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Code"
+          },
+          "shipping_warehouse_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Warehouse Name"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text"
+          },
+          "transport_lt_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Lt Days"
+          },
+          "has_order": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Order"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks"
+          }
+        },
+        "type": "object",
+        "title": "ShippingMasterCuratedUpdate",
+        "description": "出荷用マスタ更新リクエスト."
+      },
+      "ShippingMasterImportRequest": {
+        "properties": {
+          "rows": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows",
+            "description": "インポートするデータ行"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows"
+        ],
+        "title": "ShippingMasterImportRequest",
+        "description": "Excelインポートリクエスト（JSON形式でデータを受け取る場合）."
+      },
+      "ShippingMasterImportResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "imported_count": {
+            "type": "integer",
+            "title": "Imported Count"
+          },
+          "curated_count": {
+            "type": "integer",
+            "title": "Curated Count"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "imported_count",
+          "curated_count"
+        ],
+        "title": "ShippingMasterImportResponse",
+        "description": "インポートレスポンス."
       },
       "SmartReadAnalyzeResponse": {
         "properties": {

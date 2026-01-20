@@ -70,6 +70,7 @@ from app.presentation.api.routes.rpa import (
     rpa_router,
     smartread_router,
 )
+from app.presentation.api.routes.shipping_master_router import router as shipping_master_router
 from app.presentation.api.routes.system.calendar_router import router as calendar_router
 from app.presentation.api.routes.system.system_router import router as system_router
 from app.presentation.api.v2 import api_router as api_v2_router
@@ -161,6 +162,9 @@ def register_all_routers(app: FastAPI) -> None:
 
     # OCR endpoints
     app.include_router(ocr_router, prefix=prefix)
+
+    # Shipping Master endpoints
+    app.include_router(shipping_master_router, prefix=prefix)
 
 
 __all__ = [

@@ -6854,6 +6854,80 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/shipping-masters": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Shipping Masters
+     * @description 出荷用マスタ一覧を取得.
+     */
+    get: operations["list_shipping_masters_api_shipping_masters_get"];
+    put?: never;
+    /**
+     * Create Shipping Master
+     * @description 出荷用マスタを新規作成.
+     */
+    post: operations["create_shipping_master_api_shipping_masters_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/shipping-masters/{master_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Shipping Master
+     * @description 出荷用マスタを取得.
+     */
+    get: operations["get_shipping_master_api_shipping_masters__master_id__get"];
+    /**
+     * Update Shipping Master
+     * @description 出荷用マスタを更新.
+     */
+    put: operations["update_shipping_master_api_shipping_masters__master_id__put"];
+    post?: never;
+    /**
+     * Delete Shipping Master
+     * @description 出荷用マスタを削除.
+     */
+    delete: operations["delete_shipping_master_api_shipping_masters__master_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/shipping-masters/import": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import Shipping Masters
+     * @description 出荷用マスタをインポート.
+     *
+     *     Excelから読み込んだデータをJSON形式で受け取り、DBに投入する。
+     */
+    post: operations["import_shipping_masters_api_shipping_masters_import_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -12595,6 +12669,318 @@ export interface components {
        * @description データソース: 'delivery_setting' | 'customer_item' | 'none'
        */
       source: string;
+    };
+    /**
+     * ShippingMasterCuratedCreate
+     * @description 出荷用マスタ新規作成リクエスト.
+     */
+    ShippingMasterCuratedCreate: {
+      /**
+       * Customer Code
+       * @description 得意先コード
+       */
+      customer_code: string;
+      /**
+       * Material Code
+       * @description 材質コード
+       */
+      material_code: string;
+      /**
+       * Jiku Code
+       * @description 次区（出荷先区分）
+       */
+      jiku_code: string;
+      /**
+       * Warehouse Code
+       * @description 倉庫コード
+       */
+      warehouse_code?: string | null;
+      /**
+       * Customer Name
+       * @description 得意先名
+       */
+      customer_name?: string | null;
+      /**
+       * Delivery Note Product Name
+       * @description 素材納品書記載製品名
+       */
+      delivery_note_product_name?: string | null;
+      /**
+       * Customer Part No
+       * @description 先方品番
+       */
+      customer_part_no?: string | null;
+      /**
+       * Maker Part No
+       * @description メーカー品番
+       */
+      maker_part_no?: string | null;
+      /**
+       * Maker Code
+       * @description メーカーコード
+       */
+      maker_code?: string | null;
+      /**
+       * Maker Name
+       * @description メーカー名
+       */
+      maker_name?: string | null;
+      /**
+       * Supplier Code
+       * @description 仕入先コード
+       */
+      supplier_code?: string | null;
+      /**
+       * Supplier Name
+       * @description 仕入先名称
+       */
+      supplier_name?: string | null;
+      /**
+       * Delivery Place Code
+       * @description 納入先コード
+       */
+      delivery_place_code?: string | null;
+      /**
+       * Delivery Place Name
+       * @description 納入先
+       */
+      delivery_place_name?: string | null;
+      /**
+       * Shipping Warehouse Code
+       * @description 出荷倉庫コード
+       */
+      shipping_warehouse_code?: string | null;
+      /**
+       * Shipping Warehouse Name
+       * @description 出荷倉庫名
+       */
+      shipping_warehouse_name?: string | null;
+      /**
+       * Shipping Slip Text
+       * @description 出荷票テキスト
+       */
+      shipping_slip_text?: string | null;
+      /**
+       * Transport Lt Days
+       * @description 輸送LT(営業日)
+       */
+      transport_lt_days?: number | null;
+      /**
+       * Has Order
+       * @description 発注の有無
+       * @default false
+       */
+      has_order: boolean;
+      /**
+       * Remarks
+       * @description 備考
+       */
+      remarks?: string | null;
+    };
+    /**
+     * ShippingMasterCuratedListResponse
+     * @description 出荷用マスタ一覧レスポンス.
+     */
+    ShippingMasterCuratedListResponse: {
+      /** Items */
+      items: components["schemas"]["ShippingMasterCuratedResponse"][];
+      /** Total */
+      total: number;
+    };
+    /**
+     * ShippingMasterCuratedResponse
+     * @description 出荷用マスタレスポンス.
+     */
+    ShippingMasterCuratedResponse: {
+      /**
+       * Customer Code
+       * @description 得意先コード
+       */
+      customer_code: string;
+      /**
+       * Material Code
+       * @description 材質コード
+       */
+      material_code: string;
+      /**
+       * Jiku Code
+       * @description 次区（出荷先区分）
+       */
+      jiku_code: string;
+      /**
+       * Warehouse Code
+       * @description 倉庫コード
+       */
+      warehouse_code?: string | null;
+      /**
+       * Customer Name
+       * @description 得意先名
+       */
+      customer_name?: string | null;
+      /**
+       * Delivery Note Product Name
+       * @description 素材納品書記載製品名
+       */
+      delivery_note_product_name?: string | null;
+      /**
+       * Customer Part No
+       * @description 先方品番
+       */
+      customer_part_no?: string | null;
+      /**
+       * Maker Part No
+       * @description メーカー品番
+       */
+      maker_part_no?: string | null;
+      /**
+       * Maker Code
+       * @description メーカーコード
+       */
+      maker_code?: string | null;
+      /**
+       * Maker Name
+       * @description メーカー名
+       */
+      maker_name?: string | null;
+      /**
+       * Supplier Code
+       * @description 仕入先コード
+       */
+      supplier_code?: string | null;
+      /**
+       * Supplier Name
+       * @description 仕入先名称
+       */
+      supplier_name?: string | null;
+      /**
+       * Delivery Place Code
+       * @description 納入先コード
+       */
+      delivery_place_code?: string | null;
+      /**
+       * Delivery Place Name
+       * @description 納入先
+       */
+      delivery_place_name?: string | null;
+      /**
+       * Shipping Warehouse Code
+       * @description 出荷倉庫コード
+       */
+      shipping_warehouse_code?: string | null;
+      /**
+       * Shipping Warehouse Name
+       * @description 出荷倉庫名
+       */
+      shipping_warehouse_name?: string | null;
+      /**
+       * Shipping Slip Text
+       * @description 出荷票テキスト
+       */
+      shipping_slip_text?: string | null;
+      /**
+       * Transport Lt Days
+       * @description 輸送LT(営業日)
+       */
+      transport_lt_days?: number | null;
+      /**
+       * Has Order
+       * @description 発注の有無
+       * @default false
+       */
+      has_order: boolean;
+      /**
+       * Remarks
+       * @description 備考
+       */
+      remarks?: string | null;
+      /** Id */
+      id: number;
+      /** Raw Id */
+      raw_id?: number | null;
+      /**
+       * Has Duplicate Warning
+       * @default false
+       */
+      has_duplicate_warning: boolean;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * ShippingMasterCuratedUpdate
+     * @description 出荷用マスタ更新リクエスト.
+     */
+    ShippingMasterCuratedUpdate: {
+      /** Warehouse Code */
+      warehouse_code?: string | null;
+      /** Customer Name */
+      customer_name?: string | null;
+      /** Delivery Note Product Name */
+      delivery_note_product_name?: string | null;
+      /** Customer Part No */
+      customer_part_no?: string | null;
+      /** Maker Part No */
+      maker_part_no?: string | null;
+      /** Maker Code */
+      maker_code?: string | null;
+      /** Maker Name */
+      maker_name?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
+      /** Supplier Name */
+      supplier_name?: string | null;
+      /** Delivery Place Code */
+      delivery_place_code?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /** Shipping Warehouse Code */
+      shipping_warehouse_code?: string | null;
+      /** Shipping Warehouse Name */
+      shipping_warehouse_name?: string | null;
+      /** Shipping Slip Text */
+      shipping_slip_text?: string | null;
+      /** Transport Lt Days */
+      transport_lt_days?: number | null;
+      /** Has Order */
+      has_order?: boolean | null;
+      /** Remarks */
+      remarks?: string | null;
+    };
+    /**
+     * ShippingMasterImportRequest
+     * @description Excelインポートリクエスト（JSON形式でデータを受け取る場合）.
+     */
+    ShippingMasterImportRequest: {
+      /**
+       * Rows
+       * @description インポートするデータ行
+       */
+      rows: {
+        [key: string]: unknown;
+      }[];
+    };
+    /**
+     * ShippingMasterImportResponse
+     * @description インポートレスポンス.
+     */
+    ShippingMasterImportResponse: {
+      /** Success */
+      success: boolean;
+      /** Imported Count */
+      imported_count: number;
+      /** Curated Count */
+      curated_count: number;
+      /** Errors */
+      errors?: string[];
+      /** Warnings */
+      warnings?: string[];
     };
     /**
      * SmartReadAnalyzeResponse
@@ -24599,6 +24985,205 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["OcrImportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_shipping_masters_api_shipping_masters_get: {
+    parameters: {
+      query?: {
+        /** @description 得意先コードでフィルタ */
+        customer_code?: string | null;
+        /** @description 材質コードでフィルタ */
+        material_code?: string | null;
+        /** @description 次区でフィルタ */
+        jiku_code?: string | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShippingMasterCuratedListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_shipping_master_api_shipping_masters_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShippingMasterCuratedCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShippingMasterCuratedResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_shipping_master_api_shipping_masters__master_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        master_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShippingMasterCuratedResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_shipping_master_api_shipping_masters__master_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        master_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShippingMasterCuratedUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShippingMasterCuratedResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_shipping_master_api_shipping_masters__master_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        master_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  import_shipping_masters_api_shipping_masters_import_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShippingMasterImportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShippingMasterImportResponse"];
         };
       };
       /** @description Validation Error */
