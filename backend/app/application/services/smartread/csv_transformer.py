@@ -214,13 +214,20 @@ class SmartReadCsvTransformer:
     def _is_empty_detail(self, detail: dict[str, Any]) -> bool:
         """空明細かどうかを判定.
 
-        材質コード、アイテム、納入量がすべて空または未設定の場合は空明細。
+        全ての明細項目が空または未設定の場合は空明細。
         """
-        material_code = detail.get("材質コード", "")
-        item = detail.get("アイテム", "")
-        quantity = detail.get("納入量", "")
+        if not detail:
+            return True
 
-        return not material_code and not item and not quantity
+        for key, value in detail.items():
+            if key.startswith("エラー_"):
+                continue
+            if value is None:
+                continue
+            if str(value).strip() != "":
+                return False
+
+        return True
 
     def _normalize_value(self, value: Any) -> str:
         """値を正規化.
