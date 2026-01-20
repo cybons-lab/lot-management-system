@@ -183,7 +183,7 @@ export function SmartReadPage() {
           onValueChange={setActiveTab}
           className="flex-1 flex flex-col min-h-0"
         >
-          <TabsList className="grid w-full grid-cols-3 shrink-0">
+          <TabsList className="grid w-full grid-cols-4 shrink-0">
             <TabsTrigger value="import">1. インポート</TabsTrigger>
             <TabsTrigger value="tasks">2. タスク</TabsTrigger>
             <TabsTrigger value="detail">3. 結果詳細</TabsTrigger>

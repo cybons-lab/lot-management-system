@@ -679,6 +679,7 @@ def get_requests(
 )
 def get_long_data(
     config_id: int,
+    task_id: str | None = Query(default=None, description="タスクIDでフィルタ"),
     limit: int = Query(default=100, le=1000, description="取得件数"),
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
@@ -686,7 +687,7 @@ def get_long_data(
     """縦持ちデータ一覧を取得."""
     assert db is not None
     service = SmartReadService(db)
-    long_data = service.get_long_data_list(config_id, limit=limit)
+    long_data = service.get_long_data_list(config_id, task_id=task_id, limit=limit)
 
     return SmartReadLongDataListResponse(
         data=[

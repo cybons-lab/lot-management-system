@@ -394,10 +394,15 @@ export async function getRequests(
  */
 export async function getLongData(
   configId: number,
+  taskId?: string,
   limit: number = 100,
 ): Promise<SmartReadLongDataListResponse> {
+  const searchParams: Record<string, string | number> = { limit };
+  if (taskId) {
+    searchParams.task_id = taskId;
+  }
   return http.get<SmartReadLongDataListResponse>(`rpa/smartread/configs/${configId}/long-data`, {
-    searchParams: { limit },
+    searchParams,
   });
 }
 
@@ -406,6 +411,6 @@ export const getSmartReadLongDataList = async (
   configId: number,
   limit: number = 1000,
 ): Promise<SmartReadLongData[]> => {
-  const res = await getLongData(configId, limit);
+  const res = await getLongData(configId, undefined, limit);
   return res.data;
 };

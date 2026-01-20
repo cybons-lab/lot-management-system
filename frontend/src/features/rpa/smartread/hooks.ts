@@ -480,12 +480,19 @@ export function useUpdateSkipToday() {
 /**
  * 保存済み縦持ちデータを取得
  */
-export function useSmartReadLongData(configId: number | null, limit: number = 1000) {
+export function useSmartReadLongData(
+  configId: number | null,
+  taskId?: string,
+  limit: number = 1000,
+) {
   return useQuery({
-    queryKey: configId ? ["smartread", "long-data", configId, limit] : [],
+    queryKey: configId ? ["smartread", "long-data", configId, taskId, limit] : [],
     queryFn: () =>
       configId
-        ? import("./api").then((mod) => mod.getSmartReadLongDataList(configId, limit))
+        ? import("./api").then(async (mod) => {
+            const res = await mod.getLongData(configId, taskId, limit);
+            return res.data;
+          })
         : Promise.resolve([]),
     enabled: !!configId,
     staleTime: 1000 * 60 * 5, // 5 minutes
