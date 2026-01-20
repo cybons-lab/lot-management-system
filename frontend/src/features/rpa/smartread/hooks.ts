@@ -659,8 +659,8 @@ export function useSyncTaskResults() {
         }
 
         // 2. Trigger backend sync API
-        console.info(`[SmartRead] Calling backend sync API...`);
-        const res = await syncTaskResults(configId, taskId);
+        console.info(`[SmartRead] Calling backend sync API (force=${forceSync})...`);
+        const res = await syncTaskResults(configId, taskId, forceSync);
         console.info(`[SmartRead] Sync done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
         // === デバッグ: 横持ちデータの内容を表示 ===

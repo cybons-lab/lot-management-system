@@ -476,6 +476,7 @@ def update_skip_today(
 async def sync_task_results(
     task_id: str,
     config_id: int = Query(..., description="設定ID"),
+    force: bool = Query(False, description="強制的に再取得するか"),
     uow: UnitOfWork = Depends(get_uow),
     _current_user: User = Depends(get_current_user),
 ) -> SmartReadCsvDataResponse:
@@ -483,7 +484,7 @@ async def sync_task_results(
     assert uow.session is not None
     service = SmartReadService(uow.session)
 
-    result = await service.sync_task_results(config_id, task_id)
+    result = await service.sync_task_results(config_id, task_id, force=force)
     if not result:
         raise HTTPException(status_code=500, detail="同期処理に失敗しました")
 

@@ -315,11 +315,14 @@ export async function transformCsv(
 export async function syncTaskResults(
   configId: number,
   taskId: string,
+  force: boolean = false,
 ): Promise<SmartReadCsvDataResponse> {
-  console.log(`[API] Triggering sync for task ${taskId} (config_id=${configId})`);
-  return http.post<SmartReadCsvDataResponse>(
-    `rpa/smartread/tasks/${taskId}/sync?config_id=${configId}`,
-  );
+  console.log(`[API] Triggering sync for task ${taskId} (config_id=${configId}, force=${force})`);
+  const params = new URLSearchParams({
+    config_id: configId.toString(),
+    force: force.toString(),
+  });
+  return http.post<SmartReadCsvDataResponse>(`rpa/smartread/tasks/${taskId}/sync?${params}`);
 }
 
 /**
