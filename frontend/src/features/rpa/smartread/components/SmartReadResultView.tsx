@@ -30,6 +30,181 @@ interface SmartReadResultViewProps {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>;
 
+// ヘッダー表示用コンポーネント
+function ResultHeader({
+  isLoading,
+  wideCount,
+  longCount,
+  filename,
+  error,
+  onSync,
+  onDownloadJson,
+  onDownloadWide,
+  onDownloadLong,
+  isSyncing,
+}: {
+  isLoading: boolean;
+  wideCount: number;
+  longCount: number;
+  filename: string | null;
+  error: string | null;
+  onSync: () => void;
+  onDownloadJson: () => void;
+  onDownloadWide: () => void;
+  onDownloadLong: () => void;
+  isSyncing: boolean;
+}) {
+  return (
+    <CardHeader className="py-4">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base">処理結果</CardTitle>
+            {isLoading ? (
+              <Badge
+                variant="secondary"
+                className="text-xs bg-gray-100 text-gray-600 hover:bg-gray-100"
+              >
+                読み込み中...
+              </Badge>
+            ) : (
+              <Badge
+                variant="secondary"
+                className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-100"
+              >
+                横: {wideCount}件 / 縦: {longCount}件
+              </Badge>
+            )}
+          </div>
+          <CardDescription>
+            {filename ? (
+              <span>ファイル: {filename}</span>
+            ) : error ? (
+              <span className="text-red-600">エラー: {error}</span>
+            ) : isLoading ? (
+              <span className="text-gray-500">データを読み込んでいます...</span>
+            ) : (
+              <span className="text-gray-400">ファイル情報なし</span>
+            )}
+          </CardDescription>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSync}
+            disabled={isSyncing || isLoading}
+            title="APIから再取得"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${isSyncing || isLoading ? "animate-spin" : ""}`} />
+            API同期
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDownloadJson}
+            disabled={longCount === 0 || isLoading}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            JSON
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDownloadWide}
+            disabled={wideCount === 0 || isLoading}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            CSV(横)
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDownloadLong}
+            disabled={longCount === 0 || isLoading}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            CSV(縦)
+          </Button>
+        </div>
+      </div>
+    </CardHeader>
+  );
+}
+
+// タブコンテンツの表示用コンポーネント
+function TabContentDisplay({
+  isLoading,
+  hasError,
+  errorMessage,
+  data,
+  errors,
+  dataType,
+  onRetry,
+  onTransform,
+  canTransform,
+}: {
+  isLoading: boolean;
+  hasError: boolean;
+  errorMessage: string | null;
+  data: AnyRecord[];
+  errors: { row: number; field: string; message: string; value: string | null }[];
+  dataType: "wide" | "long";
+  onRetry: () => void;
+  onTransform?: () => void;
+  canTransform?: boolean;
+}) {
+  const label = dataType === "wide" ? "横持ち" : "縦持ち";
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        <RefreshCw className="animate-spin mr-2 h-5 w-5" />
+        <span>{label}データを読み込んでいます...</span>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-2">
+        <AlertCircle className="h-8 w-8 text-red-500" />
+        <p className="text-red-600">データの取得に失敗しました</p>
+        <p className="text-sm text-gray-400">{errorMessage}</p>
+        <Button variant="outline" size="sm" onClick={onRetry}>
+          <RefreshCw className="h-4 w-4 mr-1" />
+          再試行
+        </Button>
+      </div>
+    );
+  }
+
+  if (data.length > 0) {
+    return <SmartReadCsvTable data={data} errors={errors} />;
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+      <AlertCircle className="h-8 w-8" />
+      <p>{label}データがありません</p>
+      {dataType === "wide" ? (
+        <Button variant="outline" size="sm" onClick={onRetry}>
+          <RefreshCw className="h-4 w-4 mr-1" />
+          APIから同期
+        </Button>
+      ) : (
+        canTransform &&
+        onTransform && (
+          <Button variant="outline" size="sm" onClick={onTransform}>
+            <ArrowRightLeft className="h-4 w-4 mr-1" />
+            横持ちから変換
+          </Button>
+        )
+      )}
+    </div>
+  );
+}
+
 export function SmartReadResultView({ configId, taskId }: SmartReadResultViewProps) {
   const [activeTab, setActiveTab] = useState("wide");
 
@@ -45,6 +220,9 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
   const [filename, setFilename] = useState<string | null>(null);
   // 変換中フラグ
   const [isTransforming, setIsTransforming] = useState(false);
+  // 初期ロード状態
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const syncMutation = useSyncTaskResults();
 
@@ -111,118 +289,87 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     downloadJson(longData, `${taskId}.json`);
   };
 
-  // IDBからキャッシュを読み込む (初回マウント時)
+  // 初回マウント時に自動でデータを取得（IDB → API）
   useEffect(() => {
-    const loadFromCache = async () => {
+    const loadData = async () => {
       try {
-        const { exportCache } = await import("../db/export-cache");
-        const cached = await exportCache.getByTaskId(configId, taskId);
-        if (cached) {
-          console.info(`[ResultView] Loaded from IDB cache:`, {
-            wide: cached.wide_data.length,
-            long: cached.long_data.length,
-          });
-          setWideData(cached.wide_data);
-          setLongData(cached.long_data);
-          setTransformErrors(cached.errors);
-          setFilename(cached.filename);
-          if (cached.long_data.length > 0) {
-            setActiveTab("long");
+        setIsInitialLoading(true);
+        setLoadError(null);
+
+        // 1. IDBキャッシュから読み込み
+        try {
+          const { exportCache } = await import("../db/export-cache");
+          const cached = await exportCache.getByTaskId(configId, taskId);
+          if (cached && (cached.wide_data.length > 0 || cached.long_data.length > 0)) {
+            console.info(`[ResultView] Loaded from IDB cache:`, {
+              wide: cached.wide_data.length,
+              long: cached.long_data.length,
+            });
+            setWideData(cached.wide_data);
+            setLongData(cached.long_data);
+            setTransformErrors(cached.errors);
+            setFilename(cached.filename);
+            if (cached.long_data.length > 0) {
+              setActiveTab("long");
+            }
+            setIsInitialLoading(false);
+            return; // キャッシュがあれば完了
           }
+        } catch (e) {
+          console.warn(`[ResultView] Failed to load from cache:`, e);
         }
-      } catch (e) {
-        console.warn(`[ResultView] Failed to load from cache:`, e);
+
+        // 2. キャッシュがない場合、APIから取得
+        console.info(`[ResultView] No cache found, fetching from API...`);
+        try {
+          const result = await syncMutation.mutateAsync({ configId, taskId, forceSync: false });
+
+          console.info(`[ResultView] API fetch result:`, {
+            wide: result.wide_data.length,
+            long: result.long_data.length,
+            filename: result.filename,
+          });
+
+          setWideData(result.wide_data as AnyRecord[]);
+          setLongData(result.long_data as AnyRecord[]);
+          setTransformErrors(result.errors);
+          setFilename(result.filename);
+
+          if (result.long_data.length > 0) {
+            setActiveTab("long");
+          } else if (result.wide_data.length > 0) {
+            setActiveTab("wide");
+          }
+        } catch (error) {
+          console.error(`[ResultView] Failed to fetch from API:`, error);
+          setLoadError(error instanceof Error ? error.message : "データの取得に失敗しました");
+        }
+      } finally {
+        setIsInitialLoading(false);
       }
     };
-    loadFromCache();
+
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configId, taskId]);
 
-  // No Data State
-  if (wideData.length === 0 && longData.length === 0) {
-    return (
-      <Card className="h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-2 text-gray-500">
-          <AlertCircle className="h-8 w-8" />
-          <p>データが見つかりません</p>
-          <p className="text-sm text-gray-400">
-            「APIから同期」ボタンで横持ちデータを取得してください。
-          </p>
-          <div className="flex gap-2 mt-4">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleSyncFromApi}
-              disabled={syncMutation.isPending}
-            >
-              <RefreshCw className={syncMutation.isPending ? "animate-spin mr-2" : "mr-2"} />
-              APIから同期
-            </Button>
-          </div>
-        </div>
-      </Card>
-    );
-  }
+  // ローディング中・エラー時・データなし時でもテーブル構造を維持
 
   // Result Display
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader className="py-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-base">処理結果</CardTitle>
-              <Badge
-                variant="secondary"
-                className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-100"
-              >
-                横: {wideData.length}件 / 縦: {longData.length}件
-              </Badge>
-            </div>
-            <CardDescription>{filename && <span>ファイル: {filename}</span>}</CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSyncFromApi}
-              disabled={syncMutation.isPending}
-              title="APIから再取得"
-            >
-              <RefreshCw
-                className={`h-4 w-4 mr-1 ${syncMutation.isPending ? "animate-spin" : ""}`}
-              />
-              API同期
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadJson}
-              disabled={longData.length === 0}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              JSON
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadWide}
-              disabled={wideData.length === 0}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              CSV(横)
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadLong}
-              disabled={longData.length === 0}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              CSV(縦)
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
+      <ResultHeader
+        isLoading={isInitialLoading}
+        wideCount={wideData.length}
+        longCount={longData.length}
+        filename={filename}
+        error={loadError}
+        onSync={handleSyncFromApi}
+        onDownloadJson={handleDownloadJson}
+        onDownloadWide={handleDownloadWide}
+        onDownloadLong={handleDownloadLong}
+        isSyncing={syncMutation.isPending}
+      />
       <CardContent className="flex-1 overflow-hidden min-h-0 p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
           <div className="px-4 border-b flex items-center justify-between">
@@ -249,31 +396,31 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
             value="wide"
             className="flex-1 overflow-auto p-4 m-0 data-[state=inactive]:hidden"
           >
-            {wideData.length > 0 ? (
-              <SmartReadCsvTable data={wideData} errors={[]} />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">
-                横持ちデータがありません
-              </div>
-            )}
+            <TabContentDisplay
+              isLoading={isInitialLoading}
+              hasError={!!loadError}
+              errorMessage={loadError}
+              data={wideData}
+              errors={[]}
+              dataType="wide"
+              onRetry={handleSyncFromApi}
+            />
           </TabsContent>
           <TabsContent
             value="long"
             className="flex-1 overflow-auto p-4 m-0 data-[state=inactive]:hidden"
           >
-            {longData.length > 0 ? (
-              <SmartReadCsvTable data={longData} errors={transformErrors} />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
-                <p>縦持ちデータがありません</p>
-                {wideData.length > 0 && (
-                  <Button variant="outline" size="sm" onClick={handleTransformToLong}>
-                    <ArrowRightLeft className="h-4 w-4 mr-1" />
-                    横持ちから変換
-                  </Button>
-                )}
-              </div>
-            )}
+            <TabContentDisplay
+              isLoading={isInitialLoading}
+              hasError={!!loadError}
+              errorMessage={loadError}
+              data={longData}
+              errors={transformErrors}
+              dataType="long"
+              onRetry={handleSyncFromApi}
+              onTransform={handleTransformToLong}
+              canTransform={wideData.length > 0}
+            />
           </TabsContent>
         </Tabs>
       </CardContent>
