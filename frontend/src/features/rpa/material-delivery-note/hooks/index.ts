@@ -6,6 +6,8 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
+
 import {
   completeAllItems,
   createRun,
@@ -65,8 +67,9 @@ export function useCreateRun() {
       toast.success(data.message);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (error: Error) => {
-      toast.error(`CSV取込に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`CSV取込に失敗しました: ${message}`);
     },
   });
 }
@@ -108,11 +111,12 @@ export function useUpdateItem(runId: number) {
       // Return a context object with the snapshotted value
       return { previousRun };
     },
-    onError: (error: Error, _variables, context) => {
+    onError: async (error: Error, _variables, context) => {
       if (context?.previousRun) {
         queryClient.setQueryData([QUERY_KEY, runId], context.previousRun);
       }
-      toast.error(`更新に失敗しました: ${error.message}`);
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`更新に失敗しました: ${message}`);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
@@ -142,8 +146,9 @@ export function useBatchUpdateItems(runId: number) {
       toast.success("一括更新しました");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
     },
-    onError: (error: Error) => {
-      toast.error(`更新に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`更新に失敗しました: ${message}`);
     },
   });
 }
@@ -160,8 +165,9 @@ export function useCompleteAllItems(runId: number) {
       toast.success("Step2を完了しました");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
     },
-    onError: (error: Error) => {
-      toast.error(`完了処理に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`完了処理に失敗しました: ${message}`);
     },
   });
 }
@@ -179,8 +185,9 @@ export function useExecuteStep2(runId: number) {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
-    onError: (error: Error) => {
-      toast.error(`Step2実行に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`Step2実行に失敗しました: ${message}`);
     },
   });
 }
@@ -199,8 +206,9 @@ export function useExecuteMaterialDeliveryNote() {
         toast.error(data.message);
       }
     },
-    onError: (error: Error) => {
-      toast.error(`実行に失敗しました: ${error.message}`);
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`実行に失敗しました: ${message}`);
     },
   });
 }

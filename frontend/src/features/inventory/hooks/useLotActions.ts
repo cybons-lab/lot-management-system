@@ -5,6 +5,7 @@ import { useLotMutations } from "@/hooks/api/useLotMutations";
 import { useUpdateLot, useLockLot, useUnlockLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
 import type { LotUI } from "@/shared/libs/normalize";
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 /**
  * ロット操作（編集、ロック、ロック解除）のロジックを管理するカスタムフック
@@ -30,7 +31,10 @@ export function useLotActions(options?: LotActionsOptions) {
       setSelectedLot(null);
       notifyLotsChanged();
     },
-    onError: (error) => toast.error(`更新に失敗しました: ${error.message}`),
+    onError: async (error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`ロットの更新に失敗しました: ${message}`);
+    },
   });
 
   const lockLotMutation = useLockLot({
@@ -40,7 +44,10 @@ export function useLotActions(options?: LotActionsOptions) {
       setSelectedLot(null);
       notifyLotsChanged();
     },
-    onError: (error) => toast.error(`ロックに失敗しました: ${error.message}`),
+    onError: async (error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`ロックに失敗しました: ${message}`);
+    },
   });
 
   const unlockLotMutation = useUnlockLot({
@@ -48,7 +55,10 @@ export function useLotActions(options?: LotActionsOptions) {
       toast.success("ロットのロックを解除しました");
       notifyLotsChanged();
     },
-    onError: (error) => toast.error(`ロック解除に失敗しました: ${error.message}`),
+    onError: async (error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`ロック解除に失敗しました: ${message}`);
+    },
   });
 
   const { archiveLot, isArchiving } = useLotMutations();

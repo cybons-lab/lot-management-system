@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 import { logInfo } from "@/services/error-logger";
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 import type { OrderLine } from "../../types";
 
@@ -38,8 +39,8 @@ export function useAllocationMutation(
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       onSuccess();
     },
-    onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "保存に失敗しました";
+    onError: async (error: unknown) => {
+      const message = await getUserFriendlyMessageAsync(error);
       onError(message);
     },
   });

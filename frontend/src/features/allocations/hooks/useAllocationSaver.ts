@@ -33,6 +33,8 @@
 import { useMutation, type QueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
+
 import { saveManualAllocations, type ManualAllocationBatchResponse } from "../api";
 import { ALLOCATION_CONSTANTS } from "../constants";
 import { setLineStatusToCommitted } from "../helpers/allocationStatusHelpers";
@@ -102,10 +104,11 @@ export function useAllocationSaver({
         }),
       });
     },
-    onError: (error: unknown) => {
-      // Show error toast
+    onError: async (error: unknown) => {
+      // Show error toast with user-friendly message
+      const message = await getUserFriendlyMessageAsync(error);
       setToast({
-        message: error instanceof Error ? error.message : ALLOCATION_CONSTANTS.MESSAGES.SAVE_ERROR,
+        message,
         variant: "error",
       });
     },
