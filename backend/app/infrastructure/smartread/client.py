@@ -56,6 +56,52 @@ class SmartReadExport:
     error_message: str | None = None
 
 
+@dataclass
+class SmartReadRequestStatus:
+    """SmartRead リクエスト状態情報.
+
+    GET /v3/request/:requestId のレスポンスを表現。
+    """
+
+    request_id: str
+    state: str
+    # state: OCR_RUNNING | OCR_COMPLETED | OCR_FAILED | OCR_VERIFICATION_COMPLETED |
+    #        SORTING_RUNNING | SORTING_COMPLETED | SORTING_FAILED | SORTING_DROPPED
+    task_id: str | None = None
+    filename: str | None = None
+    num_of_pages: int | None = None
+    request_type: str | None = None
+    created: str | None = None
+    modified: str | None = None
+    error_message: str | None = None
+
+    def is_completed(self) -> bool:
+        """OCR処理が完了したかどうか."""
+        return self.state in ("OCR_COMPLETED", "OCR_VERIFICATION_COMPLETED", "SORTING_COMPLETED")
+
+    def is_failed(self) -> bool:
+        """OCR処理が失敗したかどうか."""
+        return self.state in ("OCR_FAILED", "SORTING_FAILED", "SORTING_DROPPED")
+
+    def is_running(self) -> bool:
+        """OCR処理が実行中かどうか."""
+        return self.state in ("OCR_RUNNING", "SORTING_RUNNING")
+
+
+@dataclass
+class SmartReadRequestResults:
+    """SmartRead リクエスト結果.
+
+    GET /v3/request/:requestId/results のレスポンスを表現。
+    """
+
+    request_id: str
+    results: list[dict[str, Any]]
+    raw_response: dict[str, Any]
+    success: bool = True
+    error_message: str | None = None
+
+
 class SmartReadClient:
     """SmartRead OCR APIクライアント.
 
@@ -596,3 +642,271 @@ class SmartReadClient:
                 return export
 
             await asyncio.sleep(poll_interval)
+
+    # ==================== requestId/results ルート API ====================
+
+    async def get_request_status(
+        self,
+        request_id: str,
+        timeout: float = 30.0,
+    ) -> SmartReadRequestStatus | None:
+        """リクエスト状態を取得.
+
+        GET /v3/request/{requestId}
+
+        Args:
+            request_id: リクエストID
+            timeout: タイムアウト秒数
+
+        Returns:
+            リクエスト状態情報、またはNone（エラー時）
+        """
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                url = self._build_api_url(f"/v3/request/{request_id}")
+                headers = self._get_headers()
+                logger.debug(f"Getting request status: {url}")
+
+                response = await client.get(url, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+
+                return SmartReadRequestStatus(
+                    request_id=data.get("requestId", request_id),
+                    state=data.get("state", "UNKNOWN"),
+                    task_id=data.get("taskId"),
+                    filename=data.get("filename"),  # APIから返る場合
+                    num_of_pages=data.get("numOfPages"),
+                    request_type=data.get("requestType"),
+                    created=data.get("created"),
+                    modified=data.get("modified"),
+                )
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to get request status: {e.response.status_code}")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get request status: {e}")
+            return None
+
+    async def get_request_results(
+        self,
+        request_id: str,
+        offset: int = 0,
+        limit: int = 50,
+        timeout: float = 60.0,
+    ) -> SmartReadRequestResults | None:
+        """リクエスト結果を取得.
+
+        GET /v3/request/{requestId}/results
+
+        処理が完了していないとエラーになるため、先にget_request_statusで
+        状態を確認してから呼び出すこと。
+
+        Args:
+            request_id: リクエストID
+            offset: 結果のオフセット（ページネーション）
+            limit: 結果の制限（最大50）
+            timeout: タイムアウト秒数
+
+        Returns:
+            リクエスト結果、またはNone（エラー時）
+        """
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                url = self._build_api_url(f"/v3/request/{request_id}/results")
+                headers = self._get_headers()
+                params = {"offset": offset, "limit": min(limit, 50)}
+                logger.debug(f"Getting request results: {url}")
+
+                response = await client.get(url, headers=headers, params=params)
+
+                # 処理中の場合は400エラーになる可能性がある
+                if response.status_code == 400:
+                    error_data = response.json()
+                    return SmartReadRequestResults(
+                        request_id=request_id,
+                        results=[],
+                        raw_response=error_data,
+                        success=False,
+                        error_message="Request is still processing",
+                    )
+
+                response.raise_for_status()
+                data = response.json()
+
+                return SmartReadRequestResults(
+                    request_id=request_id,
+                    results=data.get("results", []),
+                    raw_response=data,
+                    success=True,
+                )
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to get request results: {e.response.status_code}")
+            return SmartReadRequestResults(
+                request_id=request_id,
+                results=[],
+                raw_response={},
+                success=False,
+                error_message=f"HTTP Error: {e.response.status_code}",
+            )
+        except Exception as e:
+            logger.error(f"Failed to get request results: {e}")
+            return SmartReadRequestResults(
+                request_id=request_id,
+                results=[],
+                raw_response={},
+                success=False,
+                error_message=str(e),
+            )
+
+    async def poll_request_until_complete(
+        self,
+        request_id: str,
+        timeout_sec: float = 600.0,
+        initial_interval: float = 1.0,
+        max_interval: float = 60.0,
+        backoff_factor: float = 2.0,
+        max_attempts: int = 20,
+    ) -> SmartReadRequestStatus | None:
+        """リクエスト完了まで指数バックオフでポーリング.
+
+        Args:
+            request_id: リクエストID
+            timeout_sec: 全体タイムアウト秒数
+            initial_interval: 初期ポーリング間隔（秒）
+            max_interval: 最大ポーリング間隔（秒）
+            backoff_factor: バックオフ倍率
+            max_attempts: 最大試行回数
+
+        Returns:
+            完了したリクエスト状態、またはNone（タイムアウト/失敗）
+        """
+        import asyncio
+        import random
+        import time
+
+        start_time = time.time()
+        interval = initial_interval
+        attempts = 0
+
+        while attempts < max_attempts:
+            if time.time() - start_time > timeout_sec:
+                logger.error(f"Request polling timeout for {request_id}")
+                return SmartReadRequestStatus(
+                    request_id=request_id,
+                    state="TIMEOUT",
+                    error_message="Polling timeout exceeded",
+                )
+
+            status = await self.get_request_status(request_id)
+            if status is None:
+                logger.warning(f"Failed to get status for {request_id}, retrying...")
+                attempts += 1
+                await asyncio.sleep(interval)
+                continue
+
+            logger.debug(f"Request {request_id} state: {status.state}")
+
+            if status.is_completed():
+                logger.info(f"Request {request_id} completed with state: {status.state}")
+                return status
+            elif status.is_failed():
+                logger.error(f"Request {request_id} failed with state: {status.state}")
+                return status
+
+            # 指数バックオフ（ジッター付き）
+            jitter = random.uniform(-0.1, 0.1) * interval
+            await asyncio.sleep(interval + jitter)
+            interval = min(interval * backoff_factor, max_interval)
+            attempts += 1
+
+        logger.error(f"Request polling max attempts exceeded for {request_id}")
+        return SmartReadRequestStatus(
+            request_id=request_id,
+            state="TIMEOUT",
+            error_message="Max polling attempts exceeded",
+        )
+
+    async def create_task_with_name(
+        self,
+        task_name: str,
+        timeout: float = 30.0,
+    ) -> str | None:
+        """タスクを作成してtaskIdを返す（タスク名指定可能）.
+
+        1日1タスク運用のため、タスク名にYYYYMMDDを含めることを推奨。
+
+        Args:
+            task_name: タスク名（例: OCR_20260120）
+            timeout: タイムアウト秒数
+
+        Returns:
+            作成されたタスクID、またはNone（エラー時）
+        """
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                url = self._build_api_url("/v3/task")
+                headers = self._get_headers()
+
+                payload = {
+                    "name": task_name,
+                    "requestType": "templateMatching",
+                }
+                if self.template_ids:
+                    payload["templateIds"] = self.template_ids  # type: ignore[assignment]
+
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                task_id: str | None = data.get("taskId")
+                logger.info(f"Created task with name '{task_name}': {task_id}")
+                return task_id
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to create task: {e.response.status_code}")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to create task: {e}")
+            return None
+
+    async def submit_request(
+        self,
+        task_id: str,
+        file_content: bytes,
+        filename: str,
+        timeout: float = 60.0,
+    ) -> str | None:
+        """タスクにファイルを投入してrequestIdを返す.
+
+        POST /v3/task/{taskId}/request → 202 + requestId
+
+        Args:
+            task_id: タスクID
+            file_content: ファイルのバイナリデータ
+            filename: ファイル名
+            timeout: タイムアウト秒数
+
+        Returns:
+            リクエストID、またはNone（エラー時）
+        """
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                url = self._build_api_url(f"/v3/task/{task_id}/request")
+                headers = {"Authorization": f"apikey {self.api_key}"}
+                files = {"image": (filename, file_content)}
+
+                response = await client.post(url, files=files, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                request_id: str | None = data.get("requestId")
+                logger.info(f"Submitted request for {filename}: {request_id}")
+                return request_id
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to submit request: {e.response.status_code}")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to submit request: {e}")
+            return None

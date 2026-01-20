@@ -111,7 +111,10 @@ class SmartReadWideData(Base):
     )
     task_id: Mapped[str] = mapped_column(String(255), nullable=False)
     task_date: Mapped[date] = mapped_column(Date, nullable=False)
-    export_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    export_id: Mapped[str | None] = mapped_column(String(255), nullable=True)  # exportルート用
+    request_id_ref: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("smartread_requests.id", ondelete="SET NULL"), nullable=True
+    )  # requestId/resultsルート用
     filename: Mapped[str | None] = mapped_column(String(500), nullable=True)
     row_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[dict] = mapped_column(JSONB, nullable=False)
@@ -139,12 +142,60 @@ class SmartReadLongData(Base):
     )
     task_id: Mapped[str] = mapped_column(String(255), nullable=False)
     task_date: Mapped[date] = mapped_column(Date, nullable=False)
+    request_id_ref: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("smartread_requests.id", ondelete="SET NULL"), nullable=True
+    )  # requestId/resultsルート用
     row_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[dict] = mapped_column(JSONB, nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="PENDING", server_default=text("'PENDING'")
     )  # PENDING / IMPORTED / ERROR
     error_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+
+
+class SmartReadRequest(Base):
+    """SmartRead リクエスト管理テーブル.
+
+    requestId/resultsルートで全自動化するためのリクエスト追跡用。
+    """
+
+    __tablename__ = "smartread_requests"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    request_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+
+    # タスクへの参照
+    task_id_ref: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("smartread_tasks.id", ondelete="CASCADE"), nullable=True
+    )
+    task_id: Mapped[str] = mapped_column(String(255), nullable=False)  # SmartRead API側のtaskId
+    task_date: Mapped[date] = mapped_column(Date, nullable=False)
+    config_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("smartread_configs.id", ondelete="CASCADE"), nullable=False
+    )
+
+    # ファイル情報
+    filename: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    num_of_pages: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    # 状態管理
+    submitted_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    state: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="PENDING", server_default=text("'PENDING'")
+    )
+    # state: PENDING / OCR_RUNNING / OCR_COMPLETED / OCR_FAILED / OCR_VERIFICATION_COMPLETED /
+    #        SORTING_RUNNING / SORTING_COMPLETED / SORTING_FAILED / SORTING_DROPPED / TIMEOUT
+
+    # 結果
+    result_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
