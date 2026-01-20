@@ -17579,6 +17579,250 @@
         }
       }
     },
+    "/api/rpa/smartread/configs/{config_id}/process-auto": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "ファイルを自動処理（requestIdルート）",
+        "description": "監視フォルダ内の指定ファイルを自動処理（requestIdルート）.\n\n1日1タスク運用で、ファイルをSmartRead APIに投入し、\nバックグラウンドでポーリング・結果処理を実行します。",
+        "operationId": "process_files_auto_api_rpa_smartread_configs__config_id__process_auto_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadProcessAutoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadProcessAutoResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/configs/{config_id}/requests": {
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "リクエスト一覧を取得",
+        "description": "リクエスト一覧を取得.",
+        "operationId": "get_requests_api_rpa_smartread_configs__config_id__requests_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状態でフィルタ",
+              "title": "State"
+            },
+            "description": "状態でフィルタ"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "description": "取得件数",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "取得件数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadRequestListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/configs/{config_id}/long-data": {
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "縦持ちデータ一覧を取得",
+        "description": "縦持ちデータ一覧を取得.",
+        "operationId": "get_long_data_api_rpa_smartread_configs__config_id__long_data_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "description": "取得件数",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "取得件数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadLongDataListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/configs/{config_id}/events": {
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "SSEイベントストリーム（未実装）",
+        "description": "SSEイベントストリーム（将来実装）.\n\n現在はプレースホルダーです。フロントエンドポーリングで代用してください。",
+        "operationId": "event_stream_api_rpa_smartread_configs__config_id__events_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/masters/status": {
       "get": {
         "summary": "Get Master Status",
@@ -31043,6 +31287,164 @@
         "title": "SmartReadExportResponse",
         "description": "エクスポートレスポンス."
       },
+      "SmartReadLongDataListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/SmartReadLongDataResponse"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "縦持ちデータ一覧"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "総件数"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "total"
+        ],
+        "title": "SmartReadLongDataListResponse",
+        "description": "縦持ちデータ一覧レスポンス."
+      },
+      "SmartReadLongDataResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "config_id": {
+            "type": "integer",
+            "title": "Config Id"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "task_date": {
+            "type": "string",
+            "title": "Task Date"
+          },
+          "request_id_ref": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id Ref"
+          },
+          "row_index": {
+            "type": "integer",
+            "title": "Row Index"
+          },
+          "content": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Content"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "error_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Reason"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "config_id",
+          "task_id",
+          "task_date",
+          "request_id_ref",
+          "row_index",
+          "content",
+          "status",
+          "error_reason",
+          "created_at"
+        ],
+        "title": "SmartReadLongDataResponse",
+        "description": "縦持ちデータレスポンス."
+      },
+      "SmartReadProcessAutoRequest": {
+        "properties": {
+          "filenames": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filenames",
+            "description": "処理するファイル名のリスト"
+          },
+          "use_daily_task": {
+            "type": "boolean",
+            "title": "Use Daily Task",
+            "description": "1日1タスク運用を使用するか",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "filenames"
+        ],
+        "title": "SmartReadProcessAutoRequest",
+        "description": "自動処理リクエスト（requestIdルート用）."
+      },
+      "SmartReadProcessAutoResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "description": "タスクID"
+          },
+          "task_name": {
+            "type": "string",
+            "title": "Task Name",
+            "description": "タスク名 (OCR_YYYYMMDD)"
+          },
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/SmartReadRequestResponse"
+            },
+            "type": "array",
+            "title": "Requests",
+            "description": "投入されたリクエスト一覧"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "メッセージ",
+            "default": "処理を開始しました"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "task_name",
+          "requests"
+        ],
+        "title": "SmartReadProcessAutoResponse",
+        "description": "自動処理レスポンス（requestIdルート用）."
+      },
       "SmartReadProcessRequest": {
         "properties": {
           "filenames": {
@@ -31060,6 +31462,121 @@
         ],
         "title": "SmartReadProcessRequest",
         "description": "ファイル処理リクエスト."
+      },
+      "SmartReadRequestListResponse": {
+        "properties": {
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/SmartReadRequestResponse"
+            },
+            "type": "array",
+            "title": "Requests",
+            "description": "リクエスト一覧"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requests"
+        ],
+        "title": "SmartReadRequestListResponse",
+        "description": "リクエスト一覧レスポンス."
+      },
+      "SmartReadRequestResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "task_date": {
+            "type": "string",
+            "title": "Task Date"
+          },
+          "config_id": {
+            "type": "integer",
+            "title": "Config Id"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "num_of_pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Num Of Pages"
+          },
+          "submitted_at": {
+            "type": "string",
+            "title": "Submitted At"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "request_id",
+          "task_id",
+          "task_date",
+          "config_id",
+          "filename",
+          "num_of_pages",
+          "submitted_at",
+          "state",
+          "error_message",
+          "completed_at",
+          "created_at"
+        ],
+        "title": "SmartReadRequestResponse",
+        "description": "リクエスト状態レスポンス."
       },
       "SmartReadSkipTodayRequest": {
         "properties": {

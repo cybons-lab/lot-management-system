@@ -184,3 +184,86 @@ class SmartReadSkipTodayRequest(BaseModel):
     """skip_todayフラグ更新リクエスト."""
 
     skip_today: bool = Field(..., description="今日スキップするか")
+
+
+# ==================== requestId/results ルート系スキーマ ====================
+
+
+class SmartReadRequestResponse(BaseModel):
+    """リクエスト状態レスポンス."""
+
+    id: int
+    request_id: str
+    task_id: str
+    task_date: str
+    config_id: int
+    filename: str | None
+    num_of_pages: int | None
+    submitted_at: str
+    state: str  # PENDING | OCR_RUNNING | OCR_COMPLETED | OCR_FAILED | ...
+    error_message: str | None
+    completed_at: str | None
+    created_at: str
+
+    model_config = {"from_attributes": True}
+
+
+class SmartReadProcessAutoRequest(BaseModel):
+    """自動処理リクエスト（requestIdルート用）."""
+
+    filenames: list[str] = Field(..., description="処理するファイル名のリスト")
+    use_daily_task: bool = Field(default=True, description="1日1タスク運用を使用するか")
+
+
+class SmartReadProcessAutoResponse(BaseModel):
+    """自動処理レスポンス（requestIdルート用）."""
+
+    task_id: str = Field(..., description="タスクID")
+    task_name: str = Field(..., description="タスク名 (OCR_YYYYMMDD)")
+    requests: list[SmartReadRequestResponse] = Field(..., description="投入されたリクエスト一覧")
+    message: str = Field(default="処理を開始しました", description="メッセージ")
+
+
+class SmartReadEventData(BaseModel):
+    """SSEイベントデータ."""
+
+    event_type: str = Field(
+        ..., description="イベントタイプ (request_submitted | request_completed | request_failed)"
+    )
+    request_id: str = Field(..., description="リクエストID")
+    task_id: str = Field(..., description="タスクID")
+    filename: str | None = Field(default=None, description="ファイル名")
+    state: str = Field(..., description="状態")
+    message: str | None = Field(default=None, description="メッセージ")
+    wide_count: int | None = Field(default=None, description="横持ちデータ件数")
+    long_count: int | None = Field(default=None, description="縦持ちデータ件数")
+
+
+class SmartReadRequestListResponse(BaseModel):
+    """リクエスト一覧レスポンス."""
+
+    requests: list[SmartReadRequestResponse] = Field(..., description="リクエスト一覧")
+
+
+class SmartReadLongDataResponse(BaseModel):
+    """縦持ちデータレスポンス."""
+
+    id: int
+    config_id: int
+    task_id: str
+    task_date: str
+    request_id_ref: int | None
+    row_index: int
+    content: dict[str, Any]
+    status: str  # PENDING | IMPORTED | ERROR
+    error_reason: str | None
+    created_at: str
+
+    model_config = {"from_attributes": True}
+
+
+class SmartReadLongDataListResponse(BaseModel):
+    """縦持ちデータ一覧レスポンス."""
+
+    data: list[SmartReadLongDataResponse] = Field(..., description="縦持ちデータ一覧")
+    total: int = Field(..., description="総件数")
