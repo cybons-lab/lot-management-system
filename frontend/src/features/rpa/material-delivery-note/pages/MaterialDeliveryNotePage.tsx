@@ -76,8 +76,8 @@ const MENU_ITEMS: MenuCardProps[] = [
     to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4,
   },
   {
-    title: "実行履歴",
-    description: "過去のCSV取込・実行履歴を確認できます。各Runの詳細ページへ遷移できます。",
+    title: "Step5: Run監視・履歴",
+    description: "Runの進捗・ログ・失敗アイテムを確認できます。",
     icon: <History className="h-6 w-6" />,
     to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS,
     variant: "secondary",

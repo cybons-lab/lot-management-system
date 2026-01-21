@@ -108,7 +108,7 @@ export function Step3SelectPage() {
                       {run.complete_count} / {run.item_count} 件
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(run.id)}>
+                      <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_MONITOR(run.id)}>
                         <Button size="sm" className="gap-2">
                           詳細へ <ArrowRight className="h-4 w-4" />
                         </Button>

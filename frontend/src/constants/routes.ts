@@ -107,6 +107,7 @@ export const ROUTES = {
       STEP4_DETAIL: (runId: number | string) => `/rpa/material-delivery-note/step4/${runId}`,
       RUNS: "/rpa/material-delivery-note/runs",
       RUN_DETAIL: (runId: number | string) => `/rpa/material-delivery-note/runs/${runId}`,
+      RUN_MONITOR: (runId: number | string) => `/rpa/material-delivery-note/runs/${runId}/monitor`,
       LAYER_CODES: "/rpa/material-delivery-note/layer-codes",
     },
   },

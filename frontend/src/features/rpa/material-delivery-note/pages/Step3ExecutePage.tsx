@@ -63,7 +63,7 @@ export function Step3ExecutePage() {
       // ユーザーの要望的に「Step3結果」を見せる場所が必要かもしれないが、
       // 一旦実行完了したらステータスが変わるので一覧に戻るか、詳細に戻るか。
       // 詳細ページは「Step2確認」の位置づけでもあるが、「実行履歴」詳細として引き続き機能する。
-      navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(id));
+      navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_MONITOR(id));
     } catch {
       // エラーハンドリングはHooks内で行われる
     }
@@ -73,7 +73,7 @@ export function Step3ExecutePage() {
     <PageContainer>
       <div className="mb-4">
         <Link
-          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(id)}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_MONITOR(id)}
           className="text-sm text-gray-500 hover:text-gray-900"
         >
           ← Run詳細へ戻る
