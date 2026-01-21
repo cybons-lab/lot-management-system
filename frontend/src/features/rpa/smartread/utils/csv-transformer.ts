@@ -164,11 +164,18 @@ export class SmartReadCsvTransformer {
         keysToTry.push(fieldName);
       }
 
+      let matched = false;
       for (const key of keysToTry) {
         if (key in row) {
           detail[fieldName] = this.normalizeValue(row[key]);
+          matched = true;
           break;
         }
+      }
+
+      // Debug log for n=1 to see what's happening
+      if (!matched && n === 1) {
+        console.log(`[extractSingleDetail] Field "${fieldName}" NOT FOUND. Tried:`, keysToTry);
       }
     }
 
