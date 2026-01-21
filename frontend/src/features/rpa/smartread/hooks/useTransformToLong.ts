@@ -30,21 +30,25 @@ interface TransformData {
   filename: string | null;
 }
 
-async function cacheToIDB(data: TransformData): Promise<void> {
+async function cacheToIDB(data: TransformData): Promise<string | null> {
   try {
     const { exportCache } = await import("../db/export-cache");
+    const exportId = `transform_${Date.now()}`;
     await exportCache.set({
       config_id: data.configId,
       task_id: data.taskId,
-      export_id: `transform_${Date.now()}`,
+      export_id: exportId,
       wide_data: data.wideData,
       long_data: data.longData,
       errors: data.errors,
       filename: data.filename,
+      saved_to_db: false,
     });
     console.info(`[useTransformToLong] Cached transform result to IDB`);
+    return `${data.configId}_${data.taskId}_${exportId}`;
   } catch (e) {
     console.warn(`[useTransformToLong] Failed to cache to IDB:`, e);
+    return null;
   }
 }
 
@@ -106,7 +110,7 @@ export function useTransformToLong({
       });
 
       // IDBキャッシュに保存
-      await cacheToIDB({
+      const cacheId = await cacheToIDB({
         configId,
         taskId,
         wideData,
@@ -124,6 +128,10 @@ export function useTransformToLong({
           longData: result.long_data,
           filename,
         });
+        if (cacheId) {
+          const { exportCache } = await import("../db/export-cache");
+          await exportCache.setSavedToDb(cacheId, true);
+        }
       } catch (e) {
         console.error(`[useTransformToLong] Failed to save to DB:`, e);
         errorLogger.error("smartread_save_failed", e instanceof Error ? e : "DB保存失敗", {

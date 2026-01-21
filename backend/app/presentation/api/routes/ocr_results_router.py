@@ -42,7 +42,7 @@ class OcrResultItem(BaseModel):
     delivery_date: str | None = None
     delivery_quantity: str | None = None
     item_no: str | None = None
-    quantity_unit: str | None = None
+    order_unit: str | None = None
     inbound_no: str | None = None
     lot_no: str | None = None
 

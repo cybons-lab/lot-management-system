@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from "react";
 
-import type { SmartReadValidationError } from "../api";
+import { saveLongData, type SmartReadValidationError } from "../api";
 import { useSyncTaskResults } from "../hooks";
 
 import { errorLogger } from "@/services/error-logger";
@@ -32,6 +32,9 @@ interface LoadDataResult {
   longData: Record<string, unknown>[];
   errors: SmartReadValidationError[];
   filename: string | null;
+  taskDate?: string;
+  cacheId?: string;
+  savedToDb?: boolean;
 }
 
 async function loadFromCache(configId: number, taskId: string): Promise<LoadDataResult | null> {
@@ -54,6 +57,9 @@ async function loadFromCache(configId: number, taskId: string): Promise<LoadData
         longData: cached.long_data,
         errors: cached.errors,
         filename: cached.filename,
+        taskDate: cached.task_date,
+        cacheId: cached.id,
+        savedToDb: cached.saved_to_db,
       };
     }
   } catch (e) {
@@ -65,6 +71,44 @@ async function loadFromCache(configId: number, taskId: string): Promise<LoadData
     );
   }
   return null;
+}
+
+async function saveCacheToDatabase(params: {
+  configId: number;
+  taskId: string;
+  wideData: Record<string, unknown>[];
+  longData: Record<string, unknown>[];
+  filename: string | null;
+  taskDate?: string;
+  cacheId: string;
+}) {
+  const { configId, taskId, wideData, longData, filename, taskDate, cacheId } = params;
+  const { exportCache } = await import("../db/export-cache");
+  try {
+    const dateToUse = taskDate || new Date().toISOString().split("T")[0];
+    await saveLongData(taskId, {
+      config_id: configId,
+      task_id: taskId,
+      task_date: dateToUse,
+      wide_data: wideData,
+      long_data: longData,
+      filename,
+    });
+    await exportCache.setSavedToDb(cacheId, true);
+    errorLogger.info("smartread_cache_save_success", "キャッシュデータをDBに保存", {
+      configId,
+      taskId,
+      wideCount: wideData.length,
+      longCount: longData.length,
+    });
+  } catch (error) {
+    console.error(`[useResultDataLoader] Failed to save cache to DB:`, error);
+    errorLogger.error(
+      "smartread_cache_save_failed",
+      error instanceof Error ? error : "キャッシュDB保存失敗",
+      { configId, taskId },
+    );
+  }
 }
 
 async function loadFromApi(
@@ -125,6 +169,17 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
           setLongData(cached.longData);
           setTransformErrors(cached.errors);
           setFilename(cached.filename);
+          if (cached.cacheId && cached.savedToDb === false) {
+            void saveCacheToDatabase({
+              configId,
+              taskId,
+              wideData: cached.wideData,
+              longData: cached.longData,
+              filename: cached.filename,
+              taskDate: cached.taskDate,
+              cacheId: cached.cacheId,
+            });
+          }
           setIsInitialLoading(false);
           return;
         }
