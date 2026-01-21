@@ -389,6 +389,7 @@ export function useExportCsvData(options: {
             long_data: transformResult.long_data,
             errors: transformResult.errors,
             filename: serverData.filename,
+            task_date: taskDate,
             saved_to_db: saveToDb,
           });
         } catch (e) {
@@ -620,7 +621,13 @@ async function checkIdbCache(
 async function cacheToIdb(
   configId: number,
   taskId: string,
-  res: { wide_data: unknown[]; long_data: unknown[]; errors: unknown[]; filename: string | null },
+  res: {
+    wide_data: unknown[];
+    long_data: unknown[];
+    errors: unknown[];
+    filename: string | null;
+    task_date?: string;
+  },
 ) {
   if (res.wide_data.length === 0) return;
   try {
@@ -634,6 +641,7 @@ async function cacheToIdb(
       long_data: res.long_data as Array<Record<string, any>>,
       errors: res.errors as Array<any>,
       filename: res.filename,
+      task_date: res.task_date,
       saved_to_db: true,
     });
     console.info(`[SmartRead] Cached to IDB successfully.`);

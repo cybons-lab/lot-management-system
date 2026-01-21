@@ -32,6 +32,7 @@ interface LoadDataResult {
   longData: Record<string, unknown>[];
   errors: SmartReadValidationError[];
   filename: string | null;
+  taskDate?: string;
   cacheId?: string;
   savedToDb?: boolean;
 }
@@ -56,6 +57,7 @@ async function loadFromCache(configId: number, taskId: string): Promise<LoadData
         longData: cached.long_data,
         errors: cached.errors,
         filename: cached.filename,
+        taskDate: cached.task_date,
         cacheId: cached.id,
         savedToDb: cached.saved_to_db,
       };
@@ -77,16 +79,17 @@ async function saveCacheToDatabase(params: {
   wideData: Record<string, unknown>[];
   longData: Record<string, unknown>[];
   filename: string | null;
+  taskDate?: string;
   cacheId: string;
 }) {
-  const { configId, taskId, wideData, longData, filename, cacheId } = params;
+  const { configId, taskId, wideData, longData, filename, taskDate, cacheId } = params;
   const { exportCache } = await import("../db/export-cache");
   try {
-    const today = new Date().toISOString().split("T")[0];
+    const dateToUse = taskDate || new Date().toISOString().split("T")[0];
     await saveLongData(taskId, {
       config_id: configId,
       task_id: taskId,
-      task_date: today,
+      task_date: dateToUse,
       wide_data: wideData,
       long_data: longData,
       filename,
@@ -173,6 +176,7 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
               wideData: cached.wideData,
               longData: cached.longData,
               filename: cached.filename,
+              taskDate: cached.taskDate,
               cacheId: cached.cacheId,
             });
           }

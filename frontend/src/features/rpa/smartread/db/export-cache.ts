@@ -26,6 +26,7 @@ export interface CachedExport {
     value: string | null;
   }>;
   filename: string | null;
+  task_date?: string;
   cached_at: number; // timestamp
   saved_to_db: boolean;
 }
@@ -47,7 +48,7 @@ class ExportCacheService {
           }
           if (oldVersion < 2) {
             const store = transaction.objectStore(STORE_NAME);
-            store.openCursor().then(function updateCursor(cursor) {
+            store.openCursor().then(function updateCursor(cursor: any): any {
               if (!cursor) return;
               const value = cursor.value as CachedExport;
               if (value.saved_to_db === undefined) {
@@ -141,6 +142,7 @@ class ExportCacheService {
     long_data: Array<Record<string, any>>;
     errors: Array<any>;
     filename: string | null;
+    task_date?: string;
     saved_to_db?: boolean;
   }): Promise<void> {
     const {
@@ -151,6 +153,7 @@ class ExportCacheService {
       long_data,
       errors,
       filename,
+      task_date,
       saved_to_db = false,
     } = params;
 
@@ -167,6 +170,7 @@ class ExportCacheService {
         long_data,
         errors,
         filename,
+        task_date,
         cached_at: Date.now(),
         saved_to_db,
       };
