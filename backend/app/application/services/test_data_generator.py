@@ -18,8 +18,8 @@ from .test_data.masters import (
     generate_suppliers,
     generate_warehouses,
 )
-from .test_data.rpa_material_delivery import generate_rpa_material_delivery_data
 from .test_data.orders import generate_orders
+from .test_data.rpa_material_delivery import generate_rpa_material_delivery_data
 from .test_data.shipping_master import generate_shipping_master_data
 from .test_data.smartread import generate_smartread_data
 from .test_data.utils import clear_data
