@@ -19,6 +19,7 @@ from .test_data.masters import (
     generate_warehouses,
 )
 from .test_data.orders import generate_orders
+from .test_data.rpa_material_delivery import generate_rpa_material_delivery_data
 from .test_data.shipping_master import generate_shipping_master_data
 from .test_data.smartread import generate_smartread_data
 from .test_data.utils import clear_data
@@ -43,6 +44,7 @@ __all__ = [
     "generate_inbound_plans",
     "generate_smartread_data",
     "generate_shipping_master_data",
+    "generate_rpa_material_delivery_data",
 ]
 
 
@@ -92,6 +94,11 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
 
         # Step 2.5: Generate inventory scenarios for UI/testing
         generate_inventory_scenarios(db)
+
+        # Step 2.6: Generate RPA Material Delivery Note data
+        if progress_callback:
+            progress_callback(45, "Generating RPA Material Delivery Note data...")
+        generate_rpa_material_delivery_data(db)
 
         # Step 3: Generate reservations (requires lots to exist)
         if progress_callback:
