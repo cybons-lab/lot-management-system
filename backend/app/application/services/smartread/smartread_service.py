@@ -424,6 +424,31 @@ class SmartReadService:
         # 複数ファイルを1タスクで処理
         multi_result = await client.analyze_files(files_to_process)
 
+        # タスクをDBに保存
+        from datetime import date
+
+        task_date = date.today()
+        task_name = f"Watch Dir: {', '.join(filenames[:3])}" + ("..." if len(filenames) > 3 else "")
+        try:
+            self.get_or_create_task(
+                config_id=config_id,
+                task_id=multi_result.task_id,
+                task_date=task_date,
+                name=task_name,
+                state=None,  # SmartRead APIのステータスは不明なのでNone
+            )
+            self.session.commit()
+            logger.info(
+                f"[SmartRead] Task saved to DB: {multi_result.task_id}",
+                extra={"config_id": config_id, "task_id": multi_result.task_id},
+            )
+        except Exception as e:
+            logger.error(
+                f"[SmartRead] Failed to save task to DB: {e}",
+                extra={"config_id": config_id, "task_id": multi_result.task_id},
+            )
+            self.session.rollback()
+
         # 結果を変換
         for sr_result in multi_result.results:
             analyze_result = AnalyzeResult(
