@@ -96,7 +96,9 @@ class Settings(BaseSettings):
     """アプリケーション設定クラス."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # 環境変数 ENV_FILE でパスを上書き可能 (本番環境用)
+        env_file=os.getenv("ENV_FILE", ".env"),
+        env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
@@ -118,10 +120,16 @@ class Settings(BaseSettings):
     # アプリケーション基本設定
     APP_NAME: str = "ロット管理システム"
     APP_VERSION: str = "2.0.0"
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    ENVIRONMENT: str = Field(
+        default="development",
+        validation_alias=AliasChoices("ENVIRONMENT", "environment"),
+    )
 
     # データベース設定
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    DATABASE_URL: str = Field(
+        default="",
+        validation_alias=AliasChoices("DATABASE_URL", "database_url"),
+    )
 
     @field_validator("DATABASE_URL")
     @classmethod
@@ -193,20 +201,41 @@ class Settings(BaseSettings):
     ALERT_EXPIRY_WARNING_DAYS: int = 60  # 黄色アラート
 
     # 倉庫設定
-    DEFAULT_WAREHOUSE_ID: int = int(os.getenv("DEFAULT_WAREHOUSE_ID", "1"))
+    DEFAULT_WAREHOUSE_ID: int = Field(
+        default=1,
+        validation_alias=AliasChoices("DEFAULT_WAREHOUSE_ID", "default_warehouse_id"),
+    )
 
     # ファイルアップロード設定
     UPLOAD_DIR: Path = Path(__file__).parent.parent.parent / "uploads"
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
 
     # ログ設定
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_LEVEL: str = Field(
+        default="INFO",
+        validation_alias=AliasChoices("LOG_LEVEL", "log_level"),
+    )
     LOG_DIR: Path = Path(__file__).parent.parent.parent / "logs"
-    LOG_FILE_ENABLED: bool = os.getenv("LOG_FILE_ENABLED", "true").lower() == "true"
-    LOG_JSON_FORMAT: bool = os.getenv("LOG_JSON_FORMAT", "true").lower() == "true"
-    LOG_ROTATION_SIZE: int = int(os.getenv("LOG_ROTATION_SIZE", str(100 * 1024 * 1024)))  # 100MB
-    LOG_RETENTION_DAYS: int = int(os.getenv("LOG_RETENTION_DAYS", "30"))
-    LOG_BACKUP_COUNT: int = int(os.getenv("LOG_BACKUP_COUNT", "10"))
+    LOG_FILE_ENABLED: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("LOG_FILE_ENABLED", "log_file_enabled"),
+    )
+    LOG_JSON_FORMAT: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("LOG_JSON_FORMAT", "log_json_format"),
+    )
+    LOG_ROTATION_SIZE: int = Field(
+        default=100 * 1024 * 1024,  # 100MB
+        validation_alias=AliasChoices("LOG_ROTATION_SIZE", "log_rotation_size"),
+    )
+    LOG_RETENTION_DAYS: int = Field(
+        default=30,
+        validation_alias=AliasChoices("LOG_RETENTION_DAYS", "log_retention_days"),
+    )
+    LOG_BACKUP_COUNT: int = Field(
+        default=10,
+        validation_alias=AliasChoices("LOG_BACKUP_COUNT", "log_backup_count"),
+    )
 
     # センシティブフィールドのマスキング設定
     LOG_SENSITIVE_FIELDS: list[str] = [
@@ -219,10 +248,18 @@ class Settings(BaseSettings):
     ]
 
     # RPA Cloud Flow Settings
-    CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE: str = os.getenv(
-        "CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE", ""
+    CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE", "cloud_flow_url_material_delivery_note"
+        ),
     )
-    CLOUD_FLOW_URL_PROGRESS_DOWNLOAD: str = os.getenv("CLOUD_FLOW_URL_PROGRESS_DOWNLOAD", "")
+    CLOUD_FLOW_URL_PROGRESS_DOWNLOAD: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "CLOUD_FLOW_URL_PROGRESS_DOWNLOAD", "cloud_flow_url_progress_download"
+        ),
+    )
 
 
 # グローバル設定インスタンス
