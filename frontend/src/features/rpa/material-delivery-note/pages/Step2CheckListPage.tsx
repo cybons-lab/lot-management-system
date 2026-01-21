@@ -3,9 +3,7 @@
  * 素材納品書発行 Step2 - 確認画面
  */
 
-/* eslint-disable max-lines-per-function */
-import { format } from "date-fns";
-import { ja } from "date-fns/locale";
+/* eslint-disable max-lines-per-function, complexity */
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,7 +12,13 @@ import { useCompleteAllItems, useRun, useRuns, useUpdateItem } from "../hooks";
 
 import { Button, Checkbox } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/form";
 import {
   Table,
   TableBody,
@@ -26,15 +30,6 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-
-// ステータス表示用のマッピング
-const STATUS_LABELS: Record<
-  string,
-  { label: string; variant: "secondary" | "default" | "destructive" }
-> = {
-  step1_done: { label: "Step2実行待ち", variant: "secondary" }, // 旧 downloaded
-  step2_confirmed: { label: "確認完了", variant: "default" },
-};
 
 export function Step2CheckListPage() {
   const navigate = useNavigate();
@@ -80,7 +75,10 @@ export function Step2CheckListPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Step2: 発行対象の選択" subtitle="発行対象アイテムを選択します（このStepのみ）" />
+      <PageHeader
+        title="Step2: 発行対象の選択"
+        subtitle="発行対象アイテムを選択します（このStepのみ）"
+      />
 
       <div className="space-y-4">
         <div className="flex justify-between gap-4">
@@ -125,7 +123,9 @@ export function Step2CheckListPage() {
         <div className="rounded-md border bg-white shadow-sm">
           <div className="border-b bg-gray-50 p-4">
             <h3 className="font-medium text-gray-900">発行対象の選択</h3>
-            <p className="text-sm text-gray-500">チェックを付けたアイテムのみがStep3対象になります。</p>
+            <p className="text-sm text-gray-500">
+              チェックを付けたアイテムのみがStep3対象になります。
+            </p>
           </div>
           <Table>
             <TableHeader>

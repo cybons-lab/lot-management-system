@@ -239,6 +239,7 @@ class RpaRunSummaryResponse(BaseModel):
     complete_count: int = 0
     issue_count: int = 0
     all_items_complete: bool = False
+    updated_at: datetime
 
     model_config = {"from_attributes": True}
 

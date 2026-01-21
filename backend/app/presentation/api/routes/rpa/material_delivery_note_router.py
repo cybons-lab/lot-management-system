@@ -136,6 +136,7 @@ def _build_run_summary(run) -> RpaRunSummaryResponse:
         all_items_complete=run.all_items_complete,
         external_done_at=run.external_done_at,
         step4_executed_at=run.step4_executed_at,
+        updated_at=run.updated_at,
     )
 
 

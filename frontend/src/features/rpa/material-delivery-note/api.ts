@@ -40,6 +40,8 @@ export interface RpaRun {
   rpa_type: string;
   status: string;
   run_group_id?: number | null;
+  data_start_date: string | null;
+  data_end_date: string | null;
   progress_percent?: number | null;
   estimated_minutes?: number | null;
   paused_at?: string | null;
@@ -79,6 +81,7 @@ export interface RpaRunSummary {
   external_done_at: string | null;
   step4_executed_at: string | null;
   created_at: string;
+  updated_at: string;
   item_count: number;
   complete_count: number;
   issue_count: number;
@@ -371,9 +374,7 @@ export async function startStep4(runId: number): Promise<RpaRun> {
 }
 
 export async function getRunEvents(runId: number, limit = 100): Promise<RpaRunEvent[]> {
-  return http.get<RpaRunEvent[]>(
-    `rpa/material-delivery-note/runs/${runId}/events?limit=${limit}`,
-  );
+  return http.get<RpaRunEvent[]>(`rpa/material-delivery-note/runs/${runId}/events?limit=${limit}`);
 }
 
 export async function getFailedItems(runId: number): Promise<RpaRunItem[]> {
