@@ -13,9 +13,16 @@ import { Check, CheckCircle2, ChevronLeft, X, Filter, AlertCircle, ArrowRight } 
 import { useState, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
-import { useRun, useUpdateItem, useBatchUpdateItems, useCompleteAllItems } from "../hooks";
+import {
+  useRun,
+  useUpdateItem,
+  useBatchUpdateItems,
+  useCompleteAllItems,
+  useLoopSummary,
+  useActivity,
+} from "../hooks";
 
-import { Button, Input, Checkbox } from "@/components/ui";
+import { Button, Input, Checkbox, Progress } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -57,6 +64,8 @@ export function RunDetailPage() {
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
   const { data: run, isLoading, error } = useRun(id, { refetchInterval: 5000 });
+  const { data: loopSummary } = useLoopSummary(id, { refetchInterval: 5000 });
+  const { data: activityItems } = useActivity(id, 50, { refetchInterval: 5000 });
   const updateItemMutation = useUpdateItem(id);
   const batchUpdateMutation = useBatchUpdateItems(id);
   const completeRunMutation = useCompleteAllItems(id);
@@ -96,6 +105,22 @@ export function RunDetailPage() {
   const statusDisplay = STATUS_DISPLAY[run.status] || { label: run.status, color: "bg-gray-400" };
   const issueCount = run.issue_count ?? run.items.filter((item) => item.issue_flag).length;
   const totalCount = run.item_count ?? run.items.length;
+  const lastActivityAt = loopSummary?.last_activity_at
+    ? new Date(loopSummary.last_activity_at)
+    : null;
+  const stallThresholdMinutes = 10;
+  const isStalled =
+    (loopSummary?.processing ?? 0) > 0 &&
+    lastActivityAt !== null &&
+    Date.now() - lastActivityAt.getTime() > stallThresholdMinutes * 60 * 1000;
+
+  const getActivityIcon = (resultStatus: string | null, lastErrorCode?: string | null) => {
+    if (lastErrorCode === "LOCK_TIMEOUT") return "⏰";
+    if (resultStatus === "success") return "✅";
+    if (resultStatus === "failure") return "❌";
+    if (resultStatus === "processing") return "⏳";
+    return "・";
+  };
 
   // Step2編集可能: step1_doneのみ
 
@@ -201,6 +226,88 @@ export function RunDetailPage() {
             </Button>
           )}
         </div>
+      </div>
+
+      {/* 進捗表示 */}
+      <div className="mb-6 rounded-lg border bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-500">PAD進捗</div>
+            <div className="text-sm font-medium text-gray-700">
+              {loopSummary ? `${loopSummary.percent.toFixed(1)}%` : "-"}
+            </div>
+          </div>
+          <Progress
+            value={loopSummary?.percent ?? 0}
+            indicatorClassName={isStalled ? "bg-yellow-500" : undefined}
+          />
+          {isStalled && (
+            <div className="text-xs text-yellow-700">
+              ⚠ 処理が停止している可能性があります（最終更新:{" "}
+              {lastActivityAt ? format(lastActivityAt, "yyyy/MM/dd HH:mm:ss") : "-"}）
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 sm:grid-cols-5">
+            <div>総数: {loopSummary?.total ?? "-"}</div>
+            <div>成功: {loopSummary?.success ?? "-"}</div>
+            <div>失敗: {loopSummary?.failure ?? "-"}</div>
+            <div>処理中: {loopSummary?.processing ?? "-"}</div>
+            <div>未処理: {loopSummary?.pending ?? "-"}</div>
+          </div>
+          <div className="text-xs text-gray-500">
+            最終更新:{" "}
+            {loopSummary?.last_activity_at
+              ? format(new Date(loopSummary.last_activity_at), "yyyy/MM/dd HH:mm:ss")
+              : "-"}
+          </div>
+        </div>
+      </div>
+
+      {/* 実行ログ */}
+      <div className="mb-6 rounded-lg border bg-white p-4 shadow-sm">
+        <div className="mb-3 text-sm font-medium text-gray-700">直近の実行ログ</div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[60px]">No</TableHead>
+              <TableHead className="w-[120px]">ステータス</TableHead>
+              <TableHead>メッセージ</TableHead>
+              <TableHead>エラー</TableHead>
+              <TableHead className="w-[180px]">更新日時</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {(activityItems ?? []).map((item) => (
+              <TableRow key={item.item_id}>
+                <TableCell>{item.row_no}</TableCell>
+                <TableCell>
+                  <span className="mr-1">
+                    {getActivityIcon(item.result_status, item.last_error_code)}
+                  </span>
+                  {item.result_status ?? "-"}
+                </TableCell>
+                <TableCell className="text-xs text-gray-600">
+                  {item.result_message ?? item.result_pdf_path ?? "-"}
+                </TableCell>
+                <TableCell className="text-xs text-red-600">
+                  {item.last_error_code
+                    ? `${item.last_error_code}: ${item.last_error_message ?? ""}`
+                    : "-"}
+                </TableCell>
+                <TableCell className="text-xs text-gray-500">
+                  {item.updated_at ? format(new Date(item.updated_at), "yyyy/MM/dd HH:mm:ss") : "-"}
+                </TableCell>
+              </TableRow>
+            ))}
+            {activityItems && activityItems.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-sm text-gray-500">
+                  ログはまだありません
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* 編集モードメッセージ */}

@@ -1,3 +1,5 @@
+import logging
+from datetime import timedelta
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -30,6 +32,7 @@ class MaterialDeliveryNoteOrchestrator:
         self.db: Session = uow.session
         self.repo = RpaRepository(self.db)
         self.flow_client = RpaFlowClient()
+        self.logger = logging.getLogger(__name__)
 
     def create_run_from_csv(
         self,
@@ -468,6 +471,128 @@ class MaterialDeliveryNoteOrchestrator:
     def get_next_processing_item(self, run_id: int) -> RpaRunItem | None:
         """次に処理すべきアイテムを取得."""
         return self.repo.get_next_processing_item(run_id)
+
+    def claim_next_processing_item(
+        self,
+        run_id: int,
+        lock_timeout_seconds: int = 600,
+        lock_owner: str | None = None,
+        include_failed: bool = False,
+    ) -> RpaRunItem | None:
+        """次に処理すべきアイテムをロックして取得."""
+        run = self.get_run(run_id)
+        if not run or run.status != RpaRunStatus.STEP3_RUNNING:
+            return None
+
+        now = utcnow()
+        lock_until = now + timedelta(seconds=lock_timeout_seconds)
+        released = self.repo.release_expired_item_locks(run_id, now)
+        if released:
+            self.logger.info("Released expired RPA item locks", extra={"run_id": run_id, "count": released})
+        item = self.repo.claim_next_processing_item(
+            run_id=run_id,
+            now=now,
+            lock_until=lock_until,
+            include_failed=include_failed,
+            lock_owner=lock_owner,
+        )
+        if not item:
+            return None
+        self.db.flush()
+        self.repo.refresh(item)
+        return item
+
+    def mark_item_success(
+        self,
+        run_id: int,
+        item_id: int,
+        pdf_path: str | None = None,
+        message: str | None = None,
+        lock_owner: str | None = None,
+    ) -> RpaRunItem | None:
+        """PADから成功報告を受け取る."""
+        item = self.repo.get_item(run_id, item_id)
+        if not item:
+            return None
+
+        if item.result_status == "success":
+            return item
+        if item.result_status == "failure":
+            raise ValueError("Cannot mark success after failure.")
+
+        now = utcnow()
+        if (
+            lock_owner
+            and item.locked_by
+            and item.locked_by != lock_owner
+            and item.locked_until
+            and item.locked_until > now
+        ):
+            raise ValueError("Lock owner mismatch.")
+
+        item.result_status = "success"
+        item.result_pdf_path = pdf_path
+        item.result_message = message
+        item.locked_until = None
+        item.locked_by = None
+        item.updated_at = now
+        self.db.flush()
+        self.repo.refresh(item)
+        self._update_run_status_if_needed(run_id)
+        return item
+
+    def mark_item_failure(
+        self,
+        run_id: int,
+        item_id: int,
+        error_code: str | None = None,
+        error_message: str | None = None,
+        screenshot_path: str | None = None,
+        lock_owner: str | None = None,
+    ) -> RpaRunItem | None:
+        """PADから失敗報告を受け取る."""
+        item = self.repo.get_item(run_id, item_id)
+        if not item:
+            return None
+
+        if item.result_status == "failure":
+            return item
+        if item.result_status == "success":
+            raise ValueError("Cannot mark failure after success.")
+
+        now = utcnow()
+        if (
+            lock_owner
+            and item.locked_by
+            and item.locked_by != lock_owner
+            and item.locked_until
+            and item.locked_until > now
+        ):
+            raise ValueError("Lock owner mismatch.")
+
+        item.result_status = "failure"
+        item.last_error_code = error_code
+        item.last_error_message = error_message
+        item.last_error_screenshot_path = screenshot_path
+        item.locked_until = None
+        item.locked_by = None
+        item.updated_at = now
+        self.db.flush()
+        self.repo.refresh(item)
+        self._update_run_status_if_needed(run_id)
+        return item
+
+    def get_failed_items(self, run_id: int) -> list[RpaRunItem]:
+        """失敗したアイテム一覧を取得."""
+        return self.repo.get_failed_items(run_id)
+
+    def get_loop_summary(self, run_id: int, top_n: int = 5) -> dict[str, Any]:
+        """PADループの集計情報を取得."""
+        return self.repo.get_loop_summary(run_id, top_n=top_n)
+
+    def get_activity(self, run_id: int, limit: int = 50) -> list[RpaRunItem]:
+        """PADループの活動ログを取得."""
+        return self.repo.get_activity(run_id, limit=limit)
 
     def complete_all_items(self, run_id: int) -> RpaRun | None:
         """全アイテム完了処理 (Step3完了)."""

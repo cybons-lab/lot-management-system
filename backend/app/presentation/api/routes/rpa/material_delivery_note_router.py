@@ -26,8 +26,12 @@ from app.presentation.schemas.rpa_run_schema import (
     LotSuggestionsResponse,
     MaterialDeliveryNoteExecuteRequest,
     MaterialDeliveryNoteExecuteResponse,
+    ActivityItemResponse,
+    LoopSummaryResponse,
     RpaRunBatchUpdateRequest,
+    RpaRunItemFailureRequest,
     RpaRunItemResponse,
+    RpaRunItemSuccessRequest,
     RpaRunItemUpdateRequest,
     RpaRunListResponse,
     RpaRunResponse,
@@ -291,11 +295,19 @@ def update_item(
 )
 def get_next_processing_item(
     run_id: int,
+    lock_timeout_seconds: int = Query(default=600, ge=30, le=3600),
+    lock_owner: str | None = Query(default=None),
+    include_failed: bool = Query(default=False),
     uow: UnitOfWork = Depends(get_uow),
 ):
-    """次に処理すべき未完了アイテムを取得する."""
+    """次に処理すべき未完了アイテムをロックして取得する."""
     service = MaterialDeliveryNoteOrchestrator(uow)
-    item = service.get_next_processing_item(run_id)
+    item = service.claim_next_processing_item(
+        run_id=run_id,
+        lock_timeout_seconds=lock_timeout_seconds,
+        lock_owner=lock_owner,
+        include_failed=include_failed,
+    )
 
     if not item:
         return None
@@ -306,6 +318,151 @@ def get_next_processing_item(
         resp_item.maker_name = maker_map.get(item.layer_code)
 
     return resp_item
+
+
+@router.post(
+    "/runs/{run_id}/items/{item_id}/success",
+    response_model=RpaRunItemResponse,
+)
+def report_item_success(
+    run_id: int,
+    item_id: int,
+    request: RpaRunItemSuccessRequest,
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """PADから成功報告を受け取る."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        item = service.mark_item_success(
+            run_id=run_id,
+            item_id=item_id,
+            pdf_path=request.pdf_path,
+            message=request.message,
+            lock_owner=request.lock_owner,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+    if not item:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    resp_item = RpaRunItemResponse.model_validate(item)
+    if item.layer_code:
+        maker_map = _get_maker_map(uow.session, [item.layer_code])
+        resp_item.maker_name = maker_map.get(item.layer_code)
+    return resp_item
+
+
+@router.post(
+    "/runs/{run_id}/items/{item_id}/failure",
+    response_model=RpaRunItemResponse,
+)
+def report_item_failure(
+    run_id: int,
+    item_id: int,
+    request: RpaRunItemFailureRequest,
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """PADから失敗報告を受け取る."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        item = service.mark_item_failure(
+            run_id=run_id,
+            item_id=item_id,
+            error_code=request.error_code,
+            error_message=request.error_message,
+            screenshot_path=request.screenshot_path,
+            lock_owner=request.lock_owner,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+    if not item:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    resp_item = RpaRunItemResponse.model_validate(item)
+    if item.layer_code:
+        maker_map = _get_maker_map(uow.session, [item.layer_code])
+        resp_item.maker_name = maker_map.get(item.layer_code)
+    return resp_item
+
+
+@router.get(
+    "/runs/{run_id}/failed-items",
+    response_model=list[RpaRunItemResponse],
+)
+def list_failed_items(
+    run_id: int,
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """失敗したアイテム一覧を取得する."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    run = service.get_run(run_id)
+    if not run:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run not found")
+
+    items = service.get_failed_items(run_id)
+    responses: list[RpaRunItemResponse] = []
+    layer_codes = [item.layer_code for item in items if item.layer_code]
+    maker_map = _get_maker_map(uow.session, layer_codes)
+    for item in items:
+        resp_item = RpaRunItemResponse.model_validate(item)
+        resp_item.maker_name = maker_map.get(item.layer_code)
+        responses.append(resp_item)
+    return responses
+
+
+@router.get(
+    "/runs/{run_id}/loop-summary",
+    response_model=LoopSummaryResponse,
+)
+def get_loop_summary(
+    run_id: int,
+    top_n: int = Query(default=5, ge=1, le=50),
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """PADループの集計情報を取得する."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    run = service.get_run(run_id)
+    if not run:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run not found")
+
+    summary = service.get_loop_summary(run_id, top_n=top_n)
+    return LoopSummaryResponse(**summary)
+
+
+@router.get(
+    "/runs/{run_id}/activity",
+    response_model=list[ActivityItemResponse],
+)
+def get_activity(
+    run_id: int,
+    limit: int = Query(default=50, ge=1, le=200),
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """PADループの活動ログを取得する."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    run = service.get_run(run_id)
+    if not run:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run not found")
+
+    items = service.get_activity(run_id, limit=limit)
+    return [
+        ActivityItemResponse(
+            item_id=item.id,
+            row_no=item.row_no,
+            result_status=item.result_status,
+            updated_at=item.updated_at,
+            result_message=item.result_message,
+            result_pdf_path=item.result_pdf_path,
+            last_error_code=item.last_error_code,
+            last_error_message=item.last_error_message,
+            last_error_screenshot_path=item.last_error_screenshot_path,
+            locked_by=item.locked_by,
+            locked_until=item.locked_until,
+        )
+        for item in items
+    ]
 
 
 @router.get(

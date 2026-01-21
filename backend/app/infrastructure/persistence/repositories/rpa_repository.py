@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import or_
+from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.masters_models import CustomerItem, Product
@@ -200,6 +200,64 @@ class RpaRepository:
             .first()
         )
 
+    def release_expired_item_locks(self, run_id: int, now: Any) -> int:
+        """期限切れのロックを解除して再処理可能にする."""
+        return (
+            self.db.query(RpaRunItem)
+            .filter(
+                RpaRunItem.run_id == run_id,
+                RpaRunItem.locked_until.is_not(None),
+                RpaRunItem.locked_until <= now,
+                RpaRunItem.result_status == "processing",
+            )
+            .update(
+                {
+                    "locked_until": None,
+                    "locked_by": None,
+                    "result_status": "pending",
+                    "processing_started_at": None,
+                    "last_error_code": "LOCK_TIMEOUT",
+                    "last_error_message": "Lock expired; task returned to pending.",
+                    "updated_at": now,
+                },
+                synchronize_session=False,
+            )
+        )
+
+    def claim_next_processing_item(
+        self,
+        run_id: int,
+        now: Any,
+        lock_until: Any,
+        include_failed: bool,
+        lock_owner: str | None,
+    ) -> RpaRunItem | None:
+        """次に処理すべきアイテムをロックして取得する."""
+        allowed_statuses = ["pending"]
+        if include_failed:
+            allowed_statuses.append("failure")
+
+        query = self.db.query(RpaRunItem).filter(
+            RpaRunItem.run_id == run_id,
+            RpaRunItem.issue_flag.is_(True),
+            or_(
+                RpaRunItem.result_status.is_(None),
+                RpaRunItem.result_status.in_(allowed_statuses),
+            ),
+            or_(RpaRunItem.locked_until.is_(None), RpaRunItem.locked_until <= now),
+        )
+
+        item = query.order_by(RpaRunItem.row_no.asc()).with_for_update(skip_locked=True).first()
+        if not item:
+            return None
+
+        item.result_status = "processing"
+        item.processing_started_at = now
+        item.locked_until = lock_until
+        item.locked_by = lock_owner
+        item.updated_at = now
+        return item
+
     def lock_issue_items(self, run_id: int, now: Any) -> int:
         """発行対象アイテムをロックする (Step2開始時)."""
         return (
@@ -209,6 +267,100 @@ class RpaRepository:
                 RpaRunItem.issue_flag.is_(True),
             )
             .update({"lock_flag": True, "updated_at": now}, synchronize_session=False)
+        )
+
+    def get_failed_items(self, run_id: int) -> list[RpaRunItem]:
+        """失敗したアイテム一覧を取得."""
+        return (
+            self.db.query(RpaRunItem)
+            .filter(RpaRunItem.run_id == run_id, RpaRunItem.result_status == "failure")
+            .order_by(RpaRunItem.row_no.asc())
+            .all()
+        )
+
+    def get_loop_summary(self, run_id: int, top_n: int = 5) -> dict[str, Any]:
+        """PADループの集計情報を取得."""
+        summary = (
+            self.db.query(
+                func.count(RpaRunItem.id).label("total"),
+                func.sum(case((RpaRunItem.result_status.is_(None), 1), else_=0)).label("queued"),
+                func.sum(case((RpaRunItem.result_status == "pending", 1), else_=0)).label(
+                    "pending"
+                ),
+                func.sum(case((RpaRunItem.result_status == "processing", 1), else_=0)).label(
+                    "processing"
+                ),
+                func.sum(case((RpaRunItem.result_status == "success", 1), else_=0)).label(
+                    "success"
+                ),
+                func.sum(case((RpaRunItem.result_status == "failure", 1), else_=0)).label(
+                    "failure"
+                ),
+                func.max(RpaRunItem.updated_at).label("last_activity_at"),
+            )
+            .filter(RpaRunItem.run_id == run_id)
+            .first()
+        )
+
+        error_code_counts = (
+            self.db.query(
+                RpaRunItem.last_error_code.label("error_code"),
+                func.count(RpaRunItem.id).label("count"),
+            )
+            .filter(
+                RpaRunItem.run_id == run_id,
+                RpaRunItem.result_status == "failure",
+                RpaRunItem.last_error_code.is_not(None),
+            )
+            .group_by(RpaRunItem.last_error_code)
+            .order_by(func.count(RpaRunItem.id).desc())
+            .limit(top_n)
+            .all()
+        )
+
+        if summary is None:
+            summary_values = {
+                "total": 0,
+                "queued": 0,
+                "pending": 0,
+                "processing": 0,
+                "success": 0,
+                "failure": 0,
+                "last_activity_at": None,
+            }
+        else:
+            summary_values = {
+                "total": int(summary.total or 0),
+                "queued": int(summary.queued or 0),
+                "pending": int(summary.pending or 0),
+                "processing": int(summary.processing or 0),
+                "success": int(summary.success or 0),
+                "failure": int(summary.failure or 0),
+                "last_activity_at": summary.last_activity_at,
+            }
+        done = summary_values["success"] + summary_values["failure"]
+        remaining = summary_values["total"] - done
+        percent = (done / summary_values["total"] * 100.0) if summary_values["total"] else 0.0
+
+        return {
+            **summary_values,
+            "done": done,
+            "remaining": remaining,
+            "percent": percent,
+            "error_code_counts": [
+                {"error_code": row.error_code, "count": int(row.count)}
+                for row in error_code_counts
+            ],
+        }
+
+    def get_activity(self, run_id: int, limit: int = 50) -> list[RpaRunItem]:
+        """PADループの活動ログを取得."""
+        return (
+            self.db.query(RpaRunItem)
+            .filter(RpaRunItem.run_id == run_id)
+            .order_by(RpaRunItem.updated_at.desc())
+            .limit(limit)
+            .all()
         )
 
     # --- Master / Lot Lookup Methods for Orchestrator Logic ---

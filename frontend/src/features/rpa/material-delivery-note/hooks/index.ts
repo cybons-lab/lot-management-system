@@ -19,6 +19,10 @@ import {
   type Step2ExecuteRequest,
   type RpaRun,
   type RpaRunListResponse,
+  type ActivityItem,
+  type LoopSummary,
+  getActivity,
+  getLoopSummary,
 } from "../api";
 
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
@@ -50,6 +54,37 @@ export function useRun(
   return useQuery({
     queryKey: [QUERY_KEY, runId],
     queryFn: () => getRun(runId!),
+    enabled: runId !== undefined && (options?.enabled ?? true),
+    ...options,
+  });
+}
+
+/**
+ * PADループ集計を取得
+ */
+export function useLoopSummary(
+  runId: number | undefined,
+  options?: Partial<UseQueryOptions<LoopSummary, Error>>,
+) {
+  return useQuery({
+    queryKey: [QUERY_KEY, runId, "loop-summary"],
+    queryFn: () => getLoopSummary(runId!),
+    enabled: runId !== undefined && (options?.enabled ?? true),
+    ...options,
+  });
+}
+
+/**
+ * PADループ活動ログを取得
+ */
+export function useActivity(
+  runId: number | undefined,
+  limit = 50,
+  options?: Partial<UseQueryOptions<ActivityItem[], Error>>,
+) {
+  return useQuery({
+    queryKey: [QUERY_KEY, runId, "activity", limit],
+    queryFn: () => getActivity(runId!, limit),
     enabled: runId !== undefined && (options?.enabled ?? true),
     ...options,
   });
