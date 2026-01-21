@@ -9,7 +9,7 @@
 
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
-
+/* eslint-disable jsx-a11y/no-autofocus */
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, AlertTriangle, CheckCircle, Download, XCircle } from "lucide-react";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
@@ -19,6 +19,7 @@ import { ocrResultsApi, type OcrResultItem } from "../api";
 import { Button, Card, CardContent } from "@/components/ui";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { cn } from "@/shared/libs/utils";
 
 /**
  * ステータスアイコンを返す
@@ -105,6 +106,8 @@ type RowInputState = {
   quantity2: string;
   inboundNo: string;
   shippingDate: string;
+  shippingSlipText: string;
+  shippingSlipTextEdited: boolean;
 };
 
 const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
@@ -114,6 +117,8 @@ const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
   quantity2: "",
   inboundNo: row.inbound_no || "",
   shippingDate: "",
+  shippingSlipText: "",
+  shippingSlipTextEdited: false,
 });
 
 // ============================================
@@ -140,13 +145,15 @@ function EditableTextCell({
   row,
   field,
   placeholder,
+  inputClassName,
 }: {
   row: OcrResultItem;
-  field: keyof RowInputState;
+  field: Extract<keyof RowInputState, string>; // Ensure we only use keys that have string values
   placeholder?: string;
+  inputClassName?: string;
 }) {
   const { getInputs, updateInputs } = useOcrInputs();
-  const value = getInputs(row)[field];
+  const value = getInputs(row)[field] as string; // Explicitly cast to string
 
   return (
     <input
@@ -154,7 +161,10 @@ function EditableTextCell({
       value={value}
       onChange={(e) => updateInputs(row, { [field]: e.target.value })}
       placeholder={placeholder}
-      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      className={cn(
+        "w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500",
+        inputClassName,
+      )}
     />
   );
 }
@@ -162,9 +172,15 @@ function EditableTextCell({
 /**
  * セルコンポーネント: 日付入力
  */
-function EditableDateCell({ row, field }: { row: OcrResultItem; field: keyof RowInputState }) {
+function EditableDateCell({
+  row,
+  field,
+}: {
+  row: OcrResultItem;
+  field: Extract<keyof RowInputState, string>;
+}) {
   const { getInputs, updateInputs } = useOcrInputs();
-  const value = getInputs(row)[field];
+  const value = getInputs(row)[field] as string;
 
   return (
     <input
@@ -179,18 +195,89 @@ function EditableDateCell({ row, field }: { row: OcrResultItem; field: keyof Row
 /**
  * セルコンポーネント: 読取専用プレビュー
  */
-function PreviewTextCell({ row }: { row: OcrResultItem }) {
-  const { getInputs } = useOcrInputs();
+function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
+  const { getInputs, updateInputs } = useOcrInputs();
   const input = getInputs(row);
-  const text = buildShippingSlipText(row.shipping_slip_text, input) || "-";
+  const computedText = buildShippingSlipText(row.shipping_slip_text, input);
+  const displayText = input.shippingSlipTextEdited ? input.shippingSlipText : computedText;
+  const fallbackText = displayText || "-";
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const startEditing = () => {
+    setDraft(displayText || "");
+    setIsEditing(true);
+  };
+
+  const commit = () => {
+    if (draft === computedText) {
+      updateInputs(row, { shippingSlipText: "", shippingSlipTextEdited: false });
+    } else {
+      updateInputs(row, { shippingSlipText: draft, shippingSlipTextEdited: true });
+    }
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <textarea
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setIsEditing(false);
+            setDraft(displayText || "");
+          }
+          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+            event.preventDefault();
+            commit();
+          }
+        }}
+        autoFocus
+        className="w-full min-h-[2.5rem] rounded-md border border-gray-300 bg-white px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      />
+    );
+  }
 
   return (
-    <input
-      type="text"
-      value={text}
-      readOnly
-      className="w-full rounded-md border border-gray-300 bg-slate-50 px-2 py-1 text-xs"
-    />
+    <button
+      type="button"
+      onDoubleClick={startEditing}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          startEditing();
+        }
+      }}
+      className="min-h-[2.5rem] w-full cursor-text rounded-md border border-gray-300 bg-slate-50 px-2 py-1 text-left text-xs whitespace-pre-wrap break-words"
+    >
+      {fallbackText}
+    </button>
+  );
+}
+
+function LotEntryCell({
+  row,
+  lotField,
+  quantityField,
+}: {
+  row: OcrResultItem;
+  lotField: Extract<keyof RowInputState, string>;
+  quantityField: Extract<keyof RowInputState, string>;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5 py-1">
+      <EditableTextCell row={row} field={lotField} placeholder="ロットNo" />
+      <div className="flex items-center justify-end gap-1">
+        <span className="text-[10px] text-slate-400 shrink-0">数量:</span>
+        <EditableTextCell
+          row={row}
+          field={quantityField}
+          placeholder="数量"
+          inputClassName="w-[70px] text-right"
+        />
+      </div>
+    </div>
   );
 }
 
@@ -272,28 +359,26 @@ export function OcrResultsListPage() {
   const columns = useMemo<Column<OcrResultItem>[]>(
     () => [
       {
-        id: "lot_no_1",
-        header: "ロットNo(1)",
-        accessor: (row) => <EditableTextCell row={row} field="lotNo1" />,
-        minWidth: 120,
+        id: "lot_entry_1",
+        header: (
+          <div className="flex flex-col leading-tight py-1">
+            <span className="text-xs font-semibold">ロットNo(1)</span>
+            <span className="text-[10px] font-normal text-slate-500">数量(1)</span>
+          </div>
+        ),
+        accessor: (row) => <LotEntryCell row={row} lotField="lotNo1" quantityField="quantity1" />,
+        minWidth: 160,
       },
       {
-        id: "quantity_1",
-        header: "数量(1)",
-        accessor: (row) => <EditableTextCell row={row} field="quantity1" placeholder="数量" />,
-        minWidth: 60,
-      },
-      {
-        id: "lot_no_2",
-        header: "ロットNo(2)",
-        accessor: (row) => <EditableTextCell row={row} field="lotNo2" />,
-        minWidth: 120,
-      },
-      {
-        id: "quantity_2",
-        header: "数量(2)",
-        accessor: (row) => <EditableTextCell row={row} field="quantity2" placeholder="数量" />,
-        minWidth: 60,
+        id: "lot_entry_2",
+        header: (
+          <div className="flex flex-col leading-tight py-1">
+            <span className="text-xs font-semibold">ロットNo(2)</span>
+            <span className="text-[10px] font-normal text-slate-500">数量(2)</span>
+          </div>
+        ),
+        accessor: (row) => <LotEntryCell row={row} lotField="lotNo2" quantityField="quantity2" />,
+        minWidth: 160,
       },
       {
         id: "inbound_no_input",
@@ -310,8 +395,9 @@ export function OcrResultsListPage() {
       {
         id: "shipping_slip_text_input",
         header: "出荷票テキスト",
-        accessor: (row) => <PreviewTextCell row={row} />,
-        minWidth: 200,
+        accessor: (row) => <EditableShippingSlipCell row={row} />,
+        minWidth: 320,
+        className: "align-top",
       },
       {
         id: "shipping_slip_source",
