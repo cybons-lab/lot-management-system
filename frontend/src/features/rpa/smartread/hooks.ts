@@ -169,27 +169,16 @@ export function useAnalyzeFile() {
  * 監視フォルダ内のファイル一覧を取得
  */
 export function useWatchDirFiles(configId: number | null) {
-  return useQuery({
+  return useQuery<string[], ApiError>({
     queryKey: SMARTREAD_QUERY_KEYS.files(configId ?? 0),
-    queryFn: () => getWatchDirFiles(configId!),
-    enabled: !!configId,
-    onSuccess: (files) => {
+    queryFn: async () => {
+      const files = await getWatchDirFiles(configId!);
       console.info(
         `[SmartRead] Watch dir files loaded: ${files.length} items (config_id=${configId})`,
       );
-      if (files.length === 0) {
-        console.warn(
-          `[SmartRead] Watch dir returned empty list (config_id=${configId}).` +
-            " Check watch_dir path and input extensions.",
-        );
-      }
+      return files;
     },
-    onError: (error) => {
-      console.error(
-        `[SmartRead] Failed to load watch dir files (config_id=${configId})`,
-        error,
-      );
-    },
+    enabled: !!configId,
     retry: (failureCount, error) => {
       if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         return false;
