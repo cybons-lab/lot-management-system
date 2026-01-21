@@ -8,6 +8,8 @@
 
 import { openDB, type IDBPDatabase } from "idb";
 
+import { logger } from "../utils/logger";
+
 const DB_NAME = "smartread-export-cache";
 const DB_VERSION = 2;
 const STORE_NAME = "exports";
@@ -36,11 +38,11 @@ class ExportCacheService {
 
   private async getDB(): Promise<IDBPDatabase> {
     if (!this.dbPromise) {
-      console.log("[CACHE] Opening IndexedDB database");
+      logger.debug("IndexedDB接続開始");
       this.dbPromise = openDB(DB_NAME, DB_VERSION, {
         upgrade(db: IDBPDatabase, oldVersion: number, _newVersion: number | null, transaction) {
           if (!db.objectStoreNames.contains(STORE_NAME)) {
-            console.log("[CACHE] Creating object store");
+            logger.debug("オブジェクトストア作成");
             const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
             store.createIndex("config_id", "config_id", { unique: false });
             store.createIndex("task_id", "task_id", { unique: false });
@@ -72,21 +74,21 @@ class ExportCacheService {
       const db = await this.getDB();
       const id = this.makeKey(config_id, task_id, export_id);
 
-      console.log(`[CACHE] Looking up export: ${id}`);
       const cached = await db.get(STORE_NAME, id);
 
       if (cached) {
-        console.log(
-          `[CACHE] Cache hit for ${id} ` +
-            `(${cached.wide_data.length} wide, ${cached.long_data.length} long)`,
-        );
+        logger.debug("キャッシュヒット", {
+          id,
+          wideCount: (cached as CachedExport).wide_data.length,
+          longCount: (cached as CachedExport).long_data.length,
+        });
         return cached as CachedExport;
       }
 
-      console.log(`[CACHE] Cache miss for ${id}`);
+      logger.debug("キャッシュミス", { id });
       return null;
     } catch (error) {
-      console.error("[CACHE] Failed to get from cache:", error);
+      logger.error("キャッシュ取得失敗", error);
       return null;
     }
   }
@@ -100,14 +102,6 @@ class ExportCacheService {
       const tx = db.transaction(STORE_NAME, "readonly");
       const index = tx.store.index("task_id");
 
-      // IDBKeyRange.only(task_id) failed in some cases if types mismatch, but usually string is fine.
-      // However, we want to filter by config_id too?
-      // The index is only on task_id.
-      // But task_id is usually unique enough? Or is it scoped by config?
-      // existing code: `id: string; // {config_id}_{task_id}_{export_id}`
-      // `task_id` in `SmartReadTask` seems to be global UUID or similar string?
-      // Let's assume task_id is string.
-
       const exports = await index.getAll(task_id);
 
       if (exports.length === 0) return null;
@@ -118,15 +112,13 @@ class ExportCacheService {
         .sort((a: CachedExport, b: CachedExport) => b.cached_at - a.cached_at);
 
       if (sorted.length > 0) {
-        console.log(
-          `[CACHE] Found ${sorted.length} cached exports for task ${task_id}. Using latest.`,
-        );
+        logger.debug("タスクキャッシュ取得", { taskId: task_id, count: sorted.length });
         return sorted[0] as CachedExport;
       }
 
       return null;
     } catch (error) {
-      console.error("[CACHE] Failed to get by task_id:", error);
+      logger.error("タスクキャッシュ取得失敗", error);
       return null;
     }
   }
@@ -175,15 +167,12 @@ class ExportCacheService {
         saved_to_db,
       };
 
-      console.log(
-        `[CACHE] Storing export: ${id} ` +
-          `(${wide_data.length} wide, ${long_data.length} long rows)`,
-      );
+      logger.debug("キャッシュ保存", { id, wideCount: wide_data.length, longCount: long_data.length });
 
       await db.put(STORE_NAME, cached);
-      console.log(`[CACHE] Successfully cached ${id}`);
+      logger.debug("キャッシュ保存完了", { id });
     } catch (error) {
-      console.error("[CACHE] Failed to store in cache:", error);
+      logger.error("キャッシュ保存失敗", error);
     }
   }
 
@@ -195,10 +184,10 @@ class ExportCacheService {
       const db = await this.getDB();
       const id = this.makeKey(config_id, task_id, export_id);
 
-      console.log(`[CACHE] Deleting export: ${id}`);
+      logger.debug("キャッシュ削除", { id });
       await db.delete(STORE_NAME, id);
     } catch (error) {
-      console.error("[CACHE] Failed to delete from cache:", error);
+      logger.error("キャッシュ削除失敗", error);
     }
   }
 
@@ -213,9 +202,9 @@ class ExportCacheService {
         saved_to_db: savedToDb,
       };
       await db.put(STORE_NAME, updated);
-      console.log(`[CACHE] Updated saved_to_db for ${id} => ${savedToDb}`);
+      logger.debug("キャッシュsaved_to_db更新", { id, savedToDb });
     } catch (error) {
-      console.error("[CACHE] Failed to update saved_to_db:", error);
+      logger.error("キャッシュsaved_to_db更新失敗", error);
     }
   }
 
@@ -228,7 +217,7 @@ class ExportCacheService {
       const tx = db.transaction(STORE_NAME, "readwrite");
       const index = tx.store.index("config_id");
 
-      console.log(`[CACHE] Clearing all exports for config_id=${config_id}`);
+      logger.debug("設定キャッシュクリア開始", { configId: config_id });
 
       let cursor = await index.openCursor(IDBKeyRange.only(config_id));
       let count = 0;
@@ -240,9 +229,9 @@ class ExportCacheService {
       }
 
       await tx.done;
-      console.log(`[CACHE] Cleared ${count} cached exports for config_id=${config_id}`);
+      logger.info("設定キャッシュクリア完了", { configId: config_id, deletedCount: count });
     } catch (error) {
-      console.error("[CACHE] Failed to clear cache:", error);
+      logger.error("設定キャッシュクリア失敗", error);
     }
   }
 
@@ -256,7 +245,7 @@ class ExportCacheService {
       const index = tx.store.index("cached_at");
 
       const cutoff = Date.now() - maxAgeMs;
-      console.log(`[CACHE] Clearing entries older than ${new Date(cutoff).toISOString()}`);
+      logger.debug("古いキャッシュクリア開始", { cutoff: new Date(cutoff).toISOString() });
 
       let cursor = await index.openCursor(IDBKeyRange.upperBound(cutoff));
       let count = 0;
@@ -268,9 +257,9 @@ class ExportCacheService {
       }
 
       await tx.done;
-      console.log(`[CACHE] Cleared ${count} old cache entries`);
+      logger.info("古いキャッシュクリア完了", { deletedCount: count });
     } catch (error) {
-      console.error("[CACHE] Failed to clear old entries:", error);
+      logger.error("古いキャッシュクリア失敗", error);
     }
   }
 
@@ -296,7 +285,7 @@ class ExportCacheService {
         totalSizeEstimate: totalSize,
       };
     } catch (error) {
-      console.error("[CACHE] Failed to get stats:", error);
+      logger.error("キャッシュ統計取得失敗", error);
       return { totalEntries: 0, totalSizeEstimate: 0 };
     }
   }

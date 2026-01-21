@@ -4,6 +4,8 @@
 
 import { http } from "@/shared/api/http-client";
 
+import { logger, operationLogger } from "./utils/logger";
+
 // Types
 export interface SmartReadConfig {
   id: number;
@@ -77,13 +79,13 @@ export interface SmartReadDiagnoseResponse {
  * 全設定一覧を取得
  */
 export async function getConfigs(): Promise<SmartReadConfig[]> {
-  console.log("[SmartRead API] Fetching configs...");
+  operationLogger.start("設定一覧取得");
   try {
     const res = await http.get<SmartReadConfig[]>("rpa/smartread/configs");
-    console.log("[SmartRead API] Fetched configs:", res);
+    operationLogger.success("設定一覧取得", { count: res.length });
     return res;
   } catch (error) {
-    console.error("[SmartRead API] Error fetching configs:", error);
+    operationLogger.failure("設定一覧取得", error);
     throw error;
   }
 }
@@ -239,16 +241,15 @@ export interface SmartReadTaskDetail {
  * タスク一覧を取得 (SmartRead APIから + DBに保存)
  */
 export async function getTasks(configId: number): Promise<SmartReadTaskListResponse> {
-  console.log(`[API] Fetching tasks from SmartRead API for config_id=${configId}`);
+  operationLogger.start("タスク一覧取得 (API)", { configId });
   try {
     const res = await http.get<SmartReadTaskListResponse>(
       `rpa/smartread/tasks?config_id=${configId}`,
     );
-    console.log(`[API] Retrieved ${res.tasks?.length || 0} tasks from SmartRead API`);
-    console.log(`[DB] Tasks saved to database by backend`);
+    operationLogger.success("タスク一覧取得 (API)", { count: res.tasks?.length || 0 });
     return res;
   } catch (error) {
-    console.error(`[API] Error fetching tasks:`, error);
+    operationLogger.failure("タスク一覧取得 (API)", error);
     throw error;
   }
 }
@@ -257,15 +258,15 @@ export async function getTasks(configId: number): Promise<SmartReadTaskListRespo
  * 管理タスク一覧を取得 (DBから)
  */
 export async function getManagedTasks(configId: number): Promise<SmartReadTaskDetail[]> {
-  console.log(`[DB] Fetching managed tasks from database for config_id=${configId}`);
+  operationLogger.start("管理タスク取得 (DB)", { configId });
   try {
     const res = await http.get<SmartReadTaskDetail[]>(
       `rpa/smartread/managed-tasks?config_id=${configId}`,
     );
-    console.log(`[DB] Loaded ${res.length} tasks from database`);
+    operationLogger.success("管理タスク取得 (DB)", { count: res.length });
     return res;
   } catch (error) {
-    console.error(`[DB] Error fetching managed tasks:`, error);
+    operationLogger.failure("管理タスク取得 (DB)", error);
     throw error;
   }
 }
@@ -340,7 +341,7 @@ export async function syncTaskResults(
   taskId: string,
   force: boolean = false,
 ): Promise<SmartReadCsvDataResponse> {
-  console.log(`[API] Triggering sync for task ${taskId} (config_id=${configId}, force=${force})`);
+  logger.info("タスク同期開始", { taskId, configId, force });
   const params = new URLSearchParams({
     config_id: configId.toString(),
     force: force.toString(),
@@ -355,15 +356,15 @@ export async function updateSkipToday(
   taskId: string,
   skipToday: boolean,
 ): Promise<SmartReadTaskDetail> {
-  console.log(`[SmartRead API] Updating skip_today for task ${taskId} to ${skipToday}`);
+  operationLogger.start("スキップ設定更新", { taskId, skipToday });
   try {
     const res = await http.put<SmartReadTaskDetail>(`rpa/smartread/tasks/${taskId}/skip-today`, {
       skip_today: skipToday,
     });
-    console.log(`[SmartRead API] Updated skip_today:`, res);
+    operationLogger.success("スキップ設定更新", { taskId, skipToday: res.skip_today });
     return res;
   } catch (error) {
-    console.error(`[SmartRead API] Error updating skip_today:`, error);
+    operationLogger.failure("スキップ設定更新", error);
     throw error;
   }
 }
@@ -478,7 +479,7 @@ export async function saveLongData(
   taskId: string,
   data: SmartReadSaveLongDataRequest,
 ): Promise<SmartReadSaveLongDataResponse> {
-  console.log(`[API] Saving long data for task ${taskId}`);
+  operationLogger.start("縦持ちデータ保存", { taskId });
   return http.post<SmartReadSaveLongDataResponse>(
     `rpa/smartread/tasks/${taskId}/save-long-data`,
     data,

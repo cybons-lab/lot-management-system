@@ -7,6 +7,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { logger } from "./logger";
+
 export interface ValidationError {
   row: number;
   field: string;
@@ -57,9 +59,9 @@ export class SmartReadCsvTransformer {
     wideData: Array<Record<string, any>>,
     skipEmpty: boolean = true,
   ): TransformResult {
-    console.log(`[TRANSFORM] Starting transformation of ${wideData.length} wide rows`);
+    logger.info("CSV変換開始", { wideRowCount: wideData.length });
     if (wideData.length > 0) {
-      console.log(`[TRANSFORM] First row keys:`, Object.keys(wideData[0]));
+      logger.debug("横持ちデータキー", { keys: Object.keys(wideData[0]).slice(0, 20) });
     }
 
     const longData: Array<Record<string, any>> = [];
@@ -103,11 +105,13 @@ export class SmartReadCsvTransformer {
     }
 
     if (errors.length > 0) {
-      console.warn(`[TRANSFORM] Encountered ${errors.length} errors:`, errors);
+      logger.warn("CSV変換中にエラー発生", { errorCount: errors.length });
     }
-    console.log(
-      `[TRANSFORM] Transformation complete: ${wideData.length} wide rows → ${longData.length} long rows, ${errors.length} errors`,
-    );
+    logger.info("CSV変換完了", {
+      wideRowCount: wideData.length,
+      longRowCount: longData.length,
+      errorCount: errors.length,
+    });
 
     return {
       long_data: longData,
@@ -128,15 +132,10 @@ export class SmartReadCsvTransformer {
   private extractDetails(row: Record<string, any>): Array<Record<string, any>> {
     const details: Array<Record<string, any>> = [];
 
-    console.log(
-      `[extractDetails] Processing row with ${Object.keys(row).length} columns:`,
-      Object.keys(row).slice(0, 20),
-    );
+    logger.debug("明細抽出開始", { columnCount: Object.keys(row).length });
 
     for (let n = 1; n <= this.maxDetails; n++) {
       const detail = this.extractSingleDetail(row, n);
-
-      console.log(`[extractDetails] n=${n}, extracted detail keys:`, Object.keys(detail));
 
       // Only add if detail has data
       if (!this.isEmptyDetail(detail)) {
@@ -149,7 +148,7 @@ export class SmartReadCsvTransformer {
       }
     }
 
-    console.log(`[extractDetails] Total details found: ${details.length}`);
+    logger.debug("明細抽出完了", { detailCount: details.length });
     return details;
   }
 
@@ -198,7 +197,13 @@ export class SmartReadCsvTransformer {
       }
 
       if (!matched && n === 1) {
-        this.logFieldNotFound(fieldName, keysToTry, normalizedRow);
+        // Show what similar keys exist in normalized row (debug only)
+        const similarKeys = Object.keys(normalizedRow).filter((k) =>
+          k.toLowerCase().includes(fieldName.toLowerCase()),
+        );
+        if (similarKeys.length > 0) {
+          logger.debug(`フィールド "${fieldName}" 未検出`, { triedKeys: keysToTry, similarKeys });
+        }
       }
     }
   }
@@ -222,21 +227,6 @@ export class SmartReadCsvTransformer {
           }
         }
       }
-    }
-  }
-
-  private logFieldNotFound(
-    fieldName: string,
-    keysToTry: string[],
-    normalizedRow: Record<string, any>,
-  ): void {
-    console.log(`[extractSingleDetail] Field "${fieldName}" NOT FOUND. Tried:`, keysToTry);
-    // Show what similar keys exist in normalized row
-    const similarKeys = Object.keys(normalizedRow).filter((k) =>
-      k.toLowerCase().includes(fieldName.toLowerCase()),
-    );
-    if (similarKeys.length > 0) {
-      console.log(`  Similar keys in normalized row:`, similarKeys);
     }
   }
 
@@ -265,9 +255,7 @@ export class SmartReadCsvTransformer {
     // Check if ALL detail fields are empty
     // If ANY field has a value, it is NOT empty
 
-    // Iterate all keys in the detail object
     const detailKeys = Object.keys(detail);
-    console.log(`[isEmptyDetail] Checking detail:`, { keys: detailKeys, values: detail });
 
     for (const key of detailKeys) {
       if (key.startsWith("エラー_")) continue; // Ignore error flags
@@ -275,14 +263,10 @@ export class SmartReadCsvTransformer {
       const trimmedValue = value ? String(value).trim() : "";
 
       if (trimmedValue !== "") {
-        console.log(
-          `[isEmptyDetail] Found non-empty field: ${key} = "${trimmedValue}" -> NOT EMPTY`,
-        );
         return false;
       }
     }
 
-    console.log(`[isEmptyDetail] All fields empty -> EMPTY`);
     return true;
   }
 
@@ -325,7 +309,6 @@ export class SmartReadCsvTransformer {
           value: original || null,
         });
         common["エラー_発行日形式"] = 1;
-        // common["発行日"] = ""; // Don't clear! Keep original for manual correction.
       } else {
         common["発行日"] = parsed;
         common["エラー_発行日形式"] = 0;
@@ -344,7 +327,6 @@ export class SmartReadCsvTransformer {
           value: original || null,
         });
         common["エラー_納入日形式"] = 1;
-        // common["納入日"] = ""; // Don't clear!
       } else {
         common["納入日"] = parsed;
         common["エラー_納入日形式"] = 0;
@@ -389,9 +371,6 @@ export class SmartReadCsvTransformer {
           value: quantity || null,
         });
         detail["エラー_納入量"] = 1;
-        // detail["納入量"] = ""; // Don't clear? actually parseQuantity returns original on error.
-        // It was: return [s, true];
-        // So detail["納入量"] = parsed; sets it to original. Good.
       } else {
         detail["納入量"] = parsed;
         detail["エラー_納入量"] = 0;

@@ -1,4 +1,3 @@
-/* eslint-disable */
 /* eslint-disable max-lines-per-function, complexity */
 /**
  * SmartReadPage
@@ -15,6 +14,7 @@ import {
   useSmartReadTasks,
 } from "../hooks";
 import { diagnoseWatchDirFile } from "../api";
+import { logger } from "../utils/logger";
 import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
 import { SmartReadResultView } from "../components/SmartReadResultView";
 import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
@@ -65,9 +65,7 @@ export function SmartReadPage() {
       if (defaultConfig) {
         setSelectedConfigId(defaultConfig.id);
       } else {
-        console.info(
-          "[SmartRead] No default config found. Please select a config to enable watch dir actions.",
-        );
+        logger.info("デフォルト設定がありません。設定を選択してください。");
       }
     }
   }, [configsLoading, activeConfigs, selectedConfigId]);
@@ -126,19 +124,16 @@ export function SmartReadPage() {
     if (!selectedConfigId || selectedWatchFiles.length === 0 || isDiagnosing) return;
     const targetFile = selectedWatchFiles[0];
     setIsDiagnosing(true);
-    console.info("[SmartRead] Diagnose request start", {
-      configId: selectedConfigId,
-      filename: targetFile,
-    });
+    logger.info("API診断開始", { configId: selectedConfigId, filename: targetFile });
     try {
       const response = await diagnoseWatchDirFile(selectedConfigId, targetFile);
-      console.info("[SmartRead] Diagnose response summary", {
-        request_flow_success: response.request_flow.success,
-        export_flow_success: response.export_flow.success,
+      logger.info("API診断完了", {
+        requestFlowSuccess: response.request_flow.success,
+        exportFlowSuccess: response.export_flow.success,
       });
-      console.info("[SmartRead] Diagnose response detail", response);
+      logger.debug("API診断詳細", response as unknown as Record<string, unknown>);
     } catch (error) {
-      console.error("[SmartRead] Diagnose request failed", error);
+      logger.error("API診断失敗", error);
     } finally {
       setIsDiagnosing(false);
     }
