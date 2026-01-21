@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.routes.auth.auth_router import get_current_user
@@ -75,6 +76,37 @@ class OcrResultListResponse(BaseModel):
 
     items: list[OcrResultItem]
     total: int
+
+
+class OcrResultsExportRow(BaseModel):
+    """OCR結果エクスポート用データ."""
+
+    task_date: date | None = None
+    status: str | None = None
+    inbound_no: str | None = None
+    delivery_date: str | None = None
+    delivery_quantity: str | None = None
+    item_no: str | None = None
+    order_unit: str | None = None
+    lot_no: str | None = None
+    material_code: str | None = None
+    jiku_code: str | None = None
+    customer_part_no: str | None = None
+    maker_part_no: str | None = None
+    shipping_slip_text: str | None = None
+    customer_code: str | None = None
+    customer_name: str | None = None
+    supplier_code: str | None = None
+    supplier_name: str | None = None
+    shipping_warehouse_code: str | None = None
+    shipping_warehouse_name: str | None = None
+    delivery_place_code: str | None = None
+    delivery_place_name: str | None = None
+    remarks: str | None = None
+    has_error: bool | None = None
+    error_reason: str | None = None
+
+    model_config = {"from_attributes": True}
 
 
 @router.get("", response_model=OcrResultListResponse)
@@ -158,3 +190,100 @@ async def get_ocr_result(
         )
 
     return OcrResultItem.model_validate(dict(row))
+
+
+@router.get("/export/download")
+async def export_ocr_results(
+    task_date: Annotated[str | None, Query(description="タスク日付 (YYYY-MM-DD)")] = None,
+    status: Annotated[str | None, Query(description="ステータスでフィルタ")] = None,
+    has_error: Annotated[bool | None, Query(description="エラーのみ表示")] = None,
+    format: Annotated[str, Query(description="エクスポート形式 (csv/xlsx)")] = "xlsx",
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
+    """OCR結果をExcel/CSVでエクスポート."""
+    query = "SELECT * FROM v_ocr_results WHERE 1=1"
+    params: dict[str, Any] = {}
+
+    if task_date:
+        query += " AND task_date = :task_date"
+        params["task_date"] = datetime.fromisoformat(task_date).date()
+
+    if status:
+        query += " AND status = :status"
+        params["status"] = status
+
+    if has_error is True:
+        query += " AND has_error = true"
+    elif has_error is False:
+        query += " AND has_error = false"
+
+    query += " ORDER BY task_date DESC, row_index ASC"
+
+    rows = db.execute(text(query), params).mappings().all()
+    export_rows = []
+    for row in rows:
+        content = row.get("content") or {}
+        remarks = content.get("備考") if isinstance(content, dict) else None
+        export_rows.append(
+            OcrResultsExportRow.model_validate(
+                {
+                    "task_date": row.get("task_date"),
+                    "status": row.get("status"),
+                    "inbound_no": row.get("inbound_no"),
+                    "delivery_date": row.get("delivery_date"),
+                    "delivery_quantity": row.get("delivery_quantity"),
+                    "item_no": row.get("item_no"),
+                    "order_unit": row.get("order_unit"),
+                    "lot_no": row.get("lot_no"),
+                    "material_code": row.get("material_code"),
+                    "jiku_code": row.get("jiku_code"),
+                    "customer_part_no": row.get("customer_part_no"),
+                    "maker_part_no": row.get("maker_part_no"),
+                    "shipping_slip_text": row.get("shipping_slip_text"),
+                    "customer_code": row.get("customer_code"),
+                    "customer_name": row.get("customer_name"),
+                    "supplier_code": row.get("supplier_code"),
+                    "supplier_name": row.get("supplier_name"),
+                    "shipping_warehouse_code": row.get("shipping_warehouse_code"),
+                    "shipping_warehouse_name": row.get("shipping_warehouse_name"),
+                    "delivery_place_code": row.get("delivery_place_code"),
+                    "delivery_place_name": row.get("delivery_place_name"),
+                    "remarks": remarks,
+                    "has_error": row.get("has_error"),
+                    "error_reason": row.get("error_reason"),
+                }
+            )
+        )
+
+    column_map = {
+        "task_date": "タスク日付",
+        "status": "ステータス",
+        "inbound_no": "入庫No",
+        "delivery_date": "納期",
+        "delivery_quantity": "納入量",
+        "item_no": "アイテムNo",
+        "order_unit": "数量単位",
+        "lot_no": "ロットNo",
+        "material_code": "材質コード",
+        "jiku_code": "次区",
+        "customer_part_no": "先方品番",
+        "maker_part_no": "メーカー品番",
+        "shipping_slip_text": "出荷票テキスト",
+        "customer_code": "得意先コード",
+        "customer_name": "得意先名",
+        "supplier_code": "仕入先コード",
+        "supplier_name": "仕入先名称",
+        "shipping_warehouse_code": "出荷倉庫コード",
+        "shipping_warehouse_name": "出荷倉庫名",
+        "delivery_place_code": "納入先コード",
+        "delivery_place_name": "納入先",
+        "remarks": "備考",
+        "has_error": "エラー有無",
+        "error_reason": "エラー理由",
+    }
+
+    filename = f"ocr_results_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    if format == "csv":
+        return ExportService.export_to_csv(export_rows, filename=filename)
+    return ExportService.export_to_excel(export_rows, filename=filename, column_map=column_map)

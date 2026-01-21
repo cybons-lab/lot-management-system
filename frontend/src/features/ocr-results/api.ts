@@ -2,7 +2,7 @@
  * OCR結果データ API client (v_ocr_resultsビューベース)
  */
 
-import httpClient from "@/shared/api/http-client";
+import { http } from "@/shared/api/http-client";
 
 export interface OcrResultItem {
   id: number;
@@ -75,36 +75,35 @@ export const ocrResultsApi = {
     if (params?.limit) searchParams.set("limit", params.limit.toString());
     if (params?.offset) searchParams.set("offset", params.offset.toString());
 
-    const response = await httpClient.get(`ocr-results?${searchParams}`);
-    return response.json();
+    const response = await http.get<OcrResultListResponse>(`ocr-results?${searchParams}`);
+    return response;
   },
 
   /**
    * OCR結果詳細取得
    */
   get: async (id: number): Promise<OcrResultItem> => {
-    const response = await httpClient.get(`ocr-results/${id}`);
-    return response.json();
+    const response = await http.get<OcrResultItem>(`ocr-results/${id}`);
+    return response;
   },
 
   /**
-   * Excelエクスポート（既存のorder-registerエンドポイントを使用）
+   * OCR結果のExcelエクスポート
    */
-  exportExcel: async (params?: { task_date?: string; status?: string }): Promise<void> => {
+  exportExcel: async (params?: {
+    task_date?: string;
+    status?: string;
+    has_error?: boolean;
+  }): Promise<void> => {
     const searchParams = new URLSearchParams();
     if (params?.task_date) searchParams.set("task_date", params.task_date);
     if (params?.status) searchParams.set("status", params.status);
+    if (params?.has_error !== undefined) {
+      searchParams.set("has_error", params.has_error.toString());
+    }
 
-    const url = `order-register/export/excel?${searchParams}`;
-    const response = await httpClient.get(url);
-    const blob = await response.blob();
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = `受注情報登録_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(downloadUrl);
+    const url = `ocr-results/export/download?format=xlsx&${searchParams}`;
+    const filename = `OCR結果_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    await http.download(url, filename);
   },
 };

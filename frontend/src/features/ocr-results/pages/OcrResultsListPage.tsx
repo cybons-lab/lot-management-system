@@ -316,6 +316,7 @@ export function OcrResultsListPage() {
       await ocrResultsApi.exportExcel({
         task_date: taskDate || undefined,
         status: statusFilter || undefined,
+        has_error: showErrorsOnly || undefined,
       });
     } catch (err) {
       console.error("Export failed:", err);
