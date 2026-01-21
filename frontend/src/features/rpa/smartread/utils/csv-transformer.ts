@@ -156,9 +156,33 @@ export class SmartReadCsvTransformer {
   private extractSingleDetail(row: Record<string, any>, n: number): Record<string, any> {
     const detail: Record<string, any> = {};
 
-    // Regular detail fields (材質コード1, 材質コード 1, 納入量1, etc)
+    // Normalize row keys (全角数字→半角数字) to match patterns
+    const normalizedRow = this.createNormalizedRow(row);
+
+    // Extract regular detail fields
+    this.extractDetailFields(detail, normalizedRow, n);
+
+    // Extract sub-detail fields (Lot No, 梱包数)
+    this.extractSubDetailFields(detail, normalizedRow, n);
+
+    return detail;
+  }
+
+  private createNormalizedRow(row: Record<string, any>): Record<string, any> {
+    const normalizedRow: Record<string, any> = {};
+    for (const [key, value] of Object.entries(row)) {
+      const normalizedKey = this.normalizeKey(key);
+      normalizedRow[normalizedKey] = value;
+    }
+    return normalizedRow;
+  }
+
+  private extractDetailFields(
+    detail: Record<string, any>,
+    normalizedRow: Record<string, any>,
+    n: number,
+  ): void {
     for (const fieldName of DETAIL_FIELDS) {
-      // 複数のパターンを試行
       const keysToTry = [`${fieldName}${n}`, `${fieldName} ${n}`];
       if (n === 1) {
         keysToTry.push(fieldName);
@@ -166,37 +190,71 @@ export class SmartReadCsvTransformer {
 
       let matched = false;
       for (const key of keysToTry) {
-        if (key in row) {
-          detail[fieldName] = this.normalizeValue(row[key]);
+        if (key in normalizedRow) {
+          detail[fieldName] = this.normalizeValue(normalizedRow[key]);
           matched = true;
           break;
         }
       }
 
-      // Debug log for n=1 to see what's happening
       if (!matched && n === 1) {
-        console.log(`[extractSingleDetail] Field "${fieldName}" NOT FOUND. Tried:`, keysToTry);
+        this.logFieldNotFound(fieldName, keysToTry, normalizedRow);
       }
     }
+  }
 
-    // Sub-detail fields (Lot No1-1, Lot No 1-1, Lot No-1, etc)
+  private extractSubDetailFields(
+    detail: Record<string, any>,
+    normalizedRow: Record<string, any>,
+    n: number,
+  ): void {
     for (const subField of SUB_DETAIL_FIELDS) {
       for (let subN = 1; subN <= 4; subN++) {
-        // Max 4 sub-details
         const keysToTry = [`${subField}${n}-${subN}`, `${subField} ${n}-${subN}`];
         if (n === 1) {
           keysToTry.push(`${subField}-${subN}`);
         }
 
         for (const key of keysToTry) {
-          if (key in row) {
-            detail[`${subField}${subN}`] = this.normalizeValue(row[key]);
+          if (key in normalizedRow) {
+            detail[`${subField}${subN}`] = this.normalizeValue(normalizedRow[key]);
             break;
           }
         }
       }
     }
-    return detail;
+  }
+
+  private logFieldNotFound(
+    fieldName: string,
+    keysToTry: string[],
+    normalizedRow: Record<string, any>,
+  ): void {
+    console.log(`[extractSingleDetail] Field "${fieldName}" NOT FOUND. Tried:`, keysToTry);
+    // Show what similar keys exist in normalized row
+    const similarKeys = Object.keys(normalizedRow).filter((k) =>
+      k.toLowerCase().includes(fieldName.toLowerCase()),
+    );
+    if (similarKeys.length > 0) {
+      console.log(`  Similar keys in normalized row:`, similarKeys);
+    }
+  }
+
+  private normalizeKey(key: string): string {
+    // Normalize column names: 全角数字→半角数字, trim whitespace
+    const trimmed = key.trim();
+
+    // Full-width to half-width number conversion
+    const fullWidthNumbers = "０１２３４５６７８９";
+    const halfWidthNumbers = "0123456789";
+
+    let result = "";
+    for (const char of trimmed) {
+      const idx = fullWidthNumbers.indexOf(char);
+      result += idx >= 0 ? halfWidthNumbers[idx] : char;
+    }
+
+    return result;
   }
 
   private isVerticalFormat(row: Record<string, any>): boolean {

@@ -157,5 +157,20 @@ describe("SmartReadCsvTransformer", () => {
       expect(result.long_data).toHaveLength(1);
       expect(result.long_data[0]["梱包数1"]).toBe("50");
     });
+
+    it("should handle full-width numbers in column names (材質コード１ with 全角1)", () => {
+      const wideData = [
+        {
+          ファイル名: "test.pdf",
+          材質コード１: "MAT001", // 全角の１
+          納入量１: "100", // 全角の１
+        },
+      ];
+      const result = transformer.transformToLong(wideData);
+
+      expect(result.long_data).toHaveLength(1);
+      expect(result.long_data[0]["材質コード"]).toBe("MAT001");
+      expect(result.long_data[0]["納入量"]).toBe("100");
+    });
   });
 });
