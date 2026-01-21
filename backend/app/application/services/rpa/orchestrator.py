@@ -42,12 +42,20 @@ class MaterialDeliveryNoteOrchestrator:
         customer_id: int | None = None,
     ) -> RpaRun:
         """CSVからRunを作成."""
+        self.logger.info(
+            f"[RPA] CSVからRun作成開始: import_type={import_type}, "
+            f"user_id={user.id if user else None}, customer_id={customer_id}"
+        )
         if import_type != "material_delivery_note":
+            self.logger.error(f"[RPA] 不明なインポートタイプ: {import_type}")
             raise ValueError(f"Unknown import type: {import_type}")
 
         parsed_rows = parse_material_delivery_csv(file_content)
         if not parsed_rows:
+            self.logger.error("[RPA] CSVが空または無効です")
             raise ValueError("CSV is empty or invalid")
+
+        self.logger.info(f"[RPA] CSV解析完了: {len(parsed_rows)}行")
 
         run = RpaRun(
             rpa_type="material_delivery_note",
@@ -86,6 +94,10 @@ class MaterialDeliveryNoteOrchestrator:
         # ステータス自動更新チェック (作成直後に完了状態かもしれないため)
         self._update_run_status_if_needed(run.id)
 
+        self.logger.info(
+            f"[RPA] Run作成完了: run_id={run.id}, items={len(parsed_rows)}, "
+            f"status={run.status}"
+        )
         return run
 
     def get_run(self, run_id: int) -> RpaRun | None:
@@ -291,10 +303,15 @@ class MaterialDeliveryNoteOrchestrator:
         delivery_quantity: int | None = None,
     ) -> RpaRun | None:
         """一括更新."""
+        self.logger.info(
+            f"[RPA] バッチ更新開始: run_id={run_id}, item_count={len(item_ids)}, "
+            f"issue_flag={issue_flag}, complete_flag={complete_flag}"
+        )
         # TODO: StateManager check needed per item or run status check?
         # Assuming run status check is sufficient for batch update
         run = self.get_run(run_id)
         if not run:
+            self.logger.warning(f"[RPA] バッチ更新失敗: run_id={run_id} が見つかりません")
             return None
 
         # 簡易チェック: Draft or Ready
@@ -302,7 +319,9 @@ class MaterialDeliveryNoteOrchestrator:
         # Just check status
         if run.status not in (RpaRunStatus.DRAFT, RpaRunStatus.READY_FOR_STEP2):
             # 厳密にはエラーだが、元コードに合わせて実行
-            pass
+            self.logger.warning(
+                f"[RPA] バッチ更新: run_id={run_id} のステータスが {run.status} ですが続行します"
+            )
 
         now = utcnow()
         update_values: dict[str, Any] = {"updated_at": now}
@@ -321,6 +340,9 @@ class MaterialDeliveryNoteOrchestrator:
             # Remove explicit commit
             self.db.flush()
             self._update_run_status_if_needed(run_id)
+            self.logger.info(
+                f"[RPA] バッチ更新完了: run_id={run_id}, items={len(item_ids)}"
+            )
 
         return self.get_run(run_id)
 
@@ -619,13 +641,17 @@ class MaterialDeliveryNoteOrchestrator:
         lock_owner: str | None = None,
     ) -> RpaRunItem | None:
         """PADから成功報告を受け取る."""
+        self.logger.info(f"[RPA] アイテム成功マーク: run_id={run_id}, item_id={item_id}")
         item = self.repo.get_item(run_id, item_id)
         if not item:
+            self.logger.warning(f"[RPA] アイテム未検出: run_id={run_id}, item_id={item_id}")
             return None
 
         if item.result_status == "success":
+            self.logger.debug(f"[RPA] アイテム既に成功: item_id={item_id}")
             return item
         if item.result_status == "failure":
+            self.logger.error(f"[RPA] 失敗後に成功マーク不可: item_id={item_id}")
             raise ValueError("Cannot mark success after failure.")
 
         now = utcnow()
@@ -636,6 +662,7 @@ class MaterialDeliveryNoteOrchestrator:
             and item.locked_until
             and item.locked_until > now
         ):
+            self.logger.error(f"[RPA] ロック所有者不一致: item_id={item_id}")
             raise ValueError("Lock owner mismatch.")
 
         item.result_status = "success"
@@ -647,6 +674,7 @@ class MaterialDeliveryNoteOrchestrator:
         self.db.flush()
         self.repo.refresh(item)
         self._update_run_status_if_needed(run_id)
+        self.logger.info(f"[RPA] アイテム成功完了: item_id={item_id}, pdf_path={pdf_path}")
         return item
 
     def mark_item_failure(
@@ -659,13 +687,20 @@ class MaterialDeliveryNoteOrchestrator:
         lock_owner: str | None = None,
     ) -> RpaRunItem | None:
         """PADから失敗報告を受け取る."""
+        self.logger.warning(
+            f"[RPA] アイテム失敗マーク: run_id={run_id}, item_id={item_id}, "
+            f"error_code={error_code}"
+        )
         item = self.repo.get_item(run_id, item_id)
         if not item:
+            self.logger.warning(f"[RPA] アイテム未検出: run_id={run_id}, item_id={item_id}")
             return None
 
         if item.result_status == "failure":
+            self.logger.debug(f"[RPA] アイテム既に失敗: item_id={item_id}")
             return item
         if item.result_status == "success":
+            self.logger.error(f"[RPA] 成功後に失敗マーク不可: item_id={item_id}")
             raise ValueError("Cannot mark failure after success.")
 
         now = utcnow()
@@ -676,6 +711,7 @@ class MaterialDeliveryNoteOrchestrator:
             and item.locked_until
             and item.locked_until > now
         ):
+            self.logger.error(f"[RPA] ロック所有者不一致: item_id={item_id}")
             raise ValueError("Lock owner mismatch.")
 
         item.result_status = "failure"
@@ -688,6 +724,9 @@ class MaterialDeliveryNoteOrchestrator:
         self.db.flush()
         self.repo.refresh(item)
         self._update_run_status_if_needed(run_id)
+        self.logger.warning(
+            f"[RPA] アイテム失敗記録完了: item_id={item_id}, error={error_message}"
+        )
         return item
 
     def get_loop_summary(self, run_id: int, top_n: int = 5) -> dict[str, Any]:
