@@ -9,7 +9,7 @@
 
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
-
+/* eslint-disable jsx-a11y/no-autofocus */
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, AlertTriangle, CheckCircle, Download, XCircle } from "lucide-react";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
