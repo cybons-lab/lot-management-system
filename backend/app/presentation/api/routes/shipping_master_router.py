@@ -138,6 +138,11 @@ async def import_shipping_masters_file(
         workbook = openpyxl.load_workbook(io.BytesIO(contents), read_only=True)
         sheet = workbook.active
 
+        if sheet is None:
+            raise HTTPException(
+                status_code=400, detail="Excelファイルにアクティブシートが見つかりません"
+            )
+
         # ヘッダー行を読み取り（1行目）
         headers = [cell.value for cell in sheet[1]]
 

@@ -492,14 +492,14 @@ def update_skip_today(
     )
 
 
-@router.post("/tasks/{task_id}/sync")
+@router.post("/tasks/{task_id}/sync", response_model=None)
 async def sync_task_results(
     task_id: str,
     config_id: int = Query(..., description="設定ID"),
     force: bool = Query(False, description="強制的に再取得するか"),
     uow: UnitOfWork = Depends(get_uow),
     _current_user: User = Depends(get_current_user),
-) -> SmartReadCsvDataResponse | JSONResponse:
+):
     """タスクの結果をAPIから同期（ダウンロード & DB保存）."""
     assert uow.session is not None
     service = SmartReadService(uow.session)
