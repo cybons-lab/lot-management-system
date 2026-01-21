@@ -13,7 +13,7 @@ from fastapi import (
     UploadFile,
     status,
 )
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
 from app.application.services.common.uow_service import UnitOfWork
@@ -441,7 +441,11 @@ def get_managed_tasks(
     from app.infrastructure.persistence.models.smartread_models import SmartReadTask
 
     assert db is not None
-    stmt = SmartReadTask.__table__.select().where(SmartReadTask.config_id == config_id)
+    stmt = (
+        SmartReadTask.__table__.select()
+        .where(SmartReadTask.config_id == config_id)
+        .order_by(SmartReadTask.created_at.desc())
+    )
     tasks = db.execute(stmt).fetchall()
 
     return [
@@ -488,14 +492,14 @@ def update_skip_today(
     )
 
 
-@router.post("/tasks/{task_id}/sync", response_model=SmartReadCsvDataResponse)
+@router.post("/tasks/{task_id}/sync")
 async def sync_task_results(
     task_id: str,
     config_id: int = Query(..., description="設定ID"),
     force: bool = Query(False, description="強制的に再取得するか"),
     uow: UnitOfWork = Depends(get_uow),
     _current_user: User = Depends(get_current_user),
-) -> SmartReadCsvDataResponse:
+) -> SmartReadCsvDataResponse | JSONResponse:
     """タスクの結果をAPIから同期（ダウンロード & DB保存）."""
     assert uow.session is not None
     service = SmartReadService(uow.session)
@@ -503,6 +507,50 @@ async def sync_task_results(
     result = await service.sync_task_results(config_id, task_id, force=force)
     if not result:
         raise HTTPException(status_code=500, detail="同期処理に失敗しました")
+
+    # PENDING状態の場合は202を返す
+    if result.get("state") == "PENDING":
+        return JSONResponse(
+            status_code=202,
+            content={
+                "state": "PENDING",
+                "message": result.get("message", "OCR処理中"),
+                "requests_status": result.get("requests_status"),
+                "wide_data": [],
+                "long_data": [],
+                "errors": [],
+                "filename": None,
+            },
+        )
+
+    # FAILED状態の場合は422を返す
+    if result.get("state") == "FAILED":
+        return JSONResponse(
+            status_code=422,
+            content={
+                "state": "FAILED",
+                "message": result.get("message", "OCR処理失敗"),
+                "requests_status": result.get("requests_status"),
+                "wide_data": [],
+                "long_data": [],
+                "errors": [],
+                "filename": None,
+            },
+        )
+
+    # EMPTY状態の場合は200で返す（データなし）
+    if result.get("state") == "EMPTY":
+        return JSONResponse(
+            status_code=200,
+            content={
+                "state": "EMPTY",
+                "message": result.get("message", "データがありません"),
+                "wide_data": [],
+                "long_data": [],
+                "errors": [],
+                "filename": result.get("filename"),
+            },
+        )
 
     uow.session.commit()
 

@@ -679,79 +679,144 @@ export function useSyncTaskResults() {
         // 1. Check IDB cache first (unless forceSync is true)
         if (!forceSync) {
           const cached = await checkIdbCache(configId, taskId);
-          if (cached) return cached;
+          if (cached) return { ...cached, state: "SUCCESS" as const };
         } else {
           console.info(`[SmartRead] Force sync, skipping cache.`);
         }
 
         // 2. Trigger backend sync API
         console.info(`[SmartRead] Calling backend sync API (force=${forceSync})...`);
-        const res = await syncTaskResults(configId, taskId, forceSync);
-        console.info(`[SmartRead] Sync done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
-        // === デバッグ: 横持ちデータの内容を表示 ===
-        console.info(`[SmartRead] === WIDE DATA DEBUG ===`);
-        console.info(`[SmartRead] Wide data count: ${res.wide_data.length}`);
-        if (res.wide_data.length > 0) {
-          console.info(`[SmartRead] Wide data keys:`, Object.keys(res.wide_data[0]));
-          console.info(`[SmartRead] Wide data[0]:`, res.wide_data[0]);
-        }
-        console.info(`[SmartRead] Long data count from server: ${res.long_data.length}`);
+        // HTTP リクエストで例外をキャッチし、HTTPステータスコードに応じて処理
+        let res;
+        try {
+          res = await syncTaskResults(configId, taskId, forceSync);
+          console.info(`[SmartRead] Sync done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
-        // === デバッグ: フロントエンドで縦持ち変換を試みる ===
-        if (res.wide_data.length > 0 && res.long_data.length === 0) {
-          console.warn(
-            `[SmartRead] Server returned 0 long rows. Trying frontend transformation...`,
-          );
-          try {
-            const { SmartReadCsvTransformer } = await import("./utils/csv-transformer");
-            const transformer = new SmartReadCsvTransformer();
+          // === デバッグ: 横持ちデータの内容を表示 ===
+          console.info(`[SmartRead] === WIDE DATA DEBUG ===`);
+          console.info(`[SmartRead] Wide data count: ${res.wide_data.length}`);
+          if (res.wide_data.length > 0) {
+            console.info(`[SmartRead] Wide data keys:`, Object.keys(res.wide_data[0]));
+            console.info(`[SmartRead] Wide data[0]:`, res.wide_data[0]);
+          }
+          console.info(`[SmartRead] Long data count from server: ${res.long_data.length}`);
 
-            const frontendResult = transformer.transformToLong(res.wide_data as any[], true);
-            console.info(
-              `[SmartRead] Frontend transformation result: ${frontendResult.long_data.length} long rows`,
+          // === デバッグ: フロントエンドで縦持ち変換を試みる ===
+          if (res.wide_data.length > 0 && res.long_data.length === 0) {
+            console.warn(
+              `[SmartRead] Server returned 0 long rows. Trying frontend transformation...`,
             );
-            if (frontendResult.long_data.length > 0) {
-              console.info(`[SmartRead] Frontend long data[0]:`, frontendResult.long_data[0]);
-              // フロントエンド変換結果を使用
-              res.long_data = frontendResult.long_data;
-              res.errors = frontendResult.errors;
-              console.info(`[SmartRead] Using frontend transformation result instead!`);
-            } else {
-              console.error(`[SmartRead] Frontend transformation also failed!`);
-              console.info(`[SmartRead] Checking DETAIL_FIELDS extraction...`);
-              // 明細抽出のデバッグ
-              const row = res.wide_data[0];
-              const detailFields = [
-                "材質コード",
-                "材質サイズ",
-                "単位",
-                "納入量",
-                "アイテム",
-                "購買",
-                "次区",
-              ];
-              for (const field of detailFields) {
-                const keys = [`${field}1`, `${field} 1`, field];
-                for (const key of keys) {
-                  if (key in (row as Record<string, unknown>)) {
-                    console.info(
-                      `[SmartRead] Found: "${key}" = "${(row as Record<string, unknown>)[key]}"`,
-                    );
+            try {
+              const { SmartReadCsvTransformer } = await import("./utils/csv-transformer");
+              const transformer = new SmartReadCsvTransformer();
+
+              const frontendResult = transformer.transformToLong(res.wide_data as any[], true);
+              console.info(
+                `[SmartRead] Frontend transformation result: ${frontendResult.long_data.length} long rows`,
+              );
+              if (frontendResult.long_data.length > 0) {
+                console.info(`[SmartRead] Frontend long data[0]:`, frontendResult.long_data[0]);
+                // フロントエンド変換結果を使用
+                res.long_data = frontendResult.long_data;
+                res.errors = frontendResult.errors;
+                console.info(`[SmartRead] Using frontend transformation result instead!`);
+              } else {
+                console.error(`[SmartRead] Frontend transformation also failed!`);
+                console.info(`[SmartRead] Checking DETAIL_FIELDS extraction...`);
+                // 明細抽出のデバッグ
+                const row = res.wide_data[0];
+                const detailFields = [
+                  "材質コード",
+                  "材質サイズ",
+                  "単位",
+                  "納入量",
+                  "アイテム",
+                  "購買",
+                  "次区",
+                ];
+                for (const field of detailFields) {
+                  const keys = [`${field}1`, `${field} 1`, field];
+                  for (const key of keys) {
+                    if (key in (row as Record<string, unknown>)) {
+                      console.info(
+                        `[SmartRead] Found: "${key}" = "${(row as Record<string, unknown>)[key]}"`,
+                      );
+                    }
                   }
                 }
               }
+            } catch (e) {
+              console.error(`[SmartRead] Frontend transformation error:`, e);
             }
-          } catch (e) {
-            console.error(`[SmartRead] Frontend transformation error:`, e);
           }
+          console.info(`[SmartRead] === END DEBUG ===`);
+
+          // 3. Cache the result
+          await cacheToIdb(configId, taskId, res);
+
+          // 正常レスポンスの場合、SUCCESS状態を返す
+          return { ...res, source: "server" as const, state: "SUCCESS" as const };
+        } catch (error) {
+          // kyのHTTPErrorから直接bodyを取得する必要がある
+          // error.response.json()でbodyを取得
+          if (error && typeof error === "object" && "response" in error) {
+            const httpError = error as { response: Response };
+            const status = httpError.response.status;
+
+            try {
+              const responseBody = await httpError.response.json();
+
+              // 202 PENDING: OCR処理中
+              if (status === 202) {
+                console.info(`[SmartRead] Task is PENDING (OCR processing...)`);
+                return {
+                  wide_data: [],
+                  long_data: [],
+                  errors: [],
+                  filename: null,
+                  source: "server" as const,
+                  state: "PENDING" as const,
+                  message: responseBody.message || "OCR処理中です...",
+                  requests_status: responseBody.requests_status,
+                };
+              }
+
+              // 422 FAILED: 処理失敗
+              if (status === 422) {
+                console.error(`[SmartRead] Task FAILED:`, responseBody.message);
+                return {
+                  wide_data: [],
+                  long_data: [],
+                  errors: responseBody.errors || [],
+                  filename: null,
+                  source: "server" as const,
+                  state: "FAILED" as const,
+                  message: responseBody.message || "処理に失敗しました",
+                };
+              }
+
+              // 200でstate=EMPTYの場合
+              if (status === 200 && responseBody.state === "EMPTY") {
+                console.warn(`[SmartRead] Task returned EMPTY data:`, responseBody.message);
+                return {
+                  wide_data: [],
+                  long_data: [],
+                  errors: [],
+                  filename: null,
+                  source: "server" as const,
+                  state: "EMPTY" as const,
+                  message: responseBody.message || "データがありません",
+                };
+              }
+            } catch (jsonError) {
+              console.error(`[SmartRead] Failed to parse error response body:`, jsonError);
+            }
+          }
+
+          // その他のエラーは再スロー
+          throw error;
         }
-        console.info(`[SmartRead] === END DEBUG ===`);
-
-        // 3. Cache the result
-        await cacheToIdb(configId, taskId, res);
-
-        return { ...res, source: "server" as const };
       } catch (e) {
         console.error(`[SmartRead] Sync failed`, e);
         throw e;
@@ -760,6 +825,28 @@ export function useSyncTaskResults() {
       }
     },
     onSuccess: (res, { configId, taskId }) => {
+      // PENDING状態の場合はトーストを出さない
+      if ("state" in res && res.state === "PENDING") {
+        console.info(`[SmartRead] Task is pending, showing info toast`);
+        toast.info("message" in res ? res.message : "OCR処理中です。しばらくお待ちください...");
+        return;
+      }
+
+      // FAILED状態の場合はエラートーストを表示
+      if ("state" in res && res.state === "FAILED") {
+        console.error(`[SmartRead] Task failed:`, "message" in res ? res.message : "");
+        toast.error("message" in res ? res.message : "処理に失敗しました");
+        return;
+      }
+
+      // EMPTY状態の場合は警告トーストを表示
+      if ("state" in res && res.state === "EMPTY") {
+        console.warn(`[SmartRead] Task returned empty data:`, "message" in res ? res.message : "");
+        toast.warning("message" in res ? res.message : "データがありません");
+        return;
+      }
+
+      // SUCCESS状態の場合のみキャッシュ無効化と成功トースト
       const src = res.source === "cache" ? "キャッシュ" : "サーバー";
       toast.success(`${res.long_data.length}件のデータを同期しました (${src})`);
 

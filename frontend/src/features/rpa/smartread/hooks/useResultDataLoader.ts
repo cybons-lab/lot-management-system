@@ -5,7 +5,6 @@
 import { useState, useEffect } from "react";
 
 import { saveLongData, type SmartReadValidationError } from "../api";
-import { useSyncTaskResults } from "../hooks";
 
 import { errorLogger } from "@/services/error-logger";
 
@@ -111,41 +110,6 @@ async function saveCacheToDatabase(params: {
   }
 }
 
-async function loadFromApi(
-  configId: number,
-  taskId: string,
-  syncMutation: ReturnType<typeof useSyncTaskResults>,
-): Promise<LoadDataResult> {
-  console.info(`[useResultDataLoader] No cache found, fetching from API...`);
-  errorLogger.info("smartread_api_fetch_start", "APIからデータ取得開始", {
-    configId,
-    taskId,
-    forceSync: false,
-  });
-
-  const result = await syncMutation.mutateAsync({ configId, taskId, forceSync: false });
-
-  console.info(`[useResultDataLoader] API fetch result:`, {
-    wide: result.wide_data.length,
-    long: result.long_data.length,
-    filename: result.filename,
-  });
-  errorLogger.info("smartread_api_fetch_complete", "APIからデータ取得完了", {
-    configId,
-    taskId,
-    wideCount: result.wide_data.length,
-    longCount: result.long_data.length,
-    filename: result.filename,
-  });
-
-  return {
-    wideData: result.wide_data as Record<string, unknown>[],
-    longData: result.long_data as Record<string, unknown>[],
-    errors: result.errors,
-    filename: result.filename,
-  };
-}
-
 export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderParams): ResultData {
   const [wideData, setWideData] = useState<Record<string, unknown>[]>([]);
   const [longData, setLongData] = useState<Record<string, unknown>[]>([]);
@@ -154,15 +118,13 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const syncMutation = useSyncTaskResults();
-
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsInitialLoading(true);
         setLoadError(null);
 
-        // Try cache first
+        // タスク選択時はキャッシュのみ表示、自動APIコールはしない
         const cached = await loadFromCache(configId, taskId);
         if (cached) {
           setWideData(cached.wideData);
@@ -180,25 +142,13 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
               cacheId: cached.cacheId,
             });
           }
-          setIsInitialLoading(false);
-          return;
-        }
-
-        // Fallback to API
-        try {
-          const result = await loadFromApi(configId, taskId, syncMutation);
-          setWideData(result.wideData);
-          setLongData(result.longData);
-          setTransformErrors(result.errors);
-          setFilename(result.filename);
-        } catch (error) {
-          console.error(`[useResultDataLoader] Failed to fetch from API:`, error);
-          errorLogger.error(
-            "smartread_api_fetch_failed",
-            error instanceof Error ? error : "API取得失敗",
-            { configId, taskId },
-          );
-          setLoadError(error instanceof Error ? error.message : "データの取得に失敗しました");
+        } else {
+          // キャッシュが無い場合は空状態で表示、API同期は手動ボタンから
+          console.info(`[useResultDataLoader] No cache found. Manual sync required.`);
+          errorLogger.info("smartread_no_cache", "キャッシュなし、手動同期が必要", {
+            configId,
+            taskId,
+          });
         }
       } catch (error) {
         console.error(`[useResultDataLoader] Unexpected error:`, error);
@@ -209,7 +159,6 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
     };
 
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configId, taskId]);
 
   return {

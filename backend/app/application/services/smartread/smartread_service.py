@@ -794,7 +794,95 @@ class SmartReadService:
             logger.error(f"[SmartRead] Could not initialize client for config {config_id}")
             return None
 
-        # 1. Exportを作成
+        # 1. タスク内requestの完了確認（追加）
+        logger.info(f"[SmartRead] Checking request status for task {task_id}...")
+        try:
+            requests = await client.get_task_requests(task_id)
+
+            # request状態を集計
+            total = len(requests)
+            completed = sum(
+                1
+                for r in requests
+                if r.get("status") in ["succeeded", "completed", "SUCCEEDED", "COMPLETED"]
+            )
+            failed = sum(1 for r in requests if r.get("status") in ["failed", "FAILED"])
+            running = total - completed - failed
+
+            logger.info(
+                f"[SmartRead] Task {task_id} requests status: total={total}, completed={completed}, running={running}, failed={failed}",
+                extra={
+                    "task_id": task_id,
+                    "config_id": config_id,
+                    "requests_total": total,
+                    "requests_completed": completed,
+                    "requests_running": running,
+                    "requests_failed": failed,
+                },
+            )
+
+            # 進行中requestがある場合は準備中を返す
+            if running > 0:
+                logger.info(
+                    f"[SmartRead] Task {task_id} has {running} running requests. Returning PENDING state.",
+                    extra={
+                        "task_id": task_id,
+                        "config_id": config_id,
+                        "running_requests": running,
+                    },
+                )
+                return {
+                    "state": "PENDING",
+                    "message": "OCR処理がまだ完了していません",
+                    "requests_status": {
+                        "total": total,
+                        "completed": completed,
+                        "running": running,
+                        "failed": failed,
+                    },
+                    "wide_data": [],
+                    "long_data": [],
+                    "errors": [],
+                    "filename": None,
+                }
+
+            # 全て失敗している場合
+            if failed > 0 and completed == 0:
+                logger.error(
+                    f"[SmartRead] Task {task_id} has all requests failed.",
+                    extra={
+                        "task_id": task_id,
+                        "config_id": config_id,
+                        "failed_requests": failed,
+                    },
+                )
+                return {
+                    "state": "FAILED",
+                    "message": "OCR処理が失敗しました",
+                    "requests_status": {
+                        "total": total,
+                        "completed": completed,
+                        "running": running,
+                        "failed": failed,
+                    },
+                    "wide_data": [],
+                    "long_data": [],
+                    "errors": [],
+                    "filename": None,
+                }
+
+        except Exception as e:
+            logger.warning(
+                f"[SmartRead] Could not check request status for task {task_id}: {e}. Proceeding with export...",
+                extra={
+                    "task_id": task_id,
+                    "config_id": config_id,
+                    "error": str(e),
+                },
+            )
+            # request状態確認失敗時は従来通りexportを試みる（後方互換性）
+
+        # 2. Exportを作成
         logger.info(f"[SmartRead] Creating export for task {task_id}...")
         export = await client.create_export(task_id, export_type)
         if not export:
@@ -802,7 +890,7 @@ class SmartReadService:
             return None
         logger.info(f"[SmartRead] Export created: {export.export_id}")
 
-        # 2. 完了まで待機
+        # 3. 完了まで待機
         logger.info(f"[SmartRead] Polling export {export.export_id} until ready...")
         export_ready = await client.poll_export_until_ready(task_id, export.export_id, timeout_sec)
 
@@ -814,7 +902,7 @@ class SmartReadService:
             return None
         logger.info(f"[SmartRead] Export is ready. State: {export_ready.state}")
 
-        # 3. CSVデータを取得してDBに保存
+        # 4. CSVデータを取得してDBに保存
         return await self.get_export_csv_data(
             config_id=config_id,
             task_id=task_id,
@@ -898,48 +986,156 @@ class SmartReadService:
 
         # ZIPダウンロード
         zip_data = await client.download_export(task_id, export_id)
+
+        # データ検証1: ZIPが取得できたか
         if not zip_data:
+            logger.error(
+                "[SmartRead] Failed to download export ZIP",
+                extra={
+                    "task_id": task_id,
+                    "export_id": export_id,
+                    "config_id": config_id,
+                },
+            )
             return None
+
+        # データ検証2: ZIPサイズが0より大きいか
+        zip_size = len(zip_data)
+        if zip_size == 0:
+            logger.error(
+                "[SmartRead] Downloaded ZIP is empty (size=0)",
+                extra={
+                    "task_id": task_id,
+                    "export_id": export_id,
+                    "config_id": config_id,
+                    "zip_size": zip_size,
+                },
+            )
+            return {
+                "state": "EMPTY",
+                "message": "ダウンロードしたファイルが空です",
+                "wide_data": [],
+                "long_data": [],
+                "errors": [],
+                "filename": None,
+            }
+
+        logger.info(
+            "[SmartRead] Downloaded ZIP successfully",
+            extra={
+                "task_id": task_id,
+                "export_id": export_id,
+                "config_id": config_id,
+                "zip_size": zip_size,
+            },
+        )
 
         # ZIP展開→CSV抽出
         wide_data: list[dict[str, Any]] = []
         csv_filename: str | None = None
+        csv_files_found = 0
 
         try:
             with zipfile.ZipFile(io.BytesIO(zip_data)) as zf:
-                for name in zf.namelist():
-                    if name.endswith(".csv"):
-                        csv_filename = name
-                        with zf.open(name) as f:
-                            # CSVを読み込み
-                            reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig"))
-                            rows = list(reader)
-                            if rows:
-                                logger.info(
-                                    f"[SmartRead] CSV columns found: {list(rows[0].keys())}"
-                                )
-                                for row in rows:
-                                    wide_data.append(dict(row))
-                            else:
-                                logger.warning(f"[SmartRead] CSV file {name} is empty (no rows)")
-                        break  # 最初のCSVのみ処理
+                csv_files_in_zip = [name for name in zf.namelist() if name.endswith(".csv")]
+                csv_files_found = len(csv_files_in_zip)
+
+                # データ検証3: ZIP内にCSVファイルが存在するか
+                if csv_files_found == 0:
+                    logger.error(
+                        "[SmartRead] No CSV files found in ZIP",
+                        extra={
+                            "task_id": task_id,
+                            "export_id": export_id,
+                            "config_id": config_id,
+                            "zip_size": zip_size,
+                            "files_in_zip": zf.namelist(),
+                        },
+                    )
+                    return {
+                        "state": "EMPTY",
+                        "message": "ZIPファイル内にCSVが見つかりません",
+                        "wide_data": [],
+                        "long_data": [],
+                        "errors": [],
+                        "filename": None,
+                    }
+
+                for name in csv_files_in_zip:
+                    csv_filename = name
+                    with zf.open(name) as f:
+                        # CSVを読み込み
+                        reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig"))
+                        rows = list(reader)
+                        if rows:
+                            logger.info(f"[SmartRead] CSV columns found: {list(rows[0].keys())}")
+                            for row in rows:
+                                wide_data.append(dict(row))
+                        else:
+                            logger.warning(f"[SmartRead] CSV file {name} is empty (no rows)")
+                    break  # 最初のCSVのみ処理
 
         except Exception as e:
-            logger.error(f"Failed to extract CSV from ZIP: {e}")
+            logger.error(
+                f"[SmartRead] Failed to extract CSV from ZIP: {e}",
+                extra={
+                    "task_id": task_id,
+                    "export_id": export_id,
+                    "config_id": config_id,
+                    "zip_size": zip_size,
+                },
+            )
             return None
+
+        # データ検証4: CSVに行データがあるか（ヘッダのみではない）
+        if len(wide_data) == 0:
+            logger.warning(
+                "[SmartRead] CSV file has no data rows (header only or empty)",
+                extra={
+                    "task_id": task_id,
+                    "export_id": export_id,
+                    "config_id": config_id,
+                    "zip_size": zip_size,
+                    "csv_files": csv_files_found,
+                    "csv_filename": csv_filename,
+                },
+            )
+            return {
+                "state": "EMPTY",
+                "message": "CSVファイルにデータがありません",
+                "wide_data": [],
+                "long_data": [],
+                "errors": [],
+                "filename": csv_filename,
+            }
 
         # 横持ち→縦持ち変換
         logger.info(f"[SmartRead] Transforming {len(wide_data)} wide rows to long format...")
         transformer = SmartReadCsvTransformer()
         result = transformer.transform_to_long(wide_data)
         logger.info(
-            f"[SmartRead] Transformation complete: {len(wide_data)} wide -> {len(result.long_data)} long rows"
+            f"[SmartRead] Transformation complete: {len(wide_data)} wide -> {len(result.long_data)} long rows",
+            extra={
+                "task_id": task_id,
+                "export_id": export_id,
+                "config_id": config_id,
+                "zip_size": zip_size,
+                "csv_files": csv_files_found,
+                "rows_count": len(wide_data),
+                "long_rows_count": len(result.long_data),
+            },
         )
 
         if len(wide_data) > 0 and len(result.long_data) == 0:
             logger.warning(
                 f"[SmartRead] TRANSFORMATION RESULT IS EMPTY! Check column names. "
-                f"Available columns: {list(wide_data[0].keys()) if wide_data else 'None'}"
+                f"Available columns: {list(wide_data[0].keys()) if wide_data else 'None'}",
+                extra={
+                    "task_id": task_id,
+                    "export_id": export_id,
+                    "config_id": config_id,
+                    "available_columns": list(wide_data[0].keys()) if wide_data else [],
+                },
             )
 
         # DBに保存
