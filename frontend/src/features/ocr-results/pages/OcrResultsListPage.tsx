@@ -38,26 +38,6 @@ function StatusIcon({ row }: { row: OcrResultItem }) {
 }
 
 /**
- * エラーメッセージを生成
- */
-function getErrorMessage(row: OcrResultItem): string {
-  const errors: string[] = [];
-  if (row.status === "ERROR" && row.error_reason) {
-    errors.push(row.error_reason);
-  }
-  if (row.master_not_found) {
-    errors.push("マスタ未登録");
-  }
-  if (row.jiku_format_error) {
-    errors.push("次区フォーマットエラー");
-  }
-  if (row.date_format_error) {
-    errors.push("日付フォーマットエラー");
-  }
-  return errors.length > 0 ? errors.join(", ") : "-";
-}
-
-/**
  * 行のスタイルクラスを返す
  */
 function getRowClassName(row: OcrResultItem): string {
@@ -286,6 +266,17 @@ const formatItemNo = (itemNo: string | null) => {
   return itemNo.length > 6 ? itemNo.slice(-6) : itemNo;
 };
 
+const getContentValue = (row: OcrResultItem, key: string): string => {
+  const value = row.content?.[key];
+  if (typeof value === "string") {
+    return value.trim() ? value : "-";
+  }
+  if (value === null || value === undefined) {
+    return "-";
+  }
+  return String(value);
+};
+
 const buildShippingSlipText = (template: string | null, input: RowInputState): string => {
   if (!template) return "";
 
@@ -359,6 +350,12 @@ export function OcrResultsListPage() {
   const columns = useMemo<Column<OcrResultItem>[]>(
     () => [
       {
+        id: "status_icon",
+        header: "ステータス",
+        accessor: (row) => <StatusIcon row={row} />,
+        minWidth: 80,
+      },
+      {
         id: "lot_entry_1",
         header: (
           <div className="flex flex-col leading-tight py-1">
@@ -406,36 +403,6 @@ export function OcrResultsListPage() {
         minWidth: 80,
       },
       {
-        id: "status_icon",
-        header: "",
-        accessor: (row) => <StatusIcon row={row} />,
-        minWidth: 40,
-      },
-      {
-        id: "id",
-        header: "ID",
-        accessor: (row) => row.id,
-        minWidth: 60,
-      },
-      {
-        id: "task_date",
-        header: "タスク日付",
-        accessor: (row) => row.task_date,
-        minWidth: 110,
-      },
-      {
-        id: "customer_code",
-        header: "得意先コード",
-        accessor: (row) => row.customer_code || "-",
-        minWidth: 110,
-      },
-      {
-        id: "customer_name",
-        header: "得意先名",
-        accessor: (row) => row.customer_name || "-",
-        minWidth: 140,
-      },
-      {
         id: "material_code",
         header: "材質コード",
         accessor: (row) => (
@@ -473,55 +440,75 @@ export function OcrResultsListPage() {
       },
       {
         id: "item_no",
-        header: "アイテム",
+        header: "アイテムNo",
         accessor: (row) => formatItemNo(row.item_no),
         minWidth: 100,
       },
       {
+        id: "customer_part_no",
+        header: "先方品番",
+        accessor: (row) => row.customer_part_no || "-",
+        minWidth: 120,
+      },
+      {
+        id: "maker_part_no",
+        header: "メーカー品番",
+        accessor: (row) => row.maker_part_no || "-",
+        minWidth: 130,
+      },
+      {
         id: "order_unit",
-        header: "受注単位",
+        header: "数量単位",
         accessor: (row) => row.order_unit || "-",
         minWidth: 90,
       },
       {
-        id: "inbound_no",
-        header: "入庫No(OCR)",
-        accessor: (row) => row.inbound_no || "-",
-        minWidth: 110,
-      },
-      {
-        id: "lot_no",
-        header: "Lot No(OCR)",
-        accessor: (row) => row.lot_no || "-",
+        id: "customer_code",
+        header: "得意先",
+        accessor: (row) => row.customer_code || "-",
         minWidth: 110,
       },
       {
         id: "supplier_code",
-        header: "仕入先コード",
+        header: "仕入先",
         accessor: (row) => row.supplier_code || "-",
         minWidth: 110,
       },
       {
         id: "supplier_name",
-        header: "仕入先名",
+        header: "仕入先名称",
         accessor: (row) => row.supplier_name || "-",
         minWidth: 140,
       },
       {
+        id: "shipping_warehouse_code",
+        header: "出荷倉庫",
+        accessor: (row) => row.shipping_warehouse_code || "-",
+        minWidth: 110,
+      },
+      {
+        id: "shipping_warehouse_name",
+        header: "出荷倉庫名称",
+        accessor: (row) => row.shipping_warehouse_name || "-",
+        minWidth: 140,
+      },
+      {
+        id: "delivery_place_code",
+        header: "納入場所",
+        accessor: (row) => row.delivery_place_code || "-",
+        minWidth: 120,
+      },
+      {
         id: "delivery_place_name",
-        header: "納入先",
+        header: "納入場所名称",
         accessor: (row) => row.delivery_place_name || "-",
         minWidth: 140,
       },
       {
-        id: "error_message",
-        header: "エラー",
-        accessor: (row) => (
-          <span className={row.has_error ? "text-red-600" : "text-gray-400"}>
-            {getErrorMessage(row)}
-          </span>
-        ),
-        minWidth: 150,
+        id: "remarks",
+        header: "備考",
+        accessor: (row) => getContentValue(row, "備考"),
+        minWidth: 160,
       },
     ],
     [],
