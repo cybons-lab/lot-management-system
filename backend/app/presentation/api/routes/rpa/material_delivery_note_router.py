@@ -32,6 +32,8 @@ from app.presentation.schemas.rpa_run_schema import (
     RpaRunBatchUpdateRequest,
     RpaRunEventCreateRequest,
     RpaRunEventResponse,
+    RpaRunFetchCreateRequest,
+    RpaRunFetchResponse,
     RpaRunItemFailureRequest,
     RpaRunItemResponse,
     RpaRunItemSuccessRequest,
@@ -777,6 +779,23 @@ def cancel_run(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
+@router.post("/runs/{run_id}/step4-start", response_model=RpaRunResponse)
+def start_step4(
+    run_id: int,
+    uow: UnitOfWork = Depends(get_uow),
+    user: User | None = Depends(get_current_user_optional),
+):
+    """Step4開始を記録する."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        run = service.start_step4(run_id, user=user)
+        layer_codes = [item.layer_code for item in run.items if item.layer_code]
+        maker_map = _get_maker_map(uow.session, layer_codes)
+        return _build_run_response(run, maker_map)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 @router.get("/runs/{run_id}/events", response_model=list[RpaRunEventResponse])
 def get_run_events(
     run_id: int,
@@ -875,6 +894,33 @@ def export_failed_items(
         return ExportService.export_to_excel(export_rows, filename=filename, column_map=column_map)
     except ValueError as e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post("/step1/result", response_model=RpaRunFetchResponse)
+def create_step1_result(
+    request: RpaRunFetchCreateRequest,
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """Step1取得結果を記録する."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    fetch = service.record_run_fetch(
+        start_date=request.start_date,
+        end_date=request.end_date,
+        status=request.status,
+        item_count=request.item_count,
+        run_created=request.run_created,
+        run_updated=request.run_updated,
+        message=request.message,
+    )
+    return RpaRunFetchResponse.model_validate(fetch)
+
+
+@router.get("/step1/latest", response_model=RpaRunFetchResponse | None)
+def get_step1_latest(uow: UnitOfWork = Depends(get_uow)):
+    """Step1取得結果の最新を取得する."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    fetch = service.get_latest_run_fetch()
+    return RpaRunFetchResponse.model_validate(fetch) if fetch else None
 
 
 @router.post(

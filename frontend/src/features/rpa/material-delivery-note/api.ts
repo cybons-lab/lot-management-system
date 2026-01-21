@@ -166,6 +166,19 @@ export interface RpaRunEvent {
   created_by_user_id: number | null;
 }
 
+export interface RpaRunFetchResult {
+  id: number;
+  rpa_type: string;
+  start_date: string | null;
+  end_date: string | null;
+  status: string;
+  item_count: number | null;
+  run_created: number | null;
+  run_updated: number | null;
+  message: string | null;
+  created_at: string;
+}
+
 // ロット候補関連の型
 export interface LotCandidate {
   lot_id: number;
@@ -353,6 +366,10 @@ export async function cancelRun(runId: number): Promise<RpaRun> {
   return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/cancel`, {});
 }
 
+export async function startStep4(runId: number): Promise<RpaRun> {
+  return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/step4-start`, {});
+}
+
 export async function getRunEvents(runId: number, limit = 100): Promise<RpaRunEvent[]> {
   return http.get<RpaRunEvent[]>(
     `rpa/material-delivery-note/runs/${runId}/events?limit=${limit}`,
@@ -366,6 +383,10 @@ export async function getFailedItems(runId: number): Promise<RpaRunItem[]> {
 export async function downloadFailedItems(runId: number): Promise<void> {
   const filename = `material_delivery_run_${runId}_failed_items.xlsx`;
   await http.download(`rpa/material-delivery-note/runs/${runId}/failed-items/export`, filename);
+}
+
+export async function getStep1LatestResult(): Promise<RpaRunFetchResult | null> {
+  return http.get<RpaRunFetchResult | null>("rpa/material-delivery-note/step1/latest");
 }
 
 // Layer Codes

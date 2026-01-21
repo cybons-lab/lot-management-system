@@ -164,6 +164,49 @@ class MaterialDeliveryNoteOrchestrator:
             raise ValueError("Run not found")
         return self.repo.get_failed_items(run_id)
 
+    def record_run_fetch(
+        self,
+        start_date,
+        end_date,
+        status: str,
+        item_count: int | None,
+        run_created: int | None,
+        run_updated: int | None,
+        message: str | None,
+    ):
+        """Step1取得結果を保存."""
+        return self.repo.add_run_fetch(
+            start_date=start_date,
+            end_date=end_date,
+            status=status,
+            item_count=item_count,
+            run_created=run_created,
+            run_updated=run_updated,
+            message=message,
+        )
+
+    def get_latest_run_fetch(self):
+        """最新の取得結果を取得."""
+        return self.repo.get_latest_run_fetch()
+
+    def start_step4(self, run_id: int, user: User | None = None) -> RpaRun:
+        """Step4開始（突合チェック開始）を記録."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+
+        run.status = RpaRunStatus.STEP4_CHECKING
+        run.step4_executed_at = utcnow()
+        self.repo.add_run_event(
+            run_id=run_id,
+            event_type="step4_started",
+            message="Step4 started",
+            created_by_user_id=user.id if user else None,
+        )
+        self.db.flush()
+        self.repo.refresh(run)
+        return run
+
     def update_item(
         self,
         run_id: int,

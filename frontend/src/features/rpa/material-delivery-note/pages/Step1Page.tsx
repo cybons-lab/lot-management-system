@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { useRuns } from "../hooks";
+import { useStep1LatestResult } from "../hooks";
 import { useCloudFlowQueueStatus, useCreateCloudFlowJob } from "../hooks/useCloudFlow";
 
 import { Button, Input } from "@/components/ui";
@@ -30,8 +30,7 @@ export function Step1Page() {
   const { data: queueStatus, isLoading: isLoadingQueue } =
     useCloudFlowQueueStatus("progress_download");
   const createJobMutation = useCreateCloudFlowJob();
-  const { data: runsData } = useRuns(0, 1);
-  const latestRun = runsData?.runs?.[0];
+  const { data: latestResult } = useStep1LatestResult();
 
   const handleExecute = async () => {
     if (!startDate || !endDate) {
@@ -178,25 +177,31 @@ export function Step1Page() {
         {/* 取得結果（最新） */}
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h3 className="text-base font-semibold text-gray-900">取得結果（最新）</h3>
-          {latestRun ? (
+          {latestResult ? (
             <div className="mt-4 space-y-2 text-sm text-gray-700">
               <div>
                 <span className="text-gray-500">最終取得:</span>{" "}
-                {new Date(latestRun.created_at).toLocaleString("ja-JP")}
+                {new Date(latestResult.created_at).toLocaleString("ja-JP")}
               </div>
               <div>
                 <span className="text-gray-500">期間:</span>{" "}
-                {latestRun.data_start_date && latestRun.data_end_date
-                  ? `${latestRun.data_start_date} 〜 ${latestRun.data_end_date}`
+                {latestResult.start_date && latestResult.end_date
+                  ? `${latestResult.start_date} 〜 ${latestResult.end_date}`
                   : "-"}
               </div>
               <div>
                 <span className="text-gray-500">件数:</span>{" "}
-                {latestRun.item_count ?? "-"} 件
+                {latestResult.item_count ?? "-"} 件
               </div>
               <div>
-                <span className="text-gray-500">Run候補:</span> {runsData?.total ?? "-"} 件
+                <span className="text-gray-500">Run候補:</span>{" "}
+                {latestResult.run_created ?? 0}件作成 / {latestResult.run_updated ?? 0}件更新
               </div>
+              {latestResult.message && (
+                <div>
+                  <span className="text-gray-500">メッセージ:</span> {latestResult.message}
+                </div>
+              )}
             </div>
           ) : (
             <div className="mt-4 text-sm text-gray-500">まだ取得履歴がありません。</div>

@@ -10,7 +10,8 @@ import { AlertTriangle, ArrowRight, ChevronLeft, Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
-import { useRuns } from "../hooks";
+import type { RpaRunSummary } from "../api";
+import { useRuns, useStartStep4 } from "../hooks";
 
 import { Button } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
@@ -184,30 +185,9 @@ export function Step4ListPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                activeRuns.map((run) => {
-                  const statusInfo = STATUS_LABELS[run.status] || {
-                    label: run.status,
-                    variant: "secondary" as const,
-                  };
-                  return (
-                    <TableRow key={`execute-${run.id}`}>
-                      <TableCell>Run #{run.id}</TableCell>
-                      <TableCell>
-                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {run.issue_count} / {run.item_count} 件
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button size="sm" asChild>
-                          <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4_DETAIL(run.id)}>
-                            登録開始
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
+                activeRuns.map((run) => (
+                  <Step4StartRow key={`execute-${run.id}`} run={run} />
+                ))
               )}
             </TableBody>
           </Table>
@@ -312,5 +292,30 @@ export function Step4ListPage() {
         </div>
       </div>
     </PageContainer>
+  );
+}
+
+function Step4StartRow({ run }: { run: RpaRunSummary }) {
+  const statusInfo = STATUS_LABELS[run.status] || {
+    label: run.status,
+    variant: "secondary" as const,
+  };
+  const startMutation = useStartStep4(run.id);
+
+  return (
+    <TableRow>
+      <TableCell>Run #{run.id}</TableCell>
+      <TableCell>
+        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+      </TableCell>
+      <TableCell>
+        {run.issue_count} / {run.item_count} 件
+      </TableCell>
+      <TableCell className="text-right">
+        <Button size="sm" onClick={() => startMutation.mutate()} disabled={startMutation.isPending}>
+          登録開始
+        </Button>
+      </TableCell>
+    </TableRow>
   );
 }

@@ -451,3 +451,24 @@ class RpaRunItemAttempt(Base):
     )
 
     item: Mapped[RpaRunItem] = relationship("RpaRunItem", back_populates="attempts")
+
+
+class RpaRunFetch(Base):
+    """Step1の進度実績取得結果ログ."""
+
+    __tablename__ = "rpa_run_fetches"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    rpa_type: Mapped[str] = mapped_column(
+        String(50), server_default="material_delivery_note", nullable=False
+    )
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    item_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    run_created: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    run_updated: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )

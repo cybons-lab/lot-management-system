@@ -16,7 +16,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import { RpaSettingsModal } from "../../components/RpaSettingsModal";
-import { useRuns } from "../hooks";
+import { useRuns, useStep1LatestResult } from "../hooks";
 
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
@@ -78,6 +78,7 @@ export function MaterialDeliveryNotePage() {
   const { data: runsData } = useRuns(0, 50);
   const runs = runsData?.runs ?? [];
   const latestRun = runs[0];
+  const { data: latestFetch } = useStep1LatestResult();
 
   const step2TargetRuns = runs.filter(
     (run) => run.status === "step1_done" || run.status === "step2_confirmed",
@@ -94,19 +95,19 @@ export function MaterialDeliveryNotePage() {
         icon: <Download className="h-6 w-6" />,
         to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP1,
         summaryItems: [
-          { label: "状態", value: latestRun ? "取得済み" : "未実行" },
+          { label: "状態", value: latestFetch ? "取得済み" : "未実行" },
           {
             label: "最終取得",
-            value: latestRun ? new Date(latestRun.created_at).toLocaleString("ja-JP") : "-",
+            value: latestFetch ? new Date(latestFetch.created_at).toLocaleString("ja-JP") : "-",
           },
           {
             label: "期間",
             value:
-              latestRun?.data_start_date && latestRun?.data_end_date
-                ? `${latestRun.data_start_date} 〜 ${latestRun.data_end_date}`
+              latestFetch?.start_date && latestFetch?.end_date
+                ? `${latestFetch.start_date} 〜 ${latestFetch.end_date}`
                 : "-",
           },
-          { label: "件数", value: latestRun ? `${latestRun.item_count}件` : "-" },
+          { label: "件数", value: latestFetch?.item_count ? `${latestFetch.item_count}件` : "-" },
         ],
       },
       {
@@ -173,7 +174,14 @@ export function MaterialDeliveryNotePage() {
         variant: "secondary",
       },
     ],
-    [latestRun, runs, step2TargetRuns.length, step3TargetRuns.length, step4TargetRuns.length],
+    [
+      latestFetch,
+      latestRun,
+      runs,
+      step2TargetRuns.length,
+      step3TargetRuns.length,
+      step4TargetRuns.length,
+    ],
   );
 
   return (

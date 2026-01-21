@@ -40,6 +40,7 @@ export function Step2CheckListPage() {
   const navigate = useNavigate();
   const { data, isLoading, error } = useRuns(0, 100);
   const [selectedRunId, setSelectedRunId] = useState<number | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const selectedRunIdValue =
     selectedRunId ?? data?.runs?.find((run) => run.status === "step1_done")?.id ?? null;
   const { data: runDetail } = useRun(selectedRunIdValue ?? undefined);
@@ -75,6 +76,7 @@ export function Step2CheckListPage() {
   const excludedCount = runDetail?.items.filter((item) => !item.issue_flag).length ?? 0;
   const errorCount =
     runDetail?.items.filter((item) => item.last_error_code || item.last_error_message).length ?? 0;
+  const selectedItem = runDetail?.items.find((item) => item.id === selectedItemId) ?? null;
 
   return (
     <PageContainer>
@@ -168,11 +170,20 @@ export function Step2CheckListPage() {
                     </TableCell>
                     <TableCell>{item.last_error_message ?? "-"}</TableCell>
                     <TableCell className="text-right">
-                      <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(runDetail.id)}>
-                        <Button size="sm" variant="outline" className="gap-1">
-                          詳細 <ArrowRight className="h-4 w-4" />
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedItemId(item.id)}
+                        >
+                          詳細 <ArrowRight className="ml-1 h-4 w-4" />
                         </Button>
-                      </Link>
+                        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(runDetail.id)}>
+                          <Button size="sm" variant="ghost">
+                            全体
+                          </Button>
+                        </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -186,6 +197,27 @@ export function Step2CheckListPage() {
             </TableBody>
           </Table>
         </div>
+
+        {selectedItem && (
+          <div className="rounded-md border bg-white p-4 shadow-sm">
+            <div className="mb-2 flex items-center justify-between">
+              <h4 className="text-sm font-semibold text-gray-900">選択アイテム詳細</h4>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedItemId(null)}>
+                閉じる
+              </Button>
+            </div>
+            <div className="grid gap-2 text-sm text-gray-700 sm:grid-cols-2">
+              <div>行番号: {selectedItem.row_no}</div>
+              <div>納品書番号: {selectedItem.item_no ?? "-"}</div>
+              <div>受発注No: {selectedItem.order_no ?? "-"}</div>
+              <div>層別コード: {selectedItem.layer_code ?? "-"}</div>
+              <div>次区コード: {selectedItem.jiku_code ?? "-"}</div>
+              <div>納品予定日: {selectedItem.delivery_date ?? "-"}</div>
+              <div>納入量: {selectedItem.delivery_quantity ?? "-"}</div>
+              <div>エラー: {selectedItem.last_error_message ?? "-"}</div>
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-between gap-3">
           <Button variant="outline">選択を保存</Button>

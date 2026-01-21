@@ -29,8 +29,11 @@ import {
   pauseRun,
   resumeRun,
   cancelRun,
+  startStep4,
   downloadFailedItems,
   type RpaRunEvent,
+  type RpaRunFetchResult,
+  getStep1LatestResult,
 } from "../api";
 
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
@@ -202,6 +205,39 @@ export function useDownloadFailedItems(runId: number) {
       const message = await getUserFriendlyMessageAsync(error);
       toast.error(`Excel出力に失敗しました: ${message}`);
     },
+  });
+}
+
+/**
+ * Step4開始
+ */
+export function useStartStep4(runId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => startStep4(runId),
+    onSuccess: () => {
+      toast.success("Step4を開始しました");
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`Step4開始に失敗しました: ${message}`);
+    },
+  });
+}
+
+/**
+ * Step1最新結果
+ */
+export function useStep1LatestResult(
+  options?: Partial<UseQueryOptions<RpaRunFetchResult | null, Error>>,
+) {
+  return useQuery({
+    queryKey: [QUERY_KEY, "step1-latest"],
+    queryFn: () => getStep1LatestResult(),
+    ...options,
   });
 }
 

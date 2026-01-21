@@ -7,6 +7,7 @@ from app.infrastructure.persistence.models.masters_models import CustomerItem, P
 from app.infrastructure.persistence.models.rpa_models import (
     RpaRun,
     RpaRunEvent,
+    RpaRunFetch,
     RpaRunGroup,
     RpaRunItem,
 )
@@ -220,6 +221,42 @@ class RpaRepository:
             )
             .order_by(RpaRunItem.row_no.asc())
             .all()
+        )
+
+    def add_run_fetch(
+        self,
+        start_date,
+        end_date,
+        status: str,
+        item_count: int | None,
+        run_created: int | None,
+        run_updated: int | None,
+        message: str | None,
+        rpa_type: str = "material_delivery_note",
+    ) -> RpaRunFetch:
+        """Step1の取得結果を保存."""
+        fetch = RpaRunFetch(
+            rpa_type=rpa_type,
+            start_date=start_date,
+            end_date=end_date,
+            status=status,
+            item_count=item_count,
+            run_created=run_created,
+            run_updated=run_updated,
+            message=message,
+        )
+        self.db.add(fetch)
+        self.db.flush()
+        self.db.refresh(fetch)
+        return fetch
+
+    def get_latest_run_fetch(self, rpa_type: str = "material_delivery_note") -> RpaRunFetch | None:
+        """最新の取得結果を取得."""
+        return (
+            self.db.query(RpaRunFetch)
+            .filter(RpaRunFetch.rpa_type == rpa_type)
+            .order_by(RpaRunFetch.created_at.desc())
+            .first()
         )
 
     def get_item(self, run_id: int, item_id: int) -> RpaRunItem | None:

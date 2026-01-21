@@ -64,6 +64,7 @@ from .product_warehouse_model import ProductWarehouse
 from .rpa_models import (
     RpaRun,
     RpaRunEvent,
+    RpaRunFetch,
     RpaRunGroup,
     RpaRunItem,
     RpaRunItemAttempt,
@@ -187,6 +188,7 @@ __all__ = [
     "RpaRun",
     "RpaRunGroup",
     "RpaRunEvent",
+    "RpaRunFetch",
     "RpaRunItem",
     "RpaRunItemAttempt",
     "RpaRunStatus",

@@ -145,6 +145,35 @@ class RpaRunEventCreateRequest(BaseModel):
     message: str | None = None
 
 
+class RpaRunFetchCreateRequest(BaseModel):
+    """Step1取得結果作成リクエスト."""
+
+    start_date: date | None = None
+    end_date: date | None = None
+    status: str
+    item_count: int | None = None
+    run_created: int | None = None
+    run_updated: int | None = None
+    message: str | None = None
+
+
+class RpaRunFetchResponse(BaseModel):
+    """Step1取得結果レスポンス."""
+
+    id: int
+    rpa_type: str
+    start_date: date | None = None
+    end_date: date | None = None
+    status: str
+    item_count: int | None = None
+    run_created: int | None = None
+    run_updated: int | None = None
+    message: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class RpaRunBatchUpdateRequest(BaseModel):
     """RPA Run Batch update request schema."""
 
