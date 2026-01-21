@@ -7,10 +7,12 @@
  * - 総合エラー: 赤字ステータス
  */
 
+/* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
+
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, AlertTriangle, CheckCircle, Download, XCircle } from "lucide-react";
-import { useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
 import { ocrResultsApi, type OcrResultItem } from "../api";
 
@@ -96,132 +98,129 @@ function StatusLegend() {
   );
 }
 
-const columns: Column<OcrResultItem>[] = [
-  {
-    id: "status_icon",
-    header: "",
-    accessor: (row) => <StatusIcon row={row} />,
-    minWidth: 40,
-  },
-  {
-    id: "id",
-    header: "ID",
-    accessor: (row) => row.id,
-    minWidth: 60,
-  },
-  {
-    id: "task_date",
-    header: "タスク日付",
-    accessor: (row) => row.task_date,
-    minWidth: 110,
-  },
-  {
-    id: "customer_code",
-    header: "得意先コード",
-    accessor: (row) => row.customer_code || "-",
-    minWidth: 110,
-  },
-  {
-    id: "customer_name",
-    header: "得意先名",
-    accessor: (row) => row.customer_name || "-",
-    minWidth: 140,
-  },
-  {
-    id: "material_code",
-    header: "材質コード",
-    accessor: (row) => (
-      <span className={row.master_not_found ? "text-red-600 font-medium" : ""}>
-        {row.material_code || "-"}
-      </span>
-    ),
-    minWidth: 100,
-  },
-  {
-    id: "jiku_code",
-    header: "次区",
-    accessor: (row) => (
-      <span className={row.jiku_format_error ? "text-red-600 font-medium" : ""}>
-        {row.jiku_code || "-"}
-      </span>
-    ),
-    minWidth: 80,
-  },
-  {
-    id: "delivery_date",
-    header: "納期",
-    accessor: (row) => (
-      <span className={row.date_format_error ? "text-red-600 font-medium" : ""}>
-        {row.delivery_date || "-"}
-      </span>
-    ),
-    minWidth: 100,
-  },
-  {
-    id: "delivery_quantity",
-    header: "納入量",
-    accessor: (row) => row.delivery_quantity || "-",
-    minWidth: 80,
-  },
-  {
-    id: "item_no",
-    header: "アイテム",
-    accessor: (row) => row.item_no || "-",
-    minWidth: 100,
-  },
-  {
-    id: "order_unit",
-    header: "受注単位",
-    accessor: (row) => row.order_unit || "-",
-    minWidth: 90,
-  },
-  {
-    id: "inbound_no",
-    header: "入庫No",
-    accessor: (row) => row.inbound_no || "-",
-    minWidth: 100,
-  },
-  {
-    id: "lot_no",
-    header: "Lot No",
-    accessor: (row) => row.lot_no || "-",
-    minWidth: 100,
-  },
-  {
-    id: "supplier_code",
-    header: "仕入先コード",
-    accessor: (row) => row.supplier_code || "-",
-    minWidth: 110,
-  },
-  {
-    id: "supplier_name",
-    header: "仕入先名",
-    accessor: (row) => row.supplier_name || "-",
-    minWidth: 140,
-  },
-  {
-    id: "delivery_place_name",
-    header: "納入先",
-    accessor: (row) => row.delivery_place_name || "-",
-    minWidth: 140,
-  },
-  {
-    id: "error_message",
-    header: "エラー",
-    accessor: (row) => (
-      <span className={row.has_error ? "text-red-600" : "text-gray-400"}>
-        {getErrorMessage(row)}
-      </span>
-    ),
-    minWidth: 150,
-  },
-];
+type RowInputState = {
+  lotNo1: string;
+  quantity1: string;
+  lotNo2: string;
+  quantity2: string;
+  inboundNo: string;
+  shippingDate: string;
+};
+
+const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
+  lotNo1: row.lot_no || "",
+  quantity1: "",
+  lotNo2: "",
+  quantity2: "",
+  inboundNo: row.inbound_no || "",
+  shippingDate: "",
+});
+
+// ============================================
+// Context for Inputs normalization
+// ============================================
+
+interface OcrInputsContextType {
+  getInputs: (row: OcrResultItem) => RowInputState;
+  updateInputs: (row: OcrResultItem, patch: Partial<RowInputState>) => void;
+}
+
+const OcrInputsContext = createContext<OcrInputsContextType | null>(null);
+
+const useOcrInputs = () => {
+  const context = useContext(OcrInputsContext);
+  if (!context) throw new Error("useOcrInputs must be used within OcrInputsProvider");
+  return context;
+};
+
+/**
+ * セルコンポーネント: テキスト入力
+ */
+function EditableTextCell({
+  row,
+  field,
+  placeholder,
+}: {
+  row: OcrResultItem;
+  field: keyof RowInputState;
+  placeholder?: string;
+}) {
+  const { getInputs, updateInputs } = useOcrInputs();
+  const value = getInputs(row)[field];
+
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => updateInputs(row, { [field]: e.target.value })}
+      placeholder={placeholder}
+      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+    />
+  );
+}
+
+/**
+ * セルコンポーネント: 日付入力
+ */
+function EditableDateCell({ row, field }: { row: OcrResultItem; field: keyof RowInputState }) {
+  const { getInputs, updateInputs } = useOcrInputs();
+  const value = getInputs(row)[field];
+
+  return (
+    <input
+      type="date"
+      value={value}
+      onChange={(e) => updateInputs(row, { [field]: e.target.value })}
+      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+    />
+  );
+}
+
+/**
+ * セルコンポーネント: 読取専用プレビュー
+ */
+function PreviewTextCell({ row }: { row: OcrResultItem }) {
+  const { getInputs } = useOcrInputs();
+  const input = getInputs(row);
+  const text = buildShippingSlipText(row.shipping_slip_text, input) || "-";
+
+  return (
+    <input
+      type="text"
+      value={text}
+      readOnly
+      className="w-full rounded-md border border-gray-300 bg-slate-50 px-2 py-1 text-xs"
+    />
+  );
+}
+
+const formatItemNo = (itemNo: string | null) => {
+  if (!itemNo) return "-";
+  return itemNo.length > 6 ? itemNo.slice(-6) : itemNo;
+};
+
+const buildShippingSlipText = (template: string | null, input: RowInputState): string => {
+  if (!template) return "";
+
+  const lotEntries = [
+    input.lotNo1 ? `${input.lotNo1}（${input.quantity1 || ""}）` : "",
+    input.lotNo2 ? `${input.lotNo2}（${input.quantity2 || ""}）` : "",
+  ].filter(Boolean);
+  const lotString = lotEntries.join("・");
+
+  return template.replace("ロット番号(数量)", lotString).replace("入庫番号", input.inboundNo || "");
+};
+
+// ============================================
+// Main Page Component
+// ============================================
 
 export function OcrResultsListPage() {
   const [taskDate, setTaskDate] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [rowInputs, setRowInputs] = useState<Record<number, RowInputState>>({});
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["ocr-results", { taskDate, statusFilter, showErrorsOnly }],
@@ -249,6 +248,198 @@ export function OcrResultsListPage() {
 
   // エラー件数をカウント
   const errorCount = data?.items.filter((item) => item.has_error).length ?? 0;
+
+  const getInputs = useCallback(
+    (row: OcrResultItem) => rowInputs[row.id] ?? buildRowDefaults(row),
+    [rowInputs],
+  );
+
+  const updateInputs = useCallback((row: OcrResultItem, patch: Partial<RowInputState>) => {
+    setRowInputs((prev) => {
+      const current = prev[row.id] ?? buildRowDefaults(row);
+      return {
+        ...prev,
+        [row.id]: {
+          ...current,
+          ...patch,
+        },
+      };
+    });
+  }, []);
+
+  const contextValue = useMemo(() => ({ getInputs, updateInputs }), [getInputs, updateInputs]);
+
+  const columns = useMemo<Column<OcrResultItem>[]>(
+    () => [
+      {
+        id: "lot_no_1",
+        header: "ロットNo(1)",
+        accessor: (row) => <EditableTextCell row={row} field="lotNo1" />,
+        minWidth: 120,
+      },
+      {
+        id: "quantity_1",
+        header: "数量(1)",
+        accessor: (row) => <EditableTextCell row={row} field="quantity1" placeholder="数量" />,
+        minWidth: 60,
+      },
+      {
+        id: "lot_no_2",
+        header: "ロットNo(2)",
+        accessor: (row) => <EditableTextCell row={row} field="lotNo2" />,
+        minWidth: 120,
+      },
+      {
+        id: "quantity_2",
+        header: "数量(2)",
+        accessor: (row) => <EditableTextCell row={row} field="quantity2" placeholder="数量" />,
+        minWidth: 60,
+      },
+      {
+        id: "inbound_no_input",
+        header: "入庫No",
+        accessor: (row) => <EditableTextCell row={row} field="inboundNo" />,
+        minWidth: 120,
+      },
+      {
+        id: "shipping_date_input",
+        header: "出荷日",
+        accessor: (row) => <EditableDateCell row={row} field="shippingDate" />,
+        minWidth: 120,
+      },
+      {
+        id: "shipping_slip_text_input",
+        header: "出荷票テキスト",
+        accessor: (row) => <PreviewTextCell row={row} />,
+        minWidth: 200,
+      },
+      {
+        id: "shipping_slip_source",
+        header: "取得元",
+        accessor: () => <span className="text-xs text-gray-600">OCR</span>,
+        minWidth: 80,
+      },
+      {
+        id: "status_icon",
+        header: "",
+        accessor: (row) => <StatusIcon row={row} />,
+        minWidth: 40,
+      },
+      {
+        id: "id",
+        header: "ID",
+        accessor: (row) => row.id,
+        minWidth: 60,
+      },
+      {
+        id: "task_date",
+        header: "タスク日付",
+        accessor: (row) => row.task_date,
+        minWidth: 110,
+      },
+      {
+        id: "customer_code",
+        header: "得意先コード",
+        accessor: (row) => row.customer_code || "-",
+        minWidth: 110,
+      },
+      {
+        id: "customer_name",
+        header: "得意先名",
+        accessor: (row) => row.customer_name || "-",
+        minWidth: 140,
+      },
+      {
+        id: "material_code",
+        header: "材質コード",
+        accessor: (row) => (
+          <span className={row.master_not_found ? "text-red-600 font-medium" : ""}>
+            {row.material_code || "-"}
+          </span>
+        ),
+        minWidth: 100,
+      },
+      {
+        id: "jiku_code",
+        header: "次区",
+        accessor: (row) => (
+          <span className={row.jiku_format_error ? "text-red-600 font-medium" : ""}>
+            {row.jiku_code || "-"}
+          </span>
+        ),
+        minWidth: 80,
+      },
+      {
+        id: "delivery_date",
+        header: "納期",
+        accessor: (row) => (
+          <span className={row.date_format_error ? "text-red-600 font-medium" : ""}>
+            {row.delivery_date || "-"}
+          </span>
+        ),
+        minWidth: 100,
+      },
+      {
+        id: "delivery_quantity",
+        header: "納入量",
+        accessor: (row) => row.delivery_quantity || "-",
+        minWidth: 80,
+      },
+      {
+        id: "item_no",
+        header: "アイテム",
+        accessor: (row) => formatItemNo(row.item_no),
+        minWidth: 100,
+      },
+      {
+        id: "order_unit",
+        header: "受注単位",
+        accessor: (row) => row.order_unit || "-",
+        minWidth: 90,
+      },
+      {
+        id: "inbound_no",
+        header: "入庫No(OCR)",
+        accessor: (row) => row.inbound_no || "-",
+        minWidth: 110,
+      },
+      {
+        id: "lot_no",
+        header: "Lot No(OCR)",
+        accessor: (row) => row.lot_no || "-",
+        minWidth: 110,
+      },
+      {
+        id: "supplier_code",
+        header: "仕入先コード",
+        accessor: (row) => row.supplier_code || "-",
+        minWidth: 110,
+      },
+      {
+        id: "supplier_name",
+        header: "仕入先名",
+        accessor: (row) => row.supplier_name || "-",
+        minWidth: 140,
+      },
+      {
+        id: "delivery_place_name",
+        header: "納入先",
+        accessor: (row) => row.delivery_place_name || "-",
+        minWidth: 140,
+      },
+      {
+        id: "error_message",
+        header: "エラー",
+        accessor: (row) => (
+          <span className={row.has_error ? "text-red-600" : "text-gray-400"}>
+            {getErrorMessage(row)}
+          </span>
+        ),
+        minWidth: 150,
+      },
+    ],
+    [],
+  );
 
   return (
     <div className="space-y-6">
@@ -323,25 +514,27 @@ export function OcrResultsListPage() {
       {/* テーブル */}
       <Card>
         <CardContent className="p-0">
-          {/* ステータス凡例 - テーブルヘッダー上部に配置 */}
-          <div className="px-4 pt-4 pb-2 border-b bg-gray-50/50">
-            <StatusLegend />
-          </div>
-
-          {error ? (
-            <div className="p-8 text-center text-destructive">
-              エラーが発生しました: {error.message}
+          <OcrInputsContext.Provider value={contextValue}>
+            {/* ステータス凡例 - テーブルヘッダー上部に配置 */}
+            <div className="px-4 pt-4 pb-2 border-b bg-gray-50/50">
+              <StatusLegend />
             </div>
-          ) : (
-            <DataTable
-              data={data?.items || []}
-              columns={columns}
-              isLoading={isLoading}
-              emptyMessage="OCR結果データがありません"
-              enableVirtualization
-              getRowClassName={getRowClassName}
-            />
-          )}
+
+            {error ? (
+              <div className="p-8 text-center text-destructive">
+                エラーが発生しました: {error.message}
+              </div>
+            ) : (
+              <DataTable
+                data={data?.items || []}
+                columns={columns}
+                isLoading={isLoading}
+                emptyMessage="OCR結果データがありません"
+                enableVirtualization
+                getRowClassName={getRowClassName}
+              />
+            )}
+          </OcrInputsContext.Provider>
         </CardContent>
       </Card>
     </div>
