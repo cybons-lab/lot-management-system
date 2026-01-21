@@ -7,6 +7,7 @@ export * from "./pages/MaterialDeliveryNotePage";
 
 export * from "./pages/CsvImportPage";
 export * from "./pages/RunDetailPage";
+export * from "./pages/RunMonitorPage";
 export * from "./pages/RunsListPage";
 export * from "./pages/Step1Page";
 export * from "./pages/Step2CheckListPage";

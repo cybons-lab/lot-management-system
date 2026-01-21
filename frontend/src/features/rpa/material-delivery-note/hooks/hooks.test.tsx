@@ -68,6 +68,8 @@ const createMockRun = (overrides: Partial<RpaRun> = {}): RpaRun => ({
   started_at: "2024-01-01T00:00:00Z",
   started_by_user_id: 1,
   started_by_username: "test_user",
+  data_start_date: "2024-01-01",
+  data_end_date: "2024-01-01",
   step2_executed_at: null,
   step2_executed_by_user_id: null,
   step2_executed_by_username: null,

@@ -2,11 +2,14 @@
  * MaterialDeliveryNotePage
  * 素材納品書発行のメニューページ - Step1/Step2/履歴へのナビゲーション
  */
+/* eslint-disable max-lines-per-function, complexity, react-hooks/exhaustive-deps */
 
 import { CheckSquare, Download, FileText, History, ListTree, Play, Settings } from "lucide-react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import { RpaSettingsModal } from "../../components/RpaSettingsModal";
+import { useRuns, useStep1LatestResult } from "../hooks";
 
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
@@ -16,13 +19,21 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 interface MenuCardProps {
   title: string;
-  description: string;
+  description?: string;
+  summaryItems?: { label: string; value: string }[];
   icon: React.ReactNode;
   to: string;
   variant?: "default" | "secondary";
 }
 
-function MenuCard({ title, description, icon, to, variant = "default" }: MenuCardProps) {
+function MenuCard({
+  title,
+  description,
+  summaryItems = [],
+  icon,
+  to,
+  variant = "default",
+}: MenuCardProps) {
   const iconBg =
     variant === "secondary" ? "bg-gray-100 text-gray-600" : "bg-indigo-100 text-indigo-600";
   return (
@@ -36,7 +47,17 @@ function MenuCard({ title, description, icon, to, variant = "default" }: MenuCar
             <h3 className="text-lg font-semibold text-gray-900 group-hover:text-indigo-600">
               {title}
             </h3>
-            <p className="mt-1 text-sm text-gray-600">{description}</p>
+            {description && <p className="mt-1 text-sm text-gray-600">{description}</p>}
+            {summaryItems.length > 0 && (
+              <div className="mt-3 grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
+                {summaryItems.map((item) => (
+                  <div key={item.label} className="flex items-center gap-2">
+                    <span className="text-gray-400">{item.label}:</span>
+                    <span className="font-medium text-gray-900">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -44,63 +65,126 @@ function MenuCard({ title, description, icon, to, variant = "default" }: MenuCar
   );
 }
 
-const MENU_ITEMS: MenuCardProps[] = [
-  {
-    title: "Step1: 進度実績ダウンロード",
-    description: "Power Automateフローを呼び出して進度実績データをダウンロードします。",
-    icon: <Download className="h-6 w-6" />,
-    to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP1,
-  },
-  {
-    title: "Step2: 内容確認",
-    description: "取込データの確認・編集を行います。詳細ページで発行/完了フラグを操作します。",
-    icon: <CheckSquare className="h-6 w-6" />,
-    to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP2,
-  },
-  {
-    title: "Step3: 発行リスト作成（Plan）",
-    description: "複数Runをまとめてグルーピング・分割します。大量データの一括処理時に使用します。",
-    icon: <ListTree className="h-6 w-6" />,
-    to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3_PLAN,
-  },
-  {
-    title: "Step3: PAD実行・監視",
-    description: "PAD実行の開始と進捗監視を行います。実行中Runの状態を確認できます。",
-    icon: <Play className="h-6 w-6" />,
-    to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3,
-  },
-  {
-    title: "Step4: レビュー・SAP登録",
-    description: "突合OKデータのレビューとSAP登録を行います。",
-    icon: <CheckSquare className="h-6 w-6" />,
-    to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4,
-  },
-  {
-    title: "実行履歴",
-    description: "過去のCSV取込・実行履歴を確認できます。各Runの詳細ページへ遷移できます。",
-    icon: <History className="h-6 w-6" />,
-    to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS,
-    variant: "secondary",
-  },
-  {
-    title: "CSV取込（一時使用）",
-    description: "CSVファイルをアップロードしてデータを登録します。",
-    icon: <FileText className="h-6 w-6" />,
-    to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CSV_IMPORT,
-    variant: "secondary",
-  },
-  {
-    title: "層別コードマスタ",
-    description: "層別コードとメーカー名の対応付を管理します。",
-    icon: <Settings className="h-6 w-6" />,
-    to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES,
-    variant: "secondary",
-  },
-];
-
 export function MaterialDeliveryNotePage() {
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes("admin");
+  const { data: runsData } = useRuns(0, 50);
+  const runs = runsData?.runs ?? [];
+  const latestRun = runs[0];
+  const { data: latestFetch } = useStep1LatestResult();
+
+  const step2TargetRuns = runs.filter(
+    (run) => run.status === "step1_done" || run.status === "step2_confirmed",
+  );
+  const step3TargetRuns = runs.filter((run) => run.status === "step2_confirmed");
+  const step4TargetRuns = runs.filter((run) =>
+    ["step3_done", "step4_checking", "step4_ng_retry", "step4_review"].includes(run.status),
+  );
+
+  const menuItems = useMemo<MenuCardProps[]>(
+    () => [
+      {
+        title: "Step1: 進度実績ダウンロード",
+        icon: <Download className="h-6 w-6" />,
+        to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP1,
+        summaryItems: [
+          { label: "状態", value: latestFetch ? "取得済み" : "未実行" },
+          {
+            label: "最終取得",
+            value: latestFetch ? new Date(latestFetch.created_at).toLocaleString("ja-JP") : "-",
+          },
+          {
+            label: "期間",
+            value:
+              latestFetch?.start_date && latestFetch?.end_date
+                ? `${latestFetch.start_date} 〜 ${latestFetch.end_date}`
+                : "-",
+          },
+          { label: "件数", value: latestFetch?.item_count ? `${latestFetch.item_count}件` : "-" },
+        ],
+      },
+      {
+        title: "Step2: 発行対象の選択",
+        icon: <CheckSquare className="h-6 w-6" />,
+        to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP2,
+        summaryItems: [
+          { label: "対象Run", value: `${step2TargetRuns.length}件` },
+          { label: "選択中", value: latestRun ? `${latestRun.issue_count}件` : "0件" },
+        ],
+      },
+      {
+        title: "Step3: 発行リスト作成（Plan）",
+        icon: <ListTree className="h-6 w-6" />,
+        to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3_PLAN,
+        summaryItems: [
+          { label: "リスト", value: step3TargetRuns.length > 0 ? "作成待ち" : "未作成" },
+          { label: "予定Run数", value: `${step3TargetRuns.length}件` },
+        ],
+      },
+      {
+        title: "Step3: PAD実行・監視",
+        icon: <Play className="h-6 w-6" />,
+        to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3,
+        summaryItems: [
+          {
+            label: "実行中",
+            value: runs.some((run) => run.status === "step3_running") ? "あり" : "なし",
+          },
+          {
+            label: "最終更新",
+            value: latestRun ? new Date(latestRun.updated_at).toLocaleString("ja-JP") : "-",
+          },
+        ],
+      },
+      {
+        title: "Step4: 突合・SAP登録",
+        icon: <CheckSquare className="h-6 w-6" />,
+        to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4,
+        summaryItems: [
+          { label: "検証", value: step4TargetRuns.length > 0 ? "要対応" : "未実行" },
+          {
+            label: "登録",
+            value: runs.some((run) => run.status === "done") ? "完了あり" : "未実行",
+          },
+        ],
+      },
+      {
+        title: "Step5: Run監視・履歴",
+        icon: <History className="h-6 w-6" />,
+        to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS,
+        variant: "secondary",
+        summaryItems: [
+          { label: "直近Run", value: latestRun ? `#${latestRun.id}` : "-" },
+          {
+            label: "状態",
+            value: latestRun ? latestRun.status : "-",
+          },
+        ],
+      },
+      {
+        title: "CSV取込（一時使用）",
+        description: "CSVファイルをアップロードしてデータを登録します。",
+        icon: <FileText className="h-6 w-6" />,
+        to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CSV_IMPORT,
+        variant: "secondary",
+      },
+      {
+        title: "層別コードマスタ",
+        description: "層別コードとメーカー名の対応付を管理します。",
+        icon: <Settings className="h-6 w-6" />,
+        to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES,
+        variant: "secondary",
+      },
+    ],
+    [
+      latestFetch,
+      latestRun,
+      runs,
+      step2TargetRuns.length,
+      step3TargetRuns.length,
+      step4TargetRuns.length,
+    ],
+  );
 
   return (
     <PageContainer>
@@ -110,7 +194,7 @@ export function MaterialDeliveryNotePage() {
         actions={isAdmin ? <RpaSettingsModal /> : undefined}
       />
       <div className="mx-auto max-w-3xl space-y-4">
-        {MENU_ITEMS.map((item) => (
+        {menuItems.map((item) => (
           <MenuCard key={item.to} {...item} />
         ))}
       </div>

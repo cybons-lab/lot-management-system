@@ -129,6 +129,7 @@ from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -183,6 +184,32 @@ class RpaRunStatus:
     READY_FOR_STEP4_REVIEW = "step4_review"
 
 
+class RpaRunGroup(Base):
+    """Step3のグルーピング結果（Runグループ）."""
+
+    __tablename__ = "rpa_run_groups"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    rpa_type: Mapped[str] = mapped_column(
+        String(50), server_default="material_delivery_note", nullable=False
+    )
+    grouping_method: Mapped[str] = mapped_column(String(50), nullable=False)
+    max_items_per_run: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    planned_run_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+
+    runs: Mapped[list[RpaRun]] = relationship(
+        "RpaRun",
+        back_populates="run_group",
+        cascade="all, delete-orphan",
+    )
+
+
 class RpaRun(Base):
     """RPA実行記録（親テーブル）.
 
@@ -197,6 +224,13 @@ class RpaRun(Base):
         String(50), server_default="material_delivery_note", nullable=False
     )
     status: Mapped[str] = mapped_column(String(30), server_default="downloaded", nullable=False)
+    run_group_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("rpa_run_groups.id", ondelete="SET NULL"), nullable=True
+    )
+    progress_percent: Mapped[float | None] = mapped_column(Float, nullable=True)
+    estimated_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    paused_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # 取得データの期間
     data_start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -236,6 +270,7 @@ class RpaRun(Base):
         Index("idx_rpa_runs_status", "status"),
         Index("idx_rpa_runs_created_at", "created_at"),
         Index("idx_rpa_runs_customer_id", "customer_id"),
+        Index("idx_rpa_runs_group_id", "run_group_id"),
     )
 
     # Relationships
@@ -251,6 +286,13 @@ class RpaRun(Base):
     )
     external_done_by_user: Mapped[User | None] = relationship(
         "User", foreign_keys=[external_done_by_user_id]
+    )
+    run_group: Mapped[RpaRunGroup | None] = relationship("RpaRunGroup", back_populates="runs")
+    events: Mapped[list[RpaRunEvent]] = relationship(
+        "RpaRunEvent",
+        back_populates="run",
+        cascade="all, delete-orphan",
+        order_by="desc(RpaRunEvent.created_at)",
     )
 
     @property
@@ -363,3 +405,70 @@ class RpaRunItem(Base):
 
     # Relationships
     run: Mapped[RpaRun] = relationship("RpaRun", back_populates="items")
+    attempts: Mapped[list[RpaRunItemAttempt]] = relationship(
+        "RpaRunItemAttempt",
+        back_populates="item",
+        cascade="all, delete-orphan",
+    )
+
+
+class RpaRunEvent(Base):
+    """Run制御イベントログ."""
+
+    __tablename__ = "rpa_run_events"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    run_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("rpa_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    event_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+    run: Mapped[RpaRun] = relationship("RpaRun", back_populates="events")
+
+
+class RpaRunItemAttempt(Base):
+    """失敗アイテムの再試行履歴."""
+
+    __tablename__ = "rpa_run_item_attempts"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    run_item_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("rpa_run_items.id", ondelete="CASCADE"), nullable=False
+    )
+    attempt_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+
+    item: Mapped[RpaRunItem] = relationship("RpaRunItem", back_populates="attempts")
+
+
+class RpaRunFetch(Base):
+    """Step1の進度実績取得結果ログ."""
+
+    __tablename__ = "rpa_run_fetches"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    rpa_type: Mapped[str] = mapped_column(
+        String(50), server_default="material_delivery_note", nullable=False
+    )
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    item_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    run_created: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    run_updated: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )

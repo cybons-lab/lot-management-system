@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+import { useStep1LatestResult } from "../hooks";
 import { useCloudFlowQueueStatus, useCreateCloudFlowJob } from "../hooks/useCloudFlow";
 
 import { Button, Input } from "@/components/ui";
@@ -29,6 +30,7 @@ export function Step1Page() {
   const { data: queueStatus, isLoading: isLoadingQueue } =
     useCloudFlowQueueStatus("progress_download");
   const createJobMutation = useCreateCloudFlowJob();
+  const { data: latestResult } = useStep1LatestResult();
 
   const handleExecute = async () => {
     if (!startDate || !endDate) {
@@ -167,8 +169,50 @@ export function Step1Page() {
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-blue-800">
               <li>日付範囲を指定して実行ボタンを押してください</li>
               <li>他のユーザーが実行中の場合はキューに追加されます</li>
-              <li>実行結果は履歴ページで確認できます</li>
+              <li>実行結果はRun履歴で確認できます</li>
             </ul>
+          </div>
+        </div>
+
+        {/* 取得結果（最新） */}
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-gray-900">取得結果（最新）</h3>
+          {latestResult ? (
+            <div className="mt-4 space-y-2 text-sm text-gray-700">
+              <div>
+                <span className="text-gray-500">最終取得:</span>{" "}
+                {new Date(latestResult.created_at).toLocaleString("ja-JP")}
+              </div>
+              <div>
+                <span className="text-gray-500">期間:</span>{" "}
+                {latestResult.start_date && latestResult.end_date
+                  ? `${latestResult.start_date} 〜 ${latestResult.end_date}`
+                  : "-"}
+              </div>
+              <div>
+                <span className="text-gray-500">件数:</span>{" "}
+                {latestResult.item_count ?? "-"} 件
+              </div>
+              <div>
+                <span className="text-gray-500">Run候補:</span>{" "}
+                {latestResult.run_created ?? 0}件作成 / {latestResult.run_updated ?? 0}件更新
+              </div>
+              {latestResult.message && (
+                <div>
+                  <span className="text-gray-500">メッセージ:</span> {latestResult.message}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="mt-4 text-sm text-gray-500">まだ取得履歴がありません。</div>
+          )}
+          <div className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP2)}
+            >
+              作成されたRun候補を見る
+            </Button>
           </div>
         </div>
 

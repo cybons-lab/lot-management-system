@@ -101,6 +101,112 @@ class MaterialDeliveryNoteOrchestrator:
         """Run一覧取得."""
         return self.repo.get_runs(rpa_type, skip, limit)
 
+    def pause_run(self, run_id: int, user: User | None = None) -> RpaRun:
+        """Runを一時停止として記録する."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+
+        run.paused_at = utcnow()
+        self.repo.add_run_event(
+            run_id=run_id,
+            event_type="paused",
+            message="Run paused",
+            created_by_user_id=user.id if user else None,
+        )
+        self.db.flush()
+        self.repo.refresh(run)
+        return run
+
+    def resume_run(self, run_id: int, user: User | None = None) -> RpaRun:
+        """Runの一時停止を解除する."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+
+        run.paused_at = None
+        self.repo.add_run_event(
+            run_id=run_id,
+            event_type="resumed",
+            message="Run resumed",
+            created_by_user_id=user.id if user else None,
+        )
+        self.db.flush()
+        self.repo.refresh(run)
+        return run
+
+    def cancel_run(self, run_id: int, user: User | None = None) -> RpaRun:
+        """Runをキャンセルする."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+
+        run.status = RpaRunStatus.CANCELLED
+        run.cancelled_at = utcnow()
+        self.repo.add_run_event(
+            run_id=run_id,
+            event_type="cancelled",
+            message="Run cancelled",
+            created_by_user_id=user.id if user else None,
+        )
+        self.db.flush()
+        self.repo.refresh(run)
+        return run
+
+    def get_run_events(self, run_id: int, limit: int = 100):
+        """Runイベント一覧を取得."""
+        return self.repo.get_run_events(run_id, limit=limit)
+
+    def get_failed_items(self, run_id: int) -> list[RpaRunItem]:
+        """失敗アイテム一覧を取得."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+        return self.repo.get_failed_items(run_id)
+
+    def record_run_fetch(
+        self,
+        start_date,
+        end_date,
+        status: str,
+        item_count: int | None,
+        run_created: int | None,
+        run_updated: int | None,
+        message: str | None,
+    ):
+        """Step1取得結果を保存."""
+        return self.repo.add_run_fetch(
+            start_date=start_date,
+            end_date=end_date,
+            status=status,
+            item_count=item_count,
+            run_created=run_created,
+            run_updated=run_updated,
+            message=message,
+        )
+
+    def get_latest_run_fetch(self):
+        """最新の取得結果を取得."""
+        return self.repo.get_latest_run_fetch()
+
+    def start_step4(self, run_id: int, user: User | None = None) -> RpaRun:
+        """Step4開始（突合チェック開始）を記録."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+
+        run.status = RpaRunStatus.STEP4_CHECKING
+        run.step4_executed_at = utcnow()
+        self.repo.add_run_event(
+            run_id=run_id,
+            event_type="step4_started",
+            message="Step4 started",
+            created_by_user_id=user.id if user else None,
+        )
+        self.db.flush()
+        self.repo.refresh(run)
+        return run
+
     def update_item(
         self,
         run_id: int,
@@ -583,10 +689,6 @@ class MaterialDeliveryNoteOrchestrator:
         self.repo.refresh(item)
         self._update_run_status_if_needed(run_id)
         return item
-
-    def get_failed_items(self, run_id: int) -> list[RpaRunItem]:
-        """失敗したアイテム一覧を取得."""
-        return self.repo.get_failed_items(run_id)
 
     def get_loop_summary(self, run_id: int, top_n: int = 5) -> dict[str, Any]:
         """PADループの集計情報を取得."""

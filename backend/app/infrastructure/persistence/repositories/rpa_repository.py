@@ -6,6 +6,9 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models.masters_models import CustomerItem, Product
 from app.infrastructure.persistence.models.rpa_models import (
     RpaRun,
+    RpaRunEvent,
+    RpaRunFetch,
+    RpaRunGroup,
     RpaRunItem,
 )
 from app.infrastructure.persistence.models.views_models import VLotDetails
@@ -154,6 +157,108 @@ class RpaRepository:
         runs = query.order_by(RpaRun.created_at.desc()).offset(skip).limit(limit).all()
         return runs, total
 
+    def create_run_group(
+        self,
+        grouping_method: str,
+        max_items_per_run: int | None,
+        planned_run_count: int | None,
+        rpa_type: str = "material_delivery_note",
+        created_by_user_id: int | None = None,
+    ) -> RpaRunGroup:
+        """Runグループを作成."""
+        group = RpaRunGroup(
+            rpa_type=rpa_type,
+            grouping_method=grouping_method,
+            max_items_per_run=max_items_per_run,
+            planned_run_count=planned_run_count,
+            created_by_user_id=created_by_user_id,
+        )
+        self.db.add(group)
+        self.db.flush()
+        self.db.refresh(group)
+        return group
+
+    def add_run_event(
+        self,
+        run_id: int,
+        event_type: str,
+        message: str | None = None,
+        created_by_user_id: int | None = None,
+    ) -> RpaRunEvent:
+        """Runイベントを追加."""
+        event = RpaRunEvent(
+            run_id=run_id,
+            event_type=event_type,
+            message=message,
+            created_by_user_id=created_by_user_id,
+        )
+        self.db.add(event)
+        self.db.flush()
+        self.db.refresh(event)
+        return event
+
+    def get_run_events(self, run_id: int, limit: int = 100) -> list[RpaRunEvent]:
+        """Runイベントを取得."""
+        return (
+            self.db.query(RpaRunEvent)
+            .filter(RpaRunEvent.run_id == run_id)
+            .order_by(RpaRunEvent.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+    def get_failed_items(self, run_id: int) -> list[RpaRunItem]:
+        """失敗アイテム一覧を取得."""
+        return (
+            self.db.query(RpaRunItem)
+            .filter(
+                RpaRunItem.run_id == run_id,
+                RpaRunItem.issue_flag.is_(True),
+                or_(
+                    RpaRunItem.result_status == "failure",
+                    RpaRunItem.last_error_code.is_not(None),
+                ),
+            )
+            .order_by(RpaRunItem.row_no.asc())
+            .all()
+        )
+
+    def add_run_fetch(
+        self,
+        start_date,
+        end_date,
+        status: str,
+        item_count: int | None,
+        run_created: int | None,
+        run_updated: int | None,
+        message: str | None,
+        rpa_type: str = "material_delivery_note",
+    ) -> RpaRunFetch:
+        """Step1の取得結果を保存."""
+        fetch = RpaRunFetch(
+            rpa_type=rpa_type,
+            start_date=start_date,
+            end_date=end_date,
+            status=status,
+            item_count=item_count,
+            run_created=run_created,
+            run_updated=run_updated,
+            message=message,
+        )
+        self.db.add(fetch)
+        self.db.flush()
+        self.db.refresh(fetch)
+        return fetch
+
+    def get_latest_run_fetch(self, rpa_type: str = "material_delivery_note") -> RpaRunFetch | None:
+        """最新の取得結果を取得."""
+        return (
+            self.db.query(RpaRunFetch)
+            .filter(RpaRunFetch.rpa_type == rpa_type)
+            .order_by(RpaRunFetch.created_at.desc())
+            .first()
+        )
+
     def get_item(self, run_id: int, item_id: int) -> RpaRunItem | None:
         """Itemを取得."""
         return (
@@ -267,15 +372,6 @@ class RpaRepository:
                 RpaRunItem.issue_flag.is_(True),
             )
             .update({"lock_flag": True, "updated_at": now}, synchronize_session=False)
-        )
-
-    def get_failed_items(self, run_id: int) -> list[RpaRunItem]:
-        """失敗したアイテム一覧を取得."""
-        return (
-            self.db.query(RpaRunItem)
-            .filter(RpaRunItem.run_id == run_id, RpaRunItem.result_status == "failure")
-            .order_by(RpaRunItem.row_no.asc())
-            .all()
         )
 
     def get_loop_summary(self, run_id: int, top_n: int = 5) -> dict[str, Any]:

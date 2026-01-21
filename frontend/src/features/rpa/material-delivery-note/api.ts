@@ -27,6 +27,9 @@ export interface RpaRunItem {
   order_no: string | null;
   maker_name: string | null;
   result_status: string | null;
+  result_message?: string | null;
+  last_error_code?: string | null;
+  last_error_message?: string | null;
   lock_flag: boolean;
   item_no: string | null;
   lot_no: string | null;
@@ -36,6 +39,13 @@ export interface RpaRun {
   id: number;
   rpa_type: string;
   status: string;
+  run_group_id?: number | null;
+  data_start_date: string | null;
+  data_end_date: string | null;
+  progress_percent?: number | null;
+  estimated_minutes?: number | null;
+  paused_at?: string | null;
+  cancelled_at?: string | null;
   started_at: string | null;
   started_by_user_id: number | null;
   started_by_username: string | null;
@@ -60,12 +70,18 @@ export interface RpaRunSummary {
   status: string;
   data_start_date: string | null;
   data_end_date: string | null;
+  run_group_id?: number | null;
+  progress_percent?: number | null;
+  estimated_minutes?: number | null;
+  paused_at?: string | null;
+  cancelled_at?: string | null;
   started_at: string | null;
   started_by_username: string | null;
   step2_executed_at: string | null;
   external_done_at: string | null;
   step4_executed_at: string | null;
   created_at: string;
+  updated_at: string;
   item_count: number;
   complete_count: number;
   issue_count: number;
@@ -142,6 +158,28 @@ export interface ActivityItem {
   last_error_screenshot_path: string | null;
   locked_by: string | null;
   locked_until: string | null;
+}
+
+export interface RpaRunEvent {
+  id: number;
+  run_id: number;
+  event_type: string;
+  message: string | null;
+  created_at: string;
+  created_by_user_id: number | null;
+}
+
+export interface RpaRunFetchResult {
+  id: number;
+  rpa_type: string;
+  start_date: string | null;
+  end_date: string | null;
+  status: string;
+  item_count: number | null;
+  run_created: number | null;
+  run_updated: number | null;
+  message: string | null;
+  created_at: string;
 }
 
 // ロット候補関連の型
@@ -317,6 +355,39 @@ export async function getActivity(runId: number, limit = 50): Promise<ActivityIt
   return http.get<ActivityItem[]>(
     `rpa/material-delivery-note/runs/${runId}/activity?limit=${limit}`,
   );
+}
+
+export async function pauseRun(runId: number): Promise<RpaRun> {
+  return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/pause`, {});
+}
+
+export async function resumeRun(runId: number): Promise<RpaRun> {
+  return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/resume`, {});
+}
+
+export async function cancelRun(runId: number): Promise<RpaRun> {
+  return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/cancel`, {});
+}
+
+export async function startStep4(runId: number): Promise<RpaRun> {
+  return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/step4-start`, {});
+}
+
+export async function getRunEvents(runId: number, limit = 100): Promise<RpaRunEvent[]> {
+  return http.get<RpaRunEvent[]>(`rpa/material-delivery-note/runs/${runId}/events?limit=${limit}`);
+}
+
+export async function getFailedItems(runId: number): Promise<RpaRunItem[]> {
+  return http.get<RpaRunItem[]>(`rpa/material-delivery-note/runs/${runId}/failed-items`);
+}
+
+export async function downloadFailedItems(runId: number): Promise<void> {
+  const filename = `material_delivery_run_${runId}_failed_items.xlsx`;
+  await http.download(`rpa/material-delivery-note/runs/${runId}/failed-items/export`, filename);
+}
+
+export async function getStep1LatestResult(): Promise<RpaRunFetchResult | null> {
+  return http.get<RpaRunFetchResult | null>("rpa/material-delivery-note/step1/latest");
 }
 
 // Layer Codes
