@@ -502,10 +502,10 @@ SELECT
     ld.content->>'納期' AS delivery_date,
     ld.content->>'納入量' AS delivery_quantity,
     ld.content->>'アイテム' AS item_no,
-    ld.content->>'単位' AS quantity_unit,
+    ld.content->>'単位' AS order_unit,
     ld.content->>'入庫No' AS inbound_no,
     ld.content->>'Lot No' AS lot_no,
-    
+
     -- マスタ由来（LEFT JOIN）
     m.id AS master_id,
     m.customer_name,

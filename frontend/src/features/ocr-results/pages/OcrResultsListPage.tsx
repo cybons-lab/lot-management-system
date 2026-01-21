@@ -164,6 +164,30 @@ const columns: Column<OcrResultItem>[] = [
     minWidth: 80,
   },
   {
+    id: "item_no",
+    header: "アイテム",
+    accessor: (row) => row.item_no || "-",
+    minWidth: 100,
+  },
+  {
+    id: "order_unit",
+    header: "受注単位",
+    accessor: (row) => row.order_unit || "-",
+    minWidth: 90,
+  },
+  {
+    id: "inbound_no",
+    header: "入庫No",
+    accessor: (row) => row.inbound_no || "-",
+    minWidth: 100,
+  },
+  {
+    id: "lot_no",
+    header: "Lot No",
+    accessor: (row) => row.lot_no || "-",
+    minWidth: 100,
+  },
+  {
     id: "supplier_code",
     header: "仕入先コード",
     accessor: (row) => row.supplier_code || "-",
@@ -198,7 +222,6 @@ export function OcrResultsListPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [pageSize, setPageSize] = useState(10);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["ocr-results", { taskDate, statusFilter, showErrorsOnly }],
@@ -317,9 +340,6 @@ export function OcrResultsListPage() {
               emptyMessage="OCR結果データがありません"
               enableVirtualization
               getRowClassName={getRowClassName}
-              pageSize={pageSize}
-              pageSizeOptions={[10, 25, 50, 75, 100]}
-              onPageSizeChange={setPageSize}
             />
           )}
         </CardContent>

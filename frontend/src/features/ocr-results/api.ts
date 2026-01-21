@@ -24,7 +24,7 @@ export interface OcrResultItem {
   delivery_date: string | null;
   delivery_quantity: string | null;
   item_no: string | null;
-  quantity_unit: string | null;
+  order_unit: string | null;
   inbound_no: string | null;
   lot_no: string | null;
 
