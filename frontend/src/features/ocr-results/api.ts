@@ -2,7 +2,7 @@
  * OCR結果データ API client (v_ocr_resultsビューベース)
  */
 
-import httpClient from "@/shared/api/http-client";
+import { http } from "@/shared/api/http-client";
 
 export interface OcrResultItem {
   id: number;
@@ -75,16 +75,16 @@ export const ocrResultsApi = {
     if (params?.limit) searchParams.set("limit", params.limit.toString());
     if (params?.offset) searchParams.set("offset", params.offset.toString());
 
-    const response = await httpClient.get(`ocr-results?${searchParams}`);
-    return response.json();
+    const response = await http.get<OcrResultListResponse>(`ocr-results?${searchParams}`);
+    return response;
   },
 
   /**
    * OCR結果詳細取得
    */
   get: async (id: number): Promise<OcrResultItem> => {
-    const response = await httpClient.get(`ocr-results/${id}`);
-    return response.json();
+    const response = await http.get<OcrResultItem>(`ocr-results/${id}`);
+    return response;
   },
 
   /**
@@ -104,6 +104,6 @@ export const ocrResultsApi = {
 
     const url = `ocr-results/export/download?format=xlsx&${searchParams}`;
     const filename = `OCR結果_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    await httpClient.download(url, filename);
+    await http.download(url, filename);
   },
 };
