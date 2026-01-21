@@ -134,6 +134,57 @@ User reported: "縦持ち変換は自動でできてるっぽいんだけど、D
 2. Verify transaction commit in backend
 3. Check if there are any swallowed exceptions
 
+## Cache-to-DB Flow Analysis (2026-01-21)
+
+### Question: Does cached data eventually get saved to DB?
+
+**Answer**: **NO** - Cached data (IndexedDB) is NOT automatically saved to the database.
+
+**Flow Details**:
+
+#### 1. `useResultDataLoader` (Initial Load on Page Open)
+- **Path**: `hooks/useResultDataLoader.ts:44-68`
+- **Flow**:
+  1. Try IDB cache first → If found, returns cached data **WITHOUT DB save**
+  2. If no cache, calls `syncMutation.mutateAsync({ forceSync: false })`
+  3. `forceSync: false` → Backend checks DB first, returns if exists
+  4. Backend auto-transforms and saves to DB (via `save_to_db=True`)
+
+#### 2. `useSyncTaskResults` ("サーバー取得" button)
+- **Path**: `hooks.ts:646-764`
+- **Flow**:
+  1. If `forceSync: false` → Check IDB cache first
+  2. If cache hit → Returns cached data **WITHOUT calling backend**
+  3. If `forceSync: true` → Skip cache, call backend API
+  4. Backend sync API (`sync_task_results`) → Downloads from SmartRead → Transforms → **Saves to DB**
+  5. Frontend caches the result to IDB
+
+#### 3. `useTransformToLong` (Manual "縦変換" button in dev mode)
+- **Path**: `hooks/useTransformToLong.ts:119-136`
+- **Flow**:
+  1. Frontend transforms wide → long data
+  2. Saves to IDB cache
+  3. **Explicitly calls `saveToDatabase()`** → Saves to DB
+
+### Summary: When is DB Save Triggered?
+
+| Scenario | DB Save? | Notes |
+|----------|----------|-------|
+| Initial page load (cache hit) | ❌ NO | Returns IDB cache, no backend call |
+| Initial page load (cache miss) | ✅ YES | Backend auto-saves via `save_to_db=True` |
+| "サーバー取得" button (`forceSync: false`) | ❌ Maybe | If cache exists, no backend call → no save |
+| "サーバー取得" button (`forceSync: true`) | ✅ YES | Backend sync → transform → save to DB |
+| Manual "縦変換" button (dev mode) | ✅ YES | Frontend transform → explicit DB save |
+
+### Issue: Inconsistency in Save Logic
+
+**Problem**: If user views cached data, that data is NOT guaranteed to be in the DB!
+
+**Recommendation**:
+1. **OPTION A**: Always save cached data to DB on load (if not already saved)
+2. **OPTION B**: Change `forceSync` default to `true` in `useResultDataLoader`
+3. **OPTION C**: Add a flag to IDB cache to track if data is saved to DB or not
+
 ## Files to Modify
 
 1. `frontend/src/features/rpa/smartread/api.ts` - Add logging to API functions
