@@ -148,9 +148,10 @@ class SmartReadCsvTransformer:
     def _extract_common_fields(self, row: dict[str, Any]) -> dict[str, Any]:
         """共通項目を抽出."""
         common = {}
+        normalized_row = self._create_normalized_row(row)
         for field_name in COMMON_FIELDS:
-            if field_name in row:
-                common[field_name] = self._normalize_value(row[field_name])
+            if field_name in normalized_row:
+                common[field_name] = self._normalize_value(normalized_row[field_name])
         return common
 
     def _extract_details(self, row: dict[str, Any]) -> list[dict[str, Any]]:
@@ -160,6 +161,8 @@ class SmartReadCsvTransformer:
         [{"材質コード": "...", ...}, {"材質コード": "...", ...}] に変換。
         """
         details: list[dict[str, Any]] = []
+
+        normalized_row = self._create_normalized_row(row)
 
         for n in range(1, self.max_details + 1):
             detail: dict[str, Any] = {}
@@ -172,8 +175,8 @@ class SmartReadCsvTransformer:
                     keys_to_try.append(field_name)
 
                 for key in keys_to_try:
-                    if key in row:
-                        detail[field_name] = self._normalize_value(row[key])
+                    if key in normalized_row:
+                        detail[field_name] = self._normalize_value(normalized_row[key])
                         break
 
             # サブ明細項目（Lot No1-1, Lot No 1-1, Lot No-1, etc）
@@ -184,8 +187,10 @@ class SmartReadCsvTransformer:
                         keys_to_try.append(f"{sub_field}-{sub_n}")
 
                     for key in keys_to_try:
-                        if key in row:
-                            detail[f"{sub_field}{sub_n}"] = self._normalize_value(row[key])
+                        if key in normalized_row:
+                            detail[f"{sub_field}{sub_n}"] = self._normalize_value(
+                                normalized_row[key]
+                            )
                             break
 
             # 明細が存在する場合のみ追加
@@ -197,9 +202,9 @@ class SmartReadCsvTransformer:
                 )
                 # 番号付きが見つからず、かつn=1で番号なしでヒットした場合は縦持ちと判断して打ち切り
                 is_vertical = any(
-                    field_name in row
-                    and f"{field_name}1" not in row
-                    and f"{field_name} 1" not in row
+                    field_name in normalized_row
+                    and f"{field_name}1" not in normalized_row
+                    and f"{field_name} 1" not in normalized_row
                     for field_name in DETAIL_FIELDS
                 )
                 if is_vertical and n == 1:
@@ -228,6 +233,19 @@ class SmartReadCsvTransformer:
                 return False
 
         return True
+
+    def _create_normalized_row(self, row: dict[str, Any]) -> dict[str, Any]:
+        """キーを正規化したrowを返す."""
+        return {self._normalize_key(key): value for key, value in row.items()}
+
+    def _normalize_key(self, key: str) -> str:
+        """列名を正規化.
+
+        - 前後空白トリム
+        - 全角数字→半角数字
+        """
+        trimmed = key.strip()
+        return trimmed.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
 
     def _normalize_value(self, value: Any) -> str:
         """値を正規化.

@@ -9,7 +9,7 @@
 import { openDB, type IDBPDatabase } from "idb";
 
 const DB_NAME = "smartread-export-cache";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = "exports";
 
 export interface CachedExport {
@@ -27,6 +27,7 @@ export interface CachedExport {
   }>;
   filename: string | null;
   cached_at: number; // timestamp
+  saved_to_db: boolean;
 }
 
 class ExportCacheService {
@@ -36,13 +37,25 @@ class ExportCacheService {
     if (!this.dbPromise) {
       console.log("[CACHE] Opening IndexedDB database");
       this.dbPromise = openDB(DB_NAME, DB_VERSION, {
-        upgrade(db: IDBPDatabase) {
+        upgrade(db: IDBPDatabase, oldVersion: number, _newVersion: number | null, transaction) {
           if (!db.objectStoreNames.contains(STORE_NAME)) {
             console.log("[CACHE] Creating object store");
             const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
             store.createIndex("config_id", "config_id", { unique: false });
             store.createIndex("task_id", "task_id", { unique: false });
             store.createIndex("cached_at", "cached_at", { unique: false });
+          }
+          if (oldVersion < 2) {
+            const store = transaction.objectStore(STORE_NAME);
+            store.openCursor().then(function updateCursor(cursor) {
+              if (!cursor) return;
+              const value = cursor.value as CachedExport;
+              if (value.saved_to_db === undefined) {
+                value.saved_to_db = false;
+                cursor.update(value);
+              }
+              return cursor.continue().then(updateCursor);
+            });
           }
         },
       });
@@ -128,8 +141,18 @@ class ExportCacheService {
     long_data: Array<Record<string, any>>;
     errors: Array<any>;
     filename: string | null;
+    saved_to_db?: boolean;
   }): Promise<void> {
-    const { config_id, task_id, export_id, wide_data, long_data, errors, filename } = params;
+    const {
+      config_id,
+      task_id,
+      export_id,
+      wide_data,
+      long_data,
+      errors,
+      filename,
+      saved_to_db = false,
+    } = params;
 
     try {
       const db = await this.getDB();
@@ -145,6 +168,7 @@ class ExportCacheService {
         errors,
         filename,
         cached_at: Date.now(),
+        saved_to_db,
       };
 
       console.log(
@@ -171,6 +195,23 @@ class ExportCacheService {
       await db.delete(STORE_NAME, id);
     } catch (error) {
       console.error("[CACHE] Failed to delete from cache:", error);
+    }
+  }
+
+  async setSavedToDb(id: string, savedToDb: boolean): Promise<void> {
+    try {
+      const db = await this.getDB();
+      const cached = await db.get(STORE_NAME, id);
+      if (!cached) return;
+
+      const updated = {
+        ...(cached as CachedExport),
+        saved_to_db: savedToDb,
+      };
+      await db.put(STORE_NAME, updated);
+      console.log(`[CACHE] Updated saved_to_db for ${id} => ${savedToDb}`);
+    } catch (error) {
+      console.error("[CACHE] Failed to update saved_to_db:", error);
     }
   }
 

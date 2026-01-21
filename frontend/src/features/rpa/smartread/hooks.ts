@@ -389,6 +389,7 @@ export function useExportCsvData(options: {
             long_data: transformResult.long_data,
             errors: transformResult.errors,
             filename: serverData.filename,
+            saved_to_db: saveToDb,
           });
         } catch (e) {
           console.error("[SmartRead] Failed to cache result", e);
@@ -633,6 +634,7 @@ async function cacheToIdb(
       long_data: res.long_data as Array<Record<string, any>>,
       errors: res.errors as Array<any>,
       filename: res.filename,
+      saved_to_db: true,
     });
     console.info(`[SmartRead] Cached to IDB successfully.`);
   } catch (e) {
