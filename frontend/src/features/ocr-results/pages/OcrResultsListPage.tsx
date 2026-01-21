@@ -70,6 +70,32 @@ function getRowClassName(row: OcrResultItem): string {
   return "";
 }
 
+/**
+ * ステータス凡例コンポーネント
+ */
+function StatusLegend() {
+  return (
+    <div className="flex gap-4 text-xs text-gray-600">
+      <div className="flex items-center gap-1">
+        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+        正常
+      </div>
+      <div className="flex items-center gap-1">
+        <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
+        マスタ未登録
+      </div>
+      <div className="flex items-center gap-1">
+        <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
+        フォーマットエラー
+      </div>
+      <div className="flex items-center gap-1">
+        <XCircle className="h-3.5 w-3.5 text-red-500" />
+        エラー
+      </div>
+    </div>
+  );
+}
+
 const columns: Column<OcrResultItem>[] = [
   {
     id: "status_icon",
@@ -172,6 +198,7 @@ export function OcrResultsListPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [pageSize, setPageSize] = useState(10);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["ocr-results", { taskDate, statusFilter, showErrorsOnly }],
@@ -273,6 +300,11 @@ export function OcrResultsListPage() {
       {/* テーブル */}
       <Card>
         <CardContent className="p-0">
+          {/* ステータス凡例 - テーブルヘッダー上部に配置 */}
+          <div className="px-4 pt-4 pb-2 border-b bg-gray-50/50">
+            <StatusLegend />
+          </div>
+
           {error ? (
             <div className="p-8 text-center text-destructive">
               エラーが発生しました: {error.message}
@@ -285,30 +317,13 @@ export function OcrResultsListPage() {
               emptyMessage="OCR結果データがありません"
               enableVirtualization
               getRowClassName={getRowClassName}
+              pageSize={pageSize}
+              pageSizeOptions={[10, 25, 50, 75, 100]}
+              onPageSizeChange={setPageSize}
             />
           )}
         </CardContent>
       </Card>
-
-      {/* 凡例 */}
-      <div className="flex gap-6 text-xs text-gray-600">
-        <div className="flex items-center gap-1">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          正常
-        </div>
-        <div className="flex items-center gap-1">
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          マスタ未登録
-        </div>
-        <div className="flex items-center gap-1">
-          <AlertCircle className="h-4 w-4 text-orange-500" />
-          フォーマットエラー
-        </div>
-        <div className="flex items-center gap-1">
-          <XCircle className="h-4 w-4 text-red-500" />
-          エラー
-        </div>
-      </div>
     </div>
   );
 }
