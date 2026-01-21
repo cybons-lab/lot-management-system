@@ -4,8 +4,10 @@
 
 import { useState, useEffect } from "react";
 
-import type { SmartReadValidationError } from "../api";
+import { saveLongData, type SmartReadValidationError } from "../api";
 import { useSyncTaskResults } from "../hooks";
+
+import { errorLogger } from "@/services/error-logger";
 
 interface UseResultDataLoaderParams {
   configId: number;
@@ -25,6 +27,125 @@ interface ResultData {
   setFilename: (filename: string | null) => void;
 }
 
+interface LoadDataResult {
+  wideData: Record<string, unknown>[];
+  longData: Record<string, unknown>[];
+  errors: SmartReadValidationError[];
+  filename: string | null;
+  taskDate?: string;
+  cacheId?: string;
+  savedToDb?: boolean;
+}
+
+async function loadFromCache(configId: number, taskId: string): Promise<LoadDataResult | null> {
+  try {
+    const { exportCache } = await import("../db/export-cache");
+    const cached = await exportCache.getByTaskId(configId, taskId);
+    if (cached && (cached.wide_data.length > 0 || cached.long_data.length > 0)) {
+      console.info(`[useResultDataLoader] Loaded from IDB cache:`, {
+        wide: cached.wide_data.length,
+        long: cached.long_data.length,
+      });
+      errorLogger.info("smartread_load_from_cache", "IDBキャッシュからデータ読み込み", {
+        configId,
+        taskId,
+        wideCount: cached.wide_data.length,
+        longCount: cached.long_data.length,
+      });
+      return {
+        wideData: cached.wide_data,
+        longData: cached.long_data,
+        errors: cached.errors,
+        filename: cached.filename,
+        taskDate: cached.task_date,
+        cacheId: cached.id,
+        savedToDb: cached.saved_to_db,
+      };
+    }
+  } catch (e) {
+    console.warn(`[useResultDataLoader] Failed to load from cache:`, e);
+    errorLogger.warning(
+      "smartread_cache_load_failed",
+      e instanceof Error ? e : "キャッシュ読み込み失敗",
+      { configId, taskId },
+    );
+  }
+  return null;
+}
+
+async function saveCacheToDatabase(params: {
+  configId: number;
+  taskId: string;
+  wideData: Record<string, unknown>[];
+  longData: Record<string, unknown>[];
+  filename: string | null;
+  taskDate?: string;
+  cacheId: string;
+}) {
+  const { configId, taskId, wideData, longData, filename, taskDate, cacheId } = params;
+  const { exportCache } = await import("../db/export-cache");
+  try {
+    const dateToUse = taskDate || new Date().toISOString().split("T")[0];
+    await saveLongData(taskId, {
+      config_id: configId,
+      task_id: taskId,
+      task_date: dateToUse,
+      wide_data: wideData,
+      long_data: longData,
+      filename,
+    });
+    await exportCache.setSavedToDb(cacheId, true);
+    errorLogger.info("smartread_cache_save_success", "キャッシュデータをDBに保存", {
+      configId,
+      taskId,
+      wideCount: wideData.length,
+      longCount: longData.length,
+    });
+  } catch (error) {
+    console.error(`[useResultDataLoader] Failed to save cache to DB:`, error);
+    errorLogger.error(
+      "smartread_cache_save_failed",
+      error instanceof Error ? error : "キャッシュDB保存失敗",
+      { configId, taskId },
+    );
+  }
+}
+
+async function loadFromApi(
+  configId: number,
+  taskId: string,
+  syncMutation: ReturnType<typeof useSyncTaskResults>,
+): Promise<LoadDataResult> {
+  console.info(`[useResultDataLoader] No cache found, fetching from API...`);
+  errorLogger.info("smartread_api_fetch_start", "APIからデータ取得開始", {
+    configId,
+    taskId,
+    forceSync: false,
+  });
+
+  const result = await syncMutation.mutateAsync({ configId, taskId, forceSync: false });
+
+  console.info(`[useResultDataLoader] API fetch result:`, {
+    wide: result.wide_data.length,
+    long: result.long_data.length,
+    filename: result.filename,
+  });
+  errorLogger.info("smartread_api_fetch_complete", "APIからデータ取得完了", {
+    configId,
+    taskId,
+    wideCount: result.wide_data.length,
+    longCount: result.long_data.length,
+    filename: result.filename,
+  });
+
+  return {
+    wideData: result.wide_data as Record<string, unknown>[],
+    longData: result.long_data as Record<string, unknown>[],
+    errors: result.errors,
+    filename: result.filename,
+  };
+}
+
 export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderParams): ResultData {
   const [wideData, setWideData] = useState<Record<string, unknown>[]>([]);
   const [longData, setLongData] = useState<Record<string, unknown>[]>([]);
@@ -41,43 +162,42 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
         setIsInitialLoading(true);
         setLoadError(null);
 
-        // 1. IDBキャッシュから読み込み
-        try {
-          const { exportCache } = await import("../db/export-cache");
-          const cached = await exportCache.getByTaskId(configId, taskId);
-          if (cached && (cached.wide_data.length > 0 || cached.long_data.length > 0)) {
-            console.info(`[useResultDataLoader] Loaded from IDB cache:`, {
-              wide: cached.wide_data.length,
-              long: cached.long_data.length,
+        // Try cache first
+        const cached = await loadFromCache(configId, taskId);
+        if (cached) {
+          setWideData(cached.wideData);
+          setLongData(cached.longData);
+          setTransformErrors(cached.errors);
+          setFilename(cached.filename);
+          if (cached.cacheId && cached.savedToDb === false) {
+            void saveCacheToDatabase({
+              configId,
+              taskId,
+              wideData: cached.wideData,
+              longData: cached.longData,
+              filename: cached.filename,
+              taskDate: cached.taskDate,
+              cacheId: cached.cacheId,
             });
-            setWideData(cached.wide_data);
-            setLongData(cached.long_data);
-            setTransformErrors(cached.errors);
-            setFilename(cached.filename);
-            setIsInitialLoading(false);
-            return;
           }
-        } catch (e) {
-          console.warn(`[useResultDataLoader] Failed to load from cache:`, e);
+          setIsInitialLoading(false);
+          return;
         }
 
-        // 2. キャッシュがない場合、APIから取得
-        console.info(`[useResultDataLoader] No cache found, fetching from API...`);
+        // Fallback to API
         try {
-          const result = await syncMutation.mutateAsync({ configId, taskId, forceSync: false });
-
-          console.info(`[useResultDataLoader] API fetch result:`, {
-            wide: result.wide_data.length,
-            long: result.long_data.length,
-            filename: result.filename,
-          });
-
-          setWideData(result.wide_data as Record<string, unknown>[]);
-          setLongData(result.long_data as Record<string, unknown>[]);
+          const result = await loadFromApi(configId, taskId, syncMutation);
+          setWideData(result.wideData);
+          setLongData(result.longData);
           setTransformErrors(result.errors);
           setFilename(result.filename);
         } catch (error) {
           console.error(`[useResultDataLoader] Failed to fetch from API:`, error);
+          errorLogger.error(
+            "smartread_api_fetch_failed",
+            error instanceof Error ? error : "API取得失敗",
+            { configId, taskId },
+          );
           setLoadError(error instanceof Error ? error.message : "データの取得に失敗しました");
         }
       } catch (error) {

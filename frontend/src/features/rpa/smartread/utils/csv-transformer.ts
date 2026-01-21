@@ -128,8 +128,15 @@ export class SmartReadCsvTransformer {
   private extractDetails(row: Record<string, any>): Array<Record<string, any>> {
     const details: Array<Record<string, any>> = [];
 
+    console.log(
+      `[extractDetails] Processing row with ${Object.keys(row).length} columns:`,
+      Object.keys(row).slice(0, 20),
+    );
+
     for (let n = 1; n <= this.maxDetails; n++) {
       const detail = this.extractSingleDetail(row, n);
+
+      console.log(`[extractDetails] n=${n}, extracted detail keys:`, Object.keys(detail));
 
       // Only add if detail has data
       if (!this.isEmptyDetail(detail)) {
@@ -142,46 +149,112 @@ export class SmartReadCsvTransformer {
       }
     }
 
+    console.log(`[extractDetails] Total details found: ${details.length}`);
     return details;
   }
 
   private extractSingleDetail(row: Record<string, any>, n: number): Record<string, any> {
     const detail: Record<string, any> = {};
 
-    // Regular detail fields (材質コード1, 材質コード 1, 納入量1, etc)
+    // Normalize row keys (全角数字→半角数字) to match patterns
+    const normalizedRow = this.createNormalizedRow(row);
+
+    // Extract regular detail fields
+    this.extractDetailFields(detail, normalizedRow, n);
+
+    // Extract sub-detail fields (Lot No, 梱包数)
+    this.extractSubDetailFields(detail, normalizedRow, n);
+
+    return detail;
+  }
+
+  private createNormalizedRow(row: Record<string, any>): Record<string, any> {
+    const normalizedRow: Record<string, any> = {};
+    for (const [key, value] of Object.entries(row)) {
+      const normalizedKey = this.normalizeKey(key);
+      normalizedRow[normalizedKey] = value;
+    }
+    return normalizedRow;
+  }
+
+  private extractDetailFields(
+    detail: Record<string, any>,
+    normalizedRow: Record<string, any>,
+    n: number,
+  ): void {
     for (const fieldName of DETAIL_FIELDS) {
-      // 複数のパターンを試行
       const keysToTry = [`${fieldName}${n}`, `${fieldName} ${n}`];
       if (n === 1) {
         keysToTry.push(fieldName);
       }
 
+      let matched = false;
       for (const key of keysToTry) {
-        if (key in row) {
-          detail[fieldName] = this.normalizeValue(row[key]);
+        if (key in normalizedRow) {
+          detail[fieldName] = this.normalizeValue(normalizedRow[key]);
+          matched = true;
           break;
         }
       }
-    }
 
-    // Sub-detail fields (Lot No1-1, Lot No 1-1, Lot No-1, etc)
+      if (!matched && n === 1) {
+        this.logFieldNotFound(fieldName, keysToTry, normalizedRow);
+      }
+    }
+  }
+
+  private extractSubDetailFields(
+    detail: Record<string, any>,
+    normalizedRow: Record<string, any>,
+    n: number,
+  ): void {
     for (const subField of SUB_DETAIL_FIELDS) {
       for (let subN = 1; subN <= 4; subN++) {
-        // Max 4 sub-details
         const keysToTry = [`${subField}${n}-${subN}`, `${subField} ${n}-${subN}`];
         if (n === 1) {
           keysToTry.push(`${subField}-${subN}`);
         }
 
         for (const key of keysToTry) {
-          if (key in row) {
-            detail[`${subField}${subN}`] = this.normalizeValue(row[key]);
+          if (key in normalizedRow) {
+            detail[`${subField}${subN}`] = this.normalizeValue(normalizedRow[key]);
             break;
           }
         }
       }
     }
-    return detail;
+  }
+
+  private logFieldNotFound(
+    fieldName: string,
+    keysToTry: string[],
+    normalizedRow: Record<string, any>,
+  ): void {
+    console.log(`[extractSingleDetail] Field "${fieldName}" NOT FOUND. Tried:`, keysToTry);
+    // Show what similar keys exist in normalized row
+    const similarKeys = Object.keys(normalizedRow).filter((k) =>
+      k.toLowerCase().includes(fieldName.toLowerCase()),
+    );
+    if (similarKeys.length > 0) {
+      console.log(`  Similar keys in normalized row:`, similarKeys);
+    }
+  }
+
+  private normalizeKey(key: string): string {
+    // Normalize column names: 全角数字→半角数字, trim whitespace
+    const trimmed = key.trim();
+
+    // Full-width to half-width number conversion
+    const fullWidthNumbers = "０１２３４５６７８９";
+    const halfWidthNumbers = "0123456789";
+
+    let result = "";
+    for (const char of trimmed) {
+      const idx = fullWidthNumbers.indexOf(char);
+      result += idx >= 0 ? halfWidthNumbers[idx] : char;
+    }
+
+    return result;
   }
 
   private isVerticalFormat(row: Record<string, any>): boolean {
@@ -191,27 +264,25 @@ export class SmartReadCsvTransformer {
   private isEmptyDetail(detail: Record<string, any>): boolean {
     // Check if ALL detail fields are empty
     // If ANY field has a value, it is NOT empty
-    for (const field of [...DETAIL_FIELDS, ...SUB_DETAIL_FIELDS]) {
-      // Check base fields
-      if (detail[field] && String(detail[field]).trim() !== "") {
-        return false;
-      }
-      // Note: SUB_DETAIL_FIELDS like 'Lot No' might be stored as 'Lot No1', 'Lot No2' inside the detail object?
-      // Wait, extractDetails stores them as `detail['Lot No1']` etc?
-      // Let's look at extractDetails:
-      // detail[`${subField}${subN}`] = ...
-      // So detail object has keys like "Lot No1", "Lot No2".
-      // The DETAIL_FIELDS are stored as "材質コード", "納入量" (no number suffix inside detail object).
-    }
 
-    // Iterate all keys in the detail object to be safe
-    for (const key of Object.keys(detail)) {
+    // Iterate all keys in the detail object
+    const detailKeys = Object.keys(detail);
+    console.log(`[isEmptyDetail] Checking detail:`, { keys: detailKeys, values: detail });
+
+    for (const key of detailKeys) {
       if (key.startsWith("エラー_")) continue; // Ignore error flags
-      if (detail[key] && String(detail[key]).trim() !== "") {
+      const value = detail[key];
+      const trimmedValue = value ? String(value).trim() : "";
+
+      if (trimmedValue !== "") {
+        console.log(
+          `[isEmptyDetail] Found non-empty field: ${key} = "${trimmedValue}" -> NOT EMPTY`,
+        );
         return false;
       }
     }
 
+    console.log(`[isEmptyDetail] All fields empty -> EMPTY`);
     return true;
   }
 

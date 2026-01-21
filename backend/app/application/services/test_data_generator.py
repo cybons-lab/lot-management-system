@@ -125,6 +125,8 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
             progress_callback(97, "Generating Shipping Master Data...")
         generate_shipping_master_data(db)
 
+        db.commit()
+
         if progress_callback:
             progress_callback(100, "Completed!")
         return True

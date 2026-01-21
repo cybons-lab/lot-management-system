@@ -97,4 +97,80 @@ describe("SmartReadCsvTransformer", () => {
       );
     });
   });
+
+  describe("isEmptyDetail - Lot No and 梱包数 handling", () => {
+    it("should NOT skip detail when Lot No/梱包数 are empty but other fields have values", () => {
+      const wideData = [
+        {
+          ファイル名: "test.pdf",
+          材質コード1: "MAT001",
+          納入量1: "100",
+          // Lot No1-1, Lot No1-2, 梱包数1-1, 梱包数1-2 are all empty
+        },
+      ];
+      const result = transformer.transformToLong(wideData);
+
+      console.log("[TEST] Result:", JSON.stringify(result, null, 2));
+      expect(result.long_data).toHaveLength(1);
+      expect(result.long_data[0]["材質コード"]).toBe("MAT001");
+      expect(result.long_data[0]["納入量"]).toBe("100");
+    });
+
+    it("should skip detail when ALL fields including Lot No/梱包数 are empty", () => {
+      const wideData = [
+        {
+          ファイル名: "test.pdf",
+          // 材質コード1, 納入量1, Lot No1-1, etc all empty
+        },
+      ];
+      const result = transformer.transformToLong(wideData);
+
+      expect(result.long_data).toHaveLength(0);
+    });
+
+    it("should NOT skip detail when only Lot No has value", () => {
+      const wideData = [
+        {
+          ファイル名: "test.pdf",
+          "Lot No1-1": "LOT001",
+          // Other fields empty
+        },
+      ];
+      const result = transformer.transformToLong(wideData);
+
+      console.log("[TEST] Lot No only - Result:", JSON.stringify(result, null, 2));
+      expect(result.long_data).toHaveLength(1);
+      expect(result.long_data[0]["Lot No1"]).toBe("LOT001");
+    });
+
+    it("should NOT skip detail when only 梱包数 has value", () => {
+      const wideData = [
+        {
+          ファイル名: "test.pdf",
+          "梱包数1-1": "50",
+          // Other fields empty
+        },
+      ];
+      const result = transformer.transformToLong(wideData);
+
+      console.log("[TEST] 梱包数 only - Result:", JSON.stringify(result, null, 2));
+      expect(result.long_data).toHaveLength(1);
+      expect(result.long_data[0]["梱包数1"]).toBe("50");
+    });
+
+    it("should handle full-width numbers in column names (材質コード１ with 全角1)", () => {
+      const wideData = [
+        {
+          ファイル名: "test.pdf",
+          材質コード１: "MAT001", // 全角の１
+          納入量１: "100", // 全角の１
+        },
+      ];
+      const result = transformer.transformToLong(wideData);
+
+      expect(result.long_data).toHaveLength(1);
+      expect(result.long_data[0]["材質コード"]).toBe("MAT001");
+      expect(result.long_data[0]["納入量"]).toBe("100");
+    });
+  });
 });

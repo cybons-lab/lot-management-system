@@ -83,7 +83,7 @@ function getFieldCategory(field: string): {
     return { category: "detail", priority: 2, baseIndex: detailIndex, numbers };
   }
 
-  // サブ明細フィールド（番号付き）
+  // サブ明細フィールド（番号付き）- 右端に配置するため優先度を明細より後に
   const subDetailIndex = SUB_DETAIL_FIELDS.indexOf(base);
   if (subDetailIndex >= 0) {
     return { category: "sub_detail", priority: 3, baseIndex: subDetailIndex, numbers };
@@ -112,8 +112,8 @@ function compareNumbers(a: number[], b: number[]): number {
  * ソート順:
  * 1. 共通フィールド（COMMON_FIELDS の順序）
  * 2. 縦持ち専用フィールド（明細番号）
- * 3. 明細フィールド（DETAIL_FIELDS の順序、番号順）
- * 4. サブ明細フィールド（SUB_DETAIL_FIELDS の順序、番号順）
+ * 3. 明細フィールド（材質コード、納入量など DETAIL_FIELDS の順序、番号順）
+ * 4. サブ明細フィールド（Lot No、梱包数など SUB_DETAIL_FIELDS の順序、番号順）※右端
  * 5. 未知のフィールド（アルファベット順）
  */
 export function sortColumnHeaders(headers: string[]): string[] {
