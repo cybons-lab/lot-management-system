@@ -61,7 +61,7 @@ class SmartReadAutoSyncRunner:
                     self._stop_event.wait(),
                     timeout=settings.SMARTREAD_AUTO_SYNC_INTERVAL_SECONDS,
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
 
     async def run_once(self) -> None:
@@ -88,11 +88,7 @@ class SmartReadAutoSyncRunner:
                         task_date=date.today(),
                     )
 
-                if (
-                    settings.SMARTREAD_AUTO_SYNC_MOVE_PROCESSED
-                    and watch_dir
-                    and results
-                ):
+                if settings.SMARTREAD_AUTO_SYNC_MOVE_PROCESSED and watch_dir and results:
                     self._move_processed_files(watch_dir, results)
 
             await self._sync_pending_tasks(service, session)

@@ -125,6 +125,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # ドメインイベントハンドラを登録（インポート時に自動登録）
 import app.domain.events.handlers  # noqa: F401
+from app.application.services.smartread.auto_sync_runner import SmartReadAutoSyncRunner
 from app.core import errors
 from app.core.config import settings
 from app.core.database import init_db
@@ -133,7 +134,6 @@ from app.domain.errors import DomainError
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.metrics import MetricsMiddleware
 from app.presentation.api.routes import register_all_routers
-from app.application.services.smartread.auto_sync_runner import SmartReadAutoSyncRunner
 
 
 logger = logging.getLogger(__name__)

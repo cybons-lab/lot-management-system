@@ -12,8 +12,8 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -1303,7 +1303,12 @@ class SmartReadService:
             )
             result = self.session.execute(delete_stmt)
             # SQLAlchemy 2.0: CursorResult has rowcount attribute
-            deleted_count = result.rowcount if hasattr(result, "rowcount") else 0
+            # We use int() and handle exceptions for robust testing with mocks
+            try:
+                deleted_count = int(result.rowcount) if hasattr(result, "rowcount") else 0
+            except (TypeError, ValueError):
+                deleted_count = 0
+
             if deleted_count > 0:
                 logger.info(
                     f"[SmartRead] Deleted {deleted_count} existing long data rows for wide_data_ids={wide_ids_to_process}"
@@ -1441,6 +1446,53 @@ class SmartReadService:
         if task:
             task.skip_today = skip
             self.session.flush()
+
+    def update_skip_today(self, task_id: str, skip_today: bool) -> dict[str, Any]:
+        """skip_todayフラグを更新して詳細を返す.
+
+        Args:
+            task_id: タスクID
+            skip_today: スキップするか
+
+        Returns:
+            更新後のタスク情報
+        """
+        self.set_skip_today(task_id, skip_today)
+        task = self.get_or_create_task(config_id=0, task_id=task_id, task_date=date.today())
+        return {
+            "id": task.id,
+            "task_id": task.task_id,
+            "skip_today": task.skip_today,
+        }
+
+    def get_managed_tasks(self, config_id: int) -> list[dict[str, Any]]:
+        """管理タスク一覧を取得.
+
+        Args:
+            config_id: 設定ID
+
+        Returns:
+            タスク一覧
+        """
+        stmt = (
+            select(SmartReadTask)
+            .where(SmartReadTask.config_id == config_id)
+            .order_by(SmartReadTask.created_at.desc())
+        )
+        tasks = self.session.execute(stmt).scalars().all()
+        return [
+            {
+                "id": t.id,
+                "config_id": t.config_id,
+                "task_id": t.task_id,
+                "task_date": t.task_date,
+                "name": t.name,
+                "state": t.state,
+                "skip_today": t.skip_today,
+                "created_at": t.created_at,
+            }
+            for t in tasks
+        ]
 
     def _save_long_data_to_csv(
         self,
