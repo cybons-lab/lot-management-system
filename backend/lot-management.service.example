@@ -1,0 +1,26 @@
+[Unit]
+Description=Lot Management System Backend
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=your-username
+Group=your-groupname
+WorkingDirectory=/path/to/lot-management-system/backend
+
+# .env ファイルのパスを明示的に指定
+Environment="ENV_FILE=/path/to/lot-management-system/backend/.env"
+
+# 仮想環境の Python を使用
+ExecStart=/path/to/lot-management-system/backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+# 自動再起動
+Restart=always
+RestartSec=10
+
+# ログ設定
+StandardOutput=append:/var/log/lot-management/access.log
+StandardError=append:/var/log/lot-management/error.log
+
+[Install]
+WantedBy=multi-user.target
