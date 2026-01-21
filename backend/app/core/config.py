@@ -220,6 +220,43 @@ class Settings(BaseSettings):
         default=True,
         validation_alias=AliasChoices("LOG_FILE_ENABLED", "log_file_enabled"),
     )
+
+    # SmartRead 自動同期設定
+    SMARTREAD_AUTO_SYNC_ENABLED: bool = Field(
+        default=False,
+        validation_alias=AliasChoices(
+            "SMARTREAD_AUTO_SYNC_ENABLED",
+            "smartread_auto_sync_enabled",
+        ),
+    )
+    SMARTREAD_AUTO_SYNC_INTERVAL_SECONDS: int = Field(
+        default=60,
+        validation_alias=AliasChoices(
+            "SMARTREAD_AUTO_SYNC_INTERVAL_SECONDS",
+            "smartread_auto_sync_interval_seconds",
+        ),
+    )
+    SMARTREAD_AUTO_SYNC_WINDOW_START: str = Field(
+        default="08:30",
+        validation_alias=AliasChoices(
+            "SMARTREAD_AUTO_SYNC_WINDOW_START",
+            "smartread_auto_sync_window_start",
+        ),
+    )
+    SMARTREAD_AUTO_SYNC_WINDOW_END: str = Field(
+        default="17:30",
+        validation_alias=AliasChoices(
+            "SMARTREAD_AUTO_SYNC_WINDOW_END",
+            "smartread_auto_sync_window_end",
+        ),
+    )
+    SMARTREAD_AUTO_SYNC_MOVE_PROCESSED: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "SMARTREAD_AUTO_SYNC_MOVE_PROCESSED",
+            "smartread_auto_sync_move_processed",
+        ),
+    )
     LOG_JSON_FORMAT: bool = Field(
         default=True,
         validation_alias=AliasChoices("LOG_JSON_FORMAT", "log_json_format"),

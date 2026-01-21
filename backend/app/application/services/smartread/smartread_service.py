@@ -12,6 +12,7 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import delete, select
@@ -42,6 +43,15 @@ class AnalyzeResult:
     filename: str
     data: list[dict[str, Any]]
     error_message: str | None = None
+
+
+@dataclass
+class WatchDirProcessOutcome:
+    """監視フォルダ処理結果."""
+
+    task_id: str | None
+    results: list[AnalyzeResult]
+    watch_dir: Path | None
 
 
 @dataclass
@@ -366,16 +376,29 @@ class SmartReadService:
         Returns:
             解析結果のリスト
         """
+        outcome = await self._process_watch_dir_files(config_id, filenames)
+        return outcome.results
+
+    async def process_watch_dir_files_with_task(
+        self, config_id: int, filenames: list[str]
+    ) -> tuple[str | None, list[AnalyzeResult], Path | None]:
+        """監視ディレクトリ内の指定ファイルを処理し、タスクIDを返す."""
+        outcome = await self._process_watch_dir_files(config_id, filenames)
+        return outcome.task_id, outcome.results, outcome.watch_dir
+
+    async def _process_watch_dir_files(
+        self, config_id: int, filenames: list[str]
+    ) -> WatchDirProcessOutcome:
+        """監視ディレクトリ内の指定ファイルを処理する共通ロジック."""
         config = self.get_config(config_id)
         if not config or not config.watch_dir:
             logger.warning(
                 "[SmartRead] Watch dir processing skipped because config/watch_dir is missing",
                 extra={"config_id": config_id},
             )
-            return []
+            return WatchDirProcessOutcome(task_id=None, results=[], watch_dir=None)
 
         import os
-        from pathlib import Path
 
         watch_dir = Path(config.watch_dir)
         export_dir = Path(config.export_dir) if config.export_dir else None
@@ -408,7 +431,7 @@ class SmartReadService:
 
         # ファイルがなければ終了
         if not files_to_process:
-            return results
+            return WatchDirProcessOutcome(task_id=None, results=results, watch_dir=watch_dir)
 
         # テンプレートIDをパース
         template_ids = None
@@ -425,8 +448,6 @@ class SmartReadService:
         multi_result = await client.analyze_files(files_to_process)
 
         # タスクをDBに保存
-        from datetime import date
-
         task_date = date.today()
         task_name = f"Watch Dir: {', '.join(filenames[:3])}" + ("..." if len(filenames) > 3 else "")
         try:
@@ -474,7 +495,11 @@ class SmartReadService:
 
             results.append(analyze_result)
 
-        return results
+        return WatchDirProcessOutcome(
+            task_id=multi_result.task_id,
+            results=results,
+            watch_dir=watch_dir,
+        )
 
     async def diagnose_watch_dir_file(
         self,
@@ -1278,7 +1303,12 @@ class SmartReadService:
             )
             result = self.session.execute(delete_stmt)
             # SQLAlchemy 2.0: CursorResult has rowcount attribute
-            deleted_count = result.rowcount if hasattr(result, "rowcount") else 0
+            # We use int() and handle exceptions for robust testing with mocks
+            try:
+                deleted_count = int(result.rowcount) if hasattr(result, "rowcount") else 0
+            except (TypeError, ValueError):
+                deleted_count = 0
+
             if deleted_count > 0:
                 logger.info(
                     f"[SmartRead] Deleted {deleted_count} existing long data rows for wide_data_ids={wide_ids_to_process}"
@@ -1416,6 +1446,53 @@ class SmartReadService:
         if task:
             task.skip_today = skip
             self.session.flush()
+
+    def update_skip_today(self, task_id: str, skip_today: bool) -> dict[str, Any]:
+        """skip_todayフラグを更新して詳細を返す.
+
+        Args:
+            task_id: タスクID
+            skip_today: スキップするか
+
+        Returns:
+            更新後のタスク情報
+        """
+        self.set_skip_today(task_id, skip_today)
+        task = self.get_or_create_task(config_id=0, task_id=task_id, task_date=date.today())
+        return {
+            "id": task.id,
+            "task_id": task.task_id,
+            "skip_today": task.skip_today,
+        }
+
+    def get_managed_tasks(self, config_id: int) -> list[dict[str, Any]]:
+        """管理タスク一覧を取得.
+
+        Args:
+            config_id: 設定ID
+
+        Returns:
+            タスク一覧
+        """
+        stmt = (
+            select(SmartReadTask)
+            .where(SmartReadTask.config_id == config_id)
+            .order_by(SmartReadTask.created_at.desc())
+        )
+        tasks = self.session.execute(stmt).scalars().all()
+        return [
+            {
+                "id": t.id,
+                "config_id": t.config_id,
+                "task_id": t.task_id,
+                "task_date": t.task_date,
+                "name": t.name,
+                "state": t.state,
+                "skip_today": t.skip_today,
+                "created_at": t.created_at,
+            }
+            for t in tasks
+        ]
 
     def _save_long_data_to_csv(
         self,

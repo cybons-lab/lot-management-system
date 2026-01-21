@@ -47,6 +47,17 @@ class OcrResultItem(BaseModel):
     inbound_no: str | None = None
     lot_no: str | None = None
 
+    # 手入力結果
+    manual_lot_no_1: str | None = None
+    manual_quantity_1: str | None = None
+    manual_lot_no_2: str | None = None
+    manual_quantity_2: str | None = None
+    manual_inbound_no: str | None = None
+    manual_shipping_date: date | None = None
+    manual_shipping_slip_text: str | None = None
+    manual_shipping_slip_text_edited: bool | None = None
+    manual_updated_at: datetime | None = None
+
     # マスタ由来
     master_id: int | None = None
     customer_name: str | None = None

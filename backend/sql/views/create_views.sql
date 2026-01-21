@@ -506,6 +506,17 @@ SELECT
     ld.content->>'入庫No' AS inbound_no,
     COALESCE(ld.content->>'Lot No1', ld.content->>'Lot No', ld.content->>'ロットNo') AS lot_no,
 
+    -- 手入力結果（OCR結果編集）
+    oe.lot_no_1 AS manual_lot_no_1,
+    oe.quantity_1 AS manual_quantity_1,
+    oe.lot_no_2 AS manual_lot_no_2,
+    oe.quantity_2 AS manual_quantity_2,
+    oe.inbound_no AS manual_inbound_no,
+    oe.shipping_date AS manual_shipping_date,
+    oe.shipping_slip_text AS manual_shipping_slip_text,
+    oe.shipping_slip_text_edited AS manual_shipping_slip_text_edited,
+    oe.updated_at AS manual_updated_at,
+
     -- マスタ由来（LEFT JOIN）
     m.id AS master_id,
     m.customer_name,
@@ -550,6 +561,8 @@ SELECT
     END AS has_error
 
 FROM public.smartread_long_data ld
+LEFT JOIN public.ocr_result_edits oe
+    ON oe.smartread_long_data_id = ld.id
 LEFT JOIN public.shipping_master_curated m
     ON COALESCE(ld.content->>'得意先コード', '100427105') = m.customer_code
     AND COALESCE(ld.content->>'材質コード', ld.content->>'材料コード') = m.material_code
