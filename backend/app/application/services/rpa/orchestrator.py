@@ -101,6 +101,69 @@ class MaterialDeliveryNoteOrchestrator:
         """Run一覧取得."""
         return self.repo.get_runs(rpa_type, skip, limit)
 
+    def pause_run(self, run_id: int, user: User | None = None) -> RpaRun:
+        """Runを一時停止として記録する."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+
+        run.paused_at = utcnow()
+        self.repo.add_run_event(
+            run_id=run_id,
+            event_type="paused",
+            message="Run paused",
+            created_by_user_id=user.id if user else None,
+        )
+        self.db.flush()
+        self.repo.refresh(run)
+        return run
+
+    def resume_run(self, run_id: int, user: User | None = None) -> RpaRun:
+        """Runの一時停止を解除する."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+
+        run.paused_at = None
+        self.repo.add_run_event(
+            run_id=run_id,
+            event_type="resumed",
+            message="Run resumed",
+            created_by_user_id=user.id if user else None,
+        )
+        self.db.flush()
+        self.repo.refresh(run)
+        return run
+
+    def cancel_run(self, run_id: int, user: User | None = None) -> RpaRun:
+        """Runをキャンセルする."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+
+        run.status = RpaRunStatus.CANCELLED
+        run.cancelled_at = utcnow()
+        self.repo.add_run_event(
+            run_id=run_id,
+            event_type="cancelled",
+            message="Run cancelled",
+            created_by_user_id=user.id if user else None,
+        )
+        self.db.flush()
+        self.repo.refresh(run)
+        return run
+
+    def get_run_events(self, run_id: int, limit: int = 100):
+        """Runイベント一覧を取得."""
+        return self.repo.get_run_events(run_id, limit=limit)
+
+    def get_failed_items(self, run_id: int) -> list[RpaRunItem]:
+        """失敗アイテム一覧を取得."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError("Run not found")
+        return self.repo.get_failed_items(run_id)
+
     def update_item(
         self,
         run_id: int,

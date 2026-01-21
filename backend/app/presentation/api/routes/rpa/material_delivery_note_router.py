@@ -9,6 +9,7 @@ import logging
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.application.services.common.export_service import ExportService
 from app.application.services.common.uow_service import UnitOfWork
 from app.application.services.rpa import (
     MaterialDeliveryNoteOrchestrator,
@@ -29,6 +30,8 @@ from app.presentation.schemas.rpa_run_schema import (
     MaterialDeliveryNoteExecuteRequest,
     MaterialDeliveryNoteExecuteResponse,
     RpaRunBatchUpdateRequest,
+    RpaRunEventCreateRequest,
+    RpaRunEventResponse,
     RpaRunItemFailureRequest,
     RpaRunItemResponse,
     RpaRunItemSuccessRequest,
@@ -76,9 +79,14 @@ def _build_run_response(run, maker_map: dict[str, str] | None = None) -> RpaRunR
         id=run.id,
         rpa_type=run.rpa_type,
         status=run.status,
+        run_group_id=run.run_group_id,
         customer_id=run.customer_id,
         data_start_date=run.data_start_date,
         data_end_date=run.data_end_date,
+        progress_percent=run.progress_percent,
+        estimated_minutes=run.estimated_minutes,
+        paused_at=run.paused_at,
+        cancelled_at=run.cancelled_at,
         started_at=run.started_at,
         started_by_user_id=run.started_by_user_id,
         started_by_username=run.started_by_user.username if run.started_by_user else None,
@@ -109,8 +117,13 @@ def _build_run_summary(run) -> RpaRunSummaryResponse:
         id=run.id,
         rpa_type=run.rpa_type,
         status=run.status,
+        run_group_id=run.run_group_id,
         data_start_date=run.data_start_date,
         data_end_date=run.data_end_date,
+        progress_percent=run.progress_percent,
+        estimated_minutes=run.estimated_minutes,
+        paused_at=run.paused_at,
+        cancelled_at=run.cancelled_at,
         started_at=run.started_at,
         started_by_username=run.started_by_user.username if run.started_by_user else None,
         step2_executed_at=run.step2_executed_at,
@@ -711,6 +724,157 @@ def retry_failed_items(
         return _build_run_response(run, maker_map)
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/runs/{run_id}/pause", response_model=RpaRunResponse)
+def pause_run(
+    run_id: int,
+    uow: UnitOfWork = Depends(get_uow),
+    user: User | None = Depends(get_current_user_optional),
+):
+    """Runを一時停止として記録する."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        run = service.pause_run(run_id, user=user)
+        layer_codes = [item.layer_code for item in run.items if item.layer_code]
+        maker_map = _get_maker_map(uow.session, layer_codes)
+        return _build_run_response(run, maker_map)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post("/runs/{run_id}/resume", response_model=RpaRunResponse)
+def resume_run(
+    run_id: int,
+    uow: UnitOfWork = Depends(get_uow),
+    user: User | None = Depends(get_current_user_optional),
+):
+    """Runの一時停止を解除する."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        run = service.resume_run(run_id, user=user)
+        layer_codes = [item.layer_code for item in run.items if item.layer_code]
+        maker_map = _get_maker_map(uow.session, layer_codes)
+        return _build_run_response(run, maker_map)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post("/runs/{run_id}/cancel", response_model=RpaRunResponse)
+def cancel_run(
+    run_id: int,
+    uow: UnitOfWork = Depends(get_uow),
+    user: User | None = Depends(get_current_user_optional),
+):
+    """Runをキャンセルする."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        run = service.cancel_run(run_id, user=user)
+        layer_codes = [item.layer_code for item in run.items if item.layer_code]
+        maker_map = _get_maker_map(uow.session, layer_codes)
+        return _build_run_response(run, maker_map)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get("/runs/{run_id}/events", response_model=list[RpaRunEventResponse])
+def get_run_events(
+    run_id: int,
+    limit: int = Query(100, ge=1, le=500),
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """Run制御イベントを取得."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        events = service.get_run_events(run_id, limit=limit)
+        return [RpaRunEventResponse.model_validate(event) for event in events]
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post("/runs/{run_id}/events", response_model=RpaRunEventResponse)
+def create_run_event(
+    run_id: int,
+    request: RpaRunEventCreateRequest,
+    uow: UnitOfWork = Depends(get_uow),
+    user: User | None = Depends(get_current_user_optional),
+):
+    """Run制御イベントを追加."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        event = service.repo.add_run_event(
+            run_id=run_id,
+            event_type=request.event_type,
+            message=request.message,
+            created_by_user_id=user.id if user else None,
+        )
+        return RpaRunEventResponse.model_validate(event)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get("/runs/{run_id}/failed-items", response_model=list[RpaRunItemResponse])
+def get_failed_items(
+    run_id: int,
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """失敗アイテム一覧を取得."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        items = service.get_failed_items(run_id)
+        layer_codes = [item.layer_code for item in items if item.layer_code]
+        maker_map = _get_maker_map(uow.session, layer_codes)
+        response_items = []
+        for item in items:
+            resp_item = RpaRunItemResponse.model_validate(item)
+            resp_item.maker_name = maker_map.get(item.layer_code)
+            response_items.append(resp_item)
+        return response_items
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get("/runs/{run_id}/failed-items/export")
+def export_failed_items(
+    run_id: int,
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """失敗アイテムをExcelで出力."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        items = service.get_failed_items(run_id)
+        export_rows = []
+        for item in items:
+            export_rows.append(
+                {
+                    "run_id": str(item.run_id),
+                    "row_no": str(item.row_no),
+                    "item_no": str(item.item_no) if item.item_no is not None else "",
+                    "order_no": str(item.order_no) if item.order_no is not None else "",
+                    "supplier_code": str(item.layer_code) if item.layer_code is not None else "",
+                    "destination_code": str(item.jiku_code) if item.jiku_code is not None else "",
+                    "result_status": str(item.result_status) if item.result_status else "",
+                    "error_code": str(item.last_error_code) if item.last_error_code else "",
+                    "error_message": str(item.last_error_message) if item.last_error_message else "",
+                    "updated_at": item.updated_at.isoformat() if item.updated_at else "",
+                }
+            )
+        column_map = {
+            "run_id": "Run ID",
+            "row_no": "行番号",
+            "item_no": "納品書番号",
+            "order_no": "受発注No",
+            "supplier_code": "層別コード",
+            "destination_code": "次区コード",
+            "result_status": "結果",
+            "error_code": "エラーコード",
+            "error_message": "エラーメッセージ",
+            "updated_at": "更新日時",
+        }
+        filename = f"material_delivery_run_{run_id}_failed_items"
+        return ExportService.export_to_excel(export_rows, filename=filename, column_map=column_map)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.post(

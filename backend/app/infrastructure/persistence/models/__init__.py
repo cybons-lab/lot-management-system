@@ -61,7 +61,14 @@ from .order_groups_models import OrderGroup
 from .orders_models import Order, OrderLine
 from .product_supplier_models import ProductSupplier
 from .product_warehouse_model import ProductWarehouse
-from .rpa_models import RpaRun, RpaRunItem, RpaRunStatus
+from .rpa_models import (
+    RpaRun,
+    RpaRunEvent,
+    RpaRunGroup,
+    RpaRunItem,
+    RpaRunItemAttempt,
+    RpaRunStatus,
+)
 from .seed_snapshot_model import SeedSnapshot
 from .shipping_master_models import OrderRegisterRow, ShippingMasterCurated, ShippingMasterRaw
 from .smartread_models import SmartReadConfig
@@ -178,7 +185,10 @@ __all__ = [
     "StockMovementReason",
     # RPA
     "RpaRun",
+    "RpaRunGroup",
+    "RpaRunEvent",
     "RpaRunItem",
+    "RpaRunItemAttempt",
     "RpaRunStatus",
     # Cloud Flow
     "CloudFlowConfig",

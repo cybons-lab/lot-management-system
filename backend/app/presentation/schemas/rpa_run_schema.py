@@ -125,6 +125,26 @@ class ActivityItemResponse(BaseModel):
     locked_until: datetime | None = None
 
 
+class RpaRunEventResponse(BaseModel):
+    """Run制御イベントレスポンス."""
+
+    id: int
+    run_id: int
+    event_type: str
+    message: str | None = None
+    created_at: datetime
+    created_by_user_id: int | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class RpaRunEventCreateRequest(BaseModel):
+    """Run制御イベント作成リクエスト."""
+
+    event_type: str
+    message: str | None = None
+
+
 class RpaRunBatchUpdateRequest(BaseModel):
     """RPA Run Batch update request schema."""
 
@@ -138,9 +158,14 @@ class RpaRunResponse(BaseModel):
     id: int
     rpa_type: str
     status: str
+    run_group_id: int | None = None
     customer_id: int | None = Field(None, description="処理対象得意先ID")
     data_start_date: date | None = Field(None, description="データ期間開始日")
     data_end_date: date | None = Field(None, description="データ期間終了日")
+    progress_percent: float | None = None
+    estimated_minutes: int | None = None
+    paused_at: datetime | None = None
+    cancelled_at: datetime | None = None
     started_at: datetime | None = None
     started_by_user_id: int | None = None
     started_by_username: str | None = None
@@ -168,8 +193,13 @@ class RpaRunSummaryResponse(BaseModel):
     id: int
     rpa_type: str
     status: str
+    run_group_id: int | None = None
     data_start_date: date | None = None
     data_end_date: date | None = None
+    progress_percent: float | None = None
+    estimated_minutes: int | None = None
+    paused_at: datetime | None = None
+    cancelled_at: datetime | None = None
     started_at: datetime | None = None
     started_by_username: str | None = None
     step2_executed_at: datetime | None = None
