@@ -20,9 +20,13 @@ depends_on = None
 def upgrade() -> None:
     op.add_column("rpa_run_items", sa.Column("locked_until", sa.DateTime(), nullable=True))
     op.add_column("rpa_run_items", sa.Column("locked_by", sa.String(length=100), nullable=True))
-    op.add_column("rpa_run_items", sa.Column("result_pdf_path", sa.String(length=255), nullable=True))
+    op.add_column(
+        "rpa_run_items", sa.Column("result_pdf_path", sa.String(length=255), nullable=True)
+    )
     op.add_column("rpa_run_items", sa.Column("result_message", sa.Text(), nullable=True))
-    op.add_column("rpa_run_items", sa.Column("last_error_code", sa.String(length=50), nullable=True))
+    op.add_column(
+        "rpa_run_items", sa.Column("last_error_code", sa.String(length=50), nullable=True)
+    )
     op.add_column("rpa_run_items", sa.Column("last_error_message", sa.Text(), nullable=True))
     op.add_column(
         "rpa_run_items",

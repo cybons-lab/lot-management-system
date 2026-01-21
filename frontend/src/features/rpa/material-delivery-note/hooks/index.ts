@@ -21,8 +21,19 @@ import {
   type RpaRunListResponse,
   type ActivityItem,
   type LoopSummary,
+  type RpaRunItem,
   getActivity,
   getLoopSummary,
+  getFailedItems,
+  getRunEvents,
+  pauseRun,
+  resumeRun,
+  cancelRun,
+  startStep4,
+  downloadFailedItems,
+  type RpaRunEvent,
+  type RpaRunFetchResult,
+  getStep1LatestResult,
 } from "../api";
 
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
@@ -86,6 +97,146 @@ export function useActivity(
     queryKey: [QUERY_KEY, runId, "activity", limit],
     queryFn: () => getActivity(runId!, limit),
     enabled: runId !== undefined && (options?.enabled ?? true),
+    ...options,
+  });
+}
+
+/**
+ * Runイベント取得
+ */
+export function useRunEvents(
+  runId: number | undefined,
+  limit = 100,
+  options?: Partial<UseQueryOptions<RpaRunEvent[], Error>>,
+) {
+  return useQuery({
+    queryKey: [QUERY_KEY, runId, "events", limit],
+    queryFn: () => getRunEvents(runId!, limit),
+    enabled: runId !== undefined && (options?.enabled ?? true),
+    ...options,
+  });
+}
+
+/**
+ * 失敗アイテム一覧
+ */
+export function useFailedItems(
+  runId: number | undefined,
+  options?: Partial<UseQueryOptions<RpaRunItem[], Error>>,
+) {
+  return useQuery({
+    queryKey: [QUERY_KEY, runId, "failed-items"],
+    queryFn: () => getFailedItems(runId!),
+    enabled: runId !== undefined && (options?.enabled ?? true),
+    ...options,
+  });
+}
+
+/**
+ * Run一時停止
+ */
+export function usePauseRun(runId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => pauseRun(runId),
+    onSuccess: () => {
+      toast.success("Runを一時停止しました");
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId, "events"] });
+    },
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`一時停止に失敗しました: ${message}`);
+    },
+  });
+}
+
+/**
+ * Run再開
+ */
+export function useResumeRun(runId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => resumeRun(runId),
+    onSuccess: () => {
+      toast.success("Runを再開しました");
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId, "events"] });
+    },
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`再開に失敗しました: ${message}`);
+    },
+  });
+}
+
+/**
+ * Run中断
+ */
+export function useCancelRun(runId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => cancelRun(runId),
+    onSuccess: () => {
+      toast.success("Runを中断しました");
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId, "events"] });
+    },
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`中断に失敗しました: ${message}`);
+    },
+  });
+}
+
+/**
+ * 失敗アイテムのExcel出力
+ */
+export function useDownloadFailedItems(runId: number) {
+  return useMutation({
+    mutationFn: () => downloadFailedItems(runId),
+    onSuccess: () => {
+      toast.success("Excelをダウンロードしました");
+    },
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`Excel出力に失敗しました: ${message}`);
+    },
+  });
+}
+
+/**
+ * Step4開始
+ */
+export function useStartStep4(runId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => startStep4(runId),
+    onSuccess: () => {
+      toast.success("Step4を開始しました");
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`Step4開始に失敗しました: ${message}`);
+    },
+  });
+}
+
+/**
+ * Step1最新結果
+ */
+export function useStep1LatestResult(
+  options?: Partial<UseQueryOptions<RpaRunFetchResult | null, Error>>,
+) {
+  return useQuery({
+    queryKey: [QUERY_KEY, "step1-latest"],
+    queryFn: () => getStep1LatestResult(),
     ...options,
   });
 }

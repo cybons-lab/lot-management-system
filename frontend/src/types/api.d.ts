@@ -6388,6 +6388,170 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/material-delivery-note/runs/{run_id}/pause": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Pause Run
+     * @description Runを一時停止として記録する.
+     */
+    post: operations["pause_run_api_rpa_material_delivery_note_runs__run_id__pause_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/resume": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resume Run
+     * @description Runの一時停止を解除する.
+     */
+    post: operations["resume_run_api_rpa_material_delivery_note_runs__run_id__resume_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Run
+     * @description Runをキャンセルする.
+     */
+    post: operations["cancel_run_api_rpa_material_delivery_note_runs__run_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/step4-start": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start Step4
+     * @description Step4開始を記録する.
+     */
+    post: operations["start_step4_api_rpa_material_delivery_note_runs__run_id__step4_start_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Run Events
+     * @description Run制御イベントを取得.
+     */
+    get: operations["get_run_events_api_rpa_material_delivery_note_runs__run_id__events_get"];
+    put?: never;
+    /**
+     * Create Run Event
+     * @description Run制御イベントを追加.
+     */
+    post: operations["create_run_event_api_rpa_material_delivery_note_runs__run_id__events_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/failed-items/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Failed Items
+     * @description 失敗アイテムをExcelで出力.
+     */
+    get: operations["export_failed_items_api_rpa_material_delivery_note_runs__run_id__failed_items_export_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/step1/result": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Step1 Result
+     * @description Step1取得結果を記録する.
+     */
+    post: operations["create_step1_result_api_rpa_material_delivery_note_step1_result_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/step1/latest": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Step1 Latest
+     * @description Step1取得結果の最新を取得する.
+     */
+    get: operations["get_step1_latest_api_rpa_material_delivery_note_step1_latest_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/rpa/material-delivery-note/execute": {
     parameters: {
       query?: never;
@@ -13089,6 +13253,86 @@ export interface components {
       update_data: components["schemas"]["RpaRunItemUpdateRequest"];
     };
     /**
+     * RpaRunEventCreateRequest
+     * @description Run制御イベント作成リクエスト.
+     */
+    RpaRunEventCreateRequest: {
+      /** Event Type */
+      event_type: string;
+      /** Message */
+      message?: string | null;
+    };
+    /**
+     * RpaRunEventResponse
+     * @description Run制御イベントレスポンス.
+     */
+    RpaRunEventResponse: {
+      /** Id */
+      id: number;
+      /** Run Id */
+      run_id: number;
+      /** Event Type */
+      event_type: string;
+      /** Message */
+      message?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Created By User Id */
+      created_by_user_id?: number | null;
+    };
+    /**
+     * RpaRunFetchCreateRequest
+     * @description Step1取得結果作成リクエスト.
+     */
+    RpaRunFetchCreateRequest: {
+      /** Start Date */
+      start_date?: string | null;
+      /** End Date */
+      end_date?: string | null;
+      /** Status */
+      status: string;
+      /** Item Count */
+      item_count?: number | null;
+      /** Run Created */
+      run_created?: number | null;
+      /** Run Updated */
+      run_updated?: number | null;
+      /** Message */
+      message?: string | null;
+    };
+    /**
+     * RpaRunFetchResponse
+     * @description Step1取得結果レスポンス.
+     */
+    RpaRunFetchResponse: {
+      /** Id */
+      id: number;
+      /** Rpa Type */
+      rpa_type: string;
+      /** Start Date */
+      start_date?: string | null;
+      /** End Date */
+      end_date?: string | null;
+      /** Status */
+      status: string;
+      /** Item Count */
+      item_count?: number | null;
+      /** Run Created */
+      run_created?: number | null;
+      /** Run Updated */
+      run_updated?: number | null;
+      /** Message */
+      message?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
      * RpaRunItemFailureRequest
      * @description RPA Run Item failure report request schema (PAD loop).
      */
@@ -13287,6 +13531,8 @@ export interface components {
       rpa_type: string;
       /** Status */
       status: string;
+      /** Run Group Id */
+      run_group_id?: number | null;
       /**
        * Customer Id
        * @description 処理対象得意先ID
@@ -13302,6 +13548,14 @@ export interface components {
        * @description データ期間終了日
        */
       data_end_date?: string | null;
+      /** Progress Percent */
+      progress_percent?: number | null;
+      /** Estimated Minutes */
+      estimated_minutes?: number | null;
+      /** Paused At */
+      paused_at?: string | null;
+      /** Cancelled At */
+      cancelled_at?: string | null;
       /** Started At */
       started_at?: string | null;
       /** Started By User Id */
@@ -13384,10 +13638,20 @@ export interface components {
       rpa_type: string;
       /** Status */
       status: string;
+      /** Run Group Id */
+      run_group_id?: number | null;
       /** Data Start Date */
       data_start_date?: string | null;
       /** Data End Date */
       data_end_date?: string | null;
+      /** Progress Percent */
+      progress_percent?: number | null;
+      /** Estimated Minutes */
+      estimated_minutes?: number | null;
+      /** Paused At */
+      paused_at?: string | null;
+      /** Cancelled At */
+      cancelled_at?: string | null;
       /** Started At */
       started_at?: string | null;
       /** Started By Username */
@@ -13423,6 +13687,11 @@ export interface components {
        * @default false
        */
       all_items_complete: boolean;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
     };
     /**
      * SAPOrderRegistrationRequest
@@ -25008,6 +25277,282 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  pause_run_api_rpa_material_delivery_note_runs__run_id__pause_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  resume_run_api_rpa_material_delivery_note_runs__run_id__resume_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_run_api_rpa_material_delivery_note_runs__run_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  start_step4_api_rpa_material_delivery_note_runs__run_id__step4_start_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_run_events_api_rpa_material_delivery_note_runs__run_id__events_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunEventResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_run_event_api_rpa_material_delivery_note_runs__run_id__events_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaRunEventCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunEventResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_failed_items_api_rpa_material_delivery_note_runs__run_id__failed_items_export_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_step1_result_api_rpa_material_delivery_note_step1_result_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaRunFetchCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunFetchResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_step1_latest_api_rpa_material_delivery_note_step1_latest_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunFetchResponse"] | null;
         };
       };
     };

@@ -319,7 +319,9 @@ def test_failure_is_idempotent_and_success_conflicts(client, db: Session):
 
 def test_failed_items_returns_only_failures_in_row_order(client, db: Session):
     run = _create_run_with_items(db, status=RpaRunStatus.STEP3_RUNNING, item_count=3)
-    items = db.query(RpaRunItem).filter(RpaRunItem.run_id == run.id).order_by(RpaRunItem.row_no).all()
+    items = (
+        db.query(RpaRunItem).filter(RpaRunItem.run_id == run.id).order_by(RpaRunItem.row_no).all()
+    )
     items[0].result_status = "failure"
     items[0].last_error_code = "ERR-1"
     items[1].result_status = "success"
@@ -337,7 +339,9 @@ def test_failed_items_returns_only_failures_in_row_order(client, db: Session):
 
 def test_loop_summary_counts_and_error_codes(client, db: Session):
     run = _create_run_with_items(db, status=RpaRunStatus.STEP3_RUNNING, item_count=6)
-    items = db.query(RpaRunItem).filter(RpaRunItem.run_id == run.id).order_by(RpaRunItem.row_no).all()
+    items = (
+        db.query(RpaRunItem).filter(RpaRunItem.run_id == run.id).order_by(RpaRunItem.row_no).all()
+    )
     items[0].result_status = None
     items[1].result_status = "pending"
     items[2].result_status = "processing"
@@ -358,7 +362,10 @@ def test_loop_summary_counts_and_error_codes(client, db: Session):
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["total"] == 6
-    assert data["queued"] + data["pending"] + data["processing"] + data["success"] + data["failure"] == 6
+    assert (
+        data["queued"] + data["pending"] + data["processing"] + data["success"] + data["failure"]
+        == 6
+    )
     assert data["done"] == 3
     assert data["remaining"] == 3
     assert data["error_code_counts"] == [{"error_code": "ERROR-A", "count": 2}]

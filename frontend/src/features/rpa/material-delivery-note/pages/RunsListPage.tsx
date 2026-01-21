@@ -142,10 +142,10 @@ export function RunsListPage() {
                         : "-"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link to={`/rpa/material-delivery-note/runs/${run.id}`}>
+                      <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_MONITOR(run.id)}>
                         <Button variant="ghost" size="sm">
                           <Eye className="mr-2 h-4 w-4" />
-                          詳細
+                          監視
                         </Button>
                       </Link>
                     </TableCell>
