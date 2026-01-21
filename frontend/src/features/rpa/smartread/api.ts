@@ -60,6 +60,17 @@ export interface SmartReadAnalyzeResponse {
   error_message: string | null;
 }
 
+export interface SmartReadDiagnoseResult {
+  success: boolean;
+  error_message: string | null;
+  response: Record<string, unknown> | null;
+}
+
+export interface SmartReadDiagnoseResponse {
+  request_flow: SmartReadDiagnoseResult;
+  export_flow: SmartReadDiagnoseResult;
+}
+
 // API functions
 
 /**
@@ -137,6 +148,18 @@ export async function processWatchDirFiles(
 ): Promise<SmartReadAnalyzeResponse[]> {
   return http.post<SmartReadAnalyzeResponse[]>(`rpa/smartread/configs/${configId}/process`, {
     filenames,
+  });
+}
+
+/**
+ * 監視フォルダファイルをSmartRead APIで診断
+ */
+export async function diagnoseWatchDirFile(
+  configId: number,
+  filename: string,
+): Promise<SmartReadDiagnoseResponse> {
+  return http.post<SmartReadDiagnoseResponse>(`rpa/smartread/configs/${configId}/diagnose`, {
+    filename,
   });
 }
 

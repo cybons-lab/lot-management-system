@@ -451,6 +451,170 @@ class SmartReadService:
 
         return results
 
+    async def diagnose_watch_dir_file(
+        self,
+        config_id: int,
+        filename: str,
+    ) -> dict[str, Any]:
+        """SmartRead APIへの送信診断.
+
+        requestId方式とexport方式の両方を試し、結果を返す。
+        """
+        config = self.get_config(config_id)
+        if not config or not config.watch_dir:
+            return {
+                "request_flow": {
+                    "success": False,
+                    "error_message": "設定または監視フォルダが未設定です",
+                    "response": None,
+                },
+                "export_flow": {
+                    "success": False,
+                    "error_message": "設定または監視フォルダが未設定です",
+                    "response": None,
+                },
+            }
+
+        from pathlib import Path
+
+        watch_dir = Path(config.watch_dir)
+        file_path = watch_dir / filename
+        if not file_path.exists():
+            error_message = f"ファイルが見つかりません: {file_path}"
+            return {
+                "request_flow": {
+                    "success": False,
+                    "error_message": error_message,
+                    "response": None,
+                },
+                "export_flow": {
+                    "success": False,
+                    "error_message": error_message,
+                    "response": None,
+                },
+            }
+
+        try:
+            file_content = file_path.read_bytes()
+        except OSError as e:
+            error_message = f"ファイル読み込み失敗: {e}"
+            return {
+                "request_flow": {
+                    "success": False,
+                    "error_message": error_message,
+                    "response": None,
+                },
+                "export_flow": {
+                    "success": False,
+                    "error_message": error_message,
+                    "response": None,
+                },
+            }
+
+        client, _ = self._get_client(config_id)
+        if not client:
+            return {
+                "request_flow": {
+                    "success": False,
+                    "error_message": "SmartRead設定が見つかりません",
+                    "response": None,
+                },
+                "export_flow": {
+                    "success": False,
+                    "error_message": "SmartRead設定が見つかりません",
+                    "response": None,
+                },
+            }
+
+        request_flow: dict[str, Any] = {"success": False, "error_message": None, "response": None}
+        export_flow: dict[str, Any] = {"success": False, "error_message": None, "response": None}
+
+        try:
+            task_id = await client.create_task_with_name(
+                f"diagnose_request_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
+            if not task_id:
+                raise RuntimeError("タスク作成に失敗しました")
+
+            request_id = await client.submit_request(task_id, file_content, filename)
+            if not request_id:
+                raise RuntimeError("リクエスト送信に失敗しました")
+
+            status = await client.get_request_status(request_id)
+            results_payload: dict[str, Any] | None = None
+            if status and status.is_completed():
+                results = await client.get_request_results(request_id)
+                if results:
+                    results_payload = results.raw_response
+
+            request_flow = {
+                "success": True,
+                "error_message": None,
+                "response": {
+                    "task_id": task_id,
+                    "request_id": request_id,
+                    "status": status.__dict__ if status else None,
+                    "results": results_payload,
+                },
+            }
+        except Exception as e:
+            request_flow = {
+                "success": False,
+                "error_message": str(e),
+                "response": None,
+            }
+
+        try:
+            task_id = await client.create_task_with_name(
+                f"diagnose_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
+            if not task_id:
+                raise RuntimeError("タスク作成に失敗しました")
+
+            request_id = await client.submit_request(task_id, file_content, filename)
+            if not request_id:
+                raise RuntimeError("リクエスト送信に失敗しました")
+
+            export_type = config.export_type or "csv"
+            export = await client.create_export(task_id, export_type=export_type)
+            if not export:
+                raise RuntimeError("エクスポート作成に失敗しました")
+
+            export_status = await client.poll_export_until_ready(
+                task_id,
+                export.export_id,
+                timeout_sec=120.0,
+                poll_interval=5.0,
+            )
+            downloaded_size = None
+            if export_status and export_status.state.upper() in ("COMPLETED", "SUCCEEDED"):
+                download = await client.download_export(task_id, export.export_id)
+                if download is not None:
+                    downloaded_size = len(download)
+
+            export_flow = {
+                "success": True,
+                "error_message": None,
+                "response": {
+                    "task_id": task_id,
+                    "request_id": request_id,
+                    "export": export.__dict__,
+                    "export_status": export_status.__dict__ if export_status else None,
+                    "downloaded_size": downloaded_size,
+                },
+            }
+        except Exception as e:
+            export_flow = {
+                "success": False,
+                "error_message": str(e),
+                "response": None,
+            }
+
+        return {
+            "request_flow": request_flow,
+            "export_flow": export_flow,
+        }
+
     def _flatten_data(self, data: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """ネストされたデータをフラット化.
 

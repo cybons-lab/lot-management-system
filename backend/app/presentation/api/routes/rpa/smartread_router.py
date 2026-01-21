@@ -27,6 +27,8 @@ from app.presentation.schemas.smartread_schema import (
     SmartReadConfigResponse,
     SmartReadConfigUpdate,
     SmartReadCsvDataResponse,
+    SmartReadDiagnoseRequest,
+    SmartReadDiagnoseResponse,
     SmartReadExportRequest,
     SmartReadExportResponse,
     SmartReadLongDataListResponse,
@@ -177,6 +179,20 @@ async def process_files(
         )
         for r in results
     ]
+
+
+@router.post("/configs/{config_id}/diagnose", response_model=SmartReadDiagnoseResponse)
+async def diagnose_watch_dir_file(
+    config_id: int,
+    request: SmartReadDiagnoseRequest,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadDiagnoseResponse:
+    """SmartRead API送信を診断."""
+    assert db is not None
+    service = SmartReadService(db)
+    result = await service.diagnose_watch_dir_file(config_id, request.filename)
+    return SmartReadDiagnoseResponse(**result)
 
 
 # --- PDF解析 ---
