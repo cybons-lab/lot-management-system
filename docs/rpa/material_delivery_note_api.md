@@ -23,13 +23,18 @@ Power Automate Desktop (PAD) と連携する素材納品書発行ワークフロ
 | GET | `/runs` | Run一覧取得 | Web |
 | GET | `/runs/{run_id}` | Run詳細取得 | Web |
 | PATCH | `/runs/{run_id}/items/{item_id}` | Item更新 | Web |
-| GET | `/runs/{run_id}/next-item` | 次の処理対象取得 | PAD |
+| GET | `/runs/{run_id}/next-item` | 次の処理対象取得（ロック付き） | PAD |
 | GET | `/runs/{run_id}/items/{item_id}/lot-suggestions` | ロット候補取得 | Web |
 | POST | `/runs/{run_id}/items/batch-update` | 一括更新 | Web |
 | POST | `/runs/{run_id}/complete-all` | Step2完了 | Web |
 | POST | `/runs/{run_id}/step2` | Step3実行開始 | Web |
 | POST | `/runs/{run_id}/external-done` | 外部手順完了 | Web |
-| PATCH | `/runs/{run_id}/items/{item_id}/result` | 結果更新 | PAD |
+| PATCH | `/runs/{run_id}/items/{item_id}/result` | 結果更新（旧） | PAD |
+| POST | `/runs/{run_id}/items/{item_id}/success` | 成功報告 | PAD |
+| POST | `/runs/{run_id}/items/{item_id}/failure` | 失敗報告 | PAD |
+| GET | `/runs/{run_id}/failed-items` | 失敗一覧取得 | Web / PAD |
+| GET | `/runs/{run_id}/loop-summary` | ループ集計 | Web / PAD |
+| GET | `/runs/{run_id}/activity` | 実行ログ（直近） | Web / PAD |
 | POST | `/runs/{run_id}/step4-check` | 突合チェック | PAD / Web |
 | POST | `/runs/{run_id}/retry-failed` | NG再実行 | Web |
 | POST | `/execute` | Flow直接実行 | Web |
@@ -68,15 +73,20 @@ Content-Type: multipart/form-data
 
 ---
 
-### GET `/runs/{run_id}/next-item` - 次の処理対象取得
+### GET `/runs/{run_id}/next-item` - 次の処理対象取得（ロック付き）
 
 **用途**: Step3でPADが1件ずつ処理するための取得
 
+**クエリパラメータ**:
+- `lock_timeout_seconds`: ロックタイムアウト秒（default: 600）
+- `lock_owner`: ロック取得者（任意）
+- `include_failed`: 失敗済みも再取得する場合は `true`
+
 **処理ロジック**:
-1. 2分以上経過した `processing` アイテムを `failed_timeout` に変更
-2. 未処理アイテム（`result_status` が NULL または `pending`）を取得
-3. 層別コードごとの残件数が少ない順にソート
-4. 取得したアイテムを `processing` に変更してロック
+1. Runが `step3_running` の場合のみ払い出し
+2. 期限切れロックを解除し `pending` に戻す
+3. 未処理アイテム（`result_status` が NULL または `pending`）を取得
+4. 取得したアイテムを `processing` に変更し `locked_until` を設定
 
 **レスポンス**: `RpaRunItem` または `null`（全件処理済み）
 
@@ -121,7 +131,7 @@ Lot (FEFO順、supplier_idフィルタ)
 
 ---
 
-### PATCH `/runs/{run_id}/items/{item_id}/result` - 結果更新（PAD用）
+### PATCH `/runs/{run_id}/items/{item_id}/result` - 結果更新（旧：PAD用）
 
 **用途**: Step3でPADが処理結果を登録
 
@@ -140,6 +150,100 @@ Lot (FEFO順、supplier_idフィルタ)
 | `success` | 成功 |
 | `failure` | 失敗 |
 | `failed_timeout` | タイムアウト |
+
+---
+
+### POST `/runs/{run_id}/items/{item_id}/success` - 成功報告
+
+**用途**: PADで成功した明細の結果を記録
+
+```json
+{
+  "pdf_path": "https://.../delivery_note_123.pdf",
+  "message": "PDF保存完了",
+  "lock_owner": "pad-machine-01"
+}
+```
+
+---
+
+### POST `/runs/{run_id}/items/{item_id}/failure` - 失敗報告
+
+**用途**: PADで失敗した明細の原因を記録
+
+```json
+{
+  "error_code": "SAP_TIMEOUT",
+  "error_message": "SAP接続タイムアウト",
+  "screenshot_path": "https://.../error_123.png",
+  "lock_owner": "pad-machine-01"
+}
+```
+
+---
+
+### GET `/runs/{run_id}/failed-items` - 失敗一覧取得
+
+**用途**: 失敗した明細を一覧で取得
+
+**レスポンス**: `RpaRunItem[]`（row_no順）
+
+---
+
+### GET `/runs/{run_id}/loop-summary` - ループ集計
+
+**用途**: PADループの進捗集計とエラーコード別件数を取得
+
+**クエリパラメータ**:
+- `top_n`: エラーコード集計の上位件数（default: 5）
+
+**レスポンス例**:
+```json
+{
+  "total": 20,
+  "queued": 2,
+  "pending": 5,
+  "processing": 1,
+  "success": 10,
+  "failure": 3,
+  "done": 13,
+  "remaining": 7,
+  "percent": 65,
+  "last_activity_at": "2025-02-08T12:34:56Z",
+  "error_code_counts": [
+    {"error_code": "SAP_TIMEOUT", "count": 2},
+    {"error_code": "PDF_EXPORT", "count": 1}
+  ]
+}
+```
+
+---
+
+### GET `/runs/{run_id}/activity` - 実行ログ（直近）
+
+**用途**: 直近の処理ログを取得
+
+**クエリパラメータ**:
+- `limit`: 返却件数（default: 50）
+
+**レスポンス例**:
+```json
+[
+  {
+    "item_id": 101,
+    "row_no": 1,
+    "result_status": "success",
+    "updated_at": "2025-02-08T12:30:00Z",
+    "result_message": "PDF保存完了",
+    "result_pdf_path": "https://.../delivery_note_101.pdf",
+    "last_error_code": null,
+    "last_error_message": null,
+    "last_error_screenshot_path": null,
+    "locked_by": null,
+    "locked_until": null
+  }
+]
+```
 
 ---
 
@@ -197,7 +301,8 @@ PAD → GET /runs/{id}/next-item (ループ)
         ↓
     1件ずつ処理
         ↓
-PAD → PATCH /runs/{id}/items/{id}/result
+PAD → POST /runs/{id}/items/{id}/success (成功)
+   or POST /runs/{id}/items/{id}/failure (失敗)
         ↓
     結果登録
         ↓

@@ -5305,6 +5305,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/env-check": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Env Check
+     * @description 環境変数の読み込み状況を確認 (デバッグ用).
+     */
+    get: operations["env_check_api_env_check_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/operation-logs": {
     parameters: {
       query?: never;
@@ -6064,9 +6084,109 @@ export interface paths {
     };
     /**
      * Get Next Processing Item
-     * @description 次に処理すべき未完了アイテムを取得する.
+     * @description 次に処理すべき未完了アイテムをロックして取得する.
      */
     get: operations["get_next_processing_item_api_rpa_material_delivery_note_runs__run_id__next_item_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/success": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Report Item Success
+     * @description PADから成功報告を受け取る.
+     */
+    post: operations["report_item_success_api_rpa_material_delivery_note_runs__run_id__items__item_id__success_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/failure": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Report Item Failure
+     * @description PADから失敗報告を受け取る.
+     */
+    post: operations["report_item_failure_api_rpa_material_delivery_note_runs__run_id__items__item_id__failure_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/failed-items": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Failed Items
+     * @description 失敗したアイテム一覧を取得する.
+     */
+    get: operations["list_failed_items_api_rpa_material_delivery_note_runs__run_id__failed_items_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/loop-summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Loop Summary
+     * @description PADループの集計情報を取得する.
+     */
+    get: operations["get_loop_summary_api_rpa_material_delivery_note_runs__run_id__loop_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/activity": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Activity
+     * @description PADループの活動ログを取得する.
+     */
+    get: operations["get_activity_api_rpa_material_delivery_note_runs__run_id__activity_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -6520,6 +6640,26 @@ export interface paths {
      * @description 監視フォルダ内の指定ファイルを処理.
      */
     post: operations["process_files_api_rpa_smartread_configs__config_id__process_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/diagnose": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Diagnose Watch Dir File
+     * @description SmartRead API送信を診断.
+     */
+    post: operations["diagnose_watch_dir_file_api_rpa_smartread_configs__config_id__diagnose_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -7130,10 +7270,58 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/ocr-results/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Ocr Results
+     * @description OCR結果をExcel/CSVでエクスポート.
+     */
+    get: operations["export_ocr_results_api_ocr_results_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /**
+     * ActivityItemResponse
+     * @description PADループの実行ログアイテム.
+     */
+    ActivityItemResponse: {
+      /** Item Id */
+      item_id: number;
+      /** Row No */
+      row_no: number;
+      /** Result Status */
+      result_status?: string | null;
+      /** Updated At */
+      updated_at?: string | null;
+      /** Result Message */
+      result_message?: string | null;
+      /** Result Pdf Path */
+      result_pdf_path?: string | null;
+      /** Last Error Code */
+      last_error_code?: string | null;
+      /** Last Error Message */
+      last_error_message?: string | null;
+      /** Last Error Screenshot Path */
+      last_error_screenshot_path?: string | null;
+      /** Locked By */
+      locked_by?: string | null;
+      /** Locked Until */
+      locked_until?: string | null;
+    };
     /**
      * AdjustmentCreate
      * @description Payload for recording adjustments.
@@ -10507,6 +10695,44 @@ export interface components {
       username?: string | null;
     };
     /**
+     * LoopErrorCodeCount
+     * @description PADループ失敗コード集計.
+     */
+    LoopErrorCodeCount: {
+      /** Error Code */
+      error_code: string;
+      /** Count */
+      count: number;
+    };
+    /**
+     * LoopSummaryResponse
+     * @description PADループ集計レスポンス.
+     */
+    LoopSummaryResponse: {
+      /** Total */
+      total: number;
+      /** Queued */
+      queued: number;
+      /** Pending */
+      pending: number;
+      /** Processing */
+      processing: number;
+      /** Success */
+      success: number;
+      /** Failure */
+      failure: number;
+      /** Done */
+      done: number;
+      /** Remaining */
+      remaining: number;
+      /** Percent */
+      percent: number;
+      /** Last Activity At */
+      last_activity_at: string | null;
+      /** Error Code Counts */
+      error_code_counts?: components["schemas"]["LoopErrorCodeCount"][];
+    };
+    /**
      * LotArchiveRequest
      * @description Request body for archiving a lot with confirmation.
      *
@@ -11328,8 +11554,8 @@ export interface components {
       delivery_quantity?: string | null;
       /** Item No */
       item_no?: string | null;
-      /** Quantity Unit */
-      quantity_unit?: string | null;
+      /** Order Unit */
+      order_unit?: string | null;
       /** Inbound No */
       inbound_no?: string | null;
       /** Lot No */
@@ -12863,6 +13089,32 @@ export interface components {
       update_data: components["schemas"]["RpaRunItemUpdateRequest"];
     };
     /**
+     * RpaRunItemFailureRequest
+     * @description RPA Run Item failure report request schema (PAD loop).
+     */
+    RpaRunItemFailureRequest: {
+      /**
+       * Error Code
+       * @description エラーコード
+       */
+      error_code?: string | null;
+      /**
+       * Error Message
+       * @description エラーメッセージ
+       */
+      error_message?: string | null;
+      /**
+       * Screenshot Path
+       * @description スクリーンショット保存パス
+       */
+      screenshot_path?: string | null;
+      /**
+       * Lock Owner
+       * @description ロック取得者（任意）
+       */
+      lock_owner?: string | null;
+    };
+    /**
      * RpaRunItemResponse
      * @description RPA Run Item response schema.
      */
@@ -12939,6 +13191,62 @@ export interface components {
        * @description 処理開始日時
        */
       processing_started_at?: string | null;
+      /**
+       * Locked Until
+       * @description ロック期限
+       */
+      locked_until?: string | null;
+      /**
+       * Locked By
+       * @description ロック取得者
+       */
+      locked_by?: string | null;
+      /**
+       * Result Pdf Path
+       * @description PDF保存パス
+       */
+      result_pdf_path?: string | null;
+      /**
+       * Result Message
+       * @description 成功メッセージ
+       */
+      result_message?: string | null;
+      /**
+       * Last Error Code
+       * @description エラーコード
+       */
+      last_error_code?: string | null;
+      /**
+       * Last Error Message
+       * @description エラーメッセージ
+       */
+      last_error_message?: string | null;
+      /**
+       * Last Error Screenshot Path
+       * @description スクリーンショット保存パス
+       */
+      last_error_screenshot_path?: string | null;
+    };
+    /**
+     * RpaRunItemSuccessRequest
+     * @description RPA Run Item success report request schema (PAD loop).
+     */
+    RpaRunItemSuccessRequest: {
+      /**
+       * Pdf Path
+       * @description PDF保存パス（OneDrive等）
+       */
+      pdf_path?: string | null;
+      /**
+       * Message
+       * @description 任意メッセージ
+       */
+      message?: string | null;
+      /**
+       * Lock Owner
+       * @description ロック取得者（任意）
+       */
+      lock_owner?: string | null;
     };
     /**
      * RpaRunItemUpdateRequest
@@ -13688,6 +13996,39 @@ export interface components {
        * @description CSVファイル名
        */
       filename?: string | null;
+    };
+    /**
+     * SmartReadDiagnoseRequest
+     * @description SmartRead API診断リクエスト.
+     */
+    SmartReadDiagnoseRequest: {
+      /**
+       * Filename
+       * @description 診断対象のファイル名
+       */
+      filename: string;
+    };
+    /**
+     * SmartReadDiagnoseResponse
+     * @description SmartRead API診断レスポンス.
+     */
+    SmartReadDiagnoseResponse: {
+      request_flow: components["schemas"]["SmartReadDiagnoseResult"];
+      export_flow: components["schemas"]["SmartReadDiagnoseResult"];
+    };
+    /**
+     * SmartReadDiagnoseResult
+     * @description SmartRead API診断結果.
+     */
+    SmartReadDiagnoseResult: {
+      /** Success */
+      success: boolean;
+      /** Error Message */
+      error_message?: string | null;
+      /** Response */
+      response?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * SmartReadExportRequest
@@ -23180,6 +23521,26 @@ export interface operations {
       };
     };
   };
+  env_check_api_env_check_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
   list_operation_logs_api_operation_logs_get: {
     parameters: {
       query?: {
@@ -24150,7 +24511,11 @@ export interface operations {
   };
   get_next_processing_item_api_rpa_material_delivery_note_runs__run_id__next_item_get: {
     parameters: {
-      query?: never;
+      query?: {
+        lock_timeout_seconds?: number;
+        lock_owner?: string | null;
+        include_failed?: boolean;
+      };
       header?: never;
       path: {
         run_id: number;
@@ -24166,6 +24531,175 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["RpaRunItemResponse"] | null;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  report_item_success_api_rpa_material_delivery_note_runs__run_id__items__item_id__success_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+        item_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaRunItemSuccessRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunItemResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  report_item_failure_api_rpa_material_delivery_note_runs__run_id__items__item_id__failure_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+        item_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaRunItemFailureRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunItemResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_failed_items_api_rpa_material_delivery_note_runs__run_id__failed_items_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunItemResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_loop_summary_api_rpa_material_delivery_note_runs__run_id__loop_summary_get: {
+    parameters: {
+      query?: {
+        top_n?: number;
+      };
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LoopSummaryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_activity_api_rpa_material_delivery_note_runs__run_id__activity_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ActivityItemResponse"][];
         };
       };
       /** @description Validation Error */
@@ -25038,6 +25572,41 @@ export interface operations {
       };
     };
   };
+  diagnose_watch_dir_file_api_rpa_smartread_configs__config_id__diagnose_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadDiagnoseRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadDiagnoseResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   analyze_file_api_rpa_smartread_analyze_post: {
     parameters: {
       query: {
@@ -25416,7 +25985,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["SmartReadCsvDataResponse"];
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */
@@ -26098,6 +26667,44 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["OcrResultItem"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_ocr_results_api_ocr_results_export_download_get: {
+    parameters: {
+      query?: {
+        /** @description タスク日付 (YYYY-MM-DD) */
+        task_date?: string | null;
+        /** @description ステータスでフィルタ */
+        status?: string | null;
+        /** @description エラーのみ表示 */
+        has_error?: boolean | null;
+        /** @description エクスポート形式 (csv/xlsx) */
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */

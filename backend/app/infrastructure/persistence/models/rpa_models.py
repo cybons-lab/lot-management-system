@@ -124,7 +124,18 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, ForeignKey, Index, Integer, String, text
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.persistence.models.base_model import Base
@@ -313,6 +324,13 @@ class RpaRunItem(Base):
     processing_started_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )  # 処理開始日時（タイムアウト回収用）
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    locked_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    result_pdf_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    result_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_error_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    last_error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_error_screenshot_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # === OCR→SAP変換マスタ参照ログ ===
     complement_customer_id: Mapped[int | None] = mapped_column(
@@ -340,6 +358,7 @@ class RpaRunItem(Base):
             "complement_customer_id",
             "complement_external_product_code",
         ),
+        Index("idx_rpa_run_items_locked_until", "locked_until"),
     )
 
     # Relationships

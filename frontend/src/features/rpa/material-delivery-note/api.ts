@@ -111,6 +111,39 @@ export interface MaterialDeliveryNoteExecuteResponse {
   flow_response: Record<string, unknown> | null;
 }
 
+export interface LoopErrorCodeCount {
+  error_code: string;
+  count: number;
+}
+
+export interface LoopSummary {
+  total: number;
+  queued: number;
+  pending: number;
+  processing: number;
+  success: number;
+  failure: number;
+  done: number;
+  remaining: number;
+  percent: number;
+  last_activity_at: string | null;
+  error_code_counts: LoopErrorCodeCount[];
+}
+
+export interface ActivityItem {
+  item_id: number;
+  row_no: number;
+  result_status: string | null;
+  updated_at: string | null;
+  result_message: string | null;
+  result_pdf_path: string | null;
+  last_error_code: string | null;
+  last_error_message: string | null;
+  last_error_screenshot_path: string | null;
+  locked_by: string | null;
+  locked_until: string | null;
+}
+
 // ロット候補関連の型
 export interface LotCandidate {
   lot_id: number;
@@ -265,6 +298,24 @@ export async function getLotSuggestions(
 ): Promise<LotSuggestionsResponse> {
   return http.get<LotSuggestionsResponse>(
     `rpa/material-delivery-note/runs/${runId}/items/${itemId}/lot-suggestions`,
+  );
+}
+
+/**
+ * PADループ集計を取得
+ */
+export async function getLoopSummary(runId: number, topN = 5): Promise<LoopSummary> {
+  return http.get<LoopSummary>(
+    `rpa/material-delivery-note/runs/${runId}/loop-summary?top_n=${topN}`,
+  );
+}
+
+/**
+ * PADループ活動ログを取得
+ */
+export async function getActivity(runId: number, limit = 50): Promise<ActivityItem[]> {
+  return http.get<ActivityItem[]>(
+    `rpa/material-delivery-note/runs/${runId}/activity?limit=${limit}`,
   );
 }
 

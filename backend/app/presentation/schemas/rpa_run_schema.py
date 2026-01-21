@@ -39,6 +39,13 @@ class RpaRunItemResponse(BaseModel):
         None, description="検索種別（exact: 完全一致, prefix: 前方一致）"
     )
     processing_started_at: datetime | None = Field(None, description="処理開始日時")
+    locked_until: datetime | None = Field(None, description="ロック期限")
+    locked_by: str | None = Field(None, description="ロック取得者")
+    result_pdf_path: str | None = Field(None, description="PDF保存パス")
+    result_message: str | None = Field(None, description="成功メッセージ")
+    last_error_code: str | None = Field(None, description="エラーコード")
+    last_error_message: str | None = Field(None, description="エラーメッセージ")
+    last_error_screenshot_path: str | None = Field(None, description="スクリーンショット保存パス")
 
     model_config = {"from_attributes": True, "populate_by_name": True}
 
@@ -60,6 +67,62 @@ class RpaRunResultUpdateRequest(BaseModel):
     result_status: str | None = None
     sap_registered: bool | None = None
     issue_flag: bool | None = None
+
+
+class RpaRunItemSuccessRequest(BaseModel):
+    """RPA Run Item success report request schema (PAD loop)."""
+
+    pdf_path: str | None = Field(None, description="PDF保存パス（OneDrive等）")
+    message: str | None = Field(None, description="任意メッセージ")
+    lock_owner: str | None = Field(None, description="ロック取得者（任意）")
+
+
+class RpaRunItemFailureRequest(BaseModel):
+    """RPA Run Item failure report request schema (PAD loop)."""
+
+    error_code: str | None = Field(None, description="エラーコード")
+    error_message: str | None = Field(None, description="エラーメッセージ")
+    screenshot_path: str | None = Field(None, description="スクリーンショット保存パス")
+    lock_owner: str | None = Field(None, description="ロック取得者（任意）")
+
+
+class LoopErrorCodeCount(BaseModel):
+    """PADループ失敗コード集計."""
+
+    error_code: str
+    count: int
+
+
+class LoopSummaryResponse(BaseModel):
+    """PADループ集計レスポンス."""
+
+    total: int
+    queued: int
+    pending: int
+    processing: int
+    success: int
+    failure: int
+    done: int
+    remaining: int
+    percent: float
+    last_activity_at: datetime | None
+    error_code_counts: list[LoopErrorCodeCount] = Field(default_factory=list)
+
+
+class ActivityItemResponse(BaseModel):
+    """PADループの実行ログアイテム."""
+
+    item_id: int
+    row_no: int
+    result_status: str | None = None
+    updated_at: datetime | None = None
+    result_message: str | None = None
+    result_pdf_path: str | None = None
+    last_error_code: str | None = None
+    last_error_message: str | None = None
+    last_error_screenshot_path: str | None = None
+    locked_by: str | None = None
+    locked_until: datetime | None = None
 
 
 class RpaRunBatchUpdateRequest(BaseModel):
