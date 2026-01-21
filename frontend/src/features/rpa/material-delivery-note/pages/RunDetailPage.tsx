@@ -210,7 +210,7 @@ export function RunDetailPage() {
                   )
                 ) {
                   completeRunMutation.mutate();
-                  navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3);
+                  navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3_PLAN);
                 }
               }}
             >
@@ -220,9 +220,9 @@ export function RunDetailPage() {
           {!isEditable && (
             <Button
               variant="outline"
-              onClick={() => navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3)}
+              onClick={() => navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3_PLAN)}
             >
-              Step3一覧へ <ArrowRight className="ml-2 h-4 w-4" />
+              Step3へ <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
         </div>

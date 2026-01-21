@@ -100,6 +100,7 @@ export const ROUTES = {
       STEP1: "/rpa/material-delivery-note/step1",
       CSV_IMPORT: "/rpa/material-delivery-note/csv-import",
       STEP2: "/rpa/material-delivery-note/step2",
+      STEP3_PLAN: "/rpa/material-delivery-note/step3/plan",
       STEP3: "/rpa/material-delivery-note/step3",
       STEP3_EXECUTE: (runId: number | string) => `/rpa/material-delivery-note/step3/${runId}`,
       STEP4: "/rpa/material-delivery-note/step4",
