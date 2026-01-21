@@ -169,9 +169,15 @@ export function useAnalyzeFile() {
  * 監視フォルダ内のファイル一覧を取得
  */
 export function useWatchDirFiles(configId: number | null) {
-  return useQuery({
+  return useQuery<string[], ApiError>({
     queryKey: SMARTREAD_QUERY_KEYS.files(configId ?? 0),
-    queryFn: () => getWatchDirFiles(configId!),
+    queryFn: async () => {
+      const files = await getWatchDirFiles(configId!);
+      console.info(
+        `[SmartRead] Watch dir files loaded: ${files.length} items (config_id=${configId})`,
+      );
+      return files;
+    },
     enabled: !!configId,
     retry: (failureCount, error) => {
       if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {

@@ -62,6 +62,10 @@ export function SmartReadPage() {
       const defaultConfig = activeConfigs.find((c) => c.is_default);
       if (defaultConfig) {
         setSelectedConfigId(defaultConfig.id);
+      } else {
+        console.info(
+          "[SmartRead] No default config found. Please select a config to enable watch dir actions.",
+        );
       }
     }
   }, [configsLoading, activeConfigs, selectedConfigId]);

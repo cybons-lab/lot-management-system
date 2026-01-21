@@ -309,6 +309,10 @@ class SmartReadService:
         """
         config = self.get_config(config_id)
         if not config or not config.watch_dir:
+            logger.warning(
+                "[SmartRead] Watch dir is not configured",
+                extra={"config_id": config_id},
+            )
             return []
 
         import os
@@ -316,6 +320,10 @@ class SmartReadService:
 
         watch_dir = Path(config.watch_dir)
         if not watch_dir.exists() or not watch_dir.is_dir():
+            logger.warning(
+                "[SmartRead] Watch dir not found or not a directory",
+                extra={"config_id": config_id, "watch_dir": str(watch_dir)},
+            )
             return []
 
         extensions = set()
@@ -331,6 +339,16 @@ class SmartReadService:
         except OSError as e:
             logger.error(f"Error listing files in {watch_dir}: {e}")
             return []
+
+        if not files:
+            logger.info(
+                "[SmartRead] Watch dir listed but no matching files found",
+                extra={
+                    "config_id": config_id,
+                    "watch_dir": str(watch_dir),
+                    "input_exts": config.input_exts,
+                },
+            )
 
         return sorted(files)
 
@@ -350,6 +368,10 @@ class SmartReadService:
         """
         config = self.get_config(config_id)
         if not config or not config.watch_dir:
+            logger.warning(
+                "[SmartRead] Watch dir processing skipped because config/watch_dir is missing",
+                extra={"config_id": config_id},
+            )
             return []
 
         import os
@@ -365,6 +387,14 @@ class SmartReadService:
         for filename in filenames:
             file_path = watch_dir / filename
             if not file_path.exists():
+                logger.warning(
+                    "[SmartRead] Watch dir file not found",
+                    extra={
+                        "config_id": config_id,
+                        "filename": filename,
+                        "watch_dir": str(watch_dir),
+                    },
+                )
                 results.append(AnalyzeResult(False, filename, [], "File not found"))
                 continue
 
