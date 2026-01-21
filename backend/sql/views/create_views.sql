@@ -497,14 +497,14 @@ SELECT
     
     -- OCR由来（contentから抽出）+ 得意先コード補間
     COALESCE(ld.content->>'得意先コード', '100427105') AS customer_code,
-    ld.content->>'材質コード' AS material_code,
+    COALESCE(ld.content->>'材質コード', ld.content->>'材料コード') AS material_code,
     ld.content->>'次区' AS jiku_code,
-    ld.content->>'納期' AS delivery_date,
-    ld.content->>'納入量' AS delivery_quantity,
-    ld.content->>'アイテム' AS item_no,
-    ld.content->>'単位' AS order_unit,
+    COALESCE(ld.content->>'納期', ld.content->>'納入日') AS delivery_date,
+    COALESCE(ld.content->>'納入量', ld.content->>'数量') AS delivery_quantity,
+    COALESCE(ld.content->>'アイテムNo', ld.content->>'アイテム') AS item_no,
+    COALESCE(ld.content->>'数量単位', ld.content->>'単位') AS order_unit,
     ld.content->>'入庫No' AS inbound_no,
-    ld.content->>'Lot No' AS lot_no,
+    COALESCE(ld.content->>'Lot No1', ld.content->>'Lot No', ld.content->>'ロットNo') AS lot_no,
 
     -- マスタ由来（LEFT JOIN）
     m.id AS master_id,
@@ -550,9 +550,9 @@ SELECT
     END AS has_error
 
 FROM public.smartread_long_data ld
-LEFT JOIN public.shipping_master_curated m 
+LEFT JOIN public.shipping_master_curated m
     ON COALESCE(ld.content->>'得意先コード', '100427105') = m.customer_code
-    AND ld.content->>'材質コード' = m.material_code
+    AND COALESCE(ld.content->>'材質コード', ld.content->>'材料コード') = m.material_code
     AND ld.content->>'次区' = m.jiku_code;
 
 COMMENT ON VIEW public.v_ocr_results IS 'OCR結果ビュー（SmartRead縦持ちデータ + 出荷用マスタJOIN、エラー検出含む）';
