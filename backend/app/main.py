@@ -133,6 +133,7 @@ from app.domain.errors import DomainError
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.metrics import MetricsMiddleware
 from app.presentation.api.routes import register_all_routers
+from app.application.services.smartread.auto_sync_runner import SmartReadAutoSyncRunner
 
 
 logger = logging.getLogger(__name__)
@@ -147,7 +148,14 @@ async def lifespan(app: FastAPI):
     logger.info(f"💾 データベース: {settings.DATABASE_URL}")
 
     init_db()
+    auto_sync_runner = None
+    if settings.SMARTREAD_AUTO_SYNC_ENABLED:
+        auto_sync_runner = SmartReadAutoSyncRunner()
+        auto_sync_runner.start()
+        app.state.smartread_auto_sync = auto_sync_runner
     yield
+    if auto_sync_runner:
+        await auto_sync_runner.stop()
     logger.info("👋 アプリケーションを終了しています...")
 
 

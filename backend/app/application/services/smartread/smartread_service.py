@@ -13,6 +13,7 @@ import logging
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any
+from pathlib import Path
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -42,6 +43,15 @@ class AnalyzeResult:
     filename: str
     data: list[dict[str, Any]]
     error_message: str | None = None
+
+
+@dataclass
+class WatchDirProcessOutcome:
+    """監視フォルダ処理結果."""
+
+    task_id: str | None
+    results: list[AnalyzeResult]
+    watch_dir: Path | None
 
 
 @dataclass
@@ -366,16 +376,29 @@ class SmartReadService:
         Returns:
             解析結果のリスト
         """
+        outcome = await self._process_watch_dir_files(config_id, filenames)
+        return outcome.results
+
+    async def process_watch_dir_files_with_task(
+        self, config_id: int, filenames: list[str]
+    ) -> tuple[str | None, list[AnalyzeResult], Path | None]:
+        """監視ディレクトリ内の指定ファイルを処理し、タスクIDを返す."""
+        outcome = await self._process_watch_dir_files(config_id, filenames)
+        return outcome.task_id, outcome.results, outcome.watch_dir
+
+    async def _process_watch_dir_files(
+        self, config_id: int, filenames: list[str]
+    ) -> WatchDirProcessOutcome:
+        """監視ディレクトリ内の指定ファイルを処理する共通ロジック."""
         config = self.get_config(config_id)
         if not config or not config.watch_dir:
             logger.warning(
                 "[SmartRead] Watch dir processing skipped because config/watch_dir is missing",
                 extra={"config_id": config_id},
             )
-            return []
+            return WatchDirProcessOutcome(task_id=None, results=[], watch_dir=None)
 
         import os
-        from pathlib import Path
 
         watch_dir = Path(config.watch_dir)
         export_dir = Path(config.export_dir) if config.export_dir else None
@@ -408,7 +431,7 @@ class SmartReadService:
 
         # ファイルがなければ終了
         if not files_to_process:
-            return results
+            return WatchDirProcessOutcome(task_id=None, results=results, watch_dir=watch_dir)
 
         # テンプレートIDをパース
         template_ids = None
@@ -425,8 +448,6 @@ class SmartReadService:
         multi_result = await client.analyze_files(files_to_process)
 
         # タスクをDBに保存
-        from datetime import date
-
         task_date = date.today()
         task_name = f"Watch Dir: {', '.join(filenames[:3])}" + ("..." if len(filenames) > 3 else "")
         try:
@@ -474,7 +495,11 @@ class SmartReadService:
 
             results.append(analyze_result)
 
-        return results
+        return WatchDirProcessOutcome(
+            task_id=multi_result.task_id,
+            results=results,
+            watch_dir=watch_dir,
+        )
 
     async def diagnose_watch_dir_file(
         self,

@@ -151,15 +151,20 @@ POST /v3/task/{taskId}/request
 
 ## 5. ダウンロード / export 実行条件（重要）
 
-### 5.1 実行タイミング（UI起点）
+### 5.1 実行タイミング（UI起点 + 自動監視）
 
-❌ 自動では実行しない  
-✅ **以下の操作時のみ実行**
+✅ 自動監視（運用時間内）で実行  
+✅ **以下の操作時も実行可能**
 
 - タスクを選択
 - ユーザーが以下のいずれかを押下：
   - **「ダウンロード」**
   - **「エクスポート」**
+
+#### 自動監視の運用条件
+- 監視時間帯: `SMARTREAD_AUTO_SYNC_WINDOW_START` 〜 `SMARTREAD_AUTO_SYNC_WINDOW_END`
+- 監視間隔: `SMARTREAD_AUTO_SYNC_INTERVAL_SECONDS`（既定 60 秒）
+- 監視ON/OFF: `SMARTREAD_AUTO_SYNC_ENABLED`
 
 ---
 

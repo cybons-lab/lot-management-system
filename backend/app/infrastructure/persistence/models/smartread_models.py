@@ -229,3 +229,37 @@ class SmartReadExportHistory(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
+
+
+class OcrResultEdit(Base):
+    """OCR結果の手入力編集内容を保存."""
+
+    __tablename__ = "ocr_result_edits"
+    __table_args__ = (
+        UniqueConstraint("smartread_long_data_id", name="uq_ocr_result_edits_long_data_id"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    smartread_long_data_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("smartread_long_data.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    lot_no_1: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    quantity_1: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    lot_no_2: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    quantity_2: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    inbound_no: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    shipping_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    shipping_slip_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    shipping_slip_text_edited: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP"),
+        nullable=False,
+    )

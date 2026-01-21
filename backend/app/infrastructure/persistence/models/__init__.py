@@ -72,7 +72,7 @@ from .rpa_models import (
 )
 from .seed_snapshot_model import SeedSnapshot
 from .shipping_master_models import OrderRegisterRow, ShippingMasterCurated, ShippingMasterRaw
-from .smartread_models import SmartReadConfig
+from .smartread_models import OcrResultEdit, SmartReadConfig
 from .soft_delete_mixin import INFINITE_VALID_TO, SoftDeleteMixin
 from .system_config_model import SystemConfig
 from .system_models import ClientLog
@@ -200,6 +200,7 @@ __all__ = [
     "LayerCodeMapping",
     # SmartRead
     "SmartReadConfig",
+    "OcrResultEdit",
     # B-Plan models
     "LotMaster",
     "LotReceipt",
