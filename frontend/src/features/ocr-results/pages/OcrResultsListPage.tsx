@@ -262,18 +262,21 @@ function LotEntryCell({
   quantityField,
 }: {
   row: OcrResultItem;
-  lotField: keyof RowInputState;
-  quantityField: keyof RowInputState;
+  lotField: Extract<keyof RowInputState, string>;
+  quantityField: Extract<keyof RowInputState, string>;
 }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5 py-1">
       <EditableTextCell row={row} field={lotField} placeholder="ロットNo" />
-      <EditableTextCell
-        row={row}
-        field={quantityField}
-        placeholder="数量"
-        inputClassName="w-[80px] text-right"
-      />
+      <div className="flex items-center gap-1">
+        <span className="text-[10px] text-slate-400 shrink-0 w-8">数量:</span>
+        <EditableTextCell
+          row={row}
+          field={quantityField}
+          placeholder="数量"
+          inputClassName="w-[70px] text-right"
+        />
+      </div>
     </div>
   );
 }
@@ -358,24 +361,24 @@ export function OcrResultsListPage() {
       {
         id: "lot_entry_1",
         header: (
-          <div className="flex flex-col leading-tight whitespace-normal">
-            <span>ロットNo(1)</span>
-            <span className="text-[10px] text-slate-500">数量(1)</span>
+          <div className="flex flex-col leading-tight py-1">
+            <span className="text-xs font-semibold">ロットNo(1)</span>
+            <span className="text-[10px] font-normal text-slate-500">数量(1)</span>
           </div>
         ),
         accessor: (row) => <LotEntryCell row={row} lotField="lotNo1" quantityField="quantity1" />,
-        minWidth: 140,
+        minWidth: 160,
       },
       {
         id: "lot_entry_2",
         header: (
-          <div className="flex flex-col leading-tight whitespace-normal">
-            <span>ロットNo(2)</span>
-            <span className="text-[10px] text-slate-500">数量(2)</span>
+          <div className="flex flex-col leading-tight py-1">
+            <span className="text-xs font-semibold">ロットNo(2)</span>
+            <span className="text-[10px] font-normal text-slate-500">数量(2)</span>
           </div>
         ),
         accessor: (row) => <LotEntryCell row={row} lotField="lotNo2" quantityField="quantity2" />,
-        minWidth: 140,
+        minWidth: 160,
       },
       {
         id: "inbound_no_input",
