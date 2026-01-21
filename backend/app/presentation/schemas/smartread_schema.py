@@ -83,6 +83,27 @@ class SmartReadProcessRequest(BaseModel):
     filenames: list[str] = Field(..., description="処理するファイル名のリスト")
 
 
+class SmartReadDiagnoseRequest(BaseModel):
+    """SmartRead API診断リクエスト."""
+
+    filename: str = Field(..., description="診断対象のファイル名")
+
+
+class SmartReadDiagnoseResult(BaseModel):
+    """SmartRead API診断結果."""
+
+    success: bool
+    error_message: str | None = None
+    response: dict[str, Any] | None = None
+
+
+class SmartReadDiagnoseResponse(BaseModel):
+    """SmartRead API診断レスポンス."""
+
+    request_flow: SmartReadDiagnoseResult
+    export_flow: SmartReadDiagnoseResult
+
+
 # ==================== タスク・Export系スキーマ ====================
 
 

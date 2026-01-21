@@ -14,6 +14,7 @@ import {
   useProcessWatchDirFiles,
   useSmartReadTasks,
 } from "../hooks";
+import { diagnoseWatchDirFile } from "../api";
 import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
 import { SmartReadResultView } from "../components/SmartReadResultView";
 import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
@@ -44,6 +45,7 @@ export function SmartReadPage() {
   const [selectedWatchFiles, setSelectedWatchFiles] = useState<string[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("import");
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
 
   const { data: configs, isLoading: configsLoading } = useSmartReadConfigs();
   const {
@@ -118,6 +120,28 @@ export function SmartReadPage() {
 
   const handleSelectTask = (taskId: string) => {
     setSelectedTaskId(taskId);
+  };
+
+  const handleDiagnoseWatchFile = async () => {
+    if (!selectedConfigId || selectedWatchFiles.length === 0 || isDiagnosing) return;
+    const targetFile = selectedWatchFiles[0];
+    setIsDiagnosing(true);
+    console.info("[SmartRead] Diagnose request start", {
+      configId: selectedConfigId,
+      filename: targetFile,
+    });
+    try {
+      const response = await diagnoseWatchDirFile(selectedConfigId, targetFile);
+      console.info("[SmartRead] Diagnose response summary", {
+        request_flow_success: response.request_flow.success,
+        export_flow_success: response.export_flow.success,
+      });
+      console.info("[SmartRead] Diagnose response detail", response);
+    } catch (error) {
+      console.error("[SmartRead] Diagnose request failed", error);
+    } finally {
+      setIsDiagnosing(false);
+    }
   };
 
   return (
@@ -265,7 +289,7 @@ export function SmartReadPage() {
                           ))}
                         </div>
                       </ScrollArea>
-                      <div className="p-4 border-t">
+                      <div className="p-4 border-t space-y-2">
                         <Button
                           className="w-full"
                           size="sm"
@@ -278,6 +302,16 @@ export function SmartReadPage() {
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           )}
                           選択ファイルを処理
+                        </Button>
+                        <Button
+                          className="w-full"
+                          size="sm"
+                          variant="outline"
+                          disabled={selectedWatchFiles.length === 0 || isDiagnosing}
+                          onClick={handleDiagnoseWatchFile}
+                        >
+                          {isDiagnosing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          API診断（選択ファイル先頭）
                         </Button>
                       </div>
                     </>
