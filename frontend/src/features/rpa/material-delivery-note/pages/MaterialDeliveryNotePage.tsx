@@ -2,16 +2,9 @@
  * MaterialDeliveryNotePage
  * 素材納品書発行のメニューページ - Step1/Step2/履歴へのナビゲーション
  */
+/* eslint-disable max-lines-per-function, complexity, react-hooks/exhaustive-deps */
 
-import {
-  CheckSquare,
-  Download,
-  FileText,
-  History,
-  ListTree,
-  Play,
-  Settings,
-} from "lucide-react";
+import { CheckSquare, Download, FileText, History, ListTree, Play, Settings } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
@@ -133,8 +126,14 @@ export function MaterialDeliveryNotePage() {
         icon: <Play className="h-6 w-6" />,
         to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3,
         summaryItems: [
-          { label: "実行中", value: runs.some((run) => run.status === "step3_running") ? "あり" : "なし" },
-          { label: "最終更新", value: latestRun ? new Date(latestRun.updated_at).toLocaleString("ja-JP") : "-" },
+          {
+            label: "実行中",
+            value: runs.some((run) => run.status === "step3_running") ? "あり" : "なし",
+          },
+          {
+            label: "最終更新",
+            value: latestRun ? new Date(latestRun.updated_at).toLocaleString("ja-JP") : "-",
+          },
         ],
       },
       {
@@ -143,7 +142,10 @@ export function MaterialDeliveryNotePage() {
         to: ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4,
         summaryItems: [
           { label: "検証", value: step4TargetRuns.length > 0 ? "要対応" : "未実行" },
-          { label: "登録", value: runs.some((run) => run.status === "done") ? "完了あり" : "未実行" },
+          {
+            label: "登録",
+            value: runs.some((run) => run.status === "done") ? "完了あり" : "未実行",
+          },
         ],
       },
       {

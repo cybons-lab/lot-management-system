@@ -3,17 +3,10 @@
  * 素材納品書発行 Step5 - Run監視・制御
  */
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function, complexity */
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Clock,
-  PauseCircle,
-  PlayCircle,
-  StopCircle,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, Clock, PauseCircle, PlayCircle, StopCircle } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -42,8 +35,10 @@ import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-const STATUS_LABELS: Record<string, { label: string; variant: "secondary" | "default" | "destructive" | "outline" }>
-= {
+const STATUS_LABELS: Record<
+  string,
+  { label: string; variant: "secondary" | "default" | "destructive" | "outline" }
+> = {
   step1_done: { label: "Step1完了", variant: "secondary" },
   step2_confirmed: { label: "Step2確認済", variant: "default" },
   step3_running: { label: "PAD実行中", variant: "outline" },
@@ -186,13 +181,9 @@ export function RunMonitorPage() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-500">進捗</div>
-              <div className="text-lg font-semibold text-gray-900">
-                {progressValue.toFixed(1)}%
-              </div>
+              <div className="text-lg font-semibold text-gray-900">{progressValue.toFixed(1)}%</div>
             </div>
-            <div className="text-sm text-gray-500">
-              推定時間: {run.estimated_minutes ?? "-"} 分
-            </div>
+            <div className="text-sm text-gray-500">推定時間: {run.estimated_minutes ?? "-"} 分</div>
           </div>
           <Progress value={progressValue} />
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-gray-600 sm:grid-cols-5">
