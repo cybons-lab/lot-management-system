@@ -148,12 +148,12 @@ function EditableTextCell({
   inputClassName,
 }: {
   row: OcrResultItem;
-  field: keyof RowInputState;
+  field: Extract<keyof RowInputState, string>; // Ensure we only use keys that have string values
   placeholder?: string;
   inputClassName?: string;
 }) {
   const { getInputs, updateInputs } = useOcrInputs();
-  const value = getInputs(row)[field];
+  const value = getInputs(row)[field] as string; // Explicitly cast to string
 
   return (
     <input
@@ -172,9 +172,15 @@ function EditableTextCell({
 /**
  * セルコンポーネント: 日付入力
  */
-function EditableDateCell({ row, field }: { row: OcrResultItem; field: keyof RowInputState }) {
+function EditableDateCell({
+  row,
+  field,
+}: {
+  row: OcrResultItem;
+  field: Extract<keyof RowInputState, string>;
+}) {
   const { getInputs, updateInputs } = useOcrInputs();
-  const value = getInputs(row)[field];
+  const value = getInputs(row)[field] as string;
 
   return (
     <input
