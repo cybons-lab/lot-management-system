@@ -690,10 +690,6 @@ class MaterialDeliveryNoteOrchestrator:
         self._update_run_status_if_needed(run_id)
         return item
 
-    def get_failed_items(self, run_id: int) -> list[RpaRunItem]:
-        """失敗したアイテム一覧を取得."""
-        return self.repo.get_failed_items(run_id)
-
     def get_loop_summary(self, run_id: int, top_n: int = 5) -> dict[str, Any]:
         """PADループの集計情報を取得."""
         return self.repo.get_loop_summary(run_id, top_n=top_n)

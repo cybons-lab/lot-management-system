@@ -832,27 +832,6 @@ def create_run_event(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.get("/runs/{run_id}/failed-items", response_model=list[RpaRunItemResponse])
-def get_failed_items(
-    run_id: int,
-    uow: UnitOfWork = Depends(get_uow),
-):
-    """失敗アイテム一覧を取得."""
-    service = MaterialDeliveryNoteOrchestrator(uow)
-    try:
-        items = service.get_failed_items(run_id)
-        layer_codes = [item.layer_code for item in items if item.layer_code]
-        maker_map = _get_maker_map(uow.session, layer_codes)
-        response_items = []
-        for item in items:
-            resp_item = RpaRunItemResponse.model_validate(item)
-            resp_item.maker_name = maker_map.get(item.layer_code)
-            response_items.append(resp_item)
-        return response_items
-    except ValueError as e:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
 @router.get("/runs/{run_id}/failed-items/export")
 def export_failed_items(
     run_id: int,
@@ -874,7 +853,9 @@ def export_failed_items(
                     "destination_code": str(item.jiku_code) if item.jiku_code is not None else "",
                     "result_status": str(item.result_status) if item.result_status else "",
                     "error_code": str(item.last_error_code) if item.last_error_code else "",
-                    "error_message": str(item.last_error_message) if item.last_error_message else "",
+                    "error_message": str(item.last_error_message)
+                    if item.last_error_message
+                    else "",
                     "updated_at": item.updated_at.isoformat() if item.updated_at else "",
                 }
             )

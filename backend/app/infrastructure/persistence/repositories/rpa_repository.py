@@ -374,15 +374,6 @@ class RpaRepository:
             .update({"lock_flag": True, "updated_at": now}, synchronize_session=False)
         )
 
-    def get_failed_items(self, run_id: int) -> list[RpaRunItem]:
-        """失敗したアイテム一覧を取得."""
-        return (
-            self.db.query(RpaRunItem)
-            .filter(RpaRunItem.run_id == run_id, RpaRunItem.result_status == "failure")
-            .order_by(RpaRunItem.row_no.asc())
-            .all()
-        )
-
     def get_loop_summary(self, run_id: int, top_n: int = 5) -> dict[str, Any]:
         """PADループの集計情報を取得."""
         summary = (

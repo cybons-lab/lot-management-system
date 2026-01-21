@@ -203,7 +203,7 @@ class RpaRunGroup(Base):
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
 
-    runs: Mapped[list["RpaRun"]] = relationship(
+    runs: Mapped[list[RpaRun]] = relationship(
         "RpaRun",
         back_populates="run_group",
         cascade="all, delete-orphan",
@@ -288,7 +288,7 @@ class RpaRun(Base):
         "User", foreign_keys=[external_done_by_user_id]
     )
     run_group: Mapped[RpaRunGroup | None] = relationship("RpaRunGroup", back_populates="runs")
-    events: Mapped[list["RpaRunEvent"]] = relationship(
+    events: Mapped[list[RpaRunEvent]] = relationship(
         "RpaRunEvent",
         back_populates="run",
         cascade="all, delete-orphan",
@@ -405,7 +405,7 @@ class RpaRunItem(Base):
 
     # Relationships
     run: Mapped[RpaRun] = relationship("RpaRun", back_populates="items")
-    attempts: Mapped[list["RpaRunItemAttempt"]] = relationship(
+    attempts: Mapped[list[RpaRunItemAttempt]] = relationship(
         "RpaRunItemAttempt",
         back_populates="item",
         cascade="all, delete-orphan",
