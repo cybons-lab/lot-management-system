@@ -268,8 +268,8 @@ function LotEntryCell({
   return (
     <div className="flex flex-col gap-1.5 py-1">
       <EditableTextCell row={row} field={lotField} placeholder="ロットNo" />
-      <div className="flex items-center gap-1">
-        <span className="text-[10px] text-slate-400 shrink-0 w-8">数量:</span>
+      <div className="flex items-center justify-end gap-1">
+        <span className="text-[10px] text-slate-400 shrink-0">数量:</span>
         <EditableTextCell
           row={row}
           field={quantityField}
