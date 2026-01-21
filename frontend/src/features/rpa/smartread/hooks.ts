@@ -173,6 +173,23 @@ export function useWatchDirFiles(configId: number | null) {
     queryKey: SMARTREAD_QUERY_KEYS.files(configId ?? 0),
     queryFn: () => getWatchDirFiles(configId!),
     enabled: !!configId,
+    onSuccess: (files) => {
+      console.info(
+        `[SmartRead] Watch dir files loaded: ${files.length} items (config_id=${configId})`,
+      );
+      if (files.length === 0) {
+        console.warn(
+          `[SmartRead] Watch dir returned empty list (config_id=${configId}).` +
+            " Check watch_dir path and input extensions.",
+        );
+      }
+    },
+    onError: (error) => {
+      console.error(
+        `[SmartRead] Failed to load watch dir files (config_id=${configId})`,
+        error,
+      );
+    },
     retry: (failureCount, error) => {
       if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         return false;
