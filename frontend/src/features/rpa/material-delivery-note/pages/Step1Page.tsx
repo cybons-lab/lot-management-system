@@ -190,12 +190,11 @@ export function Step1Page() {
                   : "-"}
               </div>
               <div>
-                <span className="text-gray-500">件数:</span>{" "}
-                {latestResult.item_count ?? "-"} 件
+                <span className="text-gray-500">件数:</span> {latestResult.item_count ?? "-"} 件
               </div>
               <div>
-                <span className="text-gray-500">Run候補:</span>{" "}
-                {latestResult.run_created ?? 0}件作成 / {latestResult.run_updated ?? 0}件更新
+                <span className="text-gray-500">Run候補:</span> {latestResult.run_created ?? 0}
+                件作成 / {latestResult.run_updated ?? 0}件更新
               </div>
               {latestResult.message && (
                 <div>

@@ -123,7 +123,8 @@ export function Step4ListPage() {
                     label: run.status,
                     variant: "secondary" as const,
                   };
-                  const needsAttention = run.status === "step3_done" || run.status === "step4_ng_retry";
+                  const needsAttention =
+                    run.status === "step3_done" || run.status === "step4_ng_retry";
                   return (
                     <TableRow key={run.id}>
                       <TableCell>Run #{run.id}</TableCell>
@@ -185,9 +186,7 @@ export function Step4ListPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                activeRuns.map((run) => (
-                  <Step4StartRow key={`execute-${run.id}`} run={run} />
-                ))
+                activeRuns.map((run) => <Step4StartRow key={`execute-${run.id}`} run={run} />)
               )}
             </TableBody>
           </Table>
@@ -229,9 +228,7 @@ export function Step4ListPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" asChild>
-                        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_MONITOR(run.id)}>
-                          監視
-                        </Link>
+                        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_MONITOR(run.id)}>監視</Link>
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -279,9 +276,7 @@ export function Step4ListPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" asChild>
-                        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_MONITOR(run.id)}>
-                          監視
-                        </Link>
+                        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_MONITOR(run.id)}>監視</Link>
                       </Button>
                     </TableCell>
                   </TableRow>

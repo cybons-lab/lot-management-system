@@ -284,10 +284,7 @@ export function MainRoutes() {
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS} element={<RunsListPage />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CSV_IMPORT} element={<CsvImportPage />} />
       <Route path="/rpa/material-delivery-note/runs/:runId" element={<RunDetailPage />} />
-      <Route
-        path="/rpa/material-delivery-note/runs/:runId/monitor"
-        element={<RunMonitorPage />}
-      />
+      <Route path="/rpa/material-delivery-note/runs/:runId/monitor" element={<RunMonitorPage />} />
       <Route path="/rpa/material-delivery-note/step3/:runId" element={<Step3DetailPage />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4} element={<Step4ListPage />} />
       <Route path="/rpa/material-delivery-note/step4/:runId" element={<Step4DetailPage />} />

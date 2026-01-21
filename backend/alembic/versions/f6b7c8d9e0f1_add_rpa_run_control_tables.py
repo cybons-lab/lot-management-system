@@ -37,9 +37,7 @@ def upgrade() -> None:
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["created_by_user_id"], ["users.id"], ondelete="SET NULL"
-        ),
+        sa.ForeignKeyConstraint(["created_by_user_id"], ["users.id"], ondelete="SET NULL"),
     )
 
     op.create_table(
@@ -56,9 +54,7 @@ def upgrade() -> None:
         ),
         sa.Column("created_by_user_id", sa.BigInteger(), nullable=True),
         sa.ForeignKeyConstraint(["run_id"], ["rpa_runs.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(
-            ["created_by_user_id"], ["users.id"], ondelete="SET NULL"
-        ),
+        sa.ForeignKeyConstraint(["created_by_user_id"], ["users.id"], ondelete="SET NULL"),
     )
     op.create_index("idx_rpa_run_events_run_id", "rpa_run_events", ["run_id"])
 
@@ -76,9 +72,7 @@ def upgrade() -> None:
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["run_item_id"], ["rpa_run_items.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["run_item_id"], ["rpa_run_items.id"], ondelete="CASCADE"),
     )
     op.create_index(
         "idx_rpa_run_item_attempts_run_item_id",
