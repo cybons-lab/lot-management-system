@@ -128,8 +128,15 @@ export class SmartReadCsvTransformer {
   private extractDetails(row: Record<string, any>): Array<Record<string, any>> {
     const details: Array<Record<string, any>> = [];
 
+    console.log(
+      `[extractDetails] Processing row with ${Object.keys(row).length} columns:`,
+      Object.keys(row).slice(0, 20),
+    );
+
     for (let n = 1; n <= this.maxDetails; n++) {
       const detail = this.extractSingleDetail(row, n);
+
+      console.log(`[extractDetails] n=${n}, extracted detail keys:`, Object.keys(detail));
 
       // Only add if detail has data
       if (!this.isEmptyDetail(detail)) {
@@ -142,6 +149,7 @@ export class SmartReadCsvTransformer {
       }
     }
 
+    console.log(`[extractDetails] Total details found: ${details.length}`);
     return details;
   }
 
