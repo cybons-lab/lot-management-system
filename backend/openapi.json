@@ -13901,6 +13901,26 @@
         }
       }
     },
+    "/api/env-check": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Env Check",
+        "description": "環境変数の読み込み状況を確認 (デバッグ用).",
+        "operationId": "env_check_api_env_check_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/operation-logs": {
       "get": {
         "tags": [
@@ -15589,7 +15609,7 @@
           "rpa-material-delivery-note"
         ],
         "summary": "Get Next Processing Item",
-        "description": "次に処理すべき未完了アイテムを取得する.",
+        "description": "次に処理すべき未完了アイテムをロックして取得する.",
         "operationId": "get_next_processing_item_api_rpa_material_delivery_note_runs__run_id__next_item_get",
         "parameters": [
           {
@@ -15599,6 +15619,44 @@
             "schema": {
               "type": "integer",
               "title": "Run Id"
+            }
+          },
+          {
+            "name": "lock_timeout_seconds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 3600,
+              "minimum": 30,
+              "default": 600,
+              "title": "Lock Timeout Seconds"
+            }
+          },
+          {
+            "name": "lock_owner",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lock Owner"
+            }
+          },
+          {
+            "name": "include_failed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Failed"
             }
           }
         ],
@@ -15617,6 +15675,291 @@
                     }
                   ],
                   "title": "Response Get Next Processing Item Api Rpa Material Delivery Note Runs  Run Id  Next Item Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/success": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Report Item Success",
+        "description": "PADから成功報告を受け取る.",
+        "operationId": "report_item_success_api_rpa_material_delivery_note_runs__run_id__items__item_id__success_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpaRunItemSuccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/failure": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Report Item Failure",
+        "description": "PADから失敗報告を受け取る.",
+        "operationId": "report_item_failure_api_rpa_material_delivery_note_runs__run_id__items__item_id__failure_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpaRunItemFailureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/failed-items": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "List Failed Items",
+        "description": "失敗したアイテム一覧を取得する.",
+        "operationId": "list_failed_items_api_rpa_material_delivery_note_runs__run_id__failed_items_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RpaRunItemResponse"
+                  },
+                  "title": "Response List Failed Items Api Rpa Material Delivery Note Runs  Run Id  Failed Items Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/loop-summary": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Get Loop Summary",
+        "description": "PADループの集計情報を取得する.",
+        "operationId": "get_loop_summary_api_rpa_material_delivery_note_runs__run_id__loop_summary_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 5,
+              "title": "Top N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoopSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/activity": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Get Activity",
+        "description": "PADループの活動ログを取得する.",
+        "operationId": "get_activity_api_rpa_material_delivery_note_runs__run_id__activity_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityItemResponse"
+                  },
+                  "title": "Response Get Activity Api Rpa Material Delivery Note Runs  Run Id  Activity Get"
                 }
               }
             }
@@ -16940,6 +17283,64 @@
         }
       }
     },
+    "/api/rpa/smartread/configs/{config_id}/diagnose": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Diagnose Watch Dir File",
+        "description": "SmartRead API送信を診断.",
+        "operationId": "diagnose_watch_dir_file_api_rpa_smartread_configs__config_id__diagnose_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadDiagnoseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadDiagnoseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rpa/smartread/analyze": {
       "post": {
         "tags": [
@@ -17631,9 +18032,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SmartReadCsvDataResponse"
-                }
+                "schema": {}
               }
             }
           },
@@ -18832,10 +19231,233 @@
           }
         }
       }
+    },
+    "/api/ocr-results/export/download": {
+      "get": {
+        "tags": [
+          "OCR Results"
+        ],
+        "summary": "Export Ocr Results",
+        "description": "OCR結果をExcel/CSVでエクスポート.",
+        "operationId": "export_ocr_results_api_ocr_results_export_download_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "タスク日付 (YYYY-MM-DD)",
+              "title": "Task Date"
+            },
+            "description": "タスク日付 (YYYY-MM-DD)"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ステータスでフィルタ",
+              "title": "Status"
+            },
+            "description": "ステータスでフィルタ"
+          },
+          {
+            "name": "has_error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "エラーのみ表示",
+              "title": "Has Error"
+            },
+            "description": "エラーのみ表示"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "エクスポート形式 (csv/xlsx)",
+              "default": "xlsx",
+              "title": "Format"
+            },
+            "description": "エクスポート形式 (csv/xlsx)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "ActivityItemResponse": {
+        "properties": {
+          "item_id": {
+            "type": "integer",
+            "title": "Item Id"
+          },
+          "row_no": {
+            "type": "integer",
+            "title": "Row No"
+          },
+          "result_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Status"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "result_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Message"
+          },
+          "result_pdf_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Pdf Path"
+          },
+          "last_error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Code"
+          },
+          "last_error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Message"
+          },
+          "last_error_screenshot_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Screenshot Path"
+          },
+          "locked_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locked By"
+          },
+          "locked_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locked Until"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "row_no"
+        ],
+        "title": "ActivityItemResponse",
+        "description": "PADループの実行ログアイテム."
+      },
       "AdjustmentCreate": {
         "properties": {
           "lot_id": {
@@ -26240,6 +26862,99 @@
         "title": "LoginRequest",
         "description": "Login request (Simplified for dev)."
       },
+      "LoopErrorCodeCount": {
+        "properties": {
+          "error_code": {
+            "type": "string",
+            "title": "Error Code"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error_code",
+          "count"
+        ],
+        "title": "LoopErrorCodeCount",
+        "description": "PADループ失敗コード集計."
+      },
+      "LoopSummaryResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "queued": {
+            "type": "integer",
+            "title": "Queued"
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "processing": {
+            "type": "integer",
+            "title": "Processing"
+          },
+          "success": {
+            "type": "integer",
+            "title": "Success"
+          },
+          "failure": {
+            "type": "integer",
+            "title": "Failure"
+          },
+          "done": {
+            "type": "integer",
+            "title": "Done"
+          },
+          "remaining": {
+            "type": "integer",
+            "title": "Remaining"
+          },
+          "percent": {
+            "type": "number",
+            "title": "Percent"
+          },
+          "last_activity_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity At"
+          },
+          "error_code_counts": {
+            "items": {
+              "$ref": "#/components/schemas/LoopErrorCodeCount"
+            },
+            "type": "array",
+            "title": "Error Code Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "queued",
+          "pending",
+          "processing",
+          "success",
+          "failure",
+          "done",
+          "remaining",
+          "percent",
+          "last_activity_at"
+        ],
+        "title": "LoopSummaryResponse",
+        "description": "PADループ集計レスポンス."
+      },
       "LotArchiveRequest": {
         "properties": {
           "lot_number": {
@@ -28079,7 +28794,7 @@
             ],
             "title": "Item No"
           },
-          "quantity_unit": {
+          "order_unit": {
             "anyOf": [
               {
                 "type": "string"
@@ -28088,7 +28803,7 @@
                 "type": "null"
               }
             ],
-            "title": "Quantity Unit"
+            "title": "Order Unit"
           },
           "inbound_no": {
             "anyOf": [
@@ -31648,6 +32363,61 @@
         "title": "RpaRunBatchUpdateRequest",
         "description": "RPA Run Batch update request schema."
       },
+      "RpaRunItemFailureRequest": {
+        "properties": {
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code",
+            "description": "エラーコード"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message",
+            "description": "エラーメッセージ"
+          },
+          "screenshot_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenshot Path",
+            "description": "スクリーンショット保存パス"
+          },
+          "lock_owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lock Owner",
+            "description": "ロック取得者（任意）"
+          }
+        },
+        "type": "object",
+        "title": "RpaRunItemFailureRequest",
+        "description": "RPA Run Item failure report request schema (PAD loop)."
+      },
       "RpaRunItemResponse": {
         "properties": {
           "id": {
@@ -31881,6 +32651,91 @@
             ],
             "title": "Processing Started At",
             "description": "処理開始日時"
+          },
+          "locked_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locked Until",
+            "description": "ロック期限"
+          },
+          "locked_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locked By",
+            "description": "ロック取得者"
+          },
+          "result_pdf_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Pdf Path",
+            "description": "PDF保存パス"
+          },
+          "result_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Message",
+            "description": "成功メッセージ"
+          },
+          "last_error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Code",
+            "description": "エラーコード"
+          },
+          "last_error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Message",
+            "description": "エラーメッセージ"
+          },
+          "last_error_screenshot_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Screenshot Path",
+            "description": "スクリーンショット保存パス"
           }
         },
         "type": "object",
@@ -31891,6 +32746,49 @@
         ],
         "title": "RpaRunItemResponse",
         "description": "RPA Run Item response schema."
+      },
+      "RpaRunItemSuccessRequest": {
+        "properties": {
+          "pdf_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Path",
+            "description": "PDF保存パス（OneDrive等）"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "任意メッセージ"
+          },
+          "lock_owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lock Owner",
+            "description": "ロック取得者（任意）"
+          }
+        },
+        "type": "object",
+        "title": "RpaRunItemSuccessRequest",
+        "description": "RPA Run Item success report request schema (PAD loop)."
       },
       "RpaRunItemUpdateRequest": {
         "properties": {
@@ -33814,6 +34712,75 @@
         ],
         "title": "SmartReadCsvDataResponse",
         "description": "CSVデータレスポンス."
+      },
+      "SmartReadDiagnoseRequest": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "description": "診断対象のファイル名"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filename"
+        ],
+        "title": "SmartReadDiagnoseRequest",
+        "description": "SmartRead API診断リクエスト."
+      },
+      "SmartReadDiagnoseResponse": {
+        "properties": {
+          "request_flow": {
+            "$ref": "#/components/schemas/SmartReadDiagnoseResult"
+          },
+          "export_flow": {
+            "$ref": "#/components/schemas/SmartReadDiagnoseResult"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_flow",
+          "export_flow"
+        ],
+        "title": "SmartReadDiagnoseResponse",
+        "description": "SmartRead API診断レスポンス."
+      },
+      "SmartReadDiagnoseResult": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "response": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "SmartReadDiagnoseResult",
+        "description": "SmartRead API診断結果."
       },
       "SmartReadExportRequest": {
         "properties": {

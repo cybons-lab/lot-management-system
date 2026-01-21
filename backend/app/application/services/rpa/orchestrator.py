@@ -488,7 +488,9 @@ class MaterialDeliveryNoteOrchestrator:
         lock_until = now + timedelta(seconds=lock_timeout_seconds)
         released = self.repo.release_expired_item_locks(run_id, now)
         if released:
-            self.logger.info("Released expired RPA item locks", extra={"run_id": run_id, "count": released})
+            self.logger.info(
+                "Released expired RPA item locks", extra={"run_id": run_id, "count": released}
+            )
         item = self.repo.claim_next_processing_item(
             run_id=run_id,
             now=now,

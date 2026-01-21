@@ -23,11 +23,11 @@ from app.presentation.api.routes.auth.auth_router import (
     get_current_user_optional,
 )
 from app.presentation.schemas.rpa_run_schema import (
+    ActivityItemResponse,
+    LoopSummaryResponse,
     LotSuggestionsResponse,
     MaterialDeliveryNoteExecuteRequest,
     MaterialDeliveryNoteExecuteResponse,
-    ActivityItemResponse,
-    LoopSummaryResponse,
     RpaRunBatchUpdateRequest,
     RpaRunItemFailureRequest,
     RpaRunItemResponse,
@@ -407,7 +407,8 @@ def list_failed_items(
     maker_map = _get_maker_map(uow.session, layer_codes)
     for item in items:
         resp_item = RpaRunItemResponse.model_validate(item)
-        resp_item.maker_name = maker_map.get(item.layer_code)
+        if item.layer_code:
+            resp_item.maker_name = maker_map.get(item.layer_code)
         responses.append(resp_item)
     return responses
 

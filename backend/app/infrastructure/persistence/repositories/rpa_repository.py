@@ -319,36 +319,42 @@ class RpaRepository:
         )
 
         if summary is None:
-            summary_values = {
-                "total": 0,
-                "queued": 0,
-                "pending": 0,
-                "processing": 0,
-                "success": 0,
-                "failure": 0,
-                "last_activity_at": None,
-            }
+            total = 0
+            queued = 0
+            pending = 0
+            processing = 0
+            success = 0
+            failure = 0
+            last_activity_at = None
         else:
-            summary_values = {
-                "total": int(summary.total or 0),
-                "queued": int(summary.queued or 0),
-                "pending": int(summary.pending or 0),
-                "processing": int(summary.processing or 0),
-                "success": int(summary.success or 0),
-                "failure": int(summary.failure or 0),
-                "last_activity_at": summary.last_activity_at,
-            }
-        done = summary_values["success"] + summary_values["failure"]
-        remaining = summary_values["total"] - done
-        percent = (done / summary_values["total"] * 100.0) if summary_values["total"] else 0.0
+            total = int(summary.total or 0)
+            queued = int(summary.queued or 0)
+            pending = int(summary.pending or 0)
+            processing = int(summary.processing or 0)
+            success = int(summary.success or 0)
+            failure = int(summary.failure or 0)
+            last_activity_at = summary.last_activity_at
+
+        done = success + failure
+        remaining = total - done
+        percent = (done / total * 100.0) if total else 0.0
 
         return {
-            **summary_values,
+            "total": total,
+            "queued": queued,
+            "pending": pending,
+            "processing": processing,
+            "success": success,
+            "failure": failure,
+            "last_activity_at": last_activity_at,
             "done": done,
             "remaining": remaining,
             "percent": percent,
             "error_code_counts": [
-                {"error_code": row.error_code, "count": int(row.count)}
+                {
+                    "error_code": row.error_code,
+                    "count": row[1] if len(row) > 1 else 0,  # type: ignore[index]
+                }
                 for row in error_code_counts
             ],
         }
