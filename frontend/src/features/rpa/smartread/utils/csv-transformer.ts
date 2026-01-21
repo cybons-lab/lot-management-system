@@ -191,27 +191,25 @@ export class SmartReadCsvTransformer {
   private isEmptyDetail(detail: Record<string, any>): boolean {
     // Check if ALL detail fields are empty
     // If ANY field has a value, it is NOT empty
-    for (const field of [...DETAIL_FIELDS, ...SUB_DETAIL_FIELDS]) {
-      // Check base fields
-      if (detail[field] && String(detail[field]).trim() !== "") {
-        return false;
-      }
-      // Note: SUB_DETAIL_FIELDS like 'Lot No' might be stored as 'Lot No1', 'Lot No2' inside the detail object?
-      // Wait, extractDetails stores them as `detail['Lot No1']` etc?
-      // Let's look at extractDetails:
-      // detail[`${subField}${subN}`] = ...
-      // So detail object has keys like "Lot No1", "Lot No2".
-      // The DETAIL_FIELDS are stored as "材質コード", "納入量" (no number suffix inside detail object).
-    }
 
-    // Iterate all keys in the detail object to be safe
-    for (const key of Object.keys(detail)) {
+    // Iterate all keys in the detail object
+    const detailKeys = Object.keys(detail);
+    console.log(`[isEmptyDetail] Checking detail:`, { keys: detailKeys, values: detail });
+
+    for (const key of detailKeys) {
       if (key.startsWith("エラー_")) continue; // Ignore error flags
-      if (detail[key] && String(detail[key]).trim() !== "") {
+      const value = detail[key];
+      const trimmedValue = value ? String(value).trim() : "";
+
+      if (trimmedValue !== "") {
+        console.log(
+          `[isEmptyDetail] Found non-empty field: ${key} = "${trimmedValue}" -> NOT EMPTY`,
+        );
         return false;
       }
     }
 
+    console.log(`[isEmptyDetail] All fields empty -> EMPTY`);
     return true;
   }
 
