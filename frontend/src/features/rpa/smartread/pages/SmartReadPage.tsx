@@ -5,11 +5,13 @@
  */
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Settings, Loader2, AlertCircle, RefreshCw, FileText } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { Settings, Loader2, RefreshCw, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
 
 import { diagnoseWatchDirFile } from "../api";
+import { SmartReadConfigSelector } from "../components/SmartReadConfigSelector";
 import { SmartReadManagedTaskList } from "../components/SmartReadManagedTaskList";
+import { SmartReadPadRunStatusList } from "../components/SmartReadPadRunStatusList";
 import { SmartReadResultView } from "../components/SmartReadResultView";
 import { SmartReadSavedDataList } from "../components/SmartReadSavedDataList";
 import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
@@ -25,9 +27,7 @@ import { SMARTREAD_QUERY_KEYS } from "../hooks";
 import { logger } from "../utils/logger";
 
 import { Button } from "@/components/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { Checkbox } from "@/components/ui";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui";
 import {
   Card,
   CardContent,
@@ -60,21 +60,20 @@ export function SmartReadPage() {
   // PAD互換フロー: /pad-runs API を使用
   const startPadRunMutation = useStartPadRun();
   const { data: padRuns, refetch: refetchPadRuns } = usePadRuns(selectedConfigId);
-  const { refetch: refetchTasks } = useSmartReadTasks(selectedConfigId, false);
-
-  const activeConfigs = useMemo(() => configs?.filter((c) => c.is_active) ?? [], [configs]);
+  useSmartReadTasks(selectedConfigId, false);
 
   // Auto-select default config
   useEffect(() => {
-    if (!configsLoading && activeConfigs.length > 0 && selectedConfigId === null) {
+    if (!configsLoading && configs && selectedConfigId === null) {
+      const activeConfigs = configs.filter((c) => c.is_active);
       const defaultConfig = activeConfigs.find((c) => c.is_default);
       if (defaultConfig) {
         setSelectedConfigId(defaultConfig.id);
-      } else {
+      } else if (activeConfigs.length > 0) {
         logger.info("デフォルト設定がありません。設定を選択してください。");
       }
     }
-  }, [configsLoading, activeConfigs, selectedConfigId]);
+  }, [configsLoading, configs, selectedConfigId]);
 
   const handleProcessWatchFiles = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0) return;
@@ -158,53 +157,16 @@ export function SmartReadPage() {
       />
 
       <div className="flex h-[calc(100vh-12rem)] flex-col gap-4">
-        {/* ... Config Selection ... */}
-        {/* (Keep verify existing code for Config Selection) */}
-        <Card className="shrink-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <label htmlFor="config-select" className="text-sm font-medium whitespace-nowrap">
-                AI-OCR設定
-              </label>
-              <div className="flex-1">
-                {configsLoading ? (
-                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    設定を読み込み中...
-                  </div>
-                ) : activeConfigs.length === 0 ? (
-                  <Alert variant="default" className="border-amber-200 bg-amber-50">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                    <AlertTitle className="text-amber-800">設定がありません</AlertTitle>
-                    <AlertDescription className="text-amber-700">
-                      AI-OCR設定を追加してください。右上の「設定」ボタンから追加できます。
-                    </AlertDescription>
-                  </Alert>
-                ) : (
-                  <Select
-                    value={selectedConfigId?.toString() ?? ""}
-                    onValueChange={(value: string) => {
-                      setSelectedConfigId(Number(value));
-                      setSelectedWatchFiles([]); // Reset selection
-                      setSelectedTaskId(null); // Reset task selection
-                    }}
-                  >
-                    <SelectTrigger id="config-select">
-                      <SelectValue placeholder="設定を選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {activeConfigs.map((config) => (
-                        <SelectItem key={config.id} value={config.id.toString()}>
-                          {config.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <SmartReadConfigSelector
+          configs={configs}
+          isLoading={configsLoading}
+          selectedConfigId={selectedConfigId}
+          onSelect={(id) => {
+            setSelectedConfigId(id);
+            setSelectedWatchFiles([]);
+            setSelectedTaskId(null);
+          }}
+        />
 
         {/* Tabs Layout */}
         <Tabs
@@ -348,56 +310,7 @@ export function SmartReadPage() {
           <TabsContent value="tasks" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
             <div className="h-full overflow-hidden flex flex-col gap-4">
               {/* PAD Run Status (最新の実行状態) */}
-              {padRuns && padRuns.runs.length > 0 && (
-                <Card className="shrink-0">
-                  <CardHeader className="py-2 px-4">
-                    <CardTitle className="text-sm font-medium">PAD実行状態</CardTitle>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-3 pt-0">
-                    <div className="space-y-2">
-                      {padRuns.runs.slice(0, 3).map((run) => (
-                        <div
-                          key={run.run_id}
-                          className="flex items-center justify-between text-sm border rounded px-3 py-2"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                run.status === "RUNNING"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : run.status === "SUCCEEDED"
-                                    ? "bg-green-100 text-green-800"
-                                    : run.status === "FAILED"
-                                      ? "bg-red-100 text-red-800"
-                                      : "bg-yellow-100 text-yellow-800"
-                              }`}
-                            >
-                              {run.status === "RUNNING" && (
-                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                              )}
-                              {run.status}
-                            </span>
-                            <span className="text-gray-500">Step: {run.step}</span>
-                          </div>
-                          <div className="flex items-center gap-4 text-gray-500">
-                            <span>
-                              {run.filenames ? `${run.filenames.length}ファイル` : "-"}
-                            </span>
-                            {run.status === "SUCCEEDED" && (
-                              <span className="text-green-600">
-                                横: {run.wide_data_count} / 縦: {run.long_data_count}
-                              </span>
-                            )}
-                            <span className="text-xs">
-                              {new Date(run.created_at).toLocaleTimeString("ja-JP")}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <SmartReadPadRunStatusList runs={padRuns?.runs} />
               {/* Managed Task List */}
               <div className="flex-1 overflow-hidden">
                 <SmartReadManagedTaskList

@@ -7161,6 +7161,81 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/smartread/configs/{config_id}/pad-runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * PAD互換フロー一覧を取得
+     * @description PAD互換フロー一覧を取得.
+     */
+    get: operations["list_pad_runs_api_rpa_smartread_configs__config_id__pad_runs_get"];
+    put?: never;
+    /**
+     * PAD互換フローを開始
+     * @description PAD互換フローを開始（バックグラウンド処理）.
+     *
+     *     監視フォルダ内のファイルを指定してPAD互換フローを開始します。
+     *     処理はバックグラウンドスレッドで実行され、即座にrun_idを返します。
+     *
+     *     進捗状況は GET /pad-runs/{run_id} で確認できます。
+     */
+    post: operations["start_pad_run_api_rpa_smartread_configs__config_id__pad_runs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/pad-runs/{run_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * PAD互換フロー状態を取得
+     * @description PAD互換フローの状態を取得（STALE検出を含む）.
+     *
+     *     RUNNINGステータスの場合、heartbeat_atが一定時間（120秒）更新されていなければ
+     *     STALEとしてマークされます。
+     */
+    get: operations["get_pad_run_status_api_rpa_smartread_configs__config_id__pad_runs__run_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/pad-runs/{run_id}/retry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * PAD互換フローをリトライ
+     * @description 失敗/Staleの実行をリトライ.
+     *
+     *     同じ入力ファイルで新しい実行を開始します。
+     *     リトライ回数には上限があります（デフォルト3回）。
+     */
+    post: operations["retry_pad_run_api_rpa_smartread_configs__config_id__pad_runs__run_id__retry_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/status": {
     parameters: {
       query?: never;
@@ -7469,6 +7544,108 @@ export interface paths {
      * @description OCR結果をExcel/CSVでエクスポート.
      */
     get: operations["export_ocr_results_api_ocr_results_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/objects": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Db Objects */
+    get: operations["list_db_objects_api_debug_db_objects_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/objects/{schema}/{name}/schema": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Object Schema */
+    get: operations["get_object_schema_api_debug_db_objects__schema___name__schema_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/objects/{schema}/{name}/rows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Object Rows */
+    get: operations["get_object_rows_api_debug_db_objects__schema___name__rows_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/objects/{schema}/{name}/definition": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get View Definition */
+    get: operations["get_view_definition_api_debug_db_objects__schema___name__definition_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/graph": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Db Graph */
+    get: operations["get_db_graph_api_debug_db_graph_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/objects/{schema}/{name}/relations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Object Relations */
+    get: operations["get_object_relations_api_debug_db_objects__schema___name__relations_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -14447,6 +14624,217 @@ export interface components {
       error_reason: string | null;
       /** Created At */
       created_at: string;
+    };
+    /**
+     * SmartReadPadRunListItem
+     * @description PAD互換フロー一覧アイテム.
+     */
+    SmartReadPadRunListItem: {
+      /**
+       * Run Id
+       * @description 実行ID
+       */
+      run_id: string;
+      /**
+       * Status
+       * @description ステータス
+       */
+      status: string;
+      /**
+       * Step
+       * @description 現在の工程
+       */
+      step: string;
+      /**
+       * Filenames
+       * @description 処理対象ファイル名
+       */
+      filenames?: string[] | null;
+      /**
+       * Wide Data Count
+       * @description 横持ちデータ件数
+       * @default 0
+       */
+      wide_data_count: number;
+      /**
+       * Long Data Count
+       * @description 縦持ちデータ件数
+       * @default 0
+       */
+      long_data_count: number;
+      /**
+       * Created At
+       * @description 作成日時
+       */
+      created_at: string;
+      /**
+       * Completed At
+       * @description 完了日時
+       */
+      completed_at?: string | null;
+    };
+    /**
+     * SmartReadPadRunListResponse
+     * @description PAD互換フロー一覧レスポンス.
+     */
+    SmartReadPadRunListResponse: {
+      /**
+       * Runs
+       * @description 実行一覧
+       */
+      runs: components["schemas"]["SmartReadPadRunListItem"][];
+    };
+    /**
+     * SmartReadPadRunRetryResponse
+     * @description PAD互換フローリトライレスポンス.
+     */
+    SmartReadPadRunRetryResponse: {
+      /**
+       * New Run Id
+       * @description 新しい実行ID
+       */
+      new_run_id: string;
+      /**
+       * Original Run Id
+       * @description 元の実行ID
+       */
+      original_run_id: string;
+      /**
+       * Message
+       * @description メッセージ
+       * @default リトライを開始しました
+       */
+      message: string;
+    };
+    /**
+     * SmartReadPadRunStartRequest
+     * @description PAD互換フロー開始リクエスト.
+     */
+    SmartReadPadRunStartRequest: {
+      /**
+       * Filenames
+       * @description 監視フォルダ内のファイル名リスト
+       */
+      filenames: string[];
+    };
+    /**
+     * SmartReadPadRunStartResponse
+     * @description PAD互換フロー開始レスポンス.
+     */
+    SmartReadPadRunStartResponse: {
+      /**
+       * Run Id
+       * @description 実行ID (UUID)
+       */
+      run_id: string;
+      /**
+       * Status
+       * @description ステータス
+       * @default RUNNING
+       */
+      status: string;
+      /**
+       * Message
+       * @description メッセージ
+       * @default PAD互換フローを開始しました
+       */
+      message: string;
+    };
+    /**
+     * SmartReadPadRunStatusResponse
+     * @description PAD互換フロー状態レスポンス.
+     */
+    SmartReadPadRunStatusResponse: {
+      /**
+       * Run Id
+       * @description 実行ID
+       */
+      run_id: string;
+      /**
+       * Config Id
+       * @description 設定ID
+       */
+      config_id: number;
+      /**
+       * Status
+       * @description ステータス (RUNNING/SUCCEEDED/FAILED/STALE)
+       */
+      status: string;
+      /**
+       * Step
+       * @description 現在の工程
+       */
+      step: string;
+      /**
+       * Task Id
+       * @description SmartReadタスクID
+       */
+      task_id?: string | null;
+      /**
+       * Export Id
+       * @description SmartReadエクスポートID
+       */
+      export_id?: string | null;
+      /**
+       * Filenames
+       * @description 処理対象ファイル名
+       */
+      filenames?: string[] | null;
+      /**
+       * Wide Data Count
+       * @description 横持ちデータ件数
+       * @default 0
+       */
+      wide_data_count: number;
+      /**
+       * Long Data Count
+       * @description 縦持ちデータ件数
+       * @default 0
+       */
+      long_data_count: number;
+      /**
+       * Error Message
+       * @description エラーメッセージ
+       */
+      error_message?: string | null;
+      /**
+       * Created At
+       * @description 作成日時
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * @description 更新日時
+       */
+      updated_at: string;
+      /**
+       * Heartbeat At
+       * @description 最終heartbeat日時
+       */
+      heartbeat_at: string;
+      /**
+       * Completed At
+       * @description 完了日時
+       */
+      completed_at?: string | null;
+      /**
+       * Can Retry
+       * @description リトライ可能か
+       * @default false
+       */
+      can_retry: boolean;
+      /**
+       * Retry Count
+       * @description 現在のリトライ回数
+       * @default 0
+       */
+      retry_count: number;
+      /**
+       * Max Retries
+       * @description 最大リトライ回数
+       * @default 3
+       */
+      max_retries: number;
     };
     /**
      * SmartReadProcessRequest
@@ -26792,6 +27180,141 @@ export interface operations {
       };
     };
   };
+  list_pad_runs_api_rpa_smartread_configs__config_id__pad_runs_get: {
+    parameters: {
+      query?: {
+        /** @description ステータスでフィルタ */
+        status_filter?: string | null;
+        /** @description 取得件数 */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadPadRunListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  start_pad_run_api_rpa_smartread_configs__config_id__pad_runs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadPadRunStartRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadPadRunStartResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_pad_run_status_api_rpa_smartread_configs__config_id__pad_runs__run_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadPadRunStatusResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  retry_pad_run_api_rpa_smartread_configs__config_id__pad_runs__run_id__retry_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadPadRunRetryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_master_status_api_masters_status_get: {
     parameters: {
       query?: never;
@@ -27360,6 +27883,193 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_db_objects_api_debug_db_objects_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          }[];
+        };
+      };
+    };
+  };
+  get_object_schema_api_debug_db_objects__schema___name__schema_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schema: string;
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_object_rows_api_debug_db_objects__schema___name__rows_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+        offset?: number;
+        order_by?: string | null;
+        order_dir?: string;
+        q?: string | null;
+        filters?: string[] | null;
+      };
+      header?: never;
+      path: {
+        schema: string;
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_view_definition_api_debug_db_objects__schema___name__definition_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schema: string;
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_db_graph_api_debug_db_graph_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+    };
+  };
+  get_object_relations_api_debug_db_objects__schema___name__relations_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schema: string;
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
