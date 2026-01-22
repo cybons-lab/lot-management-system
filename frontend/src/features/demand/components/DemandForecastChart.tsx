@@ -39,8 +39,8 @@ function ForecastChartContent({ data }: { data: ChartData[] }) {
         />
         <YAxis />
         <Tooltip
-          labelFormatter={(value: string) => {
-            return new Date(value).toLocaleDateString("ja-JP");
+          labelFormatter={(value) => {
+            return new Date(String(value)).toLocaleDateString("ja-JP");
           }}
         />
         <Legend />

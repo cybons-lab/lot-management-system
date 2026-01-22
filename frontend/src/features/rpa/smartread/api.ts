@@ -58,7 +58,7 @@ export interface SmartReadConfigUpdate {
 export interface SmartReadAnalyzeResponse {
   success: boolean;
   filename: string;
-  data: Record<string, unknown>[];
+  data: Record<string, unknown>[] | null;
   error_message: string | null;
 }
 
