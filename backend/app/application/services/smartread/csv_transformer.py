@@ -288,7 +288,7 @@ class SmartReadCsvTransformer:
                     )
                 )
                 common["エラー_発行日形式"] = 1
-                # common["発行日"] = ""  # 元の値を保持
+                common["発行日"] = ""  # 値をクリア
             else:
                 common["発行日"] = parsed
                 common["エラー_発行日形式"] = 0
@@ -306,7 +306,7 @@ class SmartReadCsvTransformer:
                     )
                 )
                 common["エラー_納入日形式"] = 1
-                # common["納入日"] = ""  # 元の値を保持
+                common["納入日"] = ""  # 値をクリア
             else:
                 common["納入日"] = parsed
                 common["エラー_納入日形式"] = 0

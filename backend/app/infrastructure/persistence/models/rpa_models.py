@@ -200,7 +200,7 @@ class RpaRunGroup(Base):
         BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
 
     runs: Mapped[list[RpaRun]] = relationship(
@@ -229,28 +229,32 @@ class RpaRun(Base):
     )
     progress_percent: Mapped[float | None] = mapped_column(Float, nullable=True)
     estimated_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    paused_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    paused_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # 取得データの期間
     data_start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     data_end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
-    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     started_by_user_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    step2_executed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    step2_executed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     step2_executed_by_user_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     # Step4 / External Done
-    external_done_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    external_done_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     external_done_by_user_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     step4_executed_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
+        DateTime(timezone=True), nullable=True
     )  # Step4チェック開始日時
 
     # 得意先（CSVインポート時に設定）
@@ -259,10 +263,10 @@ class RpaRun(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
 
     __table_args__ = (
@@ -364,9 +368,9 @@ class RpaRunItem(Base):
     # 結果ステータス (pending/success/failure/error)
     result_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
     processing_started_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
+        DateTime(timezone=True), nullable=True
     )  # 処理開始日時（タイムアウト回収用）
-    locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     locked_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
     result_pdf_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     result_message: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -386,10 +390,10 @@ class RpaRunItem(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
 
     __table_args__ = (
@@ -424,7 +428,7 @@ class RpaRunEvent(Base):
     event_type: Mapped[str] = mapped_column(String(50), nullable=False)
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
     created_by_user_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
@@ -447,7 +451,7 @@ class RpaRunItemAttempt(Base):
     error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
 
     item: Mapped[RpaRunItem] = relationship("RpaRunItem", back_populates="attempts")
@@ -470,5 +474,5 @@ class RpaRunFetch(Base):
     run_updated: Mapped[int | None] = mapped_column(Integer, nullable=True)
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
