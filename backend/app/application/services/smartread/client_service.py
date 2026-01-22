@@ -146,8 +146,8 @@ class SmartReadClientService(SmartReadBaseService):
                     "from_cache": True,
                 }
 
-        client, _ = self._get_client(config_id)
-        if not client:
+        client, config = self._get_client(config_id)
+        if not client or not config:
             logger.error(f"[SmartRead] Could not initialize client for config {config_id}")
             return None
 
@@ -241,7 +241,11 @@ class SmartReadClientService(SmartReadBaseService):
 
         # 2. Exportを作成
         logger.info(f"[SmartRead] Creating export for task {task_id}...")
-        export = await client.create_export(task_id, export_type)
+        export = await client.create_export(
+            task_id,
+            export_type=export_type,
+            aggregation=config.aggregation_type,
+        )
         if not export:
             logger.error(f"[SmartRead] Failed to create export for task {task_id}")
             return None

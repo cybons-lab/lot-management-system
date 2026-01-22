@@ -258,10 +258,17 @@ class SmartReadClient:
         import asyncio
         import time
 
-        url = self._build_api_url(f"/v3/request/{request_id}/results")
+        status_url = self._build_api_url(f"/v3/request/{request_id}")
+        results_url = self._build_api_url(f"/v3/request/{request_id}/results")
         headers = self._get_headers()
 
         start_time = time.time()
+        completed_states = {
+            "OCR_COMPLETED",
+            "OCR_VERIFICATION_COMPLETED",
+            "SORTING_COMPLETED",
+        }
+        failed_states = {"OCR_FAILED", "SORTING_FAILED", "SORTING_DROPPED"}
 
         while True:
             if time.time() - start_time > timeout_sec:
@@ -272,29 +279,26 @@ class SmartReadClient:
                     error_message="Timeout waiting for results",
                 )
 
-            response = await client.get(url, headers=headers)
-            response.raise_for_status()
-            result = response.json()
+            status_response = await client.get(status_url, headers=headers)
+            status_response.raise_for_status()
+            status_data = status_response.json()
+            state = status_data.get("state")
 
-            # ステータス判定 (ドキュメント未確認だが一般的なフローとして判定)
-            # 実際にはレスポンス構造に status フィールドがあるはず
-            # ユーザー提供情報ではエンドポイントのみ。
-            # 通常、結果エンドポイントは完了するまで pending か 202 を返すことが多い。
-            # 仮定: status が 'succeeded' または 'completed'
-            status = result.get("status")
-
-            if status == "succeeded" or status == "completed":
+            if state in completed_states:
+                results_response = await client.get(results_url, headers=headers)
+                results_response.raise_for_status()
+                result = results_response.json()
                 return SmartReadResult(
                     success=True,
                     data=self._extract_data(result),
                     raw_response=result,
                 )
-            elif status == "failed":
+            if state in failed_states:
                 return SmartReadResult(
                     success=False,
                     data=[],
-                    raw_response=result,
-                    error_message=f"Analysis failed: {result.get('error')}",
+                    raw_response=status_data,
+                    error_message=f"Analysis failed: {state}",
                 )
 
             # 少し待機
@@ -503,6 +507,7 @@ class SmartReadClient:
         self,
         task_id: str,
         export_type: str = "csv",
+        aggregation: str | None = None,
         timeout: float = 30.0,
     ) -> SmartReadExport | None:
         """Export作成.
@@ -521,7 +526,9 @@ class SmartReadClient:
             async with httpx.AsyncClient(timeout=timeout) as client:
                 url = self._build_api_url(f"/v3/task/{task_id}/export")
                 headers = self._get_headers()
-                payload = {"exportType": export_type}
+                payload = {"type": export_type}
+                if aggregation:
+                    payload["aggregation"] = aggregation
                 response = await client.post(url, json=payload, headers=headers)
                 response.raise_for_status()
                 data = response.json()

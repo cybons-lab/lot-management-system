@@ -121,11 +121,15 @@ class SmartReadExportService(SmartReadBaseService):
         Returns:
             エクスポート情報
         """
-        client, _ = self._get_client(config_id)
-        if not client:
+        client, config = self._get_client(config_id)
+        if not client or not config:
             return None
 
-        return await client.create_export(task_id, export_type)
+        return await client.create_export(
+            task_id,
+            export_type=export_type,
+            aggregation=config.aggregation_type,
+        )
 
     async def get_export_status(
         self,
