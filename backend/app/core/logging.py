@@ -202,6 +202,15 @@ class RollbackFilter(logging.Filter):
         return False
 
 
+class SmartReadOnlyFilter(logging.Filter):
+    """SmartRead関連ログのみを許可するフィルタ."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        logger_name = record.name.lower()
+        message = record.getMessage()
+        return "smartread" in logger_name or "SmartRead" in message
+
+
 def _add_request_id(_, __, event_dict: dict) -> dict:
     request_id = event_dict.get("request_id") or correlation_id.get()
     if request_id:
@@ -310,10 +319,14 @@ def setup_logging(
     root_logger.setLevel(effective_level)
     root_logger.handlers.clear()
 
+    smartread_filter = SmartReadOnlyFilter() if settings.LOG_SMARTREAD_ONLY else None
+
     # コンソールハンドラ
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(effective_level)
     console_handler.addFilter(context_filter)
+    if smartread_filter:
+        console_handler.addFilter(smartread_filter)
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
 
@@ -331,6 +344,8 @@ def setup_logging(
         )
         app_handler.setLevel(logging.DEBUG)
         app_handler.addFilter(context_filter)
+        if smartread_filter:
+            app_handler.addFilter(smartread_filter)
         app_handler.setFormatter(formatter)
         root_logger.addHandler(app_handler)
 
@@ -344,6 +359,8 @@ def setup_logging(
         )
         error_handler.setLevel(logging.WARNING)
         error_handler.addFilter(context_filter)
+        if smartread_filter:
+            error_handler.addFilter(smartread_filter)
         error_handler.setFormatter(formatter)
         root_logger.addHandler(error_handler)
 
@@ -359,6 +376,8 @@ def setup_logging(
     queue_handler = StructlogQueueHandler(log_queue)
     queue_handler.setLevel(logging.WARNING)
     queue_handler.addFilter(context_filter)
+    if smartread_filter:
+        queue_handler.addFilter(smartread_filter)
     root_logger.addHandler(queue_handler)
 
     db_handler = ServerLogDBHandler()

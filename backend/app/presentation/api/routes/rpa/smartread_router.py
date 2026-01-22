@@ -162,16 +162,13 @@ async def process_files(
     config_id: int,
     request: SmartReadProcessRequest,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
 ) -> list[SmartReadAnalyzeResponse]:
     """監視フォルダ内の指定ファイルを処理 (バックグラウンド処理)."""
-    assert db is not None
-
     from app.application.services.smartread.request_service import process_files_background
 
     # ファイルを処理（バックグラウンドで処理）
-    background_tasks.add_task(process_files_background, db, config_id, request.filenames)
+    background_tasks.add_task(process_files_background, config_id, request.filenames)
 
     return [
         SmartReadAnalyzeResponse(
