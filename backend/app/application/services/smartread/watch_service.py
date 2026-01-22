@@ -71,8 +71,6 @@ class SmartReadWatchService(SmartReadBaseService):
             )
             return []
 
-        import os
-
         watch_dir = Path(config.watch_dir)
         if not watch_dir.exists() or not watch_dir.is_dir():
             logger.warning(
