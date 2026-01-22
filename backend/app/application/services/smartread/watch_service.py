@@ -4,21 +4,22 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from app.application.services.smartread.base import SmartReadBaseService
-from app.infrastructure.smartread.client import SmartReadClient
 
 from .types import AnalyzeResult, WatchDirProcessOutcome
 
 
 if TYPE_CHECKING:
+    from datetime import date
     from pathlib import Path
 
     from app.infrastructure.persistence.models import SmartReadConfig
     from app.infrastructure.persistence.models.smartread_models import SmartReadTask
+    from app.infrastructure.smartread.client import SmartReadClient
 
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,16 @@ class SmartReadWatchService(SmartReadBaseService):
         def _get_client(
             self, config_id: int
         ) -> tuple[SmartReadClient | None, SmartReadConfig | None]: ...
+
+        async def sync_with_simple_flow(
+            self,
+            config_id: int,
+            file_content: bytes,
+            filename: str,
+            *,
+            export_type_override: str | None = None,
+            aggregation_override: str | None = None,
+        ) -> dict[str, Any]: ...
 
     def list_files_in_watch_dir(self, config_id: int) -> list[str]:
         """監視ディレクトリ内のファイル一覧を取得.
@@ -172,51 +183,24 @@ class SmartReadWatchService(SmartReadBaseService):
         if not files_to_process:
             return WatchDirProcessOutcome(task_id=None, results=results, watch_dir=watch_dir)
 
-        # テンプレートIDをパース
-        template_ids = None
-        if config.template_ids:
-            template_ids = [t.strip() for t in config.template_ids.split(",") if t.strip()]
-
-        client = SmartReadClient(
-            endpoint=config.endpoint,
-            api_key=config.api_key,
-            template_ids=template_ids,
-        )
-
-        # 複数ファイルを1タスクで処理
-        multi_result = await client.analyze_files(files_to_process)
-
-        # タスクをDBに保存
-        task_date = date.today()
-        task_name = f"Watch Dir {task_date.strftime('%Y-%m-%d')} ({len(filenames)} files)"
-        try:
-            self.get_or_create_task(
-                config_id=config_id,
-                task_id=multi_result.task_id,
-                task_date=task_date,
-                name=task_name,
-                state=None,  # SmartRead APIのステータスは不明なのでNone
-            )
-            self.session.commit()
-            logger.info(
-                f"[SmartRead] Task saved to DB: {multi_result.task_id}",
-                extra={"config_id": config_id, "task_id": multi_result.task_id},
-            )
-        except Exception as e:
-            logger.error(
-                f"[SmartRead] Failed to save task to DB: {e}",
-                extra={"config_id": config_id, "task_id": multi_result.task_id},
-            )
-            self.session.rollback()
-
-        # 結果を変換
-        for sr_result in multi_result.results:
-            analyze_result = AnalyzeResult(
-                success=sr_result.success,
-                filename=sr_result.filename or "",
-                data=sr_result.data,
-                error_message=sr_result.error_message,
-            )
+        task_id = None
+        for file_content, filename in files_to_process:
+            try:
+                simple_result = await self.sync_with_simple_flow(
+                    config_id=config_id,
+                    file_content=file_content,
+                    filename=filename,
+                    export_type_override="csv",
+                )
+                analyze_result = AnalyzeResult(
+                    success=True,
+                    filename=filename,
+                    data=simple_result.get("wide_data", []),
+                    error_message=None,
+                )
+                task_id = simple_result.get("task_id", task_id)
+            except Exception as e:
+                analyze_result = AnalyzeResult(False, filename, [], str(e))
 
             # JSON出力
             if analyze_result.success and export_dir and analyze_result.filename:
@@ -235,7 +219,7 @@ class SmartReadWatchService(SmartReadBaseService):
             results.append(analyze_result)
 
         return WatchDirProcessOutcome(
-            task_id=multi_result.task_id,
+            task_id=task_id,
             results=results,
             watch_dir=watch_dir,
         )

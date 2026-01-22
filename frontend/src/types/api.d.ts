@@ -6781,7 +6781,7 @@ export interface paths {
     put?: never;
     /**
      * Process Files
-     * @description 監視フォルダ内の指定ファイルを処理.
+     * @description 監視フォルダ内の指定ファイルを処理 (process-autoへリダイレクト).
      */
     post: operations["process_files_api_rpa_smartread_configs__config_id__process_post"];
     delete?: never;
@@ -6827,6 +6827,32 @@ export interface paths {
      *     解析結果を返します。
      */
     post: operations["analyze_file_api_rpa_smartread_analyze_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/analyze-simple": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze File Simple
+     * @description ファイルをSmartRead APIで解析（バックグラウンド処理）.
+     *
+     *     即座にレスポンスを返し、バックグラウンドで処理を実行。
+     *     処理完了後、結果はDBに保存される。
+     *
+     *     Returns:
+     *         処理開始のレスポンス（task_idを含む）
+     */
+    post: operations["analyze_file_simple_api_rpa_smartread_analyze_simple_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -7048,6 +7074,26 @@ export interface paths {
      */
     post: operations["save_long_data_api_rpa_smartread_tasks__task_id__save_long_data_post"];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/reset-data": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Reset Smartread Data
+     * @description SmartReadデータを初期化（テスト用）.
+     */
+    delete: operations["reset_smartread_data_api_rpa_smartread_configs__config_id__reset_data_delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -7408,6 +7454,26 @@ export interface paths {
     get: operations["get_ocr_result_api_ocr_results__item_id__get"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/ocr-results/{item_id}/edit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Save Ocr Result Edit
+     * @description OCR結果の手入力内容を保存.
+     */
+    post: operations["save_ocr_result_edit_api_ocr_results__item_id__edit_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -8094,6 +8160,15 @@ export interface components {
     };
     /** Body_analyze_file_api_rpa_smartread_analyze_post */
     Body_analyze_file_api_rpa_smartread_analyze_post: {
+      /**
+       * File
+       * Format: binary
+       * @description 解析するファイル（PDF, PNG, JPG）
+       */
+      file: string;
+    };
+    /** Body_analyze_file_simple_api_rpa_smartread_analyze_simple_post */
+    Body_analyze_file_simple_api_rpa_smartread_analyze_simple_post: {
       /**
        * File
        * Format: binary
@@ -11614,6 +11689,67 @@ export interface components {
       lines: components["schemas"]["OcrImportLineResult"][];
     };
     /**
+     * OcrResultEditRequest
+     * @description OCR結果手入力の更新リクエスト.
+     */
+    OcrResultEditRequest: {
+      /** Lot No 1 */
+      lot_no_1?: string | null;
+      /** Quantity 1 */
+      quantity_1?: string | null;
+      /** Lot No 2 */
+      lot_no_2?: string | null;
+      /** Quantity 2 */
+      quantity_2?: string | null;
+      /** Inbound No */
+      inbound_no?: string | null;
+      /** Shipping Date */
+      shipping_date?: string | null;
+      /** Shipping Slip Text */
+      shipping_slip_text?: string | null;
+      /** Shipping Slip Text Edited */
+      shipping_slip_text_edited?: boolean | null;
+      /** Jiku Code */
+      jiku_code?: string | null;
+      /** Material Code */
+      material_code?: string | null;
+    };
+    /**
+     * OcrResultEditResponse
+     * @description OCR結果手入力の保存結果.
+     */
+    OcrResultEditResponse: {
+      /** Id */
+      id: number;
+      /** Smartread Long Data Id */
+      smartread_long_data_id: number;
+      /** Lot No 1 */
+      lot_no_1?: string | null;
+      /** Quantity 1 */
+      quantity_1?: string | null;
+      /** Lot No 2 */
+      lot_no_2?: string | null;
+      /** Quantity 2 */
+      quantity_2?: string | null;
+      /** Inbound No */
+      inbound_no?: string | null;
+      /** Shipping Date */
+      shipping_date?: string | null;
+      /** Shipping Slip Text */
+      shipping_slip_text?: string | null;
+      /** Shipping Slip Text Edited */
+      shipping_slip_text_edited: boolean;
+      /** Jiku Code */
+      jiku_code?: string | null;
+      /** Material Code */
+      material_code?: string | null;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
      * OcrResultItem
      * @description OCR結果アイテム.
      */
@@ -11682,6 +11818,10 @@ export interface components {
       manual_shipping_slip_text?: string | null;
       /** Manual Shipping Slip Text Edited */
       manual_shipping_slip_text_edited?: boolean | null;
+      /** Manual Jiku Code */
+      manual_jiku_code?: string | null;
+      /** Manual Material Code */
+      manual_material_code?: string | null;
       /** Manual Updated At */
       manual_updated_at?: string | null;
       /** Master Id */
@@ -14050,9 +14190,11 @@ export interface components {
       /** Filename */
       filename: string;
       /** Data */
-      data: {
-        [key: string]: unknown;
-      }[];
+      data:
+        | {
+            [key: string]: unknown;
+          }[]
+        | null;
       /** Error Message */
       error_message?: string | null;
     };
@@ -14424,6 +14566,47 @@ export interface components {
       completed_at: string | null;
       /** Created At */
       created_at: string;
+    };
+    /**
+     * SmartReadResetResponse
+     * @description SmartReadデータ初期化レスポンス.
+     */
+    SmartReadResetResponse: {
+      /**
+       * Success
+       * @description 削除成功フラグ
+       */
+      success: boolean;
+      /**
+       * Deleted Long Count
+       * @description 削除した縦持ちデータ件数
+       */
+      deleted_long_count: number;
+      /**
+       * Deleted Wide Count
+       * @description 削除した横持ちデータ件数
+       */
+      deleted_wide_count: number;
+      /**
+       * Deleted Request Count
+       * @description 削除したリクエスト件数
+       */
+      deleted_request_count: number;
+      /**
+       * Deleted Task Count
+       * @description 削除したタスク件数
+       */
+      deleted_task_count: number;
+      /**
+       * Deleted Export History Count
+       * @description 削除したエクスポート履歴件数
+       */
+      deleted_export_history_count: number;
+      /**
+       * Message
+       * @description メッセージ
+       */
+      message: string;
     };
     /**
      * SmartReadSaveLongDataRequest
@@ -26115,6 +26298,42 @@ export interface operations {
       };
     };
   };
+  analyze_file_simple_api_rpa_smartread_analyze_simple_post: {
+    parameters: {
+      query: {
+        /** @description 使用する設定のID */
+        config_id: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_analyze_file_simple_api_rpa_smartread_analyze_simple_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   export_to_json_api_rpa_smartread_export_json_post: {
     parameters: {
       query?: {
@@ -26493,6 +26712,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SmartReadSaveLongDataResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  reset_smartread_data_api_rpa_smartread_configs__config_id__reset_data_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadResetResponse"];
         };
       };
       /** @description Validation Error */
@@ -27139,6 +27389,41 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["OcrResultItem"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  save_ocr_result_edit_api_ocr_results__item_id__edit_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        item_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OcrResultEditRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OcrResultEditResponse"];
         };
       };
       /** @description Validation Error */

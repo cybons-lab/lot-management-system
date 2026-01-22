@@ -4,12 +4,14 @@
 Windows/Mac 両対応。標準ライブラリのみ使用。
 
 Usage:
-    python scripts/build_deploy_package.py
+    python scripts/build_deploy_package.py           # 通常ビルド（npm ci スキップ）
+    python scripts/build_deploy_package.py --clean   # クリーンビルド（npm ci 実行）
 
 Output:
     deploy/lot-management-deploy-YYYYMMDD.zip
 """
 
+import argparse
 import os
 import shutil
 import subprocess
@@ -193,7 +195,7 @@ def generate_requirements(backend_dir: Path, output_path: Path) -> bool:
     return False
 
 
-def build_frontend_with_docker(frontend_dir: Path) -> bool:
+def build_frontend_with_docker(frontend_dir: Path, clean: bool = False) -> bool:
     """Docker経由でフロントエンドをビルド."""
     print("Docker経由でビルドを試みます...")
 
@@ -208,15 +210,19 @@ def build_frontend_with_docker(frontend_dir: Path) -> bool:
         print("docker コマンドが見つかりません")
         return False
 
-    # npm ci を Docker 経由で実行
-    print("Docker: npm ci を実行中...")
-    result = run_command(
-        ["docker", "compose", "run", "--rm", "frontend", "npm", "ci"],
-        cwd=PROJECT_ROOT,
-    )
-    if result.returncode != 0:
-        print(f"Docker npm install に失敗: {result.stderr}")
-        return False
+    # npm ci を Docker 経由で実行（cleanモードまたはnode_modulesがない場合のみ）
+    node_modules = frontend_dir / "node_modules"
+    if clean or not node_modules.exists():
+        print("Docker: npm ci を実行中...")
+        result = run_command(
+            ["docker", "compose", "run", "--rm", "frontend", "npm", "ci"],
+            cwd=PROJECT_ROOT,
+        )
+        if result.returncode != 0:
+            print(f"Docker npm ci に失敗: {result.stderr}")
+            return False
+    else:
+        print("Docker: npm ci をスキップ（既存の node_modules を使用）")
 
     # npm run build を Docker 経由で実行
     print("Docker: npm run build を実行中...")
@@ -231,42 +237,55 @@ def build_frontend_with_docker(frontend_dir: Path) -> bool:
     return True
 
 
-def build_frontend_with_npm(frontend_dir: Path) -> bool:
+def build_frontend_with_npm(frontend_dir: Path, clean: bool = False) -> bool:
     """ローカルnpm経由でフロントエンドをビルド."""
     print("ローカルnpm経由でビルドを試みます...")
 
-    # npm ci
-    print("npm ci を実行中...")
+    # npm ci（cleanモードまたはnode_modulesがない場合のみ）
+    node_modules = frontend_dir / "node_modules"
+    if clean or not node_modules.exists():
+        print("npm ci を実行中...")
+        try:
+            result = run_command(
+                ["npm", "ci"],
+                cwd=frontend_dir,
+                allow_shell_on_windows=True,
+            )
+            if result.returncode != 0:
+                print(f"npm ci に失敗: {result.stderr}")
+                return False
+        except FileNotFoundError:
+            print("npm コマンドが見つかりません")
+            return False
+    else:
+        print("npm ci をスキップ（既存の node_modules を使用）")
+
+    # npm run build
+    print("npm run build を実行中...")
     try:
         result = run_command(
-            ["npm", "ci"],
+            ["npm", "run", "build"],
             cwd=frontend_dir,
             allow_shell_on_windows=True,
         )
         if result.returncode != 0:
-            print(f"npm install に失敗: {result.stderr}")
+            print(f"npm run build に失敗: {result.stderr}")
             return False
     except FileNotFoundError:
         print("npm コマンドが見つかりません")
         return False
 
-    # npm run build
-    print("npm run build を実行中...")
-    result = run_command(
-        ["npm", "run", "build"],
-        cwd=frontend_dir,
-        allow_shell_on_windows=True,
-    )
-    if result.returncode != 0:
-        print(f"npm run build に失敗: {result.stderr}")
-        return False
-
     return True
 
 
-def build_frontend(frontend_dir: Path) -> bool:
+def build_frontend(frontend_dir: Path, clean: bool = False) -> bool:
     """フロントエンドをビルド（Docker優先、npmにフォールバック）."""
     print_step("フロントエンドをビルド中...")
+
+    if clean:
+        print("クリーンビルドモード: npm ci を実行します")
+    else:
+        print("高速ビルドモード: 既存の node_modules を再利用します")
 
     dist_dir = frontend_dir / "dist"
 
@@ -276,7 +295,7 @@ def build_frontend(frontend_dir: Path) -> bool:
         shutil.rmtree(dist_dir)
 
     # 1. Docker経由でビルドを試みる
-    if build_frontend_with_docker(frontend_dir):
+    if build_frontend_with_docker(frontend_dir, clean):
         if dist_dir.exists():
             print_success("Docker経由でフロントエンドのビルドが完了しました")
             return True
@@ -285,7 +304,7 @@ def build_frontend(frontend_dir: Path) -> bool:
 
     # 2. ローカルnpm経由でビルドを試みる
     print("\nDocker経由でのビルドに失敗。ローカルnpmを試みます...")
-    if build_frontend_with_npm(frontend_dir):
+    if build_frontend_with_npm(frontend_dir, clean):
         if dist_dir.exists():
             print_success("ローカルnpm経由でフロントエンドのビルドが完了しました")
             return True
@@ -405,10 +424,35 @@ def create_zip(temp_dir: Path, output_path: Path) -> bool:
     return True
 
 
+def parse_args() -> argparse.Namespace:
+    """コマンドライン引数をパース."""
+    parser = argparse.ArgumentParser(
+        description="本番環境デプロイパッケージを作成",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+例:
+  python scripts/build_deploy_package.py           # 高速ビルド（npm ci スキップ）
+  python scripts/build_deploy_package.py --clean   # クリーンビルド（npm ci 実行）
+""",
+    )
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="クリーンビルド: npm ci を実行して依存関係を再インストール",
+    )
+    return parser.parse_args()
+
+
 def main() -> int:
     """メイン処理."""
+    args = parse_args()
+
     print("\n" + "=" * 60)
     print("🚀 本番環境デプロイパッケージ作成ツール")
+    if args.clean:
+        print("   モード: クリーンビルド（npm ci 実行）")
+    else:
+        print("   モード: 高速ビルド（npm ci スキップ）")
     print("=" * 60)
 
     # タイムスタンプ
@@ -427,7 +471,7 @@ def main() -> int:
 
     try:
         # 1. フロントエンドビルド
-        if not build_frontend(FRONTEND_DIR):
+        if not build_frontend(FRONTEND_DIR, clean=args.clean):
             return 1
 
         # 2. バックエンドコピー

@@ -163,22 +163,53 @@ def list_watch_dir_files(
 async def process_files(
     config_id: int,
     request: SmartReadProcessRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
 ) -> list[SmartReadAnalyzeResponse]:
-    """監視フォルダ内の指定ファイルを処理."""
+    """監視フォルダ内の指定ファイルを処理 (process-autoへリダイレクト)."""
+    # process-autoと同じ処理を実行
+    from datetime import date
+
     assert db is not None
-    service = SmartReadService(db)
-    results = await service.process_watch_dir_files(config_id, request.filenames)
+
+    # 今日のタスクを取得または作成
+    from app.application.services.smartread.request_service import SmartReadRequestService
+
+    request_service = SmartReadRequestService(db)
+    task_date = date.today()
+    task_id, task_record = await request_service.get_or_create_daily_task(config_id, task_date)
+
+    if not task_id or not task_record:
+        raise HTTPException(status_code=500, detail="タスクの取得/作成に失敗しました")
+
+    if task_record.skip_today:
+        raise HTTPException(
+            status_code=403, detail="このタスクは今日スキップする設定になっています"
+        )
+
+    # ファイルを処理（バックグラウンドで処理）
+    from app.application.services.smartread.request_service import (
+        process_files_background,
+    )
+
+    background_tasks.add_task(
+        process_files_background,
+        db,
+        config_id,
+        request.filenames,
+        task_id,
+        task_date,
+    )
 
     return [
         SmartReadAnalyzeResponse(
-            success=r.success,
-            filename=r.filename,
-            data=r.data,
-            error_message=r.error_message,
+            success=True,
+            filename=filename,
+            data=None,
+            error_message=None,
         )
-        for r in results
+        for filename in request.filenames
     ]
 
 
@@ -225,6 +256,78 @@ async def analyze_file(
         data=result.data,
         error_message=result.error_message,
     )
+
+
+@router.post("/analyze-simple")
+async def analyze_file_simple(
+    file: Annotated[UploadFile, File(description="解析するファイル（PDF, PNG, JPG）")],
+    background_tasks: BackgroundTasks,
+    config_id: int = Query(..., description="使用する設定のID"),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> JSONResponse:
+    """ファイルをSmartRead APIで解析（バックグラウンド処理）.
+
+    即座にレスポンスを返し、バックグラウンドで処理を実行。
+    処理完了後、結果はDBに保存される。
+
+    Returns:
+        処理開始のレスポンス（task_idを含む）
+    """
+    file_content = await file.read()
+    filename = file.filename or "unknown"
+
+    # バックグラウンドで処理を開始
+    background_tasks.add_task(
+        _run_simple_sync_background,
+        config_id=config_id,
+        file_content=file_content,
+        filename=filename,
+    )
+
+    return JSONResponse(
+        status_code=202,
+        content={
+            "message": f"処理を開始しました: {filename}",
+            "filename": filename,
+            "status": "processing",
+        },
+    )
+
+
+async def _run_simple_sync_background(
+    config_id: int,
+    file_content: bytes,
+    filename: str,
+) -> None:
+    """バックグラウンドでシンプル同期フローを実行."""
+    import logging
+
+    from app.application.services.common.uow_service import UnitOfWork
+    from app.core.database import SessionLocal
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"[SimpleSync Background] Starting processing: {filename}")
+
+    try:
+        with UnitOfWork(SessionLocal) as uow:
+            assert uow.session is not None
+            service = SmartReadService(uow.session)
+
+            result = await service.sync_with_simple_flow(
+                config_id=config_id,
+                file_content=file_content,
+                filename=filename,
+            )
+
+            logger.info(
+                f"[SimpleSync Background] Completed: {filename}, "
+                f"{len(result['wide_data'])} wide rows, "
+                f"{len(result['long_data'])} long rows"
+            )
+
+    except Exception as e:
+        logger.error(f"[SimpleSync Background] Failed: {filename}, error: {e}")
 
 
 # --- エクスポート ---

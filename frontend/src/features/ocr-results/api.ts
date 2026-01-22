@@ -37,6 +37,8 @@ export interface OcrResultItem {
   manual_shipping_date: string | null;
   manual_shipping_slip_text: string | null;
   manual_shipping_slip_text_edited: boolean | null;
+  manual_jiku_code: string | null;
+  manual_material_code: string | null;
   manual_updated_at: string | null;
 
   // マスタ由来
@@ -83,6 +85,8 @@ export interface OcrResultEditPayload {
   shipping_date?: string | null;
   shipping_slip_text?: string | null;
   shipping_slip_text_edited?: boolean | null;
+  jiku_code?: string | null;
+  material_code?: string | null;
 }
 
 export interface OcrResultEditResponse {
@@ -96,6 +100,8 @@ export interface OcrResultEditResponse {
   shipping_date: string | null;
   shipping_slip_text: string | null;
   shipping_slip_text_edited: boolean;
+  jiku_code: string | null;
+  material_code: string | null;
   updated_at: string;
 }
 

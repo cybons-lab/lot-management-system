@@ -97,17 +97,23 @@ type RowInputState = {
   shippingDate: string;
   shippingSlipText: string;
   shippingSlipTextEdited: boolean;
+  jikuCode: string;
+  materialCode: string;
 };
 
+const orEmpty = (v: string | null | undefined) => v || "";
+
 const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
-  lotNo1: row.manual_lot_no_1 || row.lot_no || "",
-  quantity1: row.manual_quantity_1 || "",
-  lotNo2: row.manual_lot_no_2 || "",
-  quantity2: row.manual_quantity_2 || "",
-  inboundNo: row.manual_inbound_no || row.inbound_no || "",
-  shippingDate: row.manual_shipping_date || "",
-  shippingSlipText: row.manual_shipping_slip_text || "",
+  lotNo1: row.manual_lot_no_1 || orEmpty(row.lot_no),
+  quantity1: orEmpty(row.manual_quantity_1),
+  lotNo2: orEmpty(row.manual_lot_no_2),
+  quantity2: orEmpty(row.manual_quantity_2),
+  inboundNo: row.manual_inbound_no || orEmpty(row.inbound_no),
+  shippingDate: orEmpty(row.manual_shipping_date),
+  shippingSlipText: orEmpty(row.manual_shipping_slip_text),
   shippingSlipTextEdited: row.manual_shipping_slip_text_edited || false,
+  jikuCode: row.manual_jiku_code || orEmpty(row.jiku_code),
+  materialCode: row.manual_material_code || orEmpty(row.material_code),
 });
 
 // ============================================
@@ -363,6 +369,8 @@ export function OcrResultsListPage() {
         shipping_date: input.shippingDate || null,
         shipping_slip_text: input.shippingSlipText || null,
         shipping_slip_text_edited: input.shippingSlipTextEdited,
+        jiku_code: input.jikuCode || null,
+        material_code: input.materialCode || null,
       };
 
       saveEditMutation.mutate({ rowId: row.id, payload });
@@ -471,21 +479,25 @@ export function OcrResultsListPage() {
         id: "material_code",
         header: "材質コード",
         accessor: (row) => (
-          <span className={row.master_not_found ? "text-red-600 font-medium" : ""}>
-            {row.material_code || "-"}
-          </span>
+          <EditableTextCell
+            row={row}
+            field="materialCode"
+            inputClassName={row.master_not_found ? "border-red-300 bg-red-50" : ""}
+          />
         ),
-        minWidth: 100,
+        minWidth: 120,
       },
       {
         id: "jiku_code",
         header: "次区",
         accessor: (row) => (
-          <span className={row.jiku_format_error ? "text-red-600 font-medium" : ""}>
-            {row.jiku_code || "-"}
-          </span>
+          <EditableTextCell
+            row={row}
+            field="jikuCode"
+            inputClassName={row.jiku_format_error ? "border-red-300 bg-red-50" : ""}
+          />
         ),
-        minWidth: 80,
+        minWidth: 100,
       },
       {
         id: "delivery_date",

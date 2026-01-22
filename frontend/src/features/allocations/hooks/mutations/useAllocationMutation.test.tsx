@@ -156,7 +156,7 @@ describe("useAllocationMutation", () => {
     });
 
     await waitFor(() => {
-      expect(onError).toHaveBeenCalledWith("保存に失敗しました");
+      expect(onError).toHaveBeenCalledWith("予期しないエラーが発生しました。");
     });
   });
 

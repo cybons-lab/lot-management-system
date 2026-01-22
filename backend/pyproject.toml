@@ -29,6 +29,7 @@ dependencies = [
     "PyJWT>=2.8.0",
     "httpx>=0.28.1",
     "reportlab>=4.4.9",
+    "requests>=2.32.0",
 ]
 
 [tool.ruff]
@@ -93,6 +94,7 @@ dev = [
     "types-passlib>=1.7.7",
     "types-python-jose>=3.3.4",
     "types-pyyaml>=6.0.12.20250915",
+    "types-requests>=2.32.4.20260107",
 ]
 
 [tool.mypy]
