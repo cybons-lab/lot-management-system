@@ -101,17 +101,19 @@ type RowInputState = {
   materialCode: string;
 };
 
+const orEmpty = (v: string | null | undefined) => v || "";
+
 const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
-  lotNo1: row.manual_lot_no_1 || row.lot_no || "",
-  quantity1: row.manual_quantity_1 || "",
-  lotNo2: row.manual_lot_no_2 || "",
-  quantity2: row.manual_quantity_2 || "",
-  inboundNo: row.manual_inbound_no || row.inbound_no || "",
-  shippingDate: row.manual_shipping_date || "",
-  shippingSlipText: row.manual_shipping_slip_text || "",
+  lotNo1: row.manual_lot_no_1 || orEmpty(row.lot_no),
+  quantity1: orEmpty(row.manual_quantity_1),
+  lotNo2: orEmpty(row.manual_lot_no_2),
+  quantity2: orEmpty(row.manual_quantity_2),
+  inboundNo: row.manual_inbound_no || orEmpty(row.inbound_no),
+  shippingDate: orEmpty(row.manual_shipping_date),
+  shippingSlipText: orEmpty(row.manual_shipping_slip_text),
   shippingSlipTextEdited: row.manual_shipping_slip_text_edited || false,
-  jikuCode: (row as any).manual_jiku_code || row.jiku_code || "",
-  materialCode: (row as any).manual_material_code || row.material_code || "",
+  jikuCode: row.manual_jiku_code || orEmpty(row.jiku_code),
+  materialCode: row.manual_material_code || orEmpty(row.material_code),
 });
 
 // ============================================

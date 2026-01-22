@@ -76,22 +76,29 @@ class ErrorLogger {
     }
 
     // Send to backend for all levels (info, warning, error)
-    import("@/shared/utils/logger").then(({ Logger }) => {
-      const contextStr = context ? ` | ${JSON.stringify(context)}` : "";
-      const message = `[${source}] ${entry.message}${contextStr}`;
+    import("@/shared/utils/logger")
+      .then((module) => {
+        const Logger = module?.Logger;
+        if (!Logger) return;
 
-      switch (level) {
-        case "error":
-          Logger.error(message);
-          break;
-        case "warning":
-          Logger.warning(message);
-          break;
-        case "info":
-          Logger.info(message);
-          break;
-      }
-    });
+        const contextStr = context ? ` | ${JSON.stringify(context)}` : "";
+        const message = `[${source}] ${entry.message}${contextStr}`;
+
+        switch (level) {
+          case "error":
+            Logger.error(message);
+            break;
+          case "warning":
+            Logger.warning(message);
+            break;
+          case "info":
+            Logger.info(message);
+            break;
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to import Logger:", err);
+      });
   }
 
   /**

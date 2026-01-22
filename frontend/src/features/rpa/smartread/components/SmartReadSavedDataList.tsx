@@ -157,9 +157,7 @@ export function SmartReadSavedDataList({ configId }: SmartReadSavedDataListProps
           <p className="text-xs text-muted-foreground">
             過去に変換・保存された縦持ちデータを表示しています (最新1000件)
           </p>
-          <p className="text-xs text-muted-foreground">
-            件数: {longDataList?.length ?? 0} 件
-          </p>
+          <p className="text-xs text-muted-foreground">件数: {longDataList?.length ?? 0} 件</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
