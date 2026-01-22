@@ -517,6 +517,7 @@ class SmartReadClient:
         Args:
             task_id: タスクID
             export_type: エクスポート形式 (csv, json等)
+            aggregation: 集約設定
             timeout: タイムアウト秒数
 
         Returns:
