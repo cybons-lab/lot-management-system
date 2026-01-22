@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -144,8 +145,6 @@ class SmartReadWatchService(SmartReadBaseService):
                 extra={"config_id": config_id},
             )
             return WatchDirProcessOutcome(task_id=None, results=[], watch_dir=None)
-
-        import os
 
         watch_dir = Path(config.watch_dir)
         # ファイルを読み込み
