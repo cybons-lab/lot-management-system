@@ -17592,7 +17592,7 @@
           "smartread"
         ],
         "summary": "Process Files",
-        "description": "監視フォルダ内の指定ファイルを処理.",
+        "description": "監視フォルダ内の指定ファイルを処理 (process-autoへリダイレクト).",
         "operationId": "process_files_api_rpa_smartread_configs__config_id__process_post",
         "security": [
           {
@@ -17750,6 +17750,64 @@
                 "schema": {
                   "$ref": "#/components/schemas/SmartReadAnalyzeResponse"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/analyze-simple": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Analyze File Simple",
+        "description": "ファイルをSmartRead APIで解析（バックグラウンド処理）.\n\n即座にレスポンスを返し、バックグラウンドで処理を実行。\n処理完了後、結果はDBに保存される。\n\nReturns:\n    処理開始のレスポンス（task_idを含む）",
+        "operationId": "analyze_file_simple_api_rpa_smartread_analyze_simple_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "使用する設定のID",
+              "title": "Config Id"
+            },
+            "description": "使用する設定のID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_analyze_file_simple_api_rpa_smartread_analyze_simple_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -18455,6 +18513,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SmartReadSaveLongDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/configs/{config_id}/reset-data": {
+      "delete": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "Reset Smartread Data",
+        "description": "SmartReadデータを初期化（テスト用）.",
+        "operationId": "reset_smartread_data_api_rpa_smartread_configs__config_id__reset_data_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadResetResponse"
                 }
               }
             }
@@ -19580,6 +19686,64 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OcrResultItem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ocr-results/{item_id}/edit": {
+      "post": {
+        "tags": [
+          "OCR Results"
+        ],
+        "summary": "Save Ocr Result Edit",
+        "description": "OCR結果の手入力内容を保存.",
+        "operationId": "save_ocr_result_edit_api_ocr_results__item_id__edit_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OcrResultEditRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OcrResultEditResponse"
                 }
               }
             }
@@ -21010,6 +21174,21 @@
           "file"
         ],
         "title": "Body_analyze_file_api_rpa_smartread_analyze_post"
+      },
+      "Body_analyze_file_simple_api_rpa_smartread_analyze_simple_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "解析するファイル（PDF, PNG, JPG）"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_analyze_file_simple_api_rpa_smartread_analyze_simple_post"
       },
       "Body_create_run_api_rpa_material_delivery_note_runs_post": {
         "properties": {
@@ -28930,6 +29109,254 @@
         "title": "OcrImportResponse",
         "description": "OCR取込レスポンス."
       },
+      "OcrResultEditRequest": {
+        "properties": {
+          "lot_no_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No 1"
+          },
+          "quantity_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity 1"
+          },
+          "lot_no_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No 2"
+          },
+          "quantity_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity 2"
+          },
+          "inbound_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inbound No"
+          },
+          "shipping_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Date"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text"
+          },
+          "shipping_slip_text_edited": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text Edited"
+          },
+          "jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Code"
+          },
+          "material_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Code"
+          }
+        },
+        "type": "object",
+        "title": "OcrResultEditRequest",
+        "description": "OCR結果手入力の更新リクエスト."
+      },
+      "OcrResultEditResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "smartread_long_data_id": {
+            "type": "integer",
+            "title": "Smartread Long Data Id"
+          },
+          "lot_no_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No 1"
+          },
+          "quantity_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity 1"
+          },
+          "lot_no_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No 2"
+          },
+          "quantity_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity 2"
+          },
+          "inbound_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inbound No"
+          },
+          "shipping_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Date"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text"
+          },
+          "shipping_slip_text_edited": {
+            "type": "boolean",
+            "title": "Shipping Slip Text Edited"
+          },
+          "jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Code"
+          },
+          "material_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Code"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "smartread_long_data_id",
+          "shipping_slip_text_edited",
+          "updated_at"
+        ],
+        "title": "OcrResultEditResponse",
+        "description": "OCR結果手入力の保存結果."
+      },
       "OcrResultItem": {
         "properties": {
           "id": {
@@ -29187,6 +29614,28 @@
               }
             ],
             "title": "Manual Shipping Slip Text Edited"
+          },
+          "manual_jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Jiku Code"
+          },
+          "manual_material_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Material Code"
           },
           "manual_updated_at": {
             "anyOf": [
@@ -35004,11 +35453,18 @@
             "title": "Filename"
           },
           "data": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Data"
           },
           "error_message": {
@@ -35876,6 +36332,57 @@
         ],
         "title": "SmartReadRequestResponse",
         "description": "リクエスト状態レスポンス."
+      },
+      "SmartReadResetResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "削除成功フラグ"
+          },
+          "deleted_long_count": {
+            "type": "integer",
+            "title": "Deleted Long Count",
+            "description": "削除した縦持ちデータ件数"
+          },
+          "deleted_wide_count": {
+            "type": "integer",
+            "title": "Deleted Wide Count",
+            "description": "削除した横持ちデータ件数"
+          },
+          "deleted_request_count": {
+            "type": "integer",
+            "title": "Deleted Request Count",
+            "description": "削除したリクエスト件数"
+          },
+          "deleted_task_count": {
+            "type": "integer",
+            "title": "Deleted Task Count",
+            "description": "削除したタスク件数"
+          },
+          "deleted_export_history_count": {
+            "type": "integer",
+            "title": "Deleted Export History Count",
+            "description": "削除したエクスポート履歴件数"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "メッセージ"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "deleted_long_count",
+          "deleted_wide_count",
+          "deleted_request_count",
+          "deleted_task_count",
+          "deleted_export_history_count",
+          "message"
+        ],
+        "title": "SmartReadResetResponse",
+        "description": "SmartReadデータ初期化レスポンス."
       },
       "SmartReadSaveLongDataRequest": {
         "properties": {
