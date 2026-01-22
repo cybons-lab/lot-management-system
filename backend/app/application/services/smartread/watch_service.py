@@ -73,7 +73,11 @@ class SmartReadWatchService(SmartReadBaseService):
 
         extensions = set()
         if config.input_exts:
-            extensions = {f".{ext.strip().lower()}" for ext in config.input_exts.split(",")}
+            extensions = {
+                f".{ext.strip().lower().lstrip('.')}"
+                for ext in config.input_exts.split(",")
+                if ext.strip()
+            }
 
         files = []
         try:
@@ -359,7 +363,11 @@ class SmartReadWatchService(SmartReadBaseService):
                 raise RuntimeError("リクエスト送信に失敗しました")
 
             export_type = config.export_type or "csv"
-            export = await client.create_export(task_id, export_type=export_type)
+            export = await client.create_export(
+                task_id,
+                export_type=export_type,
+                aggregation=config.aggregation_type,
+            )
             if not export:
                 raise RuntimeError("エクスポート作成に失敗しました")
 
