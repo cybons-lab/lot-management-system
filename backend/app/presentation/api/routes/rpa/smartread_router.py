@@ -167,15 +167,17 @@ async def process_files(
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
 ) -> list[SmartReadAnalyzeResponse]:
-    """監視フォルダ内の指定ファイルを処理 (process-autoへリダイレクト)."""
-    # process-autoと同じ処理を実行
+    """監視フォルダ内の指定ファイルを処理 (バックグラウンド処理)."""
     from datetime import date
+
+    from app.application.services.smartread.request_service import (
+        SmartReadRequestService,
+        process_files_background,
+    )
 
     assert db is not None
 
     # 今日のタスクを取得または作成
-    from app.application.services.smartread.request_service import SmartReadRequestService
-
     request_service = SmartReadRequestService(db)
     task_date = date.today()
     task_id, task_record = await request_service.get_or_create_daily_task(config_id, task_date)
@@ -189,10 +191,6 @@ async def process_files(
         )
 
     # ファイルを処理（バックグラウンドで処理）
-    from app.application.services.smartread.request_service import (
-        process_files_background,
-    )
-
     background_tasks.add_task(
         process_files_background,
         db,
@@ -778,146 +776,6 @@ def reset_smartread_data(
 
 # ==================== requestId/results ルート API ====================
 
-
-@router.post(
-    "/configs/{config_id}/process-auto",
-    response_model=SmartReadProcessAutoResponse,
-    summary="ファイルを自動処理（requestIdルート）",
-)
-async def process_files_auto(
-    config_id: int,
-    request: SmartReadProcessAutoRequest,
-    background_tasks: BackgroundTasks,
-    uow: UnitOfWork = Depends(get_uow),
-    _current_user: User = Depends(get_current_user),
-) -> SmartReadProcessAutoResponse:
-    """監視フォルダ内の指定ファイルを自動処理（requestIdルート）.
-
-    1日1タスク運用で、ファイルをSmartRead APIに投入し、
-    バックグラウンドでポーリング・結果処理を実行します。
-    """
-    from pathlib import Path
-
-    assert uow.session is not None
-    service = SmartReadService(uow.session)
-
-    # 設定確認
-    config = service.get_config(config_id)
-    if not config:
-        raise HTTPException(status_code=404, detail="設定が見つかりません")
-
-    if not config.watch_dir:
-        raise HTTPException(status_code=400, detail="監視ディレクトリが設定されていません")
-
-    # skip_today チェック（日次タスクが既に存在する場合）
-    from datetime import date
-
-    task_date = date.today()
-
-    # 1日1タスクを取得または作成
-    task_id, task_record = await service.get_or_create_daily_task(config_id, task_date)
-    if not task_id or not task_record:
-        raise HTTPException(status_code=500, detail="タスクの取得/作成に失敗しました")
-
-    if task_record.skip_today:
-        raise HTTPException(
-            status_code=403, detail="このタスクは今日スキップする設定になっています"
-        )
-
-    # ファイルを読み込んでリクエスト投入
-    watch_dir = Path(config.watch_dir)
-    submitted_requests: list[SmartReadRequestResponse] = []
-
-    for filename in request.filenames:
-        file_path = watch_dir / filename
-        if not file_path.exists():
-            continue
-
-        try:
-            with open(file_path, "rb") as f:
-                file_content = f.read()
-
-            request_record = await service.submit_ocr_request(
-                config_id=config_id,
-                task_id=task_id,
-                task_record=task_record,
-                file_content=file_content,
-                filename=filename,
-            )
-
-            if request_record:
-                submitted_requests.append(
-                    SmartReadRequestResponse(
-                        id=request_record.id,
-                        request_id=request_record.request_id,
-                        task_id=request_record.task_id,
-                        task_date=request_record.task_date.isoformat(),
-                        config_id=request_record.config_id,
-                        filename=request_record.filename,
-                        num_of_pages=request_record.num_of_pages,
-                        submitted_at=request_record.submitted_at.isoformat(),
-                        state=request_record.state,
-                        error_message=request_record.error_message,
-                        completed_at=(
-                            request_record.completed_at.isoformat()
-                            if request_record.completed_at
-                            else None
-                        ),
-                        created_at=request_record.created_at.isoformat(),
-                    )
-                )
-
-                # バックグラウンドでポーリング・処理を開始
-                background_tasks.add_task(
-                    _process_request_background,
-                    config_id=config_id,
-                    request_id=request_record.request_id,
-                )
-
-        except Exception as e:
-            import logging
-
-            logging.getLogger(__name__).error(f"Failed to process {filename}: {e}")
-
-    uow.session.commit()
-
-    return SmartReadProcessAutoResponse(
-        task_id=task_id,
-        task_name=task_record.name or f"OCR_{task_date.strftime('%Y%m%d')}",
-        requests=submitted_requests,
-        message=f"{len(submitted_requests)}件のファイルを処理中です",
-    )
-
-
-async def _process_request_background(config_id: int, request_id: str) -> None:
-    """バックグラウンドでリクエストをポーリング・処理."""
-    import logging
-
-    from app.application.services.common.uow_service import UnitOfWork
-    from app.core.database import SessionLocal
-
-    logger = logging.getLogger(__name__)
-
-    try:
-        # 新しいセッションでUoWを作成
-        with UnitOfWork(SessionLocal) as uow:
-            assert uow.session is not None
-            service = SmartReadService(uow.session)
-            request_record = service.get_request_by_id(request_id)
-
-            if not request_record:
-                logger.error(f"Request not found: {request_id}")
-                return
-
-            success = await service.poll_and_process_request(config_id, request_record)
-
-            if success:
-                logger.info(f"Request processed successfully: {request_id}")
-            else:
-                logger.warning(f"Request processing failed: {request_id}")
-
-    except Exception as e:
-        logger.error(f"Background processing error for {request_id}: {e}")
 
 
 @router.get(
