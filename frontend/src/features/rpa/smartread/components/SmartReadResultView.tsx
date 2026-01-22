@@ -1,13 +1,18 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 
-import { Download, AlertCircle, RefreshCw, Database, Repeat, Save } from "lucide-react";
+import { Download, AlertCircle, RefreshCw, Database, Repeat, Save, AlertTriangle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { syncTaskResults } from "../api";
 import { downloadJson, downloadCsv, useSyncTaskResults } from "../hooks";
 import { useResultDataLoader } from "../hooks/useResultDataLoader";
 import { useTransformToLong } from "../hooks/useTransformToLong";
+
+// ★ Phase 0: 危険な /tasks/{id}/sync への導線を塞ぐ
+// この機能は PAD互換ランナー (/pad-runs) に置き換え予定
+// See: docs/smartread/pad_runner_implementation_plan.md
+const DANGEROUS_SYNC_DISABLED = true;
 
 import { SmartReadCsvTable } from "./SmartReadCsvTable";
 
@@ -139,9 +144,17 @@ function ResultHeader({
               </Button>
               <div className="border-r mx-1" />
             </>
+          ) : DANGEROUS_SYNC_DISABLED ? (
+            <>
+              {/* ★ Phase 0: 危険な同期APIは無効化 */}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-xs">
+                <AlertTriangle className="h-4 w-4" />
+                <span>同期機能は準備中です</span>
+              </div>
+            </>
           ) : (
             <>
-              {/* 本番モード: API同期ボタン */}
+              {/* 本番モード: API同期ボタン（現在無効） */}
               <Button
                 variant="outline"
                 size="sm"
@@ -242,10 +255,12 @@ function TabContentDisplay({
       <p>{label}データがありません</p>
       <p className="text-sm text-gray-500">
         {dataType === "wide"
-          ? "APIから同期ボタンでデータを取得してください"
+          ? DANGEROUS_SYNC_DISABLED
+            ? "監視フォルダから処理を実行してください"
+            : "APIから同期ボタンでデータを取得してください"
           : "横持ちデータの同期時に自動的に変換されます"}
       </p>
-      {dataType === "wide" && (
+      {dataType === "wide" && !DANGEROUS_SYNC_DISABLED && (
         <Button variant="outline" size="sm" onClick={onRetry}>
           <RefreshCw className="h-4 w-4 mr-1" />
           APIから同期
@@ -324,6 +339,9 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
   }, [configId, taskId]);
 
   useEffect(() => {
+    // ★ Phase 0: 自動同期を無効化（危険なAPIを叩かない）
+    if (DANGEROUS_SYNC_DISABLED) return;
+
     if (hasAutoSynced.current) return;
     if (isInitialLoading || loadError) return;
     if (wideData.length > 0 || longData.length > 0) return;
