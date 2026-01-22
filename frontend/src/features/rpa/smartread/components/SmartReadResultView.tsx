@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 
-import { Download, AlertCircle, RefreshCw, Database, Repeat, Save, AlertTriangle } from "lucide-react";
+import { Download, AlertCircle, RefreshCw, Database, Repeat, Save } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { syncTaskResults } from "../api";
@@ -146,10 +146,10 @@ function ResultHeader({
             </>
           ) : DANGEROUS_SYNC_DISABLED ? (
             <>
-              {/* ★ Phase 0: 危険な同期APIは無効化 */}
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-xs">
-                <AlertTriangle className="h-4 w-4" />
-                <span>同期機能は準備中です</span>
+              {/* PAD互換フロー使用中 - 結果はDBから自動取得 */}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md text-blue-700 text-xs">
+                <Database className="h-4 w-4" />
+                <span>結果はDBから表示中</span>
               </div>
             </>
           ) : (
@@ -256,9 +256,9 @@ function TabContentDisplay({
       <p className="text-sm text-gray-500">
         {dataType === "wide"
           ? DANGEROUS_SYNC_DISABLED
-            ? "監視フォルダから処理を実行してください"
+            ? "インポートタブでファイルを選択し処理を実行してください"
             : "APIから同期ボタンでデータを取得してください"
-          : "横持ちデータの同期時に自動的に変換されます"}
+          : "横持ちデータ処理完了後に自動的に変換されます"}
       </p>
       {dataType === "wide" && !DANGEROUS_SYNC_DISABLED && (
         <Button variant="outline" size="sm" onClick={onRetry}>

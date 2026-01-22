@@ -17,8 +17,9 @@ import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
 import {
   useSmartReadConfigs,
   useWatchDirFiles,
-  useProcessFilesAuto,
   useSmartReadTasks,
+  useStartPadRun,
+  usePadRuns,
 } from "../hooks";
 import { SMARTREAD_QUERY_KEYS } from "../hooks";
 import { logger } from "../utils/logger";
@@ -56,7 +57,9 @@ export function SmartReadPage() {
     isLoading: isWatchFilesLoading,
     refetch: refetchWatchFiles,
   } = useWatchDirFiles(selectedConfigId);
-  const processWatchFilesMutation = useProcessFilesAuto();
+  // PAD互換フロー: /pad-runs API を使用
+  const startPadRunMutation = useStartPadRun();
+  const { data: padRuns, refetch: refetchPadRuns } = usePadRuns(selectedConfigId);
   const { refetch: refetchTasks } = useSmartReadTasks(selectedConfigId, false);
 
   const activeConfigs = useMemo(() => configs?.filter((c) => c.is_active) ?? [], [configs]);
@@ -76,7 +79,8 @@ export function SmartReadPage() {
   const handleProcessWatchFiles = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0) return;
 
-    await processWatchFilesMutation.mutateAsync({
+    // PAD互換フロー: /pad-runs API を使用
+    await startPadRunMutation.mutateAsync({
       configId: selectedConfigId,
       filenames: selectedWatchFiles,
     });
@@ -85,17 +89,11 @@ export function SmartReadPage() {
     setSelectedWatchFiles([]);
     setSelectedTaskId(null);
 
-    // Refresh file list and task list, then switch to tasks
+    // Refresh file list and PAD runs list
     refetchWatchFiles();
-    refetchTasks(); // This refetches API tasks... wait, we want Managed Tasks now.
-    // Actually `refetchTasks` was `useSmartReadTasks`.
-    // We might need to refetch managed tasks.
-    // But `SmartReadManagedTaskList` handles its own data fetching.
-    // Tricky part: `handleProcessWatchFiles` calls API to process files. This creates tasks in DB (via backend).
-    // So we just need to ensure `ManagedTaskList` refreshes.
-    // We can invalidate the query here.
+    refetchPadRuns();
 
-    // setActiveTab("tasks"); // we will rename "history" to "tasks"
+    // タスクタブに切り替え（PAD Runの状態表示はタスクタブで行う）
     await queryClient.invalidateQueries({
       queryKey: selectedConfigId ? SMARTREAD_QUERY_KEYS.managedTasks(selectedConfigId) : [],
     });
@@ -305,11 +303,11 @@ export function SmartReadPage() {
                           className="w-full"
                           size="sm"
                           disabled={
-                            selectedWatchFiles.length === 0 || processWatchFilesMutation.isPending
+                            selectedWatchFiles.length === 0 || startPadRunMutation.isPending
                           }
                           onClick={handleProcessWatchFiles}
                         >
-                          {processWatchFilesMutation.isPending && (
+                          {startPadRunMutation.isPending && (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           )}
                           選択ファイルを処理
@@ -348,13 +346,67 @@ export function SmartReadPage() {
 
           {/* Tab 2: Tasks (Merged) */}
           <TabsContent value="tasks" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
-            <div className="h-full overflow-hidden">
-              <SmartReadManagedTaskList
-                configId={selectedConfigId}
-                selectedTaskId={selectedTaskId}
-                onSelectTask={handleSelectTask}
-                onViewDetail={() => setActiveTab("detail")}
-              />
+            <div className="h-full overflow-hidden flex flex-col gap-4">
+              {/* PAD Run Status (最新の実行状態) */}
+              {padRuns && padRuns.runs.length > 0 && (
+                <Card className="shrink-0">
+                  <CardHeader className="py-2 px-4">
+                    <CardTitle className="text-sm font-medium">PAD実行状態</CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 pb-3 pt-0">
+                    <div className="space-y-2">
+                      {padRuns.runs.slice(0, 3).map((run) => (
+                        <div
+                          key={run.run_id}
+                          className="flex items-center justify-between text-sm border rounded px-3 py-2"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                run.status === "RUNNING"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : run.status === "SUCCEEDED"
+                                    ? "bg-green-100 text-green-800"
+                                    : run.status === "FAILED"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {run.status === "RUNNING" && (
+                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              )}
+                              {run.status}
+                            </span>
+                            <span className="text-gray-500">Step: {run.step}</span>
+                          </div>
+                          <div className="flex items-center gap-4 text-gray-500">
+                            <span>
+                              {run.filenames ? `${run.filenames.length}ファイル` : "-"}
+                            </span>
+                            {run.status === "SUCCEEDED" && (
+                              <span className="text-green-600">
+                                横: {run.wide_data_count} / 縦: {run.long_data_count}
+                              </span>
+                            )}
+                            <span className="text-xs">
+                              {new Date(run.created_at).toLocaleTimeString("ja-JP")}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              {/* Managed Task List */}
+              <div className="flex-1 overflow-hidden">
+                <SmartReadManagedTaskList
+                  configId={selectedConfigId}
+                  selectedTaskId={selectedTaskId}
+                  onSelectTask={handleSelectTask}
+                  onViewDetail={() => setActiveTab("detail")}
+                />
+              </div>
             </div>
           </TabsContent>
 
