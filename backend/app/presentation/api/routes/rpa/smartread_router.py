@@ -227,6 +227,53 @@ async def analyze_file(
     )
 
 
+@router.post("/analyze-simple", response_model=SmartReadCsvDataResponse)
+async def analyze_file_simple(
+    file: Annotated[UploadFile, File(description="解析するファイル（PDF, PNG, JPG）")],
+    config_id: int = Query(..., description="使用する設定のID"),
+    uow: UnitOfWork = Depends(get_uow),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadCsvDataResponse:
+    """ファイルをSmartRead APIで解析（シンプルフロー）.
+
+    参考コードを基にしたシンプルな実装:
+    1. タスク作成 (exportSettings付き)
+    2. ファイルアップロード
+    3. タスク完了待ち
+    4. エクスポート開始
+    5. エクスポート完了待ち
+    6. ZIPダウンロード
+    7. CSV抽出・DB保存
+
+    処理完了まで待機するため、タイムアウトに注意。
+    """
+    assert uow.session is not None
+    file_content = await file.read()
+    filename = file.filename or "unknown"
+
+    service = SmartReadService(uow.session)
+    result = await service.sync_with_simple_flow(
+        config_id=config_id,
+        file_content=file_content,
+        filename=filename,
+    )
+
+    return SmartReadCsvDataResponse(
+        wide_data=result["wide_data"],
+        long_data=result["long_data"],
+        errors=[
+            SmartReadValidationError(
+                row=e["row"],
+                field=e["field"],
+                message=e["message"],
+                value=e["value"],
+            )
+            for e in result["errors"]
+        ],
+        filename=result.get("filename"),
+    )
+
+
 # --- エクスポート ---
 
 
