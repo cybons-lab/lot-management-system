@@ -1,9 +1,13 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { RefreshCw } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import type { SmartReadLongData } from "../api";
-import { useSmartReadLongData } from "../hooks";
+import { resetSmartReadData } from "../api";
+import { exportCache } from "../db/export-cache";
+import { SMARTREAD_QUERY_KEYS, useSmartReadLongData } from "../hooks";
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -93,9 +97,38 @@ function useLongDataColumns(longDataList: SmartReadLongData[] | undefined) {
   }, [longDataList]);
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function SmartReadSavedDataList({ configId }: SmartReadSavedDataListProps) {
+  const queryClient = useQueryClient();
   const { data: longDataList, isLoading, refetch, isRefetching } = useSmartReadLongData(configId);
   const columns = useLongDataColumns(longDataList);
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleReset = async () => {
+    if (!configId || isResetting) return;
+    const confirmed = window.confirm(
+      "SmartReadの保存済みデータをすべて削除します。よろしいですか？",
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsResetting(true);
+      const result = await resetSmartReadData(configId);
+      await exportCache.clearByConfig(configId);
+      await queryClient.invalidateQueries({
+        queryKey: SMARTREAD_QUERY_KEYS.longData(configId),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: SMARTREAD_QUERY_KEYS.managedTasks(configId),
+      });
+      toast.success(result.message);
+    } catch (error) {
+      console.error("Failed to reset SmartRead data:", error);
+      toast.error("SmartReadデータのリセットに失敗しました");
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   if (!configId) {
     return (
@@ -119,17 +152,25 @@ export function SmartReadSavedDataList({ configId }: SmartReadSavedDataListProps
             過去に変換・保存された全ての縦持ちデータを表示しています (最新1000件)
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isLoading || isRefetching}
-        >
-          <RefreshCw
-            className={cn("mr-2 h-4 w-4", (isLoading || isRefetching) && "animate-spin")}
-          />
-          更新
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading || isRefetching || isResetting}
+          >
+            <RefreshCw
+              className={cn(
+                "mr-2 h-4 w-4",
+                (isLoading || isRefetching || isResetting) && "animate-spin",
+              )}
+            />
+            更新
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handleReset} disabled={isResetting}>
+            DBリセット
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-0 min-h-0">
         <DataTable

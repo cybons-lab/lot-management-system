@@ -1,7 +1,8 @@
+/* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 
 import { Download, AlertCircle, RefreshCw, Database, Repeat, Save } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { syncTaskResults } from "../api";
 import { downloadJson, downloadCsv, useSyncTaskResults } from "../hooks";
@@ -256,6 +257,9 @@ function TabContentDisplay({
 
 export function SmartReadResultView({ configId, taskId }: SmartReadResultViewProps) {
   const [activeTab, setActiveTab] = useState("wide");
+  const hasAutoSynced = useRef(false);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryCountRef = useRef(0);
 
   // データ読み込みフック
   const {
@@ -274,9 +278,21 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
   const syncMutation = useSyncTaskResults();
 
   // API同期して横持ち・縦持ちデータを取得（自動変換済み）
-  const handleSyncFromApi = async () => {
+  const handleSyncFromApi = useCallback(async () => {
     console.info(`[ResultView] Triggering API sync for task ${taskId}...`);
     const result = await syncMutation.mutateAsync({ configId, taskId, forceSync: true });
+
+    if (result.state === "PENDING") {
+      retryCountRef.current += 1;
+      if (retryCountRef.current <= 12) {
+        retryTimerRef.current = setTimeout(() => {
+          void handleSyncFromApi();
+        }, 5000);
+      }
+      return;
+    }
+
+    retryCountRef.current = 0;
 
     console.info(`[ResultView] Sync result:`, {
       wide: result.wide_data.length,
@@ -296,7 +312,33 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     } else if (result.wide_data.length > 0) {
       setActiveTab("wide");
     }
-  };
+  }, [configId, setFilename, setLongData, setTransformErrors, setWideData, syncMutation, taskId]);
+
+  useEffect(() => {
+    hasAutoSynced.current = false;
+    retryCountRef.current = 0;
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  }, [configId, taskId]);
+
+  useEffect(() => {
+    if (hasAutoSynced.current) return;
+    if (isInitialLoading || loadError) return;
+    if (wideData.length > 0 || longData.length > 0) return;
+
+    hasAutoSynced.current = true;
+    void handleSyncFromApi();
+  }, [handleSyncFromApi, isInitialLoading, loadError, wideData.length, longData.length]);
+
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleDownloadLong = () => {
     if (longData.length === 0) return;

@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
+from app.infrastructure.persistence.models.smartread_models import OcrResultEdit
 from app.presentation.api.routes.auth.auth_router import get_current_user
 
 
@@ -120,6 +121,59 @@ class OcrResultsExportRow(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class OcrResultEditRequest(BaseModel):
+    """OCR結果手入力の更新リクエスト."""
+
+    lot_no_1: str | None = None
+    quantity_1: str | None = None
+    lot_no_2: str | None = None
+    quantity_2: str | None = None
+    inbound_no: str | None = None
+    shipping_date: date | None = None
+    shipping_slip_text: str | None = None
+    shipping_slip_text_edited: bool | None = None
+
+
+class OcrResultEditResponse(BaseModel):
+    """OCR結果手入力の保存結果."""
+
+    id: int
+    smartread_long_data_id: int
+    lot_no_1: str | None = None
+    quantity_1: str | None = None
+    lot_no_2: str | None = None
+    quantity_2: str | None = None
+    inbound_no: str | None = None
+    shipping_date: date | None = None
+    shipping_slip_text: str | None = None
+    shipping_slip_text_edited: bool
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+def build_shipping_slip_text(
+    template: str | None,
+    inbound_no: str | None,
+    lot_no_1: str | None,
+    quantity_1: str | None,
+    lot_no_2: str | None,
+    quantity_2: str | None,
+) -> str | None:
+    """出荷票テンプレートにロット・入庫情報を反映."""
+    if not template:
+        return None
+
+    lot_entries = []
+    if lot_no_1:
+        lot_entries.append(f"{lot_no_1}（{quantity_1 or ''}）")
+    if lot_no_2:
+        lot_entries.append(f"{lot_no_2}（{quantity_2 or ''}）")
+
+    lot_text = "・".join(lot_entries)
+    return template.replace("ロット番号(数量)", lot_text).replace("入庫番号", inbound_no or "")
+
+
 @router.get("", response_model=OcrResultListResponse)
 async def list_ocr_results(
     task_date: Annotated[str | None, Query(description="タスク日付 (YYYY-MM-DD)")] = None,
@@ -203,6 +257,35 @@ async def get_ocr_result(
     return OcrResultItem.model_validate(dict(row))
 
 
+@router.post("/{item_id}/edit", response_model=OcrResultEditResponse)
+async def save_ocr_result_edit(
+    item_id: int,
+    request: OcrResultEditRequest,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> OcrResultEditResponse:
+    """OCR結果の手入力内容を保存."""
+    edit = (
+        db.query(OcrResultEdit)
+        .filter(OcrResultEdit.smartread_long_data_id == item_id)
+        .one_or_none()
+    )
+
+    if edit is None:
+        edit = OcrResultEdit(smartread_long_data_id=item_id)
+        db.add(edit)
+
+    update_data = request.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(edit, key, value)
+
+    edit.updated_at = datetime.now()
+    db.commit()
+    db.refresh(edit)
+
+    return OcrResultEditResponse.model_validate(edit)
+
+
 @router.get("/export/download")
 async def export_ocr_results(
     task_date: Annotated[str | None, Query(description="タスク日付 (YYYY-MM-DD)")] = None,
@@ -236,22 +319,39 @@ async def export_ocr_results(
     for row in rows:
         content = row.get("content") or {}
         remarks = content.get("備考") if isinstance(content, dict) else None
+        lot_no_1 = row.get("manual_lot_no_1")
+        quantity_1 = row.get("manual_quantity_1")
+        lot_no_2 = row.get("manual_lot_no_2")
+        quantity_2 = row.get("manual_quantity_2")
+        inbound_no = row.get("manual_inbound_no") or row.get("inbound_no")
+        shipping_slip_text = (
+            row.get("manual_shipping_slip_text")
+            if row.get("manual_shipping_slip_text_edited")
+            else build_shipping_slip_text(
+                row.get("shipping_slip_text"),
+                inbound_no,
+                lot_no_1 or row.get("lot_no"),
+                quantity_1,
+                lot_no_2,
+                quantity_2,
+            )
+        )
         export_rows.append(
             OcrResultsExportRow.model_validate(
                 {
                     "task_date": row.get("task_date"),
                     "status": row.get("status"),
-                    "inbound_no": row.get("inbound_no"),
+                    "inbound_no": inbound_no,
                     "delivery_date": row.get("delivery_date"),
                     "delivery_quantity": row.get("delivery_quantity"),
                     "item_no": row.get("item_no"),
                     "order_unit": row.get("order_unit"),
-                    "lot_no": row.get("lot_no"),
+                    "lot_no": lot_no_1 or row.get("lot_no"),
                     "material_code": row.get("material_code"),
                     "jiku_code": row.get("jiku_code"),
                     "customer_part_no": row.get("customer_part_no"),
                     "maker_part_no": row.get("maker_part_no"),
-                    "shipping_slip_text": row.get("shipping_slip_text"),
+                    "shipping_slip_text": shipping_slip_text,
                     "customer_code": row.get("customer_code"),
                     "customer_name": row.get("customer_name"),
                     "supplier_code": row.get("supplier_code"),

@@ -28,6 +28,17 @@ export interface OcrResultItem {
   inbound_no: string | null;
   lot_no: string | null;
 
+  // 手入力結果
+  manual_lot_no_1: string | null;
+  manual_quantity_1: string | null;
+  manual_lot_no_2: string | null;
+  manual_quantity_2: string | null;
+  manual_inbound_no: string | null;
+  manual_shipping_date: string | null;
+  manual_shipping_slip_text: string | null;
+  manual_shipping_slip_text_edited: boolean | null;
+  manual_updated_at: string | null;
+
   // マスタ由来
   master_id: number | null;
   customer_name: string | null;
@@ -63,6 +74,31 @@ interface OcrResultListResponse {
   total: number;
 }
 
+export interface OcrResultEditPayload {
+  lot_no_1?: string | null;
+  quantity_1?: string | null;
+  lot_no_2?: string | null;
+  quantity_2?: string | null;
+  inbound_no?: string | null;
+  shipping_date?: string | null;
+  shipping_slip_text?: string | null;
+  shipping_slip_text_edited?: boolean | null;
+}
+
+export interface OcrResultEditResponse {
+  id: number;
+  smartread_long_data_id: number;
+  lot_no_1: string | null;
+  quantity_1: string | null;
+  lot_no_2: string | null;
+  quantity_2: string | null;
+  inbound_no: string | null;
+  shipping_date: string | null;
+  shipping_slip_text: string | null;
+  shipping_slip_text_edited: boolean;
+  updated_at: string;
+}
+
 export const ocrResultsApi = {
   /**
    * OCR結果一覧取得（v_ocr_resultsビューから）
@@ -84,6 +120,14 @@ export const ocrResultsApi = {
    */
   get: async (id: number): Promise<OcrResultItem> => {
     const response = await http.get<OcrResultItem>(`ocr-results/${id}`);
+    return response;
+  },
+
+  /**
+   * OCR結果の手入力内容を保存
+   */
+  saveEdit: async (id: number, payload: OcrResultEditPayload): Promise<OcrResultEditResponse> => {
+    const response = await http.post<OcrResultEditResponse>(`ocr-results/${id}/edit`, payload);
     return response;
   },
 

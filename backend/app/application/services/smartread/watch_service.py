@@ -188,7 +188,7 @@ class SmartReadWatchService(SmartReadBaseService):
 
         # タスクをDBに保存
         task_date = date.today()
-        task_name = f"Watch Dir: {', '.join(filenames[:3])}" + ("..." if len(filenames) > 3 else "")
+        task_name = f"Watch Dir {task_date.strftime('%Y-%m-%d')} ({len(filenames)} files)"
         try:
             self.get_or_create_task(
                 config_id=config_id,
