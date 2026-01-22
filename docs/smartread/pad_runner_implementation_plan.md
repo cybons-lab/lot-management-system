@@ -1010,7 +1010,36 @@ backend/tests/fixtures/smartread/
 - 既存の `/analyze-simple` と `/configs/{id}/process` は維持（壊さない）
 - フロントエンドの移行は段階的に（既存UIを壊さない）
 - 本番デプロイ前に工程追跡の動作確認を徹底
-- **execute_run は必ずスレッドで実行**（asyncio.to_thread or threading.Thread）
+- **execute_run は必ずスレッドで実行**（threading.Thread）
+
+### 8.1 スレッド方式の限界と許容範囲
+
+**制約:**
+- `daemon=True` のため、プロセス再起動/デプロイでスレッドは即座に終了する
+- その場合、DBのステータスは `RUNNING` のまま止まる
+
+**これは仕様として許容する。理由:**
+1. 専用ワーカー（Celery等）を入れるより、運用コストが低い
+2. heartbeat監視で `STALE` を自動検出できる
+3. `retry` エンドポイントで復旧できる
+4. 頻繁なデプロイ中のOCR処理は元々リスクがある（PADも同様）
+
+**運用フロー:**
+```
+[デプロイ/再起動]
+     ↓
+[RUNNING のまま止まる]
+     ↓
+[120秒後、GET /pad-runs/{run_id} で STALE 検出]
+     ↓
+[UI にリトライボタン表示]
+     ↓
+[POST /pad-runs/{run_id}/retry で再実行]
+```
+
+**推奨:**
+- デプロイは OCR処理が少ない時間帯（早朝・深夜）に行う
+- デプロイ前に `GET /pad-runs?config_id=X` で RUNNING がないか確認
 
 ## 9. 参考: PADスクリプトの該当箇所
 
