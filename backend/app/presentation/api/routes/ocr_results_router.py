@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
-from app.infrastructure.persistence.models.smartread_models import OcrResultEdit
 from app.infrastructure.persistence.models.auth_models import User
+from app.infrastructure.persistence.models.smartread_models import OcrResultEdit
 from app.presentation.api.routes.auth.auth_router import get_current_user
 
 
@@ -171,9 +171,7 @@ def build_shipping_slip_text(
         lot_entries.append(f"{lot_no_2}（{quantity_2 or ''}）")
 
     lot_text = "・".join(lot_entries)
-    return (
-        template.replace("ロット番号(数量)", lot_text).replace("入庫番号", inbound_no or "")
-    )
+    return template.replace("ロット番号(数量)", lot_text).replace("入庫番号", inbound_no or "")
 
 
 @router.get("", response_model=OcrResultListResponse)

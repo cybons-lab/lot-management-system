@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 
 import { Download, AlertCircle, RefreshCw, Database, Repeat, Save } from "lucide-react";

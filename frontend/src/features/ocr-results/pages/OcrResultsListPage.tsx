@@ -12,7 +12,15 @@
 /* eslint-disable jsx-a11y/no-autofocus */
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AlertCircle, AlertTriangle, CheckCircle, Download, XCircle } from "lucide-react";
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 
 import { ocrResultsApi, type OcrResultItem, type OcrResultEditPayload } from "../api";
@@ -303,13 +311,8 @@ export function OcrResultsListPage() {
   const saveTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
 
   const saveEditMutation = useMutation({
-    mutationFn: async ({
-      rowId,
-      payload,
-    }: {
-      rowId: number;
-      payload: OcrResultEditPayload;
-    }) => ocrResultsApi.saveEdit(rowId, payload),
+    mutationFn: async ({ rowId, payload }: { rowId: number; payload: OcrResultEditPayload }) =>
+      ocrResultsApi.saveEdit(rowId, payload),
     onError: (error) => {
       console.error("Failed to save OCR edits:", error);
       toast.error("OCR入力内容の保存に失敗しました");
@@ -400,9 +403,10 @@ export function OcrResultsListPage() {
   );
 
   useEffect(() => {
+    const timers = saveTimersRef.current;
     return () => {
-      saveTimersRef.current.forEach((timer) => clearTimeout(timer));
-      saveTimersRef.current.clear();
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
     };
   }, []);
 

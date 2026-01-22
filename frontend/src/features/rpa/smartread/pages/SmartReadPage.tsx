@@ -4,9 +4,9 @@
  * SmartRead OCR PDFインポートページ
  */
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Settings, Loader2, AlertCircle, RefreshCw, FileText } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { diagnoseWatchDirFile } from "../api";
 import { SmartReadManagedTaskList } from "../components/SmartReadManagedTaskList";
