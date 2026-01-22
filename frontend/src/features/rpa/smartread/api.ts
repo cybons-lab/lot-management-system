@@ -58,7 +58,7 @@ export interface SmartReadConfigUpdate {
 export interface SmartReadAnalyzeResponse {
   success: boolean;
   filename: string;
-  data: Record<string, unknown>[];
+  data: Record<string, unknown>[] | null;
   error_message: string | null;
 }
 
@@ -122,16 +122,25 @@ export async function deleteConfig(configId: number): Promise<void> {
 }
 
 /**
- * ファイルをSmartRead APIで解析
+ * ファイルをSmartRead APIで解析（バックグラウンド処理）
  */
 export async function analyzeFile(configId: number, file: File): Promise<SmartReadAnalyzeResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
-  return http.postFormData<SmartReadAnalyzeResponse>(
-    `rpa/smartread/analyze?config_id=${configId}`,
+  // Use analyze-simple for background processing with DB persistence
+  const response = await http.postFormData<{ message: string; filename: string; status: string }>(
+    `rpa/smartread/analyze-simple?config_id=${configId}`,
     formData,
   );
+
+  // Return a success response matching SmartReadAnalyzeResponse interface
+  return {
+    success: true,
+    filename: response.filename,
+    data: null,
+    error_message: null,
+  };
 }
 
 /**

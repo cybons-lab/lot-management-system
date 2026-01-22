@@ -57,6 +57,8 @@ class OcrResultItem(BaseModel):
     manual_shipping_date: date | None = None
     manual_shipping_slip_text: str | None = None
     manual_shipping_slip_text_edited: bool | None = None
+    manual_jiku_code: str | None = None
+    manual_material_code: str | None = None
     manual_updated_at: datetime | None = None
 
     # マスタ由来
@@ -132,6 +134,8 @@ class OcrResultEditRequest(BaseModel):
     shipping_date: date | None = None
     shipping_slip_text: str | None = None
     shipping_slip_text_edited: bool | None = None
+    jiku_code: str | None = None
+    material_code: str | None = None
 
 
 class OcrResultEditResponse(BaseModel):
@@ -147,6 +151,8 @@ class OcrResultEditResponse(BaseModel):
     shipping_date: date | None = None
     shipping_slip_text: str | None = None
     shipping_slip_text_edited: bool
+    jiku_code: str | None = None
+    material_code: str | None = None
     updated_at: datetime
 
     model_config = {"from_attributes": True}

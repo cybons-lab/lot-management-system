@@ -13,11 +13,15 @@ import mimetypes
 import time
 import zipfile
 from datetime import date
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import requests
 
 from app.application.services.smartread.base import SmartReadBaseService
+
+
+if TYPE_CHECKING:
+    from app.infrastructure.persistence.models import SmartReadConfig
 
 
 logger = logging.getLogger(__name__)
@@ -29,13 +33,28 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
     参考コードを基にした確実な実装。
     """
 
+    if TYPE_CHECKING:
+
+        def get_config(self, config_id: int) -> SmartReadConfig | None: ...
+
+        def _save_wide_and_long_data(
+            self,
+            config_id: int,
+            task_id: str,
+            export_id: str,
+            task_date: date,
+            wide_data: list[dict[str, Any]],
+            long_data: list[dict[str, Any]],
+            filename: str,
+        ) -> None: ...
+
     def _create_session(self, api_key: str) -> requests.Session:
         """認証済みセッションを作成."""
         s = requests.Session()
         s.headers.update({"Authorization": f"apikey {api_key}"})
-        s.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Python-Requests"
-        })
+        s.headers.update(
+            {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Python-Requests"}
+        )
         return s
 
     def _create_task(
@@ -68,7 +87,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             raise RuntimeError(f"タスク作成に失敗: HTTP {r.status_code} {r.text}")
 
         data = r.json()
-        task_id = data.get("taskId")
+        task_id = cast(str | None, data.get("taskId"))
         if not task_id:
             raise RuntimeError(f"taskId が取得できませんでした: {data}")
 
@@ -98,7 +117,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             raise RuntimeError(f"アップロード失敗: {filename} HTTP {r.status_code} {r.text}")
 
         data = r.json()
-        request_id = data.get("requestId")
+        request_id = cast(str | None, data.get("requestId"))
         if not request_id:
             raise RuntimeError(f"requestId が取得できませんでした: {data}")
 
@@ -128,13 +147,13 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
             # 完了条件
             if state == "OCR_COMPLETED":
-                return data
+                return cast(dict[str, Any], data)
 
             # 失敗チェック
             if state in ("SORTING_FAILED", "OCR_FAILED"):
                 summary = data.get("formStateSummary") or {}
                 if summary.get("OCR_RUNNING", 0) == 0 and summary.get("OCR_COMPLETED", 0) > 0:
-                    return data
+                    return cast(dict[str, Any], data)
                 raise RuntimeError(f"タスク処理失敗: {state}")
 
             # タイムアウトチェック
@@ -162,7 +181,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             raise RuntimeError(f"Export開始失敗: HTTP {r.status_code} {r.text}")
 
         data = r.json()
-        export_id = data.get("exportId")
+        export_id = cast(str | None, data.get("exportId"))
         if not export_id:
             raise RuntimeError(f"exportId が取得できませんでした: {data}")
 
@@ -192,7 +211,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             logger.info(f"[SimpleSync] Export state: {state}")
 
             if state != "RUNNING":
-                return data
+                return cast(dict[str, Any], data)
 
             if time.time() - start > timeout_sec:
                 raise TimeoutError(f"Export {export_id} の処理がタイムアウトしました")
@@ -249,6 +268,9 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
         config_id: int,
         file_content: bytes,
         filename: str,
+        *,
+        export_type_override: str | None = None,
+        aggregation_override: str | None = None,
     ) -> dict[str, Any]:
         """シンプルなフローでPDFを処理して結果を返す.
 
@@ -265,6 +287,8 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             config_id: 設定ID
             file_content: ファイルのバイナリデータ
             filename: ファイル名
+            export_type_override: エクスポート形式の上書き
+            aggregation_override: 集約形式の上書き
 
         Returns:
             処理結果 (wide_data, long_data, errors)
@@ -279,8 +303,8 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
         template_ids = None
         if config.template_ids:
             template_ids = [t.strip() for t in config.template_ids.split(",") if t.strip()]
-        export_type = config.export_type or "csv"
-        aggregation = config.aggregation_type or "perPage"
+        export_type = export_type_override or config.export_type or "csv"
+        aggregation = aggregation_override or config.aggregation_type or "perPage"
 
         # セッション作成
         session = self._create_session(api_key)
@@ -348,6 +372,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             from app.application.services.smartread.csv_transformer import (
                 SmartReadCsvTransformer,
             )
+
             transformer = SmartReadCsvTransformer()
             transform_result = transformer.transform_to_long(wide_data, skip_empty=True)
 

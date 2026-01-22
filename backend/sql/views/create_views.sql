@@ -495,10 +495,10 @@ SELECT
     ld.content,
     ld.created_at,
     
-    -- OCR由来（contentから抽出）+ 得意先コード補間
+    -- OCR由来（contentから抽出）+ 得意先コード補間 + 手入力補間
     COALESCE(ld.content->>'得意先コード', '100427105') AS customer_code,
-    COALESCE(ld.content->>'材質コード', ld.content->>'材料コード') AS material_code,
-    ld.content->>'次区' AS jiku_code,
+    COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') AS material_code,
+    COALESCE(oe.jiku_code, ld.content->>'次区') AS jiku_code,
     COALESCE(ld.content->>'納期', ld.content->>'納入日') AS delivery_date,
     COALESCE(ld.content->>'納入量', ld.content->>'数量') AS delivery_quantity,
     COALESCE(ld.content->>'アイテムNo', ld.content->>'アイテム') AS item_no,
@@ -515,6 +515,8 @@ SELECT
     oe.shipping_date AS manual_shipping_date,
     oe.shipping_slip_text AS manual_shipping_slip_text,
     oe.shipping_slip_text_edited AS manual_shipping_slip_text_edited,
+    oe.jiku_code AS manual_jiku_code,
+    oe.material_code AS manual_material_code,
     oe.updated_at AS manual_updated_at,
 
     -- マスタ由来（LEFT JOIN）
@@ -536,11 +538,11 @@ SELECT
     CASE WHEN m.id IS NULL THEN true ELSE false END AS master_not_found,
     
     -- バリデーションエラー: 次区フォーマット（アルファベット+数字）
-    CASE 
-        WHEN ld.content->>'次区' IS NOT NULL 
-             AND ld.content->>'次区' !~ '^[A-Za-z][0-9]+$' 
-        THEN true 
-        ELSE false 
+    CASE
+        WHEN COALESCE(oe.jiku_code, ld.content->>'次区') IS NOT NULL
+             AND COALESCE(oe.jiku_code, ld.content->>'次区') !~ '^[A-Za-z][0-9]+$'
+        THEN true
+        ELSE false
     END AS jiku_format_error,
     
     -- バリデーションエラー: 日付フォーマット（YYYY-MM-DD or YYYY/MM/DD）
@@ -552,10 +554,10 @@ SELECT
     END AS date_format_error,
     
     -- 総合エラーフラグ
-    CASE 
+    CASE
         WHEN ld.status = 'ERROR' THEN true
         WHEN m.id IS NULL THEN true
-        WHEN ld.content->>'次区' IS NOT NULL AND ld.content->>'次区' !~ '^[A-Za-z][0-9]+$' THEN true
+        WHEN COALESCE(oe.jiku_code, ld.content->>'次区') IS NOT NULL AND COALESCE(oe.jiku_code, ld.content->>'次区') !~ '^[A-Za-z][0-9]+$' THEN true
         WHEN ld.content->>'納期' IS NOT NULL AND ld.content->>'納期' !~ '^\d{4}[-/]\d{1,2}[-/]\d{1,2}$' THEN true
         ELSE false
     END AS has_error
@@ -565,7 +567,7 @@ LEFT JOIN public.ocr_result_edits oe
     ON oe.smartread_long_data_id = ld.id
 LEFT JOIN public.shipping_master_curated m
     ON COALESCE(ld.content->>'得意先コード', '100427105') = m.customer_code
-    AND COALESCE(ld.content->>'材質コード', ld.content->>'材料コード') = m.material_code
-    AND ld.content->>'次区' = m.jiku_code;
+    AND COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') = m.material_code
+    AND COALESCE(oe.jiku_code, ld.content->>'次区') = m.jiku_code;
 
 COMMENT ON VIEW public.v_ocr_results IS 'OCR結果ビュー（SmartRead縦持ちデータ + 出荷用マスタJOIN、エラー検出含む）';

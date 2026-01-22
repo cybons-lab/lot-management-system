@@ -18,6 +18,8 @@ from app.infrastructure.persistence.models.smartread_models import (
 
 
 if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
     from app.infrastructure.persistence.models import SmartReadConfig
     from app.infrastructure.smartread.client import SmartReadClient
 
@@ -454,3 +456,61 @@ class SmartReadRequestService(SmartReadBaseService):
 
         result = self.session.execute(stmt)
         return list(result.scalars().all())
+
+
+async def process_files_background(
+    db: Session,
+    config_id: int,
+    filenames: list[str],
+    task_id: str,
+    task_date: date,
+) -> None:
+    """バックグラウンドで複心ファイルを処理."""
+    from app.application.services.smartread.smartread_service import SmartReadService
+
+    logger.info(f"[SmartRead Background] Starting background processing for {len(filenames)} files")
+
+    service = SmartReadService(db)
+    task_record = (
+        service.session.query(SmartReadTask).filter(SmartReadTask.task_id == task_id).first()
+    )
+
+    if not task_record:
+        logger.error(f"[SmartRead Background] Task record not found for {task_id}")
+        return
+
+    config = service.get_config(config_id)
+    if not config or not config.watch_dir:
+        logger.error(f"[SmartRead Background] Config or watch_dir not found for {config_id}")
+        return
+
+    from pathlib import Path
+
+    watch_dir = Path(config.watch_dir)
+
+    for filename in filenames:
+        file_path = watch_dir / filename
+        if not file_path.exists():
+            logger.warning(f"[SmartRead Background] File not found: {file_path}")
+            continue
+
+        try:
+            file_content = file_path.read_bytes()
+            request_record = await service.submit_ocr_request(
+                config_id=config_id,
+                task_id=task_id,
+                task_record=task_record,
+                file_content=file_content,
+                filename=filename,
+            )
+
+            if request_record:
+                await service.poll_and_process_request(config_id, request_record)
+                service.session.commit()
+                logger.info(f"[SmartRead Background] Successfully processed {filename}")
+            else:
+                logger.error(f"[SmartRead Background] Failed to submit request for {filename}")
+
+        except Exception as e:
+            logger.error(f"[SmartRead Background] Error processing {filename}: {e}")
+            service.session.rollback()
