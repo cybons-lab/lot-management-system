@@ -12,7 +12,7 @@ import logging
 import mimetypes
 import time
 import zipfile
-from datetime import date
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, cast
 
 import requests
@@ -123,6 +123,35 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
         logger.info(f"[SimpleSync] File uploaded, requestId: {request_id}")
         return request_id
+
+    def _poll_request_until_done(
+        self,
+        session: requests.Session,
+        endpoint: str,
+        request_id: str,
+        timeout_sec: int = 600,
+    ) -> dict[str, Any]:
+        """リクエストが完了するまでポーリング."""
+        url = f"{endpoint}/request/{request_id}"
+        start = time.time()
+
+        logger.info(f"[SimpleSync] Polling request {request_id} until completed...")
+
+        while True:
+            r = session.get(url, timeout=30)
+            r.raise_for_status()
+            data = r.json()
+            state = data.get("state")
+
+            logger.info(f"[SimpleSync] Request state: {state}")
+
+            if state not in ("SORTING_RUNNING", "OCR_RUNNING"):
+                return cast(dict[str, Any], data)
+
+            if time.time() - start > timeout_sec:
+                raise TimeoutError(f"request {request_id} の処理がタイムアウトしました")
+
+            time.sleep(1)
 
     def _poll_task_until_completed(
         self,
@@ -413,6 +442,137 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
 
         except Exception as e:
             logger.error(f"[SimpleSync] Failed: {e}")
+            raise
+        finally:
+            session.close()
+
+    async def sync_watch_dir_files(
+        self,
+        config_id: int,
+        files_to_process: list[tuple[bytes, str]],
+    ) -> dict[str, Any]:
+        """監視フォルダの複数ファイルを1タスクで処理する."""
+        config = self.get_config(config_id)
+        if not config:
+            raise RuntimeError(f"設定が見つかりません: config_id={config_id}")
+
+        endpoint = config.endpoint.rstrip("/")
+        api_key = config.api_key
+        template_ids = None
+        if config.template_ids:
+            template_ids = [t.strip() for t in config.template_ids.split(",") if t.strip()]
+        export_type = config.export_type or "csv"
+        aggregation = config.aggregation_type or "oneFilePerTemplate"
+
+        session = self._create_session(api_key)
+        request_states: list[dict[str, Any]] = []
+        task_id = None
+        export_id = None
+
+        try:
+            task_name = f"OCR_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            task_id = self._create_task(
+                session=session,
+                endpoint=endpoint,
+                name=task_name,
+                request_type="templateMatching",
+                template_ids=template_ids,
+                export_type=export_type,
+                aggregation=aggregation,
+            )
+
+            for file_content, filename in files_to_process:
+                request_id = self._upload_file(
+                    session=session,
+                    endpoint=endpoint,
+                    task_id=task_id,
+                    file_content=file_content,
+                    filename=filename,
+                )
+                state = self._poll_request_until_done(
+                    session=session,
+                    endpoint=endpoint,
+                    request_id=request_id,
+                    timeout_sec=600,
+                )
+                request_states.append({"request_id": request_id, "filename": filename, "state": state})
+
+            self._poll_task_until_completed(
+                session=session,
+                endpoint=endpoint,
+                task_id=task_id,
+                timeout_sec=600,
+            )
+
+            export_id = self._start_export(
+                session=session,
+                endpoint=endpoint,
+                task_id=task_id,
+                export_type=export_type,
+                aggregation=aggregation,
+            )
+
+            export_status = self._poll_export_until_completed(
+                session=session,
+                endpoint=endpoint,
+                task_id=task_id,
+                export_id=export_id,
+                timeout_sec=600,
+            )
+            if export_status.get("state") != "COMPLETED":
+                raise RuntimeError(f"Export処理でエラーが発生しました: {export_status}")
+
+            zip_content = self._download_export_zip(
+                session=session,
+                endpoint=endpoint,
+                task_id=task_id,
+                export_id=export_id,
+            )
+
+            wide_data = self._extract_csv_from_zip(zip_content)
+
+            from app.application.services.smartread.csv_transformer import (
+                SmartReadCsvTransformer,
+            )
+
+            transformer = SmartReadCsvTransformer()
+            transform_result = transformer.transform_to_long(wide_data, skip_empty=True)
+
+            self._save_wide_and_long_data(
+                config_id=config_id,
+                task_id=task_id,
+                export_id=export_id,
+                task_date=date.today(),
+                wide_data=wide_data,
+                long_data=transform_result.long_data,
+                filename="watch_dir_batch",
+            )
+            self.session.commit()
+
+            logger.info(
+                f"[SimpleSync] Watch dir complete: {len(wide_data)} wide rows, "
+                f"{len(transform_result.long_data)} long rows"
+            )
+
+            return {
+                "success": True,
+                "task_id": task_id,
+                "export_id": export_id,
+                "wide_data": wide_data,
+                "long_data": transform_result.long_data,
+                "errors": [
+                    {
+                        "row": e.row,
+                        "field": e.field,
+                        "message": e.message,
+                        "value": e.value,
+                    }
+                    for e in transform_result.errors
+                ],
+                "requests": request_states,
+            }
+        except Exception as e:
+            logger.error(f"[SimpleSync] Watch dir failed: {e}")
             raise
         finally:
             session.close()

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -151,8 +150,6 @@ class SmartReadWatchService(SmartReadBaseService):
         import os
 
         watch_dir = Path(config.watch_dir)
-        export_dir = Path(config.export_dir) if config.export_dir else None
-
         # ファイルを読み込み
         files_to_process: list[tuple[bytes, str]] = []
         results: list[AnalyzeResult] = []
@@ -184,39 +181,24 @@ class SmartReadWatchService(SmartReadBaseService):
             return WatchDirProcessOutcome(task_id=None, results=results, watch_dir=watch_dir)
 
         task_id = None
-        for file_content, filename in files_to_process:
-            try:
-                simple_result = await self.sync_with_simple_flow(
-                    config_id=config_id,
-                    file_content=file_content,
-                    filename=filename,
-                    export_type_override="csv",
+        try:
+            simple_result = await self.sync_watch_dir_files(
+                config_id=config_id,
+                files_to_process=files_to_process,
+            )
+            task_id = simple_result.get("task_id")
+            for _, filename in files_to_process:
+                results.append(
+                    AnalyzeResult(
+                        success=True,
+                        filename=filename,
+                        data=[],
+                        error_message=None,
+                    )
                 )
-                analyze_result = AnalyzeResult(
-                    success=True,
-                    filename=filename,
-                    data=simple_result.get("wide_data", []),
-                    error_message=None,
-                )
-                task_id = simple_result.get("task_id", task_id)
-            except Exception as e:
-                analyze_result = AnalyzeResult(False, filename, [], str(e))
-
-            # JSON出力
-            if analyze_result.success and export_dir and analyze_result.filename:
-                if not export_dir.exists():
-                    try:
-                        os.makedirs(export_dir, exist_ok=True)
-                    except OSError as e:
-                        logger.error(f"Failed to create export dir: {e}")
-
-                if export_dir.exists():
-                    json_name = f"{Path(analyze_result.filename).stem}.json"
-                    json_path = export_dir / json_name
-                    with open(json_path, "w", encoding="utf-8") as f:
-                        json.dump(analyze_result.data, f, ensure_ascii=False, indent=2)
-
-            results.append(analyze_result)
+        except Exception as e:
+            for _, filename in files_to_process:
+                results.append(AnalyzeResult(False, filename, [], str(e)))
 
         return WatchDirProcessOutcome(
             task_id=task_id,
