@@ -6781,7 +6781,7 @@ export interface paths {
     put?: never;
     /**
      * Process Files
-     * @description 監視フォルダ内の指定ファイルを処理 (process-autoへリダイレクト).
+     * @description 監視フォルダ内の指定ファイルを処理 (バックグラウンド処理).
      */
     post: operations["process_files_api_rpa_smartread_configs__config_id__process_post"];
     delete?: never;
@@ -7094,29 +7094,6 @@ export interface paths {
      * @description SmartReadデータを初期化（テスト用）.
      */
     delete: operations["reset_smartread_data_api_rpa_smartread_configs__config_id__reset_data_delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/rpa/smartread/configs/{config_id}/process-auto": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * ファイルを自動処理（requestIdルート）
-     * @description 監視フォルダ内の指定ファイルを自動処理（requestIdルート）.
-     *
-     *     1日1タスク運用で、ファイルをSmartRead APIに投入し、
-     *     バックグラウンドでポーリング・結果処理を実行します。
-     */
-    post: operations["process_files_auto_api_rpa_smartread_configs__config_id__process_auto_post"];
-    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -14470,50 +14447,6 @@ export interface components {
       error_reason: string | null;
       /** Created At */
       created_at: string;
-    };
-    /**
-     * SmartReadProcessAutoRequest
-     * @description 自動処理リクエスト（requestIdルート用）.
-     */
-    SmartReadProcessAutoRequest: {
-      /**
-       * Filenames
-       * @description 処理するファイル名のリスト
-       */
-      filenames: string[];
-      /**
-       * Use Daily Task
-       * @description 1日1タスク運用を使用するか
-       * @default true
-       */
-      use_daily_task: boolean;
-    };
-    /**
-     * SmartReadProcessAutoResponse
-     * @description 自動処理レスポンス（requestIdルート用）.
-     */
-    SmartReadProcessAutoResponse: {
-      /**
-       * Task Id
-       * @description タスクID
-       */
-      task_id: string;
-      /**
-       * Task Name
-       * @description タスク名 (OCR_YYYYMMDD)
-       */
-      task_name: string;
-      /**
-       * Requests
-       * @description 投入されたリクエスト一覧
-       */
-      requests: components["schemas"]["SmartReadRequestResponse"][];
-      /**
-       * Message
-       * @description メッセージ
-       * @default 処理を開始しました
-       */
-      message: string;
     };
     /**
      * SmartReadProcessRequest
@@ -26743,41 +26676,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SmartReadResetResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  process_files_auto_api_rpa_smartread_configs__config_id__process_auto_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        config_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SmartReadProcessAutoRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SmartReadProcessAutoResponse"];
         };
       };
       /** @description Validation Error */

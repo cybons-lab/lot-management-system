@@ -76,16 +76,14 @@ export function SmartReadPage() {
   const handleProcessWatchFiles = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0) return;
 
-    const result = await processWatchFilesMutation.mutateAsync({
+    await processWatchFilesMutation.mutateAsync({
       configId: selectedConfigId,
       filenames: selectedWatchFiles,
     });
 
     // Remove successfully processed files from selection
     setSelectedWatchFiles([]);
-    if (result.task_id) {
-      setSelectedTaskId(result.task_id);
-    }
+    setSelectedTaskId(null);
 
     // Refresh file list and task list, then switch to tasks
     refetchWatchFiles();
