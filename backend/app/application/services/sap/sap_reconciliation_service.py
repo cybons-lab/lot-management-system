@@ -59,11 +59,14 @@ class ReconciliationResult:
 
     # SAP突合結果
     sap_match_type: SapMatchType
+    # マスタ突合結果
+    master_match_type: MasterMatchType
+
+    # SAP突合詳細（デフォルト値あり）
     sap_matched_zkdmat_b: str | None = None
     sap_raw_data: dict[str, Any] | None = None
 
-    # マスタ突合結果
-    master_match_type: MasterMatchType
+    # マスタ突合詳細
     master_id: int | None = None
     master_customer_part_no: str | None = None
 

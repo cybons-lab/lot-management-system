@@ -5976,6 +5976,175 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/integration/sap/connections": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Connections
+     * @description SAP接続情報一覧を取得.
+     */
+    get: operations["list_connections_api_integration_sap_connections_get"];
+    put?: never;
+    /**
+     * Create Connection
+     * @description SAP接続情報を作成.
+     *
+     *     Note:
+     *         パスワードは暗号化して保存されます。
+     *         現在の実装では簡易的なBase64エンコードを使用しています。
+     *         本番環境では適切な暗号化方式に置き換えてください。
+     */
+    post: operations["create_connection_api_integration_sap_connections_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/connections/{connection_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete Connection
+     * @description SAP接続情報を削除（論理削除）.
+     */
+    delete: operations["delete_connection_api_integration_sap_connections__connection_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/materials/fetch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Fetch Materials
+     * @description SAPからマテリアルデータを取得してキャッシュに保存.
+     *
+     *     Z_SCM1_RFC_MATERIAL_DOWNLOADを呼び出し、ET_DATAをキャッシュテーブルに保存します。
+     *
+     *     Note:
+     *         - パスワードが未設定の場合はモックデータを返します
+     *         - 本番環境では適切なパスワード復号化が必要です
+     */
+    post: operations["fetch_materials_api_integration_sap_materials_fetch_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/materials/cache": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Cached Materials
+     * @description キャッシュされたマテリアルデータを取得.
+     */
+    get: operations["list_cached_materials_api_integration_sap_materials_cache_get"];
+    put?: never;
+    post?: never;
+    /**
+     * Clear Cache
+     * @description キャッシュをクリア.
+     */
+    delete: operations["clear_cache_api_integration_sap_materials_cache_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/reconcile": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reconcile Ocr Results
+     * @description OCR結果をSAP・マスタと突合.
+     *
+     *     突合ロジック:
+     *     1. SAP突合（完全一致 → 前方一致）
+     *     2. マスタ突合
+     *     3. 総合ステータス判定（OK/WARNING/ERROR）
+     *
+     *     Note:
+     *         キャッシュがない場合は自動的にSAPから再取得を試みます。
+     */
+    post: operations["reconcile_ocr_results_api_integration_sap_reconcile_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/reconcile/single": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reconcile Single
+     * @description 1件を突合.
+     *
+     *     デバッグ・テスト用のエンドポイント。
+     */
+    post: operations["reconcile_single_api_integration_sap_reconcile_single_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/logs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Fetch Logs
+     * @description SAP取得ログ一覧を取得.
+     */
+    get: operations["list_fetch_logs_api_integration_sap_logs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/rpa/material-delivery-document": {
     parameters: {
       query?: never;
@@ -13826,6 +13995,307 @@ export interface components {
        * @default 0
        */
       skipped_count: number;
+    };
+    /**
+     * SapConnectionCreateRequest
+     * @description SAP接続情報作成リクエスト.
+     */
+    SapConnectionCreateRequest: {
+      /**
+       * Name
+       * @description 接続名
+       */
+      name: string;
+      /**
+       * Environment
+       * @description 環境（production/test）
+       */
+      environment: string;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+      /**
+       * Ashost
+       * @description SAPホスト
+       */
+      ashost: string;
+      /**
+       * Sysnr
+       * @description システム番号
+       */
+      sysnr: string;
+      /**
+       * Client
+       * @description クライアント番号
+       */
+      client: string;
+      /**
+       * User Name
+       * @description ユーザー名
+       */
+      user_name: string;
+      /**
+       * Passwd
+       * @description パスワード（暗号化されて保存）
+       */
+      passwd: string;
+      /**
+       * Lang
+       * @description 言語
+       * @default JA
+       */
+      lang: string;
+      /**
+       * Default Bukrs
+       * @description デフォルト会社コード
+       * @default 10
+       */
+      default_bukrs: string;
+      /**
+       * Default Kunnr
+       * @description デフォルト得意先コード
+       */
+      default_kunnr?: string | null;
+      /**
+       * Is Default
+       * @description デフォルト接続にする
+       * @default false
+       */
+      is_default: boolean;
+    };
+    /**
+     * SapConnectionResponse
+     * @description SAP接続情報レスポンス.
+     */
+    SapConnectionResponse: {
+      /** Id */
+      id: number;
+      /** Name */
+      name: string;
+      /** Environment */
+      environment: string;
+      /** Description */
+      description: string | null;
+      /** Ashost */
+      ashost: string;
+      /** Sysnr */
+      sysnr: string;
+      /** Client */
+      client: string;
+      /** User Name */
+      user_name: string;
+      /** Lang */
+      lang: string;
+      /** Default Bukrs */
+      default_bukrs: string;
+      /** Default Kunnr */
+      default_kunnr: string | null;
+      /** Is Active */
+      is_active: boolean;
+      /** Is Default */
+      is_default: boolean;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * SapFetchLogResponse
+     * @description SAP取得ログレスポンス.
+     */
+    SapFetchLogResponse: {
+      /** Id */
+      id: number;
+      /** Connection Id */
+      connection_id: number;
+      /** Fetch Batch Id */
+      fetch_batch_id: string;
+      /** Rfc Name */
+      rfc_name: string;
+      /** Params */
+      params: {
+        [key: string]: unknown;
+      };
+      /** Status */
+      status: string;
+      /** Record Count */
+      record_count: number | null;
+      /** Error Message */
+      error_message: string | null;
+      /** Duration Ms */
+      duration_ms: number | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * SapMaterialCacheResponse
+     * @description SAPキャッシュレスポンス.
+     */
+    SapMaterialCacheResponse: {
+      /** Id */
+      id: number;
+      /** Connection Id */
+      connection_id: number;
+      /** Zkdmat B */
+      zkdmat_b: string;
+      /** Kunnr */
+      kunnr: string;
+      /** Raw Data */
+      raw_data: {
+        [key: string]: unknown;
+      };
+      /**
+       * Fetched At
+       * Format: date-time
+       */
+      fetched_at: string;
+      /** Fetch Batch Id */
+      fetch_batch_id: string | null;
+    };
+    /**
+     * SapMaterialFetchRequest
+     * @description SAPマテリアル取得リクエスト.
+     */
+    SapMaterialFetchRequest: {
+      /**
+       * Connection Id
+       * @description 接続ID（省略時はデフォルト）
+       */
+      connection_id?: number | null;
+      /**
+       * Kunnr F
+       * @description 得意先コードFrom
+       */
+      kunnr_f?: string | null;
+      /**
+       * Kunnr T
+       * @description 得意先コードTo
+       */
+      kunnr_t?: string | null;
+      /**
+       * Bukrs
+       * @description 会社コード
+       * @default 10
+       */
+      bukrs: string;
+      /**
+       * Zaiko
+       * @description 在庫品フラグ
+       * @default X
+       */
+      zaiko: string;
+      /**
+       * Limit
+       * @description 取得件数上限
+       */
+      limit?: number | null;
+    };
+    /**
+     * SapMaterialFetchResponse
+     * @description SAPマテリアル取得レスポンス.
+     */
+    SapMaterialFetchResponse: {
+      /** Success */
+      success: boolean;
+      /** Fetch Batch Id */
+      fetch_batch_id: string;
+      /** Record Count */
+      record_count: number;
+      /** Cached Count */
+      cached_count: number;
+      /** Error Message */
+      error_message: string | null;
+      /** Duration Ms */
+      duration_ms: number;
+    };
+    /**
+     * SapReconcileRequest
+     * @description 突合リクエスト.
+     */
+    SapReconcileRequest: {
+      /**
+       * Task Date
+       * @description タスク日付（YYYY-MM-DD）
+       */
+      task_date?: string | null;
+      /**
+       * Config Id
+       * @description SmartRead設定ID
+       */
+      config_id?: number | null;
+      /**
+       * Customer Code
+       * @description 得意先コード
+       * @default 100427105
+       */
+      customer_code: string;
+    };
+    /**
+     * SapReconcileResultResponse
+     * @description 1行の突合結果.
+     */
+    SapReconcileResultResponse: {
+      /** Material Code */
+      material_code: string | null;
+      /** Jiku Code */
+      jiku_code: string | null;
+      /** Customer Code */
+      customer_code: string;
+      /** Sap Match Type */
+      sap_match_type: string;
+      /** Sap Matched Zkdmat B */
+      sap_matched_zkdmat_b: string | null;
+      /** Sap Raw Data */
+      sap_raw_data: {
+        [key: string]: unknown;
+      } | null;
+      /** Master Match Type */
+      master_match_type: string;
+      /** Master Id */
+      master_id: number | null;
+      /** Master Customer Part No */
+      master_customer_part_no: string | null;
+      /** Overall Status */
+      overall_status: string;
+      /** Messages */
+      messages: string[];
+    };
+    /**
+     * SapReconcileSummaryResponse
+     * @description 突合サマリーレスポンス.
+     */
+    SapReconcileSummaryResponse: {
+      /** Total Count */
+      total_count: number;
+      /** Ok Count */
+      ok_count: number;
+      /** Warning Count */
+      warning_count: number;
+      /** Error Count */
+      error_count: number;
+      /** Sap Exact Count */
+      sap_exact_count: number;
+      /** Sap Prefix Count */
+      sap_prefix_count: number;
+      /** Sap Not Found Count */
+      sap_not_found_count: number;
+      /** Master Matched Count */
+      master_matched_count: number;
+      /** Master Not Found Count */
+      master_not_found_count: number;
+      /** Results */
+      results: components["schemas"]["SapReconcileResultResponse"][];
     };
     /**
      * ShipmentTextRequest
@@ -24676,6 +25146,312 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SAPOrderRegistrationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_connections_api_integration_sap_connections_get: {
+    parameters: {
+      query?: {
+        /** @description アクティブな接続のみ */
+        active_only?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapConnectionResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_connection_api_integration_sap_connections_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SapConnectionCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapConnectionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_connection_api_integration_sap_connections__connection_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        connection_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: string;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  fetch_materials_api_integration_sap_materials_fetch_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SapMaterialFetchRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapMaterialFetchResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_cached_materials_api_integration_sap_materials_cache_get: {
+    parameters: {
+      query?: {
+        /** @description 接続ID */
+        connection_id?: number | null;
+        /** @description 得意先コード */
+        kunnr?: string | null;
+        /** @description 取得件数上限 */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapMaterialCacheResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  clear_cache_api_integration_sap_materials_cache_delete: {
+    parameters: {
+      query?: {
+        /** @description 接続ID */
+        connection_id?: number | null;
+        /** @description 得意先コード */
+        kunnr?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: string | number;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  reconcile_ocr_results_api_integration_sap_reconcile_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SapReconcileRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapReconcileSummaryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  reconcile_single_api_integration_sap_reconcile_single_post: {
+    parameters: {
+      query: {
+        /** @description 材質コード */
+        material_code: string;
+        /** @description 次区 */
+        jiku_code?: string | null;
+        /** @description 得意先コード */
+        customer_code?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapReconcileResultResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_fetch_logs_api_integration_sap_logs_get: {
+    parameters: {
+      query?: {
+        /** @description 接続ID */
+        connection_id?: number | null;
+        /** @description 取得件数上限 */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapFetchLogResponse"][];
         };
       };
       /** @description Validation Error */

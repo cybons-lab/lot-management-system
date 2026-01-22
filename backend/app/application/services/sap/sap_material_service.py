@@ -168,7 +168,7 @@ class SapMaterialService:
         if not kunnr_t:
             kunnr_t = kunnr_f
 
-        params = {
+        params: dict[str, Any] = {
             "I_ZAIKO": zaiko,
             "I_ZBUKRS": bukrs,
             "I_ZKUNNR_F": kunnr_f,
@@ -472,4 +472,5 @@ class SapMaterialService:
 
         result = self.db.execute(stmt)
         self.db.commit()
-        return result.rowcount
+        # SQLAlchemy 2.0 の Result オブジェクトから rowcount を取得（DMLの場合）
+        return getattr(result, "rowcount", 0) or 0

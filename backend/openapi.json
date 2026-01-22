@@ -15349,6 +15349,535 @@
         }
       }
     },
+    "/api/integration/sap/connections": {
+      "get": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "List Connections",
+        "description": "SAP接続情報一覧を取得.",
+        "operationId": "list_connections_api_integration_sap_connections_get",
+        "parameters": [
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "アクティブな接続のみ",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "アクティブな接続のみ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SapConnectionResponse"
+                  },
+                  "title": "Response List Connections Api Integration Sap Connections Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Create Connection",
+        "description": "SAP接続情報を作成.\n\nNote:\n    パスワードは暗号化して保存されます。\n    現在の実装では簡易的なBase64エンコードを使用しています。\n    本番環境では適切な暗号化方式に置き換えてください。",
+        "operationId": "create_connection_api_integration_sap_connections_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SapConnectionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapConnectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/connections/{connection_id}": {
+      "delete": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Delete Connection",
+        "description": "SAP接続情報を削除（論理削除）.",
+        "operationId": "delete_connection_api_integration_sap_connections__connection_id__delete",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Connection Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Delete Connection Api Integration Sap Connections  Connection Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/materials/fetch": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Fetch Materials",
+        "description": "SAPからマテリアルデータを取得してキャッシュに保存.\n\nZ_SCM1_RFC_MATERIAL_DOWNLOADを呼び出し、ET_DATAをキャッシュテーブルに保存します。\n\nNote:\n    - パスワードが未設定の場合はモックデータを返します\n    - 本番環境では適切なパスワード復号化が必要です",
+        "operationId": "fetch_materials_api_integration_sap_materials_fetch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SapMaterialFetchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapMaterialFetchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/materials/cache": {
+      "get": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "List Cached Materials",
+        "description": "キャッシュされたマテリアルデータを取得.",
+        "operationId": "list_cached_materials_api_integration_sap_materials_cache_get",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "接続ID",
+              "title": "Connection Id"
+            },
+            "description": "接続ID"
+          },
+          {
+            "name": "kunnr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先コード",
+              "title": "Kunnr"
+            },
+            "description": "得意先コード"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "取得件数上限",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "取得件数上限"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SapMaterialCacheResponse"
+                  },
+                  "title": "Response List Cached Materials Api Integration Sap Materials Cache Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Clear Cache",
+        "description": "キャッシュをクリア.",
+        "operationId": "clear_cache_api_integration_sap_materials_cache_delete",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "接続ID",
+              "title": "Connection Id"
+            },
+            "description": "接続ID"
+          },
+          {
+            "name": "kunnr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先コード",
+              "title": "Kunnr"
+            },
+            "description": "得意先コード"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  },
+                  "title": "Response Clear Cache Api Integration Sap Materials Cache Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/reconcile": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Reconcile Ocr Results",
+        "description": "OCR結果をSAP・マスタと突合.\n\n突合ロジック:\n1. SAP突合（完全一致 → 前方一致）\n2. マスタ突合\n3. 総合ステータス判定（OK/WARNING/ERROR）\n\nNote:\n    キャッシュがない場合は自動的にSAPから再取得を試みます。",
+        "operationId": "reconcile_ocr_results_api_integration_sap_reconcile_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SapReconcileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapReconcileSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/reconcile/single": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Reconcile Single",
+        "description": "1件を突合.\n\nデバッグ・テスト用のエンドポイント。",
+        "operationId": "reconcile_single_api_integration_sap_reconcile_single_post",
+        "parameters": [
+          {
+            "name": "material_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "材質コード",
+              "title": "Material Code"
+            },
+            "description": "材質コード"
+          },
+          {
+            "name": "jiku_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "次区",
+              "title": "Jiku Code"
+            },
+            "description": "次区"
+          },
+          {
+            "name": "customer_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "得意先コード",
+              "default": "100427105",
+              "title": "Customer Code"
+            },
+            "description": "得意先コード"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapReconcileResultResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/logs": {
+      "get": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "List Fetch Logs",
+        "description": "SAP取得ログ一覧を取得.",
+        "operationId": "list_fetch_logs_api_integration_sap_logs_get",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "接続ID",
+              "title": "Connection Id"
+            },
+            "description": "接続ID"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "取得件数上限",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "取得件数上限"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SapFetchLogResponse"
+                  },
+                  "title": "Response List Fetch Logs Api Integration Sap Logs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rpa/material-delivery-document": {
       "post": {
         "tags": [
@@ -34522,6 +35051,656 @@
         ],
         "title": "SAPSyncResponse",
         "description": "Response model for SAP synchronization."
+      },
+      "SapConnectionCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "接続名"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "環境（production/test）"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          },
+          "ashost": {
+            "type": "string",
+            "title": "Ashost",
+            "description": "SAPホスト"
+          },
+          "sysnr": {
+            "type": "string",
+            "title": "Sysnr",
+            "description": "システム番号"
+          },
+          "client": {
+            "type": "string",
+            "title": "Client",
+            "description": "クライアント番号"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name",
+            "description": "ユーザー名"
+          },
+          "passwd": {
+            "type": "string",
+            "title": "Passwd",
+            "description": "パスワード（暗号化されて保存）"
+          },
+          "lang": {
+            "type": "string",
+            "title": "Lang",
+            "description": "言語",
+            "default": "JA"
+          },
+          "default_bukrs": {
+            "type": "string",
+            "title": "Default Bukrs",
+            "description": "デフォルト会社コード",
+            "default": "10"
+          },
+          "default_kunnr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Kunnr",
+            "description": "デフォルト得意先コード"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "デフォルト接続にする",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "environment",
+          "ashost",
+          "sysnr",
+          "client",
+          "user_name",
+          "passwd"
+        ],
+        "title": "SapConnectionCreateRequest",
+        "description": "SAP接続情報作成リクエスト."
+      },
+      "SapConnectionResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ashost": {
+            "type": "string",
+            "title": "Ashost"
+          },
+          "sysnr": {
+            "type": "string",
+            "title": "Sysnr"
+          },
+          "client": {
+            "type": "string",
+            "title": "Client"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "lang": {
+            "type": "string",
+            "title": "Lang"
+          },
+          "default_bukrs": {
+            "type": "string",
+            "title": "Default Bukrs"
+          },
+          "default_kunnr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Kunnr"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "environment",
+          "description",
+          "ashost",
+          "sysnr",
+          "client",
+          "user_name",
+          "lang",
+          "default_bukrs",
+          "default_kunnr",
+          "is_active",
+          "is_default",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SapConnectionResponse",
+        "description": "SAP接続情報レスポンス."
+      },
+      "SapFetchLogResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "connection_id": {
+            "type": "integer",
+            "title": "Connection Id"
+          },
+          "fetch_batch_id": {
+            "type": "string",
+            "title": "Fetch Batch Id"
+          },
+          "rfc_name": {
+            "type": "string",
+            "title": "Rfc Name"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "record_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Count"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "connection_id",
+          "fetch_batch_id",
+          "rfc_name",
+          "params",
+          "status",
+          "record_count",
+          "error_message",
+          "duration_ms",
+          "created_at"
+        ],
+        "title": "SapFetchLogResponse",
+        "description": "SAP取得ログレスポンス."
+      },
+      "SapMaterialCacheResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "connection_id": {
+            "type": "integer",
+            "title": "Connection Id"
+          },
+          "zkdmat_b": {
+            "type": "string",
+            "title": "Zkdmat B"
+          },
+          "kunnr": {
+            "type": "string",
+            "title": "Kunnr"
+          },
+          "raw_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Raw Data"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          },
+          "fetch_batch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetch Batch Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "connection_id",
+          "zkdmat_b",
+          "kunnr",
+          "raw_data",
+          "fetched_at",
+          "fetch_batch_id"
+        ],
+        "title": "SapMaterialCacheResponse",
+        "description": "SAPキャッシュレスポンス."
+      },
+      "SapMaterialFetchRequest": {
+        "properties": {
+          "connection_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection Id",
+            "description": "接続ID（省略時はデフォルト）"
+          },
+          "kunnr_f": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kunnr F",
+            "description": "得意先コードFrom"
+          },
+          "kunnr_t": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kunnr T",
+            "description": "得意先コードTo"
+          },
+          "bukrs": {
+            "type": "string",
+            "title": "Bukrs",
+            "description": "会社コード",
+            "default": "10"
+          },
+          "zaiko": {
+            "type": "string",
+            "title": "Zaiko",
+            "description": "在庫品フラグ",
+            "default": "X"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit",
+            "description": "取得件数上限"
+          }
+        },
+        "type": "object",
+        "title": "SapMaterialFetchRequest",
+        "description": "SAPマテリアル取得リクエスト."
+      },
+      "SapMaterialFetchResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "fetch_batch_id": {
+            "type": "string",
+            "title": "Fetch Batch Id"
+          },
+          "record_count": {
+            "type": "integer",
+            "title": "Record Count"
+          },
+          "cached_count": {
+            "type": "integer",
+            "title": "Cached Count"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "title": "Duration Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "fetch_batch_id",
+          "record_count",
+          "cached_count",
+          "error_message",
+          "duration_ms"
+        ],
+        "title": "SapMaterialFetchResponse",
+        "description": "SAPマテリアル取得レスポンス."
+      },
+      "SapReconcileRequest": {
+        "properties": {
+          "task_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Date",
+            "description": "タスク日付（YYYY-MM-DD）"
+          },
+          "config_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config Id",
+            "description": "SmartRead設定ID"
+          },
+          "customer_code": {
+            "type": "string",
+            "title": "Customer Code",
+            "description": "得意先コード",
+            "default": "100427105"
+          }
+        },
+        "type": "object",
+        "title": "SapReconcileRequest",
+        "description": "突合リクエスト."
+      },
+      "SapReconcileResultResponse": {
+        "properties": {
+          "material_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Code"
+          },
+          "jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Code"
+          },
+          "customer_code": {
+            "type": "string",
+            "title": "Customer Code"
+          },
+          "sap_match_type": {
+            "type": "string",
+            "title": "Sap Match Type"
+          },
+          "sap_matched_zkdmat_b": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Matched Zkdmat B"
+          },
+          "sap_raw_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Raw Data"
+          },
+          "master_match_type": {
+            "type": "string",
+            "title": "Master Match Type"
+          },
+          "master_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Id"
+          },
+          "master_customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Customer Part No"
+          },
+          "overall_status": {
+            "type": "string",
+            "title": "Overall Status"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "material_code",
+          "jiku_code",
+          "customer_code",
+          "sap_match_type",
+          "sap_matched_zkdmat_b",
+          "sap_raw_data",
+          "master_match_type",
+          "master_id",
+          "master_customer_part_no",
+          "overall_status",
+          "messages"
+        ],
+        "title": "SapReconcileResultResponse",
+        "description": "1行の突合結果."
+      },
+      "SapReconcileSummaryResponse": {
+        "properties": {
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "ok_count": {
+            "type": "integer",
+            "title": "Ok Count"
+          },
+          "warning_count": {
+            "type": "integer",
+            "title": "Warning Count"
+          },
+          "error_count": {
+            "type": "integer",
+            "title": "Error Count"
+          },
+          "sap_exact_count": {
+            "type": "integer",
+            "title": "Sap Exact Count"
+          },
+          "sap_prefix_count": {
+            "type": "integer",
+            "title": "Sap Prefix Count"
+          },
+          "sap_not_found_count": {
+            "type": "integer",
+            "title": "Sap Not Found Count"
+          },
+          "master_matched_count": {
+            "type": "integer",
+            "title": "Master Matched Count"
+          },
+          "master_not_found_count": {
+            "type": "integer",
+            "title": "Master Not Found Count"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SapReconcileResultResponse"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_count",
+          "ok_count",
+          "warning_count",
+          "error_count",
+          "sap_exact_count",
+          "sap_prefix_count",
+          "sap_not_found_count",
+          "master_matched_count",
+          "master_not_found_count",
+          "results"
+        ],
+        "title": "SapReconcileSummaryResponse",
+        "description": "突合サマリーレスポンス."
       },
       "ShipmentTextRequest": {
         "properties": {
