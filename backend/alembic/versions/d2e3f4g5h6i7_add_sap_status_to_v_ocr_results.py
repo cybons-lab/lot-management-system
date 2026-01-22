@@ -21,7 +21,7 @@ depends_on = None
 
 
 # 新しいビュー定義（SAP突合ステータス追加）
-NEW_VIEW = """
+NEW_VIEW = r"""
 CREATE OR REPLACE VIEW public.v_ocr_results AS
 SELECT
     ld.id,
@@ -149,12 +149,15 @@ LEFT JOIN public.sap_material_cache sap_exact
 -- SAP前方一致: 材質コードでZKDMAT_Bが始まる（一意の場合のみ）
 LEFT JOIN LATERAL (
     SELECT sc.id, sc.zkdmat_b, sc.raw_data
-    FROM public.sap_material_cache sc
-    WHERE sc.kunnr = COALESCE(ld.content->>'得意先コード', '100427105')
-      AND sc.zkdmat_b LIKE COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') || '%'
+    FROM (
+        SELECT id, zkdmat_b, raw_data,
+               COUNT(*) OVER () as cnt
+        FROM public.sap_material_cache
+        WHERE kunnr = COALESCE(ld.content->>'得意先コード', '100427105')
+          AND zkdmat_b LIKE COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') || '%'
+    ) sc
+    WHERE sc.cnt = 1
       AND sap_exact.id IS NULL  -- 完全一致がない場合のみ
-    GROUP BY sc.id, sc.zkdmat_b, sc.raw_data
-    HAVING COUNT(*) OVER () = 1  -- 一意に絞れる場合のみ
     LIMIT 1
 ) sap_prefix ON true;
 
@@ -162,7 +165,7 @@ COMMENT ON VIEW public.v_ocr_results IS 'OCR結果ビュー（SmartRead縦持ち
 """
 
 # 元のビュー定義（ダウングレード用）
-OLD_VIEW = """
+OLD_VIEW = r"""
 CREATE OR REPLACE VIEW public.v_ocr_results AS
 SELECT
     ld.id,
@@ -260,9 +263,11 @@ COMMENT ON VIEW public.v_ocr_results IS 'OCR結果ビュー（SmartRead縦持ち
 
 def upgrade() -> None:
     """Update v_ocr_results view with SAP reconciliation status."""
+    op.execute("DROP VIEW IF EXISTS public.v_ocr_results CASCADE")
     op.execute(NEW_VIEW)
 
 
 def downgrade() -> None:
     """Restore original v_ocr_results view."""
+    op.execute("DROP VIEW IF EXISTS public.v_ocr_results CASCADE")
     op.execute(OLD_VIEW)
