@@ -58,14 +58,17 @@ PAD互換スクリプトの手順（task → request → poll → export → dow
      ポーリングで進捗確認
 ```
 
-### 2.3 レビュー指摘への対応（4点）
+### 2.3 レビュー指摘への対応（7点）
 
 | 指摘 | 対応 |
 |-----|-----|
 | BackgroundTasks がプロセス再起動で消える | `heartbeat_at` フィールド追加、stale検出ロジック |
-| async内でsync I/Oがイベントループを塞ぐ | `execute_run` を同期関数化 + `run_sync`でスレッド実行 |
+| async内でsync I/Oがイベントループを塞ぐ | `execute_run` を同期関数化 + threadingで直接実行 |
 | filenames を Query CSV で渡すと壊れる | POST body (JSON) で `{ filenames: [...] }` を受ける |
 | export保証はテストだけでなく実装でも担保 | `EXPORT_STARTED` を通過しないと成功にしないゲート |
+| **BackgroundTasks + threading の二重化** | **threadingのみに統一**（BackgroundTasks不使用） |
+| **poll中にheartbeatが更新されない** | **ポーリングループ内で定期的に更新**（30秒ごと） |
+| **filenames / file_content_ref の整合** | **filenames（監視フォルダ）のみに限定**（アップロードは別フロー） |
 
 ## 3. 実装内容
 
@@ -111,8 +114,9 @@ class SmartReadPadRun(Base):
     export_id = Column(String(64), nullable=True)
 
     # 入力情報
-    filenames = Column(JSON, nullable=True)  # 処理対象ファイル名リスト
-    file_content_ref = Column(String(256), nullable=True)  # 一時ファイルパス（単一ファイル用）
+    # ★ filenames のみ（監視フォルダ内のファイル名）
+    # ブラウザからの直接アップロードは /analyze-simple を使用（既存フロー維持）
+    filenames = Column(JSON, nullable=True)  # 処理対象ファイル名リスト（監視フォルダ内）
 
     # 結果
     wide_data_count = Column(Integer, default=0)
@@ -134,6 +138,19 @@ class SmartReadPadRun(Base):
 - `heartbeat_at`: バックグラウンドタスクが生きている証拠。定期的に更新される
 - `STALE` status: heartbeat が一定時間更新されない場合に遷移
 - `retry_count`: 失敗時のリトライ管理
+- `filenames`: 監視フォルダ内のファイル名のみ（直接アップロード非対応）
+
+### 3.1.1 入力設計の方針
+
+| ユースケース | API | 入力 |
+|------------|-----|-----|
+| 監視フォルダのファイルを処理 | `POST /pad-runs` | `filenames`（フォルダ内のファイル名） |
+| ブラウザから直接アップロード | `POST /analyze-simple` | `file`（multipart/form-data） |
+
+**理由:**
+- PAD互換ランナーは「監視フォルダ→SmartRead→DB」の自動化フローを再現する目的
+- ブラウザからの直接アップロードは既存の `/analyze-simple` が安全に動作するので維持
+- 責任を分離することで、それぞれのフローをシンプルに保つ
 
 ### 3.2 サービス: SmartReadPadRunnerService
 
@@ -155,6 +172,8 @@ from app.infrastructure.persistence.models.smartread_models import (
 
 # Stale判定の閾値（この時間heartbeatが更新されなければSTALE）
 HEARTBEAT_STALE_THRESHOLD_SECONDS = 120
+# ポーリング中のheartbeat更新間隔
+HEARTBEAT_UPDATE_INTERVAL_SECONDS = 30
 
 
 class SmartReadPadRunnerService:
@@ -172,17 +191,19 @@ class SmartReadPadRunnerService:
     def start_run(
         self,
         config_id: int,
-        filenames: list[str] | None = None,
-        file_content: bytes | None = None,
-        single_filename: str | None = None,
+        filenames: list[str],  # ★ 必須（監視フォルダ内のファイル名）
     ) -> str:
-        """PAD互換フローを開始し、run_id を返す（同期）."""
-        run_id = str(uuid.uuid4())
+        """PAD互換フローを開始し、run_id を返す（同期）.
 
-        # 入力ファイルの一時保存（file_contentがある場合）
-        file_content_ref = None
-        if file_content and single_filename:
-            file_content_ref = self._save_temp_file(run_id, file_content, single_filename)
+        Args:
+            config_id: SmartRead設定ID
+            filenames: 監視フォルダ内のファイル名リスト
+
+        Note:
+            ブラウザからの直接アップロードは /analyze-simple を使用。
+            このAPIは監視フォルダ内のファイルを指定して実行する用途。
+        """
+        run_id = str(uuid.uuid4())
 
         # DBに記録
         run = SmartReadPadRun(
@@ -190,8 +211,7 @@ class SmartReadPadRunnerService:
             config_id=config_id,
             status="RUNNING",
             step="CREATED",
-            filenames=filenames or ([single_filename] if single_filename else []),
-            file_content_ref=file_content_ref,
+            filenames=filenames,
             heartbeat_at=datetime.now(),
         )
         self.session.add(run)
@@ -229,15 +249,15 @@ class SmartReadPadRunnerService:
             request_ids = self._upload_files(api_session, config, task_id, run)
             self._update_heartbeat(run)
 
-            # 3. リクエスト完了待ち（ポーリング中も定期的にheartbeat更新）
+            # 3. リクエスト完了待ち
+            # ★ ポーリング中もHEARTBEAT_UPDATE_INTERVAL_SECONDSごとにheartbeat更新
             self._update_step(run, "REQUEST_DONE")
             self._poll_requests_until_done(api_session, config, request_ids, run)
-            self._update_heartbeat(run)
 
             # 4. タスク完了待ち
+            # ★ ポーリング中もHEARTBEAT_UPDATE_INTERVAL_SECONDSごとにheartbeat更新
             self._update_step(run, "TASK_DONE")
             self._poll_task_until_completed(api_session, config, task_id, run)
-            self._update_heartbeat(run)
 
             # 5. Export開始 ★PADスクリプトと同じ・必須ゲート
             self._update_step(run, "EXPORT_STARTED")
@@ -372,11 +392,52 @@ class SmartReadPadRunnerService:
         })
         return session
 
+    def _poll_with_heartbeat(
+        self,
+        run: SmartReadPadRun,
+        poll_fn: callable,
+        timeout_sec: float = 600,
+        poll_interval: float = 2.0,
+    ) -> Any:
+        """ポーリング中もheartbeatを更新するラッパー.
+
+        Args:
+            run: 実行中のPadRun（heartbeat更新用）
+            poll_fn: 1回のポーリングを行う関数（Trueを返したら完了）
+            timeout_sec: タイムアウト（秒）
+            poll_interval: ポーリング間隔（秒）
+
+        ★ポイント:
+            HEARTBEAT_UPDATE_INTERVAL_SECONDS ごとにheartbeatを更新するので、
+            長いOCR処理中でもSTALE判定されない。
+        """
+        start_time = time.time()
+        last_heartbeat = time.time()
+
+        while True:
+            elapsed = time.time() - start_time
+            if elapsed > timeout_sec:
+                raise TimeoutError(f"Polling timeout after {timeout_sec}s")
+
+            # ★ 定期的にheartbeat更新
+            if time.time() - last_heartbeat > HEARTBEAT_UPDATE_INTERVAL_SECONDS:
+                self._update_heartbeat(run)
+                last_heartbeat = time.time()
+
+            # ポーリング実行
+            result = poll_fn()
+            if result is not None:
+                return result
+
+            time.sleep(poll_interval)
+
     # 以下、PADスクリプトからの移植メソッド
     # _create_task, _upload_files, _poll_requests_until_done,
     # _poll_task_until_completed, _start_export, _poll_export_until_completed,
     # _download_export_zip, _process_csv, _save_results
     # → simple_sync_service.py から移植
+    #
+    # ★ ポーリング系は _poll_with_heartbeat() を使って実装すること
 ```
 
 ### 3.3 APIエンドポイント
@@ -384,7 +445,7 @@ class SmartReadPadRunnerService:
 **ファイル:** `backend/app/presentation/api/routes/rpa/smartread_router.py`
 
 ```python
-import asyncio
+import threading
 from pydantic import BaseModel
 
 
@@ -392,7 +453,7 @@ from pydantic import BaseModel
 
 class PadRunStartRequest(BaseModel):
     """PAD Run 開始リクエスト."""
-    filenames: list[str] | None = None
+    filenames: list[str]  # ★ 必須（監視フォルダ内のファイル名）
 
 
 class PadRunResponse(BaseModel):
@@ -415,9 +476,8 @@ class PadRunResponse(BaseModel):
 # --- PAD互換ランナー ---
 
 @router.post("/pad-runs", status_code=status.HTTP_202_ACCEPTED)
-async def start_pad_run(
+def start_pad_run(
     request: PadRunStartRequest,  # ★ body で受け取る（Query CSV 廃止）
-    background_tasks: BackgroundTasks,
     config_id: int = Query(..., description="設定ID"),
     uow: UnitOfWork = Depends(get_uow),
     _current_user: User = Depends(get_current_user),
@@ -426,13 +486,17 @@ async def start_pad_run(
 
     即座にrun_idを返し、バックグラウンドで処理を実行。
     進捗は GET /pad-runs/{run_id} で確認可能。
+
+    Note:
+        ★ BackgroundTasks は使わず threading で直接起動。
+        責任を一本化し、デバッグしやすくする。
     """
     service = SmartReadPadRunnerService(uow.session)
     run_id = service.start_run(config_id, filenames=request.filenames)
     uow.session.commit()
 
-    # バックグラウンドで実行（同期関数をスレッドで）
-    background_tasks.add_task(_execute_pad_run_in_thread, run_id)
+    # ★ threading で直接起動（BackgroundTasks不使用）
+    _start_pad_run_thread(run_id)
 
     return {
         "run_id": run_id,
@@ -462,9 +526,8 @@ async def get_pad_run_status(
 
 
 @router.post("/pad-runs/{run_id}/retry", status_code=status.HTTP_202_ACCEPTED)
-async def retry_pad_run(
+def retry_pad_run(
     run_id: str,
-    background_tasks: BackgroundTasks,
     uow: UnitOfWork = Depends(get_uow),
     _current_user: User = Depends(get_current_user),
 ) -> dict:
@@ -480,8 +543,8 @@ async def retry_pad_run(
 
     uow.session.commit()
 
-    # バックグラウンドで実行
-    background_tasks.add_task(_execute_pad_run_in_thread, new_run_id)
+    # ★ threading で直接起動
+    _start_pad_run_thread(new_run_id)
 
     return {
         "run_id": new_run_id,
@@ -520,22 +583,24 @@ async def list_pad_runs(
     ]
 
 
-def _execute_pad_run_in_thread(run_id: str) -> None:
-    """バックグラウンドでPAD互換フローを実行（スレッドで同期実行）.
+def _start_pad_run_thread(run_id: str) -> None:
+    """PAD互換フローをバックグラウンドスレッドで開始.
 
-    重要: execute_run() は同期関数のため、asyncio.to_thread() で
-    別スレッドで実行し、イベントループをブロックしない。
+    ★ BackgroundTasks は使わない（責任の一本化）。
+    threading.Thread で直接起動し、デバッグしやすくする。
+
+    Note:
+        daemon=True なのでプロセス終了時にスレッドも終了する。
+        途中で止まった場合は heartbeat 監視で STALE 検出される。
     """
     from app.core.database import SessionLocal
 
-    def _run_sync():
+    def _run():
         with SessionLocal() as session:
             service = SmartReadPadRunnerService(session)
             service.execute_run(run_id)
 
-    # 同期関数をスレッドで実行
-    import threading
-    thread = threading.Thread(target=_run_sync, daemon=True)
+    thread = threading.Thread(target=_run, name=f"pad-run-{run_id}", daemon=True)
     thread.start()
 ```
 
@@ -547,7 +612,7 @@ def _execute_pad_run_in_thread(run_id: str) -> None:
 // PAD互換ランナーAPI
 
 export interface PadRunStartRequest {
-  filenames?: string[];
+  filenames: string[];  // ★ 必須（監視フォルダ内のファイル名）
 }
 
 export interface PadRunStatus {
@@ -568,13 +633,13 @@ export interface PadRunStatus {
 
 export async function startPadRun(
   configId: number,
-  request: PadRunStartRequest = {}
+  filenames: string[]  // ★ 必須（監視フォルダ内のファイル名）
 ): Promise<{ run_id: string; status: string; message: string }> {
   // ★ body で JSON を送信（Query CSV 廃止）
   return http
     .post("rpa/smartread/pad-runs", {
       searchParams: { config_id: String(configId) },
-      json: request,
+      json: { filenames },
     })
     .json<{ run_id: string; status: string; message: string }>();
 }
@@ -639,11 +704,11 @@ export function useStartPadRun() {
   return useMutation({
     mutationFn: ({
       configId,
-      request,
+      filenames,  // ★ 必須
     }: {
       configId: number;
-      request?: PadRunStartRequest;
-    }) => startPadRun(configId, request),
+      filenames: string[];
+    }) => startPadRun(configId, filenames),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.padRuns() });
     },
