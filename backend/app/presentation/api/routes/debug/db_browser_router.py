@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -198,9 +199,9 @@ def get_object_schema(
     ).fetchall()
 
     primary_keys = [
-        row["columns"]
+        row._mapping["columns"]
         for row in constraints
-        if row["constraint_type"] == "p" and row["columns"]
+        if row._mapping["constraint_type"] == "p" and row._mapping["columns"]
     ]
     primary_key_columns = primary_keys[0] if primary_keys else []
 
@@ -285,7 +286,7 @@ def get_object_rows(
     if q and searchable_columns:
         search_clauses = []
         params["search_query"] = f"%{q}%"
-        for idx, col in enumerate(searchable_columns):
+        for _idx, col in enumerate(searchable_columns):
             search_clauses.append(f"{_safe_identifier(col)} ILIKE :search_query")
         where_clauses.append("(" + " OR ".join(search_clauses) + ")")
 
@@ -306,7 +307,7 @@ def get_object_rows(
         db.execute(text("SET statement_timeout = DEFAULT"))
 
     columns = [
-        {"name": col["column_name"], "type": col["data_type"]}
+        {"name": col._mapping["column_name"], "type": col._mapping["data_type"]}
         for col in db.execute(
             text(
                 """
@@ -595,7 +596,7 @@ def get_object_relations(
         {"schema": schema, "name": name},
     ).fetchall()
 
-    def _format_fk(rows: list[Any]) -> list[dict[str, Any]]:
+    def _format_fk(rows: list[Any] | Sequence[Any]) -> list[dict[str, Any]]:
         return [
             {
                 "constraint_name": row.constraint_name,
