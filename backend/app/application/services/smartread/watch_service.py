@@ -56,6 +56,12 @@ class SmartReadWatchService(SmartReadBaseService):
             aggregation_override: str | None = None,
         ) -> dict[str, Any]: ...
 
+        async def sync_watch_dir_files(
+            self,
+            config_id: int,
+            files_to_process: list[tuple[bytes, str]],
+        ) -> dict[str, Any]: ...
+
     def _move_watch_file(self, watch_dir: Path, filename: str, subdir: str) -> None:
         """処理済みファイルをサブフォルダへ移動."""
         destination_dir = watch_dir / subdir

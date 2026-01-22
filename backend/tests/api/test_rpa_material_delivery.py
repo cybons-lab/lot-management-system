@@ -1,6 +1,6 @@
-import pytest
 from datetime import timedelta
 
+import pytest
 from fastapi import status
 from sqlalchemy.orm import Session
 
