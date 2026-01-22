@@ -172,6 +172,12 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api"
     API_V2_STR: str = "/api/v2"
 
+    # Debug機能
+    ENABLE_DB_BROWSER: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("ENABLE_DB_BROWSER", "enable_db_browser"),
+    )
+
     # ページネーション設定
     # 【設計根拠】なぜ100件デフォルト、1000件上限なのか:
     # - DEFAULT_PAGE_SIZE: 100件
