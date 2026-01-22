@@ -47,11 +47,15 @@ export const useDbRows = (
     keepPreviousData: true,
   });
 
-export const useDbDefinition = (schema: string | undefined, name: string | undefined) =>
+export const useDbDefinition = (
+  schema: string | undefined,
+  name: string | undefined,
+  enabled: boolean,
+) =>
   useQuery({
     queryKey: schema && name ? dbBrowserKeys.definition(schema, name) : ["db-browser", "definition"],
     queryFn: () => getDbDefinition(schema!, name!),
-    enabled: Boolean(schema && name),
+    enabled: Boolean(schema && name && enabled),
   });
 
 export const useDbRelations = (schema: string | undefined, name: string | undefined) =>

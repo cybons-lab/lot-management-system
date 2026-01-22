@@ -294,14 +294,16 @@ def get_object_rows(
     column_projection = ", ".join(_safe_identifier(col) for col in column_names)
     order_clause = f" ORDER BY {_safe_identifier(order_by)} {order_dir.upper()}"
 
-    db.execute(text("SET LOCAL statement_timeout = :timeout_ms"), {"timeout_ms": STATEMENT_TIMEOUT_MS})
+    db.execute(text("SET statement_timeout = :timeout_ms"), {"timeout_ms": STATEMENT_TIMEOUT_MS})
+    try:
+        sql = (
+            f"SELECT {column_projection} FROM {_safe_identifier(schema)}.{_safe_identifier(name)}"
+            f"{where_sql}{order_clause} LIMIT :limit OFFSET :offset"
+        )
 
-    sql = (
-        f"SELECT {column_projection} FROM {_safe_identifier(schema)}.{_safe_identifier(name)}"
-        f"{where_sql}{order_clause} LIMIT :limit OFFSET :offset"
-    )
-
-    rows = db.execute(text(sql), params).fetchall()
+        rows = db.execute(text(sql), params).fetchall()
+    finally:
+        db.execute(text("SET statement_timeout = DEFAULT"))
 
     columns = [
         {"name": col["column_name"], "type": col["data_type"]}

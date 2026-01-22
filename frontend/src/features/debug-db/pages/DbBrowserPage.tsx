@@ -2,7 +2,7 @@
  * DB Browser Page
  */
 
-import { Copy, Database } from "lucide-react";
+import { Copy, Database, Table } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -153,7 +153,13 @@ export function DbBrowserPage() {
     selectedSchema,
     selectedName,
   );
-  const { data: definitionInfo } = useDbDefinition(selectedSchema, selectedName);
+  const shouldFetchDefinition =
+    selected?.object_type === "view" || selected?.object_type === "materialized_view";
+  const { data: definitionInfo } = useDbDefinition(
+    selectedSchema,
+    selectedName,
+    shouldFetchDefinition,
+  );
   const { data: relationsInfo } = useDbRelations(selectedSchema, selectedName);
 
   const offset = (page - 1) * pageSize;
@@ -194,7 +200,7 @@ export function DbBrowserPage() {
         description="PostgreSQL のテーブル/ビューを確認する開発用ツール"
       />
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         <div className="rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 p-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
@@ -251,8 +257,11 @@ export function DbBrowserPage() {
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <div className="text-sm font-semibold text-gray-900">
-                        {obj.schema_name}.{obj.object_name}
+                      <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                        <Table className="h-4 w-4 text-gray-500" />
+                        <span>
+                          {obj.schema_name}.{obj.object_name}
+                        </span>
                       </div>
                       <Badge className={TYPE_BADGE_STYLE[obj.object_type]}>
                         {TYPE_LABELS[obj.object_type]}
