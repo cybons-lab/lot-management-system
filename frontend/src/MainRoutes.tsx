@@ -18,6 +18,7 @@ import { ClientLogsPage } from "@/features/client-logs";
 import { CustomerItemsListPage } from "@/features/customer-items/pages/CustomerItemsListPage";
 import { CustomersListPage } from "@/features/customers";
 import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
+import { DbBrowserPage } from "@/features/debug-db/pages/DbBrowserPage";
 import { DeliveryPlacesListPage } from "@/features/delivery-places";
 import { ForecastCreatePage } from "@/features/forecasts/pages/ForecastCreatePage";
 import { ForecastDetailPage } from "@/features/forecasts/pages/ForecastDetailPage";
@@ -208,6 +209,14 @@ function AdminRoutes() {
         element={
           <AdminGuard>
             <BulkExportPage />
+          </AdminGuard>
+        }
+      />
+      <Route
+        path={ROUTES.DEBUG.DB_BROWSER}
+        element={
+          <AdminGuard>
+            <DbBrowserPage />
           </AdminGuard>
         }
       />

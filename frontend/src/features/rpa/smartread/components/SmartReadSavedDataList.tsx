@@ -59,7 +59,7 @@ function useLongDataColumns(longDataList: SmartReadLongData[] | undefined) {
       {
         id: "detail_no",
         header: "#",
-        accessor: (row) => row.content["明細番号"] || "-",
+        accessor: (row) => String(row.content["明細番号"] || "-"),
         width: 60,
         align: "right",
       },

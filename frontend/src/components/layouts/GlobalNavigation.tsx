@@ -14,6 +14,7 @@ import {
   TrendingUp,
   PackagePlus,
   Database,
+  Table,
   ClipboardList,
   HelpCircle,
   ChevronDown,
@@ -88,6 +89,12 @@ const navItems: NavItem[] = [
     title: "管理",
     href: ROUTES.ADMIN.INDEX,
     icon: Settings,
+    requireAdmin: true,
+  },
+  {
+    title: "DBブラウザ",
+    href: ROUTES.DEBUG.DB_BROWSER,
+    icon: Table,
     requireAdmin: true,
   },
   {

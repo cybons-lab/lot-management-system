@@ -73,7 +73,7 @@ from .rpa_models import (
 from .sap_models import SapConnection, SapFetchLog, SapMaterialCache
 from .seed_snapshot_model import SeedSnapshot
 from .shipping_master_models import OrderRegisterRow, ShippingMasterCurated, ShippingMasterRaw
-from .smartread_models import OcrResultEdit, SmartReadConfig
+from .smartread_models import OcrResultEdit, SmartReadConfig, SmartReadPadRun
 from .soft_delete_mixin import INFINITE_VALID_TO, SoftDeleteMixin
 from .system_config_model import SystemConfig
 from .system_models import ClientLog
@@ -201,6 +201,7 @@ __all__ = [
     "LayerCodeMapping",
     # SmartRead
     "SmartReadConfig",
+    "SmartReadPadRun",
     "OcrResultEdit",
     # B-Plan models
     "LotMaster",

@@ -30,10 +30,9 @@ from app.presentation.api.routes.admin import (
 )
 from app.presentation.api.routes.alerts import alerts_router
 from app.presentation.api.routes.allocations import allocations_router
-
-# from app.presentation.api.routes.allocations import allocation_suggestions_router
 from app.presentation.api.routes.assignments.assignment_router import router as assignments_router
 from app.presentation.api.routes.auth.auth_router import router as auth_router
+from app.presentation.api.routes.debug import db_browser_router
 from app.presentation.api.routes.forecasts import forecasts_router
 from app.presentation.api.routes.integration.sap_router import router as sap_router
 from app.presentation.api.routes.inventory import (
@@ -173,6 +172,9 @@ def register_all_routers(app: FastAPI) -> None:
 
     # OCR Results (view-based, realtime)
     app.include_router(ocr_results_router, prefix=prefix)
+
+    # Debug endpoints (flag enforced inside router)
+    app.include_router(db_browser_router, prefix=prefix)
 
 
 __all__ = [

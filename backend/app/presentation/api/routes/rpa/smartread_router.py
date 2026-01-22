@@ -33,6 +33,12 @@ from app.presentation.schemas.smartread_schema import (
     SmartReadExportResponse,
     SmartReadLongDataListResponse,
     SmartReadLongDataResponse,
+    SmartReadPadRunListItem,
+    SmartReadPadRunListResponse,
+    SmartReadPadRunRetryResponse,
+    SmartReadPadRunStartRequest,
+    SmartReadPadRunStartResponse,
+    SmartReadPadRunStatusResponse,
     SmartReadProcessRequest,
     SmartReadRequestListResponse,
     SmartReadRequestResponse,
@@ -857,4 +863,246 @@ async def event_stream(
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
         },
+    )
+
+
+# ==================== PAD互換ランナー API ====================
+#
+# PADスクリプトの手順（task→request→poll→export→download→CSV後処理）を
+# サーバ側で確実に実行するためのAPI。
+#
+# See: docs/smartread/pad_runner_implementation_plan.md
+
+
+@router.post(
+    "/configs/{config_id}/pad-runs",
+    response_model=SmartReadPadRunStartResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="PAD互換フローを開始",
+)
+def start_pad_run(
+    config_id: int,
+    request: SmartReadPadRunStartRequest,
+    uow: UnitOfWork = Depends(get_uow),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadPadRunStartResponse:
+    """PAD互換フローを開始（バックグラウンド処理）.
+
+    監視フォルダ内のファイルを指定してPAD互換フローを開始します。
+    処理はバックグラウンドスレッドで実行され、即座にrun_idを返します。
+
+    進捗状況は GET /pad-runs/{run_id} で確認できます。
+    """
+    import threading
+
+    from app.application.services.smartread.pad_runner_service import (
+        SmartReadPadRunnerService,
+    )
+    from app.core.database import SessionLocal
+
+    assert uow.session is not None
+    runner = SmartReadPadRunnerService(uow.session)
+
+    # run_idを作成（DBに登録）
+    run_id = runner.start_run(config_id, request.filenames)
+    uow.session.commit()
+
+    # バックグラウンドスレッドで実行
+    # Note: daemon=True なのでプロセス終了時にスレッドも終了する
+    # heartbeat_at で生存確認し、一定時間更新がなければ STALE として検出する
+    def run_in_background(run_id: str) -> None:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.info(f"[PAD Run BG] Starting background thread for {run_id}")
+        try:
+            with SessionLocal() as session:
+                bg_runner = SmartReadPadRunnerService(session)
+                bg_runner.execute_run(run_id)
+        except Exception as e:
+            logger.exception(f"[PAD Run BG] Background thread failed: {e}")
+
+    thread = threading.Thread(
+        target=run_in_background,
+        args=(run_id,),
+        daemon=True,
+        name=f"pad-run-{run_id[:8]}",
+    )
+    thread.start()
+
+    return SmartReadPadRunStartResponse(
+        run_id=run_id,
+        status="RUNNING",
+        message=f"PAD互換フローを開始しました ({len(request.filenames)}ファイル)",
+    )
+
+
+@router.get(
+    "/configs/{config_id}/pad-runs",
+    response_model=SmartReadPadRunListResponse,
+    summary="PAD互換フロー一覧を取得",
+)
+def list_pad_runs(
+    config_id: int,
+    status_filter: str | None = Query(default=None, description="ステータスでフィルタ"),
+    limit: int = Query(default=20, le=100, description="取得件数"),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadPadRunListResponse:
+    """PAD互換フロー一覧を取得."""
+    from app.application.services.smartread.pad_runner_service import (
+        SmartReadPadRunnerService,
+    )
+
+    assert db is not None
+    runner = SmartReadPadRunnerService(db)
+    runs = runner.list_runs(config_id, limit=limit, status_filter=status_filter)
+
+    return SmartReadPadRunListResponse(
+        runs=[
+            SmartReadPadRunListItem(
+                run_id=r["run_id"],
+                status=r["status"],
+                step=r["step"],
+                filenames=r["filenames"],
+                wide_data_count=r["wide_data_count"],
+                long_data_count=r["long_data_count"],
+                created_at=r["created_at"],
+                completed_at=r["completed_at"],
+            )
+            for r in runs
+        ]
+    )
+
+
+@router.get(
+    "/configs/{config_id}/pad-runs/{run_id}",
+    response_model=SmartReadPadRunStatusResponse,
+    summary="PAD互換フロー状態を取得",
+)
+def get_pad_run_status(
+    config_id: int,
+    run_id: str,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadPadRunStatusResponse:
+    """PAD互換フローの状態を取得（STALE検出を含む）.
+
+    RUNNINGステータスの場合、heartbeat_atが一定時間（120秒）更新されていなければ
+    STALEとしてマークされます。
+    """
+    from app.application.services.smartread.pad_runner_service import (
+        SmartReadPadRunnerService,
+    )
+
+    assert db is not None
+    runner = SmartReadPadRunnerService(db)
+    result = runner.get_run_status(run_id)
+
+    if not result:
+        raise HTTPException(status_code=404, detail="実行が見つかりません")
+
+    if result["config_id"] != config_id:
+        raise HTTPException(status_code=404, detail="実行が見つかりません")
+
+    return SmartReadPadRunStatusResponse(
+        run_id=result["run_id"],
+        config_id=result["config_id"],
+        status=result["status"],
+        step=result["step"],
+        task_id=result["task_id"],
+        export_id=result["export_id"],
+        filenames=result["filenames"],
+        wide_data_count=result["wide_data_count"],
+        long_data_count=result["long_data_count"],
+        error_message=result["error_message"],
+        created_at=result["created_at"],
+        updated_at=result["updated_at"],
+        heartbeat_at=result["heartbeat_at"],
+        completed_at=result["completed_at"],
+        can_retry=result["can_retry"],
+        retry_count=result["retry_count"],
+        max_retries=result["max_retries"],
+    )
+
+
+@router.post(
+    "/configs/{config_id}/pad-runs/{run_id}/retry",
+    response_model=SmartReadPadRunRetryResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="PAD互換フローをリトライ",
+)
+def retry_pad_run(
+    config_id: int,
+    run_id: str,
+    uow: UnitOfWork = Depends(get_uow),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadPadRunRetryResponse:
+    """失敗/Staleの実行をリトライ.
+
+    同じ入力ファイルで新しい実行を開始します。
+    リトライ回数には上限があります（デフォルト3回）。
+    """
+    import threading
+
+    from app.application.services.smartread.pad_runner_service import (
+        SmartReadPadRunnerService,
+    )
+    from app.core.database import SessionLocal
+
+    assert uow.session is not None
+    runner = SmartReadPadRunnerService(uow.session)
+
+    # リトライ前のバリデーション
+    current_status = runner.get_run_status(run_id)
+    if not current_status:
+        raise HTTPException(status_code=404, detail="実行が見つかりません")
+
+    if current_status["config_id"] != config_id:
+        raise HTTPException(status_code=404, detail="実行が見つかりません")
+
+    if current_status["status"] not in ("FAILED", "STALE"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"リトライできるのはFAILED/STALEステータスのみです（現在: {current_status['status']}）",
+        )
+
+    if not current_status["can_retry"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"リトライ回数上限に達しています（{current_status['retry_count']}/{current_status['max_retries']}）",
+        )
+
+    # 新しいrun_idを作成
+    new_run_id = runner.retry_run(run_id)
+    if not new_run_id:
+        raise HTTPException(status_code=500, detail="リトライの開始に失敗しました")
+
+    uow.session.commit()
+
+    # バックグラウンドスレッドで実行
+    def run_in_background(new_run_id: str) -> None:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.info(f"[PAD Run BG] Starting retry thread for {new_run_id}")
+        try:
+            with SessionLocal() as session:
+                bg_runner = SmartReadPadRunnerService(session)
+                bg_runner.execute_run(new_run_id)
+        except Exception as e:
+            logger.exception(f"[PAD Run BG] Retry thread failed: {e}")
+
+    thread = threading.Thread(
+        target=run_in_background,
+        args=(new_run_id,),
+        daemon=True,
+        name=f"pad-run-retry-{new_run_id[:8]}",
+    )
+    thread.start()
+
+    return SmartReadPadRunRetryResponse(
+        new_run_id=new_run_id,
+        original_run_id=run_id,
+        message="リトライを開始しました",
     )

@@ -19311,6 +19311,255 @@
         }
       }
     },
+    "/api/rpa/smartread/configs/{config_id}/pad-runs": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "PAD互換フローを開始",
+        "description": "PAD互換フローを開始（バックグラウンド処理）.\n\n監視フォルダ内のファイルを指定してPAD互換フローを開始します。\n処理はバックグラウンドスレッドで実行され、即座にrun_idを返します。\n\n進捗状況は GET /pad-runs/{run_id} で確認できます。",
+        "operationId": "start_pad_run_api_rpa_smartread_configs__config_id__pad_runs_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadPadRunStartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadPadRunStartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "PAD互換フロー一覧を取得",
+        "description": "PAD互換フロー一覧を取得.",
+        "operationId": "list_pad_runs_api_rpa_smartread_configs__config_id__pad_runs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          },
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ステータスでフィルタ",
+              "title": "Status Filter"
+            },
+            "description": "ステータスでフィルタ"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "description": "取得件数",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "取得件数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadPadRunListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/configs/{config_id}/pad-runs/{run_id}": {
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "PAD互換フロー状態を取得",
+        "description": "PAD互換フローの状態を取得（STALE検出を含む）.\n\nRUNNINGステータスの場合、heartbeat_atが一定時間（120秒）更新されていなければ\nSTALEとしてマークされます。",
+        "operationId": "get_pad_run_status_api_rpa_smartread_configs__config_id__pad_runs__run_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadPadRunStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/configs/{config_id}/pad-runs/{run_id}/retry": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "PAD互換フローをリトライ",
+        "description": "失敗/Staleの実行をリトライ.\n\n同じ入力ファイルで新しい実行を開始します。\nリトライ回数には上限があります（デフォルト3回）。",
+        "operationId": "retry_pad_run_api_rpa_smartread_configs__config_id__pad_runs__run_id__retry_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadPadRunRetryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/masters/status": {
       "get": {
         "summary": "Get Master Status",
@@ -20319,6 +20568,382 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/debug/db/objects": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "List Db Objects",
+        "operationId": "list_db_objects_api_debug_db_objects_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Db Objects Api Debug Db Objects Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/debug/db/objects/{schema}/{name}/schema": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "Get Object Schema",
+        "operationId": "get_object_schema_api_debug_db_objects__schema___name__schema_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schema",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Schema"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Object Schema Api Debug Db Objects  Schema   Name  Schema Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/debug/db/objects/{schema}/{name}/rows": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "Get Object Rows",
+        "operationId": "get_object_rows_api_debug_db_objects__schema___name__rows_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schema",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Schema"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(?i)(asc|desc)$",
+              "default": "asc",
+              "title": "Order Dir"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Object Rows Api Debug Db Objects  Schema   Name  Rows Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/debug/db/objects/{schema}/{name}/definition": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "Get View Definition",
+        "operationId": "get_view_definition_api_debug_db_objects__schema___name__definition_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schema",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Schema"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get View Definition Api Debug Db Objects  Schema   Name  Definition Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/debug/db/graph": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "Get Db Graph",
+        "operationId": "get_db_graph_api_debug_db_graph_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Db Graph Api Debug Db Graph Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/debug/db/objects/{schema}/{name}/relations": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "Get Object Relations",
+        "operationId": "get_object_relations_api_debug_db_objects__schema___name__relations_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schema",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Schema"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Object Relations Api Debug Db Objects  Schema   Name  Relations Get"
+                }
               }
             }
           },
@@ -37260,6 +37885,312 @@
         ],
         "title": "SmartReadLongDataResponse",
         "description": "縦持ちデータレスポンス."
+      },
+      "SmartReadPadRunListItem": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "実行ID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ステータス"
+          },
+          "step": {
+            "type": "string",
+            "title": "Step",
+            "description": "現在の工程"
+          },
+          "filenames": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filenames",
+            "description": "処理対象ファイル名"
+          },
+          "wide_data_count": {
+            "type": "integer",
+            "title": "Wide Data Count",
+            "description": "横持ちデータ件数",
+            "default": 0
+          },
+          "long_data_count": {
+            "type": "integer",
+            "title": "Long Data Count",
+            "description": "縦持ちデータ件数",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "作成日時"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "完了日時"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "status",
+          "step",
+          "created_at"
+        ],
+        "title": "SmartReadPadRunListItem",
+        "description": "PAD互換フロー一覧アイテム."
+      },
+      "SmartReadPadRunListResponse": {
+        "properties": {
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/SmartReadPadRunListItem"
+            },
+            "type": "array",
+            "title": "Runs",
+            "description": "実行一覧"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runs"
+        ],
+        "title": "SmartReadPadRunListResponse",
+        "description": "PAD互換フロー一覧レスポンス."
+      },
+      "SmartReadPadRunRetryResponse": {
+        "properties": {
+          "new_run_id": {
+            "type": "string",
+            "title": "New Run Id",
+            "description": "新しい実行ID"
+          },
+          "original_run_id": {
+            "type": "string",
+            "title": "Original Run Id",
+            "description": "元の実行ID"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "メッセージ",
+            "default": "リトライを開始しました"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_run_id",
+          "original_run_id"
+        ],
+        "title": "SmartReadPadRunRetryResponse",
+        "description": "PAD互換フローリトライレスポンス."
+      },
+      "SmartReadPadRunStartRequest": {
+        "properties": {
+          "filenames": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filenames",
+            "description": "監視フォルダ内のファイル名リスト"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filenames"
+        ],
+        "title": "SmartReadPadRunStartRequest",
+        "description": "PAD互換フロー開始リクエスト."
+      },
+      "SmartReadPadRunStartResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "実行ID (UUID)"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ステータス",
+            "default": "RUNNING"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "メッセージ",
+            "default": "PAD互換フローを開始しました"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "title": "SmartReadPadRunStartResponse",
+        "description": "PAD互換フロー開始レスポンス."
+      },
+      "SmartReadPadRunStatusResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "実行ID"
+          },
+          "config_id": {
+            "type": "integer",
+            "title": "Config Id",
+            "description": "設定ID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ステータス (RUNNING/SUCCEEDED/FAILED/STALE)"
+          },
+          "step": {
+            "type": "string",
+            "title": "Step",
+            "description": "現在の工程"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id",
+            "description": "SmartReadタスクID"
+          },
+          "export_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Export Id",
+            "description": "SmartReadエクスポートID"
+          },
+          "filenames": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filenames",
+            "description": "処理対象ファイル名"
+          },
+          "wide_data_count": {
+            "type": "integer",
+            "title": "Wide Data Count",
+            "description": "横持ちデータ件数",
+            "default": 0
+          },
+          "long_data_count": {
+            "type": "integer",
+            "title": "Long Data Count",
+            "description": "縦持ちデータ件数",
+            "default": 0
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message",
+            "description": "エラーメッセージ"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "作成日時"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "description": "更新日時"
+          },
+          "heartbeat_at": {
+            "type": "string",
+            "title": "Heartbeat At",
+            "description": "最終heartbeat日時"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "完了日時"
+          },
+          "can_retry": {
+            "type": "boolean",
+            "title": "Can Retry",
+            "description": "リトライ可能か",
+            "default": false
+          },
+          "retry_count": {
+            "type": "integer",
+            "title": "Retry Count",
+            "description": "現在のリトライ回数",
+            "default": 0
+          },
+          "max_retries": {
+            "type": "integer",
+            "title": "Max Retries",
+            "description": "最大リトライ回数",
+            "default": 3
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "config_id",
+          "status",
+          "step",
+          "created_at",
+          "updated_at",
+          "heartbeat_at"
+        ],
+        "title": "SmartReadPadRunStatusResponse",
+        "description": "PAD互換フロー状態レスポンス."
       },
       "SmartReadProcessRequest": {
         "properties": {

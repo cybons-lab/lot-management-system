@@ -88,7 +88,7 @@
 import os
 from pathlib import Path
 
-from pydantic import AliasChoices, Field, field_validator
+from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -171,6 +171,18 @@ class Settings(BaseSettings):
     # API設定
     API_PREFIX: str = "/api"
     API_V2_STR: str = "/api/v2"
+
+    # Debug機能
+    ENABLE_DB_BROWSER: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("ENABLE_DB_BROWSER", "enable_db_browser"),
+    )
+
+    @model_validator(mode="after")
+    def apply_debug_defaults(self):
+        if "ENABLE_DB_BROWSER" not in self.model_fields_set and self.ENVIRONMENT != "production":
+            self.ENABLE_DB_BROWSER = True
+        return self
 
     # ページネーション設定
     # 【設計根拠】なぜ100件デフォルト、1000件上限なのか:

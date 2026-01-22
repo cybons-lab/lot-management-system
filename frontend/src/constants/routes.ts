@@ -120,6 +120,10 @@ export const ROUTES = {
   HELP: {
     FLOW_MAP: "/help/flow-map",
   },
+
+  DEBUG: {
+    DB_BROWSER: "/debug/db",
+  },
 } as const;
 
 /**
