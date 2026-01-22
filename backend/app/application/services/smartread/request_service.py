@@ -18,8 +18,6 @@ from app.infrastructure.persistence.models.smartread_models import (
 
 
 if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
-
     from app.infrastructure.persistence.models import SmartReadConfig
     from app.infrastructure.smartread.client import SmartReadClient
 

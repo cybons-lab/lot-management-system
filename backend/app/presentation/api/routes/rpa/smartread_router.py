@@ -165,7 +165,6 @@ async def process_files(
     _current_user: User = Depends(get_current_user),
 ) -> list[SmartReadAnalyzeResponse]:
     """監視フォルダ内の指定ファイルを処理 (バックグラウンド処理)."""
-
     from app.application.services.smartread.request_service import process_files_background
 
     # ファイルを処理（バックグラウンドで処理）
