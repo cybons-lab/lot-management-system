@@ -459,24 +459,27 @@ class SmartReadRequestService(SmartReadBaseService):
 
 
 async def process_files_background(
-    db: Session,
     config_id: int,
     filenames: list[str],
 ) -> None:
     """バックグラウンドで複心ファイルを処理."""
+    from app.application.services.common.uow_service import UnitOfWork
     from app.application.services.smartread.smartread_service import SmartReadService
+    from app.core.database import SessionLocal
 
     logger.info(f"[SmartRead Background] Starting background processing for {len(filenames)} files")
 
-    service = SmartReadService(db)
-    config = service.get_config(config_id)
-    if not config or not config.watch_dir:
-        logger.error(f"[SmartRead Background] Config or watch_dir not found for {config_id}")
-        return
-
     try:
-        await service.process_watch_dir_files(config_id, filenames)
-        logger.info("[SmartRead Background] Completed watch dir processing")
+        with UnitOfWork(SessionLocal) as uow:
+            service = SmartReadService(uow.session)
+            config = service.get_config(config_id)
+            if not config or not config.watch_dir:
+                logger.error(
+                    f"[SmartRead Background] Config or watch_dir not found for {config_id}"
+                )
+                return
+
+            await service.process_watch_dir_files(config_id, filenames)
+            logger.info("[SmartRead Background] Completed watch dir processing")
     except Exception as e:
         logger.error(f"[SmartRead Background] Error processing watch dir files: {e}")
-        service.session.rollback()

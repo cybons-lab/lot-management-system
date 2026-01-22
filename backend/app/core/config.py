@@ -220,6 +220,10 @@ class Settings(BaseSettings):
         default=True,
         validation_alias=AliasChoices("LOG_FILE_ENABLED", "log_file_enabled"),
     )
+    LOG_SMARTREAD_ONLY: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("LOG_SMARTREAD_ONLY", "log_smartread_only"),
+    )
 
     # SmartRead 自動同期設定
     SMARTREAD_AUTO_SYNC_ENABLED: bool = Field(
