@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import json
 import logging
+import os
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -55,6 +56,20 @@ class SmartReadWatchService(SmartReadBaseService):
             aggregation_override: str | None = None,
         ) -> dict[str, Any]: ...
 
+        async def sync_watch_dir_files(
+            self,
+            config_id: int,
+            files_to_process: list[tuple[bytes, str]],
+        ) -> dict[str, Any]: ...
+
+    def _move_watch_file(self, watch_dir: Path, filename: str, subdir: str) -> None:
+        """処理済みファイルをサブフォルダへ移動."""
+        destination_dir = watch_dir / subdir
+        destination_dir.mkdir(parents=True, exist_ok=True)
+        source_path = watch_dir / filename
+        destination_path = destination_dir / filename
+        shutil.move(str(source_path), str(destination_path))
+
     def list_files_in_watch_dir(self, config_id: int) -> list[str]:
         """監視ディレクトリ内のファイル一覧を取得.
 
@@ -71,8 +86,6 @@ class SmartReadWatchService(SmartReadBaseService):
                 extra={"config_id": config_id},
             )
             return []
-
-        import os
 
         watch_dir = Path(config.watch_dir)
         if not watch_dir.exists() or not watch_dir.is_dir():
@@ -148,11 +161,7 @@ class SmartReadWatchService(SmartReadBaseService):
             )
             return WatchDirProcessOutcome(task_id=None, results=[], watch_dir=None)
 
-        import os
-
         watch_dir = Path(config.watch_dir)
-        export_dir = Path(config.export_dir) if config.export_dir else None
-
         # ファイルを読み込み
         files_to_process: list[tuple[bytes, str]] = []
         results: list[AnalyzeResult] = []
@@ -184,39 +193,41 @@ class SmartReadWatchService(SmartReadBaseService):
             return WatchDirProcessOutcome(task_id=None, results=results, watch_dir=watch_dir)
 
         task_id = None
-        for file_content, filename in files_to_process:
-            try:
-                simple_result = await self.sync_with_simple_flow(
-                    config_id=config_id,
-                    file_content=file_content,
-                    filename=filename,
-                    export_type_override="csv",
+        try:
+            simple_result = await self.sync_watch_dir_files(
+                config_id=config_id,
+                files_to_process=files_to_process,
+            )
+            task_id = simple_result.get("task_id")
+            request_states = {
+                entry.get("filename"): entry.get("state", {})
+                for entry in simple_result.get("requests", [])
+            }
+            for _, filename in files_to_process:
+                state = request_states.get(filename, {})
+                state_name = state.get("state")
+                if state_name in ("SORTING_FAILED", "OCR_FAILED", "ERROR", "TIMEOUT"):
+                    self._move_watch_file(watch_dir, filename, "Error")
+                else:
+                    self._move_watch_file(watch_dir, filename, "Done")
+                results.append(
+                    AnalyzeResult(
+                        success=True,
+                        filename=filename,
+                        data=[],
+                        error_message=None,
+                    )
                 )
-                analyze_result = AnalyzeResult(
-                    success=True,
-                    filename=filename,
-                    data=simple_result.get("wide_data", []),
-                    error_message=None,
-                )
-                task_id = simple_result.get("task_id", task_id)
-            except Exception as e:
-                analyze_result = AnalyzeResult(False, filename, [], str(e))
-
-            # JSON出力
-            if analyze_result.success and export_dir and analyze_result.filename:
-                if not export_dir.exists():
-                    try:
-                        os.makedirs(export_dir, exist_ok=True)
-                    except OSError as e:
-                        logger.error(f"Failed to create export dir: {e}")
-
-                if export_dir.exists():
-                    json_name = f"{Path(analyze_result.filename).stem}.json"
-                    json_path = export_dir / json_name
-                    with open(json_path, "w", encoding="utf-8") as f:
-                        json.dump(analyze_result.data, f, ensure_ascii=False, indent=2)
-
-            results.append(analyze_result)
+        except Exception as e:
+            for _, filename in files_to_process:
+                try:
+                    self._move_watch_file(watch_dir, filename, "Error")
+                except Exception:
+                    logger.exception(
+                        "[SmartRead] Failed to move watch dir file to Error",
+                        extra={"filename": filename, "watch_dir": str(watch_dir)},
+                    )
+                results.append(AnalyzeResult(False, filename, [], str(e)))
 
         return WatchDirProcessOutcome(
             task_id=task_id,
