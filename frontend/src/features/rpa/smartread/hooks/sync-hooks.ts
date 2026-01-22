@@ -272,7 +272,7 @@ export function useSmartReadLongData(
 }
 
 /**
- * ファイルを自動処理 (process-auto)
+ * ファイルを自動処理
  */
 export function useProcessFilesAuto() {
   const queryClient = useQueryClient();
@@ -281,7 +281,9 @@ export function useProcessFilesAuto() {
     mutationFn: ({ configId, filenames }: { configId: number; filenames: string[] }) =>
       processFilesAuto(configId, filenames),
     onSuccess: (result, { configId }) => {
-      toast.success(result.message);
+      const successCount = result.filter((item) => item.success).length;
+      const totalCount = result.length;
+      toast.success(`${totalCount}件の処理を開始しました（成功: ${successCount}件）`);
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.requests(configId) });
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.files(configId) });
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.managedTasks(configId) });

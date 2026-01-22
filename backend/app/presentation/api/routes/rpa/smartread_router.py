@@ -33,8 +33,6 @@ from app.presentation.schemas.smartread_schema import (
     SmartReadExportResponse,
     SmartReadLongDataListResponse,
     SmartReadLongDataResponse,
-    SmartReadProcessAutoRequest,
-    SmartReadProcessAutoResponse,
     SmartReadProcessRequest,
     SmartReadRequestListResponse,
     SmartReadRequestResponse,
@@ -168,37 +166,12 @@ async def process_files(
     _current_user: User = Depends(get_current_user),
 ) -> list[SmartReadAnalyzeResponse]:
     """監視フォルダ内の指定ファイルを処理 (バックグラウンド処理)."""
-    from datetime import date
-
-    from app.application.services.smartread.request_service import (
-        SmartReadRequestService,
-        process_files_background,
-    )
-
     assert db is not None
 
-    # 今日のタスクを取得または作成
-    request_service = SmartReadRequestService(db)
-    task_date = date.today()
-    task_id, task_record = await request_service.get_or_create_daily_task(config_id, task_date)
-
-    if not task_id or not task_record:
-        raise HTTPException(status_code=500, detail="タスクの取得/作成に失敗しました")
-
-    if task_record.skip_today:
-        raise HTTPException(
-            status_code=403, detail="このタスクは今日スキップする設定になっています"
-        )
+    from app.application.services.smartread.request_service import process_files_background
 
     # ファイルを処理（バックグラウンドで処理）
-    background_tasks.add_task(
-        process_files_background,
-        db,
-        config_id,
-        request.filenames,
-        task_id,
-        task_date,
-    )
+    background_tasks.add_task(process_files_background, db, config_id, request.filenames)
 
     return [
         SmartReadAnalyzeResponse(
