@@ -301,14 +301,18 @@ def setup_logging(
 
     context_filter = RequestContextFilter()
 
+    effective_level = level.upper()
+    if settings.ENVIRONMENT == "production" and effective_level in {"WARNING", "ERROR", "CRITICAL"}:
+        effective_level = "INFO"
+
     # ルートロガーの設定
     root_logger = logging.getLogger()
-    root_logger.setLevel(level.upper())
+    root_logger.setLevel(effective_level)
     root_logger.handlers.clear()
 
     # コンソールハンドラ
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(level.upper())
+    console_handler.setLevel(effective_level)
     console_handler.addFilter(context_filter)
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
