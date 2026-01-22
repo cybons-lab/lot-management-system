@@ -345,6 +345,8 @@ export async function transformCsv(
 
 /**
  * タスクの結果を強制的に同期 (API -> DB)
+ *
+ * OCR処理には時間がかかるため、タイムアウトを5分に設定
  */
 export async function syncTaskResults(
   configId: number,
@@ -356,7 +358,10 @@ export async function syncTaskResults(
     config_id: configId.toString(),
     force: force.toString(),
   });
-  return http.post<SmartReadCsvDataResponse>(`rpa/smartread/tasks/${taskId}/sync?${params}`);
+  // OCR処理完了まで待つため、タイムアウトを5分に延長
+  return http.post<SmartReadCsvDataResponse>(`rpa/smartread/tasks/${taskId}/sync?${params}`, null, {
+    timeout: 300000, // 5 minutes
+  });
 }
 
 /**
