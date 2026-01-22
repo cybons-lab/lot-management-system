@@ -73,7 +73,7 @@ class SmartReadAnalyzeResponse(BaseModel):
 
     success: bool
     filename: str
-    data: list[dict[str, Any]]
+    data: list[dict[str, Any]] | None
     error_message: str | None = None
 
 

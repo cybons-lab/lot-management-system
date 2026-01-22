@@ -163,22 +163,55 @@ def list_watch_dir_files(
 async def process_files(
     config_id: int,
     request: SmartReadProcessRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
 ) -> list[SmartReadAnalyzeResponse]:
-    """監視フォルダ内の指定ファイルを処理."""
+    """監視フォルダ内の指定ファイルを処理 (process-autoへリダイレクト)."""
+    # process-autoと同じ処理を実行
+    from app.application.services.smartread.smartread_service import SmartReadService
+    from datetime import date
+
     assert db is not None
     service = SmartReadService(db)
-    results = await service.process_watch_dir_files(config_id, request.filenames)
+
+    # 今日のタスクを取得または作成
+    from app.application.services.smartread.request_service import SmartReadRequestService
+
+    request_service = SmartReadRequestService(db)
+    task_date = date.today()
+    task_id, task_record = await request_service.get_or_create_daily_task(config_id, task_date)
+
+    if not task_id or not task_record:
+        raise HTTPException(status_code=500, detail="タスクの取得/作成に失敗しました")
+
+    if task_record.skip_today:
+        raise HTTPException(
+            status_code=403, detail="このタスクは今日スキップする設定になっています"
+        )
+
+    # ファイルを処理（バックグラウンドで処理）
+    from app.application.services.smartread.request_service import (
+        process_files_background,
+    )
+
+    background_tasks.add_task(
+        process_files_background,
+        db,
+        config_id,
+        request.filenames,
+        task_id,
+        task_date,
+    )
 
     return [
         SmartReadAnalyzeResponse(
-            success=r.success,
-            filename=r.filename,
-            data=r.data,
-            error_message=r.error_message,
+            success=True,
+            filename=filename,
+            data=None,
+            error_message=None,
         )
-        for r in results
+        for filename in request.filenames
     ]
 
 
