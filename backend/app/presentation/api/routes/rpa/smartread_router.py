@@ -750,7 +750,6 @@ def reset_smartread_data(
 # ==================== requestId/results ルート API ====================
 
 
-
 @router.get(
     "/configs/{config_id}/requests",
     response_model=SmartReadRequestListResponse,

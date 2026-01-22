@@ -17592,7 +17592,7 @@
           "smartread"
         ],
         "summary": "Process Files",
-        "description": "監視フォルダ内の指定ファイルを処理 (process-autoへリダイレクト).",
+        "description": "監視フォルダ内の指定ファイルを処理 (バックグラウンド処理).",
         "operationId": "process_files_api_rpa_smartread_configs__config_id__process_post",
         "security": [
           {
@@ -18561,64 +18561,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SmartReadResetResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rpa/smartread/configs/{config_id}/process-auto": {
-      "post": {
-        "tags": [
-          "smartread"
-        ],
-        "summary": "ファイルを自動処理（requestIdルート）",
-        "description": "監視フォルダ内の指定ファイルを自動処理（requestIdルート）.\n\n1日1タスク運用で、ファイルをSmartRead APIに投入し、\nバックグラウンドでポーリング・結果処理を実行します。",
-        "operationId": "process_files_auto_api_rpa_smartread_configs__config_id__process_auto_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "config_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Config Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SmartReadProcessAutoRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SmartReadProcessAutoResponse"
                 }
               }
             }
@@ -36139,66 +36081,6 @@
         ],
         "title": "SmartReadLongDataResponse",
         "description": "縦持ちデータレスポンス."
-      },
-      "SmartReadProcessAutoRequest": {
-        "properties": {
-          "filenames": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Filenames",
-            "description": "処理するファイル名のリスト"
-          },
-          "use_daily_task": {
-            "type": "boolean",
-            "title": "Use Daily Task",
-            "description": "1日1タスク運用を使用するか",
-            "default": true
-          }
-        },
-        "type": "object",
-        "required": [
-          "filenames"
-        ],
-        "title": "SmartReadProcessAutoRequest",
-        "description": "自動処理リクエスト（requestIdルート用）."
-      },
-      "SmartReadProcessAutoResponse": {
-        "properties": {
-          "task_id": {
-            "type": "string",
-            "title": "Task Id",
-            "description": "タスクID"
-          },
-          "task_name": {
-            "type": "string",
-            "title": "Task Name",
-            "description": "タスク名 (OCR_YYYYMMDD)"
-          },
-          "requests": {
-            "items": {
-              "$ref": "#/components/schemas/SmartReadRequestResponse"
-            },
-            "type": "array",
-            "title": "Requests",
-            "description": "投入されたリクエスト一覧"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message",
-            "description": "メッセージ",
-            "default": "処理を開始しました"
-          }
-        },
-        "type": "object",
-        "required": [
-          "task_id",
-          "task_name",
-          "requests"
-        ],
-        "title": "SmartReadProcessAutoResponse",
-        "description": "自動処理レスポンス（requestIdルート用）."
       },
       "SmartReadProcessRequest": {
         "properties": {
