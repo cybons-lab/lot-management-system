@@ -320,3 +320,69 @@ class SmartReadResetResponse(BaseModel):
     deleted_task_count: int = Field(..., description="削除したタスク件数")
     deleted_export_history_count: int = Field(..., description="削除したエクスポート履歴件数")
     message: str = Field(..., description="メッセージ")
+
+
+# ==================== PAD Runner系スキーマ ====================
+
+
+class SmartReadPadRunStartRequest(BaseModel):
+    """PAD互換フロー開始リクエスト."""
+
+    filenames: list[str] = Field(..., description="監視フォルダ内のファイル名リスト")
+
+
+class SmartReadPadRunStartResponse(BaseModel):
+    """PAD互換フロー開始レスポンス."""
+
+    run_id: str = Field(..., description="実行ID (UUID)")
+    status: str = Field(default="RUNNING", description="ステータス")
+    message: str = Field(default="PAD互換フローを開始しました", description="メッセージ")
+
+
+class SmartReadPadRunStatusResponse(BaseModel):
+    """PAD互換フロー状態レスポンス."""
+
+    run_id: str = Field(..., description="実行ID")
+    config_id: int = Field(..., description="設定ID")
+    status: str = Field(..., description="ステータス (RUNNING/SUCCEEDED/FAILED/STALE)")
+    step: str = Field(..., description="現在の工程")
+    task_id: str | None = Field(default=None, description="SmartReadタスクID")
+    export_id: str | None = Field(default=None, description="SmartReadエクスポートID")
+    filenames: list[str] | None = Field(default=None, description="処理対象ファイル名")
+    wide_data_count: int = Field(default=0, description="横持ちデータ件数")
+    long_data_count: int = Field(default=0, description="縦持ちデータ件数")
+    error_message: str | None = Field(default=None, description="エラーメッセージ")
+    created_at: str = Field(..., description="作成日時")
+    updated_at: str = Field(..., description="更新日時")
+    heartbeat_at: str = Field(..., description="最終heartbeat日時")
+    completed_at: str | None = Field(default=None, description="完了日時")
+    can_retry: bool = Field(default=False, description="リトライ可能か")
+    retry_count: int = Field(default=0, description="現在のリトライ回数")
+    max_retries: int = Field(default=3, description="最大リトライ回数")
+
+
+class SmartReadPadRunListItem(BaseModel):
+    """PAD互換フロー一覧アイテム."""
+
+    run_id: str = Field(..., description="実行ID")
+    status: str = Field(..., description="ステータス")
+    step: str = Field(..., description="現在の工程")
+    filenames: list[str] | None = Field(default=None, description="処理対象ファイル名")
+    wide_data_count: int = Field(default=0, description="横持ちデータ件数")
+    long_data_count: int = Field(default=0, description="縦持ちデータ件数")
+    created_at: str = Field(..., description="作成日時")
+    completed_at: str | None = Field(default=None, description="完了日時")
+
+
+class SmartReadPadRunListResponse(BaseModel):
+    """PAD互換フロー一覧レスポンス."""
+
+    runs: list[SmartReadPadRunListItem] = Field(..., description="実行一覧")
+
+
+class SmartReadPadRunRetryResponse(BaseModel):
+    """PAD互換フローリトライレスポンス."""
+
+    new_run_id: str = Field(..., description="新しい実行ID")
+    original_run_id: str = Field(..., description="元の実行ID")
+    message: str = Field(default="リトライを開始しました", description="メッセージ")
