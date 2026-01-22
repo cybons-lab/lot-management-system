@@ -227,51 +227,76 @@ async def analyze_file(
     )
 
 
-@router.post("/analyze-simple", response_model=SmartReadCsvDataResponse)
+@router.post("/analyze-simple")
 async def analyze_file_simple(
     file: Annotated[UploadFile, File(description="解析するファイル（PDF, PNG, JPG）")],
+    background_tasks: BackgroundTasks,
     config_id: int = Query(..., description="使用する設定のID"),
-    uow: UnitOfWork = Depends(get_uow),
+    db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
-) -> SmartReadCsvDataResponse:
-    """ファイルをSmartRead APIで解析（シンプルフロー）.
+) -> JSONResponse:
+    """ファイルをSmartRead APIで解析（バックグラウンド処理）.
 
-    参考コードを基にしたシンプルな実装:
-    1. タスク作成 (exportSettings付き)
-    2. ファイルアップロード
-    3. タスク完了待ち
-    4. エクスポート開始
-    5. エクスポート完了待ち
-    6. ZIPダウンロード
-    7. CSV抽出・DB保存
+    即座にレスポンスを返し、バックグラウンドで処理を実行。
+    処理完了後、結果はDBに保存される。
 
-    処理完了まで待機するため、タイムアウトに注意。
+    Returns:
+        処理開始のレスポンス（task_idを含む）
     """
-    assert uow.session is not None
     file_content = await file.read()
     filename = file.filename or "unknown"
 
-    service = SmartReadService(uow.session)
-    result = await service.sync_with_simple_flow(
+    # バックグラウンドで処理を開始
+    background_tasks.add_task(
+        _run_simple_sync_background,
         config_id=config_id,
         file_content=file_content,
         filename=filename,
     )
 
-    return SmartReadCsvDataResponse(
-        wide_data=result["wide_data"],
-        long_data=result["long_data"],
-        errors=[
-            SmartReadValidationError(
-                row=e["row"],
-                field=e["field"],
-                message=e["message"],
-                value=e["value"],
-            )
-            for e in result["errors"]
-        ],
-        filename=result.get("filename"),
+    return JSONResponse(
+        status_code=202,
+        content={
+            "message": f"処理を開始しました: {filename}",
+            "filename": filename,
+            "status": "processing",
+        },
     )
+
+
+async def _run_simple_sync_background(
+    config_id: int,
+    file_content: bytes,
+    filename: str,
+) -> None:
+    """バックグラウンドでシンプル同期フローを実行."""
+    import logging
+
+    from app.application.services.common.uow_service import UnitOfWork
+    from app.core.database import SessionLocal
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"[SimpleSync Background] Starting processing: {filename}")
+
+    try:
+        with UnitOfWork(SessionLocal) as uow:
+            assert uow.session is not None
+            service = SmartReadService(uow.session)
+
+            result = await service.sync_with_simple_flow(
+                config_id=config_id,
+                file_content=file_content,
+                filename=filename,
+            )
+
+            logger.info(
+                f"[SimpleSync Background] Completed: {filename}, "
+                f"{len(result['wide_data'])} wide rows, "
+                f"{len(result['long_data'])} long rows"
+            )
+
+    except Exception as e:
+        logger.error(f"[SimpleSync Background] Failed: {filename}, error: {e}")
 
 
 # --- エクスポート ---
