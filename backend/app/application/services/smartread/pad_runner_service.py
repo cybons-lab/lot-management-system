@@ -15,12 +15,14 @@ import mimetypes
 import time
 import uuid
 import zipfile
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import requests
 from sqlalchemy.orm import Session
+
 
 if TYPE_CHECKING:
     from app.infrastructure.persistence.models import SmartReadConfig, SmartReadPadRun
@@ -109,8 +111,13 @@ class SmartReadPadRunnerService:
             self._update_step(run, "TASK_CREATED")
             task_name = f"PAD_{datetime.now().strftime('%Y%m%d%H%M%S')}"
             task_id = self._create_task(
-                api_session, endpoint, task_name,
-                "templateMatching", template_ids, export_type, aggregation
+                api_session,
+                endpoint,
+                task_name,
+                "templateMatching",
+                template_ids,
+                export_type,
+                aggregation,
             )
             run.task_id = task_id
             self._update_heartbeat(run)
@@ -118,26 +125,33 @@ class SmartReadPadRunnerService:
             # 2. ファイルアップロード
             self._update_step(run, "UPLOADED")
             watch_dir = Path(config.watch_dir) if config.watch_dir else None
-            request_ids = self._upload_files(
-                api_session, endpoint, task_id, run.filenames, watch_dir
-            )
+            filenames = run.filenames or []
+            request_ids = self._upload_files(api_session, endpoint, task_id, filenames, watch_dir)
             self._update_heartbeat(run)
 
             # 3. リクエスト完了待ち（ポーリング中もheartbeat更新）
             self._update_step(run, "REQUEST_DONE")
             for request_id in request_ids:
+
+                def check_rid(rid: str = request_id) -> bool | None:
+                    return self._check_request_done(api_session, endpoint, rid)
+
                 self._poll_with_heartbeat(
                     run,
-                    lambda rid=request_id: self._check_request_done(api_session, endpoint, rid),
+                    check_rid,
                     timeout_sec=600,
                     poll_interval=2.0,
                 )
 
             # 4. タスク完了待ち（ポーリング中もheartbeat更新）
             self._update_step(run, "TASK_DONE")
+
+            def check_task() -> bool | None:
+                return self._check_task_done(api_session, endpoint, task_id)
+
             self._poll_with_heartbeat(
                 run,
-                lambda: self._check_task_done(api_session, endpoint, task_id),
+                check_task,
                 timeout_sec=600,
                 poll_interval=2.0,
             )
@@ -152,9 +166,13 @@ class SmartReadPadRunnerService:
 
             # 6. Export完了待ち（ポーリング中もheartbeat更新）
             self._update_step(run, "EXPORT_DONE")
+
+            def check_export() -> bool | None:
+                return self._check_export_done(api_session, endpoint, task_id, export_id)
+
             self._poll_with_heartbeat(
                 run,
-                lambda: self._check_export_done(api_session, endpoint, task_id, export_id),
+                check_export,
                 timeout_sec=300,
                 poll_interval=2.0,
             )
@@ -264,19 +282,12 @@ class SmartReadPadRunnerService:
         """PAD Runの一覧を取得."""
         from app.infrastructure.persistence.models import SmartReadPadRun
 
-        query = (
-            self.session.query(SmartReadPadRun)
-            .filter(SmartReadPadRun.config_id == config_id)
-        )
+        query = self.session.query(SmartReadPadRun).filter(SmartReadPadRun.config_id == config_id)
 
         if status_filter:
             query = query.filter(SmartReadPadRun.status == status_filter)
 
-        runs = (
-            query.order_by(SmartReadPadRun.created_at.desc())
-            .limit(limit)
-            .all()
-        )
+        runs = query.order_by(SmartReadPadRun.created_at.desc()).limit(limit).all()
 
         return [
             {
@@ -329,10 +340,12 @@ class SmartReadPadRunnerService:
     def _create_api_session(self, api_key: str) -> requests.Session:
         """requests.Session を作成（SmartRead API用）."""
         session = requests.Session()
-        session.headers.update({
-            "Authorization": f"apikey {api_key}",
-            "User-Agent": "LotManagementSystem-PADRunner/1.0",
-        })
+        session.headers.update(
+            {
+                "Authorization": f"apikey {api_key}",
+                "User-Agent": "LotManagementSystem-PADRunner/1.0",
+            }
+        )
         return session
 
     def _poll_with_heartbeat(
@@ -567,7 +580,7 @@ class SmartReadPadRunnerService:
         """エクスポートZIPをダウンロード."""
         url = f"{endpoint}/task/{task_id}/export/{export_id}/download"
 
-        logger.info(f"[PAD Runner] Downloading export ZIP")
+        logger.info("[PAD Runner] Downloading export ZIP")
         r = session.get(url, timeout=120)
 
         if r.status_code != 200:

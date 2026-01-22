@@ -267,7 +267,7 @@ class SmartReadPadRun(Base):
     export_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # 入力情報（監視フォルダ内のファイル名リスト）
-    filenames: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    filenames: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
 
     # 結果
     wide_data_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
