@@ -101,7 +101,6 @@ export function SmartReadPage() {
     await queryClient.invalidateQueries({
       queryKey: selectedConfigId ? SMARTREAD_QUERY_KEYS.managedTasks(selectedConfigId) : [],
     });
-    setActiveTab("detail");
   };
 
   const toggleWatchFile = (filename: string) => {
@@ -121,7 +120,6 @@ export function SmartReadPage() {
 
   const handleAnalyzeSuccess = () => {
     // refetchTasks(); // same here
-    setActiveTab("tasks");
   };
 
   const handleSelectTask = (taskId: string) => {

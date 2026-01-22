@@ -87,7 +87,13 @@ function useLongDataColumns(longDataList: SmartReadLongData[] | undefined) {
       header: key,
       accessor: (row) => {
         const val = row.content[key];
-        return val !== undefined && val !== null ? String(val) : "";
+        if (val === undefined || val === null) {
+          return "";
+        }
+        if (typeof val === "object") {
+          return JSON.stringify(val);
+        }
+        return String(val);
       },
       width: 150,
       sortable: true,
@@ -147,9 +153,12 @@ export function SmartReadSavedDataList({ configId }: SmartReadSavedDataListProps
     <Card className="h-full flex flex-col border-none shadow-none">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 px-0 pt-0">
         <div className="space-y-1">
-          <CardTitle className="text-base">保存済みデータ (全件)</CardTitle>
+          <CardTitle className="text-base">保存済みデータ (縦持ちのみ)</CardTitle>
           <p className="text-xs text-muted-foreground">
-            過去に変換・保存された全ての縦持ちデータを表示しています (最新1000件)
+            過去に変換・保存された縦持ちデータを表示しています (最新1000件)
+          </p>
+          <p className="text-xs text-muted-foreground">
+            件数: {longDataList?.length ?? 0} 件
           </p>
         </div>
         <div className="flex items-center gap-2">
