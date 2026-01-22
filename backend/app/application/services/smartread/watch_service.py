@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -54,6 +55,14 @@ class SmartReadWatchService(SmartReadBaseService):
             export_type_override: str | None = None,
             aggregation_override: str | None = None,
         ) -> dict[str, Any]: ...
+
+    def _move_watch_file(self, watch_dir: Path, filename: str, subdir: str) -> None:
+        """処理済みファイルをサブフォルダへ移動."""
+        destination_dir = watch_dir / subdir
+        destination_dir.mkdir(parents=True, exist_ok=True)
+        source_path = watch_dir / filename
+        destination_path = destination_dir / filename
+        shutil.move(str(source_path), str(destination_path))
 
     def list_files_in_watch_dir(self, config_id: int) -> list[str]:
         """監視ディレクトリ内のファイル一覧を取得.
@@ -184,7 +193,17 @@ class SmartReadWatchService(SmartReadBaseService):
                 files_to_process=files_to_process,
             )
             task_id = simple_result.get("task_id")
+            request_states = {
+                entry.get("filename"): entry.get("state", {})
+                for entry in simple_result.get("requests", [])
+            }
             for _, filename in files_to_process:
+                state = request_states.get(filename, {})
+                state_name = state.get("state")
+                if state_name in ("SORTING_FAILED", "OCR_FAILED", "ERROR", "TIMEOUT"):
+                    self._move_watch_file(watch_dir, filename, "Error")
+                else:
+                    self._move_watch_file(watch_dir, filename, "Done")
                 results.append(
                     AnalyzeResult(
                         success=True,
@@ -195,6 +214,13 @@ class SmartReadWatchService(SmartReadBaseService):
                 )
         except Exception as e:
             for _, filename in files_to_process:
+                try:
+                    self._move_watch_file(watch_dir, filename, "Error")
+                except Exception:
+                    logger.exception(
+                        "[SmartRead] Failed to move watch dir file to Error",
+                        extra={"filename": filename, "watch_dir": str(watch_dir)},
+                    )
                 results.append(AnalyzeResult(False, filename, [], str(e)))
 
         return WatchDirProcessOutcome(
