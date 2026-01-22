@@ -331,7 +331,9 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
         api_key = config.api_key
         template_ids = None
         if config.template_ids:
-            template_ids = [t.strip() for t in config.template_ids.split(",") if t.strip()]
+            template_ids = [
+                t.strip() for t in config.template_ids.split(",") if t.strip()
+            ]
         export_type = export_type_override or config.export_type or "csv"
         aggregation = aggregation_override or config.aggregation_type or "perPage"
 
@@ -460,7 +462,9 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
         api_key = config.api_key
         template_ids = None
         if config.template_ids:
-            template_ids = [t.strip() for t in config.template_ids.split(",") if t.strip()]
+            template_ids = [
+                t.strip() for t in config.template_ids.split(",") if t.strip()
+            ]
         export_type = config.export_type or "csv"
         aggregation = config.aggregation_type or "oneFilePerTemplate"
 
@@ -495,7 +499,9 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                     request_id=request_id,
                     timeout_sec=600,
                 )
-                request_states.append({"request_id": request_id, "filename": filename, "state": state})
+                request_states.append(
+                    {"request_id": request_id, "filename": filename, "state": state}
+                )
 
             self._poll_task_until_completed(
                 session=session,
