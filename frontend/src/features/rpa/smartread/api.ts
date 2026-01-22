@@ -414,27 +414,14 @@ export interface SmartReadRequestListResponse {
   requests: SmartReadRequest[];
 }
 
-export interface SmartReadProcessAutoRequest {
-  filenames: string[];
-}
-
-export interface SmartReadProcessAutoResponse {
-  task_id: string;
-  task_name: string;
-  requests: SmartReadRequest[];
-  message: string;
-}
-
 /**
- * 自動処理を開始 (process-auto)
+ * 自動処理を開始
  */
 export async function processFilesAuto(
   configId: number,
   filenames: string[],
-): Promise<SmartReadProcessAutoResponse> {
-  return http.post<SmartReadProcessAutoResponse>(`rpa/smartread/configs/${configId}/process-auto`, {
-    filenames,
-  });
+): Promise<SmartReadAnalyzeResponse[]> {
+  return processWatchDirFiles(configId, filenames);
 }
 
 /**
