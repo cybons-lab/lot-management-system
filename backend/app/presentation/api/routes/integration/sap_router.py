@@ -184,14 +184,38 @@ async def fetch_materials(
 
     Z_SCM1_RFC_MATERIAL_DOWNLOADを呼び出し、ET_DATAをキャッシュテーブルに保存します。
 
-    Note:
-        - パスワードが未設定の場合はモックデータを返します
-        - 本番環境では適切なパスワード復号化が必要です
+    動作モード:
+        - DBにパスワードが設定されている場合: 本番モード（実際にSAP RFCを呼び出す）
+        - パスワードが空/未設定の場合: モックモード（テストデータを返す）
+
+    これにより、コードを変更せずにDB設定だけで本番/モック切り替えが可能。
     """
+    import base64
+
     service = SapMaterialService(db)
 
-    # TODO: 本番では接続情報からパスワードを復号化
-    # 現在はモックモードで動作
+    # 接続情報を取得
+    if request.connection_id:
+        connection = service.get_connection_by_id(request.connection_id)
+    else:
+        connection = service.get_default_connection()
+
+    # パスワードを復号化（設定されていれば本番モード、なければモックモード）
+    decrypted_passwd = None
+    if connection and connection.passwd_encrypted:
+        try:
+            decrypted_passwd = base64.b64decode(connection.passwd_encrypted).decode()
+            logger.info(
+                f"[SAP] Using real connection: id={connection.id}, "
+                f"name={connection.name}, env={connection.environment}"
+            )
+        except Exception as e:
+            logger.warning(f"[SAP] Failed to decrypt password, falling back to mock mode: {e}")
+            decrypted_passwd = None
+
+    if not decrypted_passwd:
+        logger.info("[SAP] No password configured, using mock mode")
+
     result = service.fetch_and_cache_materials(
         connection_id=request.connection_id,
         kunnr_f=request.kunnr_f,
@@ -199,7 +223,7 @@ async def fetch_materials(
         bukrs=request.bukrs,
         zaiko=request.zaiko,
         limit=request.limit,
-        decrypted_passwd=None,  # モックモード
+        decrypted_passwd=decrypted_passwd,
     )
 
     return SapMaterialFetchResponse(

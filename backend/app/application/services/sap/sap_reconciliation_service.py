@@ -417,12 +417,27 @@ class SapReconciliationService:
                 "[SapReconciliationService] SAP cache is empty, attempting to fetch from SAP..."
             )
             # キャッシュがなければSAPから再取得を試みる
+            import base64
+
             from app.application.services.sap.sap_material_service import (
                 SapMaterialService,
             )
 
             material_service = SapMaterialService(self.db)
-            fetch_result = material_service.fetch_and_cache_materials(kunnr_f=customer_code)
+
+            # パスワードを復号化（設定されていれば本番モード）
+            connection = material_service.get_default_connection()
+            decrypted_passwd = None
+            if connection and connection.passwd_encrypted:
+                try:
+                    decrypted_passwd = base64.b64decode(connection.passwd_encrypted).decode()
+                except Exception as e:
+                    logger.warning(f"[SapReconciliationService] Password decrypt failed: {e}")
+
+            fetch_result = material_service.fetch_and_cache_materials(
+                kunnr_f=customer_code,
+                decrypted_passwd=decrypted_passwd,
+            )
 
             if fetch_result.success:
                 cache_count = self.load_sap_cache(customer_code)
