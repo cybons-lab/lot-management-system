@@ -10,7 +10,7 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /* eslint-disable jsx-a11y/no-autofocus */
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, AlertTriangle, CheckCircle, Download, XCircle } from "lucide-react";
 import {
   createContext,
@@ -315,10 +315,39 @@ export function OcrResultsListPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [rowInputs, setRowInputs] = useState<Record<number, RowInputState>>({});
   const saveTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+  const refreshMasterRef = useRef<Set<number>>(new Set());
+  const queryClient = useQueryClient();
+
+  const buildPayload = useCallback(
+    (input: RowInputState): OcrResultEditPayload => ({
+      lot_no_1: input.lotNo1 || null,
+      quantity_1: input.quantity1 || null,
+      lot_no_2: input.lotNo2 || null,
+      quantity_2: input.quantity2 || null,
+      inbound_no: input.inboundNo || null,
+      shipping_date: input.shippingDate || null,
+      shipping_slip_text: input.shippingSlipText || null,
+      shipping_slip_text_edited: input.shippingSlipTextEdited,
+      jiku_code: input.jikuCode || null,
+      material_code: input.materialCode || null,
+    }),
+    [],
+  );
 
   const saveEditMutation = useMutation({
-    mutationFn: async ({ rowId, payload }: { rowId: number; payload: OcrResultEditPayload }) =>
-      ocrResultsApi.saveEdit(rowId, payload),
+    mutationFn: async ({
+      rowId,
+      payload,
+    }: {
+      rowId: number;
+      payload: OcrResultEditPayload;
+      refreshMaster: boolean;
+    }) => ocrResultsApi.saveEdit(rowId, payload),
+    onSuccess: async (_data, variables) => {
+      if (variables.refreshMaster) {
+        await queryClient.invalidateQueries({ queryKey: ["ocr-results"] });
+      }
+    },
     onError: (error) => {
       console.error("Failed to save OCR edits:", error);
       toast.error("OCR入力内容の保存に失敗しました");
@@ -335,9 +364,38 @@ export function OcrResultsListPage() {
       }),
   });
 
+  const flushPendingEdits = useCallback(async () => {
+    const timers = saveTimersRef.current;
+    if (timers.size === 0) return;
+
+    const rowMap = new Map((data?.items ?? []).map((row) => [row.id, row]));
+    const pendingIds = Array.from(timers.keys());
+
+    timers.forEach((timer) => clearTimeout(timer));
+    timers.clear();
+
+    await Promise.all(
+      pendingIds.map(async (rowId) => {
+        const row = rowMap.get(rowId);
+        const input = rowInputs[rowId];
+        if (!row || !input) return;
+
+        const refreshMaster = refreshMasterRef.current.has(rowId);
+        refreshMasterRef.current.delete(rowId);
+
+        await saveEditMutation.mutateAsync({
+          rowId,
+          payload: buildPayload(input),
+          refreshMaster,
+        });
+      }),
+    );
+  }, [buildPayload, data?.items, rowInputs, saveEditMutation]);
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
+      await flushPendingEdits();
       await ocrResultsApi.exportExcel({
         task_date: taskDate || undefined,
         status: statusFilter || undefined,
@@ -345,6 +403,7 @@ export function OcrResultsListPage() {
       });
     } catch (err) {
       console.error("Export failed:", err);
+      toast.error("Excelエクスポートに失敗しました");
     } finally {
       setIsExporting(false);
     }
@@ -360,22 +419,15 @@ export function OcrResultsListPage() {
 
   const persistEdits = useCallback(
     (row: OcrResultItem, input: RowInputState) => {
-      const payload: OcrResultEditPayload = {
-        lot_no_1: input.lotNo1 || null,
-        quantity_1: input.quantity1 || null,
-        lot_no_2: input.lotNo2 || null,
-        quantity_2: input.quantity2 || null,
-        inbound_no: input.inboundNo || null,
-        shipping_date: input.shippingDate || null,
-        shipping_slip_text: input.shippingSlipText || null,
-        shipping_slip_text_edited: input.shippingSlipTextEdited,
-        jiku_code: input.jikuCode || null,
-        material_code: input.materialCode || null,
-      };
-
-      saveEditMutation.mutate({ rowId: row.id, payload });
+      const refreshMaster = refreshMasterRef.current.has(row.id);
+      refreshMasterRef.current.delete(row.id);
+      saveEditMutation.mutate({
+        rowId: row.id,
+        payload: buildPayload(input),
+        refreshMaster,
+      });
     },
-    [saveEditMutation],
+    [buildPayload, saveEditMutation],
   );
 
   const scheduleSave = useCallback(
@@ -394,6 +446,9 @@ export function OcrResultsListPage() {
 
   const updateInputs = useCallback(
     (row: OcrResultItem, patch: Partial<RowInputState>) => {
+      if ("materialCode" in patch || "jikuCode" in patch) {
+        refreshMasterRef.current.add(row.id);
+      }
       setRowInputs((prev) => {
         const current = prev[row.id] ?? buildRowDefaults(row);
         const next = {
