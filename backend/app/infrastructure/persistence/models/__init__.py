@@ -70,6 +70,7 @@ from .rpa_models import (
     RpaRunItemAttempt,
     RpaRunStatus,
 )
+from .sap_models import SapConnection, SapFetchLog, SapMaterialCache
 from .seed_snapshot_model import SeedSnapshot
 from .shipping_master_models import OrderRegisterRow, ShippingMasterCurated, ShippingMasterRaw
 from .smartread_models import OcrResultEdit, SmartReadConfig
@@ -210,4 +211,8 @@ __all__ = [
     "ShippingMasterRaw",
     "ShippingMasterCurated",
     "OrderRegisterRow",
+    # SAP統合
+    "SapConnection",
+    "SapMaterialCache",
+    "SapFetchLog",
 ]
