@@ -27,7 +27,7 @@ def upgrade() -> None:
 
     # Recreate v_ocr_results view with updated logic
     op.execute("DROP VIEW IF EXISTS public.v_ocr_results;")
-    op.execute("""
+    op.execute(r"""
         CREATE VIEW public.v_ocr_results AS
         SELECT
             ld.id,
@@ -122,7 +122,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     # Recreate original view
     op.execute("DROP VIEW IF EXISTS public.v_ocr_results;")
-    op.execute("""
+    op.execute(r"""
         CREATE VIEW public.v_ocr_results AS
         SELECT
             ld.id,
