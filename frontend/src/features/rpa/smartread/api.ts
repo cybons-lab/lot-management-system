@@ -503,3 +503,133 @@ export async function saveLongData(
     data,
   );
 }
+
+// ==================== PAD Runner API ====================
+//
+// PADスクリプトの手順（task→request→poll→export→download→CSV後処理）を
+// サーバ側で確実に実行するためのAPI。
+//
+// See: docs/smartread/pad_runner_implementation_plan.md
+
+export interface SmartReadPadRunStartRequest {
+  filenames: string[];
+}
+
+export interface SmartReadPadRunStartResponse {
+  run_id: string;
+  status: string;
+  message: string;
+}
+
+export interface SmartReadPadRunStatus {
+  run_id: string;
+  config_id: number;
+  status: "RUNNING" | "SUCCEEDED" | "FAILED" | "STALE";
+  step: string;
+  task_id: string | null;
+  export_id: string | null;
+  filenames: string[] | null;
+  wide_data_count: number;
+  long_data_count: number;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+  heartbeat_at: string;
+  completed_at: string | null;
+  can_retry: boolean;
+  retry_count: number;
+  max_retries: number;
+}
+
+export interface SmartReadPadRunListItem {
+  run_id: string;
+  status: string;
+  step: string;
+  filenames: string[] | null;
+  wide_data_count: number;
+  long_data_count: number;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface SmartReadPadRunListResponse {
+  runs: SmartReadPadRunListItem[];
+}
+
+export interface SmartReadPadRunRetryResponse {
+  new_run_id: string;
+  original_run_id: string;
+  message: string;
+}
+
+/**
+ * PAD互換フローを開始
+ *
+ * 監視フォルダ内のファイルを指定してPAD互換フローを開始します。
+ * 処理はバックグラウンドで実行され、即座にrun_idを返します。
+ */
+export async function startPadRun(
+  configId: number,
+  filenames: string[],
+): Promise<SmartReadPadRunStartResponse> {
+  operationLogger.start("PAD互換フロー開始", { configId, fileCount: filenames.length });
+  try {
+    const res = await http.post<SmartReadPadRunStartResponse>(
+      `rpa/smartread/configs/${configId}/pad-runs`,
+      { filenames },
+    );
+    operationLogger.success("PAD互換フロー開始", { runId: res.run_id });
+    return res;
+  } catch (error) {
+    operationLogger.failure("PAD互換フロー開始", error);
+    throw error;
+  }
+}
+
+/**
+ * PAD互換フロー一覧を取得
+ */
+export async function getPadRuns(
+  configId: number,
+  statusFilter?: string,
+  limit: number = 20,
+): Promise<SmartReadPadRunListResponse> {
+  const params: Record<string, string | number> = { limit };
+  if (statusFilter) {
+    params.status_filter = statusFilter;
+  }
+  return http.get<SmartReadPadRunListResponse>(`rpa/smartread/configs/${configId}/pad-runs`, {
+    searchParams: params,
+  });
+}
+
+/**
+ * PAD互換フロー状態を取得（STALE検出を含む）
+ */
+export async function getPadRunStatus(
+  configId: number,
+  runId: string,
+): Promise<SmartReadPadRunStatus> {
+  return http.get<SmartReadPadRunStatus>(`rpa/smartread/configs/${configId}/pad-runs/${runId}`);
+}
+
+/**
+ * 失敗/Staleの実行をリトライ
+ */
+export async function retryPadRun(
+  configId: number,
+  runId: string,
+): Promise<SmartReadPadRunRetryResponse> {
+  operationLogger.start("PAD互換フローリトライ", { configId, runId });
+  try {
+    const res = await http.post<SmartReadPadRunRetryResponse>(
+      `rpa/smartread/configs/${configId}/pad-runs/${runId}/retry`,
+      null,
+    );
+    operationLogger.success("PAD互換フローリトライ", { newRunId: res.new_run_id });
+    return res;
+  } catch (error) {
+    operationLogger.failure("PAD互換フローリトライ", error);
+    throw error;
+  }
+}
