@@ -249,6 +249,9 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
         config_id: int,
         file_content: bytes,
         filename: str,
+        *,
+        export_type_override: str | None = None,
+        aggregation_override: str | None = None,
     ) -> dict[str, Any]:
         """シンプルなフローでPDFを処理して結果を返す.
 
@@ -279,8 +282,8 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
         template_ids = None
         if config.template_ids:
             template_ids = [t.strip() for t in config.template_ids.split(",") if t.strip()]
-        export_type = config.export_type or "csv"
-        aggregation = config.aggregation_type or "perPage"
+        export_type = export_type_override or config.export_type or "csv"
+        aggregation = aggregation_override or config.aggregation_type or "perPage"
 
         # セッション作成
         session = self._create_session(api_key)

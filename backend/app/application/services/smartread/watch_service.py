@@ -178,6 +178,7 @@ class SmartReadWatchService(SmartReadBaseService):
                     config_id=config_id,
                     file_content=file_content,
                     filename=filename,
+                    export_type_override="csv",
                 )
                 analyze_result = AnalyzeResult(
                     success=True,
