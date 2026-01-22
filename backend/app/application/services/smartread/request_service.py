@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
 
+from app.application.services.smartread.base import SmartReadBaseService
 from app.infrastructure.persistence.models.smartread_models import (
     SmartReadLongData,
     SmartReadRequest,
@@ -15,11 +16,25 @@ from app.infrastructure.persistence.models.smartread_models import (
     SmartReadWideData,
 )
 
+
+if TYPE_CHECKING:
+    from app.infrastructure.persistence.models import SmartReadConfig
+    from app.infrastructure.smartread.client import SmartReadClient
+
+
 logger = logging.getLogger(__name__)
 
 
-class SmartReadRequestService:
+class SmartReadRequestService(SmartReadBaseService):
     """requestId/resultsルート関連のサービス."""
+
+    if TYPE_CHECKING:
+
+        def _get_client(
+            self, config_id: int
+        ) -> tuple[SmartReadClient | None, SmartReadConfig | None]: ...
+
+        def _calculate_row_fingerprint(self, row_data: dict[str, Any]) -> str: ...
 
     async def get_or_create_daily_task(
         self,

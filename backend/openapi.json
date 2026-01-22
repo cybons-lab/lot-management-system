@@ -15396,36 +15396,48 @@
         ]
       }
     },
-    "/api/rpa/material-delivery-note/runs": {
-      "post": {
+    "/api/rpa/material-delivery-note/runs/{run_id}/events": {
+      "get": {
         "tags": [
           "rpa-material-delivery-note"
         ],
-        "summary": "Create Run",
-        "description": "CSVファイルからRunを作成する.\n\nArgs:\n    file: アップロードされたCSVファイル\n    import_type: インポート形式 (default: material_delivery_note)\n    customer_code: 得意先コード（オプション、マスタになくてもエラーにならない）\n    uow: UnitOfWork\n    user: 実行ユーザー",
-        "operationId": "create_run_api_rpa_material_delivery_note_runs_post",
-        "security": [
+        "summary": "Get Run Events",
+        "description": "Run制御イベントを取得.",
+        "operationId": "get_run_events_api_rpa_material_delivery_note_runs__run_id__events_get",
+        "parameters": [
           {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_create_run_api_rpa_material_delivery_note_runs_post"
-              }
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
             }
           }
-        },
+        ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RpaRunResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RpaRunEventResponse"
+                  },
+                  "title": "Response Get Run Events Api Rpa Material Delivery Note Runs  Run Id  Events Get"
                 }
               }
             }
@@ -15442,45 +15454,46 @@
           }
         }
       },
-      "get": {
+      "post": {
         "tags": [
           "rpa-material-delivery-note"
         ],
-        "summary": "List Runs",
-        "description": "Run一覧取得.",
-        "operationId": "list_runs_api_rpa_material_delivery_note_runs_get",
+        "summary": "Create Run Event",
+        "description": "Run制御イベントを追加.",
+        "operationId": "create_run_event_api_rpa_material_delivery_note_runs__run_id__events_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
-            "name": "skip",
-            "in": "query",
-            "required": false,
+            "name": "run_id",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "default": 100,
-              "title": "Limit"
+              "title": "Run Id"
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpaRunEventCreateRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RpaRunListResponse"
+                  "$ref": "#/components/schemas/RpaRunEventResponse"
                 }
               }
             }
@@ -15498,32 +15511,31 @@
         }
       }
     },
-    "/api/rpa/material-delivery-note/runs/{run_id}": {
-      "get": {
+    "/api/rpa/material-delivery-note/step1/result": {
+      "post": {
         "tags": [
           "rpa-material-delivery-note"
         ],
-        "summary": "Get Run",
-        "description": "Run詳細取得（items含む）.",
-        "operationId": "get_run_api_rpa_material_delivery_note_runs__run_id__get",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Run Id"
+        "summary": "Create Step1 Result",
+        "description": "Step1取得結果を記録する.",
+        "operationId": "create_step1_result_api_rpa_material_delivery_note_step1_result_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpaRunFetchCreateRequest"
+              }
             }
-          }
-        ],
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RpaRunResponse"
+                  "$ref": "#/components/schemas/RpaRunFetchResponse"
                 }
               }
             }
@@ -15539,6 +15551,83 @@
             }
           }
         }
+      }
+    },
+    "/api/rpa/material-delivery-note/step1/latest": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Get Step1 Latest",
+        "description": "Step1取得結果の最新を取得する.",
+        "operationId": "get_step1_latest_api_rpa_material_delivery_note_step1_latest_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RpaRunFetchResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Step1 Latest Api Rpa Material Delivery Note Step1 Latest Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/execute": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Execute Material Delivery Note",
+        "description": "Power Automate Cloud Flowを呼び出して素材納品書発行を実行.\n\n既存の「素材納品書発行」ボタンの機能を拡張し、\nURL/JSONを指定してFlowをトリガーする。",
+        "operationId": "execute_material_delivery_note_api_rpa_material_delivery_note_execute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialDeliveryNoteExecuteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDeliveryNoteExecuteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}": {
@@ -15863,61 +15952,6 @@
         }
       }
     },
-    "/api/rpa/material-delivery-note/runs/{run_id}/loop-summary": {
-      "get": {
-        "tags": [
-          "rpa-material-delivery-note"
-        ],
-        "summary": "Get Loop Summary",
-        "description": "PADループの集計情報を取得する.",
-        "operationId": "get_loop_summary_api_rpa_material_delivery_note_runs__run_id__loop_summary_get",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Run Id"
-            }
-          },
-          {
-            "name": "top_n",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 50,
-              "minimum": 1,
-              "default": 5,
-              "title": "Top N"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoopSummaryResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/rpa/material-delivery-note/runs/{run_id}/activity": {
       "get": {
         "tags": [
@@ -16012,6 +16046,254 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LotSuggestionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/rpa-result": {
+      "patch": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Update Item Result",
+        "description": "PADからの結果更新.",
+        "operationId": "update_item_result_api_rpa_material_delivery_note_runs__run_id__items__item_id__rpa_result_patch",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpaRunResultUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/failed-items/export": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Export Failed Items",
+        "description": "失敗アイテムをExcelで出力.",
+        "operationId": "export_failed_items_api_rpa_material_delivery_note_runs__run_id__failed_items_export_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Create Run",
+        "description": "CSVファイルからRunを作成する.\n\nArgs:\n    file: アップロードされたCSVファイル\n    import_type: インポート形式 (default: material_delivery_note)\n    customer_code: 得意先コード（オプション、マスタになくてもエラーにならない）\n    uow: UnitOfWork\n    user: 実行ユーザー",
+        "operationId": "create_run_api_rpa_material_delivery_note_runs_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_run_api_rpa_material_delivery_note_runs_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "List Runs",
+        "description": "Run一覧取得.",
+        "operationId": "list_runs_api_rpa_material_delivery_note_runs_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Get Run",
+        "description": "Run詳細取得（items含む）.",
+        "operationId": "get_run_api_rpa_material_delivery_note_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunResponse"
                 }
               }
             }
@@ -16214,68 +16496,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RpaRunResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/rpa-result": {
-      "patch": {
-        "tags": [
-          "rpa-material-delivery-note"
-        ],
-        "summary": "Update Item Result",
-        "description": "PADからの結果更新.",
-        "operationId": "update_item_result_api_rpa_material_delivery_note_runs__run_id__items__item_id__rpa_result_patch",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Run Id"
-            }
-          },
-          {
-            "name": "item_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Item Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RpaRunResultUpdateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RpaRunItemResponse"
                 }
               }
             }
@@ -16624,281 +16844,6 @@
             }
           }
         }
-      }
-    },
-    "/api/rpa/material-delivery-note/runs/{run_id}/events": {
-      "get": {
-        "tags": [
-          "rpa-material-delivery-note"
-        ],
-        "summary": "Get Run Events",
-        "description": "Run制御イベントを取得.",
-        "operationId": "get_run_events_api_rpa_material_delivery_note_runs__run_id__events_get",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Run Id"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 500,
-              "minimum": 1,
-              "default": 100,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RpaRunEventResponse"
-                  },
-                  "title": "Response Get Run Events Api Rpa Material Delivery Note Runs  Run Id  Events Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "rpa-material-delivery-note"
-        ],
-        "summary": "Create Run Event",
-        "description": "Run制御イベントを追加.",
-        "operationId": "create_run_event_api_rpa_material_delivery_note_runs__run_id__events_post",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Run Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RpaRunEventCreateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RpaRunEventResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rpa/material-delivery-note/runs/{run_id}/failed-items/export": {
-      "get": {
-        "tags": [
-          "rpa-material-delivery-note"
-        ],
-        "summary": "Export Failed Items",
-        "description": "失敗アイテムをExcelで出力.",
-        "operationId": "export_failed_items_api_rpa_material_delivery_note_runs__run_id__failed_items_export_get",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Run Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rpa/material-delivery-note/step1/result": {
-      "post": {
-        "tags": [
-          "rpa-material-delivery-note"
-        ],
-        "summary": "Create Step1 Result",
-        "description": "Step1取得結果を記録する.",
-        "operationId": "create_step1_result_api_rpa_material_delivery_note_step1_result_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RpaRunFetchCreateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RpaRunFetchResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rpa/material-delivery-note/step1/latest": {
-      "get": {
-        "tags": [
-          "rpa-material-delivery-note"
-        ],
-        "summary": "Get Step1 Latest",
-        "description": "Step1取得結果の最新を取得する.",
-        "operationId": "get_step1_latest_api_rpa_material_delivery_note_step1_latest_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/RpaRunFetchResponse"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
-                  "title": "Response Get Step1 Latest Api Rpa Material Delivery Note Step1 Latest Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rpa/material-delivery-note/execute": {
-      "post": {
-        "tags": [
-          "rpa-material-delivery-note"
-        ],
-        "summary": "Execute Material Delivery Note",
-        "description": "Power Automate Cloud Flowを呼び出して素材納品書発行を実行.\n\n既存の「素材納品書発行」ボタンの機能を拡張し、\nURL/JSONを指定してFlowをトリガーする。",
-        "operationId": "execute_material_delivery_note_api_rpa_material_delivery_note_execute_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MaterialDeliveryNoteExecuteRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MaterialDeliveryNoteExecuteResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
       }
     },
     "/api/rpa/cloud-flow/execute-generic": {
@@ -27282,99 +27227,6 @@
         "title": "LoginRequest",
         "description": "Login request (Simplified for dev)."
       },
-      "LoopErrorCodeCount": {
-        "properties": {
-          "error_code": {
-            "type": "string",
-            "title": "Error Code"
-          },
-          "count": {
-            "type": "integer",
-            "title": "Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "error_code",
-          "count"
-        ],
-        "title": "LoopErrorCodeCount",
-        "description": "PADループ失敗コード集計."
-      },
-      "LoopSummaryResponse": {
-        "properties": {
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "queued": {
-            "type": "integer",
-            "title": "Queued"
-          },
-          "pending": {
-            "type": "integer",
-            "title": "Pending"
-          },
-          "processing": {
-            "type": "integer",
-            "title": "Processing"
-          },
-          "success": {
-            "type": "integer",
-            "title": "Success"
-          },
-          "failure": {
-            "type": "integer",
-            "title": "Failure"
-          },
-          "done": {
-            "type": "integer",
-            "title": "Done"
-          },
-          "remaining": {
-            "type": "integer",
-            "title": "Remaining"
-          },
-          "percent": {
-            "type": "number",
-            "title": "Percent"
-          },
-          "last_activity_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Activity At"
-          },
-          "error_code_counts": {
-            "items": {
-              "$ref": "#/components/schemas/LoopErrorCodeCount"
-            },
-            "type": "array",
-            "title": "Error Code Counts"
-          }
-        },
-        "type": "object",
-        "required": [
-          "total",
-          "queued",
-          "pending",
-          "processing",
-          "success",
-          "failure",
-          "done",
-          "remaining",
-          "percent",
-          "last_activity_at"
-        ],
-        "title": "LoopSummaryResponse",
-        "description": "PADループ集計レスポンス."
-      },
       "LotArchiveRequest": {
         "properties": {
           "lot_number": {
@@ -29246,6 +29098,107 @@
               }
             ],
             "title": "Lot No"
+          },
+          "manual_lot_no_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Lot No 1"
+          },
+          "manual_quantity_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Quantity 1"
+          },
+          "manual_lot_no_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Lot No 2"
+          },
+          "manual_quantity_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Quantity 2"
+          },
+          "manual_inbound_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Inbound No"
+          },
+          "manual_shipping_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Shipping Date"
+          },
+          "manual_shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Shipping Slip Text"
+          },
+          "manual_shipping_slip_text_edited": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Shipping Slip Text Edited"
+          },
+          "manual_updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Updated At"
           },
           "master_id": {
             "anyOf": [

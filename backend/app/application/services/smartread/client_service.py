@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
 
+from app.application.services.smartread.base import SmartReadBaseService
 from app.infrastructure.persistence.models import SmartReadConfig
 from app.infrastructure.persistence.models.smartread_models import (
     SmartReadLongData,
@@ -15,11 +16,38 @@ from app.infrastructure.persistence.models.smartread_models import (
 )
 from app.infrastructure.smartread.client import SmartReadClient
 
+
+if TYPE_CHECKING:
+    from app.infrastructure.persistence.models.smartread_models import SmartReadTask
+
+
 logger = logging.getLogger(__name__)
 
 
-class SmartReadClientService:
+class SmartReadClientService(SmartReadBaseService):
     """SmartRead APIクライアント関連の処理."""
+
+    if TYPE_CHECKING:
+
+        def get_config(self, config_id: int) -> SmartReadConfig | None: ...
+
+        def get_or_create_task(
+            self,
+            config_id: int,
+            task_id: str,
+            task_date: date,
+            name: str | None = None,
+            state: str | None = None,
+        ) -> SmartReadTask: ...
+
+        async def get_export_csv_data(
+            self,
+            config_id: int,
+            task_id: str,
+            export_id: str,
+            save_to_db: bool = True,
+            task_date: date | None = None,
+        ) -> dict[str, Any] | None: ...
 
     def _get_client(self, config_id: int) -> tuple[SmartReadClient | None, SmartReadConfig | None]:
         """設定からクライアントを取得."""

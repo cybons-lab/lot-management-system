@@ -7,12 +7,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import {
-  getTasks,
-  getManagedTasks,
-  updateSkipToday,
-  getRequests,
-} from "../api";
+import { getTasks, getManagedTasks, updateSkipToday, getRequests } from "../api";
+
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
@@ -61,7 +57,9 @@ export function useUpdateSkipToday() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.managedTasks(0) });
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.all });
-      toast.success(`タスク ${result.task_id} のスキップ設定を${result.skip_today ? "有効" : "無効"}にしました`);
+      toast.success(
+        `タスク ${result.task_id} のスキップ設定を${result.skip_today ? "有効" : "無効"}にしました`,
+      );
     },
     onError: async (error: Error) => {
       const message = await getUserFriendlyMessageAsync(error);

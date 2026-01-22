@@ -9,11 +9,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import {
-  syncTaskResults,
-  getLongData,
-  processFilesAuto,
-} from "../api";
+import { syncTaskResults, getLongData, processFilesAuto } from "../api";
+
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
@@ -113,9 +110,7 @@ async function tryFrontendTransform(
   return null;
 }
 
-async function parseHttpError(
-  error: unknown,
-): Promise<{ status: number; body: any } | null> {
+async function parseHttpError(error: unknown): Promise<{ status: number; body: any } | null> {
   if (error && typeof error === "object" && "response" in error) {
     const httpError = error as { response: Response };
     try {
@@ -132,6 +127,7 @@ async function parseHttpError(
 // Hooks
 // ============================================
 
+/* eslint-disable max-lines-per-function, complexity */
 /**
  * タスクの結果を強制的に同期
  */

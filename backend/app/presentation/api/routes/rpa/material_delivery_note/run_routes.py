@@ -22,6 +22,7 @@ from app.presentation.schemas.rpa_run_schema import (
     RpaRunResponse,
 )
 
+
 logger = logging.getLogger(__name__)
 
 

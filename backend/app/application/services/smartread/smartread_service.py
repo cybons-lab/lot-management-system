@@ -8,13 +8,18 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.application.services.smartread.analyze_service import SmartReadAnalyzeService
+from app.application.services.smartread.base import SmartReadBaseService
 from app.application.services.smartread.client_service import SmartReadClientService
 from app.application.services.smartread.config_service import SmartReadConfigService
 from app.application.services.smartread.export_service import SmartReadExportService
 from app.application.services.smartread.request_service import SmartReadRequestService
 from app.application.services.smartread.task_service import SmartReadTaskService
+from app.application.services.smartread.types import (
+    AnalyzeResult,
+    ExportResult,
+    WatchDirProcessOutcome,
+)
 from app.application.services.smartread.watch_service import SmartReadWatchService
-from app.application.services.smartread.types import AnalyzeResult, ExportResult, WatchDirProcessOutcome
 
 
 class SmartReadService(
@@ -25,6 +30,7 @@ class SmartReadService(
     SmartReadClientService,
     SmartReadExportService,
     SmartReadRequestService,
+    SmartReadBaseService,
 ):
     """SmartRead OCRサービス.
 
@@ -37,7 +43,7 @@ class SmartReadService(
         Args:
             session: DBセッション
         """
-        self.session = session
+        super().__init__(session)
 
 
 __all__ = [

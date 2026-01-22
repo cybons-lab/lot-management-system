@@ -2,9 +2,9 @@
  * SmartRead OCR API functions
  */
 
-import { http } from "@/shared/api/http-client";
-
 import { logger, operationLogger } from "./utils/logger";
+
+import { http } from "@/shared/api/http-client";
 
 // Types
 export interface SmartReadConfig {

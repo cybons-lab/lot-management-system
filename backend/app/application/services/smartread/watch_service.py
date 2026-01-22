@@ -6,17 +6,43 @@ import json
 import logging
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from app.application.services.smartread.base import SmartReadBaseService
 from app.infrastructure.smartread.client import SmartReadClient
 
 from .types import AnalyzeResult, WatchDirProcessOutcome
 
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from app.infrastructure.persistence.models import SmartReadConfig
+    from app.infrastructure.persistence.models.smartread_models import SmartReadTask
+
+
 logger = logging.getLogger(__name__)
 
 
-class SmartReadWatchService:
+class SmartReadWatchService(SmartReadBaseService):
     """監視フォルダ処理関連のサービス."""
+
+    if TYPE_CHECKING:
+
+        def get_config(self, config_id: int) -> SmartReadConfig | None: ...
+
+        def get_or_create_task(
+            self,
+            config_id: int,
+            task_id: str,
+            task_date: date,
+            name: str | None = None,
+            state: str | None = None,
+        ) -> SmartReadTask: ...
+
+        def _get_client(
+            self, config_id: int
+        ) -> tuple[SmartReadClient | None, SmartReadConfig | None]: ...
 
     def list_files_in_watch_dir(self, config_id: int) -> list[str]:
         """監視ディレクトリ内のファイル一覧を取得.

@@ -95,8 +95,7 @@ class MaterialDeliveryNoteOrchestrator:
         self._update_run_status_if_needed(run.id)
 
         self.logger.info(
-            f"[RPA] Run作成完了: run_id={run.id}, items={len(parsed_rows)}, "
-            f"status={run.status}"
+            f"[RPA] Run作成完了: run_id={run.id}, items={len(parsed_rows)}, status={run.status}"
         )
         return run
 
@@ -340,9 +339,7 @@ class MaterialDeliveryNoteOrchestrator:
             # Remove explicit commit
             self.db.flush()
             self._update_run_status_if_needed(run_id)
-            self.logger.info(
-                f"[RPA] バッチ更新完了: run_id={run_id}, items={len(item_ids)}"
-            )
+            self.logger.info(f"[RPA] バッチ更新完了: run_id={run_id}, items={len(item_ids)}")
 
         return self.get_run(run_id)
 
@@ -688,8 +685,7 @@ class MaterialDeliveryNoteOrchestrator:
     ) -> RpaRunItem | None:
         """PADから失敗報告を受け取る."""
         self.logger.warning(
-            f"[RPA] アイテム失敗マーク: run_id={run_id}, item_id={item_id}, "
-            f"error_code={error_code}"
+            f"[RPA] アイテム失敗マーク: run_id={run_id}, item_id={item_id}, error_code={error_code}"
         )
         item = self.repo.get_item(run_id, item_id)
         if not item:
@@ -724,9 +720,7 @@ class MaterialDeliveryNoteOrchestrator:
         self.db.flush()
         self.repo.refresh(item)
         self._update_run_status_if_needed(run_id)
-        self.logger.warning(
-            f"[RPA] アイテム失敗記録完了: item_id={item_id}, error={error_message}"
-        )
+        self.logger.warning(f"[RPA] アイテム失敗記録完了: item_id={item_id}, error={error_message}")
         return item
 
     def get_loop_summary(self, run_id: int, top_n: int = 5) -> dict[str, Any]:

@@ -8,9 +8,16 @@ import io
 import json
 import logging
 from datetime import date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import delete, select
+
+from app.application.services.smartread.base import SmartReadBaseService
+
+
+if TYPE_CHECKING:
+    from app.infrastructure.persistence.models import SmartReadConfig
+    from app.infrastructure.smartread.client import SmartReadClient
 
 from app.infrastructure.persistence.models.smartread_models import (
     SmartReadExportHistory,
@@ -20,11 +27,20 @@ from app.infrastructure.persistence.models.smartread_models import (
 
 from .types import ExportResult
 
+
 logger = logging.getLogger(__name__)
 
 
-class SmartReadExportService:
+class SmartReadExportService(SmartReadBaseService):
     """SmartRead export関連のサービス."""
+
+    if TYPE_CHECKING:
+
+        def _get_client(
+            self, config_id: int
+        ) -> tuple[SmartReadClient | None, SmartReadConfig | None]: ...
+
+        def get_config(self, config_id: int) -> SmartReadConfig | None: ...
 
     def export_to_json(
         self,

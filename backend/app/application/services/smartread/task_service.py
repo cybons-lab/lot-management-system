@@ -11,30 +11,24 @@ from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
 
+from app.application.services.smartread.base import SmartReadBaseService
 from app.infrastructure.persistence.models.smartread_models import (
     SmartReadRequest,
     SmartReadTask,
 )
 
+
 if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
+    pass
 
 logger = logging.getLogger(__name__)
 
 
-class SmartReadTaskService:
+class SmartReadTaskService(SmartReadBaseService):
     """SmartReadタスクサービス.
 
     タスクの作成・取得・更新を提供。
     """
-
-    def __init__(self, session: Session) -> None:
-        """初期化.
-
-        Args:
-            session: DBセッション
-        """
-        self.session = session
 
     def get_or_create_task(
         self,

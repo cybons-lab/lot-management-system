@@ -5,21 +5,21 @@
  */
 
 import { Settings, Loader2, AlertCircle, RefreshCw, FileText } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
+import { diagnoseWatchDirFile } from "../api";
+import { SmartReadManagedTaskList } from "../components/SmartReadManagedTaskList";
+import { SmartReadResultView } from "../components/SmartReadResultView";
+import { SmartReadSavedDataList } from "../components/SmartReadSavedDataList";
+import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
+import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
 import {
   useSmartReadConfigs,
   useWatchDirFiles,
   useProcessWatchDirFiles,
   useSmartReadTasks,
 } from "../hooks";
-import { diagnoseWatchDirFile } from "../api";
 import { logger } from "../utils/logger";
-import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
-import { SmartReadResultView } from "../components/SmartReadResultView";
-import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
-import { SmartReadManagedTaskList } from "../components/SmartReadManagedTaskList";
-import { SmartReadSavedDataList } from "../components/SmartReadSavedDataList";
 
 import { Button } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
@@ -56,7 +56,7 @@ export function SmartReadPage() {
   const processWatchFilesMutation = useProcessWatchDirFiles();
   const { refetch: refetchTasks } = useSmartReadTasks(selectedConfigId, false);
 
-  const activeConfigs = configs?.filter((c) => c.is_active) ?? [];
+  const activeConfigs = useMemo(() => configs?.filter((c) => c.is_active) ?? [], [configs]);
 
   // Auto-select default config
   useEffect(() => {
@@ -159,7 +159,9 @@ export function SmartReadPage() {
         <Card className="shrink-0">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <label className="text-sm font-medium whitespace-nowrap">AI-OCR設定</label>
+              <label htmlFor="config-select" className="text-sm font-medium whitespace-nowrap">
+                AI-OCR設定
+              </label>
               <div className="flex-1">
                 {configsLoading ? (
                   <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -183,7 +185,7 @@ export function SmartReadPage() {
                       setSelectedTaskId(null); // Reset task selection
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="config-select">
                       <SelectValue placeholder="設定を選択" />
                     </SelectTrigger>
                     <SelectContent>
@@ -272,6 +274,14 @@ export function SmartReadPage() {
                               key={file}
                               className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
                               onClick={() => toggleWatchFile(file)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  toggleWatchFile(file);
+                                }
+                              }}
+                              role="button"
+                              tabIndex={0}
                             >
                               <Checkbox
                                 checked={selectedWatchFiles.includes(file)}

@@ -10,27 +10,21 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 
+from app.application.services.smartread.base import SmartReadBaseService
 from app.infrastructure.persistence.models import SmartReadConfig
 
+
 if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
+    pass
 
 logger = logging.getLogger(__name__)
 
 
-class SmartReadConfigService:
+class SmartReadConfigService(SmartReadBaseService):
     """SmartRead設定サービス.
 
     設定のCRUD操作を提供。
     """
-
-    def __init__(self, session: Session) -> None:
-        """初期化.
-
-        Args:
-            session: DBセッション
-        """
-        self.session = session
 
     def get_config(self, config_id: int) -> SmartReadConfig | None:
         """設定を取得.

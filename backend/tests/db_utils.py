@@ -32,6 +32,7 @@ VIEW_NAMES: list[str] = [
     "v_user_supplier_assignments",
     "v_customer_item_jiku_mappings",
     "v_lot_receipt_stock",
+    "v_ocr_results",
 ]
 
 

@@ -269,7 +269,7 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                       <FormLabel>APIエンドポイント *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger data-testid="endpoint-select">
                             <SelectValue placeholder="エンドポイントを選択" />
                           </SelectTrigger>
                         </FormControl>
@@ -315,8 +315,8 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
                         <FormLabel>デフォルトエクスポート形式</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
+                            <SelectTrigger data-testid="export-type-select">
+                              <SelectValue placeholder="出力形式を選択" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>

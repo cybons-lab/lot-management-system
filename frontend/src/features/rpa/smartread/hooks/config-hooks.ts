@@ -8,13 +8,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { SmartReadConfigCreate, SmartReadConfigUpdate } from "../api";
-import {
-  getConfigs,
-  getConfig,
-  createConfig,
-  updateConfig,
-  deleteConfig,
-} from "../api";
+import { getConfigs, getConfig, createConfig, updateConfig, deleteConfig } from "../api";
+
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";

@@ -167,7 +167,11 @@ class ExportCacheService {
         saved_to_db,
       };
 
-      logger.debug("キャッシュ保存", { id, wideCount: wide_data.length, longCount: long_data.length });
+      logger.debug("キャッシュ保存", {
+        id,
+        wideCount: wide_data.length,
+        longCount: long_data.length,
+      });
 
       await db.put(STORE_NAME, cached);
       logger.debug("キャッシュ保存完了", { id });
