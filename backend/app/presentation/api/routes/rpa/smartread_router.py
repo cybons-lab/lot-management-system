@@ -227,6 +227,78 @@ async def analyze_file(
     )
 
 
+@router.post("/analyze-simple")
+async def analyze_file_simple(
+    file: Annotated[UploadFile, File(description="解析するファイル（PDF, PNG, JPG）")],
+    background_tasks: BackgroundTasks,
+    config_id: int = Query(..., description="使用する設定のID"),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> JSONResponse:
+    """ファイルをSmartRead APIで解析（バックグラウンド処理）.
+
+    即座にレスポンスを返し、バックグラウンドで処理を実行。
+    処理完了後、結果はDBに保存される。
+
+    Returns:
+        処理開始のレスポンス（task_idを含む）
+    """
+    file_content = await file.read()
+    filename = file.filename or "unknown"
+
+    # バックグラウンドで処理を開始
+    background_tasks.add_task(
+        _run_simple_sync_background,
+        config_id=config_id,
+        file_content=file_content,
+        filename=filename,
+    )
+
+    return JSONResponse(
+        status_code=202,
+        content={
+            "message": f"処理を開始しました: {filename}",
+            "filename": filename,
+            "status": "processing",
+        },
+    )
+
+
+async def _run_simple_sync_background(
+    config_id: int,
+    file_content: bytes,
+    filename: str,
+) -> None:
+    """バックグラウンドでシンプル同期フローを実行."""
+    import logging
+
+    from app.application.services.common.uow_service import UnitOfWork
+    from app.core.database import SessionLocal
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"[SimpleSync Background] Starting processing: {filename}")
+
+    try:
+        with UnitOfWork(SessionLocal) as uow:
+            assert uow.session is not None
+            service = SmartReadService(uow.session)
+
+            result = await service.sync_with_simple_flow(
+                config_id=config_id,
+                file_content=file_content,
+                filename=filename,
+            )
+
+            logger.info(
+                f"[SimpleSync Background] Completed: {filename}, "
+                f"{len(result['wide_data'])} wide rows, "
+                f"{len(result['long_data'])} long rows"
+            )
+
+    except Exception as e:
+        logger.error(f"[SimpleSync Background] Failed: {filename}, error: {e}")
+
+
 # --- エクスポート ---
 
 

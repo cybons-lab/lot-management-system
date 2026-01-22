@@ -13,6 +13,7 @@ from app.application.services.smartread.client_service import SmartReadClientSer
 from app.application.services.smartread.config_service import SmartReadConfigService
 from app.application.services.smartread.export_service import SmartReadExportService
 from app.application.services.smartread.request_service import SmartReadRequestService
+from app.application.services.smartread.simple_sync_service import SmartReadSimpleSyncService
 from app.application.services.smartread.task_service import SmartReadTaskService
 from app.application.services.smartread.types import (
     AnalyzeResult,
@@ -30,6 +31,7 @@ class SmartReadService(
     SmartReadClientService,
     SmartReadExportService,
     SmartReadRequestService,
+    SmartReadSimpleSyncService,
     SmartReadBaseService,
 ):
     """SmartRead OCRサービス.

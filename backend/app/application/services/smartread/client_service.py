@@ -110,16 +110,20 @@ class SmartReadClientService(SmartReadBaseService):
         config_id: int,
         task_id: str,
         export_type: str = "csv",
-        timeout_sec: float = 300.0,
+        timeout_sec: float = 240.0,
         force: bool = False,
     ) -> dict[str, Any] | None:
         """タスクの結果をAPIから同期してDBに保存.
+
+        OCR処理には時間がかかるため、フロントエンドは5分のタイムアウトを設定。
+        バックエンドは4分でリクエストポーリングをタイムアウトさせ、
+        残り1分をエクスポート処理に充てる。
 
         Args:
             config_id: 設定ID
             task_id: タスクID
             export_type: エクスポート形式
-            timeout_sec: タイムアウト秒数
+            timeout_sec: リクエストポーリングタイムアウト秒数（デフォルト240秒）
             force: 強制的に再取得するか
 
         Returns:
@@ -182,19 +186,52 @@ class SmartReadClientService(SmartReadBaseService):
         )
         if not export:
             logger.error(f"[SmartRead] Failed to create export for task {task_id}")
-            return None
+            return {
+                "state": "PENDING",
+                "message": "エクスポートの作成に失敗しました。再試行してください。",
+                "requests_status": request_summary.get("requests_status", {}),
+                "wide_data": [],
+                "long_data": [],
+                "errors": [],
+                "filename": None,
+            }
         logger.info(f"[SmartRead] Export created: {export.export_id}")
 
-        # 3. 完了まで待機
+        # 3. 完了まで待機（エクスポートは通常速いので60秒のタイムアウト）
+        export_timeout = 60.0
         logger.info(f"[SmartRead] Polling export {export.export_id} until ready...")
-        export_ready = await client.poll_export_until_ready(task_id, export.export_id, timeout_sec)
+        export_ready = await client.poll_export_until_ready(
+            task_id, export.export_id, export_timeout
+        )
 
         # APIによっては COMPLETED, SUCCEEDED のいずれかが返る
-        if not export_ready or export_ready.state.upper() not in ["COMPLETED", "SUCCEEDED"]:
-            logger.error(
-                f"[SmartRead] Export did not complete for task {task_id}. State: {export_ready.state if export_ready else 'None'}"
+        if not export_ready:
+            logger.warning(
+                f"[SmartRead] Export polling timed out for task {task_id}, export {export.export_id}"
             )
-            return None
+            return {
+                "state": "PENDING",
+                "message": "エクスポート処理中です。しばらくお待ちください。",
+                "requests_status": request_summary.get("requests_status", {}),
+                "wide_data": [],
+                "long_data": [],
+                "errors": [],
+                "filename": None,
+            }
+
+        if export_ready.state.upper() not in ["COMPLETED", "SUCCEEDED"]:
+            logger.error(
+                f"[SmartRead] Export failed for task {task_id}. State: {export_ready.state}"
+            )
+            return {
+                "state": "FAILED",
+                "message": f"エクスポートが失敗しました: {export_ready.error_message or export_ready.state}",
+                "requests_status": request_summary.get("requests_status", {}),
+                "wide_data": [],
+                "long_data": [],
+                "errors": [],
+                "filename": None,
+            }
         logger.info(f"[SmartRead] Export is ready. State: {export_ready.state}")
 
         # 4. CSVデータを取得してDBに保存
