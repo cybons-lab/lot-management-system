@@ -175,9 +175,8 @@ def register_all_routers(app: FastAPI) -> None:
     # OCR Results (view-based, realtime)
     app.include_router(ocr_results_router, prefix=prefix)
 
-    # Debug endpoints (disabled by default)
-    if settings.ENABLE_DB_BROWSER:
-        app.include_router(db_browser_router, prefix=prefix)
+    # Debug endpoints (flag enforced inside router)
+    app.include_router(db_browser_router, prefix=prefix)
 
 
 __all__ = [
