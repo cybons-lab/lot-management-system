@@ -213,6 +213,16 @@ export interface SmartReadLongDataListResponse {
   data: SmartReadLongData[];
 }
 
+export interface SmartReadResetResponse {
+  success: boolean;
+  deleted_long_count: number;
+  deleted_wide_count: number;
+  deleted_request_count: number;
+  deleted_task_count: number;
+  deleted_export_history_count: number;
+  message: string;
+}
+
 export interface SmartReadCsvDataResponse {
   wide_data: Record<string, unknown>[];
   long_data: Record<string, unknown>[];
@@ -445,6 +455,13 @@ export async function getLongData(
   return http.get<SmartReadLongDataListResponse>(`rpa/smartread/configs/${configId}/long-data`, {
     searchParams,
   });
+}
+
+/**
+ * SmartReadデータをリセット (テスト用)
+ */
+export async function resetSmartReadData(configId: number): Promise<SmartReadResetResponse> {
+  return http.delete<SmartReadResetResponse>(`rpa/smartread/configs/${configId}/reset-data`);
 }
 
 // Alias for compatibility if needed, or remove if unused calls are updated

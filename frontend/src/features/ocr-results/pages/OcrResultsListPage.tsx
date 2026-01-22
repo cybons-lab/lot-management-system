@@ -10,11 +10,12 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /* eslint-disable jsx-a11y/no-autofocus */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AlertCircle, AlertTriangle, CheckCircle, Download, XCircle } from "lucide-react";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
-import { ocrResultsApi, type OcrResultItem } from "../api";
+import { ocrResultsApi, type OcrResultItem, type OcrResultEditPayload } from "../api";
 
 import { Button, Card, CardContent } from "@/components/ui";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
@@ -91,14 +92,14 @@ type RowInputState = {
 };
 
 const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
-  lotNo1: row.lot_no || "",
-  quantity1: "",
-  lotNo2: "",
-  quantity2: "",
-  inboundNo: row.inbound_no || "",
-  shippingDate: "",
-  shippingSlipText: "",
-  shippingSlipTextEdited: false,
+  lotNo1: row.manual_lot_no_1 || row.lot_no || "",
+  quantity1: row.manual_quantity_1 || "",
+  lotNo2: row.manual_lot_no_2 || "",
+  quantity2: row.manual_quantity_2 || "",
+  inboundNo: row.manual_inbound_no || row.inbound_no || "",
+  shippingDate: row.manual_shipping_date || "",
+  shippingSlipText: row.manual_shipping_slip_text || "",
+  shippingSlipTextEdited: row.manual_shipping_slip_text_edited || false,
 });
 
 // ============================================
@@ -299,6 +300,21 @@ export function OcrResultsListPage() {
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [rowInputs, setRowInputs] = useState<Record<number, RowInputState>>({});
+  const saveTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+
+  const saveEditMutation = useMutation({
+    mutationFn: async ({
+      rowId,
+      payload,
+    }: {
+      rowId: number;
+      payload: OcrResultEditPayload;
+    }) => ocrResultsApi.saveEdit(rowId, payload),
+    onError: (error) => {
+      console.error("Failed to save OCR edits:", error);
+      toast.error("OCR入力内容の保存に失敗しました");
+    },
+  });
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["ocr-results", { taskDate, statusFilter, showErrorsOnly }],
@@ -333,17 +349,61 @@ export function OcrResultsListPage() {
     [rowInputs],
   );
 
-  const updateInputs = useCallback((row: OcrResultItem, patch: Partial<RowInputState>) => {
-    setRowInputs((prev) => {
-      const current = prev[row.id] ?? buildRowDefaults(row);
-      return {
-        ...prev,
-        [row.id]: {
+  const persistEdits = useCallback(
+    (row: OcrResultItem, input: RowInputState) => {
+      const payload: OcrResultEditPayload = {
+        lot_no_1: input.lotNo1 || null,
+        quantity_1: input.quantity1 || null,
+        lot_no_2: input.lotNo2 || null,
+        quantity_2: input.quantity2 || null,
+        inbound_no: input.inboundNo || null,
+        shipping_date: input.shippingDate || null,
+        shipping_slip_text: input.shippingSlipText || null,
+        shipping_slip_text_edited: input.shippingSlipTextEdited,
+      };
+
+      saveEditMutation.mutate({ rowId: row.id, payload });
+    },
+    [saveEditMutation],
+  );
+
+  const scheduleSave = useCallback(
+    (row: OcrResultItem, input: RowInputState) => {
+      const existing = saveTimersRef.current.get(row.id);
+      if (existing) {
+        clearTimeout(existing);
+      }
+      const timer = setTimeout(() => {
+        persistEdits(row, input);
+      }, 800);
+      saveTimersRef.current.set(row.id, timer);
+    },
+    [persistEdits],
+  );
+
+  const updateInputs = useCallback(
+    (row: OcrResultItem, patch: Partial<RowInputState>) => {
+      setRowInputs((prev) => {
+        const current = prev[row.id] ?? buildRowDefaults(row);
+        const next = {
           ...current,
           ...patch,
-        },
-      };
-    });
+        };
+        scheduleSave(row, next);
+        return {
+          ...prev,
+          [row.id]: next,
+        };
+      });
+    },
+    [scheduleSave],
+  );
+
+  useEffect(() => {
+    return () => {
+      saveTimersRef.current.forEach((timer) => clearTimeout(timer));
+      saveTimersRef.current.clear();
+    };
   }, []);
 
   const contextValue = useMemo(() => ({ getInputs, updateInputs }), [getInputs, updateInputs]);

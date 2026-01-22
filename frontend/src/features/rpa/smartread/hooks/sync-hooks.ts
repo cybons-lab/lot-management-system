@@ -284,6 +284,7 @@ export function useProcessFilesAuto() {
       toast.success(result.message);
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.requests(configId) });
       queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.files(configId) });
+      queryClient.invalidateQueries({ queryKey: SMARTREAD_QUERY_KEYS.managedTasks(configId) });
     },
     onError: async (error: Error) => {
       const message = await getUserFriendlyMessageAsync(error);

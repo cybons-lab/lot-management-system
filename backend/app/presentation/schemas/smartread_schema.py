@@ -308,3 +308,15 @@ class SmartReadSaveLongDataResponse(BaseModel):
     saved_wide_count: int = Field(..., description="保存した横持ちデータ件数")
     saved_long_count: int = Field(..., description="保存した縦持ちデータ件数")
     message: str = Field(..., description="メッセージ")
+
+
+class SmartReadResetResponse(BaseModel):
+    """SmartReadデータ初期化レスポンス."""
+
+    success: bool = Field(..., description="削除成功フラグ")
+    deleted_long_count: int = Field(..., description="削除した縦持ちデータ件数")
+    deleted_wide_count: int = Field(..., description="削除した横持ちデータ件数")
+    deleted_request_count: int = Field(..., description="削除したリクエスト件数")
+    deleted_task_count: int = Field(..., description="削除したタスク件数")
+    deleted_export_history_count: int = Field(..., description="削除したエクスポート履歴件数")
+    message: str = Field(..., description="メッセージ")

@@ -38,6 +38,7 @@ from app.presentation.schemas.smartread_schema import (
     SmartReadProcessRequest,
     SmartReadRequestListResponse,
     SmartReadRequestResponse,
+    SmartReadResetResponse,
     SmartReadSaveLongDataRequest,
     SmartReadSaveLongDataResponse,
     SmartReadSkipTodayRequest,
@@ -611,6 +612,65 @@ async def save_long_data(
     except Exception as e:
         uow.session.rollback()
         raise HTTPException(status_code=500, detail=f"保存に失敗しました: {str(e)}")
+
+
+@router.delete(
+    "/configs/{config_id}/reset-data",
+    response_model=SmartReadResetResponse,
+)
+def reset_smartread_data(
+    config_id: int,
+    uow: UnitOfWork = Depends(get_uow),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadResetResponse:
+    """SmartReadデータを初期化（テスト用）."""
+    from app.infrastructure.persistence.models.smartread_models import (
+        SmartReadExportHistory,
+        SmartReadLongData,
+        SmartReadRequest,
+        SmartReadTask,
+        SmartReadWideData,
+    )
+
+    assert uow.session is not None
+
+    deleted_long = (
+        uow.session.query(SmartReadLongData)
+        .filter(SmartReadLongData.config_id == config_id)
+        .delete(synchronize_session=False)
+    )
+    deleted_wide = (
+        uow.session.query(SmartReadWideData)
+        .filter(SmartReadWideData.config_id == config_id)
+        .delete(synchronize_session=False)
+    )
+    deleted_requests = (
+        uow.session.query(SmartReadRequest)
+        .filter(SmartReadRequest.config_id == config_id)
+        .delete(synchronize_session=False)
+    )
+    deleted_tasks = (
+        uow.session.query(SmartReadTask)
+        .filter(SmartReadTask.config_id == config_id)
+        .delete(synchronize_session=False)
+    )
+    deleted_exports = (
+        uow.session.query(SmartReadExportHistory)
+        .filter(SmartReadExportHistory.config_id == config_id)
+        .delete(synchronize_session=False)
+    )
+
+    uow.session.commit()
+
+    return SmartReadResetResponse(
+        success=True,
+        deleted_long_count=deleted_long,
+        deleted_wide_count=deleted_wide,
+        deleted_request_count=deleted_requests,
+        deleted_task_count=deleted_tasks,
+        deleted_export_history_count=deleted_exports,
+        message="SmartReadデータをリセットしました",
+    )
 
 
 # ==================== requestId/results ルート API ====================

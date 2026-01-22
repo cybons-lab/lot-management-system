@@ -339,7 +339,16 @@ def copy_backend(temp_dir: Path) -> bool:
     for file_name in copy_files:
         src = BACKEND_DIR / file_name
         if src.exists():
-            shutil.copy2(src, dest_backend / file_name)
+            if file_name == "alembic.ini":
+                dest_path = dest_backend / file_name
+                try:
+                    content = src.read_text(encoding="utf-8")
+                    dest_path.write_text(content, encoding="cp932", newline="\r\n")
+                except UnicodeError as exc:
+                    print_error(f"alembic.ini のANSI変換に失敗: {exc}")
+                    return False
+            else:
+                shutil.copy2(src, dest_backend / file_name)
             print(f"  📄 {file_name}")
 
     print_success("バックエンドのコピーが完了しました")

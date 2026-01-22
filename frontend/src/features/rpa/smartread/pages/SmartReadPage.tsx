@@ -6,6 +6,7 @@
 
 import { Settings, Loader2, AlertCircle, RefreshCw, FileText } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { diagnoseWatchDirFile } from "../api";
 import { SmartReadManagedTaskList } from "../components/SmartReadManagedTaskList";
@@ -16,9 +17,10 @@ import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
 import {
   useSmartReadConfigs,
   useWatchDirFiles,
-  useProcessWatchDirFiles,
+  useProcessFilesAuto,
   useSmartReadTasks,
 } from "../hooks";
+import { SMARTREAD_QUERY_KEYS } from "../hooks";
 import { logger } from "../utils/logger";
 
 import { Button } from "@/components/ui";
@@ -47,13 +49,14 @@ export function SmartReadPage() {
   const [activeTab, setActiveTab] = useState("import");
   const [isDiagnosing, setIsDiagnosing] = useState(false);
 
+  const queryClient = useQueryClient();
   const { data: configs, isLoading: configsLoading } = useSmartReadConfigs();
   const {
     data: watchFiles,
     isLoading: isWatchFilesLoading,
     refetch: refetchWatchFiles,
   } = useWatchDirFiles(selectedConfigId);
-  const processWatchFilesMutation = useProcessWatchDirFiles();
+  const processWatchFilesMutation = useProcessFilesAuto();
   const { refetch: refetchTasks } = useSmartReadTasks(selectedConfigId, false);
 
   const activeConfigs = useMemo(() => configs?.filter((c) => c.is_active) ?? [], [configs]);
@@ -73,14 +76,16 @@ export function SmartReadPage() {
   const handleProcessWatchFiles = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0) return;
 
-    const results = await processWatchFilesMutation.mutateAsync({
+    const result = await processWatchFilesMutation.mutateAsync({
       configId: selectedConfigId,
       filenames: selectedWatchFiles,
     });
 
     // Remove successfully processed files from selection
-    const successFilenames = results.filter((r) => r.success).map((r) => r.filename);
-    setSelectedWatchFiles((prev) => prev.filter((f) => !successFilenames.includes(f)));
+    setSelectedWatchFiles([]);
+    if (result.task_id) {
+      setSelectedTaskId(result.task_id);
+    }
 
     // Refresh file list and task list, then switch to tasks
     refetchWatchFiles();
@@ -93,7 +98,10 @@ export function SmartReadPage() {
     // We can invalidate the query here.
 
     // setActiveTab("tasks"); // we will rename "history" to "tasks"
-    setActiveTab("tasks");
+    await queryClient.invalidateQueries({
+      queryKey: selectedConfigId ? SMARTREAD_QUERY_KEYS.managedTasks(selectedConfigId) : [],
+    });
+    setActiveTab("detail");
   };
 
   const toggleWatchFile = (filename: string) => {
