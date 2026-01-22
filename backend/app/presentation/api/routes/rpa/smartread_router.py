@@ -169,11 +169,9 @@ async def process_files(
 ) -> list[SmartReadAnalyzeResponse]:
     """監視フォルダ内の指定ファイルを処理 (process-autoへリダイレクト)."""
     # process-autoと同じ処理を実行
-    from app.application.services.smartread.smartread_service import SmartReadService
     from datetime import date
 
     assert db is not None
-    service = SmartReadService(db)
 
     # 今日のタスクを取得または作成
     from app.application.services.smartread.request_service import SmartReadRequestService

@@ -14,10 +14,12 @@ from .types import AnalyzeResult, WatchDirProcessOutcome
 
 
 if TYPE_CHECKING:
+    from datetime import date
     from pathlib import Path
 
     from app.infrastructure.persistence.models import SmartReadConfig
     from app.infrastructure.persistence.models.smartread_models import SmartReadTask
+    from app.infrastructure.smartread.client import SmartReadClient
 
 
 logger = logging.getLogger(__name__)
@@ -42,6 +44,16 @@ class SmartReadWatchService(SmartReadBaseService):
         def _get_client(
             self, config_id: int
         ) -> tuple[SmartReadClient | None, SmartReadConfig | None]: ...
+
+        async def sync_with_simple_flow(
+            self,
+            config_id: int,
+            file_content: bytes,
+            filename: str,
+            *,
+            export_type_override: str | None = None,
+            aggregation_override: str | None = None,
+        ) -> dict[str, Any]: ...
 
     def list_files_in_watch_dir(self, config_id: int) -> list[str]:
         """監視ディレクトリ内のファイル一覧を取得.
