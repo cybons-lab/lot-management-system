@@ -296,3 +296,31 @@ class TestSmartReadCsvTransformer:
         assert len(result.long_data) == 2
         assert result.long_data[0]["納入量"] == "100.250"
         assert result.long_data[1]["納入量"] == "200.5"
+
+    def test_empty_decimal_field(self, transformer: SmartReadCsvTransformer) -> None:
+        """納入量小数点が空の場合のテスト（「100.」にならないこと）."""
+        wide_data = [
+            {
+                "材質コード1": "ABC-001",
+                "納入量1": "100",
+                "納入量小数点1": "",
+            }
+        ]
+
+        result = transformer.transform_to_long(wide_data)
+
+        assert result.long_data[0]["納入量"] == "100"
+
+    def test_whitespace_decimal_field(self, transformer: SmartReadCsvTransformer) -> None:
+        """納入量小数点が空白のみの場合のテスト."""
+        wide_data = [
+            {
+                "材質コード1": "ABC-001",
+                "納入量1": "100",
+                "納入量小数点1": "   ",
+            }
+        ]
+
+        result = transformer.transform_to_long(wide_data)
+
+        assert result.long_data[0]["納入量"] == "100"
