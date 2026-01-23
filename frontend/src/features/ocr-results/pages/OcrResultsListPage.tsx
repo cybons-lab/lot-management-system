@@ -11,7 +11,15 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable jsx-a11y/no-autofocus */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, AlertTriangle, CheckCircle, Download, XCircle } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  ArrowRightLeft,
+  CheckCircle,
+  Download,
+  Minus,
+  XCircle,
+} from "lucide-react";
 import {
   createContext,
   useCallback,
@@ -47,6 +55,56 @@ function StatusIcon({ row }: { row: OcrResultItem }) {
 }
 
 /**
+ * SAPマッチングアイコンを返す
+ */
+function SapMatchIcon({ row }: { row: OcrResultItem }) {
+  const matchType = row.sap_match_type;
+
+  if (matchType === "exact") {
+    return (
+      <div className="flex items-center gap-1" title="直接一致">
+        <CheckCircle className="h-4 w-4 text-green-500" />
+        <span className="text-xs text-green-700">一致</span>
+      </div>
+    );
+  }
+
+  if (matchType === "master_reverse") {
+    return (
+      <div className="flex items-center gap-1" title="マスタ経由一致">
+        <ArrowRightLeft className="h-4 w-4 text-blue-500" />
+        <span className="text-xs text-blue-700">マスタ経由</span>
+      </div>
+    );
+  }
+
+  if (matchType === "prefix") {
+    return (
+      <div className="flex items-center gap-1" title="前方一致（要確認）">
+        <AlertTriangle className="h-4 w-4 text-yellow-500" />
+        <span className="text-xs text-yellow-700">前方一致</span>
+      </div>
+    );
+  }
+
+  if (matchType === "not_found") {
+    return (
+      <div className="flex items-center gap-1" title="SAP未一致">
+        <XCircle className="h-4 w-4 text-red-500" />
+        <span className="text-xs text-red-700">未一致</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1" title="未照合">
+      <Minus className="h-4 w-4 text-gray-400" />
+      <span className="text-xs text-gray-500">-</span>
+    </div>
+  );
+}
+
+/**
  * 行のスタイルクラスを返す
  */
 function getRowClassName(row: OcrResultItem): string {
@@ -67,22 +125,43 @@ function getRowClassName(row: OcrResultItem): string {
  */
 function StatusLegend() {
   return (
-    <div className="flex gap-4 text-xs text-gray-600">
-      <div className="flex items-center gap-1">
-        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-        正常
+    <div className="space-y-2">
+      <div className="flex gap-4 text-xs text-gray-600">
+        <div className="flex items-center gap-1">
+          <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+          正常
+        </div>
+        <div className="flex items-center gap-1">
+          <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
+          マスタ未登録
+        </div>
+        <div className="flex items-center gap-1">
+          <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
+          フォーマットエラー
+        </div>
+        <div className="flex items-center gap-1">
+          <XCircle className="h-3.5 w-3.5 text-red-500" />
+          エラー
+        </div>
       </div>
-      <div className="flex items-center gap-1">
-        <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
-        マスタ未登録
-      </div>
-      <div className="flex items-center gap-1">
-        <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
-        フォーマットエラー
-      </div>
-      <div className="flex items-center gap-1">
-        <XCircle className="h-3.5 w-3.5 text-red-500" />
-        エラー
+      <div className="flex gap-4 text-xs text-gray-600">
+        <span className="font-medium">SAPマッチ:</span>
+        <div className="flex items-center gap-1">
+          <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+          一致
+        </div>
+        <div className="flex items-center gap-1">
+          <ArrowRightLeft className="h-3.5 w-3.5 text-blue-500" />
+          マスタ経由
+        </div>
+        <div className="flex items-center gap-1">
+          <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
+          前方一致
+        </div>
+        <div className="flex items-center gap-1">
+          <XCircle className="h-3.5 w-3.5 text-red-500" />
+          未一致
+        </div>
       </div>
     </div>
   );
@@ -581,6 +660,40 @@ export function OcrResultsListPage() {
           <EditableTextCell row={row} field="deliveryQuantity" inputClassName="text-right" />
         ),
         minWidth: 100,
+      },
+      {
+        id: "sap_match_status",
+        header: "SAPマッチ",
+        accessor: (row) => <SapMatchIcon row={row} />,
+        minWidth: 130,
+      },
+      {
+        id: "sap_supplier",
+        header: "SAP仕入先",
+        accessor: (row) => {
+          if (!row.sap_supplier_code) return "-";
+          return (
+            <div className="flex flex-col">
+              <span className="text-xs font-medium">{row.sap_supplier_code}</span>
+              {row.sap_supplier_name && (
+                <span className="text-[10px] text-gray-500">{row.sap_supplier_name}</span>
+              )}
+            </div>
+          );
+        },
+        minWidth: 130,
+      },
+      {
+        id: "sap_qty_unit",
+        header: "SAP数量単位",
+        accessor: (row) => row.sap_qty_unit || "-",
+        minWidth: 110,
+      },
+      {
+        id: "sap_maker_item",
+        header: "SAPメーカー品番",
+        accessor: (row) => row.sap_maker_item || "-",
+        minWidth: 150,
       },
       {
         id: "item_no",
