@@ -20330,7 +20330,7 @@
           "Shipping Master"
         ],
         "summary": "Update Shipping Master",
-        "description": "出荷用マスタを更新.",
+        "description": "出荷用マスタを更新（楽観的ロック対応）.",
         "operationId": "update_shipping_master_api_shipping_masters__master_id__put",
         "parameters": [
           {
@@ -37807,6 +37807,19 @@
               }
             ],
             "title": "Remarks"
+          },
+          "expected_updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Updated At",
+            "description": "楽観的ロック用の期待される更新日時"
           }
         },
         "type": "object",

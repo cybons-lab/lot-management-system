@@ -2,9 +2,9 @@
  * 出荷用マスタ 編集・新規作成ダイアログ
  */
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity, max-lines */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -58,6 +58,27 @@ type FormData = {
   remarks: string;
 };
 
+// フィールドラベルマップ
+const FIELD_LABELS: Record<string, string> = {
+  warehouse_code: "倉庫コード",
+  customer_name: "得意先名",
+  delivery_note_product_name: "素材納品書記載製品名",
+  customer_part_no: "先方品番",
+  maker_part_no: "メーカー品番",
+  maker_code: "メーカーコード",
+  maker_name: "メーカー名",
+  supplier_code: "仕入先コード",
+  supplier_name: "仕入先名称",
+  delivery_place_code: "納入先コード",
+  delivery_place_name: "納入先名称",
+  shipping_warehouse_code: "出荷倉庫コード",
+  shipping_warehouse_name: "出荷倉庫名",
+  shipping_slip_text: "出荷票テキスト",
+  transport_lt_days: "輸送LT",
+  has_order: "発注の有無",
+  remarks: "備考",
+};
+
 export function ShippingMasterEditDialog({
   open,
   onOpenChange,
@@ -65,6 +86,7 @@ export function ShippingMasterEditDialog({
 }: ShippingMasterEditDialogProps) {
   const queryClient = useQueryClient();
   const isEdit = !!item;
+  const [originalValues, setOriginalValues] = useState<FormData | null>(null);
 
   const {
     register,
@@ -72,7 +94,7 @@ export function ShippingMasterEditDialog({
     reset,
     setValue,
     watch,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, dirtyFields },
   } = useForm<FormData>({
     defaultValues: {
       customer_code: "",
@@ -100,7 +122,7 @@ export function ShippingMasterEditDialog({
 
   useEffect(() => {
     if (item) {
-      reset({
+      const formData = {
         customer_code: item.customer_code || "",
         material_code: item.material_code || "",
         jiku_code: item.jiku_code || "",
@@ -121,11 +143,29 @@ export function ShippingMasterEditDialog({
         transport_lt_days: item.transport_lt_days?.toString() || "",
         has_order: item.has_order || false,
         remarks: item.remarks || "",
-      });
+      };
+      reset(formData);
+      setOriginalValues(formData);
     } else {
       reset();
+      setOriginalValues(null);
     }
   }, [item, reset]);
+
+  // 変更されたフィールドのリストを計算
+  const changedFields = useMemo(() => {
+    if (!isEdit || !originalValues) return [];
+
+    const changes: string[] = [];
+
+    Object.keys(dirtyFields).forEach((key) => {
+      if (key in FIELD_LABELS) {
+        changes.push(FIELD_LABELS[key]);
+      }
+    });
+
+    return changes;
+  }, [isEdit, originalValues, dirtyFields]);
 
   const createMutation = useMutation({
     mutationFn: (data: ShippingMasterCreate) => shippingMasterApi.create(data),
@@ -143,18 +183,35 @@ export function ShippingMasterEditDialog({
     mutationFn: ({ id, data }: { id: number; data: ShippingMasterUpdate }) =>
       shippingMasterApi.update(id, data),
     onSuccess: () => {
-      toast.success("出荷用マスタを更新しました");
+      const changeMessage =
+        changedFields.length > 0
+          ? `${changedFields.slice(0, 3).join("、")}${changedFields.length > 3 ? ` 他${changedFields.length - 3}件` : ""}を変更しました`
+          : "出荷用マスタを更新しました";
+      toast.success(changeMessage);
       queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
       onOpenChange(false);
     },
-    onError: (error: Error) => {
-      toast.error(`更新エラー: ${error.message}`);
+    onError: (error: Error & { response?: { status?: number } }) => {
+      // 409 Conflict エラー（同時編集競合）を特別に処理
+      if (error?.response?.status === 409 || error?.message?.includes("他のユーザーによって更新")) {
+        toast.error(
+          "他のユーザーがこのデータを更新しました。ページを再読み込みして最新のデータを取得してください。",
+          {
+            duration: 5000,
+          },
+        );
+        // データを再取得
+        queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
+        onOpenChange(false);
+      } else {
+        toast.error(`更新エラー: ${error.message || "不明なエラー"}`);
+      }
     },
   });
 
   const onSubmit = (data: FormData) => {
     if (isEdit && item) {
-      // 編集モード: 変更されたフィールドのみ送信
+      // 編集モード: 変更されたフィールドのみ送信 + 楽観的ロック用のupdated_at
       const updateData: ShippingMasterUpdate = {
         warehouse_code: data.warehouse_code || null,
         customer_name: data.customer_name || null,
@@ -173,6 +230,7 @@ export function ShippingMasterEditDialog({
         transport_lt_days: data.transport_lt_days ? parseInt(data.transport_lt_days, 10) : null,
         has_order: data.has_order,
         remarks: data.remarks || null,
+        expected_updated_at: item.updated_at, // 楽観的ロック用
       };
       updateMutation.mutate({ id: item.id, data: updateData });
     } else {

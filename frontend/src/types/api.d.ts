@@ -7637,7 +7637,7 @@ export interface paths {
     get: operations["get_shipping_master_api_shipping_masters__master_id__get"];
     /**
      * Update Shipping Master
-     * @description 出荷用マスタを更新.
+     * @description 出荷用マスタを更新（楽観的ロック対応）.
      */
     put: operations["update_shipping_master_api_shipping_masters__master_id__put"];
     post?: never;
@@ -14995,6 +14995,11 @@ export interface components {
       has_order?: boolean | null;
       /** Remarks */
       remarks?: string | null;
+      /**
+       * Expected Updated At
+       * @description 楽観的ロック用の期待される更新日時
+       */
+      expected_updated_at?: string | null;
     };
     /**
      * ShippingMasterImportResponse
