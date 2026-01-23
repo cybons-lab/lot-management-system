@@ -18,6 +18,7 @@ import {
   CheckCircle,
   Download,
   Minus,
+  RefreshCw,
   XCircle,
 } from "lucide-react";
 import {
@@ -834,6 +835,18 @@ export function OcrResultsListPage() {
           )}
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ["ocr-results"] });
+              toast.success("データを再読み込みしました");
+            }}
+            disabled={isLoading}
+          >
+            <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
+            再読み込み
+          </Button>
           <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
             <Download className="mr-2 h-4 w-4" />
             {isExporting ? "エクスポート中..." : "Excelエクスポート"}
