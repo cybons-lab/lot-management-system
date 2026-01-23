@@ -1,9 +1,23 @@
+/* eslint-disable max-lines-per-function */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import {
+  createConnection,
+  deleteConnection,
+  listConnections,
+  type SapConnection,
+  type SapConnectionCreateRequest,
+  type SapConnectionUpdateRequest,
+  testConnection,
+  updateConnection,
+} from "../api";
+
+import { ConnectionForm } from "./ConnectionForm";
+
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/base/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -20,18 +34,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import {
-  createConnection,
-  deleteConnection,
-  listConnections,
-  SapConnection,
-  SapConnectionCreateRequest,
-  SapConnectionUpdateRequest,
-  testConnection,
-  updateConnection,
-} from "../api";
-import { ConnectionForm } from "./ConnectionForm";
 
 export function ConnectionsTab() {
   const queryClient = useQueryClient();
@@ -93,13 +95,13 @@ export function ConnectionsTab() {
     },
   });
 
-  const handleCreate = (data: SapConnectionCreateRequest) => {
-    createMutation.mutate(data);
+  const handleCreate = (data: SapConnectionCreateRequest | SapConnectionUpdateRequest) => {
+    createMutation.mutate(data as SapConnectionCreateRequest);
   };
 
-  const handleUpdate = (data: SapConnectionUpdateRequest) => {
+  const handleUpdate = (data: SapConnectionCreateRequest | SapConnectionUpdateRequest) => {
     if (editingConnection) {
-      updateMutation.mutate({ id: editingConnection.id, data });
+      updateMutation.mutate({ id: editingConnection.id, data: data as SapConnectionUpdateRequest });
     }
   };
 
@@ -174,7 +176,11 @@ export function ConnectionsTab() {
                       >
                         テスト
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => setEditingConnection(conn)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingConnection(conn)}
+                      >
                         編集
                       </Button>
                       {conn.is_active && (

@@ -48,7 +48,6 @@ import { ProductMappingsListPage } from "@/features/product-mappings";
 import { ProductsListPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { RPAPage } from "@/features/rpa";
-import { SapIntegrationPage } from "@/features/sap-integration";
 import {
   CsvImportPage,
   LayerCodeMappingsPage,
@@ -66,6 +65,7 @@ import {
 } from "@/features/rpa/material-delivery-note";
 import { GenericCloudFlowExecutePage } from "@/features/rpa/pages/GenericCloudFlowExecutePage";
 import { SmartReadPage } from "@/features/rpa/smartread";
+import { SapIntegrationPage } from "@/features/sap-integration";
 import { ShippingMasterListPage } from "@/features/shipping-master/pages/ShippingMasterListPage";
 import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
 import { SuppliersListPage } from "@/features/suppliers";
@@ -225,6 +225,7 @@ function AdminRoutes() {
   );
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 export function MainRoutes() {
   return (
     <Routes>

@@ -1,4 +1,4 @@
-import { httpClient } from "@/shared/api/http-client";
+import { http } from "@/shared/api/http-client";
 
 // Types
 export interface SapConnection {
@@ -101,34 +101,34 @@ export interface SapFetchLog {
 // API functions
 
 export async function listConnections(activeOnly = true): Promise<SapConnection[]> {
-  return httpClient.get("integration/sap/connections", {
+  return http.get("integration/sap/connections", {
     searchParams: { active_only: activeOnly },
-  }).json();
+  });
 }
 
 export async function createConnection(data: SapConnectionCreateRequest): Promise<SapConnection> {
-  return httpClient.post("integration/sap/connections", { json: data }).json();
+  return http.post("integration/sap/connections", data);
 }
 
 export async function updateConnection(
   id: number,
-  data: SapConnectionUpdateRequest
+  data: SapConnectionUpdateRequest,
 ): Promise<SapConnection> {
-  return httpClient.put(`integration/sap/connections/${id}`, { json: data }).json();
+  return http.put(`integration/sap/connections/${id}`, data);
 }
 
 export async function deleteConnection(id: number): Promise<{ status: string; message: string }> {
-  return httpClient.delete(`integration/sap/connections/${id}`).json();
+  return http.delete(`integration/sap/connections/${id}`);
 }
 
 export async function testConnection(id: number): Promise<SapConnectionTestResponse> {
-  return httpClient.post(`integration/sap/connections/${id}/test`).json();
+  return http.post(`integration/sap/connections/${id}/test`);
 }
 
 export async function fetchMaterials(
-  data: SapMaterialFetchRequest
+  data: SapMaterialFetchRequest,
 ): Promise<SapMaterialFetchResponse> {
-  return httpClient.post("integration/sap/materials/fetch", { json: data }).json();
+  return http.post("integration/sap/materials/fetch", data);
 }
 
 export async function listCachedMaterials(params: {
@@ -141,7 +141,7 @@ export async function listCachedMaterials(params: {
   if (params.kunnr) searchParams.kunnr = params.kunnr;
   if (params.limit) searchParams.limit = params.limit;
 
-  return httpClient.get("integration/sap/materials/cache", { searchParams }).json();
+  return http.get("integration/sap/materials/cache", { searchParams });
 }
 
 export async function clearCache(params: {
@@ -152,7 +152,7 @@ export async function clearCache(params: {
   if (params.connection_id != null) searchParams.connection_id = params.connection_id;
   if (params.kunnr) searchParams.kunnr = params.kunnr;
 
-  return httpClient.delete("integration/sap/materials/cache", { searchParams }).json();
+  return http.delete("integration/sap/materials/cache", { searchParams });
 }
 
 export async function listFetchLogs(params: {
@@ -163,5 +163,5 @@ export async function listFetchLogs(params: {
   if (params.connection_id != null) searchParams.connection_id = params.connection_id;
   if (params.limit) searchParams.limit = params.limit;
 
-  return httpClient.get("integration/sap/logs", { searchParams }).json();
+  return http.get("integration/sap/logs", { searchParams });
 }

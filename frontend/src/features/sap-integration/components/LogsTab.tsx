@@ -1,16 +1,19 @@
+/* eslint-disable max-lines-per-function */
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { listConnections, listFetchLogs, type SapFetchLog } from "../api";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/form/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/form/select";
 import {
   Table,
   TableBody,
@@ -19,8 +22,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import { listConnections, listFetchLogs, SapFetchLog } from "../api";
 
 export function LogsTab() {
   const [selectedConnectionId, setSelectedConnectionId] = useState<number | null>(null);

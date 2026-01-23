@@ -1,23 +1,24 @@
+/* eslint-disable max-lines-per-function, complexity */
 import { useForm } from "react-hook-form";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  type SapConnection,
+  type SapConnectionCreateRequest,
+  type SapConnectionUpdateRequest,
+} from "../api";
+
+import { Button } from "@/components/ui/base/button";
+import { Checkbox } from "@/components/ui/form/checkbox";
+import { Input } from "@/components/ui/form/input";
+import { Label } from "@/components/ui/form/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-
-import {
-  SapConnection,
-  SapConnectionCreateRequest,
-  SapConnectionUpdateRequest,
-} from "../api";
+} from "@/components/ui/form/select";
+import { Textarea } from "@/components/ui/form/textarea";
 
 interface ConnectionFormProps {
   defaultValues?: SapConnection;
@@ -61,8 +62,9 @@ export function ConnectionForm({
       onSubmit={handleSubmit((data) => {
         // Remove empty string for passwd in edit mode (means no change)
         if (isEdit && !data.passwd) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          delete (data as any).passwd;
+          const { passwd: _passwd, ...rest } = data;
+          onSubmit(rest as SapConnectionUpdateRequest);
+          return;
         }
         onSubmit(data);
       })}
@@ -121,14 +123,16 @@ export function ConnectionForm({
         {/* Username */}
         <div className="space-y-2">
           <Label htmlFor="user_name">ユーザー名 *</Label>
-          <Input id="user_name" {...register("user_name", { required: true })} placeholder="BATCH" />
+          <Input
+            id="user_name"
+            {...register("user_name", { required: true })}
+            placeholder="BATCH"
+          />
         </div>
 
         {/* Password */}
         <div className="space-y-2">
-          <Label htmlFor="passwd">
-            パスワード {isEdit ? "(空=変更なし)" : "*"}
-          </Label>
+          <Label htmlFor="passwd">パスワード {isEdit ? "(空=変更なし)" : "*"}</Label>
           <Input
             id="passwd"
             type="password"

@@ -12038,6 +12038,8 @@ export interface components {
       jiku_code?: string | null;
       /** Material Code */
       material_code?: string | null;
+      /** Delivery Quantity */
+      delivery_quantity?: string | null;
     };
     /**
      * OcrResultEditResponse
@@ -12068,6 +12070,8 @@ export interface components {
       jiku_code?: string | null;
       /** Material Code */
       material_code?: string | null;
+      /** Delivery Quantity */
+      delivery_quantity?: string | null;
       /**
        * Updated At
        * Format: date-time
@@ -12195,6 +12199,8 @@ export interface components {
        * @default false
        */
       has_error: boolean;
+      /** Manual Delivery Quantity */
+      manual_delivery_quantity?: string | null;
     };
     /**
      * OcrResultListResponse

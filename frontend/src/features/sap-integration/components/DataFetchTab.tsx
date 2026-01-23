@@ -1,19 +1,28 @@
+/* eslint-disable max-lines-per-function */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import {
+  clearCache,
+  fetchMaterials,
+  listCachedMaterials,
+  listConnections,
+  type SapMaterialCache,
+} from "../api";
+
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/base/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/form/input";
+import { Label } from "@/components/ui/form/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/form/select";
 import {
   Table,
   TableBody,
@@ -22,14 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import {
-  clearCache,
-  fetchMaterials,
-  listCachedMaterials,
-  listConnections,
-  SapMaterialCache,
-} from "../api";
 
 export function DataFetchTab() {
   const queryClient = useQueryClient();
@@ -57,7 +58,7 @@ export function DataFetchTab() {
     onSuccess: (result) => {
       if (result.success) {
         toast.success(
-          `データ取得完了: ${result.record_count}件取得、${result.cached_count}件キャッシュ (${result.duration_ms}ms)`
+          `データ取得完了: ${result.record_count}件取得、${result.cached_count}件キャッシュ (${result.duration_ms}ms)`,
         );
         queryClient.invalidateQueries({ queryKey: ["sap-cache"] });
       } else {
@@ -113,9 +114,7 @@ export function DataFetchTab() {
               <Label>接続</Label>
               <Select
                 value={selectedConnectionId?.toString() ?? "default"}
-                onValueChange={(v) =>
-                  setSelectedConnectionId(v === "default" ? null : parseInt(v))
-                }
+                onValueChange={(v) => setSelectedConnectionId(v === "default" ? null : parseInt(v))}
               >
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="デフォルト" />

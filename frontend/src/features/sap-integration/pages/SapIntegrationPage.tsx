@@ -1,18 +1,18 @@
 import { useState } from "react";
 
-import { PageHeader } from "@/components/layout/PageHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import { ConnectionsTab } from "../components/ConnectionsTab";
 import { DataFetchTab } from "../components/DataFetchTab";
 import { LogsTab } from "../components/LogsTab";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/layout/tabs";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function SapIntegrationPage() {
   const [activeTab, setActiveTab] = useState("connections");
 
   return (
     <div className="container mx-auto space-y-6 p-6">
-      <PageHeader title="SAP連携管理" description="SAP接続設定・データ取得・ログ確認" />
+      <PageHeader title="SAP連携管理" subtitle="SAP接続設定・データ取得・ログ確認" />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
