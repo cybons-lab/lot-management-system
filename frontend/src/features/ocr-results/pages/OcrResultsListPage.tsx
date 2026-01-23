@@ -99,6 +99,7 @@ type RowInputState = {
   shippingSlipTextEdited: boolean;
   jikuCode: string;
   materialCode: string;
+  deliveryQuantity: string;
 };
 
 const orEmpty = (v: string | null | undefined) => v || "";
@@ -114,6 +115,7 @@ const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
   shippingSlipTextEdited: row.manual_shipping_slip_text_edited || false,
   jikuCode: row.manual_jiku_code || orEmpty(row.jiku_code),
   materialCode: row.manual_material_code || orEmpty(row.material_code),
+  deliveryQuantity: row.manual_delivery_quantity || orEmpty(row.delivery_quantity),
 });
 
 // ============================================
@@ -301,7 +303,14 @@ const buildShippingSlipText = (template: string | null, input: RowInputState): s
   ].filter(Boolean);
   const lotString = lotEntries.join("・");
 
-  return template.replace("ロット番号(数量)", lotString).replace("入庫番号", input.inboundNo || "");
+  // ロット表記を正規化 (ロット, ロット/, /ロット, /ロット/ などに対応)
+  const normalized = template.replace(/(^|\/)ロット($|\/)/g, (_, p1, p2) => {
+    return `${p1}ロット番号(数量)${p2}`;
+  });
+
+  return normalized
+    .replace(/ロット番号\s*[(（]数量[）)]/g, lotString)
+    .replace(/入庫番号/g, input.inboundNo || "");
 };
 
 // ============================================
@@ -330,6 +339,7 @@ export function OcrResultsListPage() {
       shipping_slip_text_edited: input.shippingSlipTextEdited,
       jiku_code: input.jikuCode || null,
       material_code: input.materialCode || null,
+      delivery_quantity: input.deliveryQuantity || null,
     }),
     [],
   );
@@ -567,8 +577,10 @@ export function OcrResultsListPage() {
       {
         id: "delivery_quantity",
         header: "納入量",
-        accessor: (row) => row.delivery_quantity || "-",
-        minWidth: 80,
+        accessor: (row) => (
+          <EditableTextCell row={row} field="deliveryQuantity" inputClassName="text-right" />
+        ),
+        minWidth: 100,
       },
       {
         id: "item_no",

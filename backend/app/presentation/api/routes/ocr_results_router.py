@@ -4,6 +4,7 @@ v_ocr_resultsビューから直接データを取得し、
 SmartRead縦持ちデータと出荷用マスタをJOINした結果を返す。
 """
 
+import re
 from datetime import date, datetime
 from typing import Annotated, Any
 
@@ -82,6 +83,9 @@ class OcrResultItem(BaseModel):
     date_format_error: bool = False
     has_error: bool = False
 
+    # 手入力・補完結果の追加分
+    manual_delivery_quantity: str | None = None
+
     model_config = {"from_attributes": True}
 
 
@@ -136,6 +140,7 @@ class OcrResultEditRequest(BaseModel):
     shipping_slip_text_edited: bool | None = None
     jiku_code: str | None = None
     material_code: str | None = None
+    delivery_quantity: str | None = None
 
 
 class OcrResultEditResponse(BaseModel):
@@ -153,6 +158,7 @@ class OcrResultEditResponse(BaseModel):
     shipping_slip_text_edited: bool
     jiku_code: str | None = None
     material_code: str | None = None
+    delivery_quantity: str | None = None
     updated_at: datetime
 
     model_config = {"from_attributes": True}
@@ -177,7 +183,15 @@ def build_shipping_slip_text(
         lot_entries.append(f"{lot_no_2}（{quantity_2 or ''}）")
 
     lot_text = "・".join(lot_entries)
-    return template.replace("ロット番号(数量)", lot_text).replace("入庫番号", inbound_no or "")
+
+    # ロット表記を正規化 (ロット, ロット/, /ロット, /ロット/ などに対応)
+    normalized = re.sub(r"(^|/)ロット($|/)", r"\1ロット番号(数量)\2", template)
+
+    # キーワード置換（全角カッコや表記揺れにもある程度対応）
+    result = re.sub(r"ロット番号\s*[（(]数量[）)]", lot_text, normalized)
+    result = result.replace("入庫番号", inbound_no or "")
+
+    return result
 
 
 @router.get("", response_model=OcrResultListResponse)
