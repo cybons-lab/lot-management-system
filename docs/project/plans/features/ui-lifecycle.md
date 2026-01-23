@@ -12,7 +12,7 @@
 - 本計画の全項目
 
 ### 対応済み
-- なし
+- **ロットアーカイブ (Backend)**: `PATCH /lots/{lot_id}/archive` 実装済み (`lots_router.py`)
 
 ## 1. 需要予測の可視化 (Demand Forecast UI)
 
