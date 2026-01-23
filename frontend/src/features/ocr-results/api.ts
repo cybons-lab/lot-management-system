@@ -70,6 +70,9 @@ export interface OcrResultItem {
   sap_supplier_name: string | null;
   sap_qty_unit: string | null;
   sap_maker_item: string | null;
+
+  // 計算結果
+  calculated_shipping_date: string | null;
 }
 
 interface OcrResultListParams {

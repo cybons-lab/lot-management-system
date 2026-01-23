@@ -13,12 +13,14 @@ from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.application.services.calendar_service import CalendarService
 from app.application.services.common.export_service import ExportService
 from app.application.services.sap.sap_reconciliation_service import SapReconciliationService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.smartread_models import OcrResultEdit
 from app.presentation.api.routes.auth.auth_router import get_current_user
+from app.presentation.schemas.calendar.calendar_schemas import BusinessDayCalculationRequest
 
 
 router = APIRouter(prefix="/ocr-results", tags=["OCR Results"])
@@ -94,6 +96,9 @@ class OcrResultItem(BaseModel):
     sap_supplier_name: str | None = None
     sap_qty_unit: str | None = None
     sap_maker_item: str | None = None
+
+    # 計算結果
+    calculated_shipping_date: date | None = None
 
     model_config = {"from_attributes": True}
 
@@ -290,6 +295,25 @@ async def list_ocr_results(
                 # 仕入先名は既にマスタから取得されている場合があるので、
                 # SAP仕入先コードがある場合のみ追加情報として保持
                 # (仕入先名の取得はフロントエンドで行うか、別途マスタから取得可能)
+
+        # 出荷日の自動計算（transport_lt_daysとdelivery_dateがある場合）
+        if item.transport_lt_days and item.delivery_date:
+            try:
+                # 納期をdate型に変換
+                delivery_date_obj = datetime.strptime(item.delivery_date, "%Y-%m-%d").date()
+
+                # CalendarServiceで営業日計算
+                calendar_service = CalendarService(db)
+                request = BusinessDayCalculationRequest(
+                    start_date=delivery_date_obj,
+                    days=item.transport_lt_days,
+                    direction="before",
+                    include_start=False,
+                )
+                item.calculated_shipping_date = calendar_service.calculate_business_day(request)
+            except (ValueError, Exception):
+                # 日付フォーマットエラーや計算エラーは無視
+                pass
 
     return OcrResultListResponse(items=items, total=total)
 

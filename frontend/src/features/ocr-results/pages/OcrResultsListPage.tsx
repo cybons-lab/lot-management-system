@@ -264,16 +264,24 @@ function EditableDateCell({
   // 納期フィールドで日付フォーマットエラーがある場合は赤枠
   const hasDateError = field === "deliveryDate" && row.date_format_error;
 
+  // 出荷日フィールドの場合、手入力値がなければ自動計算値を表示
+  const isShippingDate = field === "shippingDate";
+  const isCalculated = isShippingDate && !value && row.calculated_shipping_date;
+  const displayValue = isCalculated ? row.calculated_shipping_date : value;
+
   return (
     <input
       type="date"
-      value={value}
+      value={displayValue || ""}
       onChange={(e) => updateInputs(row, { [field]: e.target.value })}
+      title={isCalculated ? `自動計算（LT=${row.transport_lt_days}日）` : ""}
       className={cn(
         "w-full rounded-md border px-2 py-1 text-xs focus:outline-none focus:ring-1",
         hasDateError
           ? "border-red-500 bg-red-50 focus:border-red-600 focus:ring-red-500"
-          : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
+          : isCalculated
+            ? "border-blue-300 bg-blue-50 focus:border-blue-500 focus:ring-blue-500"
+            : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
       )}
     />
   );
@@ -285,7 +293,7 @@ function EditableDateCell({
 function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
   const { getInputs, updateInputs } = useOcrInputs();
   const input = getInputs(row);
-  const computedText = buildShippingSlipText(row.shipping_slip_text, input);
+  const computedText = buildShippingSlipText(row.shipping_slip_text, input, row);
   const displayText = input.shippingSlipTextEdited ? input.shippingSlipText : computedText;
   const fallbackText = displayText || "-";
   const [isEditing, setIsEditing] = useState(false);
@@ -384,23 +392,103 @@ const getContentValue = (row: OcrResultItem, key: string): string => {
   return String(value);
 };
 
-const buildShippingSlipText = (template: string | null, input: RowInputState): string => {
-  if (!template) return "";
+/**
+ * 日付をMM/DD形式にフォーマット
+ */
+const formatDateToMMDD = (dateStr: string): string | null => {
+  const dateObj = new Date(dateStr);
+  if (Number.isNaN(dateObj.getTime())) return null;
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  return `${month}/${day}`;
+};
 
+/**
+ * ロット情報文字列を作成
+ */
+const buildLotString = (input: RowInputState): string => {
   const lotEntries = [
     input.lotNo1 ? `${input.lotNo1}（${input.quantity1 || ""}）` : "",
     input.lotNo2 ? `${input.lotNo2}（${input.quantity2 || ""}）` : "",
   ].filter(Boolean);
-  const lotString = lotEntries.join("・");
+  return lotEntries.join("・");
+};
 
-  // ロット表記を正規化 (ロット, ロット/, /ロット, /ロット/ などに対応)
+/**
+ * テンプレートにロット情報を適用
+ */
+const applyLotReplacement = (template: string, input: RowInputState): string => {
+  const lotString = buildLotString(input);
   const normalized = template.replace(/(^|\/)ロット($|\/)/g, (_, p1, p2) => {
     return `${p1}ロット番号(数量)${p2}`;
   });
+  return normalized.replace(/ロット番号\s*[(（]数量[）)]/g, lotString);
+};
 
-  return normalized
-    .replace(/ロット番号\s*[(（]数量[）)]/g, lotString)
-    .replace(/入庫番号/g, input.inboundNo || "");
+/**
+ * テンプレートに日付情報を適用
+ */
+const applyDateReplacements = (
+  template: string,
+  input: RowInputState,
+  row: OcrResultItem,
+): string => {
+  let result = template;
+
+  // 出荷日の置換
+  const shippingDate = input.shippingDate || row.calculated_shipping_date;
+  if (shippingDate) {
+    const formatted = formatDateToMMDD(shippingDate);
+    if (formatted) {
+      result = result.replace(/出荷▲\/▲/g, `出荷${formatted}`);
+    }
+  }
+
+  // 納期の置換
+  if (input.deliveryDate) {
+    const formatted = formatDateToMMDD(input.deliveryDate);
+    if (formatted) {
+      result = result.replace(/着日指定●\/●/g, `着日指定${formatted}`);
+    }
+  }
+
+  return result;
+};
+
+const buildShippingSlipText = (
+  template: string | null,
+  input: RowInputState,
+  row: OcrResultItem,
+): string => {
+  if (!template) return "";
+
+  // ロット・数量・入庫Noが全て空の場合、置換せずそのまま返す
+  const hasLotInfo =
+    Boolean(input.lotNo1) ||
+    Boolean(input.quantity1) ||
+    Boolean(input.lotNo2) ||
+    Boolean(input.quantity2);
+  const hasInboundNo = Boolean(input.inboundNo);
+
+  if (!hasLotInfo && !hasInboundNo) {
+    return template;
+  }
+
+  // ロット情報の置換
+  let result = template;
+  if (hasLotInfo) {
+    result = applyLotReplacement(result, input);
+  }
+
+  // 入庫番号の置換
+  if (hasInboundNo) {
+    result = result.replace(/入庫番号/g, input.inboundNo);
+  }
+
+  // 日付情報の置換
+  result = applyDateReplacements(result, input, row);
+
+  return result;
 };
 
 // ============================================
