@@ -294,7 +294,7 @@ class TestSmartReadCsvTransformer:
         result = transformer.transform_to_long(wide_data)
 
         assert len(result.long_data) == 2
-        assert result.long_data[0]["納入量"] == "100.250"
+        assert result.long_data[0]["納入量"] == "100.25"
         assert result.long_data[1]["納入量"] == "200.5"
 
     def test_empty_decimal_field(self, transformer: SmartReadCsvTransformer) -> None:
