@@ -225,11 +225,13 @@ function EditableTextCell({
   field,
   placeholder,
   inputClassName,
+  hasWarning = false,
 }: {
   row: OcrResultItem;
   field: Extract<keyof RowInputState, string>; // Ensure we only use keys that have string values
   placeholder?: string;
   inputClassName?: string;
+  hasWarning?: boolean;
 }) {
   const { getInputs, updateInputs } = useOcrInputs();
   const value = getInputs(row)[field] as string; // Explicitly cast to string
@@ -241,7 +243,10 @@ function EditableTextCell({
       onChange={(e) => updateInputs(row, { [field]: e.target.value })}
       placeholder={placeholder}
       className={cn(
-        "w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500",
+        "w-full rounded-md border px-2 py-1 text-xs focus:outline-none focus:ring-1",
+        hasWarning
+          ? "border-red-400 bg-red-50 focus:border-red-600 focus:ring-red-500"
+          : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
         inputClassName,
       )}
     />
@@ -360,9 +365,26 @@ function LotEntryCell({
   lotField: Extract<keyof RowInputState, string>;
   quantityField: Extract<keyof RowInputState, string>;
 }) {
+  const { getInputs } = useOcrInputs();
+  const input = getInputs(row);
+
+  // ロットNoと数量の入力状態をチェック
+  const lotValue = input[lotField] as string;
+  const qtyValue = input[quantityField] as string;
+  const hasLot = Boolean(lotValue);
+  const hasQty = Boolean(qtyValue);
+
+  // 片方だけ入力されている場合は警告
+  const hasIncomplete = hasLot !== hasQty;
+
   return (
     <div className="flex flex-col gap-1.5 py-1">
-      <EditableTextCell row={row} field={lotField} placeholder="ロットNo" />
+      <EditableTextCell
+        row={row}
+        field={lotField}
+        placeholder="ロットNo"
+        hasWarning={hasIncomplete}
+      />
       <div className="flex items-center justify-end gap-1">
         <span className="text-[10px] text-slate-400 shrink-0">数量:</span>
         <EditableTextCell
@@ -370,6 +392,7 @@ function LotEntryCell({
           field={quantityField}
           placeholder="数量"
           inputClassName="w-[70px] text-right"
+          hasWarning={hasIncomplete}
         />
       </div>
     </div>
@@ -455,6 +478,30 @@ const applyDateReplacements = (
   return result;
 };
 
+/**
+ * ロット情報のバリデーション状態をチェック
+ */
+const validateLotInfo = (
+  input: RowInputState,
+): { hasValidLot: boolean; hasIncomplete: boolean } => {
+  const lot1HasNo = Boolean(input.lotNo1);
+  const lot1HasQty = Boolean(input.quantity1);
+  const lot2HasNo = Boolean(input.lotNo2);
+  const lot2HasQty = Boolean(input.quantity2);
+
+  // 有効なロット情報: ロットNoと数量がペアになっている
+  const hasValidLot1 = lot1HasNo && lot1HasQty;
+  const hasValidLot2 = lot2HasNo && lot2HasQty;
+  const hasValidLot = hasValidLot1 || hasValidLot2;
+
+  // 不完全な入力: どちらか片方だけ入力されている
+  const lot1Incomplete = lot1HasNo !== lot1HasQty; // XOR: 片方だけtrue
+  const lot2Incomplete = lot2HasNo !== lot2HasQty;
+  const hasIncomplete = lot1Incomplete || lot2Incomplete;
+
+  return { hasValidLot, hasIncomplete };
+};
+
 const buildShippingSlipText = (
   template: string | null,
   input: RowInputState,
@@ -462,21 +509,17 @@ const buildShippingSlipText = (
 ): string => {
   if (!template) return "";
 
-  // ロット・数量・入庫Noが全て空の場合、置換せずそのまま返す
-  const hasLotInfo =
-    Boolean(input.lotNo1) ||
-    Boolean(input.quantity1) ||
-    Boolean(input.lotNo2) ||
-    Boolean(input.quantity2);
+  const { hasValidLot } = validateLotInfo(input);
   const hasInboundNo = Boolean(input.inboundNo);
 
-  if (!hasLotInfo && !hasInboundNo) {
+  // ロット・数量・入庫Noが全て空の場合、置換せずそのまま返す
+  if (!hasValidLot && !hasInboundNo) {
     return template;
   }
 
-  // ロット情報の置換
+  // ロット情報の置換（有効なロット情報がある場合のみ）
   let result = template;
-  if (hasLotInfo) {
+  if (hasValidLot) {
     result = applyLotReplacement(result, input);
   }
 
