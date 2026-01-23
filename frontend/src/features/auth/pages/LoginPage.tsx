@@ -1,6 +1,6 @@
 import { Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import {
@@ -31,6 +31,8 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo") || "/";
 
   // Load users for selection (public endpoint, no auth required)
   useEffect(() => {
@@ -49,9 +51,9 @@ export function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate("/");
+      navigate(returnTo);
     }
-  }, [user, navigate]);
+  }, [user, navigate, returnTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +65,7 @@ export function LoginPage() {
     setIsLoading(true);
     try {
       await login(userId, selectedUser?.username);
-      navigate("/");
+      navigate(returnTo);
     } catch (error) {
       console.error("Login failed", error);
       toast.error("ログインに失敗しました");

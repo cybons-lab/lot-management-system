@@ -47,6 +47,7 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 
 // ステータス表示用
 const STATUS_DISPLAY: Record<string, { label: string; color: string }> = {
@@ -78,7 +79,9 @@ export function Step4DetailPage() {
 
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
-  const { data: run, isLoading, error } = useRun(id, { refetchInterval: 3000 });
+  const { data: run, isLoading, error } = useRun(id, {
+    refetchInterval: authAwareRefetchInterval(3000),
+  });
 
   const retryMutation = useMutation({
     mutationFn: () => retryFailedItems(id),

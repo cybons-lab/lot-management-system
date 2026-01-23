@@ -34,6 +34,7 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 
 const STATUS_LABELS: Record<
   string,
@@ -54,10 +55,18 @@ export function RunMonitorPage() {
   const { runId } = useParams<{ runId: string }>();
   const id = Number(runId);
 
-  const { data: run, isLoading, error } = useRun(id, { refetchInterval: 5000 });
-  const { data: loopSummary } = useLoopSummary(id, { refetchInterval: 5000 });
-  const { data: events } = useRunEvents(id, 100, { refetchInterval: 10000 });
-  const { data: failedItems } = useFailedItems(id, { refetchInterval: 10000 });
+  const { data: run, isLoading, error } = useRun(id, {
+    refetchInterval: authAwareRefetchInterval(5000),
+  });
+  const { data: loopSummary } = useLoopSummary(id, {
+    refetchInterval: authAwareRefetchInterval(5000),
+  });
+  const { data: events } = useRunEvents(id, 100, {
+    refetchInterval: authAwareRefetchInterval(10000),
+  });
+  const { data: failedItems } = useFailedItems(id, {
+    refetchInterval: authAwareRefetchInterval(10000),
+  });
   const pauseMutation = usePauseRun(id);
   const resumeMutation = useResumeRun(id);
   const cancelMutation = useCancelRun(id);

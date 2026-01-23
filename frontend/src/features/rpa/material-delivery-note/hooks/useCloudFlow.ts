@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { http } from "@/shared/api/http-client";
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 
 // Types
 interface CloudFlowJobCreate {
@@ -50,7 +51,7 @@ export function useCloudFlowQueueStatus(jobType: string) {
     queryFn: async () => {
       return http.get<CloudFlowQueueStatus>(`rpa/cloud-flow/jobs/current?job_type=${jobType}`);
     },
-    refetchInterval: 5000, // 5秒ごとに更新
+    refetchInterval: authAwareRefetchInterval(5000), // 5秒ごとに更新
   });
 }
 

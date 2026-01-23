@@ -75,6 +75,25 @@ def get_current_user_or_above(
     return user
 
 
+def require_roles(allowed_roles: set[str]):
+    """Require user to have one of the allowed roles.
+
+    - guest is represented by unauthenticated user (None)
+    - returns User | None for downstream usage
+    """
+
+    def dependency(user: User | None = Depends(get_current_user_optional)) -> User | None:
+        roles = ["guest"] if not user else [ur.role.role_code for ur in user.user_roles]
+        if not any(role in allowed_roles for role in roles):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient role",
+            )
+        return user
+
+    return dependency
+
+
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     """Simple login by User ID or Username."""

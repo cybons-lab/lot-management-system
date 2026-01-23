@@ -11,6 +11,7 @@ import { getTasks, getManagedTasks, updateSkipToday, getRequests } from "../api"
 
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 /**
@@ -95,7 +96,7 @@ export function useSmartReadRequestPolling(configId: number | null) {
       return res;
     },
     enabled: !!configId,
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: authAwareRefetchInterval(5000), // Poll every 5 seconds
     refetchIntervalInBackground: true,
   });
 }

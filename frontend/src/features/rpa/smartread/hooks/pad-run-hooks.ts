@@ -14,6 +14,7 @@ import { startPadRun, getPadRuns, getPadRunStatus, retryPadRun } from "../api";
 
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 // ============================================
@@ -32,14 +33,14 @@ export function usePadRuns(configId: number | null, statusFilter?: string, limit
     },
     enabled: !!configId,
     staleTime: 1000 * 10, // 10 seconds (runs may be in progress)
-    refetchInterval: (query) => {
+    refetchInterval: authAwareRefetchInterval((query) => {
       // Auto-refresh if there are running tasks
       const data = query.state.data;
       if (data?.runs.some((r) => r.status === "RUNNING")) {
         return 5000; // 5 seconds
       }
       return false;
-    },
+    }),
   });
 }
 
@@ -61,14 +62,14 @@ export function usePadRunStatus(configId: number | null, runId: string | null) {
     },
     enabled: !!configId && !!runId,
     staleTime: 1000 * 5, // 5 seconds
-    refetchInterval: (query) => {
+    refetchInterval: authAwareRefetchInterval((query) => {
       // Auto-poll while running
       const data = query.state.data;
       if (data?.status === "RUNNING") {
         return 3000; // 3 seconds
       }
       return false;
-    },
+    }),
   });
 }
 

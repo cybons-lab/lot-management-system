@@ -13,6 +13,7 @@ import { createExport, getExportStatus, getExportCsvData } from "../api";
 
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 /**
@@ -55,14 +56,14 @@ export function useExportStatus(
         ? getExportStatus(configId, taskId, exportId)
         : Promise.resolve(null),
     enabled: !!configId && !!taskId && !!exportId && enabled,
-    refetchInterval: (query) => {
+    refetchInterval: authAwareRefetchInterval((query) => {
       // RUNNING状態なら5秒ごとにポーリング
       const data = query.state.data;
       if (data && data.state === "RUNNING") {
         return 5000;
       }
       return false;
-    },
+    }),
   });
 }
 

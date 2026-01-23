@@ -5,6 +5,7 @@
  */
 
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 import { toast } from "sonner";
 
 import { logError } from "@/services/error-logger";
@@ -152,11 +153,27 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
+      retry: (failureCount, error) => {
+        if (error instanceof HTTPError) {
+          const status = error.response?.status;
+          if (status === 401 || status === 403) {
+            return false;
+          }
+        }
+        return failureCount < 1;
+      },
       refetchOnWindowFocus: false,
     },
     mutations: {
-      retry: 0, // No auto-retry for data mutations (avoid duplicate operations)
+      retry: (failureCount, error) => {
+        if (error instanceof HTTPError) {
+          const status = error.response?.status;
+          if (status === 401 || status === 403) {
+            return false;
+          }
+        }
+        return false;
+      },
     },
   },
 });

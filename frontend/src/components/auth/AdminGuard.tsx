@@ -131,26 +131,12 @@
  *     - カスタムリダイレクト先: ページごとに異なるリダイレクト先を指定
  */
 
-import { Navigate } from "react-router-dom";
-
-import { useAuth } from "@/features/auth/AuthContext";
+import { AccessGuard } from "@/components/auth/AccessGuard";
 
 interface AdminGuardProps {
   children: React.ReactNode;
 }
 
 export function AdminGuard({ children }: AdminGuardProps) {
-  const { user, isLoading } = useAuth();
-
-  // ローディング中は何も表示しない
-  if (isLoading) {
-    return null;
-  }
-
-  // 未ログインまたは管理者権限がない場合はリダイレクト
-  if (!user || !user.roles?.includes("admin")) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
+  return <AccessGuard roles={["admin"]}>{children}</AccessGuard>;
 }

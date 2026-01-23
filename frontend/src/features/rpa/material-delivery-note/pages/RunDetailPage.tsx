@@ -42,6 +42,7 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 
 // ステータス表示定義
 const STATUS_DISPLAY: Record<string, { label: string; color: string }> = {
@@ -63,9 +64,15 @@ export function RunDetailPage() {
 
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
-  const { data: run, isLoading, error } = useRun(id, { refetchInterval: 5000 });
-  const { data: loopSummary } = useLoopSummary(id, { refetchInterval: 5000 });
-  const { data: activityItems } = useActivity(id, 50, { refetchInterval: 5000 });
+  const { data: run, isLoading, error } = useRun(id, {
+    refetchInterval: authAwareRefetchInterval(5000),
+  });
+  const { data: loopSummary } = useLoopSummary(id, {
+    refetchInterval: authAwareRefetchInterval(5000),
+  });
+  const { data: activityItems } = useActivity(id, 50, {
+    refetchInterval: authAwareRefetchInterval(5000),
+  });
   const updateItemMutation = useUpdateItem(id);
   const batchUpdateMutation = useBatchUpdateItems(id);
   const completeRunMutation = useCompleteAllItems(id);

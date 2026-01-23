@@ -1,8 +1,10 @@
 import { Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
 
+import { AuthErrorOverlay } from "@/components/auth/AuthErrorOverlay";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { AuthProvider } from "@/features/auth/AuthContext";
+import { ForbiddenPage } from "@/features/auth/pages/ForbiddenPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { SystemStatus } from "@/features/system/SystemStatus";
 import { useGlobalErrorHandlers } from "@/hooks/useGlobalErrorHandlers";
@@ -27,9 +29,18 @@ function App() {
             }
           />
           <Route
+            path="/forbidden"
+            element={
+              <TopNavLayout>
+                <ForbiddenPage />
+              </TopNavLayout>
+            }
+          />
+          <Route
             path="*"
             element={
               <TopNavLayout>
+                <AuthErrorOverlay />
                 <MainRoutes />
                 <Toaster position="top-right" richColors closeButton />
               </TopNavLayout>

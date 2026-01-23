@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { formatOrderCode } from "@/shared/utils/order";
 
 export interface ConfirmedOrderLine {
@@ -28,6 +29,6 @@ export function useConfirmedOrderLines() {
       const data = (await response.json()) as ConfirmedOrderLine[];
       return data.map((line) => ({ ...line, order_code: formatOrderCode(line) }));
     },
-    refetchInterval: 30000,
+    refetchInterval: authAwareRefetchInterval(30000),
   });
 }

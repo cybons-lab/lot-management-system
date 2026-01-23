@@ -26,6 +26,7 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 
 // ステータス表示用のマッピング
 const STATUS_LABELS: Record<
@@ -87,7 +88,9 @@ function RunActionCell({ run }: { run: RpaRunSummary }) {
 
 export function Step3ExecuteListPage() {
   // 5秒ごとにポーリングして進捗を更新
-  const { data, isLoading, error } = useRuns(0, 100, { refetchInterval: 5000 });
+  const { data, isLoading, error } = useRuns(0, 100, {
+    refetchInterval: authAwareRefetchInterval(5000),
+  });
 
   const readyRuns = useMemo(
     () => data?.runs.filter((run) => run.status === "step2_confirmed") ?? [],

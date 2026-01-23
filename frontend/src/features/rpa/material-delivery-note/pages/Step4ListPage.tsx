@@ -26,6 +26,7 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 
 // ステータス表示用のマッピング
 const STATUS_LABELS: Record<
@@ -44,7 +45,9 @@ const STEP4_ACTIVE_STATUSES = ["step3_done", "step4_checking", "step4_ng_retry",
 
 export function Step4ListPage() {
   // 5秒ごとにポーリングして進捗を更新
-  const { data, isLoading, error } = useRuns(0, 100, { refetchInterval: 5000 });
+  const { data, isLoading, error } = useRuns(0, 100, {
+    refetchInterval: authAwareRefetchInterval(5000),
+  });
 
   // 処理中（対象）
   const activeRuns = useMemo(

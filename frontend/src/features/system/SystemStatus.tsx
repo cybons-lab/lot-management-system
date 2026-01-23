@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { cn } from "@/shared/libs/utils";
 
 interface HealthResponse {
@@ -21,7 +22,7 @@ export function SystemStatus() {
       }
       return res.json() as Promise<HealthResponse>;
     },
-    refetchInterval: 30000, // Check every 30 seconds
+    refetchInterval: authAwareRefetchInterval(30000), // Check every 30 seconds
     retry: 0, // Fail immediately so we can show error
     refetchOnWindowFocus: true,
   });

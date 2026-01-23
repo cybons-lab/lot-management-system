@@ -58,6 +58,7 @@ const API_TIMEOUT = 30000; // 30 seconds
  *    → 各コンポーネントが独立してイベントを購読・処理
  */
 export const AUTH_ERROR_EVENT = "auth:unauthorized";
+export const FORBIDDEN_ERROR_EVENT = "auth:forbidden";
 
 /**
  * Dispatch authentication error event
@@ -66,6 +67,17 @@ export const AUTH_ERROR_EVENT = "auth:unauthorized";
 function dispatchAuthError(message: string = "セッションの有効期限が切れました"): void {
   window.dispatchEvent(
     new CustomEvent(AUTH_ERROR_EVENT, {
+      detail: { message },
+    }),
+  );
+}
+
+/**
+ * Dispatch authorization error event (403)
+ */
+function dispatchForbiddenError(message: string = "この操作を行う権限がありません"): void {
+  window.dispatchEvent(
+    new CustomEvent(FORBIDDEN_ERROR_EVENT, {
       detail: { message },
     }),
   );
@@ -137,6 +149,15 @@ function handleUnauthorizedError(request: Request, errorMessage: string): void {
 }
 
 /**
+ * Handle 403 Forbidden errors
+ */
+function handleForbiddenError(request: Request, errorMessage: string): void {
+  if (!isLoginEndpoint(request?.url)) {
+    dispatchForbiddenError(errorMessage || "この操作を行う権限がありません");
+  }
+}
+
+/**
  * Log API error in development mode
  * Note: 認証エラー(401/403)はログイン前のページアクセス等で頻発するため抑制
  */
@@ -181,6 +202,9 @@ async function handleApiError(
   // Handle 401 Unauthorized - session expired or invalid token
   if (status === 401) {
     handleUnauthorizedError(request, error.message);
+  }
+  if (status === 403) {
+    handleForbiddenError(request, error.message);
   }
 
   logApiErrorDev(status, request?.url, error.message, body);
