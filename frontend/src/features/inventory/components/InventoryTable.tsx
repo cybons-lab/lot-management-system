@@ -51,6 +51,7 @@ export function InventoryTable({
     handleLockLot,
     handleUnlockLot,
     handleArchiveLot,
+    handleUnarchiveLot,
     isRowExpanded,
     fetchLotsForItem,
     getLotsForItem,
@@ -184,6 +185,7 @@ export function InventoryTable({
         onWithdraw={openWithdrawal}
         onHistory={openHistory}
         onArchive={handleArchiveLot}
+        onUnarchive={handleUnarchiveLot}
       />
     );
   };
