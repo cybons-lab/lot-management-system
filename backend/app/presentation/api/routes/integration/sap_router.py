@@ -21,6 +21,8 @@ from app.infrastructure.persistence.models.sap_models import (
     SapFetchLog,
 )
 from app.presentation.schemas.integration.sap_schema import (
+    SapCacheItemResponse,
+    SapCacheListResponse,
     SapConnectionCreateRequest,
     SapConnectionResponse,
     SapConnectionTestResponse,
@@ -381,11 +383,76 @@ async def list_cached_materials(
     kunnr: str | None = Query(None, description="得意先コード"),
     limit: int = Query(100, description="取得件数上限"),
 ) -> list[SapMaterialCacheResponse]:
-    """キャッシュされたマテリアルデータを取得."""
+    """キャッシュされたマテリアルデータを取得（旧エンドポイント）."""
     service = SapMaterialService(db)
     cache_list = service.get_cached_materials(connection_id, kunnr)
 
     return [SapMaterialCacheResponse.model_validate(item) for item in cache_list[:limit]]
+
+
+@router.get("/cache", response_model=SapCacheListResponse)
+async def get_sap_cache(
+    db: Annotated[Session, Depends(get_db)],
+    connection_id: int | None = Query(None, description="接続ID"),
+    kunnr: str | None = Query(None, description="得意先コード"),
+    zkdmat_b_search: str | None = Query(None, description="先方品番で検索（部分一致）"),
+    page: int = Query(1, ge=1, description="ページ番号"),
+    page_size: int = Query(50, ge=1, le=200, description="ページサイズ"),
+) -> SapCacheListResponse:
+    """SAPキャッシュデータ取得（ページング対応）."""
+    from sqlalchemy import func, select
+
+    from app.infrastructure.persistence.models.sap_models import SapMaterialCache
+
+    stmt = select(SapMaterialCache)
+
+    # フィルタ
+    if connection_id:
+        stmt = stmt.where(SapMaterialCache.connection_id == connection_id)
+    if kunnr:
+        stmt = stmt.where(SapMaterialCache.kunnr == kunnr)
+    if zkdmat_b_search:
+        stmt = stmt.where(SapMaterialCache.zkdmat_b.ilike(f"%{zkdmat_b_search}%"))
+
+    # 総件数取得
+    total_count = db.execute(select(func.count()).select_from(stmt.subquery())).scalar()
+
+    # ページング
+    offset = (page - 1) * page_size
+    stmt = stmt.offset(offset).limit(page_size).order_by(SapMaterialCache.zkdmat_b)
+
+    items = list(db.execute(stmt).scalars().all())
+
+    # 選択カラムのみを抽出してレスポンス作成
+    cache_items = []
+    for item in items:
+        raw_data = item.raw_data or {}
+        cache_items.append(
+            SapCacheItemResponse(
+                connection_id=item.connection_id,
+                zkdmat_b=item.zkdmat_b,
+                kunnr=item.kunnr,
+                zmkmat_b=raw_data.get("ZMKMAT_B"),
+                meins=raw_data.get("MEINS"),
+                zlifnr_h=raw_data.get("ZLIFNR_H"),
+                zotwarh_h=raw_data.get("ZOTWARH_H"),
+                zdepnm_s_h=raw_data.get("ZDEPNM_S_H"),
+                zshipte_h=raw_data.get("ZSHIPTE_H"),
+                fetched_at=item.fetched_at,
+                fetch_batch_id=item.fetch_batch_id,
+                raw_data=raw_data,
+            )
+        )
+
+    total_pages = (total_count + page_size - 1) // page_size if total_count else 0
+
+    return SapCacheListResponse(
+        items=cache_items,
+        total=total_count or 0,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
 
 
 @router.delete("/materials/cache")

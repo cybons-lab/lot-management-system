@@ -6092,7 +6092,7 @@ export interface paths {
     };
     /**
      * List Cached Materials
-     * @description キャッシュされたマテリアルデータを取得.
+     * @description キャッシュされたマテリアルデータを取得（旧エンドポイント）.
      */
     get: operations["list_cached_materials_api_integration_sap_materials_cache_get"];
     put?: never;
@@ -6102,6 +6102,26 @@ export interface paths {
      * @description キャッシュをクリア.
      */
     delete: operations["clear_cache_api_integration_sap_materials_cache_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/cache": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Sap Cache
+     * @description SAPキャッシュデータ取得（ページング対応）.
+     */
+    get: operations["get_sap_cache_api_integration_sap_cache_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -14210,6 +14230,57 @@ export interface components {
        * @default 0
        */
       skipped_count: number;
+    };
+    /**
+     * SapCacheItemResponse
+     * @description SAPキャッシュアイテム（選択カラムのみ）.
+     */
+    SapCacheItemResponse: {
+      /** Connection Id */
+      connection_id: number;
+      /** Zkdmat B */
+      zkdmat_b: string;
+      /** Kunnr */
+      kunnr: string;
+      /** Zmkmat B */
+      zmkmat_b?: string | null;
+      /** Meins */
+      meins?: string | null;
+      /** Zlifnr H */
+      zlifnr_h?: string | null;
+      /** Zotwarh H */
+      zotwarh_h?: string | null;
+      /** Zdepnm S H */
+      zdepnm_s_h?: string | null;
+      /** Zshipte H */
+      zshipte_h?: string | null;
+      /**
+       * Fetched At
+       * Format: date-time
+       */
+      fetched_at: string;
+      /** Fetch Batch Id */
+      fetch_batch_id?: string | null;
+      /** Raw Data */
+      raw_data?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
+     * SapCacheListResponse
+     * @description SAPキャッシュリストレスポンス（ページング対応）.
+     */
+    SapCacheListResponse: {
+      /** Items */
+      items: components["schemas"]["SapCacheItemResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+      /** Total Pages */
+      total_pages: number;
     };
     /**
      * SapConnectionCreateRequest
@@ -25928,6 +25999,46 @@ export interface operations {
           "application/json": {
             [key: string]: string | number;
           };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_sap_cache_api_integration_sap_cache_get: {
+    parameters: {
+      query?: {
+        /** @description 接続ID */
+        connection_id?: number | null;
+        /** @description 得意先コード */
+        kunnr?: string | null;
+        /** @description 先方品番で検索（部分一致） */
+        zkdmat_b_search?: string | null;
+        /** @description ページ番号 */
+        page?: number;
+        /** @description ページサイズ */
+        page_size?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapCacheListResponse"];
         };
       };
       /** @description Validation Error */
