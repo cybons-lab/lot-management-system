@@ -434,7 +434,7 @@ const buildLotString = (input: RowInputState): string => {
     input.lotNo1 ? `${input.lotNo1}（${input.quantity1 || ""}）` : "",
     input.lotNo2 ? `${input.lotNo2}（${input.quantity2 || ""}）` : "",
   ].filter(Boolean);
-  return lotEntries.join("・");
+  return lotEntries.join("/");
 };
 
 /**
