@@ -500,7 +500,7 @@ SELECT
     COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') AS material_code,
     COALESCE(oe.jiku_code, ld.content->>'次区') AS jiku_code,
     COALESCE(ld.content->>'納期', ld.content->>'納入日') AS delivery_date,
-    COALESCE(ld.content->>'納入量', ld.content->>'数量') AS delivery_quantity,
+    COALESCE(oe.delivery_quantity, ld.content->>'納入量', ld.content->>'数量') AS delivery_quantity,
     COALESCE(ld.content->>'アイテムNo', ld.content->>'アイテム') AS item_no,
     COALESCE(ld.content->>'数量単位', ld.content->>'単位') AS order_unit,
     ld.content->>'入庫No' AS inbound_no,

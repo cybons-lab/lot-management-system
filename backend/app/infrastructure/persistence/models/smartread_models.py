@@ -317,6 +317,7 @@ class OcrResultEdit(Base):
     )
     jiku_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     material_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    delivery_quantity: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
