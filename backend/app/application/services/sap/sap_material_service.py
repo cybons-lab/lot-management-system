@@ -32,9 +32,23 @@ logger = logging.getLogger(__name__)
 # RFC名（固定）
 RFC_NAME = "Z_SCM1_RFC_MATERIAL_DOWNLOAD"
 
-# SAPカラムマッピング（確定分）
+# SAPカラムマッピング（0-based index → 論理キー → SAPフィールド名）
+# 参考: sap_dictno_map from SAP RFC Z_SCM1_RFC_MATERIAL_DOWNLOAD
 SAP_COLS = {
-    "customer_item": "ZKDMAT_B",  # 先方品番
+    # 基軸キー
+    "customer_item": "ZKDMAT_B",  # idx=2, 先方品番
+    "maker_item": "ZMKMAT_B",  # idx=4, メーカー品番
+    # 数量・単位
+    "qty_unit": "MEINS",  # idx=7, 数量単位
+    # 取引先
+    "customer": "ZKUNNR_H",  # idx=18, 得意先コード
+    "supplier": "ZLIFNR_H",  # idx=45, 仕入先コード
+    # 倉庫・場所
+    "ship_wh_cd": "ZOTWARH_H",  # idx=25, 出荷倉庫
+    "deli_loc_cd": "ZDEPNM_S_H",  # idx=29, 納入場所コード
+    # テキスト
+    "remarks": "ZREMAKTE_H",  # idx=30, 備考(100桁)
+    "ship_note": "ZSHIPTE_H",  # idx=31, 出荷票テキスト(100)
 }
 
 
@@ -285,18 +299,119 @@ class SapMaterialService:
         """
         import pandas as pd
 
-        # 画像から読み取ったサンプルデータをベースにしたモック
+        # 実際のSAPフィールド名を使用したモックデータ
+        # SAP RFC Z_SCM1_RFC_MATERIAL_DOWNLOAD のET_DATA形式
         mock_data = [
-            {"ZKDMAT_B": "8891200-FD", "ZKUNNR": kunnr, "ZMATNR": "Z250DSGY"},
-            {"ZKDMAT_B": "8891548", "ZKUNNR": kunnr, "ZMATNR": "FZ-1240AKD"},
-            {"ZKDMAT_B": "8891549", "ZKUNNR": kunnr, "ZMATNR": "FZ-1140B2"},
-            {"ZKDMAT_B": "8890932", "ZKUNNR": kunnr, "ZMATNR": "FZ-3065-N GY"},
-            {"ZKDMAT_B": "8891075", "ZKUNNR": kunnr, "ZMATNR": "Z-250-DS BK"},
-            {"ZKDMAT_B": "8891195", "ZKUNNR": kunnr, "ZMATNR": "Z-230 BK-2B"},
-            {"ZKDMAT_B": "8891250", "ZKUNNR": kunnr, "ZMATNR": "DIC PPS Z-250-L1 BLAC"},
-            {"ZKDMAT_B": "8890774-DN", "ZKUNNR": kunnr, "ZMATNR": "FZ1240D"},
-            {"ZKDMAT_B": "8890838", "ZKUNNR": kunnr, "ZMATNR": "FZ-3003-N BK"},
-            {"ZKDMAT_B": "8890863-DN", "ZKUNNR": kunnr, "ZMATNR": "FZ3003NR"},
+            {
+                "ZKDMAT_B": "8891200-FD",
+                "ZMKMAT_B": "Z250DSGY",
+                "MEINS": "KG",
+                "ZKUNNR_H": kunnr,
+                "ZLIFNR_H": "0001000010",
+                "ZOTWARH_H": "WH01",
+                "ZDEPNM_S_H": "本社倉庫",
+                "ZREMAKTE_H": "",
+                "ZSHIPTE_H": "DIC PPS Z-250-DS GY",
+            },
+            {
+                "ZKDMAT_B": "8891548",
+                "ZMKMAT_B": "FZ-1240AKD",
+                "MEINS": "KG",
+                "ZKUNNR_H": kunnr,
+                "ZLIFNR_H": "0001000020",
+                "ZOTWARH_H": "WH01",
+                "ZDEPNM_S_H": "本社倉庫",
+                "ZREMAKTE_H": "",
+                "ZSHIPTE_H": "フォートロン FZ-1240AKD",
+            },
+            {
+                "ZKDMAT_B": "8891549",
+                "ZMKMAT_B": "FZ-1140B2",
+                "MEINS": "KG",
+                "ZKUNNR_H": kunnr,
+                "ZLIFNR_H": "0001000020",
+                "ZOTWARH_H": "WH02",
+                "ZDEPNM_S_H": "第二倉庫",
+                "ZREMAKTE_H": "耐熱グレード",
+                "ZSHIPTE_H": "フォートロン FZ-1140B2",
+            },
+            {
+                "ZKDMAT_B": "8890932",
+                "ZMKMAT_B": "FZ-3065-N GY",
+                "MEINS": "KG",
+                "ZKUNNR_H": kunnr,
+                "ZLIFNR_H": "0001000020",
+                "ZOTWARH_H": "WH01",
+                "ZDEPNM_S_H": "本社倉庫",
+                "ZREMAKTE_H": "",
+                "ZSHIPTE_H": "フォートロン FZ-3065-N GY",
+            },
+            {
+                "ZKDMAT_B": "8891075",
+                "ZMKMAT_B": "Z-250-DS BK",
+                "MEINS": "KG",
+                "ZKUNNR_H": kunnr,
+                "ZLIFNR_H": "0001000010",
+                "ZOTWARH_H": "WH01",
+                "ZDEPNM_S_H": "本社倉庫",
+                "ZREMAKTE_H": "",
+                "ZSHIPTE_H": "DIC PPS Z-250-DS BK",
+            },
+            {
+                "ZKDMAT_B": "8891195",
+                "ZMKMAT_B": "Z-230 BK-2B",
+                "MEINS": "KG",
+                "ZKUNNR_H": kunnr,
+                "ZLIFNR_H": "0001000010",
+                "ZOTWARH_H": "WH03",
+                "ZDEPNM_S_H": "外部倉庫",
+                "ZREMAKTE_H": "高流動グレード",
+                "ZSHIPTE_H": "DIC PPS Z-230 BK-2B",
+            },
+            {
+                "ZKDMAT_B": "8891250",
+                "ZMKMAT_B": "Z-250-L1 BK",
+                "MEINS": "KG",
+                "ZKUNNR_H": kunnr,
+                "ZLIFNR_H": "0001000010",
+                "ZOTWARH_H": "WH01",
+                "ZDEPNM_S_H": "本社倉庫",
+                "ZREMAKTE_H": "",
+                "ZSHIPTE_H": "DIC PPS Z-250-L1 BLACK",
+            },
+            {
+                "ZKDMAT_B": "8890774-DN",
+                "ZMKMAT_B": "FZ1240D",
+                "MEINS": "KG",
+                "ZKUNNR_H": kunnr,
+                "ZLIFNR_H": "0001000020",
+                "ZOTWARH_H": "WH01",
+                "ZDEPNM_S_H": "本社倉庫",
+                "ZREMAKTE_H": "DN指定品",
+                "ZSHIPTE_H": "フォートロン FZ1240D DN",
+            },
+            {
+                "ZKDMAT_B": "8890838",
+                "ZMKMAT_B": "FZ-3003-N BK",
+                "MEINS": "KG",
+                "ZKUNNR_H": kunnr,
+                "ZLIFNR_H": "0001000020",
+                "ZOTWARH_H": "WH02",
+                "ZDEPNM_S_H": "第二倉庫",
+                "ZREMAKTE_H": "",
+                "ZSHIPTE_H": "フォートロン FZ-3003-N BK",
+            },
+            {
+                "ZKDMAT_B": "8890863-DN",
+                "ZMKMAT_B": "FZ3003NR",
+                "MEINS": "KG",
+                "ZKUNNR_H": kunnr,
+                "ZLIFNR_H": "0001000020",
+                "ZOTWARH_H": "WH01",
+                "ZDEPNM_S_H": "本社倉庫",
+                "ZREMAKTE_H": "DN指定品 耐熱",
+                "ZSHIPTE_H": "フォートロン FZ3003NR DN",
+            },
         ]
 
         logger.info(f"[SapMaterialService] Generated {len(mock_data)} mock records")
