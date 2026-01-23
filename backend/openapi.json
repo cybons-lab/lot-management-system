@@ -15440,6 +15440,57 @@
       }
     },
     "/api/integration/sap/connections/{connection_id}": {
+      "put": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Update Connection",
+        "description": "SAP接続情報を更新.\n\nNote:\n    パスワードが空でない場合のみ更新されます。",
+        "operationId": "update_connection_api_integration_sap_connections__connection_id__put",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Connection Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SapConnectionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapConnectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "integration"
@@ -15469,6 +15520,49 @@
                     "type": "string"
                   },
                   "title": "Response Delete Connection Api Integration Sap Connections  Connection Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/connections/{connection_id}/test": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Test Connection",
+        "description": "SAP接続テストを実行.\n\npyrfcを使用して実際にSAPに接続し、接続テストを行います。\nパスワードが設定されていない場合はモックモードとして成功を返します。",
+        "operationId": "test_connection_api_integration_sap_connections__connection_id__test_post",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Connection Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapConnectionTestResponse"
                 }
               }
             }
@@ -30317,6 +30411,17 @@
               }
             ],
             "title": "Material Code"
+          },
+          "delivery_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Quantity"
           }
         },
         "type": "object",
@@ -30436,6 +30541,17 @@
               }
             ],
             "title": "Material Code"
+          },
+          "delivery_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Quantity"
           },
           "updated_at": {
             "type": "string",
@@ -30907,6 +31023,17 @@
             "type": "boolean",
             "title": "Has Error",
             "default": false
+          },
+          "manual_delivery_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Delivery Quantity"
           }
         },
         "type": "object",
@@ -35869,6 +35996,205 @@
         ],
         "title": "SapConnectionResponse",
         "description": "SAP接続情報レスポンス."
+      },
+      "SapConnectionTestResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "title": "Duration Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "duration_ms"
+        ],
+        "title": "SapConnectionTestResponse",
+        "description": "SAP接続テスト結果."
+      },
+      "SapConnectionUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "接続名"
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment",
+            "description": "環境（production/test）"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          },
+          "ashost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ashost",
+            "description": "SAPホスト"
+          },
+          "sysnr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sysnr",
+            "description": "システム番号"
+          },
+          "client": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client",
+            "description": "クライアント番号"
+          },
+          "user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Name",
+            "description": "ユーザー名"
+          },
+          "passwd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passwd",
+            "description": "パスワード（空=変更なし）"
+          },
+          "lang": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lang",
+            "description": "言語"
+          },
+          "default_bukrs": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Bukrs",
+            "description": "デフォルト会社コード"
+          },
+          "default_kunnr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Kunnr",
+            "description": "デフォルト得意先コード"
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default",
+            "description": "デフォルト接続にする"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "有効/無効"
+          }
+        },
+        "type": "object",
+        "title": "SapConnectionUpdateRequest",
+        "description": "SAP接続情報更新リクエスト."
       },
       "SapFetchLogResponse": {
         "properties": {

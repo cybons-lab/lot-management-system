@@ -6013,13 +6013,43 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    put?: never;
+    /**
+     * Update Connection
+     * @description SAP接続情報を更新.
+     *
+     *     Note:
+     *         パスワードが空でない場合のみ更新されます。
+     */
+    put: operations["update_connection_api_integration_sap_connections__connection_id__put"];
     post?: never;
     /**
      * Delete Connection
      * @description SAP接続情報を削除（論理削除）.
      */
     delete: operations["delete_connection_api_integration_sap_connections__connection_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/connections/{connection_id}/test": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test Connection
+     * @description SAP接続テストを実行.
+     *
+     *     pyrfcを使用して実際にSAPに接続し、接続テストを行います。
+     *     パスワードが設定されていない場合はモックモードとして成功を返します。
+     */
+    post: operations["test_connection_api_integration_sap_connections__connection_id__test_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -14291,6 +14321,93 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+    };
+    /**
+     * SapConnectionTestResponse
+     * @description SAP接続テスト結果.
+     */
+    SapConnectionTestResponse: {
+      /** Success */
+      success: boolean;
+      /** Message */
+      message: string;
+      /** Details */
+      details?: {
+        [key: string]: unknown;
+      } | null;
+      /** Duration Ms */
+      duration_ms: number;
+    };
+    /**
+     * SapConnectionUpdateRequest
+     * @description SAP接続情報更新リクエスト.
+     */
+    SapConnectionUpdateRequest: {
+      /**
+       * Name
+       * @description 接続名
+       */
+      name?: string | null;
+      /**
+       * Environment
+       * @description 環境（production/test）
+       */
+      environment?: string | null;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+      /**
+       * Ashost
+       * @description SAPホスト
+       */
+      ashost?: string | null;
+      /**
+       * Sysnr
+       * @description システム番号
+       */
+      sysnr?: string | null;
+      /**
+       * Client
+       * @description クライアント番号
+       */
+      client?: string | null;
+      /**
+       * User Name
+       * @description ユーザー名
+       */
+      user_name?: string | null;
+      /**
+       * Passwd
+       * @description パスワード（空=変更なし）
+       */
+      passwd?: string | null;
+      /**
+       * Lang
+       * @description 言語
+       */
+      lang?: string | null;
+      /**
+       * Default Bukrs
+       * @description デフォルト会社コード
+       */
+      default_bukrs?: string | null;
+      /**
+       * Default Kunnr
+       * @description デフォルト得意先コード
+       */
+      default_kunnr?: string | null;
+      /**
+       * Is Default
+       * @description デフォルト接続にする
+       */
+      is_default?: boolean | null;
+      /**
+       * Is Active
+       * @description 有効/無効
+       */
+      is_active?: boolean | null;
     };
     /**
      * SapFetchLogResponse
@@ -25620,6 +25737,41 @@ export interface operations {
       };
     };
   };
+  update_connection_api_integration_sap_connections__connection_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        connection_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SapConnectionUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapConnectionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   delete_connection_api_integration_sap_connections__connection_id__delete: {
     parameters: {
       query?: never;
@@ -25640,6 +25792,37 @@ export interface operations {
           "application/json": {
             [key: string]: string;
           };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  test_connection_api_integration_sap_connections__connection_id__test_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        connection_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapConnectionTestResponse"];
         };
       };
       /** @description Validation Error */
