@@ -150,6 +150,7 @@ class OcrResultEditRequest(BaseModel):
     jiku_code: str | None = None
     material_code: str | None = None
     delivery_quantity: str | None = None
+    delivery_date: str | None = None
 
 
 class OcrResultEditResponse(BaseModel):

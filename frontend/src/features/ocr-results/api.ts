@@ -97,6 +97,7 @@ export interface OcrResultEditPayload {
   jiku_code?: string | null;
   material_code?: string | null;
   delivery_quantity?: string | null;
+  delivery_date?: string | null;
 }
 
 export interface OcrResultEditResponse {

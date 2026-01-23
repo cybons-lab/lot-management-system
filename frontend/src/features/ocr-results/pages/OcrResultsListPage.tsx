@@ -180,6 +180,7 @@ type RowInputState = {
   jikuCode: string;
   materialCode: string;
   deliveryQuantity: string;
+  deliveryDate: string;
 };
 
 const orEmpty = (v: string | null | undefined) => v || "";
@@ -196,6 +197,7 @@ const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
   jikuCode: row.manual_jiku_code || orEmpty(row.jiku_code),
   materialCode: row.manual_material_code || orEmpty(row.material_code),
   deliveryQuantity: row.manual_delivery_quantity || orEmpty(row.delivery_quantity),
+  deliveryDate: orEmpty(row.delivery_date),
 });
 
 // ============================================
@@ -259,12 +261,20 @@ function EditableDateCell({
   const { getInputs, updateInputs } = useOcrInputs();
   const value = getInputs(row)[field] as string;
 
+  // 納期フィールドで日付フォーマットエラーがある場合は赤枠
+  const hasDateError = field === "deliveryDate" && row.date_format_error;
+
   return (
     <input
       type="date"
       value={value}
       onChange={(e) => updateInputs(row, { [field]: e.target.value })}
-      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      className={cn(
+        "w-full rounded-md border px-2 py-1 text-xs focus:outline-none focus:ring-1",
+        hasDateError
+          ? "border-red-500 bg-red-50 focus:border-red-600 focus:ring-red-500"
+          : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
+      )}
     />
   );
 }
@@ -420,6 +430,7 @@ export function OcrResultsListPage() {
       jiku_code: input.jikuCode || null,
       material_code: input.materialCode || null,
       delivery_quantity: input.deliveryQuantity || null,
+      delivery_date: input.deliveryDate || null,
     }),
     [],
   );
@@ -647,12 +658,8 @@ export function OcrResultsListPage() {
       {
         id: "delivery_date",
         header: "納期",
-        accessor: (row) => (
-          <span className={row.date_format_error ? "text-red-600 font-medium" : ""}>
-            {row.delivery_date || "-"}
-          </span>
-        ),
-        minWidth: 100,
+        accessor: (row) => <EditableDateCell row={row} field="deliveryDate" />,
+        minWidth: 110,
       },
       {
         id: "delivery_quantity",
