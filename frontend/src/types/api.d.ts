@@ -6040,9 +6040,11 @@ export interface paths {
      *
      *     Z_SCM1_RFC_MATERIAL_DOWNLOADを呼び出し、ET_DATAをキャッシュテーブルに保存します。
      *
-     *     Note:
-     *         - パスワードが未設定の場合はモックデータを返します
-     *         - 本番環境では適切なパスワード復号化が必要です
+     *     動作モード:
+     *         - DBにパスワードが設定されている場合: 本番モード（実際にSAP RFCを呼び出す）
+     *         - パスワードが空/未設定の場合: モックモード（テストデータを返す）
+     *
+     *     これにより、コードを変更せずにDB設定だけで本番/モック切り替えが可能。
      */
     post: operations["fetch_materials_api_integration_sap_materials_fetch_post"];
     delete?: never;
