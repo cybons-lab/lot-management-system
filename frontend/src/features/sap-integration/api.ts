@@ -85,6 +85,29 @@ export interface SapMaterialCache {
   fetch_batch_id: string | null;
 }
 
+export interface SapCacheItem {
+  connection_id: number;
+  zkdmat_b: string;
+  kunnr: string;
+  zmkmat_b: string | null;
+  meins: string | null;
+  zlifnr_h: string | null;
+  zotwarh_h: string | null;
+  zdepnm_s_h: string | null;
+  zshipte_h: string | null;
+  fetched_at: string;
+  fetch_batch_id: string | null;
+  raw_data: Record<string, unknown> | null;
+}
+
+export interface SapCacheListResponse {
+  items: SapCacheItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
 export interface SapFetchLog {
   id: number;
   connection_id: number;
@@ -153,6 +176,23 @@ export async function clearCache(params: {
   if (params.kunnr) searchParams.kunnr = params.kunnr;
 
   return http.delete("integration/sap/materials/cache", { searchParams });
+}
+
+export async function getSapCache(params: {
+  connection_id?: number | null;
+  kunnr?: string | null;
+  zkdmat_b_search?: string | null;
+  page?: number;
+  page_size?: number;
+}): Promise<SapCacheListResponse> {
+  const searchParams: Record<string, string | number> = {};
+  if (params.connection_id != null) searchParams.connection_id = params.connection_id;
+  if (params.kunnr) searchParams.kunnr = params.kunnr;
+  if (params.zkdmat_b_search) searchParams.zkdmat_b_search = params.zkdmat_b_search;
+  if (params.page) searchParams.page = params.page;
+  if (params.page_size) searchParams.page_size = params.page_size;
+
+  return http.get("integration/sap/cache", { searchParams });
 }
 
 export async function listFetchLogs(params: {
