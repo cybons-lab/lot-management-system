@@ -11,7 +11,16 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable jsx-a11y/no-autofocus */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, AlertTriangle, CheckCircle, Download, XCircle } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  ArrowRightLeft,
+  CheckCircle,
+  Download,
+  Minus,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
 import {
   createContext,
   useCallback,
@@ -48,6 +57,56 @@ function StatusIcon({ row }: { row: OcrResultItem }) {
 }
 
 /**
+ * SAPマッチングアイコンを返す
+ */
+function SapMatchIcon({ row }: { row: OcrResultItem }) {
+  const matchType = row.sap_match_type;
+
+  if (matchType === "exact") {
+    return (
+      <div className="flex items-center gap-1" title="直接一致">
+        <CheckCircle className="h-4 w-4 text-green-500" />
+        <span className="text-xs text-green-700">一致</span>
+      </div>
+    );
+  }
+
+  if (matchType === "master_reverse") {
+    return (
+      <div className="flex items-center gap-1" title="マスタ経由一致">
+        <ArrowRightLeft className="h-4 w-4 text-blue-500" />
+        <span className="text-xs text-blue-700">マスタ経由</span>
+      </div>
+    );
+  }
+
+  if (matchType === "prefix") {
+    return (
+      <div className="flex items-center gap-1" title="前方一致（要確認）">
+        <AlertTriangle className="h-4 w-4 text-yellow-500" />
+        <span className="text-xs text-yellow-700">前方一致</span>
+      </div>
+    );
+  }
+
+  if (matchType === "not_found") {
+    return (
+      <div className="flex items-center gap-1" title="SAP未一致">
+        <XCircle className="h-4 w-4 text-red-500" />
+        <span className="text-xs text-red-700">未一致</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1" title="未照合">
+      <Minus className="h-4 w-4 text-gray-400" />
+      <span className="text-xs text-gray-500">-</span>
+    </div>
+  );
+}
+
+/**
  * 行のスタイルクラスを返す
  */
 function getRowClassName(row: OcrResultItem): string {
@@ -68,22 +127,43 @@ function getRowClassName(row: OcrResultItem): string {
  */
 function StatusLegend() {
   return (
-    <div className="flex gap-4 text-xs text-gray-600">
-      <div className="flex items-center gap-1">
-        <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-        正常
+    <div className="space-y-2">
+      <div className="flex gap-4 text-xs text-gray-600">
+        <div className="flex items-center gap-1">
+          <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+          正常
+        </div>
+        <div className="flex items-center gap-1">
+          <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
+          マスタ未登録
+        </div>
+        <div className="flex items-center gap-1">
+          <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
+          フォーマットエラー
+        </div>
+        <div className="flex items-center gap-1">
+          <XCircle className="h-3.5 w-3.5 text-red-500" />
+          エラー
+        </div>
       </div>
-      <div className="flex items-center gap-1">
-        <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
-        マスタ未登録
-      </div>
-      <div className="flex items-center gap-1">
-        <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
-        フォーマットエラー
-      </div>
-      <div className="flex items-center gap-1">
-        <XCircle className="h-3.5 w-3.5 text-red-500" />
-        エラー
+      <div className="flex gap-4 text-xs text-gray-600">
+        <span className="font-medium">SAPマッチ:</span>
+        <div className="flex items-center gap-1">
+          <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+          一致
+        </div>
+        <div className="flex items-center gap-1">
+          <ArrowRightLeft className="h-3.5 w-3.5 text-blue-500" />
+          マスタ経由
+        </div>
+        <div className="flex items-center gap-1">
+          <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
+          前方一致
+        </div>
+        <div className="flex items-center gap-1">
+          <XCircle className="h-3.5 w-3.5 text-red-500" />
+          未一致
+        </div>
       </div>
     </div>
   );
@@ -101,6 +181,7 @@ type RowInputState = {
   jikuCode: string;
   materialCode: string;
   deliveryQuantity: string;
+  deliveryDate: string;
 };
 
 const orEmpty = (v: string | null | undefined) => v || "";
@@ -117,6 +198,7 @@ const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
   jikuCode: row.manual_jiku_code || orEmpty(row.jiku_code),
   materialCode: row.manual_material_code || orEmpty(row.material_code),
   deliveryQuantity: row.manual_delivery_quantity || orEmpty(row.delivery_quantity),
+  deliveryDate: orEmpty(row.delivery_date),
 });
 
 // ============================================
@@ -144,11 +226,13 @@ function EditableTextCell({
   field,
   placeholder,
   inputClassName,
+  hasWarning = false,
 }: {
   row: OcrResultItem;
   field: Extract<keyof RowInputState, string>; // Ensure we only use keys that have string values
   placeholder?: string;
   inputClassName?: string;
+  hasWarning?: boolean;
 }) {
   const { getInputs, updateInputs } = useOcrInputs();
   const value = getInputs(row)[field] as string; // Explicitly cast to string
@@ -160,7 +244,10 @@ function EditableTextCell({
       onChange={(e) => updateInputs(row, { [field]: e.target.value })}
       placeholder={placeholder}
       className={cn(
-        "w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500",
+        "w-full rounded-md border px-2 py-1 text-xs focus:outline-none focus:ring-1",
+        hasWarning
+          ? "border-red-400 bg-red-50 focus:border-red-600 focus:ring-red-500"
+          : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
         inputClassName,
       )}
     />
@@ -180,12 +267,28 @@ function EditableDateCell({
   const { getInputs, updateInputs } = useOcrInputs();
   const value = getInputs(row)[field] as string;
 
+  // 納期フィールドで日付フォーマットエラーがある場合は赤枠
+  const hasDateError = field === "deliveryDate" && row.date_format_error;
+
+  // 出荷日フィールドの場合、手入力値がなければ自動計算値を表示
+  const isShippingDate = field === "shippingDate";
+  const isCalculated = isShippingDate && !value && row.calculated_shipping_date;
+  const displayValue = isCalculated ? row.calculated_shipping_date : value;
+
   return (
     <input
       type="date"
-      value={value}
+      value={displayValue || ""}
       onChange={(e) => updateInputs(row, { [field]: e.target.value })}
-      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      title={isCalculated ? `自動計算（LT=${row.transport_lt_days}日）` : ""}
+      className={cn(
+        "w-full rounded-md border px-2 py-1 text-xs focus:outline-none focus:ring-1",
+        hasDateError
+          ? "border-red-500 bg-red-50 focus:border-red-600 focus:ring-red-500"
+          : isCalculated
+            ? "border-blue-300 bg-blue-50 focus:border-blue-500 focus:ring-blue-500"
+            : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
+      )}
     />
   );
 }
@@ -196,7 +299,7 @@ function EditableDateCell({
 function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
   const { getInputs, updateInputs } = useOcrInputs();
   const input = getInputs(row);
-  const computedText = buildShippingSlipText(row.shipping_slip_text, input);
+  const computedText = buildShippingSlipText(row.shipping_slip_text, input, row);
   const displayText = input.shippingSlipTextEdited ? input.shippingSlipText : computedText;
   const fallbackText = displayText || "-";
   const [isEditing, setIsEditing] = useState(false);
@@ -263,9 +366,26 @@ function LotEntryCell({
   lotField: Extract<keyof RowInputState, string>;
   quantityField: Extract<keyof RowInputState, string>;
 }) {
+  const { getInputs } = useOcrInputs();
+  const input = getInputs(row);
+
+  // ロットNoと数量の入力状態をチェック
+  const lotValue = input[lotField] as string;
+  const qtyValue = input[quantityField] as string;
+  const hasLot = Boolean(lotValue);
+  const hasQty = Boolean(qtyValue);
+
+  // 片方だけ入力されている場合は警告
+  const hasIncomplete = hasLot !== hasQty;
+
   return (
     <div className="flex flex-col gap-1.5 py-1">
-      <EditableTextCell row={row} field={lotField} placeholder="ロットNo" />
+      <EditableTextCell
+        row={row}
+        field={lotField}
+        placeholder="ロットNo"
+        hasWarning={hasIncomplete}
+      />
       <div className="flex items-center justify-end gap-1">
         <span className="text-[10px] text-slate-400 shrink-0">数量:</span>
         <EditableTextCell
@@ -273,6 +393,7 @@ function LotEntryCell({
           field={quantityField}
           placeholder="数量"
           inputClassName="w-[70px] text-right"
+          hasWarning={hasIncomplete}
         />
       </div>
     </div>
@@ -295,23 +416,123 @@ const getContentValue = (row: OcrResultItem, key: string): string => {
   return String(value);
 };
 
-const buildShippingSlipText = (template: string | null, input: RowInputState): string => {
-  if (!template) return "";
+/**
+ * 日付をMM/DD形式にフォーマット
+ */
+const formatDateToMMDD = (dateStr: string): string | null => {
+  const dateObj = new Date(dateStr);
+  if (Number.isNaN(dateObj.getTime())) return null;
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  return `${month}/${day}`;
+};
 
+/**
+ * ロット情報文字列を作成
+ */
+const buildLotString = (input: RowInputState): string => {
   const lotEntries = [
     input.lotNo1 ? `${input.lotNo1}（${input.quantity1 || ""}）` : "",
     input.lotNo2 ? `${input.lotNo2}（${input.quantity2 || ""}）` : "",
   ].filter(Boolean);
-  const lotString = lotEntries.join("・");
+  return lotEntries.join("/");
+};
 
-  // ロット表記を正規化 (ロット, ロット/, /ロット, /ロット/ などに対応)
+/**
+ * テンプレートにロット情報を適用
+ */
+const applyLotReplacement = (template: string, input: RowInputState): string => {
+  const lotString = buildLotString(input);
   const normalized = template.replace(/(^|\/)ロット($|\/)/g, (_, p1, p2) => {
     return `${p1}ロット番号(数量)${p2}`;
   });
+  return normalized.replace(/ロット番号\s*[(（]数量[）)]/g, lotString);
+};
 
-  return normalized
-    .replace(/ロット番号\s*[(（]数量[）)]/g, lotString)
-    .replace(/入庫番号/g, input.inboundNo || "");
+/**
+ * テンプレートに日付情報を適用
+ */
+const applyDateReplacements = (
+  template: string,
+  input: RowInputState,
+  row: OcrResultItem,
+): string => {
+  let result = template;
+
+  // 出荷日の置換
+  const shippingDate = input.shippingDate || row.calculated_shipping_date;
+  if (shippingDate) {
+    const formatted = formatDateToMMDD(shippingDate);
+    if (formatted) {
+      result = result.replace(/出荷▲\/▲/g, `出荷${formatted}`);
+    }
+  }
+
+  // 納期の置換
+  if (input.deliveryDate) {
+    const formatted = formatDateToMMDD(input.deliveryDate);
+    if (formatted) {
+      result = result.replace(/着日指定●\/●/g, `着日指定${formatted}`);
+    }
+  }
+
+  return result;
+};
+
+/**
+ * ロット情報のバリデーション状態をチェック
+ */
+const validateLotInfo = (
+  input: RowInputState,
+): { hasValidLot: boolean; hasIncomplete: boolean } => {
+  const lot1HasNo = Boolean(input.lotNo1);
+  const lot1HasQty = Boolean(input.quantity1);
+  const lot2HasNo = Boolean(input.lotNo2);
+  const lot2HasQty = Boolean(input.quantity2);
+
+  // 有効なロット情報: ロットNoと数量がペアになっている
+  const hasValidLot1 = lot1HasNo && lot1HasQty;
+  const hasValidLot2 = lot2HasNo && lot2HasQty;
+  const hasValidLot = hasValidLot1 || hasValidLot2;
+
+  // 不完全な入力: どちらか片方だけ入力されている
+  const lot1Incomplete = lot1HasNo !== lot1HasQty; // XOR: 片方だけtrue
+  const lot2Incomplete = lot2HasNo !== lot2HasQty;
+  const hasIncomplete = lot1Incomplete || lot2Incomplete;
+
+  return { hasValidLot, hasIncomplete };
+};
+
+const buildShippingSlipText = (
+  template: string | null,
+  input: RowInputState,
+  row: OcrResultItem,
+): string => {
+  if (!template) return "";
+
+  const { hasValidLot } = validateLotInfo(input);
+  const hasInboundNo = Boolean(input.inboundNo);
+
+  // ロット・数量・入庫Noが全て空の場合、置換せずそのまま返す
+  if (!hasValidLot && !hasInboundNo) {
+    return template;
+  }
+
+  // ロット情報の置換（有効なロット情報がある場合のみ）
+  let result = template;
+  if (hasValidLot) {
+    result = applyLotReplacement(result, input);
+  }
+
+  // 入庫番号の置換
+  if (hasInboundNo) {
+    result = result.replace(/入庫番号/g, input.inboundNo);
+  }
+
+  // 日付情報の置換
+  result = applyDateReplacements(result, input, row);
+
+  return result;
 };
 
 // ============================================
@@ -342,6 +563,7 @@ export function OcrResultsListPage() {
       jiku_code: input.jikuCode || null,
       material_code: input.materialCode || null,
       delivery_quantity: input.deliveryQuantity || null,
+      delivery_date: input.deliveryDate || null,
     }),
     [],
   );
@@ -570,12 +792,8 @@ export function OcrResultsListPage() {
       {
         id: "delivery_date",
         header: "納期",
-        accessor: (row) => (
-          <span className={row.date_format_error ? "text-red-600 font-medium" : ""}>
-            {row.delivery_date || "-"}
-          </span>
-        ),
-        minWidth: 100,
+        accessor: (row) => <EditableDateCell row={row} field="deliveryDate" />,
+        minWidth: 110,
       },
       {
         id: "delivery_quantity",
@@ -584,6 +802,40 @@ export function OcrResultsListPage() {
           <EditableTextCell row={row} field="deliveryQuantity" inputClassName="text-right" />
         ),
         minWidth: 100,
+      },
+      {
+        id: "sap_match_status",
+        header: "SAPマッチ",
+        accessor: (row) => <SapMatchIcon row={row} />,
+        minWidth: 130,
+      },
+      {
+        id: "sap_supplier",
+        header: "SAP仕入先",
+        accessor: (row) => {
+          if (!row.sap_supplier_code) return "-";
+          return (
+            <div className="flex flex-col">
+              <span className="text-xs font-medium">{row.sap_supplier_code}</span>
+              {row.sap_supplier_name && (
+                <span className="text-[10px] text-gray-500">{row.sap_supplier_name}</span>
+              )}
+            </div>
+          );
+        },
+        minWidth: 130,
+      },
+      {
+        id: "sap_qty_unit",
+        header: "SAP数量単位",
+        accessor: (row) => row.sap_qty_unit || "-",
+        minWidth: 110,
+      },
+      {
+        id: "sap_maker_item",
+        header: "SAPメーカー品番",
+        accessor: (row) => row.sap_maker_item || "-",
+        minWidth: 150,
       },
       {
         id: "item_no",
@@ -724,6 +976,18 @@ export function OcrResultsListPage() {
           )}
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ["ocr-results"] });
+              toast.success("データを再読み込みしました");
+            }}
+            disabled={isLoading}
+          >
+            <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
+            再読み込み
+          </Button>
           <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
             <Download className="mr-2 h-4 w-4" />
             {isExporting ? "エクスポート中..." : "Excelエクスポート"}

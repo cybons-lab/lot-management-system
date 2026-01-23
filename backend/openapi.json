@@ -15628,7 +15628,7 @@
           "integration"
         ],
         "summary": "List Cached Materials",
-        "description": "キャッシュされたマテリアルデータを取得.",
+        "description": "キャッシュされたマテリアルデータを取得（旧エンドポイント）.",
         "operationId": "list_cached_materials_api_integration_sap_materials_cache_get",
         "parameters": [
           {
@@ -15770,6 +15770,121 @@
                     ]
                   },
                   "title": "Response Clear Cache Api Integration Sap Materials Cache Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/cache": {
+      "get": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Get Sap Cache",
+        "description": "SAPキャッシュデータ取得（ページング対応）.",
+        "operationId": "get_sap_cache_api_integration_sap_cache_get",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "接続ID",
+              "title": "Connection Id"
+            },
+            "description": "接続ID"
+          },
+          {
+            "name": "kunnr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先コード",
+              "title": "Kunnr"
+            },
+            "description": "得意先コード"
+          },
+          {
+            "name": "zkdmat_b_search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "先方品番で検索（部分一致）",
+              "title": "Zkdmat B Search"
+            },
+            "description": "先方品番で検索（部分一致）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "ページ番号",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "ページ番号"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "ページサイズ",
+              "default": 50,
+              "title": "Page Size"
+            },
+            "description": "ページサイズ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapCacheListResponse"
                 }
               }
             }
@@ -20215,7 +20330,7 @@
           "Shipping Master"
         ],
         "summary": "Update Shipping Master",
-        "description": "出荷用マスタを更新.",
+        "description": "出荷用マスタを更新（楽観的ロック対応）.",
         "operationId": "update_shipping_master_api_shipping_masters__master_id__put",
         "parameters": [
           {
@@ -31034,6 +31149,72 @@
               }
             ],
             "title": "Manual Delivery Quantity"
+          },
+          "sap_match_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Match Type"
+          },
+          "sap_matched_zkdmat_b": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Matched Zkdmat B"
+          },
+          "sap_supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Supplier Code"
+          },
+          "sap_supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Supplier Name"
+          },
+          "sap_qty_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Qty Unit"
+          },
+          "sap_maker_item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Maker Item"
           }
         },
         "type": "object",
@@ -35804,6 +35985,162 @@
         "title": "SAPSyncResponse",
         "description": "Response model for SAP synchronization."
       },
+      "SapCacheItemResponse": {
+        "properties": {
+          "connection_id": {
+            "type": "integer",
+            "title": "Connection Id"
+          },
+          "zkdmat_b": {
+            "type": "string",
+            "title": "Zkdmat B"
+          },
+          "kunnr": {
+            "type": "string",
+            "title": "Kunnr"
+          },
+          "zmkmat_b": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zmkmat B"
+          },
+          "meins": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meins"
+          },
+          "zlifnr_h": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zlifnr H"
+          },
+          "zotwarh_h": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zotwarh H"
+          },
+          "zdepnm_s_h": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zdepnm S H"
+          },
+          "zshipte_h": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zshipte H"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          },
+          "fetch_batch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetch Batch Id"
+          },
+          "raw_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "connection_id",
+          "zkdmat_b",
+          "kunnr",
+          "fetched_at"
+        ],
+        "title": "SapCacheItemResponse",
+        "description": "SAPキャッシュアイテム（選択カラムのみ）."
+      },
+      "SapCacheListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SapCacheItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total_pages": {
+            "type": "integer",
+            "title": "Total Pages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size",
+          "total_pages"
+        ],
+        "title": "SapCacheListResponse",
+        "description": "SAPキャッシュリストレスポンス（ページング対応）."
+      },
       "SapConnectionCreateRequest": {
         "properties": {
           "name": {
@@ -37470,6 +37807,19 @@
               }
             ],
             "title": "Remarks"
+          },
+          "expected_updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Updated At",
+            "description": "楽観的ロック用の期待される更新日時"
           }
         },
         "type": "object",

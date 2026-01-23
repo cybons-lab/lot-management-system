@@ -7,6 +7,7 @@ import { Plus, Download, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { shippingMasterApi } from "../api";
+import { ShippingMasterEditDialog } from "../components/ShippingMasterEditDialog";
 import { ShippingMasterFilters } from "../components/ShippingMasterFilters";
 import { ShippingMasterImportDialog } from "../components/ShippingMasterImportDialog";
 import { ShippingMasterTable } from "../components/ShippingMasterTable";
@@ -22,6 +23,10 @@ export function ShippingMasterListPage() {
   const [customerCode, setCustomerCode] = useState("");
   const [materialCode, setMaterialCode] = useState("");
   const [jikuCode, setJikuCode] = useState("");
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<
+    components["schemas"]["ShippingMasterCuratedResponse"] | null
+  >(null);
 
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes("admin") ?? false;
@@ -62,14 +67,24 @@ export function ShippingMasterListPage() {
   };
 
   const handleEdit = (row: components["schemas"]["ShippingMasterCuratedResponse"]) => {
-    // TODO: 編集モーダルまたは編集ページへの遷移を実装
-    console.log("Edit shipping master:", row.id);
+    setSelectedItem(row);
+    setEditDialogOpen(true);
   };
 
   const handleDelete = (row: components["schemas"]["ShippingMasterCuratedResponse"]) => {
     if (window.confirm(`出荷用マスタデータ (ID: ${row.id}) を削除します。よろしいですか？`)) {
       deleteMutation.mutate(row.id);
     }
+  };
+
+  const handleCreateNew = () => {
+    setSelectedItem(null);
+    setEditDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setEditDialogOpen(false);
+    setSelectedItem(null);
   };
 
   return (
@@ -105,7 +120,7 @@ export function ShippingMasterListPage() {
             Excelエクスポート
           </Button>
           <ShippingMasterImportDialog />
-          <Button size="sm">
+          <Button size="sm" onClick={handleCreateNew}>
             <Plus className="mr-2 h-4 w-4" />
             新規作成
           </Button>
@@ -124,6 +139,13 @@ export function ShippingMasterListPage() {
           />
         </CardContent>
       </Card>
+
+      {/* 編集・新規作成ダイアログ */}
+      <ShippingMasterEditDialog
+        open={editDialogOpen}
+        onOpenChange={handleDialogClose}
+        item={selectedItem}
+      />
     </div>
   );
 }

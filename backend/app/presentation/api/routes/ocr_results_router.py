@@ -13,11 +13,14 @@ from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.application.services.calendar_service import CalendarService
 from app.application.services.common.export_service import ExportService
+from app.application.services.sap.sap_reconciliation_service import SapReconciliationService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.smartread_models import OcrResultEdit
 from app.presentation.api.routes.auth.auth_router import get_current_user
+from app.presentation.schemas.calendar.calendar_schemas import BusinessDayCalculationRequest
 
 
 router = APIRouter(prefix="/ocr-results", tags=["OCR Results"])
@@ -86,6 +89,17 @@ class OcrResultItem(BaseModel):
     # 手入力・補完結果の追加分
     manual_delivery_quantity: str | None = None
 
+    # SAP照合結果
+    sap_match_type: str | None = None
+    sap_matched_zkdmat_b: str | None = None
+    sap_supplier_code: str | None = None
+    sap_supplier_name: str | None = None
+    sap_qty_unit: str | None = None
+    sap_maker_item: str | None = None
+
+    # 計算結果
+    calculated_shipping_date: date | None = None
+
     model_config = {"from_attributes": True}
 
 
@@ -141,6 +155,7 @@ class OcrResultEditRequest(BaseModel):
     jiku_code: str | None = None
     material_code: str | None = None
     delivery_quantity: str | None = None
+    delivery_date: str | None = None
 
 
 class OcrResultEditResponse(BaseModel):
@@ -252,6 +267,54 @@ async def list_ocr_results(
 
     items = [OcrResultItem.model_validate(dict(row)) for row in rows]
 
+    # SAP照合処理を追加
+    sap_service = SapReconciliationService(db)
+    sap_service.load_sap_cache(kunnr="100427105")  # デフォルト得意先
+
+    for item in items:
+        if item.material_code:
+            # SAP照合を実行
+            sap_result = sap_service.reconcile_single(
+                material_code=item.material_code,
+                jiku_code=item.jiku_code or "",
+                customer_code=item.customer_code or "100427105",
+            )
+
+            # 照合結果を追加
+            item.sap_match_type = (
+                sap_result.sap_match_type.value if sap_result.sap_match_type else None
+            )
+            item.sap_matched_zkdmat_b = sap_result.sap_matched_zkdmat_b
+
+            # SAP raw_dataから情報を抽出
+            if sap_result.sap_raw_data:
+                item.sap_supplier_code = sap_result.sap_raw_data.get("ZLIFNR_H")
+                item.sap_qty_unit = sap_result.sap_raw_data.get("MEINS")
+                item.sap_maker_item = sap_result.sap_raw_data.get("ZMKMAT_B")
+
+                # 仕入先名は既にマスタから取得されている場合があるので、
+                # SAP仕入先コードがある場合のみ追加情報として保持
+                # (仕入先名の取得はフロントエンドで行うか、別途マスタから取得可能)
+
+        # 出荷日の自動計算（transport_lt_daysとdelivery_dateがある場合）
+        if item.transport_lt_days and item.delivery_date:
+            try:
+                # 納期をdate型に変換
+                delivery_date_obj = datetime.strptime(item.delivery_date, "%Y-%m-%d").date()
+
+                # CalendarServiceで営業日計算
+                calendar_service = CalendarService(db)
+                request = BusinessDayCalculationRequest(
+                    start_date=delivery_date_obj,
+                    days=item.transport_lt_days,
+                    direction="before",
+                    include_start=False,
+                )
+                item.calculated_shipping_date = calendar_service.calculate_business_day(request)
+            except (ValueError, Exception):
+                # 日付フォーマットエラーや計算エラーは無視
+                pass
+
     return OcrResultListResponse(items=items, total=total)
 
 
@@ -274,7 +337,28 @@ async def get_ocr_result(
             detail=f"OCR結果 ID={item_id} が見つかりません",
         )
 
-    return OcrResultItem.model_validate(dict(row))
+    item = OcrResultItem.model_validate(dict(row))
+
+    # SAP照合処理を追加
+    if item.material_code:
+        sap_service = SapReconciliationService(db)
+        sap_service.load_sap_cache(kunnr="100427105")
+
+        sap_result = sap_service.reconcile_single(
+            material_code=item.material_code,
+            jiku_code=item.jiku_code or "",
+            customer_code=item.customer_code or "100427105",
+        )
+
+        item.sap_match_type = sap_result.sap_match_type.value if sap_result.sap_match_type else None
+        item.sap_matched_zkdmat_b = sap_result.sap_matched_zkdmat_b
+
+        if sap_result.sap_raw_data:
+            item.sap_supplier_code = sap_result.sap_raw_data.get("ZLIFNR_H")
+            item.sap_qty_unit = sap_result.sap_raw_data.get("MEINS")
+            item.sap_maker_item = sap_result.sap_raw_data.get("ZMKMAT_B")
+
+    return item
 
 
 @router.post("/{item_id}/edit", response_model=OcrResultEditResponse)

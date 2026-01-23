@@ -83,8 +83,27 @@ async def update_shipping_master(
     data: ShippingMasterCuratedUpdate,
     service: ShippingMasterService = Depends(get_service),
 ) -> ShippingMasterCuratedResponse:
-    """出荷用マスタを更新."""
-    updated = service.update_curated(master_id, data.model_dump(exclude_unset=True))
+    """出荷用マスタを更新（楽観的ロック対応）."""
+    # 楽観的ロックチェック
+    if data.expected_updated_at:
+        current = service.get_curated_by_id(master_id)
+        if not current:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"出荷用マスタ ID={master_id} が見つかりません",
+            )
+
+        # updated_atの比較（ミリ秒単位で比較）
+        if current.updated_at.replace(microsecond=0) != data.expected_updated_at.replace(
+            microsecond=0
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="このデータは他のユーザーによって更新されています。ページを再読み込みして最新のデータを取得してください。",
+            )
+
+    update_dict = data.model_dump(exclude_unset=True, exclude={"expected_updated_at"})
+    updated = service.update_curated(master_id, update_dict)
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
