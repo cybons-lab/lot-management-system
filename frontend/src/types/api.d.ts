@@ -12090,6 +12090,8 @@ export interface components {
       material_code?: string | null;
       /** Delivery Quantity */
       delivery_quantity?: string | null;
+      /** Delivery Date */
+      delivery_date?: string | null;
     };
     /**
      * OcrResultEditResponse
@@ -12263,6 +12265,8 @@ export interface components {
       sap_qty_unit?: string | null;
       /** Sap Maker Item */
       sap_maker_item?: string | null;
+      /** Calculated Shipping Date */
+      calculated_shipping_date?: string | null;
     };
     /**
      * OcrResultListResponse
