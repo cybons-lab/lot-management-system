@@ -1,11 +1,24 @@
-import type { Query } from "@tanstack/react-query";
+import type { DefaultError, Query, QueryKey } from "@tanstack/react-query";
 
 import { isAuthExpired } from "@/shared/auth/auth-status";
 
-export type RefetchInterval = number | false | ((query: Query) => number | false);
+export type RefetchInterval<
+  TQueryFnData = unknown,
+  TError = DefaultError,
+  TData = TQueryFnData,
+  TQueryKey extends QueryKey = QueryKey,
+> =
+  | number
+  | false
+  | ((query: Query<TQueryFnData, TError, TData, TQueryKey>) => number | false | undefined);
 
-export function authAwareRefetchInterval(interval: RefetchInterval) {
-  return (query: Query) => {
+export function authAwareRefetchInterval<
+  TQueryFnData = unknown,
+  TError = DefaultError,
+  TData = TQueryFnData,
+  TQueryKey extends QueryKey = QueryKey,
+>(interval: RefetchInterval<TQueryFnData, TError, TData, TQueryKey>) {
+  return (query: Query<TQueryFnData, TError, TData, TQueryKey>) => {
     if (isAuthExpired()) {
       return false;
     }

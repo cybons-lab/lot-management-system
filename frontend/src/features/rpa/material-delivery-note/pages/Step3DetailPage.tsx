@@ -14,6 +14,7 @@ import { ChevronLeft, Filter, Loader2, ExternalLink, AlertCircle, ArrowRight } f
 import { useState, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import type { RpaRun } from "../api";
 import { markExternalDone } from "../api";
 import { useRun } from "../hooks";
 
@@ -71,7 +72,7 @@ export function Step3DetailPage() {
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
   const { data: run, isLoading, error } = useRun(id, {
-    refetchInterval: authAwareRefetchInterval(3000),
+    refetchInterval: authAwareRefetchInterval<RpaRun, Error, RpaRun>(3000),
   });
 
   const externalDoneMutation = useMutation({

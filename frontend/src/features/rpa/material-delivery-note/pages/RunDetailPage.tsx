@@ -13,6 +13,7 @@ import { Check, CheckCircle2, ChevronLeft, X, Filter, AlertCircle, ArrowRight } 
 import { useState, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
+import type { ActivityItem, LoopSummary, RpaRun } from "../api";
 import {
   useRun,
   useUpdateItem,
@@ -65,13 +66,13 @@ export function RunDetailPage() {
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
   const { data: run, isLoading, error } = useRun(id, {
-    refetchInterval: authAwareRefetchInterval(5000),
+    refetchInterval: authAwareRefetchInterval<RpaRun, Error, RpaRun>(5000),
   });
   const { data: loopSummary } = useLoopSummary(id, {
-    refetchInterval: authAwareRefetchInterval(5000),
+    refetchInterval: authAwareRefetchInterval<LoopSummary, Error, LoopSummary>(5000),
   });
   const { data: activityItems } = useActivity(id, 50, {
-    refetchInterval: authAwareRefetchInterval(5000),
+    refetchInterval: authAwareRefetchInterval<ActivityItem[], Error, ActivityItem[]>(5000),
   });
   const updateItemMutation = useUpdateItem(id);
   const batchUpdateMutation = useBatchUpdateItems(id);

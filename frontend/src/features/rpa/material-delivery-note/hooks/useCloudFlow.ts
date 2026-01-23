@@ -3,7 +3,7 @@
  * ジョブキュー管理、設定管理用
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { http } from "@/shared/api/http-client";
@@ -46,12 +46,19 @@ const CLOUD_FLOW_KEYS = {
 
 // Hooks
 export function useCloudFlowQueueStatus(jobType: string) {
-  return useQuery<CloudFlowQueueStatus>({
-    queryKey: CLOUD_FLOW_KEYS.queueStatus(jobType),
-    queryFn: async () => {
+  const queryKey = CLOUD_FLOW_KEYS.queueStatus(jobType);
+  const queryOptions = {
+    queryKey,
+    queryFn: async (): Promise<CloudFlowQueueStatus> => {
       return http.get<CloudFlowQueueStatus>(`rpa/cloud-flow/jobs/current?job_type=${jobType}`);
     },
-    refetchInterval: authAwareRefetchInterval(5000), // 5秒ごとに更新
+  } satisfies UseQueryOptions<CloudFlowQueueStatus, Error, CloudFlowQueueStatus, typeof queryKey>;
+
+  return useQuery<CloudFlowQueueStatus>({
+    ...queryOptions,
+    refetchInterval: authAwareRefetchInterval<CloudFlowQueueStatus, Error, CloudFlowQueueStatus>(
+      5000,
+    ), // 5秒ごとに更新
   });
 }
 

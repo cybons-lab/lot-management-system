@@ -10,6 +10,7 @@ import { AlertTriangle, ArrowLeft, Clock, PauseCircle, PlayCircle, StopCircle } 
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import type { LoopSummary, RpaRun, RpaRunEvent, RpaRunItem } from "../api";
 import {
   useCancelRun,
   useDownloadFailedItems,
@@ -56,16 +57,16 @@ export function RunMonitorPage() {
   const id = Number(runId);
 
   const { data: run, isLoading, error } = useRun(id, {
-    refetchInterval: authAwareRefetchInterval(5000),
+    refetchInterval: authAwareRefetchInterval<RpaRun, Error, RpaRun>(5000),
   });
   const { data: loopSummary } = useLoopSummary(id, {
-    refetchInterval: authAwareRefetchInterval(5000),
+    refetchInterval: authAwareRefetchInterval<LoopSummary, Error, LoopSummary>(5000),
   });
   const { data: events } = useRunEvents(id, 100, {
-    refetchInterval: authAwareRefetchInterval(10000),
+    refetchInterval: authAwareRefetchInterval<RpaRunEvent[], Error, RpaRunEvent[]>(10000),
   });
   const { data: failedItems } = useFailedItems(id, {
-    refetchInterval: authAwareRefetchInterval(10000),
+    refetchInterval: authAwareRefetchInterval<RpaRunItem[], Error, RpaRunItem[]>(10000),
   });
   const pauseMutation = usePauseRun(id);
   const resumeMutation = useResumeRun(id);

@@ -10,7 +10,7 @@ import { Loader2, Play, ArrowRight } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import type { RpaRunSummary } from "../api";
+import type { RpaRunListResponse, RpaRunSummary } from "../api";
 import { useExecuteStep2, useRuns } from "../hooks";
 
 import { Button } from "@/components/ui";
@@ -89,7 +89,7 @@ function RunActionCell({ run }: { run: RpaRunSummary }) {
 export function Step3ExecuteListPage() {
   // 5秒ごとにポーリングして進捗を更新
   const { data, isLoading, error } = useRuns(0, 100, {
-    refetchInterval: authAwareRefetchInterval(5000),
+    refetchInterval: authAwareRefetchInterval<RpaRunListResponse, Error, RpaRunListResponse>(5000),
   });
 
   const readyRuns = useMemo(

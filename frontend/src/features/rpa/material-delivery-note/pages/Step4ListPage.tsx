@@ -10,7 +10,7 @@ import { AlertTriangle, ArrowRight, ChevronLeft, Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
-import type { RpaRunSummary } from "../api";
+import type { RpaRunListResponse, RpaRunSummary } from "../api";
 import { useRuns, useStartStep4 } from "../hooks";
 
 import { Button } from "@/components/ui";
@@ -46,7 +46,7 @@ const STEP4_ACTIVE_STATUSES = ["step3_done", "step4_checking", "step4_ng_retry",
 export function Step4ListPage() {
   // 5秒ごとにポーリングして進捗を更新
   const { data, isLoading, error } = useRuns(0, 100, {
-    refetchInterval: authAwareRefetchInterval(5000),
+    refetchInterval: authAwareRefetchInterval<RpaRunListResponse, Error, RpaRunListResponse>(5000),
   });
 
   // 処理中（対象）

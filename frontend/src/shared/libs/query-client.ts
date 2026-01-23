@@ -165,7 +165,7 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
     },
     mutations: {
-      retry: (failureCount, error) => {
+      retry: (_failureCount, error) => {
         if (error instanceof HTTPError) {
           const status = error.response?.status;
           if (status === 401 || status === 403) {

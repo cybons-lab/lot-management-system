@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 
 import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { formatOrderCode } from "@/shared/utils/order";
@@ -20,15 +20,28 @@ export interface ConfirmedOrderLine {
   sap_order_no?: string | null;
 }
 
+const confirmedOrderLinesQueryKey = ["confirmed-order-lines"] as const;
+
+const confirmedOrderLinesQueryOptions = {
+  queryKey: confirmedOrderLinesQueryKey,
+  queryFn: async (): Promise<ConfirmedOrderLine[]> => {
+    const response = await fetch("/api/orders/confirmed-order-lines");
+    if (!response.ok) throw new Error("Failed to fetch confirmed lines");
+    const data = (await response.json()) as ConfirmedOrderLine[];
+    return data.map((line) => ({ ...line, order_code: formatOrderCode(line) }));
+  },
+} satisfies UseQueryOptions<
+  ConfirmedOrderLine[],
+  Error,
+  ConfirmedOrderLine[],
+  typeof confirmedOrderLinesQueryKey
+>;
+
 export function useConfirmedOrderLines() {
   return useQuery<ConfirmedOrderLine[]>({
-    queryKey: ["confirmed-order-lines"],
-    queryFn: async () => {
-      const response = await fetch("/api/orders/confirmed-order-lines");
-      if (!response.ok) throw new Error("Failed to fetch confirmed lines");
-      const data = (await response.json()) as ConfirmedOrderLine[];
-      return data.map((line) => ({ ...line, order_code: formatOrderCode(line) }));
-    },
-    refetchInterval: authAwareRefetchInterval(30000),
+    ...confirmedOrderLinesQueryOptions,
+    refetchInterval: authAwareRefetchInterval<ConfirmedOrderLine[], Error, ConfirmedOrderLine[]>(
+      30000,
+    ),
   });
 }

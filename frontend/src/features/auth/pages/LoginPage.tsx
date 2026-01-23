@@ -25,16 +25,9 @@ interface UserSummary {
   display_name: string;
 }
 
-export function LoginPage() {
+function useLoginUsers() {
   const [users, setUsers] = useState<UserSummary[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get("returnTo") || "/";
 
-  // Load users for selection (public endpoint, no auth required)
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -47,6 +40,18 @@ export function LoginPage() {
     };
     fetchUsers();
   }, []);
+
+  return users;
+}
+
+export function LoginPage() {
+  const users = useLoginUsers();
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo") || "/";
 
   // Redirect if already logged in
   useEffect(() => {

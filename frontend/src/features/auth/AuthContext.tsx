@@ -25,6 +25,80 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function useAuthErrorListener(
+  token: string | null,
+  logout: (options?: { preserveAuthError?: boolean }) => void,
+  setAuthError: (value: "expired" | "forbidden" | null) => void,
+) {
+  useEffect(() => {
+    const handleAuthError = (event: Event) => {
+      const customEvent = event as CustomEvent<{ message: string }>;
+      const message = customEvent.detail?.message || "セッションの有効期限が切れました";
+
+      // Only show toast and logout if user was previously logged in
+      if (token) {
+        toast.error(message, {
+          description: "再度ログインしてください",
+          duration: 5000,
+        });
+        logout({ preserveAuthError: true });
+        setAuthError("expired");
+        setAuthExpired(true);
+      }
+    };
+
+    window.addEventListener(AUTH_ERROR_EVENT, handleAuthError);
+    return () => {
+      window.removeEventListener(AUTH_ERROR_EVENT, handleAuthError);
+    };
+  }, [token, logout, setAuthError]);
+}
+
+function useForbiddenErrorListener(setAuthError: (value: "expired" | "forbidden" | null) => void) {
+  useEffect(() => {
+    const handleForbiddenError = (event: Event) => {
+      const customEvent = event as CustomEvent<{ message: string }>;
+      const message = customEvent.detail?.message || "この操作を行う権限がありません";
+      toast.error(message, {
+        description: "権限を確認してください",
+        duration: 5000,
+      });
+      setAuthError("forbidden");
+    };
+
+    window.addEventListener(FORBIDDEN_ERROR_EVENT, handleForbiddenError);
+    return () => {
+      window.removeEventListener(FORBIDDEN_ERROR_EVENT, handleForbiddenError);
+    };
+  }, [setAuthError]);
+}
+
+function useRestoreSession(
+  setToken: (token: string | null) => void,
+  setUser: (user: User | null) => void,
+  setIsLoading: (loading: boolean) => void,
+) {
+  useEffect(() => {
+    // Restore session on initial mount only
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem("token");
+      if (storedToken) {
+        try {
+          // http-client's beforeRequest hook automatically adds Authorization header
+          const response = await http.get<User>("auth/me");
+          setToken(storedToken);
+          setUser(response);
+        } catch (error) {
+          console.warn("Failed to restore session", error);
+          localStorage.removeItem("token");
+        }
+      }
+      setIsLoading(false);
+    };
+    initAuth();
+  }, [setIsLoading, setToken, setUser]);
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
@@ -47,66 +121,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthExpired(false);
   }, []);
 
-  // Listen for global auth errors (401) from http-client
-  useEffect(() => {
-    const handleAuthError = (event: Event) => {
-      const customEvent = event as CustomEvent<{ message: string }>;
-      const message = customEvent.detail?.message || "セッションの有効期限が切れました";
-
-      // Only show toast and logout if user was previously logged in
-      if (token) {
-        toast.error(message, {
-          description: "再度ログインしてください",
-          duration: 5000,
-        });
-        logout({ preserveAuthError: true });
-        setAuthError("expired");
-        setAuthExpired(true);
-      }
-    };
-
-    window.addEventListener(AUTH_ERROR_EVENT, handleAuthError);
-    return () => {
-      window.removeEventListener(AUTH_ERROR_EVENT, handleAuthError);
-    };
-  }, [token, logout]);
-
-  useEffect(() => {
-    const handleForbiddenError = (event: Event) => {
-      const customEvent = event as CustomEvent<{ message: string }>;
-      const message = customEvent.detail?.message || "この操作を行う権限がありません";
-      toast.error(message, {
-        description: "権限を確認してください",
-        duration: 5000,
-      });
-      setAuthError("forbidden");
-    };
-
-    window.addEventListener(FORBIDDEN_ERROR_EVENT, handleForbiddenError);
-    return () => {
-      window.removeEventListener(FORBIDDEN_ERROR_EVENT, handleForbiddenError);
-    };
-  }, []);
-
-  useEffect(() => {
-    // Restore session on initial mount only
-    const initAuth = async () => {
-      const storedToken = localStorage.getItem("token");
-      if (storedToken) {
-        try {
-          // http-client's beforeRequest hook automatically adds Authorization header
-          const response = await http.get<User>("auth/me");
-          setToken(storedToken);
-          setUser(response);
-        } catch (error) {
-          console.warn("Failed to restore session", error);
-          localStorage.removeItem("token");
-        }
-      }
-      setIsLoading(false);
-    };
-    initAuth();
-  }, []); // Only run on mount
+  useAuthErrorListener(token, logout, setAuthError);
+  useForbiddenErrorListener(setAuthError);
+  useRestoreSession(setToken, setUser, setIsLoading);
 
   const login = async (userId: number, username?: string) => {
     const response = await http.post<{

@@ -24,6 +24,7 @@ import { useState, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
+import type { RpaRun } from "../api";
 import { completeStep4, retryFailedItems, updateItem } from "../api";
 import { useRun } from "../hooks";
 
@@ -80,7 +81,7 @@ export function Step4DetailPage() {
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
   const { data: run, isLoading, error } = useRun(id, {
-    refetchInterval: authAwareRefetchInterval(3000),
+    refetchInterval: authAwareRefetchInterval<RpaRun, Error, RpaRun>(3000),
   });
 
   const retryMutation = useMutation({
