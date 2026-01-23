@@ -19,4 +19,7 @@ export const SMARTREAD_QUERY_KEYS = {
   },
   requests: (id: number) => [...SMARTREAD_QUERY_KEYS.config(id), "requests"] as const,
   files: (id: number) => [...SMARTREAD_QUERY_KEYS.config(id), "files"] as const,
+  // PAD Runner
+  padRuns: (id: number) => [...SMARTREAD_QUERY_KEYS.config(id), "pad-runs"] as const,
+  padRun: (id: number, runId: string) => [...SMARTREAD_QUERY_KEYS.padRuns(id), runId] as const,
 };

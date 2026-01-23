@@ -124,6 +124,11 @@ export const ROUTES = {
   DEBUG: {
     DB_BROWSER: "/debug/db",
   },
+
+  // SAP Integration
+  SAP: {
+    ROOT: "/sap",
+  },
 } as const;
 
 /**

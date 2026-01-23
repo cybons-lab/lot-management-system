@@ -15349,6 +15349,629 @@
         }
       }
     },
+    "/api/integration/sap/connections": {
+      "get": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "List Connections",
+        "description": "SAP接続情報一覧を取得.",
+        "operationId": "list_connections_api_integration_sap_connections_get",
+        "parameters": [
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "アクティブな接続のみ",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "アクティブな接続のみ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SapConnectionResponse"
+                  },
+                  "title": "Response List Connections Api Integration Sap Connections Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Create Connection",
+        "description": "SAP接続情報を作成.\n\nNote:\n    パスワードは暗号化して保存されます。\n    現在の実装では簡易的なBase64エンコードを使用しています。\n    本番環境では適切な暗号化方式に置き換えてください。",
+        "operationId": "create_connection_api_integration_sap_connections_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SapConnectionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapConnectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/connections/{connection_id}": {
+      "put": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Update Connection",
+        "description": "SAP接続情報を更新.\n\nNote:\n    パスワードが空でない場合のみ更新されます。",
+        "operationId": "update_connection_api_integration_sap_connections__connection_id__put",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Connection Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SapConnectionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapConnectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Delete Connection",
+        "description": "SAP接続情報を削除（論理削除）.",
+        "operationId": "delete_connection_api_integration_sap_connections__connection_id__delete",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Connection Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Delete Connection Api Integration Sap Connections  Connection Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/connections/{connection_id}/test": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Test Connection",
+        "description": "SAP接続テストを実行.\n\npyrfcを使用して実際にSAPに接続し、接続テストを行います。\nパスワードが設定されていない場合はモックモードとして成功を返します。",
+        "operationId": "test_connection_api_integration_sap_connections__connection_id__test_post",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Connection Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapConnectionTestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/materials/fetch": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Fetch Materials",
+        "description": "SAPからマテリアルデータを取得してキャッシュに保存.\n\nZ_SCM1_RFC_MATERIAL_DOWNLOADを呼び出し、ET_DATAをキャッシュテーブルに保存します。\n\n動作モード:\n    - DBにパスワードが設定されている場合: 本番モード（実際にSAP RFCを呼び出す）\n    - パスワードが空/未設定の場合: モックモード（テストデータを返す）\n\nこれにより、コードを変更せずにDB設定だけで本番/モック切り替えが可能。",
+        "operationId": "fetch_materials_api_integration_sap_materials_fetch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SapMaterialFetchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapMaterialFetchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/materials/cache": {
+      "get": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "List Cached Materials",
+        "description": "キャッシュされたマテリアルデータを取得.",
+        "operationId": "list_cached_materials_api_integration_sap_materials_cache_get",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "接続ID",
+              "title": "Connection Id"
+            },
+            "description": "接続ID"
+          },
+          {
+            "name": "kunnr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先コード",
+              "title": "Kunnr"
+            },
+            "description": "得意先コード"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "取得件数上限",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "取得件数上限"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SapMaterialCacheResponse"
+                  },
+                  "title": "Response List Cached Materials Api Integration Sap Materials Cache Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Clear Cache",
+        "description": "キャッシュをクリア.",
+        "operationId": "clear_cache_api_integration_sap_materials_cache_delete",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "接続ID",
+              "title": "Connection Id"
+            },
+            "description": "接続ID"
+          },
+          {
+            "name": "kunnr",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先コード",
+              "title": "Kunnr"
+            },
+            "description": "得意先コード"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  },
+                  "title": "Response Clear Cache Api Integration Sap Materials Cache Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/reconcile": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Reconcile Ocr Results",
+        "description": "OCR結果をSAP・マスタと突合.\n\n突合ロジック:\n1. SAP突合（完全一致 → 前方一致）\n2. マスタ突合\n3. 総合ステータス判定（OK/WARNING/ERROR）\n\nNote:\n    キャッシュがない場合は自動的にSAPから再取得を試みます。",
+        "operationId": "reconcile_ocr_results_api_integration_sap_reconcile_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SapReconcileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapReconcileSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/reconcile/single": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Reconcile Single",
+        "description": "1件を突合.\n\nデバッグ・テスト用のエンドポイント。",
+        "operationId": "reconcile_single_api_integration_sap_reconcile_single_post",
+        "parameters": [
+          {
+            "name": "material_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "材質コード",
+              "title": "Material Code"
+            },
+            "description": "材質コード"
+          },
+          {
+            "name": "jiku_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "次区",
+              "title": "Jiku Code"
+            },
+            "description": "次区"
+          },
+          {
+            "name": "customer_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "得意先コード",
+              "default": "100427105",
+              "title": "Customer Code"
+            },
+            "description": "得意先コード"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SapReconcileResultResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integration/sap/logs": {
+      "get": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "List Fetch Logs",
+        "description": "SAP取得ログ一覧を取得.",
+        "operationId": "list_fetch_logs_api_integration_sap_logs_get",
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "接続ID",
+              "title": "Connection Id"
+            },
+            "description": "接続ID"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "取得件数上限",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "取得件数上限"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SapFetchLogResponse"
+                  },
+                  "title": "Response List Fetch Logs Api Integration Sap Logs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rpa/material-delivery-document": {
       "post": {
         "tags": [
@@ -18782,6 +19405,255 @@
         }
       }
     },
+    "/api/rpa/smartread/configs/{config_id}/pad-runs": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "PAD互換フローを開始",
+        "description": "PAD互換フローを開始（バックグラウンド処理）.\n\n監視フォルダ内のファイルを指定してPAD互換フローを開始します。\n処理はバックグラウンドスレッドで実行され、即座にrun_idを返します。\n\n進捗状況は GET /pad-runs/{run_id} で確認できます。",
+        "operationId": "start_pad_run_api_rpa_smartread_configs__config_id__pad_runs_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadPadRunStartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadPadRunStartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "PAD互換フロー一覧を取得",
+        "description": "PAD互換フロー一覧を取得.",
+        "operationId": "list_pad_runs_api_rpa_smartread_configs__config_id__pad_runs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          },
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ステータスでフィルタ",
+              "title": "Status Filter"
+            },
+            "description": "ステータスでフィルタ"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "description": "取得件数",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "取得件数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadPadRunListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/configs/{config_id}/pad-runs/{run_id}": {
+      "get": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "PAD互換フロー状態を取得",
+        "description": "PAD互換フローの状態を取得（STALE検出を含む）.\n\nRUNNINGステータスの場合、heartbeat_atが一定時間（120秒）更新されていなければ\nSTALEとしてマークされます。",
+        "operationId": "get_pad_run_status_api_rpa_smartread_configs__config_id__pad_runs__run_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadPadRunStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/smartread/configs/{config_id}/pad-runs/{run_id}/retry": {
+      "post": {
+        "tags": [
+          "smartread"
+        ],
+        "summary": "PAD互換フローをリトライ",
+        "description": "失敗/Staleの実行をリトライ.\n\n同じ入力ファイルで新しい実行を開始します。\nリトライ回数には上限があります（デフォルト3回）。",
+        "operationId": "retry_pad_run_api_rpa_smartread_configs__config_id__pad_runs__run_id__retry_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Config Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartReadPadRunRetryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/masters/status": {
       "get": {
         "summary": "Get Master Status",
@@ -19790,6 +20662,382 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/debug/db/objects": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "List Db Objects",
+        "operationId": "list_db_objects_api_debug_db_objects_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Db Objects Api Debug Db Objects Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/debug/db/objects/{schema}/{name}/schema": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "Get Object Schema",
+        "operationId": "get_object_schema_api_debug_db_objects__schema___name__schema_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schema",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Schema"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Object Schema Api Debug Db Objects  Schema   Name  Schema Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/debug/db/objects/{schema}/{name}/rows": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "Get Object Rows",
+        "operationId": "get_object_rows_api_debug_db_objects__schema___name__rows_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schema",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Schema"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(?i)(asc|desc)$",
+              "default": "asc",
+              "title": "Order Dir"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filters"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Object Rows Api Debug Db Objects  Schema   Name  Rows Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/debug/db/objects/{schema}/{name}/definition": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "Get View Definition",
+        "operationId": "get_view_definition_api_debug_db_objects__schema___name__definition_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schema",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Schema"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get View Definition Api Debug Db Objects  Schema   Name  Definition Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/debug/db/graph": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "Get Db Graph",
+        "operationId": "get_db_graph_api_debug_db_graph_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Db Graph Api Debug Db Graph Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/debug/db/objects/{schema}/{name}/relations": {
+      "get": {
+        "tags": [
+          "debug-db"
+        ],
+        "summary": "Get Object Relations",
+        "operationId": "get_object_relations_api_debug_db_objects__schema___name__relations_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schema",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Schema"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Object Relations Api Debug Db Objects  Schema   Name  Relations Get"
+                }
               }
             }
           },
@@ -29163,6 +30411,17 @@
               }
             ],
             "title": "Material Code"
+          },
+          "delivery_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Quantity"
           }
         },
         "type": "object",
@@ -29282,6 +30541,17 @@
               }
             ],
             "title": "Material Code"
+          },
+          "delivery_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Quantity"
           },
           "updated_at": {
             "type": "string",
@@ -29753,6 +31023,17 @@
             "type": "boolean",
             "title": "Has Error",
             "default": false
+          },
+          "manual_delivery_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Delivery Quantity"
           }
         },
         "type": "object",
@@ -34523,6 +35804,855 @@
         "title": "SAPSyncResponse",
         "description": "Response model for SAP synchronization."
       },
+      "SapConnectionCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "接続名"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "環境（production/test）"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          },
+          "ashost": {
+            "type": "string",
+            "title": "Ashost",
+            "description": "SAPホスト"
+          },
+          "sysnr": {
+            "type": "string",
+            "title": "Sysnr",
+            "description": "システム番号"
+          },
+          "client": {
+            "type": "string",
+            "title": "Client",
+            "description": "クライアント番号"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name",
+            "description": "ユーザー名"
+          },
+          "passwd": {
+            "type": "string",
+            "title": "Passwd",
+            "description": "パスワード（暗号化されて保存）"
+          },
+          "lang": {
+            "type": "string",
+            "title": "Lang",
+            "description": "言語",
+            "default": "JA"
+          },
+          "default_bukrs": {
+            "type": "string",
+            "title": "Default Bukrs",
+            "description": "デフォルト会社コード",
+            "default": "10"
+          },
+          "default_kunnr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Kunnr",
+            "description": "デフォルト得意先コード"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "デフォルト接続にする",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "environment",
+          "ashost",
+          "sysnr",
+          "client",
+          "user_name",
+          "passwd"
+        ],
+        "title": "SapConnectionCreateRequest",
+        "description": "SAP接続情報作成リクエスト."
+      },
+      "SapConnectionResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ashost": {
+            "type": "string",
+            "title": "Ashost"
+          },
+          "sysnr": {
+            "type": "string",
+            "title": "Sysnr"
+          },
+          "client": {
+            "type": "string",
+            "title": "Client"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "lang": {
+            "type": "string",
+            "title": "Lang"
+          },
+          "default_bukrs": {
+            "type": "string",
+            "title": "Default Bukrs"
+          },
+          "default_kunnr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Kunnr"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "environment",
+          "description",
+          "ashost",
+          "sysnr",
+          "client",
+          "user_name",
+          "lang",
+          "default_bukrs",
+          "default_kunnr",
+          "is_active",
+          "is_default",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SapConnectionResponse",
+        "description": "SAP接続情報レスポンス."
+      },
+      "SapConnectionTestResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "title": "Duration Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "duration_ms"
+        ],
+        "title": "SapConnectionTestResponse",
+        "description": "SAP接続テスト結果."
+      },
+      "SapConnectionUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "接続名"
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment",
+            "description": "環境（production/test）"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          },
+          "ashost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ashost",
+            "description": "SAPホスト"
+          },
+          "sysnr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sysnr",
+            "description": "システム番号"
+          },
+          "client": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client",
+            "description": "クライアント番号"
+          },
+          "user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Name",
+            "description": "ユーザー名"
+          },
+          "passwd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passwd",
+            "description": "パスワード（空=変更なし）"
+          },
+          "lang": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lang",
+            "description": "言語"
+          },
+          "default_bukrs": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Bukrs",
+            "description": "デフォルト会社コード"
+          },
+          "default_kunnr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Kunnr",
+            "description": "デフォルト得意先コード"
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default",
+            "description": "デフォルト接続にする"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "有効/無効"
+          }
+        },
+        "type": "object",
+        "title": "SapConnectionUpdateRequest",
+        "description": "SAP接続情報更新リクエスト."
+      },
+      "SapFetchLogResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "connection_id": {
+            "type": "integer",
+            "title": "Connection Id"
+          },
+          "fetch_batch_id": {
+            "type": "string",
+            "title": "Fetch Batch Id"
+          },
+          "rfc_name": {
+            "type": "string",
+            "title": "Rfc Name"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "record_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Count"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "connection_id",
+          "fetch_batch_id",
+          "rfc_name",
+          "params",
+          "status",
+          "record_count",
+          "error_message",
+          "duration_ms",
+          "created_at"
+        ],
+        "title": "SapFetchLogResponse",
+        "description": "SAP取得ログレスポンス."
+      },
+      "SapMaterialCacheResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "connection_id": {
+            "type": "integer",
+            "title": "Connection Id"
+          },
+          "zkdmat_b": {
+            "type": "string",
+            "title": "Zkdmat B"
+          },
+          "kunnr": {
+            "type": "string",
+            "title": "Kunnr"
+          },
+          "raw_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Raw Data"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          },
+          "fetch_batch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetch Batch Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "connection_id",
+          "zkdmat_b",
+          "kunnr",
+          "raw_data",
+          "fetched_at",
+          "fetch_batch_id"
+        ],
+        "title": "SapMaterialCacheResponse",
+        "description": "SAPキャッシュレスポンス."
+      },
+      "SapMaterialFetchRequest": {
+        "properties": {
+          "connection_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection Id",
+            "description": "接続ID（省略時はデフォルト）"
+          },
+          "kunnr_f": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kunnr F",
+            "description": "得意先コードFrom"
+          },
+          "kunnr_t": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kunnr T",
+            "description": "得意先コードTo"
+          },
+          "bukrs": {
+            "type": "string",
+            "title": "Bukrs",
+            "description": "会社コード",
+            "default": "10"
+          },
+          "zaiko": {
+            "type": "string",
+            "title": "Zaiko",
+            "description": "在庫品フラグ",
+            "default": "X"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit",
+            "description": "取得件数上限"
+          }
+        },
+        "type": "object",
+        "title": "SapMaterialFetchRequest",
+        "description": "SAPマテリアル取得リクエスト."
+      },
+      "SapMaterialFetchResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "fetch_batch_id": {
+            "type": "string",
+            "title": "Fetch Batch Id"
+          },
+          "record_count": {
+            "type": "integer",
+            "title": "Record Count"
+          },
+          "cached_count": {
+            "type": "integer",
+            "title": "Cached Count"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "title": "Duration Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "fetch_batch_id",
+          "record_count",
+          "cached_count",
+          "error_message",
+          "duration_ms"
+        ],
+        "title": "SapMaterialFetchResponse",
+        "description": "SAPマテリアル取得レスポンス."
+      },
+      "SapReconcileRequest": {
+        "properties": {
+          "task_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Date",
+            "description": "タスク日付（YYYY-MM-DD）"
+          },
+          "config_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config Id",
+            "description": "SmartRead設定ID"
+          },
+          "customer_code": {
+            "type": "string",
+            "title": "Customer Code",
+            "description": "得意先コード",
+            "default": "100427105"
+          }
+        },
+        "type": "object",
+        "title": "SapReconcileRequest",
+        "description": "突合リクエスト."
+      },
+      "SapReconcileResultResponse": {
+        "properties": {
+          "material_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Code"
+          },
+          "jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Code"
+          },
+          "customer_code": {
+            "type": "string",
+            "title": "Customer Code"
+          },
+          "sap_match_type": {
+            "type": "string",
+            "title": "Sap Match Type"
+          },
+          "sap_matched_zkdmat_b": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Matched Zkdmat B"
+          },
+          "sap_raw_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Raw Data"
+          },
+          "master_match_type": {
+            "type": "string",
+            "title": "Master Match Type"
+          },
+          "master_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Id"
+          },
+          "master_customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Customer Part No"
+          },
+          "overall_status": {
+            "type": "string",
+            "title": "Overall Status"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "material_code",
+          "jiku_code",
+          "customer_code",
+          "sap_match_type",
+          "sap_matched_zkdmat_b",
+          "sap_raw_data",
+          "master_match_type",
+          "master_id",
+          "master_customer_part_no",
+          "overall_status",
+          "messages"
+        ],
+        "title": "SapReconcileResultResponse",
+        "description": "1行の突合結果."
+      },
+      "SapReconcileSummaryResponse": {
+        "properties": {
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "ok_count": {
+            "type": "integer",
+            "title": "Ok Count"
+          },
+          "warning_count": {
+            "type": "integer",
+            "title": "Warning Count"
+          },
+          "error_count": {
+            "type": "integer",
+            "title": "Error Count"
+          },
+          "sap_exact_count": {
+            "type": "integer",
+            "title": "Sap Exact Count"
+          },
+          "sap_prefix_count": {
+            "type": "integer",
+            "title": "Sap Prefix Count"
+          },
+          "sap_not_found_count": {
+            "type": "integer",
+            "title": "Sap Not Found Count"
+          },
+          "master_matched_count": {
+            "type": "integer",
+            "title": "Master Matched Count"
+          },
+          "master_not_found_count": {
+            "type": "integer",
+            "title": "Master Not Found Count"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SapReconcileResultResponse"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_count",
+          "ok_count",
+          "warning_count",
+          "error_count",
+          "sap_exact_count",
+          "sap_prefix_count",
+          "sap_not_found_count",
+          "master_matched_count",
+          "master_not_found_count",
+          "results"
+        ],
+        "title": "SapReconcileSummaryResponse",
+        "description": "突合サマリーレスポンス."
+      },
       "ShipmentTextRequest": {
         "properties": {
           "customer_id": {
@@ -36081,6 +38211,312 @@
         ],
         "title": "SmartReadLongDataResponse",
         "description": "縦持ちデータレスポンス."
+      },
+      "SmartReadPadRunListItem": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "実行ID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ステータス"
+          },
+          "step": {
+            "type": "string",
+            "title": "Step",
+            "description": "現在の工程"
+          },
+          "filenames": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filenames",
+            "description": "処理対象ファイル名"
+          },
+          "wide_data_count": {
+            "type": "integer",
+            "title": "Wide Data Count",
+            "description": "横持ちデータ件数",
+            "default": 0
+          },
+          "long_data_count": {
+            "type": "integer",
+            "title": "Long Data Count",
+            "description": "縦持ちデータ件数",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "作成日時"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "完了日時"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "status",
+          "step",
+          "created_at"
+        ],
+        "title": "SmartReadPadRunListItem",
+        "description": "PAD互換フロー一覧アイテム."
+      },
+      "SmartReadPadRunListResponse": {
+        "properties": {
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/SmartReadPadRunListItem"
+            },
+            "type": "array",
+            "title": "Runs",
+            "description": "実行一覧"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runs"
+        ],
+        "title": "SmartReadPadRunListResponse",
+        "description": "PAD互換フロー一覧レスポンス."
+      },
+      "SmartReadPadRunRetryResponse": {
+        "properties": {
+          "new_run_id": {
+            "type": "string",
+            "title": "New Run Id",
+            "description": "新しい実行ID"
+          },
+          "original_run_id": {
+            "type": "string",
+            "title": "Original Run Id",
+            "description": "元の実行ID"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "メッセージ",
+            "default": "リトライを開始しました"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_run_id",
+          "original_run_id"
+        ],
+        "title": "SmartReadPadRunRetryResponse",
+        "description": "PAD互換フローリトライレスポンス."
+      },
+      "SmartReadPadRunStartRequest": {
+        "properties": {
+          "filenames": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filenames",
+            "description": "監視フォルダ内のファイル名リスト"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filenames"
+        ],
+        "title": "SmartReadPadRunStartRequest",
+        "description": "PAD互換フロー開始リクエスト."
+      },
+      "SmartReadPadRunStartResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "実行ID (UUID)"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ステータス",
+            "default": "RUNNING"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "メッセージ",
+            "default": "PAD互換フローを開始しました"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "title": "SmartReadPadRunStartResponse",
+        "description": "PAD互換フロー開始レスポンス."
+      },
+      "SmartReadPadRunStatusResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "実行ID"
+          },
+          "config_id": {
+            "type": "integer",
+            "title": "Config Id",
+            "description": "設定ID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ステータス (RUNNING/SUCCEEDED/FAILED/STALE)"
+          },
+          "step": {
+            "type": "string",
+            "title": "Step",
+            "description": "現在の工程"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id",
+            "description": "SmartReadタスクID"
+          },
+          "export_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Export Id",
+            "description": "SmartReadエクスポートID"
+          },
+          "filenames": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filenames",
+            "description": "処理対象ファイル名"
+          },
+          "wide_data_count": {
+            "type": "integer",
+            "title": "Wide Data Count",
+            "description": "横持ちデータ件数",
+            "default": 0
+          },
+          "long_data_count": {
+            "type": "integer",
+            "title": "Long Data Count",
+            "description": "縦持ちデータ件数",
+            "default": 0
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message",
+            "description": "エラーメッセージ"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "作成日時"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "description": "更新日時"
+          },
+          "heartbeat_at": {
+            "type": "string",
+            "title": "Heartbeat At",
+            "description": "最終heartbeat日時"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "完了日時"
+          },
+          "can_retry": {
+            "type": "boolean",
+            "title": "Can Retry",
+            "description": "リトライ可能か",
+            "default": false
+          },
+          "retry_count": {
+            "type": "integer",
+            "title": "Retry Count",
+            "description": "現在のリトライ回数",
+            "default": 0
+          },
+          "max_retries": {
+            "type": "integer",
+            "title": "Max Retries",
+            "description": "最大リトライ回数",
+            "default": 3
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "config_id",
+          "status",
+          "step",
+          "created_at",
+          "updated_at",
+          "heartbeat_at"
+        ],
+        "title": "SmartReadPadRunStatusResponse",
+        "description": "PAD互換フロー状態レスポンス."
       },
       "SmartReadProcessRequest": {
         "properties": {

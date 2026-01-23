@@ -42,7 +42,6 @@ COMMON_FIELDS = [
     "納品書No",
     "発注者",
     "発注事業所",
-    "受注者",
     "出荷場所名称",
     "納入日",
     "便",
@@ -54,6 +53,7 @@ DETAIL_FIELDS = [
     "材質サイズ",
     "単位",
     "納入量",
+    "納入量小数点",
     "アイテム",
     "購買",
     "次区",
@@ -179,6 +179,9 @@ class SmartReadCsvTransformer:
                         detail[field_name] = self._normalize_value(normalized_row[key])
                         break
 
+            # 納入量と納入量小数点を結合
+            self._combine_quantity_and_decimal(detail)
+
             # サブ明細項目（Lot No1-1, Lot No 1-1, Lot No-1, etc）
             for sub_field in SUB_DETAIL_FIELDS:
                 for sub_n in range(1, 5):  # 最大4つのサブ明細
@@ -215,6 +218,29 @@ class SmartReadCsvTransformer:
 
         logger.debug(f"[Transformer] Total details extracted: {len(details)}")
         return details
+
+    def _combine_quantity_and_decimal(self, detail: dict[str, Any]) -> None:
+        """納入量と納入量小数点を結合.
+
+        納入量小数点の値（3桁想定）を納入量の小数部として結合する。
+        結合後は納入量小数点フィールドは削除される。
+
+        Args:
+            detail: 明細データ（in-place修正）
+        """
+        base_quantity = detail.get("納入量", "").strip()
+        decimal_part = detail.get("納入量小数点", "").strip()
+
+        # 納入量小数点フィールドを削除（縦持ちには含めない）
+        if "納入量小数点" in detail:
+            del detail["納入量小数点"]
+
+        # 小数点がある場合は結合
+        if decimal_part:
+            if base_quantity:
+                detail["納入量"] = f"{base_quantity}.{decimal_part}"
+            else:
+                detail["納入量"] = f"0.{decimal_part}"
 
     def _is_empty_detail(self, detail: dict[str, Any]) -> bool:
         """空明細かどうかを判定.

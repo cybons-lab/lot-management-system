@@ -9,6 +9,11 @@ import { downloadJson, downloadCsv, useSyncTaskResults } from "../hooks";
 import { useResultDataLoader } from "../hooks/useResultDataLoader";
 import { useTransformToLong } from "../hooks/useTransformToLong";
 
+// ★ Phase 0: 危険な /tasks/{id}/sync への導線を塞ぐ
+// この機能は PAD互換ランナー (/pad-runs) に置き換え予定
+// See: docs/smartread/pad_runner_implementation_plan.md
+const DANGEROUS_SYNC_DISABLED = true;
+
 import { SmartReadCsvTable } from "./SmartReadCsvTable";
 
 import {
@@ -139,9 +144,17 @@ function ResultHeader({
               </Button>
               <div className="border-r mx-1" />
             </>
+          ) : DANGEROUS_SYNC_DISABLED ? (
+            <>
+              {/* PAD互換フロー使用中 - 結果はDBから自動取得 */}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md text-blue-700 text-xs">
+                <Database className="h-4 w-4" />
+                <span>結果はDBから表示中</span>
+              </div>
+            </>
           ) : (
             <>
-              {/* 本番モード: API同期ボタン */}
+              {/* 本番モード: API同期ボタン（現在無効） */}
               <Button
                 variant="outline"
                 size="sm"
@@ -242,10 +255,12 @@ function TabContentDisplay({
       <p>{label}データがありません</p>
       <p className="text-sm text-gray-500">
         {dataType === "wide"
-          ? "APIから同期ボタンでデータを取得してください"
-          : "横持ちデータの同期時に自動的に変換されます"}
+          ? DANGEROUS_SYNC_DISABLED
+            ? "インポートタブでファイルを選択し処理を実行してください"
+            : "APIから同期ボタンでデータを取得してください"
+          : "横持ちデータ処理完了後に自動的に変換されます"}
       </p>
-      {dataType === "wide" && (
+      {dataType === "wide" && !DANGEROUS_SYNC_DISABLED && (
         <Button variant="outline" size="sm" onClick={onRetry}>
           <RefreshCw className="h-4 w-4 mr-1" />
           APIから同期
@@ -324,6 +339,9 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
   }, [configId, taskId]);
 
   useEffect(() => {
+    // ★ Phase 0: 自動同期を無効化（危険なAPIを叩かない）
+    if (DANGEROUS_SYNC_DISABLED) return;
+
     if (hasAutoSynced.current) return;
     if (isInitialLoading || loadError) return;
     if (wideData.length > 0 || longData.length > 0) return;

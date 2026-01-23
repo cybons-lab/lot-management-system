@@ -5976,6 +5976,207 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/integration/sap/connections": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Connections
+     * @description SAP接続情報一覧を取得.
+     */
+    get: operations["list_connections_api_integration_sap_connections_get"];
+    put?: never;
+    /**
+     * Create Connection
+     * @description SAP接続情報を作成.
+     *
+     *     Note:
+     *         パスワードは暗号化して保存されます。
+     *         現在の実装では簡易的なBase64エンコードを使用しています。
+     *         本番環境では適切な暗号化方式に置き換えてください。
+     */
+    post: operations["create_connection_api_integration_sap_connections_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/connections/{connection_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Connection
+     * @description SAP接続情報を更新.
+     *
+     *     Note:
+     *         パスワードが空でない場合のみ更新されます。
+     */
+    put: operations["update_connection_api_integration_sap_connections__connection_id__put"];
+    post?: never;
+    /**
+     * Delete Connection
+     * @description SAP接続情報を削除（論理削除）.
+     */
+    delete: operations["delete_connection_api_integration_sap_connections__connection_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/connections/{connection_id}/test": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test Connection
+     * @description SAP接続テストを実行.
+     *
+     *     pyrfcを使用して実際にSAPに接続し、接続テストを行います。
+     *     パスワードが設定されていない場合はモックモードとして成功を返します。
+     */
+    post: operations["test_connection_api_integration_sap_connections__connection_id__test_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/materials/fetch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Fetch Materials
+     * @description SAPからマテリアルデータを取得してキャッシュに保存.
+     *
+     *     Z_SCM1_RFC_MATERIAL_DOWNLOADを呼び出し、ET_DATAをキャッシュテーブルに保存します。
+     *
+     *     動作モード:
+     *         - DBにパスワードが設定されている場合: 本番モード（実際にSAP RFCを呼び出す）
+     *         - パスワードが空/未設定の場合: モックモード（テストデータを返す）
+     *
+     *     これにより、コードを変更せずにDB設定だけで本番/モック切り替えが可能。
+     */
+    post: operations["fetch_materials_api_integration_sap_materials_fetch_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/materials/cache": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Cached Materials
+     * @description キャッシュされたマテリアルデータを取得.
+     */
+    get: operations["list_cached_materials_api_integration_sap_materials_cache_get"];
+    put?: never;
+    post?: never;
+    /**
+     * Clear Cache
+     * @description キャッシュをクリア.
+     */
+    delete: operations["clear_cache_api_integration_sap_materials_cache_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/reconcile": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reconcile Ocr Results
+     * @description OCR結果をSAP・マスタと突合.
+     *
+     *     突合ロジック:
+     *     1. SAP突合（完全一致 → 前方一致）
+     *     2. マスタ突合
+     *     3. 総合ステータス判定（OK/WARNING/ERROR）
+     *
+     *     Note:
+     *         キャッシュがない場合は自動的にSAPから再取得を試みます。
+     */
+    post: operations["reconcile_ocr_results_api_integration_sap_reconcile_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/reconcile/single": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reconcile Single
+     * @description 1件を突合.
+     *
+     *     デバッグ・テスト用のエンドポイント。
+     */
+    post: operations["reconcile_single_api_integration_sap_reconcile_single_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/logs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Fetch Logs
+     * @description SAP取得ログ一覧を取得.
+     */
+    get: operations["list_fetch_logs_api_integration_sap_logs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/rpa/material-delivery-document": {
     parameters: {
       query?: never;
@@ -7161,6 +7362,81 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/smartread/configs/{config_id}/pad-runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * PAD互換フロー一覧を取得
+     * @description PAD互換フロー一覧を取得.
+     */
+    get: operations["list_pad_runs_api_rpa_smartread_configs__config_id__pad_runs_get"];
+    put?: never;
+    /**
+     * PAD互換フローを開始
+     * @description PAD互換フローを開始（バックグラウンド処理）.
+     *
+     *     監視フォルダ内のファイルを指定してPAD互換フローを開始します。
+     *     処理はバックグラウンドスレッドで実行され、即座にrun_idを返します。
+     *
+     *     進捗状況は GET /pad-runs/{run_id} で確認できます。
+     */
+    post: operations["start_pad_run_api_rpa_smartread_configs__config_id__pad_runs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/pad-runs/{run_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * PAD互換フロー状態を取得
+     * @description PAD互換フローの状態を取得（STALE検出を含む）.
+     *
+     *     RUNNINGステータスの場合、heartbeat_atが一定時間（120秒）更新されていなければ
+     *     STALEとしてマークされます。
+     */
+    get: operations["get_pad_run_status_api_rpa_smartread_configs__config_id__pad_runs__run_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/smartread/configs/{config_id}/pad-runs/{run_id}/retry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * PAD互換フローをリトライ
+     * @description 失敗/Staleの実行をリトライ.
+     *
+     *     同じ入力ファイルで新しい実行を開始します。
+     *     リトライ回数には上限があります（デフォルト3回）。
+     */
+    post: operations["retry_pad_run_api_rpa_smartread_configs__config_id__pad_runs__run_id__retry_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/status": {
     parameters: {
       query?: never;
@@ -7469,6 +7745,108 @@ export interface paths {
      * @description OCR結果をExcel/CSVでエクスポート.
      */
     get: operations["export_ocr_results_api_ocr_results_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/objects": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Db Objects */
+    get: operations["list_db_objects_api_debug_db_objects_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/objects/{schema}/{name}/schema": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Object Schema */
+    get: operations["get_object_schema_api_debug_db_objects__schema___name__schema_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/objects/{schema}/{name}/rows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Object Rows */
+    get: operations["get_object_rows_api_debug_db_objects__schema___name__rows_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/objects/{schema}/{name}/definition": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get View Definition */
+    get: operations["get_view_definition_api_debug_db_objects__schema___name__definition_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/graph": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Db Graph */
+    get: operations["get_db_graph_api_debug_db_graph_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/debug/db/objects/{schema}/{name}/relations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Object Relations */
+    get: operations["get_object_relations_api_debug_db_objects__schema___name__relations_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -11690,6 +12068,8 @@ export interface components {
       jiku_code?: string | null;
       /** Material Code */
       material_code?: string | null;
+      /** Delivery Quantity */
+      delivery_quantity?: string | null;
     };
     /**
      * OcrResultEditResponse
@@ -11720,6 +12100,8 @@ export interface components {
       jiku_code?: string | null;
       /** Material Code */
       material_code?: string | null;
+      /** Delivery Quantity */
+      delivery_quantity?: string | null;
       /**
        * Updated At
        * Format: date-time
@@ -11847,6 +12229,8 @@ export interface components {
        * @default false
        */
       has_error: boolean;
+      /** Manual Delivery Quantity */
+      manual_delivery_quantity?: string | null;
     };
     /**
      * OcrResultListResponse
@@ -13828,6 +14212,394 @@ export interface components {
       skipped_count: number;
     };
     /**
+     * SapConnectionCreateRequest
+     * @description SAP接続情報作成リクエスト.
+     */
+    SapConnectionCreateRequest: {
+      /**
+       * Name
+       * @description 接続名
+       */
+      name: string;
+      /**
+       * Environment
+       * @description 環境（production/test）
+       */
+      environment: string;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+      /**
+       * Ashost
+       * @description SAPホスト
+       */
+      ashost: string;
+      /**
+       * Sysnr
+       * @description システム番号
+       */
+      sysnr: string;
+      /**
+       * Client
+       * @description クライアント番号
+       */
+      client: string;
+      /**
+       * User Name
+       * @description ユーザー名
+       */
+      user_name: string;
+      /**
+       * Passwd
+       * @description パスワード（暗号化されて保存）
+       */
+      passwd: string;
+      /**
+       * Lang
+       * @description 言語
+       * @default JA
+       */
+      lang: string;
+      /**
+       * Default Bukrs
+       * @description デフォルト会社コード
+       * @default 10
+       */
+      default_bukrs: string;
+      /**
+       * Default Kunnr
+       * @description デフォルト得意先コード
+       */
+      default_kunnr?: string | null;
+      /**
+       * Is Default
+       * @description デフォルト接続にする
+       * @default false
+       */
+      is_default: boolean;
+    };
+    /**
+     * SapConnectionResponse
+     * @description SAP接続情報レスポンス.
+     */
+    SapConnectionResponse: {
+      /** Id */
+      id: number;
+      /** Name */
+      name: string;
+      /** Environment */
+      environment: string;
+      /** Description */
+      description: string | null;
+      /** Ashost */
+      ashost: string;
+      /** Sysnr */
+      sysnr: string;
+      /** Client */
+      client: string;
+      /** User Name */
+      user_name: string;
+      /** Lang */
+      lang: string;
+      /** Default Bukrs */
+      default_bukrs: string;
+      /** Default Kunnr */
+      default_kunnr: string | null;
+      /** Is Active */
+      is_active: boolean;
+      /** Is Default */
+      is_default: boolean;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * SapConnectionTestResponse
+     * @description SAP接続テスト結果.
+     */
+    SapConnectionTestResponse: {
+      /** Success */
+      success: boolean;
+      /** Message */
+      message: string;
+      /** Details */
+      details?: {
+        [key: string]: unknown;
+      } | null;
+      /** Duration Ms */
+      duration_ms: number;
+    };
+    /**
+     * SapConnectionUpdateRequest
+     * @description SAP接続情報更新リクエスト.
+     */
+    SapConnectionUpdateRequest: {
+      /**
+       * Name
+       * @description 接続名
+       */
+      name?: string | null;
+      /**
+       * Environment
+       * @description 環境（production/test）
+       */
+      environment?: string | null;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+      /**
+       * Ashost
+       * @description SAPホスト
+       */
+      ashost?: string | null;
+      /**
+       * Sysnr
+       * @description システム番号
+       */
+      sysnr?: string | null;
+      /**
+       * Client
+       * @description クライアント番号
+       */
+      client?: string | null;
+      /**
+       * User Name
+       * @description ユーザー名
+       */
+      user_name?: string | null;
+      /**
+       * Passwd
+       * @description パスワード（空=変更なし）
+       */
+      passwd?: string | null;
+      /**
+       * Lang
+       * @description 言語
+       */
+      lang?: string | null;
+      /**
+       * Default Bukrs
+       * @description デフォルト会社コード
+       */
+      default_bukrs?: string | null;
+      /**
+       * Default Kunnr
+       * @description デフォルト得意先コード
+       */
+      default_kunnr?: string | null;
+      /**
+       * Is Default
+       * @description デフォルト接続にする
+       */
+      is_default?: boolean | null;
+      /**
+       * Is Active
+       * @description 有効/無効
+       */
+      is_active?: boolean | null;
+    };
+    /**
+     * SapFetchLogResponse
+     * @description SAP取得ログレスポンス.
+     */
+    SapFetchLogResponse: {
+      /** Id */
+      id: number;
+      /** Connection Id */
+      connection_id: number;
+      /** Fetch Batch Id */
+      fetch_batch_id: string;
+      /** Rfc Name */
+      rfc_name: string;
+      /** Params */
+      params: {
+        [key: string]: unknown;
+      };
+      /** Status */
+      status: string;
+      /** Record Count */
+      record_count: number | null;
+      /** Error Message */
+      error_message: string | null;
+      /** Duration Ms */
+      duration_ms: number | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * SapMaterialCacheResponse
+     * @description SAPキャッシュレスポンス.
+     */
+    SapMaterialCacheResponse: {
+      /** Id */
+      id: number;
+      /** Connection Id */
+      connection_id: number;
+      /** Zkdmat B */
+      zkdmat_b: string;
+      /** Kunnr */
+      kunnr: string;
+      /** Raw Data */
+      raw_data: {
+        [key: string]: unknown;
+      };
+      /**
+       * Fetched At
+       * Format: date-time
+       */
+      fetched_at: string;
+      /** Fetch Batch Id */
+      fetch_batch_id: string | null;
+    };
+    /**
+     * SapMaterialFetchRequest
+     * @description SAPマテリアル取得リクエスト.
+     */
+    SapMaterialFetchRequest: {
+      /**
+       * Connection Id
+       * @description 接続ID（省略時はデフォルト）
+       */
+      connection_id?: number | null;
+      /**
+       * Kunnr F
+       * @description 得意先コードFrom
+       */
+      kunnr_f?: string | null;
+      /**
+       * Kunnr T
+       * @description 得意先コードTo
+       */
+      kunnr_t?: string | null;
+      /**
+       * Bukrs
+       * @description 会社コード
+       * @default 10
+       */
+      bukrs: string;
+      /**
+       * Zaiko
+       * @description 在庫品フラグ
+       * @default X
+       */
+      zaiko: string;
+      /**
+       * Limit
+       * @description 取得件数上限
+       */
+      limit?: number | null;
+    };
+    /**
+     * SapMaterialFetchResponse
+     * @description SAPマテリアル取得レスポンス.
+     */
+    SapMaterialFetchResponse: {
+      /** Success */
+      success: boolean;
+      /** Fetch Batch Id */
+      fetch_batch_id: string;
+      /** Record Count */
+      record_count: number;
+      /** Cached Count */
+      cached_count: number;
+      /** Error Message */
+      error_message: string | null;
+      /** Duration Ms */
+      duration_ms: number;
+    };
+    /**
+     * SapReconcileRequest
+     * @description 突合リクエスト.
+     */
+    SapReconcileRequest: {
+      /**
+       * Task Date
+       * @description タスク日付（YYYY-MM-DD）
+       */
+      task_date?: string | null;
+      /**
+       * Config Id
+       * @description SmartRead設定ID
+       */
+      config_id?: number | null;
+      /**
+       * Customer Code
+       * @description 得意先コード
+       * @default 100427105
+       */
+      customer_code: string;
+    };
+    /**
+     * SapReconcileResultResponse
+     * @description 1行の突合結果.
+     */
+    SapReconcileResultResponse: {
+      /** Material Code */
+      material_code: string | null;
+      /** Jiku Code */
+      jiku_code: string | null;
+      /** Customer Code */
+      customer_code: string;
+      /** Sap Match Type */
+      sap_match_type: string;
+      /** Sap Matched Zkdmat B */
+      sap_matched_zkdmat_b: string | null;
+      /** Sap Raw Data */
+      sap_raw_data: {
+        [key: string]: unknown;
+      } | null;
+      /** Master Match Type */
+      master_match_type: string;
+      /** Master Id */
+      master_id: number | null;
+      /** Master Customer Part No */
+      master_customer_part_no: string | null;
+      /** Overall Status */
+      overall_status: string;
+      /** Messages */
+      messages: string[];
+    };
+    /**
+     * SapReconcileSummaryResponse
+     * @description 突合サマリーレスポンス.
+     */
+    SapReconcileSummaryResponse: {
+      /** Total Count */
+      total_count: number;
+      /** Ok Count */
+      ok_count: number;
+      /** Warning Count */
+      warning_count: number;
+      /** Error Count */
+      error_count: number;
+      /** Sap Exact Count */
+      sap_exact_count: number;
+      /** Sap Prefix Count */
+      sap_prefix_count: number;
+      /** Sap Not Found Count */
+      sap_not_found_count: number;
+      /** Master Matched Count */
+      master_matched_count: number;
+      /** Master Not Found Count */
+      master_not_found_count: number;
+      /** Results */
+      results: components["schemas"]["SapReconcileResultResponse"][];
+    };
+    /**
      * ShipmentTextRequest
      * @description Request schema for getting shipment text.
      */
@@ -14447,6 +15219,217 @@ export interface components {
       error_reason: string | null;
       /** Created At */
       created_at: string;
+    };
+    /**
+     * SmartReadPadRunListItem
+     * @description PAD互換フロー一覧アイテム.
+     */
+    SmartReadPadRunListItem: {
+      /**
+       * Run Id
+       * @description 実行ID
+       */
+      run_id: string;
+      /**
+       * Status
+       * @description ステータス
+       */
+      status: string;
+      /**
+       * Step
+       * @description 現在の工程
+       */
+      step: string;
+      /**
+       * Filenames
+       * @description 処理対象ファイル名
+       */
+      filenames?: string[] | null;
+      /**
+       * Wide Data Count
+       * @description 横持ちデータ件数
+       * @default 0
+       */
+      wide_data_count: number;
+      /**
+       * Long Data Count
+       * @description 縦持ちデータ件数
+       * @default 0
+       */
+      long_data_count: number;
+      /**
+       * Created At
+       * @description 作成日時
+       */
+      created_at: string;
+      /**
+       * Completed At
+       * @description 完了日時
+       */
+      completed_at?: string | null;
+    };
+    /**
+     * SmartReadPadRunListResponse
+     * @description PAD互換フロー一覧レスポンス.
+     */
+    SmartReadPadRunListResponse: {
+      /**
+       * Runs
+       * @description 実行一覧
+       */
+      runs: components["schemas"]["SmartReadPadRunListItem"][];
+    };
+    /**
+     * SmartReadPadRunRetryResponse
+     * @description PAD互換フローリトライレスポンス.
+     */
+    SmartReadPadRunRetryResponse: {
+      /**
+       * New Run Id
+       * @description 新しい実行ID
+       */
+      new_run_id: string;
+      /**
+       * Original Run Id
+       * @description 元の実行ID
+       */
+      original_run_id: string;
+      /**
+       * Message
+       * @description メッセージ
+       * @default リトライを開始しました
+       */
+      message: string;
+    };
+    /**
+     * SmartReadPadRunStartRequest
+     * @description PAD互換フロー開始リクエスト.
+     */
+    SmartReadPadRunStartRequest: {
+      /**
+       * Filenames
+       * @description 監視フォルダ内のファイル名リスト
+       */
+      filenames: string[];
+    };
+    /**
+     * SmartReadPadRunStartResponse
+     * @description PAD互換フロー開始レスポンス.
+     */
+    SmartReadPadRunStartResponse: {
+      /**
+       * Run Id
+       * @description 実行ID (UUID)
+       */
+      run_id: string;
+      /**
+       * Status
+       * @description ステータス
+       * @default RUNNING
+       */
+      status: string;
+      /**
+       * Message
+       * @description メッセージ
+       * @default PAD互換フローを開始しました
+       */
+      message: string;
+    };
+    /**
+     * SmartReadPadRunStatusResponse
+     * @description PAD互換フロー状態レスポンス.
+     */
+    SmartReadPadRunStatusResponse: {
+      /**
+       * Run Id
+       * @description 実行ID
+       */
+      run_id: string;
+      /**
+       * Config Id
+       * @description 設定ID
+       */
+      config_id: number;
+      /**
+       * Status
+       * @description ステータス (RUNNING/SUCCEEDED/FAILED/STALE)
+       */
+      status: string;
+      /**
+       * Step
+       * @description 現在の工程
+       */
+      step: string;
+      /**
+       * Task Id
+       * @description SmartReadタスクID
+       */
+      task_id?: string | null;
+      /**
+       * Export Id
+       * @description SmartReadエクスポートID
+       */
+      export_id?: string | null;
+      /**
+       * Filenames
+       * @description 処理対象ファイル名
+       */
+      filenames?: string[] | null;
+      /**
+       * Wide Data Count
+       * @description 横持ちデータ件数
+       * @default 0
+       */
+      wide_data_count: number;
+      /**
+       * Long Data Count
+       * @description 縦持ちデータ件数
+       * @default 0
+       */
+      long_data_count: number;
+      /**
+       * Error Message
+       * @description エラーメッセージ
+       */
+      error_message?: string | null;
+      /**
+       * Created At
+       * @description 作成日時
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * @description 更新日時
+       */
+      updated_at: string;
+      /**
+       * Heartbeat At
+       * @description 最終heartbeat日時
+       */
+      heartbeat_at: string;
+      /**
+       * Completed At
+       * @description 完了日時
+       */
+      completed_at?: string | null;
+      /**
+       * Can Retry
+       * @description リトライ可能か
+       * @default false
+       */
+      can_retry: boolean;
+      /**
+       * Retry Count
+       * @description 現在のリトライ回数
+       * @default 0
+       */
+      retry_count: number;
+      /**
+       * Max Retries
+       * @description 最大リトライ回数
+       * @default 3
+       */
+      max_retries: number;
     };
     /**
      * SmartReadProcessRequest
@@ -24689,6 +25672,378 @@ export interface operations {
       };
     };
   };
+  list_connections_api_integration_sap_connections_get: {
+    parameters: {
+      query?: {
+        /** @description アクティブな接続のみ */
+        active_only?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapConnectionResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_connection_api_integration_sap_connections_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SapConnectionCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapConnectionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_connection_api_integration_sap_connections__connection_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        connection_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SapConnectionUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapConnectionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_connection_api_integration_sap_connections__connection_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        connection_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: string;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  test_connection_api_integration_sap_connections__connection_id__test_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        connection_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapConnectionTestResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  fetch_materials_api_integration_sap_materials_fetch_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SapMaterialFetchRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapMaterialFetchResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_cached_materials_api_integration_sap_materials_cache_get: {
+    parameters: {
+      query?: {
+        /** @description 接続ID */
+        connection_id?: number | null;
+        /** @description 得意先コード */
+        kunnr?: string | null;
+        /** @description 取得件数上限 */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapMaterialCacheResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  clear_cache_api_integration_sap_materials_cache_delete: {
+    parameters: {
+      query?: {
+        /** @description 接続ID */
+        connection_id?: number | null;
+        /** @description 得意先コード */
+        kunnr?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: string | number;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  reconcile_ocr_results_api_integration_sap_reconcile_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SapReconcileRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapReconcileSummaryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  reconcile_single_api_integration_sap_reconcile_single_post: {
+    parameters: {
+      query: {
+        /** @description 材質コード */
+        material_code: string;
+        /** @description 次区 */
+        jiku_code?: string | null;
+        /** @description 得意先コード */
+        customer_code?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapReconcileResultResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_fetch_logs_api_integration_sap_logs_get: {
+    parameters: {
+      query?: {
+        /** @description 接続ID */
+        connection_id?: number | null;
+        /** @description 取得件数上限 */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapFetchLogResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   execute_material_delivery_document_api_rpa_material_delivery_document_post: {
     parameters: {
       query?: never;
@@ -26792,6 +28147,141 @@ export interface operations {
       };
     };
   };
+  list_pad_runs_api_rpa_smartread_configs__config_id__pad_runs_get: {
+    parameters: {
+      query?: {
+        /** @description ステータスでフィルタ */
+        status_filter?: string | null;
+        /** @description 取得件数 */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadPadRunListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  start_pad_run_api_rpa_smartread_configs__config_id__pad_runs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadPadRunStartRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadPadRunStartResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_pad_run_status_api_rpa_smartread_configs__config_id__pad_runs__run_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadPadRunStatusResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  retry_pad_run_api_rpa_smartread_configs__config_id__pad_runs__run_id__retry_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: number;
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadPadRunRetryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_master_status_api_masters_status_get: {
     parameters: {
       query?: never;
@@ -27360,6 +28850,193 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_db_objects_api_debug_db_objects_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          }[];
+        };
+      };
+    };
+  };
+  get_object_schema_api_debug_db_objects__schema___name__schema_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schema: string;
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_object_rows_api_debug_db_objects__schema___name__rows_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+        offset?: number;
+        order_by?: string | null;
+        order_dir?: string;
+        q?: string | null;
+        filters?: string[] | null;
+      };
+      header?: never;
+      path: {
+        schema: string;
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_view_definition_api_debug_db_objects__schema___name__definition_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schema: string;
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_db_graph_api_debug_db_graph_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+    };
+  };
+  get_object_relations_api_debug_db_objects__schema___name__relations_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schema: string;
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */

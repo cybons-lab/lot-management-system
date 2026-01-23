@@ -231,6 +231,66 @@ class SmartReadExportHistory(Base):
     )
 
 
+class SmartReadPadRun(Base):
+    """PAD互換フローの実行記録（工程追跡用）.
+
+    PADスクリプトと同じ手順（task→request→poll→export→download→CSV後処理）を
+    サーバ側で実行し、各工程の状態をDBに記録する。
+
+    heartbeat_at でバックグラウンド処理の生存を確認し、
+    一定時間更新がなければ STALE として検出する。
+
+    See: docs/smartread/pad_runner_implementation_plan.md
+    """
+
+    __tablename__ = "smartread_pad_runs"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    run_id: Mapped[str] = mapped_column(String(36), unique=True, nullable=False, index=True)
+    config_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("smartread_configs.id", ondelete="CASCADE"), nullable=False
+    )
+
+    # 状態管理
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="RUNNING", server_default=text("'RUNNING'")
+    )  # RUNNING / SUCCEEDED / FAILED / STALE
+
+    step: Mapped[str] = mapped_column(
+        String(30), nullable=False, default="CREATED", server_default=text("'CREATED'")
+    )
+    # step: CREATED / TASK_CREATED / UPLOADED / REQUEST_DONE / TASK_DONE /
+    #       EXPORT_STARTED / EXPORT_DONE / DOWNLOADED / POSTPROCESSED
+
+    # SmartRead API のID
+    task_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    export_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # 入力情報（監視フォルダ内のファイル名リスト）
+    filenames: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+
+    # 結果
+    wide_data_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    long_data_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # タイムスタンプ
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    heartbeat_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    # リトライ管理
+    retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    max_retries: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+
+
 class OcrResultEdit(Base):
     """OCR結果の手入力編集内容を保存."""
 
@@ -257,6 +317,7 @@ class OcrResultEdit(Base):
     )
     jiku_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     material_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    delivery_quantity: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )

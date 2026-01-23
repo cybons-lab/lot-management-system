@@ -5,11 +5,13 @@
  */
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Settings, Loader2, AlertCircle, RefreshCw, FileText } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { Settings, Loader2, RefreshCw, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
 
 import { diagnoseWatchDirFile } from "../api";
+import { SmartReadConfigSelector } from "../components/SmartReadConfigSelector";
 import { SmartReadManagedTaskList } from "../components/SmartReadManagedTaskList";
+import { SmartReadPadRunStatusList } from "../components/SmartReadPadRunStatusList";
 import { SmartReadResultView } from "../components/SmartReadResultView";
 import { SmartReadSavedDataList } from "../components/SmartReadSavedDataList";
 import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
@@ -17,16 +19,15 @@ import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
 import {
   useSmartReadConfigs,
   useWatchDirFiles,
-  useProcessFilesAuto,
   useSmartReadTasks,
+  useStartPadRun,
+  usePadRuns,
 } from "../hooks";
 import { SMARTREAD_QUERY_KEYS } from "../hooks";
 import { logger } from "../utils/logger";
 
 import { Button } from "@/components/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { Checkbox } from "@/components/ui";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui";
 import {
   Card,
   CardContent,
@@ -56,27 +57,29 @@ export function SmartReadPage() {
     isLoading: isWatchFilesLoading,
     refetch: refetchWatchFiles,
   } = useWatchDirFiles(selectedConfigId);
-  const processWatchFilesMutation = useProcessFilesAuto();
-  const { refetch: refetchTasks } = useSmartReadTasks(selectedConfigId, false);
-
-  const activeConfigs = useMemo(() => configs?.filter((c) => c.is_active) ?? [], [configs]);
+  // PAD互換フロー: /pad-runs API を使用
+  const startPadRunMutation = useStartPadRun();
+  const { data: padRuns, refetch: refetchPadRuns } = usePadRuns(selectedConfigId);
+  useSmartReadTasks(selectedConfigId, false);
 
   // Auto-select default config
   useEffect(() => {
-    if (!configsLoading && activeConfigs.length > 0 && selectedConfigId === null) {
+    if (!configsLoading && configs && selectedConfigId === null) {
+      const activeConfigs = configs.filter((c) => c.is_active);
       const defaultConfig = activeConfigs.find((c) => c.is_default);
       if (defaultConfig) {
         setSelectedConfigId(defaultConfig.id);
-      } else {
+      } else if (activeConfigs.length > 0) {
         logger.info("デフォルト設定がありません。設定を選択してください。");
       }
     }
-  }, [configsLoading, activeConfigs, selectedConfigId]);
+  }, [configsLoading, configs, selectedConfigId]);
 
   const handleProcessWatchFiles = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0) return;
 
-    await processWatchFilesMutation.mutateAsync({
+    // PAD互換フロー: /pad-runs API を使用
+    await startPadRunMutation.mutateAsync({
       configId: selectedConfigId,
       filenames: selectedWatchFiles,
     });
@@ -85,17 +88,11 @@ export function SmartReadPage() {
     setSelectedWatchFiles([]);
     setSelectedTaskId(null);
 
-    // Refresh file list and task list, then switch to tasks
+    // Refresh file list and PAD runs list
     refetchWatchFiles();
-    refetchTasks(); // This refetches API tasks... wait, we want Managed Tasks now.
-    // Actually `refetchTasks` was `useSmartReadTasks`.
-    // We might need to refetch managed tasks.
-    // But `SmartReadManagedTaskList` handles its own data fetching.
-    // Tricky part: `handleProcessWatchFiles` calls API to process files. This creates tasks in DB (via backend).
-    // So we just need to ensure `ManagedTaskList` refreshes.
-    // We can invalidate the query here.
+    refetchPadRuns();
 
-    // setActiveTab("tasks"); // we will rename "history" to "tasks"
+    // タスクタブに切り替え（PAD Runの状態表示はタスクタブで行う）
     await queryClient.invalidateQueries({
       queryKey: selectedConfigId ? SMARTREAD_QUERY_KEYS.managedTasks(selectedConfigId) : [],
     });
@@ -160,53 +157,16 @@ export function SmartReadPage() {
       />
 
       <div className="flex h-[calc(100vh-12rem)] flex-col gap-4">
-        {/* ... Config Selection ... */}
-        {/* (Keep verify existing code for Config Selection) */}
-        <Card className="shrink-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <label htmlFor="config-select" className="text-sm font-medium whitespace-nowrap">
-                AI-OCR設定
-              </label>
-              <div className="flex-1">
-                {configsLoading ? (
-                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    設定を読み込み中...
-                  </div>
-                ) : activeConfigs.length === 0 ? (
-                  <Alert variant="default" className="border-amber-200 bg-amber-50">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                    <AlertTitle className="text-amber-800">設定がありません</AlertTitle>
-                    <AlertDescription className="text-amber-700">
-                      AI-OCR設定を追加してください。右上の「設定」ボタンから追加できます。
-                    </AlertDescription>
-                  </Alert>
-                ) : (
-                  <Select
-                    value={selectedConfigId?.toString() ?? ""}
-                    onValueChange={(value: string) => {
-                      setSelectedConfigId(Number(value));
-                      setSelectedWatchFiles([]); // Reset selection
-                      setSelectedTaskId(null); // Reset task selection
-                    }}
-                  >
-                    <SelectTrigger id="config-select">
-                      <SelectValue placeholder="設定を選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {activeConfigs.map((config) => (
-                        <SelectItem key={config.id} value={config.id.toString()}>
-                          {config.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <SmartReadConfigSelector
+          configs={configs}
+          isLoading={configsLoading}
+          selectedConfigId={selectedConfigId}
+          onSelect={(id) => {
+            setSelectedConfigId(id);
+            setSelectedWatchFiles([]);
+            setSelectedTaskId(null);
+          }}
+        />
 
         {/* Tabs Layout */}
         <Tabs
@@ -305,11 +265,11 @@ export function SmartReadPage() {
                           className="w-full"
                           size="sm"
                           disabled={
-                            selectedWatchFiles.length === 0 || processWatchFilesMutation.isPending
+                            selectedWatchFiles.length === 0 || startPadRunMutation.isPending
                           }
                           onClick={handleProcessWatchFiles}
                         >
-                          {processWatchFilesMutation.isPending && (
+                          {startPadRunMutation.isPending && (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           )}
                           選択ファイルを処理
@@ -348,13 +308,18 @@ export function SmartReadPage() {
 
           {/* Tab 2: Tasks (Merged) */}
           <TabsContent value="tasks" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
-            <div className="h-full overflow-hidden">
-              <SmartReadManagedTaskList
-                configId={selectedConfigId}
-                selectedTaskId={selectedTaskId}
-                onSelectTask={handleSelectTask}
-                onViewDetail={() => setActiveTab("detail")}
-              />
+            <div className="h-full overflow-hidden flex flex-col gap-4">
+              {/* PAD Run Status (最新の実行状態) */}
+              <SmartReadPadRunStatusList runs={padRuns?.runs} />
+              {/* Managed Task List */}
+              <div className="flex-1 overflow-hidden">
+                <SmartReadManagedTaskList
+                  configId={selectedConfigId}
+                  selectedTaskId={selectedTaskId}
+                  onSelectTask={handleSelectTask}
+                  onViewDetail={() => setActiveTab("detail")}
+                />
+              </div>
             </div>
           </TabsContent>
 

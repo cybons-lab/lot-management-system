@@ -65,6 +65,7 @@ import {
 } from "@/features/rpa/material-delivery-note";
 import { GenericCloudFlowExecutePage } from "@/features/rpa/pages/GenericCloudFlowExecutePage";
 import { SmartReadPage } from "@/features/rpa/smartread";
+import { SapIntegrationPage } from "@/features/sap-integration";
 import { ShippingMasterListPage } from "@/features/shipping-master/pages/ShippingMasterListPage";
 import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
 import { SuppliersListPage } from "@/features/suppliers";
@@ -224,6 +225,7 @@ function AdminRoutes() {
   );
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 export function MainRoutes() {
   return (
     <Routes>
@@ -303,6 +305,16 @@ export function MainRoutes() {
 
       {/* Help */}
       <Route path={ROUTES.HELP.FLOW_MAP} element={<FlowMapHelpPage />} />
+
+      {/* SAP Integration */}
+      <Route
+        path={ROUTES.SAP.ROOT}
+        element={
+          <AdminGuard>
+            <SapIntegrationPage />
+          </AdminGuard>
+        }
+      />
 
       {/* Catch all - redirect to dashboard */}
       <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+
 os.environ.setdefault("ENABLE_DB_BROWSER", "true")
 
 from app.infrastructure.persistence.models.base_model import Base
