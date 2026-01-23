@@ -1,7 +1,7 @@
 # レビュー・意思決定の統合記録 (REVIEW_HISTORY_CONSOLIDATED)
 
 このドキュメントは、過去に実施されたコードレビュー、設計レビュー、および主要な意思決定の記録を一つにまとめたものです。
-現在のアクションアイテム（未対応の課題）はすべて [FUTURE_IMPROVEMENTS.md](../tasks/FUTURE_IMPROVEMENTS.md) に集約されています。
+現在のアクションアイテム（未対応の課題）はすべて [FUTURE_IMPROVEMENTS.md](../plans/backlog/FUTURE_IMPROVEMENTS.md) に集約されています。
 
 ---
 
@@ -14,7 +14,7 @@
 ### 対応状況
 - [x] **Service層のデータ損失修正**: `customer_items_service.py` が一部フィールドを返していなかったバグを修正。
 - [ ] **ビジネス要件への適合**: 先方品番を主軸とした設計への見直し。
-  - → [FUTURE_IMPROVEMENTS.md: 商品識別設計のビジネス実態への適合](../tasks/FUTURE_IMPROVEMENTS.md#商品識別設計のビジネス実態への適合) へ移行。
+  - → [FUTURE_IMPROVEMENTS.md: 商品識別設計のビジネス実態への適合](../plans/backlog/FUTURE_IMPROVEMENTS.md#商品識別設計のビジネス実態への適合) へ移行。
 
 ---
 
@@ -24,7 +24,7 @@
 ### 決定事項
 - [x] **アラート条件の修正**: `collect_order_alerts` の判定条件を `status="open"` に統一。
 - [x] **自動引当失敗時の挙動**: 現状はログ出力（WARNING）のみとし、将来的にリトライ機構等を検討する。
-  - → 詳細は [FUTURE_IMPROVEMENTS.md: 在庫計算ロジックの厳密化とSSOT固定](../tasks/FUTURE_IMPROVEMENTS.md#在庫計算ロジックの厳密化とssot固定) に関連。
+  - → 詳細は [FUTURE_IMPROVEMENTS.md: 在庫計算ロジックの厳密化とSSOT固定](../plans/backlog/FUTURE_IMPROVEMENTS.md#在庫計算ロジックの厳密化とssot固定) に関連。
 
 ---
 
@@ -38,11 +38,11 @@
 - [x] **モデル名のリネーム**: `Lot` → `LotReceipt` (入荷実体) へ変更。
 - [x] **ロット番号の一本化**: `lot_master` テーブルを新設し、重複を排除。
 - [ ] **計算ロジックのSSOT固定**: 利用可能在庫の計算式不備の解消。
-  - → [FUTURE_IMPROVEMENTS.md: 在庫計算ロジックの厳密化とSSOT固定](../tasks/FUTURE_IMPROVEMENTS.md#在庫計算ロジックの厳密化とssot固定) へ移行。
+  - → [FUTURE_IMPROVEMENTS.md: 在庫計算ロジックの厳密化とSSOT固定](../plans/backlog/FUTURE_IMPROVEMENTS.md#在庫計算ロジックの厳密化とssot固定) へ移行。
 - [ ] **スケーラビリティ対応**: 100件上限の撤廃とサーバーサイドページング。
-  - → [FUTURE_IMPROVEMENTS.md: 大量データ表示の完全対応](../tasks/FUTURE_IMPROVEMENTS.md#大量データ表示の完全対応-ページネーション) へ移行。
+  - → [FUTURE_IMPROVEMENTS.md: 大量データ表示の完全対応](../plans/backlog/FUTURE_IMPROVEMENTS.md#大量データ表示の完全対応-ページネーション) へ移行。
 - [ ] **DBトリガーによる自動同期**:
-  - → [FUTURE_IMPROVEMENTS.md: DB整合性維持の自動化](../tasks/FUTURE_IMPROVEMENTS.md#db整合性維持の自動化-db-triggers) へ移行。
+  - → [FUTURE_IMPROVEMENTS.md: DB整合性維持の自動化](../plans/backlog/FUTURE_IMPROVEMENTS.md#db整合性維持の自動化-db-triggers) へ移行。
 
 ---
 
