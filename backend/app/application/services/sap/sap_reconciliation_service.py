@@ -29,7 +29,8 @@ class SapMatchType(str, Enum):
     """SAP突合タイプ."""
 
     EXACT = "exact"  # 完全一致（材質コード直接）
-    MASTER_VIA = "master_via"  # マスタ経由一致（先方品番経由）
+    MASTER_VIA = "master_via"  # マスタ経由一致（先方品番経由） - 旧方式
+    MASTER_REVERSE = "master_reverse"  # マスタ逆引き一致（材質コード経由） - 新方式
     PREFIX = "prefix"  # 前方一致（警告）
     NOT_FOUND = "not_found"  # 未一致
 
@@ -104,7 +105,8 @@ class ReconciliationSummary:
     error_count: int = 0
 
     sap_exact_count: int = 0
-    sap_master_via_count: int = 0  # マスタ経由一致
+    sap_master_via_count: int = 0  # マスタ経由一致（旧）
+    sap_master_reverse_count: int = 0  # マスタ逆引き一致（新）
     sap_prefix_count: int = 0
     sap_not_found_count: int = 0
 
@@ -122,6 +124,7 @@ class ReconciliationSummary:
             "error_count": self.error_count,
             "sap_exact_count": self.sap_exact_count,
             "sap_master_via_count": self.sap_master_via_count,
+            "sap_master_reverse_count": self.sap_master_reverse_count,
             "sap_prefix_count": self.sap_prefix_count,
             "sap_not_found_count": self.sap_not_found_count,
             "master_matched_count": self.master_matched_count,
@@ -230,6 +233,37 @@ class SapReconciliationService:
 
         return result
 
+    def _lookup_master_material_code(
+        self,
+        customer_code: str,
+        customer_part_no: str,
+        jiku_code: str | None,
+    ) -> str | None:
+        """マスタから材質コード（メーカー品番）を逆引き.
+
+        Args:
+            customer_code: 得意先コード
+            customer_part_no: 先方品番（OCRの材質コード）
+            jiku_code: 次区
+
+        Returns:
+            マスタの材質コード（メーカー品番）
+        """
+        stmt = select(ShippingMasterCurated.material_code).where(
+            ShippingMasterCurated.customer_code == customer_code,
+            ShippingMasterCurated.customer_part_no == customer_part_no,
+            ShippingMasterCurated.jiku_code == (jiku_code or ""),
+        )
+        result_code = self.db.execute(stmt).scalar()
+
+        if result_code:
+            logger.debug(
+                f"[Master Reverse] Found material_code={result_code} for "
+                f"customer_part_no={customer_part_no}, jiku={jiku_code}"
+            )
+
+        return result_code
+
     def _reconcile_sap(
         self,
         result: ReconciliationResult,
@@ -237,10 +271,11 @@ class SapReconciliationService:
     ) -> None:
         """SAP突合.
 
-        突合順序:
-        1. 直接一致: material_code == ZKDMAT_B
-        2. マスタ経由一致: master_customer_part_no == ZKDMAT_B
-        3. 前方一致: material_codeでZKDMAT_Bが前方一致（一意の場合のみ）
+        突合順序（新方式）:
+        1. 直接一致: SAP先方品番(ZKDMAT_B) == OCR材質コード
+        2. マスタ逆引き: マスタキー(得意先, 先方品番=OCR材質, 次区) → 材質コード取得
+           → SAP先方品番(ZKDMAT_B) == 取得した材質コード
+        3. 前方一致: material_codeでZKDMAT_Bが前方一致（一意の場合のみ、警告）
 
         Args:
             result: 突合結果（更新される）
@@ -250,7 +285,7 @@ class SapReconciliationService:
             result.messages.append("SAPキャッシュが未ロードです")
             return
 
-        # 1. 直接一致チェック: material_code == ZKDMAT_B
+        # 1. 直接一致チェック: SAP先方品番 == OCR材質コード
         if material_code in self._sap_cache:
             cache_item = self._sap_cache[material_code]
             result.sap_match_type = SapMatchType.EXACT
@@ -259,20 +294,28 @@ class SapReconciliationService:
             logger.debug(f"[SAP] Exact match: {material_code} == {cache_item.zkdmat_b}")
             return
 
-        # 2. マスタ経由一致チェック: master_customer_part_no == ZKDMAT_B
-        # ※SAPには次区がないため、マスタから先方品番を取得してSAPと突合
-        if result.master_customer_part_no:
-            customer_part_no = result.master_customer_part_no.strip()
-            if customer_part_no in self._sap_cache:
-                cache_item = self._sap_cache[customer_part_no]
-                result.sap_match_type = SapMatchType.MASTER_VIA
-                result.sap_matched_zkdmat_b = cache_item.zkdmat_b
-                result.sap_raw_data = cache_item.raw_data
-                logger.debug(
-                    f"[SAP] Master-via match: {material_code} "
-                    f"→ master.customer_part_no={customer_part_no} == {cache_item.zkdmat_b}"
-                )
-                return
+        # 2. マスタ逆引きチェック
+        # マスタキー: (得意先, 先方品番=OCR材質, 次区) → 材質コード取得
+        master_material_code = self._lookup_master_material_code(
+            customer_code=result.customer_code,
+            customer_part_no=material_code,  # OCRの材質コードを先方品番として使用
+            jiku_code=result.jiku_code,
+        )
+
+        # 取得した材質コードでSAPと再マッチング
+        if master_material_code and master_material_code in self._sap_cache:
+            cache_item = self._sap_cache[master_material_code]
+            result.sap_match_type = SapMatchType.MASTER_REVERSE
+            result.sap_matched_zkdmat_b = cache_item.zkdmat_b
+            result.sap_raw_data = cache_item.raw_data
+            result.messages.append(
+                f"マスタ逆引き: OCR材質={material_code} → マスタ材質={master_material_code}"
+            )
+            logger.debug(
+                f"[SAP] Master-reverse match: {material_code} "
+                f"→ master.material_code={master_material_code} == {cache_item.zkdmat_b}"
+            )
+            return
 
         # 3. 前方一致チェック
         prefix_matches = [
@@ -344,7 +387,7 @@ class SapReconciliationService:
         """総合ステータスを判定.
 
         判定ロジック:
-        - OK: SAP一致(EXACT or MASTER_VIA) & マスタ一致
+        - OK: SAP一致(EXACT or MASTER_VIA or MASTER_REVERSE) & マスタ一致
         - WARNING: SAP前方一致(PREFIX) & マスタ一致
         - ERROR: SAP未一致 or マスタ未一致
 
@@ -354,12 +397,17 @@ class SapReconciliationService:
         sap_ok = result.sap_match_type in (
             SapMatchType.EXACT,
             SapMatchType.MASTER_VIA,
+            SapMatchType.MASTER_REVERSE,
             SapMatchType.PREFIX,
         )
         master_ok = result.master_match_type == MasterMatchType.MATCHED
 
         if sap_ok and master_ok:
-            if result.sap_match_type in (SapMatchType.EXACT, SapMatchType.MASTER_VIA):
+            if result.sap_match_type in (
+                SapMatchType.EXACT,
+                SapMatchType.MASTER_VIA,
+                SapMatchType.MASTER_REVERSE,
+            ):
                 result.overall_status = OverallStatus.OK
             else:
                 # PREFIX match
@@ -411,6 +459,8 @@ class SapReconciliationService:
                 summary.sap_exact_count += 1
             elif result.sap_match_type == SapMatchType.MASTER_VIA:
                 summary.sap_master_via_count += 1
+            elif result.sap_match_type == SapMatchType.MASTER_REVERSE:
+                summary.sap_master_reverse_count += 1
             elif result.sap_match_type == SapMatchType.PREFIX:
                 summary.sap_prefix_count += 1
             else:
