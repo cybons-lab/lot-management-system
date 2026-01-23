@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/form/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/overlay/popover-trigger";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Table,
   TableBody,
