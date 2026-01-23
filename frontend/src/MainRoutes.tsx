@@ -48,6 +48,7 @@ import { ProductMappingsListPage } from "@/features/product-mappings";
 import { ProductsListPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { RPAPage } from "@/features/rpa";
+import { SapIntegrationPage } from "@/features/sap-integration";
 import {
   CsvImportPage,
   LayerCodeMappingsPage,
@@ -303,6 +304,16 @@ export function MainRoutes() {
 
       {/* Help */}
       <Route path={ROUTES.HELP.FLOW_MAP} element={<FlowMapHelpPage />} />
+
+      {/* SAP Integration */}
+      <Route
+        path={ROUTES.SAP.ROOT}
+        element={
+          <AdminGuard>
+            <SapIntegrationPage />
+          </AdminGuard>
+        }
+      />
 
       {/* Catch all - redirect to dashboard */}
       <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />

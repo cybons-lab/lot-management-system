@@ -72,6 +72,33 @@ class SapConnectionCreateRequest(BaseModel):
     is_default: bool = Field(False, description="デフォルト接続にする")
 
 
+class SapConnectionUpdateRequest(BaseModel):
+    """SAP接続情報更新リクエスト."""
+
+    name: str | None = Field(None, description="接続名")
+    environment: str | None = Field(None, description="環境（production/test）")
+    description: str | None = Field(None, description="説明")
+    ashost: str | None = Field(None, description="SAPホスト")
+    sysnr: str | None = Field(None, description="システム番号")
+    client: str | None = Field(None, description="クライアント番号")
+    user_name: str | None = Field(None, description="ユーザー名")
+    passwd: str | None = Field(None, description="パスワード（空=変更なし）")
+    lang: str | None = Field(None, description="言語")
+    default_bukrs: str | None = Field(None, description="デフォルト会社コード")
+    default_kunnr: str | None = Field(None, description="デフォルト得意先コード")
+    is_default: bool | None = Field(None, description="デフォルト接続にする")
+    is_active: bool | None = Field(None, description="有効/無効")
+
+
+class SapConnectionTestResponse(BaseModel):
+    """SAP接続テスト結果."""
+
+    success: bool
+    message: str
+    details: dict[str, Any] | None = None
+    duration_ms: int
+
+
 class SapMaterialFetchRequest(BaseModel):
     """SAPマテリアル取得リクエスト."""
 

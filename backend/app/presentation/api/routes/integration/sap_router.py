@@ -23,6 +23,8 @@ from app.infrastructure.persistence.models.sap_models import (
 from app.presentation.schemas.integration.sap_schema import (
     SapConnectionCreateRequest,
     SapConnectionResponse,
+    SapConnectionTestResponse,
+    SapConnectionUpdateRequest,
     SapFetchLogResponse,
     SapMaterialCacheResponse,
     SapMaterialFetchRequest,
@@ -152,6 +154,51 @@ async def create_connection(
     return SapConnectionResponse.model_validate(connection)
 
 
+@router.put("/connections/{connection_id}", response_model=SapConnectionResponse)
+async def update_connection(
+    connection_id: int,
+    request: SapConnectionUpdateRequest,
+    db: Annotated[Session, Depends(get_db)],
+) -> SapConnectionResponse:
+    """SAP接続情報を更新.
+
+    Note:
+        パスワードが空でない場合のみ更新されます。
+    """
+    import base64
+
+    connection = db.get(SapConnection, connection_id)
+    if not connection:
+        raise HTTPException(status_code=404, detail="接続情報が見つかりません")
+
+    # is_default=Trueの場合、他の接続のis_defaultをFalseに
+    if request.is_default:
+        from sqlalchemy import update
+
+        db.execute(
+            update(SapConnection).where(SapConnection.id != connection_id).values(is_default=False)
+        )
+
+    # 更新対象のフィールドのみ更新
+    update_data = request.model_dump(exclude_unset=True)
+
+    # パスワードは特別処理（空でない場合のみ更新）
+    if "passwd" in update_data:
+        passwd = update_data.pop("passwd")
+        if passwd:
+            connection.passwd_encrypted = base64.b64encode(passwd.encode()).decode()
+
+    for key, value in update_data.items():
+        setattr(connection, key, value)
+
+    db.commit()
+    db.refresh(connection)
+
+    logger.info(f"[SAP] Updated connection: id={connection_id}")
+
+    return SapConnectionResponse.model_validate(connection)
+
+
 @router.delete("/connections/{connection_id}")
 async def delete_connection(
     connection_id: int,
@@ -168,6 +215,97 @@ async def delete_connection(
     logger.info(f"[SAP] Deactivated connection: id={connection_id}")
 
     return {"status": "success", "message": f"接続ID {connection_id} を無効化しました"}
+
+
+@router.post("/connections/{connection_id}/test", response_model=SapConnectionTestResponse)
+async def test_connection(
+    connection_id: int,
+    db: Annotated[Session, Depends(get_db)],
+) -> SapConnectionTestResponse:
+    """SAP接続テストを実行.
+
+    pyrfcを使用して実際にSAPに接続し、接続テストを行います。
+    パスワードが設定されていない場合はモックモードとして成功を返します。
+    """
+    import base64
+
+    start_time = time.time()
+    connection = db.get(SapConnection, connection_id)
+
+    if not connection:
+        raise HTTPException(status_code=404, detail="接続情報が見つかりません")
+
+    # パスワード復号化
+    decrypted_passwd = None
+    if connection.passwd_encrypted:
+        try:
+            decrypted_passwd = base64.b64decode(connection.passwd_encrypted).decode()
+        except Exception as e:
+            duration_ms = int((time.time() - start_time) * 1000)
+            return SapConnectionTestResponse(
+                success=False,
+                message=f"パスワード復号化エラー: {e}",
+                duration_ms=duration_ms,
+            )
+
+    # パスワードがない場合はモックモード
+    if not decrypted_passwd:
+        duration_ms = int((time.time() - start_time) * 1000)
+        return SapConnectionTestResponse(
+            success=True,
+            message="モックモード: パスワードが設定されていないため、接続テストをスキップしました",
+            details={"mode": "mock"},
+            duration_ms=duration_ms,
+        )
+
+    # 実際の接続テスト
+    try:
+        from pyrfc import Connection as PyRfcConnection
+
+        conn_params = {
+            "ashost": connection.ashost,
+            "sysnr": connection.sysnr,
+            "client": connection.client,
+            "user": connection.user_name,
+            "passwd": decrypted_passwd,
+            "lang": connection.lang,
+        }
+
+        with PyRfcConnection(**conn_params) as conn:
+            # RFC_PING を呼び出して接続確認
+            conn.call("RFC_PING")
+
+        duration_ms = int((time.time() - start_time) * 1000)
+        return SapConnectionTestResponse(
+            success=True,
+            message="接続テスト成功",
+            details={
+                "mode": "production",
+                "host": connection.ashost,
+                "client": connection.client,
+                "user": connection.user_name,
+            },
+            duration_ms=duration_ms,
+        )
+
+    except ImportError:
+        duration_ms = int((time.time() - start_time) * 1000)
+        return SapConnectionTestResponse(
+            success=False,
+            message="pyrfcがインストールされていません。nwrfcsdkのパスを確認してください。",
+            details={"mode": "error", "error_type": "import_error"},
+            duration_ms=duration_ms,
+        )
+
+    except Exception as e:
+        duration_ms = int((time.time() - start_time) * 1000)
+        logger.error(f"[SAP] Connection test failed: {e}")
+        return SapConnectionTestResponse(
+            success=False,
+            message=f"接続テスト失敗: {e}",
+            details={"mode": "production", "error_type": type(e).__name__},
+            duration_ms=duration_ms,
+        )
 
 
 # ============================================================
