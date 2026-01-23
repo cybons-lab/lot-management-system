@@ -74,7 +74,10 @@ export function QuickLotIntakeDialog({
   const [receivedDate, setReceivedDate] = useState<string>(today);
   const [expiryDate, setExpiryDate] = useState<string>("");
 
-  const { data: lots = [], isLoading: isLoadingLots } = useLotsQuery({ limit: 200 });
+  const { data: lots = [], isLoading: isLoadingLots } = useLotsQuery({
+    limit: 200,
+    with_stock: false, // 追加入庫のために在庫0（アーカイブ済み含む）も表示
+  });
   const { useList: useProductList } = useProducts();
   const { useList: useWarehouseList } = useWarehouses();
   const { useList: useSupplierList } = useSuppliers();

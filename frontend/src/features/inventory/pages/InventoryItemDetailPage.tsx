@@ -73,6 +73,7 @@ export function InventoryItemDetailPage() {
     product_id: productIdNum,
     warehouse_id: warehouseIdNum,
     status: showArchived ? undefined : "active", // アーカイブ表示時は全取得、それ以外はactiveのみ
+    with_stock: !showArchived, // アーカイブ表示時は在庫0も含む
     skip: (page - 1) * pageSize,
     limit: pageSize,
   });
@@ -143,6 +144,7 @@ export function InventoryItemDetailPage() {
     handleCloseEdit,
     handleCloseLock,
     archiveLot,
+    handleUnarchiveLot,
     isArchiving,
   } = useLotActions({
     onLotsChanged: () => {
@@ -158,7 +160,13 @@ export function InventoryItemDetailPage() {
     {
       id: "lot_number",
       header: "ロット番号",
-      cell: (lot) => <span className="font-medium">{lot.lot_number}</span>,
+      cell: (lot) => (
+        <span
+          className={`font-medium ${lot.status === "archived" ? "line-through text-gray-400" : ""}`}
+        >
+          {lot.lot_number}
+        </span>
+      ),
       sortable: true,
     },
     {
@@ -166,7 +174,15 @@ export function InventoryItemDetailPage() {
       header: "仕入先",
       cell: (lot) => {
         const supplierDisplay: string = (lot.supplier_name || lot.supplier_code || "-") as string;
-        return <span className="text-sm text-gray-700">{supplierDisplay}</span>;
+        return (
+          <span
+            className={`text-sm ${
+              lot.status === "archived" ? "line-through text-gray-400" : "text-gray-700"
+            }`}
+          >
+            {supplierDisplay}
+          </span>
+        );
       },
       sortable: true,
       align: "left",
@@ -233,6 +249,7 @@ export function InventoryItemDetailPage() {
           onUnlock={handleUnlockLot}
           onHistory={handleOpenHistory}
           onArchive={handleOpenArchive}
+          onUnarchive={handleUnarchiveLot}
         />
       ),
       align: "center",
