@@ -6092,7 +6092,7 @@ export interface paths {
     };
     /**
      * List Cached Materials
-     * @description キャッシュされたマテリアルデータを取得.
+     * @description キャッシュされたマテリアルデータを取得（旧エンドポイント）.
      */
     get: operations["list_cached_materials_api_integration_sap_materials_cache_get"];
     put?: never;
@@ -6102,6 +6102,26 @@ export interface paths {
      * @description キャッシュをクリア.
      */
     delete: operations["clear_cache_api_integration_sap_materials_cache_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/cache": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Sap Cache
+     * @description SAPキャッシュデータ取得（ページング対応）.
+     */
+    get: operations["get_sap_cache_api_integration_sap_cache_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -7617,7 +7637,7 @@ export interface paths {
     get: operations["get_shipping_master_api_shipping_masters__master_id__get"];
     /**
      * Update Shipping Master
-     * @description 出荷用マスタを更新.
+     * @description 出荷用マスタを更新（楽観的ロック対応）.
      */
     put: operations["update_shipping_master_api_shipping_masters__master_id__put"];
     post?: never;
@@ -12070,6 +12090,8 @@ export interface components {
       material_code?: string | null;
       /** Delivery Quantity */
       delivery_quantity?: string | null;
+      /** Delivery Date */
+      delivery_date?: string | null;
     };
     /**
      * OcrResultEditResponse
@@ -12231,6 +12253,20 @@ export interface components {
       has_error: boolean;
       /** Manual Delivery Quantity */
       manual_delivery_quantity?: string | null;
+      /** Sap Match Type */
+      sap_match_type?: string | null;
+      /** Sap Matched Zkdmat B */
+      sap_matched_zkdmat_b?: string | null;
+      /** Sap Supplier Code */
+      sap_supplier_code?: string | null;
+      /** Sap Supplier Name */
+      sap_supplier_name?: string | null;
+      /** Sap Qty Unit */
+      sap_qty_unit?: string | null;
+      /** Sap Maker Item */
+      sap_maker_item?: string | null;
+      /** Calculated Shipping Date */
+      calculated_shipping_date?: string | null;
     };
     /**
      * OcrResultListResponse
@@ -14212,6 +14248,57 @@ export interface components {
       skipped_count: number;
     };
     /**
+     * SapCacheItemResponse
+     * @description SAPキャッシュアイテム（選択カラムのみ）.
+     */
+    SapCacheItemResponse: {
+      /** Connection Id */
+      connection_id: number;
+      /** Zkdmat B */
+      zkdmat_b: string;
+      /** Kunnr */
+      kunnr: string;
+      /** Zmkmat B */
+      zmkmat_b?: string | null;
+      /** Meins */
+      meins?: string | null;
+      /** Zlifnr H */
+      zlifnr_h?: string | null;
+      /** Zotwarh H */
+      zotwarh_h?: string | null;
+      /** Zdepnm S H */
+      zdepnm_s_h?: string | null;
+      /** Zshipte H */
+      zshipte_h?: string | null;
+      /**
+       * Fetched At
+       * Format: date-time
+       */
+      fetched_at: string;
+      /** Fetch Batch Id */
+      fetch_batch_id?: string | null;
+      /** Raw Data */
+      raw_data?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
+     * SapCacheListResponse
+     * @description SAPキャッシュリストレスポンス（ページング対応）.
+     */
+    SapCacheListResponse: {
+      /** Items */
+      items: components["schemas"]["SapCacheItemResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+      /** Total Pages */
+      total_pages: number;
+    };
+    /**
      * SapConnectionCreateRequest
      * @description SAP接続情報作成リクエスト.
      */
@@ -14912,6 +14999,11 @@ export interface components {
       has_order?: boolean | null;
       /** Remarks */
       remarks?: string | null;
+      /**
+       * Expected Updated At
+       * @description 楽観的ロック用の期待される更新日時
+       */
+      expected_updated_at?: string | null;
     };
     /**
      * ShippingMasterImportResponse
@@ -25928,6 +26020,46 @@ export interface operations {
           "application/json": {
             [key: string]: string | number;
           };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_sap_cache_api_integration_sap_cache_get: {
+    parameters: {
+      query?: {
+        /** @description 接続ID */
+        connection_id?: number | null;
+        /** @description 得意先コード */
+        kunnr?: string | null;
+        /** @description 先方品番で検索（部分一致） */
+        zkdmat_b_search?: string | null;
+        /** @description ページ番号 */
+        page?: number;
+        /** @description ページサイズ */
+        page_size?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SapCacheListResponse"];
         };
       };
       /** @description Validation Error */

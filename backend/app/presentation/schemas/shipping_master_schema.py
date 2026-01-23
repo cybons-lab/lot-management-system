@@ -63,6 +63,9 @@ class ShippingMasterCuratedUpdate(BaseModel):
     transport_lt_days: int | None = None
     has_order: bool | None = None
     remarks: str | None = None
+    expected_updated_at: datetime | None = Field(
+        default=None, description="楽観的ロック用の期待される更新日時"
+    )
 
 
 class ShippingMasterCuratedResponse(ShippingMasterCuratedBase):

@@ -135,6 +135,33 @@ class SapMaterialCacheResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class SapCacheItemResponse(BaseModel):
+    """SAPキャッシュアイテム（選択カラムのみ）."""
+
+    connection_id: int
+    zkdmat_b: str  # 先方品番
+    kunnr: str  # 得意先
+    zmkmat_b: str | None = None  # メーカー品番
+    meins: str | None = None  # 数量単位
+    zlifnr_h: str | None = None  # 仕入先
+    zotwarh_h: str | None = None  # 出荷倉庫
+    zdepnm_s_h: str | None = None  # 納入場所
+    zshipte_h: str | None = None  # 出荷票テキスト
+    fetched_at: datetime
+    fetch_batch_id: str | None = None
+    raw_data: dict[str, Any] | None = None  # 全カラム（オプション）
+
+
+class SapCacheListResponse(BaseModel):
+    """SAPキャッシュリストレスポンス（ページング対応）."""
+
+    items: list[SapCacheItemResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
 class SapReconcileRequest(BaseModel):
     """突合リクエスト."""
 

@@ -62,6 +62,17 @@ export interface OcrResultItem {
   jiku_format_error: boolean;
   date_format_error: boolean;
   has_error: boolean;
+
+  // SAP照合結果
+  sap_match_type: string | null;
+  sap_matched_zkdmat_b: string | null;
+  sap_supplier_code: string | null;
+  sap_supplier_name: string | null;
+  sap_qty_unit: string | null;
+  sap_maker_item: string | null;
+
+  // 計算結果
+  calculated_shipping_date: string | null;
 }
 
 interface OcrResultListParams {
@@ -89,6 +100,7 @@ export interface OcrResultEditPayload {
   jiku_code?: string | null;
   material_code?: string | null;
   delivery_quantity?: string | null;
+  delivery_date?: string | null;
 }
 
 export interface OcrResultEditResponse {
