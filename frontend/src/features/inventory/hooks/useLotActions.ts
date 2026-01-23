@@ -145,6 +145,20 @@ export function useLotActions(options?: LotActionsOptions) {
     handleLockLot,
     handleUnlockLot,
     handleArchiveLot,
+    handleUnarchiveLot: useCallback(
+      async (lot: LotUI) => {
+        if (
+          confirm(
+            `ロット ${lot.lot_number} のアーカイブを解除しますか?\nアーカイブ解除すると、再びロット一覧に表示されるようになります。`,
+          )
+        ) {
+          setSelectedLot(lot);
+          // @ts-expect-error Status update is supported by backend but missing in frontend type definition
+          await updateLotMutation.mutateAsync({ status: "active" });
+        }
+      },
+      [updateLotMutation],
+    ),
     handleCloseEdit,
     handleCloseLock,
     archiveLot,

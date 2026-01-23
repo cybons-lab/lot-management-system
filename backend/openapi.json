@@ -30537,6 +30537,17 @@
               }
             ],
             "title": "Delivery Quantity"
+          },
+          "delivery_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Date"
           }
         },
         "type": "object",
@@ -31215,6 +31226,18 @@
               }
             ],
             "title": "Sap Maker Item"
+          },
+          "calculated_shipping_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculated Shipping Date"
           }
         },
         "type": "object",

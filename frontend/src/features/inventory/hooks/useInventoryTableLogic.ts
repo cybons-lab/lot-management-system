@@ -44,15 +44,17 @@ export function useInventoryTableLogic() {
           // Show all lot statuses (active, depleted, expired, locked)
         });
 
-        const normalizedLots = (response ?? []).map((item) =>
-          normalizeLot(
-            item as unknown as Record<string, unknown> & {
-              lot_id: number;
-              product_id: number;
-              warehouse_id: number;
-            },
-          ),
-        );
+        const normalizedLots = (response ?? [])
+          .map((item) =>
+            normalizeLot(
+              item as unknown as Record<string, unknown> & {
+                lot_id: number;
+                product_id: number;
+                warehouse_id: number;
+              },
+            ),
+          )
+          .filter((lot) => lot.status !== "archived");
 
         setLotsCache((prev) => {
           const next = new Map(prev);

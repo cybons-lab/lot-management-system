@@ -17,6 +17,7 @@ interface InventoryLotListProps {
   onWithdraw: (lot: LotUI) => void;
   onHistory: (lot: LotUI) => void;
   onArchive?: (lot: LotUI) => void;
+  onUnarchive?: (lot: LotUI) => void;
 }
 
 const LOT_COLUMNS = [
@@ -127,6 +128,7 @@ export function InventoryLotList({
   onWithdraw,
   onHistory,
   onArchive,
+  onUnarchive,
 }: InventoryLotListProps) {
   const columns = useMemo(() => LOT_COLUMNS, []);
 
@@ -159,6 +161,7 @@ export function InventoryLotList({
             onWithdraw={onWithdraw}
             onHistory={onHistory}
             onArchive={onArchive}
+            onUnarchive={onUnarchive}
           />
         )}
         headerSlot={

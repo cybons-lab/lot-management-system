@@ -5,7 +5,7 @@
  * ホバーで詳細をツールチップ表示
  */
 
-import { Package, PackageX, AlertCircle, Clock, Calendar } from "lucide-react";
+import { Package, PackageX, AlertCircle, Clock, Calendar, Archive } from "lucide-react";
 
 import { cn } from "@/shared/libs/utils";
 import type { LotStatus } from "@/shared/utils/status";
@@ -49,6 +49,11 @@ const STATUS_CONFIG: Record<
     Icon: PackageX,
     label: "在庫なし",
     color: "text-slate-400",
+  },
+  archived: {
+    Icon: Archive,
+    label: "アーカイブ",
+    color: "text-slate-500",
   },
 };
 

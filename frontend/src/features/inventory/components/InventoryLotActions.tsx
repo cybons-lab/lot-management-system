@@ -1,7 +1,8 @@
-import { Calendar, Lock, PackageMinus, Pencil, Unlock, Archive } from "lucide-react";
+import { Calendar, Lock, PackageMinus, Pencil, Unlock, Archive, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui";
 import type { LotUI } from "@/shared/libs/normalize";
+import { cn } from "@/shared/libs/utils";
 import { parseDecimal } from "@/shared/utils/decimal";
 
 interface InventoryLotActionsProps {
@@ -13,6 +14,7 @@ interface InventoryLotActionsProps {
   onWithdraw: (lot: LotUI) => void;
   onHistory: (lot: LotUI) => void;
   onArchive?: (lot: LotUI) => void;
+  onUnarchive?: (lot: LotUI) => void;
 }
 
 export function InventoryLotActions({
@@ -24,76 +26,80 @@ export function InventoryLotActions({
   onWithdraw,
   onHistory,
   onArchive,
+  onUnarchive,
 }: InventoryLotActionsProps) {
   const lotWithWarehouseName = {
     ...lot,
     warehouse_name: lot.warehouse_name || warehouseNameFallback,
   };
 
-  // Use available_quantity from DB instead of recalculating
   const available = parseDecimal(lot.available_quantity ?? "0");
+  const isLocked = Number(lot.locked_quantity || 0) > 0;
 
   return (
     <div className="flex items-center justify-end gap-1">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onEdit(lotWithWarehouseName)}
-        title="編集"
-        className="h-7 w-7 p-0"
-      >
-        <Pencil className="h-4 w-4" />
-      </Button>
-      {Number(lot.locked_quantity || 0) > 0 ? (
-        <Button
-          variant="ghost"
-          size="sm"
+      <ActionButton onClick={() => onEdit(lotWithWarehouseName)} title="編集" Icon={Pencil} />
+
+      {isLocked ? (
+        <ActionButton
           onClick={() => onUnlock(lotWithWarehouseName)}
           title="ロック解除"
-          className="h-7 w-7 p-0"
-        >
-          <Unlock className="h-4 w-4" />
-        </Button>
+          Icon={Unlock}
+        />
       ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onLock(lotWithWarehouseName)}
-          title="ロック"
-          className="h-7 w-7 p-0"
-        >
-          <Lock className="h-4 w-4" />
-        </Button>
+        <ActionButton onClick={() => onLock(lotWithWarehouseName)} title="ロック" Icon={Lock} />
       )}
-      <Button
-        variant="ghost"
-        size="sm"
+
+      <ActionButton
         onClick={() => onWithdraw(lotWithWarehouseName)}
         title="出庫"
-        className="h-7 w-7 p-0"
+        Icon={PackageMinus}
         disabled={available.lte(0)}
-      >
-        <PackageMinus className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onHistory(lotWithWarehouseName)}
-        title="履歴"
-        className="h-7 w-7 p-0"
-      >
-        <Calendar className="h-4 w-4" />
-      </Button>
-      {/* Archive Button - always visible, dialog handles confirmation for lots with quantity */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onArchive?.(lotWithWarehouseName)}
-        title="アーカイブ"
-        className="h-7 w-7 p-0 text-gray-400 hover:text-red-500"
-      >
-        <Archive className="h-4 w-4" />
-      </Button>
+      />
+
+      <ActionButton onClick={() => onHistory(lotWithWarehouseName)} title="履歴" Icon={Calendar} />
+
+      {lot.status === "archived" ? (
+        <ActionButton
+          onClick={() => onUnarchive?.(lotWithWarehouseName)}
+          title="アーカイブ解除"
+          Icon={RotateCcw}
+          className="text-slate-400 hover:text-green-600"
+        />
+      ) : (
+        <ActionButton
+          onClick={() => onArchive?.(lotWithWarehouseName)}
+          title="アーカイブ"
+          Icon={Archive}
+          className="text-gray-400 hover:text-red-500"
+        />
+      )}
     </div>
+  );
+}
+
+/**
+ * 個別のアクションボタン用内部コンポーネント
+ */
+interface ActionButtonProps {
+  onClick: () => void;
+  title: string;
+  Icon: React.ElementType;
+  disabled?: boolean;
+  className?: string;
+}
+
+function ActionButton({ onClick, title, Icon, disabled, className }: ActionButtonProps) {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onClick}
+      title={title}
+      className={cn("h-7 w-7 p-0", className)}
+      disabled={disabled}
+    >
+      <Icon className="h-4 w-4" />
+    </Button>
   );
 }
