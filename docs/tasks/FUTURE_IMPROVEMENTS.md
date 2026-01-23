@@ -235,7 +235,7 @@ export function RefreshButton({
 
 ##### 対象ページ
 
-以下のページに再読み込みボタンを追加：
+以下のページに再読み込みボタンを追加（基本的に読み取り専用以外の全ページ）：
 
 1. **完了**: OCR結果ページ (`OcrResultsListPage.tsx`)
 2. **未実装**: 出荷用マスタページ (`ShippingMasterListPage.tsx`)
@@ -245,6 +245,50 @@ export function RefreshButton({
 6. **未実装**: 仕入先マスタページ (`SuppliersListPage.tsx`)
 7. **未実装**: 得意先マスタページ (`CustomersListPage.tsx`)
 8. **未実装**: SAP統合ページ（キャッシュデータ表示） (`DataFetchTab.tsx`)
+9. **未実装**: フォーキャストページ (`ForecastPage.tsx`)
+
+##### 改善案: 共通アクションバーコンポーネント
+
+全ページ共通のアクションセット（エクスポート・インポート・更新など）を提供する共通コンポーネントを作成することで、さらに保守性が向上します。
+
+**ファイル**: `frontend/src/shared/components/data/PageActionBar.tsx`
+
+```tsx
+interface PageActionBarProps {
+  queryKey: string[];
+  isLoading?: boolean;
+  onExport?: () => void;
+  onImport?: () => void;
+  customActions?: React.ReactNode;
+}
+
+export function PageActionBar({
+  queryKey,
+  isLoading,
+  onExport,
+  onImport,
+  customActions,
+}: PageActionBarProps) {
+  return (
+    <div className="flex gap-2">
+      <RefreshButton queryKey={queryKey} isLoading={isLoading} />
+      {onExport && (
+        <Button variant="outline" size="sm" onClick={onExport}>
+          <Download className="mr-2 h-4 w-4" />
+          Excelエクスポート
+        </Button>
+      )}
+      {onImport && (
+        <Button variant="outline" size="sm" onClick={onImport}>
+          <Upload className="mr-2 h-4 w-4" />
+          インポート
+        </Button>
+      )}
+      {customActions}
+    </div>
+  );
+}
+```
 
 ##### メリット
 
