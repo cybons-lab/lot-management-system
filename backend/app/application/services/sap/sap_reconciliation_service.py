@@ -28,7 +28,8 @@ logger = logging.getLogger(__name__)
 class SapMatchType(str, Enum):
     """SAP突合タイプ."""
 
-    EXACT = "exact"  # 完全一致
+    EXACT = "exact"  # 完全一致（材質コード直接）
+    MASTER_VIA = "master_via"  # マスタ経由一致（先方品番経由）
     PREFIX = "prefix"  # 前方一致（警告）
     NOT_FOUND = "not_found"  # 未一致
 
@@ -103,6 +104,7 @@ class ReconciliationSummary:
     error_count: int = 0
 
     sap_exact_count: int = 0
+    sap_master_via_count: int = 0  # マスタ経由一致
     sap_prefix_count: int = 0
     sap_not_found_count: int = 0
 
@@ -119,6 +121,7 @@ class ReconciliationSummary:
             "warning_count": self.warning_count,
             "error_count": self.error_count,
             "sap_exact_count": self.sap_exact_count,
+            "sap_master_via_count": self.sap_master_via_count,
             "sap_prefix_count": self.sap_prefix_count,
             "sap_not_found_count": self.sap_not_found_count,
             "master_matched_count": self.master_matched_count,
@@ -131,13 +134,16 @@ class SapReconciliationService:
     """SAP突合サービス.
 
     突合ロジック:
-    1. SAP突合
-       - 完全一致: material_code == ZKDMAT_B
-       - 前方一致: material_codeでZKDMAT_Bが前方一致 & 一意に絞れる
+    1. SAP突合（3段階）
+       a. 直接一致: material_code == ZKDMAT_B
+       b. マスタ経由一致: マスタから(customer_code, material_code, jiku_code)で
+          先方品番を取得し、ZKDMAT_Bと突合
+          ※SAPには次区がないため、枝番付き品番はマスタ経由で照合
+       c. 前方一致: material_codeでZKDMAT_Bが前方一致 & 一意に絞れる（警告）
     2. マスタ突合
-       - キー: (customer_code, material_code, jiku_code)
+       - キー: (customer_code, material_code, jiku_code) → customer_part_no取得
     3. 総合判定
-       - OK: SAP完全一致 & マスタ一致
+       - OK: SAP一致(直接 or マスタ経由) & マスタ一致
        - WARNING: SAP前方一致 & マスタ一致
        - ERROR: SAP未一致 or マスタ未一致
     """
@@ -213,13 +219,13 @@ class SapReconciliationService:
 
         material_code = material_code.strip()
 
-        # SAP突合
-        self._reconcile_sap(result, material_code)
-
-        # マスタ突合
+        # 1. マスタ突合（先に実行して先方品番を取得）
         self._reconcile_master(result, material_code, jiku_code, customer_code)
 
-        # 総合判定
+        # 2. SAP突合（マスタの先方品番も使用）
+        self._reconcile_sap(result, material_code)
+
+        # 3. 総合判定
         self._determine_overall_status(result)
 
         return result
@@ -231,6 +237,11 @@ class SapReconciliationService:
     ) -> None:
         """SAP突合.
 
+        突合順序:
+        1. 直接一致: material_code == ZKDMAT_B
+        2. マスタ経由一致: master_customer_part_no == ZKDMAT_B
+        3. 前方一致: material_codeでZKDMAT_Bが前方一致（一意の場合のみ）
+
         Args:
             result: 突合結果（更新される）
             material_code: 材質コード
@@ -239,7 +250,7 @@ class SapReconciliationService:
             result.messages.append("SAPキャッシュが未ロードです")
             return
 
-        # 1. 完全一致チェック
+        # 1. 直接一致チェック: material_code == ZKDMAT_B
         if material_code in self._sap_cache:
             cache_item = self._sap_cache[material_code]
             result.sap_match_type = SapMatchType.EXACT
@@ -248,7 +259,22 @@ class SapReconciliationService:
             logger.debug(f"[SAP] Exact match: {material_code} == {cache_item.zkdmat_b}")
             return
 
-        # 2. 前方一致チェック
+        # 2. マスタ経由一致チェック: master_customer_part_no == ZKDMAT_B
+        # ※SAPには次区がないため、マスタから先方品番を取得してSAPと突合
+        if result.master_customer_part_no:
+            customer_part_no = result.master_customer_part_no.strip()
+            if customer_part_no in self._sap_cache:
+                cache_item = self._sap_cache[customer_part_no]
+                result.sap_match_type = SapMatchType.MASTER_VIA
+                result.sap_matched_zkdmat_b = cache_item.zkdmat_b
+                result.sap_raw_data = cache_item.raw_data
+                logger.debug(
+                    f"[SAP] Master-via match: {material_code} "
+                    f"→ master.customer_part_no={customer_part_no} == {cache_item.zkdmat_b}"
+                )
+                return
+
+        # 3. 前方一致チェック
         prefix_matches = [
             item for zkdmat_b, item in self._sap_cache.items() if zkdmat_b.startswith(material_code)
         ]
@@ -317,16 +343,26 @@ class SapReconciliationService:
     def _determine_overall_status(self, result: ReconciliationResult) -> None:
         """総合ステータスを判定.
 
+        判定ロジック:
+        - OK: SAP一致(EXACT or MASTER_VIA) & マスタ一致
+        - WARNING: SAP前方一致(PREFIX) & マスタ一致
+        - ERROR: SAP未一致 or マスタ未一致
+
         Args:
             result: 突合結果（更新される）
         """
-        sap_ok = result.sap_match_type in (SapMatchType.EXACT, SapMatchType.PREFIX)
+        sap_ok = result.sap_match_type in (
+            SapMatchType.EXACT,
+            SapMatchType.MASTER_VIA,
+            SapMatchType.PREFIX,
+        )
         master_ok = result.master_match_type == MasterMatchType.MATCHED
 
         if sap_ok and master_ok:
-            if result.sap_match_type == SapMatchType.EXACT:
+            if result.sap_match_type in (SapMatchType.EXACT, SapMatchType.MASTER_VIA):
                 result.overall_status = OverallStatus.OK
             else:
+                # PREFIX match
                 result.overall_status = OverallStatus.WARNING
         else:
             result.overall_status = OverallStatus.ERROR
@@ -373,6 +409,8 @@ class SapReconciliationService:
 
             if result.sap_match_type == SapMatchType.EXACT:
                 summary.sap_exact_count += 1
+            elif result.sap_match_type == SapMatchType.MASTER_VIA:
+                summary.sap_master_via_count += 1
             elif result.sap_match_type == SapMatchType.PREFIX:
                 summary.sap_prefix_count += 1
             else:
