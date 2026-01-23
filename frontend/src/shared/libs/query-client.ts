@@ -9,6 +9,7 @@ import { HTTPError } from "ky";
 import { toast } from "sonner";
 
 import { logError } from "@/services/error-logger";
+import { AuthorizationError } from "@/utils/errors/custom-errors";
 
 /**
  * Extract user-friendly error message from error object.
@@ -154,6 +155,9 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: (failureCount, error) => {
+        if (error instanceof AuthorizationError) {
+          return false;
+        }
         if (error instanceof HTTPError) {
           const status = error.response?.status;
           if (status === 401 || status === 403) {
@@ -166,6 +170,9 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       retry: (_failureCount, error) => {
+        if (error instanceof AuthorizationError) {
+          return false;
+        }
         if (error instanceof HTTPError) {
           const status = error.response?.status;
           if (status === 401 || status === 403) {

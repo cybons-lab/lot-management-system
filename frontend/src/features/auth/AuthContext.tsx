@@ -1,7 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { http, AUTH_ERROR_EVENT, FORBIDDEN_ERROR_EVENT } from "@/shared/api/http-client";
+import { httpAuth, httpPublic, AUTH_ERROR_EVENT, FORBIDDEN_ERROR_EVENT } from "@/shared/api/http-client";
+import { clearAuthToken, getAuthToken, setAuthToken } from "@/shared/auth/token";
 import { setAuthExpired } from "@/shared/auth/auth-status";
 
 // Types (should be in separate types file ideally)
@@ -81,16 +82,16 @@ function useRestoreSession(
   useEffect(() => {
     // Restore session on initial mount only
     const initAuth = async () => {
-      const storedToken = localStorage.getItem("token");
+      const storedToken = getAuthToken();
       if (storedToken) {
         try {
           // http-client's beforeRequest hook automatically adds Authorization header
-          const response = await http.get<User>("auth/me");
+          const response = await httpAuth.get<User>("auth/me");
           setToken(storedToken);
           setUser(response);
         } catch (error) {
           console.warn("Failed to restore session", error);
-          localStorage.removeItem("token");
+          clearAuthToken();
         }
       }
       setIsLoading(false);
@@ -101,7 +102,7 @@ function useRestoreSession(
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
+  const [token, setToken] = useState<string | null>(getAuthToken());
   const [authError, setAuthError] = useState<"expired" | "forbidden" | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -113,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthError(null);
       setAuthExpired(false);
     }
-    localStorage.removeItem("token");
+    clearAuthToken();
   }, []);
 
   const clearAuthError = useCallback(() => {
@@ -126,7 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useRestoreSession(setToken, setUser, setIsLoading);
 
   const login = async (userId: number, username?: string) => {
-    const response = await http.post<{
+    const response = await httpPublic.post<{
       access_token: string;
       user: User;
     }>("auth/login", { user_id: userId, username });
@@ -135,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(response.user);
     setAuthError(null);
     setAuthExpired(false);
-    localStorage.setItem("token", response.access_token);
+    setAuthToken(response.access_token);
   };
 
   return (

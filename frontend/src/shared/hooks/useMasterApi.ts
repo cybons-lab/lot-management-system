@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { http } from "@/shared/api/http-client";
+import { useAuth } from "@/features/auth/AuthContext";
+import { httpAuth } from "@/shared/api/http-client";
 
 /**
  * Generic hook for master data CRUD operations.
@@ -22,15 +23,17 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
   resourcePath: string,
   queryKey: string,
 ) {
+  const { token } = useAuth();
   const queryClient = useQueryClient();
 
   // List (with optional include_inactive parameter)
   const useList = (includeInactive = false) =>
     useQuery({
       queryKey: [queryKey, { includeInactive }],
+      enabled: Boolean(token),
       queryFn: () => {
         const url = includeInactive ? `${resourcePath}?include_inactive=true` : resourcePath;
-        return http.get<T[]>(url);
+        return httpAuth.get<T[]>(url);
       },
     });
 
@@ -38,14 +41,14 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
   const useGet = (id: string | number) =>
     useQuery({
       queryKey: [queryKey, id],
-      queryFn: () => http.get<T>(`${resourcePath}/${id}`),
-      enabled: !!id,
+      queryFn: () => httpAuth.get<T>(`${resourcePath}/${id}`),
+      enabled: Boolean(token) && !!id,
     });
 
   // Create
   const useCreate = () =>
     useMutation({
-      mutationFn: (data: TCreate) => http.post<T>(resourcePath, data),
+      mutationFn: (data: TCreate) => httpAuth.post<T>(resourcePath, data),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
       },
@@ -55,7 +58,7 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
   const useUpdate = () =>
     useMutation({
       mutationFn: ({ id, data }: { id: string | number; data: TUpdate }) =>
-        http.put<T>(`${resourcePath}/${id}`, data),
+        httpAuth.put<T>(`${resourcePath}/${id}`, data),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
       },
@@ -65,7 +68,7 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
   // Note: For master data with soft delete support, this performs soft delete
   const useDelete = () =>
     useMutation({
-      mutationFn: (id: string | number) => http.deleteVoid(`${resourcePath}/${id}`),
+      mutationFn: (id: string | number) => httpAuth.deleteVoid(`${resourcePath}/${id}`),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
       },
@@ -76,7 +79,7 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
     useMutation({
       mutationFn: ({ id, endDate }: { id: string | number; endDate?: string }) => {
         const url = endDate ? `${resourcePath}/${id}?end_date=${endDate}` : `${resourcePath}/${id}`;
-        return http.deleteVoid(url);
+        return httpAuth.deleteVoid(url);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
@@ -86,7 +89,7 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
   // Permanent Delete (physical delete - admin only)
   const usePermanentDelete = () =>
     useMutation({
-      mutationFn: (id: string | number) => http.deleteVoid(`${resourcePath}/${id}/permanent`),
+      mutationFn: (id: string | number) => httpAuth.deleteVoid(`${resourcePath}/${id}/permanent`),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
       },
@@ -95,7 +98,7 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
   // Restore (restore soft-deleted item)
   const useRestore = () =>
     useMutation({
-      mutationFn: (id: string | number) => http.post<T>(`${resourcePath}/${id}/restore`, {}),
+      mutationFn: (id: string | number) => httpAuth.post<T>(`${resourcePath}/${id}/restore`, {}),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
       },

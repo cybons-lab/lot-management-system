@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
-import { http } from "@/shared/api/http-client";
+import { httpPublic } from "@/shared/api/http-client";
 
 // Minimal User Type for Selection (API returns id, not user_id)
 interface UserSummary {
@@ -31,7 +31,7 @@ function useLoginUsers() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const data = await http.get<UserSummary[]>("auth/login-users");
+        const data = await httpPublic.get<UserSummary[]>("auth/login-users");
         setUsers(data);
       } catch (error) {
         console.error("Failed to fetch users", error);

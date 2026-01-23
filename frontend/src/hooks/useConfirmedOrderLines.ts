@@ -1,5 +1,7 @@
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 
+import { httpAuth } from "@/shared/api/http-client";
+import { useAuth } from "@/features/auth/AuthContext";
 import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { formatOrderCode } from "@/shared/utils/order";
 
@@ -25,9 +27,7 @@ const confirmedOrderLinesQueryKey = ["confirmed-order-lines"] as const;
 const confirmedOrderLinesQueryOptions = {
   queryKey: confirmedOrderLinesQueryKey,
   queryFn: async (): Promise<ConfirmedOrderLine[]> => {
-    const response = await fetch("/api/orders/confirmed-order-lines");
-    if (!response.ok) throw new Error("Failed to fetch confirmed lines");
-    const data = (await response.json()) as ConfirmedOrderLine[];
+    const data = await httpAuth.get<ConfirmedOrderLine[]>("orders/confirmed-order-lines");
     return data.map((line) => ({ ...line, order_code: formatOrderCode(line) }));
   },
 } satisfies UseQueryOptions<
@@ -38,8 +38,11 @@ const confirmedOrderLinesQueryOptions = {
 >;
 
 export function useConfirmedOrderLines() {
+  const { token } = useAuth();
+
   return useQuery<ConfirmedOrderLine[]>({
     ...confirmedOrderLinesQueryOptions,
+    enabled: Boolean(token),
     refetchInterval: authAwareRefetchInterval<ConfirmedOrderLine[], Error, ConfirmedOrderLine[]>(
       30000,
     ),

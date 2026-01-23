@@ -6,7 +6,8 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { http } from "@/shared/api/http-client";
+import { useAuth } from "@/features/auth/AuthContext";
+import { httpAuth } from "@/shared/api/http-client";
 import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 
 // Types
@@ -46,16 +47,18 @@ const CLOUD_FLOW_KEYS = {
 
 // Hooks
 export function useCloudFlowQueueStatus(jobType: string) {
+  const { token } = useAuth();
   const queryKey = CLOUD_FLOW_KEYS.queueStatus(jobType);
   const queryOptions = {
     queryKey,
     queryFn: async (): Promise<CloudFlowQueueStatus> => {
-      return http.get<CloudFlowQueueStatus>(`rpa/cloud-flow/jobs/current?job_type=${jobType}`);
+      return httpAuth.get<CloudFlowQueueStatus>(`rpa/cloud-flow/jobs/current?job_type=${jobType}`);
     },
   } satisfies UseQueryOptions<CloudFlowQueueStatus, Error, CloudFlowQueueStatus, typeof queryKey>;
 
   return useQuery<CloudFlowQueueStatus>({
     ...queryOptions,
+    enabled: Boolean(token),
     refetchInterval: authAwareRefetchInterval<CloudFlowQueueStatus, Error, CloudFlowQueueStatus>(
       5000,
     ), // 5秒ごとに更新
@@ -66,7 +69,7 @@ export function useCloudFlowJobHistory(jobType: string, limit = 20) {
   return useQuery<CloudFlowJobResponse[]>({
     queryKey: CLOUD_FLOW_KEYS.jobs(jobType),
     queryFn: async () => {
-      return http.get<CloudFlowJobResponse[]>(
+      return httpAuth.get<CloudFlowJobResponse[]>(
         `rpa/cloud-flow/jobs?job_type=${jobType}&limit=${limit}`,
       );
     },
@@ -78,7 +81,7 @@ export function useCreateCloudFlowJob() {
 
   return useMutation<CloudFlowJobResponse, Error, CloudFlowJobCreate>({
     mutationFn: async (data) => {
-      return http.post<CloudFlowJobResponse>(`rpa/cloud-flow/jobs`, data);
+      return httpAuth.post<CloudFlowJobResponse>(`rpa/cloud-flow/jobs`, data);
     },
     onSuccess: (data) => {
       // キャッシュを無効化

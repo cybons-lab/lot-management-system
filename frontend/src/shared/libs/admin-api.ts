@@ -1,5 +1,5 @@
 // frontend/src/lib/admin-api.ts
-import { http as fetchApi } from "@/shared/api/http-client";
+import { httpAuth } from "@/shared/api/http-client";
 
 export type DashboardStats = {
   total_stock: number;
@@ -12,12 +12,12 @@ export type ResetResponse = {
 };
 /**
  * 管理ダッシュボード等「自分だけが触れる」前提のエンドポイント群。
- * JWT は lib/http.ts 側で自動付与されます（localStorage "access_token" or "jwt"）。
+ * 認証トークンは httpAuth で統一付与されます（localStorage "token"）。
  */
 
-export const getStats = () => fetchApi.get<DashboardStats>("/admin/stats");
+export const getStats = () => httpAuth.get<DashboardStats>("/admin/stats");
 
-export const resetDatabase = () => fetchApi.post<ResetResponse>("/admin/reset-database");
+export const resetDatabase = () => httpAuth.post<ResetResponse>("/admin/reset-database");
 
 export interface FullSampleDataRequest {
   products?: Array<{
@@ -62,4 +62,4 @@ export interface FullSampleDataRequest {
 }
 
 export const loadFullSampleData = (payload: FullSampleDataRequest) =>
-  fetchApi.post<{ success: boolean; message: string }>("/admin/load-full-sample-data", payload);
+  httpAuth.post<{ success: boolean; message: string }>("/admin/load-full-sample-data", payload);

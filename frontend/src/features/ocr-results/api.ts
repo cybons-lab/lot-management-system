@@ -2,7 +2,7 @@
  * OCR結果データ API client (v_ocr_resultsビューベース)
  */
 
-import { http } from "@/shared/api/http-client";
+import { httpAuth } from "@/shared/api/http-client";
 
 export interface OcrResultItem {
   id: number;
@@ -120,7 +120,7 @@ export const ocrResultsApi = {
     if (params?.limit) searchParams.set("limit", params.limit.toString());
     if (params?.offset) searchParams.set("offset", params.offset.toString());
 
-    const response = await http.get<OcrResultListResponse>(`ocr-results?${searchParams}`);
+    const response = await httpAuth.get<OcrResultListResponse>(`ocr-results?${searchParams}`);
     return response;
   },
 
@@ -128,7 +128,7 @@ export const ocrResultsApi = {
    * OCR結果詳細取得
    */
   get: async (id: number): Promise<OcrResultItem> => {
-    const response = await http.get<OcrResultItem>(`ocr-results/${id}`);
+    const response = await httpAuth.get<OcrResultItem>(`ocr-results/${id}`);
     return response;
   },
 
@@ -136,7 +136,7 @@ export const ocrResultsApi = {
    * OCR結果の手入力内容を保存
    */
   saveEdit: async (id: number, payload: OcrResultEditPayload): Promise<OcrResultEditResponse> => {
-    const response = await http.post<OcrResultEditResponse>(`ocr-results/${id}/edit`, payload);
+    const response = await httpAuth.post<OcrResultEditResponse>(`ocr-results/${id}/edit`, payload);
     return response;
   },
 
@@ -157,6 +157,6 @@ export const ocrResultsApi = {
 
     const url = `ocr-results/export/download?format=xlsx&${searchParams}`;
     const filename = `OCR結果_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    await http.download(url, filename);
+    await httpAuth.download(url, filename);
   },
 };

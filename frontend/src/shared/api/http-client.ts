@@ -23,8 +23,9 @@
 import ky, { type KyInstance, type Options, type HTTPError } from "ky";
 
 import { logError } from "@/services/error-logger";
+import { getAuthToken } from "@/shared/auth/token";
 import { createRequestId } from "@/shared/utils/request-id";
-import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
+import { AuthorizationError, createApiError, NetworkError } from "@/utils/errors/custom-errors";
 
 /**
  * Base API configuration
@@ -255,123 +256,146 @@ async function handleApiError(
  * - 5xx Server Error: サーバー側の一時的な障害 → リトライで回復する可能性
  * - 4xx Client Error（400, 401, 403, 404等）: クライアントのミス → リトライしても無駄なので除外
  */
-export const apiClient: KyInstance = ky.create({
-  prefixUrl: API_BASE_URL,
-  timeout: API_TIMEOUT,
-  retry: {
-    limit: 2,
-    methods: ["get", "put", "head", "delete", "options", "trace"], // POST除外: 冪等性
-    statusCodes: [408, 413, 429, 500, 502, 503, 504],
-  },
-  hooks: {
-    beforeRequest: [
-      (request) => {
-        // Add auth token if available
-        const token = localStorage.getItem("token");
-        if (token) {
-          request.headers.set("Authorization", `Bearer ${token}`);
-        }
-        request.headers.set("X-Request-ID", createRequestId());
-        // Note: Request logging removed to reduce console noise
-        // Enable by setting VITE_HTTP_DEBUG=true if needed
-      },
-    ],
-    afterResponse: [
-      async (_request, _options, response) => {
-        // Check for mock status header
-        const isMock = response.headers.get("X-Mock-Status") === "true";
-        if (isMock) {
-          dispatchMockStatus(true);
-        }
+type AuthMode = "public" | "auth";
 
-        return response;
-      },
-    ],
-    beforeError: [
-      async (error) => {
-        const { response, request } = error;
+function ensureAuthToken(): string {
+  const token = getAuthToken();
+  if (!token) {
+    throw new AuthorizationError("認証トークンがありません");
+  }
+  return token;
+}
 
-        if (!response) {
-          return handleNetworkError(error, request);
-        }
+function createApiClient(authMode: AuthMode): KyInstance {
+  return ky.create({
+    prefixUrl: API_BASE_URL,
+    timeout: API_TIMEOUT,
+    retry: {
+      limit: 2,
+      methods: ["get", "put", "head", "delete", "options", "trace"], // POST除外: 冪等性
+      statusCodes: [408, 413, 429, 500, 502, 503, 504],
+    },
+    hooks: {
+      beforeRequest: [
+        (request) => {
+          if (authMode === "auth") {
+            const token = ensureAuthToken();
+            request.headers.set("Authorization", `Bearer ${token}`);
+          }
+          request.headers.set("X-Request-ID", createRequestId());
+          // Note: Request logging removed to reduce console noise
+          // Enable by setting VITE_HTTP_DEBUG=true if needed
+        },
+      ],
+      afterResponse: [
+        async (_request, _options, response) => {
+          // Check for mock status header
+          const isMock = response.headers.get("X-Mock-Status") === "true";
+          if (isMock) {
+            dispatchMockStatus(true);
+          }
 
-        return handleApiError(error, request, response);
-      },
-    ],
-  },
-});
+          return response;
+        },
+      ],
+      beforeError: [
+        async (error) => {
+          const { response, request } = error;
+
+          if (!response) {
+            return handleNetworkError(error, request);
+          }
+
+          return handleApiError(error, request, response);
+        },
+      ],
+    },
+  });
+}
+
+export const apiClientPublic: KyInstance = createApiClient("public");
+export const apiClientAuth: KyInstance = createApiClient("auth");
+export const apiClient: KyInstance = apiClientAuth;
 
 /**
  * HTTP client with common methods
  *
  * Provides a consistent interface for API calls with automatic JSON handling.
  */
-export const http = {
-  /**
-   * GET request
-   */
-  async get<T>(url: string, options?: Options): Promise<T> {
-    return apiClient.get(url, options).json<T>();
-  },
+function createHttpClient(client: KyInstance) {
+  return {
+    /**
+     * GET request
+     */
+    async get<T>(url: string, options?: Options): Promise<T> {
+      return client.get(url, options).json<T>();
+    },
 
-  /**
-   * POST request
-   */
-  async post<T>(url: string, data?: unknown, options?: Options): Promise<T> {
-    return apiClient.post(url, { json: data, ...options }).json<T>();
-  },
+    /**
+     * POST request
+     */
+    async post<T>(url: string, data?: unknown, options?: Options): Promise<T> {
+      return client.post(url, { json: data, ...options }).json<T>();
+    },
 
-  /**
-   * POST request with FormData
-   */
-  async postFormData<T>(url: string, formData: FormData, options?: Options): Promise<T> {
-    return apiClient.post(url, { body: formData, ...options }).json<T>();
-  },
+    /**
+     * POST request with FormData
+     */
+    async postFormData<T>(url: string, formData: FormData, options?: Options): Promise<T> {
+      return client.post(url, { body: formData, ...options }).json<T>();
+    },
 
-  /**
-   * PUT request
-   */
-  async put<T>(url: string, data?: unknown, options?: Options): Promise<T> {
-    return apiClient.put(url, { json: data, ...options }).json<T>();
-  },
+    /**
+     * PUT request
+     */
+    async put<T>(url: string, data?: unknown, options?: Options): Promise<T> {
+      return client.put(url, { json: data, ...options }).json<T>();
+    },
 
-  /**
-   * PATCH request
-   */
-  async patch<T>(url: string, data?: unknown, options?: Options): Promise<T> {
-    return apiClient.patch(url, { json: data, ...options }).json<T>();
-  },
+    /**
+     * PATCH request
+     */
+    async patch<T>(url: string, data?: unknown, options?: Options): Promise<T> {
+      return client.patch(url, { json: data, ...options }).json<T>();
+    },
 
-  /**
-   * DELETE request
-   */
-  async delete<T>(url: string, options?: Options): Promise<T> {
-    return apiClient.delete(url, options).json<T>();
-  },
+    /**
+     * DELETE request
+     */
+    async delete<T>(url: string, options?: Options): Promise<T> {
+      return client.delete(url, options).json<T>();
+    },
 
-  /**
-   * DELETE request without response body
-   */
-  async deleteVoid(url: string, options?: Options): Promise<void> {
-    await apiClient.delete(url, options);
-  },
+    /**
+     * DELETE request without response body
+     */
+    async deleteVoid(url: string, options?: Options): Promise<void> {
+      await client.delete(url, options);
+    },
 
-  /**
-   * Download file
-   */
-  async download(url: string, filename: string, options?: Options): Promise<void> {
-    const response = await apiClient.get(url, options);
-    const blob = await response.blob();
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(downloadUrl);
-  },
-};
+    /**
+     * Download file
+     */
+    async download(url: string, filename: string, options?: Options): Promise<void> {
+      const response = await client.get(url, options);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    },
+  };
+}
+
+export const httpPublic = createHttpClient(apiClientPublic);
+export const httpAuth = createHttpClient(apiClientAuth);
+
+// Backwards compatibility: default to auth-required client
+export const http = httpAuth;
 
 /**
  * API response wrapper type
@@ -435,4 +459,4 @@ export function createResourceClient<T>(basePath: string) {
   };
 }
 
-export default apiClient;
+export default apiClientAuth;
