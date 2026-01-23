@@ -154,6 +154,11 @@ const { mutate } = useMutation({
 });
 ```
 
+## 状態管理（Jotai）
+
+### 派生Atomパイプライン
+複雑なデータ変換ロジック（フィルタ、ソート、集計）はコンポーネント内の `useMemo` ではなく、Jotai の derived atoms に集約します。詳細は [Jotai Derived Atoms 設計標準](../development/standards/jotai-derived-atoms.md) を参照してください。
+
 ## TypeScript
 
 ### 型インポート
