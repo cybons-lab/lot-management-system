@@ -31149,6 +31149,72 @@
               }
             ],
             "title": "Manual Delivery Quantity"
+          },
+          "sap_match_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Match Type"
+          },
+          "sap_matched_zkdmat_b": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Matched Zkdmat B"
+          },
+          "sap_supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Supplier Code"
+          },
+          "sap_supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Supplier Name"
+          },
+          "sap_qty_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Qty Unit"
+          },
+          "sap_maker_item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Maker Item"
           }
         },
         "type": "object",

@@ -12251,6 +12251,18 @@ export interface components {
       has_error: boolean;
       /** Manual Delivery Quantity */
       manual_delivery_quantity?: string | null;
+      /** Sap Match Type */
+      sap_match_type?: string | null;
+      /** Sap Matched Zkdmat B */
+      sap_matched_zkdmat_b?: string | null;
+      /** Sap Supplier Code */
+      sap_supplier_code?: string | null;
+      /** Sap Supplier Name */
+      sap_supplier_name?: string | null;
+      /** Sap Qty Unit */
+      sap_qty_unit?: string | null;
+      /** Sap Maker Item */
+      sap_maker_item?: string | null;
     };
     /**
      * OcrResultListResponse
