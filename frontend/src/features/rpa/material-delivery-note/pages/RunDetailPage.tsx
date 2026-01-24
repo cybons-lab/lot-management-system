@@ -1,5 +1,6 @@
 /* eslint-disable complexity */
 /* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines */
 /**
  * RunDetailPage - Step2専用ページ
  *
@@ -65,7 +66,11 @@ export function RunDetailPage() {
 
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
-  const { data: run, isLoading, error } = useRun(id, {
+  const {
+    data: run,
+    isLoading,
+    error,
+  } = useRun(id, {
     refetchInterval: authAwareRefetchInterval<RpaRun, Error, RpaRun>(5000),
   });
   const { data: loopSummary } = useLoopSummary(id, {

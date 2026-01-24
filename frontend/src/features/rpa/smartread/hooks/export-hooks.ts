@@ -61,8 +61,11 @@ export function useExportStatus(
       return getExportStatus(configId, taskId, exportId);
     },
     enabled: !!configId && !!taskId && !!exportId && enabled,
-    refetchInterval: authAwareRefetchInterval<SmartReadExport | null, Error, SmartReadExport | null>(
-      (query) => {
+    refetchInterval: authAwareRefetchInterval<
+      SmartReadExport | null,
+      Error,
+      SmartReadExport | null
+    >((query) => {
       // RUNNING状態なら5秒ごとにポーリング
       const data = query.state.data;
       if (data && data.state === "RUNNING") {

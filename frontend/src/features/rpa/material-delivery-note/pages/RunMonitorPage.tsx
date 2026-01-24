@@ -56,7 +56,11 @@ export function RunMonitorPage() {
   const { runId } = useParams<{ runId: string }>();
   const id = Number(runId);
 
-  const { data: run, isLoading, error } = useRun(id, {
+  const {
+    data: run,
+    isLoading,
+    error,
+  } = useRun(id, {
     refetchInterval: authAwareRefetchInterval<RpaRun, Error, RpaRun>(5000),
   });
   const { data: loopSummary } = useLoopSummary(id, {

@@ -80,7 +80,11 @@ export function Step4DetailPage() {
 
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
-  const { data: run, isLoading, error } = useRun(id, {
+  const {
+    data: run,
+    isLoading,
+    error,
+  } = useRun(id, {
     refetchInterval: authAwareRefetchInterval<RpaRun, Error, RpaRun>(3000),
   });
 

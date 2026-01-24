@@ -17,12 +17,7 @@ function useSystemHealthStatus() {
     queryFn: async (): Promise<HealthResponse> => {
       return httpPublic.get<HealthResponse>("readyz");
     },
-  } satisfies UseQueryOptions<
-    HealthResponse,
-    Error,
-    HealthResponse,
-    typeof systemHealthQueryKey
-  >;
+  } satisfies UseQueryOptions<HealthResponse, Error, HealthResponse, typeof systemHealthQueryKey>;
 
   return useQuery({
     ...systemHealthQueryOptions,

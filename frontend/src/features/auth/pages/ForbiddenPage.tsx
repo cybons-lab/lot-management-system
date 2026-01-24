@@ -16,9 +16,7 @@ export function ForbiddenPage() {
           このページまたは操作に必要な権限がありません。必要な権限が付与されているか確認するか、
           管理者にお問い合わせください。
         </p>
-        {fromPath && (
-          <p className="text-xs text-slate-500">直前のページ: {fromPath}</p>
-        )}
+        {fromPath && <p className="text-xs text-slate-500">直前のページ: {fromPath}</p>}
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
             <Link to="/dashboard">ダッシュボードへ戻る</Link>
