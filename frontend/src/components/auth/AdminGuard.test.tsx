@@ -28,6 +28,8 @@ describe("AdminGuard", () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
       token: null,
+      authError: null,
+      clearAuthError: vi.fn(),
       isLoading: true,
       login: vi.fn(),
       logout: vi.fn(),
@@ -45,11 +47,13 @@ describe("AdminGuard", () => {
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
   });
 
-  it("redirects to dashboard when user is not logged in", async () => {
+  it("redirects to login when user is not logged in", async () => {
     const { useAuth } = await import("@/features/auth/AuthContext");
     vi.mocked(useAuth).mockReturnValue({
       user: null,
       token: null,
+      authError: null,
+      clearAuthError: vi.fn(),
       isLoading: false,
       login: vi.fn(),
       logout: vi.fn(),
@@ -66,16 +70,16 @@ describe("AdminGuard", () => {
               </AdminGuard>
             }
           />
-          <Route path="/dashboard" element={<div>Dashboard</div>} />
+          <Route path="/login" element={<div>Login</div>} />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Login")).toBeInTheDocument();
     expect(screen.queryByText("Admin Content")).not.toBeInTheDocument();
   });
 
-  it("redirects to dashboard when user does not have admin role", async () => {
+  it("redirects to forbidden when user does not have admin role", async () => {
     const { useAuth } = await import("@/features/auth/AuthContext");
     vi.mocked(useAuth).mockReturnValue({
       user: {
@@ -86,6 +90,8 @@ describe("AdminGuard", () => {
         assignments: [],
       },
       token: "test-token",
+      authError: null,
+      clearAuthError: vi.fn(),
       isLoading: false,
       login: vi.fn(),
       logout: vi.fn(),
@@ -102,12 +108,12 @@ describe("AdminGuard", () => {
               </AdminGuard>
             }
           />
-          <Route path="/dashboard" element={<div>Dashboard</div>} />
+          <Route path="/forbidden" element={<div>Forbidden</div>} />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Forbidden")).toBeInTheDocument();
     expect(screen.queryByText("Admin Content")).not.toBeInTheDocument();
   });
 
@@ -122,6 +128,8 @@ describe("AdminGuard", () => {
         assignments: [],
       },
       token: "test-token",
+      authError: null,
+      clearAuthError: vi.fn(),
       isLoading: false,
       login: vi.fn(),
       logout: vi.fn(),
@@ -149,6 +157,8 @@ describe("AdminGuard", () => {
         assignments: [],
       },
       token: "test-token",
+      authError: null,
+      clearAuthError: vi.fn(),
       isLoading: false,
       login: vi.fn(),
       logout: vi.fn(),
@@ -165,11 +175,11 @@ describe("AdminGuard", () => {
               </AdminGuard>
             }
           />
-          <Route path="/dashboard" element={<div>Dashboard</div>} />
+          <Route path="/forbidden" element={<div>Forbidden</div>} />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Forbidden")).toBeInTheDocument();
   });
 });

@@ -9,10 +9,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { SmartReadExport } from "../api";
 import { createExport, getExportStatus, getExportCsvData } from "../api";
 
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 /**
@@ -45,24 +47,32 @@ export function useExportStatus(
   exportId: string | null,
   enabled: boolean = true,
 ) {
+  const queryKey =
+    configId && taskId && exportId
+      ? ([...SMARTREAD_QUERY_KEYS.config(configId), "export", taskId, exportId] as const)
+      : (["smartread", "export", "disabled"] as const);
+
   return useQuery({
-    queryKey:
-      configId && taskId && exportId
-        ? [...SMARTREAD_QUERY_KEYS.config(configId), "export", taskId, exportId]
-        : [],
-    queryFn: () =>
-      configId && taskId && exportId
-        ? getExportStatus(configId, taskId, exportId)
-        : Promise.resolve(null),
+    queryKey,
+    queryFn: async (): Promise<SmartReadExport | null> => {
+      if (!configId || !taskId || !exportId) {
+        return null;
+      }
+      return getExportStatus(configId, taskId, exportId);
+    },
     enabled: !!configId && !!taskId && !!exportId && enabled,
-    refetchInterval: (query) => {
+    refetchInterval: authAwareRefetchInterval<
+      SmartReadExport | null,
+      Error,
+      SmartReadExport | null
+    >((query) => {
       // RUNNING状態なら5秒ごとにポーリング
       const data = query.state.data;
       if (data && data.state === "RUNNING") {
         return 5000;
       }
       return false;
-    },
+    }),
   });
 }
 
@@ -78,12 +88,20 @@ export function useExportCsvData(options: {
   taskDate?: string;
 }) {
   const { configId, taskId, exportId, saveToDb = true, taskDate } = options;
+  const queryKey =
+    configId && taskId && exportId
+      ? ([
+          ...SMARTREAD_QUERY_KEYS.config(configId),
+          "csv",
+          taskId,
+          exportId,
+          saveToDb,
+          taskDate,
+        ] as const)
+      : (["smartread", "csv", "disabled"] as const);
 
   return useQuery({
-    queryKey:
-      configId && taskId && exportId
-        ? [...SMARTREAD_QUERY_KEYS.config(configId), "csv", taskId, exportId, saveToDb, taskDate]
-        : [],
+    queryKey,
     queryFn: async () => {
       if (!configId || !taskId || !exportId) {
         return null;

@@ -10,10 +10,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { SmartReadPadRunListResponse, SmartReadPadRunStatus } from "../api";
 import { startPadRun, getPadRuns, getPadRunStatus, retryPadRun } from "../api";
 
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 // ============================================
@@ -24,22 +26,27 @@ import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
  * PAD互換フロー一覧を取得
  */
 export function usePadRuns(configId: number | null, statusFilter?: string, limit: number = 20) {
+  const queryKey = SMARTREAD_QUERY_KEYS.padRuns(configId ?? 0);
   return useQuery({
-    queryKey: SMARTREAD_QUERY_KEYS.padRuns(configId ?? 0),
-    queryFn: async () => {
+    queryKey,
+    queryFn: async (): Promise<SmartReadPadRunListResponse> => {
       if (!configId) return { runs: [] };
       return getPadRuns(configId, statusFilter, limit);
     },
     enabled: !!configId,
     staleTime: 1000 * 10, // 10 seconds (runs may be in progress)
-    refetchInterval: (query) => {
+    refetchInterval: authAwareRefetchInterval<
+      SmartReadPadRunListResponse,
+      Error,
+      SmartReadPadRunListResponse
+    >((query) => {
       // Auto-refresh if there are running tasks
       const data = query.state.data;
       if (data?.runs.some((r) => r.status === "RUNNING")) {
         return 5000; // 5 seconds
       }
       return false;
-    },
+    }),
   });
 }
 
@@ -53,22 +60,27 @@ export function usePadRuns(configId: number | null, statusFilter?: string, limit
  * RUNNINGステータスの場合は自動ポーリングを行う。
  */
 export function usePadRunStatus(configId: number | null, runId: string | null) {
+  const queryKey = SMARTREAD_QUERY_KEYS.padRun(configId ?? 0, runId ?? "");
   return useQuery({
-    queryKey: SMARTREAD_QUERY_KEYS.padRun(configId ?? 0, runId ?? ""),
-    queryFn: async () => {
+    queryKey,
+    queryFn: async (): Promise<SmartReadPadRunStatus | null> => {
       if (!configId || !runId) return null;
       return getPadRunStatus(configId, runId);
     },
     enabled: !!configId && !!runId,
     staleTime: 1000 * 5, // 5 seconds
-    refetchInterval: (query) => {
+    refetchInterval: authAwareRefetchInterval<
+      SmartReadPadRunStatus | null,
+      Error,
+      SmartReadPadRunStatus | null
+    >((query) => {
       // Auto-poll while running
       const data = query.state.data;
       if (data?.status === "RUNNING") {
         return 3000; // 3 seconds
       }
       return false;
-    },
+    }),
   });
 }
 

@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { acquireOrderLock, releaseOrderLock } from "../api";
 
 import { QUERY_KEYS } from "@/services/api/query-keys";
+import { hasAuthToken } from "@/shared/auth/token";
 
 /**
  * Check if user is authenticated by verifying token exists in localStorage
  */
 function isAuthenticated(): boolean {
-  const token = localStorage.getItem("token");
-  return Boolean(token && token.trim().length > 0);
+  return hasAuthToken();
 }
 
 export function useOrderLock(orderId: number, enabled: boolean = true) {

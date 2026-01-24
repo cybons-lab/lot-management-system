@@ -10,7 +10,7 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /* eslint-disable jsx-a11y/no-autofocus */
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   AlertTriangle,
@@ -37,6 +37,7 @@ import { ocrResultsApi, type OcrResultItem, type OcrResultEditPayload } from "..
 import { Button, Card, CardContent } from "@/components/ui";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { useAuthenticatedQuery } from "@/shared/hooks/useAuthenticatedQuery";
 import { cn } from "@/shared/libs/utils";
 
 /**
@@ -586,7 +587,7 @@ export function OcrResultsListPage() {
     },
   });
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useAuthenticatedQuery({
     queryKey: ["ocr-results", { taskDate, statusFilter, showErrorsOnly }],
     queryFn: () =>
       ocrResultsApi.list({

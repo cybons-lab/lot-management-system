@@ -88,7 +88,7 @@
  *    - Sentry連携: エラーログを自動的に Sentry に送信
  */
 
-import { http } from "@/shared/api/http-client";
+import { httpPublic } from "@/shared/api/http-client";
 import { getRequestId } from "@/shared/utils/request-id";
 
 export type LogLevel = "info" | "warning" | "error";
@@ -139,7 +139,7 @@ export class Logger {
       request_id: getRequestId(),
     };
 
-    http.post("system/logs/client", payload).catch((e) => {
+    httpPublic.post("system/logs/client", payload).catch((e) => {
       // サーバー送信失敗時はコンソールに出力するのみ（無限ループ防止）
       console.warn("Failed to send log to server:", e);
     });

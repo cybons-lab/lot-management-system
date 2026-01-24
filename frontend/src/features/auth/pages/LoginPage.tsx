@@ -1,6 +1,6 @@
 import { Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import {
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
-import { http } from "@/shared/api/http-client";
+import { httpPublic } from "@/shared/api/http-client";
 
 // Minimal User Type for Selection (API returns id, not user_id)
 interface UserSummary {
@@ -25,18 +25,13 @@ interface UserSummary {
   display_name: string;
 }
 
-export function LoginPage() {
+function useLoginUsers() {
   const [users, setUsers] = useState<UserSummary[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useAuth();
-  const navigate = useNavigate();
 
-  // Load users for selection (public endpoint, no auth required)
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const data = await http.get<UserSummary[]>("auth/login-users");
+        const data = await httpPublic.get<UserSummary[]>("auth/login-users");
         setUsers(data);
       } catch (error) {
         console.error("Failed to fetch users", error);
@@ -46,12 +41,24 @@ export function LoginPage() {
     fetchUsers();
   }, []);
 
+  return users;
+}
+
+export function LoginPage() {
+  const users = useLoginUsers();
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo") || "/";
+
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate("/");
+      navigate(returnTo);
     }
-  }, [user, navigate]);
+  }, [user, navigate, returnTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +70,7 @@ export function LoginPage() {
     setIsLoading(true);
     try {
       await login(userId, selectedUser?.username);
-      navigate("/");
+      navigate(returnTo);
     } catch (error) {
       console.error("Login failed", error);
       toast.error("ログインに失敗しました");

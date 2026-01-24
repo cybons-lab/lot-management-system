@@ -1,30 +1,36 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
+import { httpPublic } from "@/shared/api/http-client";
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { cn } from "@/shared/libs/utils";
 
 interface HealthResponse {
   status: string;
 }
 
-export function SystemStatus() {
-  const [isDismissed, setIsDismissed] = useState(false);
-
-  const { isError, error, refetch, isFetching } = useQuery({
-    queryKey: ["system-health"],
-    queryFn: async () => {
-      // Use fetch directly to bypass authentication interceptor
-      const res = await fetch("/api/readyz");
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-      return res.json() as Promise<HealthResponse>;
+function useSystemHealthStatus() {
+  const systemHealthQueryKey = ["system-health"] as const;
+  const systemHealthQueryOptions = {
+    queryKey: systemHealthQueryKey,
+    queryFn: async (): Promise<HealthResponse> => {
+      return httpPublic.get<HealthResponse>("readyz");
     },
-    refetchInterval: 30000, // Check every 30 seconds
+  } satisfies UseQueryOptions<HealthResponse, Error, HealthResponse, typeof systemHealthQueryKey>;
+
+  return useQuery({
+    ...systemHealthQueryOptions,
+    refetchInterval: authAwareRefetchInterval<HealthResponse, Error, HealthResponse>(30000), // Check every 30 seconds
     retry: 0, // Fail immediately so we can show error
     refetchOnWindowFocus: true,
   });
+}
+
+export function SystemStatus() {
+  const [isDismissed, setIsDismissed] = useState(false);
+
+  const { isError, error, refetch, isFetching } = useSystemHealthStatus();
 
   if (!isError) {
     return null;

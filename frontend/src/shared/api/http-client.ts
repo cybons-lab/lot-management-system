@@ -23,8 +23,9 @@
 import ky, { type KyInstance, type Options, type HTTPError } from "ky";
 
 import { logError } from "@/services/error-logger";
+import { getAuthToken } from "@/shared/auth/token";
 import { createRequestId } from "@/shared/utils/request-id";
-import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
+import { AuthorizationError, createApiError, NetworkError } from "@/utils/errors/custom-errors";
 
 /**
  * Base API configuration
@@ -58,14 +59,52 @@ const API_TIMEOUT = 30000; // 30 seconds
  *    → 各コンポーネントが独立してイベントを購読・処理
  */
 export const AUTH_ERROR_EVENT = "auth:unauthorized";
+export const FORBIDDEN_ERROR_EVENT = "auth:forbidden";
 
 /**
  * Dispatch authentication error event
  * This allows React components to react to 401 errors globally
+ *
+ * 【デバウンス設計】
+ * 複数のAPIが同時に401を返した場合、dispatchAuthErrorが重複発火する。
+ * これを防ぐため、500ms以内の重複発火を抑制する。
  */
+let lastAuthErrorTime = 0;
+const AUTH_ERROR_DEBOUNCE_MS = 500;
+
 function dispatchAuthError(message: string = "セッションの有効期限が切れました"): void {
+  const now = Date.now();
+  if (now - lastAuthErrorTime < AUTH_ERROR_DEBOUNCE_MS) {
+    // デバウンス期間内は発火しない
+    return;
+  }
+  lastAuthErrorTime = now;
+
   window.dispatchEvent(
     new CustomEvent(AUTH_ERROR_EVENT, {
+      detail: { message },
+    }),
+  );
+}
+
+/**
+ * Dispatch authorization error event (403)
+ *
+ * 【デバウンス設計】
+ * 401同様、複数APIの同時403を防ぐため500ms以内の重複発火を抑制
+ */
+let lastForbiddenErrorTime = 0;
+const FORBIDDEN_ERROR_DEBOUNCE_MS = 500;
+
+function dispatchForbiddenError(message: string = "この操作を行う権限がありません"): void {
+  const now = Date.now();
+  if (now - lastForbiddenErrorTime < FORBIDDEN_ERROR_DEBOUNCE_MS) {
+    return;
+  }
+  lastForbiddenErrorTime = now;
+
+  window.dispatchEvent(
+    new CustomEvent(FORBIDDEN_ERROR_EVENT, {
       detail: { message },
     }),
   );
@@ -137,6 +176,15 @@ function handleUnauthorizedError(request: Request, errorMessage: string): void {
 }
 
 /**
+ * Handle 403 Forbidden errors
+ */
+function handleForbiddenError(request: Request, errorMessage: string): void {
+  if (!isLoginEndpoint(request?.url)) {
+    dispatchForbiddenError(errorMessage || "この操作を行う権限がありません");
+  }
+}
+
+/**
  * Log API error in development mode
  * Note: 認証エラー(401/403)はログイン前のページアクセス等で頻発するため抑制
  */
@@ -181,6 +229,9 @@ async function handleApiError(
   // Handle 401 Unauthorized - session expired or invalid token
   if (status === 401) {
     handleUnauthorizedError(request, error.message);
+  }
+  if (status === 403) {
+    handleForbiddenError(request, error.message);
   }
 
   logApiErrorDev(status, request?.url, error.message, body);
@@ -231,123 +282,146 @@ async function handleApiError(
  * - 5xx Server Error: サーバー側の一時的な障害 → リトライで回復する可能性
  * - 4xx Client Error（400, 401, 403, 404等）: クライアントのミス → リトライしても無駄なので除外
  */
-export const apiClient: KyInstance = ky.create({
-  prefixUrl: API_BASE_URL,
-  timeout: API_TIMEOUT,
-  retry: {
-    limit: 2,
-    methods: ["get", "put", "head", "delete", "options", "trace"], // POST除外: 冪等性
-    statusCodes: [408, 413, 429, 500, 502, 503, 504],
-  },
-  hooks: {
-    beforeRequest: [
-      (request) => {
-        // Add auth token if available
-        const token = localStorage.getItem("token");
-        if (token) {
-          request.headers.set("Authorization", `Bearer ${token}`);
-        }
-        request.headers.set("X-Request-ID", createRequestId());
-        // Note: Request logging removed to reduce console noise
-        // Enable by setting VITE_HTTP_DEBUG=true if needed
-      },
-    ],
-    afterResponse: [
-      async (_request, _options, response) => {
-        // Check for mock status header
-        const isMock = response.headers.get("X-Mock-Status") === "true";
-        if (isMock) {
-          dispatchMockStatus(true);
-        }
+type AuthMode = "public" | "auth";
 
-        return response;
-      },
-    ],
-    beforeError: [
-      async (error) => {
-        const { response, request } = error;
+function ensureAuthToken(): string {
+  const token = getAuthToken();
+  if (!token) {
+    throw new AuthorizationError("認証トークンがありません");
+  }
+  return token;
+}
 
-        if (!response) {
-          return handleNetworkError(error, request);
-        }
+function createApiClient(authMode: AuthMode): KyInstance {
+  return ky.create({
+    prefixUrl: API_BASE_URL,
+    timeout: API_TIMEOUT,
+    retry: {
+      limit: 2,
+      methods: ["get", "put", "head", "delete", "options", "trace"], // POST除外: 冪等性
+      statusCodes: [408, 413, 429, 500, 502, 503, 504],
+    },
+    hooks: {
+      beforeRequest: [
+        (request) => {
+          if (authMode === "auth") {
+            const token = ensureAuthToken();
+            request.headers.set("Authorization", `Bearer ${token}`);
+          }
+          request.headers.set("X-Request-ID", createRequestId());
+          // Note: Request logging removed to reduce console noise
+          // Enable by setting VITE_HTTP_DEBUG=true if needed
+        },
+      ],
+      afterResponse: [
+        async (_request, _options, response) => {
+          // Check for mock status header
+          const isMock = response.headers.get("X-Mock-Status") === "true";
+          if (isMock) {
+            dispatchMockStatus(true);
+          }
 
-        return handleApiError(error, request, response);
-      },
-    ],
-  },
-});
+          return response;
+        },
+      ],
+      beforeError: [
+        async (error) => {
+          const { response, request } = error;
+
+          if (!response) {
+            return handleNetworkError(error, request);
+          }
+
+          return handleApiError(error, request, response);
+        },
+      ],
+    },
+  });
+}
+
+export const apiClientPublic: KyInstance = createApiClient("public");
+export const apiClientAuth: KyInstance = createApiClient("auth");
+export const apiClient: KyInstance = apiClientAuth;
 
 /**
  * HTTP client with common methods
  *
  * Provides a consistent interface for API calls with automatic JSON handling.
  */
-export const http = {
-  /**
-   * GET request
-   */
-  async get<T>(url: string, options?: Options): Promise<T> {
-    return apiClient.get(url, options).json<T>();
-  },
+function createHttpClient(client: KyInstance) {
+  return {
+    /**
+     * GET request
+     */
+    async get<T>(url: string, options?: Options): Promise<T> {
+      return client.get(url, options).json<T>();
+    },
 
-  /**
-   * POST request
-   */
-  async post<T>(url: string, data?: unknown, options?: Options): Promise<T> {
-    return apiClient.post(url, { json: data, ...options }).json<T>();
-  },
+    /**
+     * POST request
+     */
+    async post<T>(url: string, data?: unknown, options?: Options): Promise<T> {
+      return client.post(url, { json: data, ...options }).json<T>();
+    },
 
-  /**
-   * POST request with FormData
-   */
-  async postFormData<T>(url: string, formData: FormData, options?: Options): Promise<T> {
-    return apiClient.post(url, { body: formData, ...options }).json<T>();
-  },
+    /**
+     * POST request with FormData
+     */
+    async postFormData<T>(url: string, formData: FormData, options?: Options): Promise<T> {
+      return client.post(url, { body: formData, ...options }).json<T>();
+    },
 
-  /**
-   * PUT request
-   */
-  async put<T>(url: string, data?: unknown, options?: Options): Promise<T> {
-    return apiClient.put(url, { json: data, ...options }).json<T>();
-  },
+    /**
+     * PUT request
+     */
+    async put<T>(url: string, data?: unknown, options?: Options): Promise<T> {
+      return client.put(url, { json: data, ...options }).json<T>();
+    },
 
-  /**
-   * PATCH request
-   */
-  async patch<T>(url: string, data?: unknown, options?: Options): Promise<T> {
-    return apiClient.patch(url, { json: data, ...options }).json<T>();
-  },
+    /**
+     * PATCH request
+     */
+    async patch<T>(url: string, data?: unknown, options?: Options): Promise<T> {
+      return client.patch(url, { json: data, ...options }).json<T>();
+    },
 
-  /**
-   * DELETE request
-   */
-  async delete<T>(url: string, options?: Options): Promise<T> {
-    return apiClient.delete(url, options).json<T>();
-  },
+    /**
+     * DELETE request
+     */
+    async delete<T>(url: string, options?: Options): Promise<T> {
+      return client.delete(url, options).json<T>();
+    },
 
-  /**
-   * DELETE request without response body
-   */
-  async deleteVoid(url: string, options?: Options): Promise<void> {
-    await apiClient.delete(url, options);
-  },
+    /**
+     * DELETE request without response body
+     */
+    async deleteVoid(url: string, options?: Options): Promise<void> {
+      await client.delete(url, options);
+    },
 
-  /**
-   * Download file
-   */
-  async download(url: string, filename: string, options?: Options): Promise<void> {
-    const response = await apiClient.get(url, options);
-    const blob = await response.blob();
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(downloadUrl);
-  },
-};
+    /**
+     * Download file
+     */
+    async download(url: string, filename: string, options?: Options): Promise<void> {
+      const response = await client.get(url, options);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    },
+  };
+}
+
+export const httpPublic = createHttpClient(apiClientPublic);
+export const httpAuth = createHttpClient(apiClientAuth);
+
+// Backwards compatibility: default to auth-required client
+export const http = httpAuth;
 
 /**
  * API response wrapper type
@@ -411,4 +485,4 @@ export function createResourceClient<T>(basePath: string) {
   };
 }
 
-export default apiClient;
+export default apiClientAuth;

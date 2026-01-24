@@ -7,10 +7,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import type { SmartReadRequestListResponse } from "../api";
 import { getTasks, getManagedTasks, updateSkipToday, getRequests } from "../api";
 
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
+import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 /**
@@ -74,7 +76,12 @@ export function useUpdateSkipToday() {
 export function useSmartReadRequests(configId: number | null, limit: number = 100) {
   return useQuery({
     queryKey: SMARTREAD_QUERY_KEYS.requests(configId ?? 0),
-    queryFn: () => (configId ? getRequests(configId, undefined, limit) : { requests: [] }),
+    queryFn: async (): Promise<SmartReadRequestListResponse> => {
+      if (!configId) {
+        return { requests: [] };
+      }
+      return getRequests(configId, undefined, limit);
+    },
     enabled: !!configId,
     staleTime: 1000 * 30, // 30 seconds
   });
@@ -95,7 +102,11 @@ export function useSmartReadRequestPolling(configId: number | null) {
       return res;
     },
     enabled: !!configId,
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: authAwareRefetchInterval<
+      SmartReadRequestListResponse | undefined,
+      Error,
+      SmartReadRequestListResponse | undefined
+    >(5000), // Poll every 5 seconds
     refetchIntervalInBackground: true,
   });
 }

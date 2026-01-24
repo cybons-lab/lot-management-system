@@ -14,6 +14,7 @@ import {
   type AllocationResult,
 } from "@/features/allocations/api";
 import { QUERY_KEYS } from "@/services/api/query-keys";
+import { httpAuth } from "@/shared/api/http-client";
 
 /**
  * ロット引当作成フック
@@ -223,18 +224,11 @@ export function useAutoAllocate(options?: {
   return useMutation({
     mutationFn: async ({ order_line_id, strategy = "fefo" }) => {
       // Backend API: POST /api/allocations/auto-allocate
-      const response = await fetch("/api/allocations/auto-allocate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order_line_id, strategy }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "自動引当に失敗しました");
-      }
-
-      const data = await response.json();
+      const data = await httpAuth.post<{
+        order_id: number;
+        allocated_lots: Array<{ lot_id: number }>;
+        message: string;
+      }>("allocations/auto-allocate", { order_line_id, strategy });
 
       // AutoAllocateResponse を AllocationResult 形式に変換
       return {
