@@ -54,6 +54,7 @@
 ### 3.1 原則
 - **派生可能な値はatomで定義**し、フック内で都度計算しない。
 - これにより再利用性と一貫性を確保する。
+- 詳細な実装パターンは [Jotai Derived Atoms 設計標準](./jotai-derived-atoms.md) を参照。
 
 ### 3.2 例
 - `inventoryPageQueryParamsAtom`
