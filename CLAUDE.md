@@ -105,8 +105,9 @@ lot-management-system/
 │   └── eslint.config.js
 │
 ├── docs/
-│   ├── standards/           # Detailed standards (security, etc.)
-│   ├── tasks/ACTIVE_TASKS.md
+│   ├── project/BACKLOG.md  # Consolidated task backlog
+│   ├── archive/            # Archived (obsolete) documentation
+│   ├── standards/          # Detailed standards (security, etc.)
 │   └── remaining_issues.adoc
 │
 ├── CLAUDE.md               # This file
@@ -276,4 +277,5 @@ Detailed standards are maintained in `docs/standards/`:
 - **CHANGELOG.md** - Version history
 - **SETUP_GUIDE.md** - Setup instructions
 - **README.md** - Project overview
-- **docs/tasks/ACTIVE_TASKS.md** - Current tasks
+- **docs/project/BACKLOG.md** - Consolidated task backlog
+- **docs/archive/README.md** - Archived documentation index (obsolete files)
