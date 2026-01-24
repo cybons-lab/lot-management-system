@@ -37,27 +37,6 @@ export const adhocLotCreateSchema = z.object({
   }),
   shipping_date: z.string().optional(),
   origin_reference: z.string().optional(),
-  cost_price: z
-    .string()
-    .optional()
-    .refine(
-      (val) => !val || (!isNaN(Number(val)) && Number(val) >= 0),
-      "0以上の数値を入力してください",
-    ),
-  sales_price: z
-    .string()
-    .optional()
-    .refine(
-      (val) => !val || (!isNaN(Number(val)) && Number(val) >= 0),
-      "0以上の数値を入力してください",
-    ),
-  tax_rate: z
-    .string()
-    .optional()
-    .refine(
-      (val) => !val || (!isNaN(Number(val)) && Number(val) >= 0 && Number(val) <= 1),
-      "0〜1の数値を入力してください",
-    ),
 });
 
 export type AdhocLotFormData = z.infer<typeof adhocLotCreateSchema>;
@@ -77,7 +56,4 @@ export const ADHOC_LOT_FORM_DEFAULTS: AdhocLotFormData = {
   origin_type: "adhoc",
   origin_reference: "",
   shipping_date: "",
-  cost_price: "",
-  sales_price: "",
-  tax_rate: "",
 };
