@@ -1,9 +1,14 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { httpAuth, httpPublic, AUTH_ERROR_EVENT, FORBIDDEN_ERROR_EVENT } from "@/shared/api/http-client";
-import { clearAuthToken, getAuthToken, setAuthToken } from "@/shared/auth/token";
+import {
+  AUTH_ERROR_EVENT,
+  FORBIDDEN_ERROR_EVENT,
+  httpAuth,
+  httpPublic,
+} from "@/shared/api/http-client";
 import { setAuthExpired } from "@/shared/auth/auth-status";
+import { clearAuthToken, getAuthToken, setAuthToken } from "@/shared/auth/token";
 
 // Types (should be in separate types file ideally)
 export interface User {

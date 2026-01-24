@@ -64,8 +64,22 @@ export const FORBIDDEN_ERROR_EVENT = "auth:forbidden";
 /**
  * Dispatch authentication error event
  * This allows React components to react to 401 errors globally
+ *
+ * 【デバウンス設計】
+ * 複数のAPIが同時に401を返した場合、dispatchAuthErrorが重複発火する。
+ * これを防ぐため、500ms以内の重複発火を抑制する。
  */
+let lastAuthErrorTime = 0;
+const AUTH_ERROR_DEBOUNCE_MS = 500;
+
 function dispatchAuthError(message: string = "セッションの有効期限が切れました"): void {
+  const now = Date.now();
+  if (now - lastAuthErrorTime < AUTH_ERROR_DEBOUNCE_MS) {
+    // デバウンス期間内は発火しない
+    return;
+  }
+  lastAuthErrorTime = now;
+
   window.dispatchEvent(
     new CustomEvent(AUTH_ERROR_EVENT, {
       detail: { message },
@@ -75,8 +89,20 @@ function dispatchAuthError(message: string = "セッションの有効期限が�
 
 /**
  * Dispatch authorization error event (403)
+ *
+ * 【デバウンス設計】
+ * 401同様、複数APIの同時403を防ぐため500ms以内の重複発火を抑制
  */
+let lastForbiddenErrorTime = 0;
+const FORBIDDEN_ERROR_DEBOUNCE_MS = 500;
+
 function dispatchForbiddenError(message: string = "この操作を行う権限がありません"): void {
+  const now = Date.now();
+  if (now - lastForbiddenErrorTime < FORBIDDEN_ERROR_DEBOUNCE_MS) {
+    return;
+  }
+  lastForbiddenErrorTime = now;
+
   window.dispatchEvent(
     new CustomEvent(FORBIDDEN_ERROR_EVENT, {
       detail: { message },

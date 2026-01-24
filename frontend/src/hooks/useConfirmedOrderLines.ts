@@ -1,7 +1,8 @@
-import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
-import { httpAuth } from "@/shared/api/http-client";
 import { useAuth } from "@/features/auth/AuthContext";
+import { httpAuth } from "@/shared/api/http-client";
+import { useAuthenticatedQuery } from "@/shared/hooks/useAuthenticatedQuery";
 import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { formatOrderCode } from "@/shared/utils/order";
 
@@ -38,13 +39,13 @@ const confirmedOrderLinesQueryOptions = {
 >;
 
 export function useConfirmedOrderLines() {
-  const { token } = useAuth();
+  const { isLoading: isAuthLoading } = useAuth();
 
-  return useQuery<ConfirmedOrderLine[]>({
+  return useAuthenticatedQuery<ConfirmedOrderLine[]>({
     ...confirmedOrderLinesQueryOptions,
-    enabled: Boolean(token),
-    refetchInterval: authAwareRefetchInterval<ConfirmedOrderLine[], Error, ConfirmedOrderLine[]>(
-      30000,
-    ),
+    // 認証状態読み込み完了後にポーリングを開始
+    refetchInterval: isAuthLoading
+      ? false
+      : authAwareRefetchInterval<ConfirmedOrderLine[], Error, ConfirmedOrderLine[]>(30000),
   });
 }

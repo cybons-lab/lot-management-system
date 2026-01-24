@@ -10,7 +10,7 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /* eslint-disable jsx-a11y/no-autofocus */
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   AlertTriangle,
@@ -35,9 +35,9 @@ import { toast } from "sonner";
 import { ocrResultsApi, type OcrResultItem, type OcrResultEditPayload } from "../api";
 
 import { Button, Card, CardContent } from "@/components/ui";
-import { useAuth } from "@/features/auth/AuthContext";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { useAuthenticatedQuery } from "@/shared/hooks/useAuthenticatedQuery";
 import { cn } from "@/shared/libs/utils";
 
 /**
@@ -540,7 +540,6 @@ const buildShippingSlipText = (
 // ============================================
 
 export function OcrResultsListPage() {
-  const { token } = useAuth();
   const [taskDate, setTaskDate] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
@@ -588,9 +587,8 @@ export function OcrResultsListPage() {
     },
   });
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useAuthenticatedQuery({
     queryKey: ["ocr-results", { taskDate, statusFilter, showErrorsOnly }],
-    enabled: Boolean(token),
     queryFn: () =>
       ocrResultsApi.list({
         task_date: taskDate || undefined,

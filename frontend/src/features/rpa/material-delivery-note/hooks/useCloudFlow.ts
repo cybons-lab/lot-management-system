@@ -3,11 +3,12 @@
  * ジョブキュー管理、設定管理用
  */
 
-import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import { useMutation, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useAuth } from "@/features/auth/AuthContext";
 import { httpAuth } from "@/shared/api/http-client";
+import { useAuthenticatedQuery } from "@/shared/hooks/useAuthenticatedQuery";
 import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 
 // Types
@@ -47,7 +48,7 @@ const CLOUD_FLOW_KEYS = {
 
 // Hooks
 export function useCloudFlowQueueStatus(jobType: string) {
-  const { token } = useAuth();
+  const { isLoading: isAuthLoading } = useAuth();
   const queryKey = CLOUD_FLOW_KEYS.queueStatus(jobType);
   const queryOptions = {
     queryKey,
@@ -56,17 +57,17 @@ export function useCloudFlowQueueStatus(jobType: string) {
     },
   } satisfies UseQueryOptions<CloudFlowQueueStatus, Error, CloudFlowQueueStatus, typeof queryKey>;
 
-  return useQuery<CloudFlowQueueStatus>({
+  return useAuthenticatedQuery<CloudFlowQueueStatus>({
     ...queryOptions,
-    enabled: Boolean(token),
-    refetchInterval: authAwareRefetchInterval<CloudFlowQueueStatus, Error, CloudFlowQueueStatus>(
-      5000,
-    ), // 5秒ごとに更新
+    // 認証状態読み込み完了後にポーリングを開始
+    refetchInterval: isAuthLoading
+      ? false
+      : authAwareRefetchInterval<CloudFlowQueueStatus, Error, CloudFlowQueueStatus>(5000),
   });
 }
 
 export function useCloudFlowJobHistory(jobType: string, limit = 20) {
-  return useQuery<CloudFlowJobResponse[]>({
+  return useAuthenticatedQuery<CloudFlowJobResponse[]>({
     queryKey: CLOUD_FLOW_KEYS.jobs(jobType),
     queryFn: async () => {
       return httpAuth.get<CloudFlowJobResponse[]>(

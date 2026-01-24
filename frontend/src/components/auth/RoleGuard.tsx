@@ -5,16 +5,13 @@
  */
 
 import { AccessGuard } from "@/components/auth/AccessGuard";
+import type { RoleCode } from "@/features/auth/permissions";
 
 interface RoleGuardProps {
   children: React.ReactNode;
-  roles: string[];
+  roles: RoleCode[];
 }
 
 export function RoleGuard({ children, roles }: RoleGuardProps) {
-  return (
-    <AccessGuard roles={roles as ("admin" | "user" | "guest")[]}>
-      {children}
-    </AccessGuard>
-  );
+  return <AccessGuard roles={roles}>{children}</AccessGuard>;
 }
