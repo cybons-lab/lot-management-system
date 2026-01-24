@@ -17,7 +17,6 @@ import {
   type AdhocLotFormData,
   type AdhocOriginType,
 } from "./adhocLotCreateSchema";
-import { AdhocLotFormFinancials } from "./AdhocLotFormFinancials";
 
 // Re-export for backward compatibility
 export { ADHOC_ORIGIN_TYPES, type AdhocOriginType };
@@ -49,9 +48,6 @@ export interface AdhocLotCreateData {
   origin_type: AdhocOriginType;
   origin_reference?: string;
   shipping_date?: string;
-  cost_price?: number;
-  sales_price?: number;
-  tax_rate?: number;
 }
 
 interface AdhocLotCreateFormProps {
@@ -138,9 +134,6 @@ export function AdhocLotCreateForm({
       received_date: data.received_date,
       expiry_date: data.expiry_date || undefined,
       shipping_date: data.shipping_date || undefined,
-      cost_price: data.cost_price ? Number(data.cost_price) : undefined,
-      sales_price: data.sales_price ? Number(data.sales_price) : undefined,
-      tax_rate: data.tax_rate ? Number(data.tax_rate) : undefined,
     };
 
     await onSubmit(submitData);
@@ -158,8 +151,9 @@ export function AdhocLotCreateForm({
       </div>
       <div className="rounded-lg border bg-white p-4">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* Row 0: Lot Number */}
-          <div className="md:col-span-2">
+          {/* Row 0: Lot Number & Lot Type */}
+          {/* Lot Number */}
+          <div>
             <div className="flex items-center gap-2">
               <Label htmlFor="lot_number">ロット番号 *</Label>
               <span className="text-xs text-slate-500">(例: LOT-2025-001)</span>
@@ -176,8 +170,7 @@ export function AdhocLotCreateForm({
             )}
           </div>
 
-          {/* Row 1: Lot Type & Supplier */}
-          {/* ロット種別 */}
+          {/* Lot Type */}
           <div>
             <div className="flex items-center gap-2">
               <Label htmlFor="origin_type">ロット種別 *</Label>
@@ -203,8 +196,8 @@ export function AdhocLotCreateForm({
             />
           </div>
 
-          {/* 仕入先（任意だが製品絞り込みに使用） */}
-          <div>
+          {/* Row 1: Supplier (Full Width) */}
+          <div className="md:col-span-2">
             <div className="flex items-center gap-2">
               <Label htmlFor="supplier_code">仕入先（製品絞り込み）</Label>
               <span className="text-xs text-slate-400">任意</span>
@@ -229,7 +222,8 @@ export function AdhocLotCreateForm({
             />
           </div>
 
-          {/* 製品選択 */}
+          {/* Row 2: Product & Warehouse */}
+          {/* Product */}
           <div>
             <div className="flex items-center gap-2">
               <Label htmlFor="product_id">製品 *</Label>
@@ -260,7 +254,7 @@ export function AdhocLotCreateForm({
             )}
           </div>
 
-          {/* 倉庫選択 */}
+          {/* Warehouse */}
           <div>
             <div className="flex items-center gap-2">
               <Label htmlFor="warehouse_id">倉庫 *</Label>
@@ -294,7 +288,7 @@ export function AdhocLotCreateForm({
       <div className="rounded-lg border bg-white p-4">
         <h3 className="text-base font-semibold text-slate-900">数量・単位</h3>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* Row 3: Quantity & Unit */}
+          {/* Row 4: Quantity & Unit */}
           {/* 数量 */}
           <div>
             <div className="flex items-center gap-2">
@@ -334,9 +328,9 @@ export function AdhocLotCreateForm({
       </div>
 
       <div className="rounded-lg border bg-white p-4">
-        <h3 className="text-base font-semibold text-slate-900">日付</h3>
+        <h3 className="text-base font-semibold text-slate-900">日付・その他</h3>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-          {/* Row 4: Dates */}
+          {/* Row 5: Dates */}
           {/* 入荷日 */}
           <div>
             <div className="flex items-center gap-2">
@@ -367,9 +361,21 @@ export function AdhocLotCreateForm({
             <Input id="shipping_date" type="date" {...register("shipping_date")} />
           </div>
         </div>
+
+        {/* 備考（origin_reference） */}
+        <div className="mt-4">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="origin_reference">備考（参照情報）</Label>
+            <span className="text-xs text-slate-400">任意</span>
+          </div>
+          <Input
+            id="origin_reference"
+            {...register("origin_reference")}
+            placeholder="例: キャンペーン用サンプル、チケット#123"
+          />
+        </div>
       </div>
 
-      <AdhocLotFormFinancials register={register} errors={errors} />
       <div className="flex justify-end space-x-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           キャンセル
