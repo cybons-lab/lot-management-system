@@ -84,23 +84,19 @@ export function CustomerItemForm({
     [customers],
   );
 
-  // 先方品番（商品名）形式のオプション - 先方品番があるもののみ
+  // 製品選択オプション - 製品コード（製品名）形式
   const productOptions = useMemo(
     () =>
-      products
-        .filter((p) => p.customer_part_no)
-        .map((p) => ({
-          value: String(p.id),
-          label: `${p.customer_part_no}（${p.product_name}）`,
-          customer_part_no: p.customer_part_no,
-        })),
+      products.map((p) => ({
+        value: String(p.id),
+        label: `${p.product_code}（${p.product_name}）`,
+      })),
     [products],
   );
 
   const handleProductSelect = (value: string) => {
-    const selected = productOptions.find((opt) => opt.value === value);
     setValue("product_id", value ? Number(value) : 0);
-    setValue("customer_part_no", selected?.customer_part_no ?? "");
+    // customer_part_noはマニュアル入力なので自動設定しない
   };
 
   const handleFormSubmit = (data: CustomerItemFormData) => {

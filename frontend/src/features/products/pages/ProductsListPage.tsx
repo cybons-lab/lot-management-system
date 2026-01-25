@@ -89,8 +89,7 @@ export function ProductsListPage() {
     return products.filter(
       (p) =>
         p.product_code.toLowerCase().includes(query) ||
-        p.product_name.toLowerCase().includes(query) ||
-        (p.maker_item_code?.toLowerCase() ?? "").includes(query),
+        p.product_name.toLowerCase().includes(query),
     );
   }, [products, searchQuery]);
 

@@ -10,7 +10,7 @@ import { DataTable, type Column, type SortConfig } from "@/shared/components/dat
 export type SupplierProductWithValidTo = SupplierProduct & { valid_to?: string };
 
 interface SupplierProductsTableProps {
-  products: { id: number; maker_item_code?: string | null; product_name: string }[];
+  products: { id: number; product_code?: string | null; product_name: string }[];
   suppliers: { id: number; supplier_code: string; supplier_name: string }[];
   supplierProducts: SupplierProduct[];
   isLoading: boolean;
@@ -43,7 +43,7 @@ export function SupplierProductsTable({
   // Maps for efficient lookups
   const productMap = useMemo(() => {
     return new Map(
-      products.map((p) => [p.id, { code: p.maker_item_code || "", name: p.product_name }]),
+      products.map((p) => [p.id, { code: p.product_code || "", name: p.product_name }]),
     );
   }, [products]);
 

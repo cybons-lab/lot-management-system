@@ -14,8 +14,6 @@ def test_create_product(product_service: ProductService):
     data = ProductCreate(
         product_code="TEST-001",
         product_name="Test Product",
-        customer_part_no="CUST-TEST-001",
-        maker_item_code="MAKER-TEST-001",
         internal_unit="EA",
         external_unit="EA",
         qty_per_internal_unit=1.0,
@@ -35,8 +33,6 @@ def test_list_products(product_service: ProductService):
         data = ProductCreate(
             product_code=f"TEST-LP-{i}",
             product_name=f"Product LP {i}",
-            customer_part_no=f"CUST-LP-{i}",
-            maker_item_code=f"MAKER-LP-{i}",
             internal_unit="EA",
             external_unit="EA",
             qty_per_internal_unit=1.0,

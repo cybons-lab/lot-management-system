@@ -39,8 +39,6 @@ def _to_product_out(product: Product) -> ProductOut:
         internal_unit=product.internal_unit,
         external_unit=product.external_unit,
         qty_per_internal_unit=float(product.qty_per_internal_unit),
-        customer_part_no=product.customer_part_no,
-        maker_item_code=product.maker_item_code,
         is_active=product.is_active,
         created_at=product.created_at,
         updated_at=product.updated_at,

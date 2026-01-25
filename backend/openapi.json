@@ -33302,18 +33302,6 @@
             "title": "Qty Per Internal Unit",
             "default": 1.0
           },
-          "customer_part_no": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Customer Part No",
-            "description": "先方品番"
-          },
-          "maker_item_code": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Maker Item Code",
-            "description": "メーカー品番（旧メーカー品目コード）"
-          },
           "is_active": {
             "type": "boolean",
             "title": "Is Active",
@@ -33322,9 +33310,7 @@
         },
         "type": "object",
         "required": [
-          "product_name",
-          "customer_part_no",
-          "maker_item_code"
+          "product_name"
         ],
         "title": "ProductCreate",
         "description": "Payload to create a product."
@@ -33782,28 +33768,6 @@
             "type": "number",
             "title": "Qty Per Internal Unit"
           },
-          "customer_part_no": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Customer Part No"
-          },
-          "maker_item_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Maker Item Code"
-          },
           "is_active": {
             "type": "boolean",
             "title": "Is Active"
@@ -33840,8 +33804,6 @@
           "internal_unit",
           "external_unit",
           "qty_per_internal_unit",
-          "customer_part_no",
-          "maker_item_code",
           "is_active",
           "created_at",
           "updated_at",
@@ -33997,28 +33959,6 @@
               }
             ],
             "title": "Qty Per Internal Unit"
-          },
-          "customer_part_no": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Customer Part No"
-          },
-          "maker_item_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Maker Item Code"
           },
           "is_active": {
             "anyOf": [

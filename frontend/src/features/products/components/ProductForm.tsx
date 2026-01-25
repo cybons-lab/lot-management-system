@@ -14,9 +14,6 @@ const productFormSchema = z.object({
   // product_codeは編集時のみ表示、新規時は自動採番なのでoptional扱いだが、編集時は必須
   product_code: z.string().max(50).optional(),
   product_name: z.string().min(1, "商品名は必須です").max(200),
-  // maker_part_code (旧メーカー品番入力欄) は削除せずに残す (Phase 1)
-  maker_item_code: z.string().max(100).optional(),
-  customer_part_no: z.string().max(100).optional(),
   base_unit: z.string().max(20).default("EA"),
   consumption_limit_days: z.coerce.number().optional(),
   internal_unit: z.string().min(1, "社内単位は必須です").max(20),
@@ -55,8 +52,6 @@ export function ProductForm({
     defaultValues: {
       product_code: product?.product_code ?? "",
       product_name: product?.product_name ?? "",
-      maker_item_code: product?.maker_item_code ?? "",
-      customer_part_no: product?.customer_part_no ?? "",
       base_unit: product?.base_unit ?? "EA",
       consumption_limit_days: product?.consumption_limit_days ?? undefined,
       internal_unit: product?.internal_unit ?? "CAN",
@@ -77,8 +72,6 @@ export function ProductForm({
       external_unit: data.external_unit,
       qty_per_internal_unit: data.qty_per_internal_unit,
       is_active: data.is_active,
-      customer_part_no: data.customer_part_no ?? "",
-      maker_item_code: data.maker_item_code ?? "",
     };
     onSubmit(output);
   };
@@ -87,7 +80,7 @@ export function ProductForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} className={formStyles.grid} noValidate>
       <div className={formStyles.field}>
         <Label htmlFor="product_code" className={formStyles.label}>
-          商品コード (メーカー品番)
+          メーカー品番
         </Label>
         <Input
           id="product_code"
@@ -111,31 +104,6 @@ export function ProductForm({
           className={formStyles.input}
         />
         {errors.product_name && <p className={formStyles.error}>{errors.product_name.message}</p>}
-      </div>
-
-      {/* Deprecated Fields (Phase 2 Removal) */}
-      <div className={formStyles.field}>
-        <Label htmlFor="maker_item_code" className={formStyles.label}>
-          メーカー品番 <span className="text-xs text-gray-500">(Phase 2で廃止予定)</span>
-        </Label>
-        <Input
-          id="maker_item_code"
-          {...register("maker_item_code")}
-          placeholder="後方互換用フィールド"
-          className={formStyles.input}
-        />
-      </div>
-
-      <div className={formStyles.field}>
-        <Label htmlFor="customer_part_no" className={formStyles.label}>
-          先方品番 <span className="text-xs text-gray-500">(Phase 2で廃止予定)</span>
-        </Label>
-        <Input
-          id="customer_part_no"
-          {...register("customer_part_no")}
-          placeholder="後方互換用フィールド"
-          className={formStyles.input}
-        />
       </div>
 
       <div className={formStyles.field}>

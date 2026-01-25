@@ -13214,16 +13214,6 @@ export interface components {
        */
       qty_per_internal_unit: number;
       /**
-       * Customer Part No
-       * @description 先方品番
-       */
-      customer_part_no: string;
-      /**
-       * Maker Item Code
-       * @description メーカー品番（旧メーカー品目コード）
-       */
-      maker_item_code: string;
-      /**
        * Is Active
        * @default true
        */
@@ -13444,10 +13434,6 @@ export interface components {
       external_unit: string;
       /** Qty Per Internal Unit */
       qty_per_internal_unit: number;
-      /** Customer Part No */
-      customer_part_no: string | null;
-      /** Maker Item Code */
-      maker_item_code: string | null;
       /** Is Active */
       is_active: boolean;
       /**
@@ -13524,10 +13510,6 @@ export interface components {
       external_unit?: string | null;
       /** Qty Per Internal Unit */
       qty_per_internal_unit?: number | null;
-      /** Customer Part No */
-      customer_part_no?: string | null;
-      /** Maker Item Code */
-      maker_item_code?: string | null;
       /** Is Active */
       is_active?: boolean | null;
     };
