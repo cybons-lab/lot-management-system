@@ -102,8 +102,15 @@ export function InventoryTable({
       }
     });
 
-    // 展開状態を直接更新
-    setExpandedRows(new Set(ids.map(String)));
+    // 展開状態を直接更新（product_id-warehouse_id形式に変換）
+    const expandKeys = new Set<string>();
+    ids.forEach((id) => {
+      const item = data.find((i) => getItemKey(i) === String(id));
+      if (item) {
+        expandKeys.add(`${item.product_id}-${item.warehouse_id}`);
+      }
+    });
+    setExpandedRows(expandKeys);
   };
 
   // アクションボタン

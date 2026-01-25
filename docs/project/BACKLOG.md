@@ -1015,6 +1015,32 @@ Infrastructure層（clients/）がService層にアクセスしている箇所が
 
 ---
 
+### 8-16. InventoryTable 展開キー形式の統一
+
+**優先度**: Low
+**作成**: 2026-01-26
+
+**背景:**
+`InventoryTable`の行展開で使用するキー形式が2箇所で異なっている。
+PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLogic`のキー形式を更新し忘れたことが原因。
+
+現在はハンドラー内で変換処理を行い暫定対応済みだが、根本的にはキー形式を統一すべき。
+
+**現状:**
+- `getItemKey` (DataTable行ID): `${supplier_id ?? "all"}-${product_id}-${warehouse_id}` （3部構成）
+- `useInventoryTableLogic.expandedRows`: `${productId}-${warehouseId}` （2部構成）
+
+**対象ファイル:**
+- `frontend/src/features/inventory/components/InventoryTable.tsx`
+- `frontend/src/features/inventory/hooks/useInventoryTableLogic.ts`
+
+**対応案:**
+1. `useInventoryTableLogic`のキー形式を3部構成に統一
+2. `toggleRow`, `isRowExpanded`, `fetchLotsForItem`等のシグネチャに`supplierId`を追加
+3. ハンドラー内の変換処理を削除
+
+---
+
 ## 9. ビジネスコンテキスト補足が必要な項目
 
 以下の項目は、コードに「意図・背景」コメントを追加する際に、開発者の判断だけでは記述できない項目です。外部レビューまたはビジネス要件の確認が必要です。
