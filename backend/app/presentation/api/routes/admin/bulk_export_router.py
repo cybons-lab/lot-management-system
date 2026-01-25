@@ -181,22 +181,22 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         from sqlalchemy import select
 
         from app.infrastructure.persistence.models.masters_models import Product, Supplier
-        from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
+        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         sp_query = (
             select(
-                ProductSupplier.id,
-                ProductSupplier.product_id,
-                ProductSupplier.supplier_id,
-                ProductSupplier.is_primary,
-                ProductSupplier.lead_time_days,
+                SupplierItem.id,
+                SupplierItem.product_id,
+                SupplierItem.supplier_id,
+                SupplierItem.is_primary,
+                SupplierItem.lead_time_days,
                 Product.maker_part_code,
                 Product.product_name,
                 Supplier.supplier_code,
                 Supplier.supplier_name,
             )
-            .join(Product, ProductSupplier.product_id == Product.id)
-            .join(Supplier, ProductSupplier.supplier_id == Supplier.id)
+            .join(Product, SupplierItem.product_id == Product.id)
+            .join(Supplier, SupplierItem.supplier_id == Supplier.id)
         )
         sp_results = db.execute(sp_query).all()
         data = [

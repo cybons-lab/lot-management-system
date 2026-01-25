@@ -39,7 +39,7 @@ class TestMaterialDeliveryNoteOrchestrator:
         assert len(items) == 1
         item = items[0]
         assert item.row_no == 1
-        assert item.external_product_code == "8891078"
+        assert item.customer_part_no == "8891078"
         assert item.delivery_quantity == 200
 
     def test_update_item_locked_error(

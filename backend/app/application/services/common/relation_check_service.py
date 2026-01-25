@@ -94,8 +94,8 @@ class RelationCheckService:
         """
         from app.infrastructure.persistence.models.inbound_models import InboundPlan
         from app.infrastructure.persistence.models.inventory_models import LotReceipt
-        from app.infrastructure.persistence.models.product_supplier_models import (
-            ProductSupplier,
+        from app.infrastructure.persistence.models.supplier_item_model import (
+            SupplierItem,
         )
 
         # ロットチェック
@@ -116,13 +116,13 @@ class RelationCheckService:
         if inbound_count > 0:
             return True
 
-        # 製品仕入先マッピングチェック
-        ps_count = (
-            self.db.query(func.count(ProductSupplier.id))
-            .filter(ProductSupplier.supplier_id == supplier_id)
+        # 仕入先品目マッピングチェック
+        si_count = (
+            self.db.query(func.count(SupplierItem.id))
+            .filter(SupplierItem.supplier_id == supplier_id)
             .scalar()
         )
-        if ps_count > 0:
+        if si_count > 0:
             return True
 
         return False

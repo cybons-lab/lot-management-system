@@ -81,13 +81,13 @@ class SAPMockClient:
                 "expected_date": (today + timedelta(days=3)).isoformat(),
                 "items": [
                     {
-                        "external_product_code": "EXT-1001",
+                        "customer_part_no": "CUST-001-PRD-1001",
                         "product_name": "サーモン切り身 10kg",
                         "quantity": Decimal("1200"),
                         "unit": "KG",
                     },
                     {
-                        "external_product_code": "EXT-1002",
+                        "customer_part_no": "CUST-001-PRD-1002",
                         "product_name": "冷凍ホタテ M",
                         "quantity": Decimal("850"),
                         "unit": "KG",
@@ -103,7 +103,7 @@ class SAPMockClient:
                 "expected_date": (today + timedelta(days=7)).isoformat(),
                 "items": [
                     {
-                        "external_product_code": "EXT-2005",
+                        "customer_part_no": "CUST-002-PRD-2005",
                         "product_name": "ココナッツウォーター 500ml",
                         "quantity": Decimal("3600"),
                         "unit": "EA",
@@ -119,13 +119,13 @@ class SAPMockClient:
                 "expected_date": (today + timedelta(days=12)).isoformat(),
                 "items": [
                     {
-                        "external_product_code": "EXT-3007",
+                        "customer_part_no": "CUST-003-PRD-3007",
                         "product_name": "エビ（L/26-30）",
                         "quantity": Decimal("540"),
                         "unit": "CASE",
                     },
                     {
-                        "external_product_code": "EXT-3010",
+                        "customer_part_no": "CUST-003-PRD-3010",
                         "product_name": "蟹ミソパック",
                         "quantity": Decimal("120"),
                         "unit": "CASE",

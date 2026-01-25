@@ -30,8 +30,12 @@ export function SupplierDetailDialog({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteType, setDeleteType] = useState<DeleteType>("soft");
 
+  // コード変更後の404を防ぐため、更新中は再取得を停止
+  const [isCodeChanging, setIsCodeChanging] = useState(false);
+
   const { useGet, useUpdate, useSoftDelete, usePermanentDelete } = useSuppliers();
-  const { data: supplier, isLoading } = useGet(supplierCode || "");
+  // ダイアログが開いていて、コード変更中でない場合のみクエリを有効化
+  const { data: supplier, isLoading } = useGet(open && !isCodeChanging ? supplierCode || "" : "");
   const { mutate: updateSupplier, isPending: isUpdating } = useUpdate();
   const { mutate: softDelete, isPending: isSoftDeleting } = useSoftDelete();
   const { mutate: permanentDelete, isPending: isPermanentDeleting } = usePermanentDelete();
@@ -46,6 +50,12 @@ export function SupplierDetailDialog({
     (data: { supplier_code: string; supplier_name: string }) => {
       if (!supplierCode) return;
 
+      // コード変更時は再取得を停止してからAPI呼び出し
+      const isChangingCode = data.supplier_code !== supplierCode;
+      if (isChangingCode) {
+        setIsCodeChanging(true);
+      }
+
       const updateData: SupplierUpdate = {
         supplier_code: data.supplier_code,
         supplier_name: data.supplier_name,
@@ -55,11 +65,20 @@ export function SupplierDetailDialog({
         {
           onSuccess: () => {
             setIsEditing(false);
+            // コード変更時はダイアログを閉じる
+            if (isChangingCode) {
+              handleClose();
+              setIsCodeChanging(false);
+            }
+          },
+          onError: () => {
+            // エラー時は再取得を再開
+            setIsCodeChanging(false);
           },
         },
       );
     },
-    [supplierCode, updateSupplier],
+    [supplierCode, updateSupplier, handleClose],
   );
 
   const handleConfirmDelete = useCallback(

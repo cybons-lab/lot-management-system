@@ -156,7 +156,7 @@ from app.infrastructure.persistence.models import (
     Order,
     OrderLine,
     Product,
-    ProductSupplier,
+    SupplierItem,
 )
 from app.presentation.schemas.orders.orders_schema import (
     OrderCreate,
@@ -256,10 +256,10 @@ class OrderService:
             # with the user's primary suppliers
             has_primary_product = exists(
                 select(OrderLine.id)
-                .join(ProductSupplier, ProductSupplier.product_id == OrderLine.product_id)
+                .join(SupplierItem, SupplierItem.product_id == OrderLine.product_id)
                 .where(
                     OrderLine.order_id == Order.id,
-                    ProductSupplier.supplier_id.in_(primary_supplier_ids),
+                    SupplierItem.supplier_id.in_(primary_supplier_ids),
                 )
             )
             priority_score = case(

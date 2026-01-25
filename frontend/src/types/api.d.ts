@@ -2770,13 +2770,13 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Product Suppliers
+     * Get Supplier Items
      * @description Fetch suppliers for a product by its code.
      *
      *     Returns a list of suppliers associated with this product, indicating
      *     which supplier is the primary one.
      */
-    get: operations["get_product_suppliers_api_masters_products__product_code__suppliers_get"];
+    get: operations["get_supplier_items_api_masters_products__product_code__suppliers_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2968,6 +2968,8 @@ export interface paths {
     /**
      * Update Supplier
      * @description Update supplier.
+     *
+     *     仕入先コードの変更は管理者のみ許可され、関連データがない場合のみ可能です。
      */
     put: operations["update_supplier_api_masters_suppliers__supplier_code__put"];
     post?: never;
@@ -3057,7 +3059,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/masters/supplier-products": {
+  "/api/masters/supplier-items": {
     parameters: {
       query?: never;
       header?: never;
@@ -3065,10 +3067,10 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * List Supplier Products
-     * @description 仕入先商品一覧を取得.
+     * List Supplier Items
+     * @description 仕入先品目一覧を取得.
      *
-     *     product_suppliersテーブルから製品-仕入先の関連情報を取得します。
+     *     supplier_itemsテーブルから仕入先品目情報を取得します。
      *     デフォルトでは有効なレコードのみを返します。
      *
      *     Args:
@@ -3079,35 +3081,35 @@ export interface paths {
      *         db: データベースセッション
      *
      *     Returns:
-     *         仕入先商品のリスト（製品情報と仕入先情報を含む）
+     *         仕入先品目のリスト（製品情報と仕入先情報を含む）
      */
-    get: operations["list_supplier_products_api_masters_supplier_products_get"];
+    get: operations["list_supplier_items_api_masters_supplier_items_get"];
     put?: never;
     /**
-     * Create Supplier Product
-     * @description 仕入先商品を新規作成.
+     * Create Supplier Item
+     * @description 仕入先品目を新規作成.
      *
-     *     製品と仕入先の関連を登録します。
+     *     仕入先と品目（メーカー品番）の関連を登録します。
      *     is_primaryがTrueの場合、同一製品の他のレコードのis_primaryをFalseに更新します。
      *
      *     Args:
-     *         data: 仕入先商品作成データ
+     *         data: 仕入先品目作成データ
      *         db: データベースセッション
      *
      *     Returns:
-     *         SupplierProductResponse: 作成された仕入先商品情報
+     *         SupplierItemResponse: 作成された仕入先品目情報
      *
      *     Raises:
-     *         HTTPException: 製品-仕入先のペアが既に存在する場合は400
+     *         HTTPException: 仕入先-製品のペアが既に存在する場合は400
      */
-    post: operations["create_supplier_product_api_masters_supplier_products_post"];
+    post: operations["create_supplier_item_api_masters_supplier_items_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/masters/supplier-products/export/download": {
+  "/api/masters/supplier-items/export/download": {
     parameters: {
       query?: never;
       header?: never;
@@ -3115,8 +3117,8 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Export Supplier Products
-     * @description 仕入先商品をエクスポート.
+     * Export Supplier Items
+     * @description 仕入先品目をエクスポート.
      *
      *     Args:
      *         format: エクスポート形式（"csv" または "xlsx"）
@@ -3125,7 +3127,7 @@ export interface paths {
      *     Returns:
      *         Excel形式またはCSV形式のファイルレスポンス
      */
-    get: operations["export_supplier_products_api_masters_supplier_products_export_download_get"];
+    get: operations["export_supplier_items_api_masters_supplier_items_export_download_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -3134,7 +3136,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/masters/supplier-products/{id}": {
+  "/api/masters/supplier-items/{id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -3142,45 +3144,48 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Supplier Product
-     * @description 仕入先商品詳細を取得.
+     * Get Supplier Item
+     * @description 仕入先品目詳細を取得.
      *
      *     Args:
-     *         id: 仕入先商品ID
+     *         id: 仕入先品目ID
      *         db: データベースセッション
      *
      *     Returns:
-     *         SupplierProductResponse: 仕入先商品詳細（製品情報と仕入先情報を含む）
+     *         SupplierItemResponse: 仕入先品目詳細（製品情報と仕入先情報を含む）
      *
      *     Raises:
      *         HTTPException: レコードが見つからない場合は404
      */
-    get: operations["get_supplier_product_api_masters_supplier_products__id__get"];
+    get: operations["get_supplier_item_api_masters_supplier_items__id__get"];
     /**
-     * Update Supplier Product
-     * @description 仕入先商品を更新.
+     * Update Supplier Item
+     * @description 仕入先品目を更新.
      *
      *     is_primaryをTrueに設定する場合、同一製品の他のレコードのis_primaryをFalseに更新します。
+     *     maker_part_no の変更は管理者のみ許可されています。
      *
      *     Args:
-     *         id: 仕入先商品ID
+     *         id: 仕入先品目ID
      *         data: 更新データ
      *         db: データベースセッション
+     *         current_user: 認証済みユーザー（オプション）
      *
      *     Returns:
-     *         SupplierProductResponse: 更新後の仕入先商品情報
+     *         SupplierItemResponse: 更新後の仕入先品目情報
      *
      *     Raises:
      *         HTTPException: レコードが見つからない場合は404
+     *         HTTPException: maker_part_no変更時に管理者でない場合は403
      */
-    put: operations["update_supplier_product_api_masters_supplier_products__id__put"];
+    put: operations["update_supplier_item_api_masters_supplier_items__id__put"];
     post?: never;
     /**
-     * Delete Supplier Product
-     * @description 仕入先商品を論理削除（無効化）.
+     * Delete Supplier Item
+     * @description 仕入先品目を論理削除（無効化）.
      *
      *     Args:
-     *         id: 仕入先商品ID
+     *         id: 仕入先品目ID
      *         end_date: 終了日（省略時は今日の日付）
      *         db: データベースセッション
      *
@@ -3190,13 +3195,13 @@ export interface paths {
      *     Raises:
      *         HTTPException: レコードが見つからない場合は404
      */
-    delete: operations["delete_supplier_product_api_masters_supplier_products__id__delete"];
+    delete: operations["delete_supplier_item_api_masters_supplier_items__id__delete"];
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/masters/supplier-products/{id}/permanent": {
+  "/api/masters/supplier-items/{id}/permanent": {
     parameters: {
       query?: never;
       header?: never;
@@ -3207,11 +3212,11 @@ export interface paths {
     put?: never;
     post?: never;
     /**
-     * Permanent Delete Supplier Product
-     * @description 仕入先商品を物理削除.
+     * Permanent Delete Supplier Item
+     * @description 仕入先品目を物理削除.
      *
      *     Args:
-     *         id: 仕入先商品ID
+     *         id: 仕入先品目ID
      *         current_user: 認証済み管理者ユーザー
      *         db: データベースセッション
      *
@@ -3221,13 +3226,13 @@ export interface paths {
      *     Raises:
      *         HTTPException: レコードが見つからない場合は404
      */
-    delete: operations["permanent_delete_supplier_product_api_masters_supplier_products__id__permanent_delete"];
+    delete: operations["permanent_delete_supplier_item_api_masters_supplier_items__id__permanent_delete"];
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/masters/supplier-products/{id}/restore": {
+  "/api/masters/supplier-items/{id}/restore": {
     parameters: {
       query?: never;
       header?: never;
@@ -3237,20 +3242,20 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Restore Supplier Product
-     * @description 論理削除された仕入先商品を復元.
+     * Restore Supplier Item
+     * @description 論理削除された仕入先品目を復元.
      *
      *     Args:
-     *         id: 仕入先商品ID
+     *         id: 仕入先品目ID
      *         db: データベースセッション
      *
      *     Returns:
-     *         SupplierProductResponse: 復元された仕入先商品情報
+     *         SupplierItemResponse: 復元された仕入先品目情報
      *
      *     Raises:
      *         HTTPException: レコードが見つからない場合は404
      */
-    post: operations["restore_supplier_product_api_masters_supplier_products__id__restore_post"];
+    post: operations["restore_supplier_item_api_masters_supplier_items__id__restore_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -3698,7 +3703,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/masters/customer-items/{customer_id}": {
+  "/api/masters/customer-items/by-customer/{customer_id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -3716,7 +3721,7 @@ export interface paths {
      *     Returns:
      *         該当得意先の品番マッピングリスト
      */
-    get: operations["list_customer_items_by_customer_api_masters_customer_items__customer_id__get"];
+    get: operations["list_customer_items_by_customer_api_masters_customer_items_by_customer__customer_id__get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -3725,23 +3730,37 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/masters/customer-items/{customer_id}/{external_product_code}": {
+  "/api/masters/customer-items/{id}": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /**
+     * Get Customer Item
+     * @description 得意先品番マッピング詳細取得.
+     *
+     *     Args:
+     *         id: 得意先品番マッピングID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         品番マッピング詳細
+     *
+     *     Raises:
+     *         HTTPException: マッピングが存在しない場合
+     */
+    get: operations["get_customer_item_api_masters_customer_items__id__get"];
     /**
      * Update Customer Item
      * @description 得意先品番マッピング更新.
      *
      *     Args:
-     *         customer_id: 得意先ID
-     *         external_product_code: 得意先品番
+     *         id: 得意先品番マッピングID
      *         item: 更新する品番マッピング情報
      *         db: データベースセッション
+     *         current_user: 認証済みユーザー（オプション）
      *
      *     Returns:
      *         更新された品番マッピング
@@ -3749,28 +3768,27 @@ export interface paths {
      *     Raises:
      *         HTTPException: マッピングが存在しない場合
      */
-    put: operations["update_customer_item_api_masters_customer_items__customer_id___external_product_code__put"];
+    put: operations["update_customer_item_api_masters_customer_items__id__put"];
     post?: never;
     /**
      * Delete Customer Item
      * @description 得意先品番マッピング削除.
      *
      *     Args:
-     *         customer_id: 得意先ID
-     *         external_product_code: 得意先品番
+     *         id: 得意先品番マッピングID
      *         end_date: 無効化日（指定がない場合は即時）
      *         db: データベースセッション
      *
      *     Raises:
      *         HTTPException: マッピングが存在しない場合
      */
-    delete: operations["delete_customer_item_api_masters_customer_items__customer_id___external_product_code__delete"];
+    delete: operations["delete_customer_item_api_masters_customer_items__id__delete"];
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/masters/customer-items/{customer_id}/{external_product_code}/permanent": {
+  "/api/masters/customer-items/{id}/permanent": {
     parameters: {
       query?: never;
       header?: never;
@@ -3785,21 +3803,20 @@ export interface paths {
      * @description 得意先品番マッピング完全削除.
      *
      *     Args:
-     *         customer_id: 得意先ID
-     *         external_product_code: 得意先品番
+     *         id: 得意先品番マッピングID
      *         current_user: 認証済み管理者ユーザー
      *         db: データベースセッション
      *
      *     Raises:
      *         HTTPException: マッピングが存在しない場合
      */
-    delete: operations["permanent_delete_customer_item_api_masters_customer_items__customer_id___external_product_code__permanent_delete"];
+    delete: operations["permanent_delete_customer_item_api_masters_customer_items__id__permanent_delete"];
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/masters/customer-items/{customer_id}/{external_product_code}/restore": {
+  "/api/masters/customer-items/{id}/restore": {
     parameters: {
       query?: never;
       header?: never;
@@ -3813,8 +3830,7 @@ export interface paths {
      * @description 得意先品番マッピング復元.
      *
      *     Args:
-     *         customer_id: 得意先ID
-     *         external_product_code: 得意先品番
+     *         id: 得意先品番マッピングID
      *         db: データベースセッション
      *
      *     Returns:
@@ -3823,7 +3839,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: マッピングが存在しない場合
      */
-    post: operations["restore_customer_item_api_masters_customer_items__customer_id___external_product_code__restore_post"];
+    post: operations["restore_customer_item_api_masters_customer_items__id__restore_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -3843,7 +3859,7 @@ export interface paths {
      * Bulk Upsert Customer Items
      * @description 得意先品番マッピング一括登録/更新.
      *
-     *     複合キー（customer_id, external_product_code）で判定し、
+     *     ビジネスキー（customer_id, customer_part_no）で判定し、
      *     既存レコードがあれば更新、なければ新規作成します。
      *
      *     Args:
@@ -9320,7 +9336,7 @@ export interface components {
      * CustomerItemBulkRow
      * @description Single row for customer item bulk upsert.
      *
-     *     Upsert uses composite key: (customer_code, external_product_code)
+     *     Upsert uses business key: (customer_code, customer_part_no)
      */
     CustomerItemBulkRow: {
       /**
@@ -9329,10 +9345,10 @@ export interface components {
        */
       customer_code: string;
       /**
-       * External Product Code
+       * Customer Part No
        * @description 得意先品番
        */
-      external_product_code: string;
+      customer_part_no: string;
       /**
        * Product Code
        * @description 製品コード
@@ -9386,10 +9402,10 @@ export interface components {
        */
       customer_id: number;
       /**
-       * External Product Code
-       * @description 得意先品番
+       * Customer Part No
+       * @description 得意先品番（先方品番）
        */
-      external_product_code: string;
+      customer_part_no: string;
       /**
        * Product Id
        * @description 製品ID
@@ -9400,6 +9416,17 @@ export interface components {
        * @description 仕入先ID
        */
       supplier_id?: number | null;
+      /**
+       * Supplier Item Id
+       * @description 仕入先品目ID
+       */
+      supplier_item_id?: number | null;
+      /**
+       * Is Primary
+       * @description 主要得意先フラグ
+       * @default false
+       */
+      is_primary: boolean;
       /**
        * Base Unit
        * @description 基本単位
@@ -9662,15 +9689,20 @@ export interface components {
      */
     CustomerItemResponse: {
       /**
+       * Id
+       * @description 得意先品番マッピングID
+       */
+      id: number;
+      /**
        * Customer Id
        * @description 得意先ID
        */
       customer_id: number;
       /**
-       * External Product Code
-       * @description 得意先品番
+       * Customer Part No
+       * @description 得意先品番（先方品番）
        */
-      external_product_code: string;
+      customer_part_no: string;
       /**
        * Product Id
        * @description 製品ID
@@ -9681,6 +9713,16 @@ export interface components {
        * @description 仕入先ID
        */
       supplier_id?: number | null;
+      /**
+       * Supplier Item Id
+       * @description 仕入先品目ID
+       */
+      supplier_item_id?: number | null;
+      /**
+       * Is Primary
+       * @description 主要得意先フラグ
+       */
+      is_primary: boolean;
       /**
        * Base Unit
        * @description 基本単位
@@ -9724,7 +9766,6 @@ export interface components {
       /**
        * Is Procurement Required
        * @description 発注の有無
-       * @default true
        */
       is_procurement_required: boolean;
       /**
@@ -9809,6 +9850,11 @@ export interface components {
      */
     CustomerItemUpdate: {
       /**
+       * Customer Part No
+       * @description 得意先品番
+       */
+      customer_part_no?: string | null;
+      /**
        * Product Id
        * @description 製品ID
        */
@@ -9818,6 +9864,16 @@ export interface components {
        * @description 仕入先ID
        */
       supplier_id?: number | null;
+      /**
+       * Supplier Item Id
+       * @description 仕入先品目ID
+       */
+      supplier_item_id?: number | null;
+      /**
+       * Is Primary
+       * @description 主要得意先フラグ
+       */
+      is_primary?: boolean | null;
       /**
        * Base Unit
        * @description 基本単位
@@ -13871,12 +13927,12 @@ export interface components {
       row_no: number;
       /** Status */
       status?: string | null;
-      /** Destination */
-      destination?: string | null;
+      /** Jiku Code */
+      jiku_code?: string | null;
       /** Layer Code */
       layer_code?: string | null;
-      /** Material Code */
-      material_code?: string | null;
+      /** Customer Part No */
+      customer_part_no?: string | null;
       /** Delivery Date */
       delivery_date?: string | null;
       /** Delivery Quantity */
@@ -13918,10 +13974,10 @@ export interface components {
        */
       complement_customer_id?: number | null;
       /**
-       * Complement External Product Code
-       * @description 参照したマスタのexternal_product_code
+       * Complement Customer Part No
+       * @description 参照したマスタのcustomer_part_no
        */
-      complement_external_product_code?: string | null;
+      complement_customer_part_no?: string | null;
       /**
        * Complement Match Type
        * @description 検索種別（exact: 完全一致, prefix: 前方一致）
@@ -15956,48 +16012,88 @@ export interface components {
       products?: components["schemas"]["ProductSupplierImportRow"][];
     };
     /**
-     * SupplierProductCreate
-     * @description Create supplier product request.
+     * SupplierItemCreate
+     * @description Payload to create a supplier item.
      */
-    SupplierProductCreate: {
-      /** Product Id */
+    SupplierItemCreate: {
+      /**
+       * Product Id
+       * @description 製品ID
+       */
       product_id: number;
-      /** Supplier Id */
+      /**
+       * Supplier Id
+       * @description 仕入先ID
+       */
       supplier_id: number;
       /**
+       * Maker Part No
+       * @description メーカー品番
+       */
+      maker_part_no: string;
+      /**
        * Is Primary
+       * @description 主要仕入先フラグ
        * @default false
        */
       is_primary: boolean;
-      /** Lead Time Days */
+      /**
+       * Lead Time Days
+       * @description リードタイム（日）
+       */
       lead_time_days?: number | null;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name?: string | null;
+      /**
+       * Notes
+       * @description 備考
+       */
+      notes?: string | null;
     };
     /**
-     * SupplierProductResponse
-     * @description Supplier product response (DDL: product_suppliers).
+     * SupplierItemResponse
+     * @description Supplier item response model with enriched data.
      */
-    SupplierProductResponse: {
+    SupplierItemResponse: {
+      /** Id */
+      id: number;
       /** Product Id */
       product_id: number;
       /** Supplier Id */
       supplier_id: number;
-      /**
-       * Is Primary
-       * @default false
-       */
+      /** Maker Part No */
+      maker_part_no: string;
+      /** Is Primary */
       is_primary: boolean;
       /** Lead Time Days */
-      lead_time_days?: number | null;
-      /** Id */
-      id: number;
-      /** Product Code */
-      product_code: string;
-      /** Product Name */
-      product_name: string;
-      /** Supplier Code */
-      supplier_code: string;
-      /** Supplier Name */
-      supplier_name: string;
+      lead_time_days: number | null;
+      /** Display Name */
+      display_name: string | null;
+      /** Notes */
+      notes: string | null;
+      /**
+       * Product Code
+       * @description 製品コード
+       */
+      product_code?: string | null;
+      /**
+       * Product Name
+       * @description 製品名
+       */
+      product_name?: string | null;
+      /**
+       * Supplier Code
+       * @description 仕入先コード
+       */
+      supplier_code?: string | null;
+      /**
+       * Supplier Name
+       * @description 仕入先名
+       */
+      supplier_name?: string | null;
       /**
        * Created At
        * Format: date-time
@@ -16015,14 +16111,35 @@ export interface components {
       valid_to: string;
     };
     /**
-     * SupplierProductUpdate
-     * @description Update supplier product request.
+     * SupplierItemUpdate
+     * @description Payload to partially update a supplier item.
      */
-    SupplierProductUpdate: {
-      /** Is Primary */
+    SupplierItemUpdate: {
+      /**
+       * Maker Part No
+       * @description メーカー品番
+       */
+      maker_part_no?: string | null;
+      /**
+       * Is Primary
+       * @description 主要仕入先フラグ
+       */
       is_primary?: boolean | null;
-      /** Lead Time Days */
+      /**
+       * Lead Time Days
+       * @description リードタイム（日）
+       */
       lead_time_days?: number | null;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name?: string | null;
+      /**
+       * Notes
+       * @description 備考
+       */
+      notes?: string | null;
     };
     /**
      * SupplierResponse
@@ -20975,7 +21092,7 @@ export interface operations {
       };
     };
   };
-  get_product_suppliers_api_masters_products__product_code__suppliers_get: {
+  get_supplier_items_api_masters_products__product_code__suppliers_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -21420,7 +21537,7 @@ export interface operations {
       };
     };
   };
-  list_supplier_products_api_masters_supplier_products_get: {
+  list_supplier_items_api_masters_supplier_items_get: {
     parameters: {
       query?: {
         skip?: number;
@@ -21454,7 +21571,7 @@ export interface operations {
       };
     };
   };
-  create_supplier_product_api_masters_supplier_products_post: {
+  create_supplier_item_api_masters_supplier_items_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -21463,7 +21580,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["SupplierProductCreate"];
+        "application/json": components["schemas"]["SupplierItemCreate"];
       };
     };
     responses: {
@@ -21473,7 +21590,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["SupplierProductResponse"];
+          "application/json": components["schemas"]["SupplierItemResponse"];
         };
       };
       /** @description Validation Error */
@@ -21487,7 +21604,7 @@ export interface operations {
       };
     };
   };
-  export_supplier_products_api_masters_supplier_products_export_download_get: {
+  export_supplier_items_api_masters_supplier_items_export_download_get: {
     parameters: {
       query?: {
         format?: string;
@@ -21518,7 +21635,7 @@ export interface operations {
       };
     };
   };
-  get_supplier_product_api_masters_supplier_products__id__get: {
+  get_supplier_item_api_masters_supplier_items__id__get: {
     parameters: {
       query?: never;
       header?: never;
@@ -21535,7 +21652,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["SupplierProductResponse"];
+          "application/json": components["schemas"]["SupplierItemResponse"];
         };
       };
       /** @description Validation Error */
@@ -21549,7 +21666,7 @@ export interface operations {
       };
     };
   };
-  update_supplier_product_api_masters_supplier_products__id__put: {
+  update_supplier_item_api_masters_supplier_items__id__put: {
     parameters: {
       query?: never;
       header?: never;
@@ -21560,7 +21677,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["SupplierProductUpdate"];
+        "application/json": components["schemas"]["SupplierItemUpdate"];
       };
     };
     responses: {
@@ -21570,7 +21687,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["SupplierProductResponse"];
+          "application/json": components["schemas"]["SupplierItemResponse"];
         };
       };
       /** @description Validation Error */
@@ -21584,7 +21701,7 @@ export interface operations {
       };
     };
   };
-  delete_supplier_product_api_masters_supplier_products__id__delete: {
+  delete_supplier_item_api_masters_supplier_items__id__delete: {
     parameters: {
       query?: {
         end_date?: string | null;
@@ -21615,7 +21732,7 @@ export interface operations {
       };
     };
   };
-  permanent_delete_supplier_product_api_masters_supplier_products__id__permanent_delete: {
+  permanent_delete_supplier_item_api_masters_supplier_items__id__permanent_delete: {
     parameters: {
       query?: never;
       header?: never;
@@ -21644,7 +21761,7 @@ export interface operations {
       };
     };
   };
-  restore_supplier_product_api_masters_supplier_products__id__restore_post: {
+  restore_supplier_item_api_masters_supplier_items__id__restore_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -21661,7 +21778,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["SupplierProductResponse"];
+          "application/json": components["schemas"]["SupplierItemResponse"];
         };
       };
       /** @description Validation Error */
@@ -22355,7 +22472,7 @@ export interface operations {
       };
     };
   };
-  list_customer_items_by_customer_api_masters_customer_items__customer_id__get: {
+  list_customer_items_by_customer_api_masters_customer_items_by_customer__customer_id__get: {
     parameters: {
       query?: never;
       header?: never;
@@ -22386,13 +22503,43 @@ export interface operations {
       };
     };
   };
-  update_customer_item_api_masters_customer_items__customer_id___external_product_code__put: {
+  get_customer_item_api_masters_customer_items__id__get: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        customer_id: number;
-        external_product_code: string;
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerItemResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_customer_item_api_masters_customer_items__id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
       };
       cookie?: never;
     };
@@ -22422,15 +22569,14 @@ export interface operations {
       };
     };
   };
-  delete_customer_item_api_masters_customer_items__customer_id___external_product_code__delete: {
+  delete_customer_item_api_masters_customer_items__id__delete: {
     parameters: {
       query?: {
         end_date?: string | null;
       };
       header?: never;
       path: {
-        customer_id: number;
-        external_product_code: string;
+        id: number;
       };
       cookie?: never;
     };
@@ -22454,13 +22600,12 @@ export interface operations {
       };
     };
   };
-  permanent_delete_customer_item_api_masters_customer_items__customer_id___external_product_code__permanent_delete: {
+  permanent_delete_customer_item_api_masters_customer_items__id__permanent_delete: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        customer_id: number;
-        external_product_code: string;
+        id: number;
       };
       cookie?: never;
     };
@@ -22484,13 +22629,12 @@ export interface operations {
       };
     };
   };
-  restore_customer_item_api_masters_customer_items__customer_id___external_product_code__restore_post: {
+  restore_customer_item_api_masters_customer_items__id__restore_post: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        customer_id: number;
-        external_product_code: string;
+        id: number;
       };
       cookie?: never;
     };

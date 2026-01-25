@@ -1,6 +1,9 @@
 /**
  * Customer Items Hooks (v2.2 - Phase G-1)
  * TanStack Query hooks for customer item mappings
+ *
+ * Updated: サロゲートキー（id）ベースに移行
+ * - ID-based API operations
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +16,7 @@ import type {
 import {
   getCustomerItems,
   getCustomerItemsByCustomer,
+  getCustomerItemById,
   createCustomerItem,
   updateCustomerItem,
   deleteCustomerItem,
@@ -27,6 +31,7 @@ export const customerItemKeys = {
   lists: () => [...customerItemKeys.all, "list"] as const,
   list: (params?: CustomerItemsListParams) => [...customerItemKeys.lists(), params] as const,
   byCustomer: (customerId: number) => [...customerItemKeys.all, "customer", customerId] as const,
+  byId: (id: number) => [...customerItemKeys.all, "detail", id] as const,
 };
 
 // ===== Query Hooks =====
@@ -54,6 +59,18 @@ export const useCustomerItemsByCustomer = (customerId: number) => {
   });
 };
 
+/**
+ * Get customer item by ID
+ */
+export const useCustomerItemById = (id: number) => {
+  return useQuery({
+    queryKey: customerItemKeys.byId(id),
+    queryFn: () => getCustomerItemById(id),
+    enabled: id > 0,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
 // ===== Mutation Hooks =====
 
 /**
@@ -72,21 +89,14 @@ export const useCreateCustomerItem = () => {
 };
 
 /**
- * Update customer item
+ * Update customer item by ID
  */
 export const useUpdateCustomerItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      customerId,
-      externalProductCode,
-      data,
-    }: {
-      customerId: number;
-      externalProductCode: string;
-      data: UpdateCustomerItemRequest;
-    }) => updateCustomerItem(customerId, externalProductCode, data),
+    mutationFn: ({ id, data }: { id: number; data: UpdateCustomerItemRequest }) =>
+      updateCustomerItem(id, data),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
@@ -95,21 +105,14 @@ export const useUpdateCustomerItem = () => {
 };
 
 /**
- * Delete customer item (Soft Delete)
+ * Delete customer item by ID (Soft Delete)
  */
 export const useDeleteCustomerItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      customerId,
-      externalProductCode,
-      endDate,
-    }: {
-      customerId: number;
-      externalProductCode: string;
-      endDate?: string;
-    }) => deleteCustomerItem(customerId, externalProductCode, endDate),
+    mutationFn: ({ id, endDate }: { id: number; endDate?: string }) =>
+      deleteCustomerItem(id, endDate),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
@@ -118,19 +121,13 @@ export const useDeleteCustomerItem = () => {
 };
 
 /**
- * Permanently delete customer item
+ * Permanently delete customer item by ID
  */
 export const usePermanentDeleteCustomerItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      customerId,
-      externalProductCode,
-    }: {
-      customerId: number;
-      externalProductCode: string;
-    }) => permanentDeleteCustomerItem(customerId, externalProductCode),
+    mutationFn: ({ id }: { id: number }) => permanentDeleteCustomerItem(id),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
@@ -139,19 +136,13 @@ export const usePermanentDeleteCustomerItem = () => {
 };
 
 /**
- * Restore customer item
+ * Restore customer item by ID
  */
 export const useRestoreCustomerItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      customerId,
-      externalProductCode,
-    }: {
-      customerId: number;
-      externalProductCode: string;
-    }) => restoreCustomerItem(customerId, externalProductCode),
+    mutationFn: ({ id }: { id: number }) => restoreCustomerItem(id),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });

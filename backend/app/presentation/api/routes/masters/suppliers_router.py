@@ -12,7 +12,10 @@ from app.application.services.common.export_service import ExportService
 from app.application.services.masters.supplier_service import SupplierService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.presentation.api.routes.auth.auth_router import get_current_admin
+from app.presentation.api.routes.auth.auth_router import (
+    get_current_admin,
+    get_current_user_optional,
+)
 from app.presentation.schemas.masters.masters_schema import (
     BulkUpsertResponse,
     SupplierBulkUpsertRequest,
@@ -130,10 +133,23 @@ def create_supplier(supplier: SupplierCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{supplier_code}", response_model=SupplierResponse)
-def update_supplier(supplier_code: str, supplier: SupplierUpdate, db: Session = Depends(get_db)):
-    """Update supplier."""
+def update_supplier(
+    supplier_code: str,
+    supplier: SupplierUpdate,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+):
+    """Update supplier.
+
+    仕入先コードの変更は管理者のみ許可され、関連データがない場合のみ可能です。
+    """
     service = SupplierService(db)
-    return service.update_by_code(supplier_code, supplier)
+    # ユーザーがログイン済みかつadminロールを持つかチェック
+    is_admin = False
+    if current_user:
+        roles = [ur.role.role_code for ur in current_user.user_roles]
+        is_admin = "admin" in roles
+    return service.update_by_code(supplier_code, supplier, is_admin=is_admin)
 
 
 @router.delete("/{supplier_code}", status_code=204)

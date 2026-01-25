@@ -90,27 +90,16 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
         customer = self.get_by_code(code)
         assert customer is not None  # raise_404=True ensures this
 
-        # Capture old values if needed for detailed diff (skipping for now, just logging payload)
-
-        # Check for code change
+        # Check for code change (コード変更はID参照のため安全に変更可能)
         if payload.customer_code and payload.customer_code != customer.customer_code:
-            # ... (existing checks) ...
-            relation_checker = RelationCheckService(self.db)
-            if relation_checker.customer_has_related_data(customer.id):
-                summary = relation_checker.get_related_data_summary("customer", customer.id)
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=f"この得意先には関連データが存在するためコードを変更できません。関連データ: {summary}",
-                )
-
-            # 2. 権限チェック (管理者のみ)
+            # 1. 権限チェック (管理者のみ)
             if not is_admin:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="得意先コードの変更は管理者のみ許可されています。",
                 )
 
-            # 3. 重複チェック
+            # 2. 重複チェック
             existing = self.get_by_code(payload.customer_code, raise_404=False)
             if existing and existing.id != customer.id:
                 raise HTTPException(

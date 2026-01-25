@@ -99,7 +99,7 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
 
         return cast(
             list[Product],
-            query.options(joinedload(Product.product_suppliers))
+            query.options(joinedload(Product.supplier_items))
             .order_by(Product.maker_part_code)
             .offset(skip)
             .limit(limit)

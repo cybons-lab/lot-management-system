@@ -34,8 +34,8 @@ const isInactive = (validTo?: string) => {
   return validTo <= today;
 };
 
-/** CustomerItem用の一意キー生成 */
-const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.external_product_code}`;
+/** CustomerItem用の一意キー生成 (サロゲートキーID使用) */
+const getItemKey = (item: CustomerItem) => item.id.toString();
 
 // eslint-disable-next-line max-lines-per-function
 export function CustomerItemsTable({
@@ -82,11 +82,11 @@ export function CustomerItemsTable({
         sortable: true,
       },
       {
-        id: "external_product_code",
+        id: "customer_part_no",
         header: "先方品番",
-        accessor: (row) => row.external_product_code,
+        accessor: (row) => row.customer_part_no,
         cell: (row) => (
-          <span className="font-medium whitespace-nowrap">{row.external_product_code}</span>
+          <span className="font-medium whitespace-nowrap">{row.customer_part_no}</span>
         ),
         width: 150,
         sortable: true,

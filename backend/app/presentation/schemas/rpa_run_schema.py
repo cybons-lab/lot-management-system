@@ -12,11 +12,10 @@ class RpaRunItemResponse(BaseModel):
     run_id: int = Field(..., description="所属するRPA RunのID")
     row_no: int
     status: str | None = None
-    # フィールド名統一: jiku_code (表示名: 出荷先)
-    jiku_code: str | None = Field(default=None, alias="destination")
+    jiku_code: str | None = None
     layer_code: str | None = None
-    # フィールド名統一: external_product_code (表示名: 材質コード)
-    external_product_code: str | None = Field(default=None, alias="material_code")
+    # 得意先品番（表示名: 材質コード）
+    customer_part_no: str | None = None
     delivery_date: date | None = None
     delivery_quantity: int | None = None
     shipping_vehicle: str | None = None
@@ -32,8 +31,8 @@ class RpaRunItemResponse(BaseModel):
     lot_no: str | None = None
     # マスタ参照ログ
     complement_customer_id: int | None = Field(None, description="参照したマスタのcustomer_id")
-    complement_external_product_code: str | None = Field(
-        None, description="参照したマスタのexternal_product_code"
+    complement_customer_part_no: str | None = Field(
+        None, description="参照したマスタのcustomer_part_no"
     )
     complement_match_type: str | None = Field(
         None, description="検索種別（exact: 完全一致, prefix: 前方一致）"

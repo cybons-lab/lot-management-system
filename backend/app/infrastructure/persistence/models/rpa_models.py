@@ -78,7 +78,7 @@
    → どのマスタレコードを参照したかを記録
    実装:
    - complement_customer_id: 参照したマスタの customer_id
-   - complement_external_product_code: 参照したマスタの external_product_code
+   - complement_customer_part_no: 参照したマスタの customer_part_no
    - complement_match_type: 検索種別（exact: 完全一致, prefix: 前方一致）
    用途:
    - マスタ検索の監査証跡
@@ -342,9 +342,9 @@ class RpaRunItem(Base):
         String(50), nullable=True
     )  # 次区コード（表示名: 出荷先）
     layer_code: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 層別
-    external_product_code: Mapped[str | None] = mapped_column(
+    customer_part_no: Mapped[str | None] = mapped_column(
         String(100), nullable=True
-    )  # 先方品番（表示名: 材質コード）
+    )  # 得意先品番（表示名: 材質コード）
     delivery_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # 納期
     delivery_quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 納入量
     shipping_vehicle: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 出荷便
@@ -382,8 +382,8 @@ class RpaRunItem(Base):
     complement_customer_id: Mapped[int | None] = mapped_column(
         BigInteger, nullable=True, comment="参照したマスタのcustomer_id"
     )
-    complement_external_product_code: Mapped[str | None] = mapped_column(
-        String(100), nullable=True, comment="参照したマスタのexternal_product_code"
+    complement_customer_part_no: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="参照したマスタのcustomer_part_no"
     )
     complement_match_type: Mapped[str | None] = mapped_column(
         String(10), nullable=True, comment="検索種別（exact: 完全一致, prefix: 前方一致）"
@@ -402,7 +402,7 @@ class RpaRunItem(Base):
         Index(
             "idx_rri_complement_master",
             "complement_customer_id",
-            "complement_external_product_code",
+            "complement_customer_part_no",
         ),
         Index("idx_rpa_run_items_locked_until", "locked_until"),
     )

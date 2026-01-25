@@ -86,8 +86,8 @@ export function SupplierProductsPage() {
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
       <PageHeader
-        title="仕入先別製品設定"
-        subtitle="仕入先別の製品情報を管理します"
+        title="メーカー品番マスタ"
+        subtitle="仕入先から購入する製品・原材料を管理します"
         actions={
           <MasterPageActions
             exportApiPath="masters/supplier-products/export/download"
@@ -113,7 +113,7 @@ export function SupplierProductsPage() {
 
       <div className="rounded-lg border bg-white shadow-sm">
         <div className="flex items-center justify-between border-b px-4 py-3">
-          <h3 className="font-semibold">仕入先商品一覧</h3>
+          <h3 className="font-semibold">メーカー品番一覧</h3>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -127,7 +127,7 @@ export function SupplierProductsPage() {
             </div>
             <Input
               type="search"
-              placeholder="商品・仕入先で検索..."
+              placeholder="品目・仕入先で検索..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-64"
@@ -162,7 +162,7 @@ export function SupplierProductsPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={(open) => !open && closeCreateDialog()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>仕入先商品登録</DialogTitle>
+            <DialogTitle>メーカー品番登録</DialogTitle>
           </DialogHeader>
           <SupplierProductForm
             products={products}
@@ -178,7 +178,7 @@ export function SupplierProductsPage() {
       <Dialog open={!!editingItem} onOpenChange={(open) => !open && closeEditDialog()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>仕入先商品編集</DialogTitle>
+            <DialogTitle>メーカー品番編集</DialogTitle>
           </DialogHeader>
           {editingItem && (
             <SupplierProductForm
@@ -196,7 +196,7 @@ export function SupplierProductsPage() {
       <SoftDeleteDialog
         open={!!deletingItem && deleteMode === "soft"}
         onOpenChange={(open) => !open && closeDeleteDialog()}
-        title="仕入先商品設定を無効化しますか？"
+        title="メーカー品番を無効化しますか？"
         description={`${deletingItem?.product_name || "商品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を無効化します。`}
         onConfirm={handleSoftDelete}
         isPending={isSoftDeleting}
@@ -208,7 +208,7 @@ export function SupplierProductsPage() {
         onOpenChange={(open: boolean) => !open && closeDeleteDialog()}
         onConfirm={handlePermanentDelete}
         isPending={isPermanentDeleting}
-        title="仕入先商品設定を完全に削除しますか？"
+        title="メーカー品番を完全に削除しますか？"
         description={`${deletingItem?.product_name || "商品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を完全に削除します。`}
         confirmationPhrase={deletingItem?.product_code || "delete"}
       />
@@ -225,7 +225,7 @@ export function SupplierProductsPage() {
       <MasterImportDialog
         open={isImportDialogOpen}
         onOpenChange={(open) => !open && closeImportDialog()}
-        title="仕入先商品 インポート"
+        title="メーカー品番 インポート"
         group="supply"
       />
     </div>

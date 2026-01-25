@@ -2,6 +2,9 @@
  * CustomerItemForm (v2.5 - react-hook-form + Zod)
  * Form component for creating customer item mappings
  * OCR-SAP変換フィールド対応版
+ *
+ * Updated: サロゲートキー（id）ベースに移行
+ * - customer_part_no フィールド使用
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,9 +52,11 @@ export function CustomerItemForm({
     defaultValues: item
       ? {
           customer_id: item.customer_id,
-          external_product_code: item.external_product_code,
+          customer_part_no: item.customer_part_no,
           product_id: item.product_id,
           supplier_id: item.supplier_id,
+          supplier_item_id: item.supplier_item_id,
+          is_primary: item.is_primary,
           base_unit: item.base_unit,
           pack_unit: item.pack_unit,
           pack_quantity: item.pack_quantity,
@@ -95,7 +100,7 @@ export function CustomerItemForm({
   const handleProductSelect = (value: string) => {
     const selected = productOptions.find((opt) => opt.value === value);
     setValue("product_id", value ? Number(value) : 0);
-    setValue("external_product_code", selected?.customer_part_no ?? "");
+    setValue("customer_part_no", selected?.customer_part_no ?? "");
   };
 
   const handleFormSubmit = (data: CustomerItemFormData) => {

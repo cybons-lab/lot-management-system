@@ -8,7 +8,7 @@ import { useMasterApi } from "@/shared/hooks/useMasterApi";
 
 export const useSupplierProducts = () => {
   return useMasterApi<SupplierProduct, SupplierProductCreate, SupplierProductUpdate>(
-    "masters/supplier-products",
-    "supplier-products",
+    "masters/supplier-items",
+    "supplier-items",
   );
 };

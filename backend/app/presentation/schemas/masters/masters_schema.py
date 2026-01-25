@@ -318,34 +318,40 @@ class BulkUpsertResponse(BaseSchema):
 
 
 # ============================================================
-# SupplierProduct (仕入先商品マスタ)
+# SupplierItem (仕入先品目マスタ) - 旧: SupplierProduct
 # ============================================================
 
 
-class SupplierProductBase(BaseSchema):
-    """Base supplier product schema (DDL: product_suppliers)."""
+class SupplierItemBase(BaseSchema):
+    """Base supplier item schema (DDL: supplier_items)."""
 
     product_id: int = Field(..., gt=0)
     supplier_id: int = Field(..., gt=0)
+    maker_part_no: str = Field(..., min_length=1, max_length=100, description="メーカー品番")
     is_primary: bool = Field(False)
     lead_time_days: int | None = Field(None, ge=0)
+    display_name: str | None = Field(None, max_length=200, description="表示名")
+    notes: str | None = Field(None, description="備考")
 
 
-class SupplierProductCreate(SupplierProductBase):
-    """Create supplier product request."""
+class SupplierItemCreate(SupplierItemBase):
+    """Create supplier item request."""
 
     pass
 
 
-class SupplierProductUpdate(BaseSchema):
-    """Update supplier product request."""
+class SupplierItemUpdate(BaseSchema):
+    """Update supplier item request."""
 
+    maker_part_no: str | None = Field(None, min_length=1, max_length=100)
     is_primary: bool | None = None
     lead_time_days: int | None = Field(None, ge=0)
+    display_name: str | None = Field(None, max_length=200)
+    notes: str | None = None
 
 
-class SupplierProductResponse(SupplierProductBase):
-    """Supplier product response (DDL: product_suppliers)."""
+class SupplierItemResponse(SupplierItemBase):
+    """Supplier item response (DDL: supplier_items)."""
 
     id: int
     product_code: str
@@ -355,6 +361,13 @@ class SupplierProductResponse(SupplierProductBase):
     created_at: datetime
     updated_at: datetime
     valid_to: date
+
+
+# Backward compatibility aliases
+SupplierProductBase = SupplierItemBase
+SupplierProductCreate = SupplierItemCreate
+SupplierProductUpdate = SupplierItemUpdate
+SupplierProductResponse = SupplierItemResponse
 
 
 # ============================================================
@@ -375,5 +388,8 @@ SupplierListResponse = ListResponse[SupplierResponse]
 DeliveryPlaceListResponse = ListResponse[DeliveryPlaceResponse]
 """Delivery place list response."""
 
-SupplierProductListResponse = ListResponse[SupplierProductResponse]
-"""Supplier product list response."""
+SupplierItemListResponse = ListResponse[SupplierItemResponse]
+"""Supplier item list response."""
+
+SupplierProductListResponse = SupplierItemListResponse
+"""Backward compatibility alias."""

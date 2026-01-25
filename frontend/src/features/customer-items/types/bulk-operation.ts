@@ -4,7 +4,7 @@ export type { BulkUpsertResponse };
 
 export interface CustomerItemBulkRow {
   customer_code: string;
-  external_product_code: string;
+  customer_part_no: string;
   product_code: string;
   supplier_code?: string;
   base_unit: string;

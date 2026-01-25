@@ -1,5 +1,9 @@
 /**
  * useCustomerItemsPage - Custom hook for customer items page logic.
+ *
+ * Updated: サロゲートキー（id）ベースに移行
+ * - ID-based operations
+ * - customer_part_no for filtering
  */
 /* eslint-disable max-lines-per-function */
 import { useState, useMemo, useCallback } from "react";
@@ -85,7 +89,7 @@ export function useCustomerItemsPage() {
     const query = searchQuery.toLowerCase();
     return customerItems.filter(
       (item) =>
-        item.external_product_code.toLowerCase().includes(query) ||
+        item.customer_part_no.toLowerCase().includes(query) ||
         item.customer_id.toString().includes(query) ||
         item.product_id.toString().includes(query),
     );
@@ -107,11 +111,11 @@ export function useCustomerItemsPage() {
     [createCustomerItem, setIsCreateDialogOpen],
   );
 
-  // Soft Delete Handler
+  // Soft Delete Handler (ID-based)
   const handleSoftDelete = useCallback(
-    (customerId: number, externalProductCode: string, endDate?: string) => {
+    (id: number, endDate?: string) => {
       softDelete(
-        { customerId, externalProductCode, endDate },
+        { id, endDate },
         {
           onSuccess: () => toast.success("得意先品番マッピングを削除しました"),
           onError: () => toast.error("削除に失敗しました"),
@@ -121,11 +125,11 @@ export function useCustomerItemsPage() {
     [softDelete],
   );
 
-  // Permanent Delete Handler
+  // Permanent Delete Handler (ID-based)
   const handlePermanentDelete = useCallback(
-    (customerId: number, externalProductCode: string) => {
+    (id: number) => {
       permanentDeleteAsync(
-        { customerId, externalProductCode },
+        { id },
         {
           onSuccess: () => toast.success("完全に削除しました"),
           onError: () => toast.error("完全削除に失敗しました"),
@@ -135,20 +139,15 @@ export function useCustomerItemsPage() {
     [permanentDeleteAsync],
   );
 
-  // Bulk Permanent Delete Handler
+  // Bulk Permanent Delete Handler (ID-based)
   const handleBulkPermanentDelete = useCallback(
-    async (items: { customer_id: number; external_product_code: string }[]) => {
+    async (items: { id: number }[]) => {
       if (items.length === 0) return;
 
       setIsBulkDeleting(true);
       try {
         const results = await Promise.allSettled(
-          items.map((item) =>
-            permanentDeleteAsync({
-              customerId: item.customer_id,
-              externalProductCode: item.external_product_code,
-            }),
-          ),
+          items.map((item) => permanentDeleteAsync({ id: item.id })),
         );
 
         const succeeded = results.filter((r) => r.status === "fulfilled").length;
@@ -168,21 +167,15 @@ export function useCustomerItemsPage() {
     [permanentDeleteAsync],
   );
 
-  // Bulk Soft Delete Handler
+  // Bulk Soft Delete Handler (ID-based)
   const handleBulkSoftDelete = useCallback(
-    async (items: { customer_id: number; external_product_code: string }[], endDate?: string) => {
+    async (items: { id: number }[], endDate?: string) => {
       if (items.length === 0) return;
 
       setIsBulkDeleting(true);
       try {
         const results = await Promise.allSettled(
-          items.map((item) =>
-            softDeleteAsync({
-              customerId: item.customer_id,
-              externalProductCode: item.external_product_code,
-              endDate,
-            }),
-          ),
+          items.map((item) => softDeleteAsync({ id: item.id, endDate })),
         );
 
         const succeeded = results.filter((r) => r.status === "fulfilled").length;
@@ -202,11 +195,11 @@ export function useCustomerItemsPage() {
     [softDeleteAsync],
   );
 
-  // Restore Handler
+  // Restore Handler (ID-based)
   const handleRestore = useCallback(
-    (customerId: number, externalProductCode: string) => {
+    (id: number) => {
       restore(
-        { customerId, externalProductCode },
+        { id },
         {
           onSuccess: () => toast.success("復元しました"),
           onError: () => toast.error("復元に失敗しました"),

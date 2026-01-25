@@ -101,7 +101,7 @@ class OcrSapComplementService:
             self.db.query(CustomerItem)
             .filter(
                 CustomerItem.customer_id == customer.id,
-                CustomerItem.external_product_code == external_product_code,
+                CustomerItem.customer_part_no == external_product_code,
                 CustomerItem.get_active_filter(),
             )
             .all()
@@ -129,8 +129,7 @@ class OcrSapComplementService:
         _jiku_mapping = (
             self.db.query(CustomerItemJikuMapping)
             .filter(
-                CustomerItemJikuMapping.customer_id == customer.id,
-                CustomerItemJikuMapping.external_product_code == external_product_code,
+                CustomerItemJikuMapping.customer_item_id == item.id,
                 CustomerItemJikuMapping.jiku_code == jiku_code,
             )
             .first()
@@ -175,7 +174,7 @@ class OcrSapComplementService:
             self.db.query(CustomerItem)
             .filter(
                 CustomerItem.customer_id == customer.id,
-                CustomerItem.external_product_code.like(f"{external_product_code}%"),
+                CustomerItem.customer_part_no.like(f"{external_product_code}%"),
                 CustomerItem.get_active_filter(),
             )
             .all()
@@ -202,7 +201,7 @@ class OcrSapComplementService:
             customer_item=item,
             match_type=MatchType.PREFIX,
             product_id=item.product_id,
-            message=f"Prefix match: {external_product_code} -> {item.external_product_code}",
+            message=f"Prefix match: {external_product_code} -> {item.customer_part_no}",
         )
 
     def resolve_product_id(

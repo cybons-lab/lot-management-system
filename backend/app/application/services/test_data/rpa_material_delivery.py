@@ -14,7 +14,7 @@ from app.infrastructure.persistence.models.rpa_models import RpaRun, RpaRunItem,
 def _build_items(
     run_id: int,
     base_date: date,
-    external_product_code: str | None,
+    customer_part_no: str | None,
     layer_code: str,
     item_prefix: str,
     issue_flag: bool,
@@ -30,7 +30,7 @@ def _build_items(
             status="New",
             jiku_code="JIKU-01",
             layer_code=layer_code,
-            external_product_code=external_product_code,
+            customer_part_no=customer_part_no,
             delivery_date=base_date,
             delivery_quantity=120,
             shipping_vehicle="TRUCK-1",
@@ -48,7 +48,7 @@ def _build_items(
             status="New",
             jiku_code="JIKU-02",
             layer_code=layer_code,
-            external_product_code=external_product_code,
+            customer_part_no=customer_part_no,
             delivery_date=base_date + timedelta(days=1),
             delivery_quantity=240,
             shipping_vehicle="TRUCK-2",
@@ -67,7 +67,7 @@ def generate_rpa_material_delivery_data(db: Session) -> None:
     """Generate sample runs/items for the material delivery note pages."""
     customer_item = db.query(CustomerItem).first()
     customer_id = customer_item.customer_id if customer_item else None
-    external_product_code = customer_item.external_product_code if customer_item else "EXT-0001"
+    customer_part_no = customer_item.customer_part_no if customer_item else "TEST-0001"
 
     today = date.today()
     now = utcnow()
@@ -89,7 +89,7 @@ def generate_rpa_material_delivery_data(db: Session) -> None:
         _build_items(
             run_step1.id,
             today + timedelta(days=3),
-            external_product_code,
+            customer_part_no,
             "L-01",
             "STEP1",
             issue_flag=True,
@@ -118,7 +118,7 @@ def generate_rpa_material_delivery_data(db: Session) -> None:
         _build_items(
             run_step2.id,
             today + timedelta(days=5),
-            external_product_code,
+            customer_part_no,
             "L-02",
             "STEP2",
             issue_flag=True,
@@ -147,7 +147,7 @@ def generate_rpa_material_delivery_data(db: Session) -> None:
         _build_items(
             run_step3.id,
             today + timedelta(days=2),
-            external_product_code,
+            customer_part_no,
             "L-03",
             "STEP3",
             issue_flag=True,
@@ -177,7 +177,7 @@ def generate_rpa_material_delivery_data(db: Session) -> None:
     review_items = _build_items(
         run_step4.id,
         today + timedelta(days=1),
-        external_product_code,
+        customer_part_no,
         "L-04",
         "STEP4",
         issue_flag=True,
@@ -208,7 +208,7 @@ def generate_rpa_material_delivery_data(db: Session) -> None:
     done_items = _build_items(
         run_done.id,
         today - timedelta(days=1),
-        external_product_code,
+        customer_part_no,
         "L-05",
         "DONE",
         issue_flag=True,

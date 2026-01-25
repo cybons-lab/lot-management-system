@@ -48,6 +48,7 @@ from .masters_models import (
     Customer,
     CustomerItem,
     CustomerItemDeliverySetting,
+    CustomerItemJikuMapping,
     DeliveryPlace,
     Product,
     ProductMapping,
@@ -59,7 +60,6 @@ from .masters_models import (
 from .missing_mapping_model import MissingMappingEvent
 from .order_groups_models import OrderGroup
 from .orders_models import Order, OrderLine
-from .product_supplier_models import ProductSupplier
 from .product_warehouse_model import ProductWarehouse
 from .rpa_models import (
     RpaRun,
@@ -75,6 +75,9 @@ from .seed_snapshot_model import SeedSnapshot
 from .shipping_master_models import OrderRegisterRow, ShippingMasterCurated, ShippingMasterRaw
 from .smartread_models import OcrResultEdit, SmartReadConfig, SmartReadPadRun
 from .soft_delete_mixin import INFINITE_VALID_TO, SoftDeleteMixin
+
+# SupplierItem (renamed from ProductSupplier)
+from .supplier_item_model import ProductSupplier, SupplierItem
 from .system_config_model import SystemConfig
 from .system_models import ClientLog
 from .views_models import (
@@ -155,8 +158,10 @@ __all__ = [
     "HolidayCalendar",
     "CompanyCalendar",
     "OriginalDeliveryCalendar",
-    "ProductSupplier",
+    "SupplierItem",
+    "ProductSupplier",  # Backward compatibility alias
     "ProductWarehouse",
+    "CustomerItemJikuMapping",
     # Logs
     "OperationLog",
     "ServerLog",

@@ -19,7 +19,7 @@ from app.infrastructure.persistence.models.masters_models import (
     ProductMapping,
     Supplier,
 )
-from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.schemas.import_schema import (
     CustomerDataImport,
     ImportResultDetail,
@@ -245,13 +245,13 @@ class MasterImportService:
         supplier_id: int,
         is_primary: bool,
         lead_time_days: int | None,
-    ) -> ProductSupplier | None:
+    ) -> SupplierItem | None:
         """Upsert product-supplier relationship."""
         existing = (
-            self.db.query(ProductSupplier)
+            self.db.query(SupplierItem)
             .filter(
-                ProductSupplier.product_id == product_id,
-                ProductSupplier.supplier_id == supplier_id,
+                SupplierItem.product_id == product_id,
+                SupplierItem.supplier_id == supplier_id,
             )
             .first()
         )
@@ -261,7 +261,7 @@ class MasterImportService:
                 existing.lead_time_days = lead_time_days  # type: ignore[assignment]
             return existing
         else:
-            ps = ProductSupplier(
+            ps = SupplierItem(
                 product_id=product_id,
                 supplier_id=supplier_id,
                 is_primary=is_primary,
@@ -339,7 +339,7 @@ class MasterImportService:
             self.db.query(CustomerItem)
             .filter(
                 CustomerItem.customer_id == customer_id,
-                CustomerItem.external_product_code == external_product_code,
+                CustomerItem.customer_part_no == external_product_code,
             )
             .first()
         )
@@ -359,7 +359,7 @@ class MasterImportService:
         else:
             ci = CustomerItem(
                 customer_id=customer_id,
-                external_product_code=external_product_code,
+                customer_part_no=external_product_code,
                 product_id=product.id,
                 supplier_id=supplier_id,
                 base_unit=base_unit,

@@ -36,7 +36,7 @@ export interface DeliveryPlaceImportRow {
 }
 
 export interface CustomerItemImportRow {
-  external_product_code: string;
+  customer_part_no: string;
   maker_part_code: string;
   supplier_code?: string | null;
   base_unit?: string | null;

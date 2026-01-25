@@ -14,14 +14,16 @@ const productFormSchema = z.object({
   // product_codeは編集時のみ表示、新規時は自動採番なのでoptional扱いだが、編集時は必須
   product_code: z.string().max(50).optional(),
   product_name: z.string().min(1, "商品名は必須です").max(200),
-  // maker_part_code (旧メーカー品番入力欄) は削除
+  // maker_part_code (旧メーカー品番入力欄) は削除せずに残す (Phase 1)
+  maker_item_code: z.string().max(100).optional(),
+  customer_part_no: z.string().max(100).optional(),
   base_unit: z.string().max(20).default("EA"),
   consumption_limit_days: z.coerce.number().optional(),
   internal_unit: z.string().min(1, "社内単位は必須です").max(20),
   external_unit: z.string().min(1, "外部単位は必須です").max(20),
   qty_per_internal_unit: z.coerce.number().positive("数量は1以上で入力してください"),
-  customer_part_no: z.string().min(1, "先方品番は必須です"),
-  maker_item_code: z.string().min(1, "メーカー品番は必須です"),
+  // 先方品番は customer_items テーブルで管理
+  // メーカー品番は supplier_items テーブルで管理
   is_active: z.boolean().default(true),
 });
 
@@ -53,13 +55,13 @@ export function ProductForm({
     defaultValues: {
       product_code: product?.product_code ?? "",
       product_name: product?.product_name ?? "",
+      maker_item_code: product?.maker_item_code ?? "",
+      customer_part_no: product?.customer_part_no ?? "",
       base_unit: product?.base_unit ?? "EA",
       consumption_limit_days: product?.consumption_limit_days ?? undefined,
       internal_unit: product?.internal_unit ?? "CAN",
       external_unit: product?.external_unit ?? "KG",
       qty_per_internal_unit: product?.qty_per_internal_unit ?? 1,
-      customer_part_no: product?.customer_part_no ?? "",
-      maker_item_code: product?.maker_item_code ?? "",
       is_active: product?.is_active ?? true,
     },
   });
@@ -74,9 +76,9 @@ export function ProductForm({
       internal_unit: data.internal_unit,
       external_unit: data.external_unit,
       qty_per_internal_unit: data.qty_per_internal_unit,
-      customer_part_no: data.customer_part_no,
-      maker_item_code: data.maker_item_code,
       is_active: data.is_active,
+      customer_part_no: data.customer_part_no ?? "",
+      maker_item_code: data.maker_item_code ?? "",
     };
     onSubmit(output);
   };
@@ -111,34 +113,29 @@ export function ProductForm({
         {errors.product_name && <p className={formStyles.error}>{errors.product_name.message}</p>}
       </div>
 
+      {/* Deprecated Fields (Phase 2 Removal) */}
       <div className={formStyles.field}>
         <Label htmlFor="maker_item_code" className={formStyles.label}>
-          メーカー品番 <span className="text-red-500">*</span>
+          メーカー品番 <span className="text-xs text-gray-500">(Phase 2で廃止予定)</span>
         </Label>
         <Input
           id="maker_item_code"
           {...register("maker_item_code")}
-          placeholder="例: MAKER-001"
+          placeholder="後方互換用フィールド"
           className={formStyles.input}
         />
-        {errors.maker_item_code && (
-          <p className={formStyles.error}>{errors.maker_item_code.message}</p>
-        )}
       </div>
 
       <div className={formStyles.field}>
         <Label htmlFor="customer_part_no" className={formStyles.label}>
-          先方品番 <span className="text-red-500">*</span>
+          先方品番 <span className="text-xs text-gray-500">(Phase 2で廃止予定)</span>
         </Label>
         <Input
           id="customer_part_no"
           {...register("customer_part_no")}
-          placeholder="例: CUST-001"
+          placeholder="後方互換用フィールド"
           className={formStyles.input}
         />
-        {errors.customer_part_no && (
-          <p className={formStyles.error}>{errors.customer_part_no.message}</p>
-        )}
       </div>
 
       <div className={formStyles.field}>
