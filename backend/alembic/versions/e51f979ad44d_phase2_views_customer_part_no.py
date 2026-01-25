@@ -23,23 +23,27 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Phase 2-1: ビューの再作成（create_views.sqlを実行）."""
-    views_sql_path = Path(__file__).parent.parent.parent / "sql" / "views" / "create_views.sql"
-    if views_sql_path.exists():
-        with open(views_sql_path) as f:
-            views_sql = f.read()
-            op.execute(views_sql)
+    """Phase 2-1: ビューの再作成（create_views.sqlを実行）.
+
+    SSOT: backend/sql/views/create_views.sql
+    ビュー定義はcreate_views.sqlで一元管理。migrationはそれを実行するのみ。
+    """
+    # backend/alembic/versions/xxxx.py -> backend/sql/views/create_views.sql
+    current_dir = Path(__file__).resolve().parent
+    sql_path = current_dir.parent.parent / "sql" / "views" / "create_views.sql"
+
+    with open(sql_path, encoding="utf-8") as f:
+        sql_content = f.read()
+
+    op.execute(sql_content)
 
 
 def downgrade() -> None:
-    """Downgrade: ビューの再作成（旧バージョンは create_views.sql で管理）.
+    """Downgrade: ビューの再適用.
 
-    Note: 旧バージョンのビュー定義は履歴管理されていないため、
-    最新の create_views.sql を再適用する形でダウングレードする。
-    実運用ではビュー履歴を別途管理することを推奨。
+    Note: ビュー定義はcreate_views.sqlで一元管理（SSOT）。
+    downgradeでも最新定義を再適用する。真にrollbackしたい場合は
+    旧バージョンのcreate_views.sqlをgit checkoutして適用する。
     """
-    views_sql_path = Path(__file__).parent.parent.parent / "sql" / "views" / "create_views.sql"
-    if views_sql_path.exists():
-        with open(views_sql_path) as f:
-            views_sql = f.read()
-            op.execute(views_sql)
+    # Views update is usually forward-only
+    pass

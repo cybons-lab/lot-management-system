@@ -152,14 +152,30 @@ CREATE TABLE products (
 
 ### Phase 2: DB拡張・データ移行 (Model Extension)
 - **変更対象**: DB (Migration), Backend (Models)
+- **Status**: **Done** (Completed on 2026-01-25)
 - **Done定義**:
   - `supplier_items.product_id` は **NULLABLEであることを保証**している（DB/Model/APIにNOT NULL前提が残っていない）。
     - すでにNULLABLEなら「確認のみ」で完了扱いとする。
   - `customer_items` に `is_primary` が追加されている。
+  - `v_lot_details` ビューに `supplier_item_id`, `customer_part_no`, `mapping_status` が追加されている。
+  - 未マッピングブロック基盤（`mapping_validator.py`）が導入されている（**Phase 2 互換モード: `strict=False`**）。
 - **移行リスク**:
   - データ重複。移行スクリプトはIdempotent（冪等）に作る。
 - **ロールバック**:
   - カラム追加の取り消し（データは消えるが本番影響なし）。
+
+#### Phase 2 互換モード (strict=False) について
+- **切替点**: `backend/app/application/services/allocations/mapping_validator.py` の `validate_lot_mapping()` 関数
+- **現在の動作 (Phase 2)**:
+  - `strict=False`（デフォルト）: `supplier_item_id` が NULL のロットは検証スキップ（既存データとの互換性維持）
+  - `supplier_item_id` が設定されているが `customer_items.is_primary=True` のマッピングがない場合のみエラー
+- **Phase 3 での切替手順**:
+  1. `mapping_validator.py` の `validate_lot_mapping()` を `strict: bool = True` に変更
+  2. または、呼び出し元（`commit.py`, `confirm.py`, `withdrawal_service.py`）で `strict=True` を明示的に渡す
+- **strict=True で影響を受ける処理**:
+  - 引当確定 (`allocations/commit.py:233`)
+  - 引当CONFIRM (`allocations/confirm.py:230`)
+  - 受注手動出庫 (`inventory/withdrawal_service.py:269`)
 
 ### 運用ルール (Operational Rules)
 - **Phase 2-1 系の “検証復旧” のための rename 反映漏れ修正（views/tests/type/mypy）は例外的に許容。ただしロジック変更は禁止。**
