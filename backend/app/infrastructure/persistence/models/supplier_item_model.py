@@ -11,6 +11,7 @@ Business key: UNIQUE(supplier_id, maker_part_no)
 from __future__ import annotations
 
 from datetime import date, datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -21,6 +22,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -57,10 +59,10 @@ class SupplierItem(SoftDeleteMixin, Base):
     __tablename__ = "supplier_items"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    product_id: Mapped[int] = mapped_column(
+    product_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("products.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
     )
     supplier_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -71,6 +73,21 @@ class SupplierItem(SoftDeleteMixin, Base):
         String(100),
         nullable=False,
         comment="メーカー品番（仕入先の品番）",
+    )
+    base_unit: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        comment="基本単位（在庫単位）",
+    )
+    net_weight: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 3),
+        nullable=True,
+        comment="正味重量",
+    )
+    weight_unit: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        comment="重量単位",
     )
     is_primary: Mapped[bool] = mapped_column(
         Boolean,

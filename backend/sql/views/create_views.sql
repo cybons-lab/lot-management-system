@@ -383,7 +383,7 @@ SELECT
     COALESCE(dp.delivery_place_code, '') AS delivery_place_code,
     COALESCE(dp.delivery_place_name, '[削除済み納入先]') AS delivery_place_name,
     dp.jiku_code,
-    ci.external_product_code,
+    ci.customer_part_no,
     COALESCE(s.supplier_name, '[削除済み仕入先]') AS supplier_name,
     COALESCE(res_sum.allocated_qty, 0) AS allocated_quantity,
     CASE WHEN c.valid_to IS NOT NULL AND c.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS customer_deleted,
@@ -457,10 +457,10 @@ COMMENT ON VIEW public.v_user_supplier_assignments IS 'ユーザー-仕入先担
 CREATE VIEW public.v_customer_item_jiku_mappings AS
 SELECT
     cijm.id,
-    cijm.customer_id,
+    ci.customer_id,
     COALESCE(c.customer_code, '') AS customer_code,
     COALESCE(c.customer_name, '[削除済み得意先]') AS customer_name,
-    cijm.external_product_code,
+    ci.customer_part_no,
     cijm.jiku_code,
     cijm.delivery_place_id,
     COALESCE(dp.delivery_place_code, '') AS delivery_place_code,
@@ -470,7 +470,8 @@ SELECT
     CASE WHEN c.valid_to IS NOT NULL AND c.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS customer_deleted,
     CASE WHEN dp.valid_to IS NOT NULL AND dp.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS delivery_place_deleted
 FROM public.customer_item_jiku_mappings cijm
-LEFT JOIN public.customers c ON cijm.customer_id = c.id
+JOIN public.customer_items ci ON cijm.customer_item_id = ci.id
+LEFT JOIN public.customers c ON ci.customer_id = c.id
 LEFT JOIN public.delivery_places dp ON cijm.delivery_place_id = dp.id;
 
 COMMENT ON VIEW public.v_customer_item_jiku_mappings IS '顧客商品-次区マッピングビュー（soft-delete対応）';

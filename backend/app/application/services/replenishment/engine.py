@@ -59,6 +59,9 @@ class ReplenishmentEngine:
         estimator = self._create_estimator(method)
 
         for ps in product_suppliers:
+            if ps.product_id is None:
+                # 独立運用(product_idなし)のSupplierItemは、現状の製品ベースのロジックでは扱えないためスキップ
+                continue
             product_id = int(ps.product_id)
             supplier_id = int(ps.supplier_id)
             # 3. 在庫情報の取得

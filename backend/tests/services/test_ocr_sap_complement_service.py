@@ -41,7 +41,7 @@ class TestOcrSapComplementService:
         # Create customer item
         customer_item = CustomerItem(
             customer_id=customer.id,
-            external_product_code="ABC-123",
+            customer_part_no="ABC-123",
             product_id=product.id,
             base_unit="KG",
         )
@@ -50,7 +50,7 @@ class TestOcrSapComplementService:
         # Create another item for prefix match test
         customer_item_2 = CustomerItem(
             customer_id=customer.id,
-            external_product_code="XYZ-001-A",
+            customer_part_no="XYZ-001-A",
             product_id=product.id,
             base_unit="KG",
         )
@@ -70,26 +70,26 @@ class TestOcrSapComplementService:
         result = service.find_complement(
             customer_code="CUST001",
             jiku_code="J01",  # Not used in current implementation
-            external_product_code="ABC-123",
+            customer_part_no="ABC-123",
         )
 
         assert result.match_type == MatchType.EXACT
         assert result.product_id == setup_test_data["product"].id
         assert result.customer_item is not None
-        assert result.customer_item.external_product_code == "ABC-123"
+        assert result.customer_item.customer_part_no == "ABC-123"
 
     def test_exact_match_not_found_fallback_to_prefix(self, service, setup_test_data):
         """Test prefix match when exact match fails."""
         result = service.find_complement(
             customer_code="CUST001",
             jiku_code="J01",
-            external_product_code="XYZ-001",  # Will prefix match XYZ-001-A
+            customer_part_no="XYZ-001",  # Will prefix match XYZ-001-A
         )
 
         assert result.match_type == MatchType.PREFIX
         assert result.product_id == setup_test_data["product"].id
         assert result.customer_item is not None
-        assert result.customer_item.external_product_code == "XYZ-001-A"
+        assert result.customer_item.customer_part_no == "XYZ-001-A"
         assert "Prefix match" in (result.message or "")
 
     def test_no_match_found(self, service, setup_test_data):
@@ -97,7 +97,7 @@ class TestOcrSapComplementService:
         result = service.find_complement(
             customer_code="CUST001",
             jiku_code="J01",
-            external_product_code="NONEXISTENT",
+            customer_part_no="NONEXISTENT",
         )
 
         assert result.match_type == MatchType.NOT_FOUND
@@ -109,7 +109,7 @@ class TestOcrSapComplementService:
         result = service.find_complement(
             customer_code="INVALID",
             jiku_code="J01",
-            external_product_code="ABC-123",
+            customer_part_no="ABC-123",
         )
 
         assert result.match_type == MatchType.NOT_FOUND
@@ -120,7 +120,7 @@ class TestOcrSapComplementService:
         product_id, match_type, message = service.resolve_product_id(
             customer_code="CUST001",
             jiku_code="J01",
-            external_product_code="ABC-123",
+            customer_part_no="ABC-123",
         )
 
         assert product_id == setup_test_data["product"].id

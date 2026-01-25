@@ -161,6 +161,9 @@ CREATE TABLE products (
 - **ロールバック**:
   - カラム追加の取り消し（データは消えるが本番影響なし）。
 
+### 運用ルール (Operational Rules)
+- **Phase 2-1 系の “検証復旧” のための rename 反映漏れ修正（views/tests/type/mypy）は例外的に許容。ただしロジック変更は禁止。**
+
 ### Phase 3: ロジック切り替え (Logic Switch)
 - **変更対象**: Backend (Service Logic), Frontend (Validation)
 - **Done定義**:

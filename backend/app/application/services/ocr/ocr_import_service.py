@@ -143,14 +143,14 @@ class OcrImportService:
         product_id, match_type, message = self.complement_service.resolve_product_id(
             customer_code="",  # customer_idで直接検索するため不要
             jiku_code=line.jiku_code,
-            external_product_code=line.external_product_code,
+            customer_part_no=line.external_product_code,
         )
 
         # customer_idから直接検索するバージョン
         result = self.complement_service.find_complement(
             customer_code=self._get_customer_code(customer_id),
             jiku_code=line.jiku_code,
-            external_product_code=line.external_product_code,
+            customer_part_no=line.external_product_code,
         )
 
         # 納入先を解決（次区コードから）
