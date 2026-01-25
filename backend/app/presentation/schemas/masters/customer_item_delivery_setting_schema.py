@@ -10,8 +10,7 @@ from app.presentation.schemas.common.base import BaseSchema
 class CustomerItemDeliverySettingBase(BaseSchema):
     """Base schema for CustomerItemDeliverySetting."""
 
-    customer_id: int
-    customer_part_no: str
+    customer_item_id: int = Field(..., description="得意先品番マッピングID")
     delivery_place_id: int | None = Field(
         default=None, description="納入先ID（NULLの場合はデフォルト設定）"
     )
@@ -27,6 +26,7 @@ class CustomerItemDeliverySettingBase(BaseSchema):
 class CustomerItemDeliverySettingCreate(CustomerItemDeliverySettingBase):
     """Schema for creating a CustomerItemDeliverySetting."""
 
+    # customer_id/customer_part_no are removed as inputs
     pass
 
 
@@ -60,6 +60,9 @@ class CustomerItemDeliverySettingResponse(CustomerItemDeliverySettingBase):
 class ShipmentTextRequest(BaseSchema):
     """Request schema for getting shipment text."""
 
+    # This might still use customer_id/product_id logic or need update?
+    # Logic uses find_customer_part_no(customer_id, product_id)
+    # Keeping as is for now as it seems to be a different look-up case (from OrderLine context?)
     customer_id: int
     product_id: int
     delivery_place_id: int | None = None

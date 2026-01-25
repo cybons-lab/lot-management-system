@@ -10255,26 +10255,19 @@
           "customer-item-delivery-settings"
         ],
         "summary": "List Settings",
-        "description": "List all delivery settings for a customer item.",
+        "description": "List all delivery settings for a customer item.\n\nLookup by customer_item_id (SSOT).",
         "operationId": "list_settings_api_masters_customer_item_delivery_settings__get",
         "parameters": [
           {
-            "name": "customer_id",
+            "name": "customer_item_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Customer Id"
-            }
-          },
-          {
-            "name": "customer_part_no",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Customer Part No"
-            }
+              "description": "得意先品番マッピングID",
+              "title": "Customer Item Id"
+            },
+            "description": "得意先品番マッピングID"
           }
         ],
         "responses": {
@@ -24417,13 +24410,10 @@
       },
       "CustomerItemDeliverySettingCreate": {
         "properties": {
-          "customer_id": {
+          "customer_item_id": {
             "type": "integer",
-            "title": "Customer Id"
-          },
-          "customer_part_no": {
-            "type": "string",
-            "title": "Customer Part No"
+            "title": "Customer Item Id",
+            "description": "得意先品番マッピングID"
           },
           "delivery_place_id": {
             "anyOf": [
@@ -24520,21 +24510,17 @@
         },
         "type": "object",
         "required": [
-          "customer_id",
-          "customer_part_no"
+          "customer_item_id"
         ],
         "title": "CustomerItemDeliverySettingCreate",
         "description": "Schema for creating a CustomerItemDeliverySetting."
       },
       "CustomerItemDeliverySettingResponse": {
         "properties": {
-          "customer_id": {
+          "customer_item_id": {
             "type": "integer",
-            "title": "Customer Id"
-          },
-          "customer_part_no": {
-            "type": "string",
-            "title": "Customer Part No"
+            "title": "Customer Item Id",
+            "description": "得意先品番マッピングID"
           },
           "delivery_place_id": {
             "anyOf": [
@@ -24656,8 +24642,7 @@
         },
         "type": "object",
         "required": [
-          "customer_id",
-          "customer_part_no",
+          "customer_item_id",
           "id",
           "created_at",
           "updated_at"

@@ -1,6 +1,6 @@
 """Customer Item Delivery Settings API router."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.application.services.masters.customer_item_delivery_setting_service import (
@@ -27,16 +27,15 @@ router = APIRouter(
     response_model=list[CustomerItemDeliverySettingResponse],
 )
 def list_settings(
-    customer_id: int,
-    customer_part_no: str,
+    customer_item_id: int = Query(..., description="得意先品番マッピングID"),
     db: Session = Depends(get_db),
 ) -> list[CustomerItemDeliverySettingResponse]:
-    """List all delivery settings for a customer item."""
+    """List all delivery settings for a customer item.
+
+    Lookup by customer_item_id (SSOT).
+    """
     service = CustomerItemDeliverySettingService(db)
-    return service.list_by_customer_item(
-        customer_id=customer_id,
-        customer_part_no=customer_part_no,
-    )
+    return service.list_by_customer_item_id(customer_item_id)
 
 
 @router.post(

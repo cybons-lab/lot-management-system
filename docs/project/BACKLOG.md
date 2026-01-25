@@ -500,6 +500,79 @@ Phase 0〜2の実装により、フロントエンドおよびバックエンド
 
 ---
 
+### 5-4. Docker テスト環境の依存関係修正
+
+**優先度**: Medium
+**難易度**: Low
+**想定工数**: 0.5日
+
+**背景:**
+`docker compose exec backend pytest` でテスト実行時に、必要な依存関係（`fastapi`, `sqlalchemy`, `pydantic_settings`等）が見つからずImportErrorが発生する。
+
+**症状:**
+```
+ImportError while loading conftest '/app/tests/conftest.py'.
+tests/conftest.py:5: in <module>
+    from fastapi.testclient import TestClient
+E   ModuleNotFoundError: No module named 'fastapi'
+```
+
+**原因（推定）:**
+- 本番用Dockerイメージにテスト用依存関係が含まれていない
+- `requirements-dev.txt`または`pyproject.toml`の`[dev]`グループがコンテナビルド時にインストールされていない
+
+**対応案:**
+1. `Dockerfile`でテスト依存関係もインストールするように修正
+2. または、テスト専用のDocker Compose serviceを追加（`backend-test`等）
+3. CI/CDでのテスト実行方法と整合を取る
+
+**発見日:** 2026-01-26
+**元:** customer_item_delivery_settings SSOT化PRレビュー時
+
+---
+
+### 5-5. E2Eテストの失敗修正 (19件)
+
+**優先度**: Medium
+**作成**: 2026-01-26
+**現状**: 61テスト中 42 passed / 19 failed
+
+**失敗カテゴリ:**
+
+1. **ログインフォームセレクタ問題** (複数テスト)
+   - `getByLabel('ユーザー名')` が見つからない
+   - 対象: `e2e-04-permission.spec.ts` 等
+   - 原因: ログインUIの変更にテストが追従していない
+
+2. **テストデータ不整合**
+   - `warehouse-crud.spec.ts`: "Existing Warehouse" が存在しない
+   - `customer-items.spec.ts`: 期待するテストデータがない
+
+3. **タイムアウト/応答遅延**
+   - `e2e-06-error-handling.spec.ts`: 長時間レスポンスのハンドリング
+
+**失敗テスト一覧:**
+- `e2e/allocation.spec.ts`
+- `e2e/customer-items.spec.ts`
+- `e2e/rpa-material-delivery.spec.ts`
+- `e2e/shortage-auto-order.spec.ts`
+- `e2e/specs/p0/e2e-01-order-flow.spec.ts`
+- `e2e/specs/p0/e2e-02-save-persistence.spec.ts` (2件)
+- `e2e/specs/p0/e2e-03-double-submit.spec.ts` (2件)
+- `e2e/specs/p0/e2e-04-permission.spec.ts` (4件)
+- `e2e/specs/p0/e2e-05-list-filter.spec.ts` (4件)
+- `e2e/specs/p0/e2e-06-error-handling.spec.ts`
+- `e2e/warehouse-crud.spec.ts`
+
+**対応方針:**
+1. ログインセレクタを現在のUI構造に合わせて更新
+2. テストフィクスチャ/シードデータの整備
+3. タイムアウト値の調整またはテスト設計の見直し
+
+**元:** SSOT化PR E2Eテスト実行結果 (2026-01-26)
+
+---
+
 ## 6. 機能改善・中長期タスク
 
 ### 6-1. DB/UI整合性修正に伴うエクスポート機能
@@ -719,6 +792,80 @@ IDBに「DB保存済み」フラグを追加し、未保存データのみDB保�
 4. テスト
 
 **元:** `smartread-cache-db-save-inconsistency.md` (2026-01-21)
+
+---
+
+### 8-6. SSOT統一: CustomerItems 複合キーAPI廃止
+
+**優先度**: Low
+**作成**: 2026-01-26
+**関連**: customer_item_delivery_settings SSOT化
+
+**背景:**
+CustomerItemsのCRUD APIは現在、後方互換性のため`/{customer_id}/{customer_part_no}`形式のエンドポイントを維持している。
+`customer_items.id`がSSOTであるため、将来的に`/{id}`ベースに統一すべき。
+
+**対象ファイル:**
+- `backend/app/presentation/api/routes/masters/customer_items_router.py`
+- `backend/app/application/services/masters/customer_items_service.py`
+
+**廃止対象メソッド:**
+- `get_by_key(customer_id, customer_part_no)`
+- `update_by_key(customer_id, customer_part_no, ...)`
+- `delete_by_key(customer_id, customer_part_no, ...)`
+- `restore_by_key(customer_id, customer_part_no)`
+- `permanent_delete_by_key(customer_id, customer_part_no)`
+
+**移行手順:**
+1. フロントエンドの呼び出し元を`/{id}`形式に移行
+2. 後方互換エンドポイントにdeprecation警告を追加
+3. 一定期間後に後方互換エンドポイントを削除
+
+**元:** SSOT監査レポート (2026-01-26)
+
+---
+
+### 8-7. SSOT統一: ShipmentTextRequest の customer_item_id 対応
+
+**優先度**: Low
+**作成**: 2026-01-26
+**依存**: OrderLineモデルへの`customer_item_id`追加
+
+**背景:**
+`/shipment-text`エンドポイントは現在`customer_id + product_id`を受け取り、内部で`customer_part_no`に変換している。
+OrderLineに`customer_item_id`が追加されれば、直接`customer_item_id`を受け取る形式に移行可能。
+
+**対象ファイル:**
+- `backend/app/presentation/schemas/masters/customer_item_delivery_setting_schema.py` (ShipmentTextRequest)
+- `backend/app/application/services/masters/customer_item_delivery_setting_service.py` (get_shipment_text)
+- `backend/app/infrastructure/persistence/repositories/customer_item_delivery_setting_repository.py` (find_matching_setting, find_customer_part_no)
+
+**前提条件:**
+- OrderLine / order_lines テーブルに`customer_item_id`カラムを追加
+- 受注作成時に`customer_item_id`を設定するロジックを実装
+
+**元:** SSOT監査レポート (2026-01-26)
+
+---
+
+### 8-8. スキーマ重複解消: SupplierItem
+
+**優先度**: Low
+**作成**: 2026-01-26
+
+**背景:**
+SupplierItemエンティティに対して2箇所でスキーマが定義されており、メンテナンス性が低下している。
+
+**重複箇所:**
+- `backend/app/presentation/schemas/masters/supplier_items_schema.py` (SupplierItemBase, Create, Update, Response)
+- `backend/app/presentation/schemas/masters/masters_schema.py:321-367` (同名のスキーマ群)
+
+**対応:**
+1. どちらが正として使われているか調査
+2. 使用されていない方を削除、または片方を他方へのエイリアスに変更
+3. インポート元を統一
+
+**元:** SSOT監査レポート (2026-01-26)
 
 ---
 

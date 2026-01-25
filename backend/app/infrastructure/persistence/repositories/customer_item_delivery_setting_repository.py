@@ -23,24 +23,22 @@ class CustomerItemDeliverySettingRepository:
             self.db.get(CustomerItemDeliverySetting, setting_id),
         )
 
-    def find_by_customer_item(
+    def find_by_customer_item_id(
         self,
-        customer_id: int,
-        customer_part_no: str,
+        customer_item_id: int,
     ) -> list[CustomerItemDeliverySetting]:
-        """Find all settings for a customer item."""
+        """Find all settings for a customer item by ID."""
         from sqlalchemy.orm import joinedload
 
         stmt = (
             select(CustomerItemDeliverySetting)
-            .join(CustomerItem)
             .options(joinedload(CustomerItemDeliverySetting.delivery_place))
-            .where(
-                CustomerItem.customer_id == customer_id,
-                CustomerItem.customer_part_no == customer_part_no,
-            )
+            .where(CustomerItemDeliverySetting.customer_item_id == customer_item_id)
         )
         return list(self.db.execute(stmt).scalars().all())
+
+    # Deprecated: find_by_customer_item (composite key) - can be removed if verified unused
+    # User instruction says "Remove/Non-public". I will remove it to ensure no usage.
 
     def find_matching_setting(
         self,
@@ -50,6 +48,11 @@ class CustomerItemDeliverySettingRepository:
         jiku_code: str | None = None,
     ) -> CustomerItemDeliverySetting | None:
         """Find a setting matching the given criteria with priority.
+
+        Note: Uses composite key lookup for ShipmentTextRequest (order line context).
+        This is intentional as the /shipment-text endpoint receives customer_id + product_id
+        from OrderLine and needs to resolve to customer_part_no internally.
+        Not part of the SSOT refactoring for CRUD operations.
 
         Priority order:
         1. Exact match (delivery_place_id + jiku_code)
@@ -100,7 +103,11 @@ class CustomerItemDeliverySettingRepository:
         customer_id: int,
         customer_part_no: str,
     ) -> str | None:
-        """Get the shipping_document_template from customer_items as fallback."""
+        """Get the shipping_document_template from customer_items as fallback.
+
+        Note: Uses composite key lookup for ShipmentTextRequest fallback logic.
+        See find_matching_setting() for context.
+        """
         stmt = select(CustomerItem.shipping_document_template).where(
             CustomerItem.customer_id == customer_id,
             CustomerItem.customer_part_no == customer_part_no,
@@ -112,7 +119,11 @@ class CustomerItemDeliverySettingRepository:
         customer_id: int,
         product_id: int,
     ) -> str | None:
-        """Get customer_part_no from customer_items by customer_id and product_id."""
+        """Get customer_part_no from customer_items by customer_id and product_id.
+
+        Note: Used by ShipmentTextRequest to convert product_id to customer_part_no.
+        See find_matching_setting() for context.
+        """
         stmt = select(CustomerItem.customer_part_no).where(
             CustomerItem.customer_id == customer_id,
             CustomerItem.product_id == product_id,
