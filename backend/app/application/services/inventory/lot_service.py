@@ -267,6 +267,11 @@ class LotService:
             product_deleted=lot_view.product_deleted,
             warehouse_deleted=lot_view.warehouse_deleted,
             supplier_deleted=lot_view.supplier_deleted,
+            # Phase 2 Mapping
+            maker_part_no=lot_view.supplier_maker_part_no,
+            customer_part_no=lot_view.customer_part_no,
+            supplier_item_id=lot_view.supplier_item_id,
+            mapping_status=lot_view.mapping_status,
             created_at=lot_view.created_at,
             updated_at=lot_view.updated_at,
         )
@@ -509,6 +514,11 @@ class LotService:
                 is_primary_supplier=bool(
                     primary_supplier_ids and lot_view.supplier_id in primary_supplier_ids
                 ),
+                # Phase 2 Mapping
+                maker_part_no=lot_view.supplier_maker_part_no,
+                customer_part_no=lot_view.customer_part_no,
+                supplier_item_id=lot_view.supplier_item_id,
+                mapping_status=lot_view.mapping_status,
             )
             responses.append(response)
         return responses
@@ -637,6 +647,11 @@ class LotService:
                 cost_price=lot_view.cost_price,
                 sales_price=lot_view.sales_price,
                 tax_rate=lot_view.tax_rate,
+                # Phase 2 Mapping
+                maker_part_no=lot_view.supplier_maker_part_no,
+                customer_part_no=lot_view.customer_part_no,
+                supplier_item_id=lot_view.supplier_item_id,
+                mapping_status=lot_view.mapping_status,
             )
             responses.append(response)
 
@@ -1154,4 +1169,9 @@ class LotService:
             product_deleted=product_deleted,
             warehouse_deleted=warehouse_deleted,
             supplier_deleted=supplier_deleted,
+            # Phase 2 Mapping (entity based)
+            supplier_item_id=db_lot.supplier_item_id,
+            maker_part_no=None,
+            customer_part_no=None,
+            mapping_status=None,
         )

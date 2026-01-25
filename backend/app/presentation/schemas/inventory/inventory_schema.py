@@ -183,6 +183,12 @@ class LotResponse(LotBase, TimestampMixin):
     warehouse_deleted: bool = False
     supplier_deleted: bool = False
 
+    # Phase 2: Mapping fields
+    maker_part_no: str | None = Field(None, serialization_alias="supplier_maker_part_no")
+    customer_part_no: str | None = None
+    supplier_item_id: int | None = None
+    mapping_status: str | None = None
+
 
 class LotListResponse(BaseSchema):
     """API response model for paginated list of lots."""

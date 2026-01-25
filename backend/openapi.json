@@ -29588,6 +29588,50 @@
             "type": "boolean",
             "title": "Supplier Deleted",
             "default": false
+          },
+          "supplier_maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Maker Part No"
+          },
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No"
+          },
+          "supplier_item_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Item Id"
+          },
+          "mapping_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping Status"
           }
         },
         "type": "object",

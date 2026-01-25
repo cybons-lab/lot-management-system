@@ -165,6 +165,8 @@ describe("QuickWithdrawalDialog", () => {
     sales_price: null,
     tax_rate: null,
     customer_name: null,
+    maker_part_no: null,
+    customer_part_no: null,
   };
 
   const mockCustomers = [

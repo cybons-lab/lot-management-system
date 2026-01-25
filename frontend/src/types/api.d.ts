@@ -11650,6 +11650,14 @@ export interface components {
        * @default false
        */
       supplier_deleted: boolean;
+      /** Supplier Maker Part No */
+      supplier_maker_part_no?: string | null;
+      /** Customer Part No */
+      customer_part_no?: string | null;
+      /** Supplier Item Id */
+      supplier_item_id?: number | null;
+      /** Mapping Status */
+      mapping_status?: string | null;
     };
     /**
      * LotStatus
