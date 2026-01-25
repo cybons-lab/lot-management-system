@@ -9511,8 +9511,8 @@ export interface components {
     CustomerItemDeliverySettingCreate: {
       /** Customer Id */
       customer_id: number;
-      /** External Product Code */
-      external_product_code: string;
+      /** Customer Part No */
+      customer_part_no: string;
       /**
        * Delivery Place Id
        * @description 納入先ID（NULLの場合はデフォルト設定）
@@ -9562,8 +9562,8 @@ export interface components {
     CustomerItemDeliverySettingResponse: {
       /** Customer Id */
       customer_id: number;
-      /** External Product Code */
-      external_product_code: string;
+      /** Customer Part No */
+      customer_part_no: string;
       /**
        * Delivery Place Id
        * @description 納入先ID（NULLの場合はデフォルト設定）
@@ -9648,10 +9648,10 @@ export interface components {
      */
     CustomerItemImportRow: {
       /**
-       * External Product Code
+       * Customer Part No
        * @description Customer's product code
        */
-      external_product_code: string;
+      customer_part_no: string;
       /**
        * Maker Part Code
        * @description Internal product code (products.maker_part_code)
@@ -12000,10 +12000,10 @@ export interface components {
      */
     OcrImportLineRequest: {
       /**
-       * External Product Code
+       * Customer Part No
        * @description 先方品番（OCR読取値）
        */
-      external_product_code: string;
+      customer_part_no: string;
       /**
        * Jiku Code
        * @description 次区コード
@@ -12032,10 +12032,10 @@ export interface components {
        */
       row_no: number;
       /**
-       * External Product Code
+       * Customer Part No
        * @description 先方品番
        */
-      external_product_code: string;
+      customer_part_no: string;
       /**
        * Product Id
        * @description 解決された製品ID
@@ -12541,10 +12541,10 @@ export interface components {
        */
       status: string;
       /**
-       * External Product Code
+       * Customer Part No
        * @description OCR元の先方品番（変換前の生データ）
        */
-      external_product_code?: string | null;
+      customer_part_no?: string | null;
       /**
        * Shipping Document Text
        * @description 出荷表用テキスト
@@ -12688,10 +12688,10 @@ export interface components {
        */
       status: string;
       /**
-       * External Product Code
+       * Customer Part No
        * @description OCR元の先方品番（変換前の生データ）
        */
-      external_product_code?: string | null;
+      customer_part_no?: string | null;
       /**
        * Shipping Document Text
        * @description 出荷表用テキスト
@@ -22697,7 +22697,7 @@ export interface operations {
     parameters: {
       query: {
         customer_id: number;
-        external_product_code: string;
+        customer_part_no: string;
       };
       header?: never;
       path?: never;

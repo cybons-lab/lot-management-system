@@ -11,7 +11,7 @@ class CustomerItemDeliverySettingBase(BaseSchema):
     """Base schema for CustomerItemDeliverySetting."""
 
     customer_id: int
-    external_product_code: str
+    customer_part_no: str
     delivery_place_id: int | None = Field(
         default=None, description="納入先ID（NULLの場合はデフォルト設定）"
     )

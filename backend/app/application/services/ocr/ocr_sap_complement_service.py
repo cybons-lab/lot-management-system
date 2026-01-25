@@ -1,7 +1,7 @@
 """OCR→SAP変換用補完マスタ検索サービス.
 
 2段階検索ロジック:
-1. 完全一致検索（customer_code + jiku_code + external_product_code）
+1. 完全一致検索（customer_code + jiku_code + customer_part_no）
 2. 前方一致フォールバック（1件のみヒット時に採用）
 """
 

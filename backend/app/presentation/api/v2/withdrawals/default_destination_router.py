@@ -108,7 +108,7 @@ def get_default_destination(
                 "product_id": product_id,
                 "supplier_id": supplier_id,
                 "customer_id": customer_item.customer_id,
-                "external_product_code": customer_item.customer_part_no,
+                "customer_part_no": customer_item.customer_part_no,
             },
         )
         return DefaultDestinationResponse(
@@ -146,7 +146,7 @@ def get_default_destination(
                 "product_id": product_id,
                 "supplier_id": supplier_id,
                 "customer_id": customer.id,
-                "external_product_code": customer_item.customer_part_no,
+                "customer_part_no": customer_item.customer_part_no,
             },
         )
 

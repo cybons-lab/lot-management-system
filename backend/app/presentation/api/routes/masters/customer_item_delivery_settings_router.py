@@ -28,14 +28,14 @@ router = APIRouter(
 )
 def list_settings(
     customer_id: int,
-    external_product_code: str,
+    customer_part_no: str,
     db: Session = Depends(get_db),
 ) -> list[CustomerItemDeliverySettingResponse]:
     """List all delivery settings for a customer item."""
     service = CustomerItemDeliverySettingService(db)
     return service.list_by_customer_item(
         customer_id=customer_id,
-        external_product_code=external_product_code,
+        customer_part_no=customer_part_no,
     )
 
 

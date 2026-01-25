@@ -26,7 +26,7 @@ class CustomerItemDeliverySettingRepository:
     def find_by_customer_item(
         self,
         customer_id: int,
-        external_product_code: str,
+        customer_part_no: str,
     ) -> list[CustomerItemDeliverySetting]:
         """Find all settings for a customer item."""
         from sqlalchemy.orm import joinedload
@@ -37,7 +37,7 @@ class CustomerItemDeliverySettingRepository:
             .options(joinedload(CustomerItemDeliverySetting.delivery_place))
             .where(
                 CustomerItem.customer_id == customer_id,
-                CustomerItem.customer_part_no == external_product_code,
+                CustomerItem.customer_part_no == customer_part_no,
             )
         )
         return list(self.db.execute(stmt).scalars().all())
@@ -45,7 +45,7 @@ class CustomerItemDeliverySettingRepository:
     def find_matching_setting(
         self,
         customer_id: int,
-        external_product_code: str,
+        customer_part_no: str,
         delivery_place_id: int | None = None,
         jiku_code: str | None = None,
     ) -> CustomerItemDeliverySetting | None:
@@ -62,7 +62,7 @@ class CustomerItemDeliverySettingRepository:
             .join(CustomerItem)
             .where(
                 CustomerItem.customer_id == customer_id,
-                CustomerItem.customer_part_no == external_product_code,
+                CustomerItem.customer_part_no == customer_part_no,
             )
         )
 
@@ -98,21 +98,21 @@ class CustomerItemDeliverySettingRepository:
     def get_customer_item_template(
         self,
         customer_id: int,
-        external_product_code: str,
+        customer_part_no: str,
     ) -> str | None:
         """Get the shipping_document_template from customer_items as fallback."""
         stmt = select(CustomerItem.shipping_document_template).where(
             CustomerItem.customer_id == customer_id,
-            CustomerItem.customer_part_no == external_product_code,
+            CustomerItem.customer_part_no == customer_part_no,
         )
         return cast(str | None, self.db.execute(stmt).scalar_one_or_none())
 
-    def find_external_product_code(
+    def find_customer_part_no(
         self,
         customer_id: int,
         product_id: int,
     ) -> str | None:
-        """Get external_product_code from customer_items by customer_id and product_id."""
+        """Get customer_part_no from customer_items by customer_id and product_id."""
         stmt = select(CustomerItem.customer_part_no).where(
             CustomerItem.customer_id == customer_id,
             CustomerItem.product_id == product_id,
