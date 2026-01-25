@@ -30,7 +30,8 @@ interface InventoryTableProps {
 }
 
 /** 複合キー生成 */
-const getItemKey = (item: InventoryItem) => `${item.product_id}-${item.warehouse_id}`;
+const getItemKey = (item: InventoryItem) =>
+  `${item.supplier_id ?? "all"}-${item.product_id}-${item.warehouse_id}`;
 
 // eslint-disable-next-line max-lines-per-function
 export function InventoryTable({

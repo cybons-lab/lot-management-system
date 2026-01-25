@@ -178,7 +178,6 @@ class WithdrawalService:
                     LotMaster.lot_number.ilike(term),
                     Product.maker_part_code.ilike(term),
                     Product.product_name.ilike(term),
-                    Product.maker_item_code.ilike(term),
                     Customer.customer_name.ilike(term),
                     DeliveryPlace.delivery_place_name.ilike(term),
                     Withdrawal.reference_number.ilike(term),

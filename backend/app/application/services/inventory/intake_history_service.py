@@ -115,7 +115,6 @@ class IntakeHistoryService:
                     LotMaster.lot_number.ilike(term),
                     Product.maker_part_code.ilike(term),
                     Product.product_name.ilike(term),
-                    Product.maker_item_code.ilike(term),
                     Supplier.supplier_name.ilike(term),
                     Warehouse.warehouse_name.ilike(term),
                 )
