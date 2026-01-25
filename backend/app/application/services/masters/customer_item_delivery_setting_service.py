@@ -103,16 +103,12 @@ class CustomerItemDeliverySettingService:
         settings = self.db.query(CustomerItemDeliverySetting).all()
         return [CustomerItemDeliverySettingResponse.model_validate(s) for s in settings]
 
-    def list_by_customer_item(
+    def list_by_customer_item_id(
         self,
-        customer_id: int,
-        customer_part_no: str,
+        customer_item_id: int,
     ) -> list[CustomerItemDeliverySettingResponse]:
-        """List all settings for a customer item."""
-        settings = self.repository.find_by_customer_item(
-            customer_id=customer_id,
-            customer_part_no=customer_part_no,
-        )
+        """List all settings for a customer item by ID."""
+        settings = self.repository.find_by_customer_item_id(customer_item_id)
         return [CustomerItemDeliverySettingResponse.model_validate(s) for s in settings]
 
     def create(
@@ -120,9 +116,9 @@ class CustomerItemDeliverySettingService:
         data: CustomerItemDeliverySettingCreate,
     ) -> CustomerItemDeliverySettingResponse:
         """Create a new delivery setting."""
+        # Use SSOT: data.customer_item_id is available from schema
         setting = CustomerItemDeliverySetting(
-            customer_id=data.customer_id,
-            customer_part_no=data.customer_part_no,
+            customer_item_id=data.customer_item_id,
             delivery_place_id=data.delivery_place_id,
             jiku_code=data.jiku_code,
             shipment_text=data.shipment_text,

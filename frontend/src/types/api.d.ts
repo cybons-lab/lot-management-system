@@ -3886,6 +3886,8 @@ export interface paths {
     /**
      * List Settings
      * @description List all delivery settings for a customer item.
+     *
+     *     Lookup by customer_item_id (SSOT).
      */
     get: operations["list_settings_api_masters_customer_item_delivery_settings__get"];
     put?: never;
@@ -9509,10 +9511,11 @@ export interface components {
      * @description Schema for creating a CustomerItemDeliverySetting.
      */
     CustomerItemDeliverySettingCreate: {
-      /** Customer Id */
-      customer_id: number;
-      /** Customer Part No */
-      customer_part_no: string;
+      /**
+       * Customer Item Id
+       * @description 得意先品番マッピングID
+       */
+      customer_item_id: number;
       /**
        * Delivery Place Id
        * @description 納入先ID（NULLの場合はデフォルト設定）
@@ -9560,10 +9563,11 @@ export interface components {
      * @description Response schema for CustomerItemDeliverySetting.
      */
     CustomerItemDeliverySettingResponse: {
-      /** Customer Id */
-      customer_id: number;
-      /** Customer Part No */
-      customer_part_no: string;
+      /**
+       * Customer Item Id
+       * @description 得意先品番マッピングID
+       */
+      customer_item_id: number;
       /**
        * Delivery Place Id
        * @description 納入先ID（NULLの場合はデフォルト設定）
@@ -22686,8 +22690,8 @@ export interface operations {
   list_settings_api_masters_customer_item_delivery_settings__get: {
     parameters: {
       query: {
-        customer_id: number;
-        customer_part_no: string;
+        /** @description 得意先品番マッピングID */
+        customer_item_id: number;
       };
       header?: never;
       path?: never;
