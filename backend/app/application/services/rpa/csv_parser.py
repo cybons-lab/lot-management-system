@@ -222,7 +222,9 @@ SAMPLE_CSV = """ステータス,出荷先,層別,材質コード,納期,納入�
 
 
 if __name__ == "__main__":
+    import pprint
+
     # Test with sample CSV
     results = parse_material_delivery_csv(SAMPLE_CSV.encode("utf-8"))
     for row in results:
-        print(row)
+        pprint.pprint(row)
