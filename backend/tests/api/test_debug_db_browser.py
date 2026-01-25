@@ -43,7 +43,9 @@ def test_db_browser_rows_missing_table_returns_404(
     assert response.status_code == 404
 
 
-def test_db_browser_disabled_returns_404(client: TestClient, superuser_token_headers: dict[str, str]):
+def test_db_browser_disabled_returns_404(
+    client: TestClient, superuser_token_headers: dict[str, str]
+):
     original_value = settings.ENABLE_DB_BROWSER
     settings.ENABLE_DB_BROWSER = False
     os.environ["ENABLE_DB_BROWSER"] = "false"

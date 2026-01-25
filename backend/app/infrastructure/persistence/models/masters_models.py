@@ -403,12 +403,6 @@ class Product(SoftDeleteMixin, Base):
         Numeric(10, 4), nullable=False, server_default="1.0"
     )  # e.g. 20.0 (1 CAN = 20 KG)
     # External part numbers
-    customer_part_no: Mapped[str | None] = mapped_column(
-        String(100), nullable=True, comment="先方品番（得意先の品番）"
-    )
-    maker_item_code: Mapped[str | None] = mapped_column(
-        String(100), nullable=True, comment="メーカー品番（仕入先の品番）"
-    )
     # Decision D1: Frequency/Scale of demand
     qty_scale: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="1", comment="数量スケール（1=通常, 10=小ロット等）"

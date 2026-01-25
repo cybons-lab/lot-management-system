@@ -5,6 +5,35 @@ Phase 2 完了後に残存する課題を管理するファイル。
 
 ---
 
+## P0: Phase 3 Close-out (Current)
+
+### 1. maker_item_code 内部検索参照の整理 (Phase 4) [x]
+
+**目的**: `products.maker_item_code` カラムを削除するために、アプリケーションコードからの参照を除去する。
+
+**対象ファイル**:
+- `backend/app/application/services/inventory/intake_history_service.py`
+- `backend/app/application/services/inventory/withdrawal_service.py`
+
+**対応内容**:
+- 検索条件 (`ilike`) から `maker_item_code` を削除する。
+- `maker_part_code` (新カラム) が既に検索条件に含まれているため、単純削除で良い。
+- `Product.maker_item_code` を参照している行を削除。
+
+### 2. Legacy DB列のDROP (Phase 4/5) [x]
+
+**目的**: 使用されなくなった `products` テーブルのカラムを物理削除する。
+
+**対象カラム**:
+- `products.maker_item_code`
+- `products.customer_part_no`
+
+**対応内容**:
+- Alembic マイグレーションを作成して `DROP COLUMN` を実行。
+- SQLAlchemy モデル (`masters_models.py`) から定義を削除。
+
+---
+
 ## P1: Phase 2-2 で対応予定
 
 ### 1. customer_items API テスト修正
@@ -38,6 +67,8 @@ Phase 2 完了後に残存する課題を管理するファイル。
 
 ### 1. customer_part_no 残存参照のクリーンアップ
 
+**備考**: 今回の Phase 3 Close-out で `products.customer_part_no` は削除されるが、他の参照箇所（もしあれば）を確認する。
+
 **残存ファイル数**: 34件 (grep結果)
 
 **カテゴリ別内訳**:
@@ -56,9 +87,6 @@ Phase 2 完了後に残存する課題を管理するファイル。
 - `app/application/services/ocr/ocr_import_service.py`
 
 **方針**: Phase 3 でAPI互換性を維持しつつ段階的にリネーム。フロントエンドとの同期が必要。
-
----
-
 
 ---
 
