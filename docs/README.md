@@ -16,9 +16,10 @@
 | | [testing/test_strategy.md](development/testing/test_strategy.md) | テスト戦略、観点 |
 | **Operations (運用)** | [runbook.md](operations/runbook.md) | 運用手順（監視、データ補正） |
 | | [troubleshooting.md](operations/troubleshooting.md) | トラブルシューティングガイド |
-| **Project (案件管理)** | [plans/backlog/backlog.md](project/plans/backlog/backlog.md) | 未完了タスクのバックログ |
+| **Project (案件管理)** | [BACKLOG.md](project/BACKLOG.md) | **統合版** 未完了タスクのバックログ |
 | | [plans/ui_and_lifecycle_plan.md](project/plans/ui_and_lifecycle_plan.md) | 開発計画・ロードマップ |
 | **Features (機能別)** | [rpa/material_delivery_note_overview.md](features/rpa/material_delivery_note_overview.md) | 各機能固有の仕様・設計 |
+| **Archive (アーカイブ)** | [archive/README.md](archive/README.md) | 実装済み・陳腐化したドキュメント (参照用) |
 
 ## 読み進め方
 

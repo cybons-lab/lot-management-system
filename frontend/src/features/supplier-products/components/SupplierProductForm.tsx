@@ -102,7 +102,7 @@ export function SupplierProductForm({
                 <SelectContent>
                   {products.map((p) => (
                     <SelectItem key={p.id} value={String(p.id)}>
-                      {p.maker_item_code || p.product_code} - {p.product_name}
+                      {p.product_code} - {p.product_name}
                     </SelectItem>
                   ))}
                 </SelectContent>

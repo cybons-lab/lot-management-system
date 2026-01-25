@@ -65,6 +65,7 @@ if TYPE_CHECKING:
         Supplier,
         Warehouse,
     )
+    from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
     from app.infrastructure.persistence.models.withdrawal_line_model import WithdrawalLine
 
 
@@ -125,6 +126,14 @@ class LotReceipt(Base):
         BigInteger,
         ForeignKey("expected_lots.id", ondelete="SET NULL"),
         nullable=True,
+    )
+
+    # B-Plan: supplier_item_id (SSOT for supplier item reference)
+    supplier_item_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("supplier_items.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="仕入先品目ID (SSOT)",
     )
 
     # Receipt details
@@ -222,6 +231,7 @@ class LotReceipt(Base):
         Index("idx_lot_receipts_warehouse", "warehouse_id"),
         Index("idx_lot_receipts_origin_type", "origin_type"),
         Index("idx_lot_receipts_lot_master_warehouse", "lot_master_id", "warehouse_id"),
+        Index("idx_lot_receipts_supplier_item", "supplier_item_id"),
         Index(
             "idx_lot_receipts_expiry_date",
             "expiry_date",
@@ -253,6 +263,9 @@ class LotReceipt(Base):
     product: Mapped[Product] = relationship("Product", back_populates="lot_receipts")
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lot_receipts")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_receipts")
+    supplier_item: Mapped[SupplierItem | None] = relationship(
+        "SupplierItem", back_populates="lot_receipts"
+    )
     expected_lot: Mapped[ExpectedLot | None] = relationship(
         "ExpectedLot", back_populates="lot_receipt", uselist=False
     )

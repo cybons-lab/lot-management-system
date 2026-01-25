@@ -89,8 +89,7 @@ export function ProductsListPage() {
     return products.filter(
       (p) =>
         p.product_code.toLowerCase().includes(query) ||
-        p.product_name.toLowerCase().includes(query) ||
-        (p.maker_item_code?.toLowerCase() ?? "").includes(query),
+        p.product_name.toLowerCase().includes(query),
     );
   }, [products, searchQuery]);
 
@@ -203,7 +202,7 @@ export function ProductsListPage() {
     return (
       <div className={styles.root}>
         <PageHeader
-          title="商品マスタ"
+          title="商品構成マスタ"
           subtitle="商品の作成・編集・削除、一括インポート/エクスポート"
           backLink={{ to: "/masters", label: "マスタ管理" }}
         />
@@ -215,8 +214,8 @@ export function ProductsListPage() {
   return (
     <div className={styles.root}>
       <PageHeader
-        title="商品マスタ"
-        subtitle="商品の作成・編集・削除、一括インポート/エクスポート"
+        title="商品構成マスタ"
+        subtitle="商品グループの定義・管理"
         backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
           <MasterPageActions
@@ -242,7 +241,7 @@ export function ProductsListPage() {
 
       <div className={styles.tableContainer}>
         <div className={styles.tableHeader}>
-          <h3 className={styles.tableTitle}>商品一覧</h3>
+          <h3 className={styles.tableTitle}>商品構成一覧</h3>
           <div className={styles.tableActions}>
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -294,7 +293,7 @@ export function ProductsListPage() {
           getRowId={(row) => row.product_code}
           onRowClick={handleRowClick}
           isLoading={isLoading}
-          emptyMessage="商品が登録されていません"
+          emptyMessage="商品グループが登録されていません"
           selectable
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
@@ -314,7 +313,7 @@ export function ProductsListPage() {
       <Dialog open={isCreateOpen} onOpenChange={(open) => !open && close()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>商品新規登録</DialogTitle>
+            <DialogTitle>商品グループ新規登録</DialogTitle>
           </DialogHeader>
           <ProductForm onSubmit={handleCreate} onCancel={close} isSubmitting={isCreating} />
         </DialogContent>
@@ -325,7 +324,7 @@ export function ProductsListPage() {
       <SoftDeleteDialog
         open={isSoftDeleteOpen}
         onOpenChange={(open) => !open && close()}
-        title="商品を無効化しますか？"
+        title="商品グループを無効化しますか？"
         description={`${deletingItem?.product_name}（${deletingItem?.product_code}）を無効化します。`}
         onConfirm={handleSoftDelete}
         isPending={isSoftDeleting}
@@ -337,7 +336,7 @@ export function ProductsListPage() {
         onOpenChange={(open) => !open && close()}
         onConfirm={handlePermanentDelete}
         isPending={isPermanentDeleting}
-        title="商品を完全に削除しますか？"
+        title="商品グループを完全に削除しますか？"
         description={`${deletingItem?.product_name} を完全に削除します。`}
         confirmationPhrase={deletingItem?.product_code || "delete"}
       />
@@ -347,7 +346,7 @@ export function ProductsListPage() {
         onOpenChange={(open) => !open && close()}
         onConfirm={handleRestore}
         isPending={isRestoring}
-        title="商品を復元しますか？"
+        title="商品グループを復元しますか？"
         description={`${restoringItem?.product_name} を有効状態に戻します。`}
       />
 
@@ -359,8 +358,8 @@ export function ProductsListPage() {
           selectedCount={selectedIds.length}
           onConfirm={executeBulkPermanentDelete}
           isPending={isBulkDeleting}
-          title="選択した商品を完全に削除しますか？"
-          description={`選択された ${selectedIds.length} 件の商品を完全に削除します。`}
+          title="選択した商品グループを完全に削除しますか？"
+          description={`選択された ${selectedIds.length} 件の商品グループを完全に削除します。`}
         />
       ) : (
         <BulkSoftDeleteDialog
@@ -369,8 +368,8 @@ export function ProductsListPage() {
           selectedCount={selectedIds.length}
           onConfirm={executeBulkSoftDelete}
           isPending={isBulkDeleting}
-          title="選択した商品を無効化しますか？"
-          description={`選択された ${selectedIds.length} 件の商品を無効化します。`}
+          title="選択した商品グループを無効化しますか？"
+          description={`選択された ${selectedIds.length} 件の商品グループを無効化します。`}
         />
       )}
       <ProductDetailDialog

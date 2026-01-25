@@ -1,6 +1,8 @@
 /**
  * Customer Item Delivery Settings API
  * 得意先品番-納入先別設定のAPI関数
+ *
+ * Updated: customer_item_id ベースに移行
  */
 
 import { http } from "@/shared/api/http-client";
@@ -8,8 +10,7 @@ import { http } from "@/shared/api/http-client";
 // Types
 export interface CustomerItemDeliverySetting {
   id: number;
-  customer_id: number;
-  external_product_code: string;
+  customer_item_id: number;
   delivery_place_id: number | null;
   jiku_code: string | null;
   shipment_text: string | null;
@@ -24,8 +25,7 @@ export interface CustomerItemDeliverySetting {
 }
 
 export interface CreateDeliverySettingRequest {
-  customer_id: number;
-  external_product_code: string;
+  customer_item_id: number;
   delivery_place_id?: number | null;
   jiku_code?: string | null;
   shipment_text?: string | null;
@@ -51,11 +51,10 @@ export interface UpdateDeliverySettingRequest {
 const BASE_PATH = "masters/customer-item-delivery-settings";
 
 export async function fetchDeliverySettings(
-  customerId: number,
-  externalProductCode: string,
+  customerItemId: number,
 ): Promise<CustomerItemDeliverySetting[]> {
   return http.get<CustomerItemDeliverySetting[]>(
-    `${BASE_PATH}/?customer_id=${customerId}&external_product_code=${encodeURIComponent(externalProductCode)}`,
+    `${BASE_PATH}/?customer_item_id=${customerItemId}`,
   );
 }
 

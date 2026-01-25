@@ -344,10 +344,10 @@ export function Step4DetailPage() {
                     <TableCell className="text-sm">{item.item_no || "-"}</TableCell>
                     <TableCell>{item.row_no}</TableCell>
                     <TableCell className="text-sm">{item.status || "-"}</TableCell>
-                    <TableCell>{item.jiku_code || item.destination}</TableCell>
+                    <TableCell>{item.jiku_code}</TableCell>
                     <TableCell>{item.layer_code}</TableCell>
                     <TableCell className="text-sm">{item.maker_name}</TableCell>
-                    <TableCell>{item.external_product_code || item.material_code}</TableCell>
+                    <TableCell>{item.customer_part_no}</TableCell>
                     <TableCell>
                       {item.delivery_date ? format(new Date(item.delivery_date), "MM/dd") : ""}
                     </TableCell>

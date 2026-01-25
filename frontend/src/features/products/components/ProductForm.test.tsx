@@ -18,16 +18,12 @@ describe("ProductForm", () => {
     render(<ProductForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
     // 商品コードは新規作成時も表示される（プレースホルダー付き）
-    expect(screen.getByLabelText(/商品コード/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/メーカー品番$/)).toBeInTheDocument();
 
     expect(screen.getByLabelText(/商品名/)).toBeInTheDocument();
     expect(screen.getByLabelText(/社内単位/)).toBeInTheDocument();
     expect(screen.getByLabelText(/外部単位/)).toBeInTheDocument();
     expect(screen.getByLabelText(/内部単位あたりの数量/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/先方品番/)).toBeInTheDocument();
-
-    // メーカー品目コードは「メーカー品番」というラベルになった
-    expect(screen.getByLabelText(/^メーカー品番/)).toBeInTheDocument();
 
     expect(screen.getByLabelText(/有効/)).toBeInTheDocument();
   });
@@ -40,8 +36,6 @@ describe("ProductForm", () => {
 
     await waitFor(() => {
       expect(screen.getByText("商品名は必須です")).toBeInTheDocument();
-      expect(screen.getByText("先方品番は必須です")).toBeInTheDocument();
-      expect(screen.getByText("メーカー品番は必須です")).toBeInTheDocument();
     });
   });
 
@@ -51,8 +45,6 @@ describe("ProductForm", () => {
     fireEvent.change(screen.getByLabelText(/商品名/), { target: { value: "Test Product" } });
     fireEvent.change(screen.getByLabelText(/社内単位/), { target: { value: "BOX" } });
     fireEvent.change(screen.getByLabelText(/外部単位/), { target: { value: "KG" } });
-    fireEvent.change(screen.getByLabelText(/先方品番/), { target: { value: "CUST-001" } });
-    fireEvent.change(screen.getByLabelText(/^メーカー品番/), { target: { value: "MAKER-001" } });
 
     const qtyInput = screen.getByLabelText(/内部単位あたりの数量/);
     fireEvent.change(qtyInput, { target: { value: "10" } });
@@ -71,8 +63,6 @@ describe("ProductForm", () => {
           internal_unit: "BOX",
           external_unit: "KG",
           qty_per_internal_unit: 10,
-          customer_part_no: "CUST-001",
-          maker_item_code: "MAKER-001",
           is_active: true,
         }),
       );
@@ -91,9 +81,7 @@ describe("ProductForm", () => {
       created_at: "2023-01-01",
       updated_at: "2023-01-01",
       supplier_ids: [],
-      customer_part_no: "CP-123",
       maker_part_code: "P20230101", // システム上のメーカー品番（製品コードと同じ）
-      maker_item_code: "MK-456", // 画面上のメーカー品番
       valid_to: "9999-12-31",
       base_unit: "EA",
       consumption_limit_days: 90,
@@ -101,13 +89,11 @@ describe("ProductForm", () => {
 
     render(<ProductForm product={product} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
-    expect(screen.getByLabelText(/商品コード/)).toHaveValue("EDIT-001"); // 編集モードでのみ表示
+    expect(screen.getByLabelText(/メーカー品番$/)).toHaveValue("EDIT-001"); // 編集モードでのみ表示
     expect(screen.getByLabelText(/商品名/)).toHaveValue("Edit Product");
     expect(screen.getByLabelText(/社内単位/)).toHaveValue("EA");
     expect(screen.getByLabelText(/外部単位/)).toHaveValue("CS");
     expect(screen.getByLabelText(/内部単位あたりの数量/)).toHaveValue(12);
-    expect(screen.getByLabelText(/先方品番/)).toHaveValue("CP-123");
-    expect(screen.getByLabelText(/^メーカー品番/)).toHaveValue("MK-456"); // maker_item_code
     expect(screen.getByLabelText(/有効/)).not.toBeChecked();
 
     expect(screen.getByRole("button", { name: /更新/ })).toBeInTheDocument();

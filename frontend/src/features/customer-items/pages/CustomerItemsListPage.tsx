@@ -3,6 +3,8 @@
  * 得意先品番マッピング一覧ページ
  * useListPageDialogsを使用してダイアログ状態を管理
  * 一括削除機能対応版
+ *
+ * Updated: サロゲートキー（id）ベースに移行
  */
 import { Package, Plus, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -32,17 +34,8 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { useListPageDialogs } from "@/hooks/ui";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-/** CustomerItem用の一意キー生成 */
-const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.external_product_code}`;
-
-/** キーをパース */
-const parseItemKey = (key: string) => {
-  const [customerIdStr, ...rest] = key.split("-");
-  return {
-    customer_id: Number(customerIdStr),
-    external_product_code: rest.join("-"),
-  };
-};
+/** CustomerItem用の一意キー生成 (サロゲートキーID使用) */
+const getItemKey = (item: CustomerItem) => item.id.toString();
 
 export function CustomerItemsListPage() {
   const {
@@ -117,8 +110,7 @@ export function CustomerItemsListPage() {
     if (!editingItem) return;
     updateCustomerItem(
       {
-        customerId: editingItem.customer_id,
-        externalProductCode: editingItem.external_product_code,
+        id: editingItem.id,
         data,
       },
       {
@@ -136,23 +128,19 @@ export function CustomerItemsListPage() {
 
   const executeSoftDelete = (endDate: string | null) => {
     if (!deletingItem) return;
-    handleSoftDelete(
-      deletingItem.customer_id,
-      deletingItem.external_product_code,
-      endDate || undefined,
-    );
+    handleSoftDelete(deletingItem.id, endDate || undefined);
     closeDeleteDialog();
   };
 
   const executePermanentDelete = () => {
     if (!deletingItem) return;
-    handlePermanentDelete(deletingItem.customer_id, deletingItem.external_product_code);
+    handlePermanentDelete(deletingItem.id);
     closeDeleteDialog();
   };
 
   const executeRestore = () => {
     if (!restoringItem) return;
-    handleRestore(restoringItem.customer_id, restoringItem.external_product_code);
+    handleRestore(restoringItem.id);
     closeDeleteDialog();
   };
 
@@ -188,18 +176,16 @@ export function CustomerItemsListPage() {
 
   // 管理者: 一括物理削除
   const executeBulkPermanentDelete = async () => {
-    const keys = Array.from(selectedIds) as string[];
-    const items = keys.map(parseItemKey);
-    await handleBulkPermanentDelete(items);
+    const ids = Array.from(selectedIds).map((id) => ({ id: Number(id) }));
+    await handleBulkPermanentDelete(ids);
     setSelectedIds(new Set());
     setIsBulkDeleteDialogOpen(false);
   };
 
   // 非管理者: 一括論理削除
   const executeBulkSoftDelete = async (endDate: string | null) => {
-    const keys = Array.from(selectedIds) as string[];
-    const items = keys.map(parseItemKey);
-    await handleBulkSoftDelete(items, endDate ?? undefined);
+    const ids = Array.from(selectedIds).map((id) => ({ id: Number(id) }));
+    await handleBulkSoftDelete(ids, endDate ?? undefined);
     setSelectedIds(new Set());
     setIsBulkDeleteDialogOpen(false);
   };
@@ -212,8 +198,8 @@ export function CustomerItemsListPage() {
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
       <PageHeader
-        title="得意先品番マッピング"
-        subtitle="得意先品番と製品の紐付け管理"
+        title="先方品番マスタ"
+        subtitle="得意先品番とメーカー品番の紐付け管理"
         backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
           <div className="flex gap-2">
@@ -361,7 +347,7 @@ export function CustomerItemsListPage() {
         isPending={isPermanentDeleting}
         title="マッピングを完全に削除しますか？"
         description={`${deletingItem?.customer_name} - ${deletingItem?.product_name} の設定を完全に削除します。この操作は取り消せません。`}
-        confirmationPhrase={deletingItem?.external_product_code || "delete"}
+        confirmationPhrase={deletingItem?.customer_part_no || "delete"}
       />
 
       <RestoreDialog

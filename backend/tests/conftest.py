@@ -3,7 +3,7 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 
@@ -56,6 +56,13 @@ def db_engine():
 
     print("DEBUG: Conftest - Imported Models.")
     print(f"DEBUG: Base.metadata.tables keys: {list(Base.metadata.tables.keys())}")
+
+    # Force reset schema to ensure models are synced (drop old tables if exist)
+    # Use CASCADE to handle dependencies even for tables not in metadata (orphaned)
+    with engine.connect() as conn:
+        conn.execute(text("DROP SCHEMA public CASCADE;"))
+        conn.execute(text("CREATE SCHEMA public;"))
+        conn.commit()
 
     create_core_tables(engine)
 

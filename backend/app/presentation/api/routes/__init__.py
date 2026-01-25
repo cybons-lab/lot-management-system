@@ -50,7 +50,7 @@ from app.presentation.api.routes.masters import (
     product_mappings_router,
     products_router,
     status_router,
-    supplier_products_router,
+    supplier_items_router,
     suppliers_router,
     uom_conversions_router,
     warehouse_delivery_routes_router,
@@ -120,7 +120,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(delivery_places_router, prefix=masters_prefix)
     app.include_router(products_router, prefix=masters_prefix)
     app.include_router(suppliers_router, prefix=masters_prefix)
-    app.include_router(supplier_products_router, prefix=masters_prefix)
+    app.include_router(supplier_items_router, prefix=masters_prefix)
     app.include_router(uom_conversions_router, prefix=masters_prefix)
     app.include_router(warehouses_router, prefix=masters_prefix)
     app.include_router(customer_items_router, prefix=masters_prefix)
@@ -184,7 +184,7 @@ __all__ = [
     "customers_router",
     "product_mappings_router",
     "products_router",
-    "supplier_products_router",
+    "supplier_items_router",
     "suppliers_router",
     "uom_conversions_router",
     "warehouse_delivery_routes_router",

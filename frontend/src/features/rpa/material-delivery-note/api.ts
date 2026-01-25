@@ -10,13 +10,10 @@ export interface RpaRunItem {
   id: number;
   row_no: number;
   status: string | null;
-  // フィールド名統一: jiku_code (表示名: 出荷先)
   jiku_code: string | null;
-  destination?: string | null; // 後方互換用alias
   layer_code: string | null;
-  // フィールド名統一: external_product_code (表示名: 材質コード)
-  external_product_code: string | null;
-  material_code?: string | null; // 後方互換用alias
+  /** 得意先品番 (表示名: 材質コード) */
+  customer_part_no: string | null;
   delivery_date: string | null;
   delivery_quantity: number | null;
   shipping_vehicle: string | null;

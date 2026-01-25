@@ -143,14 +143,14 @@ class OcrImportService:
         product_id, match_type, message = self.complement_service.resolve_product_id(
             customer_code="",  # customer_idで直接検索するため不要
             jiku_code=line.jiku_code,
-            external_product_code=line.external_product_code,
+            customer_part_no=line.customer_part_no,
         )
 
         # customer_idから直接検索するバージョン
         result = self.complement_service.find_complement(
             customer_code=self._get_customer_code(customer_id),
             jiku_code=line.jiku_code,
-            external_product_code=line.external_product_code,
+            customer_part_no=line.customer_part_no,
         )
 
         # 納入先を解決（次区コードから）
@@ -160,7 +160,7 @@ class OcrImportService:
         order_line = OrderLine(
             order_id=order_id,
             product_id=result.product_id,  # NULLの場合もあり
-            external_product_code=line.external_product_code,
+            customer_part_no=line.customer_part_no,
             delivery_date=line.delivery_date,
             order_quantity=line.quantity,
             unit="KG",  # デフォルト単位（後でマスタから取得に変更可能）
@@ -174,7 +174,7 @@ class OcrImportService:
         status = "resolved" if result.product_id else "unresolved"
         return OcrImportLineResult(
             row_no=row_no,
-            external_product_code=line.external_product_code,
+            customer_part_no=line.customer_part_no,
             product_id=result.product_id,
             match_type=result.match_type.value,
             status=status,

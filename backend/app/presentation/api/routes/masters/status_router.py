@@ -1,7 +1,7 @@
 """Master status router."""
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.assignments.assignment_models import (
@@ -13,7 +13,7 @@ from app.infrastructure.persistence.models.masters_models import (
     CustomerItemDeliverySetting,
     Product,
 )
-from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import get_current_user
 
@@ -34,27 +34,23 @@ def get_master_status(
         .scalar()
     )
 
-    # 2. Unmapped Products (No supplier assigned in ProductSupplier)
-    # products table LEFT JOIN product_suppliers table
+    # 2. Unmapped Products (No supplier assigned in SupplierItem)
+    # products table LEFT JOIN supplier_items table
     unmapped_products_count = (
         db.query(func.count(Product.id))
-        .outerjoin(ProductSupplier, Product.id == ProductSupplier.product_id)
-        .filter(ProductSupplier.id.is_(None))
+        .outerjoin(SupplierItem, Product.id == SupplierItem.product_id)
+        .filter(SupplierItem.id.is_(None))
         .scalar()
     )
 
     # 3. Unmapped Customer Item Delivery Settings
     # customer_items table LEFT JOIN customer_item_delivery_settings
-    # JOIN condition: customer_id AND external_product_code
+    # JOIN condition: customer_item_id (after migration)
     unmapped_customer_item_delivery_settings_count = (
-        db.query(func.count(CustomerItem.customer_id))
+        db.query(func.count(CustomerItem.id))
         .outerjoin(
             CustomerItemDeliverySetting,
-            and_(
-                CustomerItem.customer_id == CustomerItemDeliverySetting.customer_id,
-                CustomerItem.external_product_code
-                == CustomerItemDeliverySetting.external_product_code,
-            ),
+            CustomerItem.id == CustomerItemDeliverySetting.customer_item_id,
         )
         .filter(
             CustomerItemDeliverySetting.id.is_(None),

@@ -71,7 +71,7 @@ export function useSupplierProductsPageState() {
   // Maps for efficient lookups
   const productMap = useMemo(() => {
     return new Map(
-      products.map((p) => [p.id, { code: p.maker_item_code || "", name: p.product_name }]),
+      products.map((p) => [p.id, { code: p.product_code || "", name: p.product_name }]),
     );
   }, [products]);
 

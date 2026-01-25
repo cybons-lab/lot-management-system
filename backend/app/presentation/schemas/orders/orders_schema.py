@@ -121,7 +121,7 @@ class OrderLineBase(BaseSchema):
     )
 
     # OCR取込情報
-    external_product_code: str | None = Field(
+    customer_part_no: str | None = Field(
         None, max_length=100, description="OCR元の先方品番（変換前の生データ）"
     )
 

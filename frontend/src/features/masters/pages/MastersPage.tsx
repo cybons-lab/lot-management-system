@@ -34,70 +34,77 @@ interface MasterSection {
 
 const masterSections: MasterSection[] = [
   {
-    title: "基本マスタ",
-    description: "単独で管理する基礎データ",
+    title: "品番・品目管理 (Items & Materials)",
+    description: "製品・品番に関するマスタデータを管理",
     links: [
       {
-        title: "得意先マスタ",
-        description: "得意先の基本情報を管理",
-        href: ROUTES.MASTERS.CUSTOMERS,
-        icon: Users,
-        color: "bg-blue-50 text-blue-600 hover:bg-blue-100",
-      },
-      {
-        title: "納入先マスタ",
-        description: "納入先の基本情報を管理",
-        href: "/delivery-places",
-        icon: Database,
-        color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
-      },
-      {
-        title: "倉庫マスタ",
-        description: "倉庫の基本情報を管理",
-        href: ROUTES.MASTERS.WAREHOUSES,
-        icon: Warehouse,
-        color: "bg-purple-50 text-purple-600 hover:bg-purple-100",
-      },
-      {
-        title: "商品マスタ",
-        description: "社内基準の商品情報を管理",
-        href: ROUTES.MASTERS.PRODUCTS,
+        title: "メーカー品番マスタ",
+        description: "仕入先から購入する製品・原材料（在庫の基準）を管理",
+        href: "/masters/supplier-products",
         icon: Package,
-        color: "bg-green-50 text-green-600 hover:bg-green-100",
-      },
-      {
-        title: "仕入先マスタ",
-        description: "仕入先の基本情報を管理",
-        href: ROUTES.MASTERS.SUPPLIERS,
-        icon: Building2,
         color: "bg-orange-50 text-orange-600 hover:bg-orange-100",
       },
-    ],
-  },
-  {
-    title: "マッピングマスタ",
-    description: "得意先/仕入先と商品の紐付けを管理",
-    links: [
       {
-        title: "得意先品番マッピング",
-        description: "得意先品番と商品/仕入先の紐付け",
+        title: "先方品番マスタ",
+        description: "得意先の注文書に記載される品番（変換ルール）を管理",
         href: ROUTES.MASTERS.CUSTOMER_ITEMS,
         icon: Database,
         color: "bg-teal-50 text-teal-600 hover:bg-teal-100",
       },
       {
-        title: "仕入先別商品設定",
-        description: "商品と仕入先の関係・主取引先設定",
-        href: "/masters/supplier-products",
+        title: "商品構成マスタ",
+        description: "複数のメーカー品番を束ねるグループ定義・分類を管理",
+        href: ROUTES.MASTERS.PRODUCTS,
         icon: Database,
-        color: "bg-cyan-50 text-cyan-600 hover:bg-cyan-100",
+        color: "bg-green-50 text-green-600 hover:bg-green-100",
       },
     ],
   },
   {
-    title: "変換・設定",
-    description: "商品に紐づく単位や担当の設定",
+    title: "取引先・拠点 (Partners & Locations)",
+    description: "仕入先・得意先および拠点情報を管理",
     links: [
+      {
+        title: "仕入先マスタ",
+        description: "仕入先の基本情報を管理（担当者設定を含む）",
+        href: ROUTES.MASTERS.SUPPLIERS,
+        icon: Building2,
+        color: "bg-blue-50 text-blue-600 hover:bg-blue-100",
+      },
+      {
+        title: "得意先マスタ",
+        description: "得意先の基本情報や納入ルールを管理",
+        href: ROUTES.MASTERS.CUSTOMERS,
+        icon: Users,
+        color: "bg-indigo-50 text-indigo-600 hover:bg-indigo-100",
+      },
+      {
+        title: "納入先マスタ",
+        description: "納入先の基本情報を管理",
+        href: "/delivery-places",
+        icon: Truck,
+        color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
+      },
+      {
+        title: "倉庫マスタ",
+        description: "自社倉庫の基本情報を管理",
+        href: ROUTES.MASTERS.WAREHOUSES,
+        icon: Warehouse,
+        color: "bg-purple-50 text-purple-600 hover:bg-purple-100",
+      },
+    ],
+  },
+  {
+    title: "システム・設定 (System & Config)",
+    description: "システム制御や単位換算などの設定",
+    links: [
+      {
+        title: "出荷制御マスタ",
+        description: "OCR変換ルールや出荷時の特殊制御を管理",
+        href: "/masters/shipping-masters",
+        icon: Truck,
+        color: "bg-sky-50 text-sky-600 hover:bg-sky-100",
+      },
       {
         title: "単位換算",
         description: "商品ごとの単位換算係数を管理",
@@ -115,19 +122,6 @@ const masterSections: MasterSection[] = [
     ],
   },
   {
-    title: "OCR・出荷用マスタ",
-    description: "OCR受注登録で使用する出荷ルール管理",
-    links: [
-      {
-        title: "出荷用マスタデータ",
-        description: "得意先・材質・次区ごとの出荷ルールを管理",
-        href: "/masters/shipping-masters",
-        icon: Truck,
-        color: "bg-sky-50 text-sky-600 hover:bg-sky-100",
-      },
-    ],
-  },
-  {
     title: "運用・管理",
     description: "ユーザーや初期化などの管理機能",
     links: [
@@ -136,7 +130,7 @@ const masterSections: MasterSection[] = [
         description: "ユーザーアカウントを管理",
         href: ROUTES.SETTINGS.USERS,
         icon: Users,
-        color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
+        color: "bg-gray-50 text-gray-600 hover:bg-gray-100",
         requireAdmin: true,
       },
       {
@@ -253,13 +247,13 @@ function MasterStatusAlert() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>要確認: マッピング未設定のデータがあります</AlertTitle>
           <AlertDescription>
-            仕入先が設定されていない商品が <strong>{status.unmapped_products_count}件</strong>{" "}
+            仕入先が設定されていない商品構成が <strong>{status.unmapped_products_count}件</strong>{" "}
             あります。
             <Link
               to="/masters/supplier-products"
               className="ml-1 font-medium underline hover:text-red-950"
             >
-              仕入先別商品設定を確認
+              メーカー品番マスタを確認
             </Link>
           </AlertDescription>
         </Alert>

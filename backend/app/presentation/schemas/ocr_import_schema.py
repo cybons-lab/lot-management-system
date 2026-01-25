@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class OcrImportLineRequest(BaseModel):
     """OCR取込明細行."""
 
-    external_product_code: str = Field(..., description="先方品番（OCR読取値）")
+    customer_part_no: str = Field(..., description="先方品番（OCR読取値）")
     jiku_code: str = Field(..., description="次区コード")
     quantity: float = Field(..., description="数量")
     delivery_date: date = Field(..., description="納期")
@@ -26,7 +26,7 @@ class OcrImportLineResult(BaseModel):
     """OCR取込明細行の処理結果."""
 
     row_no: int = Field(..., description="行番号")
-    external_product_code: str = Field(..., description="先方品番")
+    customer_part_no: str = Field(..., description="先方品番")
     product_id: int | None = Field(None, description="解決された製品ID")
     match_type: str = Field(..., description="マッチ種別（exact/prefix/not_found/multiple）")
     status: str = Field(..., description="処理状態（resolved/unresolved）")

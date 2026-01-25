@@ -1470,12 +1470,12 @@ Phase 2: Optimization (12h) ← v2.1 工数減少
 
 ## ドキュメント出力先
 
-**本計画書（v2.1）**: `docs/plan/supplier_customer_items_implementation_plan_v2.1.md`
+**本計画書（v2.1）**: [supplier_customer_items_implementation_plan_v2.1.md](file:///Users/kazuya/dev/projects/lot-management-system/docs/project/plans/supplier_customer_items_implementation_plan_v2.1.md)
 
-関連ドキュメント:
-- `docs/plan/supplier_customer_item_migration_plan.md` (既存)
-- `docs/plan/SUPPLIER_ITEMS_MIGRATION_PLAN.md` (既存)
-- `docs/plan/supplier_customer_items_implementation_plan_v2.md` (v2.0、本計画書で置き換え)
+関連ドキュメント（本計画書に統合済み）:
+- `docs/project/plans/supplier_customer_item_migration_plan.md` (統合済み)
+- `docs/project/plans/SUPPLIER_ITEMS_MIGRATION_PLAN.md` (統合済み)
+- `docs/project/plans/supplier_customer_items_implementation_plan_v2.md` (v2.0、本計画書に統合・置換)
 
 ---
 

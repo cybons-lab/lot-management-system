@@ -36,7 +36,7 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
   return [
     {
       id: "product_code",
-      header: "商品コード",
+      header: "メーカー品番",
       cell: (row) => (
         <div className="flex items-center gap-2">
           <span className="font-mono text-sm font-medium whitespace-nowrap text-slate-900">
@@ -64,17 +64,6 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
       ),
       sortable: true,
       width: "200px",
-    },
-    {
-      id: "maker_part_code",
-      header: "メーカー品番",
-      cell: (row) => (
-        <span className="font-mono text-sm whitespace-nowrap text-slate-700">
-          {row.maker_part_code || "-"}
-        </span>
-      ),
-      sortable: true,
-      width: "140px",
     },
     {
       id: "base_unit",

@@ -17,7 +17,7 @@ from app.infrastructure.persistence.models.inbound_models import InboundPlan
 from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
 from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
 from app.infrastructure.persistence.models.masters_models import Product
-from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 
 class ReplenishmentEngine:
@@ -43,13 +43,13 @@ class ReplenishmentEngine:
             as_of_date = utcnow().date()
 
         # 1. 対象の製品・仕入先ペアを取得
-        # ProductSupplierをベースに、指定されたproduct_idがあれば絞り込む
-        stmt = select(ProductSupplier).where(ProductSupplier.valid_to >= as_of_date)
+        # SupplierItemをベースに、指定されたproduct_idがあれば絞り込む
+        stmt = select(SupplierItem).where(SupplierItem.valid_to >= as_of_date)
         if product_ids:
-            stmt = stmt.where(ProductSupplier.product_id.in_(product_ids))
+            stmt = stmt.where(SupplierItem.product_id.in_(product_ids))
 
         # primaryのみにするか？一旦全supplerについて回すが、通常はprimaryのみ
-        stmt = stmt.where(ProductSupplier.is_primary)
+        stmt = stmt.where(SupplierItem.is_primary)
 
         product_suppliers = self.db.execute(stmt).scalars().all()
 
@@ -59,6 +59,9 @@ class ReplenishmentEngine:
         estimator = self._create_estimator(method)
 
         for ps in product_suppliers:
+            if ps.product_id is None:
+                # 独立運用(product_idなし)のSupplierItemは、現状の製品ベースのロジックでは扱えないためスキップ
+                continue
             product_id = int(ps.product_id)
             supplier_id = int(ps.supplier_id)
             # 3. 在庫情報の取得

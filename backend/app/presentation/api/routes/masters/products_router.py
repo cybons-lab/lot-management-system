@@ -39,14 +39,12 @@ def _to_product_out(product: Product) -> ProductOut:
         internal_unit=product.internal_unit,
         external_unit=product.external_unit,
         qty_per_internal_unit=float(product.qty_per_internal_unit),
-        customer_part_no=product.customer_part_no,
-        maker_item_code=product.maker_item_code,
         is_active=product.is_active,
         created_at=product.created_at,
         updated_at=product.updated_at,
         valid_to=product.valid_to,
-        supplier_ids=[int(ps.supplier_id) for ps in product.product_suppliers]
-        if product.product_suppliers
+        supplier_ids=[int(ps.supplier_id) for ps in product.supplier_items]
+        if product.supplier_items
         else [],
     )
 
@@ -136,7 +134,7 @@ def get_product(product_code: str, db: Session = Depends(get_db)):
 
 
 @router.get("/{product_code}/suppliers")
-def get_product_suppliers(product_code: str, db: Session = Depends(get_db)):
+def get_supplier_items(product_code: str, db: Session = Depends(get_db)):
     """Fetch suppliers for a product by its code.
 
     Returns a list of suppliers associated with this product, indicating
@@ -144,17 +142,17 @@ def get_product_suppliers(product_code: str, db: Session = Depends(get_db)):
     """
     from sqlalchemy import select
 
-    from app.infrastructure.persistence.models import ProductSupplier, Supplier
+    from app.infrastructure.persistence.models import Supplier, SupplierItem
 
     service = ProductService(db)
     product = service.get_by_code(product_code)
     assert product is not None
 
     stmt = (
-        select(ProductSupplier, Supplier)
-        .join(Supplier, ProductSupplier.supplier_id == Supplier.id)
-        .where(ProductSupplier.product_id == product.id)
-        .order_by(ProductSupplier.is_primary.desc(), Supplier.supplier_name)
+        select(SupplierItem, Supplier)
+        .join(Supplier, SupplierItem.supplier_id == Supplier.id)
+        .where(SupplierItem.product_id == product.id)
+        .order_by(SupplierItem.is_primary.desc(), Supplier.supplier_name)
     )
     results = db.execute(stmt).all()
 

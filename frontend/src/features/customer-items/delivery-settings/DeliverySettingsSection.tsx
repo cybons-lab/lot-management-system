@@ -1,6 +1,8 @@
 /**
  * DeliverySettingsSection
  * 得意先品番-納入先別設定の一覧と編集セクション
+ *
+ * Updated: customer_item_id ベースに移行
  */
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
@@ -17,18 +19,18 @@ import { Label } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 
 interface DeliverySettingsSectionProps {
+  customerItemId: number;
   customerId: number;
-  externalProductCode: string;
+  customerPartNo: string;
 }
 
 export function DeliverySettingsSection({
+  customerItemId,
   customerId,
-  externalProductCode,
+  customerPartNo,
 }: DeliverySettingsSectionProps) {
-  const { settings, isLoading, create, remove, isCreating, isDeleting } = useDeliverySettings(
-    customerId,
-    externalProductCode,
-  );
+  const { settings, isLoading, create, remove, isCreating, isDeleting } =
+    useDeliverySettings(customerItemId);
 
   const { data: deliveryPlaces = [] } = useQuery({
     queryKey: ["delivery-places", customerId],
@@ -42,8 +44,7 @@ export function DeliverySettingsSection({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     create({
-      customer_id: customerId,
-      external_product_code: externalProductCode,
+      customer_item_id: customerItemId,
       ...formData,
     });
     setIsFormOpen(false);
@@ -61,7 +62,7 @@ export function DeliverySettingsSection({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-slate-700">納入先別設定</h3>
+        <h3 className="text-sm font-medium text-slate-700">納入先別設定（{customerPartNo}）</h3>
         <Button size="sm" variant="outline" onClick={() => setIsFormOpen(true)}>
           <Plus className="mr-1 h-4 w-4" />
           追加

@@ -14,7 +14,7 @@ from app.infrastructure.persistence.models.masters_models import (
     Supplier,
     Warehouse,
 )
-from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 from .utils import fake
 
@@ -195,15 +195,17 @@ def generate_customer_items(
     delivery_places: list[DeliveryPlace] | None = None,
     options: object = None,
 ):
-    """Generate CustomerItem, ProductSupplier, and CustomerItemDeliverySettings records.
+    """Generate CustomerItem, SupplierItem, and CustomerItemDeliverySettings records.
 
     Each product is assigned to:
-    - 1-2 suppliers (via product_suppliers table)
+    - 1-2 suppliers (via supplier_items table)
     - 1-3 customers (via customer_items table)
     - Default delivery place per customer-product (via customer_item_delivery_settings)
     """
-    # Track which products already have suppliers to avoid duplicates
-    product_supplier_pairs: set[tuple[int, int]] = set()
+    # Track which supplier-maker_part_no pairs already exist to avoid duplicates
+    supplier_maker_pairs: set[tuple[int, str]] = set()
+    # Map product_id + supplier_id -> supplier_item for linking
+    supplier_item_map: dict[tuple[int, int], SupplierItem] = {}
 
     # Get delivery places if not provided
     if delivery_places is None:
@@ -217,20 +219,24 @@ def generate_customer_items(
         customer_delivery_map[dp.customer_id].append(dp)
 
     for p in products:
-        # 1. Assign 1-2 suppliers to this product
+        # 1. Assign 1-2 suppliers to this product (via supplier_items)
         if suppliers:
             num_suppliers = random.randint(1, min(2, len(suppliers)))
             selected_suppliers = random.sample(suppliers, num_suppliers)
 
             for idx, supplier in enumerate(selected_suppliers):
-                if (p.id, supplier.id) not in product_supplier_pairs:
-                    ps = ProductSupplier(
+                maker_part_no = p.maker_part_code  # Use product's maker_part_code
+                if (supplier.id, maker_part_no) not in supplier_maker_pairs:
+                    si = SupplierItem(
                         product_id=p.id,
                         supplier_id=supplier.id,
+                        maker_part_no=maker_part_no,
                         is_primary=(idx == 0),  # First supplier is primary
                     )
-                    db.add(ps)
-                    product_supplier_pairs.add((p.id, supplier.id))
+                    db.add(si)
+                    db.flush()  # Get the ID
+                    supplier_maker_pairs.add((supplier.id, maker_part_no))
+                    supplier_item_map[(p.id, supplier.id)] = si
 
         # 2. Assign this product to customers
         primary_customer = random.choice(customers)
@@ -248,23 +254,33 @@ def generate_customer_items(
                 customers_for_product.extend(additional)
 
         # Create CustomerItem and CustomerItemDeliverySettings for each customer
-        for c in customers_for_product:
-            external_code = f"EXT-{c.customer_code}-{p.maker_part_code}"
+        for idx, c in enumerate(customers_for_product):
+            # Use meaningful customer part number (not EXT- prefix)
+            customer_part_no = f"{c.customer_code}-{p.maker_part_code}"
+
+            # Link to supplier_item if available
+            selected_supplier = random.choice(suppliers) if suppliers else None
+            supplier_item = None
+            if selected_supplier and (p.id, selected_supplier.id) in supplier_item_map:
+                supplier_item = supplier_item_map[(p.id, selected_supplier.id)]
+
             ci = CustomerItem(
                 customer_id=c.id,
                 product_id=p.id,
-                external_product_code=external_code,
+                customer_part_no=customer_part_no,
                 base_unit="pcs",
-                supplier_id=random.choice(suppliers).id if suppliers else None,
+                supplier_id=selected_supplier.id if selected_supplier else None,
+                supplier_item_id=supplier_item.id if supplier_item else None,
+                is_primary=(idx == 0),  # First customer is primary for this supplier_item
             )
             db.add(ci)
+            db.flush()  # Get the ID for related tables
 
             # Create default delivery setting if customer has delivery places
             if c.id in customer_delivery_map and customer_delivery_map[c.id]:
                 default_dp = random.choice(customer_delivery_map[c.id])
                 delivery_setting = CustomerItemDeliverySetting(
-                    customer_id=c.id,
-                    external_product_code=external_code,
+                    customer_item_id=ci.id,
                     delivery_place_id=default_dp.id,
                     is_default=True,
                 )
@@ -278,8 +294,7 @@ def generate_customer_items(
                         # Pick a random delivery place of this customer
                         target_dp = random.choice(customer_delivery_map[c.id])
                         jiku_map = CustomerItemJikuMapping(
-                            customer_id=c.id,
-                            external_product_code=external_code,
+                            customer_item_id=ci.id,
                             jiku_code=jiku,
                             delivery_place_id=target_dp.id,
                             is_default=(jiku == "A"),  # 'A' is default if present

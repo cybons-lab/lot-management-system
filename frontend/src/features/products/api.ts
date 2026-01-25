@@ -18,7 +18,7 @@ import type { components } from "@/types/api";
 // ============================================
 
 export type Product = components["schemas"]["ProductOut"];
-// export type ProductCreate = components["schemas"]["ProductCreate"]; // Override to match backend changes
+// Updated to match backend schema (maker_item_code, customer_part_no removed)
 export type ProductCreate = {
   product_code?: string | null;
   product_name: string;
@@ -28,8 +28,6 @@ export type ProductCreate = {
   internal_unit: string;
   external_unit: string;
   qty_per_internal_unit: number;
-  customer_part_no: string; // Required
-  maker_item_code: string; // Required
   is_active?: boolean;
 };
 export type ProductUpdate = components["schemas"]["ProductUpdate"];

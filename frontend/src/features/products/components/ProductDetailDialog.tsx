@@ -45,8 +45,6 @@ export function ProductDetailDialog({ productCode, open, onOpenChange }: Product
       if (!productCode) return;
       const updateData: ProductUpdate = {
         ...data,
-        customer_part_no: data.customer_part_no ?? undefined,
-        maker_item_code: data.maker_item_code ?? undefined,
       };
       updateProduct(
         { id: productCode, data: updateData },
@@ -116,7 +114,7 @@ export function ProductDetailDialog({ productCode, open, onOpenChange }: Product
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <span className="text-sm font-medium text-gray-500">商品コード</span>
+                      <span className="text-sm font-medium text-gray-500">メーカー品番</span>
                       <span className="font-mono text-base font-bold text-gray-900">
                         {product.product_code}
                       </span>{" "}
@@ -147,10 +145,6 @@ export function ProductDetailDialog({ productCode, open, onOpenChange }: Product
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-sm text-muted-foreground">メーカー品番</span>
-                      <p>{product.maker_item_code ?? "-"}</p>
-                    </div>
                     <div>
                       <span className="text-sm text-muted-foreground">作成日時</span>
                       <p className="text-sm text-gray-600">

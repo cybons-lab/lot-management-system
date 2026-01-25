@@ -30,11 +30,12 @@ export function CustomerDetailDialog({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteType, setDeleteType] = useState<DeleteType>("soft");
 
+  // コード変更後の404を防ぐため、更新中は再取得を停止
+  const [isCodeChanging, setIsCodeChanging] = useState(false);
+
   const { useGet, useUpdate, useSoftDelete, usePermanentDelete } = useCustomers();
-  // idがnullの場合はクエリを実行しないようにしたいが、useGetの仕様による。
-  // 通常は enabled オプションがあるはずだが、useMasterApiの実装次第。
-  // ここでは customerCode がある場合のみ有効と仮定するか、dataがundefinedならloading表示。
-  const { data: customer, isLoading } = useGet(customerCode || "");
+  // ダイアログが開いていて、コード変更中でない場合のみクエリを有効化
+  const { data: customer, isLoading } = useGet(open && !isCodeChanging ? customerCode || "" : "");
   const { mutate: updateCustomer, isPending: isUpdating } = useUpdate();
   const { mutate: softDelete, isPending: isSoftDeleting } = useSoftDelete();
   const { mutate: permanentDelete, isPending: isPermanentDeleting } = usePermanentDelete();
@@ -49,6 +50,12 @@ export function CustomerDetailDialog({
     (data: { customer_code: string; customer_name: string }) => {
       if (!customerCode) return;
 
+      // コード変更時は再取得を停止してからAPI呼び出し
+      const isChangingCode = data.customer_code !== customerCode;
+      if (isChangingCode) {
+        setIsCodeChanging(true);
+      }
+
       const updateData: CustomerUpdate = {
         customer_code: data.customer_code,
         customer_name: data.customer_name,
@@ -58,15 +65,20 @@ export function CustomerDetailDialog({
         {
           onSuccess: () => {
             setIsEditing(false);
-            // コード変更時のハンドリングはリスト更新で対応されるため、ここでは特にリダイレクト不要
-            // ただし、親側の selectedCustomerCode を更新する必要があるかもしれないが、
-            // ダイアログを閉じるか、或いは再取得されるか。
-            // シンプルに編集後は閲覧モードに戻る。
+            // コード変更時はダイアログを閉じる
+            if (isChangingCode) {
+              handleClose();
+              setIsCodeChanging(false);
+            }
+          },
+          onError: () => {
+            // エラー時は再取得を再開
+            setIsCodeChanging(false);
           },
         },
       );
     },
-    [customerCode, updateCustomer],
+    [customerCode, updateCustomer, handleClose],
   );
 
   const handleConfirmDelete = useCallback(

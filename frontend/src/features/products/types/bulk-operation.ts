@@ -25,10 +25,6 @@ export interface ProductBulkRow extends BulkRowBase {
   external_unit: string;
   /** 内部単位あたりの数量 */
   qty_per_internal_unit: number;
-  /** 得意先品番 */
-  customer_part_no?: string | null;
-  /** メーカー品番 */
-  maker_item_code?: string | null;
   /** 有効フラグ */
   is_active: boolean;
 }

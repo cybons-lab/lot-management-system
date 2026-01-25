@@ -15,8 +15,8 @@ from app.presentation.api.routes.masters.product_mappings_router import (
 )
 from app.presentation.api.routes.masters.products_router import router as products_router
 from app.presentation.api.routes.masters.status_router import router as status_router
-from app.presentation.api.routes.masters.supplier_products_router import (
-    router as supplier_products_router,
+from app.presentation.api.routes.masters.supplier_items_router import (
+    router as supplier_items_router,
 )
 from app.presentation.api.routes.masters.suppliers_router import router as suppliers_router
 from app.presentation.api.routes.masters.uom_conversions_router import (
@@ -36,7 +36,7 @@ __all__ = [
     "product_mappings_router",
     "products_router",
     "status_router",
-    "supplier_products_router",
+    "supplier_items_router",
     "suppliers_router",
     "uom_conversions_router",
     "warehouse_delivery_routes_router",

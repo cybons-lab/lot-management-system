@@ -185,6 +185,13 @@ class VLotDetails(Base):
     # 仮入庫識別キー（UUID）
     temporary_lot_key: Mapped[str | None] = mapped_column(String)
 
+    # Phase2: supplier_item_id と先方品番表示
+    supplier_item_id: Mapped[int | None] = mapped_column(BigInteger)
+    supplier_maker_part_no: Mapped[str | None] = mapped_column(String)
+    customer_part_no: Mapped[str | None] = mapped_column(String)
+    primary_customer_id: Mapped[int | None] = mapped_column(BigInteger)
+    mapping_status: Mapped[str | None] = mapped_column(String)
+
     # Origin tracking
     origin_type: Mapped[str | None] = mapped_column(String)
     origin_reference: Mapped[str | None] = mapped_column(String)
@@ -255,7 +262,7 @@ class VOrderLineDetails(Base):
     jiku_code: Mapped[str | None] = mapped_column(String)
 
     # 得意先品番
-    external_product_code: Mapped[str | None] = mapped_column(String)
+    customer_part_no: Mapped[str | None] = mapped_column(String)
 
     # 仕入元情報 (COALESCE ensures non-null)
     supplier_name: Mapped[str] = mapped_column(String)

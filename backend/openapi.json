@@ -7826,9 +7826,9 @@
         "tags": [
           "products"
         ],
-        "summary": "Get Product Suppliers",
+        "summary": "Get Supplier Items",
         "description": "Fetch suppliers for a product by its code.\n\nReturns a list of suppliers associated with this product, indicating\nwhich supplier is the primary one.",
-        "operationId": "get_product_suppliers_api_masters_products__product_code__suppliers_get",
+        "operationId": "get_supplier_items_api_masters_products__product_code__suppliers_get",
         "parameters": [
           {
             "name": "product_code",
@@ -8239,8 +8239,13 @@
           "suppliers"
         ],
         "summary": "Update Supplier",
-        "description": "Update supplier.",
+        "description": "Update supplier.\n\n仕入先コードの変更は管理者のみ許可され、関連データがない場合のみ可能です。",
         "operationId": "update_supplier_api_masters_suppliers__supplier_code__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "supplier_code",
@@ -8465,14 +8470,14 @@
         }
       }
     },
-    "/api/masters/supplier-products": {
+    "/api/masters/supplier-items": {
       "get": {
         "tags": [
           "masters"
         ],
-        "summary": "List Supplier Products",
-        "description": "仕入先商品一覧を取得.\n\nproduct_suppliersテーブルから製品-仕入先の関連情報を取得します。\nデフォルトでは有効なレコードのみを返します。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限（最大1000件）\n    supplier_id: 仕入先IDでフィルタ\n    include_inactive: 論理削除済みレコードを含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    仕入先商品のリスト（製品情報と仕入先情報を含む）",
-        "operationId": "list_supplier_products_api_masters_supplier_products_get",
+        "summary": "List Supplier Items",
+        "description": "仕入先品目一覧を取得.\n\nsupplier_itemsテーブルから仕入先品目情報を取得します。\nデフォルトでは有効なレコードのみを返します。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限（最大1000件）\n    supplier_id: 仕入先IDでフィルタ\n    include_inactive: 論理削除済みレコードを含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    仕入先品目のリスト（製品情報と仕入先情報を含む）",
+        "operationId": "list_supplier_items_api_masters_supplier_items_get",
         "parameters": [
           {
             "name": "skip",
@@ -8549,15 +8554,15 @@
         "tags": [
           "masters"
         ],
-        "summary": "Create Supplier Product",
-        "description": "仕入先商品を新規作成.\n\n製品と仕入先の関連を登録します。\nis_primaryがTrueの場合、同一製品の他のレコードのis_primaryをFalseに更新します。\n\nArgs:\n    data: 仕入先商品作成データ\n    db: データベースセッション\n\nReturns:\n    SupplierProductResponse: 作成された仕入先商品情報\n\nRaises:\n    HTTPException: 製品-仕入先のペアが既に存在する場合は400",
-        "operationId": "create_supplier_product_api_masters_supplier_products_post",
+        "summary": "Create Supplier Item",
+        "description": "仕入先品目を新規作成.\n\n仕入先と品目（メーカー品番）の関連を登録します。\nis_primaryがTrueの場合、同一製品の他のレコードのis_primaryをFalseに更新します。\n\nArgs:\n    data: 仕入先品目作成データ\n    db: データベースセッション\n\nReturns:\n    SupplierItemResponse: 作成された仕入先品目情報\n\nRaises:\n    HTTPException: 仕入先-製品のペアが既に存在する場合は400",
+        "operationId": "create_supplier_item_api_masters_supplier_items_post",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SupplierProductCreate"
+                "$ref": "#/components/schemas/SupplierItemCreate"
               }
             }
           }
@@ -8568,7 +8573,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SupplierProductResponse"
+                  "$ref": "#/components/schemas/SupplierItemResponse"
                 }
               }
             }
@@ -8586,14 +8591,14 @@
         }
       }
     },
-    "/api/masters/supplier-products/export/download": {
+    "/api/masters/supplier-items/export/download": {
       "get": {
         "tags": [
           "masters"
         ],
-        "summary": "Export Supplier Products",
-        "description": "仕入先商品をエクスポート.\n\nArgs:\n    format: エクスポート形式（\"csv\" または \"xlsx\"）\n    db: データベースセッション\n\nReturns:\n    Excel形式またはCSV形式のファイルレスポンス",
-        "operationId": "export_supplier_products_api_masters_supplier_products_export_download_get",
+        "summary": "Export Supplier Items",
+        "description": "仕入先品目をエクスポート.\n\nArgs:\n    format: エクスポート形式（\"csv\" または \"xlsx\"）\n    db: データベースセッション\n\nReturns:\n    Excel形式またはCSV形式のファイルレスポンス",
+        "operationId": "export_supplier_items_api_masters_supplier_items_export_download_get",
         "parameters": [
           {
             "name": "format",
@@ -8628,14 +8633,14 @@
         }
       }
     },
-    "/api/masters/supplier-products/{id}": {
+    "/api/masters/supplier-items/{id}": {
       "get": {
         "tags": [
           "masters"
         ],
-        "summary": "Get Supplier Product",
-        "description": "仕入先商品詳細を取得.\n\nArgs:\n    id: 仕入先商品ID\n    db: データベースセッション\n\nReturns:\n    SupplierProductResponse: 仕入先商品詳細（製品情報と仕入先情報を含む）\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
-        "operationId": "get_supplier_product_api_masters_supplier_products__id__get",
+        "summary": "Get Supplier Item",
+        "description": "仕入先品目詳細を取得.\n\nArgs:\n    id: 仕入先品目ID\n    db: データベースセッション\n\nReturns:\n    SupplierItemResponse: 仕入先品目詳細（製品情報と仕入先情報を含む）\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
+        "operationId": "get_supplier_item_api_masters_supplier_items__id__get",
         "parameters": [
           {
             "name": "id",
@@ -8653,7 +8658,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SupplierProductResponse"
+                  "$ref": "#/components/schemas/SupplierItemResponse"
                 }
               }
             }
@@ -8674,9 +8679,14 @@
         "tags": [
           "masters"
         ],
-        "summary": "Update Supplier Product",
-        "description": "仕入先商品を更新.\n\nis_primaryをTrueに設定する場合、同一製品の他のレコードのis_primaryをFalseに更新します。\n\nArgs:\n    id: 仕入先商品ID\n    data: 更新データ\n    db: データベースセッション\n\nReturns:\n    SupplierProductResponse: 更新後の仕入先商品情報\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
-        "operationId": "update_supplier_product_api_masters_supplier_products__id__put",
+        "summary": "Update Supplier Item",
+        "description": "仕入先品目を更新.\n\nis_primaryをTrueに設定する場合、同一製品の他のレコードのis_primaryをFalseに更新します。\nmaker_part_no の変更は管理者のみ許可されています。\n\nArgs:\n    id: 仕入先品目ID\n    data: 更新データ\n    db: データベースセッション\n    current_user: 認証済みユーザー（オプション）\n\nReturns:\n    SupplierItemResponse: 更新後の仕入先品目情報\n\nRaises:\n    HTTPException: レコードが見つからない場合は404\n    HTTPException: maker_part_no変更時に管理者でない場合は403",
+        "operationId": "update_supplier_item_api_masters_supplier_items__id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -8693,7 +8703,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SupplierProductUpdate"
+                "$ref": "#/components/schemas/SupplierItemUpdate"
               }
             }
           }
@@ -8704,7 +8714,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SupplierProductResponse"
+                  "$ref": "#/components/schemas/SupplierItemResponse"
                 }
               }
             }
@@ -8725,9 +8735,9 @@
         "tags": [
           "masters"
         ],
-        "summary": "Delete Supplier Product",
-        "description": "仕入先商品を論理削除（無効化）.\n\nArgs:\n    id: 仕入先商品ID\n    end_date: 終了日（省略時は今日の日付）\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
-        "operationId": "delete_supplier_product_api_masters_supplier_products__id__delete",
+        "summary": "Delete Supplier Item",
+        "description": "仕入先品目を論理削除（無効化）.\n\nArgs:\n    id: 仕入先品目ID\n    end_date: 終了日（省略時は今日の日付）\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
+        "operationId": "delete_supplier_item_api_masters_supplier_items__id__delete",
         "parameters": [
           {
             "name": "id",
@@ -8773,14 +8783,14 @@
         }
       }
     },
-    "/api/masters/supplier-products/{id}/permanent": {
+    "/api/masters/supplier-items/{id}/permanent": {
       "delete": {
         "tags": [
           "masters"
         ],
-        "summary": "Permanent Delete Supplier Product",
-        "description": "仕入先商品を物理削除.\n\nArgs:\n    id: 仕入先商品ID\n    current_user: 認証済み管理者ユーザー\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
-        "operationId": "permanent_delete_supplier_product_api_masters_supplier_products__id__permanent_delete",
+        "summary": "Permanent Delete Supplier Item",
+        "description": "仕入先品目を物理削除.\n\nArgs:\n    id: 仕入先品目ID\n    current_user: 認証済み管理者ユーザー\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
+        "operationId": "permanent_delete_supplier_item_api_masters_supplier_items__id__permanent_delete",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -8814,14 +8824,14 @@
         }
       }
     },
-    "/api/masters/supplier-products/{id}/restore": {
+    "/api/masters/supplier-items/{id}/restore": {
       "post": {
         "tags": [
           "masters"
         ],
-        "summary": "Restore Supplier Product",
-        "description": "論理削除された仕入先商品を復元.\n\nArgs:\n    id: 仕入先商品ID\n    db: データベースセッション\n\nReturns:\n    SupplierProductResponse: 復元された仕入先商品情報\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
-        "operationId": "restore_supplier_product_api_masters_supplier_products__id__restore_post",
+        "summary": "Restore Supplier Item",
+        "description": "論理削除された仕入先品目を復元.\n\nArgs:\n    id: 仕入先品目ID\n    db: データベースセッション\n\nReturns:\n    SupplierItemResponse: 復元された仕入先品目情報\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
+        "operationId": "restore_supplier_item_api_masters_supplier_items__id__restore_post",
         "parameters": [
           {
             "name": "id",
@@ -8839,7 +8849,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SupplierProductResponse"
+                  "$ref": "#/components/schemas/SupplierItemResponse"
                 }
               }
             }
@@ -9916,14 +9926,14 @@
         }
       }
     },
-    "/api/masters/customer-items/{customer_id}": {
+    "/api/masters/customer-items/by-customer/{customer_id}": {
       "get": {
         "tags": [
           "customer-items"
         ],
         "summary": "List Customer Items By Customer",
         "description": "特定得意先の品番マッピング一覧取得.\n\nArgs:\n    customer_id: 得意先ID\n    db: データベースセッション\n\nReturns:\n    該当得意先の品番マッピングリスト",
-        "operationId": "list_customer_items_by_customer_api_masters_customer_items__customer_id__get",
+        "operationId": "list_customer_items_by_customer_api_masters_customer_items_by_customer__customer_id__get",
         "parameters": [
           {
             "name": "customer_id",
@@ -9945,7 +9955,7 @@
                   "items": {
                     "$ref": "#/components/schemas/CustomerItemResponse"
                   },
-                  "title": "Response List Customer Items By Customer Api Masters Customer Items  Customer Id  Get"
+                  "title": "Response List Customer Items By Customer Api Masters Customer Items By Customer  Customer Id  Get"
                 }
               }
             }
@@ -9963,31 +9973,68 @@
         }
       }
     },
-    "/api/masters/customer-items/{customer_id}/{external_product_code}": {
+    "/api/masters/customer-items/{id}": {
+      "get": {
+        "tags": [
+          "customer-items"
+        ],
+        "summary": "Get Customer Item",
+        "description": "得意先品番マッピング詳細取得.\n\nArgs:\n    id: 得意先品番マッピングID\n    db: データベースセッション\n\nReturns:\n    品番マッピング詳細\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "operationId": "get_customer_item_api_masters_customer_items__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "customer-items"
         ],
         "summary": "Update Customer Item",
-        "description": "得意先品番マッピング更新.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    item: 更新する品番マッピング情報\n    db: データベースセッション\n\nReturns:\n    更新された品番マッピング\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
-        "operationId": "update_customer_item_api_masters_customer_items__customer_id___external_product_code__put",
+        "description": "得意先品番マッピング更新.\n\nArgs:\n    id: 得意先品番マッピングID\n    item: 更新する品番マッピング情報\n    db: データベースセッション\n    current_user: 認証済みユーザー（オプション）\n\nReturns:\n    更新された品番マッピング\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "operationId": "update_customer_item_api_masters_customer_items__id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
-            "name": "customer_id",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Customer Id"
-            }
-          },
-          {
-            "name": "external_product_code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "External Product Code"
+              "title": "Id"
             }
           }
         ],
@@ -10029,25 +10076,16 @@
           "customer-items"
         ],
         "summary": "Delete Customer Item",
-        "description": "得意先品番マッピング削除.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    end_date: 無効化日（指定がない場合は即時）\n    db: データベースセッション\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
-        "operationId": "delete_customer_item_api_masters_customer_items__customer_id___external_product_code__delete",
+        "description": "得意先品番マッピング削除.\n\nArgs:\n    id: 得意先品番マッピングID\n    end_date: 無効化日（指定がない場合は即時）\n    db: データベースセッション\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "operationId": "delete_customer_item_api_masters_customer_items__id__delete",
         "parameters": [
           {
-            "name": "customer_id",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Customer Id"
-            }
-          },
-          {
-            "name": "external_product_code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "External Product Code"
+              "title": "Id"
             }
           },
           {
@@ -10085,14 +10123,14 @@
         }
       }
     },
-    "/api/masters/customer-items/{customer_id}/{external_product_code}/permanent": {
+    "/api/masters/customer-items/{id}/permanent": {
       "delete": {
         "tags": [
           "customer-items"
         ],
         "summary": "Permanent Delete Customer Item",
-        "description": "得意先品番マッピング完全削除.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    current_user: 認証済み管理者ユーザー\n    db: データベースセッション\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
-        "operationId": "permanent_delete_customer_item_api_masters_customer_items__customer_id___external_product_code__permanent_delete",
+        "description": "得意先品番マッピング完全削除.\n\nArgs:\n    id: 得意先品番マッピングID\n    current_user: 認証済み管理者ユーザー\n    db: データベースセッション\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "operationId": "permanent_delete_customer_item_api_masters_customer_items__id__permanent_delete",
         "security": [
           {
             "OAuth2PasswordBearer": []
@@ -10100,21 +10138,12 @@
         ],
         "parameters": [
           {
-            "name": "customer_id",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Customer Id"
-            }
-          },
-          {
-            "name": "external_product_code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "External Product Code"
+              "title": "Id"
             }
           }
         ],
@@ -10135,31 +10164,22 @@
         }
       }
     },
-    "/api/masters/customer-items/{customer_id}/{external_product_code}/restore": {
+    "/api/masters/customer-items/{id}/restore": {
       "post": {
         "tags": [
           "customer-items"
         ],
         "summary": "Restore Customer Item",
-        "description": "得意先品番マッピング復元.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    db: データベースセッション\n\nReturns:\n    復元された品番マッピング\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
-        "operationId": "restore_customer_item_api_masters_customer_items__customer_id___external_product_code__restore_post",
+        "description": "得意先品番マッピング復元.\n\nArgs:\n    id: 得意先品番マッピングID\n    db: データベースセッション\n\nReturns:\n    復元された品番マッピング\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "operationId": "restore_customer_item_api_masters_customer_items__id__restore_post",
         "parameters": [
           {
-            "name": "customer_id",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Customer Id"
-            }
-          },
-          {
-            "name": "external_product_code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "External Product Code"
+              "title": "Id"
             }
           }
         ],
@@ -10193,7 +10213,7 @@
           "customer-items"
         ],
         "summary": "Bulk Upsert Customer Items",
-        "description": "得意先品番マッピング一括登録/更新.\n\n複合キー（customer_id, external_product_code）で判定し、\n既存レコードがあれば更新、なければ新規作成します。\n\nArgs:\n    request: 一括登録/更新リクエスト\n    db: データベースセッション\n\nReturns:\n    BulkUpsertResponse: 作成/更新/失敗件数のサマリー",
+        "description": "得意先品番マッピング一括登録/更新.\n\nビジネスキー（customer_id, customer_part_no）で判定し、\n既存レコードがあれば更新、なければ新規作成します。\n\nArgs:\n    request: 一括登録/更新リクエスト\n    db: データベースセッション\n\nReturns:\n    BulkUpsertResponse: 作成/更新/失敗件数のサマリー",
         "operationId": "bulk_upsert_customer_items_api_masters_customer_items_bulk_upsert_post",
         "requestBody": {
           "content": {
@@ -10248,12 +10268,12 @@
             }
           },
           {
-            "name": "external_product_code",
+            "name": "customer_part_no",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "External Product Code"
+              "title": "Customer Part No"
             }
           }
         ],
@@ -24065,10 +24085,10 @@
             "title": "Customer Code",
             "description": "得意先コード"
           },
-          "external_product_code": {
+          "customer_part_no": {
             "type": "string",
             "maxLength": 100,
-            "title": "External Product Code",
+            "title": "Customer Part No",
             "description": "得意先品番"
           },
           "product_code": {
@@ -24135,12 +24155,12 @@
         "type": "object",
         "required": [
           "customer_code",
-          "external_product_code",
+          "customer_part_no",
           "product_code",
           "base_unit"
         ],
         "title": "CustomerItemBulkRow",
-        "description": "Single row for customer item bulk upsert.\n\nUpsert uses composite key: (customer_code, external_product_code)"
+        "description": "Single row for customer item bulk upsert.\n\nUpsert uses business key: (customer_code, customer_part_no)"
       },
       "CustomerItemBulkUpsertRequest": {
         "properties": {
@@ -24168,11 +24188,11 @@
             "title": "Customer Id",
             "description": "得意先ID"
           },
-          "external_product_code": {
+          "customer_part_no": {
             "type": "string",
             "maxLength": 100,
-            "title": "External Product Code",
-            "description": "得意先品番"
+            "title": "Customer Part No",
+            "description": "得意先品番（先方品番）"
           },
           "product_id": {
             "type": "integer",
@@ -24190,6 +24210,24 @@
             ],
             "title": "Supplier Id",
             "description": "仕入先ID"
+          },
+          "supplier_item_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Item Id",
+            "description": "仕入先品目ID"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "description": "主要得意先フラグ",
+            "default": false
           },
           "base_unit": {
             "type": "string",
@@ -24370,7 +24408,7 @@
         "type": "object",
         "required": [
           "customer_id",
-          "external_product_code",
+          "customer_part_no",
           "product_id",
           "base_unit"
         ],
@@ -24383,9 +24421,9 @@
             "type": "integer",
             "title": "Customer Id"
           },
-          "external_product_code": {
+          "customer_part_no": {
             "type": "string",
-            "title": "External Product Code"
+            "title": "Customer Part No"
           },
           "delivery_place_id": {
             "anyOf": [
@@ -24483,7 +24521,7 @@
         "type": "object",
         "required": [
           "customer_id",
-          "external_product_code"
+          "customer_part_no"
         ],
         "title": "CustomerItemDeliverySettingCreate",
         "description": "Schema for creating a CustomerItemDeliverySetting."
@@ -24494,9 +24532,9 @@
             "type": "integer",
             "title": "Customer Id"
           },
-          "external_product_code": {
+          "customer_part_no": {
             "type": "string",
-            "title": "External Product Code"
+            "title": "Customer Part No"
           },
           "delivery_place_id": {
             "anyOf": [
@@ -24619,7 +24657,7 @@
         "type": "object",
         "required": [
           "customer_id",
-          "external_product_code",
+          "customer_part_no",
           "id",
           "created_at",
           "updated_at"
@@ -24726,9 +24764,9 @@
       },
       "CustomerItemImportRow": {
         "properties": {
-          "external_product_code": {
+          "customer_part_no": {
             "type": "string",
-            "title": "External Product Code",
+            "title": "Customer Part No",
             "description": "Customer's product code"
           },
           "maker_part_code": {
@@ -24800,7 +24838,7 @@
         },
         "type": "object",
         "required": [
-          "external_product_code",
+          "customer_part_no",
           "maker_part_code"
         ],
         "title": "CustomerItemImportRow",
@@ -24808,16 +24846,20 @@
       },
       "CustomerItemResponse": {
         "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "得意先品番マッピングID"
+          },
           "customer_id": {
             "type": "integer",
             "title": "Customer Id",
             "description": "得意先ID"
           },
-          "external_product_code": {
+          "customer_part_no": {
             "type": "string",
-            "maxLength": 100,
-            "title": "External Product Code",
-            "description": "得意先品番"
+            "title": "Customer Part No",
+            "description": "得意先品番（先方品番）"
           },
           "product_id": {
             "type": "integer",
@@ -24836,17 +24878,32 @@
             "title": "Supplier Id",
             "description": "仕入先ID"
           },
+          "supplier_item_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Item Id",
+            "description": "仕入先品目ID"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "description": "主要得意先フラグ"
+          },
           "base_unit": {
             "type": "string",
-            "maxLength": 20,
             "title": "Base Unit",
             "description": "基本単位"
           },
           "pack_unit": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 20
+                "type": "string"
               },
               {
                 "type": "null"
@@ -24906,8 +24963,7 @@
           "maker_part_no": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 100
+                "type": "string"
               },
               {
                 "type": "null"
@@ -24919,8 +24975,7 @@
           "order_category": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 50
+                "type": "string"
               },
               {
                 "type": "null"
@@ -24932,8 +24987,7 @@
           "is_procurement_required": {
             "type": "boolean",
             "title": "Is Procurement Required",
-            "description": "発注の有無",
-            "default": true
+            "description": "発注の有無"
           },
           "shipping_slip_text": {
             "anyOf": [
@@ -24962,8 +25016,7 @@
           "sap_supplier_code": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 50
+                "type": "string"
               },
               {
                 "type": "null"
@@ -24975,8 +25028,7 @@
           "sap_warehouse_code": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 50
+                "type": "string"
               },
               {
                 "type": "null"
@@ -24988,8 +25040,7 @@
           "sap_shipping_warehouse": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 50
+                "type": "string"
               },
               {
                 "type": "null"
@@ -25001,8 +25052,7 @@
           "sap_uom": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 20
+                "type": "string"
               },
               {
                 "type": "null"
@@ -25073,10 +25123,13 @@
         },
         "type": "object",
         "required": [
+          "id",
           "customer_id",
-          "external_product_code",
+          "customer_part_no",
           "product_id",
+          "is_primary",
           "base_unit",
+          "is_procurement_required",
           "customer_code",
           "customer_name",
           "product_code",
@@ -25090,6 +25143,19 @@
       },
       "CustomerItemUpdate": {
         "properties": {
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No",
+            "description": "得意先品番"
+          },
           "product_id": {
             "anyOf": [
               {
@@ -25113,6 +25179,30 @@
             ],
             "title": "Supplier Id",
             "description": "仕入先ID"
+          },
+          "supplier_item_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Item Id",
+            "description": "仕入先品目ID"
+          },
+          "is_primary": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Primary",
+            "description": "主要得意先フラグ"
           },
           "base_unit": {
             "anyOf": [
@@ -29498,6 +29588,50 @@
             "type": "boolean",
             "title": "Supplier Deleted",
             "default": false
+          },
+          "supplier_maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Maker Part No"
+          },
+          "customer_part_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part No"
+          },
+          "supplier_item_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Item Id"
+          },
+          "mapping_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping Status"
           }
         },
         "type": "object",
@@ -30241,9 +30375,9 @@
       },
       "OcrImportLineRequest": {
         "properties": {
-          "external_product_code": {
+          "customer_part_no": {
             "type": "string",
-            "title": "External Product Code",
+            "title": "Customer Part No",
             "description": "先方品番（OCR読取値）"
           },
           "jiku_code": {
@@ -30265,7 +30399,7 @@
         },
         "type": "object",
         "required": [
-          "external_product_code",
+          "customer_part_no",
           "jiku_code",
           "quantity",
           "delivery_date"
@@ -30280,9 +30414,9 @@
             "title": "Row No",
             "description": "行番号"
           },
-          "external_product_code": {
+          "customer_part_no": {
             "type": "string",
-            "title": "External Product Code",
+            "title": "Customer Part No",
             "description": "先方品番"
           },
           "product_id": {
@@ -30323,7 +30457,7 @@
         "type": "object",
         "required": [
           "row_no",
-          "external_product_code",
+          "customer_part_no",
           "match_type",
           "status"
         ],
@@ -31748,7 +31882,7 @@
             "title": "Status",
             "default": "pending"
           },
-          "external_product_code": {
+          "customer_part_no": {
             "anyOf": [
               {
                 "type": "string",
@@ -31758,7 +31892,7 @@
                 "type": "null"
               }
             ],
-            "title": "External Product Code",
+            "title": "Customer Part No",
             "description": "OCR元の先方品番（変換前の生データ）"
           },
           "shipping_document_text": {
@@ -32048,7 +32182,7 @@
             "title": "Status",
             "default": "pending"
           },
-          "external_product_code": {
+          "customer_part_no": {
             "anyOf": [
               {
                 "type": "string",
@@ -32058,7 +32192,7 @@
                 "type": "null"
               }
             ],
-            "title": "External Product Code",
+            "title": "Customer Part No",
             "description": "OCR元の先方品番（変換前の生データ）"
           },
           "shipping_document_text": {
@@ -33212,18 +33346,6 @@
             "title": "Qty Per Internal Unit",
             "default": 1.0
           },
-          "customer_part_no": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Customer Part No",
-            "description": "先方品番"
-          },
-          "maker_item_code": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Maker Item Code",
-            "description": "メーカー品番（旧メーカー品目コード）"
-          },
           "is_active": {
             "type": "boolean",
             "title": "Is Active",
@@ -33232,9 +33354,7 @@
         },
         "type": "object",
         "required": [
-          "product_name",
-          "customer_part_no",
-          "maker_item_code"
+          "product_name"
         ],
         "title": "ProductCreate",
         "description": "Payload to create a product."
@@ -33692,28 +33812,6 @@
             "type": "number",
             "title": "Qty Per Internal Unit"
           },
-          "customer_part_no": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Customer Part No"
-          },
-          "maker_item_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Maker Item Code"
-          },
           "is_active": {
             "type": "boolean",
             "title": "Is Active"
@@ -33750,8 +33848,6 @@
           "internal_unit",
           "external_unit",
           "qty_per_internal_unit",
-          "customer_part_no",
-          "maker_item_code",
           "is_active",
           "created_at",
           "updated_at",
@@ -33907,28 +34003,6 @@
               }
             ],
             "title": "Qty Per Internal Unit"
-          },
-          "customer_part_no": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Customer Part No"
-          },
-          "maker_item_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Maker Item Code"
           },
           "is_active": {
             "anyOf": [
@@ -34950,7 +35024,7 @@
             ],
             "title": "Status"
           },
-          "destination": {
+          "jiku_code": {
             "anyOf": [
               {
                 "type": "string"
@@ -34959,7 +35033,7 @@
                 "type": "null"
               }
             ],
-            "title": "Destination"
+            "title": "Jiku Code"
           },
           "layer_code": {
             "anyOf": [
@@ -34972,7 +35046,7 @@
             ],
             "title": "Layer Code"
           },
-          "material_code": {
+          "customer_part_no": {
             "anyOf": [
               {
                 "type": "string"
@@ -34981,7 +35055,7 @@
                 "type": "null"
               }
             ],
-            "title": "Material Code"
+            "title": "Customer Part No"
           },
           "delivery_date": {
             "anyOf": [
@@ -35121,7 +35195,7 @@
             "title": "Complement Customer Id",
             "description": "参照したマスタのcustomer_id"
           },
-          "complement_external_product_code": {
+          "complement_customer_part_no": {
             "anyOf": [
               {
                 "type": "string"
@@ -35130,8 +35204,8 @@
                 "type": "null"
               }
             ],
-            "title": "Complement External Product Code",
-            "description": "参照したマスタのexternal_product_code"
+            "title": "Complement Customer Part No",
+            "description": "参照したマスタのcustomer_part_no"
           },
           "complement_match_type": {
             "anyOf": [
@@ -39763,66 +39837,103 @@
         "title": "SupplierImportRow",
         "description": "Supplier with related products for import."
       },
-      "SupplierProductCreate": {
+      "SupplierItemCreate": {
         "properties": {
           "product_id": {
             "type": "integer",
-            "exclusiveMinimum": 0.0,
-            "title": "Product Id"
+            "title": "Product Id",
+            "description": "製品ID"
           },
           "supplier_id": {
             "type": "integer",
-            "exclusiveMinimum": 0.0,
-            "title": "Supplier Id"
+            "title": "Supplier Id",
+            "description": "仕入先ID"
+          },
+          "maker_part_no": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Maker Part No",
+            "description": "メーカー品番"
           },
           "is_primary": {
             "type": "boolean",
             "title": "Is Primary",
+            "description": "主要仕入先フラグ",
             "default": false
           },
           "lead_time_days": {
             "anyOf": [
               {
-                "type": "integer",
-                "minimum": 0.0
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Lead Time Days"
+            "title": "Lead Time Days",
+            "description": "リードタイム（日）"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name",
+            "description": "表示名"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "備考"
           }
         },
         "type": "object",
         "required": [
           "product_id",
-          "supplier_id"
+          "supplier_id",
+          "maker_part_no"
         ],
-        "title": "SupplierProductCreate",
-        "description": "Create supplier product request."
+        "title": "SupplierItemCreate",
+        "description": "Payload to create a supplier item."
       },
-      "SupplierProductResponse": {
+      "SupplierItemResponse": {
         "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "product_id": {
             "type": "integer",
-            "exclusiveMinimum": 0.0,
             "title": "Product Id"
           },
           "supplier_id": {
             "type": "integer",
-            "exclusiveMinimum": 0.0,
             "title": "Supplier Id"
+          },
+          "maker_part_no": {
+            "type": "string",
+            "title": "Maker Part No"
           },
           "is_primary": {
             "type": "boolean",
-            "title": "Is Primary",
-            "default": false
+            "title": "Is Primary"
           },
           "lead_time_days": {
             "anyOf": [
               {
-                "type": "integer",
-                "minimum": 0.0
+                "type": "integer"
               },
               {
                 "type": "null"
@@ -39830,25 +39941,75 @@
             ],
             "title": "Lead Time Days"
           },
-          "id": {
-            "type": "integer",
-            "title": "Id"
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
           },
           "product_code": {
-            "type": "string",
-            "title": "Product Code"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Code",
+            "description": "製品コード"
           },
           "product_name": {
-            "type": "string",
-            "title": "Product Name"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name",
+            "description": "製品名"
           },
           "supplier_code": {
-            "type": "string",
-            "title": "Supplier Code"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code",
+            "description": "仕入先コード"
           },
           "supplier_name": {
-            "type": "string",
-            "title": "Supplier Name"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name",
+            "description": "仕入先名"
           },
           "created_at": {
             "type": "string",
@@ -39868,22 +40029,36 @@
         },
         "type": "object",
         "required": [
+          "id",
           "product_id",
           "supplier_id",
-          "id",
-          "product_code",
-          "product_name",
-          "supplier_code",
-          "supplier_name",
+          "maker_part_no",
+          "is_primary",
+          "lead_time_days",
+          "display_name",
+          "notes",
           "created_at",
           "updated_at",
           "valid_to"
         ],
-        "title": "SupplierProductResponse",
-        "description": "Supplier product response (DDL: product_suppliers)."
+        "title": "SupplierItemResponse",
+        "description": "Supplier item response model with enriched data."
       },
-      "SupplierProductUpdate": {
+      "SupplierItemUpdate": {
         "properties": {
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No",
+            "description": "メーカー品番"
+          },
           "is_primary": {
             "anyOf": [
               {
@@ -39893,24 +40068,50 @@
                 "type": "null"
               }
             ],
-            "title": "Is Primary"
+            "title": "Is Primary",
+            "description": "主要仕入先フラグ"
           },
           "lead_time_days": {
             "anyOf": [
               {
-                "type": "integer",
-                "minimum": 0.0
+                "type": "integer"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Lead Time Days"
+            "title": "Lead Time Days",
+            "description": "リードタイム（日）"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name",
+            "description": "表示名"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "備考"
           }
         },
         "type": "object",
-        "title": "SupplierProductUpdate",
-        "description": "Update supplier product request."
+        "title": "SupplierItemUpdate",
+        "description": "Payload to partially update a supplier item."
       },
       "SupplierResponse": {
         "properties": {

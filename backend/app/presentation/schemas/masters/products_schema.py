@@ -26,12 +26,6 @@ class ProductCreate(ProductBase):
     # product_code は自動採番されるため任意
     product_code: str | None = None  # type: ignore[assignment]
 
-    # 以下2つは必須
-    customer_part_no: str = Field(..., min_length=1, description="先方品番")
-    maker_item_code: str = Field(
-        ..., min_length=1, description="メーカー品番（旧メーカー品目コード）"
-    )
-
     is_active: bool = True
 
 
@@ -46,8 +40,6 @@ class ProductUpdate(BaseModel):
     internal_unit: str | None = None
     external_unit: str | None = None
     qty_per_internal_unit: float | None = None
-    customer_part_no: str | None = None
-    maker_item_code: str | None = None
     is_active: bool | None = None
 
 
@@ -63,8 +55,6 @@ class ProductOut(ORMModel):
     internal_unit: str
     external_unit: str
     qty_per_internal_unit: float
-    customer_part_no: str | None
-    maker_item_code: str | None
     is_active: bool
     created_at: datetime
     updated_at: datetime

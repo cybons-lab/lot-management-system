@@ -1,7 +1,7 @@
 """OCR→SAP変換用補完マスタ検索サービス.
 
 2段階検索ロジック:
-1. 完全一致検索（customer_code + jiku_code + external_product_code）
+1. 完全一致検索（customer_code + jiku_code + customer_part_no）
 2. 前方一致フォールバック（1件のみヒット時に採用）
 """
 
@@ -52,31 +52,31 @@ class OcrSapComplementService:
         self,
         customer_code: str,
         jiku_code: str,
-        external_product_code: str,
+        customer_part_no: str,
     ) -> ComplementResult:
         """OCR入力データから補完マスタを検索.
 
         Args:
             customer_code: 得意先コード
             jiku_code: 次区コード
-            external_product_code: 先方品番（OCR読取値）
+            customer_part_no: 先方品番（OCR読取値）
 
         Returns:
             ComplementResult: 検索結果（マスタ、マッチ種別、製品ID）
         """
         # Step 1: 完全一致検索
-        result = self._find_exact_match(customer_code, jiku_code, external_product_code)
+        result = self._find_exact_match(customer_code, jiku_code, customer_part_no)
         if result.match_type == MatchType.EXACT:
             return result
 
         # Step 2: 前方一致フォールバック
-        return self._find_prefix_match(customer_code, jiku_code, external_product_code)
+        return self._find_prefix_match(customer_code, jiku_code, customer_part_no)
 
     def _find_exact_match(
         self,
         customer_code: str,
         jiku_code: str,
-        external_product_code: str,
+        customer_part_no: str,
     ) -> ComplementResult:
         """完全一致検索."""
         # customer_codeからcustomer_idを取得
@@ -101,7 +101,7 @@ class OcrSapComplementService:
             self.db.query(CustomerItem)
             .filter(
                 CustomerItem.customer_id == customer.id,
-                CustomerItem.external_product_code == external_product_code,
+                CustomerItem.customer_part_no == customer_part_no,
                 CustomerItem.get_active_filter(),
             )
             .all()
@@ -129,8 +129,7 @@ class OcrSapComplementService:
         _jiku_mapping = (
             self.db.query(CustomerItemJikuMapping)
             .filter(
-                CustomerItemJikuMapping.customer_id == customer.id,
-                CustomerItemJikuMapping.external_product_code == external_product_code,
+                CustomerItemJikuMapping.customer_item_id == item.id,
                 CustomerItemJikuMapping.jiku_code == jiku_code,
             )
             .first()
@@ -147,7 +146,7 @@ class OcrSapComplementService:
         self,
         customer_code: str,
         jiku_code: str,
-        external_product_code: str,
+        customer_part_no: str,
     ) -> ComplementResult:
         """前方一致検索（フォールバック）.
 
@@ -175,7 +174,7 @@ class OcrSapComplementService:
             self.db.query(CustomerItem)
             .filter(
                 CustomerItem.customer_id == customer.id,
-                CustomerItem.external_product_code.like(f"{external_product_code}%"),
+                CustomerItem.customer_part_no.like(f"{customer_part_no}%"),
                 CustomerItem.get_active_filter(),
             )
             .all()
@@ -186,7 +185,7 @@ class OcrSapComplementService:
                 customer_item=None,
                 match_type=MatchType.NOT_FOUND,
                 product_id=None,
-                message=f"No match found for: {external_product_code}",
+                message=f"No match found for: {customer_part_no}",
             )
 
         if len(items) > 1:
@@ -202,19 +201,19 @@ class OcrSapComplementService:
             customer_item=item,
             match_type=MatchType.PREFIX,
             product_id=item.product_id,
-            message=f"Prefix match: {external_product_code} -> {item.external_product_code}",
+            message=f"Prefix match: {customer_part_no} -> {item.customer_part_no}",
         )
 
     def resolve_product_id(
         self,
         customer_code: str,
         jiku_code: str,
-        external_product_code: str,
+        customer_part_no: str,
     ) -> tuple[int | None, MatchType, str | None]:
         """製品IDを解決（簡易版）.
 
         Returns:
             tuple: (product_id, match_type, message)
         """
-        result = self.find_complement(customer_code, jiku_code, external_product_code)
+        result = self.find_complement(customer_code, jiku_code, customer_part_no)
         return (result.product_id, result.match_type, result.message)

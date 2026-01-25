@@ -276,7 +276,7 @@ class OrderLine(Base):
     )
 
     # OCR取込時の元データ
-    external_product_code: Mapped[str | None] = mapped_column(
+    customer_part_no: Mapped[str | None] = mapped_column(
         String(100), nullable=True, comment="OCR元の先方品番（変換前の生データ）"
     )
     delivery_date: Mapped[date] = mapped_column(Date, nullable=False)

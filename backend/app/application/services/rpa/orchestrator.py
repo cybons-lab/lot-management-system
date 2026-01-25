@@ -74,7 +74,7 @@ class MaterialDeliveryNoteOrchestrator:
                 status=row_data.get("status"),
                 jiku_code=row_data.get("jiku_code"),
                 layer_code=row_data.get("layer_code"),
-                external_product_code=row_data.get("external_product_code"),
+                customer_part_no=row_data.get("customer_part_no"),
                 delivery_date=row_data.get("delivery_date"),
                 delivery_quantity=row_data.get("delivery_quantity"),
                 shipping_vehicle=row_data.get("shipping_vehicle"),
@@ -516,12 +516,11 @@ class MaterialDeliveryNoteOrchestrator:
             return {"lots": [], "auto_selected": None, "source": "none"}
 
         item = self.repo.get_item(run_id, item_id)
-        if not item or not item.external_product_code:
+        if not item or not item.customer_part_no:
             return {"lots": [], "auto_selected": None, "source": "none"}
 
         customer_id = run.customer_id
-        # Fix: access attribute directly
-        external_product_code = item.external_product_code
+        customer_part_no = item.customer_part_no
 
         product_id = None
         supplier_id = None
@@ -529,7 +528,7 @@ class MaterialDeliveryNoteOrchestrator:
 
         # 1. CustomerItem
         if customer_id:
-            customer_item = self.repo.find_customer_item(customer_id, external_product_code)
+            customer_item = self.repo.find_customer_item(customer_id, customer_part_no)
             if customer_item:
                 product_id = customer_item.product_id
                 supplier_id = customer_item.supplier_id
@@ -537,7 +536,7 @@ class MaterialDeliveryNoteOrchestrator:
 
         # 2. Product fallback
         if not product_id:
-            product = self.repo.find_product_by_maker_part_code(external_product_code)
+            product = self.repo.find_product_by_maker_part_code(customer_part_no)
             if product:
                 product_id = product.id
                 source = "product_only"

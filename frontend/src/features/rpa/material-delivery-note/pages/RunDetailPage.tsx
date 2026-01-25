@@ -410,10 +410,10 @@ export function RunDetailPage() {
             {filteredItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>{item.row_no}</TableCell>
-                <TableCell>{item.destination}</TableCell>
+                <TableCell>{item.jiku_code}</TableCell>
                 <TableCell>{item.layer_code}</TableCell>
                 <TableCell className="text-sm">{item.maker_name}</TableCell>
-                <TableCell>{item.material_code}</TableCell>
+                <TableCell>{item.customer_part_no}</TableCell>
                 <TableCell>
                   {item.delivery_date ? format(new Date(item.delivery_date), "MM/dd") : ""}
                 </TableCell>

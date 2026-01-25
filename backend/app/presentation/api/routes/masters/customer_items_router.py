@@ -1,4 +1,10 @@
-"""Customer items router (得意先品番マッピングAPI)."""
+"""Customer items router (得意先品番マッピングAPI).
+
+Updated: サロゲートキー（id）ベースに移行
+- パスパラメータを /{id} に変更
+- external_product_code → customer_part_no
+- 後方互換性: /{customer_id}/{customer_part_no} も維持
+"""
 
 from datetime import date
 
@@ -9,7 +15,10 @@ from app.application.services.common.export_service import ExportService
 from app.application.services.masters.customer_items_service import CustomerItemsService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.presentation.api.routes.auth.auth_router import get_current_admin
+from app.presentation.api.routes.auth.auth_router import (
+    get_current_admin,
+    get_current_user_optional,
+)
 from app.presentation.schemas.masters.customer_items_schema import (
     CustomerItemBulkUpsertRequest,
     CustomerItemCreate,
@@ -73,7 +82,7 @@ def export_customer_items(format: str = "csv", db: Session = Depends(get_db)):
     return ExportService.export_to_csv(items, "customer_items")
 
 
-@router.get("/{customer_id}", response_model=list[CustomerItemResponse])
+@router.get("/by-customer/{customer_id}", response_model=list[CustomerItemResponse])
 def list_customer_items_by_customer(customer_id: int, db: Session = Depends(get_db)):
     """特定得意先の品番マッピング一覧取得.
 
@@ -86,6 +95,30 @@ def list_customer_items_by_customer(customer_id: int, db: Session = Depends(get_
     """
     service = CustomerItemsService(db)
     return service.get_by_customer(customer_id)
+
+
+@router.get("/{id}", response_model=CustomerItemResponse)
+def get_customer_item(id: int, db: Session = Depends(get_db)):
+    """得意先品番マッピング詳細取得.
+
+    Args:
+        id: 得意先品番マッピングID
+        db: データベースセッション
+
+    Returns:
+        品番マッピング詳細
+
+    Raises:
+        HTTPException: マッピングが存在しない場合
+    """
+    service = CustomerItemsService(db)
+    item = service.get_by_id_enriched(id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer item mapping not found",
+        )
+    return item
 
 
 @router.post("", response_model=CustomerItemResponse, status_code=status.HTTP_201_CREATED)
@@ -104,8 +137,8 @@ def create_customer_item(item: CustomerItemCreate, db: Session = Depends(get_db)
     """
     service = CustomerItemsService(db)
 
-    # Check if mapping already exists
-    existing = service.get_by_key(item.customer_id, item.external_product_code)
+    # Check if mapping already exists (business key check)
+    existing = service.get_by_key(item.customer_id, item.customer_part_no)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -115,20 +148,20 @@ def create_customer_item(item: CustomerItemCreate, db: Session = Depends(get_db)
     return service.create(item)
 
 
-@router.put("/{customer_id}/{external_product_code}", response_model=CustomerItemResponse)
+@router.put("/{id}", response_model=CustomerItemResponse)
 def update_customer_item(
-    customer_id: int,
-    external_product_code: str,
+    id: int,
     item: CustomerItemUpdate,
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
 ):
     """得意先品番マッピング更新.
 
     Args:
-        customer_id: 得意先ID
-        external_product_code: 得意先品番
+        id: 得意先品番マッピングID
         item: 更新する品番マッピング情報
         db: データベースセッション
+        current_user: 認証済みユーザー（オプション）
 
     Returns:
         更新された品番マッピング
@@ -137,7 +170,13 @@ def update_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    updated = service.update_by_key(customer_id, external_product_code, item)
+    # 管理者かどうかを判定
+    is_admin = False
+    if current_user:
+        roles = [ur.role.role_code for ur in current_user.user_roles]
+        is_admin = "admin" in roles
+
+    updated = service.update_by_id(id, item, is_admin=is_admin)
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -146,18 +185,16 @@ def update_customer_item(
     return updated
 
 
-@router.delete("/{customer_id}/{external_product_code}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_customer_item(
-    customer_id: int,
-    external_product_code: str,
+    id: int,
     end_date: date | None = Query(None),
     db: Session = Depends(get_db),
 ):
     """得意先品番マッピング削除.
 
     Args:
-        customer_id: 得意先ID
-        external_product_code: 得意先品番
+        id: 得意先品番マッピングID
         end_date: 無効化日（指定がない場合は即時）
         db: データベースセッション
 
@@ -165,7 +202,7 @@ def delete_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    deleted = service.delete_by_key(customer_id, external_product_code, end_date)
+    deleted = service.delete_by_id(id, end_date)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -174,20 +211,16 @@ def delete_customer_item(
     return None
 
 
-@router.delete(
-    "/{customer_id}/{external_product_code}/permanent", status_code=status.HTTP_204_NO_CONTENT
-)
+@router.delete("/{id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
 def permanent_delete_customer_item(
-    customer_id: int,
-    external_product_code: str,
+    id: int,
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
     """得意先品番マッピング完全削除.
 
     Args:
-        customer_id: 得意先ID
-        external_product_code: 得意先品番
+        id: 得意先品番マッピングID
         current_user: 認証済み管理者ユーザー
         db: データベースセッション
 
@@ -195,7 +228,7 @@ def permanent_delete_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    deleted = service.permanent_delete_by_key(customer_id, external_product_code)
+    deleted = service.permanent_delete_by_id(id)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -204,15 +237,12 @@ def permanent_delete_customer_item(
     return None
 
 
-@router.post("/{customer_id}/{external_product_code}/restore", response_model=CustomerItemResponse)
-def restore_customer_item(
-    customer_id: int, external_product_code: str, db: Session = Depends(get_db)
-):
+@router.post("/{id}/restore", response_model=CustomerItemResponse)
+def restore_customer_item(id: int, db: Session = Depends(get_db)):
     """得意先品番マッピング復元.
 
     Args:
-        customer_id: 得意先ID
-        external_product_code: 得意先品番
+        id: 得意先品番マッピングID
         db: データベースセッション
 
     Returns:
@@ -222,7 +252,7 @@ def restore_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    restored = service.restore_by_key(customer_id, external_product_code)
+    restored = service.restore_by_id(id)
     if not restored:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -237,7 +267,7 @@ def bulk_upsert_customer_items(
 ):
     """得意先品番マッピング一括登録/更新.
 
-    複合キー（customer_id, external_product_code）で判定し、
+    ビジネスキー（customer_id, customer_part_no）で判定し、
     既存レコードがあれば更新、なければ新規作成します。
 
     Args:

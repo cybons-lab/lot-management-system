@@ -38,6 +38,8 @@ const createLot = (overrides: Partial<LotUI>): LotUI => ({
   supplier_name: overrides.supplier_name ?? "Supplier A",
   supplier_code: overrides.supplier_code ?? "SUP-A",
   warehouse_code: overrides.warehouse_code ?? "WH-1",
+  maker_part_no: overrides.maker_part_no ?? null,
+  customer_part_no: overrides.customer_part_no ?? null,
 });
 
 describe("inventory lot derived logic", () => {

@@ -29,7 +29,7 @@ export interface SupplierProductUpdate {
   lead_time_days?: number | null;
 }
 
-const BASE_PATH = "masters/supplier-products";
+const BASE_PATH = "masters/supplier-items";
 
 export async function fetchSupplierProducts(params?: {
   supplier_id?: number;

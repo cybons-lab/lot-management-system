@@ -1,13 +1,15 @@
 /**
  * Customer Item CSV Utilities
+ *
+ * Updated: customer_part_no に変更
  */
 import type { CustomerItemBulkRow } from "../types/bulk-operation";
 
-const REQUIRED_HEADERS = ["customer_code", "external_product_code", "product_code", "base_unit"];
+const REQUIRED_HEADERS = ["customer_code", "customer_part_no", "product_code", "base_unit"];
 
 export const CSV_HEADERS = [
   "customer_code",
-  "external_product_code",
+  "customer_part_no",
   "product_code",
   "supplier_code",
   "base_unit",
@@ -51,7 +53,7 @@ function buildRow(headers: string[], values: string[], rowNumber: number) {
   return {
     row: {
       customer_code: rowData["customer_code"] ?? "",
-      external_product_code: rowData["external_product_code"] ?? "",
+      customer_part_no: rowData["customer_part_no"] ?? "",
       product_code: rowData["product_code"] ?? "",
       supplier_code: rowData["supplier_code"] || undefined,
       base_unit: rowData["base_unit"] ?? "",
@@ -109,7 +111,9 @@ export async function parseCustomerItemCsv(
 }
 
 export function generateEmptyTemplate(): string {
-  return [CSV_HEADERS.join(","), "C001,EXT-001,P001,S001,PCS,BOX,10,特記事項あり"].join("\n");
+  return [CSV_HEADERS.join(","), "C001,CUST-001-PRD-001,P001,S001,PCS,BOX,10,特記事項あり"].join(
+    "\n",
+  );
 }
 
 export function downloadCSV(content: string, filename: string): void {

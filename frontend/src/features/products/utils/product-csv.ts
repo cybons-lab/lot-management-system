@@ -9,7 +9,7 @@ import type { ProductBulkRow } from "../types/bulk-operation";
  * Parse product CSV file content
  *
  * Expected CSV format:
- * OPERATION,product_code,product_name,internal_unit,external_unit,qty_per_internal_unit,customer_part_no,maker_item_code,is_active
+ * OPERATION,product_code,product_name,internal_unit,external_unit,qty_per_internal_unit,is_active
  *
  * @param csvText - CSV file content as string
  * @returns Parsed rows and errors
@@ -30,8 +30,6 @@ function parseProductRow(
     internal_unit,
     external_unit,
     qty_per_internal_unit_str,
-    customer_part_no,
-    maker_item_code,
     is_active_str,
   ] = cols;
 
@@ -56,8 +54,6 @@ function parseProductRow(
       internal_unit: internal_unit.trim() || "CAN",
       external_unit: external_unit.trim() || "KG",
       qty_per_internal_unit,
-      customer_part_no: customer_part_no?.trim() || null,
-      maker_item_code: maker_item_code?.trim() || null,
       is_active,
       _rowNumber: rowIndex,
     },
@@ -68,7 +64,7 @@ function parseProductRow(
  * Parse product CSV file content
  *
  * Expected CSV format:
- * OPERATION,product_code,product_name,internal_unit,external_unit,qty_per_internal_unit,customer_part_no,maker_item_code,is_active
+ * OPERATION,product_code,product_name,internal_unit,external_unit,qty_per_internal_unit,is_active
  *
  * @param csvText - CSV file content as string
  * @returns Parsed rows and errors
@@ -116,9 +112,9 @@ export function parseProductCsv(csvText: string): {
  */
 export function generateProductTemplateCsv(): string {
   const header =
-    "OPERATION,product_code,product_name,internal_unit,external_unit,qty_per_internal_unit,customer_part_no,maker_item_code,is_active";
+    "OPERATION,product_code,product_name,internal_unit,external_unit,qty_per_internal_unit,is_active";
 
-  const sampleRow = "ADD,PROD001,サンプル商品,CAN,KG,1.0,CUST001,MAKER001,true";
+  const sampleRow = "ADD,PROD001,サンプル商品,CAN,KG,1.0,true";
 
   return `${header}\n${sampleRow}\n`;
 }

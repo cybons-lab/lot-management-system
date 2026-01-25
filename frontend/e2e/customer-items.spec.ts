@@ -13,7 +13,7 @@ test.describe("Customer Items", () => {
   // Mock data
   const mockCustomerItem = {
     customer_id: 1,
-    external_product_code: "EXT-001",
+    customer_part_no: "EXT-001",
     product_id: 1,
     product_name: "Test Product",
     customer_code: "CUST-001",

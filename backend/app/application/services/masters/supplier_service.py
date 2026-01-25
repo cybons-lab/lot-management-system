@@ -1,6 +1,7 @@
 from datetime import date
 from typing import cast
 
+from fastapi import HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -38,11 +39,47 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, int]
             )
         return supplier
 
-    def update_by_code(self, code: str, payload: SupplierUpdate) -> Supplier:
-        """Update supplier by supplier_code."""
+    def update_by_code(
+        self,
+        code: str,
+        payload: SupplierUpdate,
+        *,
+        is_admin: bool = False,
+    ) -> Supplier:
+        """Update supplier by supplier_code.
+
+        コード変更はID参照のため安全に変更可能（リレーションは壊れない）。
+        ただし重複チェックと管理者権限チェックは実施。
+
+        Args:
+            code: 現在の仕入先コード
+            payload: 更新データ
+            is_admin: 管理者権限フラグ（コード変更時に必要）
+
+        Returns:
+            更新後の仕入先
+        """
         supplier = self.get_by_code(code)
         if supplier is None or supplier.id is None:
             raise ValueError("Supplier not found or has no ID")
+
+        # コード変更のチェック
+        if payload.supplier_code and payload.supplier_code != supplier.supplier_code:
+            # 1. 権限チェック（管理者のみ）
+            if not is_admin:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="仕入先コードの変更は管理者のみ許可されています。",
+                )
+
+            # 2. 重複チェック
+            existing = self.get_by_code(payload.supplier_code, raise_404=False)
+            if existing and existing.id != supplier.id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"仕入先コード '{payload.supplier_code}' は既に存在します。",
+                )
+
         return self.update(supplier.id, payload)
 
     def delete_by_code(self, code: str, *, end_date: date | None = None) -> None:

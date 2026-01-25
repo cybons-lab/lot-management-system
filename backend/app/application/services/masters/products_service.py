@@ -99,7 +99,7 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
 
         return cast(
             list[Product],
-            query.options(joinedload(Product.product_suppliers))
+            query.options(joinedload(Product.supplier_items))
             .order_by(Product.maker_part_code)
             .offset(skip)
             .limit(limit)
@@ -147,16 +147,6 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
 
         # 不要な product_code フィールドを削除
         data.pop("product_code", None)
-
-        # 2. 必須フィールドの確認 (スキーマでもチェックしているが念のため)
-        if not data.get("customer_part_no"):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="先方品番は必須です"
-            )
-        if not data.get("maker_item_code"):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="メーカー品番は必須です"
-            )
 
         # Remove fields not in model
         data.pop("is_active", None)

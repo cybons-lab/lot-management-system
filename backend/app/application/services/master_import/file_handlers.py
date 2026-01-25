@@ -206,11 +206,14 @@ def _parse_customers_sheet(sheet) -> list[dict]:
             )
 
         # Add customer item if present
-        ext_code = str(row_dict.get("external_product_code", "")).strip()
+        ext_code = (
+            str(row_dict.get("customer_part_no", "")).strip()
+            or str(row_dict.get("external_product_code", "")).strip()
+        )
         if ext_code:
             customer["items"].append(
                 {
-                    "external_product_code": ext_code,
+                    "customer_part_no": ext_code,
                     "maker_part_code": str(row_dict.get("maker_part_code", "")).strip(),
                     "supplier_code": str(row_dict.get("supplier_code", "")).strip() or None,
                 }

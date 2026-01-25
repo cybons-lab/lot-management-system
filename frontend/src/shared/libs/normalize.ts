@@ -86,6 +86,9 @@ type LotResponse = components["schemas"]["LotResponse"] & {
   cost_price?: number | string | null;
   sales_price?: number | string | null;
   tax_rate?: number | string | null;
+  // Phase 3 Fields
+  maker_part_no?: string | null;
+  customer_part_no?: string | null;
 };
 type ProductResponse = components["schemas"]["ProductOut"];
 
@@ -144,6 +147,8 @@ export interface LotUI extends Record<string, unknown> {
   id: number; // Required for UI operations
   lot_id: number; // DDL v2.2
   lot_number: string;
+  maker_part_no: string | null; // Phase 3
+  customer_part_no: string | null; // Phase 3
   product_id: number; // DDL v2.2
   warehouse_id: number; // DDL v2.2
   supplier_id: number | null; // DDL v2.2
@@ -205,8 +210,6 @@ export interface ProductUI extends Record<string, unknown> {
   internal_unit: string;
   external_unit: string;
   qty_per_internal_unit: number;
-  customer_part_no: string | null;
-  maker_item_code: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -267,6 +270,8 @@ export function normalizeLot(
   return {
     lot_id: lot.lot_id,
     lot_number: S(lot.lot_number),
+    maker_part_no: lot.maker_part_no ?? null,
+    customer_part_no: lot.customer_part_no ?? null,
     product_id: lot.product_id,
     warehouse_id: lot.warehouse_id,
     supplier_id: lot.supplier_id ?? null,
@@ -336,13 +341,11 @@ export function normalizeProduct(product: ProductResponse): ProductUI {
     internal_unit: S(product.internal_unit, "CAN"),
     external_unit: S(product.external_unit, "KG"),
     qty_per_internal_unit: N(product.qty_per_internal_unit, 1),
-    customer_part_no: product.customer_part_no ?? null,
-    maker_item_code: product.maker_item_code ?? null,
     is_active: product.is_active,
     created_at: S(product.created_at),
     updated_at: S(product.updated_at),
     // Legacy fields (for backward compatibility)
-    maker_part_code: product.maker_item_code ?? undefined,
+    maker_part_code: product.product_code ?? undefined,
     base_unit: product.internal_unit,
     consumption_limit_days: undefined,
   };

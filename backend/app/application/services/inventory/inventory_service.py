@@ -134,7 +134,7 @@ from app.infrastructure.persistence.models.assignments.assignment_models import 
     UserSupplierAssignment,
 )
 from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
-from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.schemas.inventory.inventory_schema import (
     InventoryFilterOption,
     InventoryFilterOptions,
@@ -685,9 +685,9 @@ class InventoryService:
         if supplier_id:
             # Filter products supplied by this supplier
             p_stmt = (
-                p_stmt.join(ProductSupplier, ProductSupplier.product_id == Product.id)
-                .where(ProductSupplier.supplier_id == supplier_id)
-                .where(ProductSupplier.valid_to >= "9999-12-31")
+                p_stmt.join(SupplierItem, SupplierItem.product_id == Product.id)
+                .where(SupplierItem.supplier_id == supplier_id)
+                .where(SupplierItem.valid_to >= "9999-12-31")
             )
 
         p_rows = self.db.execute(p_stmt).all()
@@ -712,9 +712,9 @@ class InventoryService:
         if product_id:
             # Filter suppliers supplying this product
             s_stmt = (
-                s_stmt.join(ProductSupplier, ProductSupplier.supplier_id == Supplier.id)
-                .where(ProductSupplier.product_id == product_id)
-                .where(ProductSupplier.valid_to >= "9999-12-31")
+                s_stmt.join(SupplierItem, SupplierItem.supplier_id == Supplier.id)
+                .where(SupplierItem.product_id == product_id)
+                .where(SupplierItem.valid_to >= "9999-12-31")
             )
 
         s_rows = self.db.execute(s_stmt).all()

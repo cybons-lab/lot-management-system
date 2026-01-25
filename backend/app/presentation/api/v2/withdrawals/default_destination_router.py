@@ -108,7 +108,7 @@ def get_default_destination(
                 "product_id": product_id,
                 "supplier_id": supplier_id,
                 "customer_id": customer_item.customer_id,
-                "external_product_code": customer_item.external_product_code,
+                "customer_part_no": customer_item.customer_part_no,
             },
         )
         return DefaultDestinationResponse(
@@ -119,9 +119,7 @@ def get_default_destination(
     # Step 3: Find default delivery settings
     delivery_query = select(CustomerItemDeliverySetting).where(
         and_(
-            CustomerItemDeliverySetting.customer_id == customer_item.customer_id,
-            CustomerItemDeliverySetting.external_product_code
-            == customer_item.external_product_code,
+            CustomerItemDeliverySetting.customer_item_id == customer_item.id,
             CustomerItemDeliverySetting.is_default == True,  # noqa: E712
         )
     )
@@ -148,7 +146,7 @@ def get_default_destination(
                 "product_id": product_id,
                 "supplier_id": supplier_id,
                 "customer_id": customer.id,
-                "external_product_code": customer_item.external_product_code,
+                "customer_part_no": customer_item.customer_part_no,
             },
         )
 

@@ -142,3 +142,9 @@ backend/dumps/
 # ============================================
 backups/
 mypy_*.txt
+
+# ============================================
+# Test artifacts / Mock output
+# ============================================
+backend/MagicMock/
+backend/test_exports/
