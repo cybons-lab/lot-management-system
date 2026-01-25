@@ -191,8 +191,8 @@ export function createProductColumns(options: ProductColumnsOptions): Column<Pro
 
 /** 旧エクスポート（後方互換性） - 非推奨 */
 export const productColumns = createProductColumns({
-  onEdit: () => { },
-  onSoftDelete: () => { },
-  onRestore: () => { },
-  onPermanentDelete: () => { },
+  onEdit: () => {},
+  onSoftDelete: () => {},
+  onRestore: () => {},
+  onPermanentDelete: () => {},
 });
