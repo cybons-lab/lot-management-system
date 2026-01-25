@@ -607,14 +607,13 @@ class SmartReadClient:
                 url = self._build_api_url(f"/v3/task/{task_id}/export/{export_id}/download")
                 headers = {"Authorization": f"apikey {self.api_key}"}
                 response = await client.get(url, headers=headers)
-                print(f"[DEBUG] Download Code: {response.status_code}")
+                logger.debug(f"Download Code: {response.status_code}")
                 response.raise_for_status()
-                print(f"[DEBUG] Download Content-Type: {response.headers.get('content-type')}")
-                print(f"[DEBUG] Download Size: {len(response.content)} bytes")
+                logger.debug(f"Download Content-Type: {response.headers.get('content-type')}")
+                logger.debug(f"Download Size: {len(response.content)} bytes")
                 return response.content
 
         except Exception as e:
-            print(f"[DEBUG] Download Error: {e}")
             logger.error(f"Failed to download export: {e}")
             return None
 

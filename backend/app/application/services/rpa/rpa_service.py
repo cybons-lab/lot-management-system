@@ -118,10 +118,14 @@
     - スケールアウト時にもロック機能が正常動作
 """
 
+import logging
 import time
 from datetime import datetime, timedelta
 
 from app.core.time_utils import utcnow
+
+
+logger = logging.getLogger(__name__)
 
 
 class RPALockManager:
@@ -253,11 +257,11 @@ class RPAService:
 
         # PAD実行のモック（実際はPower Automate Desktop APIを呼び出す）
         # 設定値を使用して実行（ログに出力）
-        print(f"[RPA] 素材納品書発行を実行: {start_date} ~ {end_date}")
-        print(f"[RPA] Using STEP1 URL: {url_step1 or 'Not Set'}")
-        print(f"[RPA] Using STEP3 URL: {url_step3 or 'Not Set'}")
-        print(f"[RPA] Using STEP1 Payload: {payload_step1 or 'Not Set'}")
-        print(f"[RPA] Using STEP3 Payload: {payload_step3 or 'Not Set'}")
+        logger.info(f"[RPA] 素材納品書発行を実行: {start_date} ~ {end_date}")
+        logger.debug(f"[RPA] Using STEP1 URL: {url_step1 or 'Not Set'}")
+        logger.debug(f"[RPA] Using STEP3 URL: {url_step3 or 'Not Set'}")
+        logger.debug(f"[RPA] Using STEP1 Payload: {payload_step1 or 'Not Set'}")
+        logger.debug(f"[RPA] Using STEP3 Payload: {payload_step3 or 'Not Set'}")
 
         time.sleep(0.1)  # 実行シミュレーション
 
