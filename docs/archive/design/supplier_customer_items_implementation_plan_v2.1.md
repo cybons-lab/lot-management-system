@@ -1,11 +1,16 @@
 # supplier_items / customer_items 統合移行計画 v2.1
 
+> [!NOTE]
+> **実装ステータス: 完了 (2026-01-25)**
+> 本計画に基づく Phase 2-1 までの実装は `main` ブランチに反映済みです。
+> 実装過程で `external_product_code` は `customer_part_no` へリネームされました。
+
 ## 📌 v2.1 最終決定事項（変更不可）
 
 本計画書は以下の最終決定に基づき作成されています。代替案提案は不要です。
 
 ### 1. 主キー設計
-- ✅ **customer_items の主キーは現状維持**（複合PK: `customer_id, external_product_code`）
+- ✅ **customer_items の主キーは現状維持**（複合PK: `customer_id, customer_part_no`）
 - ❌ surrogate key (id) 追加・PK移行は今回一切行わない
 - 理由: 既存 FK 参照への影響を回避、段階的導入を優先
 
@@ -19,10 +24,10 @@
 - ❌ lot_master.supplier_item_id は追加しない（または派生 read-only 扱いで更新禁止）
 - 理由: データの二重管理を避け、lot_receipts を SSOT とする
 
-### 4. external_product_code の定義
-- ✅ **external_product_code は「得意先品番」として扱う**
-- order_lines.external_product_code: OCR取込時の「得意先品番」
-- customer_items.external_product_code: 主キーの一部（同じ意味）
+### 4. customer_part_no の定義
+- ✅ **customer_part_no は「得意先品番」として扱う**
+- order_lines.customer_part_no: OCR取込時の「得意先品番」
+- customer_items.customer_part_no: 主キーの一部（同じ意味）
 - 【要確認】: 実装時に意味が異なる場合のみ別途提案
 
 ---
@@ -34,7 +39,7 @@
 ### 目的
 
 - **入荷・在庫**: `(supplier_id, maker_part_no)` → supplier_items でキー管理
-- **受注・出荷**: `(customer_id, external_product_code)` → customer_items でキー管理
+- **受注・出荷**: `(customer_id, customer_part_no)` → customer_items でキー管理
 - **橋渡し**: `customer_items.supplier_item_id` (nullable) で両者を接続
 - **制約**: 在庫操作時に `supplier_item_id` が NULL なら **Phase 1 から即座にブロック**
 
@@ -49,13 +54,13 @@ Phase 1/2 では `products` テーブルと `product_id` を残し、段階的�
 ### 重要な発見
 
 1. **customer_items テーブルは既に存在** (v2.1から)
-   - PK: `(customer_id, external_product_code)`（**v2.1: 変更しない**）
+   - PK: `(customer_id, customer_part_no)`（**v2.1: 変更しない**）
    - FK: `product_id` → products(id)
    - **不足**: `supplier_item_id` FK がない
 
-2. **external_product_code が得意先品番**（**v2.1: 確定**）
-   - order_lines.external_product_code: OCR取込時の「得意先品番」
-   - customer_items.external_product_code: 主キーの一部（同じ意味）
+2. **customer_part_no が得意先品番**（**v2.1: 確定**）
+   - order_lines.customer_part_no: OCR取込時の「得意先品番」
+   - customer_items.customer_part_no: 主キーの一部（同じ意味）
 
 3. **lot_receipts に maker_part_no 列がない**
    - lot_master + lot_receipts 構造
@@ -71,7 +76,7 @@ Phase 1/2 では `products` テーブルと `product_id` を残し、段階的�
 | 項目 | 現状 | 要求 | 対応 |
 |------|------|------|------|
 | 入荷キー | lot_number + product_id | supplier_id + maker_part_no | supplier_items 新規作成 |
-| 受注キー | customer_id + external_product_code | 同じ | customer_items 既存 ✓ |
+| 受注キー | customer_id + customer_part_no | 同じ | customer_items 既存 ✓ |
 | マッピング | customer_items → product_id | customer_items → supplier_item_id | FK列追加 |
 | ロット保存 | lot_receipts.product_id | lot_receipts.supplier_item_id (SSOT) | FK列追加 |
 | 引当検証 | なし | supplier_item_id NULL なら Phase 1 からブロック | サービス層ロジック |
@@ -127,7 +132,7 @@ CREATE INDEX idx_supplier_items_valid_to ON supplier_items (valid_to);
 
 ```sql
 -- customer_items に supplier_item_id 追加
--- v2.1 決定: PK は複合PK (customer_id, external_product_code) のまま維持
+-- v2.1 決定: PK は複合PK (customer_id, customer_part_no) のまま維持
 ALTER TABLE customer_items
     ADD COLUMN supplier_item_id BIGINT NULL
     REFERENCES supplier_items(id) ON DELETE SET NULL;
@@ -469,7 +474,7 @@ def allocate_order_lines(self, order_id: int):
         validation_result = self._validate_line_for_allocation(line)
         if not validation_result.is_valid:
             raise AllocationBlockedError(
-                f"Order line {line.id} (external_product_code: {line.external_product_code}) "
+                f"Order line {line.id} (customer_part_no: {line.customer_part_no}) "
                 f"cannot be allocated: {validation_result.reason}. "
                 f"Please map this customer item to a supplier item at /masters/customer-items/mapping"
             )
@@ -492,10 +497,10 @@ def _validate_line_for_allocation(self, line: OrderLine) -> ValidationResult:
     if not line.product_id:
         return ValidationResult(False, "product_id not resolved")
 
-    # customer_item からマッピング確認（v2.1: external_product_code = 得意先品番）
+    # customer_item からマッピング確認（v2.1: customer_part_no = 得意先品番）
     customer_item = self.customer_item_repo.find_by_customer_and_part_no(
         customer_id=line.order.customer_id,
-        external_product_code=line.external_product_code
+        customer_part_no=line.customer_part_no
     )
 
     if not customer_item:
@@ -510,7 +515,7 @@ def _get_customer_item_for_line(self, line: OrderLine) -> CustomerItem | None:
     """受注明細から customer_item を取得"""
     return self.customer_item_repo.find_by_customer_and_part_no(
         customer_id=line.order.customer_id,
-        external_product_code=line.external_product_code
+        customer_part_no=line.customer_part_no
     )
 ```
 
@@ -543,7 +548,7 @@ def get_unmapped_customer_items(
                 {
                     "customer_id": 1,
                     "customer_name": "得意先A",
-                    "external_product_code": "CUST-001",  # v2.1: 得意先品番
+                    "customer_part_no": "CUST-001",  # v2.1: 得意先品番
                     "description": "商品名",
                     "product_id": 123,
                     "supplier_item_id": null,  # ← NULL が問題
@@ -581,7 +586,7 @@ def suggest_mappings(
     """
     customer_item = db.query(CustomerItem).filter(
         CustomerItem.customer_id == request.customer_id,
-        CustomerItem.external_product_code == request.external_product_code
+        CustomerItem.customer_part_no == request.customer_part_no
     ).first()
 
     if not customer_item:
@@ -606,17 +611,17 @@ def suggest_mappings(
         ]
     }
 
-@router.patch("/api/v2/customer-items/{customer_id}/{external_product_code}/map")
+@router.patch("/api/v2/customer-items/{customer_id}/{customer_part_no}/map")
 def update_mapping(
     customer_id: int,
-    external_product_code: str,
+    customer_part_no: str,
     request: UpdateMappingRequest,
     db: Session = Depends(get_db)
 ):
     """customer_item の supplier_item_id を更新"""
     customer_item = db.query(CustomerItem).filter(
         CustomerItem.customer_id == customer_id,
-        CustomerItem.external_product_code == external_product_code
+        CustomerItem.customer_part_no == customer_part_no
     ).first()
 
     if not customer_item:
@@ -742,7 +747,7 @@ export function MappingManagerPage() {
         <tbody>
           {unmappedData?.items.map(item => (
             <MappingRow
-              key={`${item.customer_id}-${item.external_product_code}`}
+              key={`${item.customer_id}-${item.customer_part_no}`}
               item={item}
             />
           ))}
@@ -775,11 +780,11 @@ function MappingRow({ item }) {
 
   // マッピング候補取得
   const { data: suggestions } = useQuery({
-    queryKey: ['mapping-suggestions', item.customer_id, item.external_product_code],
+    queryKey: ['mapping-suggestions', item.customer_id, item.customer_part_no],
     queryFn: () => api.post('/api/v2/customer-items/suggest-mappings', {
       json: {
         customer_id: item.customer_id,
-        external_product_code: item.external_product_code
+        customer_part_no: item.customer_part_no
       }
     }).json()
   });
@@ -788,7 +793,7 @@ function MappingRow({ item }) {
   const updateMutation = useMutation({
     mutationFn: (supplierItemId) =>
       api.patch(
-        `/api/v2/customer-items/${item.customer_id}/${item.external_product_code}/map`,
+        `/api/v2/customer-items/${item.customer_id}/${item.customer_part_no}/map`,
         { json: { supplier_item_id: supplierItemId } }
       ).json(),
     onSuccess: () => {
@@ -805,7 +810,7 @@ function MappingRow({ item }) {
     <tr>
       <td>{item.customer_name}</td>
       <td>
-        <code className="text-sm">{item.external_product_code}</code>
+        <code className="text-sm">{item.customer_part_no}</code>
       </td>
       <td>{item.description}</td>
       <td>{item.maker_part_no || '-'}</td>
@@ -862,7 +867,7 @@ export function OrderLineCard({ orderLine }: { orderLine: OrderLine }) {
     <Card>
       {/* 既存の表示 */}
       <div className="p-4">
-        <p>得意先品番: {orderLine.external_product_code}</p>
+        <p>得意先品番: {orderLine.customer_part_no}</p>
         <p>数量: {orderLine.order_quantity}</p>
         {/* ... その他の情報 */}
       </div>
@@ -1121,7 +1126,7 @@ def test_allocation_blocked_without_mapping_phase1(db: Session):
     # Setup: customer_item with NULL supplier_item_id
     customer_item = CustomerItem(
         customer_id=1,
-        external_product_code="CUST-001",  # v2.1: 得意先品番
+        customer_part_no="CUST-001",  # v2.1: 得意先品番
         product_id=1,
         supplier_item_id=None  # 未マッピング
     )
@@ -1129,7 +1134,7 @@ def test_allocation_blocked_without_mapping_phase1(db: Session):
 
     # Setup: Order
     order = create_order(customer_id=1, lines=[
-        {"external_product_code": "CUST-001", "quantity": 10}
+        {"customer_part_no": "CUST-001", "quantity": 10}
     ])
 
     # Act & Assert: Phase 1 から即座にブロック
@@ -1157,7 +1162,7 @@ def test_allocation_succeeds_after_mapping(db: Session):
     # Setup: customer_item with mapping
     customer_item = CustomerItem(
         customer_id=1,
-        external_product_code="CUST-001",
+        customer_part_no="CUST-001",
         product_id=1,
         supplier_item_id=si.id  # マッピング済み
     )
@@ -1165,7 +1170,7 @@ def test_allocation_succeeds_after_mapping(db: Session):
 
     # Act
     order = create_order(customer_id=1, lines=[
-        {"external_product_code": "CUST-001", "quantity": 10}
+        {"customer_part_no": "CUST-001", "quantity": 10}
     ])
     order_service.allocate_order_lines(order.id)
 
@@ -1218,14 +1223,14 @@ def test_e2e_allocation_blocked_then_mapped(db: Session, client: TestClient):
     # Setup: customer_item (未マッピング)
     customer_item = create_customer_item(
         customer_id=1,
-        external_product_code="CUST-001",
+        customer_part_no="CUST-001",
         supplier_item_id=None
     )
 
     # Setup: Order
     order = create_order(
         customer_id=1,
-        lines=[{"external_product_code": "CUST-001", "quantity": 10}]
+        lines=[{"customer_part_no": "CUST-001", "quantity": 10}]
     )
 
     # Step 1: 引当を試みる → Phase 1 からブロックされる
@@ -1243,7 +1248,7 @@ def test_e2e_allocation_blocked_then_mapped(db: Session, client: TestClient):
     # Step 3: マッピング候補を取得
     response = client.post("/api/v2/customer-items/suggest-mappings", json={
         "customer_id": 1,
-        "external_product_code": "CUST-001"
+        "customer_part_no": "CUST-001"
     })
     suggestions = response.json()["suggestions"]
     assert len(suggestions) >= 1
@@ -1344,12 +1349,12 @@ FROM lot_master lm;
 
 ---
 
-### Risk 3: external_product_code の意味が異なる
+### Risk 3: customer_part_no の意味が異なる
 
 **影響**: High
 **確率**: Low
 
-**【要確認】**: `order_lines.external_product_code` と `customer_items.external_product_code` が同じ意味か？
+**【要確認】**: `order_lines.customer_part_no` と `customer_items.customer_part_no` が同じ意味か？
 
 **v2.1 前提**: 両者とも「得意先品番」として扱う
 
@@ -1357,11 +1362,11 @@ FROM lot_master lm;
 ```sql
 -- 一致率を確認
 SELECT
-    COUNT(DISTINCT oi.external_product_code) AS order_codes,
-    COUNT(DISTINCT ci.external_product_code) AS customer_codes,
-    COUNT(DISTINCT CASE WHEN oi.external_product_code = ci.external_product_code THEN oi.external_product_code END) AS matched_codes
+    COUNT(DISTINCT oi.customer_part_no) AS order_codes,
+    COUNT(DISTINCT ci.customer_part_no) AS customer_codes,
+    COUNT(DISTINCT CASE WHEN oi.customer_part_no = ci.customer_part_no THEN oi.customer_part_no END) AS matched_codes
 FROM order_lines oi
-LEFT JOIN customer_items ci ON oi.external_product_code = ci.external_product_code;
+LEFT JOIN customer_items ci ON oi.customer_part_no = ci.customer_part_no;
 ```
 
 ---
@@ -1490,7 +1495,7 @@ Phase 2: Optimization (12h) ← v2.1 工数減少
 | **Phase 0.5** | なし | **新規追加** | Phase 1 前にマッピング完了 |
 | **product_id フォールバック** | Phase 2 まで残す | **Phase 1 で削除** | 一貫性確保 |
 | **customer_items PK** | 検討 | **現状維持（複合PK）** | 既存 FK 参照への影響回避 |
-| **external_product_code** | 検討 | **得意先品番として扱う** | 定義明確化 |
+| **customer_part_no** | 検討 | **得意先品番として扱う** | 定義明確化 |
 
 ---
 

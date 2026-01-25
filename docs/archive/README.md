@@ -4,7 +4,7 @@
 
 ## アーカイブ日
 
-2026-01-24
+2026-01-25
 
 ## アーカイブ理由
 
@@ -16,10 +16,11 @@
 
 ## アーカイブ一覧
 
-### design/ (3件) - RPA/在庫改善の設計書
+### design/ (4件) - RPA/在庫改善/マスタ移行の設計書
 
 | ファイル | 推定作成年 | アーカイブ理由 |
 |---------|----------|--------------|
+| `supplier_customer_items_implementation_plan_v2.1.md` | 2026-01 | 仕入先・得意先品目移行の主計画書。実装完了 (2026-01-25)。 |
 | `rpa_material_delivery_cloud_flow_spec.md` | 2026-01 | Cloud Flow仕様の計画書。実装済み (#470)、APIドキュメントに統合済み |
 | `rpa_material_delivery_run_control_plan.md` | 2026-01 | Run制御の設計書。実装済み (#470)、API仕様とworkflow.mdに統合済み |
 | `inventory_view_strategy.md` | 2026-01-16 | パフォーマンス改善計画。方針レベルで実装方針が未確定のまま放置 |
