@@ -27,6 +27,7 @@ from app.infrastructure.persistence.models import (
     Product,
     ReservationSourceType,
     ReservationStatus,
+    Supplier,
     Warehouse,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
@@ -136,6 +137,43 @@ def master_data(test_db: Session):
     test_db.add(lot_master)
     test_db.commit()
 
+    # Create Supplier for SupplierItem
+    supplier = Supplier(
+        supplier_code="SUP-001",
+        supplier_name="Test Supplier",
+    )
+    test_db.add(supplier)
+    test_db.commit()
+    test_db.refresh(supplier)
+
+    # Create SupplierItem
+    from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
+
+    supplier_item = SupplierItem(
+        supplier_id=supplier.id,
+        product_id=product.id,
+        maker_part_no=product.maker_part_code,
+        is_primary=True,
+        lead_time_days=1,
+    )
+    test_db.add(supplier_item)
+    test_db.commit()
+    test_db.refresh(supplier_item)
+
+    # Create CustomerItem (Primary Mapping)
+    from app.infrastructure.persistence.models.masters_models import CustomerItem
+
+    customer_item = CustomerItem(
+        customer_id=customer.id,
+        customer_part_no="CUST-PART-001",
+        product_id=product.id,
+        supplier_item_id=supplier_item.id,
+        is_primary=True,
+        base_unit="EA",
+    )
+    test_db.add(customer_item)
+    test_db.commit()
+
     # Create lot with stock
     lot = LotReceipt(
         lot_master_id=lot_master.id,
@@ -146,6 +184,8 @@ def master_data(test_db: Session):
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=90),
         origin_type="order",
+        supplier_id=supplier.id,
+        supplier_item_id=supplier_item.id,
     )
     test_db.add(lot)
     test_db.commit()
@@ -157,6 +197,9 @@ def master_data(test_db: Session):
         "product": product,
         "delivery_place": delivery_place,
         "lot": lot,
+        "supplier": supplier,
+        "supplier_item": supplier_item,
+        "customer_item": customer_item,
     }
 
 
@@ -864,3 +907,54 @@ def test_confirm_batch_partial_failure(test_db: Session, master_data: dict):
     assert len(data["failed"]) == 1
     assert data["failed"][0]["id"] == 99999
     assert data["failed"][0]["error"] == "RESERVATION_NOT_FOUND"
+
+
+def test_drag_assign_without_primary_mapping_success(test_db: Session, master_data: dict):
+    """Test manual allocation succeeds even if customer item primary mapping is missing (Strict Mode relaxed)."""
+    client = TestClient(application)
+
+    # Note: master_data's customer_item has is_primary=True.
+    # We need to simulate a scenario where supplier_item exists but NO customer_item has is_primary.
+    # So we remove the customer_item created in fixture.
+    from app.infrastructure.persistence.models import CustomerItem
+
+    try:
+        test_db.query(CustomerItem).delete()
+        test_db.commit()
+    except Exception:
+        test_db.rollback()
+
+    # Create order with line
+    order = Order(
+        customer_id=master_data["customer"].id,
+        order_date=date.today(),
+        status="open",
+        created_at=utcnow(),
+    )
+    test_db.add(order)
+    test_db.commit()
+
+    order_line = OrderLine(
+        order_id=order.id,
+        product_id=master_data["product"].id,
+        delivery_date=date.today() + timedelta(days=7),
+        order_quantity=Decimal("10.000"),
+        unit="EA",
+        delivery_place_id=master_data["delivery_place"].id,
+        status="pending",
+    )
+    test_db.add(order_line)
+    test_db.commit()
+
+    # Test: Manual allocation with NO primary mapping but WITH supplier_item_id (from fixture)
+    payload = {
+        "order_line_id": order_line.id,
+        "lot_id": master_data["lot"].id,
+        "allocated_quantity": 10.0,
+    }
+
+    # Should succeed (200) not fail
+    response = client.post("/api/allocations/drag-assign", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "preview"

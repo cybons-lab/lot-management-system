@@ -23,7 +23,7 @@ def validate_lot_mapping(
     lot: LotReceipt,
     *,
     raise_on_unmapped: bool = True,
-    strict: bool = False,
+    strict: bool = True,
 ) -> bool:
     """ロットのマッピング状態を検証.
 
@@ -55,22 +55,25 @@ def validate_lot_mapping(
         # supplier_item_id未設定は検証スキップ（Phase 2互換モード）
         return True
 
-    # 2. customer_items に is_primary=True のマッピングが存在するか
-    stmt = select(CustomerItem).where(
-        CustomerItem.supplier_item_id == lot.supplier_item_id,
-        CustomerItem.is_primary.is_(True),
-    )
-    primary_mapping = db.execute(stmt).scalar_one_or_none()
+    # Phase 2-3 Rule Change:
+    # "Strict Mode" only enforces the existence of supplier_item_id.
+    # The existence of an is_primary=True mapping is preferred for display stability
+    # but NOT required for allocation/shipping logic.
+    # Blocking on missing is_primary would stop business operations unnecessarily.
 
-    if not primary_mapping:
-        if raise_on_unmapped:
-            raise UnmappedItemError(
-                lot_id=lot.id,
-                lot_number=lot.lot_number,
-                product_code=lot.product.maker_part_code if lot.product else None,
-                supplier_item_id=lot.supplier_item_id,
-            )
-        return False
+    # 2. customer_items に is_primary=True のマッピングが存在するか (Warning only)
+    # stmt = select(CustomerItem).where(
+    #     CustomerItem.supplier_item_id == lot.supplier_item_id,
+    #     CustomerItem.is_primary.is_(True),
+    # )
+    # primary_mapping = db.execute(stmt).scalar_one_or_none()
+
+    # if not primary_mapping:
+    #     # Do not block here even if raise_on_unmapped=True
+    #     # Just return True (Valid for processing) implies "mapped to a manufacturer item"
+    #     pass
+
+    return True
 
     return True
 
