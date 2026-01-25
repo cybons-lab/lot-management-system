@@ -254,7 +254,7 @@ WHERE pw.is_active = true;
 
 COMMENT ON VIEW public.v_inventory_summary IS '在庫集計ビュー（product_warehouse起点、lot_receipts対応）';
 
--- v_lot_details (B-Plan: lot_receipts + lot_master)
+-- v_lot_details (B-Plan: lot_receipts + lot_master + Phase2 customer_part_no)
 CREATE VIEW public.v_lot_details AS
 SELECT
     lr.id AS lot_id,
@@ -281,7 +281,7 @@ SELECT
     COALESCE(lar.reserved_quantity_active, 0) AS reserved_quantity_active,
     lr.locked_quantity,
     GREATEST(
-        lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) 
+        lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0)
         - lr.locked_quantity - COALESCE(la.allocated_quantity, 0),
         0
     ) AS available_quantity,
@@ -295,7 +295,20 @@ SELECT
     lr.temporary_lot_key,
     lr.receipt_key,
     lr.lot_master_id,
-    
+
+    -- Phase2: supplier_item_id と先方品番表示
+    lr.supplier_item_id,
+    si.maker_part_no AS supplier_maker_part_no,
+    -- 先方品番表示ルール(2): デフォルト (is_primary=True)
+    ci_primary.customer_part_no AS customer_part_no,
+    ci_primary.customer_id AS primary_customer_id,
+    -- マッピング状態フラグ
+    CASE
+        WHEN lr.supplier_item_id IS NULL THEN 'no_supplier_item'
+        WHEN ci_primary.id IS NULL THEN 'no_primary_mapping'
+        ELSE 'mapped'
+    END AS mapping_status,
+
     -- Origin Tracking
     lr.origin_type,
     lr.origin_reference,
@@ -321,6 +334,10 @@ LEFT JOIN public.v_lot_active_reservations lar ON lr.id = lar.lot_id
 LEFT JOIN public.products p ON lr.product_id = p.id
 LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON lm.supplier_id = s.id
+LEFT JOIN public.supplier_items si ON lr.supplier_item_id = si.id
+LEFT JOIN public.customer_items ci_primary
+    ON ci_primary.supplier_item_id = lr.supplier_item_id
+    AND ci_primary.is_primary = TRUE
 LEFT JOIN (
     SELECT wl.lot_receipt_id, SUM(wl.quantity) AS total_withdrawn
     FROM public.withdrawal_lines wl
@@ -334,7 +351,7 @@ LEFT JOIN public.user_supplier_assignments usa_primary
 LEFT JOIN public.users u_primary
     ON u_primary.id = usa_primary.user_id;
 
-COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む、soft-delete対応、仮入庫対応）Phase1拡張版';
+COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む、soft-delete対応、仮入庫対応、Phase2 先方品番表示対応）';
 
 -- v_candidate_lots_by_order_line (B-Plan)
 CREATE VIEW public.v_candidate_lots_by_order_line AS

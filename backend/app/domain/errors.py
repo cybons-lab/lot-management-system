@@ -122,3 +122,54 @@ class InsufficientStockError(DomainError):
             code=self.default_code,
             details=error_details,
         )
+
+
+class UnmappedItemError(DomainError):
+    """未マッピング品目エラー（Phase 2-1）.
+
+    supplier_item_id が未設定、または customer_items へのマッピングがない場合に発生。
+    引当・出荷処理をブロックし、マッピング設定を促す。
+
+    Attributes:
+        lot_id: 未マッピングのロットID
+        lot_number: ロット番号
+        product_code: 製品コード
+        supplier_item_id: 仕入先品目ID（Noneの場合は未設定）
+    """
+
+    default_code = "UNMAPPED_ITEM"
+
+    def __init__(
+        self,
+        *,
+        lot_id: int | None = None,
+        lot_number: str | None = None,
+        product_code: str | None = None,
+        supplier_item_id: int | None = None,
+        details: dict | None = None,
+    ):
+        self.lot_id = lot_id
+        self.lot_number = lot_number
+        self.product_code = product_code
+        self.supplier_item_id = supplier_item_id
+
+        if supplier_item_id is None:
+            message = f"ロット {lot_number or lot_id} はメーカー品番が未設定です。マッピング設定を行ってください。"
+        else:
+            message = f"メーカー品番 (supplier_item_id={supplier_item_id}) に対応する先方品番が未登録です。マッピング設定を行ってください。"
+
+        error_details: dict = details.copy() if details else {}
+        if lot_id:
+            error_details["lot_id"] = lot_id
+        if lot_number:
+            error_details["lot_number"] = lot_number
+        if product_code:
+            error_details["product_code"] = product_code
+        if supplier_item_id:
+            error_details["supplier_item_id"] = supplier_item_id
+
+        super().__init__(
+            message,
+            code=self.default_code,
+            details=error_details,
+        )

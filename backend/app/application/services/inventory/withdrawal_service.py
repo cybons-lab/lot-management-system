@@ -50,6 +50,7 @@ from decimal import Decimal
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
+from app.application.services.allocations.mapping_validator import validate_lot_mapping
 from app.application.services.common.soft_delete_utils import (
     get_customer_code,
     get_customer_name,
@@ -64,6 +65,7 @@ from app.application.services.inventory.lot_reservation_service import (
 )
 from app.application.services.inventory.stock_calculation import get_reserved_quantity
 from app.core.time_utils import utcnow
+from app.domain.errors import UnmappedItemError
 from app.domain.events import EventDispatcher, StockChangedEvent
 from app.infrastructure.persistence.models import (
     Customer,
@@ -260,6 +262,13 @@ class WithdrawalService:
 
         if not lot:
             raise ReservationLotNotFoundError(data.lot_id)
+
+        # Phase 2-1: 未マッピングブロック（受注手動出庫の場合のみ）
+        if data.withdrawal_type == WithdrawalType.ORDER_MANUAL:
+            try:
+                validate_lot_mapping(self.db, lot, raise_on_unmapped=True)
+            except UnmappedItemError as e:
+                raise ValueError(str(e)) from e
 
         # 利用可能数量をチェック (using lot_reservations)
         reserved_qty = get_reserved_quantity(self.db, lot.id)

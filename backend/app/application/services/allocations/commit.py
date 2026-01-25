@@ -130,6 +130,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.application.services.allocations.fefo import preview_fefo_allocation
+from app.application.services.allocations.mapping_validator import validate_lot_mapping
 from app.application.services.allocations.schemas import (
     AllocationCommitError,
     FefoCommitResult,
@@ -141,6 +142,7 @@ from app.application.services.allocations.utils import (
 )
 from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.core.time_utils import utcnow
+from app.domain.errors import UnmappedItemError
 from app.infrastructure.persistence.models import LotReceipt, Order, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
@@ -225,6 +227,12 @@ def persist_reservation_entities(
             raise AllocationCommitError(
                 f"Lot {alloc_plan.lot_id} status '{lot.status}' is not active"
             )
+
+        # Phase 2-1: 未マッピングブロック
+        try:
+            validate_lot_mapping(db, lot, raise_on_unmapped=True)
+        except UnmappedItemError as e:
+            raise AllocationCommitError("UNMAPPED_ITEM", str(e)) from e
 
         available = float(get_available_quantity(db, lot))
         if available + EPSILON < alloc_plan.allocate_qty:
