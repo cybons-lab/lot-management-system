@@ -103,16 +103,29 @@ const mapLotBlock = (lot: LotUI, context: MapContext): LotBlockData => {
 };
 
 export function useExcelViewData(productId: number, warehouseId: number) {
+  const isEnabled = !isNaN(productId) && !isNaN(warehouseId);
+
   const { data: inventoryItem, isLoading: itemLoading } = useInventoryItem(productId, warehouseId);
-  const { data: lots = [], isLoading: lotsLoading } = useLotsQuery({
-    product_id: productId,
-    warehouse_id: warehouseId,
-    status: "active",
-    with_stock: true,
-  });
-  const { data: suggestionResponse, isLoading: suggestionsLoading } = useAllocationSuggestions({
-    product_id: productId,
-  });
+
+  // Need to ensure useLotsQuery and useAllocationSuggestions are disabled if IDs are NaN
+  // But they might not support enabled flag directly. Let's check.
+  // Actually useLotsQuery uses useQuery which supports enabled.
+
+  const { data: lots = [], isLoading: lotsLoading } = useLotsQuery(
+    isEnabled
+      ? {
+          product_id: productId,
+          warehouse_id: warehouseId,
+          status: "active",
+          with_stock: true,
+        }
+      : undefined,
+  );
+
+  const { data: suggestionResponse, isLoading: suggestionsLoading } = useAllocationSuggestions(
+    isEnabled ? { product_id: productId } : undefined,
+  );
+
   const deliveryPlaceApi = useMasterApi<DeliveryPlace>(
     "masters/delivery-places",
     "delivery-places",
@@ -149,7 +162,6 @@ export function useExcelViewData(productId: number, warehouseId: number) {
 
   const data = useMemo<ExcelViewData | null>(() => {
     if (!inventoryItem) return null;
-
     const uniqueDpIds = Array.from(new Set(mapContext.suggestions.map((s) => s.delivery_place_id)));
     const involvedDestinations = uniqueDpIds.map((id) => getDestinationInfo(id, mapContext));
 
@@ -171,5 +183,5 @@ export function useExcelViewData(productId: number, warehouseId: number) {
     };
   }, [inventoryItem, dateColumns, lotBlocks, mapContext]);
 
-  return { data, isLoading };
+  return { data, isLoading: isEnabled ? isLoading : false };
 }

@@ -98,7 +98,7 @@ function InventoryRoutes() {
         <Route path="adjustments" element={<AdjustmentsListPage />} />
         <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
         <Route path="adhoc/new" element={<AdhocLotCreatePage />} />
-        <Route path="excel-view" element={<ExcelViewPage />} />
+        <Route path="excel-view/:productId/:warehouseId" element={<ExcelViewPage />} />
         <Route path="history" element={<StockHistoryPage />} />
         <Route path="withdrawals" element={<WithdrawalsListPage />} />
         <Route path="withdrawals/new" element={<WithdrawalCreatePage />} />

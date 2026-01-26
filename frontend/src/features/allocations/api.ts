@@ -414,13 +414,15 @@ export const generateAllocationSuggestions = (data: AllocationSuggestionRequest)
   return http.post<AllocationSuggestionPreviewResponse>("v2/forecast/suggestions/preview", data);
 };
 
-export const getAllocationSuggestions = (params: {
-  skip?: number;
-  limit?: number;
-  forecast_period?: string;
-  product_id?: number;
-  customer_id?: number;
-}) => {
+export const getAllocationSuggestions = (
+  params: {
+    skip?: number;
+    limit?: number;
+    forecast_period?: string;
+    product_id?: number;
+    customer_id?: number;
+  } = {},
+) => {
   const searchParams = new URLSearchParams();
   if (params.skip) searchParams.append("skip", params.skip.toString());
   if (params.limit) searchParams.append("limit", params.limit.toString());

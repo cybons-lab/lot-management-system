@@ -59,7 +59,8 @@ export const ROUTES = {
       DETAIL: (productId: number | string, warehouseId: number | string) =>
         `/inventory/items/${productId}/${warehouseId}`,
     },
-    EXCEL_VIEW: "/inventory/excel-view",
+    EXCEL_VIEW: (productId: number | string, warehouseId: number | string) =>
+      `/inventory/excel-view/${productId}/${warehouseId}`,
   },
 
   // Masters

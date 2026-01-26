@@ -242,10 +242,6 @@ export function InventoryPage() {
               <Search className="mr-2 h-4 w-4" />
               ロット検索
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/inventory/excel-view")}>
-              <List className="mr-2 h-4 w-4" />
-              Excelビュー
-            </Button>
           </div>
 
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
