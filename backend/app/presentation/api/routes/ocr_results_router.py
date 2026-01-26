@@ -111,32 +111,40 @@ class OcrResultListResponse(BaseModel):
 
 
 class OcrResultsExportRow(BaseModel):
-    """OCR結果エクスポート用データ."""
+    """OCR結果エクスポート用データ.
 
-    task_date: date | None = None
-    status: str | None = None
+    カラム順序は業務要件に従って定義。
+    """
+
+    # 手入力ロット情報
+    lot_no_1: str | None = None
+    quantity_1: str | None = None
+    lot_no_2: str | None = None
+    quantity_2: str | None = None
     inbound_no: str | None = None
+    shipping_date: date | None = None
+    shipping_slip_text: str | None = None
+
+    # OCR由来
+    status: str | None = None  # 取得元
+    material_code: str | None = None
+    jiku_code: str | None = None
     delivery_date: str | None = None
     delivery_quantity: str | None = None
     item_no: str | None = None
-    order_unit: str | None = None
-    lot_no: str | None = None
-    material_code: str | None = None
-    jiku_code: str | None = None
     customer_part_no: str | None = None
     maker_part_no: str | None = None
-    shipping_slip_text: str | None = None
-    customer_code: str | None = None
-    customer_name: str | None = None
-    supplier_code: str | None = None
-    supplier_name: str | None = None
-    shipping_warehouse_code: str | None = None
-    shipping_warehouse_name: str | None = None
-    delivery_place_code: str | None = None
-    delivery_place_name: str | None = None
-    remarks: str | None = None
-    has_error: bool | None = None
-    error_reason: str | None = None
+    order_unit: str | None = None
+
+    # マスタ由来
+    customer_name: str | None = None  # 得意先
+    supplier_code: str | None = None  # 仕入先
+    supplier_name: str | None = None  # 仕入先名称
+    shipping_warehouse_code: str | None = None  # 出荷倉庫
+    shipping_warehouse_name: str | None = None  # 出荷倉庫名称
+    delivery_place_code: str | None = None  # 納入場所
+    delivery_place_name: str | None = None  # 納入場所名称
+    remarks: str | None = None  # 備考
 
     model_config = {"from_attributes": True}
 
@@ -428,6 +436,7 @@ async def export_ocr_results(
         lot_no_2 = row.get("manual_lot_no_2")
         quantity_2 = row.get("manual_quantity_2")
         inbound_no = row.get("manual_inbound_no") or row.get("inbound_no")
+        shipping_date = row.get("manual_shipping_date")
         shipping_slip_text = (
             row.get("manual_shipping_slip_text")
             if row.get("manual_shipping_slip_text_edited")
@@ -443,20 +452,25 @@ async def export_ocr_results(
         export_rows.append(
             OcrResultsExportRow.model_validate(
                 {
-                    "task_date": row.get("task_date"),
-                    "status": row.get("status"),
+                    # 手入力ロット情報
+                    "lot_no_1": lot_no_1,
+                    "quantity_1": quantity_1,
+                    "lot_no_2": lot_no_2,
+                    "quantity_2": quantity_2,
                     "inbound_no": inbound_no,
+                    "shipping_date": shipping_date,
+                    "shipping_slip_text": shipping_slip_text,
+                    # 取得元（SmartRead経由の場合は常に「OCR」）
+                    "status": "OCR",
+                    "material_code": row.get("material_code"),
+                    "jiku_code": row.get("jiku_code"),
                     "delivery_date": row.get("delivery_date"),
                     "delivery_quantity": row.get("delivery_quantity"),
                     "item_no": row.get("item_no"),
-                    "order_unit": row.get("order_unit"),
-                    "lot_no": lot_no_1 or row.get("lot_no"),
-                    "material_code": row.get("material_code"),
-                    "jiku_code": row.get("jiku_code"),
                     "customer_part_no": row.get("customer_part_no"),
                     "maker_part_no": row.get("maker_part_no"),
-                    "shipping_slip_text": shipping_slip_text,
-                    "customer_code": row.get("customer_code"),
+                    "order_unit": row.get("order_unit"),
+                    # マスタ由来
                     "customer_name": row.get("customer_name"),
                     "supplier_code": row.get("supplier_code"),
                     "supplier_name": row.get("supplier_name"),
@@ -465,37 +479,36 @@ async def export_ocr_results(
                     "delivery_place_code": row.get("delivery_place_code"),
                     "delivery_place_name": row.get("delivery_place_name"),
                     "remarks": remarks,
-                    "has_error": row.get("has_error"),
-                    "error_reason": row.get("error_reason"),
                 }
             )
         )
 
+    # カラム順序と日本語ヘッダーのマッピング（業務要件に従った順序）
     column_map = {
-        "task_date": "タスク日付",
-        "status": "ステータス",
+        "lot_no_1": "LotNo-1",
+        "quantity_1": "数量-1",
+        "lot_no_2": "LotNo-2",
+        "quantity_2": "数量-2",
         "inbound_no": "入庫No",
+        "shipping_date": "出荷日",
+        "shipping_slip_text": "出荷票テキスト",
+        "status": "取得元",
+        "material_code": "材質コード",
+        "jiku_code": "次区",
         "delivery_date": "納期",
         "delivery_quantity": "納入量",
         "item_no": "アイテムNo",
-        "order_unit": "数量単位",
-        "lot_no": "ロットNo",
-        "material_code": "材質コード",
-        "jiku_code": "次区",
         "customer_part_no": "先方品番",
         "maker_part_no": "メーカー品番",
-        "shipping_slip_text": "出荷票テキスト",
-        "customer_code": "得意先コード",
-        "customer_name": "得意先名",
-        "supplier_code": "仕入先コード",
+        "order_unit": "数量単位",
+        "customer_name": "得意先",
+        "supplier_code": "仕入先",
         "supplier_name": "仕入先名称",
-        "shipping_warehouse_code": "出荷倉庫コード",
-        "shipping_warehouse_name": "出荷倉庫名",
-        "delivery_place_code": "納入先コード",
-        "delivery_place_name": "納入先",
+        "shipping_warehouse_code": "出荷倉庫",
+        "shipping_warehouse_name": "出荷倉庫名称",
+        "delivery_place_code": "納入場所",
+        "delivery_place_name": "納入場所名称",
         "remarks": "備考",
-        "has_error": "エラー有無",
-        "error_reason": "エラー理由",
     }
 
     filename = f"ocr_results_{datetime.now().strftime('%Y%m%d%H%M%S')}"
