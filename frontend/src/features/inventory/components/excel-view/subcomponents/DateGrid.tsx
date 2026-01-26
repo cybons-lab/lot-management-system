@@ -1,4 +1,4 @@
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { Plus } from "lucide-react";
 
 import { type DestinationRowData } from "../types";
@@ -6,6 +6,25 @@ import { type DestinationRowData } from "../types";
 const hHeader = "h-8";
 const hRow = "h-10";
 const hFooter = "h-10";
+
+/**
+ * Format forecast_period for column header display.
+ * Supports both YYYY-MM (monthly) and YYYY-MM-DD (daily) formats.
+ */
+function formatPeriodHeader(period: string): string {
+  // Monthly format: "2026-01" → "1月" (or "01")
+  if (/^\d{4}-\d{2}$/.test(period)) {
+    const month = parseInt(period.substring(5, 7), 10);
+    return `${month}月`;
+  }
+  // Daily format: "2026-01-15" → "01/15"
+  const parsed = parseISO(period);
+  if (isValid(parsed)) {
+    return format(parsed, "MM/dd");
+  }
+  // Fallback: return as-is
+  return period;
+}
 
 interface Props {
   dateColumns: string[];
@@ -79,7 +98,7 @@ export function DateGrid({
               key={date}
               className="w-16 p-2 flex items-center justify-center text-center text-[10px] text-slate-500"
             >
-              {format(parseISO(date), "MM/dd")}
+              {formatPeriodHeader(date)}
             </div>
           ))}
           {/* Add Column Button */}

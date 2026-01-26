@@ -1021,9 +1021,176 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 
 ---
 
-## 10. 対応済み
+## 10. Excelビュー機能 (材料ロット管理/個別)
 
-### 10-1. テストデータ生成の問題 (inventory_scenarios)
+### 10-1. 成績書（COA）の納入先別管理
+
+**優先度**: Medium
+**作成**: 2026-01-26
+**状態**: 設計検討中
+
+**背景:**
+実際のExcel運用では、**検査成績書は納入先ごとに発行日が異なる**。
+例：同じロットでも DN北海道 → 2025/10/24、DN岩手 → 2025/10/24（同日の場合もある）
+
+**現状の問題:**
+- `LotReceipt.inspection_date` はロット単位の情報
+- 実運用では納入先×ロットの組み合わせで成績書を管理
+
+**対応案:**
+1. `AllocationSuggestion` に `coa_issue_date` カラムを追加
+2. または出荷レコードに成績書発行日を持たせる
+3. フロントエンドで納入先行ごとに日付を表示
+
+**関連ファイル:**
+- `backend/app/infrastructure/persistence/models/inventory_models.py` (AllocationSuggestion)
+- `frontend/src/features/inventory/components/excel-view/subcomponents/ShipmentTable.tsx`
+
+---
+
+### 10-2. 収容数・保証期間フィールドの実装
+
+**優先度**: Low
+**作成**: 2026-01-26
+
+**背景:**
+Excelビューヘッダーに「収容数」「保証期間」列があるが、バックエンドに対応フィールドがない。
+
+**UIでの表示状態:**
+- 収容数: 常に `-` 表示
+- 保証期間: 常に `-` 表示
+
+**対応案:**
+1. `Product` テーブルに以下のカラムを追加:
+   - `capacity` (収容数): パッケージあたりの収容量
+   - `warranty_period_days` (保証期間日数): 製品の保証期間
+2. InventoryItem API レスポンスにこれらのフィールドを含める
+
+**関連ファイル:**
+- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts:177-178`
+- `backend/app/presentation/schemas/inventory/inventory_schema.py`
+
+---
+
+### 10-3. 先方品番（customerPartNo）の表示
+
+**優先度**: Medium
+**作成**: 2026-01-26
+
+**背景:**
+Excelビューの得意先情報に「先方品番」を表示する欄があるが、現在は常に `-` 表示。
+先方品番マスタ（`customer_items`）には顧客-製品のマッピングが存在する。
+
+**対応案:**
+1. `AllocationSuggestion` レスポンスに `customer_part_no` を含める
+2. または、フロントエンドで `customer_id` + `product_id` から `customer_items` をルックアップ
+3. `useExcelViewData.ts` の `getDestinationInfo()` でAPIから取得した値を使用
+
+**関連ファイル:**
+- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts:56`
+- `backend/app/presentation/api/v2/forecast/router.py` (AllocationSuggestion API)
+
+---
+
+### 10-4. 発注NO.の表示
+
+**優先度**: Low
+**作成**: 2026-01-26
+
+**背景:**
+Excelビューのロット情報に「発注NO.」列があるが、常に `-` 表示。
+ロットが発注（Purchase Order）に紐づいている場合、その発注番号を表示すべき。
+
+**現状:**
+- `LotReceipt.origin_reference` に参照情報があるが、発注番号とは別概念
+- 発注管理機能自体が未実装の可能性
+
+**対応案:**
+1. 発注管理機能の実装状況を確認
+2. `LotReceipt` に `purchase_order_id` / `purchase_order_number` を追加
+3. またはビジネス要件を再確認（発注NOが必要かどうか）
+
+**関連ファイル:**
+- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts:84`
+
+---
+
+### 10-5. ✅ 仕入先情報の表示修正（対応済み）
+
+**解決日**: 2026-01-26
+
+**問題:**
+Excelビューのヘッダーで「仕入先」「仕入先名称」が `-` 表示だった。
+
+**原因:**
+`GET /api/v2/inventory/{product_id}/{warehouse_id}` が `supplier_id`, `supplier_code`, `supplier_name` を返していなかった。
+
+**対応:**
+`inventory_service.py` の `get_inventory_item_by_product_warehouse()` にサプライヤー取得クエリを追加し、レスポンスに含めるように修正。
+
+---
+
+### 10-6. ✅ forecast_period 日付表示の修正（対応済み）
+
+**解決日**: 2026-01-26
+
+**問題:**
+`forecast_period` は `YYYY-MM` 形式（月単位）だが、フロントエンドは `parseISO()` で日付としてパースしようとしていた。
+
+**対応:**
+`DateGrid.tsx` に `formatPeriodHeader()` 関数を追加:
+- `YYYY-MM` 形式 → `1月`, `2月` のように月表示
+- `YYYY-MM-DD` 形式 → `01/15` のように日付表示
+
+---
+
+### 10-7. 日付列の仕様整理（予測 vs 実績）
+
+**優先度**: High
+**作成**: 2026-01-26
+**状態**: 設計検討中
+
+**背景:**
+実際の運用では、日付列は**予測（フォーキャスト）と実績の両方**を扱う：
+- 未来日付 = 仮引当/予定（現在の `AllocationSuggestion` で対応）
+- 過去日付 = 確定/実績（出荷済みデータ）
+- 日付が過ぎたら自動的に確定扱い
+
+**確認事項:**
+1. 日付が過ぎた行をどのように扱うか（自動確定？手動確定？）
+2. 実績データのソース（出荷履歴？引当確定？）
+3. 予測と実績の表示上の区別（色分け等）
+
+---
+
+### 10-8. 同一ロット・入荷日別の行表示
+
+**優先度**: Medium
+**作成**: 2026-01-26
+**状態**: 設計確認済み ✅
+
+**背景:**
+実運用では**同じロット番号でも入荷日が違えば別行として扱う**。
+例：ロット `CE880104` → 入荷日 `2025/11/12` と `2025/11/19` は別行
+
+**確認結果（2026-01-26）:**
+- `LotReceipt` のユニーク制約は `receipt_key`（UUID）のみ
+- `lot_number` にはユニーク制約がない
+- **同じロット番号で異なる `received_date` の複数レコード作成が可能** ✅
+
+**残タスク:**
+1. 「既存ロットに追加入庫」UIの用途を再検討（ほぼ使わないとのこと）
+2. Excelビューで同一ロット番号・別入荷日を正しく表示できるか確認
+
+**関連ファイル:**
+- `backend/app/infrastructure/persistence/models/lot_receipt_models.py`
+- `backend/app/infrastructure/persistence/models/lot_master_model.py`
+
+---
+
+## 11. 対応済み
+
+### 11-1. テストデータ生成の問題 (inventory_scenarios)
 
 **解決日**: 2026-01-18
 **マイグレーション**: `b77dcffc2d98`
@@ -1034,7 +1201,7 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 
 ---
 
-### 10-2. Date Handling の型を明示 (orchestrator.py)
+### 11-2. Date Handling の型を明示 (orchestrator.py)
 
 **解決日**: 2026-01-26
 
@@ -1044,7 +1211,7 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 
 ---
 
-### 10-3. InboundPlansList のステータス日本語化
+### 11-3. InboundPlansList のステータス日本語化
 
 **解決日**: 2026-01-26
 
@@ -1054,7 +1221,7 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 
 ---
 
-### 10-4. ConfirmedLinesPage のSAP一括登録ボタン重複
+### 11-4. ConfirmedLinesPage のSAP一括登録ボタン重複
 
 **解決日**: 2026-01-26
 **状態**: 確認時点で既に修正済み（ボタンは1箇所のみ）
@@ -1063,7 +1230,7 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 
 ---
 
-### 10-5. 本番コードの print() 文削除
+### 11-5. 本番コードの print() 文削除
 
 **解決日**: 2026-01-26
 **状態**: 確認時点で既に対応済み（logger使用に移行済み、またはコメント/テストコード内のみ）
@@ -1095,3 +1262,4 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 
 - 2026-01-24: 9ファイルを統合し、単一バックログとして整理
 - 2026-01-26: クイックウィン4件対応 (1-4, 2-2, 2-4, 8-9)
+- 2026-01-26: Excelビュー機能タスク追加 (セクション10)、仕入先表示・forecast_period表示修正完了

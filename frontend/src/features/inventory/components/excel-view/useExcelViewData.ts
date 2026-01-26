@@ -64,6 +64,7 @@ const mapDestinationRow = (
   dpId: number,
   lotId: number,
   context: MapContext,
+  coaIssueDate?: string | null,
 ): DestinationRowData => {
   const { suggestions, dpMap } = context;
   const { shipmentQtyByDate, totalShipmentQty } = getShipmentByDate(lotId, dpId, suggestions);
@@ -74,6 +75,7 @@ const mapDestinationRow = (
     destination: getDestinationInfo(dpId, context),
     shipmentQtyByDate,
     totalShipmentQty,
+    coaIssueDate: coaIssueDate ?? undefined,
   };
 };
 
@@ -91,7 +93,9 @@ const mapLotBlock = (lot: LotUI, context: MapContext): LotBlockData => {
   const lotId = lot.lot_id;
   const lotSuggestions = context.suggestions.filter((s) => s.lot_id === lotId);
   const dpIds = Array.from(new Set(lotSuggestions.map((s) => s.delivery_place_id)));
-  const destinations = dpIds.map((dpId) => mapDestinationRow(dpId, lotId, context));
+  // Pass lot's inspection_date as COA issue date for each destination row
+  const coaIssueDate = lot.inspection_date;
+  const destinations = dpIds.map((dpId) => mapDestinationRow(dpId, lotId, context, coaIssueDate));
   const totalShipment = destinations.reduce((sum, d) => sum + d.totalShipmentQty, 0);
   return {
     lotId,
@@ -102,7 +106,13 @@ const mapLotBlock = (lot: LotUI, context: MapContext): LotBlockData => {
   };
 };
 
-export function useExcelViewData(productId: number, warehouseId: number) {
+interface UseExcelViewDataReturn {
+  data: ExcelViewData | null;
+  isLoading: boolean;
+  supplierId: number | undefined;
+}
+
+export function useExcelViewData(productId: number, warehouseId: number): UseExcelViewDataReturn {
   const isEnabled = !isNaN(productId) && !isNaN(warehouseId);
 
   const { data: inventoryItem, isLoading: itemLoading } = useInventoryItem(productId, warehouseId);
@@ -183,5 +193,9 @@ export function useExcelViewData(productId: number, warehouseId: number) {
     };
   }, [inventoryItem, dateColumns, lotBlocks, mapContext]);
 
-  return { data, isLoading: isEnabled ? isLoading : false };
+  return {
+    data,
+    isLoading: isEnabled ? isLoading : false,
+    supplierId: inventoryItem?.supplier_id,
+  };
 }

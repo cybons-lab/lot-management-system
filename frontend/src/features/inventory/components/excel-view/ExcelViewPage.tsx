@@ -1,4 +1,4 @@
-import { ArrowLeft, Edit3, Save, X } from "lucide-react";
+import { ArrowLeft, Edit3, Plus, Save, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { useExcelViewData } from "./useExcelViewData";
 
 import { Button } from "@/components/ui";
 import { useUpdateAllocationSuggestionsBatch } from "@/features/allocations/hooks/api/useAllocationSuggestions";
+import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 
 interface ActionButtonsProps {
@@ -69,8 +70,9 @@ export function ExcelViewPage() {
   const [localChanges, setLocalChanges] = useState<Record<string, number>>({});
   const [addedDates, setAddedDates] = useState<string[]>([]);
   const [isNewColumnDialogOpen, setIsNewColumnDialogOpen] = useState(false);
+  const [isLotIntakeDialogOpen, setIsLotIntakeDialogOpen] = useState(false);
 
-  const { data, isLoading } = useExcelViewData(Number(productId), Number(warehouseId));
+  const { data, isLoading, supplierId } = useExcelViewData(Number(productId), Number(warehouseId));
   const updateMutation = useUpdateAllocationSuggestionsBatch();
 
   const handleQtyChange = useCallback(
@@ -156,11 +158,32 @@ export function ExcelViewPage() {
         ))}
       </div>
 
+      {/* New Lot Intake Button */}
+      <div className="mt-8 flex justify-center">
+        <Button
+          variant="outline"
+          size="lg"
+          className="gap-3 border-2 border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-600 h-16 px-8"
+          onClick={() => setIsLotIntakeDialogOpen(true)}
+        >
+          <Plus className="h-6 w-6" />
+          <span className="text-lg font-medium">新規ロット入庫</span>
+        </Button>
+      </div>
+
       <NewWithdrawalDialog
         open={isNewColumnDialogOpen}
         onOpenChange={setIsNewColumnDialogOpen}
         onConfirm={handleAddNewColumn}
         existingDates={allDateColumns}
+      />
+
+      <QuickLotIntakeDialog
+        open={isLotIntakeDialogOpen}
+        onOpenChange={setIsLotIntakeDialogOpen}
+        initialProductId={Number(productId)}
+        initialWarehouseId={Number(warehouseId)}
+        initialSupplierId={supplierId}
       />
     </PageContainer>
   );
