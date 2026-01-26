@@ -21,6 +21,7 @@ import {
   Download,
   Calendar,
   FileText,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -74,6 +75,11 @@ const navItems: NavItem[] = [
     href: ROUTES.INVENTORY.ROOT,
     icon: Package,
     feature: "inventory",
+  },
+  {
+    title: "ロット管理（Excelビュー）",
+    href: ROUTES.INVENTORY.EXCEL_PORTAL,
+    icon: FileSpreadsheet,
   },
   {
     title: "受注管理",

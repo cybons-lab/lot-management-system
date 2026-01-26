@@ -10,9 +10,17 @@ interface Props {
   isEditing?: boolean;
   localChanges?: Record<string, number>;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
+  onAddColumn?: () => void;
 }
 
-export function LotSection({ lot, dateColumns, isEditing, localChanges, onQtyChange }: Props) {
+export function LotSection({
+  lot,
+  dateColumns,
+  isEditing,
+  localChanges,
+  onQtyChange,
+  onAddColumn,
+}: Props) {
   const { lotId, lotInfo, destinations, totalStock, totalShipment } = lot;
 
   return (
@@ -53,6 +61,7 @@ export function LotSection({ lot, dateColumns, isEditing, localChanges, onQtyCha
           isEditing={isEditing}
           localChanges={localChanges}
           onQtyChange={onQtyChange}
+          onAddColumn={onAddColumn}
         />
       </div>
     </div>

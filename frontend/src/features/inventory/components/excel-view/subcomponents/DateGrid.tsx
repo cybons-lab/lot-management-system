@@ -1,3 +1,6 @@
+import { format, parseISO } from "date-fns";
+import { Plus } from "lucide-react";
+
 import { type DestinationRowData } from "../types";
 
 const hHeader = "h-8";
@@ -11,6 +14,7 @@ interface Props {
   isEditing?: boolean;
   localChanges?: Record<string, number>;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
+  onAddColumn?: () => void;
 }
 
 interface CellProps {
@@ -53,6 +57,7 @@ function DateCell({ date, lotId, dest, isEditing, localChanges, onQtyChange }: C
   );
 }
 
+/* eslint-disable max-lines-per-function */
 export function DateGrid({
   dateColumns,
   destinations,
@@ -60,6 +65,7 @@ export function DateGrid({
   isEditing,
   localChanges,
   onQtyChange,
+  onAddColumn,
 }: Props) {
   return (
     <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 bg-slate-50/5">
@@ -73,9 +79,19 @@ export function DateGrid({
               key={date}
               className="w-16 p-2 flex items-center justify-center text-center text-[10px] text-slate-500"
             >
-              {date.substring(5).replace("-", "/")}
+              {format(parseISO(date), "MM/dd")}
             </div>
           ))}
+          {/* Add Column Button */}
+          {isEditing && (
+            <button
+              onClick={onAddColumn}
+              className="w-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              title="列を追加"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* Rows */}
@@ -93,6 +109,8 @@ export function DateGrid({
                   onQtyChange={onQtyChange}
                 />
               ))}
+              {/* Spacer for add column button (prevent row misalignment) */}
+              {isEditing && <div className="w-10 bg-slate-50/30" />}
             </div>
           ))}
           {destinations.length < 5 &&
@@ -101,6 +119,7 @@ export function DateGrid({
                 {dateColumns.map((d) => (
                   <div key={d} className="w-16"></div>
                 ))}
+                {isEditing && <div className="w-10"></div>}
               </div>
             ))}
         </div>
@@ -127,6 +146,7 @@ export function DateGrid({
               </div>
             );
           })}
+          {isEditing && <div className="w-10 bg-slate-100"></div>}
         </div>
       </div>
     </div>

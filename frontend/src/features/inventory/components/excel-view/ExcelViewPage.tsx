@@ -1,10 +1,11 @@
-import { ArrowLeft, Save, Edit3, X } from "lucide-react";
-import { useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, Edit3, Save, X } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { LotSection } from "./LotSection";
 import { ProductHeader } from "./ProductHeader";
+import { NewWithdrawalDialog } from "./subcomponents/NewWithdrawalDialog";
 import { useExcelViewData } from "./useExcelViewData";
 
 import { Button } from "@/components/ui";
@@ -60,11 +61,15 @@ function LoadingOrError({ isLoading }: LoadingOrErrorProps) {
   );
 }
 
+/* eslint-disable max-lines-per-function */
 export function ExcelViewPage() {
   const { productId, warehouseId } = useParams<{ productId: string; warehouseId: string }>();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [localChanges, setLocalChanges] = useState<Record<string, number>>({});
+  const [addedDates, setAddedDates] = useState<string[]>([]);
+  const [isNewColumnDialogOpen, setIsNewColumnDialogOpen] = useState(false);
+
   const { data, isLoading } = useExcelViewData(Number(productId), Number(warehouseId));
   const updateMutation = useUpdateAllocationSuggestionsBatch();
 
@@ -94,10 +99,21 @@ export function ExcelViewPage() {
       await updateMutation.mutateAsync({ updates });
       toast.success("計画引当を保存しました");
       setLocalChanges({});
+      setAddedDates([]);
       setIsEditing(false);
     } catch {
       toast.error("保存に失敗しました");
     }
+  };
+
+  const allDateColumns = useMemo(() => {
+    const base = data?.dateColumns || [];
+    return Array.from(new Set([...base, ...addedDates])).sort();
+  }, [data?.dateColumns, addedDates]);
+
+  const handleAddNewColumn = (date: Date) => {
+    const dateStr = date.toISOString().split("T")[0];
+    setAddedDates((prev) => [...prev, dateStr]);
   };
 
   if (isLoading || !data) return <LoadingOrError isLoading={isLoading} />;
@@ -116,7 +132,11 @@ export function ExcelViewPage() {
             isEditing={isEditing}
             isSaving={updateMutation.isPending}
             onEdit={() => setIsEditing(true)}
-            onCancel={() => setIsEditing(false)}
+            onCancel={() => {
+              setIsEditing(false);
+              setLocalChanges({});
+              setAddedDates([]);
+            }}
             onSave={handleSave}
           />
         </div>
@@ -127,13 +147,21 @@ export function ExcelViewPage() {
           <LotSection
             key={lot.lotId}
             lot={lot}
-            dateColumns={data.dateColumns}
+            dateColumns={allDateColumns}
             isEditing={isEditing}
             localChanges={localChanges}
             onQtyChange={handleQtyChange}
+            onAddColumn={() => setIsNewColumnDialogOpen(true)}
           />
         ))}
       </div>
+
+      <NewWithdrawalDialog
+        open={isNewColumnDialogOpen}
+        onOpenChange={setIsNewColumnDialogOpen}
+        onConfirm={handleAddNewColumn}
+        existingDates={allDateColumns}
+      />
     </PageContainer>
   );
 }
