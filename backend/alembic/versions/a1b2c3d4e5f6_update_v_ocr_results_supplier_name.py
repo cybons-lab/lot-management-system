@@ -12,12 +12,12 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "a1b2c3d4e5f6"
-down_revision = "7469e861ca23"
+down_revision = "b2c3d4e5f6g7"
 branch_labels = None
 depends_on = None
 
 
-# 新しいビュー定義（supplier_nameをmaker_nameに変更）
+# 新しいビュー定義（supplier_nameをmaker_nameに変更 + process_status追加）
 NEW_VIEW = r"""
 CREATE OR REPLACE VIEW public.v_ocr_results AS
 SELECT
@@ -56,6 +56,8 @@ SELECT
     oe.jiku_code AS manual_jiku_code,
     oe.material_code AS manual_material_code,
     oe.updated_at AS manual_updated_at,
+    -- 処理ステータス: pending/downloaded/sap_linked/completed
+    COALESCE(oe.process_status, 'pending') AS process_status,
 
     -- マスタ由来（LEFT JOIN）
     m.id AS master_id,

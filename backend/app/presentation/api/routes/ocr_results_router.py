@@ -89,6 +89,9 @@ class OcrResultItem(BaseModel):
     # 手入力・補完結果の追加分
     manual_delivery_quantity: str | None = None
 
+    # 処理ステータス: pending/downloaded/sap_linked/completed
+    process_status: str = "pending"
+
     # SAP照合結果
     sap_match_type: str | None = None
     sap_matched_zkdmat_b: str | None = None
@@ -126,7 +129,7 @@ class OcrResultsExportRow(BaseModel):
     shipping_slip_text: str | None = None
 
     # OCR由来
-    status: str | None = None  # 取得元
+    data_source: str | None = None  # 取得元（固定値"OCR"）
     material_code: str | None = None
     jiku_code: str | None = None
     delivery_date: str | None = None
@@ -463,8 +466,8 @@ async def export_ocr_results(
                     "inbound_no": inbound_no,
                     "shipping_date": shipping_date,
                     "shipping_slip_text": shipping_slip_text,
-                    # 取得元（DBのstatusをそのまま使用）
-                    "status": row.get("status"),
+                    # 取得元（SmartRead経由なので固定値"OCR"）
+                    "data_source": "OCR",
                     "material_code": row.get("material_code"),
                     "jiku_code": row.get("jiku_code"),
                     "delivery_date": row.get("delivery_date"),
@@ -495,7 +498,7 @@ async def export_ocr_results(
         "inbound_no": "入庫No",
         "shipping_date": "出荷日",
         "shipping_slip_text": "出荷票テキスト",
-        "status": "取得元",
+        "data_source": "取得元",
         "material_code": "材質コード",
         "jiku_code": "次区",
         "delivery_date": "納期",

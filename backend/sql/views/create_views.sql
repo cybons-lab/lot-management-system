@@ -536,12 +536,15 @@ SELECT
     oe.jiku_code AS manual_jiku_code,
     oe.material_code AS manual_material_code,
     oe.updated_at AS manual_updated_at,
+    -- 処理ステータス: pending/downloaded/sap_linked/completed
+    COALESCE(oe.process_status, 'pending') AS process_status,
 
     -- マスタ由来（LEFT JOIN）
     m.id AS master_id,
     m.customer_name,
     m.supplier_code,
-    m.supplier_name,
+    -- 仕入先名称はmaker_name（メーカー名）から取得
+    m.maker_name AS supplier_name,
     m.delivery_place_code,
     m.delivery_place_name,
     m.shipping_warehouse_code,
