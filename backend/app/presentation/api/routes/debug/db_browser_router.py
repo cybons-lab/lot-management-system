@@ -10,13 +10,12 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import quoted_name
 
-from app.core.config import settings
+from app.application.services.system_config_service import ConfigKeys, SystemConfigService
 from app.core.database import get_db
 from app.presentation.api.routes.auth.auth_router import get_current_admin
 
 
 router = APIRouter(prefix="/debug/db", tags=["debug-db"])
-
 
 MAX_LIMIT = 200
 DEFAULT_LIMIT = 50
@@ -24,11 +23,14 @@ MAX_Q_COLUMNS = 3
 STATEMENT_TIMEOUT_MS = 3_000
 
 
-def _ensure_enabled() -> None:
-    if not settings.ENABLE_DB_BROWSER:
+def _ensure_enabled(db: Session) -> None:
+    service = SystemConfigService(db)
+    is_enabled = service.get_bool(ConfigKeys.ENABLE_DB_BROWSER, default=False)
+
+    if not is_enabled:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="DB browser is disabled",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="DB browser is disabled in system settings",
         )
 
 
@@ -77,7 +79,7 @@ def list_db_objects(
     db: Session = Depends(get_db),
     _current_admin=Depends(get_current_admin),
 ) -> list[dict[str, Any]]:
-    _ensure_enabled()
+    _ensure_enabled(db)
     allowed_schemas = _get_allowed_schemas(db)
     rows = db.execute(
         text(
@@ -111,7 +113,7 @@ def get_object_schema(
     db: Session = Depends(get_db),
     _current_admin=Depends(get_current_admin),
 ) -> dict[str, Any]:
-    _ensure_enabled()
+    _ensure_enabled(db)
     allowed_schemas = _get_allowed_schemas(db)
     _validate_schema(schema, allowed_schemas)
 
@@ -226,7 +228,7 @@ def get_object_rows(
     db: Session = Depends(get_db),
     _current_admin=Depends(get_current_admin),
 ) -> dict[str, Any]:
-    _ensure_enabled()
+    _ensure_enabled(db)
     allowed_schemas = _get_allowed_schemas(db)
     _validate_schema(schema, allowed_schemas)
 
@@ -342,7 +344,7 @@ def get_view_definition(
     db: Session = Depends(get_db),
     _current_admin=Depends(get_current_admin),
 ) -> dict[str, Any]:
-    _ensure_enabled()
+    _ensure_enabled(db)
     allowed_schemas = _get_allowed_schemas(db)
     _validate_schema(schema, allowed_schemas)
 
@@ -373,7 +375,7 @@ def get_db_graph(
     db: Session = Depends(get_db),
     _current_admin=Depends(get_current_admin),
 ) -> dict[str, Any]:
-    _ensure_enabled()
+    _ensure_enabled(db)
     allowed_schemas = _get_allowed_schemas(db)
 
     nodes = db.execute(
@@ -484,7 +486,7 @@ def get_object_relations(
     db: Session = Depends(get_db),
     _current_admin=Depends(get_current_admin),
 ) -> dict[str, Any]:
-    _ensure_enabled()
+    _ensure_enabled(db)
     allowed_schemas = _get_allowed_schemas(db)
     _validate_schema(schema, allowed_schemas)
 

@@ -1,6 +1,7 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, Outlet } from "react-router-dom";
 
 import { AdminGuard } from "@/components/auth/AdminGuard";
+import { FeatureGuard } from "@/components/auth/FeatureGuard";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
 // Pages
@@ -10,6 +11,7 @@ import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { BulkExportPage } from "@/features/admin/pages/BulkExportPage";
 import { MasterChangeLogsPage } from "@/features/admin/pages/MasterChangeLogsPage";
 import { SeedSnapshotsPage } from "@/features/admin/pages/SeedSnapshotsPage";
+import { SystemSettingsPage } from "@/features/admin/pages/SystemSettingsPage";
 import { PrimaryAssignmentsPage } from "@/features/assignments/pages/PrimaryAssignmentsPage";
 import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
 import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
@@ -77,9 +79,15 @@ import { WithdrawalCreatePage, WithdrawalsListPage } from "@/features/withdrawal
 
 // --- Route Groups ---
 
+const FeatureGuardLayout = ({ feature }: { feature: string }) => (
+  <FeatureGuard feature={feature}>
+    <Outlet />
+  </FeatureGuard>
+);
+
 function InventoryRoutes() {
   return (
-    <>
+    <Route element={<FeatureGuardLayout feature="inventory" />}>
       {/* Inventory routes */}
       <Route path={ROUTES.INVENTORY.ROOT} element={<InventoryLayout />}>
         <Route index element={<InventoryPage />} />
@@ -100,13 +108,13 @@ function InventoryRoutes() {
         element={<InventoryItemDetailPage />}
       />
       <Route path="/inventory/lots/:lotId" element={<LotDetailPage />} />
-    </>
+    </Route>
   );
 }
 
 function MasterRoutes() {
   return (
-    <>
+    <Route element={<FeatureGuardLayout feature="masters" />}>
       {/* Masters - Phase G-1 */}
       <Route path="/masters" element={<MastersPage />} />
       <Route path="/masters/supplier-products" element={<SupplierProductsPage />} />
@@ -141,10 +149,11 @@ function MasterRoutes() {
           </AdminGuard>
         }
       />
-    </>
+    </Route>
   );
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 function AdminRoutes() {
   return (
     <>
@@ -198,6 +207,14 @@ function AdminRoutes() {
         }
       />
       <Route
+        path={ROUTES.ADMIN.SYSTEM_SETTINGS}
+        element={
+          <AdminGuard>
+            <SystemSettingsPage />
+          </AdminGuard>
+        }
+      />
+      <Route
         path="/admin/client-logs"
         element={
           <AdminGuard>
@@ -243,11 +260,13 @@ export function MainRoutes() {
       <Route path="/allocations/suggestions" element={<Navigate to="/orders" replace />} />
 
       {/* Forecasts - New structure (v2.2 - Phase B) */}
-      <Route path={ROUTES.FORECASTS.LIST} element={<ForecastListPage />} />
-      <Route path={ROUTES.FORECASTS.NEW} element={<ForecastCreatePage />} />
-      <Route path="/forecasts/:id" element={<ForecastDetailPage />} />
-      <Route path="/forecasts/:forecastId/edit" element={<ForecastEditPage />} />
-      <Route path={ROUTES.FORECASTS.IMPORT} element={<ForecastImportPage />} />
+      <Route element={<FeatureGuardLayout feature="forecasts" />}>
+        <Route path={ROUTES.FORECASTS.LIST} element={<ForecastListPage />} />
+        <Route path={ROUTES.FORECASTS.NEW} element={<ForecastCreatePage />} />
+        <Route path="/forecasts/:id" element={<ForecastDetailPage />} />
+        <Route path="/forecasts/:forecastId/edit" element={<ForecastEditPage />} />
+        <Route path={ROUTES.FORECASTS.IMPORT} element={<ForecastImportPage />} />
+      </Route>
 
       {/* Legacy forecast routes - Redirect to new structure */}
       <Route

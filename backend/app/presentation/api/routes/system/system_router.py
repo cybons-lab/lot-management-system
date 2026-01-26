@@ -1,9 +1,12 @@
+import json
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.application.services.system_config_service import ConfigKeys, SystemConfigService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.system_models import ClientLog
@@ -66,3 +69,29 @@ def get_recent_logs(
         }
         for log, user in logs
     ]
+
+
+class PublicSystemSettings(BaseModel):
+    page_visibility: dict | None
+    maintenance_mode: bool
+
+
+@router.get("/public-settings", response_model=PublicSystemSettings)
+def get_public_settings(
+    db: Session = Depends(get_db),
+    # Authenticated used required (any user)
+    _current_user: User = Depends(get_current_user_optional),
+):
+    """フロントエンド用の公開システム設定を取得."""
+    service = SystemConfigService(db)
+
+    # Get config values
+    maintenance = service.get_bool(ConfigKeys.MAINTENANCE_MODE)
+    visibility_str = service.get(ConfigKeys.PAGE_VISIBILITY, "{}")
+
+    try:
+        visibility = json.loads(visibility_str)
+    except json.JSONDecodeError:
+        visibility = {}
+
+    return PublicSystemSettings(page_visibility=visibility, maintenance_mode=maintenance)

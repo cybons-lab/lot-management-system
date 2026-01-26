@@ -133,6 +133,7 @@ from app.core.logging import setup_logging
 from app.domain.errors import DomainError
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.metrics import MetricsMiddleware
+from app.presentation.api.middleware.maintenance_middleware import MaintenanceMiddleware
 from app.presentation.api.routes import register_all_routers
 
 
@@ -192,6 +193,7 @@ application.add_middleware(
     allow_headers=["*"],
 )
 application.add_middleware(MetricsMiddleware)
+application.add_middleware(MaintenanceMiddleware)
 application.add_middleware(
     RequestLoggingMiddleware,
     sensitive_headers=settings.LOG_SENSITIVE_FIELDS,
