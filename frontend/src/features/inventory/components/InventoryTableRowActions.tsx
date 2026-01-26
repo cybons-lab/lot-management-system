@@ -1,8 +1,7 @@
-import { ArrowDownToLine, FileSpreadsheet, Plus } from "lucide-react";
+import { ArrowDownToLine, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui";
-import { ROUTES } from "@/constants/routes";
 import { type InventoryItem } from "@/features/inventory/api";
 
 interface RowActionsProps {
@@ -13,11 +12,6 @@ interface RowActionsProps {
 
 export function RowActions({ item, onOpenQuickIntake, onViewDetail }: RowActionsProps) {
   const navigate = useNavigate();
-
-  const handleExcelView = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(ROUTES.INVENTORY.EXCEL_VIEW(item.product_id, item.warehouse_id));
-  };
 
   if (item.inventory_state === "no_lots") {
     return (
@@ -44,15 +38,6 @@ export function RowActions({ item, onOpenQuickIntake, onViewDetail }: RowActions
           }}
         >
           詳細
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="font-medium text-emerald-700 hover:bg-emerald-50"
-          onClick={handleExcelView}
-          title="Excel風ビュー"
-        >
-          <FileSpreadsheet className="h-4 w-4" />
         </Button>
       </div>
     );
@@ -81,15 +66,6 @@ export function RowActions({ item, onOpenQuickIntake, onViewDetail }: RowActions
         }}
       >
         詳細
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="font-medium text-emerald-700 hover:bg-emerald-50"
-        onClick={handleExcelView}
-        title="Excel風ビュー"
-      >
-        <FileSpreadsheet className="h-4 w-4" />
       </Button>
     </div>
   );

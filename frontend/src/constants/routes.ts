@@ -61,6 +61,7 @@ export const ROUTES = {
     },
     EXCEL_VIEW: (productId: number | string, warehouseId: number | string) =>
       `/inventory/excel-view/${productId}/${warehouseId}`,
+    EXCEL_PORTAL: "/inventory/excel-portal",
   },
 
   // Masters
