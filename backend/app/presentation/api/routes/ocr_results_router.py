@@ -125,7 +125,7 @@ class OcrResultsExportRow(BaseModel):
     lot_no_2: str | None = None
     quantity_2: str | None = None
     inbound_no: str | None = None
-    shipping_date: date | None = None
+    shipping_date: str | None = None  # YYYY/MM/DD形式
     shipping_slip_text: str | None = None
 
     # OCR由来
@@ -441,7 +441,9 @@ async def export_ocr_results(
         inbound_no = row.get("manual_inbound_no") or row.get("inbound_no")
 
         # 出荷日: 手入力値をそのまま使用（自動計算は画面表示時のみ）
-        shipping_date = row.get("manual_shipping_date")
+        # Excelエクスポート用にYYYY/MM/DD形式の文字列に変換
+        shipping_date_raw = row.get("manual_shipping_date")
+        shipping_date = shipping_date_raw.strftime("%Y/%m/%d") if shipping_date_raw else None
 
         shipping_slip_text = (
             row.get("manual_shipping_slip_text")
