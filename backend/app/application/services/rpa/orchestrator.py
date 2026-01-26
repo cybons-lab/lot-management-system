@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -348,8 +348,8 @@ class MaterialDeliveryNoteOrchestrator:
         run_id: int,
         flow_url: str | None,
         json_payload: dict[str, Any],
-        start_date: Any,
-        end_date: Any,
+        start_date: date | None,
+        end_date: date | None,
         user: User | None = None,
     ) -> dict[str, Any]:
         """Step2実行."""

@@ -318,6 +318,15 @@ class OcrResultEdit(Base):
     jiku_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     material_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     delivery_quantity: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    delivery_date: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    # 処理ステータス: pending/downloaded/sap_linked/completed
+    process_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending", server_default=text("'pending'")
+    )
+    # バリデーションエラーフラグ: {"master_not_found": true, ...}
+    error_flags: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )

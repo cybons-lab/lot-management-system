@@ -145,10 +145,10 @@ export function InboundPlansList({
             className="w-full rounded-md border px-3 py-2 text-sm"
           >
             <option value="">すべて</option>
-            <option value="planned">Planned（予定）</option>
-            <option value="partially_received">Partially Received（一部入荷）</option>
-            <option value="received">Received（入荷済）</option>
-            <option value="cancelled">Cancelled（キャンセル）</option>
+            <option value="planned">予定</option>
+            <option value="partially_received">一部入荷</option>
+            <option value="received">入荷済</option>
+            <option value="cancelled">キャンセル</option>
           </select>
         </div>
         <div>
