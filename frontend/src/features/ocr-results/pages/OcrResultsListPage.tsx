@@ -186,6 +186,23 @@ type RowInputState = {
 
 const orEmpty = (v: string | null | undefined) => v || "";
 
+/**
+ * 日付文字列をHTML date input用のYYYY-MM-DD形式に変換
+ * YYYY/MM/DD や YYYY/M/D 形式をYYYY-MM-DD形式に変換
+ */
+const formatDateForInput = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return "";
+  // スラッシュをハイフンに置換
+  const converted = dateStr.replace(/\//g, "-");
+  // YYYY-M-D形式の場合はゼロパディング
+  const match = converted.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (match) {
+    const [, year, month, day] = match;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+  return converted;
+};
+
 const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
   lotNo1: row.manual_lot_no_1 || orEmpty(row.lot_no),
   quantity1: orEmpty(row.manual_quantity_1),
@@ -198,7 +215,7 @@ const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
   jikuCode: row.manual_jiku_code || orEmpty(row.jiku_code),
   materialCode: row.manual_material_code || orEmpty(row.material_code),
   deliveryQuantity: row.manual_delivery_quantity || orEmpty(row.delivery_quantity),
-  deliveryDate: orEmpty(row.delivery_date),
+  deliveryDate: formatDateForInput(row.delivery_date),
 });
 
 // ============================================
