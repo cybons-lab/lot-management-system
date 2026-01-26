@@ -1,7 +1,7 @@
 /**
  * CustomerItemDetailDialog
  * 得意先品番マッピングの詳細ダイアログ（納入先別設定タブ含む）
- * OCR-SAP変換フィールド対応版
+ * Simplified version - OCR/SAP fields removed
  */
 
 import { Pencil } from "lucide-react";
@@ -10,7 +10,6 @@ import type { CustomerItem } from "../api";
 import { DeliverySettingsSection } from "../delivery-settings";
 
 import { CustomerItemBasicTab } from "./CustomerItemBasicTab";
-import { CustomerItemOcrSapTab } from "./CustomerItemOcrSapTab";
 
 import { Button } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
@@ -58,9 +57,6 @@ export function CustomerItemDetailDialog({
             <TabsTrigger value="basic" className="flex-1">
               基本情報
             </TabsTrigger>
-            <TabsTrigger value="ocr-sap" className="flex-1">
-              OCR-SAP変換
-            </TabsTrigger>
             <TabsTrigger value="delivery" className="flex-1">
               納入先別設定
             </TabsTrigger>
@@ -68,10 +64,6 @@ export function CustomerItemDetailDialog({
 
           <TabsContent value="basic" className="mt-4">
             <CustomerItemBasicTab item={item} />
-          </TabsContent>
-
-          <TabsContent value="ocr-sap" className="mt-4">
-            <CustomerItemOcrSapTab item={item} />
           </TabsContent>
 
           <TabsContent value="delivery" className="mt-4">

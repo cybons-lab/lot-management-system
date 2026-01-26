@@ -1,9 +1,9 @@
 /**
  * CustomerItemsTable - Table component for customer items.
  * Refactored to use DataTable component.
- * OCR-SAP変換フィールド対応版 + チェックボックス選択対応
+ * Simplified version - OCR/SAP fields removed
  */
-import { Building2, CheckCircle, Package, Pencil, RotateCcw, Trash2, XCircle } from "lucide-react";
+import { Building2, Package, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 
 import type { CustomerItem } from "../api";
@@ -148,39 +148,6 @@ export function CustomerItemsTable({
             <span className="text-gray-400">-</span>
           ),
         width: 100,
-      },
-      {
-        id: "procurement",
-        header: "発注",
-        accessor: (row) => (row.is_procurement_required ? "要" : "不要"),
-        cell: (row) =>
-          row.is_procurement_required ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-              <CheckCircle className="h-3 w-3" />
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-              <XCircle className="h-3 w-3" />
-              不要
-            </span>
-          ),
-        width: 80,
-        align: "center",
-        sortable: true,
-      },
-      {
-        id: "shipping_slip_text",
-        header: "出荷票テキスト",
-        accessor: (row) => row.shipping_slip_text || "",
-        cell: (row) =>
-          row.shipping_slip_text ? (
-            <div className="max-w-[150px] truncate" title={row.shipping_slip_text}>
-              {row.shipping_slip_text}
-            </div>
-          ) : (
-            <span className="text-gray-400">-</span>
-          ),
-        width: 150,
       },
       {
         id: "special_instructions",

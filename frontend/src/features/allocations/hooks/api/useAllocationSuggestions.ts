@@ -3,19 +3,51 @@
  * Hooks for manual and FEFO allocation suggestions
  */
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
   createManualAllocationSuggestion,
   createFefoAllocationSuggestion,
   commitAllocation,
   cancelAllocation,
+  getAllocationSuggestions,
+  updateAllocationSuggestionsBatch,
   type ManualAllocationRequest,
   type FefoPreviewRequest,
   type AllocationCommitRequest,
 } from "../../api";
 
 import { getAllocationQueryKeys } from "@/services/api/query-keys";
+
+/**
+ * Get allocation suggestions list
+ */
+export const useAllocationSuggestions = (params?: {
+  product_id?: number;
+  forecast_period?: string;
+  customer_id?: number;
+}) => {
+  return useQuery({
+    queryKey: ["allocationSuggestions", params],
+    queryFn: () => getAllocationSuggestions(params ?? {}),
+    enabled: !!params?.product_id,
+  });
+};
+
+/**
+ * Batch update allocation suggestions
+ */
+export const useUpdateAllocationSuggestionsBatch = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateAllocationSuggestionsBatch,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] });
+      // もし引当状況サマリのクエリがあればそれも無効化
+      queryClient.invalidateQueries({ queryKey: ["planning-allocation-summary"] });
+    },
+  });
+};
 
 /**
  * Create manual allocation suggestion (preview only)

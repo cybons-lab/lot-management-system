@@ -46,6 +46,7 @@ export const useLotsQuery = (params?: LotsQuery) =>
   useQuery<LotResponse[], Error, LotUI[]>({
     queryKey: ["lots", params],
     queryFn: () => getLots(params),
+    enabled: !!params?.product_id || !!params?.warehouse_id,
     staleTime: 30_000,
     refetchOnMount: true,
     refetchOnWindowFocus: false,

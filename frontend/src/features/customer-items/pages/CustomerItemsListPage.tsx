@@ -14,7 +14,7 @@ import type { CustomerItem, UpdateCustomerItemRequest } from "../api";
 import { CustomerItemBulkImportDialog } from "../components/CustomerItemBulkImportDialog";
 import { CustomerItemDetailDialog } from "../components/CustomerItemDetailDialog";
 import { CustomerItemExportButton } from "../components/CustomerItemExportButton";
-import { CustomerItemForm } from "../components/CustomerItemForm";
+import { CustomerItemFormDialog } from "../components/CustomerItemFormDialog";
 import { CustomerItemsFilter } from "../components/CustomerItemsFilter";
 import { CustomerItemsTable } from "../components/CustomerItemsTable";
 import { useUpdateCustomerItem } from "../hooks";
@@ -29,7 +29,6 @@ import {
 } from "@/components/common";
 import { Button, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useListPageDialogs } from "@/hooks/ui";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -287,18 +286,13 @@ export function CustomerItemsListPage() {
       />
 
       {/* 新規登録ダイアログ */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>得意先品番マッピング新規登録</DialogTitle>
-          </DialogHeader>
-          <CustomerItemForm
-            onSubmit={handleCreate}
-            onCancel={() => setIsCreateDialogOpen(false)}
-            isSubmitting={isCreating}
-          />
-        </DialogContent>
-      </Dialog>
+      <CustomerItemFormDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSubmit={handleCreate}
+        isSubmitting={isCreating}
+        mode="create"
+      />
 
       {/* インポートダイアログ */}
       <CustomerItemBulkImportDialog
@@ -315,19 +309,14 @@ export function CustomerItemsListPage() {
       />
 
       {/* 編集ダイアログ */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>得意先品番マッピング編集</DialogTitle>
-          </DialogHeader>
-          <CustomerItemForm
-            item={editingItem ?? undefined}
-            onSubmit={handleUpdate}
-            onCancel={() => setIsEditDialogOpen(false)}
-            isSubmitting={isUpdating}
-          />
-        </DialogContent>
-      </Dialog>
+      <CustomerItemFormDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        item={editingItem ?? undefined}
+        onSubmit={handleUpdate}
+        isSubmitting={isUpdating}
+        mode="edit"
+      />
 
       {/* Delete/Restore Dialogs */}
       <SoftDeleteDialog

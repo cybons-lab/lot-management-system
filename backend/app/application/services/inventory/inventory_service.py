@@ -423,12 +423,12 @@ class InventoryService:
             Inventory item, or None if not found
         """
         query = """
-            SELECT 
-                v.product_id, 
-                v.warehouse_id, 
-                v.total_quantity, 
-                v.allocated_quantity, 
-                v.available_quantity, 
+            SELECT
+                v.product_id,
+                v.warehouse_id,
+                v.total_quantity,
+                v.allocated_quantity,
+                v.available_quantity,
                 v.last_updated,
                 p.product_name,
                 p.maker_part_code AS product_code,
@@ -439,6 +439,24 @@ class InventoryService:
             LEFT JOIN warehouses w ON v.warehouse_id = w.id
             WHERE v.product_id = :product_id AND v.warehouse_id = :warehouse_id
         """
+
+        # Get primary supplier for this product/warehouse (supplier with most stock)
+        supplier_query = """
+            SELECT
+                l.supplier_id,
+                s.supplier_code,
+                s.supplier_name,
+                SUM(l.remaining_quantity) as total_qty
+            FROM v_lot_receipt_stock l
+            LEFT JOIN suppliers s ON l.supplier_id = s.id
+            WHERE l.product_id = :product_id
+              AND l.warehouse_id = :warehouse_id
+              AND l.status = 'active'
+              AND l.supplier_id IS NOT NULL
+            GROUP BY l.supplier_id, s.supplier_code, s.supplier_name
+            ORDER BY total_qty DESC
+            LIMIT 1
+        """
         from sqlalchemy import text
 
         row = self.db.execute(
@@ -447,6 +465,11 @@ class InventoryService:
 
         if not row:
             return None
+
+        # Get supplier info
+        supplier_row = self.db.execute(
+            text(supplier_query), {"product_id": product_id, "warehouse_id": warehouse_id}
+        ).fetchone()
 
         # Get Allocation breakdown
         # P3: allocations table replaced by lot_reservations
@@ -507,6 +530,9 @@ class InventoryService:
             product_code=row.product_code,
             warehouse_name=row.warehouse_name,
             warehouse_code=row.warehouse_code,
+            supplier_id=supplier_row.supplier_id if supplier_row else None,
+            supplier_code=supplier_row.supplier_code if supplier_row else None,
+            supplier_name=supplier_row.supplier_name if supplier_row else None,
         )
 
     def get_inventory_by_supplier(self) -> list[dict]:

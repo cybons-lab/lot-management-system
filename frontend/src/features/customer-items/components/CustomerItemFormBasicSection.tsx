@@ -68,10 +68,37 @@ export function CustomerItemFormBasicSection({
           )}
         </div>
 
-        {/* 先方品番（商品）選択 */}
+        {/* 先方品番（手入力） */}
+        <div>
+          <Label htmlFor="customer_part_no" className="mb-2 block text-sm font-medium">
+            先方品番 <span className="text-red-500">*</span>
+          </Label>
+          <Controller
+            name="customer_part_no"
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                id="customer_part_no"
+                type="text"
+                placeholder="得意先での品番を入力"
+                disabled={isSubmitting}
+                maxLength={100}
+              />
+            )}
+          />
+          {errors.customer_part_no && (
+            <p className="mt-1 text-sm text-red-600">{errors.customer_part_no.message}</p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            得意先が使用する品番（先方で呼ばれている品番）
+          </p>
+        </div>
+
+        {/* メーカー品番選択 */}
         <div>
           <Label htmlFor="product_id" className="mb-2 block text-sm font-medium">
-            先方品番 <span className="text-red-500">*</span>
+            メーカー品番 <span className="text-red-500">*</span>
           </Label>
           <Controller
             name="product_id"
@@ -81,7 +108,7 @@ export function CustomerItemFormBasicSection({
                 options={productOptions}
                 value={field.value ? String(field.value) : ""}
                 onChange={onProductSelect}
-                placeholder={isLoadingProducts ? "読込中..." : "先方品番を検索..."}
+                placeholder={isLoadingProducts ? "読込中..." : "メーカー品番を検索..."}
                 disabled={isSubmitting || isLoading}
               />
             )}
@@ -89,6 +116,9 @@ export function CustomerItemFormBasicSection({
           {errors.product_id && (
             <p className="mt-1 text-sm text-red-600">{errors.product_id.message}</p>
           )}
+          <p className="mt-1 text-xs text-gray-500">
+            先方品番に対応するメーカー品番（仕入先の製品番号）
+          </p>
         </div>
 
         {/* Base Unit */}

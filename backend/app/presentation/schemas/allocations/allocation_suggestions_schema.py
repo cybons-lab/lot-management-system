@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 class AllocationSuggestionBase(BaseModel):
     """引当推奨基本スキーマ."""
 
-    forecast_period: str = Field(..., description="対象期間 (YYYY-MM)")
+    forecast_period: str = Field(..., description="対象期間 (YYYY-MM または YYYY-MM-DD)")
     customer_id: int = Field(..., description="得意先ID")
     delivery_place_id: int = Field(..., description="納入先ID")
     product_id: int = Field(..., description="製品ID")
@@ -124,3 +124,20 @@ class AllocationSuggestionListResponse(BaseModel):
 
     suggestions: list[AllocationSuggestionResponse]
     total: int
+
+
+class AllocationSuggestionBatchUpdateItem(BaseModel):
+    """一括更新用アイテム."""
+
+    customer_id: int
+    delivery_place_id: int
+    product_id: int
+    lot_id: int
+    forecast_period: str
+    quantity: Decimal
+
+
+class AllocationSuggestionBatchUpdate(BaseModel):
+    """一括更新リクエスト."""
+
+    updates: list[AllocationSuggestionBatchUpdateItem]

@@ -32,7 +32,9 @@ import { InboundPlanCreatePage } from "@/features/inbound-plans/pages/InboundPla
 import { InboundPlanDetailPage } from "@/features/inbound-plans/pages/InboundPlanDetailPage";
 import { InboundPlanEditPage } from "@/features/inbound-plans/pages/InboundPlanEditPage";
 import { InboundPlansListPage } from "@/features/inbound-plans/pages/InboundPlansListPage";
+import { ExcelViewPage } from "@/features/inventory/components/excel-view/ExcelViewPage";
 import { AdhocLotCreatePage } from "@/features/inventory/pages/AdhocLotCreatePage";
+import { ExcelPortalPage } from "@/features/inventory/pages/ExcelPortalPage";
 import { InventoryItemDetailPage } from "@/features/inventory/pages/InventoryItemDetailPage";
 import { InventoryLayout } from "@/features/inventory/pages/InventoryLayout";
 import { InventoryPage } from "@/features/inventory/pages/InventoryPage";
@@ -97,6 +99,13 @@ function InventoryRoutes() {
         <Route path="adjustments" element={<AdjustmentsListPage />} />
         <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
         <Route path="adhoc/new" element={<AdhocLotCreatePage />} />
+
+        <Route path="excel-view/:productId/:warehouseId" element={<ExcelViewPage />} />
+        <Route
+          path="excel-view/:productId/:warehouseId/:customerItemId"
+          element={<ExcelViewPage />}
+        />
+        <Route path="excel-portal" element={<ExcelPortalPage />} />
         <Route path="history" element={<StockHistoryPage />} />
         <Route path="withdrawals" element={<WithdrawalsListPage />} />
         <Route path="withdrawals/new" element={<WithdrawalCreatePage />} />

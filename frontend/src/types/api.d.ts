@@ -423,6 +423,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v2/forecast/suggestions/batch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Batch Update Suggestions
+     * @description 計画引当（Suggestions）を一括更新.
+     */
+    post: operations["batch_update_suggestions_api_v2_forecast_suggestions_batch_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v2/inventory/": {
     parameters: {
       query?: never;
@@ -8324,6 +8344,32 @@ export interface components {
       per_key: components["schemas"]["AllocationStatsPerKey"][];
     };
     /**
+     * AllocationSuggestionBatchUpdate
+     * @description 一括更新リクエスト.
+     */
+    AllocationSuggestionBatchUpdate: {
+      /** Updates */
+      updates: components["schemas"]["AllocationSuggestionBatchUpdateItem"][];
+    };
+    /**
+     * AllocationSuggestionBatchUpdateItem
+     * @description 一括更新用アイテム.
+     */
+    AllocationSuggestionBatchUpdateItem: {
+      /** Customer Id */
+      customer_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Product Id */
+      product_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Forecast Period */
+      forecast_period: string;
+      /** Quantity */
+      quantity: number | string;
+    };
+    /**
      * AllocationSuggestionListResponse
      * @description 引当推奨一覧レスポンス.
      */
@@ -8365,7 +8411,7 @@ export interface components {
     AllocationSuggestionResponse: {
       /**
        * Forecast Period
-       * @description 対象期間 (YYYY-MM)
+       * @description 対象期間 (YYYY-MM または YYYY-MM-DD)
        */
       forecast_period: string;
       /**
@@ -9509,62 +9555,6 @@ export interface components {
        * @description 特記事項
        */
       special_instructions?: string | null;
-      /**
-       * Shipping Document Template
-       * @description 出荷表テンプレート
-       */
-      shipping_document_template?: string | null;
-      /**
-       * Sap Notes
-       * @description SAP備考
-       */
-      sap_notes?: string | null;
-      /**
-       * Maker Part No
-       * @description メーカー品番
-       */
-      maker_part_no?: string | null;
-      /**
-       * Order Category
-       * @description 発注区分
-       */
-      order_category?: string | null;
-      /**
-       * Is Procurement Required
-       * @description 発注の有無
-       * @default true
-       */
-      is_procurement_required: boolean;
-      /**
-       * Shipping Slip Text
-       * @description 出荷票テキスト
-       */
-      shipping_slip_text?: string | null;
-      /**
-       * Ocr Conversion Notes
-       * @description OCR変換用備考
-       */
-      ocr_conversion_notes?: string | null;
-      /**
-       * Sap Supplier Code
-       * @description SAP仕入先コード
-       */
-      sap_supplier_code?: string | null;
-      /**
-       * Sap Warehouse Code
-       * @description SAP倉庫コード
-       */
-      sap_warehouse_code?: string | null;
-      /**
-       * Sap Shipping Warehouse
-       * @description SAP出荷倉庫
-       */
-      sap_shipping_warehouse?: string | null;
-      /**
-       * Sap Uom
-       * @description SAP単位
-       */
-      sap_uom?: string | null;
     };
     /**
      * CustomerItemDeliverySettingCreate
@@ -9808,61 +9798,6 @@ export interface components {
        */
       special_instructions?: string | null;
       /**
-       * Shipping Document Template
-       * @description 出荷表テンプレート
-       */
-      shipping_document_template?: string | null;
-      /**
-       * Sap Notes
-       * @description SAP備考
-       */
-      sap_notes?: string | null;
-      /**
-       * Maker Part No
-       * @description メーカー品番
-       */
-      maker_part_no?: string | null;
-      /**
-       * Order Category
-       * @description 発注区分
-       */
-      order_category?: string | null;
-      /**
-       * Is Procurement Required
-       * @description 発注の有無
-       */
-      is_procurement_required: boolean;
-      /**
-       * Shipping Slip Text
-       * @description 出荷票テキスト
-       */
-      shipping_slip_text?: string | null;
-      /**
-       * Ocr Conversion Notes
-       * @description OCR変換用備考
-       */
-      ocr_conversion_notes?: string | null;
-      /**
-       * Sap Supplier Code
-       * @description SAP仕入先コード
-       */
-      sap_supplier_code?: string | null;
-      /**
-       * Sap Warehouse Code
-       * @description SAP倉庫コード
-       */
-      sap_warehouse_code?: string | null;
-      /**
-       * Sap Shipping Warehouse
-       * @description SAP出荷倉庫
-       */
-      sap_shipping_warehouse?: string | null;
-      /**
-       * Sap Uom
-       * @description SAP単位
-       */
-      sap_uom?: string | null;
-      /**
        * Customer Code
        * @description 得意先コード
        */
@@ -9958,61 +9893,6 @@ export interface components {
        * @description 特記事項
        */
       special_instructions?: string | null;
-      /**
-       * Shipping Document Template
-       * @description 出荷表テンプレート
-       */
-      shipping_document_template?: string | null;
-      /**
-       * Sap Notes
-       * @description SAP備考
-       */
-      sap_notes?: string | null;
-      /**
-       * Maker Part No
-       * @description メーカー品番
-       */
-      maker_part_no?: string | null;
-      /**
-       * Order Category
-       * @description 発注区分
-       */
-      order_category?: string | null;
-      /**
-       * Is Procurement Required
-       * @description 発注の有無
-       */
-      is_procurement_required?: boolean | null;
-      /**
-       * Shipping Slip Text
-       * @description 出荷票テキスト
-       */
-      shipping_slip_text?: string | null;
-      /**
-       * Ocr Conversion Notes
-       * @description OCR変換用備考
-       */
-      ocr_conversion_notes?: string | null;
-      /**
-       * Sap Supplier Code
-       * @description SAP仕入先コード
-       */
-      sap_supplier_code?: string | null;
-      /**
-       * Sap Warehouse Code
-       * @description SAP倉庫コード
-       */
-      sap_warehouse_code?: string | null;
-      /**
-       * Sap Shipping Warehouse
-       * @description SAP出荷倉庫
-       */
-      sap_shipping_warehouse?: string | null;
-      /**
-       * Sap Uom
-       * @description SAP単位
-       */
-      sap_uom?: string | null;
     };
     /**
      * CustomerResponse
@@ -18009,6 +17889,39 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  batch_update_suggestions_api_v2_forecast_suggestions_batch_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AllocationSuggestionBatchUpdate"];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {

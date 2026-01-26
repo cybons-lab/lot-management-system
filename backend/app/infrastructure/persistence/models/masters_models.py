@@ -439,10 +439,9 @@ class Product(SoftDeleteMixin, Base):
 class CustomerItem(SoftDeleteMixin, Base):
     """Customer-specific product mappings (得意先品番マッピング).
 
-    【責務境界】受注・出荷ドメイン + OCR→SAP変換
+    【責務境界】受注・出荷ドメイン
     - 得意先が使用する品番コードの変換
-    - 出荷表テキスト、梱包注意書き、SAP連携
-    - OCR読取結果からSAP登録データへの変換補完
+    - 得意先・製品・仕入先の基本マッピング
     - 参照: v_order_line_details, 出荷表生成処理
 
     DDL: customer_items
@@ -498,39 +497,6 @@ class CustomerItem(SoftDeleteMixin, Base):
     pack_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
     pack_quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)
     special_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
-    shipping_document_template: Mapped[str | None] = mapped_column(Text, nullable=True)
-    sap_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-
-    # === OCR→SAP変換用カラム ===
-    maker_part_no: Mapped[str | None] = mapped_column(
-        String(100), nullable=True, comment="メーカー品番"
-    )
-    order_category: Mapped[str | None] = mapped_column(
-        String(50), nullable=True, comment="発注区分（指示/かんばん等）"
-    )
-    is_procurement_required: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default=text("true"), comment="発注の有無"
-    )
-    shipping_slip_text: Mapped[str | None] = mapped_column(
-        Text, nullable=True, comment="出荷票テキスト"
-    )
-    ocr_conversion_notes: Mapped[str | None] = mapped_column(
-        Text, nullable=True, comment="OCR変換用備考"
-    )
-
-    # === SAP正（キャッシュ項目） ===
-    sap_supplier_code: Mapped[str | None] = mapped_column(
-        String(50), nullable=True, comment="SAP仕入先コード（キャッシュ）"
-    )
-    sap_warehouse_code: Mapped[str | None] = mapped_column(
-        String(50), nullable=True, comment="SAP倉庫コード（キャッシュ）"
-    )
-    sap_shipping_warehouse: Mapped[str | None] = mapped_column(
-        String(50), nullable=True, comment="SAP出荷倉庫（キャッシュ）"
-    )
-    sap_uom: Mapped[str | None] = mapped_column(
-        String(20), nullable=True, comment="SAP単位（キャッシュ）"
-    )
 
     valid_to: Mapped[date] = mapped_column(
         Date, nullable=False, server_default=text("'9999-12-31'")
@@ -556,7 +522,6 @@ class CustomerItem(SoftDeleteMixin, Base):
         Index("idx_customer_items_supplier", "supplier_id"),
         Index("idx_customer_items_supplier_item", "supplier_item_id"),
         Index("idx_customer_items_valid_to", "valid_to"),
-        Index("idx_customer_items_order_category", "order_category"),
     )
 
     # Relationships

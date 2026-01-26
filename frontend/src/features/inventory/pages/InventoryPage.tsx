@@ -3,6 +3,7 @@ import {
   Box,
   ChevronLeft,
   ChevronRight,
+  FileSpreadsheet,
   History,
   Home,
   List,
@@ -15,9 +16,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { Button, Checkbox } from "@/components/ui";
-import { Label } from "@/components/ui";
+import { Button, Checkbox, Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
+import { ROUTES } from "@/constants/routes";
 import { InventoryByProductTable } from "@/features/inventory/components/InventoryByProductTable";
 import { InventoryBySupplierTable } from "@/features/inventory/components/InventoryBySupplierTable";
 import { InventoryByWarehouseTable } from "@/features/inventory/components/InventoryByWarehouseTable";
@@ -178,6 +179,14 @@ export function InventoryPage() {
         actions={
           <div className="flex gap-2">
             <ExportButton apiPath="lots/export/download" filePrefix="lots" size="sm" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(ROUTES.INVENTORY.EXCEL_PORTAL)}
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Excel View
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/inventory/history")}>
               <History className="mr-2 h-4 w-4" />
               入出庫履歴

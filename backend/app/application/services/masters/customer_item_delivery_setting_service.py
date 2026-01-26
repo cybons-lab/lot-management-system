@@ -36,7 +36,6 @@ class CustomerItemDeliverySettingService:
         1. customer_item_delivery_settings with exact match
         2. customer_item_delivery_settings with delivery_place only
         3. customer_item_delivery_settings with is_default = true
-        4. customer_items.shipping_document_template (fallback)
 
         Args:
             customer_id: Customer ID
@@ -75,20 +74,6 @@ class CustomerItemDeliverySettingService:
                 packing_note=setting.packing_note,
                 lead_time_days=setting.lead_time_days,
                 source="delivery_setting",
-            )
-
-        # Fallback to customer_items.shipping_document_template
-        template = self.repository.get_customer_item_template(
-            customer_id=customer_id,
-            customer_part_no=customer_part_no,
-        )
-
-        if template:
-            return ShipmentTextResponse(
-                shipment_text=template,
-                packing_note=None,
-                lead_time_days=None,
-                source="customer_item",
             )
 
         return ShipmentTextResponse(

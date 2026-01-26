@@ -414,13 +414,15 @@ export const generateAllocationSuggestions = (data: AllocationSuggestionRequest)
   return http.post<AllocationSuggestionPreviewResponse>("v2/forecast/suggestions/preview", data);
 };
 
-export const getAllocationSuggestions = (params: {
-  skip?: number;
-  limit?: number;
-  forecast_period?: string;
-  product_id?: number;
-  customer_id?: number;
-}) => {
+export const getAllocationSuggestions = (
+  params: {
+    skip?: number;
+    limit?: number;
+    forecast_period?: string;
+    product_id?: number;
+    customer_id?: number;
+  } = {},
+) => {
   const searchParams = new URLSearchParams();
   if (params.skip) searchParams.append("skip", params.skip.toString());
   if (params.limit) searchParams.append("limit", params.limit.toString());
@@ -431,6 +433,24 @@ export const getAllocationSuggestions = (params: {
   const queryString = searchParams.toString();
   return http.get<AllocationSuggestionListResponse>(
     `v2/forecast/suggestions${queryString ? "?" + queryString : ""}`,
+  );
+};
+
+export interface AllocationSuggestionBatchUpdateItem {
+  customer_id: number;
+  delivery_place_id: number;
+  product_id: number;
+  lot_id: number;
+  forecast_period: string;
+  quantity: number;
+}
+
+export const updateAllocationSuggestionsBatch = (data: {
+  updates: AllocationSuggestionBatchUpdateItem[];
+}) => {
+  return http.post<{ status: string; updated_count: number; message: string }>(
+    "v2/forecast/suggestions/batch",
+    data,
   );
 };
 

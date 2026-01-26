@@ -171,3 +171,73 @@ class AllocationSuggestionService(AllocationSuggestionBase):
             stats=stats,
             gaps=gaps,
         )
+
+    def update_manual_suggestions(
+        self,
+        updates: list[dict],
+    ) -> int:
+        """Update multiple allocation suggestions manually.
+
+        Args:
+            updates: List of dicts with keys:
+                customer_id, delivery_place_id, product_id,
+                lot_id, forecast_period, quantity
+
+        Returns:
+            Number of records updated/created/deleted.
+        """
+        from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
+
+        count = 0
+        for up in updates:
+            # 1. 既存の提案を検索
+            item = (
+                self.db.query(AllocationSuggestion)
+                .filter(
+                    AllocationSuggestion.customer_id == up["customer_id"],
+                    AllocationSuggestion.delivery_place_id == up["delivery_place_id"],
+                    AllocationSuggestion.product_id == up["product_id"],
+                    AllocationSuggestion.lot_id == up["lot_id"],
+                    AllocationSuggestion.forecast_period == up["forecast_period"],
+                )
+                .first()
+            )
+
+            quantity = Decimal(str(up["quantity"]))
+
+            if item:
+                if quantity <= 0:
+                    self.db.delete(item)
+                else:
+                    item.quantity = quantity
+                    item.source = "manual_excel"
+                count += 1
+            elif quantity > 0:
+                # 対応するフォーキャストを取得（任意で紐付け）
+                forecast = (
+                    self.db.query(ForecastCurrent)
+                    .filter(
+                        ForecastCurrent.customer_id == up["customer_id"],
+                        ForecastCurrent.delivery_place_id == up["delivery_place_id"],
+                        ForecastCurrent.product_id == up["product_id"],
+                        ForecastCurrent.forecast_period == up["forecast_period"],
+                    )
+                    .first()
+                )
+
+                new_item = AllocationSuggestion(
+                    customer_id=up["customer_id"],
+                    delivery_place_id=up["delivery_place_id"],
+                    product_id=up["product_id"],
+                    lot_id=up["lot_id"],
+                    forecast_period=up["forecast_period"],
+                    quantity=quantity,
+                    forecast_id=forecast.id if forecast else None,
+                    allocation_type="soft",
+                    source="manual_excel",
+                )
+                self.db.add(new_item)
+                count += 1
+
+        self.db.commit()
+        return count
