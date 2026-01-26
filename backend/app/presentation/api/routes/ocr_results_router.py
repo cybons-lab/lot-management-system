@@ -427,6 +427,7 @@ async def export_ocr_results(
     query += " ORDER BY task_date DESC, row_index ASC"
 
     rows = db.execute(text(query), params).mappings().all()
+    calendar_service = CalendarService(db)
     export_rows = []
     for row in rows:
         content = row.get("content") or {}
@@ -436,7 +437,25 @@ async def export_ocr_results(
         lot_no_2 = row.get("manual_lot_no_2")
         quantity_2 = row.get("manual_quantity_2")
         inbound_no = row.get("manual_inbound_no") or row.get("inbound_no")
+
+        # 出荷日: 手入力優先、なければLTから自動計算
         shipping_date = row.get("manual_shipping_date")
+        if not shipping_date:
+            transport_lt_days = row.get("transport_lt_days")
+            delivery_date_str = row.get("delivery_date")
+            if transport_lt_days and delivery_date_str:
+                try:
+                    delivery_date_obj = datetime.strptime(delivery_date_str, "%Y-%m-%d").date()
+                    request = BusinessDayCalculationRequest(
+                        start_date=delivery_date_obj,
+                        days=transport_lt_days,
+                        direction="before",
+                        include_start=False,
+                    )
+                    shipping_date = calendar_service.calculate_business_day(request)
+                except (ValueError, Exception):
+                    pass
+
         shipping_slip_text = (
             row.get("manual_shipping_slip_text")
             if row.get("manual_shipping_slip_text_edited")
@@ -460,8 +479,8 @@ async def export_ocr_results(
                     "inbound_no": inbound_no,
                     "shipping_date": shipping_date,
                     "shipping_slip_text": shipping_slip_text,
-                    # 取得元（SmartRead経由の場合は常に「OCR」）
-                    "status": "OCR",
+                    # 取得元（DBのstatusをそのまま使用）
+                    "status": row.get("status"),
                     "material_code": row.get("material_code"),
                     "jiku_code": row.get("jiku_code"),
                     "delivery_date": row.get("delivery_date"),
