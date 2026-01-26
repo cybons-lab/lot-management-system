@@ -131,21 +131,28 @@ export function useExcelViewData(productId: number, warehouseId: number) {
     return Array.from(dateSet).sort();
   }, [suggestionResponse]);
 
-  const lotBlocks = useMemo(() => {
-    if (!inventoryItem) return [];
+  const mapContext = useMemo(() => {
     const dpMap = new Map(deliveryPlaces.map((dp) => [dp.id, dp]));
     const customerMap = new Map(customers.map((c) => [c.id, c]));
-    const context = {
+    return {
       dpMap,
       customerMap,
       suggestions: suggestionResponse?.suggestions || [],
-      productCode: inventoryItem.product_code || "-",
+      productCode: inventoryItem?.product_code || "-",
     };
-    return lots.map((lot) => mapLotBlock(lot, context));
-  }, [inventoryItem, lots, suggestionResponse, deliveryPlaces, customers]);
+  }, [deliveryPlaces, customers, suggestionResponse, inventoryItem]);
+
+  const lotBlocks = useMemo(() => {
+    if (!inventoryItem) return [];
+    return lots.map((lot) => mapLotBlock(lot, mapContext));
+  }, [inventoryItem, lots, mapContext]);
 
   const data = useMemo<ExcelViewData | null>(() => {
     if (!inventoryItem) return null;
+
+    const uniqueDpIds = Array.from(new Set(mapContext.suggestions.map((s) => s.delivery_place_id)));
+    const involvedDestinations = uniqueDpIds.map((id) => getDestinationInfo(id, mapContext));
+
     return {
       header: {
         supplierCode: inventoryItem.supplier_code || "-",
@@ -158,10 +165,11 @@ export function useExcelViewData(productId: number, warehouseId: number) {
         capacity: "-",
         warrantyPeriod: "-",
       },
+      involvedDestinations,
       dateColumns,
       lots: lotBlocks,
     };
-  }, [inventoryItem, dateColumns, lotBlocks]);
+  }, [inventoryItem, dateColumns, lotBlocks, mapContext]);
 
   return { data, isLoading };
 }

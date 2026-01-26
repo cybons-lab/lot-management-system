@@ -122,7 +122,7 @@ export function ExcelViewPage() {
         </div>
       </div>
       <div className="space-y-4">
-        <ProductHeader data={data.header} />
+        <ProductHeader data={data.header} involvedDestinations={data.involvedDestinations} />
         {data.lots.map((lot) => (
           <LotSection
             key={lot.lotId}

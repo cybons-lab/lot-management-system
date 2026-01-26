@@ -55,6 +55,7 @@ export interface LotBlockData {
 
 export interface ExcelViewData {
   header: ProductHeaderInfo;
+  involvedDestinations: DestinationInfo[];
   dateColumns: string[]; // ISO date strings
   lots: LotBlockData[];
 }
