@@ -500,7 +500,7 @@ COMMENT ON VIEW public.v_customer_item_jiku_mappings IS '顧客商品-次区マ�
 -- OCR結果ビュー: 縦持ちデータと出荷用マスタをJOINしてリアルタイム表示
 -- デフォルト得意先コード: 100427105（OCRで取得できない場合の補間値）
 CREATE VIEW public.v_ocr_results AS
-SELECT 
+SELECT
     ld.id,
     ld.wide_data_id,
     ld.config_id,
@@ -512,12 +512,12 @@ SELECT
     ld.error_reason,
     ld.content,
     ld.created_at,
-    
+
     -- OCR由来（contentから抽出）+ 得意先コード補間 + 手入力補間
     COALESCE(ld.content->>'得意先コード', '100427105') AS customer_code,
     COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') AS material_code,
     COALESCE(oe.jiku_code, ld.content->>'次区') AS jiku_code,
-    COALESCE(ld.content->>'納期', ld.content->>'納入日') AS delivery_date,
+    COALESCE(oe.delivery_date, ld.content->>'納期', ld.content->>'納入日') AS delivery_date,
     COALESCE(oe.delivery_quantity, ld.content->>'納入量', ld.content->>'数量') AS delivery_quantity,
     COALESCE(ld.content->>'アイテムNo', ld.content->>'アイテム') AS item_no,
     COALESCE(ld.content->>'数量単位', ld.content->>'単位') AS order_unit,
@@ -535,9 +535,13 @@ SELECT
     oe.shipping_slip_text_edited AS manual_shipping_slip_text_edited,
     oe.jiku_code AS manual_jiku_code,
     oe.material_code AS manual_material_code,
+    oe.delivery_quantity AS manual_delivery_quantity,
+    oe.delivery_date AS manual_delivery_date,
     oe.updated_at AS manual_updated_at,
     -- 処理ステータス: pending/downloaded/sap_linked/completed
     COALESCE(oe.process_status, 'pending') AS process_status,
+    -- バリデーションエラーフラグ（DB保存分）
+    COALESCE(oe.error_flags, '{}'::jsonb) AS error_flags,
 
     -- マスタ由来（LEFT JOIN）
     m.id AS master_id,
@@ -554,10 +558,27 @@ SELECT
     m.customer_part_no,
     m.maker_part_no,
     m.has_order,
-    
+
+    -- SAP突合ステータス
+    CASE
+        WHEN sap_exact.id IS NOT NULL THEN 'exact'
+        WHEN sap_prefix.id IS NOT NULL THEN 'prefix'
+        ELSE 'not_found'
+    END AS sap_match_type,
+
+    COALESCE(sap_exact.zkdmat_b, sap_prefix.zkdmat_b) AS sap_matched_zkdmat_b,
+
+    COALESCE(sap_exact.raw_data, sap_prefix.raw_data) AS sap_raw_data,
+
     -- エラーフラグ: マスタ未登録
     CASE WHEN m.id IS NULL THEN true ELSE false END AS master_not_found,
-    
+
+    -- エラーフラグ: SAP未登録
+    CASE
+        WHEN sap_exact.id IS NULL AND sap_prefix.id IS NULL THEN true
+        ELSE false
+    END AS sap_not_found,
+
     -- バリデーションエラー: 次区フォーマット（アルファベット+数字）
     CASE
         WHEN COALESCE(oe.jiku_code, ld.content->>'次区') IS NOT NULL
@@ -565,23 +586,36 @@ SELECT
         THEN true
         ELSE false
     END AS jiku_format_error,
-    
+
     -- バリデーションエラー: 日付フォーマット（YYYY-MM-DD or YYYY/MM/DD）
     CASE 
-        WHEN ld.content->>'納期' IS NOT NULL 
-             AND ld.content->>'納期' !~ '^\d{4}[-/]\d{1,2}[-/]\d{1,2}$' 
+        WHEN COALESCE(oe.delivery_date, ld.content->>'納期') IS NOT NULL 
+             AND COALESCE(oe.delivery_date, ld.content->>'納期') !~ '^\d{4}[-/]\d{1,2}[-/]\d{1,2}$' 
         THEN true 
         ELSE false 
     END AS date_format_error,
     
-    -- 総合エラーフラグ
+    -- 総合エラーフラグ（従来互換）
     CASE
         WHEN ld.status = 'ERROR' THEN true
         WHEN m.id IS NULL THEN true
         WHEN COALESCE(oe.jiku_code, ld.content->>'次区') IS NOT NULL AND COALESCE(oe.jiku_code, ld.content->>'次区') !~ '^[A-Za-z][0-9]+$' THEN true
-        WHEN ld.content->>'納期' IS NOT NULL AND ld.content->>'納期' !~ '^\d{4}[-/]\d{1,2}[-/]\d{1,2}$' THEN true
+        WHEN COALESCE(oe.delivery_date, ld.content->>'納期') IS NOT NULL AND COALESCE(oe.delivery_date, ld.content->>'納期') !~ '^\d{4}[-/]\d{1,2}[-/]\d{1,2}$' THEN true
         ELSE false
-    END AS has_error
+    END AS has_error,
+
+    -- 総合突合ステータス（SAP + マスタ）
+    CASE
+        WHEN ld.status = 'ERROR' THEN 'error'
+        WHEN m.id IS NULL THEN 'error'
+        WHEN sap_exact.id IS NULL AND sap_prefix.id IS NULL THEN 'error'
+        WHEN sap_prefix.id IS NOT NULL AND sap_exact.id IS NULL THEN 'warning'
+        WHEN COALESCE(oe.jiku_code, ld.content->>'次区') IS NOT NULL
+             AND COALESCE(oe.jiku_code, ld.content->>'次区') !~ '^[A-Za-z][0-9]+$' THEN 'error'
+        WHEN COALESCE(oe.delivery_date, ld.content->>'納期') IS NOT NULL
+             AND COALESCE(oe.delivery_date, ld.content->>'納期') !~ '^\d{4}[-/]\d{1,2}[-/]\d{1,2}$' THEN 'warning'
+        ELSE 'ok'
+    END AS overall_reconcile_status
 
 FROM public.smartread_long_data ld
 LEFT JOIN public.ocr_result_edits oe
@@ -589,6 +623,24 @@ LEFT JOIN public.ocr_result_edits oe
 LEFT JOIN public.shipping_master_curated m
     ON COALESCE(ld.content->>'得意先コード', '100427105') = m.customer_code
     AND COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') = m.material_code
-    AND COALESCE(oe.jiku_code, ld.content->>'次区') = m.jiku_code;
+    AND COALESCE(oe.jiku_code, ld.content->>'次区') = m.jiku_code
+-- SAP完全一致: 材質コード == ZKDMAT_B
+LEFT JOIN public.sap_material_cache sap_exact
+    ON sap_exact.kunnr = COALESCE(ld.content->>'得意先コード', '100427105')
+    AND sap_exact.zkdmat_b = COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード')
+-- SAP前方一致: 材質コードでZKDMAT_Bが始まる（一意の場合のみ）
+LEFT JOIN LATERAL (
+    SELECT sc.id, sc.zkdmat_b, sc.raw_data
+    FROM (
+        SELECT id, zkdmat_b, raw_data,
+               COUNT(*) OVER () as cnt
+        FROM public.sap_material_cache
+        WHERE kunnr = COALESCE(ld.content->>'得意先コード', '100427105')
+          AND zkdmat_b LIKE COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') || '%'
+    ) sc
+    WHERE sc.cnt = 1
+      AND sap_exact.id IS NULL  -- 完全一致がない場合のみ
+    LIMIT 1
+) sap_prefix ON true;
 
 COMMENT ON VIEW public.v_ocr_results IS 'OCR結果ビュー（SmartRead縦持ちデータ + 出荷用マスタJOIN、エラー検出含む）';
