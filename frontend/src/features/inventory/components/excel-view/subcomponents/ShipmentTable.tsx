@@ -7,9 +7,43 @@ const hFooter = "h-10";
 interface Props {
   destinations: DestinationRowData[];
   totalShipment: number;
+  lotId: number;
+  localChanges?: Record<string, number>;
 }
 
-export function ShipmentTable({ destinations, totalShipment }: Props) {
+export function ShipmentTable({ destinations, totalShipment, lotId, localChanges }: Props) {
+  // Compute totals considering local changes
+  const computedDestinations = destinations.map((dest) => {
+    let rowTotal = dest.totalShipmentQty;
+
+    if (localChanges) {
+      // Find all changes for this lot and delivery place
+      const prefix = `${lotId}:${dest.deliveryPlaceId}:`;
+      const originalRowTotalFromSuggestions = Object.keys(dest.shipmentQtyByDate).reduce(
+        (sum, date) => sum + (dest.shipmentQtyByDate[date] || 0),
+        0,
+      );
+
+      let adjustedRowTotal = originalRowTotalFromSuggestions;
+
+      Object.keys(localChanges).forEach((key) => {
+        if (key.startsWith(prefix)) {
+          const date = key.replace(prefix, "");
+          const originalVal = dest.shipmentQtyByDate[date] || 0;
+          const newVal = localChanges[key];
+          adjustedRowTotal = adjustedRowTotal - originalVal + newVal;
+        }
+      });
+      rowTotal = adjustedRowTotal;
+    }
+
+    return { ...dest, totalShipmentQty: rowTotal };
+  });
+
+  const computedTotalShipment = localChanges
+    ? computedDestinations.reduce((sum, d) => sum + d.totalShipmentQty, 0)
+    : totalShipment;
+
   return (
     <div className="flex flex-col border-r border-slate-300">
       <div
@@ -24,7 +58,7 @@ export function ShipmentTable({ destinations, totalShipment }: Props) {
         </div>
       </div>
       <div className="flex-1 flex flex-col divide-y divide-slate-100">
-        {destinations.map((dest, i) => (
+        {computedDestinations.map((dest, i) => (
           <div key={i} className={`${hRow} flex group hover:bg-slate-50 divide-x divide-slate-100`}>
             <div
               className="w-48 p-2 flex items-center truncate text-sm"
@@ -52,8 +86,10 @@ export function ShipmentTable({ destinations, totalShipment }: Props) {
       <div
         className={`${hFooter} flex border-t border-slate-300 bg-slate-100 font-bold divide-x divide-slate-200`}
       >
-        <div className="w-64 p-2 flex items-center text-slate-700">出荷日計</div>
-        <div className="w-20 p-2 flex items-center justify-end pr-2 text-sm">{totalShipment}</div>
+        <div className="w-64 p-2 flex items-center text-slate-700 font-bold">ロット合計</div>
+        <div className="w-20 p-2 flex items-center justify-end pr-2 text-sm font-bold">
+          {computedTotalShipment}
+        </div>
       </div>
     </div>
   );

@@ -37,6 +37,8 @@ export interface ShipmentPlan {
 }
 
 export interface DestinationRowData {
+  deliveryPlaceId: number;
+  customerId: number;
   destination: DestinationInfo;
   shipmentQtyByDate: Record<string, number>; // date string -> quantity
   coaIssueDate?: string;
@@ -44,6 +46,7 @@ export interface DestinationRowData {
 }
 
 export interface LotBlockData {
+  lotId: number;
   lotInfo: LotInfo;
   destinations: DestinationRowData[];
   totalStock: number;

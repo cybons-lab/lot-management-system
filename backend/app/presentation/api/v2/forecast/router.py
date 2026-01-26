@@ -12,6 +12,7 @@ from app.application.services.forecasts.forecast_service import ForecastService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion, LotReceipt
 from app.presentation.schemas.allocations.allocation_suggestions_schema import (
+    AllocationSuggestionBatchUpdate,
     AllocationSuggestionListResponse,
     AllocationSuggestionPreviewResponse,
     AllocationSuggestionRequest,
@@ -299,4 +300,21 @@ def get_allocation_suggestions_by_group(
         "shortage_quantity": shortage,
         "lot_breakdown": lot_breakdown,
         "by_period": by_period,
+    }
+
+
+@router.post("/suggestions/batch")
+def batch_update_suggestions(
+    payload: AllocationSuggestionBatchUpdate,
+    db: Session = Depends(get_db),
+) -> Any:
+    """計画引当（Suggestions）を一括更新."""
+    service = AllocationSuggestionService(db)
+    count = service.update_manual_suggestions(
+        updates=[item.model_dump() for item in payload.updates]
+    )
+    return {
+        "status": "success",
+        "updated_count": count,
+        "message": f"{count}件の計画引当を更新しました",
     }

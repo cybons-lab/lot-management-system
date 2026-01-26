@@ -124,3 +124,20 @@ class AllocationSuggestionListResponse(BaseModel):
 
     suggestions: list[AllocationSuggestionResponse]
     total: int
+
+
+class AllocationSuggestionBatchUpdateItem(BaseModel):
+    """一括更新用アイテム."""
+
+    customer_id: int
+    delivery_place_id: int
+    product_id: int
+    lot_id: int
+    forecast_period: str
+    quantity: Decimal
+
+
+class AllocationSuggestionBatchUpdate(BaseModel):
+    """一括更新リクエスト."""
+
+    updates: list[AllocationSuggestionBatchUpdateItem]

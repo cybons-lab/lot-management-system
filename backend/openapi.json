@@ -1882,6 +1882,48 @@
         }
       }
     },
+    "/api/v2/forecast/suggestions/batch": {
+      "post": {
+        "tags": [
+          "v2-forecast"
+        ],
+        "summary": "Batch Update Suggestions",
+        "description": "計画引当（Suggestions）を一括更新.",
+        "operationId": "batch_update_suggestions_api_v2_forecast_suggestions_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllocationSuggestionBatchUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Batch Update Suggestions Api V2 Forecast Suggestions Batch Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v2/inventory/": {
       "get": {
         "tags": [
@@ -22043,6 +22085,70 @@
         ],
         "title": "AllocationStatsSummary",
         "description": "全体集計."
+      },
+      "AllocationSuggestionBatchUpdate": {
+        "properties": {
+          "updates": {
+            "items": {
+              "$ref": "#/components/schemas/AllocationSuggestionBatchUpdateItem"
+            },
+            "type": "array",
+            "title": "Updates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "updates"
+        ],
+        "title": "AllocationSuggestionBatchUpdate",
+        "description": "一括更新リクエスト."
+      },
+      "AllocationSuggestionBatchUpdateItem": {
+        "properties": {
+          "customer_id": {
+            "type": "integer",
+            "title": "Customer Id"
+          },
+          "delivery_place_id": {
+            "type": "integer",
+            "title": "Delivery Place Id"
+          },
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "lot_id": {
+            "type": "integer",
+            "title": "Lot Id"
+          },
+          "forecast_period": {
+            "type": "string",
+            "title": "Forecast Period"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_id",
+          "delivery_place_id",
+          "product_id",
+          "lot_id",
+          "forecast_period",
+          "quantity"
+        ],
+        "title": "AllocationSuggestionBatchUpdateItem",
+        "description": "一括更新用アイテム."
       },
       "AllocationSuggestionListResponse": {
         "properties": {

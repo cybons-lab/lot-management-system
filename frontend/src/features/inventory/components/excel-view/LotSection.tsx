@@ -7,10 +7,13 @@ import { type LotBlockData } from "./types";
 interface Props {
   lot: LotBlockData;
   dateColumns: string[];
+  isEditing?: boolean;
+  localChanges?: Record<string, number>;
+  onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
 }
 
-export function LotSection({ lot, dateColumns }: Props) {
-  const { lotInfo, destinations, totalStock, totalShipment } = lot;
+export function LotSection({ lot, dateColumns, isEditing, localChanges, onQtyChange }: Props) {
+  const { lotId, lotInfo, destinations, totalStock, totalShipment } = lot;
 
   return (
     <div className="border border-slate-300 mt-6 text-xs bg-white shadow-sm rounded-md overflow-hidden min-w-max">
@@ -27,7 +30,12 @@ export function LotSection({ lot, dateColumns }: Props) {
         />
 
         {/* 3. Destination and Shipment Total */}
-        <ShipmentTable destinations={destinations} totalShipment={totalShipment} />
+        <ShipmentTable
+          destinations={destinations}
+          totalShipment={totalShipment}
+          lotId={lotId}
+          localChanges={localChanges}
+        />
 
         {/* 4. Current Stock (Big Vertical) */}
         <BigStatColumn
@@ -38,7 +46,14 @@ export function LotSection({ lot, dateColumns }: Props) {
         />
 
         {/* 5. Date Columns (Scrollable Area) */}
-        <DateGrid dateColumns={dateColumns} destinations={destinations} />
+        <DateGrid
+          dateColumns={dateColumns}
+          destinations={destinations}
+          lotId={lotId}
+          isEditing={isEditing}
+          localChanges={localChanges}
+          onQtyChange={onQtyChange}
+        />
       </div>
     </div>
   );

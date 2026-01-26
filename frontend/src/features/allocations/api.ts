@@ -434,6 +434,24 @@ export const getAllocationSuggestions = (params: {
   );
 };
 
+export interface AllocationSuggestionBatchUpdateItem {
+  customer_id: number;
+  delivery_place_id: number;
+  product_id: number;
+  lot_id: number;
+  forecast_period: string;
+  quantity: number;
+}
+
+export const updateAllocationSuggestionsBatch = (data: {
+  updates: AllocationSuggestionBatchUpdateItem[];
+}) => {
+  return http.post<{ status: string; updated_count: number; message: string }>(
+    "v2/forecast/suggestions/batch",
+    data,
+  );
+};
+
 export const createManualAllocationSuggestion = (data: ManualAllocationRequest) => {
   return http.post<ManualAllocationResponse>("v2/allocation/manual", data);
 };

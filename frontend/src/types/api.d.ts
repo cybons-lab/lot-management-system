@@ -423,6 +423,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v2/forecast/suggestions/batch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Batch Update Suggestions
+     * @description 計画引当（Suggestions）を一括更新.
+     */
+    post: operations["batch_update_suggestions_api_v2_forecast_suggestions_batch_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v2/inventory/": {
     parameters: {
       query?: never;
@@ -8322,6 +8342,32 @@ export interface components {
       total_shortage_quantity: string;
       /** Per Key */
       per_key: components["schemas"]["AllocationStatsPerKey"][];
+    };
+    /**
+     * AllocationSuggestionBatchUpdate
+     * @description 一括更新リクエスト.
+     */
+    AllocationSuggestionBatchUpdate: {
+      /** Updates */
+      updates: components["schemas"]["AllocationSuggestionBatchUpdateItem"][];
+    };
+    /**
+     * AllocationSuggestionBatchUpdateItem
+     * @description 一括更新用アイテム.
+     */
+    AllocationSuggestionBatchUpdateItem: {
+      /** Customer Id */
+      customer_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Product Id */
+      product_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Forecast Period */
+      forecast_period: string;
+      /** Quantity */
+      quantity: number | string;
     };
     /**
      * AllocationSuggestionListResponse
@@ -18009,6 +18055,39 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  batch_update_suggestions_api_v2_forecast_suggestions_batch_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AllocationSuggestionBatchUpdate"];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
