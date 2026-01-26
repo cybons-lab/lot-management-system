@@ -32,6 +32,7 @@ import { InboundPlanCreatePage } from "@/features/inbound-plans/pages/InboundPla
 import { InboundPlanDetailPage } from "@/features/inbound-plans/pages/InboundPlanDetailPage";
 import { InboundPlanEditPage } from "@/features/inbound-plans/pages/InboundPlanEditPage";
 import { InboundPlansListPage } from "@/features/inbound-plans/pages/InboundPlansListPage";
+import { ExcelViewPage } from "@/features/inventory/components/excel-view/ExcelViewPage";
 import { AdhocLotCreatePage } from "@/features/inventory/pages/AdhocLotCreatePage";
 import { InventoryItemDetailPage } from "@/features/inventory/pages/InventoryItemDetailPage";
 import { InventoryLayout } from "@/features/inventory/pages/InventoryLayout";
@@ -97,6 +98,7 @@ function InventoryRoutes() {
         <Route path="adjustments" element={<AdjustmentsListPage />} />
         <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
         <Route path="adhoc/new" element={<AdhocLotCreatePage />} />
+        <Route path="excel-view" element={<ExcelViewPage />} />
         <Route path="history" element={<StockHistoryPage />} />
         <Route path="withdrawals" element={<WithdrawalsListPage />} />
         <Route path="withdrawals/new" element={<WithdrawalCreatePage />} />
