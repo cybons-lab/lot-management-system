@@ -65,6 +65,14 @@ class SystemConfigService:
             config.config_value = value
             if description:
                 config.description = description
+
+            # Explicitly update updated_at if it exists on model (assuming it inherits from Base with timestamps)
+            # Or if it's a server_default, we might need to touch it.
+            # Checking model definition first is better, but safe to import datetime
+            from datetime import UTC, datetime
+
+            if hasattr(config, "updated_at"):
+                config.updated_at = datetime.now(UTC)
         else:
             config = SystemConfig(
                 config_key=key,
