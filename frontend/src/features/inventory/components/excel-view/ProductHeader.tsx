@@ -42,8 +42,11 @@ export function ProductHeader({ data }: Props) {
         <div className="col-span-1 p-1 border-r border-slate-300">{data.unit}</div>
         <div className="col-span-1 p-1 border-r border-slate-300">{data.capacity}</div>
         <div className="col-span-1 p-1 border-r border-slate-300">{data.warrantyPeriod}</div>
-        <div className="col-span-4 p-1 truncate" title={data.productName}>
-          {data.productName}
+        <div
+          className="col-span-4 p-1 truncate"
+          title={`${data.productName} (${data.productCode})`}
+        >
+          {data.productName} <span className="text-slate-400">({data.productCode})</span>
         </div>
       </div>
     </div>

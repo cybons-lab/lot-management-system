@@ -1,35 +1,55 @@
 import { ArrowLeft, Save } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import { LotSection } from "./LotSection";
-import { generateMockData } from "./mockData";
 import { ProductHeader } from "./ProductHeader";
+import { useExcelViewData } from "./useExcelViewData";
 
 import { Button } from "@/components/ui";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
-import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function ExcelViewPage() {
+  const { productId, warehouseId } = useParams<{ productId: string; warehouseId: string }>();
   const navigate = useNavigate();
-  const data = generateMockData();
+
+  const { data, isLoading } = useExcelViewData(Number(productId), Number(warehouseId));
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-slate-500 animate-pulse font-medium">データを読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-red-500 font-medium">品目情報の取得に失敗しました。</div>
+      </div>
+    );
+  }
 
   return (
     <PageContainer>
-      <PageHeader
-        title="ロット管理（Excelビュー）"
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate("/inventory")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              一覧に戻る
-            </Button>
-            <Button size="sm">
-              <Save className="mr-2 h-4 w-4" />
-              保存
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={handleBack}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold text-slate-800">材料ロット管理（個別）</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button className="gap-2">
+            <Save className="h-4 w-4" />
+            保存
+          </Button>
+        </div>
+      </div>
 
       <div className="space-y-4">
         <ProductHeader data={data.header} />
