@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/display/dropdown-menu";
 import { ROUTES } from "@/constants/routes";
+import { useSystemSettings } from "@/contexts/SystemSettingsContext";
 import { type User, useAuth } from "@/features/auth/AuthContext";
 import { cn } from "@/shared/libs/utils";
 
@@ -47,6 +48,7 @@ interface NavItem {
   requireAdmin?: boolean;
   requireRoles?: string[];
   subItems?: { title: string; href: string }[];
+  feature?: string; // Feature key for visibility control
 }
 
 const navItems: NavItem[] = [
@@ -59,31 +61,37 @@ const navItems: NavItem[] = [
     title: "オリジナル（需要予測）",
     href: ROUTES.FORECASTS.LIST,
     icon: TrendingUp,
+    feature: "forecasts",
   },
   {
     title: "入荷予定",
     href: ROUTES.INBOUND_PLANS.LIST,
     icon: PackagePlus,
+    feature: "inventory", // Group under inventory? or separate?
   },
   {
     title: "在庫・ロット管理",
     href: ROUTES.INVENTORY.ROOT,
     icon: Package,
+    feature: "inventory",
   },
   {
     title: "受注管理",
     href: ROUTES.ORDERS.LIST,
     icon: ShoppingCart,
+    feature: "orders",
   },
   {
     title: "OCR結果",
     href: ROUTES.OCR_RESULTS.LIST,
     icon: FileText,
+    feature: "ocr",
   },
   {
     title: "RPA",
     href: ROUTES.RPA.ROOT,
     icon: Settings,
+    feature: "rpa",
   },
   {
     title: "管理",
@@ -110,6 +118,7 @@ const navItems: NavItem[] = [
     title: "マスタ",
     href: "/masters",
     icon: Database,
+    feature: "masters",
   },
   {
     title: "カレンダー",
@@ -211,9 +220,13 @@ function NavItemSingle({ item, currentPath }: { item: NavItem; currentPath: stri
 }
 
 function NavItems({ user, currentPath }: { currentPath: string; user: User | null }) {
+  const { isFeatureVisible } = useSystemSettings();
   const visibleItems = navItems.filter((item) => {
     if (item.requireAdmin && !user?.roles?.includes("admin")) return false;
     if (item.requireRoles && !item.requireRoles.some((role) => user?.roles?.includes(role))) {
+      return false;
+    }
+    if (item.feature && !isFeatureVisible(item.feature)) {
       return false;
     }
     return true;

@@ -4240,6 +4240,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/system/public-settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Public Settings
+     * @description フロントエンド用の公開システム設定を取得.
+     */
+    get: operations["get_public_settings_api_system_public_settings_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/calendar/holidays": {
     parameters: {
       query?: never;
@@ -5270,6 +5290,46 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/admin/system-settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List System Settings
+     * @description システム設定一覧を取得.
+     */
+    get: operations["list_system_settings_api_admin_system_settings_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/system-settings/{key}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update System Setting
+     * @description システム設定を更新.
+     */
+    patch: operations["update_system_setting_api_admin_system_settings__key__patch"];
     trace?: never;
   };
   "/api/healthz": {
@@ -12160,6 +12220,12 @@ export interface components {
       delivery_quantity?: string | null;
       /** Delivery Date */
       delivery_date?: string | null;
+      /** Process Status */
+      process_status?: string | null;
+      /** Error Flags */
+      error_flags?: {
+        [key: string]: boolean;
+      } | null;
     };
     /**
      * OcrResultEditResponse
@@ -12192,6 +12258,12 @@ export interface components {
       material_code?: string | null;
       /** Delivery Quantity */
       delivery_quantity?: string | null;
+      /** Process Status */
+      process_status: string;
+      /** Error Flags */
+      error_flags: {
+        [key: string]: boolean;
+      };
       /**
        * Updated At
        * Format: date-time
@@ -12321,6 +12393,11 @@ export interface components {
       has_error: boolean;
       /** Manual Delivery Quantity */
       manual_delivery_quantity?: string | null;
+      /**
+       * Process Status
+       * @default pending
+       */
+      process_status: string;
       /** Sap Match Type */
       sap_match_type?: string | null;
       /** Sap Matched Zkdmat B */
@@ -12333,6 +12410,14 @@ export interface components {
       sap_qty_unit?: string | null;
       /** Sap Maker Item */
       sap_maker_item?: string | null;
+      /** Sap Raw Data */
+      sap_raw_data?: {
+        [key: string]: unknown;
+      } | null;
+      /** Error Flags */
+      error_flags?: {
+        [key: string]: boolean;
+      };
       /** Calculated Shipping Date */
       calculated_shipping_date?: string | null;
     };
@@ -13524,6 +13609,15 @@ export interface components {
       qty_per_internal_unit?: number | null;
       /** Is Active */
       is_active?: boolean | null;
+    };
+    /** PublicSystemSettings */
+    PublicSystemSettings: {
+      /** Page Visibility */
+      page_visibility: {
+        [key: string]: unknown;
+      } | null;
+      /** Maintenance Mode */
+      maintenance_mode: boolean;
     };
     /** ReplenishmentRecommendation */
     ReplenishmentRecommendation: {
@@ -16212,6 +16306,39 @@ export interface components {
        * @description List of suppliers with their products
        */
       suppliers?: components["schemas"]["SupplierImportRow"][];
+    };
+    /** SystemSettingResponse */
+    SystemSettingResponse: {
+      /**
+       * Config Key
+       * @description 設定キー
+       */
+      config_key: string;
+      /**
+       * Config Value
+       * @description 設定値
+       */
+      config_value: string;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+      /** Id */
+      id: number;
+    };
+    /** SystemSettingUpdate */
+    SystemSettingUpdate: {
+      /**
+       * Config Value
+       * @description 設定値
+       */
+      config_value: string;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
     };
     /**
      * SystemUserResponse
@@ -23419,6 +23546,26 @@ export interface operations {
       };
     };
   };
+  get_public_settings_api_system_public_settings_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicSystemSettings"];
+        };
+      };
+    };
+  };
   list_holiday_calendars_api_calendar_holidays_get: {
     parameters: {
       query?: never;
@@ -25015,6 +25162,61 @@ export interface operations {
           "application/json": {
             [key: string]: unknown;
           };
+        };
+      };
+    };
+  };
+  list_system_settings_api_admin_system_settings_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SystemSettingResponse"][];
+        };
+      };
+    };
+  };
+  update_system_setting_api_admin_system_settings__key__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        key: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SystemSettingUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SystemSettingResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

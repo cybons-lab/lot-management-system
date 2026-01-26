@@ -11385,6 +11385,30 @@
         }
       }
     },
+    "/api/system/public-settings": {
+      "get": {
+        "summary": "Get Public Settings",
+        "description": "フロントエンド用の公開システム設定を取得.",
+        "operationId": "get_public_settings_api_system_public_settings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSystemSettings"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/calendar/holidays": {
       "get": {
         "tags": [
@@ -13850,6 +13874,95 @@
                   "additionalProperties": true,
                   "type": "object",
                   "title": "Response Download Order Template Api Admin Master Import Template Order Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/system-settings": {
+      "get": {
+        "tags": [
+          "admin-system-settings"
+        ],
+        "summary": "List System Settings",
+        "description": "システム設定一覧を取得.",
+        "operationId": "list_system_settings_api_admin_system_settings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SystemSettingResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List System Settings Api Admin System Settings Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/admin/system-settings/{key}": {
+      "patch": {
+        "tags": [
+          "admin-system-settings"
+        ],
+        "summary": "Update System Setting",
+        "description": "システム設定を更新.",
+        "operationId": "update_system_setting_api_admin_system_settings__key__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SystemSettingUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemSettingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -30667,6 +30780,31 @@
               }
             ],
             "title": "Delivery Date"
+          },
+          "process_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Process Status"
+          },
+          "error_flags": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Flags"
           }
         },
         "type": "object",
@@ -30798,6 +30936,17 @@
             ],
             "title": "Delivery Quantity"
           },
+          "process_status": {
+            "type": "string",
+            "title": "Process Status"
+          },
+          "error_flags": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Error Flags"
+          },
           "updated_at": {
             "type": "string",
             "format": "date-time",
@@ -30809,6 +30958,8 @@
           "id",
           "smartread_long_data_id",
           "shipping_slip_text_edited",
+          "process_status",
+          "error_flags",
           "updated_at"
         ],
         "title": "OcrResultEditResponse",
@@ -31280,6 +31431,11 @@
             ],
             "title": "Manual Delivery Quantity"
           },
+          "process_status": {
+            "type": "string",
+            "title": "Process Status",
+            "default": "pending"
+          },
           "sap_match_type": {
             "anyOf": [
               {
@@ -31345,6 +31501,25 @@
               }
             ],
             "title": "Sap Maker Item"
+          },
+          "sap_raw_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Raw Data"
+          },
+          "error_flags": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Error Flags"
           },
           "calculated_shipping_date": {
             "anyOf": [
@@ -34004,6 +34179,32 @@
         "type": "object",
         "title": "ProductUpdate",
         "description": "Payload to partially update a product."
+      },
+      "PublicSystemSettings": {
+        "properties": {
+          "page_visibility": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Visibility"
+          },
+          "maintenance_mode": {
+            "type": "boolean",
+            "title": "Maintenance Mode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page_visibility",
+          "maintenance_mode"
+        ],
+        "title": "PublicSystemSettings"
       },
       "ReplenishmentRecommendation": {
         "properties": {
@@ -40246,6 +40447,69 @@
         "type": "object",
         "title": "SupplyDataImport",
         "description": "Supply-side import data (suppliers + products + product_suppliers)."
+      },
+      "SystemSettingResponse": {
+        "properties": {
+          "config_key": {
+            "type": "string",
+            "title": "Config Key",
+            "description": "設定キー"
+          },
+          "config_value": {
+            "type": "string",
+            "title": "Config Value",
+            "description": "設定値"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config_key",
+          "config_value",
+          "id"
+        ],
+        "title": "SystemSettingResponse"
+      },
+      "SystemSettingUpdate": {
+        "properties": {
+          "config_value": {
+            "type": "string",
+            "title": "Config Value",
+            "description": "設定値"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "説明"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config_value"
+        ],
+        "title": "SystemSettingUpdate"
       },
       "SystemUserResponse": {
         "properties": {

@@ -89,6 +89,7 @@ export const ROUTES = {
     BATCH_JOBS: "/admin/batch-jobs",
     MASTER_CHANGE_LOGS: "/admin/master-change-logs",
     SEED_SNAPSHOTS: "/admin/seed-snapshots",
+    SYSTEM_SETTINGS: "/admin/system-settings",
   },
 
   RPA: {

@@ -25,6 +25,7 @@ from app.presentation.api.routes.admin import (
     operation_logs_router,
     replenishment_router,
     roles_router,
+    system_settings_router,
     test_data_router,
     users_router,
 )
@@ -143,6 +144,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(replenishment_router, prefix=f"{prefix}/admin/replenishment")
     app.include_router(demand_router, prefix=f"{prefix}/admin/demand")
     app.include_router(master_import_router, prefix=f"{prefix}/admin")
+    app.include_router(system_settings_router.router, prefix=prefix)
     app.include_router(health_router, prefix=prefix)
 
     # Operations endpoints
