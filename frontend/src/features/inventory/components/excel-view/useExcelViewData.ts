@@ -167,7 +167,13 @@ export function useExcelViewData(productId: number, warehouseId: number): UseExc
 
   const lotBlocks = useMemo(() => {
     if (!inventoryItem) return [];
-    return lots.map((lot) => mapLotBlock(lot, mapContext));
+    // Sort lots by received_date ascending (oldest first, newest last)
+    const sortedLots = [...lots].sort((a, b) => {
+      const dateA = a.received_date ? new Date(a.received_date).getTime() : 0;
+      const dateB = b.received_date ? new Date(b.received_date).getTime() : 0;
+      return dateA - dateB;
+    });
+    return sortedLots.map((lot) => mapLotBlock(lot, mapContext));
   }, [inventoryItem, lots, mapContext]);
 
   const data = useMemo<ExcelViewData | null>(() => {

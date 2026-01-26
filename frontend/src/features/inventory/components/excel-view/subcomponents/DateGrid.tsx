@@ -8,14 +8,15 @@ const hRow = "h-10";
 const hFooter = "h-10";
 
 /**
- * Format forecast_period for column header display.
+ * Format forecast_period for column header display (納期日).
  * Supports both YYYY-MM (monthly) and YYYY-MM-DD (daily) formats.
+ * Always displays as MM/dd format.
  */
 function formatPeriodHeader(period: string): string {
-  // Monthly format: "2026-01" → "1月" (or "01")
+  // Monthly format: "2026-02" → "02/01" (1st of the month)
   if (/^\d{4}-\d{2}$/.test(period)) {
-    const month = parseInt(period.substring(5, 7), 10);
-    return `${month}月`;
+    const month = period.substring(5, 7);
+    return `${month}/01`;
   }
   // Daily format: "2026-01-15" → "01/15"
   const parsed = parseISO(period);
