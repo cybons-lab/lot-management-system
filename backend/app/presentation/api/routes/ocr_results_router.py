@@ -18,7 +18,7 @@ from app.application.services.common.export_service import ExportService
 from app.application.services.sap.sap_reconciliation_service import SapReconciliationService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.infrastructure.persistence.models.smartread_models import OcrResultEdit
+from app.infrastructure.persistence.models.smartread_models import OcrResultEdit, SmartReadLongData
 from app.presentation.api.routes.auth.auth_router import get_current_user
 from app.presentation.schemas.calendar.calendar_schemas import BusinessDayCalculationRequest
 
@@ -99,6 +99,10 @@ class OcrResultItem(BaseModel):
     sap_supplier_name: str | None = None
     sap_qty_unit: str | None = None
     sap_maker_item: str | None = None
+    sap_raw_data: dict[str, Any] | None = None
+
+    # エラーフラグ内容（DB保存分）
+    error_flags: dict[str, bool] = Field(default_factory=dict)
 
     # 計算結果
     calculated_shipping_date: date | None = None
@@ -167,6 +171,8 @@ class OcrResultEditRequest(BaseModel):
     material_code: str | None = None
     delivery_quantity: str | None = None
     delivery_date: str | None = None
+    process_status: str | None = None
+    error_flags: dict[str, bool] | None = None
 
 
 class OcrResultEditResponse(BaseModel):
@@ -185,6 +191,8 @@ class OcrResultEditResponse(BaseModel):
     jiku_code: str | None = None
     material_code: str | None = None
     delivery_quantity: str | None = None
+    process_status: str
+    error_flags: dict[str, bool]
     updated_at: datetime
 
     model_config = {"from_attributes": True}
@@ -395,6 +403,49 @@ async def save_ocr_result_edit(
         setattr(edit, key, value)
 
     edit.updated_at = datetime.now()
+
+    # バリデーションとerror_flagsの更新
+    long_data = db.query(SmartReadLongData).filter(SmartReadLongData.id == item_id).first()
+    if long_data:
+        # 突合キーの特定
+        customer_code = long_data.content.get("得意先コード") or "100427105"
+        material_code = (
+            edit.material_code
+            or long_data.content.get("材質コード")
+            or long_data.content.get("材料コード")
+        )
+        jiku_code = edit.jiku_code or long_data.content.get("次区")
+
+        # マスタ登録確認
+        master_check_query = """
+            SELECT 1 FROM shipping_master_curated
+            WHERE customer_code = :cc AND material_code = :mc AND jiku_code = :jc
+        """
+        master_exists = (
+            db.execute(
+                text(master_check_query),
+                {"cc": customer_code, "mc": material_code, "jc": jiku_code},
+            ).first()
+            is not None
+        )
+
+        # 次区フォーマットバリデーション
+        jiku_error = False
+        if jiku_code and not re.match(r"^[A-Za-z][0-9]+$", jiku_code):
+            jiku_error = True
+
+        # 日付フォーマットバリデーション（納期）
+        delivery_date = edit.delivery_date or long_data.content.get("納期")
+        date_error = False
+        if delivery_date and not re.match(r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}$", delivery_date):
+            date_error = True
+
+        edit.error_flags = {
+            "master_not_found": not master_exists,
+            "jiku_format_error": jiku_error,
+            "date_format_error": date_error,
+        }
+
     db.commit()
     db.refresh(edit)
 
@@ -430,6 +481,30 @@ async def export_ocr_results(
     query += " ORDER BY task_date DESC, row_index ASC"
 
     rows = db.execute(text(query), params).mappings().all()
+
+    # エクスポート対象レコードのステータスを "downloaded" に更新
+    from sqlalchemy.dialects.postgresql import insert
+
+    export_ids = [row.get("id") for row in rows]
+    if export_ids:
+        now = datetime.now()
+        stmt = insert(OcrResultEdit).values(
+            [
+                {
+                    "smartread_long_data_id": tid,
+                    "process_status": "downloaded",
+                    "updated_at": now,
+                }
+                for tid in export_ids
+            ]
+        )
+        stmt = stmt.on_conflict_do_update(
+            constraint="uq_ocr_result_edits_long_data_id",
+            set_={"process_status": "downloaded", "updated_at": now},
+        )
+        db.execute(stmt)
+        db.commit()
+
     export_rows = []
     for row in rows:
         content = row.get("content") or {}

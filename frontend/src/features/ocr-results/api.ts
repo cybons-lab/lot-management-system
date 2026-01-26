@@ -71,6 +71,10 @@ export interface OcrResultItem {
   sap_qty_unit: string | null;
   sap_maker_item: string | null;
 
+  // 処理ステータス: pending/downloaded/sap_linked/completed
+  process_status: string;
+  error_flags: Record<string, boolean>;
+
   // 計算結果
   calculated_shipping_date: string | null;
 }
@@ -101,6 +105,8 @@ export interface OcrResultEditPayload {
   material_code?: string | null;
   delivery_quantity?: string | null;
   delivery_date?: string | null;
+  process_status?: string | null;
+  error_flags?: Record<string, boolean> | null;
 }
 
 export interface OcrResultEditResponse {
@@ -117,6 +123,8 @@ export interface OcrResultEditResponse {
   jiku_code: string | null;
   material_code: string | null;
   delivery_quantity: string | null;
+  process_status: string;
+  error_flags: Record<string, boolean>;
   updated_at: string;
 }
 
