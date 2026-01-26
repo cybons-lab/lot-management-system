@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 import {
@@ -10,6 +11,7 @@ import {
 
 import { type AllocationSuggestionResponse } from "@/features/allocations/api";
 import { useAllocationSuggestions } from "@/features/allocations/hooks/api/useAllocationSuggestions";
+import { getCustomerItemById, type CustomerItem } from "@/features/customer-items/api";
 import { type Customer } from "@/features/customers/api";
 import { type DeliveryPlace } from "@/features/delivery-places/api";
 import { useInventoryItem } from "@/features/inventory/hooks";
@@ -110,12 +112,26 @@ interface UseExcelViewDataReturn {
   data: ExcelViewData | null;
   isLoading: boolean;
   supplierId: number | undefined;
+  customerItem: CustomerItem | undefined;
 }
 
-export function useExcelViewData(productId: number, warehouseId: number): UseExcelViewDataReturn {
+/* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
+export function useExcelViewData(
+  productId: number,
+  warehouseId: number,
+  customerItemId?: number,
+): UseExcelViewDataReturn {
   const isEnabled = !isNaN(productId) && !isNaN(warehouseId);
 
   const { data: inventoryItem, isLoading: itemLoading } = useInventoryItem(productId, warehouseId);
+
+  // Fetch customer item if customerItemId is provided
+  const { data: customerItem, isLoading: customerItemLoading } = useQuery({
+    queryKey: ["customer-item", customerItemId],
+    queryFn: () => getCustomerItemById(customerItemId!),
+    enabled: !!customerItemId,
+  });
 
   // Need to ensure useLotsQuery and useAllocationSuggestions are disabled if IDs are NaN
   // But they might not support enabled flag directly. Let's check.
@@ -143,7 +159,7 @@ export function useExcelViewData(productId: number, warehouseId: number): UseExc
   const { data: deliveryPlaces = [] } = deliveryPlaceApi.useList();
   const customerApi = useMasterApi<Customer>("masters/customers", "customers");
   const { data: customers = [] } = customerApi.useList();
-  const isLoading = itemLoading || lotsLoading || suggestionsLoading;
+  const isLoading = itemLoading || lotsLoading || suggestionsLoading || customerItemLoading;
 
   const dateColumns = useMemo(() => {
     const suggestions = suggestionResponse?.suggestions || [];
@@ -192,16 +208,21 @@ export function useExcelViewData(productId: number, warehouseId: number): UseExc
         unit: lotBlocks[0]?.lotInfo.unit || "g",
         capacity: "-",
         warrantyPeriod: "-",
+        // Customer item info (when filtering by customer_item)
+        customerName: customerItem?.customer_name,
+        customerCode: customerItem?.customer_code,
+        customerPartNo: customerItem?.customer_part_no,
       },
       involvedDestinations,
       dateColumns,
       lots: lotBlocks,
     };
-  }, [inventoryItem, dateColumns, lotBlocks, mapContext]);
+  }, [inventoryItem, dateColumns, lotBlocks, mapContext, customerItem]);
 
   return {
     data,
     isLoading: isEnabled ? isLoading : false,
     supplierId: inventoryItem?.supplier_id,
+    customerItem,
   };
 }

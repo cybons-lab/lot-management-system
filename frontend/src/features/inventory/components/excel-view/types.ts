@@ -8,6 +8,10 @@ export interface ProductHeaderInfo {
   warrantyPeriod: string;
   productName: string;
   productCode: string;
+  // Customer item info (when filtering by customer_item)
+  customerName?: string;
+  customerCode?: string;
+  customerPartNo?: string;
 }
 
 export interface DestinationInfo {

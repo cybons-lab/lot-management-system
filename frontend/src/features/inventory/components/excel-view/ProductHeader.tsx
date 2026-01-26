@@ -29,6 +29,7 @@ function DestinationCard({ dest }: { dest: DestinationInfo }) {
   );
 }
 
+/* eslint-disable max-lines-per-function */
 export function ProductHeader({ data, involvedDestinations }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -76,6 +77,29 @@ export function ProductHeader({ data, involvedDestinations }: Props) {
           {data.productName} <span className="text-slate-400">({data.productCode})</span>
         </div>
       </div>
+
+      {/* Customer Item Info (if filtering by customer_item) */}
+      {data.customerName && (
+        <div className="grid grid-cols-12 border-b border-slate-300 bg-emerald-50/50">
+          <div className="col-span-1 bg-emerald-100 p-1 font-bold border-r border-slate-300 text-emerald-800">
+            得意先
+          </div>
+          <div
+            className="col-span-2 p-1 border-r border-slate-300 truncate"
+            title={data.customerName}
+          >
+            {data.customerName}
+          </div>
+          <div className="col-span-1 bg-emerald-100 p-1 font-bold border-r border-slate-300 text-emerald-800">
+            得意先CD
+          </div>
+          <div className="col-span-1 p-1 border-r border-slate-300">{data.customerCode}</div>
+          <div className="col-span-1 bg-emerald-100 p-1 font-bold border-r border-slate-300 text-emerald-800">
+            先方品番
+          </div>
+          <div className="col-span-6 p-1 font-mono">{data.customerPartNo}</div>
+        </div>
+      )}
 
       <div>
         <button

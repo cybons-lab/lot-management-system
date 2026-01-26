@@ -64,7 +64,11 @@ function LoadingOrError({ isLoading }: LoadingOrErrorProps) {
 
 /* eslint-disable max-lines-per-function */
 export function ExcelViewPage() {
-  const { productId, warehouseId } = useParams<{ productId: string; warehouseId: string }>();
+  const { productId, warehouseId, customerItemId } = useParams<{
+    productId: string;
+    warehouseId: string;
+    customerItemId?: string;
+  }>();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [localChanges, setLocalChanges] = useState<Record<string, number>>({});
@@ -72,7 +76,11 @@ export function ExcelViewPage() {
   const [isNewColumnDialogOpen, setIsNewColumnDialogOpen] = useState(false);
   const [isLotIntakeDialogOpen, setIsLotIntakeDialogOpen] = useState(false);
 
-  const { data, isLoading, supplierId } = useExcelViewData(Number(productId), Number(warehouseId));
+  const { data, isLoading, supplierId } = useExcelViewData(
+    Number(productId),
+    Number(warehouseId),
+    customerItemId ? Number(customerItemId) : undefined,
+  );
   const updateMutation = useUpdateAllocationSuggestionsBatch();
 
   const handleQtyChange = useCallback(
