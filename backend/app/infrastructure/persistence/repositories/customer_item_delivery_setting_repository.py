@@ -98,22 +98,6 @@ class CustomerItemDeliverySettingRepository:
             self.db.execute(stmt).scalar_one_or_none(),
         )
 
-    def get_customer_item_template(
-        self,
-        customer_id: int,
-        customer_part_no: str,
-    ) -> str | None:
-        """Get the shipping_document_template from customer_items as fallback.
-
-        Note: Uses composite key lookup for ShipmentTextRequest fallback logic.
-        See find_matching_setting() for context.
-        """
-        stmt = select(CustomerItem.shipping_document_template).where(
-            CustomerItem.customer_id == customer_id,
-            CustomerItem.customer_part_no == customer_part_no,
-        )
-        return cast(str | None, self.db.execute(stmt).scalar_one_or_none())
-
     def find_customer_part_no(
         self,
         customer_id: int,

@@ -8411,7 +8411,7 @@ export interface components {
     AllocationSuggestionResponse: {
       /**
        * Forecast Period
-       * @description 対象期間 (YYYY-MM)
+       * @description 対象期間 (YYYY-MM または YYYY-MM-DD)
        */
       forecast_period: string;
       /**
@@ -9555,62 +9555,6 @@ export interface components {
        * @description 特記事項
        */
       special_instructions?: string | null;
-      /**
-       * Shipping Document Template
-       * @description 出荷表テンプレート
-       */
-      shipping_document_template?: string | null;
-      /**
-       * Sap Notes
-       * @description SAP備考
-       */
-      sap_notes?: string | null;
-      /**
-       * Maker Part No
-       * @description メーカー品番
-       */
-      maker_part_no?: string | null;
-      /**
-       * Order Category
-       * @description 発注区分
-       */
-      order_category?: string | null;
-      /**
-       * Is Procurement Required
-       * @description 発注の有無
-       * @default true
-       */
-      is_procurement_required: boolean;
-      /**
-       * Shipping Slip Text
-       * @description 出荷票テキスト
-       */
-      shipping_slip_text?: string | null;
-      /**
-       * Ocr Conversion Notes
-       * @description OCR変換用備考
-       */
-      ocr_conversion_notes?: string | null;
-      /**
-       * Sap Supplier Code
-       * @description SAP仕入先コード
-       */
-      sap_supplier_code?: string | null;
-      /**
-       * Sap Warehouse Code
-       * @description SAP倉庫コード
-       */
-      sap_warehouse_code?: string | null;
-      /**
-       * Sap Shipping Warehouse
-       * @description SAP出荷倉庫
-       */
-      sap_shipping_warehouse?: string | null;
-      /**
-       * Sap Uom
-       * @description SAP単位
-       */
-      sap_uom?: string | null;
     };
     /**
      * CustomerItemDeliverySettingCreate
@@ -9854,61 +9798,6 @@ export interface components {
        */
       special_instructions?: string | null;
       /**
-       * Shipping Document Template
-       * @description 出荷表テンプレート
-       */
-      shipping_document_template?: string | null;
-      /**
-       * Sap Notes
-       * @description SAP備考
-       */
-      sap_notes?: string | null;
-      /**
-       * Maker Part No
-       * @description メーカー品番
-       */
-      maker_part_no?: string | null;
-      /**
-       * Order Category
-       * @description 発注区分
-       */
-      order_category?: string | null;
-      /**
-       * Is Procurement Required
-       * @description 発注の有無
-       */
-      is_procurement_required: boolean;
-      /**
-       * Shipping Slip Text
-       * @description 出荷票テキスト
-       */
-      shipping_slip_text?: string | null;
-      /**
-       * Ocr Conversion Notes
-       * @description OCR変換用備考
-       */
-      ocr_conversion_notes?: string | null;
-      /**
-       * Sap Supplier Code
-       * @description SAP仕入先コード
-       */
-      sap_supplier_code?: string | null;
-      /**
-       * Sap Warehouse Code
-       * @description SAP倉庫コード
-       */
-      sap_warehouse_code?: string | null;
-      /**
-       * Sap Shipping Warehouse
-       * @description SAP出荷倉庫
-       */
-      sap_shipping_warehouse?: string | null;
-      /**
-       * Sap Uom
-       * @description SAP単位
-       */
-      sap_uom?: string | null;
-      /**
        * Customer Code
        * @description 得意先コード
        */
@@ -10004,61 +9893,6 @@ export interface components {
        * @description 特記事項
        */
       special_instructions?: string | null;
-      /**
-       * Shipping Document Template
-       * @description 出荷表テンプレート
-       */
-      shipping_document_template?: string | null;
-      /**
-       * Sap Notes
-       * @description SAP備考
-       */
-      sap_notes?: string | null;
-      /**
-       * Maker Part No
-       * @description メーカー品番
-       */
-      maker_part_no?: string | null;
-      /**
-       * Order Category
-       * @description 発注区分
-       */
-      order_category?: string | null;
-      /**
-       * Is Procurement Required
-       * @description 発注の有無
-       */
-      is_procurement_required?: boolean | null;
-      /**
-       * Shipping Slip Text
-       * @description 出荷票テキスト
-       */
-      shipping_slip_text?: string | null;
-      /**
-       * Ocr Conversion Notes
-       * @description OCR変換用備考
-       */
-      ocr_conversion_notes?: string | null;
-      /**
-       * Sap Supplier Code
-       * @description SAP仕入先コード
-       */
-      sap_supplier_code?: string | null;
-      /**
-       * Sap Warehouse Code
-       * @description SAP倉庫コード
-       */
-      sap_warehouse_code?: string | null;
-      /**
-       * Sap Shipping Warehouse
-       * @description SAP出荷倉庫
-       */
-      sap_shipping_warehouse?: string | null;
-      /**
-       * Sap Uom
-       * @description SAP単位
-       */
-      sap_uom?: string | null;
     };
     /**
      * CustomerResponse

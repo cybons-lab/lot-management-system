@@ -5,7 +5,6 @@ import { toast } from "sonner";
 
 import { LotSection } from "./LotSection";
 import { ProductHeader } from "./ProductHeader";
-import { NewWithdrawalDialog } from "./subcomponents/NewWithdrawalDialog";
 import { useExcelViewData } from "./useExcelViewData";
 
 import { Button } from "@/components/ui";
@@ -73,7 +72,6 @@ export function ExcelViewPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [localChanges, setLocalChanges] = useState<Record<string, number>>({});
   const [addedDates, setAddedDates] = useState<string[]>([]);
-  const [isNewColumnDialogOpen, setIsNewColumnDialogOpen] = useState(false);
   const [isLotIntakeDialogOpen, setIsLotIntakeDialogOpen] = useState(false);
 
   const { data, isLoading, supplierId } = useExcelViewData(
@@ -124,6 +122,7 @@ export function ExcelViewPage() {
   const handleAddNewColumn = (date: Date) => {
     const dateStr = date.toISOString().split("T")[0];
     setAddedDates((prev) => [...prev, dateStr]);
+    setIsEditing(true);
   };
 
   if (isLoading || !data) return <LoadingOrError isLoading={isLoading} />;
@@ -161,7 +160,7 @@ export function ExcelViewPage() {
             isEditing={isEditing}
             localChanges={localChanges}
             onQtyChange={handleQtyChange}
-            onAddColumn={() => setIsNewColumnDialogOpen(true)}
+            onAddColumn={handleAddNewColumn}
           />
         ))}
       </div>
@@ -178,13 +177,6 @@ export function ExcelViewPage() {
           <span className="text-lg font-medium">新規ロット入庫</span>
         </Button>
       </div>
-
-      <NewWithdrawalDialog
-        open={isNewColumnDialogOpen}
-        onOpenChange={setIsNewColumnDialogOpen}
-        onConfirm={handleAddNewColumn}
-        existingDates={allDateColumns}
-      />
 
       <QuickLotIntakeDialog
         open={isLotIntakeDialogOpen}

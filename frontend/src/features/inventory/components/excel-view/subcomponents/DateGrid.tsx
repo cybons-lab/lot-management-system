@@ -1,7 +1,12 @@
-import { format, parseISO, isValid } from "date-fns";
-import { Plus } from "lucide-react";
+import { format, isValid, parseISO } from "date-fns";
+import { ja } from "date-fns/locale";
+import { CalendarPlus } from "lucide-react";
+import { useState } from "react";
 
 import { type DestinationRowData } from "../types";
+
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const hHeader = "h-8";
 const hRow = "h-10";
@@ -34,7 +39,7 @@ interface Props {
   isEditing?: boolean;
   localChanges?: Record<string, number>;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
-  onAddColumn?: () => void;
+  onAddColumn?: (date: Date) => void;
 }
 
 interface CellProps {
@@ -87,6 +92,20 @@ export function DateGrid({
   onQtyChange,
   onAddColumn,
 }: Props) {
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
+  const isDateDisabled = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return dateColumns.includes(dateStr);
+  };
+
+  const handleSelectDate = (date: Date | undefined) => {
+    if (!date) return;
+    if (isDateDisabled(date)) return; // Extra guard against duplicates
+    onAddColumn?.(date);
+    setIsPopoverOpen(false);
+  };
+
   return (
     <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 bg-slate-50/5">
       <div className="min-w-max flex flex-col">
@@ -102,16 +121,29 @@ export function DateGrid({
               {formatPeriodHeader(date)}
             </div>
           ))}
-          {/* Add Column Button */}
-          {isEditing && (
-            <button
-              onClick={onAddColumn}
-              className="w-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-              title="列を追加"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          )}
+          {/* Add Column Button (Always Visible) */}
+          <div className="w-10 flex items-center justify-center bg-slate-50">
+            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  className="w-full h-full flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                  title="列を追加"
+                >
+                  <CalendarPlus className="h-4 w-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={undefined}
+                  onSelect={handleSelectDate}
+                  disabled={isDateDisabled}
+                  initialFocus
+                  locale={ja}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         {/* Rows */}
@@ -130,7 +162,7 @@ export function DateGrid({
                 />
               ))}
               {/* Spacer for add column button (prevent row misalignment) */}
-              {isEditing && <div className="w-10 bg-slate-50/30" />}
+              <div className="w-10 bg-slate-50/30" />
             </div>
           ))}
           {destinations.length < 5 &&
@@ -139,7 +171,7 @@ export function DateGrid({
                 {dateColumns.map((d) => (
                   <div key={d} className="w-16"></div>
                 ))}
-                {isEditing && <div className="w-10"></div>}
+                <div className="w-10"></div>
               </div>
             ))}
         </div>
@@ -166,7 +198,7 @@ export function DateGrid({
               </div>
             );
           })}
-          {isEditing && <div className="w-10 bg-slate-100"></div>}
+          <div className="w-10 bg-slate-100"></div>
         </div>
       </div>
     </div>

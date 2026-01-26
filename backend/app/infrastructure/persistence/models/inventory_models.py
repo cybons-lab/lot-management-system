@@ -308,7 +308,9 @@ class AllocationSuggestion(Base):
 
     # 需要側キー
     order_line_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
-    forecast_period: Mapped[str] = mapped_column(String(7), nullable=False)  # "YYYY-MM"
+    forecast_period: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # "YYYY-MM" or "YYYY-MM-DD"
     forecast_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("forecast_current.id", ondelete="CASCADE"),

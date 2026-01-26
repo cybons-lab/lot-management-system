@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 class AllocationSuggestionBase(BaseModel):
     """引当推奨基本スキーマ."""
 
-    forecast_period: str = Field(..., description="対象期間 (YYYY-MM)")
+    forecast_period: str = Field(..., description="対象期間 (YYYY-MM または YYYY-MM-DD)")
     customer_id: int = Field(..., description="得意先ID")
     delivery_place_id: int = Field(..., description="納入先ID")
     product_id: int = Field(..., description="製品ID")

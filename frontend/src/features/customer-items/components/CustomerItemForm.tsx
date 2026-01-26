@@ -1,9 +1,8 @@
 /**
- * CustomerItemForm (v2.5 - react-hook-form + Zod)
+ * CustomerItemForm (v3.0 - Simplified)
  * Form component for creating customer item mappings
- * OCR-SAP変換フィールド対応版
  *
- * Updated: サロゲートキー（id）ベースに移行
+ * Updated: OCR/SAP fields removed (now in ShippingMasterCurated)
  * - customer_part_no フィールド使用
  */
 
@@ -14,8 +13,6 @@ import { useForm } from "react-hook-form";
 import type { CreateCustomerItemRequest, CustomerItem } from "../api";
 
 import { CustomerItemFormBasicSection } from "./CustomerItemFormBasicSection";
-import { CustomerItemFormOcrSapSection } from "./CustomerItemFormOcrSapSection";
-import { CustomerItemFormSapCacheSection } from "./CustomerItemFormSapCacheSection";
 import {
   customerItemFormSchema,
   type CustomerItemFormData,
@@ -61,15 +58,6 @@ export function CustomerItemForm({
           pack_unit: item.pack_unit,
           pack_quantity: item.pack_quantity,
           special_instructions: item.special_instructions,
-          maker_part_no: item.maker_part_no,
-          order_category: item.order_category,
-          is_procurement_required: item.is_procurement_required,
-          shipping_slip_text: item.shipping_slip_text,
-          ocr_conversion_notes: item.ocr_conversion_notes,
-          sap_supplier_code: item.sap_supplier_code,
-          sap_warehouse_code: item.sap_warehouse_code,
-          sap_shipping_warehouse: item.sap_shipping_warehouse,
-          sap_uom: item.sap_uom,
         }
       : CUSTOMER_ITEM_FORM_DEFAULTS,
   });
@@ -118,12 +106,6 @@ export function CustomerItemForm({
         isLoadingProducts={isLoadingProducts}
         onProductSelect={handleProductSelect}
       />
-
-      {/* OCR→SAP変換設定とSAPキャッシュ設定を2段レイアウト */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <CustomerItemFormOcrSapSection control={control} isSubmitting={isSubmitting} />
-        <CustomerItemFormSapCacheSection control={control} isSubmitting={isSubmitting} />
-      </div>
 
       {/* Submit Buttons */}
       <div className="flex justify-end gap-3">

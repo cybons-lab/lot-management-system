@@ -200,9 +200,20 @@ function NavItemDropdown({ item, currentPath }: { item: NavItem; currentPath: st
 
 function NavItemSingle({ item, currentPath }: { item: NavItem; currentPath: string }) {
   const Icon = item.icon;
+
+  // More specific paths that should NOT match parent routes
+  // e.g., /inventory/excel-portal should not activate /inventory
+  const specificChildPaths = ["/inventory/excel-portal", "/inventory/excel-view"];
+
+  // Check if current path matches a more specific child route
+  const matchesMoreSpecificRoute =
+    item.href === ROUTES.INVENTORY.ROOT &&
+    specificChildPaths.some((path) => currentPath.startsWith(path));
+
   const isActive =
-    currentPath === item.href ||
-    (item.href !== "/dashboard" && item.href && currentPath.startsWith(item.href));
+    !matchesMoreSpecificRoute &&
+    (currentPath === item.href ||
+      (item.href !== "/dashboard" && item.href && currentPath.startsWith(item.href)));
 
   return (
     <Link

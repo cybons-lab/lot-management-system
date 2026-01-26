@@ -10,7 +10,7 @@ interface Props {
   isEditing?: boolean;
   localChanges?: Record<string, number>;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
-  onAddColumn?: () => void;
+  onAddColumn?: (date: Date) => void;
 }
 
 export function LotSection({
