@@ -96,12 +96,20 @@ export function CustomerItemForm({
   );
 
   const handleProductSelect = (value: string) => {
-    setValue("product_id", value ? Number(value) : 0);
+    // Phase1: product_idはオプション、空文字列の場合はnullを設定
+    setValue("product_id", value && value !== "" ? Number(value) : null);
     // customer_part_noはマニュアル入力なので自動設定しない
   };
 
   // Phase1: supplier_item_id選択ハンドラ
   const handleSupplierItemSelect = (value: string) => {
+    // 空文字列の場合は0を設定（未選択状態）
+    if (!value || value === "") {
+      setValue("supplier_item_id", 0);
+      setValue("supplier_id", null);
+      return;
+    }
+
     const selectedSupplierItem = supplierItems.find((si) => si.id === Number(value));
     if (selectedSupplierItem) {
       setValue("supplier_item_id", selectedSupplierItem.id);

@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/layout/tabs";
+import { useSupplierProductsQuery } from "@/features/supplier-products/hooks/useSupplierProductsQuery";
 import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
 
 interface CustomerItemFormDialogProps {
@@ -47,6 +48,8 @@ export function CustomerItemFormDialog({
   // Master data for select options
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
   const { data: products = [], isLoading: isLoadingProducts } = useProductsQuery();
+  const { data: supplierItems = [], isLoading: isLoadingSupplierItems } =
+    useSupplierProductsQuery();
 
   const {
     control,
@@ -91,15 +94,43 @@ export function CustomerItemFormDialog({
     [products],
   );
 
+  // Phase1: メーカー品番選択オプション - maker_part_no（仕入先名）形式
+  const supplierItemOptions = useMemo(
+    () =>
+      supplierItems.map((si) => ({
+        value: String(si.id),
+        label: `${si.maker_part_no}（${si.supplier_name || "仕入先不明"}）`,
+      })),
+    [supplierItems],
+  );
+
   const handleProductSelect = (value: string) => {
-    setValue("product_id", value ? Number(value) : 0);
+    // Phase1: product_idはオプション、空文字列の場合はnullを設定
+    setValue("product_id", value && value !== "" ? Number(value) : null);
+  };
+
+  // Phase1: supplier_item_id選択ハンドラ
+  const handleSupplierItemSelect = (value: string) => {
+    // 空文字列の場合は0を設定（未選択状態）
+    if (!value || value === "") {
+      setValue("supplier_item_id", 0);
+      setValue("supplier_id", null);
+      return;
+    }
+
+    const selectedSupplierItem = supplierItems.find((si) => si.id === Number(value));
+    if (selectedSupplierItem) {
+      setValue("supplier_item_id", selectedSupplierItem.id);
+      // supplier_idは非推奨だがバックエンド互換性のため設定
+      setValue("supplier_id", selectedSupplierItem.supplier_id);
+    }
   };
 
   const handleFormSubmit = (data: CustomerItemFormData) => {
     onSubmit(data as CreateCustomerItemRequest);
   };
 
-  const isLoading = isLoadingCustomers || isLoadingProducts;
+  const isLoading = isLoadingCustomers || isLoadingProducts || isLoadingSupplierItems;
   const isEditMode = mode === "edit" && item;
 
   return (
@@ -131,9 +162,12 @@ export function CustomerItemFormDialog({
                 isLoading={isLoading}
                 customerOptions={customerOptions}
                 productOptions={productOptions}
+                supplierItemOptions={supplierItemOptions}
                 isLoadingCustomers={isLoadingCustomers}
                 isLoadingProducts={isLoadingProducts}
+                isLoadingSupplierItems={isLoadingSupplierItems}
                 onProductSelect={handleProductSelect}
+                onSupplierItemSelect={handleSupplierItemSelect}
               />
 
               {/* Submit Buttons */}
