@@ -631,6 +631,17 @@ E   ModuleNotFoundError: No module named 'fastapi'
 
 ---
 
+### 7-3. RPA通常版 (Step1) の実行不可修正
+
+- **症状**: `/rpa/material-delivery-note` のStep1実行ボタンを押しても、設定キー不一致によりBackendで即座にエラーとなる。
+- **原因**: Frontend (`STEP1_URL`) と Backend (`progress_download_url`) の設定キー不整合。
+- **対処**: 設定モーダルの保存キー修正、またはBackendの参照キー修正。
+- **詳細**: `docs/issues/20260128_RPA_MaterialDelivery_Step1_Failure.md`
+
+**元:** 2026-01-28 調査
+
+---
+
 ## 8. 技術負債 (低優先度)
 
 ### 8-1. フロントエンド: 外部モジュール型定義を改善

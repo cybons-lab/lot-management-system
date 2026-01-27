@@ -250,7 +250,15 @@ class EventDispatcher:
                 result = handler(event)
                 if result is not None and hasattr(result, "__await__"):
                     await result
-            except (RuntimeError, TypeError, ValueError, LookupError) as exc:
+            except (
+                RuntimeError,
+                TypeError,
+                ValueError,
+                LookupError,
+                AttributeError,
+                NotImplementedError,
+                NameError,
+            ) as exc:
                 logger.exception(
                     f"Error in handler {handler.__name__} for {event_type.__name__}: {exc}"
                 )
