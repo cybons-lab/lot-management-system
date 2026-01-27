@@ -37,6 +37,7 @@ def list_customer_items(
     limit: int = Query(100, ge=1, le=1000),
     customer_id: int | None = Query(None, description="得意先IDでフィルタ"),
     product_id: int | None = Query(None, description="製品IDでフィルタ"),
+    supplier_id: int | None = Query(None, description="仕入先IDでフィルタ（supplier_items経由）"),
     include_inactive: bool = Query(False, description="無効なマッピングを含めるか"),
     db: Session = Depends(get_db),
 ):
@@ -47,6 +48,7 @@ def list_customer_items(
         limit: 取得件数上限
         customer_id: 得意先IDでフィルタ（オプション）
         product_id: 製品IDでフィルタ（オプション）
+        supplier_id: 仕入先IDでフィルタ（オプション、supplier_items経由）
         include_inactive: 無効なマッピングを含めるか
         db: データベースセッション
 
@@ -59,6 +61,7 @@ def list_customer_items(
         limit=limit,
         customer_id=customer_id,
         product_id=product_id,
+        supplier_id=supplier_id,
         include_inactive=include_inactive,
     )
 

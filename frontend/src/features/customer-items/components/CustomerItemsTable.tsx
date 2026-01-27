@@ -83,7 +83,7 @@ export function CustomerItemsTable({
       },
       {
         id: "customer_part_no",
-        header: "先方品番",
+        header: "得意先品番",
         accessor: (row) => row.customer_part_no,
         cell: (row) => (
           <span className="font-medium whitespace-nowrap">{row.customer_part_no}</span>

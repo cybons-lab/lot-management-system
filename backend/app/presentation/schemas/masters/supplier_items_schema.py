@@ -13,9 +13,9 @@ from app.presentation.schemas.common.common_schema import ORMModel
 class SupplierItemBase(BaseModel):
     """Shared supplier item fields."""
 
-    product_id: int = Field(..., description="製品ID")
-    supplier_id: int = Field(..., description="仕入先ID")
-    maker_part_no: str = Field(..., max_length=100, description="メーカー品番")
+    product_id: int | None = Field(None, description="製品ID（Phase2用グルーピング、オプション）")
+    supplier_id: int = Field(..., description="仕入先ID（必須）")
+    maker_part_no: str = Field(..., max_length=100, description="メーカー品番（必須・SKUキー）")
     is_primary: bool = Field(False, description="主要仕入先フラグ")
     lead_time_days: int | None = Field(None, description="リードタイム（日）")
     display_name: str | None = Field(None, max_length=200, description="表示名")
@@ -42,7 +42,7 @@ class SupplierItemResponse(ORMModel):
     """Supplier item response model with enriched data."""
 
     id: int
-    product_id: int
+    product_id: int | None  # Phase1: オプション
     supplier_id: int
     maker_part_no: str
     is_primary: bool
@@ -63,7 +63,7 @@ class SupplierItemListItem(BaseModel):
     """Supplier item list item (for API list response)."""
 
     id: int
-    product_id: int
+    product_id: int | None  # Phase1: オプション
     supplier_id: int
     maker_part_no: str
     is_primary: bool

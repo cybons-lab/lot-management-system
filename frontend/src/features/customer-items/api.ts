@@ -73,7 +73,28 @@ export interface CustomerItemsListParams {
   limit?: number;
   customer_id?: number;
   product_id?: number;
+  supplier_id?: number;
   include_inactive?: boolean;
+}
+
+// ===== Helper Functions =====
+
+/**
+ * Build query string from customer items list params
+ */
+function buildCustomerItemsQuery(params?: CustomerItemsListParams): string {
+  if (!params) return "";
+
+  const searchParams = new URLSearchParams();
+  if (params.skip !== undefined) searchParams.append("skip", params.skip.toString());
+  if (params.limit !== undefined) searchParams.append("limit", params.limit.toString());
+  if (params.customer_id) searchParams.append("customer_id", params.customer_id.toString());
+  if (params.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
+  if (params.include_inactive) searchParams.append("include_inactive", "true");
+
+  const queryString = searchParams.toString();
+  return queryString ? `?${queryString}` : "";
 }
 
 // ===== API Functions =====
@@ -83,15 +104,8 @@ export interface CustomerItemsListParams {
  * @endpoint GET /customer-items
  */
 export const getCustomerItems = (params?: CustomerItemsListParams) => {
-  const searchParams = new URLSearchParams();
-  if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
-  if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
-  if (params?.customer_id) searchParams.append("customer_id", params.customer_id.toString());
-  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
-  if (params?.include_inactive) searchParams.append("include_inactive", "true");
-
-  const queryString = searchParams.toString();
-  return http.get<CustomerItem[]>(`masters/customer-items${queryString ? "?" + queryString : ""}`);
+  const query = buildCustomerItemsQuery(params);
+  return http.get<CustomerItem[]>(`masters/customer-items${query}`);
 };
 
 /**

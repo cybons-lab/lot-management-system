@@ -45,7 +45,7 @@ const masterSections: MasterSection[] = [
         color: "bg-orange-50 text-orange-600 hover:bg-orange-100",
       },
       {
-        title: "先方品番マスタ",
+        title: "得意先品番マスタ",
         description: "得意先の注文書に記載される品番（変換ルール）を管理",
         href: ROUTES.MASTERS.CUSTOMER_ITEMS,
         icon: Database,

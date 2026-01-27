@@ -77,12 +77,14 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         limit: int = 100,
         customer_id: int | None = None,
         product_id: int | None = None,
+        supplier_id: int | None = None,
         include_inactive: bool = False,
     ) -> list[dict]:
         """Get all customer item mappings with optional filtering and enriched data."""
         from sqlalchemy import select
 
         from app.infrastructure.persistence.models.masters_models import Customer, Product, Supplier
+        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         # Build query with JOINs to get related names
         query = (
@@ -105,6 +107,12 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
         if product_id is not None:
             query = query.filter(CustomerItem.product_id == product_id)
+
+        if supplier_id is not None:
+            # Filter via supplier_item_id -> supplier_items.supplier_id
+            query = query.join(
+                SupplierItem, CustomerItem.supplier_item_id == SupplierItem.id
+            ).filter(SupplierItem.supplier_id == supplier_id)
 
         if not include_inactive:
             query = query.filter(CustomerItem.get_active_filter())

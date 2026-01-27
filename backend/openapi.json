@@ -9783,7 +9783,7 @@
           "customer-items"
         ],
         "summary": "List Customer Items",
-        "description": "得意先品番マッピング一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ（オプション）\n    product_id: 製品IDでフィルタ（オプション）\n    include_inactive: 無効なマッピングを含めるか\n    db: データベースセッション\n\nReturns:\n    得意先品番マッピングのリスト",
+        "description": "得意先品番マッピング一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ（オプション）\n    product_id: 製品IDでフィルタ（オプション）\n    supplier_id: 仕入先IDでフィルタ（オプション、supplier_items経由）\n    include_inactive: 無効なマッピングを含めるか\n    db: データベースセッション\n\nReturns:\n    得意先品番マッピングのリスト",
         "operationId": "list_customer_items_api_masters_customer_items_get",
         "parameters": [
           {
@@ -9844,6 +9844,24 @@
               "title": "Product Id"
             },
             "description": "製品IDでフィルタ"
+          },
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "仕入先IDでフィルタ（supplier_items経由）",
+              "title": "Supplier Id"
+            },
+            "description": "仕入先IDでフィルタ（supplier_items経由）"
           },
           {
             "name": "include_inactive",
@@ -40744,20 +40762,27 @@
       "SupplierItemCreate": {
         "properties": {
           "product_id": {
-            "type": "integer",
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Product Id",
-            "description": "製品ID"
+            "description": "製品ID（Phase2用グルーピング、オプション）"
           },
           "supplier_id": {
             "type": "integer",
             "title": "Supplier Id",
-            "description": "仕入先ID"
+            "description": "仕入先ID（必須）"
           },
           "maker_part_no": {
             "type": "string",
             "maxLength": 100,
             "title": "Maker Part No",
-            "description": "メーカー品番"
+            "description": "メーカー品番（必須・SKUキー）"
           },
           "is_primary": {
             "type": "boolean",
@@ -40805,7 +40830,6 @@
         },
         "type": "object",
         "required": [
-          "product_id",
           "supplier_id",
           "maker_part_no"
         ],
@@ -40819,7 +40843,14 @@
             "title": "Id"
           },
           "product_id": {
-            "type": "integer",
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Product Id"
           },
           "supplier_id": {

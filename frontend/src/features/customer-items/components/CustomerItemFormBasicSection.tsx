@@ -1,14 +1,18 @@
 /**
  * CustomerItemFormBasicSection
  * 得意先品番の基本情報セクション（フォーム用）
+ * Phase1対応: supplier_item_id を必須に変更
  */
 
+import { AlertCircle } from "lucide-react";
+import React from "react";
 import { type Control, Controller, type FieldErrors } from "react-hook-form";
 
 import type { CustomerItemFormData } from "./customerItemFormSchema";
 
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/feedback/alert";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 
 interface Option {
@@ -23,10 +27,13 @@ interface CustomerItemFormBasicSectionProps {
   isSubmitting: boolean;
   isLoading: boolean;
   customerOptions: Option[];
-  productOptions: Option[];
+  productOptions: Option[]; // Phase1: product_id はオプション
+  supplierItemOptions?: Option[]; // Phase1: supplier_item_id 選択用（必須）
   isLoadingCustomers: boolean;
   isLoadingProducts: boolean;
+  isLoadingSupplierItems?: boolean; // Phase1用
   onProductSelect: (value: string) => void;
+  onSupplierItemSelect?: (value: string) => void; // Phase1用
 }
 
 // eslint-disable-next-line max-lines-per-function -- フォームセクションのため許容
@@ -37,10 +44,23 @@ export function CustomerItemFormBasicSection({
   isLoading,
   customerOptions,
   productOptions,
+  supplierItemOptions = [],
   isLoadingCustomers,
   isLoadingProducts,
+  isLoadingSupplierItems = false,
   onProductSelect,
+  onSupplierItemSelect,
 }: CustomerItemFormBasicSectionProps) {
+  // Phase1: supplier_item_id が未設定かチェック（警告表示用）
+  const [isSupplierItemMissing, setIsSupplierItemMissing] = React.useState(false);
+
+  React.useEffect(() => {
+    // supplier_item_id フィールドの値を監視
+    const subscription = control._subjects.values.subscribe((values) => {
+      setIsSupplierItemMissing(!values.supplier_item_id || values.supplier_item_id === 0);
+    });
+    return () => subscription.unsubscribe();
+  }, [control]);
   return (
     <fieldset className="rounded-lg border p-4">
       <legend className="px-2 text-sm font-semibold text-slate-700">基本情報</legend>
@@ -68,10 +88,10 @@ export function CustomerItemFormBasicSection({
           )}
         </div>
 
-        {/* 先方品番（手入力） */}
+        {/* 得意先品番（手入力） */}
         <div>
           <Label htmlFor="customer_part_no" className="mb-2 block text-sm font-medium">
-            先方品番 <span className="text-red-500">*</span>
+            得意先品番 <span className="text-red-500">*</span>
           </Label>
           <Controller
             name="customer_part_no"
@@ -95,10 +115,50 @@ export function CustomerItemFormBasicSection({
           </p>
         </div>
 
-        {/* メーカー品番選択 */}
+        {/* メーカー品番選択 (Phase1: supplier_item_id) */}
+        <div>
+          <Label htmlFor="supplier_item_id" className="mb-2 block text-sm font-medium">
+            メーカー品番 <span className="text-red-500">*</span>
+          </Label>
+          <Controller
+            name="supplier_item_id"
+            control={control}
+            render={({ field }) => (
+              <SearchableSelect
+                options={supplierItemOptions}
+                value={field.value ? String(field.value) : ""}
+                onChange={(value) => {
+                  field.onChange(value ? Number(value) : 0);
+                  if (onSupplierItemSelect) {
+                    onSupplierItemSelect(value);
+                  }
+                }}
+                placeholder={isLoadingSupplierItems ? "読込中..." : "メーカー品番を検索..."}
+                disabled={isSubmitting || isLoading}
+              />
+            )}
+          />
+          {errors.supplier_item_id && (
+            <p className="mt-1 text-sm text-red-600">{errors.supplier_item_id.message}</p>
+          )}
+          <p className="mt-1 text-xs text-amber-600">
+            ⚠️ Phase1必須:
+            メーカー品番の設定は必須です。設定しない場合、出荷処理がブロックされます。
+          </p>
+          {isSupplierItemMissing && (
+            <Alert variant="destructive" className="mt-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                メーカー品番の設定は必須です。設定しない場合、この得意先品番での出荷処理がブロックされます。
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        {/* 商品構成 (Phase1: オプション、Phase2用) */}
         <div>
           <Label htmlFor="product_id" className="mb-2 block text-sm font-medium">
-            メーカー品番 <span className="text-red-500">*</span>
+            商品構成 <span className="text-gray-400">(オプション)</span>
           </Label>
           <Controller
             name="product_id"
@@ -108,7 +168,7 @@ export function CustomerItemFormBasicSection({
                 options={productOptions}
                 value={field.value ? String(field.value) : ""}
                 onChange={onProductSelect}
-                placeholder={isLoadingProducts ? "読込中..." : "メーカー品番を検索..."}
+                placeholder={isLoadingProducts ? "読込中..." : "商品構成を選択（Phase2用）"}
                 disabled={isSubmitting || isLoading}
               />
             )}
@@ -117,7 +177,7 @@ export function CustomerItemFormBasicSection({
             <p className="mt-1 text-sm text-red-600">{errors.product_id.message}</p>
           )}
           <p className="mt-1 text-xs text-gray-500">
-            先方品番に対応するメーカー品番（仕入先の製品番号）
+            Phase1では省略可能。複数メーカー品番をまとめる場合のみ設定（Phase2機能）。
           </p>
         </div>
 

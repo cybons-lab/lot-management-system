@@ -3667,6 +3667,7 @@ export interface paths {
      *         limit: 取得件数上限
      *         customer_id: 得意先IDでフィルタ（オプション）
      *         product_id: 製品IDでフィルタ（オプション）
+     *         supplier_id: 仕入先IDでフィルタ（オプション、supplier_items経由）
      *         include_inactive: 無効なマッピングを含めるか
      *         db: データベースセッション
      *
@@ -16432,17 +16433,17 @@ export interface components {
     SupplierItemCreate: {
       /**
        * Product Id
-       * @description 製品ID
+       * @description 製品ID（Phase2用グルーピング、オプション）
        */
-      product_id: number;
+      product_id?: number | null;
       /**
        * Supplier Id
-       * @description 仕入先ID
+       * @description 仕入先ID（必須）
        */
       supplier_id: number;
       /**
        * Maker Part No
-       * @description メーカー品番
+       * @description メーカー品番（必須・SKUキー）
        */
       maker_part_no: string;
       /**
@@ -16475,7 +16476,7 @@ export interface components {
       /** Id */
       id: number;
       /** Product Id */
-      product_id: number;
+      product_id: number | null;
       /** Supplier Id */
       supplier_id: number;
       /** Maker Part No */
@@ -22859,6 +22860,8 @@ export interface operations {
         customer_id?: number | null;
         /** @description 製品IDでフィルタ */
         product_id?: number | null;
+        /** @description 仕入先IDでフィルタ（supplier_items経由） */
+        supplier_id?: number | null;
         /** @description 無効なマッピングを含めるか */
         include_inactive?: boolean;
       };

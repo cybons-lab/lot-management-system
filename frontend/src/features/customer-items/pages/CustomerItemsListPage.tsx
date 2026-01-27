@@ -197,7 +197,7 @@ export function CustomerItemsListPage() {
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
       <PageHeader
-        title="先方品番マスタ"
+        title="得意先品番マスタ"
         subtitle="得意先品番とメーカー品番の紐付け管理"
         backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={

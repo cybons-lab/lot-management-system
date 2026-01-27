@@ -168,7 +168,7 @@ export function ExcelPortalPage() {
     <PageContainer>
       <PageHeader
         title="ロット管理（Excelビュー）"
-        subtitle="仕入先・先方品番・倉庫を選択してください"
+        subtitle="仕入先・得意先品番・倉庫を選択してください"
         actions={
           <Button variant="outline" onClick={handleBack}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -205,7 +205,7 @@ export function ExcelPortalPage() {
             >
               2
             </div>
-            <span>製品・先方品番</span>
+            <span>製品・得意先品番</span>
           </div>
           <ChevronRight className="h-4 w-4 text-slate-300" />
           <div className={`flex items-center gap-2 ${step === "warehouse" ? "text-blue-600" : ""}`}>
@@ -230,7 +230,7 @@ export function ExcelPortalPage() {
               step === "supplier"
                 ? "仕入先を検索..."
                 : step === "customer-item"
-                  ? "製品・先方品番を検索..."
+                  ? "製品・得意先品番を検索..."
                   : "倉庫を検索..."
             }
             className="pl-10 h-12 text-lg"
@@ -308,7 +308,7 @@ export function ExcelPortalPage() {
               </div>
             ) : filteredProductGroups.length === 0 ? (
               <div className="text-center py-12 text-slate-500">
-                該当する先方品番が見つかりません
+                該当する得意先品番が見つかりません
               </div>
             ) : (
               <div className="space-y-6">
@@ -346,7 +346,7 @@ export function ExcelPortalPage() {
                               <span className="text-xs text-slate-400">({item.customer_code})</span>
                             </div>
                             <p className="text-sm text-slate-500 font-mono mt-0.5">
-                              先方品番: {item.customer_part_no}
+                              得意先品番: {item.customer_part_no}
                             </p>
                           </div>
                           <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
