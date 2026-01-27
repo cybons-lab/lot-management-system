@@ -5,10 +5,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.application.services.rpa.csv_parser import parse_material_delivery_csv
-from app.application.services.system_config_service import (
-    ConfigKeys,
-    SystemConfigService,
-)
+from app.application.services.cloud_flow_service import CloudFlowService
 from app.core.config import settings
 from app.core.time_utils import utcnow
 from app.domain.rpa.state_manager import RpaStateManager
@@ -362,11 +359,12 @@ class MaterialDeliveryNoteOrchestrator:
         # Config resolution
         actual_flow_url = flow_url
         if not actual_flow_url:
-            config_service = SystemConfigService(self.db)
-            actual_flow_url = config_service.get(
-                ConfigKeys.CLOUD_FLOW_URL_MATERIAL_DELIVERY,
-                settings.CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE,
-            )
+            cf_service = CloudFlowService(self.db)
+            config = cf_service.get_config("STEP3_URL")
+            if config and config.config_value:
+                actual_flow_url = config.config_value
+            elif settings.CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE:
+                actual_flow_url = settings.CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE
 
         if not actual_flow_url:
             raise ValueError("Flow URL is not configured")

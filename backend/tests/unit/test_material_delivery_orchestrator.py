@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.application.services.rpa.orchestrator import MaterialDeliveryNoteOrchestrator
-from app.application.services.system_config_service import ConfigKeys, SystemConfigService
+from app.application.services.cloud_flow_service import CloudFlowService
 from app.infrastructure.persistence.models.rpa_models import RpaRun, RpaRunItem, RpaRunStatus
 from app.infrastructure.rpa.flow_client import RpaFlowClient
 
@@ -183,8 +183,8 @@ class TestMaterialDeliveryNoteOrchestrator:
         db.add(item)
         db.commit()
 
-        config_service = SystemConfigService(db)
-        config_service.set(ConfigKeys.CLOUD_FLOW_URL_MATERIAL_DELIVERY, "http://configured-flow")
+        config_service = CloudFlowService(db)
+        config_service.set_config("STEP3_URL", "http://configured-flow")
 
         mock_client = AsyncMock(spec=RpaFlowClient)
         mock_client.call_flow.return_value = {"status": "ok"}
