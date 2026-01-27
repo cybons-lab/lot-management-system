@@ -118,9 +118,12 @@
     - スケールアウト時にもロック機能が正常動作
 """
 
+import json
 import logging
 import time
 from datetime import datetime, timedelta
+
+import httpx
 
 from app.core.time_utils import utcnow
 
@@ -255,13 +258,43 @@ class RPAService:
                     "{{start_date}}", start_date
                 ).replace("{{end_date}}", end_date)
 
-        # PAD実行のモック（実際はPower Automate Desktop APIを呼び出す）
-        # 設定値を使用して実行（ログに出力）
         logger.info(f"[RPA] 素材納品書発行を実行: {start_date} ~ {end_date}")
         logger.debug(f"[RPA] Using STEP1 URL: {url_step1 or 'Not Set'}")
         logger.debug(f"[RPA] Using STEP3 URL: {url_step3 or 'Not Set'}")
         logger.debug(f"[RPA] Using STEP1 Payload: {payload_step1 or 'Not Set'}")
         logger.debug(f"[RPA] Using STEP3 Payload: {payload_step3 or 'Not Set'}")
+
+        if not url_step1:
+            return {
+                "status": "error",
+                "message": "Step1 Flow URLが設定されていません。",
+                "execution_time_seconds": 0,
+            }
+
+        try:
+            step1_payload = json.loads(payload_step1) if payload_step1 else {}
+        except json.JSONDecodeError:
+            return {
+                "status": "error",
+                "message": "Step1 JSONペイロードの形式が不正です。",
+                "execution_time_seconds": 0,
+            }
+
+        step1_payload.setdefault("start_date", start_date)
+        step1_payload.setdefault("end_date", end_date)
+        step1_payload.setdefault("executed_by", user)
+
+        try:
+            with httpx.Client(timeout=30.0) as client:
+                response = client.post(url_step1, json=step1_payload)
+                response.raise_for_status()
+        except httpx.HTTPError as exc:
+            logger.exception("[RPA] Step1 Flow呼び出しエラー")
+            return {
+                "status": "error",
+                "message": f"Step1 Flow呼び出しに失敗しました: {exc!s}",
+                "execution_time_seconds": 0,
+            }
 
         time.sleep(0.1)  # 実行シミュレーション
 
