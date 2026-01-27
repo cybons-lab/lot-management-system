@@ -127,6 +127,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.application.services.allocations.fefo import preview_fefo_allocation
@@ -281,7 +282,7 @@ def commit_fefo_reservation(db: Session, order_id: int) -> FefoCommitResult:
         update_order_allocation_status(db, order_id)
 
         db.commit()
-    except Exception:
+    except (AllocationCommitError, SQLAlchemyError, ValueError):
         db.rollback()
         raise
 

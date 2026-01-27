@@ -131,11 +131,14 @@
     - 不要なレコードを残さない
 """
 
+# Re-ordering imports for Ruff compliance
+import logging
 from collections import defaultdict
 from decimal import Decimal
 from typing import cast
 
 from sqlalchemy import and_, tuple_
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
@@ -159,6 +162,9 @@ from app.presentation.schemas.forecasts.forecast_schema import (
     ForecastResponse,
     ForecastUpdate,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdate, int]):
@@ -547,12 +553,12 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
 
             suggestion_service = AllocationSuggestionService(self.db)
             suggestion_service.regenerate_for_periods([forecast_period])
-        except Exception as e:
+        except (ImportError, SQLAlchemyError, ValueError) as e:
             # Log but don't fail the forecast operation
-            import logging
-
-            logging.getLogger(__name__).warning(
-                f"Failed to regenerate allocation suggestions for period {forecast_period}: {e}"
+            logger.warning(
+                "Failed to regenerate allocation suggestions for period %s: %s",
+                forecast_period,
+                e,
             )
 
     def _build_forecast_reference(self, forecast: ForecastCurrent) -> str:
@@ -615,13 +621,15 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
 
         # Trigger auto-allocation
         from app.application.services.allocations.actions import auto_reserve_line
+        from app.application.services.allocations.schemas import AllocationCommitError
 
         try:
             auto_reserve_line(self.db, order_line.id)
-        except Exception:
+        except (SQLAlchemyError, ValueError, AllocationCommitError) as e:
             # Ignore allocation errors during forecast creation/update to prevent blocking
-            # but ideally log this. For now just pass.
-            pass
+            logger.warning(
+                "Auto-reserve failed for provisional order line %s: %s", order_line.id, e
+            )
 
     def _update_provisional_order(self, forecast: ForecastCurrent) -> None:
         """Update or create provisional order for the forecast."""
@@ -640,11 +648,16 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
 
             # Trigger auto-allocation
             from app.application.services.allocations.actions import auto_reserve_line
+            from app.application.services.allocations.schemas import AllocationCommitError
 
             try:
                 auto_reserve_line(self.db, order_line.id)
-            except Exception:
-                pass
+            except (SQLAlchemyError, ValueError, AllocationCommitError) as e:
+                logger.warning(
+                    "Auto-reserve failed for updated provisional order line %s: %s",
+                    order_line.id,
+                    e,
+                )
         else:
             # Create new if not exists
             self._create_provisional_order(forecast)
