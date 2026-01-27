@@ -418,60 +418,9 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 
 ---
 
-### 5-3. Phase 3: 体系的なテストコード作成
 
-**優先度**: High
-**難易度**: Medium
-**想定工数**: 3-5日
 
-**背景:**
-Phase 0〜2の実装により、フロントエンドおよびバックエンドの主要機能は完成しましたが、これまでテストと検証は主に手動で行われてきました。今後の改修時にデグレード（先祖返り）を防ぎ、品質を維持するために、体系的なテストコードの追加が必要です。
 
-**タスク内容:**
-1. **バックエンドテストの強化**
-   - APIユニットテストの追加
-   - 複雑なロジック（ロット引き当て、納期計算など）の境界値テスト
-2. **E2Eテストの実装**
-   - PlaywrightまたはCypressを使用した主要シナリオの自動化
-   - OCRスキャンからSAP連携、マニュアル編集までのワークフロー検証
-3. **SAP連携 (#488) 対応範囲のテストデータ作成**
-   - 直近のSAP連携で対応したAPIおよびフロントエンド機能のための体系的なテストデータを整備する。
-   - 異常系（通信エラー、認証エラーなど）のパターンを網羅したデータを作成する。
-
-**元:** `FUTURE_IMPROVEMENTS.md`
-
----
-
-### 5-4. Docker テスト環境の依存関係修正
-
-**優先度**: Medium
-**難易度**: Low
-**想定工数**: 0.5日
-
-**背景:**
-`docker compose exec backend pytest` でテスト実行時に、必要な依存関係（`fastapi`, `sqlalchemy`, `pydantic_settings`等）が見つからずImportErrorが発生する。
-
-**症状:**
-```
-ImportError while loading conftest '/app/tests/conftest.py'.
-tests/conftest.py:5: in <module>
-    from fastapi.testclient import TestClient
-E   ModuleNotFoundError: No module named 'fastapi'
-```
-
-**原因（推定）:**
-- 本番用Dockerイメージにテスト用依存関係が含まれていない
-- `requirements-dev.txt`または`pyproject.toml`の`[dev]`グループがコンテナビルド時にインストールされていない
-
-**対応案:**
-1. `Dockerfile`でテスト依存関係もインストールするように修正
-2. または、テスト専用のDocker Compose serviceを追加（`backend-test`等）
-3. CI/CDでのテスト実行方法と整合を取る
-
-**発見日:** 2026-01-26
-**元:** customer_item_delivery_settings SSOT化PRレビュー時
-
----
 
 ### 5-5. E2Eテストの失敗修正 (19件)
 
@@ -822,28 +771,7 @@ SupplierItemエンティティに対して2箇所でスキーマが定義され�
 
 ---
 
-### 8-9. 広範な except Exception の具体化
 
-**優先度**: High
-**作成**: 2026-01-26
-
-**背景:**
-`except Exception:` で全ての例外をキャッチしている箇所が15箇所以上存在。
-エラーの握りつぶしやデバッグ困難の原因となる。
-
-**対象ファイル:**
-- `backend/app/presentation/api/routes/allocations/allocations_router.py:271,318,507`
-- `backend/app/application/services/forecasts/forecast_service.py:621,646`
-- `backend/app/application/services/allocations/commit.py:284`
-- `backend/app/domain/events/dispatcher.py:253`
-- その他複数
-
-**対応:**
-1. 具体的な例外型（`IntegrityError`, `ValidationError`, `AllocationError`等）でキャッチ
-2. 最低限 `logger.exception()` でスタックトレースを記録
-3. `except Exception: pass` は絶対に避ける
-
----
 
 ### 8-11. 大規模ファイルの分割 (600行超)
 
