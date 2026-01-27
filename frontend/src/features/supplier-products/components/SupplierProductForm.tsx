@@ -99,8 +99,8 @@ export function SupplierProductForm({
                 仕入先 <span className="text-red-500">*</span>
               </FormLabel>
               <Select
-                value={field.value ? String(field.value) : ""}
-                onValueChange={(v) => field.onChange(Number(v))}
+                value={field.value ? String(field.value) : undefined}
+                onValueChange={(v) => field.onChange(v ? Number(v) : 0)}
                 disabled={isEdit}
               >
                 <FormControl>
@@ -151,8 +151,8 @@ export function SupplierProductForm({
                 商品構成 <span className="text-gray-400">(オプション)</span>
               </FormLabel>
               <Select
-                value={field.value ? String(field.value) : ""}
-                onValueChange={(v) => field.onChange(v === "" ? null : Number(v))}
+                value={field.value ? String(field.value) : undefined}
+                onValueChange={(v) => field.onChange(v && v !== "" ? Number(v) : null)}
                 disabled={isEdit}
               >
                 <FormControl>
