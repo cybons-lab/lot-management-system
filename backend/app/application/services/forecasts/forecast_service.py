@@ -131,6 +131,7 @@
     - 不要なレコードを残さない
 """
 
+# Re-ordering imports for Ruff compliance
 import logging
 from collections import defaultdict
 from decimal import Decimal
