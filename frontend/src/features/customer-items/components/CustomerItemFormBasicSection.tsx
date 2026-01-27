@@ -69,8 +69,8 @@ export function CustomerItemFormBasicSection({
             render={({ field }) => (
               <SearchableSelect
                 options={customerOptions}
-                value={field.value ? String(field.value) : ""}
-                onChange={(value) => field.onChange(value ? Number(value) : 0)}
+                value={field.value ? String(field.value) : undefined}
+                onChange={(value) => field.onChange(value && value !== "" ? Number(value) : 0)}
                 placeholder={isLoadingCustomers ? "読込中..." : "得意先を検索..."}
                 disabled={isSubmitting || isLoading}
               />
@@ -119,7 +119,7 @@ export function CustomerItemFormBasicSection({
             render={({ field }) => (
               <SearchableSelect
                 options={supplierItemOptions}
-                value={field.value ? String(field.value) : ""}
+                value={field.value ? String(field.value) : undefined}
                 onChange={(value) => {
                   field.onChange(value ? Number(value) : 0);
                   if (onSupplierItemSelect) {
@@ -159,7 +159,7 @@ export function CustomerItemFormBasicSection({
             render={({ field }) => (
               <SearchableSelect
                 options={productOptions}
-                value={field.value ? String(field.value) : ""}
+                value={field.value ? String(field.value) : undefined}
                 onChange={onProductSelect}
                 placeholder={isLoadingProducts ? "読込中..." : "商品構成を選択（Phase2用）"}
                 disabled={isSubmitting || isLoading}
