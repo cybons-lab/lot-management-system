@@ -131,8 +131,8 @@
     - 不要なレコードを残さない
 """
 
-from collections import defaultdict
 import logging
+from collections import defaultdict
 from decimal import Decimal
 from typing import cast
 
@@ -161,6 +161,7 @@ from app.presentation.schemas.forecasts.forecast_schema import (
     ForecastResponse,
     ForecastUpdate,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -619,12 +620,15 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
 
         # Trigger auto-allocation
         from app.application.services.allocations.actions import auto_reserve_line
+        from app.application.services.allocations.schemas import AllocationCommitError
 
         try:
             auto_reserve_line(self.db, order_line.id)
-        except (SQLAlchemyError, ValueError) as e:
+        except (SQLAlchemyError, ValueError, AllocationCommitError) as e:
             # Ignore allocation errors during forecast creation/update to prevent blocking
-            logger.warning("Auto-reserve failed for provisional order line %s: %s", order_line.id, e)
+            logger.warning(
+                "Auto-reserve failed for provisional order line %s: %s", order_line.id, e
+            )
 
     def _update_provisional_order(self, forecast: ForecastCurrent) -> None:
         """Update or create provisional order for the forecast."""
@@ -643,10 +647,11 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
 
             # Trigger auto-allocation
             from app.application.services.allocations.actions import auto_reserve_line
+            from app.application.services.allocations.schemas import AllocationCommitError
 
             try:
                 auto_reserve_line(self.db, order_line.id)
-            except (SQLAlchemyError, ValueError) as e:
+            except (SQLAlchemyError, ValueError, AllocationCommitError) as e:
                 logger.warning(
                     "Auto-reserve failed for updated provisional order line %s: %s",
                     order_line.id,
