@@ -189,19 +189,14 @@ class SmartReadPadRunnerService:
             long_data, errors = self._transform_to_long(wide_data)
             self._update_heartbeat(run)
 
-            # 結果をDBに保存
+            # 9. 結果をDBに保存 (ステータス更新前に行う)
             self._save_results(run, config.id, task_id, export_id, wide_data, long_data)
 
-            # ★★★ 成功判定: EXPORT_STARTEDを通過していることを確認 ★★★
+            # 成功判定: EXPORT_STARTEDを通過していることを確認
             if not run.export_id:
                 raise RuntimeError("Export工程を通過していません（export_idが未設定）")
 
-            # 成功
-            run.status = "SUCCEEDED"
-            run.wide_data_count = len(wide_data)
-            run.long_data_count = len(long_data)
-            run.completed_at = datetime.now()
-            # 処理済みファイルの移動 (Success)
+            # 10. 処理済みファイルの移動 (Success)
             if watch_dir and filenames:
                 for filename in filenames:
                     try:
@@ -211,8 +206,16 @@ class SmartReadPadRunnerService:
                             f"[PAD Run {run_id}] Failed to move file {filename} to Done: {e}"
                         )
 
-            # 成功
+            # 11. 成功ステータスへ更新
             run.status = "SUCCEEDED"
+            run.wide_data_count = len(wide_data)
+            run.long_data_count = len(long_data)
+            run.completed_at = datetime.now()
+
+            self.session.commit()
+            logger.info(
+                f"[PAD Run {run_id}] Completed Successfully: {len(wide_data)} wide, {len(long_data)} long"
+            )
 
         except Exception as e:
             logger.exception(f"[PAD Run {run_id}] Failed: {e}")

@@ -79,15 +79,30 @@ export function SmartReadPage() {
 
   // Auto-navigate to OCR Results when a run succeeds
   const prevRunsRef = useRef<string[]>([]);
+  const isInitialLoadRef = useRef(true);
+
   useEffect(() => {
     if (padRuns?.runs) {
+      if (isInitialLoadRef.current) {
+        // 初回ロード時は既存の成功済みタスクを「既知」として記録するだけ
+        prevRunsRef.current = padRuns.runs
+          .filter((run) => run.status === "SUCCEEDED")
+          .map((run) => run.run_id);
+        isInitialLoadRef.current = false;
+        return;
+      }
+
       const succeededRun = padRuns.runs.find(
         (run) => run.status === "SUCCEEDED" && !prevRunsRef.current.includes(run.run_id),
       );
       if (succeededRun) {
-        logger.info("処理が完了しました。結果一覧へ移動します。", { run_id: succeededRun.run_id });
+        logger.info("新しく処理が完了しました。結果一覧へ移動します。", {
+          run_id: succeededRun.run_id,
+        });
         navigate(ROUTES.OCR_RESULTS.LIST);
       }
+
+      // 成功済みリストを更新
       prevRunsRef.current = padRuns.runs
         .filter((run) => run.status === "SUCCEEDED")
         .map((run) => run.run_id);
