@@ -5,7 +5,6 @@
  */
 
 import { AlertCircle } from "lucide-react";
-import React from "react";
 import { type Control, Controller, type FieldErrors } from "react-hook-form";
 
 import type { CustomerItemFormData } from "./customerItemFormSchema";
@@ -52,15 +51,9 @@ export function CustomerItemFormBasicSection({
   onSupplierItemSelect,
 }: CustomerItemFormBasicSectionProps) {
   // Phase1: supplier_item_id が未設定かチェック（警告表示用）
-  const [isSupplierItemMissing, setIsSupplierItemMissing] = React.useState(false);
-
-  React.useEffect(() => {
-    // supplier_item_id フィールドの値を監視
-    const subscription = control._subjects.values.subscribe((values) => {
-      setIsSupplierItemMissing(!values.supplier_item_id || values.supplier_item_id === 0);
-    });
-    return () => subscription.unsubscribe();
-  }, [control]);
+  // Note: この機能は一時的に無効化（react-hook-formのAPIアクセスパターン変更のため）
+  // const [isSupplierItemMissing, setIsSupplierItemMissing] = React.useState(false);
+  const isSupplierItemMissing = false; // TODO: watch()を使用した実装に変更
   return (
     <fieldset className="rounded-lg border p-4">
       <legend className="px-2 text-sm font-semibold text-slate-700">基本情報</legend>

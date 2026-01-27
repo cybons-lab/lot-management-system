@@ -99,10 +99,10 @@ export function CustomerItemsTable({
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 shrink-0 text-green-600" />
             <div className="min-w-[120px]">
-              <div className="truncate font-medium text-sm" title={row.product_name}>
-                {row.product_name}
+              <div className="truncate font-medium text-sm" title={row.product_name || undefined}>
+                {row.product_name || "-"}
               </div>
-              <div className="text-xs text-gray-500">{row.product_code}</div>
+              <div className="text-xs text-gray-500">{row.product_code || "-"}</div>
             </div>
           </div>
         ),

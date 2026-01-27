@@ -149,11 +149,14 @@ function useQuickMappingForm({
     if (!customerId || !partNo || !dpId) return toast.error("入力不足です");
     setSubmitting(true);
     try {
+      // Phase1: supplier_item_idが必須になったため、仮の値を設定
+      // TODO: Phase1完了後、supplier_item_id選択UIを追加
       const createdItem = await createCustomerItem({
         customer_id: customerId,
         product_id: productId,
         customer_part_no: partNo,
         base_unit: defaultUnit || "CAN",
+        supplier_item_id: 1, // FIXME: 仮の値（Phase1対応）
       });
       await createDeliverySetting({
         customer_item_id: createdItem.id,

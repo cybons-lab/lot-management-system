@@ -91,7 +91,7 @@ export function useCustomerItemsPage() {
       (item) =>
         item.customer_part_no.toLowerCase().includes(query) ||
         item.customer_id.toString().includes(query) ||
-        item.product_id.toString().includes(query),
+        item.product_id?.toString().includes(query), // Phase1: product_idはnullable
     );
   }, [customerItems, searchQuery]);
 

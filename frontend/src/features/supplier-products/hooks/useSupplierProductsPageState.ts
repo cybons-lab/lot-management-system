@@ -85,7 +85,8 @@ export function useSupplierProductsPageState() {
     const query = searchQuery.toLowerCase();
     // eslint-disable-next-line complexity
     return supplierProducts.filter((sp) => {
-      const p = productMap.get(sp.product_id);
+      // Phase1: product_idはnullable
+      const p = sp.product_id !== null ? productMap.get(sp.product_id) : null;
       const s = supplierMap.get(sp.supplier_id);
       const targetString = `
         ${sp.product_code || ""} ${sp.product_name || ""}
@@ -103,6 +104,8 @@ export function useSupplierProductsPageState() {
     sorted.sort((a, b) => {
       const getVal = (item: SupplierProduct, col: string) => {
         if (col === "product_id") {
+          // Phase1: product_idはnullable
+          if (item.product_id === null) return "";
           return item.product_code || productMap.get(item.product_id)?.code || "";
         }
         if (col === "supplier_id") {

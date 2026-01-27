@@ -66,12 +66,15 @@ export function ExcelPortalPage() {
     >();
 
     customerItemsForSupplier.forEach((item) => {
+      // Phase1: product_idがnullの場合はスキップ（Phase2で対応）
+      if (item.product_id === null) return;
+
       if (!groups.has(item.product_id)) {
         groups.set(item.product_id, {
           product: {
             id: item.product_id,
-            code: item.product_code,
-            name: item.product_name,
+            code: item.product_code || "",
+            name: item.product_name || "",
           },
           items: [],
         });

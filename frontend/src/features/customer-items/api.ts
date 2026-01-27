@@ -22,11 +22,11 @@ export interface CustomerItem {
   customer_code: string;
   customer_name: string;
   customer_part_no: string;
-  product_id: number;
-  product_code: string;
-  product_name: string;
+  product_id: number | null; // Phase1: オプション（Phase2用グルーピング）
+  product_code: string | null;
+  product_name: string | null;
   supplier_id: number | null;
-  supplier_item_id: number | null;
+  supplier_item_id: number; // Phase1: 必須（NOT NULL制約）
   supplier_code: string | null;
   supplier_name: string | null;
   is_primary: boolean;
@@ -46,9 +46,9 @@ export interface CustomerItem {
 export interface CreateCustomerItemRequest {
   customer_id: number;
   customer_part_no: string;
-  product_id: number;
-  supplier_id?: number | null;
-  supplier_item_id?: number | null;
+  product_id?: number | null; // Phase1: オプション
+  supplier_id?: number | null; // 非推奨（supplier_item_id経由で取得）
+  supplier_item_id: number; // Phase1: 必須
   is_primary?: boolean;
   base_unit: string;
   pack_unit?: string | null;
@@ -58,9 +58,9 @@ export interface CreateCustomerItemRequest {
 
 export interface UpdateCustomerItemRequest {
   customer_part_no?: string;
-  product_id?: number;
-  supplier_id?: number | null;
-  supplier_item_id?: number | null;
+  product_id?: number | null; // Phase1: オプション
+  supplier_id?: number | null; // 非推奨
+  supplier_item_id?: number; // Phase1: 必須（更新時は任意）
   is_primary?: boolean | null;
   base_unit?: string;
   pack_unit?: string | null;

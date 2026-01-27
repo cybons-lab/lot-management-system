@@ -20,6 +20,7 @@ import {
 } from "./customerItemFormSchema";
 
 import { Button } from "@/components/ui";
+import { useSupplierProductsQuery } from "@/features/supplier-products/hooks/useSupplierProductsQuery";
 import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
 
 interface CustomerItemFormProps {
@@ -38,6 +39,8 @@ export function CustomerItemForm({
   // Master data for select options
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
   const { data: products = [], isLoading: isLoadingProducts } = useProductsQuery();
+  const { data: supplierItems = [], isLoading: isLoadingSupplierItems } =
+    useSupplierProductsQuery();
 
   const {
     control,
@@ -82,16 +85,36 @@ export function CustomerItemForm({
     [products],
   );
 
+  // Phase1: メーカー品番選択オプション - maker_part_no（仕入先名）形式
+  const supplierItemOptions = useMemo(
+    () =>
+      supplierItems.map((si) => ({
+        value: String(si.id),
+        label: `${si.maker_part_no}（${si.supplier_name || "仕入先不明"}）`,
+      })),
+    [supplierItems],
+  );
+
   const handleProductSelect = (value: string) => {
     setValue("product_id", value ? Number(value) : 0);
     // customer_part_noはマニュアル入力なので自動設定しない
+  };
+
+  // Phase1: supplier_item_id選択ハンドラ
+  const handleSupplierItemSelect = (value: string) => {
+    const selectedSupplierItem = supplierItems.find((si) => si.id === Number(value));
+    if (selectedSupplierItem) {
+      setValue("supplier_item_id", selectedSupplierItem.id);
+      // supplier_idは非推奨だがバックエンド互換性のため設定
+      setValue("supplier_id", selectedSupplierItem.supplier_id);
+    }
   };
 
   const handleFormSubmit = (data: CustomerItemFormData) => {
     onSubmit(data as CreateCustomerItemRequest);
   };
 
-  const isLoading = isLoadingCustomers || isLoadingProducts;
+  const isLoading = isLoadingCustomers || isLoadingProducts || isLoadingSupplierItems;
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
@@ -102,9 +125,12 @@ export function CustomerItemForm({
         isLoading={isLoading}
         customerOptions={customerOptions}
         productOptions={productOptions}
+        supplierItemOptions={supplierItemOptions}
         isLoadingCustomers={isLoadingCustomers}
         isLoadingProducts={isLoadingProducts}
+        isLoadingSupplierItems={isLoadingSupplierItems}
         onProductSelect={handleProductSelect}
+        onSupplierItemSelect={handleSupplierItemSelect}
       />
 
       {/* Submit Buttons */}

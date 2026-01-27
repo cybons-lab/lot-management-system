@@ -2,31 +2,40 @@ import { http } from "@/shared/api/http-client";
 
 export interface SupplierProduct {
   id: number;
-  product_id: number;
+  product_id: number | null; // Phase1: オプション
   supplier_id: number;
+  maker_part_no: string; // Phase1: 必須（SKUキー）
   is_primary: boolean;
   lead_time_days: number | null;
-  product_code: string;
-  product_name: string;
+  display_name: string | null; // Phase1: 新規追加
+  notes: string | null; // Phase1: 新規追加
+  product_code: string | null;
+  product_name: string | null;
   supplier_code: string;
   supplier_name: string;
   created_at: string;
   updated_at: string;
+  valid_to: string;
   // UI helper fields (optional)
   order_unit?: string;
   order_lot_size?: number;
 }
 
 export interface SupplierProductCreate {
-  product_id: number;
+  product_id?: number | null; // Phase1: オプション
   supplier_id: number;
+  maker_part_no: string; // Phase1: 必須
   is_primary?: boolean;
   lead_time_days?: number | null;
+  display_name?: string | null; // Phase1: 新規追加
+  notes?: string | null; // Phase1: 新規追加
 }
 
 export interface SupplierProductUpdate {
   is_primary?: boolean;
   lead_time_days?: number | null;
+  display_name?: string | null; // Phase1: 新規追加
+  notes?: string | null; // Phase1: 新規追加
 }
 
 const BASE_PATH = "masters/supplier-items";
@@ -54,3 +63,6 @@ export async function updateSupplierProduct(
 export async function deleteSupplierProduct(id: number): Promise<void> {
   return http.deleteVoid(`${BASE_PATH}/${id}`);
 }
+
+// Alias for convenience
+export const getSupplierProducts = fetchSupplierProducts;

@@ -84,6 +84,8 @@ export function SupplierProductsTable({
           if (row.product_code && row.product_name) {
             return `${row.product_code} - ${row.product_name}`;
           }
+          // Phase1: product_idはオプション
+          if (row.product_id === null) return "-";
           const p = productMap.get(row.product_id);
           if (!p) return `ID: ${row.product_id}`;
           return `${p.code} - ${p.name}`;
