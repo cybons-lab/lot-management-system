@@ -124,7 +124,10 @@ r"""引当APIルーター.
     → APIはクライアントに優しい表現を使う
 """
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.application.services.allocations import actions, cancel, fefo
@@ -161,6 +164,7 @@ from app.presentation.schemas.allocations.allocations_schema import (
 
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def _map_fefo_preview(result) -> FefoPreviewResponse:
@@ -223,8 +227,9 @@ def preview_allocation(
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except SQLAlchemyError as e:
+        logger.exception("Database error while previewing allocation.")
+        raise HTTPException(status_code=500, detail="Database error") from e
 
 
 @router.post("/commit", response_model=AllocationCommitResponse)
@@ -268,8 +273,9 @@ def commit_allocation(
         raise HTTPException(status_code=400, detail=str(e))
     except AllocationCommitError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception:
-        raise  # グローバルハンドラに委譲
+    except SQLAlchemyError as e:
+        logger.exception("Database error while committing allocation.")
+        raise HTTPException(status_code=500, detail="Database error") from e
 
 
 @router.post("/drag-assign", response_model=ManualAllocationResponse)
@@ -315,8 +321,9 @@ def manual_allocate(
         raise HTTPException(status_code=400, detail=str(e))
     except AllocationCommitError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception:
-        raise  # グローバルハンドラに委譲
+    except SQLAlchemyError as e:
+        logger.exception("Database error while creating manual allocation.")
+        raise HTTPException(status_code=500, detail="Database error") from e
 
 
 @router.patch("/{allocation_id}/confirm", response_model=HardAllocationConfirmResponse)
@@ -504,8 +511,9 @@ async def bulk_auto_allocate(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception:
-        raise  # グローバルハンドラに委譲
+    except SQLAlchemyError as e:
+        logger.exception("Database error while running bulk auto allocation.")
+        raise HTTPException(status_code=500, detail="Database error") from e
 
 
 @router.post("/{allocation_id}/cancel", response_model=ReservationCancelResponse)
