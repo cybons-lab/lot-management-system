@@ -310,6 +310,7 @@ class OcrResultEdit(Base):
     lot_no_2: Mapped[str | None] = mapped_column(String(100), nullable=True)
     quantity_2: Mapped[str | None] = mapped_column(String(50), nullable=True)
     inbound_no: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    inbound_no_2: Mapped[str | None] = mapped_column(String(100), nullable=True)
     shipping_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     shipping_slip_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     shipping_slip_text_edited: Mapped[bool] = mapped_column(

@@ -12,6 +12,7 @@ import csv
 import io
 import logging
 import mimetypes
+import shutil
 import time
 import uuid
 import zipfile
@@ -188,21 +189,32 @@ class SmartReadPadRunnerService:
             long_data, errors = self._transform_to_long(wide_data)
             self._update_heartbeat(run)
 
-            # 結果をDBに保存
+            # 9. 結果をDBに保存 (ステータス更新前に行う)
             self._save_results(run, config.id, task_id, export_id, wide_data, long_data)
 
-            # ★★★ 成功判定: EXPORT_STARTEDを通過していることを確認 ★★★
+            # 成功判定: EXPORT_STARTEDを通過していることを確認
             if not run.export_id:
                 raise RuntimeError("Export工程を通過していません（export_idが未設定）")
 
-            # 成功
+            # 10. 処理済みファイルの移動 (Success)
+            if watch_dir and filenames:
+                for filename in filenames:
+                    try:
+                        self._move_watch_file(watch_dir, filename, "Done")
+                    except Exception as e:
+                        logger.warning(
+                            f"[PAD Run {run_id}] Failed to move file {filename} to Done: {e}"
+                        )
+
+            # 11. 成功ステータスへ更新
             run.status = "SUCCEEDED"
             run.wide_data_count = len(wide_data)
             run.long_data_count = len(long_data)
             run.completed_at = datetime.now()
+
             self.session.commit()
             logger.info(
-                f"[PAD Run {run_id}] Completed: {len(wide_data)} wide, {len(long_data)} long"
+                f"[PAD Run {run_id}] Completed Successfully: {len(wide_data)} wide, {len(long_data)} long"
             )
 
         except Exception as e:
@@ -331,6 +343,31 @@ class SmartReadPadRunnerService:
         run.completed_at = datetime.now()
         self.session.commit()
         logger.error(f"[PAD Run {run.run_id}] Failed: {error_message}")
+
+        # 失敗ファイルの移動
+        try:
+            config = self._get_config(run.config_id)
+            if config and config.watch_dir and run.filenames:
+                watch_dir = Path(config.watch_dir)
+                for filename in run.filenames:
+                    try:
+                        self._move_watch_file(watch_dir, filename, "Error")
+                    except Exception as e:
+                        logger.warning(f"Failed to move file {filename} to Error: {e}")
+        except Exception as e:
+            logger.error(f"Failed to process file moving for failed run: {e}")
+
+    def _move_watch_file(self, watch_dir: Path, filename: str, subdir: str) -> None:
+        """処理済みファイルをサブフォルダへ移動."""
+        destination_dir = watch_dir / subdir
+        destination_dir.mkdir(parents=True, exist_ok=True)
+        source_path = watch_dir / filename
+        destination_path = destination_dir / filename
+
+        # ファイルが存在する場合のみ移動
+        if source_path.exists():
+            shutil.move(str(source_path), str(destination_path))
+            logger.info(f"[PAD Runner] Moved {filename} to {subdir}")
 
     def _parse_template_ids(self, template_ids_str: str | None) -> list[str] | None:
         if not template_ids_str:

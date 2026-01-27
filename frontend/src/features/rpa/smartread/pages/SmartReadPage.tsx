@@ -1,18 +1,18 @@
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function */
 /**
  * SmartReadPage
  * SmartRead OCR PDFインポートページ
  */
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Settings, Loader2, RefreshCw, FileText } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Settings, Loader2, RefreshCw } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { diagnoseWatchDirFile } from "../api";
 import { SmartReadConfigSelector } from "../components/SmartReadConfigSelector";
 import { SmartReadManagedTaskList } from "../components/SmartReadManagedTaskList";
 import { SmartReadPadRunStatusList } from "../components/SmartReadPadRunStatusList";
-import { SmartReadResultView } from "../components/SmartReadResultView";
 import { SmartReadSavedDataList } from "../components/SmartReadSavedDataList";
 import { SmartReadSettingsModal } from "../components/SmartReadSettingsModal";
 import { SmartReadUploadPanel } from "../components/SmartReadUploadPanel";
@@ -39,6 +39,7 @@ import {
   TabsTrigger,
 } from "@/components/ui";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -50,6 +51,7 @@ export function SmartReadPage() {
   const [activeTab, setActiveTab] = useState("import");
   const [isDiagnosing, setIsDiagnosing] = useState(false);
 
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: configs, isLoading: configsLoading } = useSmartReadConfigs();
   const {
@@ -74,6 +76,46 @@ export function SmartReadPage() {
       }
     }
   }, [configsLoading, configs, selectedConfigId]);
+
+  // Auto-navigate to OCR Results when a run succeeds
+  const prevRunsRef = useRef<string[]>([]);
+  const isInitialLoadRef = useRef(true);
+  const pageMountedAt = useRef(new Date());
+
+  useEffect(() => {
+    if (padRuns?.runs) {
+      if (isInitialLoadRef.current) {
+        // 初回ロード時は既存の成功済みタスクを「既知」として記録するだけ
+        prevRunsRef.current = padRuns.runs
+          .filter((run) => run.status === "SUCCEEDED")
+          .map((run) => run.run_id);
+        isInitialLoadRef.current = false;
+        return;
+      }
+
+      const succeededRun = padRuns.runs.find((run) => {
+        // 成功している 且つ まだ遷移済みでない 且つ ページを開いた後に作成されたタスクであること
+        const isSucceeded = run.status === "SUCCEEDED";
+        const isAlreadyProcessed = prevRunsRef.current.includes(run.run_id);
+        const createdAt = new Date(run.created_at);
+        const isNewRun = createdAt >= pageMountedAt.current;
+
+        return isSucceeded && !isAlreadyProcessed && isNewRun;
+      });
+
+      if (succeededRun) {
+        logger.info("新しく処理が完了しました。結果一覧へ移動します。", {
+          run_id: succeededRun.run_id,
+        });
+        navigate(ROUTES.OCR_RESULTS.LIST);
+      }
+
+      // 成功済みリストを更新
+      prevRunsRef.current = padRuns.runs
+        .filter((run) => run.status === "SUCCEEDED")
+        .map((run) => run.run_id);
+    }
+  }, [padRuns, navigate]);
 
   const handleProcessWatchFiles = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0) return;
@@ -174,11 +216,10 @@ export function SmartReadPage() {
           onValueChange={setActiveTab}
           className="flex-1 flex flex-col min-h-0"
         >
-          <TabsList className="grid w-full grid-cols-4 shrink-0">
+          <TabsList className="grid w-full grid-cols-3 shrink-0">
             <TabsTrigger value="import">1. インポート</TabsTrigger>
             <TabsTrigger value="tasks">2. タスク</TabsTrigger>
-            <TabsTrigger value="detail">3. 結果詳細</TabsTrigger>
-            <TabsTrigger value="saved">4. 保存済みデータ</TabsTrigger>
+            <TabsTrigger value="saved">3. 保存済みデータ</TabsTrigger>
           </TabsList>
 
           {/* Tab 1: Import (Watch Folder & Upload) */}
@@ -317,29 +358,8 @@ export function SmartReadPage() {
                   configId={selectedConfigId}
                   selectedTaskId={selectedTaskId}
                   onSelectTask={handleSelectTask}
-                  onViewDetail={() => setActiveTab("detail")}
                 />
               </div>
-            </div>
-          </TabsContent>
-
-          {/* Tab 3: Detail (Result View) */}
-          <TabsContent value="detail" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
-            <div className="h-full">
-              {!selectedConfigId ? (
-                <Card className="h-full flex items-center justify-center text-gray-400">
-                  <p>設定を選択してください</p>
-                </Card>
-              ) : selectedTaskId ? (
-                <SmartReadResultView configId={selectedConfigId} taskId={selectedTaskId} />
-              ) : (
-                <Card className="h-full flex items-center justify-center text-gray-400">
-                  <div className="flex flex-col items-center gap-2">
-                    <FileText className="h-8 w-8 text-gray-300" />
-                    <p>タスクタブからタスクを選択してください</p>
-                  </div>
-                </Card>
-              )}
             </div>
           </TabsContent>
 

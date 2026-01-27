@@ -58,6 +58,7 @@ class OcrResultItem(BaseModel):
     manual_lot_no_2: str | None = None
     manual_quantity_2: str | None = None
     manual_inbound_no: str | None = None
+    manual_inbound_no_2: str | None = None  # Added
     manual_shipping_date: date | None = None
     manual_shipping_slip_text: str | None = None
     manual_shipping_slip_text_edited: bool | None = None
@@ -125,23 +126,25 @@ class OcrResultsExportRow(BaseModel):
 
     # 手入力ロット情報
     lot_no_1: str | None = None
-    quantity_1: str | None = None
+    quantity_1: str | None = None  # 受注数量-1
+    inbound_no_1: str | None = None  # 入庫No-1 (renamed from inbound_no)
     lot_no_2: str | None = None
-    quantity_2: str | None = None
-    inbound_no: str | None = None
-    shipping_date: str | None = None  # YYYY/MM/DD形式
-    shipping_slip_text: str | None = None
+    quantity_2: str | None = None  # 受注数量-2
+    inbound_no_2: str | None = None  # 入庫No-2
+
+    shipping_date: str | None = None  # YYYY/MM/DD形式 (出荷予定日)
+    shipping_slip_text: str | None = None  # 出荷票テキスト (編集後/計算後)
 
     # OCR由来
     data_source: str | None = None  # 取得元（固定値"OCR"）
     material_code: str | None = None
     jiku_code: str | None = None
-    delivery_date: str | None = None
-    delivery_quantity: str | None = None
+    delivery_date: str | None = None  # 受注納期
+    delivery_quantity: str | None = None  # 納入量
     item_no: str | None = None
-    customer_part_no: str | None = None
-    maker_part_no: str | None = None
-    order_unit: str | None = None
+    customer_part_no: str | None = None  # 先方品番
+    maker_part_no: str | None = None  # メーカー品番
+    order_unit: str | None = None  # 数量単位
 
     # マスタ由来
     customer_name: str | None = None  # 得意先
@@ -151,7 +154,10 @@ class OcrResultsExportRow(BaseModel):
     shipping_warehouse_name: str | None = None  # 出荷倉庫名称
     delivery_place_code: str | None = None  # 納入場所
     delivery_place_name: str | None = None  # 納入場所名称
+
+    shipping_slip_text_master: str | None = None  # 出荷票テキスト(マスタ) - 備考の左
     remarks: str | None = None  # 備考
+    transport_lt: int | None = None  # 輸送LT
 
     model_config = {"from_attributes": True}
 
@@ -164,6 +170,7 @@ class OcrResultEditRequest(BaseModel):
     lot_no_2: str | None = None
     quantity_2: str | None = None
     inbound_no: str | None = None
+    inbound_no_2: str | None = None  # Added
     shipping_date: date | None = None
     shipping_slip_text: str | None = None
     shipping_slip_text_edited: bool | None = None
@@ -185,6 +192,7 @@ class OcrResultEditResponse(BaseModel):
     lot_no_2: str | None = None
     quantity_2: str | None = None
     inbound_no: str | None = None
+    inbound_no_2: str | None = None  # Added
     shipping_date: date | None = None
     shipping_slip_text: str | None = None
     shipping_slip_text_edited: bool
@@ -513,7 +521,8 @@ async def export_ocr_results(
         quantity_1 = row.get("manual_quantity_1")
         lot_no_2 = row.get("manual_lot_no_2")
         quantity_2 = row.get("manual_quantity_2")
-        inbound_no = row.get("manual_inbound_no") or row.get("inbound_no")
+        inbound_no_1 = row.get("manual_inbound_no") or row.get("inbound_no")
+        inbound_no_2 = row.get("manual_inbound_no_2")
 
         # 出荷日: 手入力値をそのまま使用（自動計算は画面表示時のみ）
         # Excelエクスポート用にYYYY/MM/DD形式の文字列に変換
@@ -525,22 +534,28 @@ async def export_ocr_results(
             if row.get("manual_shipping_slip_text_edited")
             else build_shipping_slip_text(
                 row.get("shipping_slip_text"),
-                inbound_no,
+                inbound_no_1,
                 lot_no_1 or row.get("lot_no"),
                 quantity_1,
                 lot_no_2,
                 quantity_2,
             )
         )
+
+        # マスタからの追加フィールド
+        shipping_slip_text_master = row.get("shipping_slip_text")
+        transport_lt = row.get("transport_lt_days")
+
         export_rows.append(
             OcrResultsExportRow.model_validate(
                 {
                     # 手入力ロット情報
                     "lot_no_1": lot_no_1,
                     "quantity_1": quantity_1,
+                    "inbound_no_1": inbound_no_1,
                     "lot_no_2": lot_no_2,
                     "quantity_2": quantity_2,
-                    "inbound_no": inbound_no,
+                    "inbound_no_2": inbound_no_2,
                     "shipping_date": shipping_date,
                     "shipping_slip_text": shipping_slip_text,
                     # 取得元（SmartRead経由なので固定値"OCR"）
@@ -561,7 +576,9 @@ async def export_ocr_results(
                     "shipping_warehouse_name": row.get("shipping_warehouse_name"),
                     "delivery_place_code": row.get("delivery_place_code"),
                     "delivery_place_name": row.get("delivery_place_name"),
+                    "shipping_slip_text_master": shipping_slip_text_master,
                     "remarks": remarks,
+                    "transport_lt": transport_lt,
                 }
             )
         )
@@ -569,16 +586,17 @@ async def export_ocr_results(
     # カラム順序と日本語ヘッダーのマッピング（業務要件に従った順序）
     column_map = {
         "lot_no_1": "LotNo-1",
-        "quantity_1": "数量-1",
+        "quantity_1": "受注数量-1",
+        "inbound_no_1": "入庫No-1",
         "lot_no_2": "LotNo-2",
-        "quantity_2": "数量-2",
-        "inbound_no": "入庫No",
-        "shipping_date": "出荷日",
+        "quantity_2": "受注数量-2",
+        "inbound_no_2": "入庫No-2",
+        "shipping_date": "出荷予定日",
         "shipping_slip_text": "出荷票テキスト",
         "data_source": "取得元",
         "material_code": "材質コード",
         "jiku_code": "次区",
-        "delivery_date": "納期",
+        "delivery_date": "受注納期",
         "delivery_quantity": "納入量",
         "item_no": "アイテムNo",
         "customer_part_no": "先方品番",
@@ -591,7 +609,9 @@ async def export_ocr_results(
         "shipping_warehouse_name": "出荷倉庫名称",
         "delivery_place_code": "納入場所",
         "delivery_place_name": "納入場所名称",
+        "shipping_slip_text_master": "出荷票テキスト",
         "remarks": "備考",
+        "transport_lt": "輸送LT",
     }
 
     filename = f"ocr_results_{datetime.now().strftime('%Y%m%d%H%M%S')}"

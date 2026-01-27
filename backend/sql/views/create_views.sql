@@ -530,6 +530,7 @@ SELECT
     oe.lot_no_2 AS manual_lot_no_2,
     oe.quantity_2 AS manual_quantity_2,
     oe.inbound_no AS manual_inbound_no,
+    oe.inbound_no_2 AS manual_inbound_no_2,
     oe.shipping_date AS manual_shipping_date,
     oe.shipping_slip_text AS manual_shipping_slip_text,
     oe.shipping_slip_text_edited AS manual_shipping_slip_text_edited,

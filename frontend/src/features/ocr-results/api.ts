@@ -34,6 +34,7 @@ export interface OcrResultItem {
   manual_lot_no_2: string | null;
   manual_quantity_2: string | null;
   manual_inbound_no: string | null;
+  manual_inbound_no_2: string | null;
   manual_shipping_date: string | null;
   manual_shipping_slip_text: string | null;
   manual_shipping_slip_text_edited: boolean | null;
@@ -98,6 +99,7 @@ export interface OcrResultEditPayload {
   lot_no_2?: string | null;
   quantity_2?: string | null;
   inbound_no?: string | null;
+  inbound_no_2?: string | null;
   shipping_date?: string | null;
   shipping_slip_text?: string | null;
   shipping_slip_text_edited?: boolean | null;
@@ -117,6 +119,7 @@ export interface OcrResultEditResponse {
   lot_no_2: string | null;
   quantity_2: string | null;
   inbound_no: string | null;
+  inbound_no_2: string | null;
   shipping_date: string | null;
   shipping_slip_text: string | null;
   shipping_slip_text_edited: boolean;
