@@ -75,12 +75,12 @@ export function CustomerItemForm({
     [customers],
   );
 
-  // 製品選択オプション - 製品コード（製品名）形式
+  // Phase1注意: 製品選択はPhase2用グルーピング。製品名のみ表示
   const productOptions = useMemo(
     () =>
       products.map((p) => ({
         value: String(p.id),
-        label: `${p.product_code}（${p.product_name}）`,
+        label: p.product_name, // Phase1: product_codeは非表示（maker_part_codeと重複するため）
       })),
     [products],
   );

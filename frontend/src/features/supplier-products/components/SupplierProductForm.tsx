@@ -152,7 +152,7 @@ export function SupplierProductForm({
               </FormLabel>
               <Select
                 value={field.value ? String(field.value) : undefined}
-                onValueChange={(v) => field.onChange(v && v !== "" ? Number(v) : null)}
+                onValueChange={(v) => field.onChange(v === "unselected" ? null : Number(v))}
                 disabled={isEdit}
               >
                 <FormControl>
@@ -161,7 +161,7 @@ export function SupplierProductForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">なし</SelectItem>
+                  <SelectItem value="unselected">なし</SelectItem>
                   {products.map((p) => (
                     <SelectItem key={p.id} value={String(p.id)}>
                       {p.product_code} - {p.product_name}
