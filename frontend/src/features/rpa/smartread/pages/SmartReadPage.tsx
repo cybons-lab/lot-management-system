@@ -80,6 +80,7 @@ export function SmartReadPage() {
   // Auto-navigate to OCR Results when a run succeeds
   const prevRunsRef = useRef<string[]>([]);
   const isInitialLoadRef = useRef(true);
+  const pageMountedAt = useRef(new Date());
 
   useEffect(() => {
     if (padRuns?.runs) {
@@ -92,9 +93,16 @@ export function SmartReadPage() {
         return;
       }
 
-      const succeededRun = padRuns.runs.find(
-        (run) => run.status === "SUCCEEDED" && !prevRunsRef.current.includes(run.run_id),
-      );
+      const succeededRun = padRuns.runs.find((run) => {
+        // 成功している 且つ まだ遷移済みでない 且つ ページを開いた後に作成されたタスクであること
+        const isSucceeded = run.status === "SUCCEEDED";
+        const isAlreadyProcessed = prevRunsRef.current.includes(run.run_id);
+        const createdAt = new Date(run.created_at);
+        const isNewRun = createdAt >= pageMountedAt.current;
+
+        return isSucceeded && !isAlreadyProcessed && isNewRun;
+      });
+
       if (succeededRun) {
         logger.info("新しく処理が完了しました。結果一覧へ移動します。", {
           run_id: succeededRun.run_id,

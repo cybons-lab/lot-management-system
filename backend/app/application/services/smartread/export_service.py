@@ -462,10 +462,22 @@ class SmartReadExportService(SmartReadBaseService):
                     row_fingerprint=fingerprint,
                 )
                 self.session.add(wide_record)
-                self.session.flush()  # 1行ずつIDを確定させる
-                wide_id_by_index[row_index] = wide_record.id
-                fingerprint_to_id[fingerprint] = wide_record.id
+                # ループ内での flush() は極力避ける。
+                # ただし、wide_record.id が後続の縦持ち保存で必要なため、一括して後で行う。
                 new_wide_count += 1
+                # IDが必要な新規レコードを一旦リストへ保持
+                if not hasattr(self, "_pending_wide_records"):
+                    self._pending_wide_records = []
+                self._pending_wide_records.append((row_index, wide_record, fingerprint))
+
+        # まとめて flush して ID を確定
+        if new_wide_count > 0:
+            self.session.flush()
+            # IDをDBから取得してキャッシュを更新
+            for row_idx, record, fp in getattr(self, "_pending_wide_records", []):
+                wide_id_by_index[row_idx] = record.id
+                fingerprint_to_id[fp] = record.id
+            delattr(self, "_pending_wide_records")
 
         # 4. 縦持ちデータの保存（重複防止付き）
         # 既存の縦持ちデータを削除（同じwide_data_idに対する再変換に対応）
