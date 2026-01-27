@@ -30413,6 +30413,17 @@
             ],
             "title": "Inbound No"
           },
+          "inbound_no_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inbound No 2"
+          },
           "shipping_date": {
             "anyOf": [
               {
@@ -30585,6 +30596,17 @@
               }
             ],
             "title": "Inbound No"
+          },
+          "inbound_no_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inbound No 2"
           },
           "shipping_date": {
             "anyOf": [
@@ -30898,6 +30920,17 @@
               }
             ],
             "title": "Manual Inbound No"
+          },
+          "manual_inbound_no_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Inbound No 2"
           },
           "manual_shipping_date": {
             "anyOf": [

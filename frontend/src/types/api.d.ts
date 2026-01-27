@@ -12086,6 +12086,8 @@ export interface components {
       quantity_2?: string | null;
       /** Inbound No */
       inbound_no?: string | null;
+      /** Inbound No 2 */
+      inbound_no_2?: string | null;
       /** Shipping Date */
       shipping_date?: string | null;
       /** Shipping Slip Text */
@@ -12126,6 +12128,8 @@ export interface components {
       quantity_2?: string | null;
       /** Inbound No */
       inbound_no?: string | null;
+      /** Inbound No 2 */
+      inbound_no_2?: string | null;
       /** Shipping Date */
       shipping_date?: string | null;
       /** Shipping Slip Text */
@@ -12213,6 +12217,8 @@ export interface components {
       manual_quantity_2?: string | null;
       /** Manual Inbound No */
       manual_inbound_no?: string | null;
+      /** Manual Inbound No 2 */
+      manual_inbound_no_2?: string | null;
       /** Manual Shipping Date */
       manual_shipping_date?: string | null;
       /** Manual Shipping Slip Text */
