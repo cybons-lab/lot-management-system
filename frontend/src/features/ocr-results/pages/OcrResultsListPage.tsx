@@ -174,7 +174,8 @@ type RowInputState = {
   quantity1: string;
   lotNo2: string;
   quantity2: string;
-  inboundNo: string;
+  inboundNo1: string;
+  inboundNo2: string;
   shippingDate: string;
   shippingSlipText: string;
   shippingSlipTextEdited: boolean;
@@ -210,7 +211,8 @@ const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
   quantity1: orEmpty(row.manual_quantity_1),
   lotNo2: orEmpty(row.manual_lot_no_2),
   quantity2: orEmpty(row.manual_quantity_2),
-  inboundNo: row.manual_inbound_no || orEmpty(row.inbound_no),
+  inboundNo1: row.manual_inbound_no || orEmpty(row.inbound_no),
+  inboundNo2: orEmpty(row.manual_inbound_no_2),
   shippingDate: orEmpty(row.manual_shipping_date),
   shippingSlipText: orEmpty(row.manual_shipping_slip_text),
   shippingSlipTextEdited: row.manual_shipping_slip_text_edited || false,
@@ -532,7 +534,7 @@ const buildShippingSlipText = (
   if (!template) return "";
 
   const { hasValidLot } = validateLotInfo(input);
-  const hasInboundNo = Boolean(input.inboundNo);
+  const hasInboundNo = Boolean(input.inboundNo1);
 
   // ロット・数量・入庫Noが全て空の場合、置換せずそのまま返す
   if (!hasValidLot && !hasInboundNo) {
@@ -546,8 +548,9 @@ const buildShippingSlipText = (
   }
 
   // 入庫番号の置換
+  // 入庫番号の置換
   if (hasInboundNo) {
-    result = result.replace(/入庫番号/g, input.inboundNo);
+    result = result.replace(/入庫番号/g, input.inboundNo1);
   }
 
   // 日付情報の置換
@@ -581,7 +584,8 @@ export function OcrResultsListPage() {
       ["quantity1", "quantity_1"],
       ["lotNo2", "lot_no_2"],
       ["quantity2", "quantity_2"],
-      ["inboundNo", "inbound_no"],
+      ["inboundNo1", "inbound_no"],
+      ["inboundNo2", "inbound_no_2"],
       ["shippingDate", "shipping_date"],
       ["shippingSlipText", "shipping_slip_text"],
       ["jikuCode", "jiku_code"],
@@ -779,9 +783,15 @@ export function OcrResultsListPage() {
         minWidth: 160,
       },
       {
-        id: "inbound_no_input",
-        header: "入庫No",
-        accessor: (row) => <EditableTextCell row={row} field="inboundNo" />,
+        id: "inbound_no_1_input",
+        header: "入庫No(1)",
+        accessor: (row) => <EditableTextCell row={row} field="inboundNo1" />,
+        minWidth: 120,
+      },
+      {
+        id: "inbound_no_2_input",
+        header: "入庫No(2)",
+        accessor: (row) => <EditableTextCell row={row} field="inboundNo2" />,
         minWidth: 120,
       },
       {
