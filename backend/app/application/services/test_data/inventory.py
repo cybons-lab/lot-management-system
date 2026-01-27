@@ -11,7 +11,7 @@ from app.infrastructure.persistence.models.inventory_models import (
     StockTransactionType,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
-from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.masters_models import ProductGroup, Supplier, Warehouse
 from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
 from .utils import fake
@@ -19,7 +19,7 @@ from .utils import fake
 
 def generate_lots(
     db: Session,
-    products: list[Product],
+    products: list[ProductGroup],
     warehouses: list[Warehouse],
     suppliers: list[Supplier],
     forecast_totals: dict[int, int],  # product_group_id -> total forecast quantity
@@ -208,7 +208,7 @@ def generate_lots(
     if lot_counts:
         print("\n[WARNING] Products with >3 lots after generation:")
         for product_group_id, count in lot_counts:
-            product = db.query(Product).filter(Product.id == product_group_id).first()
+            product = db.query(ProductGroup).filter(ProductGroup.id == product_group_id).first()
             product_code = product.maker_part_code if product else "UNKNOWN"
             print(f"  - Product {product_code} (id={product_group_id}): {count} lots")
     else:

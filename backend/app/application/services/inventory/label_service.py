@@ -47,9 +47,11 @@ class LabelService:
                     id=lot_entity.id,
                     lot_number=lot_entity.lot_number,
                     product_group_id=lot_entity.product_group_id,
-                    product_code=lot_entity.product.maker_part_code if lot_entity.product else "",
-                    product_name=lot_entity.product.product_name
-                    if lot_entity.product
+                    product_code=lot_entity.product_group.maker_part_code
+                    if lot_entity.product_group
+                    else "",
+                    product_name=lot_entity.product_group.product_name
+                    if lot_entity.product_group
                     else "Unknown",
                     supplier_id=lot_entity.supplier_id,
                     supplier_code=lot_entity.supplier.supplier_code

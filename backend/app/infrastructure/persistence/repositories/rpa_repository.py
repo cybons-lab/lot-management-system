@@ -3,7 +3,7 @@ from typing import Any
 from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models.masters_models import CustomerItem, Product
+from app.infrastructure.persistence.models.masters_models import CustomerItem, ProductGroup
 from app.infrastructure.persistence.models.rpa_models import (
     RpaRun,
     RpaRunEvent,
@@ -478,9 +478,9 @@ class RpaRepository:
             .first()
         )
 
-    def find_product_by_maker_part_code(self, code: str) -> Product | None:
+    def find_product_by_maker_part_code(self, code: str) -> ProductGroup | None:
         """メーカー品番で商品検索."""
-        return self.db.query(Product).filter(Product.maker_part_code == code).first()
+        return self.db.query(ProductGroup).filter(ProductGroup.maker_part_code == code).first()
 
     def find_active_lots(
         self,

@@ -46,10 +46,10 @@ class CustomerItemDeliverySettingService:
         Returns:
             ShipmentTextResponse with shipment_text, packing_note, lead_time_days, source
         """
-        # Convert product_id to customer_part_no
+        # Convert product_group_id to customer_part_no
         customer_part_no = self.repository.find_customer_part_no(
             customer_id=customer_id,
-            product_group_id=product_id,
+            product_group_id=product_group_id,
         )
 
         if not customer_part_no:

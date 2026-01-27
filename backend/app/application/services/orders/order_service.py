@@ -114,7 +114,7 @@
    - Step2: 自動的に仮受注作成（FORECAST_LINKED）
    - Step3: 実際の受注が入ったら、仮受注を実受注に変換
    実装:
-   - forecast_reference: "FC-{customer_id}-{delivery_place_id}-{product_id}-{forecast_date}"
+   - forecast_reference: "FC-{customer_id}-{delivery_place_id}-{product_group_id}-{forecast_date}"
    → 予測データとの紐付けキー
    用途:
    - 予測削除時: 関連する仮受注も削除
@@ -232,7 +232,7 @@ class OrderService:
             list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）
         """
         stmt = select(Order).options(  # type: ignore[assignment]
-            selectinload(Order.order_lines).selectinload(OrderLine.product)
+            selectinload(Order.order_lines).selectinload(OrderLine.product_group)
         )
 
         if customer_code:
@@ -256,7 +256,10 @@ class OrderService:
             # with the user's primary suppliers
             has_primary_product = exists(
                 select(OrderLine.id)
-                .join(SupplierItem, SupplierItem.product_group_id == OrderLine.product_group_id)
+                .join(
+                    SupplierItem,
+                    SupplierItem.product_group_id == OrderLine.product_group_id,
+                )
                 .where(
                     OrderLine.order_id == Order.id,
                     SupplierItem.supplier_id.in_(primary_supplier_ids),
@@ -309,7 +312,7 @@ class OrderService:
             .join(Order, OrderLine.order_id == Order.id)
             .options(
                 selectinload(OrderLine.order).selectinload(Order.customer),
-                selectinload(OrderLine.product),
+                selectinload(OrderLine.product_group),
             )
         )
 
@@ -364,7 +367,7 @@ class OrderService:
         stmt = (  # type: ignore[assignment]
             select(Order)
             .options(
-                selectinload(Order.order_lines).selectinload(OrderLine.product),
+                selectinload(Order.order_lines).selectinload(OrderLine.product_group),
                 selectinload(Order.customer),
             )
             .where(Order.id == order_id)
@@ -397,7 +400,7 @@ class OrderService:
 
         # Create order lines
         for line_data in order_data.lines:
-            # Validate product_id exists
+            # Validate product_group_id exists
             product_stmt = select(Product).where(Product.id == line_data.product_group_id)
             product = self.db.execute(product_stmt).scalar_one_or_none()
             if not product:

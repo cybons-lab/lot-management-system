@@ -189,18 +189,18 @@ class InboundReceivingService:
         Returns:
             Generated lot number
         """
-        # Simple implementation: plan_number + product_id + sequence
+        # Simple implementation: plan_number + product_group_id + sequence
         # Count existing lots for this plan and product
         count = (
             self.db.query(func.count(LotReceipt.id))
             .join(LotMaster)
-            .filter(LotMaster.lot_number.like(f"{plan_number}-{product_id}-%"))
+            .filter(LotMaster.lot_number.like(f"{plan_number}-{product_group_id}-%"))
             .scalar()
         )
 
         sequence = count + 1 if count else 1
 
-        return f"{plan_number}-{product_id}-{sequence:03d}"
+        return f"{plan_number}-{product_group_id}-{sequence:03d}"
 
     def _generate_temporary_lot_info(self) -> tuple[str, str]:
         """Generate temporary lot number and UUID key for provisional inbound.
@@ -235,7 +235,7 @@ class InboundReceivingService:
             self.db.query(LotMaster)
             .filter(
                 LotMaster.lot_number == lot_number,
-                LotMaster.product_group_id == product_id,
+                LotMaster.product_group_id == product_group_id,
             )
             .first()
         )
@@ -243,7 +243,7 @@ class InboundReceivingService:
         if not lm:
             lm = LotMaster(
                 lot_number=lot_number,
-                product_group_id=product_id,
+                product_group_id=product_group_id,
                 supplier_id=supplier_id,
             )
             self.db.add(lm)

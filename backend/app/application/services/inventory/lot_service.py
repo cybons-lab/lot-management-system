@@ -306,7 +306,7 @@ class LotService:
         )
         from app.domain.allocation_policy import AllocationPolicy, LockMode
 
-        # Resolve product_code to product_id
+        # Resolve product_code to product_group_id
         product = self.db.query(Product).filter(Product.maker_part_code == product_code).first()
         if not product:
             return []
@@ -428,8 +428,8 @@ class LotService:
 
         query = self.db.query(VLotDetails)
 
-        if product_id is not None:
-            query = query.filter(VLotDetails.product_group_id == product_id)
+        if product_group_id is not None:
+            query = query.filter(VLotDetails.product_group_id == product_group_id)
         elif product_code:
             query = query.filter(VLotDetails.maker_part_code == product_code)
 
@@ -559,7 +559,7 @@ class LotService:
 
         # Exact Filters
         if product_group_id:
-            db_query = db_query.filter(VLotDetails.product_group_id == product_id)
+            db_query = db_query.filter(VLotDetails.product_group_id == product_group_id)
         if warehouse_id:
             db_query = db_query.filter(VLotDetails.warehouse_id == warehouse_id)
         if supplier_code:
@@ -665,7 +665,7 @@ class LotService:
         """
         # Validation
         if not lot_create.product_group_id:
-            raise LotValidationError("product_id は必須です")
+            raise LotValidationError("product_group_id は必須です")
 
         product = self.db.query(Product).filter(Product.id == lot_create.product_group_id).first()
         if not product:
@@ -1075,7 +1075,7 @@ class LotService:
         db_lot = (
             self.db.query(LotReceipt)
             .options(
-                joinedload(LotReceipt.product),
+                joinedload(LotReceipt.product_group),
                 joinedload(LotReceipt.warehouse),
                 joinedload(LotReceipt.supplier),
             )
@@ -1086,7 +1086,7 @@ class LotService:
             raise LotNotFoundError(lot_id)
 
         # LotResponseの必須フィールドをリレーションから取得（削除済みマスタ対応）
-        product = db_lot.product
+        product = db_lot.product_group
         warehouse = db_lot.warehouse
         supplier = db_lot.supplier
 

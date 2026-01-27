@@ -16,14 +16,17 @@ def run_replenishment_recommendations(
     warehouse_id: int = Query(..., description="Warehouse ID"),
     as_of_date: date | None = None,
     method: str = "moving_average_seasonal",
-    product_ids: list[int] | None = Query(None),
+    product_group_ids: list[int] | None = Query(None),
     db: Session = Depends(get_db),
 ):
     """Run replenishment calculation and return recommendations."""
     engine = ReplenishmentEngine(db)
     try:
         recommendations = engine.run(
-            warehouse_id=warehouse_id, product_ids=product_ids, as_of_date=as_of_date, method=method
+            warehouse_id=warehouse_id,
+            product_group_ids=product_group_ids,
+            as_of_date=as_of_date,
+            method=method,
         )
         return recommendations
     except Exception as e:

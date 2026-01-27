@@ -84,10 +84,10 @@ class ProductGroupBulkUpsertRequest(BaseModel):
     )
 
 
-# Backward compatibility aliases
-ProductBase = ProductGroupBase
-ProductCreate = ProductGroupCreate
-ProductUpdate = ProductGroupUpdate
-ProductOut = ProductGroupOut
-ProductBulkRow = ProductGroupBulkRow
-ProductBulkUpsertRequest = ProductGroupBulkUpsertRequest
+# Backward compatibility aliases (type aliases for mypy)
+ProductBase: type[ProductGroupBase] = ProductGroupBase
+ProductCreate: type[ProductGroupCreate] = ProductGroupCreate
+ProductUpdate: type[ProductGroupUpdate] = ProductGroupUpdate
+ProductOut: type[ProductGroupOut] = ProductGroupOut
+ProductBulkRow: type[ProductGroupBulkRow] = ProductGroupBulkRow
+ProductBulkUpsertRequest: type[ProductGroupBulkUpsertRequest] = ProductGroupBulkUpsertRequest

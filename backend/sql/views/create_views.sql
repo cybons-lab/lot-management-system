@@ -52,7 +52,7 @@ GROUP BY lot_id;
 CREATE VIEW public.v_lot_current_stock AS
 SELECT
     lr.id AS lot_id,
-    lr.product_id,
+    lr.product_group_id,
     lr.warehouse_id,
     lr.received_quantity AS current_quantity,
     lr.updated_at AS last_updated
@@ -63,7 +63,7 @@ WHERE lr.received_quantity > 0;
 CREATE VIEW public.v_customer_daily_products AS
 SELECT DISTINCT
     f.customer_id,
-    f.product_id
+    f.product_group_id
 FROM public.forecast_current f
 WHERE f.forecast_period IS NOT NULL;
 
@@ -73,7 +73,7 @@ SELECT
     ol.id AS order_line_id,
     o.id AS order_id,
     o.customer_id,
-    ol.product_id,
+    ol.product_group_id,
     ol.delivery_place_id,
     ol.order_quantity AS quantity
 FROM public.order_lines ol
@@ -101,29 +101,29 @@ FROM public.delivery_places d;
 CREATE VIEW public.v_product_code_to_id AS
 SELECT
     p.maker_part_code AS product_code,
-    p.id AS product_id,
+    p.id AS product_group_id,
     COALESCE(p.product_name, '[削除済み製品]') AS product_name,
     CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS is_deleted
-FROM public.products p;
+FROM public.product_groups p;
 
 -- フォーキャスト-受注ペアビュー
 CREATE VIEW public.v_forecast_order_pairs AS
 SELECT DISTINCT
     f.id AS forecast_id,
     f.customer_id,
-    f.product_id,
+    f.product_group_id,
     o.id AS order_id,
     ol.delivery_place_id
 FROM public.forecast_current f
 JOIN public.orders o ON o.customer_id = f.customer_id
 JOIN public.order_lines ol ON ol.order_id = o.id
-    AND ol.product_id = f.product_id;
+    AND ol.product_group_id = f.product_group_id;
 
 -- v_lot_available_qty (B-Plan: lot_receipts + withdrawal calc)
 CREATE VIEW public.v_lot_available_qty AS
 SELECT 
     lr.id AS lot_id,
-    lr.product_id,
+    lr.product_group_id,
     lr.warehouse_id,
     GREATEST(
         lr.received_quantity 
@@ -155,7 +155,7 @@ SELECT
     lr.id AS receipt_id,
     lm.id AS lot_master_id,
     lm.lot_number,
-    lr.product_id,
+    lr.product_group_id,
     p.maker_part_code AS product_code,
     p.product_name,
     lr.warehouse_id,
@@ -193,7 +193,7 @@ SELECT
     END AS days_to_expiry
 FROM public.lot_receipts lr
 JOIN public.lot_master lm ON lr.lot_master_id = lm.id
-LEFT JOIN public.products p ON lr.product_id = p.id
+LEFT JOIN public.product_groups p ON lr.product_group_id = p.id
 LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON lm.supplier_id = s.id
 LEFT JOIN (
@@ -214,7 +214,7 @@ COMMENT ON VIEW public.v_lot_receipt_stock IS '在庫一覧（残量は集計で
 -- v_inventory_summary (B-Plan: lot_receipts base)
 CREATE VIEW public.v_inventory_summary AS
 SELECT
-  pw.product_id,
+  pw.product_group_id,
   pw.warehouse_id,
   COALESCE(agg.active_lot_count, 0) AS active_lot_count,
   COALESCE(agg.total_quantity, 0) AS total_quantity,
@@ -232,7 +232,7 @@ SELECT
 FROM public.product_warehouse pw
 LEFT JOIN (
   SELECT
-    lrs.product_id,
+    lrs.product_group_id,
     lrs.warehouse_id,
     COUNT(*) AS active_lot_count,
     SUM(lrs.remaining_quantity) AS total_quantity,
@@ -246,10 +246,10 @@ LEFT JOIN (
     ) AS available_with_provisional,
     MAX(lrs.updated_at) AS last_updated
   FROM public.v_lot_receipt_stock lrs
-  LEFT JOIN public.inbound_plan_lines ipl ON lrs.product_id = ipl.product_id
+  LEFT JOIN public.inbound_plan_lines ipl ON lrs.product_group_id = ipl.product_group_id
   LEFT JOIN public.inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
-  GROUP BY lrs.product_id, lrs.warehouse_id
-) agg ON agg.product_id = pw.product_id AND agg.warehouse_id = pw.warehouse_id
+  GROUP BY lrs.product_group_id, lrs.warehouse_id
+) agg ON agg.product_group_id = pw.product_group_id AND agg.warehouse_id = pw.warehouse_id
 WHERE pw.is_active = true;
 
 COMMENT ON VIEW public.v_inventory_summary IS '在庫集計ビュー（product_warehouse起点、lot_receipts対応）';
@@ -259,7 +259,7 @@ CREATE VIEW public.v_lot_details AS
 SELECT
     lr.id AS lot_id,
     lm.lot_number,
-    lr.product_id,
+    lr.product_group_id,
     COALESCE(p.maker_part_code, '') AS maker_part_code,
     COALESCE(p.product_name, '[削除済み製品]') AS product_name,
     lr.warehouse_id,
@@ -331,7 +331,7 @@ FROM public.lot_receipts lr
 JOIN public.lot_master lm ON lr.lot_master_id = lm.id
 LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
 LEFT JOIN public.v_lot_active_reservations lar ON lr.id = lar.lot_id
-LEFT JOIN public.products p ON lr.product_id = p.id
+LEFT JOIN public.product_groups p ON lr.product_group_id = p.id
 LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON lm.supplier_id = s.id
 LEFT JOIN public.supplier_items si ON lr.supplier_item_id = si.id
@@ -358,7 +358,7 @@ CREATE VIEW public.v_candidate_lots_by_order_line AS
 SELECT 
     c.order_line_id,
     l.lot_id,
-    l.product_id,
+    l.product_group_id,
     l.warehouse_id,
     l.available_qty,
     l.receipt_date,
@@ -366,9 +366,9 @@ SELECT
 FROM public.v_order_line_context c
 JOIN public.v_customer_daily_products f 
     ON f.customer_id = c.customer_id 
-    AND f.product_id = c.product_id
+    AND f.product_group_id = c.product_group_id
 JOIN public.v_lot_available_qty l 
-    ON l.product_id = c.product_id 
+    ON l.product_group_id = c.product_group_id 
     AND l.available_qty > 0
 ORDER BY 
     c.order_line_id, 
@@ -385,7 +385,7 @@ SELECT
     COALESCE(c.customer_code, '') AS customer_code,
     COALESCE(c.customer_name, '[削除済み得意先]') AS customer_name,
     ol.id AS line_id,
-    ol.product_id,
+    ol.product_group_id,
     ol.delivery_date,
     ol.order_quantity,
     ol.unit,
@@ -409,9 +409,9 @@ SELECT
 FROM public.orders o
 LEFT JOIN public.customers c ON o.customer_id = c.id
 LEFT JOIN public.order_lines ol ON ol.order_id = o.id
-LEFT JOIN public.products p ON ol.product_id = p.id
+LEFT JOIN public.product_groups p ON ol.product_group_id = p.id
 LEFT JOIN public.delivery_places dp ON ol.delivery_place_id = dp.id
-LEFT JOIN public.customer_items ci ON ci.customer_id = o.customer_id AND ci.product_id = ol.product_id
+LEFT JOIN public.customer_items ci ON ci.customer_id = o.customer_id AND ci.product_group_id = ol.product_group_id
 LEFT JOIN public.suppliers s ON ci.supplier_id = s.id
 LEFT JOIN (
     SELECT source_id, SUM(reserved_qty) as allocated_qty

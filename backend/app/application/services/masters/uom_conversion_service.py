@@ -32,7 +32,7 @@ class UomConversionService(
             ProductUomConversion | None,
             self.db.query(ProductUomConversion)
             .filter(
-                ProductUomConversion.product_group_id == product_id,
+                ProductUomConversion.product_group_id == product_group_id,
                 ProductUomConversion.external_unit == external_unit,
             )
             .first(),
@@ -148,7 +148,7 @@ class UomConversionService(
         return conversion
 
     def bulk_upsert(self, rows: list[UomConversionBulkRow]) -> BulkUpsertResponse:
-        """Bulk upsert UOM conversions by composite key (product_id,
+        """Bulk upsert UOM conversions by composite key (product_group_id,
         external_unit).
 
         Args:
@@ -157,7 +157,7 @@ class UomConversionService(
         Returns:
             BulkUpsertResponse with summary and errors
         """
-        from app.infrastructure.persistence.models.masters_models import Product
+        from app.infrastructure.persistence.models.masters_models import ProductGroup
 
         summary = {"total": 0, "created": 0, "updated": 0, "failed": 0}
         errors = []
@@ -167,8 +167,8 @@ class UomConversionService(
 
         # 2. Resolve IDs
         products = (
-            self.db.query(Product.product_code, Product.id)  # type: ignore[attr-defined]
-            .filter(Product.product_code.in_(product_codes))  # type: ignore[attr-defined]
+            self.db.query(ProductGroup.product_code, ProductGroup.id)  # type: ignore[attr-defined]
+            .filter(ProductGroup.product_code.in_(product_codes))  # type: ignore[attr-defined]
             .all()
         )
         product_map = {code: id for code, id in products}
@@ -177,12 +177,12 @@ class UomConversionService(
         for row in rows:
             try:
                 # Resolve IDs
-                product_id = product_map.get(row.product_code)
+                product_group_id = product_map.get(row.product_code)
                 if not product_group_id:
                     raise ValueError(f"Product code not found: {row.product_code}")
 
                 # Check if UOM conversion exists by composite key
-                existing = self.get_by_key(product_id, row.external_unit)
+                existing = self.get_by_key(product_group_id, row.external_unit)
 
                 if existing:
                     # UPDATE
@@ -192,7 +192,7 @@ class UomConversionService(
                 else:
                     # CREATE
                     new_conversion = ProductUomConversion(
-                        product_group_id=product_id,
+                        product_group_id=product_group_id,
                         external_unit=row.external_unit,
                         factor=row.factor,
                     )

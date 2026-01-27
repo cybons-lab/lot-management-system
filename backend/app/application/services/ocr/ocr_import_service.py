@@ -140,7 +140,7 @@ class OcrImportService:
     ) -> OcrImportLineResult:
         """明細行を処理."""
         # マスタ検索で製品IDを解決
-        product_id, match_type, message = self.complement_service.resolve_product_id(
+        product_group_id, match_type, message = self.complement_service.resolve_product_group_id(
             customer_code="",  # customer_idで直接検索するため不要
             jiku_code=line.jiku_code,
             customer_part_no=line.customer_part_no,

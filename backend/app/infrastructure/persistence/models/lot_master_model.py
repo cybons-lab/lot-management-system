@@ -5,7 +5,7 @@ B-Plan: Lot number consolidation master - allows multiple receipts per lot numbe
 Design rationale:
 1. なぜ lot_master を分離するのか
    - 同一ロット番号の小分け入荷を許可するため
-   - lot_number + product_id でユニーク、複数の lot_receipts が紐づく
+   - lot_number + product_group_id でユニーク、複数の lot_receipts が紐づく
 
 2. supplier_id の扱い
    - ユニーク制約には含めない（NULLになるケースがあるため）

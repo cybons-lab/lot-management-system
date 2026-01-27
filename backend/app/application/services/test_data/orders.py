@@ -10,7 +10,11 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
     ReservationSourceType,
     ReservationStatus,
 )
-from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace, Product
+from app.infrastructure.persistence.models.masters_models import (
+    Customer,
+    DeliveryPlace,
+    ProductGroup,
+)
 from app.infrastructure.persistence.models.order_groups_models import OrderGroup
 from app.infrastructure.persistence.models.orders_models import Order, OrderLine
 
@@ -21,8 +25,8 @@ from .scenarios.stockout_scenarios import STOCKOUT_SCENARIOS
 def generate_orders(
     db: Session,
     customers: list[Customer],
-    products: list[Product],
-    products_with_forecast: list[Product],
+    products: list[ProductGroup],
+    products_with_forecast: list[ProductGroup],
     delivery_places: list[DeliveryPlace],
     options: object = None,
     calendar: object = None,
@@ -262,7 +266,7 @@ def generate_orders(
 def _generate_stockout_scenarios(
     db: Session,
     customers: list[Customer],
-    products: list[Product],
+    products: list[ProductGroup],
     delivery_places: list[DeliveryPlace],
 ):
     """Generate specific stockout scenarios."""

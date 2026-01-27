@@ -40,7 +40,7 @@
             }
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -52,7 +52,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           },
           {
@@ -266,13 +266,13 @@
         "operationId": "get_available_lots_api_v2_lot_available_get",
         "parameters": [
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
               "description": "製品ID",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品ID"
           },
@@ -423,7 +423,7 @@
             "description": "Sort order"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -436,7 +436,7 @@
                 }
               ],
               "description": "Filter by Product ID",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "Filter by Product ID"
           },
@@ -1388,7 +1388,7 @@
             }
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -1400,7 +1400,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           }
         ],
@@ -1567,7 +1567,7 @@
             "description": "期間 (YYYY-MM)"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -1580,7 +1580,7 @@
                 }
               ],
               "description": "製品ID",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品ID"
           },
@@ -1659,13 +1659,13 @@
             "description": "納入先ID"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
               "description": "製品ID",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品ID"
           },
@@ -1744,13 +1744,13 @@
             "description": "納入先ID"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
               "description": "製品ID",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品ID"
           },
@@ -1829,13 +1829,13 @@
             "description": "納入先ID"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
               "description": "製品ID",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品ID"
           },
@@ -1961,7 +1961,7 @@
             }
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -1973,7 +1973,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           },
           {
@@ -2082,7 +2082,7 @@
         ],
         "parameters": [
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -2094,7 +2094,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           },
           {
@@ -2186,21 +2186,21 @@
         }
       }
     },
-    "/api/v2/inventory/{product_id}/{warehouse_id}": {
+    "/api/v2/inventory/{product_group_id}/{warehouse_id}": {
       "get": {
         "tags": [
           "v2-inventory"
         ],
         "summary": "Get Inventory Item",
-        "operationId": "get_inventory_item_api_v2_inventory__product_id___warehouse_id__get",
+        "operationId": "get_inventory_item_api_v2_inventory__product_group_id___warehouse_id__get",
         "parameters": [
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           },
           {
@@ -2466,17 +2466,17 @@
           "withdrawals"
         ],
         "summary": "Get Default Destination",
-        "description": "製品IDからデフォルトの得意先・納入先を取得する.\n\n1. customer_items テーブルから product_id でマッピングを検索\n2. 見つかれば customer_id を取得\n3. customer_item_delivery_settings の is_default=True レコードから delivery_place_id を取得\n4. マッピングが無い場合は mapping_found=False を返す",
+        "description": "製品IDからデフォルトの得意先・納入先を取得する.\n\n1. customer_items テーブルから product_group_id でマッピングを検索\n2. 見つかれば customer_id を取得\n3. customer_item_delivery_settings の is_default=True レコードから delivery_place_id を取得\n4. マッピングが無い場合は mapping_found=False を返す",
         "operationId": "get_default_destination_api_v2_withdrawals_default_destination_get",
         "parameters": [
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
               "description": "製品ID",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品ID"
           },
@@ -2529,11 +2529,11 @@
           "lots"
         ],
         "summary": "Export Lots",
-        "description": "ロット一覧をExcelファイルとしてエクスポート.\n\nArgs:\n    product_id: 製品ID（フィルタ）\n    product_code: 製品コード（フィルタ）\n    supplier_code: 仕入先コード（フィルタ）\n    warehouse_code: 倉庫コード（フィルタ）\n    expiry_from: 有効期限開始日（フィルタ）\n    expiry_to: 有効期限終了日（フィルタ）\n    with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）\n    db: データベースセッション\n\nReturns:\n    Response: Excelファイル（application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）",
+        "description": "ロット一覧をExcelファイルとしてエクスポート.\n\nArgs:\n    product_group_id: 製品ID（フィルタ）\n    product_code: 製品コード（フィルタ）\n    supplier_code: 仕入先コード（フィルタ）\n    warehouse_code: 倉庫コード（フィルタ）\n    expiry_from: 有効期限開始日（フィルタ）\n    expiry_to: 有効期限終了日（フィルタ）\n    with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）\n    db: データベースセッション\n\nReturns:\n    Response: Excelファイル（application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）",
         "operationId": "export_lots_api_lots_export_download_get",
         "parameters": [
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -2545,7 +2545,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           },
           {
@@ -2669,7 +2669,7 @@
           "lots"
         ],
         "summary": "List Lots",
-        "description": "ロット一覧取得.\n\nv_lots_with_master ビューを使用してロット一覧を取得します。\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能で、\nFEFO (First Expiry First Out) 順に並べて返します。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    product_id: 製品ID（フィルタ）\n    product_code: 製品コード（フィルタ）\n    supplier_code: 仕入先コード（フィルタ）\n    warehouse_code: 倉庫コード（フィルタ）\n    expiry_from: 有効期限開始日（フィルタ）\n    expiry_to: 有効期限終了日（フィルタ）\n    with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）\n    db: データベースセッション\n\nReturns:\n    list[LotResponse]: ロット情報のリスト",
+        "description": "ロット一覧取得.\n\nv_lots_with_master ビューを使用してロット一覧を取得します。\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能で、\nFEFO (First Expiry First Out) 順に並べて返します。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    product_group_id: 製品ID（フィルタ）\n    product_code: 製品コード（フィルタ）\n    supplier_code: 仕入先コード（フィルタ）\n    warehouse_code: 倉庫コード（フィルタ）\n    expiry_from: 有効期限開始日（フィルタ）\n    expiry_to: 有効期限終了日（フィルタ）\n    with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）\n    db: データベースセッション\n\nReturns:\n    list[LotResponse]: ロット情報のリスト",
         "operationId": "list_lots_api_lots_get",
         "security": [
           {
@@ -2698,7 +2698,7 @@
             }
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -2710,7 +2710,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           },
           {
@@ -4040,7 +4040,7 @@
           "forecasts"
         ],
         "summary": "List Forecasts",
-        "description": "フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    グループ化されたフォーキャストリスト",
+        "description": "フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_group_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    グループ化されたフォーキャストリスト",
         "operationId": "list_forecasts_api_forecasts_get",
         "parameters": [
           {
@@ -4099,7 +4099,7 @@
             }
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -4111,7 +4111,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           }
         ],
@@ -4185,7 +4185,7 @@
           "forecasts"
         ],
         "summary": "Export Forecasts",
-        "description": "フォーキャストをExcelでエクスポート.\n\nグループ化されたフォーキャストを明細レベルに展開してExcelファイルとして出力します。\n\nArgs:\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: Excelファイル",
+        "description": "フォーキャストをExcelでエクスポート.\n\nグループ化されたフォーキャストを明細レベルに展開してExcelファイルとして出力します。\n\nArgs:\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_group_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: Excelファイル",
         "operationId": "export_forecasts_api_forecasts_export_download_get",
         "parameters": [
           {
@@ -4221,7 +4221,7 @@
             }
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -4233,7 +4233,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           }
         ],
@@ -4265,7 +4265,7 @@
           "forecasts"
         ],
         "summary": "List Forecast History",
-        "description": "フォーキャスト履歴取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    アーカイブ済みフォーキャストリスト",
+        "description": "フォーキャスト履歴取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_group_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    アーカイブ済みフォーキャストリスト",
         "operationId": "list_forecast_history_api_forecasts_history_get",
         "parameters": [
           {
@@ -4324,7 +4324,7 @@
             }
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -4336,7 +4336,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           }
         ],
@@ -5105,7 +5105,7 @@
           "inbound-plans"
         ],
         "summary": "List Inbound Plans",
-        "description": "入荷予定一覧取得.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    supplier_id: 仕入先IDでフィルタ\n    product_id: 商品IDでフィルタ\n    status: ステータスでフィルタ（planned/partially_received/received/cancelled）\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用）\n    db: データベースセッション\n\nReturns:\n    入荷予定リスト",
+        "description": "入荷予定一覧取得.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    supplier_id: 仕入先IDでフィルタ\n    product_group_id: 商品IDでフィルタ\n    status: ステータスでフィルタ（planned/partially_received/received/cancelled）\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用）\n    db: データベースセッション\n\nReturns:\n    入荷予定リスト",
         "operationId": "list_inbound_plans_api_inbound_plans_get",
         "security": [
           {
@@ -5153,7 +5153,7 @@
             }
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -5165,7 +5165,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           },
           {
@@ -5762,7 +5762,7 @@
           "withdrawals"
         ],
         "summary": "List Withdrawals",
-        "description": "出庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    lot_id: ロットIDでフィルタ\n    customer_id: 得意先IDでフィルタ\n    withdrawal_type: 出庫タイプでフィルタ\n    start_date: 開始日\n    end_date: 終了日\n    product_id: 製品ID\n    warehouse_id: 倉庫ID\n    search: 検索キーワード\n    db: データベースセッション\n\nReturns:\n    出庫履歴一覧",
+        "description": "出庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    lot_id: ロットIDでフィルタ\n    customer_id: 得意先IDでフィルタ\n    withdrawal_type: 出庫タイプでフィルタ\n    start_date: 開始日\n    end_date: 終了日\n    product_group_id: 製品ID\n    warehouse_id: 倉庫ID\n    search: 検索キーワード\n    db: データベースセッション\n\nReturns:\n    出庫履歴一覧",
         "operationId": "list_withdrawals_api_withdrawals_get",
         "parameters": [
           {
@@ -5885,7 +5885,7 @@
             "description": "終了日（出荷日）"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -5898,7 +5898,7 @@
                 }
               ],
               "description": "製品IDでフィルタ",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品IDでフィルタ"
           },
@@ -6014,7 +6014,7 @@
           "withdrawals"
         ],
         "summary": "Get Calendar Summary",
-        "description": "月間の日別出庫集計を取得（カレンダー用）.\n\nArgs:\n    year: 年\n    month: 月\n    warehouse_id: 倉庫ID\n    product_id: 製品ID\n    supplier_id: 仕入先ID\n    db: データベースセッション\n\nReturns:\n    日別集計リスト",
+        "description": "月間の日別出庫集計を取得（カレンダー用）.\n\nArgs:\n    year: 年\n    month: 月\n    warehouse_id: 倉庫ID\n    product_group_id: 製品ID\n    supplier_id: 仕入先ID\n    db: データベースセッション\n\nReturns:\n    日別集計リスト",
         "operationId": "get_calendar_summary_api_withdrawals_calendar_summary_get",
         "parameters": [
           {
@@ -6058,7 +6058,7 @@
             "description": "倉庫ID"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -6071,7 +6071,7 @@
                 }
               ],
               "description": "製品ID",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品ID"
           },
@@ -6224,7 +6224,7 @@
           "intake-history"
         ],
         "summary": "List Intake History",
-        "description": "入庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    supplier_id: 仕入先IDでフィルタ\n    warehouse_id: 倉庫IDでフィルタ\n    product_id: 製品IDでフィルタ\n    start_date: 開始日\n    end_date: 終了日\n    search: 検索キーワード\n    db: データベースセッション\n\nReturns:\n    入庫履歴一覧",
+        "description": "入庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    supplier_id: 仕入先IDでフィルタ\n    warehouse_id: 倉庫IDでフィルタ\n    product_group_id: 製品IDでフィルタ\n    start_date: 開始日\n    end_date: 終了日\n    search: 検索キーワード\n    db: データベースセッション\n\nReturns:\n    入庫履歴一覧",
         "operationId": "list_intake_history_api_intake_history_get",
         "parameters": [
           {
@@ -6291,7 +6291,7 @@
             "description": "倉庫IDでフィルタ"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -6304,7 +6304,7 @@
                 }
               ],
               "description": "製品IDでフィルタ",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品IDでフィルタ"
           },
@@ -6395,7 +6395,7 @@
           "intake-history"
         ],
         "summary": "Get Calendar Summary",
-        "description": "月間の日別入庫集計を取得（カレンダー用）.\n\nArgs:\n    year: 年\n    month: 月\n    warehouse_id: 倉庫ID\n    product_id: 製品ID\n    supplier_id: 仕入先ID\n    db: データベースセッション\n\nReturns:\n    日別集計リスト",
+        "description": "月間の日別入庫集計を取得（カレンダー用）.\n\nArgs:\n    year: 年\n    month: 月\n    warehouse_id: 倉庫ID\n    product_group_id: 製品ID\n    supplier_id: 仕入先ID\n    db: データベースセッション\n\nReturns:\n    日別集計リスト",
         "operationId": "get_calendar_summary_api_intake_history_calendar_summary_get",
         "parameters": [
           {
@@ -6439,7 +6439,7 @@
             "description": "倉庫ID"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -6452,7 +6452,7 @@
                 }
               ],
               "description": "製品ID",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品ID"
           },
@@ -8942,7 +8942,7 @@
             }
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -8954,7 +8954,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           },
           {
@@ -8994,7 +8994,7 @@
           "masters"
         ],
         "summary": "Create Uom Conversion",
-        "description": "Create a new UOM conversion.\n\nArgs:\n    data: UOM conversion data (product_id, external_unit, factor)\n    db: Database session\n\nReturns:\n    Created UOM conversion with product info",
+        "description": "Create a new UOM conversion.\n\nArgs:\n    data: UOM conversion data (product_group_id, external_unit, factor)\n    db: Database session\n\nReturns:\n    Created UOM conversion with product info",
         "operationId": "create_uom_conversion_api_masters_uom_conversions_post",
         "requestBody": {
           "required": true,
@@ -9076,7 +9076,7 @@
           "masters"
         ],
         "summary": "Bulk Upsert Uom Conversions",
-        "description": "Bulk upsert UOM conversions by composite key (product_id,\nexternal_unit).\n\n- If a UOM conversion with the same composite key exists, it will be updated\n- If not, a new UOM conversion will be created\n\nReturns summary with counts of created/updated/failed records.",
+        "description": "Bulk upsert UOM conversions by composite key (product_group_id,\nexternal_unit).\n\n- If a UOM conversion with the same composite key exists, it will be updated\n- If not, a new UOM conversion will be created\n\nReturns summary with counts of created/updated/failed records.",
         "operationId": "bulk_upsert_uom_conversions_api_masters_uom_conversions_bulk_upsert_post",
         "requestBody": {
           "content": {
@@ -9783,7 +9783,7 @@
           "customer-items"
         ],
         "summary": "List Customer Items",
-        "description": "得意先品番マッピング一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ（オプション）\n    product_id: 製品IDでフィルタ（オプション）\n    supplier_id: 仕入先IDでフィルタ（オプション、supplier_items経由）\n    include_inactive: 無効なマッピングを含めるか\n    db: データベースセッション\n\nReturns:\n    得意先品番マッピングのリスト",
+        "description": "得意先品番マッピング一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ（オプション）\n    product_group_id: 製品IDでフィルタ（オプション）\n    supplier_id: 仕入先IDでフィルタ（オプション、supplier_items経由）\n    include_inactive: 無効なマッピングを含めるか\n    db: データベースセッション\n\nReturns:\n    得意先品番マッピングのリスト",
         "operationId": "list_customer_items_api_masters_customer_items_get",
         "parameters": [
           {
@@ -9828,7 +9828,7 @@
             "description": "得意先IDでフィルタ"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -9841,7 +9841,7 @@
                 }
               ],
               "description": "製品IDでフィルタ",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "製品IDでフィルタ"
           },
@@ -10687,7 +10687,7 @@
             "description": "Filter by supplier ID"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -10700,7 +10700,7 @@
                 }
               ],
               "description": "Filter by product ID",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "Filter by product ID"
           },
@@ -11077,7 +11077,7 @@
           "warehouse-delivery-routes"
         ],
         "summary": "Lookup Lead Time",
-        "description": "Lookup transport lead time with fallback logic.\n\nPriority:\n1. Route with matching warehouse + delivery_place + product\n2. Route default (warehouse + delivery_place + product_id=NULL)\n3. Warehouse default (default_transport_lead_time_days)\n4. Not found",
+        "description": "Lookup transport lead time with fallback logic.\n\nPriority:\n1. Route with matching warehouse + delivery_place + product\n2. Route default (warehouse + delivery_place + product_group_id=NULL)\n3. Warehouse default (default_transport_lead_time_days)\n4. Not found",
         "operationId": "lookup_lead_time_api_masters_warehouse_delivery_routes_lookup_get",
         "parameters": [
           {
@@ -11103,7 +11103,7 @@
             "description": "Delivery place ID"
           },
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -11116,7 +11116,7 @@
                 }
               ],
               "description": "Product ID (optional)",
-              "title": "Product Id"
+              "title": "Product Group Id"
             },
             "description": "Product ID (optional)"
           }
@@ -13533,7 +13533,7 @@
             }
           },
           {
-            "name": "product_ids",
+            "name": "product_group_ids",
             "in": "query",
             "required": false,
             "schema": {
@@ -13548,7 +13548,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Ids"
+              "title": "Product Group Ids"
             }
           }
         ],
@@ -13671,12 +13671,12 @@
         "operationId": "get_demand_forecast_api_admin_demand_forecast_get",
         "parameters": [
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           },
           {
@@ -13764,12 +13764,12 @@
         "operationId": "get_demand_history_api_admin_demand_history_get",
         "parameters": [
           {
-            "name": "product_id",
+            "name": "product_group_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Product Id"
+              "title": "Product Group Id"
             }
           },
           {
@@ -22517,9 +22517,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "forecast_period": {
             "type": "string",
@@ -22549,7 +22549,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_id",
+          "product_group_id",
           "forecast_period",
           "shortage_quantity"
         ],
@@ -22667,9 +22667,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "forecast_period": {
             "type": "string",
@@ -22695,7 +22695,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_id",
+          "product_group_id",
           "forecast_period",
           "forecast_quantity",
           "allocated_quantity",
@@ -22766,9 +22766,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "lot_id": {
             "type": "integer",
@@ -22795,7 +22795,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_id",
+          "product_group_id",
           "lot_id",
           "forecast_period",
           "quantity"
@@ -22912,9 +22912,9 @@
             "title": "Delivery Place Id",
             "description": "納入先ID"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "lot_id": {
@@ -23029,7 +23029,7 @@
           "forecast_period",
           "customer_id",
           "delivery_place_id",
-          "product_id",
+          "product_group_id",
           "lot_id",
           "quantity",
           "allocation_type",
@@ -23475,7 +23475,7 @@
       },
       "BulkAutoAllocateRequest": {
         "properties": {
-          "product_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer"
@@ -23484,7 +23484,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID（指定時はその製品のみ対象）"
           },
           "customer_id": {
@@ -23963,9 +23963,9 @@
             "title": "Available Quantity",
             "description": "引当可能数量"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -24096,7 +24096,7 @@
           "current_quantity",
           "allocated_quantity",
           "available_quantity",
-          "product_id",
+          "product_group_id",
           "warehouse_id"
         ],
         "title": "CandidateLotItem",
@@ -24639,9 +24639,9 @@
             "type": "string",
             "title": "Customer Name"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "product_code": {
             "type": "string",
@@ -24685,7 +24685,7 @@
           "order_id",
           "customer_id",
           "customer_name",
-          "product_id",
+          "product_group_id",
           "product_code",
           "product_name",
           "order_quantity",
@@ -25059,9 +25059,9 @@
             "title": "Customer Part No",
             "description": "得意先品番（先方品番）"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "supplier_id": {
@@ -25142,7 +25142,7 @@
         "required": [
           "customer_id",
           "customer_part_no",
-          "product_id",
+          "product_group_id",
           "base_unit"
         ],
         "title": "CustomerItemCreate",
@@ -25586,9 +25586,9 @@
             "title": "Customer Part No",
             "description": "得意先品番（先方品番）"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "supplier_id": {
@@ -25726,7 +25726,7 @@
           "id",
           "customer_id",
           "customer_part_no",
-          "product_id",
+          "product_group_id",
           "is_primary",
           "base_unit",
           "customer_code",
@@ -25755,7 +25755,7 @@
             "title": "Customer Part No",
             "description": "得意先品番"
           },
-          "product_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer"
@@ -25764,7 +25764,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "supplier_id": {
@@ -26523,9 +26523,9 @@
       },
       "DemandForecast": {
         "properties": {
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "warehouse_id": {
             "anyOf": [
@@ -26596,7 +26596,7 @@
         },
         "type": "object",
         "required": [
-          "product_id",
+          "product_group_id",
           "warehouse_id",
           "as_of_date",
           "horizon_days",
@@ -26750,9 +26750,9 @@
             "type": "integer",
             "title": "Order Line Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "order_quantity": {
             "type": "string",
@@ -26785,7 +26785,7 @@
         "type": "object",
         "required": [
           "order_line_id",
-          "product_id",
+          "product_group_id",
           "order_quantity"
         ],
         "title": "FefoLineAllocation",
@@ -27006,9 +27006,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "forecast_date": {
             "type": "string",
@@ -27054,7 +27054,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_id",
+          "product_group_id",
           "forecast_date",
           "forecast_quantity"
         ],
@@ -27071,9 +27071,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "customer_code": {
             "anyOf": [
@@ -27146,7 +27146,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_id"
+          "product_group_id"
         ],
         "title": "ForecastGroupKey",
         "description": "Group key for customer × delivery_place × product."
@@ -27200,9 +27200,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "forecast_date": {
             "type": "string",
@@ -27324,7 +27324,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_id",
+          "product_group_id",
           "forecast_date",
           "forecast_quantity",
           "forecast_period",
@@ -27364,9 +27364,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "forecast_date": {
             "type": "string",
@@ -27474,7 +27474,7 @@
           "created_at",
           "customer_id",
           "delivery_place_id",
-          "product_id",
+          "product_group_id",
           "forecast_date",
           "forecast_quantity",
           "forecast_period",
@@ -28190,9 +28190,9 @@
       },
       "InboundPlanLineCreate": {
         "properties": {
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "planned_quantity": {
             "anyOf": [
@@ -28227,7 +28227,7 @@
         },
         "type": "object",
         "required": [
-          "product_id",
+          "product_group_id",
           "planned_quantity",
           "unit"
         ],
@@ -28253,9 +28253,9 @@
             ],
             "title": "Updated At"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "planned_quantity": {
             "type": "string",
@@ -28285,7 +28285,7 @@
         "type": "object",
         "required": [
           "created_at",
-          "product_id",
+          "product_group_id",
           "planned_quantity",
           "unit",
           "inbound_plan_line_id",
@@ -28555,9 +28555,9 @@
             "type": "string",
             "title": "Lot Number"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "product_name": {
             "type": "string",
@@ -28685,7 +28685,7 @@
           "intake_id",
           "lot_id",
           "lot_number",
-          "product_id",
+          "product_group_id",
           "product_name",
           "product_code",
           "warehouse_id",
@@ -28700,9 +28700,9 @@
       },
       "InventoryByProductResponse": {
         "properties": {
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "product_name": {
             "type": "string",
@@ -28738,7 +28738,7 @@
         },
         "type": "object",
         "required": [
-          "product_id",
+          "product_group_id",
           "product_name",
           "product_code",
           "total_quantity",
@@ -28904,9 +28904,9 @@
             "type": "integer",
             "title": "Inventory Item Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -29044,7 +29044,7 @@
         "type": "object",
         "required": [
           "inventory_item_id",
-          "product_id",
+          "product_group_id",
           "warehouse_id",
           "total_quantity",
           "allocated_quantity",
@@ -29362,9 +29362,9 @@
             "title": "Lot Number",
             "default": ""
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -29640,7 +29640,7 @@
         },
         "type": "object",
         "required": [
-          "product_id",
+          "product_group_id",
           "warehouse_id",
           "received_date",
           "unit"
@@ -29765,9 +29765,9 @@
             "type": "string",
             "title": "Lot Number"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -30114,7 +30114,7 @@
         "required": [
           "created_at",
           "lot_number",
-          "product_id",
+          "product_group_id",
           "warehouse_id",
           "received_date",
           "unit",
@@ -30445,9 +30445,9 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Available Quantity"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "expiry_date": {
             "anyOf": [
@@ -30486,7 +30486,7 @@
           "lot_number",
           "allocated_quantity",
           "available_quantity",
-          "product_id"
+          "product_group_id"
         ],
         "title": "ManualAllocationResponse",
         "description": "Manual allocation response (v2.2.1)."
@@ -30999,7 +30999,7 @@
             "title": "Customer Part No",
             "description": "先方品番"
           },
-          "product_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer"
@@ -31008,7 +31008,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "解決された製品ID"
           },
           "match_type": {
@@ -32472,7 +32472,7 @@
       },
       "OrderLineCreate": {
         "properties": {
-          "product_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer",
@@ -32482,7 +32482,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID（OCR取込時はNULL可）"
           },
           "delivery_date": {
@@ -32783,7 +32783,7 @@
       },
       "OrderLineResponse": {
         "properties": {
-          "product_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer",
@@ -32793,7 +32793,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID（OCR取込時はNULL可）"
           },
           "delivery_date": {
@@ -34055,10 +34055,10 @@
             "title": "Supplier Id",
             "description": "仕入先ID"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "base_unit": {
@@ -34118,7 +34118,7 @@
           "customer_id",
           "customer_part_code",
           "supplier_id",
-          "product_id",
+          "product_group_id",
           "base_unit"
         ],
         "title": "ProductMappingCreate",
@@ -34221,10 +34221,10 @@
             "title": "Supplier Id",
             "description": "仕入先ID"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "base_unit": {
@@ -34303,7 +34303,7 @@
           "customer_id",
           "customer_part_code",
           "supplier_id",
-          "product_id",
+          "product_group_id",
           "base_unit",
           "id",
           "created_at",
@@ -34352,7 +34352,7 @@
             ],
             "title": "Supplier Id"
           },
-          "product_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer",
@@ -34362,7 +34362,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "base_unit": {
             "anyOf": [
@@ -34727,9 +34727,9 @@
             "type": "string",
             "title": "Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -34861,7 +34861,7 @@
         "type": "object",
         "required": [
           "id",
-          "product_id",
+          "product_group_id",
           "warehouse_id",
           "supplier_id",
           "recommended_order_qty",
@@ -37999,9 +37999,9 @@
             "type": "integer",
             "title": "Customer Id"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "delivery_place_id": {
             "anyOf": [
@@ -38029,7 +38029,7 @@
         "type": "object",
         "required": [
           "customer_id",
-          "product_id"
+          "product_group_id"
         ],
         "title": "ShipmentTextRequest",
         "description": "Request schema for getting shipment text."
@@ -40761,7 +40761,7 @@
       },
       "SupplierItemCreate": {
         "properties": {
-          "product_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer"
@@ -40770,7 +40770,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID（Phase2用グルーピング、オプション）"
           },
           "supplier_id": {
@@ -40842,7 +40842,7 @@
             "type": "integer",
             "title": "Id"
           },
-          "product_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer"
@@ -40851,7 +40851,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "supplier_id": {
             "type": "integer",
@@ -40965,7 +40965,7 @@
         "type": "object",
         "required": [
           "id",
-          "product_id",
+          "product_group_id",
           "supplier_id",
           "maker_part_no",
           "is_primary",
@@ -41435,9 +41435,9 @@
       },
       "UomConversionCreate": {
         "properties": {
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "external_unit": {
@@ -41462,7 +41462,7 @@
         },
         "type": "object",
         "required": [
-          "product_id",
+          "product_group_id",
           "external_unit",
           "factor"
         ],
@@ -41471,9 +41471,9 @@
       },
       "UomConversionResponse": {
         "properties": {
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "external_unit": {
@@ -41510,7 +41510,7 @@
         },
         "type": "object",
         "required": [
-          "product_id",
+          "product_group_id",
           "external_unit",
           "factor",
           "conversion_id",
@@ -42074,7 +42074,7 @@
             "title": "Delivery Place Id",
             "description": "納入先ID"
           },
-          "product_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer",
@@ -42084,7 +42084,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "品番ID（NULLの場合は経路デフォルト）"
           },
           "transport_lead_time_days": {
@@ -42136,7 +42136,7 @@
             "title": "Delivery Place Id",
             "description": "納入先ID"
           },
-          "product_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer",
@@ -42146,7 +42146,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Id",
+            "title": "Product Group Id",
             "description": "品番ID（NULLの場合は経路デフォルト）"
           },
           "transport_lead_time_days": {
@@ -42678,9 +42678,9 @@
             "type": "string",
             "title": "Lot Number"
           },
-          "product_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Product Id"
+            "title": "Product Group Id"
           },
           "product_name": {
             "type": "string",
@@ -42918,7 +42918,7 @@
           "withdrawal_id",
           "lot_id",
           "lot_number",
-          "product_id",
+          "product_group_id",
           "product_name",
           "product_code",
           "quantity",

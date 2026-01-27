@@ -204,7 +204,7 @@ class OcrSapComplementService:
             message=f"Prefix match: {customer_part_no} -> {item.customer_part_no}",
         )
 
-    def resolve_product_id(
+    def resolve_product_group_id(
         self,
         customer_code: str,
         jiku_code: str,
@@ -213,7 +213,7 @@ class OcrSapComplementService:
         """製品IDを解決（簡易版）.
 
         Returns:
-            tuple: (product_id, match_type, message)
+            tuple: (product_group_id, match_type, message)
         """
         result = self.find_complement(customer_code, jiku_code, customer_part_no)
         return (result.product_group_id, result.match_type, result.message)

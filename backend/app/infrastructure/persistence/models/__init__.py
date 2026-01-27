@@ -57,10 +57,6 @@ from .masters_models import (
     Warehouse,
     WarehouseDeliveryRoute,
 )
-
-
-# Backward compatibility alias
-Product = ProductGroup
 from .missing_mapping_model import MissingMappingEvent
 from .order_groups_models import OrderGroup
 from .orders_models import Order, OrderLine
@@ -102,6 +98,9 @@ from .views_models import (
 from .withdrawal_line_model import WithdrawalLine
 from .withdrawal_models import Withdrawal, WithdrawalCancelReason, WithdrawalType
 
+
+# Backward compatibility alias
+Product = ProductGroup
 
 __all__ = [
     # Base

@@ -2,7 +2,7 @@
 
 仕入先品目マスタ: 仕入先から仕入れる品目の情報を管理。
 - maker_part_no: メーカー品番（仕入先の品番）
-- product_id: 内部製品マスタへの参照
+- product_group_id: 内部製品マスタへの参照
 - is_primary: 主要仕入先フラグ（1製品につき1つ）
 
 Business key: UNIQUE(supplier_id, maker_part_no)

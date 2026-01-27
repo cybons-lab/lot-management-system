@@ -98,7 +98,7 @@ Soft Delete Support:
    - 製品B: 1缶 = 15kg
    → 製品ごとに変換係数が異なる
    実装:
-   - product_id: 製品ID
+   - product_group_id: 製品ID
    - external_unit: 外部単位（例: "KG"）
    - factor: 変換係数（例: 20.0）
    用途:
@@ -784,7 +784,7 @@ class WarehouseDeliveryRoute(Base):
     """Warehouse delivery routes table (輸送経路マスタ).
 
     倉庫から納入先への輸送リードタイムを管理。
-    品番別のLT設定も可能（product_id指定）。
+    品番別のLT設定も可能（product_group_id指定）。
 
     直送（supplier warehouse_type）は対象外。
     """
@@ -833,3 +833,7 @@ class WarehouseDeliveryRoute(Base):
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="delivery_routes")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
     product_group: Mapped[ProductGroup | None] = relationship("ProductGroup")
+
+
+# Backward compatibility alias
+Product = ProductGroup

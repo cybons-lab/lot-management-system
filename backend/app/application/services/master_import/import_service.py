@@ -250,7 +250,7 @@ class MasterImportService:
         existing = (
             self.db.query(SupplierItem)
             .filter(
-                SupplierItem.product_group_id == product_id,
+                SupplierItem.product_group_id == product_group_id,
                 SupplierItem.supplier_id == supplier_id,
             )
             .first()
@@ -262,7 +262,7 @@ class MasterImportService:
             return existing
         else:
             ps = SupplierItem(
-                product_group_id=product_id,
+                product_group_id=product_group_id,
                 supplier_id=supplier_id,
                 is_primary=is_primary,
                 lead_time_days=lead_time_days or 0,

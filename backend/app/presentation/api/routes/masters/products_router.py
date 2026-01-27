@@ -13,7 +13,7 @@ from app.application.services.common.export_service import ExportService
 from app.application.services.masters.products_service import ProductService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.infrastructure.persistence.models.masters_models import Product
+from app.infrastructure.persistence.models.masters_models import ProductGroup
 from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.masters_schema import BulkUpsertResponse
 from app.presentation.schemas.masters.products_schema import (
@@ -27,7 +27,7 @@ from app.presentation.schemas.masters.products_schema import (
 router = APIRouter(prefix="/products", tags=["products"])
 
 
-def _to_product_out(product: Product) -> ProductOut:
+def _to_product_out(product: ProductGroup) -> ProductOut:
     """Map a Product ORM model to the canonical ProductOut schema."""
     return ProductOut(
         id=product.id,

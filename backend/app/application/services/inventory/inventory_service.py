@@ -48,9 +48,9 @@ providing product × warehouse summary information.
    理由: N×M の突合を高速化
    パフォーマンス:
    - N件の在庫サマリー × M件の引当内訳 → O(N×M) = 遅い
-   - 辞書化: {(product_id, warehouse_id): {soft, hard}} → O(1) ルックアップ
+   - 辞書化: {(product_group_id, warehouse_id): {soft, hard}} → O(1) ルックアップ
    実装:
-   - alloc_map: キー = (product_id, warehouse_id)、値 = {soft, hard}
+   - alloc_map: キー = (product_group_id, warehouse_id)、値 = {soft, hard}
    - ループ内で alloc_map.get(key) → O(1) で取得
    メリット:
    - 100件の在庫×100件の引当でも、200回のループで完了
@@ -97,7 +97,7 @@ providing product × warehouse summary information.
    → IN句でページング対象のみに絞る
    実装:
    - found_products: 最初のクエリで取得した製品IDリスト
-   - WHERE l.product_group_id IN :product_ids AND l.warehouse_id IN :warehouse_ids
+   - WHERE l.product_group_id IN :product_group_ids AND l.warehouse_id IN :warehouse_ids
    メリット:
    - 100件の在庫サマリーに対して、100件分の引当のみ取得
 
@@ -133,7 +133,7 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models.assignments.assignment_models import (
     UserSupplierAssignment,
 )
-from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.masters_models import ProductGroup, Supplier, Warehouse
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.schemas.inventory.inventory_schema import (
     InventoryFilterOption,
@@ -198,9 +198,9 @@ class InventoryService:
             where_clauses.append("v.supplier_id = :supplier_id")
             params["supplier_id"] = supplier_id
 
-        if product_id is not None:
-            where_clauses.append("v.product_group_id = :product_id")
-            params["product_group_id"] = product_id
+        if product_group_id is not None:
+            where_clauses.append("v.product_group_id = :product_group_id")
+            params["product_group_id"] = product_group_id
 
         if warehouse_id is not None:
             where_clauses.append("v.warehouse_id = :warehouse_id")
@@ -306,7 +306,7 @@ class InventoryService:
                 FROM lot_reservations r
                 JOIN v_lot_receipt_stock l ON l.receipt_id = r.lot_id
                 WHERE r.status IN ('active', 'confirmed')
-                  AND l.product_group_id IN :product_ids
+                  AND l.product_group_id IN :product_group_ids
                   AND l.warehouse_id IN :warehouse_ids
                 GROUP BY r.lot_id, l.product_group_id, l.warehouse_id, 
                     CASE 
@@ -319,7 +319,7 @@ class InventoryService:
             alloc_rows = self.db.execute(
                 text(alloc_query),
                 {
-                    "product_ids": tuple(set(found_products)),
+                    "product_group_ids": tuple(set(found_products)),
                     "warehouse_ids": tuple(set(found_warehouses)),
                 },
             ).fetchall()
@@ -333,7 +333,7 @@ class InventoryService:
                     v.warehouse_id,
                     COUNT(v.receipt_id) as lot_count
                 FROM v_lot_receipt_stock v
-                WHERE v.product_group_id IN :product_ids
+                WHERE v.product_group_id IN :product_group_ids
                   AND v.warehouse_id IN :warehouse_ids
                   AND v.remaining_quantity > 0 AND v.status = 'active'
                 GROUP BY v.product_group_id, v.warehouse_id
@@ -341,7 +341,7 @@ class InventoryService:
             count_rows_details = self.db.execute(
                 text(count_query_details),
                 {
-                    "product_ids": tuple(set(found_products)),
+                    "product_group_ids": tuple(set(found_products)),
                     "warehouse_ids": tuple(set(found_warehouses)),
                 },
             ).fetchall()
@@ -437,7 +437,7 @@ class InventoryService:
             FROM v_inventory_summary v
             LEFT JOIN products p ON v.product_group_id = p.id
             LEFT JOIN warehouses w ON v.warehouse_id = w.id
-            WHERE v.product_group_id = :product_id AND v.warehouse_id = :warehouse_id
+            WHERE v.product_group_id = :product_group_id AND v.warehouse_id = :warehouse_id
         """
 
         # Get primary supplier for this product/warehouse (supplier with most stock)
@@ -449,7 +449,7 @@ class InventoryService:
                 SUM(l.remaining_quantity) as total_qty
             FROM v_lot_receipt_stock l
             LEFT JOIN suppliers s ON l.supplier_id = s.id
-            WHERE l.product_group_id = :product_id
+            WHERE l.product_group_id = :product_group_id
               AND l.warehouse_id = :warehouse_id
               AND l.status = 'active'
               AND l.supplier_id IS NOT NULL
@@ -460,7 +460,7 @@ class InventoryService:
         from sqlalchemy import text
 
         row = self.db.execute(
-            text(query), {"product_group_id": product_id, "warehouse_id": warehouse_id}
+            text(query), {"product_group_id": product_group_id, "warehouse_id": warehouse_id}
         ).fetchone()
 
         if not row:
@@ -468,7 +468,8 @@ class InventoryService:
 
         # Get supplier info
         supplier_row = self.db.execute(
-            text(supplier_query), {"product_group_id": product_id, "warehouse_id": warehouse_id}
+            text(supplier_query),
+            {"product_group_id": product_group_id, "warehouse_id": warehouse_id},
         ).fetchone()
 
         # Get Allocation breakdown
@@ -484,7 +485,7 @@ class InventoryService:
             FROM lot_reservations r
             JOIN v_lot_receipt_stock l ON l.receipt_id = r.lot_id
             WHERE r.status IN ('active', 'confirmed')
-              AND l.product_group_id = :product_id
+              AND l.product_group_id = :product_group_id
               AND l.warehouse_id = :warehouse_id
             GROUP BY 
                 CASE 
@@ -494,7 +495,7 @@ class InventoryService:
                 END
         """
         alloc_rows = self.db.execute(
-            text(alloc_query), {"product_group_id": product_id, "warehouse_id": warehouse_id}
+            text(alloc_query), {"product_group_id": product_group_id, "warehouse_id": warehouse_id}
         ).fetchall()
 
         soft_qty = 0.0
@@ -508,11 +509,11 @@ class InventoryService:
         # Get count (must match /api/lots default behavior: with_stock=True)
         count_query = """
             SELECT COUNT(receipt_id) as cnt FROM v_lot_receipt_stock 
-            WHERE product_id = :pid AND warehouse_id = :wid 
+            WHERE product_group_id = :pid AND warehouse_id = :wid 
             AND remaining_quantity > 0 AND status = 'active'
         """
         count_res = self.db.execute(
-            text(count_query), {"pid": product_id, "wid": warehouse_id}
+            text(count_query), {"pid": product_group_id, "wid": warehouse_id}
         ).scalar()
 
         return InventoryItemResponse(
@@ -670,7 +671,7 @@ class InventoryService:
 
         if mode == "master":
             return self._get_filter_options_from_master(
-                product_group_id=product_id,
+                product_group_id=product_group_id,
                 warehouse_id=warehouse_id,
                 supplier_id=supplier_id,
                 primary_staff_only=primary_staff_only,
@@ -685,7 +686,7 @@ class InventoryService:
             tab = "in_stock"
 
         return self._get_filter_options_from_stock(
-            product_group_id=product_id,
+            product_group_id=product_group_id,
             warehouse_id=warehouse_id,
             supplier_id=supplier_id,
             tab=tab,
@@ -705,13 +706,13 @@ class InventoryService:
     ) -> InventoryFilterOptions:
         """Get filter options based on master relationships (legacy behavior)."""
         # 1. Products (filtered by supplier if selected)
-        p_stmt = select(Product.id, Product.maker_part_code, Product.product_name).where(
-            Product.valid_to >= "9999-12-31"
-        )
+        p_stmt = select(
+            ProductGroup.id, ProductGroup.maker_part_code, ProductGroup.product_name
+        ).where(ProductGroup.valid_to >= "9999-12-31")
         if supplier_id:
             # Filter products supplied by this supplier
             p_stmt = (
-                p_stmt.join(SupplierItem, SupplierItem.product_group_id == Product.id)
+                p_stmt.join(SupplierItem, SupplierItem.product_group_id == ProductGroup.id)
                 .where(SupplierItem.supplier_id == supplier_id)
                 .where(SupplierItem.valid_to >= "9999-12-31")
             )
@@ -739,7 +740,7 @@ class InventoryService:
             # Filter suppliers supplying this product
             s_stmt = (
                 s_stmt.join(SupplierItem, SupplierItem.supplier_id == Supplier.id)
-                .where(SupplierItem.product_group_id == product_id)
+                .where(SupplierItem.product_group_id == product_group_id)
                 .where(SupplierItem.valid_to >= "9999-12-31")
             )
 
@@ -781,9 +782,9 @@ class InventoryService:
         where_clauses = ["v.remaining_quantity > 0", "v.status = 'active'"]
         params: dict[str, int | str] = {}
 
-        if product_id is not None:
-            where_clauses.append("v.product_group_id = :product_id")
-            params["product_group_id"] = product_id
+        if product_group_id is not None:
+            where_clauses.append("v.product_group_id = :product_group_id")
+            params["product_group_id"] = product_group_id
 
         if warehouse_id is not None:
             where_clauses.append("v.warehouse_id = :warehouse_id")

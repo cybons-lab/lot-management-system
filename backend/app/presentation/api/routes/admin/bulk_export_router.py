@@ -18,10 +18,10 @@ from app.application.services.forecasts.forecast_service import ForecastService
 from app.application.services.inventory.lot_service import LotService
 from app.application.services.masters.customer_items_service import CustomerItemsService
 from app.application.services.masters.customer_service import CustomerService
+from app.application.services.masters.product_groups_service import ProductService
 from app.application.services.masters.product_mappings_service import (
     ProductMappingsService,
 )
-from app.application.services.masters.products_service import ProductService
 from app.application.services.masters.supplier_service import SupplierService
 from app.application.services.masters.warehouse_service import WarehouseService
 from app.application.services.orders.order_service import OrderService
@@ -35,7 +35,7 @@ from app.presentation.schemas.masters.masters_schema import (
     SupplierResponse,
     WarehouseResponse,
 )
-from app.presentation.schemas.masters.products_schema import ProductOut
+from app.presentation.schemas.masters.product_groups_schema import ProductOut
 
 
 router = APIRouter(prefix="/bulk-export", tags=["bulk-export"])
@@ -180,7 +180,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
     if target == "supplier_products":
         from sqlalchemy import select
 
-        from app.infrastructure.persistence.models.masters_models import Product, Supplier
+        from app.infrastructure.persistence.models.masters_models import Supplier
         from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         sp_query = (
@@ -235,8 +235,12 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
                     "delivery_place_name": (
                         route.delivery_place.delivery_place_name if route.delivery_place else None
                     ),
-                    "product_name": route.product.product_name if route.product else None,
-                    "maker_part_code": route.product.maker_part_code if route.product else None,
+                    "product_name": route.product_group.product_name
+                    if route.product_group
+                    else None,
+                    "maker_part_code": route.product_group.maker_part_code
+                    if route.product_group
+                    else None,
                     "transport_lead_time_days": route.transport_lead_time_days,
                     "notes": route.notes,
                 }

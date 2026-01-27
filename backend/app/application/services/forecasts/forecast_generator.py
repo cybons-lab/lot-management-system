@@ -23,14 +23,14 @@ from random import Random
 
 from dateutil.relativedelta import relativedelta  # type: ignore
 
+from app.infrastructure.persistence.models import ProductGroup
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
-from app.infrastructure.persistence.models.masters_models import Product
 
 
 def create_daily_forecasts(
     customer_id: int,
     delivery_place_id: int,
-    product: Product,
+    product: ProductGroup,
     start_date: date,
     end_date: date,
     now: datetime,
@@ -127,7 +127,7 @@ def create_daily_forecasts(
 def create_jyun_forecasts_from_daily(
     customer_id: int,
     delivery_place_id: int,
-    product: Product,
+    product: ProductGroup,
     target_month: date,
     period_totals: dict[str, Decimal],
     now: datetime,
@@ -219,7 +219,7 @@ def create_jyun_forecasts_from_daily(
 def create_monthly_forecasts_from_daily(
     customer_id: int,
     delivery_place_id: int,
-    product: Product,
+    product: ProductGroup,
     target_month: date,
     period_totals: dict[str, Decimal],
     now: datetime,

@@ -12,7 +12,7 @@ models (ExpiryRule) have been removed.
    → ロット単位で在庫を管理する必要がある
    設計:
    - Lot: 物理的な在庫の単位（lot_number で識別）
-   - product_id: どの製品のロットか
+   - product_group_id: どの製品のロットか
    - warehouse_id: どの倉庫に保管されているか
    - expiry_date: 有効期限（FEFO管理の基準）
    メリット:
@@ -299,7 +299,7 @@ class AllocationSuggestion(Base):
 
     DDL: allocation_suggestions
     Primary key: id (BIGSERIAL)
-    Foreign keys: customer_id, delivery_place_id, product_id, lot_id
+    Foreign keys: customer_id, delivery_place_id, product_group_id, lot_id
     """
 
     __tablename__ = "allocation_suggestions"

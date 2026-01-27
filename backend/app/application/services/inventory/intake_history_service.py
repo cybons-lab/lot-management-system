@@ -78,7 +78,7 @@ class IntakeHistoryService:
             self.db.query(StockHistory)
             .filter(StockHistory.transaction_type == StockTransactionType.INBOUND)
             .options(
-                joinedload(StockHistory.lot).joinedload(LotReceipt.product),
+                joinedload(StockHistory.lot).joinedload(LotReceipt.product_group),
                 joinedload(StockHistory.lot).joinedload(LotReceipt.warehouse),
                 joinedload(StockHistory.lot).joinedload(LotReceipt.supplier),
                 joinedload(StockHistory.lot)
@@ -89,21 +89,21 @@ class IntakeHistoryService:
         )
 
         # Lot結合が必要なフィルタ
-        if supplier_id is not None or warehouse_id is not None or product_id is not None:
+        if supplier_id is not None or warehouse_id is not None or product_group_id is not None:
             query = query.join(StockHistory.lot)
             if supplier_id is not None:
                 query = query.filter(LotReceipt.supplier_id == supplier_id)
             if warehouse_id is not None:
                 query = query.filter(LotReceipt.warehouse_id == warehouse_id)
-            if product_id is not None:
-                query = query.filter(LotReceipt.product_group_id == product_id)
+            if product_group_id is not None:
+                query = query.filter(LotReceipt.product_group_id == product_group_id)
 
         if search_query:
             term = f"%{search_query}%"
             # 検索に必要なテーブルを結合
-            if supplier_id is None and warehouse_id is None and product_id is None:
+            if supplier_id is None and warehouse_id is None and product_group_id is None:
                 query = query.join(StockHistory.lot)
-            query = query.join(LotReceipt.product)
+            query = query.join(LotReceipt.product_group)
             query = query.outerjoin(LotReceipt.supplier)
             query = query.outerjoin(LotReceipt.warehouse)
 
@@ -154,7 +154,7 @@ class IntakeHistoryService:
             .filter(StockHistory.id == intake_id)
             .filter(StockHistory.transaction_type == StockTransactionType.INBOUND)
             .options(
-                joinedload(StockHistory.lot).joinedload(LotReceipt.product),
+                joinedload(StockHistory.lot).joinedload(LotReceipt.product_group),
                 joinedload(StockHistory.lot).joinedload(LotReceipt.warehouse),
                 joinedload(StockHistory.lot).joinedload(LotReceipt.supplier),
                 joinedload(StockHistory.lot)
@@ -173,7 +173,7 @@ class IntakeHistoryService:
     def _to_response(self, record: StockHistory) -> IntakeHistoryResponse:
         """モデルをレスポンススキーマに変換."""
         lot = record.lot
-        product = lot.product if lot else None
+        product = lot.product_group if lot else None
         warehouse = lot.warehouse if lot else None
         supplier = lot.supplier if lot else None
 
@@ -253,7 +253,7 @@ class IntakeHistoryService:
         if warehouse_id:
             stmt = stmt.where(LotReceipt.warehouse_id == warehouse_id)
         if product_group_id:
-            stmt = stmt.where(LotReceipt.product_group_id == product_id)
+            stmt = stmt.where(LotReceipt.product_group_id == product_group_id)
         if supplier_id:
             stmt = stmt.where(LotReceipt.supplier_id == supplier_id)
 

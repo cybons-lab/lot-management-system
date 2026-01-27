@@ -12,7 +12,12 @@ from pydantic import Field
 
 from app.presentation.schemas.common.base import BaseSchema
 from app.presentation.schemas.common.common_schema import ListResponse
-from app.presentation.schemas.masters.products_schema import ProductCreate, ProductOut
+from app.presentation.schemas.masters.product_groups_schema import (
+    ProductGroupCreate as ProductCreate,
+)
+from app.presentation.schemas.masters.product_groups_schema import (
+    ProductGroupOut as ProductOut,
+)
 
 
 # ============================================================

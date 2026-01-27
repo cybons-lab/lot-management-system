@@ -48,7 +48,7 @@ def validate_lot_mapping(
                 raise UnmappedItemError(
                     lot_id=lot.id,
                     lot_number=lot.lot_number,
-                    product_code=lot.product.maker_part_code if lot.product else None,
+                    product_code=lot.product_group.maker_part_code if lot.product_group else None,
                     supplier_item_id=None,
                 )
             return False

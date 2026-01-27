@@ -11,7 +11,7 @@ from app.core.database import get_db
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.masters_models import (
     DeliveryPlace,
-    Product,
+    ProductGroup,
     Warehouse,
     WarehouseDeliveryRoute,
 )
@@ -46,8 +46,8 @@ def _build_response(route: WarehouseDeliveryRoute) -> dict:
         "delivery_place_name": (
             route.delivery_place.delivery_place_name if route.delivery_place else None
         ),
-        "product_name": route.product.product_name if route.product else None,
-        "maker_part_code": route.product.maker_part_code if route.product else None,
+        "product_name": route.product_group.product_name if route.product_group else None,
+        "maker_part_code": route.product_group.maker_part_code if route.product_group else None,
     }
 
 
@@ -199,7 +199,7 @@ def create_route(
     # Validate product if specified
     if data.product_group_id is not None:
         product = db.execute(
-            select(Product).where(Product.id == data.product_group_id)
+            select(ProductGroup).where(ProductGroup.id == data.product_group_id)
         ).scalar_one_or_none()
 
         if not product:

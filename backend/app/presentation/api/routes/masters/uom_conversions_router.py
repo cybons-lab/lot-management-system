@@ -10,7 +10,7 @@ from app.application.services.common.export_service import ExportService
 from app.application.services.masters.uom_conversion_service import UomConversionService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.infrastructure.persistence.models.masters_models import Product, ProductUomConversion
+from app.infrastructure.persistence.models.masters_models import ProductGroup, ProductUomConversion
 from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.masters_schema import BulkUpsertResponse
 from app.presentation.schemas.masters.uom_conversions_schema import (
@@ -38,10 +38,10 @@ def list_uom_conversions(
         ProductUomConversion.product_group_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
-        Product.maker_part_code,
-        Product.product_name,
+        ProductGroup.maker_part_code,
+        ProductGroup.product_name,
         ProductUomConversion.valid_to,
-    ).join(Product, ProductUomConversion.product_group_id == Product.id)
+    ).join(ProductGroup, ProductUomConversion.product_group_id == ProductGroup.id)
 
     if product_group_id is not None:
         query = query.where(ProductUomConversion.product_group_id == product_group_id)
@@ -75,9 +75,9 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
         ProductUomConversion.product_group_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
-        Product.maker_part_code,
-        Product.product_name,
-    ).join(Product, ProductUomConversion.product_group_id == Product.id)
+        ProductGroup.maker_part_code,
+        ProductGroup.product_name,
+    ).join(ProductGroup, ProductUomConversion.product_group_id == ProductGroup.id)
 
     results = db.execute(query).all()
 
@@ -113,7 +113,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
     service = UomConversionService(db)
 
     # Check if product exists
-    product = db.query(Product).filter(Product.id == data.product_group_id).first()
+    product = db.query(ProductGroup).filter(ProductGroup.id == data.product_group_id).first()
     if not product:
         raise HTTPException(status_code=400, detail="Product not found")
 

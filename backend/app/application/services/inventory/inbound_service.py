@@ -91,9 +91,9 @@ class InboundService:
         if supplier_id is not None:
             query = query.filter(InboundPlan.supplier_id == supplier_id)
 
-        if product_id is not None:
+        if product_group_id is not None:
             query = query.join(InboundPlan.lines).filter(
-                InboundPlanLine.product_group_id == product_id
+                InboundPlanLine.product_group_id == product_group_id
             )
 
         if status is not None:
@@ -101,7 +101,7 @@ class InboundService:
 
         # Distinct is needed if joining with lines to avoid duplicates
         # 【設計】linesとJOINすると重複行が発生 → distinct()で除外
-        if product_id is not None:
+        if product_group_id is not None:
             query = query.distinct()
 
         # Count total before applying pagination (using subquery without joinedload)
@@ -109,10 +109,10 @@ class InboundService:
         count_query = self.db.query(InboundPlan)
         if supplier_id is not None:
             count_query = count_query.filter(InboundPlan.supplier_id == supplier_id)
-        if product_id is not None:
+        if product_group_id is not None:
             count_query = (
                 count_query.join(InboundPlan.lines)
-                .filter(InboundPlanLine.product_group_id == product_id)
+                .filter(InboundPlanLine.product_group_id == product_group_id)
                 .distinct()
             )
         if status is not None:

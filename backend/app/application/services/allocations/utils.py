@@ -20,7 +20,7 @@ Shared utilities for allocation operations:
    理由: 受注データの効率的な取得
    実装:
    - selectinload(Order.order_lines): 明細を別クエリで一括取得
-   - joinedload(OrderLine.product): 製品情報をJOINで取得
+   - joinedload(OrderLine.product_group): 製品情報をJOINで取得
    業務的意義:
    - N+1問題を回避
    → 100件の明細があっても、クエリは3回のみ
@@ -56,7 +56,7 @@ Shared utilities for allocation operations:
    - 自動車部品: 製品ごとに梱包単位が異なる
    → 「次区」マスタで管理（例: 100個入り、50個入り）
    処理フロー:
-   - line.product から取得 → なければ product_group_id で検索
+   - line.product_group から取得 → なければ product_group_id で検索
    → それでも見つからなければ warning 返却
    用途:
    - 引当数量の丸め処理（100個単位で引当等）
@@ -156,7 +156,7 @@ def _load_order(db: Session, order_id: int) -> Order:
         select(Order)
         .options(
             selectinload(Order.order_lines),
-            selectinload(Order.order_lines).joinedload(OrderLine.product),
+            selectinload(Order.order_lines).joinedload(OrderLine.product_group),
         )
         .where(Order.id == order_id)
     )

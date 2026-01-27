@@ -28,7 +28,7 @@ tables.
 3. なぜ複合ユニーク制約が2つあるのか（L64-79）
    理由: 検索性能とデータ整合性の両立
    インデックス1（L65-70）:
-   - idx_forecast_current_unique: (customer_id, delivery_place_id, product_id)
+   - idx_forecast_current_unique: (customer_id, delivery_place_id, product_group_id)
    → 顧客×納品先×製品での検索を高速化（ユニーク制約なし）
    インデックス2（L71-78）:
    - ux_forecast_current_unique: + forecast_date, forecast_period
@@ -97,7 +97,7 @@ tables.
    - 検索頻度: 低い（分析時のみ）
    → インデックスは最小限に抑える
    インデックス選定:
-   - ix_forecast_history_key: (customer_id, delivery_place_id, product_id)
+   - ix_forecast_history_key: (customer_id, delivery_place_id, product_group_id)
    → 分析時の主要な検索軸
    → date や period はインデックス不要（全件スキャンで十分）
 

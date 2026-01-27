@@ -10,7 +10,7 @@
    → ヘッダ（入荷日、仕入先）と明細（製品、数量）を分離
    実装:
    - InboundPlan: 入荷計画全体の情報（plan_number, supplier_id, arrival_date）
-   - InboundPlanLine: 製品ごとの情報（product_id, quantity）
+   - InboundPlanLine: 製品ごとの情報（product_group_id, quantity）
    → 1対多の関係
 
 2. なぜ sap_po_number をユニークにするのか（L50-55, L77-78）

@@ -70,7 +70,7 @@ class LotRepository:
        理由: N+1問題の防止
        効果:
        - Lot と Product/Warehouse を1回のクエリで取得
-       → ループ内でlot.productにアクセスしても追加クエリが発生しない
+       → ループ内でlot.product_groupにアクセスしても追加クエリが発生しない
        パフォーマンス:
        - 100ロット取得時: JOIN なし → 201クエリ（1 + 100 + 100）
        - 100ロット取得時: JOIN あり → 1クエリ
@@ -118,7 +118,7 @@ class LotRepository:
         """Return a lot by its primary key."""
         stmt: Select[tuple[LotReceipt]] = (
             select(LotReceipt)
-            .options(joinedload(LotReceipt.product), joinedload(LotReceipt.warehouse))
+            .options(joinedload(LotReceipt.product_group), joinedload(LotReceipt.warehouse))
             .where(LotReceipt.id == lot_id)
         )
         return cast(LotReceipt | None, self.db.execute(stmt).scalar_one_or_none())
@@ -274,7 +274,7 @@ class LotRepository:
                 LotReceipt.product_group_id == product_group_id,
                 LotReceipt.status == "active",
             )
-            .options(joinedload(LotReceipt.product), joinedload(LotReceipt.warehouse))
+            .options(joinedload(LotReceipt.product_group), joinedload(LotReceipt.warehouse))
         )
 
         # Warehouse filter
@@ -390,7 +390,7 @@ class LotRepository:
                     lot_id=lot.id,
                     lot_code=lot.lot_number,
                     lot_number=lot.lot_number,
-                    product_code=lot.product.maker_part_code if lot.product else "",
+                    product_code=lot.product_group.maker_part_code if lot.product_group else "",
                     warehouse_code=lot.warehouse.warehouse_code if lot.warehouse else "",
                     available_qty=available,
                     expiry_date=lot.expiry_date,

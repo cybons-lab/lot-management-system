@@ -25,10 +25,10 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
     """Service layer orchestrating product use cases.
 
     Inherits common CRUD operations from BaseService:
-    - get_by_id(product_id) -> Product
+    - get_by_id(product_group_id) -> Product
     - create(payload) -> Product
-    - update(product_id, payload) -> Product
-    - delete(product_id) -> None
+    - update(product_group_id, payload) -> Product
+    - delete(product_group_id) -> None
 
     Custom business logic is implemented below.
     """

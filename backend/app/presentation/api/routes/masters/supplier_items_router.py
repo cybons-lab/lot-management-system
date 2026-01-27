@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.infrastructure.persistence.models.masters_models import Product, Supplier
+from app.infrastructure.persistence.models.masters_models import ProductGroup, Supplier
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.routes.auth.auth_router import (
     get_current_admin,
@@ -62,13 +62,13 @@ def list_supplier_items(
             SupplierItem.lead_time_days,
             SupplierItem.display_name,
             SupplierItem.notes,
-            Product.maker_part_code,
-            Product.product_name,
+            ProductGroup.maker_part_code,
+            ProductGroup.product_name,
             Supplier.supplier_code,
             Supplier.supplier_name,
             SupplierItem.valid_to,
         )
-        .join(Product, SupplierItem.product_group_id == Product.id)
+        .join(ProductGroup, SupplierItem.product_group_id == ProductGroup.id)
         .join(Supplier, SupplierItem.supplier_id == Supplier.id)
     )
 
@@ -122,12 +122,12 @@ def export_supplier_items(format: str = "csv", db: Session = Depends(get_db)):
             SupplierItem.lead_time_days,
             SupplierItem.display_name,
             SupplierItem.notes,
-            Product.maker_part_code,
-            Product.product_name,
+            ProductGroup.maker_part_code,
+            ProductGroup.product_name,
             Supplier.supplier_code,
             Supplier.supplier_name,
         )
-        .join(Product, SupplierItem.product_group_id == Product.id)
+        .join(ProductGroup, SupplierItem.product_group_id == ProductGroup.id)
         .join(Supplier, SupplierItem.supplier_id == Supplier.id)
     )
     results = db.execute(query).all()
@@ -185,8 +185,8 @@ def get_supplier_item(id: int, db: Session = Depends(get_db)):
         "lead_time_days": si.lead_time_days,
         "display_name": si.display_name,
         "notes": si.notes,
-        "product_code": si.product.maker_part_code,
-        "product_name": si.product.product_name,
+        "product_code": si.product_group.maker_part_code,
+        "product_name": si.product_group.product_name,
         "supplier_code": si.supplier.supplier_code,
         "supplier_name": si.supplier.supplier_name,
         "created_at": si.created_at,
@@ -256,8 +256,8 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
         "lead_time_days": si.lead_time_days,
         "display_name": si.display_name,
         "notes": si.notes,
-        "product_code": si.product.maker_part_code,
-        "product_name": si.product.product_name,
+        "product_code": si.product_group.maker_part_code,
+        "product_name": si.product_group.product_name,
         "supplier_code": si.supplier.supplier_code,
         "supplier_name": si.supplier.supplier_name,
         "created_at": si.created_at,
@@ -350,8 +350,8 @@ def update_supplier_item(
         "lead_time_days": si.lead_time_days,
         "display_name": si.display_name,
         "notes": si.notes,
-        "product_code": si.product.maker_part_code,
-        "product_name": si.product.product_name,
+        "product_code": si.product_group.maker_part_code,
+        "product_name": si.product_group.product_name,
         "supplier_code": si.supplier.supplier_code,
         "supplier_name": si.supplier.supplier_name,
         "created_at": si.created_at,
@@ -447,8 +447,8 @@ def restore_supplier_item(id: int, db: Session = Depends(get_db)):
         "lead_time_days": si.lead_time_days,
         "display_name": si.display_name,
         "notes": si.notes,
-        "product_code": si.product.maker_part_code,
-        "product_name": si.product.product_name,
+        "product_code": si.product_group.maker_part_code,
+        "product_name": si.product_group.product_name,
         "supplier_code": si.supplier.supplier_code,
         "supplier_name": si.supplier.supplier_name,
         "created_at": si.created_at,
