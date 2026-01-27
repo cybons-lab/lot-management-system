@@ -9,9 +9,9 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.application.services.cloud_flow_service import CloudFlowService
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import CloudFlowJob, CloudFlowJobStatus, User
-from app.application.services.cloud_flow_service import CloudFlowService
 
 
 logger = logging.getLogger(__name__)
@@ -96,3 +96,16 @@ class MaterialDeliverySimpleService:
         self.db.commit()
         self.db.refresh(job)
         return job
+
+    def delete_history(self, job_id: int) -> None:
+        """Step1履歴を削除."""
+        job = self.db.query(CloudFlowJob).filter(CloudFlowJob.id == job_id).first()
+        if not job:
+            raise ValueError(f"Job not found: {job_id}")
+
+        # 簡易素材納品書以外のジョブは削除させない（安全のため）
+        if job.job_type != self.STEP1_JOB_TYPE:
+            raise ValueError(f"Invalid job type for deletion: {job.job_type}")
+
+        self.db.delete(job)
+        self.db.commit()

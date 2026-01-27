@@ -48,13 +48,19 @@ export async function executeMaterialDeliveryDocument(
 export async function executeMaterialDeliveryStep1(
   request: MaterialDeliverySimpleRequest,
 ): Promise<MaterialDeliverySimpleJobResponse> {
-  return http.post<MaterialDeliverySimpleJobResponse>("rpa/material-delivery-simple/step1", request);
+  return http.post<MaterialDeliverySimpleJobResponse>(
+    "rpa/material-delivery-simple/step1",
+    request,
+  );
 }
 
 export async function executeMaterialDeliveryStep2(
   request: MaterialDeliverySimpleRequest,
 ): Promise<MaterialDeliverySimpleJobResponse> {
-  return http.post<MaterialDeliverySimpleJobResponse>("rpa/material-delivery-simple/step2", request);
+  return http.post<MaterialDeliverySimpleJobResponse>(
+    "rpa/material-delivery-simple/step2",
+    request,
+  );
 }
 
 export async function getMaterialDeliverySimpleHistory(
@@ -64,6 +70,10 @@ export async function getMaterialDeliverySimpleHistory(
   return http.get<MaterialDeliverySimpleJobResponse[]>(
     `rpa/material-delivery-simple/history?limit=${limit}&offset=${offset}`,
   );
+}
+
+export async function deleteMaterialDeliverySimpleHistory(id: number): Promise<void> {
+  return http.delete(`rpa/material-delivery-simple/history/${id}`);
 }
 
 export interface GenericCloudFlowExecuteRequest {

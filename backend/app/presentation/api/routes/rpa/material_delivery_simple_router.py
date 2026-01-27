@@ -46,6 +46,20 @@ def get_step1_history(
     return [_job_to_response(job, step=1) for job in jobs]
 
 
+@router.delete("/history/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_step1_history(
+    job_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User | None = Depends(get_current_user_optional),
+):
+    """Step1履歴を削除."""
+    service = MaterialDeliverySimpleService(db)
+    try:
+        service.delete_history(job_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
 @router.post("/step1", response_model=MaterialDeliverySimpleJobResponse)
 def execute_step1(
     request: MaterialDeliverySimpleRequest,
