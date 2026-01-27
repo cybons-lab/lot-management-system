@@ -52,6 +52,7 @@ import { ProductMappingsListPage } from "@/features/product-mappings";
 import { ProductsListPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { RPAPage } from "@/features/rpa";
+import { MaterialDeliverySimplePage } from "@/features/rpa/pages/MaterialDeliverySimplePage";
 import {
   CsvImportPage,
   LayerCodeMappingsPage,
@@ -309,6 +310,10 @@ export function MainRoutes() {
 
       {/* RPA */}
       <Route path={ROUTES.RPA.ROOT} element={<RPAPage />} />
+      <Route
+        path={ROUTES.RPA.MATERIAL_DELIVERY_SIMPLE}
+        element={<MaterialDeliverySimplePage />}
+      />
       <Route path={ROUTES.RPA.GENERIC_CLOUD_FLOW} element={<GenericCloudFlowExecutePage />} />
       <Route path={ROUTES.RPA.SMARTREAD} element={<SmartReadPage />} />
       <Route

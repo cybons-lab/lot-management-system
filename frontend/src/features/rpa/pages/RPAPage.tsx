@@ -39,6 +39,14 @@ export function RPAPage() {
       <PageHeader title="RPA" />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* 素材納品書発行（簡易） */}
+        <RPAMenuCard
+          title="素材納品書発行（簡易）"
+          description="Step1/Step2のみのシンプル実行ページ。日付指定と履歴確認、Step2実行ができます。"
+          icon={<FileText className="h-6 w-6" />}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_SIMPLE}
+        />
+
         {/* 素材納品書発行 */}
         <RPAMenuCard
           title="素材納品書発行"
