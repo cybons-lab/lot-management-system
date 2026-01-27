@@ -1,5 +1,17 @@
 # CLAUDE.md - Lot Management System
 
+## 🔒 CRITICAL: Code System Definition
+
+**このシステムは2つのコード体系のみを使用します:**
+1. **メーカー品番** (`supplier_items.maker_part_no`) - 在庫実体
+2. **得意先品番** (`customer_items.customer_part_no`) - 注文入力
+
+**社内商品コードは存在しません。** `products`テーブルは補助的なグルーピング用です。
+
+詳細: [docs/project/CODE_SYSTEM_DEFINITION.md](docs/project/CODE_SYSTEM_DEFINITION.md)
+
+---
+
 ## Project Overview
 
 **ロット管理システム (Lot Management System) v2.1**
