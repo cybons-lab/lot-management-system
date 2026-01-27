@@ -19,7 +19,7 @@ class CustomerItemBase(BaseSchema):
 
     customer_id: int = Field(..., description="得意先ID")
     customer_part_no: str = Field(..., max_length=100, description="得意先品番（先方品番）")
-    product_id: int = Field(..., description="製品ID")
+    product_group_id: int = Field(..., description="製品ID")
     supplier_id: int | None = Field(None, description="仕入先ID")
     supplier_item_id: int | None = Field(None, description="仕入先品目ID")
     is_primary: bool = Field(False, description="主要得意先フラグ")
@@ -39,7 +39,7 @@ class CustomerItemUpdate(BaseSchema):
     """Schema for updating a customer item mapping."""
 
     customer_part_no: str | None = Field(None, max_length=100, description="得意先品番")
-    product_id: int | None = Field(None, description="製品ID")
+    product_group_id: int | None = Field(None, description="製品ID")
     supplier_id: int | None = Field(None, description="仕入先ID")
     supplier_item_id: int | None = Field(None, description="仕入先品目ID")
     is_primary: bool | None = Field(None, description="主要得意先フラグ")
@@ -55,7 +55,7 @@ class CustomerItemResponse(BaseSchema):
     id: int = Field(..., description="得意先品番マッピングID")
     customer_id: int = Field(..., description="得意先ID")
     customer_part_no: str = Field(..., description="得意先品番（先方品番）")
-    product_id: int = Field(..., description="製品ID")
+    product_group_id: int = Field(..., description="製品ID")
     supplier_id: int | None = Field(None, description="仕入先ID")
     supplier_item_id: int | None = Field(None, description="仕入先品目ID")
     is_primary: bool = Field(..., description="主要得意先フラグ")

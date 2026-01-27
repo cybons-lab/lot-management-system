@@ -58,7 +58,7 @@ def _to_preview_response(service_result) -> FefoPreviewResponse:
         lines.append(
             FefoLineAllocation(  # type: ignore[call-arg]
                 order_line_id=line.order_line_id,
-                product_id=line.product_id,
+                product_group_id=line.product_group_id,
                 product_code=line.product_code,
                 order_quantity=line.required_qty,
                 already_allocated_quantity=line.already_allocated_qty,
@@ -130,7 +130,7 @@ async def manual_allocate(request: ManualAllocationRequest, db: Session = Depend
         lot_number=lot_number,
         allocated_quantity=reservation.reserved_qty,
         available_quantity=Decimal(available),
-        product_id=lot.product_id if lot else 0,
+        product_group_id=lot.product_group_id if lot else 0,
         expiry_date=lot.expiry_date if lot else None,
         status=res_status,
         message="manual reservation created",
@@ -177,7 +177,9 @@ async def list_allocations_by_order(order_id: int, db: Session = Depends(get_db)
         available_quantity = get_available_quantity(db, lot) if lot else Decimal("0")
 
         order_line = db.get(OrderLine, res.source_id)
-        product_id = order_line.product_id if order_line else (lot.product_id if lot else 0)
+        product_group_id = (
+            order_line.product_group_id if order_line else (lot.product_group_id if lot else 0)
+        )
 
         res_status = "allocated" if res.status == ReservationStatus.ACTIVE else "confirmed"
 
@@ -189,7 +191,7 @@ async def list_allocations_by_order(order_id: int, db: Session = Depends(get_db)
                 lot_number=lot.lot_number if lot else "",
                 allocated_quantity=res.reserved_qty,
                 available_quantity=Decimal(available_quantity),
-                product_id=product_id or 0,
+                product_group_id=product_group_id or 0,
                 expiry_date=lot.expiry_date if lot else None,
                 status=res_status,
                 message="",

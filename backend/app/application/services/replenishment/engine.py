@@ -32,7 +32,7 @@ class ReplenishmentEngine:
     def run(
         self,
         warehouse_id: int,
-        product_ids: list[int] | None = None,
+        product_group_ids: list[int] | None = None,
         as_of_date: date | None = None,
         method: str = "moving_average_seasonal",  # default per D11
     ) -> list[ReplenishmentRecommendation]:
@@ -43,10 +43,10 @@ class ReplenishmentEngine:
             as_of_date = utcnow().date()
 
         # 1. 対象の製品・仕入先ペアを取得
-        # SupplierItemをベースに、指定されたproduct_idがあれば絞り込む
+        # SupplierItemをベースに、指定されたproduct_group_idがあれば絞り込む
         stmt = select(SupplierItem).where(SupplierItem.valid_to >= as_of_date)
-        if product_ids:
-            stmt = stmt.where(SupplierItem.product_id.in_(product_ids))
+        if product_group_ids:
+            stmt = stmt.where(SupplierItem.product_group_id.in_(product_group_ids))
 
         # primaryのみにするか？一旦全supplerについて回すが、通常はprimaryのみ
         stmt = stmt.where(SupplierItem.is_primary)
@@ -59,21 +59,21 @@ class ReplenishmentEngine:
         estimator = self._create_estimator(method)
 
         for ps in product_suppliers:
-            if ps.product_id is None:
-                # 独立運用(product_idなし)のSupplierItemは、現状の製品ベースのロジックでは扱えないためスキップ
+            if ps.product_group_id is None:
+                # 独立運用(product_group_idなし)のSupplierItemは、現状の製品ベースのロジックでは扱えないためスキップ
                 continue
-            product_id = int(ps.product_id)
+            product_group_id = int(ps.product_group_id)
             supplier_id = int(ps.supplier_id)
             # 3. 在庫情報の取得
-            on_hand = self._get_on_hand(product_id, warehouse_id)
-            reserved = self._get_reserved(product_id, warehouse_id)
-            inbound = self._get_pending_inbound(product_id, warehouse_id, supplier_id)
+            on_hand = self._get_on_hand(product_group_id, warehouse_id)
+            reserved = self._get_reserved(product_group_id, warehouse_id)
+            inbound = self._get_pending_inbound(product_group_id, warehouse_id, supplier_id)
 
             # 4. 需要予測
             # D13: 予測期間 30日
             horizon_days = 30
             forecast = estimator.estimate(
-                product_id=product_id,
+                product_group_id=product_group_id,
                 warehouse_id=warehouse_id,
                 horizon_days=horizon_days,
                 as_of_date=as_of_date,
@@ -95,13 +95,13 @@ class ReplenishmentEngine:
             # 今回は MOQ=なし, LotSize=qty_scale * 10 などを仮定、またはマスタにあれば使う
             # Productにqty_scaleを追加したのでそれを使う
 
-            product = self.db.get(Product, ps.product_id)
+            product = self.db.get(Product, ps.product_group_id)
             lot_size = None
             if product and product.qty_scale:
                 lot_size = Decimal(product.qty_scale)  # 仮: qty_scale をロットサイズとして扱う
 
             rec = self.calculator.calculate(
-                product_id=product_id,
+                product_group_id=product_group_id,
                 warehouse_id=warehouse_id,
                 supplier_id=supplier_id,
                 as_of_date=as_of_date,
@@ -145,9 +145,9 @@ class ReplenishmentEngine:
 
         return OutlierHandler(ma)
 
-    def _get_on_hand(self, product_id: int, warehouse_id: int) -> Decimal:
+    def _get_on_hand(self, product_group_id: int, warehouse_id: int) -> Decimal:
         stmt = select(func.sum(LotReceipt.current_quantity)).where(
-            LotReceipt.product_id == product_id,
+            LotReceipt.product_group_id == product_group_id,
             LotReceipt.warehouse_id == warehouse_id,
             # active lots only logic? valid_to check?
             # Assume all records with quantity > 0 are on hand
@@ -155,21 +155,23 @@ class ReplenishmentEngine:
         )
         return self.db.execute(stmt).scalar() or Decimal("0")
 
-    def _get_reserved(self, product_id: int, warehouse_id: int) -> Decimal:
+    def _get_reserved(self, product_group_id: int, warehouse_id: int) -> Decimal:
         # Reservation logic: linked to LotReservation?
         # Need to join LotReservation -> LotReceipt to filter by warehouse
         stmt = (
             select(func.sum(LotReservation.reserved_qty))
             .join(LotReceipt, LotReservation.lot_id == LotReceipt.id)
             .where(
-                LotReceipt.product_id == product_id,
+                LotReceipt.product_group_id == product_group_id,
                 LotReceipt.warehouse_id == warehouse_id,
                 LotReservation.status == "active",
             )
         )
         return self.db.execute(stmt).scalar() or Decimal("0")
 
-    def _get_pending_inbound(self, product_id: int, warehouse_id: int, supplier_id: int) -> Decimal:
+    def _get_pending_inbound(
+        self, product_group_id: int, warehouse_id: int, supplier_id: int
+    ) -> Decimal:
         # InboundPlanLine logic?
         # Assuming we check InboundPlanLine linked to InboundPlan
         # status planned or in_transit
@@ -179,7 +181,7 @@ class ReplenishmentEngine:
             select(func.sum(InboundPlanLine.planned_quantity))
             .join(InboundPlan, InboundPlanLine.inbound_plan_id == InboundPlan.id)
             .where(
-                InboundPlanLine.product_id == product_id,
+                InboundPlanLine.product_group_id == product_group_id,
                 InboundPlan.supplier_id == supplier_id,
                 InboundPlan.status.in_(["planned", "in_transit"]),
             )

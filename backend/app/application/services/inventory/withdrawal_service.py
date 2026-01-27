@@ -113,7 +113,7 @@ class WithdrawalService:
         withdrawal_type: str | None = None,
         start_date: date | None = None,
         end_date: date | None = None,
-        product_id: int | None = None,
+        product_group_id: int | None = None,
         warehouse_id: int | None = None,
         search_query: str | None = None,
     ) -> WithdrawalListResponse:
@@ -127,7 +127,7 @@ class WithdrawalService:
             withdrawal_type: 出庫タイプでフィルタ
             start_date: 開始日（出荷日）
             end_date: 終了日（出荷日）
-            product_id: 製品IDでフィルタ
+            product_group_id: 製品IDでフィルタ
             warehouse_id: 倉庫IDでフィルタ
             search_query: キーワード検索（ロット、製品、得意先、納入先、参照番号）
 
@@ -149,7 +149,7 @@ class WithdrawalService:
         if product_id is not None or warehouse_id is not None:
             query = query.join(Withdrawal.lot)
             if product_id is not None:
-                query = query.filter(LotReceipt.product_id == product_id)
+                query = query.filter(LotReceipt.product_group_id == product_id)
             if warehouse_id is not None:
                 query = query.filter(LotReceipt.warehouse_id == warehouse_id)
 
@@ -402,7 +402,7 @@ class WithdrawalService:
             id=withdrawal.id,
             lot_id=withdrawal.lot_id or 0,
             lot_number=lot.lot_number if lot else "",
-            product_id=lot.product_id if lot else 0,
+            product_group_id=lot.product_group_id if lot else 0,
             product_name=get_product_name(product),
             product_code=get_product_code(product),
             quantity=withdrawal.quantity or Decimal("0"),
@@ -557,7 +557,7 @@ class WithdrawalService:
         year: int,
         month: int,
         warehouse_id: int | None = None,
-        product_id: int | None = None,
+        product_group_id: int | None = None,
         supplier_id: int | None = None,
     ) -> list[DailyWithdrawalSummary]:
         """月間の日別出庫集計を取得.
@@ -566,7 +566,7 @@ class WithdrawalService:
             year: 年
             month: 月
             warehouse_id: 倉庫IDフィルタ
-            product_id: 製品IDフィルタ
+            product_group_id: 製品IDフィルタ
             supplier_id: 仕入先IDフィルタ
 
         Returns:
@@ -592,8 +592,8 @@ class WithdrawalService:
 
         if warehouse_id:
             stmt = stmt.where(LotReceipt.warehouse_id == warehouse_id)
-        if product_id:
-            stmt = stmt.where(LotReceipt.product_id == product_id)
+        if product_group_id:
+            stmt = stmt.where(LotReceipt.product_group_id == product_id)
         if supplier_id:
             stmt = stmt.where(LotReceipt.supplier_id == supplier_id)
 

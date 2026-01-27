@@ -47,7 +47,7 @@ class AvailableLotResponse(BaseSchema):
 async def list_lots(
     skip: int = 0,
     limit: int = 100,
-    product_id: int | None = None,
+    product_group_id: int | None = None,
     product_code: str | None = None,
     supplier_code: str | None = None,
     warehouse_id: int | None = None,
@@ -71,7 +71,7 @@ async def list_lots(
     return service.list_lots(
         skip=skip,
         limit=limit,
-        product_id=product_id,
+        product_group_id=product_group_id,
         product_code=product_code,
         supplier_code=supplier_code,
         warehouse_id=warehouse_id,
@@ -86,7 +86,7 @@ async def list_lots(
 
 @router.get("/available", response_model=list[AvailableLotResponse])
 async def get_available_lots(
-    product_id: int = Query(..., description="製品ID"),
+    product_group_id: int = Query(..., description="製品ID"),
     warehouse_id: int | None = Query(None, description="倉庫ID"),
     min_quantity: Decimal = Query(Decimal("0"), description="最小必要数量"),
     db: Session = Depends(get_db),
@@ -95,7 +95,7 @@ async def get_available_lots(
     # client.get_available_lots call is likely non-async inside InProcessLotClient but here awaited?
     # Checking InProcessLotClient implementation, it was defined as async def in previous steps.
     candidates = await client.get_available_lots(
-        product_id=product_id, warehouse_id=warehouse_id, min_quantity=min_quantity
+        product_group_id=product_group_id, warehouse_id=warehouse_id, min_quantity=min_quantity
     )
     return [AvailableLotResponse.model_validate(candidate) for candidate in candidates]
 
@@ -107,7 +107,7 @@ async def search_lots(
     size: int = Query(100, ge=1, le=1000, description="Page size"),
     sort_by: str = Query("expiry_date", description="Sort field"),
     sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort order"),
-    product_id: int | None = Query(None, description="Filter by Product ID"),
+    product_group_id: int | None = Query(None, description="Filter by Product ID"),
     warehouse_id: int | None = Query(None, description="Filter by Warehouse ID"),
     supplier_code: str | None = Query(None, description="Filter by Supplier Code"),
     expiry_from: date | None = Query(None, description="Filter by Expiry Date (From)"),
@@ -123,7 +123,7 @@ async def search_lots(
         size=size,
         sort_by=sort_by,
         sort_order=sort_order,
-        product_id=product_id,
+        product_group_id=product_group_id,
         warehouse_id=warehouse_id,
         supplier_code=supplier_code,
         expiry_from=expiry_from,

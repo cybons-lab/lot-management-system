@@ -52,7 +52,7 @@ class AllocationCandidateService:
     Usage:
         service = AllocationCandidateService(db)
         candidates = service.get_candidates(
-            product_id=123,
+            product_group_id=123,
             policy=AllocationPolicy.FEFO,
             lock_mode=LockMode.NONE,
         )
@@ -65,7 +65,7 @@ class AllocationCandidateService:
 
     def get_candidates(
         self,
-        product_id: int,
+        product_group_id: int,
         *,
         policy: AllocationPolicy,
         lock_mode: LockMode = LockMode.NONE,
@@ -106,7 +106,7 @@ class AllocationCandidateService:
         特殊なケースでは明示的にフラグを変更することで柔軟に対応。
 
         Args:
-            product_id: Product ID to filter by
+            product_group_id: Product ID to filter by
             policy: Sorting policy (FEFO or FIFO) - REQUIRED
             lock_mode: Database locking mode (default: NONE)
             warehouse_id: Optional warehouse filter
@@ -121,7 +121,7 @@ class AllocationCandidateService:
             List of LotCandidate sorted by policy
         """
         return self._repo.find_allocation_candidates(
-            product_id=product_id,
+            product_group_id=product_group_id,
             policy=policy,
             lock_mode=lock_mode,
             warehouse_id=warehouse_id,
@@ -135,7 +135,7 @@ class AllocationCandidateService:
 
     def get_candidates_for_products(
         self,
-        product_ids: list[int],
+        product_group_ids: list[int],
         *,
         policy: AllocationPolicy,
         lock_mode: LockMode = LockMode.NONE,
@@ -151,7 +151,7 @@ class AllocationCandidateService:
         Convenience method for batch operations.
 
         Args:
-            product_ids: List of product IDs to fetch candidates for
+            product_group_ids: List of product IDs to fetch candidates for
             policy: Sorting policy (FEFO or FIFO) - REQUIRED
             lock_mode: Database locking mode (default: NONE)
             exclude_expired: Exclude lots past expiry date (default: True)
@@ -162,12 +162,12 @@ class AllocationCandidateService:
             min_available_qty: Minimum available quantity threshold (default: 0.0)
 
         Returns:
-            Dict mapping product_id to list of LotCandidate
+            Dict mapping product_group_id to list of LotCandidate
         """
         result: dict[int, list[LotCandidate]] = {}
-        for product_id in product_ids:
+        for product_group_id in product_group_ids:
             candidates = self.get_candidates(
-                product_id=product_id,
+                product_group_id=product_group_id,
                 policy=policy,
                 lock_mode=lock_mode,
                 exclude_expired=exclude_expired,
@@ -178,5 +178,5 @@ class AllocationCandidateService:
                 min_available_qty=min_available_qty,
             )
             if candidates:
-                result[product_id] = candidates
+                result[product_group_id] = candidates
         return result

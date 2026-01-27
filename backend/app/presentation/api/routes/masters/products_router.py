@@ -151,7 +151,7 @@ def get_supplier_items(product_code: str, db: Session = Depends(get_db)):
     stmt = (
         select(SupplierItem, Supplier)
         .join(Supplier, SupplierItem.supplier_id == Supplier.id)
-        .where(SupplierItem.product_id == product.id)
+        .where(SupplierItem.product_group_id == product.id)
         .order_by(SupplierItem.is_primary.desc(), Supplier.supplier_name)
     )
     results = db.execute(stmt).all()

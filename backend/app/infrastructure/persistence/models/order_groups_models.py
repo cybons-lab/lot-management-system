@@ -25,17 +25,17 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:
-    from .masters_models import Customer, Product
+    from .masters_models import Customer, ProductGroup
     from .orders_models import OrderLine
 
 
 class OrderGroup(Base):
     """受注グループ（論理ヘッダ）.
 
-    業務キー: customer_id × product_id × order_date
+    業務キー: customer_id × product_group_id × order_date
 
     仮想的な受注ナンバーを別途採番するのではなく、
-    「得意先 × 製品 × 受注日」を1つの受注グループとして扱う。
+    「得意先 × 製品グループ × 受注日」を1つの受注グループとして扱う。
     """
 
     __tablename__ = "order_groups"
@@ -46,9 +46,9 @@ class OrderGroup(Base):
         ForeignKey("customers.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("product_groups.id", ondelete="RESTRICT"),
         nullable=False,
     )
     order_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -66,18 +66,18 @@ class OrderGroup(Base):
     __table_args__ = (
         UniqueConstraint(
             "customer_id",
-            "product_id",
+            "product_group_id",
             "order_date",
             name="uq_order_groups_business_key",
         ),
         Index("idx_order_groups_customer", "customer_id"),
-        Index("idx_order_groups_product", "product_id"),
+        Index("idx_order_groups_product_group", "product_group_id"),
         Index("idx_order_groups_date", "order_date"),
     )
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
-    product: Mapped[Product] = relationship("Product")
+    product_group: Mapped[ProductGroup] = relationship("ProductGroup")
     order_lines: Mapped[list[OrderLine]] = relationship(
         "OrderLine",
         back_populates="order_group",

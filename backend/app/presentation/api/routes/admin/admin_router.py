@@ -311,7 +311,7 @@ def get_allocatable_lots(
             SELECT
                 vld.lot_id,
                 vld.lot_number,
-                vld.product_id,
+                vld.product_group_id,
                 p.maker_part_code AS product_code,
                 vld.warehouse_id,
                 vld.warehouse_code,
@@ -323,7 +323,7 @@ def get_allocatable_lots(
                 vld.updated_at as last_updated
             FROM
                 v_lot_details vld
-                INNER JOIN products p ON p.id = vld.product_id
+                INNER JOIN products p ON p.id = vld.product_group_id
             WHERE
                 vld.available_quantity > 0
                 AND vld.status = 'active'
@@ -344,7 +344,7 @@ def get_allocatable_lots(
             {
                 "lot_id": row.lot_id,
                 "lot_number": row.lot_number,
-                "product_id": row.product_id,
+                "product_group_id": row.product_group_id,
                 "product_code": row.product_code,
                 "warehouse_id": row.warehouse_id,
                 "warehouse_code": row.warehouse_code,

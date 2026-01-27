@@ -35,7 +35,7 @@ class InventoryStats(BaseSchema):
 async def list_inventory(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=1000),
-    product_id: int | None = None,
+    product_group_id: int | None = None,
     warehouse_id: int | None = None,
     supplier_id: int | None = None,
     tab: str = Query(default="all", pattern="^(in_stock|no_stock|all)$"),
@@ -55,7 +55,7 @@ async def list_inventory(
     return service.get_inventory_items(
         skip=skip,
         limit=limit,
-        product_id=product_id,
+        product_group_id=product_group_id,
         warehouse_id=warehouse_id,
         supplier_id=supplier_id,
         tab=tab,
@@ -67,7 +67,7 @@ async def list_inventory(
 
 @router.get("/filter-options", response_model=InventoryFilterOptions)
 async def get_filter_options(
-    product_id: int | None = None,
+    product_group_id: int | None = None,
     warehouse_id: int | None = None,
     supplier_id: int | None = None,
     tab: str = Query(default="all", pattern="^(in_stock|no_stock|all)$"),
@@ -81,7 +81,7 @@ async def get_filter_options(
         raise HTTPException(status_code=401, detail="Authentication required for this filter")
     service = InventoryService(db)
     return service.get_filter_options(
-        product_id=product_id,
+        product_group_id=product_group_id,
         warehouse_id=warehouse_id,
         supplier_id=supplier_id,
         tab=tab,
@@ -91,10 +91,12 @@ async def get_filter_options(
     )
 
 
-@router.get("/{product_id}/{warehouse_id}", response_model=InventoryItemResponse)
-async def get_inventory_item(product_id: int, warehouse_id: int, db: Session = Depends(get_db)):
+@router.get("/{product_group_id}/{warehouse_id}", response_model=InventoryItemResponse)
+async def get_inventory_item(
+    product_group_id: int, warehouse_id: int, db: Session = Depends(get_db)
+):
     service = InventoryService(db)
-    item = service.get_inventory_item_by_product_warehouse(product_id, warehouse_id)
+    item = service.get_inventory_item_by_product_warehouse(product_group_id, warehouse_id)
     if not item:
         raise HTTPException(status_code=404, detail="Inventory item not found")
     return item
@@ -108,16 +110,16 @@ async def get_inventory_stats(db: Session = Depends(get_db)):
         (Decimal(str(item.get("total_quantity", 0))) for item in by_product), Decimal("0")
     )
     warehouse_ids = set()
-    product_ids = set()
+    product_group_ids = set()
     for item in by_product:
-        product_ids.add(item.get("product_id"))
+        product_group_ids.add(item.get("product_group_id"))
         # available warehouse count not in product item; derive from by_warehouse
     by_warehouse = service.get_inventory_by_warehouse()
     for warehouse in by_warehouse:
         warehouse_ids.add(warehouse.get("warehouse_id"))
 
     return InventoryStats(
-        total_products=len(product_ids),
+        total_products=len(product_group_ids),
         total_warehouses=len(warehouse_ids),
         total_quantity=total_quantity,
     )

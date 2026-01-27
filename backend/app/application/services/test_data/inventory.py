@@ -22,7 +22,7 @@ def generate_lots(
     products: list[Product],
     warehouses: list[Warehouse],
     suppliers: list[Supplier],
-    forecast_totals: dict[int, int],  # product_id -> total forecast quantity
+    forecast_totals: dict[int, int],  # product_group_id -> total forecast quantity
 ):
     """Generate lots based on forecast data (planned procurement).
 
@@ -79,13 +79,13 @@ def generate_lots(
                 existing = (
                     db.query(ProductWarehouse)
                     .filter(
-                        ProductWarehouse.product_id == p.id,
+                        ProductWarehouse.product_group_id == p.id,
                         ProductWarehouse.warehouse_id == warehouse.id,
                     )
                     .first()
                 )
                 if not existing:
-                    db.add(ProductWarehouse(product_id=p.id, warehouse_id=warehouse.id))
+                    db.add(ProductWarehouse(product_group_id=p.id, warehouse_id=warehouse.id))
                 continue
             elif scenario == "archived_lots":
                 lots_to_create = [("archived", "archived"), ("archived", "archived")]
@@ -146,7 +146,7 @@ def generate_lots(
             # Create LotMaster
             master = LotMaster(
                 lot_number=lot_number,
-                product_id=p.id,
+                product_group_id=p.id,
                 supplier_id=supplier_id,
                 first_receipt_date=received_date,
                 latest_expiry_date=expiry_date,
@@ -156,7 +156,7 @@ def generate_lots(
 
             lot = LotReceipt(
                 lot_master_id=master.id,
-                product_id=p.id,
+                product_group_id=p.id,
                 warehouse_id=warehouse.id,
                 supplier_id=supplier_id,
                 received_date=received_date,
@@ -186,38 +186,40 @@ def generate_lots(
             existing = (
                 db.query(ProductWarehouse)
                 .filter(
-                    ProductWarehouse.product_id == p.id,
+                    ProductWarehouse.product_group_id == p.id,
                     ProductWarehouse.warehouse_id == warehouse.id,
                 )
                 .first()
             )
             if not existing:
-                db.add(ProductWarehouse(product_id=p.id, warehouse_id=warehouse.id))
+                db.add(ProductWarehouse(product_group_id=p.id, warehouse_id=warehouse.id))
 
     db.commit()
     print(f"[INFO] Generated {generated_count} lots for {len(products)} products")
 
     # DEBUG: Verify lot counts per product
     lot_counts = (
-        db.query(LotReceipt.product_id, func.count(LotReceipt.id).label("count"))
-        .group_by(LotReceipt.product_id)
+        db.query(LotReceipt.product_group_id, func.count(LotReceipt.id).label("count"))
+        .group_by(LotReceipt.product_group_id)
         .having(func.count(LotReceipt.id) > 3)
         .all()
     )
 
     if lot_counts:
         print("\n[WARNING] Products with >3 lots after generation:")
-        for product_id, count in lot_counts:
-            product = db.query(Product).filter(Product.id == product_id).first()
+        for product_group_id, count in lot_counts:
+            product = db.query(Product).filter(Product.id == product_group_id).first()
             product_code = product.maker_part_code if product else "UNKNOWN"
-            print(f"  - Product {product_code} (id={product_id}): {count} lots")
+            print(f"  - Product {product_code} (id={product_group_id}): {count} lots")
     else:
         print("\n[SUCCESS] All products have ≤3 lots")
 
 
-def get_any_lot_id(db: Session, product_id: int, required_qty: Decimal | None = None) -> int | None:
+def get_any_lot_id(
+    db: Session, product_group_id: int, required_qty: Decimal | None = None
+) -> int | None:
     query = db.query(LotReceipt).filter(
-        LotReceipt.product_id == product_id, LotReceipt.status == "active"
+        LotReceipt.product_group_id == product_group_id, LotReceipt.status == "active"
     )
 
     if required_qty is not None:
@@ -232,7 +234,7 @@ def get_any_lot_id(db: Session, product_id: int, required_qty: Decimal | None = 
     if not lot and required_qty is not None:
         lot = (
             db.query(LotReceipt)
-            .filter(LotReceipt.product_id == product_id, LotReceipt.status == "active")
+            .filter(LotReceipt.product_group_id == product_group_id, LotReceipt.status == "active")
             .order_by(
                 (LotReceipt.received_quantity - LotReceipt.consumed_quantity).desc(),
                 LotReceipt.id.asc(),

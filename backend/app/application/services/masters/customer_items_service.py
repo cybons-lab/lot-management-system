@@ -48,7 +48,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "customer_code": item.customer.customer_code,
             "customer_name": item.customer.customer_name,
             "customer_part_no": item.customer_part_no,
-            "product_id": item.product_id,
+            "product_group_id": item.product_group_id,
             "product_code": item.product.maker_part_code,
             "product_name": item.product.product_name,
             "supplier_id": item.supplier_id,
@@ -76,7 +76,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         skip: int = 0,
         limit: int = 100,
         customer_id: int | None = None,
-        product_id: int | None = None,
+        product_group_id: int | None = None,
         supplier_id: int | None = None,
         include_inactive: bool = False,
     ) -> list[dict]:
@@ -98,7 +98,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 Supplier.supplier_name,
             )
             .join(Customer, CustomerItem.customer_id == Customer.id)
-            .join(Product, CustomerItem.product_id == Product.id)
+            .join(Product, CustomerItem.product_group_id == Product.id)
             .outerjoin(Supplier, CustomerItem.supplier_id == Supplier.id)
         )
 
@@ -106,7 +106,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             query = query.filter(CustomerItem.customer_id == customer_id)
 
         if product_id is not None:
-            query = query.filter(CustomerItem.product_id == product_id)
+            query = query.filter(CustomerItem.product_group_id == product_id)
 
         if supplier_id is not None:
             # Filter via supplier_item_id -> supplier_items.supplier_id
@@ -127,7 +127,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 "customer_code": r.customer_code,
                 "customer_name": r.customer_name,
                 "customer_part_no": r.CustomerItem.customer_part_no,
-                "product_id": r.CustomerItem.product_id,
+                "product_group_id": r.CustomerItem.product_group_id,
                 "product_code": r.maker_part_code,
                 "product_name": r.product_name,
                 "supplier_id": r.CustomerItem.supplier_id,
@@ -374,7 +374,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                     raise ValueError(f"Customer code not found: {row.customer_code}")
 
                 product_id = product_map.get(row.product_code)
-                if not product_id:
+                if not product_group_id:
                     raise ValueError(f"Product code not found: {row.product_code}")
 
                 supplier_id = None
@@ -388,7 +388,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
                 if existing:
                     # UPDATE
-                    existing.product_id = product_id
+                    existing.product_group_id = product_id
                     existing.supplier_id = supplier_id
                     existing.base_unit = row.base_unit
                     existing.pack_unit = row.pack_unit
@@ -401,7 +401,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                     new_item = CustomerItem(
                         customer_id=customer_id,
                         customer_part_no=row.customer_part_no,
-                        product_id=product_id,
+                        product_group_id=product_id,
                         supplier_id=supplier_id,
                         base_unit=row.base_unit,
                         pack_unit=row.pack_unit,

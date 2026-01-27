@@ -19,7 +19,7 @@ class IntakeHistoryResponse(BaseSchema):
     id: int = Field(..., serialization_alias="intake_id")
     lot_id: int
     lot_number: str
-    product_id: int
+    product_group_id: int
     product_name: str
     product_code: str
     supplier_id: int | None = None

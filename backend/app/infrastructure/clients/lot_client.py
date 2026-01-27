@@ -18,7 +18,7 @@ class LotContextClient(ABC):
 
     @abstractmethod
     async def get_available_lots(
-        self, product_id: int, warehouse_id: int | None, min_quantity: Decimal
+        self, product_group_id: int, warehouse_id: int | None, min_quantity: Decimal
     ) -> list[LotCandidate]:
         """利用可能ロットを FEFO 順で取得."""
         raise NotImplementedError
@@ -37,9 +37,9 @@ class InProcessLotClient(LotContextClient):
         self.db: Session = lot_service.db
 
     async def get_available_lots(
-        self, product_id: int, warehouse_id: int | None, min_quantity: Decimal
+        self, product_group_id: int, warehouse_id: int | None, min_quantity: Decimal
     ) -> list[LotCandidate]:
-        product = self.db.get(Product, product_id)
+        product = self.db.get(Product, product_group_id)
         if not product:
             return []
 

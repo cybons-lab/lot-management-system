@@ -180,7 +180,7 @@ def generate_products(db: Session, options: object = None) -> list[Product]:
         if random.random() < 0.6:
             # 1 PCS = 15-25 KG
             factor = Decimal(random.randint(15, 25))
-            conv = ProductUomConversion(product_id=p.id, external_unit="KG", factor=factor)
+            conv = ProductUomConversion(product_group_id=p.id, external_unit="KG", factor=factor)
             db.add(conv)
 
     db.commit()
@@ -204,7 +204,7 @@ def generate_customer_items(
     """
     # Track which supplier-maker_part_no pairs already exist to avoid duplicates
     supplier_maker_pairs: set[tuple[int, str]] = set()
-    # Map product_id + supplier_id -> supplier_item for linking
+    # Map product_group_id + supplier_id -> supplier_item for linking
     supplier_item_map: dict[tuple[int, int], SupplierItem] = {}
 
     # Get delivery places if not provided
@@ -228,7 +228,7 @@ def generate_customer_items(
                 maker_part_no = p.maker_part_code  # Use product's maker_part_code
                 if (supplier.id, maker_part_no) not in supplier_maker_pairs:
                     si = SupplierItem(
-                        product_id=p.id,
+                        product_group_id=p.id,
                         supplier_id=supplier.id,
                         maker_part_no=maker_part_no,
                         is_primary=(idx == 0),  # First supplier is primary
@@ -266,7 +266,7 @@ def generate_customer_items(
 
             ci = CustomerItem(
                 customer_id=c.id,
-                product_id=p.id,
+                product_group_id=p.id,
                 customer_part_no=customer_part_no,
                 base_unit="pcs",
                 supplier_id=selected_supplier.id if selected_supplier else None,

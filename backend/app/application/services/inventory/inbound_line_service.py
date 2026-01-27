@@ -30,7 +30,7 @@ class InboundLineService:
         return InboundPlanLineResponse(
             id=line.id,
             inbound_plan_id=line.inbound_plan_id,
-            product_id=line.product_id,
+            product_group_id=line.product_group_id,
             planned_quantity=line.planned_quantity,
             unit=line.unit,
             created_at=line.created_at,
@@ -97,7 +97,7 @@ class InboundLineService:
         """
         db_line = InboundPlanLine(
             inbound_plan_id=plan_id,
-            product_id=line_data.product_id,
+            product_group_id=line_data.product_group_id,
             planned_quantity=line_data.planned_quantity,
             unit=line_data.unit,
         )

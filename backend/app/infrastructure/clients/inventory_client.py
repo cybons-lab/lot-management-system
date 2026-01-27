@@ -13,7 +13,7 @@ class InventoryContextClient(ABC):
 
     @abstractmethod
     async def get_inventory_summary(
-        self, product_id: int, warehouse_id: int
+        self, product_group_id: int, warehouse_id: int
     ) -> InventoryItemResponse | None:
         raise NotImplementedError
 
@@ -29,9 +29,9 @@ class InProcessInventoryClient(InventoryContextClient):
         self.service = service
 
     async def get_inventory_summary(
-        self, product_id: int, warehouse_id: int
+        self, product_group_id: int, warehouse_id: int
     ) -> InventoryItemResponse | None:
-        return self.service.get_inventory_item_by_product_warehouse(product_id, warehouse_id)
+        return self.service.get_inventory_item_by_product_warehouse(product_group_id, warehouse_id)
 
     async def list_inventory(self, skip: int = 0, limit: int = 100) -> list[InventoryItemResponse]:
         response = self.service.get_inventory_items(skip=skip, limit=limit)

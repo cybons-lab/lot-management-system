@@ -45,13 +45,13 @@ class AllocationSuggestionBase:
         self.db = db
         self._candidate_service = AllocationCandidateService(db)
 
-    def _fetch_available_lots(self, product_ids: list[int]) -> dict[int, list[LotCandidate]]:
+    def _fetch_available_lots(self, product_group_ids: list[int]) -> dict[int, list[LotCandidate]]:
         """Fetch available lots for given products, sorted by FEFO.
 
         v3.0: Delegates to AllocationCandidateService (SSOT).
         """
         return self._candidate_service.get_candidates_for_products(
-            product_ids=product_ids,
+            product_group_ids=product_group_ids,
             policy=AllocationPolicy.FEFO,
             lock_mode=LockMode.NONE,
             exclude_expired=True,
@@ -68,7 +68,7 @@ class AllocationSuggestionBase:
 
         Args:
             forecasts: List of forecast records to process
-            lots_by_product: Available lots grouped by product_id (LotCandidate)
+            lots_by_product: Available lots grouped by product_group_id (LotCandidate)
             source: Source identifier for suggestions (e.g., "forecast_import", "group_regenerate")
 
         Returns:
@@ -84,7 +84,7 @@ class AllocationSuggestionBase:
             result.total_forecast += needed
 
             allocated_for_row: Decimal = Decimal("0")
-            lots = lots_by_product.get(f.product_id, [])
+            lots = lots_by_product.get(f.product_group_id, [])
 
             alloc_results = allocate_soft_for_forecast(needed, lots, temp_allocations)
 
@@ -94,7 +94,7 @@ class AllocationSuggestionBase:
                     forecast_id=f.id,
                     customer_id=f.customer_id,
                     delivery_place_id=f.delivery_place_id,
-                    product_id=f.product_id,
+                    product_group_id=f.product_group_id,
                     lot_id=res.lot_id,
                     quantity=res.quantity,
                     priority=res.priority,
@@ -114,7 +114,7 @@ class AllocationSuggestionBase:
             result.total_allocated += allocated_for_row
 
             # Aggregate stats
-            key = (f.customer_id, f.delivery_place_id, f.product_id, f.forecast_period)
+            key = (f.customer_id, f.delivery_place_id, f.product_group_id, f.forecast_period)
             if key not in result.stats_agg:
                 result.stats_agg[key] = {
                     "forecast_quantity": Decimal("0"),
@@ -143,12 +143,12 @@ def finalize_stats_and_gaps(
     gaps_list: list[AllocationGap] = []
 
     for key, data in stats_agg.items():
-        customer_id, delivery_place_id, product_id, forecast_period = key
+        customer_id, delivery_place_id, product_group_id, forecast_period = key
         stats_list.append(
             AllocationStatsPerKey(
                 customer_id=customer_id,
                 delivery_place_id=delivery_place_id,
-                product_id=product_id,
+                product_group_id=product_group_id,
                 forecast_period=forecast_period,
                 forecast_quantity=data["forecast_quantity"],
                 allocated_quantity=data["allocated_quantity"],
@@ -160,7 +160,7 @@ def finalize_stats_and_gaps(
                 AllocationGap(
                     customer_id=customer_id,
                     delivery_place_id=delivery_place_id,
-                    product_id=product_id,
+                    product_group_id=product_group_id,
                     forecast_period=forecast_period,
                     shortage_quantity=data["shortage_quantity"],
                 )

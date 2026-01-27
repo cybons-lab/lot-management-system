@@ -124,10 +124,10 @@ class DBErrorParser:
         ),
         "uq_user_supplier_primary_per_supplier": ("この仕入先には既に主担当が割り当てられています"),
         # Foreign Key Violations
-        "fk_lots_product_id": "指定された製品が見つかりません",
+        "fk_lots_product_group_id": "指定された製品グループが見つかりません",
         "fk_lots_warehouse_id": "指定された倉庫が見つかりません",
         "fk_lots_supplier_id": "指定された仕入先が見つかりません",
-        "fk_order_lines_product_id": "指定された製品が見つかりません",
+        "fk_order_lines_product_group_id": "指定された製品グループが見つかりません",
         "fk_order_lines_order_id": "指定された受注が見つかりません",
         "fk_allocations_order_line_id": "指定された受注明細が見つかりません",
         "fk_allocations_lot_id": "指定されたロットが見つかりません",

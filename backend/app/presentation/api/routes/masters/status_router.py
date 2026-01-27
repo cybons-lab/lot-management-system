@@ -38,7 +38,7 @@ def get_master_status(
     # products table LEFT JOIN supplier_items table
     unmapped_products_count = (
         db.query(func.count(Product.id))
-        .outerjoin(SupplierItem, Product.id == SupplierItem.product_id)
+        .outerjoin(SupplierItem, Product.id == SupplierItem.product_group_id)
         .filter(SupplierItem.id.is_(None))
         .scalar()
     )

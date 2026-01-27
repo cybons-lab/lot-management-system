@@ -26,7 +26,7 @@ class CustomerItemDeliverySettingService:
     def get_shipment_text(
         self,
         customer_id: int,
-        product_id: int,
+        product_group_id: int,
         delivery_place_id: int | None = None,
         jiku_code: str | None = None,
     ) -> ShipmentTextResponse:
@@ -39,7 +39,7 @@ class CustomerItemDeliverySettingService:
 
         Args:
             customer_id: Customer ID
-            product_id: Product ID (will be converted to customer_part_no)
+            product_group_id: Product ID (will be converted to customer_part_no)
             delivery_place_id: Optional delivery place ID
             jiku_code: Optional jiku code
 
@@ -49,7 +49,7 @@ class CustomerItemDeliverySettingService:
         # Convert product_id to customer_part_no
         customer_part_no = self.repository.find_customer_part_no(
             customer_id=customer_id,
-            product_id=product_id,
+            product_group_id=product_id,
         )
 
         if not customer_part_no:

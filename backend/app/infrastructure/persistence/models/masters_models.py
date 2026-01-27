@@ -364,15 +364,22 @@ class DeliveryPlace(SoftDeleteMixin, Base):
     )
 
 
-class Product(SoftDeleteMixin, Base):
-    """Products master table (製品マスタ).
+class ProductGroup(SoftDeleteMixin, Base):
+    """Product groups table (製品グループマスタ).
 
-    DDL: products
+    【重要】このテーブルは業務識別子ではありません。
+    supplier_items と customer_items を紐付けるためのグルーピングエンティティです。
+
+    2コード体系:
+    1. メーカー品番 (supplier_items.maker_part_no) - 在庫実体
+    2. 得意先品番 (customer_items.customer_part_no) - 注文入力
+
+    DDL: product_groups
     Primary key: id (BIGSERIAL)
     Supports soft delete via valid_to column.
     """
 
-    __tablename__ = "products"
+    __tablename__ = "product_groups"
 
     id: Mapped[int] = mapped_column(
         BigInteger().with_variant(Integer, "sqlite"),
@@ -409,30 +416,32 @@ class Product(SoftDeleteMixin, Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("maker_part_code", name="uq_products_maker_part_code"),
-        Index("idx_products_name", "product_name"),
-        Index("idx_products_valid_to", "valid_to"),
+        UniqueConstraint("maker_part_code", name="uq_product_groups_maker_part_code"),
+        Index("idx_product_groups_name", "product_name"),
+        Index("idx_product_groups_valid_to", "valid_to"),
     )
 
     # Relationships
 
-    lot_masters: Mapped[list[LotMaster]] = relationship("LotMaster", back_populates="product")
-    lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="product")
-    order_lines: Mapped[list[OrderLine]] = relationship("OrderLine", back_populates="product")
+    lot_masters: Mapped[list[LotMaster]] = relationship("LotMaster", back_populates="product_group")
+    lot_receipts: Mapped[list[LotReceipt]] = relationship(
+        "LotReceipt", back_populates="product_group"
+    )
+    order_lines: Mapped[list[OrderLine]] = relationship("OrderLine", back_populates="product_group")
     forecast_current: Mapped[list[ForecastCurrent]] = relationship(
-        "ForecastCurrent", back_populates="product"
+        "ForecastCurrent", back_populates="product_group"
     )
     inbound_plan_lines: Mapped[list[InboundPlanLine]] = relationship(
-        "InboundPlanLine", back_populates="product"
+        "InboundPlanLine", back_populates="product_group"
     )
     customer_items: Mapped[list[CustomerItem]] = relationship(
-        "CustomerItem", back_populates="product"
+        "CustomerItem", back_populates="product_group"
     )
     uom_conversions: Mapped[list[ProductUomConversion]] = relationship(
-        "ProductUomConversion", back_populates="product"
+        "ProductUomConversion", back_populates="product_group"
     )
     supplier_items: Mapped[list[SupplierItem]] = relationship(
-        "SupplierItem", back_populates="product", cascade="all, delete-orphan"
+        "SupplierItem", back_populates="product_group", cascade="all, delete-orphan"
     )
 
 
@@ -447,7 +456,7 @@ class CustomerItem(SoftDeleteMixin, Base):
     DDL: customer_items
     Primary key: id (BIGSERIAL) - サロゲートキー
     Business key: UNIQUE(customer_id, customer_part_no)
-    Foreign keys: customer_id -> customers(id), product_id -> products(id),
+    Foreign keys: customer_id -> customers(id), product_group_id -> product_groups(id),
                   supplier_id -> suppliers(id), supplier_item_id -> supplier_items(id)
     Supports soft delete via valid_to column.
     See: docs/SCHEMA_GUIDE.md, docs/adr/ADR-003_customer_items_product_mappings.md
@@ -469,9 +478,9 @@ class CustomerItem(SoftDeleteMixin, Base):
         nullable=False,
         comment="得意先品番（先方品番）",
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("product_groups.id", ondelete="RESTRICT"),
         nullable=False,
     )
     supplier_id: Mapped[int | None] = mapped_column(
@@ -518,7 +527,7 @@ class CustomerItem(SoftDeleteMixin, Base):
             unique=True,
             postgresql_where=text("is_primary = true AND supplier_item_id IS NOT NULL"),
         ),
-        Index("idx_customer_items_product", "product_id"),
+        Index("idx_customer_items_product_group", "product_group_id"),
         Index("idx_customer_items_supplier", "supplier_id"),
         Index("idx_customer_items_supplier_item", "supplier_item_id"),
         Index("idx_customer_items_valid_to", "valid_to"),
@@ -526,7 +535,9 @@ class CustomerItem(SoftDeleteMixin, Base):
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer", back_populates="customer_items")
-    product: Mapped[Product] = relationship("Product", back_populates="customer_items")
+    product_group: Mapped[ProductGroup] = relationship(
+        "ProductGroup", back_populates="customer_items"
+    )
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="customer_items")
     supplier_item: Mapped[SupplierItem | None] = relationship(
         "SupplierItem", back_populates="customer_items"
@@ -571,9 +582,9 @@ class ProductMapping(SoftDeleteMixin, Base):
         ForeignKey("suppliers.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("product_groups.id", ondelete="RESTRICT"),
         nullable=False,
     )
     base_unit: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -599,14 +610,14 @@ class ProductMapping(SoftDeleteMixin, Base):
         ),
         Index("idx_product_mappings_customer", "customer_id"),
         Index("idx_product_mappings_supplier", "supplier_id"),
-        Index("idx_product_mappings_product", "product_id"),
+        Index("idx_product_mappings_product_group", "product_group_id"),
         Index("idx_product_mappings_valid_to", "valid_to"),
     )
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
     supplier: Mapped[Supplier] = relationship("Supplier")
-    product: Mapped[Product] = relationship("Product")
+    product_group: Mapped[ProductGroup] = relationship("ProductGroup")
 
 
 class ProductUomConversion(SoftDeleteMixin, Base):
@@ -614,16 +625,16 @@ class ProductUomConversion(SoftDeleteMixin, Base):
 
     DDL: product_uom_conversions
     Primary key: conversion_id (BIGSERIAL)
-    Foreign keys: product_id -> products(id)
+    Foreign keys: product_group_id -> product_groups(id)
     Supports soft delete via valid_to column.
     """
 
     __tablename__ = "product_uom_conversions"
 
     conversion_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="CASCADE"),
+        ForeignKey("product_groups.id", ondelete="CASCADE"),
         nullable=False,
     )
     external_unit: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -639,12 +650,16 @@ class ProductUomConversion(SoftDeleteMixin, Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("product_id", "external_unit", name="uq_uom_conversions_product_unit"),
+        UniqueConstraint(
+            "product_group_id", "external_unit", name="uq_uom_conversions_product_group_unit"
+        ),
         Index("idx_product_uom_conversions_valid_to", "valid_to"),
     )
 
     # Relationships
-    product: Mapped[Product] = relationship("Product", back_populates="uom_conversions")
+    product_group: Mapped[ProductGroup] = relationship(
+        "ProductGroup", back_populates="uom_conversions"
+    )
 
 
 class CustomerItemJikuMapping(Base):
@@ -787,11 +802,11 @@ class WarehouseDeliveryRoute(Base):
         ForeignKey("delivery_places.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_id: Mapped[int | None] = mapped_column(
+    product_group_id: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="CASCADE"),
+        ForeignKey("product_groups.id", ondelete="CASCADE"),
         nullable=True,
-        comment="品番（NULLの場合は経路デフォルト）",
+        comment="製品グループ（NULLの場合は経路デフォルト）",
     )
     transport_lead_time_days: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="輸送リードタイム（日）"
@@ -810,11 +825,11 @@ class WarehouseDeliveryRoute(Base):
     __table_args__ = (
         Index("idx_wdr_warehouse", "warehouse_id"),
         Index("idx_wdr_delivery_place", "delivery_place_id"),
-        Index("idx_wdr_product", "product_id"),
+        Index("idx_wdr_product_group", "product_group_id"),
         Index("idx_wdr_active", "is_active"),
     )
 
     # Relationships
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="delivery_routes")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
-    product: Mapped[Product | None] = relationship("Product")
+    product_group: Mapped[ProductGroup | None] = relationship("ProductGroup")

@@ -125,7 +125,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .masters_models import Customer, DeliveryPlace, Product
+    from .masters_models import Customer, DeliveryPlace, ProductGroup
 
 
 class ForecastCurrent(Base):
@@ -149,9 +149,9 @@ class ForecastCurrent(Base):
         ForeignKey("delivery_places.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("product_groups.id", ondelete="RESTRICT"),
         nullable=False,
     )
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -176,13 +176,13 @@ class ForecastCurrent(Base):
             "idx_forecast_current_unique",
             "customer_id",
             "delivery_place_id",
-            "product_id",
+            "product_group_id",
         ),
         Index(
             "ux_forecast_current_unique",
             "customer_id",
             "delivery_place_id",
-            "product_id",
+            "product_group_id",
             "forecast_date",
             "forecast_period",
             unique=True,
@@ -193,7 +193,9 @@ class ForecastCurrent(Base):
     delivery_place: Mapped[DeliveryPlace] = relationship(
         "DeliveryPlace", back_populates="forecast_current"
     )
-    product: Mapped[Product] = relationship("Product", back_populates="forecast_current")
+    product_group: Mapped[ProductGroup] = relationship(
+        "ProductGroup", back_populates="forecast_current"
+    )
 
 
 class ForecastHistory(Base):
@@ -208,7 +210,7 @@ class ForecastHistory(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     customer_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     delivery_place_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    product_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    product_group_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -225,7 +227,7 @@ class ForecastHistory(Base):
             "ix_forecast_history_key",
             "customer_id",
             "delivery_place_id",
-            "product_id",
+            "product_group_id",
         ),
     )
 

@@ -169,7 +169,7 @@ from .lot_receipt_models import LotReceipt
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .forecast_models import ForecastCurrent
-    from .masters_models import Customer, DeliveryPlace, Product
+    from .masters_models import Customer, DeliveryPlace, ProductGroup
 
 
 # Valid transaction types
@@ -327,9 +327,9 @@ class AllocationSuggestion(Base):
         ForeignKey("delivery_places.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="CASCADE"),
+        ForeignKey("product_groups.id", ondelete="CASCADE"),
         nullable=False,
     )
 
@@ -354,14 +354,14 @@ class AllocationSuggestion(Base):
     __table_args__ = (
         Index("idx_allocation_suggestions_period", "forecast_period"),
         Index("idx_allocation_suggestions_customer", "customer_id"),
-        Index("idx_allocation_suggestions_product", "product_id"),
+        Index("idx_allocation_suggestions_product_group", "product_group_id"),
         Index("idx_allocation_suggestions_lot", "lot_id"),
         Index("idx_allocation_suggestions_forecast", "forecast_id"),
     )
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
-    product: Mapped[Product] = relationship("Product")
+    product_group: Mapped[ProductGroup] = relationship("ProductGroup")
     lot: Mapped[LotReceipt] = relationship("LotReceipt")
     forecast: Mapped[ForecastCurrent | None] = relationship("ForecastCurrent")
 

@@ -10,7 +10,7 @@ from app.presentation.schemas.common.common_schema import ORMModel
 class ProductSupplierBase(BaseModel):
     """Shared product-supplier fields."""
 
-    product_id: int
+    product_group_id: int
     supplier_id: int
     is_primary: bool = False
     lead_time_days: int | None = None
@@ -33,7 +33,7 @@ class ProductSupplierResponse(ORMModel):
     """Product-supplier relationship response model."""
 
     id: int
-    product_id: int
+    product_group_id: int
     supplier_id: int
     is_primary: bool
     lead_time_days: int | None

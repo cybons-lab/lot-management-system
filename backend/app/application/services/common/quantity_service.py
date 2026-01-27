@@ -153,7 +153,7 @@ async def to_internal_qty(
 
     # 2. 換算テーブルを検索
     stmt = select(ProductUomConversion).where(
-        ProductUomConversion.product_id == product.id,
+        ProductUomConversion.product_group_id == product.id,
         ProductUomConversion.external_unit == external_unit_value,
     )
     result = await db.execute(stmt)

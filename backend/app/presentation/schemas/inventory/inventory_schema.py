@@ -65,7 +65,7 @@ class LotBase(BaseSchema):
     """Shared attributes for lot payloads."""
 
     lot_number: str
-    product_id: int
+    product_group_id: int
     warehouse_id: int
     supplier_id: int | None = None
     expected_lot_id: int | None = None
@@ -294,7 +294,7 @@ class InventoryItemResponse(BaseSchema):
     """
 
     id: int = Field(serialization_alias="inventory_item_id")
-    product_id: int
+    product_group_id: int
     warehouse_id: int
     total_quantity: Decimal
     allocated_quantity: Decimal
@@ -366,7 +366,7 @@ class InventoryByWarehouseResponse(BaseSchema):
 class InventoryByProductResponse(BaseSchema):
     """Inventory aggregated by product (across all warehouses)."""
 
-    product_id: int
+    product_group_id: int
     product_name: str
     product_code: str
     total_quantity: Decimal

@@ -50,13 +50,17 @@ from .masters_models import (
     CustomerItemDeliverySetting,
     CustomerItemJikuMapping,
     DeliveryPlace,
-    Product,
+    ProductGroup,
     ProductMapping,
     ProductUomConversion,
     Supplier,
     Warehouse,
     WarehouseDeliveryRoute,
 )
+
+
+# Backward compatibility alias
+Product = ProductGroup
 from .missing_mapping_model import MissingMappingEvent
 from .order_groups_models import OrderGroup
 from .orders_models import Order, OrderLine
@@ -110,7 +114,8 @@ __all__ = [
     "Supplier",
     "Customer",
     "DeliveryPlace",
-    "Product",
+    "ProductGroup",
+    "Product",  # Backward compatibility alias for ProductGroup
     "ProductUomConversion",
     "CustomerItem",
     "CustomerItemDeliverySetting",

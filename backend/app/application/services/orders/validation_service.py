@@ -137,7 +137,7 @@ class OrderValidationService:
 
         for line in lines:
             # Resolve IDs from codes
-            product_id = self._db.execute(
+            product_group_id = self._db.execute(
                 select(Product.id).where(Product.maker_part_code == line.product_code)
             ).scalar_one_or_none()
 
@@ -145,7 +145,7 @@ class OrderValidationService:
                 select(Warehouse.id).where(Warehouse.warehouse_code == line.warehouse_code)
             ).scalar_one_or_none()
 
-            if not product_id or not warehouse_id:
+            if not product_group_id or not warehouse_id:
                 # If product or warehouse not found, treat as insufficient stock (or raise specific error)
                 # For now, let's assume they exist or handle gracefully
                 raise InsufficientStockError(
@@ -156,7 +156,7 @@ class OrderValidationService:
                 )
 
             lots = self._stock_repo.find_fifo_lots_for_allocation(
-                product_id=product_id,
+                product_group_id=product_group_id,
                 warehouse_id=warehouse_id,
                 ship_date=ship_date,
                 for_update=lock,

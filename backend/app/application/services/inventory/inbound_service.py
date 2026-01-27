@@ -65,7 +65,7 @@ class InboundService:
         skip: int = 0,
         limit: int = 100,
         supplier_id: int | None = None,
-        product_id: int | None = None,
+        product_group_id: int | None = None,
         status: str | None = None,
         primary_supplier_ids: list[int] | None = None,
     ) -> tuple[list[InboundPlan], int]:
@@ -75,7 +75,7 @@ class InboundService:
             skip: Number of records to skip (pagination)
             limit: Maximum number of records to return
             supplier_id: Filter by supplier ID
-            product_id: Filter by product ID
+            product_group_id: Filter by product ID
             status: Filter by status (planned/partially_received/received/cancelled)
             primary_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
 
@@ -92,7 +92,9 @@ class InboundService:
             query = query.filter(InboundPlan.supplier_id == supplier_id)
 
         if product_id is not None:
-            query = query.join(InboundPlan.lines).filter(InboundPlanLine.product_id == product_id)
+            query = query.join(InboundPlan.lines).filter(
+                InboundPlanLine.product_group_id == product_id
+            )
 
         if status is not None:
             query = query.filter(InboundPlan.status == status)
@@ -110,7 +112,7 @@ class InboundService:
         if product_id is not None:
             count_query = (
                 count_query.join(InboundPlan.lines)
-                .filter(InboundPlanLine.product_id == product_id)
+                .filter(InboundPlanLine.product_group_id == product_id)
                 .distinct()
             )
         if status is not None:

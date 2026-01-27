@@ -19,7 +19,7 @@ class MovingAverageEstimator(DemandEstimator):
 
     def estimate(
         self,
-        product_id: int,
+        product_group_id: int,
         warehouse_id: int | None,
         horizon_days: int,
         as_of_date: date,
@@ -33,7 +33,7 @@ class MovingAverageEstimator(DemandEstimator):
         demand_types = ["order_auto", "order_manual"]
 
         history = self.repository.get_demand_history(
-            product_id=product_id,
+            product_group_id=product_group_id,
             warehouse_id=warehouse_id,
             start_date=as_of_date - timedelta(days=self.window_days),
             end_date=as_of_date,
@@ -79,7 +79,7 @@ class MovingAverageEstimator(DemandEstimator):
             total_forecast += avg_daily
 
         return DemandForecast(
-            product_id=product_id,
+            product_group_id=product_group_id,
             warehouse_id=warehouse_id,
             as_of_date=as_of_date,
             horizon_days=horizon_days,

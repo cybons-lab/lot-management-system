@@ -159,7 +159,7 @@ class OcrImportService:
         # 受注明細を作成
         order_line = OrderLine(
             order_id=order_id,
-            product_id=result.product_id,  # NULLの場合もあり
+            product_group_id=result.product_group_id,  # NULLの場合もあり
             customer_part_no=line.customer_part_no,
             delivery_date=line.delivery_date,
             order_quantity=line.quantity,
@@ -171,11 +171,11 @@ class OcrImportService:
         self.db.add(order_line)
 
         # 結果を返す
-        status = "resolved" if result.product_id else "unresolved"
+        status = "resolved" if result.product_group_id else "unresolved"
         return OcrImportLineResult(
             row_no=row_no,
             customer_part_no=line.customer_part_no,
-            product_id=result.product_id,
+            product_group_id=result.product_group_id,
             match_type=result.match_type.value,
             status=status,
             message=result.message,

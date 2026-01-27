@@ -24,11 +24,11 @@
    戻り値:
    - FIFO順にソートされたロットリスト
 
-3. なぜ product_id と warehouse_id を使うのか（L33-35, L44-45）
+3. なぜ product_group_id と warehouse_id を使うのか（L33-35, L44-45）
    理由: DDL v2.2 準拠
    設計:
    - v1.x: product_code, warehouse_code（文字列）で検索
-   - v2.2: product_id, warehouse_id（数値）で検索
+   - v2.2: product_group_id, warehouse_id（数値）で検索
    → 正規化により、コード変更時の影響を最小化
    メリット:
    - 外部キー制約による整合性保証
@@ -129,18 +129,18 @@ class StockRepository:
 
     def find_fifo_lots_for_allocation(
         self,
-        product_id: int,
+        product_group_id: int,
         warehouse_id: int,
         ship_date: date | None,
         for_update: bool = True,
     ) -> list[LotReceipt]:
         """Fetch candidate lots in FIFO order with optional row locking.
 
-        v2.2: Updated to use product_id and warehouse_id (DDL compliant).
+        v2.2: Updated to use product_group_id and warehouse_id (DDL compliant).
         Removed joinedload(Lot.current_stock) - no longer needed.
 
         Args:
-            product_id: Product ID (not product_code)
+            product_group_id: Product ID (not product_code)
             warehouse_id: Warehouse ID (not warehouse_code)
             ship_date: Optional ship date for expiry filtering
             for_update: Whether to lock rows for update
@@ -150,7 +150,7 @@ class StockRepository:
         """
         stmt: Select[tuple[LotReceipt]] = (
             select(LotReceipt)
-            .where(LotReceipt.product_id == product_id)
+            .where(LotReceipt.product_group_id == product_group_id)
             .where(LotReceipt.warehouse_id == warehouse_id)
             .where(LotReceipt.status == "active")  # DDL v2.2 compliant
             # v2.3: 検査合格または検査不要のロットのみ対象

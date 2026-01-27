@@ -26,7 +26,7 @@ def list_intake_history(
     limit: int = Query(100, ge=1, le=1000, description="取得件数上限"),
     supplier_id: int | None = Query(None, description="仕入先IDでフィルタ"),
     warehouse_id: int | None = Query(None, description="倉庫IDでフィルタ"),
-    product_id: int | None = Query(None, description="製品IDでフィルタ"),
+    product_group_id: int | None = Query(None, description="製品IDでフィルタ"),
     start_date: date | None = Query(None, description="開始日（入庫日）"),
     end_date: date | None = Query(None, description="終了日（入庫日）"),
     search: str | None = Query(None, description="キーワード検索（ロット番号、製品名、仕入先名）"),
@@ -39,7 +39,7 @@ def list_intake_history(
         limit: 取得件数上限
         supplier_id: 仕入先IDでフィルタ
         warehouse_id: 倉庫IDでフィルタ
-        product_id: 製品IDでフィルタ
+        product_group_id: 製品IDでフィルタ
         start_date: 開始日
         end_date: 終了日
         search: 検索キーワード
@@ -54,7 +54,7 @@ def list_intake_history(
         limit=limit,
         supplier_id=supplier_id,
         warehouse_id=warehouse_id,
-        product_id=product_id,
+        product_group_id=product_group_id,
         start_date=start_date,
         end_date=end_date,
         search_query=search,
@@ -66,7 +66,7 @@ def get_calendar_summary(
     year: int = Query(..., description="年"),
     month: int = Query(..., description="月"),
     warehouse_id: int | None = Query(None, description="倉庫ID"),
-    product_id: int | None = Query(None, description="製品ID"),
+    product_group_id: int | None = Query(None, description="製品ID"),
     supplier_id: int | None = Query(None, description="仕入先ID"),
     db: Session = Depends(get_db),
 ):
@@ -76,7 +76,7 @@ def get_calendar_summary(
         year: 年
         month: 月
         warehouse_id: 倉庫ID
-        product_id: 製品ID
+        product_group_id: 製品ID
         supplier_id: 仕入先ID
         db: データベースセッション
 
@@ -88,7 +88,7 @@ def get_calendar_summary(
         year=year,
         month=month,
         warehouse_id=warehouse_id,
-        product_id=product_id,
+        product_group_id=product_group_id,
         supplier_id=supplier_id,
     )
 

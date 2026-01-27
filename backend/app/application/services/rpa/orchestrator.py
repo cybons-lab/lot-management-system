@@ -520,7 +520,7 @@ class MaterialDeliveryNoteOrchestrator:
         customer_id = run.customer_id
         customer_part_no = item.customer_part_no
 
-        product_id = None
+        product_group_id = None
         supplier_id = None
         source = "none"
 
@@ -528,22 +528,22 @@ class MaterialDeliveryNoteOrchestrator:
         if customer_id:
             customer_item = self.repo.find_customer_item(customer_id, customer_part_no)
             if customer_item:
-                product_id = customer_item.product_id
+                product_group_id = customer_item.product_group_id
                 supplier_id = customer_item.supplier_id
                 source = "customer_item"
 
         # 2. Product fallback
-        if not product_id:
+        if not product_group_id:
             product = self.repo.find_product_by_maker_part_code(customer_part_no)
             if product:
-                product_id = product.id
+                product_group_id = product.id
                 source = "product_only"
 
-        if not product_id:
+        if not product_group_id:
             return {"lots": [], "auto_selected": None, "source": "none"}
 
         # 3. Lot fetch
-        lots = self.repo.find_active_lots(product_id, supplier_id)
+        lots = self.repo.find_active_lots(product_group_id, supplier_id)
 
         lot_candidates = [
             {

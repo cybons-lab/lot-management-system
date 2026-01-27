@@ -8,7 +8,7 @@ class ReplenishmentRecommendation:
     """発注提案。."""
 
     id: str  # 提案ID
-    product_id: int
+    product_group_id: int
     warehouse_id: int
     supplier_id: int
 

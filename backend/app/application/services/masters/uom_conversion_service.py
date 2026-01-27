@@ -26,13 +26,13 @@ class UomConversionService(
         """Initialize service with database session."""
         super().__init__(db=db, model=ProductUomConversion)
 
-    def get_by_key(self, product_id: int, external_unit: str) -> ProductUomConversion | None:
+    def get_by_key(self, product_group_id: int, external_unit: str) -> ProductUomConversion | None:
         """Get UOM conversion by composite key."""
         return cast(
             ProductUomConversion | None,
             self.db.query(ProductUomConversion)
             .filter(
-                ProductUomConversion.product_id == product_id,
+                ProductUomConversion.product_group_id == product_id,
                 ProductUomConversion.external_unit == external_unit,
             )
             .first(),
@@ -178,7 +178,7 @@ class UomConversionService(
             try:
                 # Resolve IDs
                 product_id = product_map.get(row.product_code)
-                if not product_id:
+                if not product_group_id:
                     raise ValueError(f"Product code not found: {row.product_code}")
 
                 # Check if UOM conversion exists by composite key
@@ -192,7 +192,9 @@ class UomConversionService(
                 else:
                     # CREATE
                     new_conversion = ProductUomConversion(
-                        product_id=product_id, external_unit=row.external_unit, factor=row.factor
+                        product_group_id=product_id,
+                        external_unit=row.external_unit,
+                        factor=row.factor,
                     )
                     self.db.add(new_conversion)
                     summary["created"] += 1

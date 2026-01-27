@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
     from app.infrastructure.persistence.models.masters_models import (
         CustomerItem,
-        Product,
+        ProductGroup,
         Supplier,
     )
 
@@ -59,9 +59,9 @@ class SupplierItem(SoftDeleteMixin, Base):
     __tablename__ = "supplier_items"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    product_id: Mapped[int | None] = mapped_column(
+    product_group_id: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("product_groups.id", ondelete="RESTRICT"),
         nullable=True,
     )
     supplier_id: Mapped[int] = mapped_column(
@@ -133,22 +133,22 @@ class SupplierItem(SoftDeleteMixin, Base):
             "maker_part_no",
             name="uq_supplier_items_supplier_maker",
         ),
-        # 1製品につき1つのis_primary=trueを保証
+        # 1製品グループにつき1つのis_primary=trueを保証
         Index(
             "idx_supplier_items_is_primary",
-            "product_id",
+            "product_group_id",
             unique=True,
             postgresql_where=text("is_primary = true"),
         ),
         Index("idx_supplier_items_valid_to", "valid_to"),
         Index("idx_supplier_items_maker_part", "maker_part_no"),
-        Index("idx_supplier_items_product", "product_id"),
+        Index("idx_supplier_items_product_group", "product_group_id"),
         Index("idx_supplier_items_supplier", "supplier_id"),
     )
 
     # Relationships
-    product: Mapped[Product] = relationship(
-        "Product",
+    product_group: Mapped[ProductGroup] = relationship(
+        "ProductGroup",
         back_populates="supplier_items",
     )
     supplier: Mapped[Supplier] = relationship(

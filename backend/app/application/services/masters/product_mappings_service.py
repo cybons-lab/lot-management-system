@@ -45,7 +45,7 @@ class ProductMappingsService(
             )
             .join(Customer, ProductMapping.customer_id == Customer.id)
             .join(Supplier, ProductMapping.supplier_id == Supplier.id)
-            .join(Product, ProductMapping.product_id == Product.id)
+            .join(Product, ProductMapping.product_group_id == Product.id)
         )
 
         results = query.all()

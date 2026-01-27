@@ -241,7 +241,7 @@ class MasterImportService:
 
     def _upsert_product_supplier(
         self,
-        product_id: int,
+        product_group_id: int,
         supplier_id: int,
         is_primary: bool,
         lead_time_days: int | None,
@@ -250,7 +250,7 @@ class MasterImportService:
         existing = (
             self.db.query(SupplierItem)
             .filter(
-                SupplierItem.product_id == product_id,
+                SupplierItem.product_group_id == product_id,
                 SupplierItem.supplier_id == supplier_id,
             )
             .first()
@@ -262,7 +262,7 @@ class MasterImportService:
             return existing
         else:
             ps = SupplierItem(
-                product_id=product_id,
+                product_group_id=product_id,
                 supplier_id=supplier_id,
                 is_primary=is_primary,
                 lead_time_days=lead_time_days or 0,
@@ -345,7 +345,7 @@ class MasterImportService:
         )
 
         if existing:
-            existing.product_id = product.id
+            existing.product_group_id = product.id
             existing.supplier_id = supplier_id
             if base_unit:
                 existing.base_unit = base_unit
@@ -360,7 +360,7 @@ class MasterImportService:
             ci = CustomerItem(
                 customer_id=customer_id,
                 customer_part_no=customer_part_no,
-                product_id=product.id,
+                product_group_id=product.id,
                 supplier_id=supplier_id,
                 base_unit=base_unit,
                 pack_unit=pack_unit,
@@ -405,7 +405,7 @@ class MasterImportService:
         )
 
         if existing:
-            existing.product_id = product.id
+            existing.product_group_id = product.id
             existing.base_unit = base_unit
             if pack_unit:
                 existing.pack_unit = pack_unit
@@ -423,7 +423,7 @@ class MasterImportService:
                 customer_id=customer_id,
                 customer_part_code=customer_part_code,
                 supplier_id=supplier.id,
-                product_id=product.id,
+                product_group_id=product.id,
                 base_unit=base_unit,
                 pack_unit=pack_unit,
                 pack_quantity=pack_quantity,

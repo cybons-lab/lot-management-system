@@ -153,19 +153,19 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
 
         uom_query = select(
             ProductUomConversion.conversion_id,
-            ProductUomConversion.product_id,
+            ProductUomConversion.product_group_id,
             ProductUomConversion.external_unit,
             ProductUomConversion.factor,
             Product.internal_unit,
             Product.maker_part_code,
             Product.product_name,
-        ).join(Product, ProductUomConversion.product_id == Product.id)
+        ).join(Product, ProductUomConversion.product_group_id == Product.id)
 
         uom_results = db.execute(uom_query).all()
         data = [
             {
                 "conversion_id": r.conversion_id,
-                "product_id": r.product_id,
+                "product_group_id": r.product_group_id,
                 "external_unit": r.external_unit,
                 "factor": float(r.factor),
                 "internal_unit": r.internal_unit,
@@ -186,7 +186,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         sp_query = (
             select(
                 SupplierItem.id,
-                SupplierItem.product_id,
+                SupplierItem.product_group_id,
                 SupplierItem.supplier_id,
                 SupplierItem.is_primary,
                 SupplierItem.lead_time_days,
@@ -195,14 +195,14 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
                 Supplier.supplier_code,
                 Supplier.supplier_name,
             )
-            .join(Product, SupplierItem.product_id == Product.id)
+            .join(Product, SupplierItem.product_group_id == Product.id)
             .join(Supplier, SupplierItem.supplier_id == Supplier.id)
         )
         sp_results = db.execute(sp_query).all()
         data = [
             {
                 "id": r.id,
-                "product_id": r.product_id,
+                "product_group_id": r.product_group_id,
                 "supplier_id": r.supplier_id,
                 "is_primary": r.is_primary,
                 "lead_time_days": r.lead_time_days,

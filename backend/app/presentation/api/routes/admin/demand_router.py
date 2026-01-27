@@ -31,7 +31,7 @@ router = APIRouter()
 
 @router.get("/forecast", response_model=DemandForecast)
 def get_demand_forecast(
-    product_id: int,
+    product_group_id: int,
     warehouse_id: int | None = None,
     horizon_days: int = 30,
     method: str = "moving_average_seasonal",
@@ -58,7 +58,7 @@ def get_demand_forecast(
 
     try:
         forecast = estimator.estimate(
-            product_id=product_id,
+            product_group_id=product_group_id,
             warehouse_id=warehouse_id,
             horizon_days=horizon_days,
             as_of_date=as_of_date,
@@ -74,7 +74,7 @@ def get_demand_forecast(
 
 @router.get("/history", response_model=GetHistoryResponse)
 def get_demand_history(
-    product_id: int,
+    product_group_id: int,
     start_date: date,
     end_date: date,
     warehouse_id: int | None = None,
@@ -90,7 +90,7 @@ def get_demand_history(
 
     try:
         history = repo.get_demand_history(
-            product_id=product_id,
+            product_group_id=product_group_id,
             warehouse_id=warehouse_id,
             start_date=start_date,
             end_date=end_date,

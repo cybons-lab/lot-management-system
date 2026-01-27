@@ -10,6 +10,9 @@ from app.presentation.api.routes.masters.customers_router import router as custo
 from app.presentation.api.routes.masters.delivery_places_router import (
     router as delivery_places_router,
 )
+from app.presentation.api.routes.masters.product_groups_router import (
+    router as product_groups_router,
+)
 from app.presentation.api.routes.masters.product_mappings_router import (
     router as product_mappings_router,
 )
@@ -33,6 +36,7 @@ __all__ = [
     "customer_items_router",
     "customers_router",
     "delivery_places_router",
+    "product_groups_router",
     "product_mappings_router",
     "products_router",
     "status_router",

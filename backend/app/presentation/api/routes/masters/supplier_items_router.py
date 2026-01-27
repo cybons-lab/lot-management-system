@@ -55,7 +55,7 @@ def list_supplier_items(
     query = (
         select(
             SupplierItem.id,
-            SupplierItem.product_id,
+            SupplierItem.product_group_id,
             SupplierItem.supplier_id,
             SupplierItem.maker_part_no,
             SupplierItem.is_primary,
@@ -68,7 +68,7 @@ def list_supplier_items(
             Supplier.supplier_name,
             SupplierItem.valid_to,
         )
-        .join(Product, SupplierItem.product_id == Product.id)
+        .join(Product, SupplierItem.product_group_id == Product.id)
         .join(Supplier, SupplierItem.supplier_id == Supplier.id)
     )
 
@@ -84,7 +84,7 @@ def list_supplier_items(
     return [
         {
             "id": r.id,
-            "product_id": r.product_id,
+            "product_group_id": r.product_group_id,
             "supplier_id": r.supplier_id,
             "maker_part_no": r.maker_part_no,
             "is_primary": r.is_primary,
@@ -115,7 +115,7 @@ def export_supplier_items(format: str = "csv", db: Session = Depends(get_db)):
     query = (
         select(
             SupplierItem.id,
-            SupplierItem.product_id,
+            SupplierItem.product_group_id,
             SupplierItem.supplier_id,
             SupplierItem.maker_part_no,
             SupplierItem.is_primary,
@@ -127,7 +127,7 @@ def export_supplier_items(format: str = "csv", db: Session = Depends(get_db)):
             Supplier.supplier_code,
             Supplier.supplier_name,
         )
-        .join(Product, SupplierItem.product_id == Product.id)
+        .join(Product, SupplierItem.product_group_id == Product.id)
         .join(Supplier, SupplierItem.supplier_id == Supplier.id)
     )
     results = db.execute(query).all()
@@ -135,7 +135,7 @@ def export_supplier_items(format: str = "csv", db: Session = Depends(get_db)):
     data = [
         {
             "id": r.id,
-            "product_id": r.product_id,
+            "product_group_id": r.product_group_id,
             "supplier_id": r.supplier_id,
             "maker_part_no": r.maker_part_no,
             "is_primary": r.is_primary,
@@ -178,7 +178,7 @@ def get_supplier_item(id: int, db: Session = Depends(get_db)):
 
     return {
         "id": si.id,
-        "product_id": si.product_id,
+        "product_group_id": si.product_group_id,
         "supplier_id": si.supplier_id,
         "maker_part_no": si.maker_part_no,
         "is_primary": si.is_primary,
@@ -230,11 +230,12 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
     # If is_primary is True, unset others for this product
     if data.is_primary:
         db.query(SupplierItem).filter(
-            SupplierItem.product_id == data.product_id, SupplierItem.is_primary.is_(True)
+            SupplierItem.product_group_id == data.product_group_id,
+            SupplierItem.is_primary.is_(True),
         ).update({"is_primary": False})
 
     si = SupplierItem(
-        product_id=data.product_id,
+        product_group_id=data.product_group_id,
         supplier_id=data.supplier_id,
         maker_part_no=data.maker_part_no,
         is_primary=data.is_primary,
@@ -248,7 +249,7 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
 
     return {
         "id": si.id,
-        "product_id": si.product_id,
+        "product_group_id": si.product_group_id,
         "supplier_id": si.supplier_id,
         "maker_part_no": si.maker_part_no,
         "is_primary": si.is_primary,
@@ -329,7 +330,7 @@ def update_supplier_item(
     # If setting is_primary=True, unset others for this product
     if update_data.get("is_primary"):
         db.query(SupplierItem).filter(
-            SupplierItem.product_id == si.product_id,
+            SupplierItem.product_group_id == si.product_group_id,
             SupplierItem.id != id,
             SupplierItem.is_primary.is_(True),
         ).update({"is_primary": False})
@@ -342,7 +343,7 @@ def update_supplier_item(
 
     return {
         "id": si.id,
-        "product_id": si.product_id,
+        "product_group_id": si.product_group_id,
         "supplier_id": si.supplier_id,
         "maker_part_no": si.maker_part_no,
         "is_primary": si.is_primary,
@@ -439,7 +440,7 @@ def restore_supplier_item(id: int, db: Session = Depends(get_db)):
 
     return {
         "id": si.id,
-        "product_id": si.product_id,
+        "product_group_id": si.product_group_id,
         "supplier_id": si.supplier_id,
         "maker_part_no": si.maker_part_no,
         "is_primary": si.is_primary,

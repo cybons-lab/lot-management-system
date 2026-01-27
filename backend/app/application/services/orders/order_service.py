@@ -256,7 +256,7 @@ class OrderService:
             # with the user's primary suppliers
             has_primary_product = exists(
                 select(OrderLine.id)
-                .join(SupplierItem, SupplierItem.product_id == OrderLine.product_id)
+                .join(SupplierItem, SupplierItem.product_group_id == OrderLine.product_group_id)
                 .where(
                     OrderLine.order_id == Order.id,
                     SupplierItem.supplier_id.in_(primary_supplier_ids),
@@ -319,7 +319,7 @@ class OrderService:
             )
 
         if product_code:
-            stmt = stmt.join(Product, OrderLine.product_id == Product.id).where(
+            stmt = stmt.join(Product, OrderLine.product_group_id == Product.id).where(
                 Product.maker_part_code == product_code
             )
 
@@ -398,10 +398,10 @@ class OrderService:
         # Create order lines
         for line_data in order_data.lines:
             # Validate product_id exists
-            product_stmt = select(Product).where(Product.id == line_data.product_id)
+            product_stmt = select(Product).where(Product.id == line_data.product_group_id)
             product = self.db.execute(product_stmt).scalar_one_or_none()
             if not product:
-                raise ProductNotFoundError(str(line_data.product_id))
+                raise ProductNotFoundError(str(line_data.product_group_id))
 
             # Calculate converted_quantity
             converted_qty = line_data.order_quantity
@@ -421,7 +421,7 @@ class OrderService:
             # Create order line (DDL v2.2 compliant)
             line = OrderLine(
                 order_id=order.id,
-                product_id=line_data.product_id,
+                product_group_id=line_data.product_group_id,
                 delivery_date=line_data.delivery_date,
                 order_quantity=line_data.order_quantity,
                 unit=line_data.unit,

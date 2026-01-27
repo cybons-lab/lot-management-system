@@ -204,7 +204,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         limit: int = 100,
         customer_id: int | None = None,
         delivery_place_id: int | None = None,
-        product_id: int | None = None,
+        product_group_id: int | None = None,
     ) -> ForecastListResponse:
         """Get current forecasts grouped by customer × delivery_place ×
         product.
@@ -213,7 +213,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         groups_query = self.db.query(
             ForecastCurrent.customer_id,
             ForecastCurrent.delivery_place_id,
-            ForecastCurrent.product_id,
+            ForecastCurrent.product_group_id,
         ).distinct()
 
         if customer_id is not None:
@@ -223,13 +223,13 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                 ForecastCurrent.delivery_place_id == delivery_place_id
             )
         if product_id is not None:
-            groups_query = groups_query.filter(ForecastCurrent.product_id == product_id)
+            groups_query = groups_query.filter(ForecastCurrent.product_group_id == product_id)
 
         # Sort for consistent pagination (essential for deterministic limit/offset)
         groups_query = groups_query.order_by(
             ForecastCurrent.customer_id,
             ForecastCurrent.delivery_place_id,
-            ForecastCurrent.product_id,
+            ForecastCurrent.product_group_id,
         )
 
         total_groups = groups_query.count()
@@ -245,7 +245,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         filters = tuple_(
             ForecastCurrent.customer_id,
             ForecastCurrent.delivery_place_id,
-            ForecastCurrent.product_id,
+            ForecastCurrent.product_group_id,
         ).in_(unique_groups)
 
         query = (
@@ -259,7 +259,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             .order_by(
                 ForecastCurrent.customer_id,
                 ForecastCurrent.delivery_place_id,
-                ForecastCurrent.product_id,
+                ForecastCurrent.product_group_id,
                 ForecastCurrent.forecast_date,
             )
         )
@@ -269,7 +269,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         # Group by customer × delivery_place × product
         grouped: dict[tuple[int, int, int], list[ForecastCurrent]] = defaultdict(list)
         for forecast in forecasts:
-            key = (forecast.customer_id, forecast.delivery_place_id, forecast.product_id)
+            key = (forecast.customer_id, forecast.delivery_place_id, forecast.product_group_id)
             grouped[key].append(forecast)
 
         # Build response
@@ -287,7 +287,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             group_key = ForecastGroupKey(
                 customer_id=cust_id,
                 delivery_place_id=dp_id,
-                product_id=prod_id,
+                product_group_id=prod_id,
                 customer_code=get_customer_code(first.customer),
                 customer_name=get_customer_name(first.customer),
                 delivery_place_code=get_delivery_place_code(first.delivery_place),
@@ -301,7 +301,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                     id=f.id,
                     customer_id=f.customer_id,
                     delivery_place_id=f.delivery_place_id,
-                    product_id=f.product_id,
+                    product_group_id=f.product_group_id,
                     forecast_date=f.forecast_date,
                     forecast_quantity=f.forecast_quantity,
                     unit=f.unit,
@@ -327,7 +327,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                 .filter(
                     and_(
                         Order.customer_id == cust_id,
-                        OrderLine.product_id == prod_id,
+                        OrderLine.product_group_id == prod_id,
                         OrderLine.delivery_place_id == dp_id,
                         OrderLine.order_type == "FORECAST_LINKED",
                         Order.status != "closed",
@@ -395,7 +395,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             id=forecast.id,
             customer_id=forecast.customer_id,
             delivery_place_id=forecast.delivery_place_id,
-            product_id=forecast.product_id,
+            product_group_id=forecast.product_group_id,
             forecast_date=forecast.forecast_date,
             forecast_quantity=forecast.forecast_quantity,
             unit=forecast.unit,
@@ -421,7 +421,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         db_forecast = ForecastCurrent(
             customer_id=data.customer_id,
             delivery_place_id=data.delivery_place_id,
-            product_id=data.product_id,
+            product_group_id=data.product_group_id,
             forecast_date=data.forecast_date,
             forecast_quantity=data.forecast_quantity,
             unit=data.unit,
@@ -505,7 +505,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         self,
         customer_id: int | None = None,
         delivery_place_id: int | None = None,
-        product_id: int | None = None,
+        product_group_id: int | None = None,
         skip: int = 0,
         limit: int = 100,
     ) -> list[ForecastHistoryResponse]:
@@ -517,7 +517,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         if delivery_place_id is not None:
             query = query.filter(ForecastHistory.delivery_place_id == delivery_place_id)
         if product_id is not None:
-            query = query.filter(ForecastHistory.product_id == product_id)
+            query = query.filter(ForecastHistory.product_group_id == product_id)
 
         query = query.order_by(ForecastHistory.archived_at.desc())
         history = query.offset(skip).limit(limit).all()
@@ -527,7 +527,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                 id=h.id,
                 customer_id=h.customer_id,
                 delivery_place_id=h.delivery_place_id,
-                product_id=h.product_id,
+                product_group_id=h.product_group_id,
                 forecast_date=h.forecast_date,
                 forecast_quantity=h.forecast_quantity,
                 unit=h.unit,
@@ -566,7 +566,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
 
         Format: FC-{customer_id}-{delivery_place_id}-{product_id}-{forecast_date}
         """
-        return f"FC-{forecast.customer_id}-{forecast.delivery_place_id}-{forecast.product_id}-{forecast.forecast_date}"
+        return f"FC-{forecast.customer_id}-{forecast.delivery_place_id}-{forecast.product_group_id}-{forecast.forecast_date}"
 
     def _create_provisional_order(self, forecast: ForecastCurrent) -> None:
         """Create a provisional order for the forecast.
@@ -607,7 +607,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         # Create provisional order line
         order_line = OrderLine(
             order_id=order.id,
-            product_id=forecast.product_id,
+            product_group_id=forecast.product_group_id,
             delivery_place_id=forecast.delivery_place_id,
             delivery_date=forecast.forecast_date,
             order_quantity=Decimal(str(forecast.forecast_quantity)),

@@ -108,7 +108,7 @@ def get_shipment_text(
     service = CustomerItemDeliverySettingService(db)
     return service.get_shipment_text(
         customer_id=request.customer_id,
-        product_id=request.product_id,
+        product_group_id=request.product_group_id,
         delivery_place_id=request.delivery_place_id,
         jiku_code=request.jiku_code,
     )

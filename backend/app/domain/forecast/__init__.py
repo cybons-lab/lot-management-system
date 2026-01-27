@@ -51,7 +51,7 @@ Forecast Domain Layer
    - forecast_id: フォーキャストID
    - customer_id: 得意先ID
    - delivery_place_id: 納入場所ID
-   - product_id: 製品ID
+   - product_group_id: 製品ID
    - forecast_date: フォーキャスト日付（v2.4で追加）
    - forecast_quantity: 予測数量
    - match_confidence: マッチング信頼度（0.0-1.0）
@@ -158,7 +158,7 @@ class ForecastMatch:
     forecast_id: int
     customer_id: int
     delivery_place_id: int
-    product_id: int
+    product_group_id: int
     forecast_date: date
     forecast_quantity: float
     match_confidence: float  # 0.0 ~ 1.0

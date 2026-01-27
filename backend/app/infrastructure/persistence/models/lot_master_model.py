@@ -41,14 +41,14 @@ from app.infrastructure.persistence.models.base_model import Base
 
 if TYPE_CHECKING:
     from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
-    from app.infrastructure.persistence.models.masters_models import Product, Supplier
+    from app.infrastructure.persistence.models.masters_models import ProductGroup, Supplier
 
 
 class LotMaster(Base):
     """Lot number consolidation master.
 
     Allows multiple receipts (lot_receipts) to share the same lot number.
-    Unique constraint: (lot_number, product_id)
+    Unique constraint: (lot_number, product_group_id)
     """
 
     __tablename__ = "lot_master"
@@ -61,9 +61,9 @@ class LotMaster(Base):
         nullable=False,
         comment="ロット番号（仕入先発番）",
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("product_groups.id", ondelete="RESTRICT"),
         nullable=False,
     )
     supplier_id: Mapped[int | None] = mapped_column(
@@ -106,7 +106,7 @@ class LotMaster(Base):
     )
 
     # Relationships
-    product: Mapped[Product] = relationship("Product", back_populates="lot_masters")
+    product_group: Mapped[ProductGroup] = relationship("ProductGroup", back_populates="lot_masters")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_masters")
     receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",
@@ -115,8 +115,10 @@ class LotMaster(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("lot_number", "product_id", name="uq_lot_master_number_product"),
-        Index("idx_lot_master_product", "product_id"),
+        UniqueConstraint(
+            "lot_number", "product_group_id", name="uq_lot_master_number_product_group"
+        ),
+        Index("idx_lot_master_product_group", "product_group_id"),
         Index("idx_lot_master_lot_number", "lot_number"),
         Index("idx_lot_master_supplier", "supplier_id"),
         {"comment": "ロット番号名寄せマスタ - 同一ロット番号の複数入荷を許可"},
@@ -124,7 +126,8 @@ class LotMaster(Base):
 
     def __repr__(self) -> str:
         return (
-            f"<LotMaster(id={self.id}, lot_number={self.lot_number}, product_id={self.product_id})>"
+            f"<LotMaster(id={self.id}, lot_number={self.lot_number}, "
+            f"product_group_id={self.product_group_id})>"
         )
 
     def update_aggregate_dates(self) -> None:

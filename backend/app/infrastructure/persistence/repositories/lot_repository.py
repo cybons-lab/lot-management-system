@@ -164,7 +164,7 @@ class LotRepository:
 
         # First, get all active lots for this product
         stmt: Select[tuple[LotReceipt]] = select(LotReceipt).where(
-            LotReceipt.product_id == product.id,
+            LotReceipt.product_group_id == product.id,
             LotReceipt.status == "active",
         )
 
@@ -217,7 +217,7 @@ class LotRepository:
         lot = LotReceipt(
             supplier_id=supplier.id if supplier else None,
             supplier_code=supplier.supplier_code if supplier else supplier_code,
-            product_id=product.id if product else None,
+            product_group_id=product.id if product else None,
             product_code=product.maker_part_code if product else product_code,
             lot_number=lot_number,
             warehouse_id=warehouse_id,
@@ -230,7 +230,7 @@ class LotRepository:
 
     def find_allocation_candidates(
         self,
-        product_id: int,
+        product_group_id: int,
         *,
         policy: AllocationPolicy,
         lock_mode: LockMode,
@@ -248,7 +248,7 @@ class LotRepository:
         All allocation-related candidate fetching should go through this method.
 
         Args:
-            product_id: Product ID to filter by
+            product_group_id: Product ID to filter by
             policy: Sorting policy (FEFO or FIFO)
             lock_mode: Database locking mode
             warehouse_id: Optional warehouse filter
@@ -271,7 +271,7 @@ class LotRepository:
         query = (
             self.db.query(LotReceipt)
             .filter(
-                LotReceipt.product_id == product_id,
+                LotReceipt.product_group_id == product_group_id,
                 LotReceipt.status == "active",
             )
             .options(joinedload(LotReceipt.product), joinedload(LotReceipt.warehouse))

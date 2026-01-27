@@ -2,7 +2,7 @@
 Default Destination Router.
 
 GET /api/v2/withdrawals/default-destination
-Lookup customer and delivery place based on product_id from customer_items and
+Lookup customer and delivery place based on product_group_id from customer_items and
 customer_item_delivery_settings tables.
 """
 
@@ -41,14 +41,14 @@ def _record_missing_mapping_event(
     db: Session,
     *,
     event_type: str,
-    product_id: int | None,
+    product_group_id: int | None,
     supplier_id: int | None,
     customer_id: int | None,
     context_json: dict[str, object] | None,
 ) -> None:
     event = MissingMappingEvent(
         event_type=event_type,
-        product_id=product_id,
+        product_group_id=product_group_id,
         supplier_id=supplier_id,
         customer_id=customer_id,
         context_json=context_json,
@@ -62,20 +62,20 @@ def _record_missing_mapping_event(
 
 @router.get("/default-destination", response_model=DefaultDestinationResponse)
 def get_default_destination(
-    product_id: int = Query(..., description="製品ID"),
+    product_group_id: int = Query(..., description="製品ID"),
     supplier_id: int | None = Query(None, description="仕入先ID (任意)"),
     db: Session = Depends(get_db),
 ) -> DefaultDestinationResponse:
     """
     製品IDからデフォルトの得意先・納入先を取得する.
 
-    1. customer_items テーブルから product_id でマッピングを検索
+    1. customer_items テーブルから product_group_id でマッピングを検索
     2. 見つかれば customer_id を取得
     3. customer_item_delivery_settings の is_default=True レコードから delivery_place_id を取得
     4. マッピングが無い場合は mapping_found=False を返す
     """
-    # Step 1: Find CustomerItem by product_id
-    query = select(CustomerItem).where(CustomerItem.product_id == product_id)
+    # Step 1: Find CustomerItem by product_group_id
+    query = select(CustomerItem).where(CustomerItem.product_group_id == product_group_id)
     if supplier_id is not None:
         query = query.where(CustomerItem.supplier_id == supplier_id)
 
@@ -85,14 +85,14 @@ def get_default_destination(
         _record_missing_mapping_event(
             db,
             event_type="customer_item_mapping_not_found",
-            product_id=product_id,
+            product_group_id=product_group_id,
             supplier_id=supplier_id,
             customer_id=None,
-            context_json={"product_id": product_id, "supplier_id": supplier_id},
+            context_json={"product_group_id": product_group_id, "supplier_id": supplier_id},
         )
         return DefaultDestinationResponse(
             mapping_found=False,
-            message=f"product_id={product_id} のマッピングが見つかりません",
+            message=f"product_group_id={product_group_id} のマッピングが見つかりません",
         )
 
     # Step 2: Get Customer info
@@ -101,11 +101,11 @@ def get_default_destination(
         _record_missing_mapping_event(
             db,
             event_type="customer_not_found",
-            product_id=product_id,
+            product_group_id=product_group_id,
             supplier_id=supplier_id,
             customer_id=customer_item.customer_id,
             context_json={
-                "product_id": product_id,
+                "product_group_id": product_group_id,
                 "supplier_id": supplier_id,
                 "customer_id": customer_item.customer_id,
                 "customer_part_no": customer_item.customer_part_no,
@@ -139,11 +139,11 @@ def get_default_destination(
         _record_missing_mapping_event(
             db,
             event_type="delivery_place_not_found",
-            product_id=product_id,
+            product_group_id=product_group_id,
             supplier_id=supplier_id,
             customer_id=customer.id,
             context_json={
-                "product_id": product_id,
+                "product_group_id": product_group_id,
                 "supplier_id": supplier_id,
                 "customer_id": customer.id,
                 "customer_part_no": customer_item.customer_part_no,
