@@ -69,6 +69,7 @@ from app.presentation.api.routes.rpa import (
     cloud_flow_router,
     layer_code_router,
     material_delivery_note_router,
+    material_delivery_simple_router,
     rpa_router,
     smartread_router,
 )
@@ -157,6 +158,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(sap_router, prefix=prefix)
     app.include_router(rpa_router, prefix=prefix)
     app.include_router(material_delivery_note_router, prefix=prefix)
+    app.include_router(material_delivery_simple_router, prefix=prefix)
     app.include_router(cloud_flow_router, prefix=prefix)
     app.include_router(layer_code_router, prefix=prefix)
     app.include_router(smartread_router, prefix=prefix)

@@ -170,6 +170,11 @@ export const routePermissions: RoutePermission[] = [
   // RPA
   { routeKey: "RPA.ROOT", path: "/rpa", allowedRoles: ["admin", "user"] },
   {
+    routeKey: "RPA.MATERIAL_DELIVERY_SIMPLE",
+    path: "/rpa/material-delivery-simple",
+    allowedRoles: ["admin", "user"],
+  },
+  {
     routeKey: "RPA.GENERIC_CLOUD_FLOW",
     path: "/rpa/generic-cloud-flow",
     allowedRoles: ["admin", "user"],

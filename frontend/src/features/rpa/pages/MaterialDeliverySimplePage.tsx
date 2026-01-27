@@ -1,0 +1,112 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { CalendarDays, Settings } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+
+import { getCloudFlowConfigOptional } from "../api";
+import { CloudFlowHelp } from "../components/CloudFlowHelp";
+import { ConfigDialog } from "../components/ConfigDialog";
+import { HistoryTable } from "../components/HistoryTable";
+import { useExecuteMaterialDeliveryStep1, useMaterialDeliverySimpleHistory } from "../hooks";
+
+import { Button, Input, Label } from "@/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
+
+const STEP1_CONFIG_KEY = "MATERIAL_DELIVERY_STEP1_URL";
+
+// eslint-disable-next-line max-lines-per-function
+export function MaterialDeliverySimplePage() {
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [configOpen, setConfigOpen] = useState(false);
+
+  const queryClient = useQueryClient();
+  const step1Mutation = useExecuteMaterialDeliveryStep1();
+  const historyQuery = useMaterialDeliverySimpleHistory(50, 0);
+
+  const canExecuteStep1 = useMemo(
+    () => Boolean(startDate && endDate && !step1Mutation.isPending),
+    [startDate, endDate, step1Mutation.isPending],
+  );
+
+  const handleExecuteStep1 = async () => {
+    if (!startDate || !endDate) {
+      toast.error("開始日と終了日を入力してください");
+      return;
+    }
+
+    try {
+      // 設定チェック
+      const config = await queryClient.fetchQuery({
+        queryKey: ["rpa", "config", STEP1_CONFIG_KEY],
+        queryFn: () => getCloudFlowConfigOptional(STEP1_CONFIG_KEY),
+        staleTime: 0,
+      });
+
+      if (!config) {
+        toast.error("URL設定が見つかりません。右上の設定ボタンから設定してください。");
+        setConfigOpen(true);
+        return;
+      }
+
+      await step1Mutation.mutateAsync({ start_date: startDate, end_date: endDate });
+      toast.success("Step1を実行しました");
+      historyQuery.refetch();
+    } catch (error) {
+      console.error(error);
+      toast.error("Step1の実行に失敗しました。");
+    }
+  };
+
+  return (
+    <PageContainer className="space-y-6">
+      <div className="flex items-center justify-between">
+        <PageHeader title="素材納品書発行（簡易）" subtitle="Step1/Step2のみのシンプル実行フロー" />
+        <Button variant="outline" size="sm" onClick={() => setConfigOpen(true)}>
+          <Settings className="mr-2 h-4 w-4" />
+          URL設定
+        </Button>
+      </div>
+
+      <ConfigDialog open={configOpen} onOpenChange={setConfigOpen} />
+
+      <div className="rounded-lg border bg-card p-6 space-y-4">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <CalendarDays className="h-4 w-4" />
+          Step1 実行
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="start-date">開始日</Label>
+            <Input
+              id="start-date"
+              type="date"
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="end-date">終了日</Label>
+            <Input
+              id="end-date"
+              type="date"
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+            />
+          </div>
+          <div className="flex items-end">
+            <Button onClick={handleExecuteStep1} disabled={!canExecuteStep1}>
+              {step1Mutation.isPending ? "実行中..." : "Step1 実行"}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <HistoryTable historyQuery={historyQuery} onConfigError={() => setConfigOpen(true)} />
+
+      <div className="mt-8">
+        <CloudFlowHelp />
+      </div>
+    </PageContainer>
+  );
+}

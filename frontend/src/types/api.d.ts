@@ -6874,6 +6874,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/material-delivery-simple/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Step1 History
+     * @description Step1履歴を取得.
+     */
+    get: operations["get_step1_history_api_rpa_material_delivery_simple_history_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-simple/history/{job_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete Step1 History
+     * @description Step1履歴を削除.
+     */
+    delete: operations["delete_step1_history_api_rpa_material_delivery_simple_history__job_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-simple/step1": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Step1
+     * @description Step1実行.
+     */
+    post: operations["execute_step1_api_rpa_material_delivery_simple_step1_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-simple/step2": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Step2
+     * @description Step2実行.
+     */
+    post: operations["execute_step2_api_rpa_material_delivery_simple_step2_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/rpa/cloud-flow/execute-generic": {
     parameters: {
       query?: never;
@@ -11933,6 +12013,59 @@ export interface components {
       flow_response?: {
         [key: string]: unknown;
       } | null;
+    };
+    /**
+     * MaterialDeliverySimpleJobResponse
+     * @description 素材納品書発行（簡易）ジョブレスポンス.
+     */
+    MaterialDeliverySimpleJobResponse: {
+      /** Id */
+      id: number;
+      /** Step */
+      step: number;
+      /** Status */
+      status: string;
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string;
+      /**
+       * End Date
+       * Format: date
+       */
+      end_date: string;
+      /**
+       * Requested At
+       * Format: date-time
+       */
+      requested_at: string;
+      /** Requested By */
+      requested_by: string | null;
+      /** Completed At */
+      completed_at: string | null;
+      /** Result Message */
+      result_message: string | null;
+      /** Error Message */
+      error_message: string | null;
+    };
+    /**
+     * MaterialDeliverySimpleRequest
+     * @description 素材納品書発行（簡易）リクエスト.
+     */
+    MaterialDeliverySimpleRequest: {
+      /**
+       * Start Date
+       * Format: date
+       * @description 開始日
+       */
+      start_date: string;
+      /**
+       * End Date
+       * Format: date
+       * @description 終了日
+       */
+      end_date: string;
     };
     /**
      * MySuppliersResponse
@@ -27366,6 +27499,133 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_step1_history_api_rpa_material_delivery_simple_history_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialDeliverySimpleJobResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_step1_history_api_rpa_material_delivery_simple_history__job_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        job_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_step1_api_rpa_material_delivery_simple_step1_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MaterialDeliverySimpleRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialDeliverySimpleJobResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_step2_api_rpa_material_delivery_simple_step2_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MaterialDeliverySimpleRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialDeliverySimpleJobResponse"];
         };
       };
       /** @description Validation Error */

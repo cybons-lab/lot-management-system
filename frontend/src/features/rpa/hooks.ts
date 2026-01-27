@@ -7,10 +7,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   executeMaterialDeliveryDocument,
+  executeMaterialDeliveryStep1,
+  executeMaterialDeliveryStep2,
   executeGenericCloudFlow,
+  getCloudFlowConfigOptional,
+  getMaterialDeliverySimpleHistory,
+  deleteMaterialDeliverySimpleHistory,
   getCloudFlowConfig,
   updateCloudFlowConfig,
   type MaterialDeliveryDocumentRequest,
+  type MaterialDeliverySimpleRequest,
   type CloudFlowConfigUpdate,
   type GenericCloudFlowExecuteRequest,
 } from "./api";
@@ -25,16 +31,54 @@ export function useExecuteMaterialDeliveryDocument() {
   });
 }
 
+export function useExecuteMaterialDeliveryStep1() {
+  return useMutation({
+    mutationFn: (request: MaterialDeliverySimpleRequest) => executeMaterialDeliveryStep1(request),
+  });
+}
+
+export function useExecuteMaterialDeliveryStep2() {
+  return useMutation({
+    mutationFn: (request: MaterialDeliverySimpleRequest) => executeMaterialDeliveryStep2(request),
+  });
+}
+
+export function useMaterialDeliverySimpleHistory(limit = 20, offset = 0) {
+  return useQuery({
+    queryKey: ["rpa", "material-delivery-simple", "history", limit, offset],
+    queryFn: () => getMaterialDeliverySimpleHistory(limit, offset),
+  });
+}
+
+export function useDeleteMaterialDeliverySimpleHistory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteMaterialDeliverySimpleHistory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rpa", "material-delivery-simple", "history"] });
+    },
+  });
+}
+
 export function useExecuteGenericCloudFlow() {
   return useMutation({
     mutationFn: (request: GenericCloudFlowExecuteRequest) => executeGenericCloudFlow(request),
   });
 }
 
-export function useCloudFlowConfig(key: string) {
+export function useCloudFlowConfig(key: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["rpa", "config", key],
     queryFn: () => getCloudFlowConfig(key),
+    enabled: options?.enabled,
+  });
+}
+
+export function useCloudFlowConfigOptional(key: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["rpa", "config", key],
+    queryFn: () => getCloudFlowConfigOptional(key),
+    enabled: options?.enabled,
   });
 }
 
