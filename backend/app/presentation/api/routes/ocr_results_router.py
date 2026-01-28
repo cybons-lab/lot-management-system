@@ -8,7 +8,7 @@ import re
 from datetime import date, datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -16,11 +16,13 @@ from sqlalchemy.orm import Session
 from app.application.services.calendar_service import CalendarService
 from app.application.services.common.export_service import ExportService
 from app.application.services.sap.sap_reconciliation_service import SapReconciliationService
+from app.application.services.smartread.completion_service import SmartReadCompletionService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.smartread_models import OcrResultEdit, SmartReadLongData
 from app.presentation.api.routes.auth.auth_router import get_current_user
 from app.presentation.schemas.calendar.calendar_schemas import BusinessDayCalculationRequest
+from app.presentation.schemas.smartread_schema import SmartReadCompletionRequest
 
 
 router = APIRouter(prefix="/ocr-results", tags=["OCR Results"])
@@ -369,119 +371,136 @@ async def list_ocr_results(
     return OcrResultListResponse(items=items, total=total)
 
 
-@router.get("/{item_id}", response_model=OcrResultItem)
-async def get_ocr_result(
-    item_id: int,
+@router.get("/completed", response_model=OcrResultListResponse)
+async def list_completed_ocr_results(
+    task_date: Annotated[str | None, Query(description="タスク日付 (YYYY-MM-DD)")] = None,
+    limit: Annotated[int, Query(ge=1, le=1000)] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
-) -> OcrResultItem:
-    """OCR結果詳細を取得."""
-    query = "SELECT * FROM v_ocr_results WHERE id = :id"
-    result = db.execute(text(query), {"id": item_id})
-    row = result.mappings().first()
+) -> OcrResultListResponse:
+    """完了済み（アーカイブ）のOCR結果一覧を取得."""
+    from sqlalchemy import func, select
 
-    if not row:
-        from fastapi import HTTPException, status
-
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"OCR結果 ID={item_id} が見つかりません",
-        )
-
-    item = OcrResultItem.model_validate(dict(row))
-
-    # SAP照合処理を追加
-    if item.material_code:
-        sap_service = SapReconciliationService(db)
-        sap_service.load_sap_cache(kunnr="100427105")
-
-        sap_result = sap_service.reconcile_single(
-            material_code=item.material_code,
-            jiku_code=item.jiku_code or "",
-            customer_code=item.customer_code or "100427105",
-        )
-
-        item.sap_match_type = sap_result.sap_match_type.value if sap_result.sap_match_type else None
-        item.sap_matched_zkdmat_b = sap_result.sap_matched_zkdmat_b
-
-        if sap_result.sap_raw_data:
-            item.sap_supplier_code = sap_result.sap_raw_data.get("ZLIFNR_H")
-            item.sap_qty_unit = sap_result.sap_raw_data.get("MEINS")
-            item.sap_maker_item = sap_result.sap_raw_data.get("ZMKMAT_B")
-
-    return item
-
-
-@router.post("/{item_id}/edit", response_model=OcrResultEditResponse)
-async def save_ocr_result_edit(
-    item_id: int,
-    request: OcrResultEditRequest,
-    db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
-) -> OcrResultEditResponse:
-    """OCR結果の手入力内容を保存."""
-    edit = (
-        db.query(OcrResultEdit)
-        .filter(OcrResultEdit.smartread_long_data_id == item_id)
-        .one_or_none()
+    from app.infrastructure.persistence.models.smartread_models import (
+        OcrResultEditCompleted,
+        SmartReadLongDataCompleted,
     )
 
-    if edit is None:
-        edit = OcrResultEdit(smartread_long_data_id=item_id)
-        db.add(edit)
+    # Base query for completed items
+    stmt = select(SmartReadLongDataCompleted).order_by(
+        SmartReadLongDataCompleted.task_date.desc(), SmartReadLongDataCompleted.row_index.asc()
+    )
 
-    update_data = request.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(edit, key, value)
-
-    edit.updated_at = datetime.now()
-
-    # バリデーションとerror_flagsの更新
-    long_data = db.query(SmartReadLongData).filter(SmartReadLongData.id == item_id).first()
-    if long_data:
-        # 突合キーの特定
-        customer_code = long_data.content.get("得意先コード") or "100427105"
-        material_code = (
-            edit.material_code
-            or long_data.content.get("材質コード")
-            or long_data.content.get("材料コード")
-        )
-        jiku_code = edit.jiku_code or long_data.content.get("次区")
-
-        # マスタ登録確認
-        master_check_query = """
-            SELECT 1 FROM shipping_master_curated
-            WHERE customer_code = :cc AND material_code = :mc AND jiku_code = :jc
-        """
-        master_exists = (
-            db.execute(
-                text(master_check_query),
-                {"cc": customer_code, "mc": material_code, "jc": jiku_code},
-            ).first()
-            is not None
+    # Filters
+    if task_date:
+        stmt = stmt.where(
+            SmartReadLongDataCompleted.task_date == datetime.fromisoformat(task_date).date()
         )
 
-        # 次区フォーマットバリデーション
-        jiku_error = False
-        if jiku_code and not re.match(r"^[A-Za-z][0-9]+$", jiku_code):
-            jiku_error = True
+    # Pagination
+    stmt_limit = stmt.limit(limit).offset(offset)
+    long_rows = db.scalars(stmt_limit).all()
 
-        # 日付フォーマットバリデーション（納期）
-        delivery_date = edit.delivery_date or long_data.content.get("納期")
-        date_error = False
-        if delivery_date and not re.match(r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}$", delivery_date):
-            date_error = True
+    # Total count
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = db.scalar(count_stmt) or 0
 
-        edit.error_flags = {
-            "master_not_found": not master_exists,
-            "jiku_format_error": jiku_error,
-            "date_format_error": date_error,
-        }
+    if not long_rows:
+        return OcrResultListResponse(items=[], total=0)
 
-    db.commit()
-    db.refresh(edit)
+    # Fetch associated edits
+    long_ids = [row.id for row in long_rows]
+    edits = db.scalars(
+        select(OcrResultEditCompleted).where(
+            OcrResultEditCompleted.smartread_long_data_completed_id.in_(long_ids)
+        )
+    ).all()
+    edits_map = {edit.smartread_long_data_completed_id: edit for edit in edits}
 
-    return OcrResultEditResponse.model_validate(edit)
+    items = []
+    for row in long_rows:
+        content = row.content or {}
+        edit = edits_map.get(row.id)
+
+        # Map to OcrResultItem
+        # Note: Master data fields will be empty as we don't join with master tables here.
+        # This is acceptable for archive view.
+        item = OcrResultItem(
+            id=row.original_id
+            or row.id,  # Use original ID if available for display? Or actual ID? Restore uses actual ID from history.
+            # Wait, restore takes specific IDs. If we pass `row.id` (history ID), restore needs to know it's history ID.
+            # My restore service takes history table IDs. So we must return history table ID as `id`.
+            wide_data_id=row.wide_data_id,
+            config_id=row.config_id,
+            task_id=row.task_id,
+            task_date=row.task_date,
+            request_id_ref=row.request_id_ref,
+            row_index=row.row_index,
+            status=row.status,
+            content=content,
+            created_at=row.created_at,
+            # OCR derived
+            customer_code=content.get("得意先コード"),
+            material_code=content.get("材質コード") or content.get("材料コード"),
+            jiku_code=content.get("次区") or content.get("次区コード"),
+            delivery_date=content.get("納期"),
+            delivery_quantity=content.get("納入数") or content.get("数量"),
+            item_no=content.get("アイテムNo"),
+            order_unit=content.get("単位"),
+            inbound_no=content.get("入庫No") or content.get("入庫番号"),
+            lot_no=content.get("ロットNo") or content.get("ロット番号"),
+            # Edits
+            manual_lot_no_1=edit.lot_no_1 if edit else None,
+            manual_quantity_1=edit.quantity_1 if edit else None,
+            manual_lot_no_2=edit.lot_no_2 if edit else None,
+            manual_quantity_2=edit.quantity_2 if edit else None,
+            manual_inbound_no=edit.inbound_no if edit else None,
+            manual_inbound_no_2=edit.inbound_no_2 if edit else None,
+            manual_shipping_date=edit.shipping_date if edit else None,
+            manual_shipping_slip_text=edit.shipping_slip_text if edit else None,
+            manual_shipping_slip_text_edited=edit.shipping_slip_text_edited if edit else None,
+            manual_jiku_code=edit.jiku_code if edit else None,
+            manual_material_code=edit.material_code if edit else None,
+            manual_delivery_quantity=edit.delivery_quantity if edit else None,
+            manual_updated_at=edit.updated_at if edit else None,
+            error_flags=edit.error_flags if edit else {},
+            process_status=edit.process_status if edit else "completed",
+            # [NEW] SAP Snapshot data from archive
+            sap_match_type=edit.sap_match_type if edit else None,
+            sap_matched_zkdmat_b=edit.sap_matched_zkdmat_b if edit else None,
+            sap_supplier_code=edit.sap_supplier_code if edit else None,
+            sap_supplier_name=edit.sap_supplier_name if edit else None,
+            sap_qty_unit=edit.sap_qty_unit if edit else None,
+            sap_maker_item=edit.sap_maker_item if edit else None,
+        )
+        items.append(item)
+
+    return OcrResultListResponse(items=items, total=total)
+
+
+@router.post("/complete", status_code=204)
+async def complete_ocr_items(
+    request: SmartReadCompletionRequest,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
+    """選択したOCR結果を完了（アーカイブ）にする."""
+    service = SmartReadCompletionService(db)
+    service.mark_as_completed(request.ids)
+    return Response(status_code=204)
+
+
+@router.post("/restore", status_code=204)
+async def restore_ocr_items(
+    request: SmartReadCompletionRequest,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
+    """完了済み（アーカイブ）アイテムを復元して未処理に戻す."""
+    service = SmartReadCompletionService(db)
+    service.restore_items(request.ids)
+    return Response(status_code=204)
 
 
 @router.get("/export/download")
@@ -489,6 +508,8 @@ async def export_ocr_results(
     task_date: Annotated[str | None, Query(description="タスク日付 (YYYY-MM-DD)")] = None,
     status: Annotated[str | None, Query(description="ステータスでフィルタ")] = None,
     has_error: Annotated[bool | None, Query(description="エラーのみ表示")] = None,
+    # FastAPI handles list query params as ?ids=1&ids=2
+    ids: Annotated[list[int] | None, Query(description="IDリストでフィルタ")] = None,
     format: Annotated[str, Query(description="エクスポート形式 (csv/xlsx)")] = "xlsx",
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
@@ -497,18 +518,26 @@ async def export_ocr_results(
     query = "SELECT * FROM v_ocr_results WHERE 1=1"
     params: dict[str, Any] = {}
 
-    if task_date:
-        query += " AND task_date = :task_date"
-        params["task_date"] = datetime.fromisoformat(task_date).date()
+    if ids:
+        # ID指定がある場合は他のフィルタより優先（またはAND条件）
+        # Selected items should typically override other filters or be a subset.
+        # User selection implies specific intent.
+        query += " AND id = ANY(:ids)"
+        params["ids"] = ids
+    else:
+        # ID指定がない場合のみ他のフィルタを適用（UI挙動に合わせて調整）
+        if task_date:
+            query += " AND task_date = :task_date"
+            params["task_date"] = datetime.fromisoformat(task_date).date()
 
-    if status:
-        query += " AND status = :status"
-        params["status"] = status
+        if status:
+            query += " AND status = :status"
+            params["status"] = status
 
-    if has_error is True:
-        query += " AND has_error = true"
-    elif has_error is False:
-        query += " AND has_error = false"
+        if has_error is True:
+            query += " AND has_error = true"
+        elif has_error is False:
+            query += " AND has_error = false"
 
     query += " ORDER BY task_date DESC, row_index ASC"
 
@@ -629,7 +658,7 @@ async def export_ocr_results(
                     "delivery_quantity": row.get("delivery_quantity"),
                     "item_no": row.get("item_no"),
                     "customer_part_no": row.get("customer_part_no"),
-                    "maker_part_no": row.get("maker_part_no"),
+                    "maker_part_no": row.get("メーカー品番"),
                     "order_unit": order_unit,  # SAP優先単位
                     # マスタ由来
                     "customer_name": row.get("customer_code"),  # 得意先コードを出力
@@ -681,3 +710,122 @@ async def export_ocr_results(
     if format == "csv":
         return ExportService.export_to_csv(export_rows, filename=filename)
     return ExportService.export_to_excel(export_rows, filename=filename, column_map=column_map)
+
+
+@router.get("/{item_id}", response_model=OcrResultItem)
+async def get_ocr_result(
+    item_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> OcrResultItem:
+    """OCR結果詳細を取得."""
+    query = "SELECT * FROM v_ocr_results WHERE id = :id"
+    result = db.execute(text(query), {"id": item_id})
+    row = result.mappings().first()
+
+    if not row:
+        from fastapi import HTTPException, status
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"OCR結果 ID={item_id} が見つかりません",
+        )
+
+    item = OcrResultItem.model_validate(dict(row))
+
+    # SAP照合処理を追加
+    if item.material_code:
+        sap_service = SapReconciliationService(db)
+        sap_service.load_sap_cache(kunnr="100427105")
+
+        sap_result = sap_service.reconcile_single(
+            material_code=item.material_code,
+            jiku_code=item.jiku_code or "",
+            customer_code=item.customer_code or "100427105",
+        )
+
+        item.sap_match_type = sap_result.sap_match_type.value if sap_result.sap_match_type else None
+        item.sap_matched_zkdmat_b = sap_result.sap_matched_zkdmat_b
+
+        if sap_result.sap_raw_data:
+            item.sap_supplier_code = sap_result.sap_raw_data.get("ZLIFNR_H")
+            item.sap_qty_unit = sap_result.sap_raw_data.get("MEINS")
+            item.sap_maker_item = sap_result.sap_raw_data.get("ZMKMAT_B")
+
+    return item
+
+
+@router.post("/{item_id}/edit", response_model=OcrResultEditResponse)
+async def save_ocr_result_edit(
+    item_id: int,
+    request: OcrResultEditRequest,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+) -> OcrResultEditResponse:
+    """OCR結果の手入力内容を保存."""
+    edit = (
+        db.query(OcrResultEdit)
+        .filter(OcrResultEdit.smartread_long_data_id == item_id)
+        .one_or_none()
+    )
+
+    if edit is None:
+        edit = OcrResultEdit(smartread_long_data_id=item_id)
+        db.add(edit)
+
+    update_data = request.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(edit, key, value)
+
+    edit.updated_at = datetime.now()
+
+    # バリデーションとerror_flagsの更新
+    long_data = db.query(SmartReadLongData).filter(SmartReadLongData.id == item_id).first()
+    if long_data:
+        # 突合キーの特定
+        customer_code = long_data.content.get("得意先コード") or "100427105"
+        material_code = (
+            edit.material_code
+            or long_data.content.get("材質コード")
+            or long_data.content.get("材料コード")
+        )
+        jiku_code = edit.jiku_code or long_data.content.get("次区")
+
+        # マスタ登録確認
+        master_check_query = """
+            SELECT 1 FROM shipping_master_curated
+            WHERE customer_code = :cc AND material_code = :mc AND jiku_code = :jc
+        """
+        master_exists = (
+            db.execute(
+                text(master_check_query),
+                {"cc": customer_code, "mc": material_code, "jc": jiku_code},
+            ).first()
+            is not None
+        )
+
+        # 次区フォーマットバリデーション
+        jiku_error = False
+        if jiku_code and not re.match(r"^[A-Za-z][0-9]+$", jiku_code):
+            jiku_error = True
+
+        # 日付フォーマットバリデーション（納期）
+        delivery_date = edit.delivery_date or long_data.content.get("納期")
+        date_error = False
+        if delivery_date and not re.match(r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}$", delivery_date):
+            date_error = True
+
+        edit.error_flags = {
+            "master_not_found": not master_exists,
+            "jiku_format_error": jiku_error,
+            "date_format_error": date_error,
+        }
+
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    db.refresh(edit)
+
+    return OcrResultEditResponse.model_validate(edit)

@@ -386,3 +386,7 @@ class SmartReadPadRunRetryResponse(BaseModel):
     new_run_id: str = Field(..., description="新しい実行ID")
     original_run_id: str = Field(..., description="元の実行ID")
     message: str = Field(default="リトライを開始しました", description="メッセージ")
+
+
+class SmartReadCompletionRequest(BaseModel):
+    ids: list[int]

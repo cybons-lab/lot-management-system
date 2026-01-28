@@ -7891,6 +7891,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/ocr-results/completed": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Completed Ocr Results
+     * @description 完了済み（アーカイブ）のOCR結果一覧を取得.
+     */
+    get: operations["list_completed_ocr_results_api_ocr_results_completed_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/ocr-results/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Complete Ocr Items
+     * @description 選択したOCR結果を完了（アーカイブ）にする.
+     */
+    post: operations["complete_ocr_items_api_ocr_results_complete_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/ocr-results/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore Ocr Items
+     * @description 完了済み（アーカイブ）アイテムを復元して未処理に戻す.
+     */
+    post: operations["restore_ocr_items_api_ocr_results_restore_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/ocr-results/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Ocr Results
+     * @description OCR結果をExcel/CSVでエクスポート.
+     */
+    get: operations["export_ocr_results_api_ocr_results_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/ocr-results/{item_id}": {
     parameters: {
       query?: never;
@@ -7925,26 +8005,6 @@ export interface paths {
      * @description OCR結果の手入力内容を保存.
      */
     post: operations["save_ocr_result_edit_api_ocr_results__item_id__edit_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/ocr-results/export/download": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Export Ocr Results
-     * @description OCR結果をExcel/CSVでエクスポート.
-     */
-    get: operations["export_ocr_results_api_ocr_results_export_download_get"];
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -15201,6 +15261,11 @@ export interface components {
         | null;
       /** Error Message */
       error_message?: string | null;
+    };
+    /** SmartReadCompletionRequest */
+    SmartReadCompletionRequest: {
+      /** Ids */
+      ids: number[];
     };
     /**
      * SmartReadConfigCreate
@@ -29410,6 +29475,142 @@ export interface operations {
       };
     };
   };
+  list_completed_ocr_results_api_ocr_results_completed_get: {
+    parameters: {
+      query?: {
+        /** @description タスク日付 (YYYY-MM-DD) */
+        task_date?: string | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OcrResultListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  complete_ocr_items_api_ocr_results_complete_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadCompletionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  restore_ocr_items_api_ocr_results_restore_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadCompletionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_ocr_results_api_ocr_results_export_download_get: {
+    parameters: {
+      query?: {
+        /** @description タスク日付 (YYYY-MM-DD) */
+        task_date?: string | null;
+        /** @description ステータスでフィルタ */
+        status?: string | null;
+        /** @description エラーのみ表示 */
+        has_error?: boolean | null;
+        /** @description IDリストでフィルタ */
+        ids?: number[] | null;
+        /** @description エクスポート形式 (csv/xlsx) */
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_ocr_result_api_ocr_results__item_id__get: {
     parameters: {
       query?: never;
@@ -29463,44 +29664,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["OcrResultEditResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  export_ocr_results_api_ocr_results_export_download_get: {
-    parameters: {
-      query?: {
-        /** @description タスク日付 (YYYY-MM-DD) */
-        task_date?: string | null;
-        /** @description ステータスでフィルタ */
-        status?: string | null;
-        /** @description エラーのみ表示 */
-        has_error?: boolean | null;
-        /** @description エクスポート形式 (csv/xlsx) */
-        format?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
         };
       };
       /** @description Validation Error */

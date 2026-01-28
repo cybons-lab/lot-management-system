@@ -20950,6 +20950,290 @@
         }
       }
     },
+    "/api/ocr-results/completed": {
+      "get": {
+        "tags": [
+          "OCR Results"
+        ],
+        "summary": "List Completed Ocr Results",
+        "description": "完了済み（アーカイブ）のOCR結果一覧を取得.",
+        "operationId": "list_completed_ocr_results_api_ocr_results_completed_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "タスク日付 (YYYY-MM-DD)",
+              "title": "Task Date"
+            },
+            "description": "タスク日付 (YYYY-MM-DD)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OcrResultListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ocr-results/complete": {
+      "post": {
+        "tags": [
+          "OCR Results"
+        ],
+        "summary": "Complete Ocr Items",
+        "description": "選択したOCR結果を完了（アーカイブ）にする.",
+        "operationId": "complete_ocr_items_api_ocr_results_complete_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadCompletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/ocr-results/restore": {
+      "post": {
+        "tags": [
+          "OCR Results"
+        ],
+        "summary": "Restore Ocr Items",
+        "description": "完了済み（アーカイブ）アイテムを復元して未処理に戻す.",
+        "operationId": "restore_ocr_items_api_ocr_results_restore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartReadCompletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/ocr-results/export/download": {
+      "get": {
+        "tags": [
+          "OCR Results"
+        ],
+        "summary": "Export Ocr Results",
+        "description": "OCR結果をExcel/CSVでエクスポート.",
+        "operationId": "export_ocr_results_api_ocr_results_export_download_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "タスク日付 (YYYY-MM-DD)",
+              "title": "Task Date"
+            },
+            "description": "タスク日付 (YYYY-MM-DD)"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ステータスでフィルタ",
+              "title": "Status"
+            },
+            "description": "ステータスでフィルタ"
+          },
+          {
+            "name": "has_error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "エラーのみ表示",
+              "title": "Has Error"
+            },
+            "description": "エラーのみ表示"
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "IDリストでフィルタ",
+              "title": "Ids"
+            },
+            "description": "IDリストでフィルタ"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "エクスポート形式 (csv/xlsx)",
+              "default": "xlsx",
+              "title": "Format"
+            },
+            "description": "エクスポート形式 (csv/xlsx)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ocr-results/{item_id}": {
       "get": {
         "tags": [
@@ -21040,109 +21324,6 @@
                 "schema": {
                   "$ref": "#/components/schemas/OcrResultEditResponse"
                 }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/ocr-results/export/download": {
-      "get": {
-        "tags": [
-          "OCR Results"
-        ],
-        "summary": "Export Ocr Results",
-        "description": "OCR結果をExcel/CSVでエクスポート.",
-        "operationId": "export_ocr_results_api_ocr_results_export_download_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "task_date",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "タスク日付 (YYYY-MM-DD)",
-              "title": "Task Date"
-            },
-            "description": "タスク日付 (YYYY-MM-DD)"
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "ステータスでフィルタ",
-              "title": "Status"
-            },
-            "description": "ステータスでフィルタ"
-          },
-          {
-            "name": "has_error",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "エラーのみ表示",
-              "title": "Has Error"
-            },
-            "description": "エラーのみ表示"
-          },
-          {
-            "name": "format",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "description": "エクスポート形式 (csv/xlsx)",
-              "default": "xlsx",
-              "title": "Format"
-            },
-            "description": "エクスポート形式 (csv/xlsx)"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
               }
             }
           },
@@ -38247,6 +38428,22 @@
         ],
         "title": "SmartReadAnalyzeResponse",
         "description": "解析レスポンス."
+      },
+      "SmartReadCompletionRequest": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ids"
+        ],
+        "title": "SmartReadCompletionRequest"
       },
       "SmartReadConfigCreate": {
         "properties": {

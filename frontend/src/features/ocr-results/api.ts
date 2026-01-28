@@ -137,13 +137,23 @@ export const ocrResultsApi = {
    */
   list: async (params?: OcrResultListParams): Promise<OcrResultListResponse> => {
     const searchParams = new URLSearchParams();
-    if (params?.task_date) searchParams.set("task_date", params.task_date);
-    if (params?.status) searchParams.set("status", params.status);
-    if (params?.has_error !== undefined) searchParams.set("has_error", params.has_error.toString());
-    if (params?.limit) searchParams.set("limit", params.limit.toString());
-    if (params?.offset) searchParams.set("offset", params.offset.toString());
+    if (params) {
+      if (params.task_date) searchParams.set("task_date", params.task_date);
+      if (params.status) searchParams.set("status", params.status);
+      if (params.has_error !== undefined) {
+        searchParams.set("has_error", String(params.has_error));
+      }
+      if (typeof params.limit === "number") {
+        searchParams.set("limit", String(params.limit));
+      }
+      if (typeof params.offset === "number") {
+        searchParams.set("offset", String(params.offset));
+      }
+    }
 
-    const response = await httpAuth.get<OcrResultListResponse>(`ocr-results?${searchParams}`);
+    const response = await httpAuth.get<OcrResultListResponse>(
+      `ocr-results?${searchParams.toString()}`,
+    );
     return response;
   },
 
@@ -170,6 +180,7 @@ export const ocrResultsApi = {
     task_date?: string;
     status?: string;
     has_error?: boolean;
+    ids?: number[];
   }): Promise<void> => {
     const searchParams = new URLSearchParams();
     if (params?.task_date) searchParams.set("task_date", params.task_date);
@@ -177,9 +188,47 @@ export const ocrResultsApi = {
     if (params?.has_error !== undefined) {
       searchParams.set("has_error", params.has_error.toString());
     }
+    if (params?.ids?.length) {
+      params.ids.forEach((id) => searchParams.append("ids", id.toString()));
+    }
 
     const url = `ocr-results/export/download?format=xlsx&${searchParams}`;
     const filename = `OCR結果_${new Date().toISOString().slice(0, 10)}.xlsx`;
     await httpAuth.download(url, filename);
+  },
+
+  /**
+   * OCR結果を完了としてマーク（アーカイブ）
+   */
+  complete: async (ids: number[]): Promise<void> => {
+    await httpAuth.post("ocr-results/complete", { ids });
+  },
+
+  /**
+   * OCR結果を未処理に戻す（リストア）
+   */
+  restore: async (ids: number[]): Promise<void> => {
+    await httpAuth.post("ocr-results/restore", { ids });
+  },
+
+  /**
+   * 完了済み（アーカイブ）OCR結果一覧取得
+   */
+  listCompleted: async (params?: OcrResultListParams): Promise<OcrResultListResponse> => {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      if (params.task_date) searchParams.set("task_date", params.task_date);
+      if (typeof params.limit === "number") {
+        searchParams.set("limit", String(params.limit));
+      }
+      if (typeof params.offset === "number") {
+        searchParams.set("offset", String(params.offset));
+      }
+    }
+
+    const response = await httpAuth.get<OcrResultListResponse>(
+      `ocr-results/completed?${searchParams.toString()}`,
+    );
+    return response;
   },
 };
