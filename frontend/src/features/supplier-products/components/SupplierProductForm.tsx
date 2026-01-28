@@ -20,7 +20,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Checkbox,
 } from "@/components/ui";
 import {
   Form,
@@ -37,7 +36,6 @@ const schema = z.object({
   supplier_id: z.coerce.number().min(1, "仕入先を選択してください"),
   maker_part_no: z.string().min(1, "メーカー品番を入力してください"),
   display_name: z.string().min(1, "製品名を入力してください"),
-  is_primary: z.boolean().default(false),
   lead_time_days: z.number().nullable(),
   notes: z.string().optional(),
 });
@@ -68,7 +66,6 @@ export function SupplierProductForm({
       supplier_id: initialData?.supplier_id || 0,
       maker_part_no: initialData?.maker_part_no || "",
       display_name: initialData?.display_name || "",
-      is_primary: initialData?.is_primary || false,
       lead_time_days: initialData?.lead_time_days ?? null,
       notes: initialData?.notes || "",
     },
@@ -150,23 +147,6 @@ export function SupplierProductForm({
               </FormControl>
               <FormDescription>この製品の名称を入力してください</FormDescription>
               <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* 主要仕入先フラグ */}
-        <FormField
-          control={control}
-          name="is_primary"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">主要仕入先</FormLabel>
-                <FormDescription>この商品のメイン仕入先として設定します</FormDescription>
-              </div>
-              <FormControl>
-                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              </FormControl>
             </FormItem>
           )}
         />

@@ -22,7 +22,7 @@ import { Button } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/layout/tabs";
 import { useSupplierProductsQuery } from "@/features/supplier-products/hooks/useSupplierProductsQuery";
-import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
+import { useCustomersQuery } from "@/hooks/api/useMastersQuery";
 
 interface CustomerItemFormDialogProps {
   open: boolean;
@@ -47,7 +47,6 @@ export function CustomerItemFormDialog({
 
   // Master data for select options
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
-  const { data: products = [], isLoading: isLoadingProducts } = useProductsQuery();
   const { data: supplierItems = [], isLoading: isLoadingSupplierItems } =
     useSupplierProductsQuery();
 
@@ -62,10 +61,7 @@ export function CustomerItemFormDialog({
       ? {
           customer_id: item.customer_id,
           customer_part_no: item.customer_part_no,
-          product_group_id: item.product_group_id,
-          supplier_id: item.supplier_id,
           supplier_item_id: item.supplier_item_id,
-          is_primary: item.is_primary,
           base_unit: item.base_unit,
           pack_unit: item.pack_unit,
           pack_quantity: item.pack_quantity,
@@ -84,17 +80,7 @@ export function CustomerItemFormDialog({
     [customers],
   );
 
-  // 製品選択オプション - 製品コード（製品名）形式
-  const productOptions = useMemo(
-    () =>
-      products.map((p) => ({
-        value: String(p.id),
-        label: `${p.product_code}（${p.product_name}）`,
-      })),
-    [products],
-  );
-
-  // Phase1: メーカー品番選択オプション - maker_part_no（仕入先名）形式
+  // メーカー品番選択オプション - maker_part_no（仕入先名）形式
   const supplierItemOptions = useMemo(
     () =>
       supplierItems.map((si) => ({
@@ -104,25 +90,17 @@ export function CustomerItemFormDialog({
     [supplierItems],
   );
 
-  const handleProductSelect = (value: string) => {
-    // Phase1: product_group_idはオプション、空文字列の場合はnullを設定
-    setValue("product_group_id", value && value !== "" ? Number(value) : null);
-  };
-
-  // Phase1: supplier_item_id選択ハンドラ
+  // supplier_item_id選択ハンドラ
   const handleSupplierItemSelect = (value: string) => {
     // 空文字列の場合は0を設定（未選択状態）
     if (!value || value === "") {
       setValue("supplier_item_id", 0);
-      setValue("supplier_id", null);
       return;
     }
 
     const selectedSupplierItem = supplierItems.find((si) => si.id === Number(value));
     if (selectedSupplierItem) {
       setValue("supplier_item_id", selectedSupplierItem.id);
-      // supplier_idは非推奨だがバックエンド互換性のため設定
-      setValue("supplier_id", selectedSupplierItem.supplier_id);
     }
   };
 
@@ -130,7 +108,7 @@ export function CustomerItemFormDialog({
     onSubmit(data as CreateCustomerItemRequest);
   };
 
-  const isLoading = isLoadingCustomers || isLoadingProducts || isLoadingSupplierItems;
+  const isLoading = isLoadingCustomers || isLoadingSupplierItems;
   const isEditMode = mode === "edit" && item;
 
   return (
@@ -161,12 +139,9 @@ export function CustomerItemFormDialog({
                 isSubmitting={isSubmitting}
                 isLoading={isLoading}
                 customerOptions={customerOptions}
-                productOptions={productOptions}
                 supplierItemOptions={supplierItemOptions}
                 isLoadingCustomers={isLoadingCustomers}
-                isLoadingProducts={isLoadingProducts}
                 isLoadingSupplierItems={isLoadingSupplierItems}
-                onProductSelect={handleProductSelect}
                 onSupplierItemSelect={handleSupplierItemSelect}
               />
 

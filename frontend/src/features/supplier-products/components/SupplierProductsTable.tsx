@@ -82,12 +82,6 @@ export function SupplierProductsTable({
         sortable: true,
       },
       {
-        id: "is_primary",
-        header: "主要",
-        cell: (row) => (row.is_primary ? "★" : ""),
-        sortable: true,
-      },
-      {
         id: "lead_time_days",
         header: "ＬＴ(日)",
         cell: (row) => (row.lead_time_days != null ? `${row.lead_time_days}日` : "-"),
