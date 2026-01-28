@@ -236,7 +236,44 @@ WHERE si.supplier_id = 5 AND si.maker_part_no = 'SUZ-BOLT-001';
 - ✅ product_idをnullableにする
 - ✅ メーカー品番の重複を排除
 
-### Phase2（計画中）: 製品グルーピング機能
+### Phase2（進行中）: UIラベル明確化 & フィールド名統一
+
+#### Phase2-A: UIラベル修正（進行中）
+在庫画面で `product_code` を「メーカー品番」と明示表示する
+
+**完了:**
+- ✅ InventoryByProductTable.tsx: header「メーカー品番」
+- ✅ ProductGroupHeader.tsx: label「メーカー品番」
+- ✅ InventoryTableColumns.tsx: title="メーカー品番"
+- ✅ LotDetailPage.tsx: 「メーカー品番: xxx」形式
+
+**残り:**
+- ⬜ LotCreateForm.tsx:65 - 「先方品番 *」→「メーカー品番 *」
+- ⬜ lot-columns.tsx:57 - 「先方品番」→「メーカー品番」
+- ⬜ useLotColumns.tsx:123 - 「先方品番」→「メーカー品番」
+- ⬜ LotEditFields.tsx:24 - 「先方品番」→「メーカー品番」
+- ⬜ excel-view/ProductHeader.tsx:98 - 「先方品番」→「メーカー品番」
+
+#### Phase2-B: フィールド名統一（計画）
+対称性のあるフィールド名に統一する
+
+**目標:**
+```
+supplier_items.maker_part_no    → API: maker_part_no（メーカー品番）
+customer_items.customer_part_no → API: customer_part_no（先方品番）
+```
+
+**現状の問題:**
+- APIレスポンスで `maker_part_no` が `product_code` として扱われている
+- `customer_part_no` はそのまま使用されており非対称
+
+**作業内容:**
+1. バックエンドAPI: レスポンスで `product_code` → `maker_part_no` に変更
+2. フロントエンド型定義: `product_code` → `maker_part_no` に置換
+3. 正規化ロジック（normalizeLot等）の修正
+4. 全コンポーネントでの置換
+
+### Phase3（計画中）: 製品グルーピング機能
 - products.product_idを活用した集計
 - 製品カテゴリ別レポート
 - 関連商品推奨機能
