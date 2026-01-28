@@ -120,7 +120,7 @@ export function useLotColumns({
       baseColumns[0], // lot_number
       {
         id: "product_code",
-        header: "先方品番",
+        header: "メーカー品番",
         cell: (lot) => <span className="whitespace-nowrap">{lot.product_code ?? "–"}</span>,
         sortable: true,
       },

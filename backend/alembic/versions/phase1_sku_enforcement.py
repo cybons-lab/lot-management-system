@@ -25,7 +25,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "phase1_sku_enforcement"
-down_revision = "baseline_2026_01_27"
+down_revision = "4e9ab10f6031"
 branch_labels = None
 depends_on = None
 
