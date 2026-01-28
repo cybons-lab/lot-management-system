@@ -200,7 +200,6 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
     """仕入先品目を新規作成.
 
     仕入先と品目（メーカー品番）の関連を登録します。
-    is_primaryがTrueの場合、同一製品の他のレコードのis_primaryをFalseに更新します。
 
     Args:
         data: 仕入先品目作成データ
@@ -227,20 +226,12 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
             detail="This supplier-maker_part_no pair already exists",
         )
 
-    # If is_primary is True, unset others for this product
-    if data.is_primary:
-        db.query(SupplierItem).filter(
-            SupplierItem.product_group_id == data.product_group_id,
-            SupplierItem.is_primary.is_(True),
-        ).update({"is_primary": False})
-
     si = SupplierItem(
-        product_group_id=data.product_group_id,
         supplier_id=data.supplier_id,
         maker_part_no=data.maker_part_no,
-        is_primary=data.is_primary,
-        lead_time_days=data.lead_time_days,
         display_name=data.display_name,
+        base_unit=data.base_unit,
+        lead_time_days=data.lead_time_days,
         notes=data.notes,
     )
     db.add(si)
@@ -249,15 +240,12 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
 
     return {
         "id": si.id,
-        "product_group_id": si.product_group_id,
         "supplier_id": si.supplier_id,
         "maker_part_no": si.maker_part_no,
-        "is_primary": si.is_primary,
-        "lead_time_days": si.lead_time_days,
         "display_name": si.display_name,
+        "base_unit": si.base_unit,
+        "lead_time_days": si.lead_time_days,
         "notes": si.notes,
-        "product_code": si.product_group.maker_part_code,
-        "product_name": si.product_group.product_name,
         "supplier_code": si.supplier.supplier_code,
         "supplier_name": si.supplier.supplier_name,
         "created_at": si.created_at,
@@ -275,7 +263,6 @@ def update_supplier_item(
 ):
     """仕入先品目を更新.
 
-    is_primaryをTrueに設定する場合、同一製品の他のレコードのis_primaryをFalseに更新します。
     maker_part_no の変更は管理者のみ許可されています。
 
     Args:
@@ -326,14 +313,6 @@ def update_supplier_item(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"メーカー品番 '{update_data['maker_part_no']}' は既に存在します。",
             )
-
-    # If setting is_primary=True, unset others for this product
-    if update_data.get("is_primary"):
-        db.query(SupplierItem).filter(
-            SupplierItem.product_group_id == si.product_group_id,
-            SupplierItem.id != id,
-            SupplierItem.is_primary.is_(True),
-        ).update({"is_primary": False})
 
     for field, value in update_data.items():
         setattr(si, field, value)

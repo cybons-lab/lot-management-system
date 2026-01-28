@@ -2,33 +2,26 @@ import { http } from "@/shared/api/http-client";
 
 export interface SupplierProduct {
   id: number;
-  product_group_id: number | null; // Phase1: オプション
   supplier_id: number;
-  maker_part_no: string; // Phase1: 必須（SKUキー）
-  is_primary: boolean;
+  maker_part_no: string;
+  display_name: string;
+  base_unit: string;
   lead_time_days: number | null;
-  display_name: string | null; // Phase1: 新規追加
-  notes: string | null; // Phase1: 新規追加
-  product_code: string | null;
-  product_name: string | null;
+  notes: string | null;
   supplier_code: string;
   supplier_name: string;
   created_at: string;
   updated_at: string;
   valid_to: string;
-  // UI helper fields (optional)
-  order_unit?: string;
-  order_lot_size?: number;
 }
 
 export interface SupplierProductCreate {
-  product_group_id?: number | null; // Phase1: オプション
   supplier_id: number;
-  maker_part_no: string; // Phase1: 必須
-  is_primary?: boolean;
+  maker_part_no: string;
+  display_name: string;
+  base_unit: string;
   lead_time_days?: number | null;
-  display_name?: string | null; // Phase1: 新規追加
-  notes?: string | null; // Phase1: 新規追加
+  notes?: string | null;
 }
 
 export interface SupplierProductUpdate {

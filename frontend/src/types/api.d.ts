@@ -3110,7 +3110,6 @@ export interface paths {
      * @description 仕入先品目を新規作成.
      *
      *     仕入先と品目（メーカー品番）の関連を登録します。
-     *     is_primaryがTrueの場合、同一製品の他のレコードのis_primaryをFalseに更新します。
      *
      *     Args:
      *         data: 仕入先品目作成データ
@@ -3182,7 +3181,6 @@ export interface paths {
      * Update Supplier Item
      * @description 仕入先品目を更新.
      *
-     *     is_primaryをTrueに設定する場合、同一製品の他のレコードのis_primaryをFalseに更新します。
      *     maker_part_no の変更は管理者のみ許可されています。
      *
      *     Args:
@@ -16432,11 +16430,6 @@ export interface components {
      */
     SupplierItemCreate: {
       /**
-       * Product Group Id
-       * @description 製品ID（Phase2用グルーピング、オプション）
-       */
-      product_group_id?: number | null;
-      /**
        * Supplier Id
        * @description 仕入先ID（必須）
        */
@@ -16447,21 +16440,20 @@ export interface components {
        */
       maker_part_no: string;
       /**
-       * Is Primary
-       * @description 主要仕入先フラグ
-       * @default false
+       * Display Name
+       * @description 製品名（必須）
        */
-      is_primary: boolean;
+      display_name: string;
+      /**
+       * Base Unit
+       * @description 基本単位（必須、例: EA, pcs, kg）
+       */
+      base_unit: string;
       /**
        * Lead Time Days
        * @description リードタイム（日）
        */
       lead_time_days?: number | null;
-      /**
-       * Display Name
-       * @description 表示名
-       */
-      display_name?: string | null;
       /**
        * Notes
        * @description 備考
@@ -16475,30 +16467,18 @@ export interface components {
     SupplierItemResponse: {
       /** Id */
       id: number;
-      /** Product Group Id */
-      product_group_id: number | null;
       /** Supplier Id */
       supplier_id: number;
       /** Maker Part No */
       maker_part_no: string;
-      /** Is Primary */
-      is_primary: boolean;
+      /** Display Name */
+      display_name: string;
+      /** Base Unit */
+      base_unit: string;
       /** Lead Time Days */
       lead_time_days: number | null;
-      /** Display Name */
-      display_name: string | null;
       /** Notes */
       notes: string | null;
-      /**
-       * Product Code
-       * @description 製品コード
-       */
-      product_code?: string | null;
-      /**
-       * Product Name
-       * @description 製品名
-       */
-      product_name?: string | null;
       /**
        * Supplier Code
        * @description 仕入先コード
@@ -16536,20 +16516,20 @@ export interface components {
        */
       maker_part_no?: string | null;
       /**
-       * Is Primary
-       * @description 主要仕入先フラグ
+       * Display Name
+       * @description 製品名
        */
-      is_primary?: boolean | null;
+      display_name?: string | null;
+      /**
+       * Base Unit
+       * @description 基本単位
+       */
+      base_unit?: string | null;
       /**
        * Lead Time Days
        * @description リードタイム（日）
        */
       lead_time_days?: number | null;
-      /**
-       * Display Name
-       * @description 表示名
-       */
-      display_name?: string | null;
       /**
        * Notes
        * @description 備考

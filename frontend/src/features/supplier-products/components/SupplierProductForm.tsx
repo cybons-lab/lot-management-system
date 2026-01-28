@@ -36,6 +36,7 @@ const schema = z.object({
   supplier_id: z.coerce.number().min(1, "仕入先を選択してください"),
   maker_part_no: z.string().min(1, "メーカー品番を入力してください"),
   display_name: z.string().min(1, "製品名を入力してください"),
+  base_unit: z.string().min(1, "基本単位を入力してください"),
   lead_time_days: z.number().nullable(),
   notes: z.string().optional(),
 });
@@ -66,6 +67,7 @@ export function SupplierProductForm({
       supplier_id: initialData?.supplier_id || 0,
       maker_part_no: initialData?.maker_part_no || "",
       display_name: initialData?.display_name || "",
+      base_unit: initialData?.base_unit || "EA",
       lead_time_days: initialData?.lead_time_days ?? null,
       notes: initialData?.notes || "",
     },
@@ -146,6 +148,26 @@ export function SupplierProductForm({
                 <Input {...field} placeholder="例: 六角ボルト M10" />
               </FormControl>
               <FormDescription>この製品の名称を入力してください</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* 基本単位 - 必須フィールド */}
+        <FormField
+          control={control}
+          name="base_unit"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                基本単位 <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="例: EA, pcs, kg" />
+              </FormControl>
+              <FormDescription>
+                在庫管理の基本単位を入力してください（例: EA（個）, pcs（個）, kg, m）
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

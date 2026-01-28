@@ -8597,7 +8597,7 @@
           "masters"
         ],
         "summary": "Create Supplier Item",
-        "description": "仕入先品目を新規作成.\n\n仕入先と品目（メーカー品番）の関連を登録します。\nis_primaryがTrueの場合、同一製品の他のレコードのis_primaryをFalseに更新します。\n\nArgs:\n    data: 仕入先品目作成データ\n    db: データベースセッション\n\nReturns:\n    SupplierItemResponse: 作成された仕入先品目情報\n\nRaises:\n    HTTPException: 仕入先-製品のペアが既に存在する場合は400",
+        "description": "仕入先品目を新規作成.\n\n仕入先と品目（メーカー品番）の関連を登録します。\n\nArgs:\n    data: 仕入先品目作成データ\n    db: データベースセッション\n\nReturns:\n    SupplierItemResponse: 作成された仕入先品目情報\n\nRaises:\n    HTTPException: 仕入先-製品のペアが既に存在する場合は400",
         "operationId": "create_supplier_item_api_masters_supplier_items_post",
         "requestBody": {
           "required": true,
@@ -8722,7 +8722,7 @@
           "masters"
         ],
         "summary": "Update Supplier Item",
-        "description": "仕入先品目を更新.\n\nis_primaryをTrueに設定する場合、同一製品の他のレコードのis_primaryをFalseに更新します。\nmaker_part_no の変更は管理者のみ許可されています。\n\nArgs:\n    id: 仕入先品目ID\n    data: 更新データ\n    db: データベースセッション\n    current_user: 認証済みユーザー（オプション）\n\nReturns:\n    SupplierItemResponse: 更新後の仕入先品目情報\n\nRaises:\n    HTTPException: レコードが見つからない場合は404\n    HTTPException: maker_part_no変更時に管理者でない場合は403",
+        "description": "仕入先品目を更新.\n\nmaker_part_no の変更は管理者のみ許可されています。\n\nArgs:\n    id: 仕入先品目ID\n    data: 更新データ\n    db: データベースセッション\n    current_user: 認証済みユーザー（オプション）\n\nReturns:\n    SupplierItemResponse: 更新後の仕入先品目情報\n\nRaises:\n    HTTPException: レコードが見つからない場合は404\n    HTTPException: maker_part_no変更時に管理者でない場合は403",
         "operationId": "update_supplier_item_api_masters_supplier_items__id__put",
         "security": [
           {
@@ -40761,18 +40761,6 @@
       },
       "SupplierItemCreate": {
         "properties": {
-          "product_group_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Group Id",
-            "description": "製品ID（Phase2用グルーピング、オプション）"
-          },
           "supplier_id": {
             "type": "integer",
             "title": "Supplier Id",
@@ -40784,11 +40772,17 @@
             "title": "Maker Part No",
             "description": "メーカー品番（必須・SKUキー）"
           },
-          "is_primary": {
-            "type": "boolean",
-            "title": "Is Primary",
-            "description": "主要仕入先フラグ",
-            "default": false
+          "display_name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Display Name",
+            "description": "製品名（必須）"
+          },
+          "base_unit": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Base Unit",
+            "description": "基本単位（必須、例: EA, pcs, kg）"
           },
           "lead_time_days": {
             "anyOf": [
@@ -40801,19 +40795,6 @@
             ],
             "title": "Lead Time Days",
             "description": "リードタイム（日）"
-          },
-          "display_name": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 200
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Display Name",
-            "description": "表示名"
           },
           "notes": {
             "anyOf": [
@@ -40831,7 +40812,9 @@
         "type": "object",
         "required": [
           "supplier_id",
-          "maker_part_no"
+          "maker_part_no",
+          "display_name",
+          "base_unit"
         ],
         "title": "SupplierItemCreate",
         "description": "Payload to create a supplier item."
@@ -40842,17 +40825,6 @@
             "type": "integer",
             "title": "Id"
           },
-          "product_group_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Group Id"
-          },
           "supplier_id": {
             "type": "integer",
             "title": "Supplier Id"
@@ -40861,9 +40833,13 @@
             "type": "string",
             "title": "Maker Part No"
           },
-          "is_primary": {
-            "type": "boolean",
-            "title": "Is Primary"
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "base_unit": {
+            "type": "string",
+            "title": "Base Unit"
           },
           "lead_time_days": {
             "anyOf": [
@@ -40876,17 +40852,6 @@
             ],
             "title": "Lead Time Days"
           },
-          "display_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Display Name"
-          },
           "notes": {
             "anyOf": [
               {
@@ -40897,30 +40862,6 @@
               }
             ],
             "title": "Notes"
-          },
-          "product_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Code",
-            "description": "製品コード"
-          },
-          "product_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Name",
-            "description": "製品名"
           },
           "supplier_code": {
             "anyOf": [
@@ -40965,12 +40906,11 @@
         "type": "object",
         "required": [
           "id",
-          "product_group_id",
           "supplier_id",
           "maker_part_no",
-          "is_primary",
-          "lead_time_days",
           "display_name",
+          "base_unit",
+          "lead_time_days",
           "notes",
           "created_at",
           "updated_at",
@@ -40994,17 +40934,31 @@
             "title": "Maker Part No",
             "description": "メーカー品番"
           },
-          "is_primary": {
+          "display_name": {
             "anyOf": [
               {
-                "type": "boolean"
+                "type": "string",
+                "maxLength": 200
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Is Primary",
-            "description": "主要仕入先フラグ"
+            "title": "Display Name",
+            "description": "製品名"
+          },
+          "base_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Unit",
+            "description": "基本単位"
           },
           "lead_time_days": {
             "anyOf": [
@@ -41017,19 +40971,6 @@
             ],
             "title": "Lead Time Days",
             "description": "リードタイム（日）"
-          },
-          "display_name": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 200
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Display Name",
-            "description": "表示名"
           },
           "notes": {
             "anyOf": [

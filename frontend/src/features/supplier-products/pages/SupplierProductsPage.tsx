@@ -194,7 +194,7 @@ export function SupplierProductsPage() {
         open={!!deletingItem && deleteMode === "soft"}
         onOpenChange={(open) => !open && closeDeleteDialog()}
         title="メーカー品番を無効化しますか？"
-        description={`${deletingItem?.product_name || "商品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を無効化します。`}
+        description={`${deletingItem?.display_name || "商品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を無効化します。`}
         onConfirm={handleSoftDelete}
         isPending={isSoftDeleting}
         onSwitchToPermanent={switchToPermanentDelete}
@@ -206,8 +206,8 @@ export function SupplierProductsPage() {
         onConfirm={handlePermanentDelete}
         isPending={isPermanentDeleting}
         title="メーカー品番を完全に削除しますか？"
-        description={`${deletingItem?.product_name || "商品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を完全に削除します。`}
-        confirmationPhrase={deletingItem?.product_code || "delete"}
+        description={`${deletingItem?.display_name || "商品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を完全に削除します。`}
+        confirmationPhrase={deletingItem?.maker_part_no || "delete"}
       />
 
       <RestoreDialog
@@ -216,7 +216,7 @@ export function SupplierProductsPage() {
         onConfirm={handleRestore}
         isPending={isRestoring}
         title="設定を復元しますか？"
-        description={`${restoringItem?.product_name} - ${restoringItem?.supplier_name} の関連を有効状態に戻します。`}
+        description={`${restoringItem?.display_name} - ${restoringItem?.supplier_name} の関連を有効状態に戻します。`}
       />
 
       <MasterImportDialog
