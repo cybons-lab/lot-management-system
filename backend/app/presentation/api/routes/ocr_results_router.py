@@ -213,25 +213,49 @@ def build_shipping_slip_text(
     quantity_1: str | None,
     lot_no_2: str | None,
     quantity_2: str | None,
+    shipping_date: str | None = None,
+    delivery_date: str | None = None,
 ) -> str | None:
-    """出荷票テンプレートにロット・入庫情報を反映."""
+    """出荷票テンプレートにロット・入庫・日付情報を反映.
+
+    部分置換ロジック:
+    情報がある場合のみプレースホルダー（ロット、入庫番号、納期、出荷日）を置換し、
+    情報がない場合はプレースホルダー文字列をそのまま残す。
+    """
     if not template:
         return None
 
-    lot_entries = []
-    if lot_no_1:
-        lot_entries.append(f"{lot_no_1}（{quantity_1 or ''}）")
-    if lot_no_2:
-        lot_entries.append(f"{lot_no_2}（{quantity_2 or ''}）")
+    result = template
 
-    lot_text = "・".join(lot_entries)
+    # 1. ロット情報の置換
+    # どちらかのロット情報がある場合のみ置換を実行
+    if lot_no_1 or lot_no_2:
+        lot_entries = []
+        if lot_no_1:
+            lot_entries.append(f"{lot_no_1}（{quantity_1 or ''}）")
+        if lot_no_2:
+            lot_entries.append(f"{lot_no_2}（{quantity_2 or ''}）")
 
-    # ロット表記を正規化 (ロット, ロット/, /ロット, /ロット/ などに対応)
-    normalized = re.sub(r"(^|/)ロット($|/)", r"\1ロット番号(数量)\2", template)
+        lot_text = "・".join(lot_entries)
 
-    # キーワード置換（全角カッコや表記揺れにもある程度対応）
-    result = re.sub(r"ロット番号\s*[（(]数量[）)]", lot_text, normalized)
-    result = result.replace("入庫番号", inbound_no or "")
+        # ロット表記を正規化 (ロット, ロット/, /ロット, /ロット/ などに対応)
+        normalized = re.sub(r"(^|/)ロット($|/)", r"\1ロット番号(数量)\2", result)
+
+        # キーワード置換（全角カッコや表記揺れにもある程度対応）
+        result = re.sub(r"ロット番号\s*[（(]数量[）)]", lot_text, normalized)
+
+    # 2. 入庫番号の置換
+    # 入庫番号がある場合のみ置換
+    if inbound_no:
+        result = result.replace("入庫番号", inbound_no)
+
+    # 3. 納期の置換
+    if delivery_date:
+        result = result.replace("納期", delivery_date)
+
+    # 4. 出荷日の置換
+    if shipping_date:
+        result = result.replace("出荷日", shipping_date)
 
     return result
 
@@ -513,6 +537,12 @@ async def export_ocr_results(
         db.execute(stmt)
         db.commit()
 
+    # SAPサービスの初期化
+    sap_service = SapReconciliationService(db)
+    # キャッシュロードはバッチで一括で行うため、ここでは個別行取得のループ内で必要に応じてロードされるが、
+    # 効率のため事前にデフォルトロードしておく
+    sap_service.load_sap_cache(kunnr="100427105")
+
     export_rows = []
     for row in rows:
         content = row.get("content") or {}
@@ -529,6 +559,36 @@ async def export_ocr_results(
         shipping_date_raw = row.get("manual_shipping_date")
         shipping_date = shipping_date_raw.strftime("%Y/%m/%d") if shipping_date_raw else None
 
+        # 納期: YYYY/MM/DD形式に統一
+        delivery_date_raw = row.get("delivery_date")
+        delivery_date = None
+        if delivery_date_raw:
+            # 既にスラッシュかハイフンかを判定して整形
+            # NOTE: 簡単のため日付としてパースして再フォーマット
+            try:
+                # ハイフンまたはスラッシュを許容
+                cleaned = delivery_date_raw.replace("-", "/")
+                dt = datetime.strptime(cleaned, "%Y/%m/%d")
+                delivery_date = dt.strftime("%Y/%m/%d")
+            except ValueError:
+                # パース失敗時はそのまま
+                delivery_date = delivery_date_raw
+
+        # SAP情報を取得して数量単位を決定
+        sap_qty_unit = None
+        if row.get("material_code"):
+            sap_result = sap_service.reconcile_single(
+                material_code=row.get("material_code"),
+                jiku_code=row.get("jiku_code") or "",
+                customer_code=row.get("customer_code") or "100427105",
+            )
+            if sap_result.sap_raw_data:
+                sap_qty_unit = sap_result.sap_raw_data.get("MEINS")
+
+        order_unit = sap_qty_unit if sap_qty_unit else row.get("order_unit")
+
+        # 部分置換ロジック適用
+        # 出荷票テキスト（計算用・H列）
         shipping_slip_text = (
             row.get("manual_shipping_slip_text")
             if row.get("manual_shipping_slip_text_edited")
@@ -539,10 +599,13 @@ async def export_ocr_results(
                 quantity_1,
                 lot_no_2,
                 quantity_2,
+                shipping_date=shipping_date,
+                delivery_date=delivery_date,
             )
         )
 
-        # マスタからの追加フィールド
+        # マスタからの追加フィールド (Y列用)
+        # 確実にマスタ生データを使用
         shipping_slip_text_master = row.get("shipping_slip_text")
         transport_lt = row.get("transport_lt_days")
 
@@ -562,14 +625,14 @@ async def export_ocr_results(
                     "data_source": "OCR",
                     "material_code": row.get("material_code"),
                     "jiku_code": row.get("jiku_code"),
-                    "delivery_date": row.get("delivery_date"),
+                    "delivery_date": delivery_date,  # 整形済み納期
                     "delivery_quantity": row.get("delivery_quantity"),
                     "item_no": row.get("item_no"),
                     "customer_part_no": row.get("customer_part_no"),
                     "maker_part_no": row.get("maker_part_no"),
-                    "order_unit": row.get("order_unit"),
+                    "order_unit": order_unit,  # SAP優先単位
                     # マスタ由来
-                    "customer_name": row.get("customer_name"),
+                    "customer_name": row.get("customer_code"),  # 得意先コードを出力
                     "supplier_code": row.get("supplier_code"),
                     "supplier_name": row.get("supplier_name"),
                     "shipping_warehouse_code": row.get("shipping_warehouse_code"),
