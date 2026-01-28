@@ -112,3 +112,9 @@ class BusinessDayCalculationResponse(BaseSchema):
     days: int
     direction: str
     include_start: bool
+
+
+class HolidayImportRequest(BaseSchema):
+    """Request for holiday import (TSV format)."""
+
+    tsv_data: str = Field(..., description="タブ区切りの祝日データ (日付 [Tab] 祝日名)")

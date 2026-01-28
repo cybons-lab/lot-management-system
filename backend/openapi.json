@@ -11620,6 +11620,74 @@
         }
       }
     },
+    "/api/calendar/holidays/sync": {
+      "post": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Sync Holiday Calendar",
+        "operationId": "sync_holiday_calendar_api_calendar_holidays_sync_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/calendar/holidays/import": {
+      "post": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Import Holiday Calendar",
+        "operationId": "import_holiday_calendar_api_calendar_holidays_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HolidayImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/calendar/company-days": {
       "get": {
         "tags": [
@@ -27846,6 +27914,21 @@
         "type": "object",
         "title": "HolidayCalendarUpdate",
         "description": "Update request for holiday calendar."
+      },
+      "HolidayImportRequest": {
+        "properties": {
+          "tsv_data": {
+            "type": "string",
+            "title": "Tsv Data",
+            "description": "タブ区切りの祝日データ (日付 [Tab] 祝日名)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tsv_data"
+        ],
+        "title": "HolidayImportRequest",
+        "description": "Request for holiday import (TSV format)."
       },
       "ImportResultDetail": {
         "properties": {

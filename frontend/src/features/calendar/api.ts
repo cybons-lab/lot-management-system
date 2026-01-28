@@ -64,6 +64,15 @@ export type BusinessDayCalculationRequest = {
   include_start: boolean;
 };
 
+export type HolidayImportRequest = {
+  tsv_data: string;
+};
+
+export type SyncImportResponse = {
+  message: string;
+  count: number;
+};
+
 export type BusinessDayCalculationResponse = {
   start_date: string;
   result_date: string;
@@ -100,4 +109,8 @@ export const calendarApi = {
 
   calculateBusinessDay: (payload: BusinessDayCalculationRequest) =>
     http.post<BusinessDayCalculationResponse>(`${BASE_PATH}/business-day-calc`, payload),
+
+  syncHolidays: () => http.post<SyncImportResponse>(`${BASE_PATH}/holidays/sync`, {}),
+  importHolidays: (payload: HolidayImportRequest) =>
+    http.post<SyncImportResponse>(`${BASE_PATH}/holidays/import`, payload),
 };

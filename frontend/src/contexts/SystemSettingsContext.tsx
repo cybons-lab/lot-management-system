@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode, useCall
 import { type PublicSystemSettings } from "../types/system";
 
 import { useAuth } from "@/features/auth/AuthContext";
-import { http } from "@/shared/api/http-client";
+import { httpPublic } from "@/shared/api/http-client";
 
 interface SystemSettingsContextType {
   settings: PublicSystemSettings | null;
@@ -16,26 +16,21 @@ const SystemSettingsContext = createContext<SystemSettingsContextType | null>(nu
 
 export function SystemSettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const isAuthenticated = !!user;
   const [settings, setSettings] = useState<PublicSystemSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchSettings = useCallback(async () => {
-    if (!isAuthenticated) {
-      setIsLoading(false);
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      const data = await http.get<PublicSystemSettings>("system/public-settings");
+      // Use httpPublic to fetch settings even without a session
+      const data = await httpPublic.get<PublicSystemSettings>("system/public-settings");
       setSettings(data);
     } catch (error) {
       console.error("Failed to fetch system settings:", error);
-      // Don't show toast on initial load to avoid annoyance, usually silent fail or retry
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated]);
+  }, []);
 
   useEffect(() => {
     fetchSettings();

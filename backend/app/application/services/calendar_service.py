@@ -1,8 +1,9 @@
-from __future__ import annotations
-
-from datetime import date
+import csv
+import io
+from datetime import date, datetime
 from typing import Any
 
+import httpx
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -180,6 +181,91 @@ class CalendarService:
         )
         self.db.delete(delivery_date)
         self._commit_or_raise()
+
+    def sync_holidays_from_external(self) -> int:
+        """Sync holidays from Cabinet Office CSV."""
+        url = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
+        try:
+            with httpx.Client(timeout=10.0) as client:
+                response = client.get(url)
+                response.raise_for_status()
+                # 内閣府のCSVはShift-JIS
+                content = response.content.decode("cp932")
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"祝日データの取得に失敗しました: {e!s}",
+            ) from e
+
+        reader = csv.reader(io.StringIO(content))
+        header = next(reader, None)  # ヘッダーを飛ばす: 国民の祝日名,月日
+        if not header:
+            return 0
+
+        count = 0
+        for row in reader:
+            if len(row) < 2:
+                continue
+            date_str, name = row[0], row[1]
+            try:
+                # 形式: YYYY/M/D or YYYY/MM/DD
+                holiday_date = datetime.strptime(date_str, "%Y/%m/%d").date()
+            except ValueError:
+                continue
+
+            existing = (
+                self.db.query(HolidayCalendar)
+                .filter(HolidayCalendar.holiday_date == holiday_date)
+                .first()
+            )
+            if existing:
+                existing.holiday_name = name
+            else:
+                holiday = HolidayCalendar(holiday_date=holiday_date, holiday_name=name)
+                self.db.add(holiday)
+            count += 1
+
+        self._commit_or_raise()
+        return count
+
+    def import_holidays_from_tsv(self, tsv_data: str) -> int:
+        """Import holidays from TSV (Date [Tab] Name)."""
+        count = 0
+        lines = tsv_data.strip().splitlines()
+        for line in lines:
+            parts = line.split("\t")
+            if not parts:
+                continue
+            date_str = parts[0].strip()
+            name = parts[1].strip() if len(parts) > 1 else None
+
+            try:
+                # 柔軟な日付解析 (YYYY/MM/DD, YYYY-MM-DD, YYYYMMDD etc)
+                # ここでは簡単な YYYY/MM/DD と YYYY-MM-DD をサポート
+                if "/" in date_str:
+                    holiday_date = datetime.strptime(date_str, "%Y/%m/%d").date()
+                elif "-" in date_str:
+                    holiday_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                else:
+                    # その他の形式は必要に応じて追加
+                    continue
+            except ValueError:
+                continue
+
+            existing = (
+                self.db.query(HolidayCalendar)
+                .filter(HolidayCalendar.holiday_date == holiday_date)
+                .first()
+            )
+            if existing:
+                existing.holiday_name = name
+            else:
+                holiday = HolidayCalendar(holiday_date=holiday_date, holiday_name=name)
+                self.db.add(holiday)
+            count += 1
+
+        self._commit_or_raise()
+        return count
 
     def calculate_business_day(self, payload: BusinessDayCalculationRequest) -> date:
         if payload.days == 0:
