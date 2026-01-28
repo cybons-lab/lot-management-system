@@ -114,6 +114,23 @@ export const routePermissions: RoutePermission[] = [
     allowedRoles: ["admin", "user", "guest"],
   },
 
+  // レガシーリダイレクト用 / ユーティリティ
+  {
+    routeKey: "LEGACY.ALLOCATIONS",
+    path: "/allocations",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "INVENTORY.EXCEL_VIEW",
+    path: "/inventory/excel-view",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "INVENTORY.EXCEL_VIEW_ANY",
+    path: "/inventory/excel-view/*",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+
   // ========================================
   // user以上（操作が必要なページ）
   // ========================================

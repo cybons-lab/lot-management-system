@@ -206,12 +206,17 @@ class CalendarService:
         for row in reader:
             if len(row) < 2:
                 continue
-            date_str, name = row[0], row[1]
+            name, date_str = row[0], row[1]
             try:
                 # 形式: YYYY/M/D or YYYY/MM/DD
                 holiday_date = datetime.strptime(date_str, "%Y/%m/%d").date()
             except ValueError:
-                continue
+                # 日付が左側にくるパターン（または不正な行）を考慮
+                try:
+                    holiday_date = datetime.strptime(name, "%Y/%m/%d").date()
+                    name, date_str = date_str, name
+                except ValueError:
+                    continue
 
             existing = (
                 self.db.query(HolidayCalendar)
