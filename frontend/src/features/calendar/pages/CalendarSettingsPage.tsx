@@ -1,5 +1,5 @@
 /* eslint-disable max-lines, max-lines-per-function, complexity */
-import { CalendarDays, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Download, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Textarea,
 } from "@/components/ui";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -49,6 +50,8 @@ export function CalendarSettingsPage() {
     useCreate: useHolidayCreate,
     useUpdate: useHolidayUpdate,
     useDelete: useHolidayDelete,
+    useSync: useHolidaySync,
+    useImport: useHolidayImport,
   } = useHolidayCalendar();
   const {
     useList: useCompanyList,
@@ -70,6 +73,8 @@ export function CalendarSettingsPage() {
   const { mutateAsync: createHoliday, isPending: isCreatingHoliday } = useHolidayCreate();
   const { mutateAsync: updateHoliday, isPending: isUpdatingHoliday } = useHolidayUpdate();
   const { mutateAsync: deleteHoliday, isPending: isDeletingHoliday } = useHolidayDelete();
+  const { mutateAsync: syncHolidays, isPending: isSyncingHolidays } = useHolidaySync();
+  const { mutateAsync: importHolidays, isPending: isImportingHolidays } = useHolidayImport();
 
   const { mutateAsync: createCompanyDay, isPending: isCreatingCompany } = useCompanyCreate();
   const { mutateAsync: updateCompanyDay, isPending: isUpdatingCompany } = useCompanyUpdate();
@@ -92,6 +97,9 @@ export function CalendarSettingsPage() {
     holiday_date: string;
     holiday_name: string;
   } | null>(null);
+
+  const [importTsvData, setImportTsvData] = useState(EMPTY_EDIT);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const [companyDate, setCompanyDate] = useState(EMPTY_EDIT);
   const [companyType, setCompanyType] = useState("holiday");
@@ -116,20 +124,36 @@ export function CalendarSettingsPage() {
   const [calcDirection, setCalcDirection] = useState<"after" | "before">("after");
   const [calcIncludeStart, setCalcIncludeStart] = useState(false);
 
+  const { holidayRangeStart, holidayRangeEnd } = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 7, 0);
+    return {
+      holidayRangeStart: start.toISOString().split("T")[0],
+      holidayRangeEnd: end.toISOString().split("T")[0],
+    };
+  }, []);
+
   const sortedHolidays = useMemo(() => {
     const list = holidaysQuery.data ?? [];
-    return [...list].sort((a, b) => a.holiday_date.localeCompare(b.holiday_date));
-  }, [holidaysQuery.data]);
+    return list
+      .filter((h) => h.holiday_date >= holidayRangeStart && h.holiday_date <= holidayRangeEnd)
+      .sort((a, b) => a.holiday_date.localeCompare(b.holiday_date));
+  }, [holidaysQuery.data, holidayRangeStart, holidayRangeEnd]);
 
   const sortedCompanyDates = useMemo(() => {
     const list = companyQuery.data ?? [];
-    return [...list].sort((a, b) => a.calendar_date.localeCompare(b.calendar_date));
-  }, [companyQuery.data]);
+    return list
+      .filter((c) => c.calendar_date >= holidayRangeStart && c.calendar_date <= holidayRangeEnd)
+      .sort((a, b) => a.calendar_date.localeCompare(b.calendar_date));
+  }, [companyQuery.data, holidayRangeStart, holidayRangeEnd]);
 
   const sortedDeliveryDates = useMemo(() => {
     const list = deliveryQuery.data ?? [];
-    return [...list].sort((a, b) => a.delivery_date.localeCompare(b.delivery_date));
-  }, [deliveryQuery.data]);
+    return list
+      .filter((d) => d.delivery_date >= holidayRangeStart && d.delivery_date <= holidayRangeEnd)
+      .sort((a, b) => a.delivery_date.localeCompare(b.delivery_date));
+  }, [deliveryQuery.data, holidayRangeStart, holidayRangeEnd]);
 
   const handleHolidayCreate = async () => {
     if (!holidayDate) {
@@ -179,6 +203,30 @@ export function CalendarSettingsPage() {
       toast.success("祝日を削除しました");
     } catch {
       toast.error("祝日の削除に失敗しました");
+    }
+  };
+
+  const handleHolidaySync = async () => {
+    try {
+      const result = await syncHolidays();
+      toast.success(result.message);
+    } catch {
+      toast.error("祝日の同期に失敗しました");
+    }
+  };
+
+  const handleHolidayImport = async () => {
+    if (!importTsvData.trim()) {
+      toast.error("インポートするデータを入力してください");
+      return;
+    }
+    try {
+      const result = await importHolidays({ tsv_data: importTsvData });
+      toast.success(result.message);
+      setImportTsvData(EMPTY_EDIT);
+      setIsImportDialogOpen(false);
+    } catch {
+      toast.error("祝日のインポートに失敗しました");
     }
   };
 
@@ -316,6 +364,21 @@ export function CalendarSettingsPage() {
             <CalendarDays className="h-5 w-5 text-teal-600" />
             祝日カレンダー
           </CardTitle>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleHolidaySync}
+              disabled={isSyncingHolidays}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isSyncingHolidays ? "animate-spin" : ""}`} />
+              祝日同期
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
+              <Download className="mr-2 h-4 w-4" />
+              インポート
+            </Button>
+          </div>
           <CardDescription>国民の祝日や社内で管理したい祝日を登録します。</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -700,6 +763,41 @@ export function CalendarSettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>祝日インポート</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">
+              Excel等から「日付 [Tab] 祝日名」の形式でコピーしたデータを貼り付けてください。
+              <br />
+              例: 2026/01/01 [Tab] 元日
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="holiday-import-tsv" className="text-sm font-medium">
+                インポートデータ (TSV形式)
+              </label>
+              <Textarea
+                id="holiday-import-tsv"
+                placeholder="2026/01/01&#9;元日&#10;2026/01/12&#9;成人の日"
+                rows={10}
+                value={importTsvData}
+                onChange={(e) => setImportTsvData(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+              キャンセル
+            </Button>
+            <Button onClick={handleHolidayImport} disabled={isImportingHolidays}>
+              インポート実行
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editingHoliday} onOpenChange={(open) => !open && setEditingHoliday(null)}>
         <DialogContent>

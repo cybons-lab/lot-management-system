@@ -234,12 +234,11 @@ async def result_rpa_job(
             service = SmartReadCompletionService(db)
             service.mark_as_completed(ids_to_archive)
         except Exception as e:
-            # アーカイブ失敗しても、データは残るので致命的ではないが、ログは出したい
-            # ここではエラーとして返すか、job statusをpartial_successみたいにするか？
-            # いったんエラーメッセージに入れてcommitする
+            # アーカイブ失敗時はロールバックして不整合を防ぐ
+            db.rollback()
+            logger.error(f"Archiving failed after SAP registration: {e}")
             job.error_message = f"Registration success, but archiving failed: {str(e)}"
-            # Status completedのままにするか？
-            # 完了処理は非同期でもいいが、ここでは同期で行っている
+            # フロントエンドには成功として返すが、ジョブメッセージに残す
             pass
 
         message = "Job completed successfully"

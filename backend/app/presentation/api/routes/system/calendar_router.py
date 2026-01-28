@@ -14,6 +14,7 @@ from app.presentation.schemas.calendar.calendar_schemas import (
     HolidayCalendarCreate,
     HolidayCalendarResponse,
     HolidayCalendarUpdate,
+    HolidayImportRequest,
     OriginalDeliveryCalendarCreate,
     OriginalDeliveryCalendarResponse,
     OriginalDeliveryCalendarUpdate,
@@ -62,6 +63,27 @@ def delete_holiday_calendar(
     service = CalendarService(db)
     service.delete_holiday(holiday_id)
     return None
+
+
+@router.post("/calendar/holidays/sync", status_code=200)
+def sync_holiday_calendar(
+    _: User = Depends(get_current_user_or_above),
+    db: Session = Depends(get_db),
+):
+    service = CalendarService(db)
+    count = service.sync_holidays_from_external()
+    return {"message": f"{count}件の祝日を同期しました", "count": count}
+
+
+@router.post("/calendar/holidays/import", status_code=200)
+def import_holiday_calendar(
+    payload: HolidayImportRequest,
+    _: User = Depends(get_current_user_or_above),
+    db: Session = Depends(get_db),
+):
+    service = CalendarService(db)
+    count = service.import_holidays_from_tsv(payload.tsv_data)
+    return {"message": f"{count}件の祝日をインポートしました", "count": count}
 
 
 @router.get("/calendar/company-days", response_model=list[CompanyCalendarResponse])

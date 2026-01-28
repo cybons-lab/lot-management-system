@@ -7,6 +7,7 @@ import {
   type CompanyCalendarUpdate,
   type HolidayCalendarCreate,
   type HolidayCalendarUpdate,
+  type HolidayImportRequest,
   type OriginalDeliveryCalendarCreate,
   type OriginalDeliveryCalendarUpdate,
 } from "./api";
@@ -32,14 +33,31 @@ export function useHolidayCalendar() {
         calendarApi.updateHoliday(id, payload),
       onSuccess: () => queryClient.invalidateQueries({ queryKey: ["holidayCalendar"] }),
     });
-
   const useDelete = () =>
     useMutation({
       mutationFn: (id: number) => calendarApi.deleteHoliday(id),
       onSuccess: () => queryClient.invalidateQueries({ queryKey: ["holidayCalendar"] }),
     });
 
-  return { useList, useCreate, useUpdate, useDelete };
+  const useSync = () =>
+    useMutation({
+      mutationFn: calendarApi.syncHolidays,
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: ["holidayCalendar"] });
+        return data;
+      },
+    });
+
+  const useImport = () =>
+    useMutation({
+      mutationFn: (payload: HolidayImportRequest) => calendarApi.importHolidays(payload),
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: ["holidayCalendar"] });
+        return data;
+      },
+    });
+
+  return { useList, useCreate, useUpdate, useDelete, useSync, useImport };
 }
 
 export function useCompanyCalendar() {

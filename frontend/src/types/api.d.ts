@@ -4316,6 +4316,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/calendar/holidays/sync": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Sync Holiday Calendar */
+    post: operations["sync_holiday_calendar_api_calendar_holidays_sync_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/calendar/holidays/import": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Import Holiday Calendar */
+    post: operations["import_holiday_calendar_api_calendar_holidays_import_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/calendar/company-days": {
     parameters: {
       query?: never;
@@ -10931,6 +10965,17 @@ export interface components {
        * @description 祝日名
        */
       holiday_name?: string | null;
+    };
+    /**
+     * HolidayImportRequest
+     * @description Request for holiday import (TSV format).
+     */
+    HolidayImportRequest: {
+      /**
+       * Tsv Data
+       * @description タブ区切りの祝日データ (日付 [Tab] 祝日名)
+       */
+      tsv_data: string;
     };
     /**
      * ImportResultDetail
@@ -23985,6 +24030,59 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  sync_holiday_calendar_api_calendar_holidays_sync_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  import_holiday_calendar_api_calendar_holidays_import_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HolidayImportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
       };
       /** @description Validation Error */
       422: {

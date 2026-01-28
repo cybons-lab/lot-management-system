@@ -427,10 +427,7 @@ async def list_completed_ocr_results(
         # Note: Master data fields will be empty as we don't join with master tables here.
         # This is acceptable for archive view.
         item = OcrResultItem(
-            id=row.original_id
-            or row.id,  # Use original ID if available for display? Or actual ID? Restore uses actual ID from history.
-            # Wait, restore takes specific IDs. If we pass `row.id` (history ID), restore needs to know it's history ID.
-            # My restore service takes history table IDs. So we must return history table ID as `id`.
+            id=row.id,
             wide_data_id=row.wide_data_id,
             config_id=row.config_id,
             task_id=row.task_id,
@@ -592,16 +589,16 @@ async def export_ocr_results(
         delivery_date_raw = row.get("delivery_date")
         delivery_date = None
         if delivery_date_raw:
-            # 既にスラッシュかハイフンかを判定して整形
-            # NOTE: 簡単のため日付としてパースして再フォーマット
-            try:
-                # ハイフンまたはスラッシュを許容
-                cleaned = delivery_date_raw.replace("-", "/")
-                dt = datetime.strptime(cleaned, "%Y/%m/%d")
-                delivery_date = dt.strftime("%Y/%m/%d")
-            except ValueError:
-                # パース失敗時はそのまま
-                delivery_date = delivery_date_raw
+            if isinstance(delivery_date_raw, date | datetime):
+                delivery_date = delivery_date_raw.strftime("%Y/%m/%d")
+            else:
+                try:
+                    # ハイフンまたはスラッシュを許容
+                    cleaned = str(delivery_date_raw).replace("-", "/")
+                    dt = datetime.strptime(cleaned, "%Y/%m/%d")
+                    delivery_date = dt.strftime("%Y/%m/%d")
+                except ValueError:
+                    delivery_date = str(delivery_date_raw)
 
         # SAP情報を取得して数量単位を決定
         sap_qty_unit = None
