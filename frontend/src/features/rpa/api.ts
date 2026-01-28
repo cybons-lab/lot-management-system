@@ -37,6 +37,15 @@ export interface MaterialDeliverySimpleJobResponse {
 }
 
 /**
+ * SAP Order Entry (RPA)
+ */
+export interface SapOrderEntryStartResponse {
+  job_id: string;
+  target_count: number;
+  launch_url?: string;
+}
+
+/**
  * 素材納品書発行を実行
  */
 export async function executeMaterialDeliveryDocument(
@@ -121,4 +130,13 @@ export async function updateCloudFlowConfig(
   data: CloudFlowConfigUpdate,
 ): Promise<CloudFlowConfigResponse> {
   return http.put<CloudFlowConfigResponse>(`rpa/cloud-flow/configs/${key}`, data);
+}
+
+/**
+ * SAP Order Entry RPA Start
+ */
+export async function executeSapOrderEntryStart(
+  ids: number[],
+): Promise<SapOrderEntryStartResponse> {
+  return http.post<SapOrderEntryStartResponse>("rpa/sap/orders/start", { ids });
 }

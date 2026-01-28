@@ -71,6 +71,7 @@ from app.presentation.api.routes.rpa import (
     material_delivery_note_router,
     material_delivery_simple_router,
     rpa_router,
+    sap_orders_router,
     smartread_router,
 )
 from app.presentation.api.routes.shipping_master_router import router as shipping_master_router
@@ -162,6 +163,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(cloud_flow_router, prefix=prefix)
     app.include_router(layer_code_router, prefix=prefix)
     app.include_router(smartread_router, prefix=prefix)
+    app.include_router(sap_orders_router, prefix=prefix)
 
     app.include_router(status_router, prefix=masters_prefix)
 

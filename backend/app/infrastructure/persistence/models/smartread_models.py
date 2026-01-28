@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import date, datetime
 
 from sqlalchemy import (
@@ -16,7 +17,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infrastructure.persistence.models.base_model import Base
@@ -125,6 +126,36 @@ class SmartReadWideData(Base):
     )
 
 
+class RpaJob(Base):
+    """RPAジョブ管理テーブル.
+
+    RPAによるSAP連携などのジョブ状態を管理する。
+    """
+
+    __tablename__ = "rpa_jobs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_type: Mapped[str] = mapped_column(String(50), nullable=False)  # sales_order_entry etc
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending"
+    )  # pending, validating, processing, completed, failed
+
+    # メタデータ
+    target_count: Mapped[int] = mapped_column(Integer, default=0)
+    success_count: Mapped[int] = mapped_column(Integer, default=0)
+    failure_count: Mapped[int] = mapped_column(Integer, default=0)
+
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    timeout_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
 class SmartReadLongData(Base):
     """SmartRead 縦持ちデータ（変換後）.
 
@@ -149,12 +180,53 @@ class SmartReadLongData(Base):
     content: Mapped[dict] = mapped_column(JSONB, nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="PENDING", server_default=text("'PENDING'")
-    )  # PENDING / IMPORTED / ERROR
+    )  # PENDING / IMPORTED / ERROR / PROCESSING
     error_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # RPA Linkage
+    rpa_job_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rpa_jobs.id", ondelete="SET NULL"), nullable=True
+    )
+    sap_order_no: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    verification_result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
+
+
+class SmartReadLongDataCompleted(Base):
+    """SmartRead 縦持ちデータ（完了済みアーカイブ）.
+
+    完了処理されたデータを保存する。
+    元のFK制約は持たず、削除後もデータを保持する。
+    """
+
+    __tablename__ = "smartread_long_data_completed"
+
+    id: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True
+    )  # Keep original ID if possible, or new
+    original_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # Traceability
+
+    # Copy of essential fields without FKs
+    wide_data_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    config_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    task_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    task_date: Mapped[date] = mapped_column(Date, nullable=False)
+    request_id_ref: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    row_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    content: Mapped[dict] = mapped_column(JSONB, nullable=False)
+
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="COMPLETED")
+
+    # RPA Linkage Snapshot
+    sap_order_no: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    completed_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)  # Original creation time
 
 
 class SmartReadRequest(Base):
@@ -336,3 +408,54 @@ class OcrResultEdit(Base):
         server_default=text("CURRENT_TIMESTAMP"),
         nullable=False,
     )
+
+
+class OcrResultEditCompleted(Base):
+    """OCR結果の手入力編集内容（完了済みアーカイブ）.
+
+    完了処理されたデータの編集内容を保存する。
+    """
+
+    __tablename__ = "ocr_result_edits_completed"
+
+    # Needs a link to the completed long data
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)  # ID from original or new
+    original_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
+    smartread_long_data_completed_id: Mapped[int] = mapped_column(
+        BigInteger,
+        # No FK to allow deletion of history if needed, or maintain consistency manually.
+        # Actually usually history tables don't enforce FKs to avoid locking issues.
+        nullable=False,
+    )
+
+    lot_no_1: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    quantity_1: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    lot_no_2: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    quantity_2: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    inbound_no: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    inbound_no_2: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    shipping_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    shipping_slip_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    shipping_slip_text_edited: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    jiku_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    material_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    delivery_quantity: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    delivery_date: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    # SAP Snapshot Data
+    sap_match_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    sap_matched_zkdmat_b: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    sap_supplier_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    sap_supplier_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    sap_qty_unit: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    sap_maker_item: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    process_status: Mapped[str] = mapped_column(String(20), nullable=False, default="completed")
+    error_flags: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+
+    completed_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
