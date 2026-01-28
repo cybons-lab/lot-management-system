@@ -10,6 +10,16 @@ import { HistoryTable } from "../components/HistoryTable";
 import { useExecuteMaterialDeliveryStep1, useMaterialDeliverySimpleHistory } from "../hooks";
 
 import { Button, Input, Label } from "@/components/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 const STEP1_CONFIG_KEY = "MATERIAL_DELIVERY_STEP1_URL";
@@ -19,6 +29,7 @@ export function MaterialDeliverySimplePage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [configOpen, setConfigOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const queryClient = useQueryClient();
   const step1Mutation = useExecuteMaterialDeliveryStep1();
@@ -29,11 +40,16 @@ export function MaterialDeliverySimplePage() {
     [startDate, endDate, step1Mutation.isPending],
   );
 
-  const handleExecuteStep1 = async () => {
+  const handleConfirmClick = () => {
     if (!startDate || !endDate) {
       toast.error("開始日と終了日を入力してください");
       return;
     }
+    setConfirmOpen(true);
+  };
+
+  const handleExecuteStep1 = async () => {
+    if (!startDate || !endDate) return;
 
     try {
       // 設定チェック
@@ -70,6 +86,23 @@ export function MaterialDeliverySimplePage() {
 
       <ConfigDialog open={configOpen} onOpenChange={setConfigOpen} />
 
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Step1 実行確認</AlertDialogTitle>
+            <AlertDialogDescription>
+              Step1を実行しますか？
+              <br />
+              期間: {startDate} 〜 {endDate}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleExecuteStep1}>実行する</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="rounded-lg border bg-card p-6 space-y-4">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <CalendarDays className="h-4 w-4" />
@@ -95,7 +128,7 @@ export function MaterialDeliverySimplePage() {
             />
           </div>
           <div className="flex items-end">
-            <Button onClick={handleExecuteStep1} disabled={!canExecuteStep1}>
+            <Button onClick={handleConfirmClick} disabled={!canExecuteStep1}>
               {step1Mutation.isPending ? "実行中..." : "Step1 実行"}
             </Button>
           </div>

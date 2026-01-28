@@ -38,6 +38,8 @@ interface HistoryTableProps {
 export function HistoryTable({ historyQuery, onConfigError }: HistoryTableProps) {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [step2ConfirmOpen, setStep2ConfirmOpen] = useState(false);
+  const [step2Target, setStep2Target] = useState<{ start: string; end: string } | null>(null);
 
   const queryClient = useQueryClient();
   const step2Mutation = useExecuteMaterialDeliveryStep2();
@@ -69,6 +71,18 @@ export function HistoryTable({ historyQuery, onConfigError }: HistoryTableProps)
   const handleDeleteClick = (id: number) => {
     setDeletingId(id);
     setDeleteConfirmOpen(true);
+  };
+
+  const handleStep2Click = (startDate: string, endDate: string) => {
+    setStep2Target({ start: startDate, end: endDate });
+    setStep2ConfirmOpen(true);
+  };
+
+  const handleStep2Confirm = async () => {
+    if (!step2Target) return;
+    setStep2ConfirmOpen(false);
+    await handleExecuteStep2(step2Target.start, step2Target.end);
+    setStep2Target(null);
   };
 
   const handleDeleteConfirm = async () => {
@@ -106,6 +120,23 @@ export function HistoryTable({ historyQuery, onConfigError }: HistoryTableProps)
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={step2ConfirmOpen} onOpenChange={setStep2ConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Step2 実行確認</AlertDialogTitle>
+            <AlertDialogDescription>
+              Step2を実行しますか？
+              <br />
+              期間: {step2Target?.start} 〜 {step2Target?.end}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleStep2Confirm}>実行する</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="rounded-lg border bg-card p-6 space-y-4">
         <div className="text-sm font-semibold">Step1 履歴</div>
         {historyQuery.isLoading ? (
@@ -134,7 +165,7 @@ export function HistoryTable({ historyQuery, onConfigError }: HistoryTableProps)
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleExecuteStep2(job.start_date, job.end_date)}
+                      onClick={() => handleStep2Click(job.start_date, job.end_date)}
                       disabled={step2Mutation.isPending}
                     >
                       Step2 実行
