@@ -24,10 +24,12 @@ export function CustomerItemBasicTab({ item }: CustomerItemBasicTabProps) {
           <div className="font-medium">{item.customer_part_no}</div>
         </div>
         <div>
-          <div className="text-xs text-slate-500">商品</div>
-          <div className="font-medium">
-            {item.product_name} (ID: {item.product_group_id})
-          </div>
+          <div className="text-xs text-slate-500">製品名</div>
+          <div className="font-medium">{item.display_name || "-"}</div>
+        </div>
+        <div>
+          <div className="text-xs text-slate-500">メーカー品番</div>
+          <div className="font-medium">{item.maker_part_no || "-"}</div>
         </div>
         <div>
           <div className="text-xs text-slate-500">仕入先</div>

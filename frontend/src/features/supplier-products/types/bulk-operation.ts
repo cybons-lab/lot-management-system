@@ -14,8 +14,9 @@ export type { BulkOperationType, BulkRowBase, BulkResultRow, BulkUpsertResponse 
 export interface SupplierProductBulkRow extends BulkRowBase {
   supplier_code: string;
   supplier_name: string;
-  product_code: string;
-  product_name: string;
-  order_unit?: string;
-  order_lot_size?: number;
+  maker_part_no: string;
+  display_name: string;
+  base_unit: string;
+  lead_time_days?: number;
+  notes?: string;
 }

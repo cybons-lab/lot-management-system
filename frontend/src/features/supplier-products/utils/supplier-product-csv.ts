@@ -9,7 +9,7 @@ import type { SupplierProductBulkRow } from "../types/bulk-operation";
  * Parse supplier product CSV file content
  *
  * Expected CSV format:
- * OPERATION,supplier_code,supplier_name,product_code,product_name,order_unit,order_lot_size
+ * OPERATION,supplier_code,supplier_name,maker_part_no,display_name,base_unit,lead_time_days,notes
  *
  * @param csvText - CSV file content as string
  * @returns Parsed rows and errors
@@ -37,7 +37,7 @@ export function parseSupplierProductCsv(csvText: string): {
     try {
       const cols = parseCSVLine(line);
 
-      if (cols.length < 5) {
+      if (cols.length < 6) {
         errors.push(`行${i + 1}: 必須列が不足しています`);
         continue;
       }
@@ -46,10 +46,11 @@ export function parseSupplierProductCsv(csvText: string): {
         operation,
         supplier_code,
         supplier_name,
-        product_code,
-        product_name,
-        order_unit,
-        order_lot_size_str,
+        maker_part_no,
+        display_name,
+        base_unit,
+        lead_time_days_str,
+        notes,
       ] = cols;
 
       // Validate operation
@@ -58,9 +59,9 @@ export function parseSupplierProductCsv(csvText: string): {
         continue;
       }
 
-      const order_lot_size = order_lot_size_str ? parseFloat(order_lot_size_str) : undefined;
-      if (order_lot_size_str && isNaN(order_lot_size!)) {
-        errors.push(`行${i + 1}: 発注ロットサイズは数値である必要があります`);
+      const lead_time_days = lead_time_days_str ? parseInt(lead_time_days_str, 10) : undefined;
+      if (lead_time_days_str && isNaN(lead_time_days!)) {
+        errors.push(`行${i + 1}: リードタイムは数値である必要があります`);
         continue;
       }
 
@@ -68,10 +69,11 @@ export function parseSupplierProductCsv(csvText: string): {
         OPERATION: operation as "ADD" | "UPD" | "DEL",
         supplier_code: supplier_code.trim(),
         supplier_name: supplier_name.trim(),
-        product_code: product_code.trim(),
-        product_name: product_name.trim(),
-        order_unit: order_unit?.trim() || undefined,
-        order_lot_size,
+        maker_part_no: maker_part_no.trim(),
+        display_name: display_name.trim(),
+        base_unit: base_unit.trim(),
+        lead_time_days,
+        notes: notes?.trim() || undefined,
         _rowNumber: i + 1,
       });
     } catch (e) {
@@ -89,9 +91,9 @@ export function parseSupplierProductCsv(csvText: string): {
  */
 export function generateSupplierProductTemplateCsv(): string {
   const header =
-    "OPERATION,supplier_code,supplier_name,product_code,product_name,order_unit,order_lot_size";
+    "OPERATION,supplier_code,supplier_name,maker_part_no,display_name,base_unit,lead_time_days,notes";
 
-  const sampleRow = "ADD,SUP001,サンプル仕入先,PROD001,サンプル商品,CS,10";
+  const sampleRow = "ADD,SUP001,サンプル仕入先,ABC-12345,六角ボルト M10,EA,7,備考欄";
 
   return `${header}\n${sampleRow}\n`;
 }

@@ -25,10 +25,11 @@ export interface SupplierProductCreate {
 }
 
 export interface SupplierProductUpdate {
-  is_primary?: boolean;
+  maker_part_no?: string;
+  display_name?: string;
+  base_unit?: string;
   lead_time_days?: number | null;
-  display_name?: string | null; // Phase1: 新規追加
-  notes?: string | null; // Phase1: 新規追加
+  notes?: string | null;
 }
 
 const BASE_PATH = "masters/supplier-items";

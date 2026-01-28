@@ -82,6 +82,12 @@ export function SupplierProductsTable({
         sortable: true,
       },
       {
+        id: "base_unit",
+        header: "基本単位",
+        cell: (row) => row.base_unit || "-",
+        sortable: true,
+      },
+      {
         id: "lead_time_days",
         header: "ＬＴ(日)",
         cell: (row) => (row.lead_time_days != null ? `${row.lead_time_days}日` : "-"),
