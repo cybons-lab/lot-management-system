@@ -72,6 +72,7 @@ class SmartReadCompletionService:
                 row_index=item.row_index,
                 content=item.content,
                 status="COMPLETED",
+                sap_order_no=item.sap_order_no,
                 created_at=item.created_at,
             )
             self.db.add(completed_item)

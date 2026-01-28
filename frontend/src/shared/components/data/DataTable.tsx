@@ -106,6 +106,8 @@ interface DataTableProps<T> {
   enableVirtualization?: boolean;
   /** 仮想スクロール時の表示エリアの高さ */
   scrollAreaHeight?: string | number;
+  /** 行が選択可能かどうかを判定する関数 */
+  isRowSelectable?: (row: T) => boolean;
 }
 
 // ============================================
@@ -136,6 +138,7 @@ export function DataTable<T = never>({
   headerSlot,
   enableVirtualization = false,
   scrollAreaHeight,
+  isRowSelectable,
 }: DataTableProps<T>) {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
 
@@ -162,6 +165,7 @@ export function DataTable<T = never>({
             <Checkbox
               checked={row.getIsSelected()}
               onCheckedChange={(value) => row.toggleSelected(!!value)}
+              disabled={!row.getCanSelect()}
               aria-label="行を選択"
               data-testid="select-row-checkbox"
             />
@@ -291,6 +295,7 @@ export function DataTable<T = never>({
     },
     columnResizeMode: "onChange",
     onColumnVisibilityChange: setColumnVisibility,
+    enableRowSelection: isRowSelectable ? (row) => isRowSelectable(row.original) : true,
     getRowId: (row) => String(getRowId(row)),
     getRowCanExpand: () => expandable && !!renderExpandedRow,
     onSortingChange: (updaterOrValue) => {

@@ -15,6 +15,8 @@ interface ActionButtonsProps {
   isLoading: boolean;
   completeMutationPending: boolean;
   restoreMutationPending: boolean;
+  handleSapLinkage: () => void;
+  isRpaStarting: boolean;
 }
 
 export function ActionButtons({
@@ -27,6 +29,8 @@ export function ActionButtons({
   isLoading,
   completeMutationPending,
   restoreMutationPending,
+  handleSapLinkage,
+  isRpaStarting,
 }: ActionButtonsProps) {
   const queryClient = useQueryClient();
 
@@ -42,6 +46,19 @@ export function ActionButtons({
         >
           <CheckCircle className="mr-2 h-4 w-4" />
           完了にする
+        </Button>
+      )}
+
+      {viewMode === "current" && selectedIds.length > 0 && (
+        <Button
+          variant="default"
+          size="sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={handleSapLinkage}
+          disabled={isRpaStarting}
+        >
+          <RefreshCw className={cn("mr-2 h-4 w-4", isRpaStarting && "animate-spin")} />
+          SAP連携(RPA)
         </Button>
       )}
 

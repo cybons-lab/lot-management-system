@@ -7635,6 +7635,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/sap/orders/start": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start Rpa Job
+     * @description RPAジョブを開始し、対象データをロックする.
+     */
+    post: operations["start_rpa_job_api_rpa_sap_orders_start_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/sap/orders/checkout": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Checkout Rpa Job
+     * @description RPAからデータを取得する.
+     */
+    post: operations["checkout_rpa_job_api_rpa_sap_orders_checkout_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/sap/orders/verify": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Verify Rpa Job
+     * @description RPAマクロ側でのバリデーション結果を受け取る.
+     */
+    post: operations["verify_rpa_job_api_rpa_sap_orders_verify_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/sap/orders/result": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Result Rpa Job
+     * @description RPA実行の最終結果を受け取る (SAP登録完了/失敗).
+     */
+    post: operations["result_rpa_job_api_rpa_sap_orders_result_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/status": {
     parameters: {
       query?: never;
@@ -11984,42 +12064,30 @@ export interface components {
     };
     /**
      * MaterialDeliveryDocumentRequest
-     * @description 素材納品書発行リクエスト.
+     * @description 素材納品書作成リクエスト.
      */
     MaterialDeliveryDocumentRequest: {
       /**
        * Start Date
        * Format: date
-       * @description 開始日
        */
       start_date: string;
       /**
        * End Date
        * Format: date
-       * @description 終了日
        */
       end_date: string;
     };
     /**
      * MaterialDeliveryDocumentResponse
-     * @description 素材納品書発行レスポンス.
+     * @description 素材納品書作成レスポンス.
      */
     MaterialDeliveryDocumentResponse: {
-      /**
-       * Status
-       * @description 実行ステータス (success, locked)
-       */
+      /** Status */
       status: string;
-      /**
-       * Message
-       * @description メッセージ
-       */
+      /** Message */
       message: string;
-      /**
-       * Execution Time Seconds
-       * @description 実行時間（秒）
-       * @default 60
-       */
+      /** Execution Time Seconds */
       execution_time_seconds: number;
     };
     /**
@@ -12076,7 +12144,7 @@ export interface components {
     };
     /**
      * MaterialDeliverySimpleJobResponse
-     * @description 素材納品書発行（簡易）ジョブレスポンス.
+     * @description 素材納品書作成(簡易版)ジョブレスポンス.
      */
     MaterialDeliverySimpleJobResponse: {
       /** Id */
@@ -12103,27 +12171,25 @@ export interface components {
       /** Requested By */
       requested_by: string | null;
       /** Completed At */
-      completed_at: string | null;
+      completed_at?: string | null;
       /** Result Message */
-      result_message: string | null;
+      result_message?: string | null;
       /** Error Message */
-      error_message: string | null;
+      error_message?: string | null;
     };
     /**
      * MaterialDeliverySimpleRequest
-     * @description 素材納品書発行（簡易）リクエスト.
+     * @description 素材納品書作成(簡易版)リクエスト.
      */
     MaterialDeliverySimpleRequest: {
       /**
        * Start Date
        * Format: date
-       * @description 開始日
        */
       start_date: string;
       /**
        * End Date
        * Format: date
-       * @description 終了日
        */
       end_date: string;
     };
@@ -13962,6 +14028,137 @@ export interface components {
        * @description 説明
        */
       description?: string | null;
+    };
+    /**
+     * RpaOrderCheckoutRequest
+     * @description データ取得リクエスト (RPA -> API).
+     */
+    RpaOrderCheckoutRequest: {
+      /**
+       * Job Id
+       * Format: uuid
+       * @description Job ID
+       */
+      job_id: string;
+    };
+    /**
+     * RpaOrderCheckoutResponse
+     * @description データ取得レスポンス (API -> RPA).
+     */
+    RpaOrderCheckoutResponse: {
+      /**
+       * Job Id
+       * Format: uuid
+       */
+      job_id: string;
+      /**
+       * Items
+       * @description 処理対象データリスト
+       */
+      items: {
+        [key: string]: unknown;
+      }[];
+    };
+    /**
+     * RpaOrderResultRequest
+     * @description 最終結果報告リクエスト (RPA -> API).
+     */
+    RpaOrderResultRequest: {
+      /**
+       * Job Id
+       * Format: uuid
+       */
+      job_id: string;
+      /**
+       * Success
+       * @description SAP登録が成功したか
+       */
+      success: boolean;
+      /**
+       * Sap Order No
+       * @description SAP受注番号 (成功時)
+       */
+      sap_order_no?: string | null;
+      /**
+       * Error Message
+       * @description エラーメッセージ (失敗時)
+       */
+      error_message?: string | null;
+    };
+    /**
+     * RpaOrderResultResponse
+     * @description 最終結果レスポンス (API -> RPA).
+     */
+    RpaOrderResultResponse: {
+      /** Success */
+      success: boolean;
+      /** Message */
+      message: string;
+    };
+    /**
+     * RpaOrderStartRequest
+     * @description RPA開始リクエスト (Frontend -> API).
+     */
+    RpaOrderStartRequest: {
+      /**
+       * Ids
+       * @description 対象データのIDリスト
+       */
+      ids: number[];
+    };
+    /**
+     * RpaOrderStartResponse
+     * @description RPA開始レスポンス (API -> Frontend).
+     */
+    RpaOrderStartResponse: {
+      /**
+       * Job Id
+       * Format: uuid
+       * @description 発行されたJob ID
+       */
+      job_id: string;
+      /**
+       * Target Count
+       * @description ロックされた対象件数
+       */
+      target_count: number;
+      /**
+       * Launch Url
+       * @description RPA起動用URL (Optional)
+       */
+      launch_url?: string | null;
+    };
+    /**
+     * RpaOrderVerifyRequest
+     * @description バリデーション結果報告リクエスト (RPA -> API).
+     */
+    RpaOrderVerifyRequest: {
+      /**
+       * Job Id
+       * Format: uuid
+       */
+      job_id: string;
+      /**
+       * Success
+       * @description マクロ貼り付け・チェックが成功したか
+       */
+      success: boolean;
+      /**
+       * Error Message
+       * @description マクロエラーメッセージ
+       */
+      error_message?: string | null;
+    };
+    /**
+     * RpaOrderVerifyResponse
+     * @description バリデーション結果レスポンス (API -> RPA).
+     */
+    RpaOrderVerifyResponse: {
+      /**
+       * Action
+       * @description 次のアクション: proceed (登録へ) | abort (中止)
+       */
+      action: string;
     };
     /**
      * RpaRunBatchUpdateRequest
@@ -28985,6 +29182,138 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SmartReadPadRunRetryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  start_rpa_job_api_rpa_sap_orders_start_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaOrderStartRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaOrderStartResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  checkout_rpa_job_api_rpa_sap_orders_checkout_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaOrderCheckoutRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaOrderCheckoutResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  verify_rpa_job_api_rpa_sap_orders_verify_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaOrderVerifyRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaOrderVerifyResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  result_rpa_job_api_rpa_sap_orders_result_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaOrderResultRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaOrderResultResponse"];
         };
       };
       /** @description Validation Error */

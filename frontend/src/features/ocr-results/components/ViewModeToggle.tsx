@@ -7,7 +7,7 @@ export function ViewModeToggle({
 }: {
   viewMode: "current" | "completed";
   setViewMode: (v: "current" | "completed") => void;
-  setSelectedIds: (ids: any[]) => void;
+  setSelectedIds: (ids: (string | number)[]) => void;
 }) {
   return (
     <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">

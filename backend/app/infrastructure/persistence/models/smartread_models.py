@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import date, datetime
 
 from sqlalchemy import (
@@ -16,7 +17,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infrastructure.persistence.models.base_model import Base
@@ -125,6 +126,36 @@ class SmartReadWideData(Base):
     )
 
 
+class RpaJob(Base):
+    """RPAジョブ管理テーブル.
+
+    RPAによるSAP連携などのジョブ状態を管理する。
+    """
+
+    __tablename__ = "rpa_jobs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_type: Mapped[str] = mapped_column(String(50), nullable=False)  # sales_order_entry etc
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending"
+    )  # pending, validating, processing, completed, failed
+
+    # メタデータ
+    target_count: Mapped[int] = mapped_column(Integer, default=0)
+    success_count: Mapped[int] = mapped_column(Integer, default=0)
+    failure_count: Mapped[int] = mapped_column(Integer, default=0)
+
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
+    )
+    timeout_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
 class SmartReadLongData(Base):
     """SmartRead 縦持ちデータ（変換後）.
 
@@ -149,8 +180,15 @@ class SmartReadLongData(Base):
     content: Mapped[dict] = mapped_column(JSONB, nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="PENDING", server_default=text("'PENDING'")
-    )  # PENDING / IMPORTED / ERROR
+    )  # PENDING / IMPORTED / ERROR / PROCESSING
     error_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # RPA Linkage
+    rpa_job_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("rpa_jobs.id", ondelete="SET NULL"), nullable=True
+    )
+    sap_order_no: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    verification_result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
@@ -181,6 +219,9 @@ class SmartReadLongDataCompleted(Base):
     content: Mapped[dict] = mapped_column(JSONB, nullable=False)
 
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="COMPLETED")
+
+    # RPA Linkage Snapshot
+    sap_order_no: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     completed_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False

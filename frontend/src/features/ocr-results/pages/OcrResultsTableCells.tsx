@@ -192,6 +192,9 @@ function OcrStatusBadge({ row }: { row: OcrResultItem }) {
   } else if (row.jiku_format_error || row.date_format_error) {
     status = "warning";
     label = "形式エラー";
+  } else if (row.status === "processing") {
+    status = "warning";
+    label = "処理中";
   }
 
   return (
@@ -273,6 +276,7 @@ export function getRowClassName(row: OcrResultItem): string {
   if (row.status === "ERROR") return "bg-red-50/50";
   if (row.master_not_found) return "bg-red-50/50"; // Master missing is critical
   if (row.jiku_format_error || row.date_format_error) return "bg-orange-50/50";
+  if (row.status === "processing") return "bg-blue-50/30 animate-pulse";
   return "";
 }
 
@@ -346,6 +350,7 @@ export function EditableTextCell({
           : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
         inputClassName,
       )}
+      disabled={row.status === "processing"}
     />
   );
 }
@@ -379,6 +384,7 @@ export function EditableDateCell({
             ? "border-blue-300 bg-blue-50 focus:border-blue-500 focus:ring-blue-500"
             : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
       )}
+      disabled={row.status === "processing"}
     />
   );
 }
@@ -445,7 +451,11 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
           startEditing();
         }
       }}
-      className="min-h-[2.5rem] w-full cursor-text rounded-md border border-gray-300 bg-slate-50 px-2 py-1 text-left text-xs whitespace-pre-wrap break-words"
+      className={cn(
+        "min-h-[2.5rem] w-full cursor-text rounded-md border border-gray-300 bg-slate-50 px-2 py-1 text-left text-xs whitespace-pre-wrap break-words",
+        row.status === "processing" && "cursor-not-allowed opacity-70",
+      )}
+      disabled={row.status === "processing"}
     >
       {fallbackText}
     </button>

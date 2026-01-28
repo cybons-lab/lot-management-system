@@ -1,4 +1,4 @@
-import { type ColumnDef } from "@tanstack/react-table";
+import { AlertCircle } from "lucide-react";
 
 import { type OcrResultItem } from "../api";
 import { OcrResultEditModal } from "../pages/OcrResultEditModal";
@@ -10,14 +10,13 @@ import {
 } from "../pages/OcrResultsTableCells";
 
 import { Card, CardContent } from "@/components/ui";
-import { DataTable } from "@/shared/components/data/DataTable";
+import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { cn } from "@/shared/libs/utils";
-
 
 interface OcrResultsTableProps {
   viewMode: "current" | "completed";
   data: OcrResultItem[];
-  columns: ColumnDef<OcrResultItem, any>[];
+  columns: Column<OcrResultItem>[];
   isLoading: boolean;
   error: Error | null;
   selectedIds: (string | number)[];
@@ -60,7 +59,7 @@ export function OcrResultsTable({
 
           {error ? (
             <div className="p-8 text-center text-destructive">
-              エラーが発生しました: {(error as any).message}
+              エラーが発生しました: {error instanceof Error ? error.message : "不明なエラー"}
             </div>
           ) : (
             <DataTable
@@ -73,6 +72,7 @@ export function OcrResultsTable({
               selectable={true}
               selectedIds={selectedIds}
               onSelectionChange={onSelectionChange}
+              isRowSelectable={(row) => row.status !== "processing"}
             />
           )}
           <OcrResultEditModal row={editingRow} isOpen={!!editingRow} onClose={onCloseEditModal} />
