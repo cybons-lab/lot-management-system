@@ -21,7 +21,6 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 export function SupplierProductsPage() {
   const {
     supplierProducts,
-    products,
     suppliers,
     paginatedData,
     table,
@@ -135,7 +134,6 @@ export function SupplierProductsPage() {
           </div>
         </div>
         <SupplierProductsTable
-          products={products}
           suppliers={suppliers}
           supplierProducts={paginatedData}
           isLoading={isLoading}
@@ -165,7 +163,6 @@ export function SupplierProductsPage() {
             <DialogTitle>メーカー品番登録</DialogTitle>
           </DialogHeader>
           <SupplierProductForm
-            products={products}
             suppliers={suppliers}
             onSubmit={handleCreate}
             onCancel={closeCreateDialog}
@@ -183,11 +180,11 @@ export function SupplierProductsPage() {
           {editingItem && (
             <SupplierProductForm
               initialData={editingItem}
-              products={products}
               suppliers={suppliers}
               onSubmit={handleUpdate}
               onCancel={closeEditDialog}
               isSubmitting={isUpdating}
+              isEdit
             />
           )}
         </DialogContent>

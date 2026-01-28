@@ -31,16 +31,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { type Product } from "@/features/products/api";
 import { type Supplier } from "@/features/suppliers/api";
 
 const schema = z.object({
-  product_group_id: z.coerce.number().optional().nullable(), // Phase1: オプション
   supplier_id: z.coerce.number().min(1, "仕入先を選択してください"),
-  maker_part_no: z.string().min(1, "メーカー品番を入力してください"), // Phase1: 必須
+  maker_part_no: z.string().min(1, "メーカー品番を入力してください"),
+  display_name: z.string().min(1, "製品名を入力してください"),
   is_primary: z.boolean().default(false),
   lead_time_days: z.number().nullable(),
-  display_name: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -48,7 +46,6 @@ type FormValues = z.infer<typeof schema>;
 
 interface SupplierProductFormProps {
   initialData?: SupplierProduct;
-  products: Product[];
   suppliers: Supplier[];
   onSubmit: (data: SupplierProductCreate | SupplierProductUpdate) => void;
   onCancel: () => void;
@@ -59,7 +56,6 @@ interface SupplierProductFormProps {
 // eslint-disable-next-line complexity -- フォームコンポーネントのため許容
 export function SupplierProductForm({
   initialData,
-  products,
   suppliers,
   onSubmit,
   onCancel,
@@ -69,12 +65,11 @@ export function SupplierProductForm({
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      product_group_id: initialData?.product_group_id ?? null,
       supplier_id: initialData?.supplier_id || 0,
       maker_part_no: initialData?.maker_part_no || "",
+      display_name: initialData?.display_name || "",
       is_primary: initialData?.is_primary || false,
       lead_time_days: initialData?.lead_time_days ?? null,
-      display_name: initialData?.display_name || "",
       notes: initialData?.notes || "",
     },
   });
@@ -121,7 +116,7 @@ export function SupplierProductForm({
           )}
         />
 
-        {/* メーカー品番 - Phase1で必須フィールド */}
+        {/* メーカー品番 - 必須フィールド */}
         <FormField
           control={control}
           name="maker_part_no"
@@ -141,37 +136,19 @@ export function SupplierProductForm({
           )}
         />
 
-        {/* 商品構成 (オプション - Phase2用) */}
+        {/* 製品名 - 必須フィールド */}
         <FormField
           control={control}
-          name="product_group_id"
+          name="display_name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                商品構成 <span className="text-gray-400">(オプション)</span>
+                製品名 <span className="text-red-500">*</span>
               </FormLabel>
-              <Select
-                value={field.value ? String(field.value) : undefined}
-                onValueChange={(v) => field.onChange(v === "unselected" ? null : Number(v))}
-                disabled={isEdit}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Phase2で設定（省略可）" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="unselected">なし</SelectItem>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.product_code} - {p.product_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Phase1では省略可能。複数メーカー品番をまとめる場合のみ設定。
-              </FormDescription>
+              <FormControl>
+                <Input {...field} placeholder="例: 六角ボルト M10" />
+              </FormControl>
+              <FormDescription>この製品の名称を入力してください</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -212,22 +189,6 @@ export function SupplierProductForm({
                   placeholder="未設定"
                 />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* 表示名 (オプション) */}
-        <FormField
-          control={control}
-          name="display_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>表示名 (社内呼称)</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="例: 特殊部品A" />
-              </FormControl>
-              <FormDescription>社内で使いやすい名称があれば入力してください</FormDescription>
               <FormMessage />
             </FormItem>
           )}
