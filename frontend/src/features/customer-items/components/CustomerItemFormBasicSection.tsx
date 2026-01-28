@@ -26,7 +26,7 @@ interface CustomerItemFormBasicSectionProps {
   isSubmitting: boolean;
   isLoading: boolean;
   customerOptions: Option[];
-  productOptions: Option[]; // Phase1: product_id はオプション
+  productOptions: Option[]; // Phase1: product_group_id はオプション
   supplierItemOptions?: Option[]; // Phase1: supplier_item_id 選択用（必須）
   isLoadingCustomers: boolean;
   isLoadingProducts: boolean;
@@ -150,11 +150,11 @@ export function CustomerItemFormBasicSection({
 
         {/* 商品構成 (Phase1: オプション、Phase2用) */}
         <div>
-          <Label htmlFor="product_id" className="mb-2 block text-sm font-medium">
+          <Label htmlFor="product_group_id" className="mb-2 block text-sm font-medium">
             商品構成 <span className="text-gray-400">(オプション)</span>
           </Label>
           <Controller
-            name="product_id"
+            name="product_group_id"
             control={control}
             render={({ field }) => (
               <SearchableSelect
@@ -166,8 +166,8 @@ export function CustomerItemFormBasicSection({
               />
             )}
           />
-          {errors.product_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.product_id.message}</p>
+          {errors.product_group_id && (
+            <p className="mt-1 text-sm text-red-600">{errors.product_group_id.message}</p>
           )}
           <p className="mt-1 text-xs text-gray-500">
             Phase1では省略可能。複数メーカー品番をまとめる場合のみ設定（Phase2機能）。

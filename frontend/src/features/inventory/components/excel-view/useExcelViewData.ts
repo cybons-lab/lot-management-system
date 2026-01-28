@@ -140,7 +140,7 @@ export function useExcelViewData(
   const { data: lots = [], isLoading: lotsLoading } = useLotsQuery(
     isEnabled
       ? {
-          product_id: productId,
+          product_group_id: productId,
           warehouse_id: warehouseId,
           status: "active",
           with_stock: true,
@@ -149,7 +149,7 @@ export function useExcelViewData(
   );
 
   const { data: suggestionResponse, isLoading: suggestionsLoading } = useAllocationSuggestions(
-    isEnabled ? { product_id: productId } : undefined,
+    isEnabled ? { product_group_id: productId } : undefined,
   );
 
   const deliveryPlaceApi = useMasterApi<DeliveryPlace>(

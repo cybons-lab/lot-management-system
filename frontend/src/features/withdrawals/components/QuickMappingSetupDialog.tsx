@@ -153,7 +153,7 @@ function useQuickMappingForm({
       // TODO: Phase1完了後、supplier_item_id選択UIを追加
       const createdItem = await createCustomerItem({
         customer_id: customerId,
-        product_id: productId,
+        product_group_id: productId,
         customer_part_no: partNo,
         base_unit: defaultUnit || "CAN",
         supplier_item_id: 1, // FIXME: 仮の値（Phase1対応）

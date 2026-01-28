@@ -168,7 +168,7 @@ describe("AdhocLotCreateForm", () => {
       expect(defaultProps.onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
           lot_number: "LOT-TEST-001",
-          product_id: 1,
+          product_group_id: 1,
           warehouse_id: 1,
           current_quantity: 100,
           unit: "EA",

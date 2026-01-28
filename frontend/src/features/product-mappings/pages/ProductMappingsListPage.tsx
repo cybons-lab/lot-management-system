@@ -143,11 +143,11 @@ export function ProductMappingsListPage() {
         className: "truncate",
       },
       {
-        id: "product_id",
+        id: "product_group_id",
         header: "商品",
         cell: (row) => {
-          const product = productMap.get(row.product_id);
-          if (!product) return `ID: ${row.product_id}`;
+          const product = productMap.get(row.product_group_id);
+          if (!product) return `ID: ${row.product_group_id}`;
           return `${product.product_code} - ${product.product_name}`;
         },
         sortable: true,
@@ -190,7 +190,7 @@ export function ProductMappingsListPage() {
 
     // Product filter
     if (selectedProductId !== "all") {
-      result = result.filter((m) => m.product_id === Number(selectedProductId));
+      result = result.filter((m) => m.product_group_id === Number(selectedProductId));
     }
 
     // Text search
@@ -199,7 +199,7 @@ export function ProductMappingsListPage() {
       result = result.filter((m) => {
         const customer = customerMap.get(m.customer_id);
         const supplier = supplierMap.get(m.supplier_id);
-        const product = productMap.get(m.product_id);
+        const product = productMap.get(m.product_group_id);
         return (
           m.customer_part_code.toLowerCase().includes(query) ||
           customer?.customer_name.toLowerCase().includes(query) ||

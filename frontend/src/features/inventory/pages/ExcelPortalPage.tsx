@@ -46,7 +46,7 @@ export function ExcelPortalPage() {
   const { data: inventoryData, isLoading: isLoadingInventory } = useInventoryItems(
     selected.customerItem
       ? {
-          product_id: selected.customerItem.product_id,
+          product_group_id: selected.customerItem.product_group_id,
           limit: 100,
         }
       : undefined,
@@ -66,20 +66,20 @@ export function ExcelPortalPage() {
     >();
 
     customerItemsForSupplier.forEach((item) => {
-      // Phase1: product_idがnullの場合はスキップ（Phase2で対応）
-      if (item.product_id === null) return;
+      // Phase1: product_group_idがnullの場合はスキップ（Phase2で対応）
+      if (item.product_group_id === null) return;
 
-      if (!groups.has(item.product_id)) {
-        groups.set(item.product_id, {
+      if (!groups.has(item.product_group_id)) {
+        groups.set(item.product_group_id, {
           product: {
-            id: item.product_id,
+            id: item.product_group_id,
             code: item.product_code || "",
             name: item.product_name || "",
           },
           items: [],
         });
       }
-      groups.get(item.product_id)!.items.push(item);
+      groups.get(item.product_group_id)!.items.push(item);
     });
 
     return Array.from(groups.values());
@@ -111,7 +111,7 @@ export function ExcelPortalPage() {
   const handleWarehouseSelect = (warehouseId: number) => {
     if (!selected.customerItem) return;
     navigate(
-      `/inventory/excel-view/${selected.customerItem.product_id}/${warehouseId}/${selected.customerItemId}`,
+      `/inventory/excel-view/${selected.customerItem.product_group_id}/${warehouseId}/${selected.customerItemId}`,
     );
   };
 

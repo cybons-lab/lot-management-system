@@ -22,17 +22,17 @@ function useCustomerItemFilters() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     customer_id: "",
-    product_id: "",
+    product_group_id: "",
   });
   const [showInactive, setShowInactive] = useState(false);
 
   const queryParams = useMemo(
     () => ({
       customer_id: filters.customer_id ? Number(filters.customer_id) : undefined,
-      product_id: filters.product_id ? Number(filters.product_id) : undefined,
+      product_group_id: filters.product_group_id ? Number(filters.product_group_id) : undefined,
       include_inactive: showInactive,
     }),
-    [filters.customer_id, filters.product_id, showInactive],
+    [filters.customer_id, filters.product_group_id, showInactive],
   );
 
   return {
@@ -91,7 +91,7 @@ export function useCustomerItemsPage() {
       (item) =>
         item.customer_part_no.toLowerCase().includes(query) ||
         item.customer_id.toString().includes(query) ||
-        item.product_id?.toString().includes(query), // Phase1: product_idはnullable
+        item.product_group_id?.toString().includes(query), // Phase1: product_group_idはnullable
     );
   }, [customerItems, searchQuery]);
 

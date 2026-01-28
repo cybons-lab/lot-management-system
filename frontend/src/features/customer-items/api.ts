@@ -22,7 +22,7 @@ export interface CustomerItem {
   customer_code: string;
   customer_name: string;
   customer_part_no: string;
-  product_id: number | null; // Phase1: オプション（Phase2用グルーピング）
+  product_group_id: number | null; // Phase1: オプション（Phase2用グルーピング）
   product_code: string | null;
   product_name: string | null;
   supplier_id: number | null;
@@ -46,7 +46,7 @@ export interface CustomerItem {
 export interface CreateCustomerItemRequest {
   customer_id: number;
   customer_part_no: string;
-  product_id?: number | null; // Phase1: オプション
+  product_group_id?: number | null; // Phase1: オプション
   supplier_id?: number | null; // 非推奨（supplier_item_id経由で取得）
   supplier_item_id: number; // Phase1: 必須
   is_primary?: boolean;
@@ -58,7 +58,7 @@ export interface CreateCustomerItemRequest {
 
 export interface UpdateCustomerItemRequest {
   customer_part_no?: string;
-  product_id?: number | null; // Phase1: オプション
+  product_group_id?: number | null; // Phase1: オプション
   supplier_id?: number | null; // 非推奨
   supplier_item_id?: number; // Phase1: 必須（更新時は任意）
   is_primary?: boolean | null;
@@ -72,7 +72,7 @@ export interface CustomerItemsListParams {
   skip?: number;
   limit?: number;
   customer_id?: number;
-  product_id?: number;
+  product_group_id?: number;
   supplier_id?: number;
   include_inactive?: boolean;
 }
@@ -89,7 +89,8 @@ function buildCustomerItemsQuery(params?: CustomerItemsListParams): string {
   if (params.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params.limit !== undefined) searchParams.append("limit", params.limit.toString());
   if (params.customer_id) searchParams.append("customer_id", params.customer_id.toString());
-  if (params.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params.product_group_id)
+    searchParams.append("product_group_id", params.product_group_id.toString());
   if (params.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
   if (params.include_inactive) searchParams.append("include_inactive", "true");
 

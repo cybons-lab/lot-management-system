@@ -35,7 +35,7 @@ describe("useFilterOptions", () => {
     renderHook(
       () =>
         useFilterOptions({
-          product_id: "1",
+          product_group_id: "1",
           onAutoSelectSupplier,
         }),
       { wrapper: createWrapper() },
@@ -61,7 +61,7 @@ describe("useFilterOptions", () => {
     renderHook(
       () =>
         useFilterOptions({
-          product_id: "1",
+          product_group_id: "1",
           onAutoSelectSupplier,
         }),
       { wrapper: createWrapper() },

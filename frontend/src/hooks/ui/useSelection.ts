@@ -82,14 +82,14 @@
  *    理由: 型安全性と柔軟性の両立
  *    業務データの多様性:
  *    - 受注明細: id (number)
- *    - 製品マスタ: product_id (number)
+ *    - 製品マスタ: product_group_id (number)
  *    - 得意先マスタ: customer_code (string)
  *    → idKey パラメータで任意のキーを指定可能
  *    型安全性:
  *    ```typescript
- *    type OrderLine = { id: number; product_id: number; ... };
+ *    type OrderLine = { id: number; product_group_id: number; ... };
  *    const selection = useSelection<OrderLine>('id');
- *    // → idKey は 'id' | 'product_id' | ... のみ受け付ける（型チェック）
+ *    // → idKey は 'id' | 'product_group_id' | ... のみ受け付ける（型チェック）
  *    ```
  */
 

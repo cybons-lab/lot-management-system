@@ -97,7 +97,7 @@ export function ExcelViewPage() {
       return {
         lot_id: Number(lotId),
         delivery_place_id: Number(dpId),
-        product_id: Number(productId),
+        product_group_id: Number(productId),
         customer_id: dest?.customerId || 0,
         forecast_period: forecastPeriod,
         quantity,

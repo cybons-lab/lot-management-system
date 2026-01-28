@@ -99,10 +99,10 @@ export function ForecastDetailCard({
   const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
   const deliveryPlaceDisplay =
     group_key.delivery_place_name ?? `納入先ID:${group_key.delivery_place_id}`;
-  const productName = group_key.product_name ?? `製品ID:${group_key.product_id}`;
+  const productName = group_key.product_name ?? `製品ID:${group_key.product_group_id}`;
   const productCode = group_key.product_code;
 
-  const groupKey = `${group_key.customer_id}-${group_key.delivery_place_id}-${group_key.product_id}`;
+  const groupKey = `${group_key.customer_id}-${group_key.delivery_place_id}-${group_key.product_group_id}`;
 
   // 受注引当ハンドラー（受注明細へのFEFO引当）
   const handleAutoAllocate = () => {
@@ -193,14 +193,14 @@ export function ForecastDetailCard({
             <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-3 md:col-span-5">
               <div>
                 <h4 className="text-xs font-semibold text-gray-700">在庫情報</h4>
-                <WarehouseInfoCard productId={group_key.product_id} />
+                <WarehouseInfoCard productId={group_key.product_group_id} />
               </div>
 
               <div className="border-t pt-3">
                 <PlanningAllocationPanel
                   customerId={group_key.customer_id}
                   deliveryPlaceId={group_key.delivery_place_id}
-                  productId={group_key.product_id}
+                  productId={group_key.product_group_id}
                 />
               </div>
             </div>

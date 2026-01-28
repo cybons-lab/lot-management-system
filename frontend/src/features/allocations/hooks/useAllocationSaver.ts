@@ -97,7 +97,7 @@ export function useAllocationSaver({
       queryClient.invalidateQueries({
         queryKey: allocationCandidatesKeys.list({
           order_line_id: variables.orderLineId,
-          product_id: variables.productId,
+          product_group_id: variables.productId,
           strategy: ALLOCATION_CONSTANTS.QUERY_STRATEGY.FEFO,
           limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
         }),
@@ -137,7 +137,7 @@ export function useAllocationSaver({
       // Execute mutation
       saveAllocationsMutation.mutate({
         orderLineId: lineId,
-        productId: Number(line.product_id || 0),
+        productId: Number(line.product_group_id || 0),
         orderId: getOrderId(line),
         allocations,
       });

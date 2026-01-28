@@ -67,9 +67,9 @@ export function useChangeAllocationHandler({
 }) {
   return useCallback(
     (lineId: number, lotId: number, value: number) => {
-      // Find the line to get product_id
+      // Find the line to get product_group_id
       const line = allLines.find((l) => l.id === lineId);
-      const productId = Number(line?.product_id || 0);
+      const productId = Number(line?.product_group_id || 0);
 
       // Fetch candidate lots to determine max allowed quantity
       // 【設計】キャッシュから候補ロットを取得し、利用可能数量を確認

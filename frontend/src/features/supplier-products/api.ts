@@ -2,7 +2,7 @@ import { http } from "@/shared/api/http-client";
 
 export interface SupplierProduct {
   id: number;
-  product_id: number | null; // Phase1: オプション
+  product_group_id: number | null; // Phase1: オプション
   supplier_id: number;
   maker_part_no: string; // Phase1: 必須（SKUキー）
   is_primary: boolean;
@@ -22,7 +22,7 @@ export interface SupplierProduct {
 }
 
 export interface SupplierProductCreate {
-  product_id?: number | null; // Phase1: オプション
+  product_group_id?: number | null; // Phase1: オプション
   supplier_id: number;
   maker_part_no: string; // Phase1: 必須
   is_primary?: boolean;

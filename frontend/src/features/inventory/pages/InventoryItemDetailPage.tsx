@@ -70,7 +70,7 @@ export function InventoryItemDetailPage() {
     isLoading: lotsLoading,
     refetch: refetchLots,
   } = useLotsQuery({
-    product_id: productIdNum,
+    product_group_id: productIdNum,
     warehouse_id: warehouseIdNum,
     status: showArchived ? undefined : "active", // アーカイブ表示時は全取得、それ以外はactiveのみ
     with_stock: !showArchived, // アーカイブ表示時は在庫0も含む

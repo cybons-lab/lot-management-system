@@ -24,7 +24,7 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
     id: lotId, // Required for UI compatibility
     lot_id: lotId, // DDL v2.2
     lot_number: `LOT-${faker.string.alphanumeric(8).toUpperCase()}`,
-    product_id: faker.number.int({ min: 1, max: 100 }), // DDL v2.2
+    product_group_id: faker.number.int({ min: 1, max: 100 }), // DDL v2.2
     warehouse_id: faker.number.int({ min: 1, max: 10 }), // DDL v2.2
     supplier_id: faker.number.int({ min: 1, max: 50 }), // DDL v2.2
     received_date: receivedDate.toISOString().split("T")[0], // DDL v2.2

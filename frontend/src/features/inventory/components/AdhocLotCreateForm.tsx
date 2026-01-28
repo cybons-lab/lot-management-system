@@ -38,7 +38,7 @@ import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
  */
 export interface AdhocLotCreateData {
   lot_number: string;
-  product_id: number;
+  product_group_id: number;
   warehouse_id: number;
   supplier_code?: string;
   received_date: string;
@@ -94,7 +94,7 @@ export function AdhocLotCreateForm({
 
   // 監視対象のフィールド
   const selectedSupplier = watch("supplier_code");
-  const selectedProduct = watch("product_id");
+  const selectedProduct = watch("product_group_id");
   const selectedWarehouse = watch("warehouse_id");
 
   // Filter products based on selected supplier
@@ -115,7 +115,7 @@ export function AdhocLotCreateForm({
     if (selectedProduct && filteredProducts.length > 0) {
       const exists = filteredProducts.find((p) => p.id.toString() === selectedProduct);
       if (!exists) {
-        setValue("product_id", "");
+        setValue("product_group_id", "");
       }
     }
   }, [selectedSupplier, filteredProducts, selectedProduct, setValue]);
@@ -123,7 +123,7 @@ export function AdhocLotCreateForm({
   const onFormSubmit = async (data: AdhocLotFormData) => {
     const submitData: AdhocLotCreateData = {
       lot_number: data.lot_number,
-      product_id: parseInt(data.product_id, 10),
+      product_group_id: parseInt(data.product_group_id, 10),
       warehouse_id: parseInt(data.warehouse_id, 10),
       origin_type: data.origin_type,
       origin_reference: data.origin_reference || undefined,
@@ -226,11 +226,11 @@ export function AdhocLotCreateForm({
           {/* Product */}
           <div>
             <div className="flex items-center gap-2">
-              <Label htmlFor="product_id">製品 *</Label>
+              <Label htmlFor="product_group_id">製品 *</Label>
               <span className="text-xs font-medium text-red-500">必須</span>
             </div>
             <Controller
-              name="product_id"
+              name="product_group_id"
               control={control}
               render={({ field }) => (
                 <SearchableSelect
@@ -249,8 +249,8 @@ export function AdhocLotCreateForm({
                 この仕入先に関連付けられた製品はありません。
               </p>
             )}
-            {errors.product_id && (
-              <p className="mt-1 text-sm text-red-600">{errors.product_id.message}</p>
+            {errors.product_group_id && (
+              <p className="mt-1 text-sm text-red-600">{errors.product_group_id.message}</p>
             )}
           </div>
 

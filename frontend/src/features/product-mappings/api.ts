@@ -8,7 +8,7 @@ export interface ProductMapping {
   customer_id: number;
   customer_part_code: string;
   supplier_id: number;
-  product_id: number;
+  product_group_id: number;
   base_unit: string;
   pack_unit: string | null;
   pack_quantity: number | null;
@@ -22,7 +22,7 @@ export interface ProductMappingCreate {
   customer_id: number;
   customer_part_code: string;
   supplier_id: number;
-  product_id: number;
+  product_group_id: number;
   base_unit: string;
   pack_unit?: string | null;
   pack_quantity?: number | null;
@@ -34,7 +34,7 @@ export interface ProductMappingUpdate {
   customer_id?: number;
   customer_part_code?: string;
   supplier_id?: number;
-  product_id?: number;
+  product_group_id?: number;
   base_unit?: string;
   pack_unit?: string | null;
   pack_quantity?: number | null;
@@ -47,13 +47,14 @@ const BASE_PATH = "masters/product-mappings";
 export async function fetchProductMappings(params?: {
   customer_id?: number;
   supplier_id?: number;
-  product_id?: number;
+  product_group_id?: number;
   is_active?: boolean;
 }): Promise<ProductMapping[]> {
   const searchParams = new URLSearchParams();
   if (params?.customer_id) searchParams.append("customer_id", String(params.customer_id));
   if (params?.supplier_id) searchParams.append("supplier_id", String(params.supplier_id));
-  if (params?.product_id) searchParams.append("product_id", String(params.product_id));
+  if (params?.product_group_id)
+    searchParams.append("product_group_id", String(params.product_group_id));
   if (params?.is_active !== undefined) searchParams.append("is_active", String(params.is_active));
   const query = searchParams.toString();
   return http.get<ProductMapping[]>(`${BASE_PATH}${query ? `?${query}` : ""}`);

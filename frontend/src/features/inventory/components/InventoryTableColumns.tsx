@@ -9,7 +9,7 @@ export const inventoryColumns: Column<InventoryItem>[] = [
     accessor: (row) =>
       row.product_name
         ? `${row.product_name} (${row.product_code || ""})`
-        : row.product_code || `ID: ${row.product_id}`,
+        : row.product_code || `ID: ${row.product_group_id}`,
     cell: (row) => (
       <div className="flex flex-col">
         <span className="block truncate font-medium text-slate-900" title={row.product_name || ""}>

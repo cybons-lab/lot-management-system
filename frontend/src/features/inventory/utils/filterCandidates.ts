@@ -6,7 +6,7 @@ export type FilterCandidateOption = {
 export type FilterField = "product" | "supplier" | "warehouse";
 
 type CandidateFilters = {
-  product_id: string;
+  product_group_id: string;
   supplier_id: string;
   warehouse_id: string;
 };
@@ -30,7 +30,8 @@ const validateFilters = (
   filters: CandidateFilters,
   options: CandidateOptions,
 ): ValidationResult => ({
-  productValid: !filters.product_id || hasOption(options.productOptions, filters.product_id),
+  productValid:
+    !filters.product_group_id || hasOption(options.productOptions, filters.product_group_id),
   supplierValid: !filters.supplier_id || hasOption(options.supplierOptions, filters.supplier_id),
   warehouseValid:
     !filters.warehouse_id || hasOption(options.warehouseOptions, filters.warehouse_id),
@@ -62,7 +63,7 @@ export const getDependentFilterUpdates = ({
   // Valid filters are ALWAYS preserved, regardless of lastTouched
   const validation = validateFilters(filters, options);
 
-  if (!validation.productValid) updates.product_id = "";
+  if (!validation.productValid) updates.product_group_id = "";
   if (!validation.supplierValid) updates.supplier_id = "";
   if (!validation.warehouseValid) updates.warehouse_id = "";
 

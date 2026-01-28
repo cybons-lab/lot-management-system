@@ -11,9 +11,9 @@ import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer"
 interface CustomerItemsFilterProps {
   filters: {
     customer_id: string;
-    product_id: string;
+    product_group_id: string;
   };
-  setFilters: (filters: { customer_id: string; product_id: string }) => void;
+  setFilters: (filters: { customer_id: string; product_group_id: string }) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
@@ -48,7 +48,7 @@ export function CustomerItemsFilter({
   );
 
   const handleReset = () => {
-    setFilters({ customer_id: "", product_id: "" });
+    setFilters({ customer_id: "", product_group_id: "" });
     setSearchQuery("");
   };
 
@@ -77,8 +77,8 @@ export function CustomerItemsFilter({
           </Label>
           <SearchableSelect
             options={productOptions}
-            value={filters.product_id}
-            onChange={(value) => setFilters({ ...filters, product_id: value })}
+            value={filters.product_group_id}
+            onChange={(value) => setFilters({ ...filters, product_group_id: value })}
             placeholder="製品を検索..."
           />
         </div>

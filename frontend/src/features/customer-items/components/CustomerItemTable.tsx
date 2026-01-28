@@ -47,9 +47,9 @@ export function CustomerItemTable({
         sortable: true,
       },
       {
-        id: "product_id",
+        id: "product_group_id",
         header: "製品ID",
-        accessor: (row) => row.product_id,
+        accessor: (row) => row.product_group_id,
         width: 100,
         sortable: true,
       },

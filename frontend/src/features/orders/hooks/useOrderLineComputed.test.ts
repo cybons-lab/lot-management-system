@@ -11,7 +11,7 @@ describe("useOrderLineComputed", () => {
   const mockOrderLine: OrderLineSource = {
     id: 101,
     order_id: 1,
-    product_id: 10,
+    product_group_id: 10,
     product_code: "PRD-001",
     product_name: "テスト製品",
     quantity: 100,

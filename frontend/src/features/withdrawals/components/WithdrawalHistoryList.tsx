@@ -20,7 +20,7 @@ export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHist
     queryKey: ["withdrawals", "list", { productId, warehouseId }],
     queryFn: () =>
       getWithdrawals({
-        product_id: productId,
+        product_group_id: productId,
         warehouse_id: warehouseId,
         limit: 100, // 直近100件を表示
       }),

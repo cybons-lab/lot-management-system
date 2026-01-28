@@ -6,6 +6,6 @@ export function useDemandForecast(params: DemandForecastParams) {
   return useQuery({
     queryKey: ["demand", "forecast", params],
     queryFn: () => getDemandForecast(params),
-    enabled: !!params.product_id,
+    enabled: !!params.product_group_id,
   });
 }

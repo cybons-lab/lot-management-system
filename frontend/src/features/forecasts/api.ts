@@ -44,7 +44,8 @@ export const getForecasts = (params?: ForecastListParams) => {
   if (params?.customer_id) searchParams.append("customer_id", params.customer_id.toString());
   if (params?.delivery_place_id)
     searchParams.append("delivery_place_id", params.delivery_place_id.toString());
-  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params?.product_group_id)
+    searchParams.append("product_group_id", params.product_group_id.toString());
 
   const queryString = searchParams.toString();
   return http.get<ForecastListResponse>(`forecasts${queryString ? "?" + queryString : ""}`);
@@ -93,7 +94,8 @@ export const getForecastHistory = (params?: ForecastHistoryParams) => {
   if (params?.customer_id) searchParams.append("customer_id", params.customer_id.toString());
   if (params?.delivery_place_id)
     searchParams.append("delivery_place_id", params.delivery_place_id.toString());
-  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params?.product_group_id)
+    searchParams.append("product_group_id", params.product_group_id.toString());
 
   const queryString = searchParams.toString();
   return http.get<ForecastHistory[]>(`forecasts/history${queryString ? "?" + queryString : ""}`);
@@ -114,7 +116,7 @@ export const bulkImportForecasts = (data: BulkImportForecastRequest) => {
 export interface RegenerateGroupSuggestionsParams {
   customer_id: number;
   delivery_place_id: number;
-  product_id: number;
+  product_group_id: number;
   forecast_period?: string;
 }
 
@@ -133,7 +135,7 @@ export const regenerateGroupSuggestions = (params: RegenerateGroupSuggestionsPar
   const searchParams = new URLSearchParams();
   searchParams.append("customer_id", params.customer_id.toString());
   searchParams.append("delivery_place_id", params.delivery_place_id.toString());
-  searchParams.append("product_id", params.product_id.toString());
+  searchParams.append("product_group_id", params.product_group_id.toString());
   if (params.forecast_period) {
     searchParams.append("forecast_period", params.forecast_period);
   }
@@ -158,7 +160,7 @@ export const clearGroupSuggestions = (params: RegenerateGroupSuggestionsParams) 
   const searchParams = new URLSearchParams();
   searchParams.append("customer_id", params.customer_id.toString());
   searchParams.append("delivery_place_id", params.delivery_place_id.toString());
-  searchParams.append("product_id", params.product_id.toString());
+  searchParams.append("product_group_id", params.product_group_id.toString());
   if (params.forecast_period) {
     searchParams.append("forecast_period", params.forecast_period);
   }

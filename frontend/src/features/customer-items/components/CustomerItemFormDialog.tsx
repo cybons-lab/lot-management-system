@@ -62,7 +62,7 @@ export function CustomerItemFormDialog({
       ? {
           customer_id: item.customer_id,
           customer_part_no: item.customer_part_no,
-          product_id: item.product_id,
+          product_group_id: item.product_group_id,
           supplier_id: item.supplier_id,
           supplier_item_id: item.supplier_item_id,
           is_primary: item.is_primary,
@@ -105,8 +105,8 @@ export function CustomerItemFormDialog({
   );
 
   const handleProductSelect = (value: string) => {
-    // Phase1: product_idはオプション、空文字列の場合はnullを設定
-    setValue("product_id", value && value !== "" ? Number(value) : null);
+    // Phase1: product_group_idはオプション、空文字列の場合はnullを設定
+    setValue("product_group_id", value && value !== "" ? Number(value) : null);
   };
 
   // Phase1: supplier_item_id選択ハンドラ

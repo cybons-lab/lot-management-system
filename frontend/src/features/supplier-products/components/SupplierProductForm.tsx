@@ -35,7 +35,7 @@ import { type Product } from "@/features/products/api";
 import { type Supplier } from "@/features/suppliers/api";
 
 const schema = z.object({
-  product_id: z.coerce.number().optional().nullable(), // Phase1: オプション
+  product_group_id: z.coerce.number().optional().nullable(), // Phase1: オプション
   supplier_id: z.coerce.number().min(1, "仕入先を選択してください"),
   maker_part_no: z.string().min(1, "メーカー品番を入力してください"), // Phase1: 必須
   is_primary: z.boolean().default(false),
@@ -69,7 +69,7 @@ export function SupplierProductForm({
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      product_id: initialData?.product_id ?? null,
+      product_group_id: initialData?.product_group_id ?? null,
       supplier_id: initialData?.supplier_id || 0,
       maker_part_no: initialData?.maker_part_no || "",
       is_primary: initialData?.is_primary || false,
@@ -144,7 +144,7 @@ export function SupplierProductForm({
         {/* 商品構成 (オプション - Phase2用) */}
         <FormField
           control={control}
-          name="product_id"
+          name="product_group_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel>

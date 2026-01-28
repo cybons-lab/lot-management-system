@@ -42,7 +42,7 @@ function createSessionStorageAdapter<T>() {
 export interface ForecastListFilters {
   customer_id: string;
   delivery_place_id: string;
-  product_id: string;
+  product_group_id: string;
 }
 
 /**
@@ -57,7 +57,7 @@ const INITIAL_STATE: ForecastListPageState = {
   filters: {
     customer_id: "",
     delivery_place_id: "",
-    product_id: "",
+    product_group_id: "",
   },
   openGroupKeys: [],
 };

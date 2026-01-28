@@ -21,7 +21,7 @@ type WarehouseSource = {
 };
 
 type InboundPlanLineLike = WarehouseSource & {
-  product_id?: number;
+  product_group_id?: number;
   planned_quantity?: number | string;
   unit?: string;
 };
@@ -42,9 +42,11 @@ const getWarehouseKey = (source: WarehouseSource) =>
 
 export function useWarehouseData(productId: number) {
   const { data: inboundPlans, isLoading: isLoadingInbound } = useInboundPlans({
-    product_id: productId,
+    product_group_id: productId,
   });
-  const { data: lots = [], isLoading: isLoadingLots } = useLotsQuery({ product_id: productId });
+  const { data: lots = [], isLoading: isLoadingLots } = useLotsQuery({
+    product_group_id: productId,
+  });
 
   const isLoading = isLoadingInbound || isLoadingLots;
 
@@ -85,7 +87,7 @@ export function useWarehouseData(productId: number) {
     const lines = Array.isArray(plan.lines) ? plan.lines : [];
     const relevantLines =
       lines.length > 0
-        ? lines.filter((line) => !line.product_id || line.product_id === productId)
+        ? lines.filter((line) => !line.product_group_id || line.product_group_id === productId)
         : [plan];
 
     relevantLines.forEach((line) => {

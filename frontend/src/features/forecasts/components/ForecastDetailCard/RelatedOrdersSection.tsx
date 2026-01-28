@@ -25,7 +25,7 @@ interface OrderSummary {
 
 function useOrderSummary(
   orders: OrderWithLinesResponse[],
-  productId: number,
+  productGroupId: number,
   deliveryPlaceId: number,
 ): OrderSummary {
   return useMemo(() => {
@@ -34,7 +34,10 @@ function useOrderSummary(
 
     for (const order of orders) {
       for (const line of order.lines || []) {
-        if (line.product_id === productId && line.delivery_place_id === deliveryPlaceId) {
+        if (
+          line.product_group_id === productGroupId &&
+          line.delivery_place_id === deliveryPlaceId
+        ) {
           totalRequired += Number(line.order_quantity || 0);
           const allocatedLots =
             (line as { allocated_lots?: { allocated_qty?: number }[] }).allocated_lots || [];
@@ -48,7 +51,7 @@ function useOrderSummary(
     }
 
     return { totalRequired, totalAllocated, count: orders.length };
-  }, [orders, productId, deliveryPlaceId]);
+  }, [orders, productGroupId, deliveryPlaceId]);
 }
 
 function SummaryHeader({
@@ -120,13 +123,13 @@ function SummaryHeader({
 
 function OrderSummaryRowWrapper({
   order,
-  targetProductId,
+  targetProductGroupId,
   targetDeliveryPlaceId,
   hoveredDate,
   onDateHover,
 }: {
   order: OrderWithLinesResponse;
-  targetProductId: number;
+  targetProductGroupId: number;
   targetDeliveryPlaceId: number;
   hoveredDate?: string | null;
   onDateHover?: (date: string | null) => void;
@@ -136,7 +139,7 @@ function OrderSummaryRowWrapper({
   return (
     <OrderSummaryRow
       order={order}
-      targetProductId={targetProductId}
+      targetProductGroupId={targetProductGroupId}
       targetDeliveryPlaceId={targetDeliveryPlaceId}
       logic={logic}
       hoveredDate={hoveredDate}
@@ -154,7 +157,7 @@ export function RelatedOrdersSection({
   const orders = useMemo(() => group.related_orders || [], [group.related_orders]);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const summary = useOrderSummary(orders, group_key.product_id, group_key.delivery_place_id);
+  const summary = useOrderSummary(orders, group_key.product_group_id, group_key.delivery_place_id);
 
   if (orders.length === 0) {
     return (
@@ -170,7 +173,7 @@ export function RelatedOrdersSection({
       ? Math.round((summary.totalAllocated / summary.totalRequired) * 100)
       : 0;
 
-  const ordersPageLink = `/orders?customer_id=${group_key.customer_id}&product_id=${group_key.product_id}&delivery_place_id=${group_key.delivery_place_id}`;
+  const ordersPageLink = `/orders?customer_id=${group_key.customer_id}&product_group_id=${group_key.product_group_id}&delivery_place_id=${group_key.delivery_place_id}`;
 
   return (
     <div className="mt-8 rounded-lg border border-slate-200 bg-white">
@@ -189,7 +192,7 @@ export function RelatedOrdersSection({
             <OrderSummaryRowWrapper
               key={order.id}
               order={order}
-              targetProductId={group_key.product_id}
+              targetProductGroupId={group_key.product_group_id}
               targetDeliveryPlaceId={group_key.delivery_place_id}
               hoveredDate={hoveredDate}
               onDateHover={onDateHover}

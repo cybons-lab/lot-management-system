@@ -22,7 +22,7 @@ export function RowActions({ item, onOpenQuickIntake, onViewDetail }: RowActions
           onClick={(e) => {
             e.stopPropagation();
             navigate(
-              `/inventory/adhoc/new?product_id=${item.product_id}&warehouse_id=${item.warehouse_id}`,
+              `/inventory/adhoc/new?product_group_id=${item.product_group_id}&warehouse_id=${item.warehouse_id}`,
             );
           }}
         >
@@ -34,7 +34,7 @@ export function RowActions({ item, onOpenQuickIntake, onViewDetail }: RowActions
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            onViewDetail(item.product_id, item.warehouse_id);
+            onViewDetail(item.product_group_id, item.warehouse_id);
           }}
         >
           詳細
@@ -62,7 +62,7 @@ export function RowActions({ item, onOpenQuickIntake, onViewDetail }: RowActions
         size="sm"
         onClick={(e) => {
           e.stopPropagation();
-          onViewDetail(item.product_id, item.warehouse_id);
+          onViewDetail(item.product_group_id, item.warehouse_id);
         }}
       >
         詳細
