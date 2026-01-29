@@ -132,6 +132,8 @@ services:
           action: sync
         - path: ./frontend/package.json
           action: rebuild
+        - path: ./frontend/package-lock.json
+          action: rebuild
         - path: ./frontend/pnpm-lock.yaml
           action: rebuild
         - path: ./frontend/yarn.lock
