@@ -92,14 +92,14 @@ def upgrade() -> None:
             existing_type=postgresql.TIMESTAMP(),
             type_=sa.DateTime(timezone=True),
             existing_nullable=False,
-            existing_server_default=sa.text("CURRENT_TIMESTAMP"),
+            existing_server_default=sa.text("CURRENT_TIMESTAMP"),  # type: ignore[arg-type]
         )
         batch_op.alter_column(
             "updated_at",
             existing_type=postgresql.TIMESTAMP(),
             type_=sa.DateTime(timezone=True),
             existing_nullable=False,
-            existing_server_default=sa.text("CURRENT_TIMESTAMP"),
+            existing_server_default=sa.text("CURRENT_TIMESTAMP"),  # type: ignore[arg-type]
         )
         batch_op.drop_index(
             batch_op.f("idx_order_lines_external_product_code"),
@@ -112,14 +112,14 @@ def upgrade() -> None:
             existing_type=postgresql.TIMESTAMP(),
             type_=sa.DateTime(timezone=True),
             existing_nullable=False,
-            existing_server_default=sa.text("CURRENT_TIMESTAMP"),
+            existing_server_default=sa.text("CURRENT_TIMESTAMP"),  # type: ignore[arg-type]
         )
         batch_op.alter_column(
             "updated_at",
             existing_type=postgresql.TIMESTAMP(),
             type_=sa.DateTime(timezone=True),
             existing_nullable=False,
-            existing_server_default=sa.text("CURRENT_TIMESTAMP"),
+            existing_server_default=sa.text("CURRENT_TIMESTAMP"),  # type: ignore[arg-type]
         )
         batch_op.alter_column(
             "locked_at",
@@ -338,14 +338,14 @@ def downgrade() -> None:
             existing_type=sa.DateTime(timezone=True),
             type_=postgresql.TIMESTAMP(),
             existing_nullable=False,
-            existing_server_default=sa.text("CURRENT_TIMESTAMP"),
+            existing_server_default=sa.text("CURRENT_TIMESTAMP"),  # type: ignore[arg-type]
         )
         batch_op.alter_column(
             "created_at",
             existing_type=sa.DateTime(timezone=True),
             type_=postgresql.TIMESTAMP(),
             existing_nullable=False,
-            existing_server_default=sa.text("CURRENT_TIMESTAMP"),
+            existing_server_default=sa.text("CURRENT_TIMESTAMP"),  # type: ignore[arg-type]
         )
 
     with op.batch_alter_table("order_lines", schema=None) as batch_op:
@@ -360,14 +360,14 @@ def downgrade() -> None:
             existing_type=sa.DateTime(timezone=True),
             type_=postgresql.TIMESTAMP(),
             existing_nullable=False,
-            existing_server_default=sa.text("CURRENT_TIMESTAMP"),
+            existing_server_default=sa.text("CURRENT_TIMESTAMP"),  # type: ignore[arg-type]
         )
         batch_op.alter_column(
             "created_at",
             existing_type=sa.DateTime(timezone=True),
             type_=postgresql.TIMESTAMP(),
             existing_nullable=False,
-            existing_server_default=sa.text("CURRENT_TIMESTAMP"),
+            existing_server_default=sa.text("CURRENT_TIMESTAMP"),  # type: ignore[arg-type]
         )
 
     with op.batch_alter_table("lot_receipts", schema=None) as batch_op:

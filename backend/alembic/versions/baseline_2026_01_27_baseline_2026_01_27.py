@@ -32,8 +32,8 @@ def upgrade() -> None:
         # Execute the SQL dump using raw connection to avoid SQLAlchemy/Alembic parsing
         # (This avoids issues with colons in strings being treated as bind parameters)
         bind = op.get_bind()
-        raw_connection = bind.connection
-        with raw_connection.cursor() as cursor:
+        raw_connection = bind.connection  # type: ignore[attr-defined]
+        with raw_connection.cursor() as cursor:  # type: ignore[attr-defined]
             cursor.execute(sql)
     else:
         # In case the file is missing (e.g. in some environments),

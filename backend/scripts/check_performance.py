@@ -15,9 +15,9 @@ from app.application.services.allocations.confirm import confirm_reservations_ba
 from app.infrastructure.external import sap_gateway
 from app.infrastructure.external.sap_gateway import SapRegistrationResult
 from app.infrastructure.persistence.models import (
-    Lot,
+    LotReceipt,
     LotReservation,
-    Product,
+    SupplierItem,
     Warehouse,
 )
 from app.infrastructure.persistence.models.base_model import Base
@@ -31,13 +31,13 @@ db = SessionLocal()
 warehouse = Warehouse(
     id=1, warehouse_code="WH1", warehouse_name="Test WH", warehouse_type="internal"
 )
-product = Product(id=1, maker_part_code="P1", product_name="Test Prod", base_unit="EA")
-lot = Lot(
+product = SupplierItem(id=1, maker_part_no="P1", product_name="Test Prod", base_unit="EA")
+lot = LotReceipt(
     id=1,
     lot_number="L1",
     product=product,
     warehouse=warehouse,
-    current_quantity=Decimal("100000"),
+    received_quantity=Decimal("100000"),
     received_date=date.today(),
     unit="EA",
     status="active",
