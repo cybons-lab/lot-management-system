@@ -5,13 +5,15 @@ Revises: a9f36409b674
 Create Date: 2026-01-29 20:11:55.154327
 
 """
-from alembic import op
+
 import sqlalchemy as sa
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = 'e1ffaa651bdb'
-down_revision = 'a9f36409b674'
+revision = "e1ffaa651bdb"
+down_revision = "a9f36409b674"
 branch_labels = None
 depends_on = None
 
@@ -30,32 +32,30 @@ def upgrade() -> None:
     - Multiple NULL lot_numbers are allowed (they are identified by id/receipt_key)
     """
     # Step 1: Drop existing unique constraint
-    op.drop_constraint('uq_lot_master_number_product', 'lot_master', type_='unique')
+    op.drop_constraint("uq_lot_master_number_product", "lot_master", type_="unique")
 
     # Step 2: Make lot_number nullable
-    op.alter_column('lot_master', 'lot_number',
-                    existing_type=sa.String(100),
-                    nullable=True)
+    op.alter_column("lot_master", "lot_number", existing_type=sa.String(100), nullable=True)
 
     # Step 3: Add partial unique index (enforces uniqueness only when lot_number IS NOT NULL)
     op.create_index(
-        'idx_lot_master_number_product_group_unique',
-        'lot_master',
-        ['lot_number', 'product_group_id'],
+        "idx_lot_master_number_product_group_unique",
+        "lot_master",
+        ["lot_number", "product_group_id"],
         unique=True,
-        postgresql_where=sa.text('lot_number IS NOT NULL')
+        postgresql_where=sa.text("lot_number IS NOT NULL"),
     )
 
 
 def downgrade() -> None:
     """Revert lot_number to NOT NULL with standard unique constraint."""
     # Step 1: Drop partial unique index
-    op.drop_index('idx_lot_master_number_product_group_unique', 'lot_master')
+    op.drop_index("idx_lot_master_number_product_group_unique", "lot_master")
 
     # Step 2: Make lot_number NOT NULL (may fail if NULL values exist)
-    op.alter_column('lot_master', 'lot_number',
-                    existing_type=sa.String(100),
-                    nullable=False)
+    op.alter_column("lot_master", "lot_number", existing_type=sa.String(100), nullable=False)
 
     # Step 3: Recreate original unique constraint
-    op.create_unique_constraint('uq_lot_master_number_product', 'lot_master', ['lot_number', 'product_group_id'])
+    op.create_unique_constraint(
+        "uq_lot_master_number_product", "lot_master", ["lot_number", "product_group_id"]
+    )

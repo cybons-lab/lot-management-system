@@ -155,8 +155,11 @@ class VLotDetails(Base):
     lot_id: Mapped[int] = mapped_column("lot_id", BigInteger, primary_key=True)
     lot_number: Mapped[str] = mapped_column(String(100))
     product_group_id: Mapped[int] = mapped_column(BigInteger)
-    maker_part_code: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
-    product_name: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
+    product_code: Mapped[str] = mapped_column(String)  # New in Phase 2
+    maker_part_no: Mapped[str] = mapped_column(String)  # Alias for backward compatibility
+    maker_part_code: Mapped[str] = mapped_column(String)  # Alias for compatibility
+    product_name: Mapped[str] = mapped_column(String)  # Alias for compatibility
+    display_name: Mapped[str] = mapped_column(String)  # New in Phase 2
     warehouse_id: Mapped[int] = mapped_column(BigInteger)
     warehouse_code: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
     warehouse_name: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null

@@ -218,9 +218,11 @@ def _get_or_create_product(db: Session, scenario: InventoryScenario) -> Product:
     if product:
         return product
 
+    supplier = _get_or_create_supplier(db)
     product = Product(
-        maker_part_code=maker_part_code,
-        product_name=f"Inventory Scenario {scenario.key}",
+        supplier_id=supplier.id,
+        maker_part_no=maker_part_code,
+        display_name=f"Inventory Scenario {scenario.key}",
         base_unit="PCS",
         internal_unit="PCS",
         external_unit="PCS",

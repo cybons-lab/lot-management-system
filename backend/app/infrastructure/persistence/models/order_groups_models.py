@@ -27,6 +27,7 @@ from .base_model import Base
 if TYPE_CHECKING:
     from .masters_models import Customer
     from .orders_models import OrderLine
+    from .supplier_item_model import SupplierItem
 
 
 class OrderGroup(Base):
@@ -77,7 +78,7 @@ class OrderGroup(Base):
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
-    product_group: Mapped[ProductGroup] = relationship("SupplierItem")
+    product_group: Mapped[SupplierItem] = relationship("SupplierItem")
     order_lines: Mapped[list[OrderLine]] = relationship(
         "OrderLine",
         back_populates="order_group",

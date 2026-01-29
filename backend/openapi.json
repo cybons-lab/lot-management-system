@@ -7984,7 +7984,7 @@
           "masters"
         ],
         "summary": "List Supplier Items",
-        "description": "仕入先品目一覧を取得.\n\nsupplier_itemsテーブルから仕入先品目情報を取得します。\nデフォルトでは有効なレコードのみを返します。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限（最大1000件）\n    supplier_id: 仕入先IDでフィルタ\n    include_inactive: 論理削除済みレコードを含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    仕入先品目のリスト（製品情報と仕入先情報を含む）",
+        "description": "仕入先品目一覧を取得.\n\nsupplier_itemsテーブルから仕入先品目情報を取得します。\nデフォルトでは有効なレコードのみを返します。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限（最大1000件）\n    supplier_id: 仕入先IDでフィルタ\n    include_inactive: 論理削除済みレコードを含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    仕入先品目のリスト（仕入先情報を含む）",
         "operationId": "list_supplier_items_api_masters_supplier_items_get",
         "parameters": [
           {
@@ -8063,7 +8063,7 @@
           "masters"
         ],
         "summary": "Create Supplier Item",
-        "description": "仕入先品目を新規作成.\n\n仕入先と品目（メーカー品番）の関連を登録します。\n\nArgs:\n    data: 仕入先品目作成データ\n    db: データベースセッション\n\nReturns:\n    SupplierItemResponse: 作成された仕入先品目情報\n\nRaises:\n    HTTPException: 仕入先-製品のペアが既に存在する場合は400",
+        "description": "仕入先品目を新規作成.\n\n仕入先と品目（メーカー品番）の関連を登録します。\n\nArgs:\n    data: 仕入先品目作成データ\n    db: データベースセッション\n\nReturns:\n    SupplierItemResponse: 作成された仕入先品目情報\n\nRaises:\n    HTTPException: 仕入先-メーカー品番のペアが既に存在する場合は400",
         "operationId": "create_supplier_item_api_masters_supplier_items_post",
         "requestBody": {
           "required": true,
@@ -8147,7 +8147,7 @@
           "masters"
         ],
         "summary": "Get Supplier Item",
-        "description": "仕入先品目詳細を取得.\n\nArgs:\n    id: 仕入先品目ID\n    db: データベースセッション\n\nReturns:\n    SupplierItemResponse: 仕入先品目詳細（製品情報と仕入先情報を含む）\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
+        "description": "仕入先品目詳細を取得.\n\nArgs:\n    id: 仕入先品目ID\n    db: データベースセッション\n\nReturns:\n    SupplierItemResponse: 仕入先品目詳細（仕入先情報を含む）\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
         "operationId": "get_supplier_item_api_masters_supplier_items__id__get",
         "parameters": [
           {
@@ -24963,7 +24963,7 @@
           "maker_part_code": {
             "type": "string",
             "title": "Maker Part Code",
-            "description": "Internal product code (products.maker_part_code)"
+            "description": "Internal product code (products.maker_part_no)"
           },
           "supplier_code": {
             "anyOf": [
@@ -33441,7 +33441,7 @@
           "maker_part_code": {
             "type": "string",
             "title": "Maker Part Code",
-            "description": "Internal product code (products.maker_part_code)"
+            "description": "Internal product code (products.maker_part_no)"
           },
           "supplier_code": {
             "type": "string",
@@ -33740,7 +33740,7 @@
           "maker_part_code": {
             "type": "string",
             "title": "Maker Part Code",
-            "description": "Product code (products.maker_part_code)"
+            "description": "Product code (products.maker_part_no)"
           },
           "product_name": {
             "anyOf": [

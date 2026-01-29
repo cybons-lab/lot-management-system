@@ -435,7 +435,7 @@ class InventoryService:
                 w.warehouse_name,
                 w.warehouse_code
             FROM v_inventory_summary v
-            LEFT JOIN products p ON v.product_group_id = p.id
+            LEFT JOIN supplier_items p ON v.product_group_id = p.id
             LEFT JOIN warehouses w ON v.warehouse_id = w.id
             WHERE v.product_group_id = :product_group_id AND v.warehouse_id = :warehouse_id
         """
@@ -706,14 +706,13 @@ class InventoryService:
     ) -> InventoryFilterOptions:
         """Get filter options based on master relationships (legacy behavior)."""
         # 1. Products (filtered by supplier if selected)
-        p_stmt = select(SupplierItem.maker_part_no).where(SupplierItem.valid_to >= "9999-12-31")
+        p_stmt = select(
+            SupplierItem.id, SupplierItem.maker_part_no, SupplierItem.display_name
+        ).where(SupplierItem.valid_to >= "9999-12-31")
+
         if supplier_id:
             # Filter products supplied by this supplier
-            p_stmt = (
-                p_stmt.join(SupplierItem, SupplierItem.product_group_id == SupplierItem.id)
-                .where(SupplierItem.supplier_id == supplier_id)
-                .where(SupplierItem.valid_to >= "9999-12-31")
-            )
+            p_stmt = p_stmt.where(SupplierItem.supplier_id == supplier_id)
 
         p_rows = self.db.execute(p_stmt).all()
         products = [
@@ -738,7 +737,7 @@ class InventoryService:
             # Filter suppliers supplying this product
             s_stmt = (
                 s_stmt.join(SupplierItem, SupplierItem.supplier_id == Supplier.id)
-                .where(SupplierItem.product_group_id == product_group_id)
+                .where(SupplierItem.id == product_group_id)
                 .where(SupplierItem.valid_to >= "9999-12-31")
             )
 
@@ -833,7 +832,7 @@ class InventoryService:
                 p.maker_part_no AS code,
                 p.display_name AS name
             FROM stock_base sb
-            JOIN products p ON sb.product_group_id = p.id
+            JOIN supplier_items p ON sb.product_group_id = p.id
             WHERE p.valid_to >= '9999-12-31'
             GROUP BY p.id, p.maker_part_no, p.display_name
 

@@ -11,6 +11,7 @@ from app.application.services.masters.uom_conversion_service import UomConversio
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.masters_models import ProductUomConversion
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.masters_schema import BulkUpsertResponse
 from app.presentation.schemas.masters.uom_conversions_schema import (
@@ -38,10 +39,10 @@ def list_uom_conversions(
         ProductUomConversion.product_group_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
-        ProductGroup.maker_part_no,
-        ProductGroup.display_name,
+        SupplierItem.maker_part_no,
+        SupplierItem.display_name,
         ProductUomConversion.valid_to,
-    ).join(ProductUomConversion.product_group_id == ProductGroup.id)
+    ).join(ProductUomConversion.product_group_id == SupplierItem.id)
 
     if product_group_id is not None:
         query = query.where(ProductUomConversion.product_group_id == product_group_id)
@@ -75,9 +76,9 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
         ProductUomConversion.product_group_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
-        ProductGroup.maker_part_no,
-        ProductGroup.display_name,
-    ).join(ProductUomConversion.product_group_id == ProductGroup.id)
+        SupplierItem.maker_part_no,
+        SupplierItem.display_name,
+    ).join(ProductUomConversion.product_group_id == SupplierItem.id)
 
     results = db.execute(query).all()
 
@@ -113,7 +114,11 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
     service = UomConversionService(db)
 
     # Check if product exists
-    product = db.query(ProductGroup).filter(ProductGroup.id == data.product_group_id).first()
+    product = (
+        db.query(SupplierItem)
+        .filter(SupplierItem.id == data.product_group_id)
+        .first()
+    )
     if not product:
         raise HTTPException(status_code=400, detail="Product not found")
 

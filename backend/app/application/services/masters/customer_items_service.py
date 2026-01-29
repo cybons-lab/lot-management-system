@@ -41,7 +41,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
     def _enrich_item(self, item: CustomerItem) -> dict:
         """Enrich customer item with related names."""
-        self.db.refresh(item, attribute_names=["customer", "product", "supplier"])
+        self.db.refresh(item, attribute_names=["customer", "product_group", "supplier"])
         return {
             "id": item.id,
             "customer_id": item.customer_id,

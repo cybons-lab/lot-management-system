@@ -383,7 +383,7 @@ class OrderLine(Base):
     order_group: Mapped[OrderGroup | None] = relationship(
         "OrderGroup", back_populates="order_lines"
     )
-    product_group: Mapped[ProductGroup] = relationship("SupplierItem", back_populates="order_lines")
+    product_group: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="order_lines")
 
     # P3: Relationship to LotReservation for efficient loading (avoid N+1)
     lot_reservations: Mapped[list[LotReservation]] = relationship(

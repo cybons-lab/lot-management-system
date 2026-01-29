@@ -76,7 +76,7 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
         warehouses = generate_warehouses(db, options)
         suppliers = generate_suppliers(db, options)
         customers, delivery_places = generate_customers_and_delivery_places(db, options)
-        products = generate_products(db, options)
+        products = generate_products(db, suppliers, options)
 
         generate_customer_items(db, customers, products, suppliers, delivery_places, options)
 

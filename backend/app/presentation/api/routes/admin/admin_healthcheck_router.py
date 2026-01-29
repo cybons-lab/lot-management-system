@@ -52,7 +52,10 @@ def get_db_counts(db: Session = Depends(get_db)):
     # counts["lot_current_stock"] = ...
 
     masters_total = (
-        counts["customers"] + counts["products"] + counts["warehouses"] + counts["suppliers"]
+        counts["customers"]
+        + counts["supplier_items"]
+        + counts["warehouses"]
+        + counts["suppliers"]
     )
     inventory_total = counts["lots"] + counts["stock_movements"]
     orders_total = counts["orders"] + counts["order_lines"] + counts["reservations"]
@@ -87,8 +90,11 @@ def get_masters_health(db: Session = Depends(get_db)):
     result["customers"] = {"count": customer_count, "sample_codes": customer_codes}
 
     # 製品
-    product_count = db.scalar(select(func.count()).select_from(Product)) or 0
-    product_codes = [p for (p,) in db.execute(select(Product.product_code).limit(5)).all()]  # type: ignore[attr-defined]
+    product_count = db.scalar(select(func.count()).select_from(SupplierItem)) or 0
+    product_codes = [
+        p
+        for (p,) in db.execute(select(SupplierItem.maker_part_no).limit(5)).all()
+    ]
     result["products"] = {"count": product_count, "sample_codes": product_codes}
 
     # 倉庫

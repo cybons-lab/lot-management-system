@@ -238,7 +238,7 @@ WHERE si.supplier_id = 5 AND si.maker_part_no = 'SUZ-BOLT-001';
 
 ### Phase2（進行中）: UIラベル明確化 & フィールド名統一
 
-#### Phase2-A: UIラベル修正（進行中）
+#### Phase2-A: UIラベル修正（完了）
 在庫画面で `product_code` を「メーカー品番」と明示表示する
 
 **完了:**
@@ -246,13 +246,11 @@ WHERE si.supplier_id = 5 AND si.maker_part_no = 'SUZ-BOLT-001';
 - ✅ ProductGroupHeader.tsx: label「メーカー品番」
 - ✅ InventoryTableColumns.tsx: title="メーカー品番"
 - ✅ LotDetailPage.tsx: 「メーカー品番: xxx」形式
-
-**残り:**
-- ⬜ LotCreateForm.tsx:65 - 「先方品番 *」→「メーカー品番 *」
-- ⬜ lot-columns.tsx:57 - 「先方品番」→「メーカー品番」
-- ⬜ useLotColumns.tsx:123 - 「先方品番」→「メーカー品番」
-- ⬜ LotEditFields.tsx:24 - 「先方品番」→「メーカー品番」
-- ⬜ excel-view/ProductHeader.tsx:98 - 「先方品番」→「メーカー品番」
+- ✅ LotCreateForm.tsx:65 - 「メーカー品番 *」
+- ✅ lot-columns.tsx:57 - 「メーカー品番」
+- ✅ useLotColumns.tsx:123 - 「メーカー品番」
+- ✅ LotEditFields.tsx:24 - 「メーカー品番」
+- ✅ ProductHeader.tsx:98 - 「先方品番」（正しい：customerPartNoを表示）
 
 #### Phase2-B: フィールド名統一（計画）
 対称性のあるフィールド名に統一する

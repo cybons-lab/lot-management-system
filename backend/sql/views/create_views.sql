@@ -100,11 +100,14 @@ FROM public.delivery_places d;
 -- 製品コード→IDマッピング（論理削除対応）
 CREATE VIEW public.v_product_code_to_id AS
 SELECT
-    p.maker_part_code AS product_code,
+    p.maker_part_no AS product_code,
+    p.maker_part_no AS maker_part_code,
+    p.maker_part_no AS maker_part_no, -- Alias for backward compatibility
     p.id AS product_group_id,
-    COALESCE(p.product_name, '[削除済み製品]') AS product_name,
+    COALESCE(p.display_name, '[削除済み製品]') AS product_name,
+    COALESCE(p.display_name, '[削除済み製品]') AS display_name,
     CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS is_deleted
-FROM public.product_groups p;
+FROM public.supplier_items p;
 
 -- フォーキャスト-受注ペアビュー
 CREATE VIEW public.v_forecast_order_pairs AS
@@ -156,8 +159,11 @@ SELECT
     lm.id AS lot_master_id,
     lm.lot_number,
     lr.product_group_id,
-    p.maker_part_code AS product_code,
-    p.product_name,
+    p.maker_part_no AS product_code,
+    p.maker_part_no AS maker_part_code,
+    p.maker_part_no AS maker_part_no, -- Alias for backward compatibility
+    p.display_name AS product_name,
+    p.display_name AS display_name,
     lr.warehouse_id,
     w.warehouse_code,
     w.warehouse_name,
@@ -193,7 +199,7 @@ SELECT
     END AS days_to_expiry
 FROM public.lot_receipts lr
 JOIN public.lot_master lm ON lr.lot_master_id = lm.id
-LEFT JOIN public.product_groups p ON lr.product_group_id = p.id
+LEFT JOIN public.supplier_items p ON lr.product_group_id = p.id
 LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON lm.supplier_id = s.id
 LEFT JOIN (
@@ -260,8 +266,11 @@ SELECT
     lr.id AS lot_id,
     lm.lot_number,
     lr.product_group_id,
-    COALESCE(p.maker_part_code, '') AS maker_part_code,
-    COALESCE(p.product_name, '[削除済み製品]') AS product_name,
+    COALESCE(p.maker_part_no, '') AS product_code,
+    COALESCE(p.maker_part_no, '') AS maker_part_code,
+    COALESCE(p.maker_part_no, '') AS maker_part_no, -- Alias for backward compatibility
+    COALESCE(p.display_name, '[削除済み製品]') AS product_name,
+    COALESCE(p.display_name, '[削除済み製品]') AS display_name,
     lr.warehouse_id,
     COALESCE(w.warehouse_code, '') AS warehouse_code,
     COALESCE(w.warehouse_name, '[削除済み倉庫]') AS warehouse_name,
@@ -331,7 +340,7 @@ FROM public.lot_receipts lr
 JOIN public.lot_master lm ON lr.lot_master_id = lm.id
 LEFT JOIN public.v_lot_allocations la ON lr.id = la.lot_id
 LEFT JOIN public.v_lot_active_reservations lar ON lr.id = lar.lot_id
-LEFT JOIN public.product_groups p ON lr.product_group_id = p.id
+LEFT JOIN public.supplier_items p ON lr.product_group_id = p.id
 LEFT JOIN public.warehouses w ON lr.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON lm.supplier_id = s.id
 LEFT JOIN public.supplier_items si ON lr.supplier_item_id = si.id
@@ -392,8 +401,11 @@ SELECT
     ol.delivery_place_id,
     ol.status AS line_status,
     ol.shipping_document_text,
-    COALESCE(p.maker_part_code, '') AS product_code,
-    COALESCE(p.product_name, '[削除済み製品]') AS product_name,
+    COALESCE(p.maker_part_no, '') AS product_code,
+    COALESCE(p.maker_part_no, '') AS maker_part_code,
+    COALESCE(p.maker_part_no, '') AS maker_part_no, -- Alias for backward compatibility
+    COALESCE(p.display_name, '[削除済み製品]') AS product_name,
+    COALESCE(p.display_name, '[削除済み製品]') AS display_name,
     p.internal_unit AS product_internal_unit,
     p.external_unit AS product_external_unit,
     p.qty_per_internal_unit AS product_qty_per_internal_unit,
@@ -409,7 +421,7 @@ SELECT
 FROM public.orders o
 LEFT JOIN public.customers c ON o.customer_id = c.id
 LEFT JOIN public.order_lines ol ON ol.order_id = o.id
-LEFT JOIN public.product_groups p ON ol.product_group_id = p.id
+LEFT JOIN public.supplier_items p ON ol.product_group_id = p.id
 LEFT JOIN public.delivery_places dp ON ol.delivery_place_id = dp.id
 LEFT JOIN public.customer_items ci ON ci.customer_id = o.customer_id AND ci.product_group_id = ol.product_group_id
 LEFT JOIN public.suppliers s ON ci.supplier_id = s.id

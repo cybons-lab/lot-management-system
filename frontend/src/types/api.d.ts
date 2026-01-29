@@ -2884,7 +2884,7 @@ export interface paths {
      *         db: データベースセッション
      *
      *     Returns:
-     *         仕入先品目のリスト（製品情報と仕入先情報を含む）
+     *         仕入先品目のリスト（仕入先情報を含む）
      */
     get: operations["list_supplier_items_api_masters_supplier_items_get"];
     put?: never;
@@ -2902,7 +2902,7 @@ export interface paths {
      *         SupplierItemResponse: 作成された仕入先品目情報
      *
      *     Raises:
-     *         HTTPException: 仕入先-製品のペアが既に存在する場合は400
+     *         HTTPException: 仕入先-メーカー品番のペアが既に存在する場合は400
      */
     post: operations["create_supplier_item_api_masters_supplier_items_post"];
     delete?: never;
@@ -2954,7 +2954,7 @@ export interface paths {
      *         db: データベースセッション
      *
      *     Returns:
-     *         SupplierItemResponse: 仕入先品目詳細（製品情報と仕入先情報を含む）
+     *         SupplierItemResponse: 仕入先品目詳細（仕入先情報を含む）
      *
      *     Raises:
      *         HTTPException: レコードが見つからない場合は404
@@ -9744,7 +9744,7 @@ export interface components {
       customer_part_no: string;
       /**
        * Maker Part Code
-       * @description Internal product code (products.maker_part_code)
+       * @description Internal product code (products.maker_part_no)
        */
       maker_part_code: string;
       /**
@@ -13252,7 +13252,7 @@ export interface components {
       customer_part_code: string;
       /**
        * Maker Part Code
-       * @description Internal product code (products.maker_part_code)
+       * @description Internal product code (products.maker_part_no)
        */
       maker_part_code: string;
       /**
@@ -13387,7 +13387,7 @@ export interface components {
     ProductSupplierImportRow: {
       /**
        * Maker Part Code
-       * @description Product code (products.maker_part_code)
+       * @description Product code (products.maker_part_no)
        */
       maker_part_code: string;
       /**
