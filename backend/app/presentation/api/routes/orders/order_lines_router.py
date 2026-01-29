@@ -27,7 +27,7 @@ class OrderLineExportRow:
         self.得意先コード = line.customer_code or ""
         self.得意先名 = line.customer_name or ""
         self.先方品番 = line.product_code or ""
-        self.商品名 = line.product_name or ""
+        self.商品名 = line.display_name or ""
         self.納入先 = line.delivery_place_name or ""
         self.受注数量 = float(line.order_quantity)
         self.単位 = line.unit

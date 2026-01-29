@@ -49,8 +49,8 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "customer_name": item.customer.customer_name,
             "customer_part_no": item.customer_part_no,
             "product_group_id": item.product_group_id,
-            "product_code": item.product_group.maker_part_code,
-            "product_name": item.product_group.product_name,
+            "product_code": item.product_group.maker_part_no,
+            "product_name": item.product_group.display_name,
             "supplier_id": item.supplier_id,
             "supplier_item_id": item.supplier_item_id,
             "supplier_code": item.supplier.supplier_code if item.supplier else None,
@@ -95,8 +95,8 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 CustomerItem,
                 Customer.customer_code,
                 Customer.customer_name,
-                SupplierItem.product_name,
-                SupplierItem.maker_part_code,
+                SupplierItem.display_name,
+                SupplierItem.maker_part_no,
                 Supplier.supplier_code,
                 Supplier.supplier_name,
             )
@@ -131,8 +131,8 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 "customer_name": r.customer_name,
                 "customer_part_no": r.CustomerItem.customer_part_no,
                 "product_group_id": r.CustomerItem.product_group_id,
-                "product_code": r.maker_part_code,
-                "product_name": r.product_name,
+                "product_code": r.maker_part_no,
+                "product_name": r.display_name,
                 "supplier_id": r.CustomerItem.supplier_id,
                 "supplier_item_id": r.CustomerItem.supplier_item_id,
                 "supplier_code": r.supplier_code,
@@ -356,8 +356,8 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         customer_map = {code: id for code, id in customers}
 
         products = (
-            self.db.query(SupplierItem.maker_part_code.id)
-            .filter(SupplierItem.maker_part_code.in_(product_codes))
+            self.db.query(SupplierItem.maker_part_no.id)
+            .filter(SupplierItem.maker_part_no.in_(product_codes))
             .all()
         )
         product_map = {code: id for code, id in products}

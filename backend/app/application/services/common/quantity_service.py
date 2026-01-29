@@ -161,7 +161,7 @@ async def to_internal_qty(
 
     if not conversion:
         raise QuantityConversionError(
-            f"単位換算定義が見つかりません: 製品={product.product_name}, 単位={external_unit_value}"
+            f"単位換算定義が見つかりません: 製品={product.display_name}, 単位={external_unit_value}"
         )
 
     # 3. 換算実行 (internal = external * factor)

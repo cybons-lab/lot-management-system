@@ -312,7 +312,7 @@ def get_allocatable_lots(
                 vld.lot_id,
                 vld.lot_number,
                 vld.product_group_id,
-                p.maker_part_code AS product_code,
+                p.maker_part_no AS product_code,
                 vld.warehouse_id,
                 vld.warehouse_code,
                 vld.current_quantity,
@@ -328,7 +328,7 @@ def get_allocatable_lots(
                 vld.available_quantity > 0
                 AND vld.status = 'active'
                 AND (vld.expiry_date IS NULL OR vld.expiry_date >= CURRENT_DATE)
-                AND (:prod IS NULL OR p.maker_part_code = :prod)
+                AND (:prod IS NULL OR p.maker_part_no = :prod)
                 AND (:wh IS NULL OR vld.warehouse_code = :wh)
             ORDER BY
                 vld.expiry_date NULLS LAST,

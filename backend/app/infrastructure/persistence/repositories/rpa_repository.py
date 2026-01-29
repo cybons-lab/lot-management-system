@@ -481,7 +481,7 @@ class RpaRepository:
 
     def find_product_by_maker_part_code(self, code: str) -> SupplierItem | None:
         """メーカー品番で商品検索."""
-        return self.db.query(SupplierItem).filter(SupplierItem.maker_part_code == code).first()
+        return self.db.query(SupplierItem).filter(SupplierItem.maker_part_no == code).first()
 
     def find_active_lots(
         self,

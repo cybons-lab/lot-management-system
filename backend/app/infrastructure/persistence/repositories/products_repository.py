@@ -83,7 +83,7 @@
 9. update() がシンプルな理由（L51-54）
    理由: SQLAlchemy の自動追跡機能
    実装:
-   - product.product_name = "新しい名前"
+   - product.display_name = "新しい名前"
    - flush() → 自動的に UPDATE SQL 発行
    メリット:
    - 明示的な update() 呼び出し不要
@@ -123,8 +123,8 @@ class ProductRepository:
             pattern = f"%{q}%"
             filters.append(
                 or_(
-                    Product.maker_part_code.ilike(pattern),
-                    Product.product_name.ilike(pattern),
+                    Product.maker_part_no.ilike(pattern),
+                    Product.display_name.ilike(pattern),
                 )
             )
 

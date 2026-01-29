@@ -323,7 +323,7 @@ class OrderService:
 
         if product_code:
             stmt = stmt.join(Product, OrderLine.product_group_id == Product.id).where(
-                Product.maker_part_code == product_code
+                Product.maker_part_no == product_code
             )
 
         if status:
@@ -583,7 +583,7 @@ class OrderService:
                 if detail:
                     line.supplier_name = detail.supplier_name
                     line.product_code = detail.product_code
-                    line.product_name = detail.product_name
+                    line.display_name = detail.display_name
                     line.product_internal_unit = detail.product_internal_unit
                     line.product_external_unit = detail.product_external_unit
                     line.product_qty_per_internal_unit = float(
@@ -624,7 +624,7 @@ class OrderService:
             if detail:
                 line.supplier_name = detail.supplier_name
                 line.product_code = detail.product_code
-                line.product_name = detail.product_name
+                line.display_name = detail.display_name
                 line.product_internal_unit = detail.product_internal_unit
                 line.product_external_unit = detail.product_external_unit
                 line.product_qty_per_internal_unit = float(

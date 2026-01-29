@@ -158,7 +158,7 @@ class LotRepository:
             min_quantity: Minimum available quantity threshold
             excluded_origin_types: List of origin_types to exclude (e.g., ['sample', 'adhoc'])
         """
-        product = self.db.query(Product).filter(Product.maker_part_code == product_code).first()
+        product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
         if not product:
             return []
 
@@ -211,14 +211,14 @@ class LotRepository:
             supplier_stmt = select(Supplier).where(Supplier.supplier_code == supplier_code)
             supplier = self.db.execute(supplier_stmt).scalar_one_or_none()
         if product_code:
-            product_stmt = select(Product).where(Product.maker_part_code == product_code)
+            product_stmt = select(Product).where(Product.maker_part_no == product_code)
             product = self.db.execute(product_stmt).scalar_one_or_none()
 
         lot = LotReceipt(
             supplier_id=supplier.id if supplier else None,
             supplier_code=supplier.supplier_code if supplier else supplier_code,
             product_group_id=product.id if product else None,
-            product_code=product.maker_part_code if product else product_code,
+            product_code=product.maker_part_no if product else product_code,
             lot_number=lot_number,
             warehouse_id=warehouse_id,
             warehouse_code=warehouse.warehouse_code if warehouse else None,
@@ -390,7 +390,7 @@ class LotRepository:
                     lot_id=lot.id,
                     lot_code=lot.lot_number,
                     lot_number=lot.lot_number,
-                    product_code=lot.product_group.maker_part_code if lot.product_group else "",
+                    product_code=lot.product_group.maker_part_no if lot.product_group else "",
                     warehouse_code=lot.warehouse.warehouse_code if lot.warehouse else "",
                     available_qty=available,
                     expiry_date=lot.expiry_date,

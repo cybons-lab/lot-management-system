@@ -138,7 +138,7 @@ class OrderValidationService:
         for line in lines:
             # Resolve IDs from codes
             product_group_id = self._db.execute(
-                select(Product.id).where(Product.maker_part_code == line.product_code)
+                select(Product.id).where(Product.maker_part_no == line.product_code)
             ).scalar_one_or_none()
 
             warehouse_id = self._db.execute(

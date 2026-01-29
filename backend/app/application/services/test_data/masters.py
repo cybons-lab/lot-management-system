@@ -224,7 +224,7 @@ def generate_customer_items(
             selected_suppliers = random.sample(suppliers, num_suppliers)
 
             for idx, supplier in enumerate(selected_suppliers):
-                maker_part_no = p.maker_part_code  # Use product's maker_part_code
+                maker_part_no = p.maker_part_no  # Use product's maker_part_code
                 if (supplier.id, maker_part_no) not in supplier_maker_pairs:
                     si = SupplierItem(
                         product_group_id=p.id,
@@ -255,7 +255,7 @@ def generate_customer_items(
         # Create CustomerItem and CustomerItemDeliverySettings for each customer
         for idx, c in enumerate(customers_for_product):
             # Use meaningful customer part number (not EXT- prefix)
-            customer_part_no = f"{c.customer_code}-{p.maker_part_code}"
+            customer_part_no = f"{c.customer_code}-{p.maker_part_no}"
 
             # Link to supplier_item if available
             selected_supplier = random.choice(suppliers) if suppliers else None

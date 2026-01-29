@@ -41,11 +41,15 @@ from app.infrastructure.persistence.models.soft_delete_mixin import SoftDeleteMi
 
 
 if TYPE_CHECKING:
+    from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
+    from app.infrastructure.persistence.models.inbound_models import InboundPlanLine
+    from app.infrastructure.persistence.models.lot_master_model import LotMaster
     from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
     from app.infrastructure.persistence.models.masters_models import (
         CustomerItem,
         Supplier,
     )
+    from app.infrastructure.persistence.models.orders_models import OrderLine
 
 
 class SupplierItem(SoftDeleteMixin, Base):
@@ -167,7 +171,13 @@ class SupplierItem(SoftDeleteMixin, Base):
     )
     customer_items: Mapped[list[CustomerItem]] = relationship(
         "CustomerItem",
+        foreign_keys="[CustomerItem.supplier_item_id]",
         back_populates="supplier_item",
+    )
+    customer_items_as_product_group: Mapped[list[CustomerItem]] = relationship(
+        "CustomerItem",
+        foreign_keys="[CustomerItem.product_group_id]",
+        back_populates="product_group",
     )
     lot_receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",

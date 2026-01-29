@@ -49,7 +49,7 @@ class InProcessLotClient(LotContextClient):
             warehouse_code = warehouse.warehouse_code if warehouse else None
 
         candidates = self.lot_service.get_fefo_candidates(
-            product_code=product.maker_part_code,
+            product_code=product.maker_part_no,
             warehouse_code=warehouse_code,
             exclude_expired=True,
         )

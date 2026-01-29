@@ -231,13 +231,13 @@ class InventoryService:
         if use_supplier_grouping:
             # Supplier × Product × Warehouse grouping (supplier-centric view)
             group_by_cols = "v.supplier_id, v.product_group_id, v.warehouse_id"
-            group_by_full = f"{group_by_cols}, v.product_name, v.product_code, v.warehouse_name, v.warehouse_code, v.supplier_name, v.supplier_code"
+            group_by_full = f"{group_by_cols}, v.display_name, v.product_code, v.warehouse_name, v.warehouse_code, v.supplier_name, v.supplier_code"
             select_supplier = ", v.supplier_id, v.supplier_name, v.supplier_code"
             order_by = "v.supplier_id, v.product_group_id, v.warehouse_id"
         else:
             # Product × Warehouse grouping (default, aggregates across suppliers)
             group_by_cols = "v.product_group_id, v.warehouse_id"
-            group_by_full = f"{group_by_cols}, v.product_name, v.product_code, v.warehouse_name, v.warehouse_code"
+            group_by_full = f"{group_by_cols}, v.display_name, v.product_code, v.warehouse_name, v.warehouse_code"
             select_supplier = ""
             order_by = "v.product_group_id, v.warehouse_id"
 
@@ -263,7 +263,7 @@ class InventoryService:
                 SUM(v.available_quantity) as available_quantity,
                 COUNT(v.receipt_id) as lot_count,
                 MAX(v.updated_at) as last_updated,
-                v.product_name,
+                v.display_name,
                 v.product_code,
                 v.warehouse_name,
                 v.warehouse_code
@@ -395,7 +395,7 @@ class InventoryService:
                         active_lot_count=active_lot_count,
                         inventory_state=InventoryState(inventory_state),
                         last_updated=row.last_updated,
-                        product_name=row.product_name,
+                        product_name=row.display_name,
                         product_code=row.product_code,
                         warehouse_name=row.warehouse_name,
                         warehouse_code=row.warehouse_code,
@@ -430,8 +430,8 @@ class InventoryService:
                 v.allocated_quantity,
                 v.available_quantity,
                 v.last_updated,
-                p.product_name,
-                p.maker_part_code AS product_code,
+                p.display_name,
+                p.maker_part_no AS product_code,
                 w.warehouse_name,
                 w.warehouse_code
             FROM v_inventory_summary v
@@ -527,7 +527,7 @@ class InventoryService:
             hard_allocated_quantity=Decimal(str(hard_qty)),
             active_lot_count=count_res or 0,
             last_updated=row.last_updated,
-            product_name=row.product_name,
+            product_name=row.display_name,
             product_code=row.product_code,
             warehouse_name=row.warehouse_name,
             warehouse_code=row.warehouse_code,
@@ -613,7 +613,7 @@ class InventoryService:
         query = """
             SELECT 
                 l.product_group_id,
-                l.product_name,
+                l.display_name,
                 l.product_code,
                 SUM(l.remaining_quantity) as total_quantity,
                 SUM(l.reserved_quantity) as allocated_quantity,
@@ -622,7 +622,7 @@ class InventoryService:
                 COUNT(DISTINCT l.warehouse_id) as warehouse_count
             FROM v_lot_receipt_stock l
             WHERE l.remaining_quantity > 0 AND l.status = 'active'
-            GROUP BY l.product_group_id, l.product_name, l.product_code
+            GROUP BY l.product_group_id, l.display_name, l.product_code
             ORDER BY l.product_code
         """
         from sqlalchemy import text
@@ -631,7 +631,7 @@ class InventoryService:
         return [
             {
                 "product_group_id": row.product_group_id,
-                "product_name": row.product_name,
+                "product_name": row.display_name,
                 "product_code": row.product_code,
                 "total_quantity": row.total_quantity,
                 "allocated_quantity": row.allocated_quantity,
@@ -706,7 +706,7 @@ class InventoryService:
     ) -> InventoryFilterOptions:
         """Get filter options based on master relationships (legacy behavior)."""
         # 1. Products (filtered by supplier if selected)
-        p_stmt = select(SupplierItem.maker_part_code).where(SupplierItem.valid_to >= "9999-12-31")
+        p_stmt = select(SupplierItem.maker_part_no).where(SupplierItem.valid_to >= "9999-12-31")
         if supplier_id:
             # Filter products supplied by this supplier
             p_stmt = (
@@ -717,7 +717,7 @@ class InventoryService:
 
         p_rows = self.db.execute(p_stmt).all()
         products = [
-            InventoryFilterOption(id=r.id, code=r.maker_part_code, name=r.product_name)
+            InventoryFilterOption(id=r.id, code=r.maker_part_no, name=r.display_name)
             for r in p_rows
         ]
 
@@ -830,12 +830,12 @@ class InventoryService:
             SELECT
                 'product' AS kind,
                 p.id AS id,
-                p.maker_part_code AS code,
-                p.product_name AS name
+                p.maker_part_no AS code,
+                p.display_name AS name
             FROM stock_base sb
             JOIN products p ON sb.product_group_id = p.id
             WHERE p.valid_to >= '9999-12-31'
-            GROUP BY p.id, p.maker_part_code, p.product_name
+            GROUP BY p.id, p.maker_part_no, p.display_name
 
             UNION ALL
 

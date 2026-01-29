@@ -110,8 +110,8 @@ class MasterImportService:
                 # Process products
                 for product_row in supplier_row.products:
                     product = self._upsert_product(
-                        product_row.maker_part_code,
-                        product_row.product_name,
+                        product_row.maker_part_no,
+                        product_row.display_name,
                         product_row.base_unit,
                     )
                     if product:
@@ -170,7 +170,7 @@ class MasterImportService:
                     ci = self._upsert_customer_item(
                         customer.id,
                         item_row.customer_part_no,
-                        item_row.maker_part_code,
+                        item_row.maker_part_no,
                         item_row.supplier_code,
                         item_row.base_unit,
                         item_row.pack_unit,
@@ -190,7 +190,7 @@ class MasterImportService:
                     pm = self._upsert_product_mapping(
                         customer.id,
                         pm_row.customer_part_code,
-                        pm_row.maker_part_code,
+                        pm_row.maker_part_no,
                         pm_row.supplier_code,
                         pm_row.base_unit,
                         pm_row.pack_unit,
@@ -222,10 +222,10 @@ class MasterImportService:
 
     def _upsert_product(self, code: str, name: str | None, base_unit: str | None) -> Product | None:
         """Upsert product by maker_part_code."""
-        existing = self.db.query(Product).filter(Product.maker_part_code == code).first()
+        existing = self.db.query(Product).filter(Product.maker_part_no == code).first()
         if existing:
             if name:
-                existing.product_name = name
+                existing.display_name = name
             if base_unit:
                 existing.base_unit = base_unit
             return existing
@@ -320,7 +320,7 @@ class MasterImportService:
     ) -> CustomerItem | None:
         """Upsert customer item."""
         # Find product by maker_part_code
-        product = self.db.query(Product).filter(Product.maker_part_code == maker_part_code).first()
+        product = self.db.query(Product).filter(Product.maker_part_no == maker_part_code).first()
         if not product:
             return None
 
@@ -383,7 +383,7 @@ class MasterImportService:
     ) -> ProductMapping | None:
         """Upsert product mapping (4-party relationship)."""
         # Find product by maker_part_code
-        product = self.db.query(Product).filter(Product.maker_part_code == maker_part_code).first()
+        product = self.db.query(Product).filter(Product.maker_part_no == maker_part_code).first()
         if not product:
             return None
 

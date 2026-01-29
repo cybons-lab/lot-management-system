@@ -96,7 +96,7 @@ class OrderImportService:
                 errors=[f"得意先が見つかりません: {customer_code}"],
             )
 
-        product = self.db.query(Product).filter(Product.maker_part_code == product_code).first()
+        product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
         if not product:
             return OrderGroupImportResult(
                 order_group=None,  # type: ignore[arg-type]

@@ -196,7 +196,7 @@ def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> tuple[str |
 
     product_code = getattr(line, "product_code", None)
     if not product_code and product:
-        product_code = product.maker_part_code
+        product_code = product.maker_part_no
     warning = f"次区が未設定: customer_id={order.customer_id}, product={product_code or 'unknown'}"
     return None, warning
 

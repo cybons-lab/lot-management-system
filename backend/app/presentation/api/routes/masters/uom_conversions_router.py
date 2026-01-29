@@ -38,8 +38,8 @@ def list_uom_conversions(
         ProductUomConversion.product_group_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
-        ProductGroup.maker_part_code,
-        ProductGroup.product_name,
+        ProductGroup.maker_part_no,
+        ProductGroup.display_name,
         ProductUomConversion.valid_to,
     ).join(ProductUomConversion.product_group_id == ProductGroup.id)
 
@@ -59,8 +59,8 @@ def list_uom_conversions(
             "external_unit": r.external_unit,
             "conversion_factor": float(r.factor),
             "remarks": None,
-            "product_code": r.maker_part_code,
-            "product_name": r.product_name,
+            "product_code": r.maker_part_no,
+            "product_name": r.display_name,
             "valid_to": r.valid_to,
         }
         for r in results
@@ -75,8 +75,8 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
         ProductUomConversion.product_group_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
-        ProductGroup.maker_part_code,
-        ProductGroup.product_name,
+        ProductGroup.maker_part_no,
+        ProductGroup.display_name,
     ).join(ProductUomConversion.product_group_id == ProductGroup.id)
 
     results = db.execute(query).all()
@@ -88,8 +88,8 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
             "external_unit": r.external_unit,
             "conversion_factor": float(r.factor),
             "remarks": None,
-            "product_code": r.maker_part_code,
-            "product_name": r.product_name,
+            "product_code": r.maker_part_no,
+            "product_name": r.display_name,
         }
         for r in results
     ]
@@ -141,8 +141,8 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
         "external_unit": new_conversion.external_unit,
         "conversion_factor": float(new_conversion.factor),
         "remarks": None,
-        "product_code": product.maker_part_code,
-        "product_name": product.product_name,
+        "product_code": product.maker_part_no,
+        "product_name": product.display_name,
         "valid_to": new_conversion.valid_to,
     }
 

@@ -149,8 +149,8 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
             ProductUomConversion.external_unit,
             ProductUomConversion.factor,
             Product.internal_unit,
-            Product.maker_part_code,
-            Product.product_name,
+            Product.maker_part_no,
+            Product.display_name,
         ).join(Product, ProductUomConversion.product_group_id == Product.id)
 
         uom_results = db.execute(uom_query).all()
@@ -162,8 +162,8 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
                 "factor": float(r.factor),
                 "internal_unit": r.internal_unit,
                 # "base_unit": r.base_unit, # Optional if needed
-                "product_code": r.maker_part_code,
-                "product_name": r.product_name,
+                "product_code": r.maker_part_no,
+                "product_name": r.display_name,
             }
             for r in uom_results
         ]
@@ -182,8 +182,8 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
                 SupplierItem.supplier_id,
                 SupplierItem.is_primary,
                 SupplierItem.lead_time_days,
-                Product.maker_part_code,
-                Product.product_name,
+                Product.maker_part_no,
+                Product.display_name,
                 Supplier.supplier_code,
                 Supplier.supplier_name,
             )
@@ -198,8 +198,8 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
                 "supplier_id": r.supplier_id,
                 "is_primary": r.is_primary,
                 "lead_time_days": r.lead_time_days,
-                "product_code": r.maker_part_code,
-                "product_name": r.product_name,
+                "product_code": r.maker_part_no,
+                "product_name": r.display_name,
                 "supplier_code": r.supplier_code,
                 "supplier_name": r.supplier_name,
             }
@@ -227,10 +227,10 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
                     "delivery_place_name": (
                         route.delivery_place.delivery_place_name if route.delivery_place else None
                     ),
-                    "product_name": route.product_group.product_name
+                    "product_name": route.product_group.display_name
                     if route.product_group
                     else None,
-                    "maker_part_code": route.product_group.maker_part_code
+                    "maker_part_code": route.product_group.maker_part_no
                     if route.product_group
                     else None,
                     "transport_lead_time_days": route.transport_lead_time_days,

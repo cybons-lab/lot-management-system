@@ -29,7 +29,7 @@ user-friendly Japanese messages.
    PostgreSQL:
    - 'constraint "uq_products_maker_part_code" violated'
    SQLite:
-   - 'UNIQUE constraint failed: products.maker_part_code'
+   - 'UNIQUE constraint failed: products.maker_part_no'
    → re.search(r'constraint ["\']?(\w+)["\']?') で両方に対応
    メリット: データベース移行時もコード変更不要
 

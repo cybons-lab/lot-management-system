@@ -229,8 +229,8 @@ class LotService:
             id=lot_view.lot_id,
             lot_number=lot_view.lot_number,
             product_group_id=lot_view.product_group_id,
-            product_code=lot_view.maker_part_code or "",
-            product_name=lot_view.product_name,
+            product_code=lot_view.maker_part_no or "",
+            product_name=lot_view.display_name,
             supplier_id=lot_view.supplier_id,
             supplier_code=lot_view.supplier_code,
             supplier_name=lot_view.supplier_name or "",
@@ -307,7 +307,7 @@ class LotService:
         from app.domain.allocation_policy import AllocationPolicy, LockMode
 
         # Resolve product_code to product_group_id
-        product = self.db.query(Product).filter(Product.maker_part_code == product_code).first()
+        product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
         if not product:
             return []
 
@@ -431,7 +431,7 @@ class LotService:
         if product_group_id is not None:
             query = query.filter(VLotDetails.product_group_id == product_group_id)
         elif product_code:
-            query = query.filter(VLotDetails.maker_part_code == product_code)
+            query = query.filter(VLotDetails.maker_part_no == product_code)
 
         if supplier_code:
             supplier = (
@@ -470,13 +470,13 @@ class LotService:
             )
             query = query.order_by(
                 priority_case,
-                VLotDetails.maker_part_code.asc(),
+                VLotDetails.maker_part_no.asc(),
                 VLotDetails.supplier_name.asc(),
                 VLotDetails.expiry_date.asc().nullslast(),
             )
         else:
             query = query.order_by(
-                VLotDetails.maker_part_code.asc(),
+                VLotDetails.maker_part_no.asc(),
                 VLotDetails.supplier_name.asc(),
                 VLotDetails.expiry_date.asc().nullslast(),
             )
@@ -489,8 +489,8 @@ class LotService:
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number,
                 product_group_id=lot_view.product_group_id,
-                product_code=lot_view.maker_part_code or "",
-                product_name=lot_view.product_name,
+                product_code=lot_view.maker_part_no or "",
+                product_name=lot_view.display_name,
                 supplier_id=lot_view.supplier_id,
                 supplier_code=lot_view.supplier_code,
                 supplier_name=lot_view.supplier_name or "",
@@ -551,8 +551,8 @@ class LotService:
             db_query = db_query.filter(
                 or_(
                     VLotDetails.lot_number.ilike(search_pattern),
-                    VLotDetails.maker_part_code.ilike(search_pattern),
-                    VLotDetails.product_name.ilike(search_pattern),
+                    VLotDetails.maker_part_no.ilike(search_pattern),
+                    VLotDetails.display_name.ilike(search_pattern),
                     VLotDetails.origin_reference.ilike(search_pattern),
                 )
             )
@@ -617,8 +617,8 @@ class LotService:
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number,
                 product_group_id=lot_view.product_group_id,
-                product_code=lot_view.maker_part_code or "",
-                product_name=lot_view.product_name,
+                product_code=lot_view.maker_part_no or "",
+                product_name=lot_view.display_name,
                 supplier_id=lot_view.supplier_id,
                 supplier_code=lot_view.supplier_code,
                 supplier_name=lot_view.supplier_name or "",
@@ -1105,13 +1105,13 @@ class LotService:
 
         # 削除済みマスタの場合はフォールバック値を設定
         product_name = (
-            product.product_name
+            product.display_name
             if product and not product_deleted
             else "[削除済み製品]"
             if product_deleted
             else ""
         )
-        product_code = product.maker_part_code if product else ""
+        product_code = product.maker_part_no if product else ""
         supplier_name = (
             supplier.supplier_name
             if supplier and not supplier_deleted

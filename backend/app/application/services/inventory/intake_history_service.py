@@ -113,8 +113,8 @@ class IntakeHistoryService:
             query = query.filter(
                 or_(
                     LotMaster.lot_number.ilike(term),
-                    Product.maker_part_code.ilike(term),
-                    Product.product_name.ilike(term),
+                    Product.maker_part_no.ilike(term),
+                    Product.display_name.ilike(term),
                     Supplier.supplier_name.ilike(term),
                     Warehouse.warehouse_name.ilike(term),
                 )

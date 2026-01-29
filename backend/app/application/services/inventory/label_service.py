@@ -47,10 +47,10 @@ class LabelService:
                     id=lot_entity.id,
                     lot_number=lot_entity.lot_number,
                     product_group_id=lot_entity.product_group_id,
-                    product_code=lot_entity.product_group.maker_part_code
+                    product_code=lot_entity.product_group.maker_part_no
                     if lot_entity.product_group
                     else "",
-                    product_name=lot_entity.product_group.product_name
+                    product_name=lot_entity.product_group.display_name
                     if lot_entity.product_group
                     else "Unknown",
                     supplier_id=lot_entity.supplier_id,
@@ -96,7 +96,7 @@ class LabelService:
 
         # Title: Product Name
         c.setFont("Helvetica-Bold", 10)
-        product_name = lot.product_name or "Unknown Product"
+        product_name = lot.display_name or "Unknown Product"
         # Simple truncation if too long
         if len(product_name) > 30:
             product_name = product_name[:27] + "..."

@@ -228,7 +228,7 @@ def calculate_line_allocations(
     if product_group_id:
         product = db.query(Product).filter(Product.id == product_group_id).first()
         if product:
-            product_code = product.maker_part_code
+            product_code = product.maker_part_no
 
     # Get warehouse_code from warehouse_id if needed
     if warehouse_id and not warehouse_code:

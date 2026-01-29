@@ -214,7 +214,7 @@ def _get_or_create_supplier(db: Session) -> Supplier:
 
 def _get_or_create_product(db: Session, scenario: InventoryScenario) -> Product:
     maker_part_code = f"TEST-INV-{scenario.key}"
-    product = db.query(Product).filter(Product.maker_part_code == maker_part_code).first()
+    product = db.query(Product).filter(Product.maker_part_no == maker_part_code).first()
     if product:
         return product
 

@@ -59,7 +59,7 @@ class ForecastImportService:
         # Load all products
         products = self.db.query(SupplierItem).all()
         for p in products:
-            code_to_id["product"][p.maker_part_code] = p.id
+            code_to_id["product"][p.maker_part_no] = p.id
 
         # Group items by customer × delivery_place × product
         grouped: dict[tuple[int, int, int], list[ForecastBulkImportItem]] = defaultdict(list)

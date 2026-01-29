@@ -456,7 +456,14 @@ class CustomerItem(SoftDeleteMixin, Base):
     customer: Mapped[Customer] = relationship("Customer", back_populates="customer_items")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="customer_items")
     supplier_item: Mapped[SupplierItem | None] = relationship(
-        "SupplierItem", back_populates="customer_items"
+        "SupplierItem",
+        foreign_keys="[CustomerItem.supplier_item_id]",
+        back_populates="customer_items",
+    )
+    product_group: Mapped[SupplierItem] = relationship(
+        "SupplierItem",
+        foreign_keys="[CustomerItem.product_group_id]",
+        back_populates="customer_items_as_product_group",
     )
     delivery_settings: Mapped[list[CustomerItemDeliverySetting]] = relationship(
         "CustomerItemDeliverySetting",
