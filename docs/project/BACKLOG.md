@@ -1,6 +1,6 @@
 # タスクバックログ (統合版)
 
-**最終更新:** 2026-01-26
+**最終更新:** 2026-01-29
 
 ---
 
@@ -67,6 +67,107 @@
 3. UI上の説明（ツールチップ等）と実計算式を完全に一致させる。
 
 **元:** `FUTURE_IMPROVEMENTS.md`
+
+---
+
+### 1-4. エラー処理・ログ出力の改善（2026-01-29 レビュー）
+
+**優先度**: High
+**作成**: 2026-01-29
+**カテゴリ**: 可観測性・デバッグ性
+
+**背景:**
+エラー処理とログ出力のコードレビューにより、以下の重大な問題が発見された。
+特にロット管理システムの核心部分（FEFO引当、Repository）にログがなく、障害時の原因追跡が困難。
+
+#### 🔴 重大な問題（即時対応推奨）
+
+**1. Repositoryレイヤーにログが完全欠如**
+
+- **影響範囲**: `backend/app/infrastructure/persistence/repositories/` 配下全体
+- **対象ファイル**:
+  - `order_repository.py`
+  - `allocation_repository.py`
+  - `lot_repository.py`
+  - `forecast_repository.py`
+  - その他全Repository
+- **問題**: データベース操作（CRUD）が完全に不可視。障害時の原因追跡が不可能
+- **対応**: 各Repositoryメソッドに `logger.debug()` / `logger.info()` を追加
+
+**2. FEFOアロケーションにログなし**
+
+- **影響範囲**: ロット管理システムの核心機能
+- **対象ファイル**:
+  - `backend/app/application/services/allocations/fefo.py`
+  - `backend/app/application/services/allocations/auto.py`
+  - `backend/app/application/services/allocations/commit.py`
+  - `backend/app/application/services/allocations/confirm.py`
+  - `backend/app/application/services/allocations/cancel.py`
+- **問題**: どのロットがどの理由で選択/スキップされたか追跡不可
+- **対応**: 引当結果、選択理由、スキップ理由をログ出力
+
+**3. トランザクション境界のログなし**
+
+- **影響範囲**: 84ファイルで `session.commit()` が呼ばれている
+- **問題**: commit/rollback時のログがなく、データ不整合発生時のデバッグが困難
+- **対応**: UnitOfWorkまたは各サービスでcommit/rollbackをログ出力
+
+**4. MaintenanceMiddlewareのサイレント例外**
+
+- **対象ファイル**: `backend/app/presentation/api/middleware/maintenance_middleware.py:54-55`
+- **問題コード**:
+  ```python
+  except Exception:
+      pass  # Invalid token, treat as guest
+  ```
+- **問題**: 全ての例外を無視。トークン検証以外のエラーも隠蔽
+- **対応**: `logger.debug()` でログを残す、または `except jwt.InvalidTokenError` に限定
+
+#### 🟡 中程度の問題
+
+**5. フロントエンドのサイレントエラー**
+
+| 箇所 | ファイル | 問題 |
+|------|----------|------|
+| セッション復元失敗 | `AuthContext.tsx:98` | `console.warn` のみでユーザーに通知なし |
+| エクスポート失敗 | `ExportButton.tsx`, `MasterPageActions.tsx` | `console.error` のみ |
+| DB リセット失敗 | `useDatabaseReset.ts` | `console.error` のみ |
+
+**対応**: エラー時にトースト通知を追加
+
+**6. 機密データのログ出力リスク**
+
+| 箇所 | リスク |
+|------|--------|
+| `main.py:149` | DATABASE_URLがログに出力される可能性（パスワード含む場合） |
+| SmartReadクライアント | API keyがconfigオブジェクトとして保持、オブジェクト全体をログ出力すると漏洩 |
+| SAP連携 | 認証情報がマスクされていない可能性 |
+
+**対応**: 機密情報を含む可能性のあるフィールドをマスク
+
+**7. ログ量の不均衡**
+
+- SmartRead: 40+のログ文（過剰）
+- FEFO/Allocation: 0件（不足）
+- **問題**: 外部連携の詳細は見えるが、コアビジネスロジックは見えない
+- **対応**: SmartReadは重要箇所のみに削減、Allocationにログ追加
+
+**8. 例外ハンドリングパターンの不整合**
+
+- 116箇所の try-except ブロックのうち、多くでログ出力がない
+- 例外ログのパターンが統一されていない（詳細付き/なし/logger.exception/logger.error）
+- **対応**: ログ出力パターンのガイドライン作成と統一
+
+#### ✅ 良い点（参考）
+
+- RFC 7807 Problem+JSON 準拠のエラーレスポンス
+- 構造化されたドメイン例外階層
+- グローバル例外ハンドラで一貫したHTTPステータスマッピング
+- UnitOfWorkパターンでトランザクションの原子性確保
+- structlogによる構造化ログ設定
+- フロントエンドのkyクライアント集中エラー処理
+
+**元:** 2026-01-29 エラー処理・ログ出力レビュー
 
 ---
 
