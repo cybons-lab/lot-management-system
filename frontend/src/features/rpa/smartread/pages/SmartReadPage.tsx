@@ -157,7 +157,13 @@ export function SmartReadPage() {
   };
 
   const handleAnalyzeSuccess = () => {
-    // refetchTasks(); // same here
+    // タスクリストとPAD Runリストを更新
+    if (selectedConfigId) {
+      queryClient.invalidateQueries({
+        queryKey: SMARTREAD_QUERY_KEYS.managedTasks(selectedConfigId),
+      });
+      refetchPadRuns();
+    }
     setActiveTab("tasks");
   };
 
