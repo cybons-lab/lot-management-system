@@ -101,7 +101,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 Supplier.supplier_name,
             )
             .join(Customer, CustomerItem.customer_id == Customer.id)
-            .join(CustomerItem.product_group_id == SupplierItem.id)
+            .join(SupplierItem, CustomerItem.product_group_id == SupplierItem.id)
             .outerjoin(Supplier, CustomerItem.supplier_id == Supplier.id)
         )
 
@@ -338,6 +338,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             Customer,
             Supplier,
         )
+        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         summary = {"total": 0, "created": 0, "updated": 0, "failed": 0}
         errors = []
@@ -356,7 +357,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         customer_map = {code: id for code, id in customers}
 
         products = (
-            self.db.query(SupplierItem.maker_part_no.id)
+            self.db.query(SupplierItem.maker_part_no, SupplierItem.id)
             .filter(SupplierItem.maker_part_no.in_(product_codes))
             .all()
         )

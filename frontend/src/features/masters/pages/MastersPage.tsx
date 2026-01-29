@@ -52,9 +52,9 @@ const masterSections: MasterSection[] = [
         color: "bg-teal-50 text-teal-600 hover:bg-teal-100",
       },
       {
-        title: "商品構成マスタ",
-        description: "複数のメーカー品番を束ねるグループ定義・分類を管理",
-        href: ROUTES.MASTERS.PRODUCTS,
+        title: "メーカー品番マスタ",
+        description: "仕入先から仕入れる品目の情報（品番、単位、リードタイムなど）を管理",
+        href: ROUTES.MASTERS.SUPPLIER_PRODUCTS,
         icon: Database,
         color: "bg-green-50 text-green-600 hover:bg-green-100",
       },

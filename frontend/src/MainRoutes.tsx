@@ -127,12 +127,11 @@ function MasterRoutes() {
     <Route element={<FeatureGuardLayout feature="masters" />}>
       {/* Masters - Phase G-1 */}
       <Route path="/masters" element={<MastersPage />} />
-      <Route path="/masters/supplier-products" element={<SupplierProductsPage />} />
+      <Route path={ROUTES.MASTERS.SUPPLIER_PRODUCTS} element={<SupplierProductsPage />} />
       <Route path="/masters/uom-conversions" element={<UomConversionsPage />} />
       <Route path={ROUTES.MASTERS.WAREHOUSES} element={<WarehousesListPage />} />
       <Route path={ROUTES.MASTERS.SUPPLIERS} element={<SuppliersListPage />} />
       <Route path={ROUTES.MASTERS.CUSTOMERS} element={<CustomersListPage />} />
-      <Route path={ROUTES.MASTERS.PRODUCTS} element={<SupplierProductsPage />} />
       <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
       <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
       <Route path="/masters/primary-assignments" element={<PrimaryAssignmentsPage />} />

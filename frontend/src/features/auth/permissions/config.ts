@@ -92,7 +92,11 @@ export const routePermissions: RoutePermission[] = [
   },
   { routeKey: "MASTERS.SUPPLIERS", path: "/suppliers", allowedRoles: ["admin", "user", "guest"] },
   { routeKey: "MASTERS.CUSTOMERS", path: "/customers", allowedRoles: ["admin", "user", "guest"] },
-  { routeKey: "MASTERS.PRODUCTS", path: "/products", allowedRoles: ["admin", "user", "guest"] },
+  {
+    routeKey: "MASTERS.SUPPLIER_PRODUCTS",
+    path: "/supplier-products",
+    allowedRoles: ["admin", "user", "guest"],
+  },
   {
     routeKey: "MASTERS.CUSTOMER_ITEMS",
     path: "/customer-items",
