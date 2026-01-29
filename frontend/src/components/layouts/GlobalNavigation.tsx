@@ -31,7 +31,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/display/dropdown-menu";
+} from "@/components/ui/display";
 import { type FeatureKey } from "@/constants/features";
 import { ROUTES } from "@/constants/routes";
 import { useSystemSettings } from "@/contexts/SystemSettingsContext";

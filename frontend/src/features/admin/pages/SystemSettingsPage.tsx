@@ -226,6 +226,7 @@ interface SystemSettingItemProps {
 }
 
 function SystemSettingItem({ setting, config, isSaving, onUpdate }: SystemSettingItemProps) {
+  if (!config) return null;
   return (
     <div
       className={
