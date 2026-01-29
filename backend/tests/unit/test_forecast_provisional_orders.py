@@ -38,9 +38,7 @@ def test_create_provisional_order_creates_order_line(master_data, db):
     service._create_provisional_order(forecast)
 
     reference = service._build_forecast_reference(forecast)
-    order_lines = (
-        db.query(OrderLine).filter(OrderLine.forecast_reference == reference).all()
-    )
+    order_lines = db.query(OrderLine).filter(OrderLine.forecast_reference == reference).all()
 
     assert len(order_lines) == 1
 
@@ -52,7 +50,5 @@ def test_create_provisional_order_creates_order_line(master_data, db):
 
     service._create_provisional_order(forecast)
 
-    order_lines_after = (
-        db.query(OrderLine).filter(OrderLine.forecast_reference == reference).all()
-    )
+    order_lines_after = db.query(OrderLine).filter(OrderLine.forecast_reference == reference).all()
     assert len(order_lines_after) == 1
