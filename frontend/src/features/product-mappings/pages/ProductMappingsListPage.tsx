@@ -40,7 +40,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { useCustomers } from "@/features/customers/hooks";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
-import { useProducts } from "@/features/products/hooks";
+import { useSupplierProducts } from "@/features/supplier-products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks";
 import { useTable } from "@/hooks/ui";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
@@ -74,8 +74,19 @@ export function ProductMappingsListPage() {
   const { data: customers = [] } = useCustomerList();
   const { useList: useSupplierList } = useSuppliers();
   const { data: suppliers = [] } = useSupplierList();
-  const { useList: useProductList } = useProducts();
-  const { data: products = [] } = useProductList();
+  const { useList: useProductList } = useSupplierProducts();
+  const { data: productsRaw = [] } = useProductList();
+
+  // Map SupplierProduct to form expected format
+  const products = useMemo(
+    () =>
+      productsRaw.map((p) => ({
+        id: p.id,
+        product_code: p.maker_part_no,
+        product_name: p.display_name,
+      })),
+    [productsRaw],
+  );
 
   const { mutate: create, isPending: isCreating } = useCreateProductMapping();
   const { mutate: update, isPending: isUpdating } = useUpdateProductMapping();

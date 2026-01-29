@@ -66,7 +66,7 @@ export function ForecastListPage() {
     () =>
       products.map((p) => ({
         value: String(p.id),
-        label: `${p.product_code} - ${p.product_name}`,
+        label: `${p.maker_part_no} - ${p.display_name}`,
       })),
     [products],
   );

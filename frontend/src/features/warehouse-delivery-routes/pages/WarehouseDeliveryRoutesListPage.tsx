@@ -12,7 +12,7 @@ import { Button, Checkbox, Input } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { useDeliveryPlaces } from "@/features/delivery-places/hooks";
-import { useProducts } from "@/features/products/hooks";
+import { useSupplierProducts } from "@/features/supplier-products/hooks";
 import { useWarehouses } from "@/features/warehouses/hooks";
 import { useTable } from "@/hooks/ui";
 import type { SortConfig } from "@/shared/components/data/DataTable";
@@ -38,8 +38,8 @@ interface DeliveryPlaceOption {
 
 interface ProductOption {
   id: number;
-  maker_part_code: string;
-  product_name: string;
+  maker_part_no: string;
+  display_name: string;
 }
 
 /* eslint-disable max-lines-per-function, complexity */
@@ -63,7 +63,7 @@ export function WarehouseDeliveryRoutesListPage() {
   const { useList: useWarehouseList } = useWarehouses();
   const { data: warehousesRaw = [] } = useWarehouseList();
   const { data: deliveryPlacesRaw = [] } = useDeliveryPlaces();
-  const { useList: useProductList } = useProducts();
+  const { useList: useProductList } = useSupplierProducts();
   const { data: productsRaw = [] } = useProductList();
 
   // Map for form compatibility
@@ -92,11 +92,8 @@ export function WarehouseDeliveryRoutesListPage() {
     () =>
       productsRaw.map((p) => ({
         id: p.id,
-        maker_part_code:
-          (p as { maker_part_code?: string }).maker_part_code ??
-          (p as { product_code?: string }).product_code ??
-          "",
-        product_name: p.product_name,
+        maker_part_no: p.maker_part_no,
+        display_name: p.display_name,
       })),
     [productsRaw],
   );

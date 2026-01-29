@@ -14,7 +14,7 @@ import type { UomConversionCreate, UomConversionResponse } from "../api";
 import { useInlineEdit } from "./useInlineEdit";
 import { useCreateUomConversion, useUomConversions } from "./useUomConversions";
 
-import { useProducts } from "@/features/products/hooks";
+import { useSupplierProducts } from "@/features/supplier-products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
 
 interface DialogState {
@@ -44,7 +44,7 @@ export function useUomConversionsPageState() {
   const { useList, useSoftDelete, usePermanentDelete, useRestore } = useUomConversions();
   const { data: conversions = [], isLoading } = useList(showInactive);
 
-  const { useList: useProductList } = useProducts();
+  const { useList: useProductList } = useSupplierProducts();
   const { data: products = [] } = useProductList();
 
   const { useList: useSupplierList } = useSuppliers();
@@ -61,7 +61,7 @@ export function useUomConversionsPageState() {
   const productSupplierMap = useMemo(() => {
     const map = new Map<number, number[]>();
     products.forEach((p) => {
-      map.set(p.id, p.supplier_ids || []);
+      map.set(p.id, p.supplier_id ? [p.supplier_id] : []);
     });
     return map;
   }, [products]);
@@ -83,9 +83,9 @@ export function useUomConversionsPageState() {
     () =>
       products.map((p) => ({
         id: p.id,
-        product_name: p.product_name,
-        product_code: p.product_code,
-        supplier_ids: p.supplier_ids,
+        product_name: p.display_name,
+        product_code: p.maker_part_no,
+        supplier_ids: p.supplier_id ? [p.supplier_id] : [],
       })),
     [products],
   );

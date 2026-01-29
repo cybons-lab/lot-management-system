@@ -15,7 +15,7 @@ import { AdhocLotCreateForm, type AdhocLotCreateData } from "../components/Adhoc
 
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
-import { useProducts } from "@/features/products/hooks";
+import { useSupplierProducts } from "@/features/supplier-products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
 import { useWarehouses } from "@/features/warehouses/hooks";
 
@@ -29,7 +29,7 @@ export function AdhocLotCreatePage() {
   const { user } = useAuth();
 
   // マスタデータ取得
-  const { useList: useProductList } = useProducts();
+  const { useList: useProductList } = useSupplierProducts();
   const { useList: useWarehouseList } = useWarehouses();
   const { useList: useSupplierList } = useSuppliers();
 
@@ -95,9 +95,9 @@ export function AdhocLotCreatePage() {
   // 製品リストを変換
   const productOptions = products.map((p) => ({
     id: p.id ?? 0,
-    product_code: p.product_code ?? "",
-    product_name: p.product_name ?? "",
-    supplier_ids: p.supplier_ids ?? [],
+    product_code: p.maker_part_no ?? "",
+    product_name: p.display_name ?? "",
+    supplier_ids: p.supplier_id ? [p.supplier_id] : [],
   }));
 
   // 倉庫リストを変換

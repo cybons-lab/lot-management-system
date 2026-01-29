@@ -183,7 +183,7 @@ export function useLotAllocationLogic() {
     if (!productsQuery.data) return {};
     return productsQuery.data.reduce(
       (acc, product) => {
-        acc[product.id] = product.product_name ?? "";
+        acc[product.id] = product.display_name ?? "";
         return acc;
       },
       {} as Record<number, string>,
