@@ -96,7 +96,7 @@ class OrderImportService:
                 errors=[f"得意先が見つかりません: {customer_code}"],
             )
 
-        product = self.db.query(Product).filter(Product.maker_part_code == product_code).first()
+        product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
         if not product:
             return OrderGroupImportResult(
                 order_group=None,  # type: ignore[arg-type]
@@ -108,7 +108,7 @@ class OrderImportService:
         # 2. 受注グループを業務キーでupsert
         order_group = self.order_group_repo.upsert_by_business_key(
             customer_id=customer.id,
-            product_id=product.id,
+            product_group_id=product.id,
             order_date=order_date,
             source_file_name=source_file_name,
         )
@@ -131,7 +131,7 @@ class OrderImportService:
             order_line = OrderLine(
                 order_id=order_id,
                 order_group_id=order_group.id,
-                product_id=product.id,
+                product_group_id=product.id,
                 customer_order_no=line.customer_order_no,
                 customer_order_line_no=line.customer_order_line_no,
                 order_quantity=line.quantity,

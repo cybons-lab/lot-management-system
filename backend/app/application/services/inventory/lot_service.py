@@ -228,9 +228,9 @@ class LotService:
         return LotResponse(
             id=lot_view.lot_id,
             lot_number=lot_view.lot_number,
-            product_id=lot_view.product_id,
-            product_code=lot_view.maker_part_code or "",
-            product_name=lot_view.product_name,
+            product_group_id=lot_view.product_group_id,
+            product_code=lot_view.maker_part_no or "",
+            product_name=lot_view.display_name,
             supplier_id=lot_view.supplier_id,
             supplier_code=lot_view.supplier_code,
             supplier_name=lot_view.supplier_name or "",
@@ -306,8 +306,8 @@ class LotService:
         )
         from app.domain.allocation_policy import AllocationPolicy, LockMode
 
-        # Resolve product_code to product_id
-        product = self.db.query(Product).filter(Product.maker_part_code == product_code).first()
+        # Resolve product_code to product_group_id
+        product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
         if not product:
             return []
 
@@ -325,7 +325,7 @@ class LotService:
         # Delegate to SSOT
         candidate_service = AllocationCandidateService(self.db)
         return candidate_service.get_candidates(
-            product_id=product.id,
+            product_group_id=product.id,
             policy=AllocationPolicy.FEFO,
             lock_mode=LockMode.NONE,
             warehouse_id=warehouse_id,
@@ -393,7 +393,7 @@ class LotService:
         self,
         skip: int = 0,
         limit: int = 100,
-        product_id: int | None = None,
+        product_group_id: int | None = None,
         product_code: str | None = None,
         supplier_code: str | None = None,
         warehouse_id: int | None = None,
@@ -409,7 +409,7 @@ class LotService:
         Args:
             skip: スキップ件数
             limit: 取得件数
-            product_id: 製品ID
+            product_group_id: 製品ID
             product_code: 製品コード
             supplier_code: 仕入先コード
             warehouse_id: 倉庫ID
@@ -428,10 +428,10 @@ class LotService:
 
         query = self.db.query(VLotDetails)
 
-        if product_id is not None:
-            query = query.filter(VLotDetails.product_id == product_id)
+        if product_group_id is not None:
+            query = query.filter(VLotDetails.product_group_id == product_group_id)
         elif product_code:
-            query = query.filter(VLotDetails.maker_part_code == product_code)
+            query = query.filter(VLotDetails.maker_part_no == product_code)
 
         if supplier_code:
             supplier = (
@@ -470,13 +470,13 @@ class LotService:
             )
             query = query.order_by(
                 priority_case,
-                VLotDetails.maker_part_code.asc(),
+                VLotDetails.maker_part_no.asc(),
                 VLotDetails.supplier_name.asc(),
                 VLotDetails.expiry_date.asc().nullslast(),
             )
         else:
             query = query.order_by(
-                VLotDetails.maker_part_code.asc(),
+                VLotDetails.maker_part_no.asc(),
                 VLotDetails.supplier_name.asc(),
                 VLotDetails.expiry_date.asc().nullslast(),
             )
@@ -488,9 +488,9 @@ class LotService:
             response = LotResponse(
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number,
-                product_id=lot_view.product_id,
-                product_code=lot_view.maker_part_code or "",
-                product_name=lot_view.product_name,
+                product_group_id=lot_view.product_group_id,
+                product_code=lot_view.maker_part_no or "",
+                product_name=lot_view.display_name,
                 supplier_id=lot_view.supplier_id,
                 supplier_code=lot_view.supplier_code,
                 supplier_name=lot_view.supplier_name or "",
@@ -530,7 +530,7 @@ class LotService:
         size: int = 100,
         sort_by: str = "expiry_date",
         sort_order: str = "asc",
-        product_id: int | None = None,
+        product_group_id: int | None = None,
         warehouse_id: int | None = None,
         supplier_code: str | None = None,
         expiry_from: date | None = None,
@@ -551,15 +551,15 @@ class LotService:
             db_query = db_query.filter(
                 or_(
                     VLotDetails.lot_number.ilike(search_pattern),
-                    VLotDetails.maker_part_code.ilike(search_pattern),
-                    VLotDetails.product_name.ilike(search_pattern),
+                    VLotDetails.maker_part_no.ilike(search_pattern),
+                    VLotDetails.display_name.ilike(search_pattern),
                     VLotDetails.origin_reference.ilike(search_pattern),
                 )
             )
 
         # Exact Filters
-        if product_id:
-            db_query = db_query.filter(VLotDetails.product_id == product_id)
+        if product_group_id:
+            db_query = db_query.filter(VLotDetails.product_group_id == product_group_id)
         if warehouse_id:
             db_query = db_query.filter(VLotDetails.warehouse_id == warehouse_id)
         if supplier_code:
@@ -616,9 +616,9 @@ class LotService:
             response = LotResponse(
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number,
-                product_id=lot_view.product_id,
-                product_code=lot_view.maker_part_code or "",
-                product_name=lot_view.product_name,
+                product_group_id=lot_view.product_group_id,
+                product_code=lot_view.maker_part_no or "",
+                product_name=lot_view.display_name,
                 supplier_id=lot_view.supplier_id,
                 supplier_code=lot_view.supplier_code,
                 supplier_name=lot_view.supplier_name or "",
@@ -664,12 +664,12 @@ class LotService:
         supplier_code is optional and lot number is auto-generated.
         """
         # Validation
-        if not lot_create.product_id:
-            raise LotValidationError("product_id は必須です")
+        if not lot_create.product_group_id:
+            raise LotValidationError("product_group_id は必須です")
 
-        product = self.db.query(Product).filter(Product.id == lot_create.product_id).first()
+        product = self.db.query(Product).filter(Product.id == lot_create.product_group_id).first()
         if not product:
-            raise LotProductNotFoundError(lot_create.product_id)
+            raise LotProductNotFoundError(lot_create.product_group_id)
 
         # Supplier validation: required only for ORDER origin type
         supplier = None
@@ -715,17 +715,10 @@ class LotService:
         # Lotモデルに存在しないフィールドを削除
         lot_payload.pop("allocated_quantity", None)
 
-        # 仮入庫対応: lot_number が未指定/空の場合
-        # - temporary_lot_key に UUID を発行
-        # - lot_number に TMP-YYYYMMDD-XXXX 形式の暫定番号を採番
-        is_temporary_lot = (
-            not lot_payload.get("lot_number") or lot_payload["lot_number"].strip() == ""
-        )
-
-        if is_temporary_lot:
-            lot_payload["lot_number"], lot_payload["temporary_lot_key"] = (
-                self._generate_temporary_lot_info()
-            )
+        # lot_number が未指定/空の場合は None に設定（TMP番号は生成しない）
+        # temporary_lot_key は UUID で自動生成（DB default値）
+        if not lot_payload.get("lot_number") or lot_payload["lot_number"].strip() == "":
+            lot_payload["lot_number"] = None
         elif lot_create.origin_type != LotOriginType.ORDER:
             # Auto-generate lot number for non-order origin types if placeholder
             if lot_payload["lot_number"] == "AUTO":
@@ -735,20 +728,23 @@ class LotService:
 
         # B-Plan: Find or create LotMaster
         # lot_master acts as the canonical source for lot_number
-        lot_master = (
-            self.db.query(LotMaster)
-            .filter(
-                LotMaster.lot_number == lot_payload["lot_number"],
-                LotMaster.product_id == lot_create.product_id,
-                LotMaster.supplier_id == (supplier.id if supplier else None),
+        # lot_numberがNullの場合は常に新規作成（同じNullロットを共有しない）
+        lot_master = None
+        if lot_payload["lot_number"] is not None:
+            lot_master = (
+                self.db.query(LotMaster)
+                .filter(
+                    LotMaster.lot_number == lot_payload["lot_number"],
+                    LotMaster.product_group_id == lot_create.product_group_id,
+                    LotMaster.supplier_id == (supplier.id if supplier else None),
+                )
+                .first()
             )
-            .first()
-        )
 
         if not lot_master:
             lot_master = LotMaster(
                 lot_number=lot_payload["lot_number"],
-                product_id=lot_create.product_id,
+                product_group_id=lot_create.product_group_id,
                 supplier_id=supplier.id if supplier else None,
             )
             self.db.add(lot_master)
@@ -834,33 +830,6 @@ class LotService:
         )
         sequence = (count or 0) + 1
         return f"{prefix}-{today}-{sequence:04d}"
-
-    def _generate_temporary_lot_info(self) -> tuple[str, str]:
-        """Generate temporary lot number and UUID key for provisional inbound.
-
-        仮入庫対応:
-        - lot_number が未確定の場合に呼び出される
-        - UUID を発行し、その一部を lot_number に使用して衝突を完全回避
-        - 形式: TMP-YYYYMMDD-XXXX (XXXX は UUID の先頭8文字)
-
-        Returns:
-            tuple[str, str]: (lot_number, temporary_lot_key)
-
-        Example:
-            ("TMP-20251213-a1b2c3d4", "a1b2c3d4-e5f6-7890-...")
-        """
-        import uuid
-
-        # Generate UUID for unique identification
-        temp_key = uuid.uuid4()
-        temp_key_str = str(temp_key)
-
-        # Use first 8 characters of UUID for readable lot number (衝突ゼロ保証)
-        today = date.today().strftime("%Y%m%d")
-        uuid_prefix = temp_key_str[:8]
-        lot_number = f"TMP-{today}-{uuid_prefix}"
-
-        return lot_number, temp_key_str
 
     def update_lot(self, lot_id: int, lot_update: LotUpdate) -> LotResponse:
         """Update an existing lot."""
@@ -1075,7 +1044,7 @@ class LotService:
         db_lot = (
             self.db.query(LotReceipt)
             .options(
-                joinedload(LotReceipt.product),
+                joinedload(LotReceipt.product_group),
                 joinedload(LotReceipt.warehouse),
                 joinedload(LotReceipt.supplier),
             )
@@ -1086,7 +1055,7 @@ class LotService:
             raise LotNotFoundError(lot_id)
 
         # LotResponseの必須フィールドをリレーションから取得（削除済みマスタ対応）
-        product = db_lot.product
+        product = db_lot.product_group
         warehouse = db_lot.warehouse
         supplier = db_lot.supplier
 
@@ -1105,13 +1074,13 @@ class LotService:
 
         # 削除済みマスタの場合はフォールバック値を設定
         product_name = (
-            product.product_name
+            product.display_name
             if product and not product_deleted
             else "[削除済み製品]"
             if product_deleted
             else ""
         )
-        product_code = product.maker_part_code if product else ""
+        product_code = product.maker_part_no if product else ""
         supplier_name = (
             supplier.supplier_name
             if supplier and not supplier_deleted
@@ -1131,8 +1100,8 @@ class LotService:
 
         return LotResponse(
             id=db_lot.id,
-            lot_number=db_lot.lot_number,
-            product_id=db_lot.product_id,
+            lot_number=db_lot.lot_number or "",
+            product_group_id=db_lot.product_group_id,
             warehouse_id=db_lot.warehouse_id,
             supplier_id=db_lot.supplier_id,
             supplier_code=supplier_code,

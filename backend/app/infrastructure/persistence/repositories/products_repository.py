@@ -64,7 +64,7 @@
 7. get() の設計（L41-43）
    理由: ID による単一製品の取得
    実装:
-   - session.get(Product, product_id)
+   - session.get(Product, product_group_id)
    → SQLAlchemy 2.0 の get() メソッド（主キー検索）
    メリット:
    - セッションキャッシュを活用（同一トランザクション内で2回目以降は高速）
@@ -83,7 +83,7 @@
 9. update() がシンプルな理由（L51-54）
    理由: SQLAlchemy の自動追跡機能
    実装:
-   - product.product_name = "新しい名前"
+   - product.display_name = "新しい名前"
    - flush() → 自動的に UPDATE SQL 発行
    メリット:
    - 明示的な update() 呼び出し不要
@@ -123,8 +123,8 @@ class ProductRepository:
             pattern = f"%{q}%"
             filters.append(
                 or_(
-                    Product.maker_part_code.ilike(pattern),
-                    Product.product_name.ilike(pattern),
+                    Product.maker_part_no.ilike(pattern),
+                    Product.display_name.ilike(pattern),
                 )
             )
 
@@ -140,9 +140,9 @@ class ProductRepository:
         items = cast(list[Product], self.session.execute(stmt).scalars().all())
         return items, total
 
-    def get(self, product_id: int) -> Product | None:
+    def get(self, product_group_id: int) -> Product | None:
         """Fetch a product by id."""
-        return cast(Product | None, self.session.get(Product, product_id))
+        return cast(Product | None, self.session.get(Product, product_group_id))
 
     def create(self, product: Product) -> Product:
         """Persist a new product."""

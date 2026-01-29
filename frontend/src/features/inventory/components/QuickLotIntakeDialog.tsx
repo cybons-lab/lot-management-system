@@ -24,7 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui";
 import { intakeHistoryKeys } from "@/features/intake-history/hooks/useIntakeHistory";
-import { useProducts } from "@/features/products/hooks";
+import { useSupplierProducts } from "@/features/supplier-products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
 import { useWarehouses } from "@/features/warehouses/hooks";
 import { useLotsQuery } from "@/hooks/api";
@@ -78,7 +78,7 @@ export function QuickLotIntakeDialog({
     limit: 200,
     with_stock: false, // 追加入庫のために在庫0（アーカイブ済み含む）も表示
   });
-  const { useList: useProductList } = useProducts();
+  const { useList: useProductList } = useSupplierProducts();
   const { useList: useWarehouseList } = useWarehouses();
   const { useList: useSupplierList } = useSuppliers();
 
@@ -125,7 +125,7 @@ export function QuickLotIntakeDialog({
     () =>
       products.map((p) => ({
         value: String(p.id ?? 0),
-        label: `${p.product_code ?? ""} - ${p.product_name ?? ""}`,
+        label: `${p.maker_part_no ?? ""} - ${p.display_name ?? ""}`,
       })),
     [products],
   );
@@ -221,7 +221,7 @@ export function QuickLotIntakeDialog({
 
     await createLotMutation.mutateAsync({
       lot_number: lotNumber,
-      product_id: Number(productId),
+      product_group_id: Number(productId),
       warehouse_id: Number(warehouseId),
       supplier_id: supplierId ? Number(supplierId) : undefined,
       received_date: receivedDate,

@@ -12,7 +12,7 @@ const keyCandidates = (orderLineId: number) =>
   ["orders", "line", orderLineId, "candidates"] as const;
 
 /**
- * ロット候補を取得（product_id基準）
+ * ロット候補を取得（product_group_id基準）
  * 識別キー: customer_code + product_code (+ delivery_place_code optional)
  */
 // UI用の型定義
@@ -22,7 +22,7 @@ type LotCandidateResult = {
 };
 
 /**
- * ロット候補を取得（product_id基準）
+ * ロット候補を取得（product_group_id基準）
  * 識別キー: customer_code + product_code (+ delivery_place_code optional)
  */
 export function useCandidateLots(orderLineId: number | undefined) {

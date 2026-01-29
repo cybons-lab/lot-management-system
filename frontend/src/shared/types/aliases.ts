@@ -132,7 +132,7 @@ export type CandidateLotItem = {
   current_quantity: number;
   allocated_quantity: number | string; // DDL v2.2: DECIMAL(15,3)
   allocated_qty?: number; // Deprecated: use allocated_quantity
-  product_id?: number | null;
+  product_group_id?: number | null;
   product_code?: string | null;
   delivery_place_id?: number | null;
   delivery_place_code?: string | null;
@@ -274,7 +274,7 @@ export type OrderLineComputed = {
   lineId?: number;
   orderId?: number;
   id?: number;
-  productId?: number | null; // product_id基準の引当に必要
+  productId?: number | null; // product_group_id基準の引当に必要
   productCode?: string | null; // Optionalか(表示用のみ)
   productName: string;
   status?: string;

@@ -53,6 +53,10 @@ class OcrResultItem(BaseModel):
     order_unit: str | None = None
     inbound_no: str | None = None
     lot_no: str | None = None
+    lot_no_1: str | None = None  # OCR由来1
+    quantity_1: str | None = None  # OCR由来1
+    lot_no_2: str | None = None  # OCR由来2
+    quantity_2: str | None = None  # OCR由来2
 
     # 手入力結果
     manual_lot_no_1: str | None = None
@@ -573,10 +577,10 @@ async def export_ocr_results(
     for row in rows:
         content = row.get("content") or {}
         remarks = content.get("備考") if isinstance(content, dict) else None
-        lot_no_1 = row.get("manual_lot_no_1")
-        quantity_1 = row.get("manual_quantity_1")
-        lot_no_2 = row.get("manual_lot_no_2")
-        quantity_2 = row.get("manual_quantity_2")
+        lot_no_1 = row.get("manual_lot_no_1") or row.get("lot_no_1") or row.get("lot_no")
+        quantity_1 = row.get("manual_quantity_1") or row.get("quantity_1")
+        lot_no_2 = row.get("manual_lot_no_2") or row.get("lot_no_2")
+        quantity_2 = row.get("manual_quantity_2") or row.get("quantity_2")
         inbound_no_1 = row.get("manual_inbound_no") or row.get("inbound_no")
         inbound_no_2 = row.get("manual_inbound_no_2")
 

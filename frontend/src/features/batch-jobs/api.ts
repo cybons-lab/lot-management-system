@@ -129,7 +129,7 @@ export interface InventorySyncAlert {
   rule_name: string;
   rule_type: string;
   rule_parameters: {
-    product_id: number;
+    product_group_id: number;
     local_qty: number;
     sap_qty: number;
     diff_pct: number;

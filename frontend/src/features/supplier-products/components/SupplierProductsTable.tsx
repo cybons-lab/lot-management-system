@@ -10,7 +10,6 @@ import { DataTable, type Column, type SortConfig } from "@/shared/components/dat
 export type SupplierProductWithValidTo = SupplierProduct & { valid_to?: string };
 
 interface SupplierProductsTableProps {
-  products: { id: number; product_code?: string | null; product_name: string }[];
   suppliers: { id: number; supplier_code: string; supplier_name: string }[];
   supplierProducts: SupplierProduct[];
   isLoading: boolean;
@@ -29,7 +28,6 @@ const isInactive = (validTo?: string | null) => {
 };
 
 export function SupplierProductsTable({
-  products,
   suppliers,
   supplierProducts,
   isLoading,
@@ -40,13 +38,7 @@ export function SupplierProductsTable({
   onPermanentDelete,
   onRestore,
 }: SupplierProductsTableProps) {
-  // Maps for efficient lookups
-  const productMap = useMemo(() => {
-    return new Map(
-      products.map((p) => [p.id, { code: p.product_code || "", name: p.product_name }]),
-    );
-  }, [products]);
-
+  // Map for efficient lookups
   const supplierMap = useMemo(() => {
     return new Map(suppliers.map((s) => [s.id, { code: s.supplier_code, name: s.supplier_name }]));
   }, [suppliers]);
@@ -78,22 +70,21 @@ export function SupplierProductsTable({
         sortable: true,
       },
       {
-        id: "product_id",
-        header: "商品",
-        cell: (row) => {
-          if (row.product_code && row.product_name) {
-            return `${row.product_code} - ${row.product_name}`;
-          }
-          const p = productMap.get(row.product_id);
-          if (!p) return `ID: ${row.product_id}`;
-          return `${p.code} - ${p.name}`;
-        },
+        id: "maker_part_no",
+        header: "メーカー品番",
+        cell: (row) => <span className="font-mono text-slate-700">{row.maker_part_no}</span>,
         sortable: true,
       },
       {
-        id: "is_primary",
-        header: "主要",
-        cell: (row) => (row.is_primary ? "★" : ""),
+        id: "display_name",
+        header: "製品名",
+        cell: (row) => row.display_name || "-",
+        sortable: true,
+      },
+      {
+        id: "base_unit",
+        header: "基本単位",
+        cell: (row) => row.base_unit || "-",
         sortable: true,
       },
       {
@@ -162,7 +153,7 @@ export function SupplierProductsTable({
         },
       },
     ],
-    [productMap, supplierMap, onEdit, onSoftDelete, onPermanentDelete, onRestore],
+    [supplierMap, onEdit, onSoftDelete, onPermanentDelete, onRestore],
   );
 
   return (

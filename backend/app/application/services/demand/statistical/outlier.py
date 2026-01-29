@@ -13,14 +13,14 @@ class OutlierHandler(DemandEstimator):
 
     def estimate(
         self,
-        product_id: int,
+        product_group_id: int,
         warehouse_id: int | None,
         horizon_days: int,
         as_of_date: date,
     ) -> DemandForecast:
         # ベース予測を実行
         base_forecast = self.base_estimator.estimate(
-            product_id, warehouse_id, horizon_days, as_of_date
+            product_group_id, warehouse_id, horizon_days, as_of_date
         )
 
         # 予測値自体に対するWinsorize（異常に高い予測が出た場合のキャップ）

@@ -5,26 +5,26 @@ import { getForecasts, type ForecastListResponse, type Forecast } from "@/featur
 import { formatDate } from "@/shared/utils/date";
 
 type Props = {
-  productId?: number;
+  productGroupId?: number;
   customerId?: number;
   fullWidth?: boolean;
 };
 
-export function ForecastSection({ productId, customerId, fullWidth = false }: Props) {
+export function ForecastSection({ productGroupId, customerId, fullWidth = false }: Props) {
   const [isOpen, setIsOpen] = React.useState(false);
 
   const forecastQ = useQuery<ForecastListResponse>({
-    queryKey: ["forecast", productId, customerId],
+    queryKey: ["forecast", productGroupId, customerId],
     queryFn: () =>
       getForecasts({
-        product_id: productId,
+        product_group_id: productGroupId,
         customer_id: customerId,
       }),
-    enabled: isOpen && productId != null && customerId != null,
+    enabled: isOpen && productGroupId != null && customerId != null,
     staleTime: 1000 * 60,
   });
 
-  if (!productId || !customerId) return null;
+  if (!productGroupId || !customerId) return null;
 
   // Extract forecasts from first group (or flatten all groups)
   const allForecasts: Forecast[] = [];
@@ -52,7 +52,7 @@ export function ForecastSection({ productId, customerId, fullWidth = false }: Pr
         <div className="flex flex-col">
           <span className="text-sm font-medium">フォーキャスト</span>
           <span className="text-xs text-gray-500">
-            製品ID: {productId} × 得意先ID: {customerId}
+            製品ID: {productGroupId} × 得意先ID: {customerId}
           </span>
         </div>
         <span className="text-gray-400">{isOpen ? "▼" : "▶"}</span>
@@ -77,7 +77,7 @@ export function ForecastSection({ productId, customerId, fullWidth = false }: Pr
                       {Number(f.forecast_quantity).toLocaleString()} {f.unit ?? "EA"}
                     </div>
                     <div className="mt-1 text-[11px] text-gray-400">
-                      {f.product_name ?? `製品ID: ${f.product_id}`}
+                      {f.product_name ?? `製品ID: ${f.product_group_id}`}
                     </div>
                   </div>
                 ))}
@@ -85,7 +85,8 @@ export function ForecastSection({ productId, customerId, fullWidth = false }: Pr
             </div>
           ) : (
             <div className="rounded border border-dashed border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
-              得意先ID {customerId} 向けの製品ID {productId} フォーキャストは登録されていません。
+              得意先ID {customerId} 向けの製品ID {productGroupId}{" "}
+              フォーキャストは登録されていません。
             </div>
           )}
 
@@ -97,7 +98,7 @@ export function ForecastSection({ productId, customerId, fullWidth = false }: Pr
 
           <div className="flex flex-wrap gap-2 text-xs">
             <a
-              href={`/forecasts?product_id=${productId}&customer_id=${customerId}`}
+              href={`/forecasts?product_group_id=${productGroupId}&customer_id=${customerId}`}
               className="inline-flex items-center gap-1 rounded bg-sky-600 px-3 py-1.5 text-white hover:bg-sky-700"
             >
               詳細を開く

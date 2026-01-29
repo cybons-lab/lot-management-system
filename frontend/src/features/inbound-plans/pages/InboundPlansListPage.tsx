@@ -27,7 +27,7 @@ export function InboundPlansListPage() {
 
   const [filters, setFilters] = useState<InboundPlansFilters>({
     supplier_id: searchParams.get("supplier_id") || "",
-    product_id: searchParams.get("product_id") || "",
+    product_group_id: searchParams.get("product_group_id") || "",
     status: (searchParams.get("status") as InboundPlansFilters["status"]) || "",
     date_from: searchParams.get("date_from") || "",
     date_to: searchParams.get("date_to") || "",
@@ -40,7 +40,7 @@ export function InboundPlansListPage() {
   // Build query params
   const queryParams = {
     supplier_id: filters.supplier_id ? Number(filters.supplier_id) : undefined,
-    product_id: filters.product_id ? Number(filters.product_id) : undefined,
+    product_group_id: filters.product_group_id ? Number(filters.product_group_id) : undefined,
     status: filters.status || undefined,
     date_from: filters.date_from || undefined,
     date_to: filters.date_to || undefined,

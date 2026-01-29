@@ -49,7 +49,6 @@ from app.presentation.api.routes.masters import (
     customers_router,
     delivery_places_router,
     product_mappings_router,
-    products_router,
     status_router,
     supplier_items_router,
     suppliers_router,
@@ -121,7 +120,6 @@ def register_all_routers(app: FastAPI) -> None:
     masters_prefix = f"{prefix}/masters"
     app.include_router(customers_router, prefix=masters_prefix)
     app.include_router(delivery_places_router, prefix=masters_prefix)
-    app.include_router(products_router, prefix=masters_prefix)
     app.include_router(suppliers_router, prefix=masters_prefix)
     app.include_router(supplier_items_router, prefix=masters_prefix)
     app.include_router(uom_conversions_router, prefix=masters_prefix)
@@ -189,7 +187,6 @@ __all__ = [
     "customer_items_router",
     "customers_router",
     "product_mappings_router",
-    "products_router",
     "supplier_items_router",
     "suppliers_router",
     "uom_conversions_router",

@@ -43,7 +43,7 @@ export function useLotColumns({
         cell: (lot) => (
           <div className="flex items-center gap-2">
             {lot.status === "locked" && <Lock className="h-4 w-4 text-slate-400" />}
-            <span className="font-medium">{lot.lot_number}</span>
+            <span className="font-medium">{lot.lot_number || "-"}</span>
           </div>
         ),
         sortable: true,
@@ -120,7 +120,7 @@ export function useLotColumns({
       baseColumns[0], // lot_number
       {
         id: "product_code",
-        header: "先方品番",
+        header: "メーカー品番",
         cell: (lot) => <span className="whitespace-nowrap">{lot.product_code ?? "–"}</span>,
         sortable: true,
       },

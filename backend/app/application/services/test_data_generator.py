@@ -20,6 +20,7 @@ from .test_data.masters import (
 )
 from .test_data.orders import generate_orders
 from .test_data.rpa_material_delivery import generate_rpa_material_delivery_data
+from .test_data.sap import generate_sap_data
 from .test_data.shipping_master import generate_shipping_master_data
 from .test_data.smartread import generate_smartread_data
 from .test_data.utils import clear_data
@@ -45,6 +46,7 @@ __all__ = [
     "generate_smartread_data",
     "generate_shipping_master_data",
     "generate_rpa_material_delivery_data",
+    "generate_sap_data",
 ]
 
 
@@ -76,7 +78,7 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
         warehouses = generate_warehouses(db, options)
         suppliers = generate_suppliers(db, options)
         customers, delivery_places = generate_customers_and_delivery_places(db, options)
-        products = generate_products(db, options)
+        products = generate_products(db, suppliers, options)
 
         generate_customer_items(db, customers, products, suppliers, delivery_places, options)
 
@@ -129,8 +131,13 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
 
         # Step 8: Generate Shipping Master data (SmartReadと連動)
         if progress_callback:
-            progress_callback(97, "Generating Shipping Master Data...")
+            progress_callback(95, "Generating Shipping Master Data...")
         generate_shipping_master_data(db)
+
+        # Step 9: Generate SAP integration data
+        if progress_callback:
+            progress_callback(98, "Generating SAP Integration Data...")
+        generate_sap_data(db)
 
         db.commit()
 

@@ -87,12 +87,22 @@ def get_master_attr(
 
 def get_product_name(product: Any, default: str = "") -> str:
     """Get product name with soft-delete handling."""
-    return str(get_master_attr(product, "product_name", default, master_type="product"))
+    # Phase 2 compatibility: Try display_name first, then product_name
+    for attr in ["display_name", "product_name"]:
+        val = get_master_attr(product, attr, None, master_type="product")
+        if val is not None:
+            return str(val)
+    return default
 
 
 def get_product_code(product: Any, default: str = "") -> str:
     """Get product code with soft-delete handling."""
-    return str(get_master_attr(product, "maker_part_code", default, master_type="product"))
+    # Phase 2 compatibility: Try maker_part_no, maker_part_code, product_code
+    for attr in ["maker_part_no", "maker_part_code", "product_code"]:
+        val = get_master_attr(product, attr, None, master_type="product")
+        if val is not None:
+            return str(val)
+    return default
 
 
 def get_customer_name(customer: Any, default: str = "") -> str:

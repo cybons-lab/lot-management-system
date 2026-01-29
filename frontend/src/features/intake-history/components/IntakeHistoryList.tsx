@@ -42,7 +42,7 @@ export function IntakeHistoryList({
   const { data, isLoading, isError, error, refetch } = useIntakeHistory({
     supplier_id: supplierId,
     warehouse_id: warehouseId,
-    product_id: productId,
+    product_group_id: productId,
     search: searchQuery,
     start_date: startDate,
     end_date: endDate,

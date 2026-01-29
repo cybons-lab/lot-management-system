@@ -30,7 +30,7 @@ describe("useOrders Hooks", () => {
       {
         id: 101,
         order_id: 1,
-        product_id: 20,
+        product_group_id: 20,
         product_name: "Test Product",
         order_quantity: "10.000",
         unit: "EA",

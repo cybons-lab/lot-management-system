@@ -92,7 +92,7 @@
  * 7. allocationContextDataAtom の設計（L30-36）
  *    理由: マスタデータのマップを共有
  *    用途:
- *    - productMap: product_id → product_name
+ *    - productMap: product_group_id → product_name
  *    - customerMap: customer_id → customer_name
  *    → 表示時に製品名・得意先名をルックアップ
  *    メリット:

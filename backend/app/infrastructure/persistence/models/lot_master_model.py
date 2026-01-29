@@ -5,7 +5,7 @@ B-Plan: Lot number consolidation master - allows multiple receipts per lot numbe
 Design rationale:
 1. なぜ lot_master を分離するのか
    - 同一ロット番号の小分け入荷を許可するため
-   - lot_number + product_id でユニーク、複数の lot_receipts が紐づく
+   - lot_number + product_group_id でユニーク、複数の lot_receipts が紐づく
 
 2. supplier_id の扱い
    - ユニーク制約には含めない（NULLになるケースがあるため）
@@ -30,7 +30,6 @@ from sqlalchemy import (
     Index,
     Numeric,
     String,
-    UniqueConstraint,
     func,
     text,
 )
@@ -41,14 +40,15 @@ from app.infrastructure.persistence.models.base_model import Base
 
 if TYPE_CHECKING:
     from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
-    from app.infrastructure.persistence.models.masters_models import Product, Supplier
+    from app.infrastructure.persistence.models.masters_models import Supplier
+    from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 
 class LotMaster(Base):
     """Lot number consolidation master.
 
     Allows multiple receipts (lot_receipts) to share the same lot number.
-    Unique constraint: (lot_number, product_id)
+    Unique constraint: (lot_number, product_group_id)
     """
 
     __tablename__ = "lot_master"
@@ -56,14 +56,14 @@ class LotMaster(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
     # Lot identification
-    lot_number: Mapped[str] = mapped_column(
+    lot_number: Mapped[str | None] = mapped_column(
         String(100),
-        nullable=False,
-        comment="ロット番号（仕入先発番）",
+        nullable=True,
+        comment="ロット番号（仕入先発番、NULL許可）",
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
     supplier_id: Mapped[int | None] = mapped_column(
@@ -106,7 +106,7 @@ class LotMaster(Base):
     )
 
     # Relationships
-    product: Mapped[Product] = relationship("Product", back_populates="lot_masters")
+    product_group: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="lot_masters")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_masters")
     receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",
@@ -115,16 +115,24 @@ class LotMaster(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("lot_number", "product_id", name="uq_lot_master_number_product"),
-        Index("idx_lot_master_product", "product_id"),
+        # Partial unique index: unique on (lot_number, product_group_id) WHERE lot_number IS NOT NULL
+        Index(
+            "idx_lot_master_number_product_group_unique",
+            "lot_number",
+            "product_group_id",
+            unique=True,
+            postgresql_where=text("lot_number IS NOT NULL"),
+        ),
+        Index("idx_lot_master_product_group", "product_group_id"),
         Index("idx_lot_master_lot_number", "lot_number"),
         Index("idx_lot_master_supplier", "supplier_id"),
-        {"comment": "ロット番号名寄せマスタ - 同一ロット番号の複数入荷を許可"},
+        {"comment": "ロット番号名寄せマスタ - 同一ロット番号の複数入荷を許可、NULL許可"},
     )
 
     def __repr__(self) -> str:
         return (
-            f"<LotMaster(id={self.id}, lot_number={self.lot_number}, product_id={self.product_id})>"
+            f"<LotMaster(id={self.id}, lot_number={self.lot_number}, "
+            f"product_group_id={self.product_group_id})>"
         )
 
     def update_aggregate_dates(self) -> None:

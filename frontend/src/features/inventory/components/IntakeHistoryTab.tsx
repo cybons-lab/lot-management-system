@@ -92,7 +92,7 @@ export function IntakeHistoryTab() {
   const [productId, setProductId] = useState<string>("");
 
   const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
-    product_id: productId || undefined,
+    product_group_id: productId || undefined,
     supplier_id: supplierId || undefined,
     warehouse_id: warehouseId || undefined,
     mode: "master",

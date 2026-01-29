@@ -55,7 +55,10 @@ export function ProductHeader({ data, involvedDestinations }: Props) {
         <div className="col-span-1 bg-slate-200 p-1 font-bold border-r border-slate-300">
           保証期間
         </div>
-        <div className="col-span-4 bg-slate-200 p-1 font-bold">商品名</div>
+        <div className="col-span-2 bg-slate-200 p-1 font-bold border-r border-slate-300">
+          メーカー品番
+        </div>
+        <div className="col-span-2 bg-slate-200 p-1 font-bold">商品名</div>
       </div>
       <div className="grid grid-cols-12 border-b border-slate-300 bg-white">
         <div className="col-span-1 p-1 border-r border-slate-300">{data.supplierCode}</div>
@@ -71,10 +74,13 @@ export function ProductHeader({ data, involvedDestinations }: Props) {
         <div className="col-span-1 p-1 border-r border-slate-300">{data.capacity}</div>
         <div className="col-span-1 p-1 border-r border-slate-300">{data.warrantyPeriod}</div>
         <div
-          className="col-span-4 p-1 truncate"
-          title={`${data.productName} (${data.productCode})`}
+          className="col-span-2 p-1 border-r border-slate-300 font-mono text-slate-700"
+          title={data.productCode}
         >
-          {data.productName} <span className="text-slate-400">({data.productCode})</span>
+          {data.productCode}
+        </div>
+        <div className="col-span-2 p-1 truncate" title={data.productName}>
+          {data.productName}
         </div>
       </div>
 

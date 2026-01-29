@@ -34,11 +34,18 @@ def clear_data(db: Session):
         "forecast_current",
         "forecast_history",
         "lot_receipts",
+        "lot_master",
+        "customer_item_jiku_mappings",
+        "customer_item_delivery_settings",
         "customer_items",
-        "products",
+        "product_uom_conversions",
+        "product_mappings",
+        "product_warehouse",
+        "supplier_items",
         "delivery_places",
         "customers",
         "suppliers",
+        "warehouse_delivery_routes",
         "warehouses",
         # SmartRead tables
         "smartread_long_data",
@@ -46,6 +53,12 @@ def clear_data(db: Session):
         "smartread_export_history",
         "smartread_requests",
         "smartread_tasks",
+        # Shipping Master tables
+        "shipping_master_curated",
+        "shipping_master_raw",
+        "order_register_rows",
+        # System
+        "sap_material_cache",
     ]
 
     for table in tables:

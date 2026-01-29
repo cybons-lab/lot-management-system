@@ -116,7 +116,7 @@ interface HookParams {
 }
 
 function useQuickMappingForm({
-  productId,
+  productId: _productId,
   productCode,
   defaultUnit,
   customerPartNo,
@@ -149,11 +149,13 @@ function useQuickMappingForm({
     if (!customerId || !partNo || !dpId) return toast.error("入力不足です");
     setSubmitting(true);
     try {
+      // Phase1: supplier_item_idが必須
+      // TODO: supplier_item_id選択UIを追加
       const createdItem = await createCustomerItem({
         customer_id: customerId,
-        product_id: productId,
         customer_part_no: partNo,
         base_unit: defaultUnit || "CAN",
+        supplier_item_id: 1, // FIXME: 仮の値
       });
       await createDeliverySetting({
         customer_item_id: createdItem.id,

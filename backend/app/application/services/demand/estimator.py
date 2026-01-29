@@ -18,7 +18,7 @@ class DailyForecast:
 class DemandForecast:
     """需要予測結果."""
 
-    product_id: int
+    product_group_id: int
     warehouse_id: int | None
     as_of_date: date
     horizon_days: int
@@ -43,7 +43,7 @@ class DemandEstimator(Protocol):
 
     def estimate(
         self,
-        product_id: int,
+        product_group_id: int,
         warehouse_id: int | None,
         horizon_days: int,
         as_of_date: date,

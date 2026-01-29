@@ -13,7 +13,6 @@ from app.presentation.api.routes.masters.delivery_places_router import (
 from app.presentation.api.routes.masters.product_mappings_router import (
     router as product_mappings_router,
 )
-from app.presentation.api.routes.masters.products_router import router as products_router
 from app.presentation.api.routes.masters.status_router import router as status_router
 from app.presentation.api.routes.masters.supplier_items_router import (
     router as supplier_items_router,
@@ -34,7 +33,6 @@ __all__ = [
     "customers_router",
     "delivery_places_router",
     "product_mappings_router",
-    "products_router",
     "status_router",
     "supplier_items_router",
     "suppliers_router",

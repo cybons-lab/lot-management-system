@@ -22,14 +22,16 @@ export interface CustomerItem {
   customer_code: string;
   customer_name: string;
   customer_part_no: string;
-  product_id: number;
-  product_code: string;
-  product_name: string;
+  product_group_id: number;
   supplier_id: number | null;
   supplier_item_id: number | null;
+  is_primary: boolean;
+  maker_part_no: string | null;
+  product_code: string;
+  product_name: string;
+  display_name: string | null;
   supplier_code: string | null;
   supplier_name: string | null;
-  is_primary: boolean;
   base_unit: string;
   pack_unit: string | null;
   pack_quantity: number | null;
@@ -46,10 +48,7 @@ export interface CustomerItem {
 export interface CreateCustomerItemRequest {
   customer_id: number;
   customer_part_no: string;
-  product_id: number;
-  supplier_id?: number | null;
-  supplier_item_id?: number | null;
-  is_primary?: boolean;
+  supplier_item_id: number;
   base_unit: string;
   pack_unit?: string | null;
   pack_quantity?: number | null;
@@ -58,10 +57,7 @@ export interface CreateCustomerItemRequest {
 
 export interface UpdateCustomerItemRequest {
   customer_part_no?: string;
-  product_id?: number;
-  supplier_id?: number | null;
-  supplier_item_id?: number | null;
-  is_primary?: boolean | null;
+  supplier_item_id?: number;
   base_unit?: string;
   pack_unit?: string | null;
   pack_quantity?: number | null;
@@ -72,8 +68,28 @@ export interface CustomerItemsListParams {
   skip?: number;
   limit?: number;
   customer_id?: number;
-  product_id?: number;
+  supplier_item_id?: number;
   include_inactive?: boolean;
+}
+
+// ===== Helper Functions =====
+
+/**
+ * Build query string from customer items list params
+ */
+function buildCustomerItemsQuery(params?: CustomerItemsListParams): string {
+  if (!params) return "";
+
+  const searchParams = new URLSearchParams();
+  if (params.skip !== undefined) searchParams.append("skip", params.skip.toString());
+  if (params.limit !== undefined) searchParams.append("limit", params.limit.toString());
+  if (params.customer_id) searchParams.append("customer_id", params.customer_id.toString());
+  if (params.supplier_item_id)
+    searchParams.append("supplier_item_id", params.supplier_item_id.toString());
+  if (params.include_inactive) searchParams.append("include_inactive", "true");
+
+  const queryString = searchParams.toString();
+  return queryString ? `?${queryString}` : "";
 }
 
 // ===== API Functions =====
@@ -83,15 +99,8 @@ export interface CustomerItemsListParams {
  * @endpoint GET /customer-items
  */
 export const getCustomerItems = (params?: CustomerItemsListParams) => {
-  const searchParams = new URLSearchParams();
-  if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
-  if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
-  if (params?.customer_id) searchParams.append("customer_id", params.customer_id.toString());
-  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
-  if (params?.include_inactive) searchParams.append("include_inactive", "true");
-
-  const queryString = searchParams.toString();
-  return http.get<CustomerItem[]>(`masters/customer-items${queryString ? "?" + queryString : ""}`);
+  const query = buildCustomerItemsQuery(params);
+  return http.get<CustomerItem[]>(`masters/customer-items${query}`);
 };
 
 /**

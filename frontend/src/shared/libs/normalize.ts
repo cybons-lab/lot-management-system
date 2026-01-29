@@ -90,7 +90,7 @@ type LotResponse = components["schemas"]["LotResponse"] & {
   maker_part_no?: string | null;
   customer_part_no?: string | null;
 };
-type ProductResponse = components["schemas"]["ProductOut"];
+type ProductResponse = components["schemas"]["SupplierItemResponse"];
 
 // Forward declare OrderLineUI for OrderUI
 export interface OrderLineUI extends Record<string, unknown> {
@@ -98,7 +98,7 @@ export interface OrderLineUI extends Record<string, unknown> {
   order_id: number;
   customer_order_no?: string | null;
   order_code: string;
-  product_id: number;
+  product_group_id: number;
   product_name: string; // Join field (not in DDL)
   order_quantity: string; // DDL v2.2: DECIMAL(15,3) as string
   unit: string;
@@ -146,10 +146,10 @@ export interface OrderUI extends Record<string, unknown> {
 export interface LotUI extends Record<string, unknown> {
   id: number; // Required for UI operations
   lot_id: number; // DDL v2.2
-  lot_number: string;
+  lot_number: string | null;
   maker_part_no: string | null; // Phase 3
   customer_part_no: string | null; // Phase 3
-  product_id: number; // DDL v2.2
+  product_group_id: number; // DDL v2.2
   warehouse_id: number; // DDL v2.2
   supplier_id: number | null; // DDL v2.2
   received_date: string; // DDL v2.2
@@ -265,14 +265,14 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
  * LotResponse → LotUI
  */
 export function normalizeLot(
-  lot: Partial<LotResponse> & { lot_id: number; product_id: number; warehouse_id: number },
+  lot: Partial<LotResponse> & { lot_id: number; product_group_id: number; warehouse_id: number },
 ): LotUI {
   return {
     lot_id: lot.lot_id,
     lot_number: S(lot.lot_number),
     maker_part_no: lot.maker_part_no ?? null,
     customer_part_no: lot.customer_part_no ?? null,
-    product_id: lot.product_id,
+    product_group_id: lot.product_group_id,
     warehouse_id: lot.warehouse_id,
     supplier_id: lot.supplier_id ?? null,
     received_date: S(lot.received_date),
@@ -336,18 +336,18 @@ export function normalizeLot(
 export function normalizeProduct(product: ProductResponse): ProductUI {
   return {
     id: product.id,
-    product_code: S(product.product_code),
-    product_name: S(product.product_name),
+    product_code: S(product.maker_part_no),
+    product_name: S(product.display_name),
     internal_unit: S(product.internal_unit, "CAN"),
     external_unit: S(product.external_unit, "KG"),
-    qty_per_internal_unit: N(product.qty_per_internal_unit, 1),
-    is_active: product.is_active,
+    qty_per_internal_unit: N(Number(product.qty_per_internal_unit), 1),
+    is_active: true, // SupplierItem is active if it exists (valid_to is handled by API)
     created_at: S(product.created_at),
     updated_at: S(product.updated_at),
     // Legacy fields (for backward compatibility)
-    maker_part_code: product.product_code ?? undefined,
-    base_unit: product.internal_unit,
-    consumption_limit_days: undefined,
+    maker_part_code: product.maker_part_no ?? undefined,
+    base_unit: product.internal_unit ?? undefined,
+    consumption_limit_days: product.consumption_limit_days ?? undefined,
   };
 }
 
@@ -360,7 +360,7 @@ export function normalizeOrderLine(line: OrderLine): OrderLineUI {
     order_id: N(line.order_id),
     customer_order_no: (line as Record<string, unknown>).customer_order_no as string | null,
     order_code: formatOrderCode(line),
-    product_id: N(line.product_id),
+    product_group_id: N(line.product_group_id),
     product_name: S(line.product_name),
     order_quantity: String(line.order_quantity ?? "0"),
     unit: S(line.unit, "EA"),

@@ -23,11 +23,12 @@ export function getRoutePermission(path: string): RoutePermissionResult {
     return { allowedRoles: exactMatch.allowedRoles, isDefined: true };
   }
 
-  // パスパラメータを含むルートをマッチング
-  // 例: "/orders/123" は "/orders/:orderId" にマッチ
+  // パスパラメータ (:) や ワイルドカード (*) を含むルートをマッチング
   for (const permission of routePermissions) {
-    if (permission.path.includes(":")) {
-      const pattern = permission.path.replace(/:[^/]+/g, "[^/]+");
+    if (permission.path.includes(":") || permission.path.includes("*")) {
+      // 1. :param -> [^/]+
+      // 2. * -> .*
+      const pattern = permission.path.replace(/:[^/]+/g, "[^/]+").replace(/\*/g, ".*");
       const regex = new RegExp(`^${pattern}$`);
       if (regex.test(path)) {
         return { allowedRoles: permission.allowedRoles, isDefined: true };

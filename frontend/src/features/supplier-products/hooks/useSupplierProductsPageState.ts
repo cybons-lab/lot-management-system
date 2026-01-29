@@ -15,7 +15,6 @@ import type { SupplierProductWithValidTo } from "../components/SupplierProductsT
 
 import { useSupplierProducts } from "./useSupplierProducts";
 
-import { useProducts } from "@/features/products/hooks/useProducts";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
 import { useTable } from "@/hooks/ui";
 import type { SortConfig } from "@/shared/components/data/DataTable";
@@ -55,9 +54,6 @@ export function useSupplierProductsPageState() {
     useSupplierProducts();
   const { data: supplierProducts = [], isLoading, isError, error, refetch } = useList(showInactive);
 
-  const { useList: useProductList } = useProducts();
-  const { data: products = [] } = useProductList(true);
-
   const { useList: useSupplierList } = useSuppliers();
   const { data: suppliers = [] } = useSupplierList(true);
 
@@ -68,13 +64,7 @@ export function useSupplierProductsPageState() {
   const { mutate: permanentDelete, isPending: isPermanentDeleting } = usePermanentDelete();
   const { mutate: restore, isPending: isRestoring } = useRestore();
 
-  // Maps for efficient lookups
-  const productMap = useMemo(() => {
-    return new Map(
-      products.map((p) => [p.id, { code: p.product_code || "", name: p.product_name }]),
-    );
-  }, [products]);
-
+  // Map for efficient lookups
   const supplierMap = useMemo(() => {
     return new Map(suppliers.map((s) => [s.id, { code: s.supplier_code, name: s.supplier_name }]));
   }, [suppliers]);
@@ -83,28 +73,23 @@ export function useSupplierProductsPageState() {
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return supplierProducts;
     const query = searchQuery.toLowerCase();
-    // eslint-disable-next-line complexity
     return supplierProducts.filter((sp) => {
-      const p = productMap.get(sp.product_id);
       const s = supplierMap.get(sp.supplier_id);
       const targetString = `
-        ${sp.product_code || ""} ${sp.product_name || ""}
+        ${sp.maker_part_no || ""}
+        ${sp.display_name || ""}
         ${sp.supplier_code || ""} ${sp.supplier_name || ""}
-        ${p?.code || ""} ${p?.name || ""}
         ${s?.code || ""} ${s?.name || ""}
       `.toLowerCase();
       return targetString.includes(query);
     });
-  }, [supplierProducts, searchQuery, productMap, supplierMap]);
+  }, [supplierProducts, searchQuery, supplierMap]);
 
   // Sorted data
   const sortedData = useMemo(() => {
     const sorted = [...filteredData];
     sorted.sort((a, b) => {
       const getVal = (item: SupplierProduct, col: string) => {
-        if (col === "product_id") {
-          return item.product_code || productMap.get(item.product_id)?.code || "";
-        }
         if (col === "supplier_id") {
           return item.supplier_code || supplierMap.get(item.supplier_id)?.code || "";
         }
@@ -121,7 +106,7 @@ export function useSupplierProductsPageState() {
       return sort.direction === "asc" ? cmp : -cmp;
     });
     return sorted;
-  }, [filteredData, sort, productMap, supplierMap]);
+  }, [filteredData, sort, supplierMap]);
 
   // Paginated data
   const paginatedData = table.paginateData(sortedData);
@@ -218,7 +203,6 @@ export function useSupplierProductsPageState() {
   return {
     // Data
     supplierProducts,
-    products,
     suppliers,
     sortedData,
     isLoading,

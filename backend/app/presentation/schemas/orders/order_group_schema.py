@@ -1,7 +1,7 @@
 # backend/app/presentation/schemas/orders/order_group_schema.py
 """OrderGroup (受注グループ) Pydantic schemas.
 
-業務キー: customer_id × product_id × order_date
+業務キー: customer_id × product_group_id × order_date
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ class OrderGroupBase(BaseSchema):
     """Base order group schema."""
 
     customer_id: int = Field(..., gt=0, description="得意先ID")
-    product_id: int = Field(..., gt=0, description="製品ID")
+    product_group_id: int = Field(..., gt=0, description="製品ID")
     order_date: date = Field(..., description="受注日")
     source_file_name: str | None = Field(None, max_length=255, description="取り込み元ファイル名")
 

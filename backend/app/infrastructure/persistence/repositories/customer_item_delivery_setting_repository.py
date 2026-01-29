@@ -50,7 +50,7 @@ class CustomerItemDeliverySettingRepository:
         """Find a setting matching the given criteria with priority.
 
         Note: Uses composite key lookup for ShipmentTextRequest (order line context).
-        This is intentional as the /shipment-text endpoint receives customer_id + product_id
+        This is intentional as the /shipment-text endpoint receives customer_id + product_group_id
         from OrderLine and needs to resolve to customer_part_no internally.
         Not part of the SSOT refactoring for CRUD operations.
 
@@ -101,16 +101,16 @@ class CustomerItemDeliverySettingRepository:
     def find_customer_part_no(
         self,
         customer_id: int,
-        product_id: int,
+        product_group_id: int,
     ) -> str | None:
-        """Get customer_part_no from customer_items by customer_id and product_id.
+        """Get customer_part_no from customer_items by customer_id and product_group_id.
 
-        Note: Used by ShipmentTextRequest to convert product_id to customer_part_no.
+        Note: Used by ShipmentTextRequest to convert product_group_id to customer_part_no.
         See find_matching_setting() for context.
         """
         stmt = select(CustomerItem.customer_part_no).where(
             CustomerItem.customer_id == customer_id,
-            CustomerItem.product_id == product_id,
+            CustomerItem.product_group_id == product_group_id,
         )
         return cast(str | None, self.db.execute(stmt).scalar_one_or_none())
 

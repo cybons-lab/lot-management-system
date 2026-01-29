@@ -13,9 +13,10 @@ from app.core.database import SessionLocal
 from app.infrastructure.persistence.models import (
     Customer,
     DeliveryPlace,
-    Lot,
+    LotReceipt,
     OrderLine,
     Product,
+    SupplierItem,
     Warehouse,
 )
 from app.presentation.schemas.orders.orders_schema import OrderCreate, OrderLineCreate
@@ -60,8 +61,8 @@ def verify_unit_conversion():
         # 1. Setup Product with Unit Info
         product = db.query(Product).filter(Product.maker_part_code == "UNIT_TEST_PROD").first()
         if not product:
-            product = Product(
-                maker_part_code="UNIT_TEST_PROD",
+            product = SupplierItem(
+                maker_part_no="UNIT_TEST_PROD",
                 product_name="Unit Test Product",
                 base_unit="CAN",
                 internal_unit="CAN",
@@ -73,7 +74,7 @@ def verify_unit_conversion():
             db.commit()
             db.refresh(product)
         print(
-            f"Product created: {product.product_name} (1 {product.internal_unit} = {product.qty_per_internal_unit} {product.external_unit})"
+            f"Product created: {product.display_name} (1 {product.internal_unit} = {product.qty_per_internal_unit} {product.external_unit})"
         )
 
         # 2. Setup Customer & Delivery Place (if needed)
@@ -136,18 +137,18 @@ def verify_unit_conversion():
             db.add(warehouse)
             db.commit()
 
-        lot = Lot(
+        lot = LotReceipt(
             lot_number=f"LOT_{datetime.now().strftime('%Y%m%d%H%M%S')}",
             product_id=product.id,
             warehouse_id=warehouse.id,
             received_date=date.today(),
-            current_quantity=Decimal("5.0"),  # 5 CANs
+            received_quantity=Decimal("5.0"),  # 5 CANs
             unit="CAN",
             status="active",
         )
         db.add(lot)
         db.commit()
-        print(f"Lot created: {lot.lot_number} (Qty: {lot.current_quantity} CAN)")
+        print(f"Lot created: {lot.lot_number} (Qty: {lot.received_quantity} CAN)")
 
         # 6. Verify Allocation Preview uses Converted Quantity
         # Required: 2 CANs (from 40 KG)

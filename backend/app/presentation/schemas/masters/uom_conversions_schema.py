@@ -12,7 +12,7 @@ from app.presentation.schemas.common.base import BaseSchema
 class UomConversionBase(BaseSchema):
     """Base schema for UOM conversions."""
 
-    product_id: int = Field(..., description="製品ID")
+    product_group_id: int = Field(..., description="製品ID")
     external_unit: str = Field(..., max_length=20, description="外部単位")
     factor: Decimal = Field(..., description="換算係数")
 

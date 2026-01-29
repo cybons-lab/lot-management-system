@@ -220,15 +220,15 @@ def calculate_line_allocations(
     already_allocated = _existing_allocated_qty(line)
     remaining = required_qty - already_allocated
 
-    product_id = getattr(line, "product_id", None)
+    product_group_id = getattr(line, "product_group_id", None)
     warehouse_id = getattr(line, "warehouse_id", None)
     product_code = None
     warehouse_code = None
 
-    if product_id:
-        product = db.query(Product).filter(Product.id == product_id).first()
+    if product_group_id:
+        product = db.query(Product).filter(Product.id == product_group_id).first()
         if product:
-            product_code = product.maker_part_code
+            product_code = product.maker_part_no
 
     # Get warehouse_code from warehouse_id if needed
     if warehouse_id and not warehouse_code:
@@ -238,11 +238,11 @@ def calculate_line_allocations(
         if warehouse:
             warehouse_code = warehouse.warehouse_code
 
-    if not product_id:
+    if not product_group_id:
         warning = f"製品ID未設定: order_line={line.id}"
         return FefoLinePlan(
             order_line_id=line.id,
-            product_id=None,
+            product_group_id=None,
             product_code="",
             warehouse_id=warehouse_id,
             warehouse_code=warehouse_code,
@@ -254,7 +254,7 @@ def calculate_line_allocations(
     next_div_value, next_div_warning = _resolve_next_div(db, order, line)
     line_plan = FefoLinePlan(
         order_line_id=line.id,
-        product_id=product_id,
+        product_group_id=product_group_id,
         product_code=product_code or "",
         warehouse_id=warehouse_id,
         warehouse_code=warehouse_code,
@@ -277,7 +277,7 @@ def calculate_line_allocations(
         # Prepare candidates with correct availability context
         service = AllocationCandidateService(db)
         candidates = service.get_candidates(
-            product_id=product_id,
+            product_group_id=product_group_id,
             policy=AllocationPolicy.FEFO,
             warehouse_id=warehouse_id,
             min_available_qty=0.001,  # Filter out 0 qty candidates

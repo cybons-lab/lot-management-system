@@ -28,7 +28,7 @@ export function InventoryByProductTable({
     () => [
       {
         id: "product_code",
-        header: "先方品番",
+        header: "メーカー品番",
         accessor: (row) => row.product_code,
         cell: (row) => <span className="font-medium whitespace-nowrap">{row.product_code}</span>,
         width: 150,
@@ -99,7 +99,7 @@ export function InventoryByProductTable({
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            onViewDetail(row.product_id);
+            onViewDetail(row.product_group_id);
           }}
         >
           詳細
@@ -116,7 +116,7 @@ export function InventoryByProductTable({
     <DataTable
       data={data}
       columns={columns}
-      getRowId={(row) => row.product_id}
+      getRowId={(row) => row.product_group_id}
       onRowClick={handleRowClick}
       rowActions={renderRowActions}
       emptyMessage="データがありません"

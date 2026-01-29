@@ -67,7 +67,7 @@ v3.0: Delegates to AllocationCandidateService (SSOT).
    - 管理者: 「FORECAST_LINKED の受注を全て引当」
    - バッチ処理: 「夜間に全受注を一括引当」
    実装:
-   - フィルタ: product_id, customer_id, delivery_place_id, order_type
+   - フィルタ: product_group_id, customer_id, delivery_place_id, order_type
    - ORDER BY delivery_date ASC: 納期が早い順に引当
    業務影響:
    - 手動で1件ずつ引当する手間を削減
@@ -142,7 +142,7 @@ if TYPE_CHECKING:
 
 def _get_fefo_candidates_for_line(
     db: Session,
-    product_id: int,
+    product_group_id: int,
     warehouse_id: int | None = None,
     lock: bool = True,
 ) -> list[LotCandidate]:
@@ -150,7 +150,7 @@ def _get_fefo_candidates_for_line(
 
     Args:
         db: Database session
-        product_id: Product ID
+        product_group_id: Product ID
         warehouse_id: Optional warehouse ID to filter by
         lock: Whether to lock rows for update
 
@@ -159,7 +159,7 @@ def _get_fefo_candidates_for_line(
     """
     candidate_service = AllocationCandidateService(db)
     return candidate_service.get_candidates(
-        product_id=product_id,
+        product_group_id=product_group_id,
         policy=AllocationPolicy.FEFO,
         lock_mode=LockMode.FOR_UPDATE if lock else LockMode.NONE,
         warehouse_id=warehouse_id,
@@ -206,7 +206,7 @@ def auto_reserve_line(
     # Use SSOT for candidate fetching with warehouse filter
     warehouse_id = getattr(line, "warehouse_id", None)
     candidates = _get_fefo_candidates_for_line(
-        db, line.product_id or 0, warehouse_id=warehouse_id, lock=True
+        db, line.product_group_id or 0, warehouse_id=warehouse_id, lock=True
     )
 
     created_reservations: list[LotReservation] = []
@@ -265,7 +265,7 @@ def _auto_reserve_line_no_commit(
     # Use SSOT for candidate fetching with warehouse filter
     warehouse_id = getattr(line, "warehouse_id", None)
     candidates = _get_fefo_candidates_for_line(
-        db, line.product_id or 0, warehouse_id=warehouse_id, lock=True
+        db, line.product_group_id or 0, warehouse_id=warehouse_id, lock=True
     )
 
     created_reservations: list[LotReservation] = []
@@ -297,7 +297,7 @@ def _auto_reserve_line_no_commit(
 def auto_reserve_bulk(
     db: Session,
     *,
-    product_id: int | None = None,
+    product_group_id: int | None = None,
     customer_id: int | None = None,
     delivery_place_id: int | None = None,
     order_type: str | None = None,
@@ -309,7 +309,7 @@ def auto_reserve_bulk(
 
     Args:
         db: データベースセッション
-        product_id: 製品ID（指定時はその製品のみ対象）
+        product_group_id: 製品ID（指定時はその製品のみ対象）
         customer_id: 得意先ID（指定時はその得意先のみ対象）
         delivery_place_id: 納入先ID（指定時はその納入先のみ対象）
         order_type: 受注タイプ（FORECAST_LINKED, KANBAN, SPOT, ORDER）
@@ -327,8 +327,8 @@ def auto_reserve_bulk(
         )
     )
 
-    if product_id is not None:
-        query = query.filter(OrderLine.product_id == product_id)
+    if product_group_id is not None:
+        query = query.filter(OrderLine.product_group_id == product_group_id)
 
     if customer_id is not None:
         query = query.filter(Order.customer_id == customer_id)

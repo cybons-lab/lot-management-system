@@ -105,7 +105,7 @@ P3: Uses LotReservation exclusively.
    - 明細X: 製品P-002（ブレーキパッド）
    → タイヤをブレーキパッドに引当（誤り）
    解決:
-   - lot.product_id != line.product_id → ValueError
+   - lot.product_group_id != line.product_group_id → ValueError
    → フロントエンドのバグや不正リクエストを検出
 
 10. なぜ在庫不足を AllocationCommitError にするのか（L87-89）
@@ -189,9 +189,9 @@ def create_manual_reservation(
     if lot.status != "active":
         raise AllocationCommitError(f"Lot {lot_id} is not active")
 
-    if lot.product_id != line.product_id:
+    if lot.product_group_id != line.product_group_id:
         raise ValueError(
-            f"Product mismatch: Lot product {lot.product_id} != Line product {line.product_id}"
+            f"Product mismatch: Lot product {lot.product_group_id} != Line product {line.product_group_id}"
         )
 
     available = get_available_quantity(db, lot)

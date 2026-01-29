@@ -28,7 +28,7 @@ interface AddForecastDialogProps {
 export function AddForecastDialog({ open, onOpenChange, onSuccess }: AddForecastDialogProps) {
   const [customerId, setCustomerId] = useState<string>("");
   const [deliveryPlaceId, setDeliveryPlaceId] = useState<string>("");
-  const [productId, setProductId] = useState<string>("");
+  const [productGroupId, setProductGroupId] = useState<string>("");
   const [forecastDate, setForecastDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [quantity, setQuantity] = useState<string>("");
   const [unit, setUnit] = useState<string>("EA");
@@ -60,7 +60,7 @@ export function AddForecastDialog({ open, onOpenChange, onSuccess }: AddForecast
     () =>
       products.map((p) => ({
         value: String(p.id),
-        label: `${p.product_code} - ${p.product_name}`,
+        label: `${p.maker_part_no} - ${p.display_name}`,
       })),
     [products],
   );
@@ -75,7 +75,7 @@ export function AddForecastDialog({ open, onOpenChange, onSuccess }: AddForecast
   );
 
   const handleSubmit = async () => {
-    if (!customerId || !deliveryPlaceId || !productId || !forecastDate || !quantity) {
+    if (!customerId || !deliveryPlaceId || !productGroupId || !forecastDate || !quantity) {
       toast.error("必須項目を入力してください");
       return;
     }
@@ -84,7 +84,7 @@ export function AddForecastDialog({ open, onOpenChange, onSuccess }: AddForecast
       await createMutation.mutateAsync({
         customer_id: Number(customerId),
         delivery_place_id: Number(deliveryPlaceId),
-        product_id: Number(productId),
+        product_group_id: Number(productGroupId),
         forecast_date: forecastDate,
         forecast_quantity: Number(quantity),
         unit,
@@ -96,7 +96,7 @@ export function AddForecastDialog({ open, onOpenChange, onSuccess }: AddForecast
       // Reset form
       setCustomerId("");
       setDeliveryPlaceId("");
-      setProductId("");
+      setProductGroupId("");
       setQuantity("");
     } catch (error) {
       const err = error as { response?: { data?: { detail?: string } }; message?: string };
@@ -139,8 +139,8 @@ export function AddForecastDialog({ open, onOpenChange, onSuccess }: AddForecast
             <Label htmlFor="product">製品 *</Label>
             <SearchableSelect
               options={productOptions}
-              value={productId}
-              onChange={setProductId}
+              value={productGroupId}
+              onChange={setProductGroupId}
               placeholder="製品を選択..."
             />
           </div>

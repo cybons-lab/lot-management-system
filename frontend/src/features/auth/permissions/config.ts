@@ -92,7 +92,11 @@ export const routePermissions: RoutePermission[] = [
   },
   { routeKey: "MASTERS.SUPPLIERS", path: "/suppliers", allowedRoles: ["admin", "user", "guest"] },
   { routeKey: "MASTERS.CUSTOMERS", path: "/customers", allowedRoles: ["admin", "user", "guest"] },
-  { routeKey: "MASTERS.PRODUCTS", path: "/products", allowedRoles: ["admin", "user", "guest"] },
+  {
+    routeKey: "MASTERS.SUPPLIER_PRODUCTS",
+    path: "/supplier-products",
+    allowedRoles: ["admin", "user", "guest"],
+  },
   {
     routeKey: "MASTERS.CUSTOMER_ITEMS",
     path: "/customer-items",
@@ -123,6 +127,11 @@ export const routePermissions: RoutePermission[] = [
   {
     routeKey: "INVENTORY.EXCEL_VIEW",
     path: "/inventory/excel-view",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "INVENTORY.EXCEL_PORTAL",
+    path: "/inventory/excel-portal",
     allowedRoles: ["admin", "user", "guest"],
   },
   {
@@ -218,6 +227,11 @@ export const routePermissions: RoutePermission[] = [
     allowedRoles: ["admin", "user"],
   },
   {
+    routeKey: "RPA.MATERIAL_DELIVERY_NOTE.STEP3_PLAN",
+    path: "/rpa/material-delivery-note/step3/plan",
+    allowedRoles: ["admin", "user"],
+  },
+  {
     routeKey: "RPA.MATERIAL_DELIVERY_NOTE.STEP3",
     path: "/rpa/material-delivery-note/step3",
     allowedRoles: ["admin", "user"],
@@ -230,6 +244,11 @@ export const routePermissions: RoutePermission[] = [
   {
     routeKey: "RPA.MATERIAL_DELIVERY_NOTE.RUNS",
     path: "/rpa/material-delivery-note/runs",
+    allowedRoles: ["admin", "user"],
+  },
+  {
+    routeKey: "RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES",
+    path: "/rpa/material-delivery-note/layer-codes",
     allowedRoles: ["admin", "user"],
   },
   {
@@ -250,11 +269,6 @@ export const routePermissions: RoutePermission[] = [
   {
     routeKey: "RPA.MATERIAL_DELIVERY_NOTE.STEP4_DETAIL",
     path: "/rpa/material-delivery-note/step4/:runId",
-    allowedRoles: ["admin", "user"],
-  },
-  {
-    routeKey: "RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES",
-    path: "/rpa/material-delivery-note/layer-codes",
     allowedRoles: ["admin", "user"],
   },
 
@@ -301,6 +315,7 @@ export const routePermissions: RoutePermission[] = [
   { routeKey: "ADMIN.SEED_SNAPSHOTS", path: "/admin/seed-snapshots", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.CLIENT_LOGS", path: "/admin/client-logs", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.EXPORT", path: "/admin/export", allowedRoles: ["admin"] },
+  { routeKey: "ADMIN.SYSTEM_SETTINGS", path: "/admin/system-settings", allowedRoles: ["admin"] },
   { routeKey: "DEBUG.DB_BROWSER", path: "/debug/db", allowedRoles: ["admin"] },
   { routeKey: "SAP.ROOT", path: "/sap", allowedRoles: ["admin"] },
 ];

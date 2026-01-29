@@ -70,7 +70,7 @@ class LotRepository:
        理由: N+1問題の防止
        効果:
        - Lot と Product/Warehouse を1回のクエリで取得
-       → ループ内でlot.productにアクセスしても追加クエリが発生しない
+       → ループ内でlot.product_groupにアクセスしても追加クエリが発生しない
        パフォーマンス:
        - 100ロット取得時: JOIN なし → 201クエリ（1 + 100 + 100）
        - 100ロット取得時: JOIN あり → 1クエリ
@@ -118,7 +118,7 @@ class LotRepository:
         """Return a lot by its primary key."""
         stmt: Select[tuple[LotReceipt]] = (
             select(LotReceipt)
-            .options(joinedload(LotReceipt.product), joinedload(LotReceipt.warehouse))
+            .options(joinedload(LotReceipt.product_group), joinedload(LotReceipt.warehouse))
             .where(LotReceipt.id == lot_id)
         )
         return cast(LotReceipt | None, self.db.execute(stmt).scalar_one_or_none())
@@ -158,13 +158,13 @@ class LotRepository:
             min_quantity: Minimum available quantity threshold
             excluded_origin_types: List of origin_types to exclude (e.g., ['sample', 'adhoc'])
         """
-        product = self.db.query(Product).filter(Product.maker_part_code == product_code).first()
+        product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
         if not product:
             return []
 
         # First, get all active lots for this product
         stmt: Select[tuple[LotReceipt]] = select(LotReceipt).where(
-            LotReceipt.product_id == product.id,
+            LotReceipt.product_group_id == product.id,
             LotReceipt.status == "active",
         )
 
@@ -204,33 +204,30 @@ class LotRepository:
         expiry_date: date | None = None,
     ) -> LotReceipt:
         """Create a lot placeholder using known identifiers."""
-        warehouse: Warehouse | None = self.db.get(Warehouse, warehouse_id)
         product: Product | None = None
         supplier: Supplier | None = None
         if supplier_code:
             supplier_stmt = select(Supplier).where(Supplier.supplier_code == supplier_code)
             supplier = self.db.execute(supplier_stmt).scalar_one_or_none()
         if product_code:
-            product_stmt = select(Product).where(Product.maker_part_code == product_code)
+            product_stmt = select(Product).where(Product.maker_part_no == product_code)
             product = self.db.execute(product_stmt).scalar_one_or_none()
 
         lot = LotReceipt(
             supplier_id=supplier.id if supplier else None,
-            supplier_code=supplier.supplier_code if supplier else supplier_code,
-            product_id=product.id if product else None,
-            product_code=product.maker_part_code if product else product_code,
-            lot_number=lot_number,
+            product_group_id=product.id if product else None,
+            lot_master_id=0,  # This method seems legacy or incomplete, but for now matching schema
             warehouse_id=warehouse_id,
-            warehouse_code=warehouse.warehouse_code if warehouse else None,
             received_date=receipt_date or date.today(),
             expiry_date=expiry_date,
+            unit="PC",  # Default if missing
         )
         self.db.add(lot)
         return lot
 
     def find_allocation_candidates(
         self,
-        product_id: int,
+        product_group_id: int,
         *,
         policy: AllocationPolicy,
         lock_mode: LockMode,
@@ -248,7 +245,7 @@ class LotRepository:
         All allocation-related candidate fetching should go through this method.
 
         Args:
-            product_id: Product ID to filter by
+            product_group_id: Product ID to filter by
             policy: Sorting policy (FEFO or FIFO)
             lock_mode: Database locking mode
             warehouse_id: Optional warehouse filter
@@ -271,10 +268,10 @@ class LotRepository:
         query = (
             self.db.query(LotReceipt)
             .filter(
-                LotReceipt.product_id == product_id,
+                LotReceipt.product_group_id == product_group_id,
                 LotReceipt.status == "active",
             )
-            .options(joinedload(LotReceipt.product), joinedload(LotReceipt.warehouse))
+            .options(joinedload(LotReceipt.product_group), joinedload(LotReceipt.warehouse))
         )
 
         # Warehouse filter
@@ -388,9 +385,9 @@ class LotRepository:
             candidates.append(
                 LotCandidate(
                     lot_id=lot.id,
-                    lot_code=lot.lot_number,
-                    lot_number=lot.lot_number,
-                    product_code=lot.product.maker_part_code if lot.product else "",
+                    lot_code=lot.lot_number or "",
+                    lot_number=lot.lot_number or "",
+                    product_code=lot.product_group.maker_part_no if lot.product_group else "",
                     warehouse_code=lot.warehouse.warehouse_code if lot.warehouse else "",
                     available_qty=available,
                     expiry_date=lot.expiry_date,

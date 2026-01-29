@@ -89,7 +89,7 @@ class WithdrawalResponse(BaseSchema):
     id: int = Field(..., serialization_alias="withdrawal_id")
     lot_id: int
     lot_number: str
-    product_id: int
+    product_group_id: int
     product_name: str
     product_code: str
     quantity: Decimal

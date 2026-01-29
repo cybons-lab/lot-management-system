@@ -20,10 +20,10 @@ export function useLotSearch(params: LotSearchParams) {
         items: response.items.map((item) =>
           normalizeLot({
             ...item,
-            // normalizeLot expects lot_id, product_id, warehouse_id which are in LotResponse
+            // normalizeLot expects lot_id, product_group_id, warehouse_id which are in LotResponse
             // TypeScript might need reassurance if strict
             lot_id: item.lot_id,
-            product_id: item.product_id,
+            product_group_id: item.product_group_id,
             warehouse_id: item.warehouse_id,
           } as unknown as Parameters<typeof normalizeLot>[0]),
         ),

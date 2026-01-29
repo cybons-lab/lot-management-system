@@ -19,7 +19,7 @@ from app.presentation.schemas.common.base import BaseSchema
 class ProductSupplierImportRow(BaseSchema):
     """Product-supplier relationship in import data."""
 
-    maker_part_code: str = Field(..., description="Product code (products.maker_part_code)")
+    maker_part_code: str = Field(..., description="Product code (products.maker_part_no)")
     product_name: str | None = Field(None, description="Product name (for upsert)")
     base_unit: str | None = Field(None, description="Base unit (e.g., KG, EA)")
     is_primary: bool = Field(default=False, description="Is primary supplier for this product")
@@ -61,9 +61,7 @@ class CustomerItemImportRow(BaseSchema):
     """Customer item mapping for import."""
 
     customer_part_no: str = Field(..., description="Customer's product code")
-    maker_part_code: str = Field(
-        ..., description="Internal product code (products.maker_part_code)"
-    )
+    maker_part_code: str = Field(..., description="Internal product code (products.maker_part_no)")
     supplier_code: str | None = Field(None, description="Supplier code (if specific)")
     base_unit: str | None = Field(None, description="Base unit")
     pack_unit: str | None = Field(None, description="Pack unit")
@@ -75,9 +73,7 @@ class ProductMappingImportRow(BaseSchema):
     """Product mapping for import (4-party relationship: customer + part code + product + supplier)."""
 
     customer_part_code: str = Field(..., description="Customer's part code")
-    maker_part_code: str = Field(
-        ..., description="Internal product code (products.maker_part_code)"
-    )
+    maker_part_code: str = Field(..., description="Internal product code (products.maker_part_no)")
     supplier_code: str = Field(..., description="Supplier code (required)")
     base_unit: str = Field(..., description="Base unit")
     pack_unit: str | None = Field(None, description="Pack unit")

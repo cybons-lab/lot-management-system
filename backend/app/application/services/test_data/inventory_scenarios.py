@@ -214,13 +214,15 @@ def _get_or_create_supplier(db: Session) -> Supplier:
 
 def _get_or_create_product(db: Session, scenario: InventoryScenario) -> Product:
     maker_part_code = f"TEST-INV-{scenario.key}"
-    product = db.query(Product).filter(Product.maker_part_code == maker_part_code).first()
+    product = db.query(Product).filter(Product.maker_part_no == maker_part_code).first()
     if product:
         return product
 
+    supplier = _get_or_create_supplier(db)
     product = Product(
-        maker_part_code=maker_part_code,
-        product_name=f"Inventory Scenario {scenario.key}",
+        supplier_id=supplier.id,
+        maker_part_no=maker_part_code,
+        display_name=f"Inventory Scenario {scenario.key}",
         base_unit="PCS",
         internal_unit="PCS",
         external_unit="PCS",
@@ -240,7 +242,7 @@ def _get_or_create_lot_master(
     lot_number = f"TEST-INV-LOT-{scenario.key}"
     lot_master = (
         db.query(LotMaster)
-        .filter(LotMaster.lot_number == lot_number, LotMaster.product_id == product.id)
+        .filter(LotMaster.lot_number == lot_number, LotMaster.product_group_id == product.id)
         .first()
     )
     if lot_master:
@@ -248,7 +250,7 @@ def _get_or_create_lot_master(
 
     lot_master = LotMaster(
         lot_number=lot_number,
-        product_id=product.id,
+        product_group_id=product.id,
         supplier_id=supplier.id,
         first_receipt_date=date.today(),
         latest_expiry_date=date.today() + timedelta(days=365),
@@ -262,13 +264,15 @@ def _ensure_product_warehouse(db: Session, product: Product, warehouse: Warehous
     exists = (
         db.query(ProductWarehouse)
         .filter(
-            ProductWarehouse.product_id == product.id,
+            ProductWarehouse.product_group_id == product.id,
             ProductWarehouse.warehouse_id == warehouse.id,
         )
         .first()
     )
     if not exists:
-        db.add(ProductWarehouse(product_id=product.id, warehouse_id=warehouse.id, is_active=True))
+        db.add(
+            ProductWarehouse(product_group_id=product.id, warehouse_id=warehouse.id, is_active=True)
+        )
 
 
 def _upsert_lot_receipt(
@@ -282,7 +286,7 @@ def _upsert_lot_receipt(
     lot = (
         db.query(LotReceipt)
         .filter(
-            LotReceipt.product_id == product.id,
+            LotReceipt.product_group_id == product.id,
             LotReceipt.origin_reference == f"inventory-scenario-{scenario.key}",
         )
         .first()
@@ -290,7 +294,7 @@ def _upsert_lot_receipt(
     if not lot:
         lot = LotReceipt(
             lot_master_id=lot_master.id,
-            product_id=product.id,
+            product_group_id=product.id,
             warehouse_id=warehouse.id,
             supplier_id=supplier.id,
             received_date=date.today(),
@@ -309,7 +313,7 @@ def _upsert_lot_receipt(
         return lot
 
     lot.lot_master_id = lot_master.id
-    lot.product_id = product.id
+    lot.product_group_id = product.id
     lot.warehouse_id = warehouse.id
     lot.supplier_id = supplier.id
     lot.received_date = date.today()
@@ -319,7 +323,7 @@ def _upsert_lot_receipt(
     lot.locked_quantity = scenario.locked_qty
     lot.status = scenario.status
     lot.lock_reason = scenario.lock_reason
-    lot.unit = product.internal_unit
+    lot.unit = str(product.internal_unit or "PC")
     lot.origin_type = "adhoc"
     lot.origin_reference = f"inventory-scenario-{scenario.key}"
     db.flush()

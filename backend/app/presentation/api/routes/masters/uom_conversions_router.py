@@ -10,7 +10,8 @@ from app.application.services.common.export_service import ExportService
 from app.application.services.masters.uom_conversion_service import UomConversionService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.infrastructure.persistence.models.masters_models import Product, ProductUomConversion
+from app.infrastructure.persistence.models.masters_models import ProductUomConversion
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.masters_schema import BulkUpsertResponse
 from app.presentation.schemas.masters.uom_conversions_schema import (
@@ -28,23 +29,23 @@ router = APIRouter(prefix="/uom-conversions", tags=["masters"])
 def list_uom_conversions(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    product_id: int | None = Query(None),
+    product_group_id: int | None = Query(None),
     include_inactive: bool = Query(False),
     db: Session = Depends(get_db),
 ):
     """Get UOM conversions (単位換算一覧)."""
     query = select(
         ProductUomConversion.conversion_id,
-        ProductUomConversion.product_id,
+        ProductUomConversion.product_group_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
-        Product.maker_part_code,
-        Product.product_name,
+        SupplierItem.maker_part_no,
+        SupplierItem.display_name,
         ProductUomConversion.valid_to,
-    ).join(Product, ProductUomConversion.product_id == Product.id)
+    ).join(ProductUomConversion.product_group_id == SupplierItem.id)
 
-    if product_id is not None:
-        query = query.where(ProductUomConversion.product_id == product_id)
+    if product_group_id is not None:
+        query = query.where(ProductUomConversion.product_group_id == product_group_id)
 
     if not include_inactive:
         query = query.where(ProductUomConversion.get_active_filter())
@@ -55,12 +56,12 @@ def list_uom_conversions(
     return [
         {
             "conversion_id": r.conversion_id,
-            "product_id": r.product_id,
+            "product_group_id": r.product_group_id,
             "external_unit": r.external_unit,
             "conversion_factor": float(r.factor),
             "remarks": None,
-            "product_code": r.maker_part_code,
-            "product_name": r.product_name,
+            "product_code": r.maker_part_no,
+            "product_name": r.display_name,
             "valid_to": r.valid_to,
         }
         for r in results
@@ -72,24 +73,24 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
     """Export UOM conversions."""
     query = select(
         ProductUomConversion.conversion_id,
-        ProductUomConversion.product_id,
+        ProductUomConversion.product_group_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
-        Product.maker_part_code,
-        Product.product_name,
-    ).join(Product, ProductUomConversion.product_id == Product.id)
+        SupplierItem.maker_part_no,
+        SupplierItem.display_name,
+    ).join(ProductUomConversion.product_group_id == SupplierItem.id)
 
     results = db.execute(query).all()
 
     data = [
         {
             "conversion_id": r.conversion_id,
-            "product_id": r.product_id,
+            "product_group_id": r.product_group_id,
             "external_unit": r.external_unit,
             "conversion_factor": float(r.factor),
             "remarks": None,
-            "product_code": r.maker_part_code,
-            "product_name": r.product_name,
+            "product_code": r.maker_part_no,
+            "product_name": r.display_name,
         }
         for r in results
     ]
@@ -104,7 +105,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
     """Create a new UOM conversion.
 
     Args:
-        data: UOM conversion data (product_id, external_unit, factor)
+        data: UOM conversion data (product_group_id, external_unit, factor)
         db: Database session
 
     Returns:
@@ -113,12 +114,12 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
     service = UomConversionService(db)
 
     # Check if product exists
-    product = db.query(Product).filter(Product.id == data.product_id).first()
+    product = db.query(SupplierItem).filter(SupplierItem.id == data.product_group_id).first()
     if not product:
         raise HTTPException(status_code=400, detail="Product not found")
 
     # Check for duplicate
-    existing = service.get_by_key(data.product_id, data.external_unit)
+    existing = service.get_by_key(data.product_group_id, data.external_unit)
     if existing:
         raise HTTPException(
             status_code=400,
@@ -127,7 +128,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
 
     # Create new conversion
     new_conversion = ProductUomConversion(
-        product_id=data.product_id,
+        product_group_id=data.product_group_id,
         external_unit=data.external_unit,
         factor=data.factor,
     )
@@ -137,12 +138,12 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
 
     return {
         "conversion_id": new_conversion.conversion_id,
-        "product_id": new_conversion.product_id,
+        "product_group_id": new_conversion.product_group_id,
         "external_unit": new_conversion.external_unit,
         "conversion_factor": float(new_conversion.factor),
         "remarks": None,
-        "product_code": product.maker_part_code,
-        "product_name": product.product_name,
+        "product_code": product.maker_part_no,
+        "product_name": product.display_name,
         "valid_to": new_conversion.valid_to,
     }
 
@@ -151,7 +152,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
 def bulk_upsert_uom_conversions(
     request: UomConversionBulkUpsertRequest, db: Session = Depends(get_db)
 ):
-    """Bulk upsert UOM conversions by composite key (product_id,
+    """Bulk upsert UOM conversions by composite key (product_group_id,
     external_unit).
 
     - If a UOM conversion with the same composite key exists, it will be updated

@@ -63,7 +63,9 @@ export function useForecastListPageState() {
       delivery_place_id: state.filters.delivery_place_id
         ? Number(state.filters.delivery_place_id)
         : undefined,
-      product_id: state.filters.product_id ? Number(state.filters.product_id) : undefined,
+      product_group_id: state.filters.product_group_id
+        ? Number(state.filters.product_group_id)
+        : undefined,
     }),
     [state.filters],
   );

@@ -153,7 +153,7 @@ async def to_internal_qty(
 
     # 2. 換算テーブルを検索
     stmt = select(ProductUomConversion).where(
-        ProductUomConversion.product_id == product.id,
+        ProductUomConversion.product_group_id == product.id,
         ProductUomConversion.external_unit == external_unit_value,
     )
     result = await db.execute(stmt)
@@ -161,7 +161,7 @@ async def to_internal_qty(
 
     if not conversion:
         raise QuantityConversionError(
-            f"単位換算定義が見つかりません: 製品={product.product_name}, 単位={external_unit_value}"
+            f"単位換算定義が見つかりません: 製品={product.display_name}, 単位={external_unit_value}"
         )
 
     # 3. 換算実行 (internal = external * factor)

@@ -10,9 +10,13 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
     ReservationSourceType,
     ReservationStatus,
 )
-from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace, Product
+from app.infrastructure.persistence.models.masters_models import (
+    Customer,
+    DeliveryPlace,
+)
 from app.infrastructure.persistence.models.order_groups_models import OrderGroup
 from app.infrastructure.persistence.models.orders_models import Order, OrderLine
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 from .inventory import get_any_lot_id
 from .scenarios.stockout_scenarios import STOCKOUT_SCENARIOS
@@ -21,8 +25,8 @@ from .scenarios.stockout_scenarios import STOCKOUT_SCENARIOS
 def generate_orders(
     db: Session,
     customers: list[Customer],
-    products: list[Product],
-    products_with_forecast: list[Product],
+    products: list[SupplierItem],
+    products_with_forecast: list[SupplierItem],
     delivery_places: list[DeliveryPlace],
     options: object = None,
     calendar: object = None,
@@ -72,7 +76,7 @@ def generate_orders(
     line_count = 0
 
     # Track OrderGroups to avoid uniqueness violation if multiple runs (though we usually clear data)
-    # Key: (customer_id, product_id, order_date) -> OrderGroup.id
+    # Key: (customer_id, product_group_id, order_date) -> OrderGroup.id
     order_group_map: dict[tuple[int, int, date], int] = {}
 
     for (customer_id, _order_date), fc_list in order_groups.items():
@@ -122,29 +126,29 @@ def generate_orders(
             # Note: We create one OG per Order for simplicity in test data
             og = OrderGroup(
                 customer_id=customer_id,
-                # product_id is nullable in OrderGroup? The model snippet didn't show it clearly but
+                # product_group_id is nullable in OrderGroup? The model snippet didn't show it clearly but
                 # in loop L182 it was set. Let's assume OrderGroup can be per-order or per-product-order.
-                # In L175 existing code: og_key = (customer_id, fc.product_id, order.order_date)
+                # In L175 existing code: og_key = (customer_id, fc.product_group_id, order.order_date)
                 # This implies one OG per Product in the existing logic.
-                # If we want to group lines into one OG, we need to check if OG has product_id.
-                # Let's check existing usage: "product_id=fc.product_id" (L182).
+                # If we want to group lines into one OG, we need to check if OG has product_group_id.
+                # Let's check existing usage: "product_group_id=fc.product_group_id" (L182).
                 # This means OrderGroup is partitioned by Product.
                 # So we must create OGs inside the loop if we want to follow that pattern.
                 # BUT, usually an OrderGroup (Batch) contains multiple products.
-                # If the current model enforces product_id on OrderGroup, that's restrictive.
+                # If the current model enforces product_group_id on OrderGroup, that's restrictive.
                 # Let's look at L14 in orders.py imports -> OrderGroup is imported.
-                # Assuming product_id IS required on OrderGroup based on previous code.
+                # Assuming product_group_id IS required on OrderGroup based on previous code.
                 # So we will resolve OG inside the loop.
                 order_date=order.order_date,
                 source_file_name=ocr_filename,  # Use the same filename for all products in this order
             )
-            # Actually, we can't create it here if it needs product_id.
+            # Actually, we can't create it here if it needs product_group_id.
             pass
 
         # Create OrderLines from forecasts
         for fc in fc_list:
             # Get product for unit info
-            product = next((p for p in products if p.id == fc.product_id), None)
+            product = next((p for p in products if p.id == fc.product_group_id), None)
             if not product:
                 continue
 
@@ -200,7 +204,7 @@ def generate_orders(
             # Create OrderLine
             ol = OrderLine(
                 order_id=order.id,
-                product_id=fc.product_id,
+                product_group_id=fc.product_group_id,
                 delivery_date=delivery_date,
                 order_quantity=qty,
                 unit=unit,
@@ -212,13 +216,13 @@ def generate_orders(
             # --- Order Group Logic ---
             if not is_forecast_linked:
                 # Need specific OrderGroup for this product/date
-                og_key = (customer_id, fc.product_id, order.order_date)
+                og_key = (customer_id, fc.product_group_id, order.order_date)
                 og_id = order_group_map.get(og_key)
 
                 if not og_id:
                     og = OrderGroup(
                         customer_id=customer_id,
-                        product_id=fc.product_id,
+                        product_group_id=fc.product_group_id,
                         order_date=order.order_date,
                         source_file_name=ocr_filename,  # Consistent filename for the order
                     )
@@ -238,7 +242,7 @@ def generate_orders(
 
             # If allocated, create LotReservation
             if status == "allocated":
-                lot_id = get_any_lot_id(db, fc.product_id, qty)
+                lot_id = get_any_lot_id(db, fc.product_group_id, qty)
                 if lot_id:
                     res = LotReservation(
                         lot_id=lot_id,
@@ -262,7 +266,7 @@ def generate_orders(
 def _generate_stockout_scenarios(
     db: Session,
     customers: list[Customer],
-    products: list[Product],
+    products: list[SupplierItem],
     delivery_places: list[DeliveryPlace],
 ):
     """Generate specific stockout scenarios."""
@@ -305,7 +309,7 @@ def _generate_stockout_scenarios(
 
         ol = OrderLine(
             order_id=order.id,
-            product_id=product.id,
+            product_group_id=product.id,
             delivery_date=today,  # Due today or past
             order_quantity=qty,
             unit="pcs",

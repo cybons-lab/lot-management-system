@@ -1,9 +1,14 @@
-"""SupplierItem model (formerly ProductSupplier) for supplier-product relationships.
+"""SupplierItem model for managing supplier products.
 
 仕入先品目マスタ: 仕入先から仕入れる品目の情報を管理。
-- maker_part_no: メーカー品番（仕入先の品番）
-- product_id: 内部製品マスタへの参照
-- is_primary: 主要仕入先フラグ（1製品につき1つ）
+2コード体系における「メーカー品番」の実体。
+
+- maker_part_no: メーカー品番（仕入先の品番、在庫実体キー）
+- display_name: 製品名
+- base_unit: 基本単位（在庫単位）
+- internal_unit, external_unit, qty_per_internal_unit: 単位変換情報
+- consumption_limit_days: 消費期限日数
+- requires_lot_number: ロット番号管理要否
 
 Business key: UNIQUE(supplier_id, maker_part_no)
 """
@@ -36,19 +41,22 @@ from app.infrastructure.persistence.models.soft_delete_mixin import SoftDeleteMi
 
 
 if TYPE_CHECKING:
+    from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
+    from app.infrastructure.persistence.models.inbound_models import InboundPlanLine
+    from app.infrastructure.persistence.models.lot_master_model import LotMaster
     from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
     from app.infrastructure.persistence.models.masters_models import (
         CustomerItem,
-        Product,
         Supplier,
     )
+    from app.infrastructure.persistence.models.orders_models import OrderLine
 
 
 class SupplierItem(SoftDeleteMixin, Base):
-    """仕入先品目マスタ (旧 ProductSupplier).
+    """仕入先品目マスタ (メーカー品番マスタ).
 
-    仕入先から仕入れる品目の情報を管理。
-    1製品に対して複数の仕入先を紐づけ可能。is_primary=True の仕入先が主要仕入先（1製品につき1つ）。
+    2コード体系における「メーカー品番」の実体。
+    仕入先から仕入れる品目の情報（品番、単位、リードタイムなど）を管理。
 
     DDL: supplier_items
     Primary key: id (BIGSERIAL)
@@ -59,11 +67,6 @@ class SupplierItem(SoftDeleteMixin, Base):
     __tablename__ = "supplier_items"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    product_id: Mapped[int | None] = mapped_column(
-        BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
-        nullable=True,
-    )
     supplier_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("suppliers.id", ondelete="RESTRICT"),
@@ -74,10 +77,43 @@ class SupplierItem(SoftDeleteMixin, Base):
         nullable=False,
         comment="メーカー品番（仕入先の品番）",
     )
-    base_unit: Mapped[str | None] = mapped_column(
+    display_name: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False,
+        comment="製品名（必須）",
+    )
+    base_unit: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        comment="基本単位（在庫単位、必須）",
+    )
+    # Unit conversion fields
+    internal_unit: Mapped[str | None] = mapped_column(
         String(20),
         nullable=True,
-        comment="基本単位（在庫単位）",
+        comment="社内単位/引当単位（例: CAN）",
+    )
+    external_unit: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        comment="外部単位/表示単位（例: KG）",
+    )
+    qty_per_internal_unit: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 4),
+        nullable=True,
+        comment="内部単位あたりの数量（例: 1 CAN = 20.0 KG）",
+    )
+    # Product attributes
+    consumption_limit_days: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+        comment="消費期限日数",
+    )
+    requires_lot_number: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        comment="ロット番号管理が必要",
     )
     net_weight: Mapped[Decimal | None] = mapped_column(
         Numeric(10, 3),
@@ -89,20 +125,10 @@ class SupplierItem(SoftDeleteMixin, Base):
         nullable=True,
         comment="重量単位",
     )
-    is_primary: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        default=False,
-    )
     lead_time_days: Mapped[int | None] = mapped_column(
         Integer,
         nullable=True,
         comment="リードタイム（日）",
-    )
-    display_name: Mapped[str | None] = mapped_column(
-        String(200),
-        nullable=True,
-        comment="表示名（省略時はメーカー品番を使用）",
     )
     notes: Mapped[str | None] = mapped_column(
         Text,
@@ -133,41 +159,58 @@ class SupplierItem(SoftDeleteMixin, Base):
             "maker_part_no",
             name="uq_supplier_items_supplier_maker",
         ),
-        # 1製品につき1つのis_primary=trueを保証
-        Index(
-            "idx_supplier_items_is_primary",
-            "product_id",
-            unique=True,
-            postgresql_where=text("is_primary = true"),
-        ),
         Index("idx_supplier_items_valid_to", "valid_to"),
         Index("idx_supplier_items_maker_part", "maker_part_no"),
-        Index("idx_supplier_items_product", "product_id"),
         Index("idx_supplier_items_supplier", "supplier_id"),
     )
 
     # Relationships
-    product: Mapped[Product] = relationship(
-        "Product",
-        back_populates="supplier_items",
-    )
     supplier: Mapped[Supplier] = relationship(
         "Supplier",
         back_populates="supplier_items",
     )
     customer_items: Mapped[list[CustomerItem]] = relationship(
         "CustomerItem",
+        foreign_keys="[CustomerItem.supplier_item_id]",
         back_populates="supplier_item",
+    )
+    customer_items_as_product_group: Mapped[list[CustomerItem]] = relationship(
+        "CustomerItem",
+        foreign_keys="[CustomerItem.product_group_id]",
+        back_populates="product_group",
     )
     lot_receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",
+        foreign_keys="[LotReceipt.supplier_item_id]",
         back_populates="supplier_item",
+    )
+
+    # Additional relationships from removed ProductGroup model (via product_group_id)
+    forecast_current: Mapped[list[ForecastCurrent]] = relationship(
+        "ForecastCurrent",
+        foreign_keys="[ForecastCurrent.product_group_id]",
+        back_populates="product_group",
+    )
+    lot_masters: Mapped[list[LotMaster]] = relationship(
+        "LotMaster",
+        foreign_keys="[LotMaster.product_group_id]",
+        back_populates="product_group",
+    )
+    order_lines: Mapped[list[OrderLine]] = relationship(
+        "OrderLine",
+        foreign_keys="[OrderLine.product_group_id]",
+        back_populates="product_group",
+    )
+    inbound_plan_lines: Mapped[list[InboundPlanLine]] = relationship(
+        "InboundPlanLine",
+        foreign_keys="[InboundPlanLine.product_group_id]",
+        back_populates="product_group",
     )
 
     def __repr__(self) -> str:
         return (
             f"<SupplierItem(id={self.id}, supplier_id={self.supplier_id}, "
-            f"maker_part_no={self.maker_part_no}, is_primary={self.is_primary})>"
+            f"maker_part_no={self.maker_part_no}, display_name={self.display_name})>"
         )
 
 

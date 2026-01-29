@@ -1,14 +1,17 @@
 /**
  * CustomerItemFormBasicSection
  * 得意先品番の基本情報セクション（フォーム用）
+ * Phase1対応: supplier_item_id を必須に変更
  */
 
+import { AlertCircle } from "lucide-react";
 import { type Control, Controller, type FieldErrors } from "react-hook-form";
 
 import type { CustomerItemFormData } from "./customerItemFormSchema";
 
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
+import { Alert, AlertDescription } from "@/components/ui/feedback/alert";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 
 interface Option {
@@ -23,10 +26,10 @@ interface CustomerItemFormBasicSectionProps {
   isSubmitting: boolean;
   isLoading: boolean;
   customerOptions: Option[];
-  productOptions: Option[];
+  supplierItemOptions?: Option[];
   isLoadingCustomers: boolean;
-  isLoadingProducts: boolean;
-  onProductSelect: (value: string) => void;
+  isLoadingSupplierItems?: boolean;
+  onSupplierItemSelect?: (value: string) => void;
 }
 
 // eslint-disable-next-line max-lines-per-function -- フォームセクションのため許容
@@ -36,11 +39,15 @@ export function CustomerItemFormBasicSection({
   isSubmitting,
   isLoading,
   customerOptions,
-  productOptions,
+  supplierItemOptions = [],
   isLoadingCustomers,
-  isLoadingProducts,
-  onProductSelect,
+  isLoadingSupplierItems = false,
+  onSupplierItemSelect,
 }: CustomerItemFormBasicSectionProps) {
+  // Phase1: supplier_item_id が未設定かチェック（警告表示用）
+  // Note: この機能は一時的に無効化（react-hook-formのAPIアクセスパターン変更のため）
+  // const [isSupplierItemMissing, setIsSupplierItemMissing] = React.useState(false);
+  const isSupplierItemMissing = false; // TODO: watch()を使用した実装に変更
   return (
     <fieldset className="rounded-lg border p-4">
       <legend className="px-2 text-sm font-semibold text-slate-700">基本情報</legend>
@@ -56,8 +63,8 @@ export function CustomerItemFormBasicSection({
             render={({ field }) => (
               <SearchableSelect
                 options={customerOptions}
-                value={field.value ? String(field.value) : ""}
-                onChange={(value) => field.onChange(value ? Number(value) : 0)}
+                value={field.value ? String(field.value) : undefined}
+                onChange={(value) => field.onChange(value && value !== "" ? Number(value) : 0)}
                 placeholder={isLoadingCustomers ? "読込中..." : "得意先を検索..."}
                 disabled={isSubmitting || isLoading}
               />
@@ -68,10 +75,10 @@ export function CustomerItemFormBasicSection({
           )}
         </div>
 
-        {/* 先方品番（手入力） */}
+        {/* 得意先品番（手入力） */}
         <div>
           <Label htmlFor="customer_part_no" className="mb-2 block text-sm font-medium">
-            先方品番 <span className="text-red-500">*</span>
+            得意先品番 <span className="text-red-500">*</span>
           </Label>
           <Controller
             name="customer_part_no"
@@ -95,30 +102,44 @@ export function CustomerItemFormBasicSection({
           </p>
         </div>
 
-        {/* メーカー品番選択 */}
+        {/* メーカー品番選択 (Phase1: supplier_item_id) */}
         <div>
-          <Label htmlFor="product_id" className="mb-2 block text-sm font-medium">
+          <Label htmlFor="supplier_item_id" className="mb-2 block text-sm font-medium">
             メーカー品番 <span className="text-red-500">*</span>
           </Label>
           <Controller
-            name="product_id"
+            name="supplier_item_id"
             control={control}
             render={({ field }) => (
               <SearchableSelect
-                options={productOptions}
-                value={field.value ? String(field.value) : ""}
-                onChange={onProductSelect}
-                placeholder={isLoadingProducts ? "読込中..." : "メーカー品番を検索..."}
+                options={supplierItemOptions}
+                value={field.value ? String(field.value) : undefined}
+                onChange={(value) => {
+                  field.onChange(value ? Number(value) : 0);
+                  if (onSupplierItemSelect) {
+                    onSupplierItemSelect(value);
+                  }
+                }}
+                placeholder={isLoadingSupplierItems ? "読込中..." : "メーカー品番を検索..."}
                 disabled={isSubmitting || isLoading}
               />
             )}
           />
-          {errors.product_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.product_id.message}</p>
+          {errors.supplier_item_id && (
+            <p className="mt-1 text-sm text-red-600">{errors.supplier_item_id.message}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">
-            先方品番に対応するメーカー品番（仕入先の製品番号）
+          <p className="mt-1 text-xs text-amber-600">
+            ⚠️ Phase1必須:
+            メーカー品番の設定は必須です。設定しない場合、出荷処理がブロックされます。
           </p>
+          {isSupplierItemMissing && (
+            <Alert variant="destructive" className="mt-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                メーカー品番の設定は必須です。設定しない場合、この得意先品番での出荷処理がブロックされます。
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         {/* Base Unit */}

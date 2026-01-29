@@ -9,7 +9,7 @@ import { formatDateKey } from "@/shared/utils/date";
 
 interface OrderSummaryRowProps {
   order: OrderWithLinesResponse;
-  targetProductId: number; // フィルタリング対象の製品ID
+  targetProductGroupId: number; // フィルタリング対象の製品グループID
   targetDeliveryPlaceId: number; // フィルタリング対象の納入先ID
   logic: ReturnType<typeof useLotAllocationForOrder>;
   hoveredDate?: string | null;
@@ -18,7 +18,7 @@ interface OrderSummaryRowProps {
 
 export function OrderSummaryRow({
   order,
-  targetProductId,
+  targetProductGroupId,
   targetDeliveryPlaceId,
   logic,
   hoveredDate,
@@ -27,7 +27,7 @@ export function OrderSummaryRow({
   const [isExpanded, setIsExpanded] = useState(false);
   const { targetLines, totalRequired, totalAllocated, statusLabel, statusColor } = useOrderSummary(
     order,
-    targetProductId,
+    targetProductGroupId,
     targetDeliveryPlaceId,
     logic,
   );
@@ -81,14 +81,15 @@ export function OrderSummaryRow({
 
 function useOrderSummary(
   order: OrderWithLinesResponse,
-  targetProductId: number,
+  targetProductGroupId: number,
   targetDeliveryPlaceId: number,
   logic: ReturnType<typeof useLotAllocationForOrder>,
 ) {
   const targetLines =
     order.lines?.filter(
       (line) =>
-        line.product_id === targetProductId && line.delivery_place_id === targetDeliveryPlaceId,
+        line.product_group_id === targetProductGroupId &&
+        line.delivery_place_id === targetDeliveryPlaceId,
     ) || [];
 
   const totalRequired = targetLines.reduce(

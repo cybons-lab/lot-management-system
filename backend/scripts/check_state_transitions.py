@@ -13,7 +13,8 @@ from sqlalchemy.orm import sessionmaker
 from app.application.services.allocations.confirm import confirm_reservation
 from app.application.services.inventory.lot_reservation_service import LotReservationService
 from app.infrastructure.external.sap_gateway import SapRegistrationResult
-from app.infrastructure.persistence.models import Lot, LotReservation, Product, Warehouse
+from app.infrastructure.persistence.models import LotReceipt as Lot
+from app.infrastructure.persistence.models import LotReservation, Product, Warehouse
 from app.infrastructure.persistence.models.base_model import Base
 
 

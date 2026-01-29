@@ -28,7 +28,7 @@ const schema = z.object({
   customer_id: z.coerce.number().min(1, "得意先を選択してください"),
   customer_part_code: z.string().min(1, "先方品番は必須です"),
   supplier_id: z.coerce.number().min(1, "仕入先を選択してください"),
-  product_id: z.coerce.number().min(1, "商品を選択してください"),
+  product_group_id: z.coerce.number().min(1, "商品を選択してください"),
   base_unit: z.string().min(1, "基本単位は必須です"),
   pack_unit: z.string().optional(),
   pack_quantity: z.coerce.number().optional(),
@@ -43,7 +43,7 @@ interface ProductMappingFormProps {
     customer_id?: number;
     customer_part_code?: string;
     supplier_id?: number;
-    product_id?: number;
+    product_group_id?: number;
     base_unit?: string;
     pack_unit?: string | null;
     pack_quantity?: number | null;
@@ -76,7 +76,7 @@ export function ProductMappingForm({
       customer_id: initialData?.customer_id ?? 0,
       customer_part_code: initialData?.customer_part_code ?? "",
       supplier_id: initialData?.supplier_id ?? 0,
-      product_id: initialData?.product_id ?? 0,
+      product_group_id: initialData?.product_group_id ?? 0,
       base_unit: initialData?.base_unit ?? "",
       pack_unit: initialData?.pack_unit ?? "",
       pack_quantity: initialData?.pack_quantity ?? undefined,
@@ -168,7 +168,7 @@ export function ProductMappingForm({
 
         <FormField
           control={form.control}
-          name="product_id"
+          name="product_group_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel>商品</FormLabel>

@@ -127,8 +127,8 @@ export function QuickWithdrawalDialog({
       resetFormState(initialShipDate);
 
       // 製品IDからデフォルトの得意先・納入先を取得
-      if (lot.product_id) {
-        getDefaultDestination({ product_id: lot.product_id })
+      if (lot.product_group_id) {
+        getDefaultDestination({ product_group_id: lot.product_group_id })
           .then((result) => {
             if (result.mapping_found && result.customer_id) {
               setFormState((prev) => ({
@@ -149,7 +149,7 @@ export function QuickWithdrawalDialog({
               setDeliveryPlaceNotFound(false);
               if (!result.mapping_found) {
                 toast.warning(
-                  `製品 (ID: ${lot.product_id}) のマッピングが未設定です。設定を行ってください。`,
+                  `製品 (ID: ${lot.product_group_id}) のマッピングが未設定です。設定を行ってください。`,
                 );
               }
             }
@@ -162,7 +162,7 @@ export function QuickWithdrawalDialog({
           });
       }
     }
-  }, [open, initialShipDate, lot.product_id, resetFormState]);
+  }, [open, initialShipDate, lot.product_group_id, resetFormState]);
 
   useEffect(() => {
     deliveryPlaceIdRef.current = formState.delivery_place_id;
@@ -511,9 +511,9 @@ export function QuickWithdrawalDialog({
 
       {/* マッピング設定ダイアログ */}
       <QuickMappingSetupDialog
-        productId={lot.product_id}
+        productId={lot.product_group_id}
         productName={lot.product_name || "不明な製品"}
-        productCode={lot.product_code || String(lot.product_id)}
+        productCode={lot.product_code || String(lot.product_group_id)}
         defaultUnit={lot.unit}
         open={isSetupDialogOpen}
         onOpenChange={setIsSetupDialogOpen}

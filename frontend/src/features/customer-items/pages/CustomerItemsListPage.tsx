@@ -197,7 +197,7 @@ export function CustomerItemsListPage() {
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
       <PageHeader
-        title="先方品番マスタ"
+        title="得意先品番マスタ"
         subtitle="得意先品番とメーカー品番の紐付け管理"
         backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
@@ -323,7 +323,7 @@ export function CustomerItemsListPage() {
         open={isSoftDeleteOpen}
         onOpenChange={(open) => !open && closeDeleteDialog()}
         title="マッピングを無効化しますか？"
-        description={`${deletingItem?.customer_name} - ${deletingItem?.product_name} の設定を無効化します。`}
+        description={`${deletingItem?.customer_name} - ${deletingItem?.display_name} の設定を無効化します。`}
         onConfirm={executeSoftDelete}
         isPending={isSoftDeleting}
         onSwitchToPermanent={switchToPermanentDelete}
@@ -335,7 +335,7 @@ export function CustomerItemsListPage() {
         onConfirm={executePermanentDelete}
         isPending={isPermanentDeleting}
         title="マッピングを完全に削除しますか？"
-        description={`${deletingItem?.customer_name} - ${deletingItem?.product_name} の設定を完全に削除します。この操作は取り消せません。`}
+        description={`${deletingItem?.customer_name} - ${deletingItem?.display_name} の設定を完全に削除します。この操作は取り消せません。`}
         confirmationPhrase={deletingItem?.customer_part_no || "delete"}
       />
 
@@ -345,7 +345,7 @@ export function CustomerItemsListPage() {
         onConfirm={executeRestore}
         isPending={isRestoring}
         title="設定を復元しますか？"
-        description={`${restoringItem?.customer_name} - ${restoringItem?.product_name} の設定を有効状態に戻します。`}
+        description={`${restoringItem?.customer_name} - ${restoringItem?.display_name} の設定を有効状態に戻します。`}
       />
 
       {/* 一括削除ダイアログ（管理者: 物理削除、非管理者: 論理削除） */}

@@ -171,7 +171,7 @@ from .base_model import Base
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .auth_models import User
     from .lot_reservations_model import LotReservation
-    from .masters_models import Customer, Product
+    from .masters_models import Customer, SupplierItem
     from .order_groups_models import OrderGroup
 
 
@@ -251,7 +251,7 @@ class OrderLine(Base):
 
     DDL: order_lines
     Primary key: id (BIGSERIAL)
-    Foreign keys: order_id -> orders(id), product_id -> products(id)
+    Foreign keys: order_id -> orders(id), product_group_id -> product_groups(id)
     """
 
     __tablename__ = "order_lines"
@@ -268,11 +268,11 @@ class OrderLine(Base):
         nullable=True,
         comment="受注グループへの参照（得意先×製品×受注日）",
     )
-    product_id: Mapped[int | None] = mapped_column(
+    product_group_id: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=True,
-        comment="製品ID（OCR取込時はNULL可、変換後に設定）",
+        comment="製品グループID（OCR取込時はNULL可、変換後に設定）",
     )
 
     # OCR取込時の元データ
@@ -339,7 +339,7 @@ class OrderLine(Base):
 
     __table_args__ = (
         Index("idx_order_lines_order", "order_id"),
-        Index("idx_order_lines_product", "product_id"),
+        Index("idx_order_lines_product_group", "product_group_id"),
         Index("idx_order_lines_date", "delivery_date"),
         Index("idx_order_lines_delivery_place", "delivery_place_id"),
         Index("idx_order_lines_status", "status"),
@@ -383,7 +383,7 @@ class OrderLine(Base):
     order_group: Mapped[OrderGroup | None] = relationship(
         "OrderGroup", back_populates="order_lines"
     )
-    product: Mapped[Product] = relationship("Product", back_populates="order_lines")
+    product_group: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="order_lines")
 
     # P3: Relationship to LotReservation for efficient loading (avoid N+1)
     lot_reservations: Mapped[list[LotReservation]] = relationship(

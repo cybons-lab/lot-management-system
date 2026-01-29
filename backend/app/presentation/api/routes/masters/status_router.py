@@ -11,9 +11,7 @@ from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.masters_models import (
     CustomerItem,
     CustomerItemDeliverySetting,
-    Product,
 )
-from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import get_current_user
 
@@ -34,14 +32,10 @@ def get_master_status(
         .scalar()
     )
 
-    # 2. Unmapped Products (No supplier assigned in SupplierItem)
-    # products table LEFT JOIN supplier_items table
-    unmapped_products_count = (
-        db.query(func.count(Product.id))
-        .outerjoin(SupplierItem, Product.id == SupplierItem.product_id)
-        .filter(SupplierItem.id.is_(None))
-        .scalar()
-    )
+    # 2. Unmapped Products - no longer applicable as ProductGroup was removed
+    # SupplierItem IS the product entity now
+    # Count could be: supplier_items with no customer_items references
+    unmapped_products_count = 0  # Placeholder - redefine business logic if needed
 
     # 3. Unmapped Customer Item Delivery Settings
     # customer_items table LEFT JOIN customer_item_delivery_settings

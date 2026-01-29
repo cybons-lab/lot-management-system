@@ -10,6 +10,7 @@ interface Props {
   isEditing?: boolean;
   localChanges?: Record<string, number>;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
+  onLotFieldChange?: (lotId: number, field: string, value: string) => void;
   onAddColumn?: (date: Date) => void;
 }
 
@@ -19,6 +20,7 @@ export function LotSection({
   isEditing,
   localChanges,
   onQtyChange,
+  onLotFieldChange,
   onAddColumn,
 }: Props) {
   const { lotId, lotInfo, destinations, totalStock, totalShipment } = lot;
@@ -27,7 +29,12 @@ export function LotSection({
     <div className="border border-slate-300 mt-6 text-xs bg-white shadow-sm rounded-md overflow-hidden min-w-max">
       <div className="flex shrink-0">
         {/* 1. Lot Information (Fixed) */}
-        <LotInfoGroups lotInfo={lotInfo} />
+        <LotInfoGroups
+          lotInfo={lotInfo}
+          lotId={lotId}
+          isEditing={isEditing}
+          onFieldChange={onLotFieldChange}
+        />
 
         {/* 2. Inbound Qty (Big Vertical) */}
         <BigStatColumn

@@ -41,16 +41,16 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
     def _enrich_item(self, item: CustomerItem) -> dict:
         """Enrich customer item with related names."""
-        self.db.refresh(item, attribute_names=["customer", "product", "supplier"])
+        self.db.refresh(item, attribute_names=["customer", "product_group", "supplier"])
         return {
             "id": item.id,
             "customer_id": item.customer_id,
             "customer_code": item.customer.customer_code,
             "customer_name": item.customer.customer_name,
             "customer_part_no": item.customer_part_no,
-            "product_id": item.product_id,
-            "product_code": item.product.maker_part_code,
-            "product_name": item.product.product_name,
+            "product_group_id": item.product_group_id,
+            "product_code": item.product_group.maker_part_no,
+            "product_name": item.product_group.display_name,
             "supplier_id": item.supplier_id,
             "supplier_item_id": item.supplier_item_id,
             "supplier_code": item.supplier.supplier_code if item.supplier else None,
@@ -76,13 +76,18 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         skip: int = 0,
         limit: int = 100,
         customer_id: int | None = None,
-        product_id: int | None = None,
+        product_group_id: int | None = None,
+        supplier_id: int | None = None,
         include_inactive: bool = False,
     ) -> list[dict]:
         """Get all customer item mappings with optional filtering and enriched data."""
         from sqlalchemy import select
 
-        from app.infrastructure.persistence.models.masters_models import Customer, Product, Supplier
+        from app.infrastructure.persistence.models.masters_models import (
+            Customer,
+            Supplier,
+        )
+        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         # Build query with JOINs to get related names
         query = (
@@ -90,21 +95,27 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 CustomerItem,
                 Customer.customer_code,
                 Customer.customer_name,
-                Product.product_name,
-                Product.maker_part_code,
+                SupplierItem.display_name,
+                SupplierItem.maker_part_no,
                 Supplier.supplier_code,
                 Supplier.supplier_name,
             )
             .join(Customer, CustomerItem.customer_id == Customer.id)
-            .join(Product, CustomerItem.product_id == Product.id)
+            .join(SupplierItem, CustomerItem.product_group_id == SupplierItem.id)
             .outerjoin(Supplier, CustomerItem.supplier_id == Supplier.id)
         )
 
         if customer_id is not None:
             query = query.filter(CustomerItem.customer_id == customer_id)
 
-        if product_id is not None:
-            query = query.filter(CustomerItem.product_id == product_id)
+        if product_group_id is not None:
+            query = query.filter(CustomerItem.product_group_id == product_group_id)
+
+        if supplier_id is not None:
+            # Filter via supplier_item_id -> supplier_items.supplier_id
+            query = query.join(
+                SupplierItem, CustomerItem.supplier_item_id == SupplierItem.id
+            ).filter(SupplierItem.supplier_id == supplier_id)
 
         if not include_inactive:
             query = query.filter(CustomerItem.get_active_filter())
@@ -119,9 +130,9 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 "customer_code": r.customer_code,
                 "customer_name": r.customer_name,
                 "customer_part_no": r.CustomerItem.customer_part_no,
-                "product_id": r.CustomerItem.product_id,
-                "product_code": r.maker_part_code,
-                "product_name": r.product_name,
+                "product_group_id": r.CustomerItem.product_group_id,
+                "product_code": r.maker_part_no,
+                "product_name": r.display_name,
                 "supplier_id": r.CustomerItem.supplier_id,
                 "supplier_item_id": r.CustomerItem.supplier_item_id,
                 "supplier_code": r.supplier_code,
@@ -323,7 +334,11 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         Returns:
             BulkUpsertResponse with summary and errors
         """
-        from app.infrastructure.persistence.models.masters_models import Customer, Product, Supplier
+        from app.infrastructure.persistence.models.masters_models import (
+            Customer,
+            Supplier,
+        )
+        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         summary = {"total": 0, "created": 0, "updated": 0, "failed": 0}
         errors = []
@@ -342,8 +357,8 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         customer_map = {code: id for code, id in customers}
 
         products = (
-            self.db.query(Product.maker_part_code, Product.id)
-            .filter(Product.maker_part_code.in_(product_codes))
+            self.db.query(SupplierItem.maker_part_no, SupplierItem.id)
+            .filter(SupplierItem.maker_part_no.in_(product_codes))
             .all()
         )
         product_map = {code: id for code, id in products}
@@ -365,8 +380,8 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 if not customer_id:
                     raise ValueError(f"Customer code not found: {row.customer_code}")
 
-                product_id = product_map.get(row.product_code)
-                if not product_id:
+                product_group_id = product_map.get(row.product_code)
+                if not product_group_id:
                     raise ValueError(f"Product code not found: {row.product_code}")
 
                 supplier_id = None
@@ -380,7 +395,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
                 if existing:
                     # UPDATE
-                    existing.product_id = product_id
+                    existing.product_group_id = product_group_id
                     existing.supplier_id = supplier_id
                     existing.base_unit = row.base_unit
                     existing.pack_unit = row.pack_unit
@@ -393,7 +408,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                     new_item = CustomerItem(
                         customer_id=customer_id,
                         customer_part_no=row.customer_part_no,
-                        product_id=product_id,
+                        product_group_id=product_group_id,
                         supplier_id=supplier_id,
                         base_unit=row.base_unit,
                         pack_unit=row.pack_unit,

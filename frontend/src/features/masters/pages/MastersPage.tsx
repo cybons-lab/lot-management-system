@@ -39,24 +39,17 @@ const masterSections: MasterSection[] = [
     links: [
       {
         title: "メーカー品番マスタ",
-        description: "仕入先から購入する製品・原材料（在庫の基準）を管理",
-        href: "/masters/supplier-products",
+        description: "仕入先から仕入れる品目の情報（品番、単位、リードタイムなど）を管理",
+        href: ROUTES.MASTERS.SUPPLIER_PRODUCTS,
         icon: Package,
         color: "bg-orange-50 text-orange-600 hover:bg-orange-100",
       },
       {
-        title: "先方品番マスタ",
+        title: "得意先品番マスタ",
         description: "得意先の注文書に記載される品番（変換ルール）を管理",
         href: ROUTES.MASTERS.CUSTOMER_ITEMS,
         icon: Database,
         color: "bg-teal-50 text-teal-600 hover:bg-teal-100",
-      },
-      {
-        title: "商品構成マスタ",
-        description: "複数のメーカー品番を束ねるグループ定義・分類を管理",
-        href: ROUTES.MASTERS.PRODUCTS,
-        icon: Database,
-        color: "bg-green-50 text-green-600 hover:bg-green-100",
       },
     ],
   },

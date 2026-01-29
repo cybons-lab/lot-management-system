@@ -17,7 +17,9 @@ class WarehouseDeliveryRouteBase(BaseModel):
 
     warehouse_id: int = Field(..., gt=0, description="出荷元倉庫ID")
     delivery_place_id: int = Field(..., gt=0, description="納入先ID")
-    product_id: int | None = Field(None, gt=0, description="品番ID（NULLの場合は経路デフォルト）")
+    product_group_id: int | None = Field(
+        None, gt=0, description="品番ID（NULLの場合は経路デフォルト）"
+    )
     transport_lead_time_days: int = Field(..., ge=0, description="輸送リードタイム（日）")
     is_active: bool = Field(default=True, description="有効フラグ")
     notes: str | None = Field(None, max_length=1000, description="備考")
@@ -79,7 +81,7 @@ class TransportLeadTimeQuery(BaseModel):
 
     warehouse_id: int = Field(..., gt=0)
     delivery_place_id: int = Field(..., gt=0)
-    product_id: int | None = Field(None, gt=0)
+    product_group_id: int | None = Field(None, gt=0)
 
 
 class TransportLeadTimeResponse(BaseModel):

@@ -174,8 +174,8 @@ class LotValidationError(LotDomainError):
 class LotProductNotFoundError(LotDomainError):
     """ロット作成時に製品が見つからないエラー."""
 
-    def __init__(self, product_id: int):
-        message = f"製品が見つかりません: ID={product_id}"
+    def __init__(self, product_group_id: int):
+        message = f"製品が見つかりません: ID={product_group_id}"
         super().__init__(message, code="PRODUCT_NOT_FOUND")
 
 

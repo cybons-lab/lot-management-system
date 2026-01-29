@@ -77,11 +77,11 @@ def _get_or_create_delivery_place(
 
 
 def _get_or_create_product(db: Session, code: str, name: str) -> Product:
-    product = db.query(Product).filter(Product.maker_part_code == code).first()
+    product = db.query(Product).filter(Product.maker_part_no == code).first()
     if not product:
         product = Product(
-            maker_part_code=code,
-            product_name=name,
+            maker_part_no=code,
+            display_name=name,
             base_unit="kg",
             internal_unit="kg",
             external_unit="kg",
@@ -113,12 +113,15 @@ def generate_excel_view_data(db: Session):
     pw = (
         db.query(ProductWarehouse)
         .filter(
-            ProductWarehouse.product_id == product.id, ProductWarehouse.warehouse_id == warehouse.id
+            ProductWarehouse.product_group_id == product.id,
+            ProductWarehouse.warehouse_id == warehouse.id,
         )
         .first()
     )
     if not pw:
-        db.add(ProductWarehouse(product_id=product.id, warehouse_id=warehouse.id, is_active=True))
+        db.add(
+            ProductWarehouse(product_group_id=product.id, warehouse_id=warehouse.id, is_active=True)
+        )
 
     # 4. Create Lots and Receipts
     print("Creating Lots...")
@@ -130,7 +133,7 @@ def generate_excel_view_data(db: Session):
     if not lot1_master:
         lot1_master = LotMaster(
             lot_number=lot1_no,
-            product_id=product.id,
+            product_group_id=product.id,
             supplier_id=supplier.id,
             first_receipt_date=today - timedelta(days=30),
             latest_expiry_date=today + timedelta(days=365),
@@ -142,7 +145,7 @@ def generate_excel_view_data(db: Session):
     if not lot1_receipt:
         lot1_receipt = LotReceipt(
             lot_master_id=lot1_master.id,
-            product_id=product.id,
+            product_group_id=product.id,
             warehouse_id=warehouse.id,
             supplier_id=supplier.id,
             received_date=today - timedelta(days=30),
@@ -163,7 +166,7 @@ def generate_excel_view_data(db: Session):
     if not lot2_master:
         lot2_master = LotMaster(
             lot_number=lot2_no,
-            product_id=product.id,
+            product_group_id=product.id,
             supplier_id=supplier.id,
             first_receipt_date=today - timedelta(days=10),
             latest_expiry_date=today + timedelta(days=400),
@@ -175,7 +178,7 @@ def generate_excel_view_data(db: Session):
     if not lot2_receipt:
         lot2_receipt = LotReceipt(
             lot_master_id=lot2_master.id,
-            product_id=product.id,
+            product_group_id=product.id,
             warehouse_id=warehouse.id,
             supplier_id=supplier.id,
             received_date=today - timedelta(days=10),
@@ -205,7 +208,7 @@ def generate_excel_view_data(db: Session):
     # Delivery Place 1 (Customer A)
     s1 = AllocationSuggestion(
         lot_id=lot1_receipt.id,
-        product_id=product.id,
+        product_group_id=product.id,
         customer_id=customer.id,
         delivery_place_id=dp1.id,
         quantity=Decimal("50"),
@@ -217,7 +220,7 @@ def generate_excel_view_data(db: Session):
 
     s2 = AllocationSuggestion(
         lot_id=lot1_receipt.id,
-        product_id=product.id,
+        product_group_id=product.id,
         customer_id=customer.id,
         delivery_place_id=dp1.id,
         quantity=Decimal("30"),
@@ -231,7 +234,7 @@ def generate_excel_view_data(db: Session):
     # Delivery Place 2 (Customer B)
     s3 = AllocationSuggestion(
         lot_id=lot2_receipt.id,
-        product_id=product.id,
+        product_group_id=product.id,
         customer_id=customer.id,
         delivery_place_id=dp2.id,
         quantity=Decimal("100"),

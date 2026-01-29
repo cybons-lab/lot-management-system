@@ -31,7 +31,7 @@ export function InventoryTableDialogs({
         open={editDialog.isOpen}
         onClose={onCloseEdit}
         title="ロット編集"
-        description={`ロット ${selectedLot.lot_number} を編集します`}
+        description={`ロット ${selectedLot.lot_number || "-"} を編集します`}
         size="lg"
       >
         <LotEditForm
@@ -51,11 +51,11 @@ export function InventoryTableDialogs({
           await lockLotMutation.mutateAsync({ id: selectedLot.id, reason, quantity });
         }}
         isSubmitting={lockLotMutation.isPending}
-        lotNumber={selectedLot.lot_number}
+        lotNumber={selectedLot.lot_number || "-"}
         availableQuantity={calculateAvailable(
           selectedLot.current_quantity,
           selectedLot.allocated_quantity,
-          selectedLot.locked_quantity,
+          selectedLot.locked_quantity || "0",
         ).toNumber()}
       />
     </>

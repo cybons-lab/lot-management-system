@@ -9,7 +9,6 @@ from app.infrastructure.persistence.models.masters_models import (
     CustomerItemDeliverySetting,
     CustomerItemJikuMapping,
     DeliveryPlace,
-    Product,
     ProductUomConversion,
     Supplier,
     Warehouse,
@@ -124,7 +123,9 @@ def generate_customers_and_delivery_places(
     return customers, delivery_places
 
 
-def generate_products(db: Session, options: object = None) -> list[Product]:
+def generate_products(
+    db: Session, suppliers: list[Supplier], options: object = None
+) -> list[SupplierItem]:
     products = []
 
     # Scale logic
@@ -164,9 +165,10 @@ def generate_products(db: Session, options: object = None) -> list[Product]:
             + " "
             + fake.bothify(text="##")
         )
-        p = Product(
-            maker_part_code=fake.unique.bothify(text="PRD-###??"),
-            product_name=product_name,
+        p = SupplierItem(
+            supplier_id=random.choice(suppliers).id if suppliers else 1,
+            maker_part_no=fake.unique.bothify(text="PRD-###??"),
+            display_name=product_name,
             base_unit="pcs",
             consumption_limit_days=random.choice([30, 60, 90, 120, 180, 365]),
         )
@@ -180,7 +182,7 @@ def generate_products(db: Session, options: object = None) -> list[Product]:
         if random.random() < 0.6:
             # 1 PCS = 15-25 KG
             factor = Decimal(random.randint(15, 25))
-            conv = ProductUomConversion(product_id=p.id, external_unit="KG", factor=factor)
+            conv = ProductUomConversion(product_group_id=p.id, external_unit="KG", factor=factor)
             db.add(conv)
 
     db.commit()
@@ -190,7 +192,7 @@ def generate_products(db: Session, options: object = None) -> list[Product]:
 def generate_customer_items(
     db: Session,
     customers: list[Customer],
-    products: list[Product],
+    products: list[SupplierItem],
     suppliers: list[Supplier],
     delivery_places: list[DeliveryPlace] | None = None,
     options: object = None,
@@ -204,8 +206,12 @@ def generate_customer_items(
     """
     # Track which supplier-maker_part_no pairs already exist to avoid duplicates
     supplier_maker_pairs: set[tuple[int, str]] = set()
-    # Map product_id + supplier_id -> supplier_item for linking
+    # Map product_group_id + supplier_id -> supplier_item for linking
     supplier_item_map: dict[tuple[int, int], SupplierItem] = {}
+
+    for p in products:
+        supplier_maker_pairs.add((p.supplier_id, p.maker_part_no))
+        supplier_item_map[(p.id, p.supplier_id)] = p
 
     # Get delivery places if not provided
     if delivery_places is None:
@@ -224,19 +230,20 @@ def generate_customer_items(
             num_suppliers = random.randint(1, min(2, len(suppliers)))
             selected_suppliers = random.sample(suppliers, num_suppliers)
 
-            for idx, supplier in enumerate(selected_suppliers):
-                maker_part_no = p.maker_part_code  # Use product's maker_part_code
-                if (supplier.id, maker_part_no) not in supplier_maker_pairs:
+            for _idx, s in enumerate(selected_suppliers):
+                maker_part_no = p.maker_part_no
+                if (s.id, maker_part_no) not in supplier_maker_pairs:
                     si = SupplierItem(
-                        product_id=p.id,
-                        supplier_id=supplier.id,
+                        supplier_id=s.id,
                         maker_part_no=maker_part_no,
-                        is_primary=(idx == 0),  # First supplier is primary
+                        display_name=p.display_name,
+                        base_unit=p.base_unit,
+                        consumption_limit_days=p.consumption_limit_days,
                     )
                     db.add(si)
-                    db.flush()  # Get the ID
-                    supplier_maker_pairs.add((supplier.id, maker_part_no))
-                    supplier_item_map[(p.id, supplier.id)] = si
+                    db.flush()
+                    supplier_maker_pairs.add((s.id, maker_part_no))
+                    supplier_item_map[(p.id, s.id)] = si
 
         # 2. Assign this product to customers
         primary_customer = random.choice(customers)
@@ -256,22 +263,29 @@ def generate_customer_items(
         # Create CustomerItem and CustomerItemDeliverySettings for each customer
         for idx, c in enumerate(customers_for_product):
             # Use meaningful customer part number (not EXT- prefix)
-            customer_part_no = f"{c.customer_code}-{p.maker_part_code}"
+            customer_part_no = f"{c.customer_code}-{p.maker_part_no}"
 
             # Link to supplier_item if available
-            selected_supplier = random.choice(suppliers) if suppliers else None
-            supplier_item = None
-            if selected_supplier and (p.id, selected_supplier.id) in supplier_item_map:
-                supplier_item = supplier_item_map[(p.id, selected_supplier.id)]
+            # Ensure we link to one of the supplier_items created for this product
+            product_supplier_items = [
+                si for (pid, sid), si in supplier_item_map.items() if pid == p.id
+            ]
+            if not product_supplier_items:
+                # Fallback to the product itself (which is also a SupplierItem)
+                supplier_item = p
+                selected_supplier_id = p.supplier_id
+            else:
+                supplier_item = random.choice(product_supplier_items)
+                selected_supplier_id = supplier_item.supplier_id
 
             ci = CustomerItem(
                 customer_id=c.id,
-                product_id=p.id,
+                product_group_id=p.id,
                 customer_part_no=customer_part_no,
                 base_unit="pcs",
-                supplier_id=selected_supplier.id if selected_supplier else None,
-                supplier_item_id=supplier_item.id if supplier_item else None,
-                is_primary=(idx == 0),  # First customer is primary for this supplier_item
+                supplier_id=selected_supplier_id,
+                supplier_item_id=supplier_item.id,
+                is_primary=(idx == 0),
             )
             db.add(ci)
             db.flush()  # Get the ID for related tables

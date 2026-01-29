@@ -94,15 +94,15 @@
    - クライアント側で正しくステータスコードを判定可能
    → status === 201 で作成成功
 
-8. product_id と product_code の両対応（L30-31, L50-51）
+8. product_group_id と product_code の両対応（L30-31, L50-51）
    理由: クライアント側の利便性
    用途:
-   - product_id: 内部ID（数値）
+   - product_group_id: 内部ID（数値）
    → フロントエンドがIDを保持している場合
    - product_code: 製品コード（文字列）
    → OCRやCSVから読み取った製品コードで検索する場合
    業務シナリオ:
-   - 受注明細から検索: product_id で検索
+   - 受注明細から検索: product_group_id で検索
    - 手入力検索: product_code で検索（ユーザーは製品コードを覚えている）
 
 9. limit のデフォルト100（L29）
@@ -199,7 +199,7 @@ class LotExportRow:
         }
 
         return cls(
-            ロット番号=lot.lot_number,
+            ロット番号=lot.lot_number or "",
             先方品番=lot.product_code or "",
             製品名=lot.product_name or "",
             仕入先コード=lot.supplier_code or "",
@@ -224,7 +224,7 @@ class LotExportRow:
 
 @router.get("/export/download")
 def export_lots(
-    product_id: int | None = None,
+    product_group_id: int | None = None,
     product_code: str | None = None,
     supplier_code: str | None = None,
     warehouse_code: str | None = None,
@@ -236,7 +236,7 @@ def export_lots(
     """ロット一覧をExcelファイルとしてエクスポート.
 
     Args:
-        product_id: 製品ID（フィルタ）
+        product_group_id: 製品ID（フィルタ）
         product_code: 製品コード（フィルタ）
         supplier_code: 仕入先コード（フィルタ）
         warehouse_code: 倉庫コード（フィルタ）
@@ -252,7 +252,7 @@ def export_lots(
     lots = service.list_lots(
         skip=0,
         limit=10000,  # エクスポート用に十分な件数を取得
-        product_id=product_id,
+        product_group_id=product_group_id,
         product_code=product_code,
         supplier_code=supplier_code,
         warehouse_code=warehouse_code,
@@ -271,7 +271,7 @@ def export_lots(
 def list_lots(
     skip: int = 0,
     limit: int = 100,
-    product_id: int | None = None,
+    product_group_id: int | None = None,
     product_code: str | None = None,
     supplier_code: str | None = None,
     warehouse_code: str | None = None,
@@ -291,7 +291,7 @@ def list_lots(
     Args:
         skip: スキップ件数（ページネーション用）
         limit: 取得件数（最大100件）
-        product_id: 製品ID（フィルタ）
+        product_group_id: 製品ID（フィルタ）
         product_code: 製品コード（フィルタ）
         supplier_code: 仕入先コード（フィルタ）
         warehouse_code: 倉庫コード（フィルタ）
@@ -316,7 +316,7 @@ def list_lots(
     return service.list_lots(
         skip=skip,
         limit=limit,
-        product_id=product_id,
+        product_group_id=product_group_id,
         product_code=product_code,
         supplier_code=supplier_code,
         warehouse_code=warehouse_code,

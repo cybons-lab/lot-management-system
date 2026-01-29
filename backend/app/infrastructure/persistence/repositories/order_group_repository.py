@@ -14,7 +14,7 @@ from app.infrastructure.persistence.models import OrderGroup
 class OrderGroupRepository:
     """受注グループリポジトリ（SQLAlchemy 2.0準拠）.
 
-    業務キー: customer_id × product_id × order_date
+    業務キー: customer_id × product_group_id × order_date
     """
 
     def __init__(self, db: Session):
@@ -40,14 +40,14 @@ class OrderGroupRepository:
     def find_by_business_key(
         self,
         customer_id: int,
-        product_id: int,
+        product_group_id: int,
         order_date: date,
     ) -> OrderGroup | None:
         """業務キーで受注グループを取得.
 
         Args:
             customer_id: 得意先ID
-            product_id: 製品ID
+            product_group_id: 製品ID
             order_date: 受注日
 
         Returns:
@@ -55,7 +55,7 @@ class OrderGroupRepository:
         """
         stmt = select(OrderGroup).where(
             OrderGroup.customer_id == customer_id,
-            OrderGroup.product_id == product_id,
+            OrderGroup.product_group_id == product_group_id,
             OrderGroup.order_date == order_date,
         )
         return cast(OrderGroup | None, self.db.execute(stmt).scalar_one_or_none())
@@ -63,7 +63,7 @@ class OrderGroupRepository:
     def upsert_by_business_key(
         self,
         customer_id: int,
-        product_id: int,
+        product_group_id: int,
         order_date: date,
         source_file_name: str | None = None,
     ) -> OrderGroup:
@@ -71,7 +71,7 @@ class OrderGroupRepository:
 
         Args:
             customer_id: 得意先ID
-            product_id: 製品ID
+            product_group_id: 製品ID
             order_date: 受注日
             source_file_name: 取り込み元ファイル名
 
@@ -83,7 +83,7 @@ class OrderGroupRepository:
             insert(OrderGroup)
             .values(
                 customer_id=customer_id,
-                product_id=product_id,
+                product_group_id=product_group_id,
                 order_date=order_date,
                 source_file_name=source_file_name,
             )
@@ -96,10 +96,10 @@ class OrderGroupRepository:
 
         if group_id is None:
             # 既存レコードを取得
-            existing = self.find_by_business_key(customer_id, product_id, order_date)
+            existing = self.find_by_business_key(customer_id, product_group_id, order_date)
             if existing is None:
                 raise RuntimeError(
-                    f"Failed to upsert OrderGroup: {customer_id}/{product_id}/{order_date}"
+                    f"Failed to upsert OrderGroup: {customer_id}/{product_group_id}/{order_date}"
                 )
             return existing
 
@@ -114,7 +114,7 @@ class OrderGroupRepository:
         skip: int = 0,
         limit: int = 100,
         customer_id: int | None = None,
-        product_id: int | None = None,
+        product_group_id: int | None = None,
         date_from: date | None = None,
         date_to: date | None = None,
     ) -> list[OrderGroup]:
@@ -124,7 +124,7 @@ class OrderGroupRepository:
             skip: スキップ件数
             limit: 取得件数
             customer_id: 得意先IDフィルタ
-            product_id: 製品IDフィルタ
+            product_group_id: 製品IDフィルタ
             date_from: 開始日フィルタ
             date_to: 終了日フィルタ
 
@@ -135,8 +135,8 @@ class OrderGroupRepository:
 
         if customer_id:
             stmt = stmt.where(OrderGroup.customer_id == customer_id)
-        if product_id:
-            stmt = stmt.where(OrderGroup.product_id == product_id)
+        if product_group_id:
+            stmt = stmt.where(OrderGroup.product_group_id == product_group_id)
         if date_from:
             stmt = stmt.where(OrderGroup.order_date >= date_from)
         if date_to:

@@ -12,7 +12,7 @@ models (ExpiryRule) have been removed.
    → ロット単位で在庫を管理する必要がある
    設計:
    - Lot: 物理的な在庫の単位（lot_number で識別）
-   - product_id: どの製品のロットか
+   - product_group_id: どの製品のロットか
    - warehouse_id: どの倉庫に保管されているか
    - expiry_date: 有効期限（FEFO管理の基準）
    メリット:
@@ -169,7 +169,7 @@ from .lot_receipt_models import LotReceipt
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .forecast_models import ForecastCurrent
-    from .masters_models import Customer, DeliveryPlace, Product
+    from .masters_models import Customer, DeliveryPlace, SupplierItem
 
 
 # Valid transaction types
@@ -299,7 +299,7 @@ class AllocationSuggestion(Base):
 
     DDL: allocation_suggestions
     Primary key: id (BIGSERIAL)
-    Foreign keys: customer_id, delivery_place_id, product_id, lot_id
+    Foreign keys: customer_id, delivery_place_id, product_group_id, lot_id
     """
 
     __tablename__ = "allocation_suggestions"
@@ -327,9 +327,9 @@ class AllocationSuggestion(Base):
         ForeignKey("delivery_places.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="CASCADE"),
+        ForeignKey("supplier_items.id", ondelete="CASCADE"),
         nullable=False,
     )
 
@@ -354,14 +354,14 @@ class AllocationSuggestion(Base):
     __table_args__ = (
         Index("idx_allocation_suggestions_period", "forecast_period"),
         Index("idx_allocation_suggestions_customer", "customer_id"),
-        Index("idx_allocation_suggestions_product", "product_id"),
+        Index("idx_allocation_suggestions_product_group", "product_group_id"),
         Index("idx_allocation_suggestions_lot", "lot_id"),
         Index("idx_allocation_suggestions_forecast", "forecast_id"),
     )
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
-    product: Mapped[Product] = relationship("Product")
+    product_group: Mapped[SupplierItem] = relationship("SupplierItem")
     lot: Mapped[LotReceipt] = relationship("LotReceipt")
     forecast: Mapped[ForecastCurrent | None] = relationship("ForecastCurrent")
 

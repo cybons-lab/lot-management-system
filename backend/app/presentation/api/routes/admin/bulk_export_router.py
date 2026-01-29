@@ -21,7 +21,6 @@ from app.application.services.masters.customer_service import CustomerService
 from app.application.services.masters.product_mappings_service import (
     ProductMappingsService,
 )
-from app.application.services.masters.products_service import ProductService
 from app.application.services.masters.supplier_service import SupplierService
 from app.application.services.masters.warehouse_service import WarehouseService
 from app.application.services.orders.order_service import OrderService
@@ -35,7 +34,6 @@ from app.presentation.schemas.masters.masters_schema import (
     SupplierResponse,
     WarehouseResponse,
 )
-from app.presentation.schemas.masters.products_schema import ProductOut
 
 
 router = APIRouter(prefix="/bulk-export", tags=["bulk-export"])
@@ -100,12 +98,6 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         data = [CustomerResponse.model_validate(c).model_dump() for c in customer_list]
         return data, "customers"
 
-    if target == "products":
-        product_service = ProductService(db)
-        product_list = product_service.get_all(limit=10000)
-        data = [ProductOut.model_validate(p).model_dump() for p in product_list]
-        return data, "products"
-
     if target == "suppliers":
         supplier_service = SupplierService(db)
         supplier_list = supplier_service.get_all(limit=10000)
@@ -147,31 +139,31 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         from sqlalchemy import select
 
         from app.infrastructure.persistence.models.masters_models import (
-            Product,
             ProductUomConversion,
         )
+        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         uom_query = select(
             ProductUomConversion.conversion_id,
-            ProductUomConversion.product_id,
+            ProductUomConversion.product_group_id,
             ProductUomConversion.external_unit,
             ProductUomConversion.factor,
-            Product.internal_unit,
-            Product.maker_part_code,
-            Product.product_name,
-        ).join(Product, ProductUomConversion.product_id == Product.id)
+            SupplierItem.internal_unit,
+            SupplierItem.maker_part_no,
+            SupplierItem.display_name,
+        ).join(SupplierItem, ProductUomConversion.product_group_id == SupplierItem.id)
 
         uom_results = db.execute(uom_query).all()
         data = [
             {
                 "conversion_id": r.conversion_id,
-                "product_id": r.product_id,
+                "product_group_id": r.product_group_id,
                 "external_unit": r.external_unit,
                 "factor": float(r.factor),
                 "internal_unit": r.internal_unit,
                 # "base_unit": r.base_unit, # Optional if needed
-                "product_code": r.maker_part_code,
-                "product_name": r.product_name,
+                "product_code": r.maker_part_no,
+                "product_name": r.display_name,
             }
             for r in uom_results
         ]
@@ -180,34 +172,28 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
     if target == "supplier_products":
         from sqlalchemy import select
 
-        from app.infrastructure.persistence.models.masters_models import Product, Supplier
+        from app.infrastructure.persistence.models.masters_models import Supplier
         from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
-        sp_query = (
-            select(
-                SupplierItem.id,
-                SupplierItem.product_id,
-                SupplierItem.supplier_id,
-                SupplierItem.is_primary,
-                SupplierItem.lead_time_days,
-                Product.maker_part_code,
-                Product.product_name,
-                Supplier.supplier_code,
-                Supplier.supplier_name,
-            )
-            .join(Product, SupplierItem.product_id == Product.id)
-            .join(Supplier, SupplierItem.supplier_id == Supplier.id)
-        )
+        sp_query = select(
+            SupplierItem.id,
+            SupplierItem.supplier_id,
+            SupplierItem.maker_part_no,
+            SupplierItem.display_name,
+            SupplierItem.base_unit,
+            SupplierItem.lead_time_days,
+            Supplier.supplier_code,
+            Supplier.supplier_name,
+        ).join(Supplier, SupplierItem.supplier_id == Supplier.id)
         sp_results = db.execute(sp_query).all()
         data = [
             {
                 "id": r.id,
-                "product_id": r.product_id,
                 "supplier_id": r.supplier_id,
-                "is_primary": r.is_primary,
+                "maker_part_no": r.maker_part_no,
+                "display_name": r.display_name,
+                "base_unit": r.base_unit,
                 "lead_time_days": r.lead_time_days,
-                "product_code": r.maker_part_code,
-                "product_name": r.product_name,
                 "supplier_code": r.supplier_code,
                 "supplier_name": r.supplier_name,
             }
@@ -225,6 +211,20 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         # Reuse internal router's builder function logic
         data = []
         for route in routes:
+            # product_group_id is optional FK to supplier_items
+            # Load SupplierItem if product_group_id exists
+            product_name = None
+            maker_part_no = None
+            if route.product_group_id:
+                from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
+
+                supplier_item = (
+                    db.query(SupplierItem).filter(SupplierItem.id == route.product_group_id).first()
+                )
+                if supplier_item:
+                    product_name = supplier_item.display_name
+                    maker_part_no = supplier_item.maker_part_no
+
             data.append(
                 {
                     "warehouse_code": route.warehouse.warehouse_code if route.warehouse else None,
@@ -235,8 +235,8 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
                     "delivery_place_name": (
                         route.delivery_place.delivery_place_name if route.delivery_place else None
                     ),
-                    "product_name": route.product.product_name if route.product else None,
-                    "maker_part_code": route.product.maker_part_code if route.product else None,
+                    "product_name": product_name,
+                    "maker_part_no": maker_part_no,
                     "transport_lead_time_days": route.transport_lead_time_days,
                     "notes": route.notes,
                 }

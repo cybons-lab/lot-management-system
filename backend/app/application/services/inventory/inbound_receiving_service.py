@@ -77,28 +77,23 @@ class InboundReceivingService:
             if line.expected_lots:
                 # Create lots from expected lots
                 for expected_lot in line.expected_lots:
-                    # 仮入庫対応: expected_lot_number が空の場合は仮ロットとして登録
-                    is_temporary = (
+                    # expected_lot_number が空の場合は None に設定（TMP番号は生成しない）
+                    if (
                         not expected_lot.expected_lot_number
                         or expected_lot.expected_lot_number.strip() == ""
-                    )
-
-                    if is_temporary:
-                        lot_number, temp_key = self._generate_temporary_lot_info()
+                    ):
+                        lot_number = None
                     else:
-                        lot_number = expected_lot.expected_lot_number or ""
-                        temp_key = None
-
-                        temp_key = None
+                        lot_number = expected_lot.expected_lot_number
 
                     # Get or Create LotMaster
                     lm = self._get_or_create_lot_master(
-                        lot_number, line.product_id, plan.supplier_id
+                        lot_number, line.product_group_id, plan.supplier_id
                     )
 
                     db_lot = LotReceipt(
                         lot_master_id=lm.id,
-                        product_id=line.product_id,
+                        product_group_id=line.product_group_id,
                         warehouse_id=default_warehouse_id,
                         supplier_id=plan.supplier_id,
                         expected_lot_id=expected_lot.id,
@@ -108,7 +103,6 @@ class InboundReceivingService:
                         consumed_quantity=Decimal("0"),
                         unit=line.unit,
                         status="active",
-                        temporary_lot_key=temp_key,
                     )
 
                     self.db.add(db_lot)
@@ -129,14 +123,16 @@ class InboundReceivingService:
                     created_lot_ids.append(db_lot.id)
             else:
                 # Create a single lot from plan line (no expected lots)
-                lot_number = self._generate_lot_number(plan.plan_number, line.product_id)
+                lot_number = self._generate_lot_number(plan.plan_number, line.product_group_id)
 
                 # Get or Create LotMaster
-                lm = self._get_or_create_lot_master(lot_number, line.product_id, plan.supplier_id)
+                lm = self._get_or_create_lot_master(
+                    lot_number, line.product_group_id, plan.supplier_id
+                )
 
                 db_lot = LotReceipt(
                     lot_master_id=lm.id,
-                    product_id=line.product_id,
+                    product_group_id=line.product_group_id,
                     warehouse_id=default_warehouse_id,
                     supplier_id=plan.supplier_id,
                     expected_lot_id=None,
@@ -177,71 +173,51 @@ class InboundReceivingService:
             created_lot_ids=created_lot_ids,
         )
 
-    def _generate_lot_number(self, plan_number: str, product_id: int) -> str:
+    def _generate_lot_number(self, plan_number: str, product_group_id: int) -> str:
         """Generate a unique lot number.
 
         Args:
             plan_number: Inbound plan number
-            product_id: Product ID
+            product_group_id: Product ID
 
         Returns:
             Generated lot number
         """
-        # Simple implementation: plan_number + product_id + sequence
+        # Simple implementation: plan_number + product_group_id + sequence
         # Count existing lots for this plan and product
         count = (
             self.db.query(func.count(LotReceipt.id))
             .join(LotMaster)
-            .filter(LotMaster.lot_number.like(f"{plan_number}-{product_id}-%"))
+            .filter(LotMaster.lot_number.like(f"{plan_number}-{product_group_id}-%"))
             .scalar()
         )
 
         sequence = count + 1 if count else 1
 
-        return f"{plan_number}-{product_id}-{sequence:03d}"
-
-    def _generate_temporary_lot_info(self) -> tuple[str, str]:
-        """Generate temporary lot number and UUID key for provisional inbound.
-
-        仮入庫対応:
-        - expected_lot_number が未確定の場合に呼び出される
-        - UUID を発行し、その一部を lot_number に使用して衝突を完全回避
-        - 形式: TMP-YYYYMMDD-XXXX (XXXX は UUID の先頭8文字)
-
-        Returns:
-            tuple[str, str]: (lot_number, temporary_lot_key)
-        """
-        import uuid
-        from datetime import date
-
-        # Generate UUID for unique identification
-        temp_key = uuid.uuid4()
-        temp_key_str = str(temp_key)
-
-        # Use first 8 characters of UUID for readable lot number
-        today = date.today().strftime("%Y%m%d")
-        uuid_prefix = temp_key_str[:8]
-        lot_number = f"TMP-{today}-{uuid_prefix}"
-
-        return lot_number, temp_key_str
+        return f"{plan_number}-{product_group_id}-{sequence:03d}"
 
     def _get_or_create_lot_master(
-        self, lot_number: str, product_id: int, supplier_id: int
+        self, lot_number: str | None, product_group_id: int, supplier_id: int
     ) -> LotMaster:
-        """Get existing LotMaster or create a new one."""
-        lm = (
-            self.db.query(LotMaster)
-            .filter(
-                LotMaster.lot_number == lot_number,
-                LotMaster.product_id == product_id,
+        """Get existing LotMaster or create a new one.
+
+        lot_numberがNoneの場合は常に新規作成（同じNullロットを共有しない）
+        """
+        lm = None
+        if lot_number is not None:
+            lm = (
+                self.db.query(LotMaster)
+                .filter(
+                    LotMaster.lot_number == lot_number,
+                    LotMaster.product_group_id == product_group_id,
+                )
+                .first()
             )
-            .first()
-        )
 
         if not lm:
             lm = LotMaster(
                 lot_number=lot_number,
-                product_id=product_id,
+                product_group_id=product_group_id,
                 supplier_id=supplier_id,
             )
             self.db.add(lm)

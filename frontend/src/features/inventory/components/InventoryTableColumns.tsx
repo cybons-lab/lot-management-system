@@ -9,13 +9,15 @@ export const inventoryColumns: Column<InventoryItem>[] = [
     accessor: (row) =>
       row.product_name
         ? `${row.product_name} (${row.product_code || ""})`
-        : row.product_code || `ID: ${row.product_id}`,
+        : row.product_code || `ID: ${row.product_group_id}`,
     cell: (row) => (
       <div className="flex flex-col">
         <span className="block truncate font-medium text-slate-900" title={row.product_name || ""}>
           {row.product_name || "名称未設定"}
         </span>
-        <span className="text-[11px] text-slate-500">{row.product_code || "-"}</span>
+        <span className="text-[11px] text-slate-500" title="メーカー品番">
+          {row.product_code || "-"}
+        </span>
       </div>
     ),
     width: 250,

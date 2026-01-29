@@ -7,7 +7,7 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 
 import type { Customer } from "@/features/customers/validators/customer-schema";
-import type { Product } from "@/features/products/validators/product-schema";
+import type { SupplierProduct } from "@/features/supplier-products/api";
 import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
 import type { Warehouse } from "@/features/warehouses/validators/warehouse-schema";
 import { QUERY_KEYS } from "@/services/api/query-keys";
@@ -21,16 +21,16 @@ import { http } from "@/shared/api/http-client";
  *
  * @example
  * ```tsx
- * const { data: products, isLoading } = useProductsQuery();
+ * const { data: products, isLoading } = useSupplierProductsQuery();
  * ```
  */
-export function useProductsQuery(options?: {
+export function useSupplierProductsQuery(options?: {
   enabled?: boolean;
   staleTime?: number;
-}): UseQueryResult<Product[], Error> {
+}): UseQueryResult<SupplierProduct[], Error> {
   return useQuery({
     queryKey: QUERY_KEYS.masters.products(),
-    queryFn: () => http.get<Product[]>("masters/products"),
+    queryFn: () => http.get<SupplierProduct[]>("masters/products"),
     staleTime: options?.staleTime ?? 300000, // 5分（マスタは変更頻度が低い）
     enabled: options?.enabled ?? true,
   });
@@ -106,12 +106,12 @@ export function useSuppliersQuery(options?: {
  * @param productCode - 製品コード
  * @returns 製品のクエリ結果
  */
-export function useProductQuery(
+export function useSupplierProductQuery(
   productCode: string | undefined,
-): UseQueryResult<Product | undefined, Error> {
+): UseQueryResult<SupplierProduct | undefined, Error> {
   return useQuery({
     queryKey: QUERY_KEYS.masters.product(productCode!),
-    queryFn: () => http.get<Product>(`masters/products/${productCode}`),
+    queryFn: () => http.get<SupplierProduct>(`masters/products/${productCode}`),
     enabled: !!productCode,
     staleTime: 300000,
   });
@@ -168,7 +168,7 @@ export function useWarehouseQuery(
  * ```
  */
 export function useAllMastersQuery() {
-  const productsQuery = useProductsQuery();
+  const productsQuery = useSupplierProductsQuery();
   const customersQuery = useCustomersQuery();
   const warehousesQuery = useWarehousesQuery();
 
@@ -201,13 +201,13 @@ export function createSelectOptions<T extends { code?: string; name?: string }>(
 /**
  * 製品選択肢を生成
  */
-export function useProductOptions() {
-  const { data: products } = useProductsQuery();
+export function useSupplierProductOptions() {
+  const { data: products } = useSupplierProductsQuery();
 
   return createSelectOptions(
     products?.map((p) => ({
-      code: p.product_code,
-      name: p.product_name,
+      code: p.maker_part_no,
+      name: p.display_name,
     })),
     (p: { code: string; name: string }) => p.code,
     (p: { code: string; name: string }) => p.name,
@@ -239,3 +239,8 @@ export function useWarehouseOptions() {
     (w: { code: string; name: string }) => w.name,
   );
 }
+
+// Backward compatibility aliases
+export const useProductsQuery = useSupplierProductsQuery;
+export const useProductQuery = useSupplierProductQuery;
+export const useProductOptions = useSupplierProductOptions;

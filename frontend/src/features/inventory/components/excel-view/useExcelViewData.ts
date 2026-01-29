@@ -83,8 +83,8 @@ const mapDestinationRow = (
 
 const getLotInfo = (lot: LotUI): LotInfo => ({
   inboundDate: lot.received_date ? String(lot.received_date).substring(0, 10) : "-",
-  lotNo: lot.lot_number,
-  inboundNo: lot.lot_number,
+  lotNo: lot.lot_number || "-",
+  inboundNo: lot.origin_reference || "-",
   orderNo: "-",
   expiryDate: lot.expiry_date ? String(lot.expiry_date).substring(0, 10) : "期限なし",
   inboundQty: Number(lot.current_quantity),
@@ -140,7 +140,7 @@ export function useExcelViewData(
   const { data: lots = [], isLoading: lotsLoading } = useLotsQuery(
     isEnabled
       ? {
-          product_id: productId,
+          product_group_id: productId,
           warehouse_id: warehouseId,
           status: "active",
           with_stock: true,
@@ -149,7 +149,12 @@ export function useExcelViewData(
   );
 
   const { data: suggestionResponse, isLoading: suggestionsLoading } = useAllocationSuggestions(
-    isEnabled ? { product_id: productId } : undefined,
+    isEnabled && (!customerItemId || !!customerItem)
+      ? {
+          product_group_id: productId,
+          customer_id: customerItem?.customer_id,
+        }
+      : undefined,
   );
 
   const deliveryPlaceApi = useMasterApi<DeliveryPlace>(

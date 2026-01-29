@@ -81,7 +81,8 @@ export const getLots = (params?: LotsGetParams) => {
 
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
-  if (params?.product_id != null) searchParams.append("product_id", params.product_id.toString());
+  if (params?.product_group_id != null)
+    searchParams.append("product_group_id", params.product_group_id.toString());
   if (params?.product_code) searchParams.append("product_code", params.product_code);
   if (params?.supplier_code) searchParams.append("supplier_code", params.supplier_code);
   if (params?.warehouse_id != null)
@@ -113,12 +114,12 @@ export const createLot = (data: LotCreateRequest) => http.post<LotCreateResponse
  * 利用可能ロット一覧取得 (v2)
  */
 export const getAvailableLots = (params: {
-  product_id: number;
+  product_group_id: number;
   warehouse_id?: number;
   min_quantity?: number;
 }) => {
   const searchParams = new URLSearchParams();
-  searchParams.append("product_id", params.product_id.toString());
+  searchParams.append("product_group_id", params.product_group_id.toString());
   if (params.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params.min_quantity) searchParams.append("min_quantity", params.min_quantity.toString());
 
@@ -142,7 +143,7 @@ export type LotSearchParams = {
   sort_by?: string;
   sort_order?: "asc" | "desc";
 
-  product_id?: number;
+  product_group_id?: number;
   warehouse_id?: number;
   supplier_code?: string;
 
@@ -160,7 +161,8 @@ export const searchLots = (params: LotSearchParams) => {
   if (params.sort_by) searchParams.append("sort_by", params.sort_by);
   if (params.sort_order) searchParams.append("sort_order", params.sort_order);
 
-  if (params.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params.product_group_id)
+    searchParams.append("product_group_id", params.product_group_id.toString());
   if (params.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params.supplier_code) searchParams.append("supplier_code", params.supplier_code);
 
@@ -207,7 +209,8 @@ export const getInventoryItems = (
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
-  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params?.product_group_id)
+    searchParams.append("product_group_id", params.product_group_id.toString());
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
   if (params?.tab) searchParams.append("tab", params.tab);
@@ -221,7 +224,7 @@ export const getInventoryItems = (
 
 /**
  * Get inventory item detail (product + warehouse)
- * @endpoint GET /api/v2/inventory/{product_id}/{warehouse_id}
+ * @endpoint GET /api/v2/inventory/{product_group_id}/{warehouse_id}
  */
 export const getInventoryItem = (productId: number, warehouseId: number) => {
   return http.get<InventoryItem>(`v2/inventory/${productId}/${warehouseId}`);
@@ -256,7 +259,7 @@ export const getInventoryByProduct = () => {
  * @endpoint GET /api/v2/inventory/filter-options
  */
 export const getFilterOptions = (params?: {
-  product_id?: number;
+  product_group_id?: number;
   warehouse_id?: number;
   supplier_id?: number;
   tab?: string;
@@ -264,7 +267,8 @@ export const getFilterOptions = (params?: {
   mode?: "stock" | "master";
 }) => {
   const searchParams = new URLSearchParams();
-  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params?.product_group_id)
+    searchParams.append("product_group_id", params.product_group_id.toString());
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
   if (params?.tab) searchParams.append("tab", params.tab);

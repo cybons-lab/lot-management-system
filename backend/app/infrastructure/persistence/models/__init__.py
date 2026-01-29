@@ -30,13 +30,8 @@ from .inventory_models import (
 )
 from .layer_code_models import LayerCodeMapping
 from .logs_models import BatchJob, BusinessRule, MasterChangeLog, OperationLog, ServerLog
-
-# B-Plan models
 from .lot_master_model import LotMaster
 from .lot_receipt_models import LotReceipt
-
-# Backward compatibility: Lot is now an alias for LotReceipt
-# All existing code using Lot will work with the new lot_receipts table
 from .lot_reservation_history_model import HistoryOperation, LotReservationHistory
 from .lot_reservations_model import (
     LotReservation,
@@ -50,7 +45,6 @@ from .masters_models import (
     CustomerItemDeliverySetting,
     CustomerItemJikuMapping,
     DeliveryPlace,
-    Product,
     ProductMapping,
     ProductUomConversion,
     Supplier,
@@ -75,8 +69,6 @@ from .seed_snapshot_model import SeedSnapshot
 from .shipping_master_models import OrderRegisterRow, ShippingMasterCurated, ShippingMasterRaw
 from .smartread_models import OcrResultEdit, SmartReadConfig, SmartReadPadRun
 from .soft_delete_mixin import INFINITE_VALID_TO, SoftDeleteMixin
-
-# SupplierItem (renamed from ProductSupplier)
 from .supplier_item_model import ProductSupplier, SupplierItem
 from .system_config_model import SystemConfig
 from .system_models import ClientLog
@@ -99,6 +91,11 @@ from .withdrawal_line_model import WithdrawalLine
 from .withdrawal_models import Withdrawal, WithdrawalCancelReason, WithdrawalType
 
 
+# TEMPORARY: Backward compatibility aliases for Product/ProductGroup
+# These should be removed once all code is updated to use SupplierItem directly
+Product = SupplierItem
+ProductGroup = SupplierItem
+
 __all__ = [
     # Base
     "Base",
@@ -110,7 +107,8 @@ __all__ = [
     "Supplier",
     "Customer",
     "DeliveryPlace",
-    "Product",
+    "Product",  # TEMPORARY: Backward compatibility alias for SupplierItem
+    "ProductGroup",  # TEMPORARY: Backward compatibility alias for SupplierItem
     "ProductUomConversion",
     "CustomerItem",
     "CustomerItemDeliverySetting",
@@ -164,7 +162,6 @@ __all__ = [
     "CustomerItemJikuMapping",
     # Logs
     "OperationLog",
-    "ServerLog",
     "ServerLog",
     "MasterChangeLog",
     "BusinessRule",

@@ -20,7 +20,8 @@ import {
 } from "./customerItemFormSchema";
 
 import { Button } from "@/components/ui";
-import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
+import { useSupplierProductsQuery } from "@/features/supplier-products/hooks/useSupplierProductsQuery";
+import { useCustomersQuery } from "@/hooks/api/useMastersQuery";
 
 interface CustomerItemFormProps {
   item?: CustomerItem;
@@ -37,7 +38,8 @@ export function CustomerItemForm({
 }: CustomerItemFormProps) {
   // Master data for select options
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
-  const { data: products = [], isLoading: isLoadingProducts } = useProductsQuery();
+  const { data: supplierItems = [], isLoading: isLoadingSupplierItems } =
+    useSupplierProductsQuery();
 
   const {
     control,
@@ -50,14 +52,11 @@ export function CustomerItemForm({
       ? {
           customer_id: item.customer_id,
           customer_part_no: item.customer_part_no,
-          product_id: item.product_id,
-          supplier_id: item.supplier_id,
-          supplier_item_id: item.supplier_item_id,
-          is_primary: item.is_primary,
-          base_unit: item.base_unit,
-          pack_unit: item.pack_unit,
-          pack_quantity: item.pack_quantity,
-          special_instructions: item.special_instructions,
+          supplier_item_id: item.supplier_item_id ?? 0,
+          base_unit: item.base_unit || "EA",
+          pack_unit: item.pack_unit ?? null,
+          pack_quantity: item.pack_quantity ?? null,
+          special_instructions: item.special_instructions ?? null,
         }
       : CUSTOMER_ITEM_FORM_DEFAULTS,
   });
@@ -72,26 +71,35 @@ export function CustomerItemForm({
     [customers],
   );
 
-  // 製品選択オプション - 製品コード（製品名）形式
-  const productOptions = useMemo(
+  // メーカー品番選択オプション - maker_part_no（仕入先名）形式
+  const supplierItemOptions = useMemo(
     () =>
-      products.map((p) => ({
-        value: String(p.id),
-        label: `${p.product_code}（${p.product_name}）`,
+      supplierItems.map((si) => ({
+        value: String(si.id),
+        label: `${si.maker_part_no}（${si.supplier_name || "仕入先不明"}）`,
       })),
-    [products],
+    [supplierItems],
   );
 
-  const handleProductSelect = (value: string) => {
-    setValue("product_id", value ? Number(value) : 0);
-    // customer_part_noはマニュアル入力なので自動設定しない
+  // supplier_item_id選択ハンドラ
+  const handleSupplierItemSelect = (value: string) => {
+    // 空文字列の場合は0を設定（未選択状態）
+    if (!value || value === "") {
+      setValue("supplier_item_id", 0);
+      return;
+    }
+
+    const selectedSupplierItem = supplierItems.find((si) => si.id === Number(value));
+    if (selectedSupplierItem) {
+      setValue("supplier_item_id", selectedSupplierItem.id);
+    }
   };
 
   const handleFormSubmit = (data: CustomerItemFormData) => {
     onSubmit(data as CreateCustomerItemRequest);
   };
 
-  const isLoading = isLoadingCustomers || isLoadingProducts;
+  const isLoading = isLoadingCustomers || isLoadingSupplierItems;
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
@@ -101,10 +109,10 @@ export function CustomerItemForm({
         isSubmitting={isSubmitting}
         isLoading={isLoading}
         customerOptions={customerOptions}
-        productOptions={productOptions}
+        supplierItemOptions={supplierItemOptions}
         isLoadingCustomers={isLoadingCustomers}
-        isLoadingProducts={isLoadingProducts}
-        onProductSelect={handleProductSelect}
+        isLoadingSupplierItems={isLoadingSupplierItems}
+        onSupplierItemSelect={handleSupplierItemSelect}
       />
 
       {/* Submit Buttons */}

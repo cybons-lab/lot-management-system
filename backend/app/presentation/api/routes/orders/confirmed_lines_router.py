@@ -28,7 +28,7 @@ class ConfirmedOrderLineResponse(BaseModel):
     customer_order_no: str | None = None  # 得意先受注番号（明細レベル）
     customer_id: int
     customer_name: str
-    product_id: int
+    product_group_id: int
     product_code: str
     product_name: str
     order_quantity: float
@@ -78,9 +78,9 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
             OrderLine.customer_order_no,
             Customer.id.label("customer_id"),
             Customer.customer_name,
-            Product.id.label("product_id"),
-            Product.maker_part_code.label("product_code"),
-            Product.product_name,
+            Product.id.label("product_group_id"),
+            Product.maker_part_no.label("product_code"),
+            Product.display_name,
             OrderLine.order_quantity,
             func.coalesce(res_subq.c.reserved_qty, 0).label("reserved_quantity"),
             OrderLine.unit,
@@ -89,7 +89,7 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
         )
         .join(Order, OrderLine.order_id == Order.id)
         .join(Customer, Order.customer_id == Customer.id)
-        .join(Product, OrderLine.product_id == Product.id)
+        .join(Product, OrderLine.product_group_id == Product.id)
         .outerjoin(res_subq, OrderLine.id == res_subq.c.order_line_id)
         .where(OrderLine.sap_order_no.is_(None))  # SAP未登録
         .where(
@@ -107,9 +107,9 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
             customer_order_no=r.customer_order_no,
             customer_id=r.customer_id,
             customer_name=r.customer_name,
-            product_id=r.product_id,
+            product_group_id=r.product_group_id,
             product_code=r.product_code,
-            product_name=r.product_name,
+            product_name=r.display_name,
             order_quantity=float(r.order_quantity),
             reserved_quantity=float(r.reserved_quantity),
             unit=r.unit,

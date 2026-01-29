@@ -18,7 +18,7 @@ const QUERY_KEY = ["product-mappings"] as const;
 export function useProductMappings(params?: {
   customer_id?: number;
   supplier_id?: number;
-  product_id?: number;
+  product_group_id?: number;
   is_active?: boolean;
 }) {
   return useQuery({

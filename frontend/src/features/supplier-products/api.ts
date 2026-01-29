@@ -2,31 +2,34 @@ import { http } from "@/shared/api/http-client";
 
 export interface SupplierProduct {
   id: number;
-  product_id: number;
   supplier_id: number;
-  is_primary: boolean;
+  maker_part_no: string;
+  display_name: string;
+  base_unit: string;
   lead_time_days: number | null;
-  product_code: string;
-  product_name: string;
+  notes: string | null;
   supplier_code: string;
   supplier_name: string;
   created_at: string;
   updated_at: string;
-  // UI helper fields (optional)
-  order_unit?: string;
-  order_lot_size?: number;
+  valid_to: string;
 }
 
 export interface SupplierProductCreate {
-  product_id: number;
   supplier_id: number;
-  is_primary?: boolean;
+  maker_part_no: string;
+  display_name: string;
+  base_unit: string;
   lead_time_days?: number | null;
+  notes?: string | null;
 }
 
 export interface SupplierProductUpdate {
-  is_primary?: boolean;
+  maker_part_no?: string;
+  display_name?: string;
+  base_unit?: string;
   lead_time_days?: number | null;
+  notes?: string | null;
 }
 
 const BASE_PATH = "masters/supplier-items";
@@ -54,3 +57,6 @@ export async function updateSupplierProduct(
 export async function deleteSupplierProduct(id: number): Promise<void> {
   return http.deleteVoid(`${BASE_PATH}/${id}`);
 }
+
+// Alias for convenience
+export const getSupplierProducts = fetchSupplierProducts;

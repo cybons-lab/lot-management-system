@@ -3,8 +3,6 @@
  * 素材納品書発行などのRPA実行APIを提供
  */
 
-import { HTTPError } from "ky";
-
 import { http } from "@/shared/api/http-client";
 
 export interface MaterialDeliveryDocumentRequest {
@@ -115,14 +113,12 @@ export async function getCloudFlowConfig(key: string): Promise<CloudFlowConfigRe
 export async function getCloudFlowConfigOptional(
   key: string,
 ): Promise<CloudFlowConfigResponse | null> {
-  try {
-    return await getCloudFlowConfig(key);
-  } catch (error) {
-    if (error instanceof HTTPError && error.response?.status === 404) {
-      return null;
-    }
-    throw error;
-  }
+  // optional=trueパラメータを渡すことで、未設定時に404ではなくnullを返す
+  return http
+    .get<CloudFlowConfigResponse | null>(`rpa/cloud-flow/configs/${key}`, {
+      searchParams: { optional: "true" },
+    })
+    .then((response) => response ?? null);
 }
 
 export async function updateCloudFlowConfig(

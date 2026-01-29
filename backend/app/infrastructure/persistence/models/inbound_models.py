@@ -10,7 +10,7 @@
    → ヘッダ（入荷日、仕入先）と明細（製品、数量）を分離
    実装:
    - InboundPlan: 入荷計画全体の情報（plan_number, supplier_id, arrival_date）
-   - InboundPlanLine: 製品ごとの情報（product_id, quantity）
+   - InboundPlanLine: 製品ごとの情報（product_group_id, quantity）
    → 1対多の関係
 
 2. なぜ sap_po_number をユニークにするのか（L50-55, L77-78）
@@ -144,7 +144,7 @@ from .base_model import Base
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .lot_receipt_models import LotReceipt
-    from .masters_models import Product, Supplier
+    from .masters_models import Supplier, SupplierItem
 
 
 class InboundPlanStatus(str, PyEnum):
@@ -223,9 +223,9 @@ class InboundPlanLine(Base):
         ForeignKey("inbound_plans.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
     planned_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
@@ -242,11 +242,13 @@ class InboundPlanLine(Base):
 
     __table_args__ = (
         Index("idx_inbound_plan_lines_plan", "inbound_plan_id"),
-        Index("idx_inbound_plan_lines_product", "product_id"),
+        Index("idx_inbound_plan_lines_product_group", "product_group_id"),
     )
 
     inbound_plan: Mapped[InboundPlan] = relationship("InboundPlan", back_populates="lines")
-    product: Mapped[Product] = relationship("Product", back_populates="inbound_plan_lines")
+    product_group: Mapped[SupplierItem] = relationship(
+        "SupplierItem", back_populates="inbound_plan_lines"
+    )
     expected_lots: Mapped[list[ExpectedLot]] = relationship(
         "ExpectedLot", back_populates="inbound_plan_line", cascade="all, delete-orphan"
     )

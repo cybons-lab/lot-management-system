@@ -6,18 +6,18 @@ import type { Forecast } from "@/features/forecasts/api";
 export function useForecastData(
   customerId?: number | null,
   deliveryPlaceId?: number | null,
-  productId?: number | null,
+  productGroupId?: number | null,
 ) {
   return useQuery({
-    queryKey: ["forecasts", customerId, deliveryPlaceId, productId],
+    queryKey: ["forecasts", customerId, deliveryPlaceId, productGroupId],
     queryFn: () =>
       getForecasts({
         customer_id: customerId ?? undefined,
         delivery_place_id: deliveryPlaceId ?? undefined,
-        product_id: productId ?? undefined,
+        product_group_id: productGroupId ?? undefined,
         limit: 100, // 十分な数を取得
       }),
-    enabled: !!customerId && !!productId,
+    enabled: !!customerId && !!productGroupId,
     staleTime: 1000 * 60 * 5, // 5分間キャッシュ
     select: (data) => {
       // 全グループのforecastsを結合

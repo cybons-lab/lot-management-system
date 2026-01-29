@@ -27,6 +27,10 @@ export interface OcrResultItem {
   order_unit: string | null;
   inbound_no: string | null;
   lot_no: string | null;
+  lot_no_1: string | null;
+  quantity_1: string | null;
+  lot_no_2: string | null;
+  quantity_2: string | null;
 
   // 手入力結果
   manual_lot_no_1: string | null;

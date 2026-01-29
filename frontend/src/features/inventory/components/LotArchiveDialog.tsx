@@ -104,7 +104,7 @@ export function LotArchiveDialog({
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-3 pt-2">
             <div>
-              ロット <strong>{lot.lot_number}</strong> をアーカイブしますか？
+              ロット <strong>{lot.lot_number || "-"}</strong> をアーカイブしますか？
               <br />
               アーカイブされたロットは通常の一覧には表示されなくなり、在庫計算からも除外されます。
             </div>
@@ -114,7 +114,7 @@ export function LotArchiveDialog({
               <ConfirmInput
                 value={confirmInput}
                 onChange={setConfirmInput}
-                lotNumber={lot.lot_number}
+                lotNumber={lot.lot_number || ""}
               />
             )}
           </AlertDialogDescription>

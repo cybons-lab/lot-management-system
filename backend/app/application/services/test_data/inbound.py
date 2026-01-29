@@ -12,7 +12,8 @@ from app.infrastructure.persistence.models.inbound_models import (
     InboundPlanStatus,
 )
 from app.infrastructure.persistence.models.inventory_models import LotReceipt
-from app.infrastructure.persistence.models.masters_models import Product, Supplier
+from app.infrastructure.persistence.models.masters_models import Supplier
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 from .scenarios.lt_scenarios import LT_SCENARIOS
 from .utils import fake
@@ -20,7 +21,7 @@ from .utils import fake
 
 def generate_inbound_plans(
     db: Session,
-    products: list[Product],
+    products: list[SupplierItem],
     suppliers: list[Supplier],
     options: object = None,
     calendar: object = None,
@@ -85,7 +86,7 @@ def generate_inbound_plans(
 
             line = InboundPlanLine(
                 inbound_plan_id=plan.id,
-                product_id=lot.product_id,
+                product_group_id=lot.product_group_id,
                 planned_quantity=original_qty,
                 unit="pcs",
             )
@@ -159,7 +160,7 @@ def generate_inbound_plans(
         for p in selected_products:
             line = InboundPlanLine(
                 inbound_plan_id=plan.id,
-                product_id=p.id,
+                product_group_id=p.id,
                 planned_quantity=Decimal(str(random.randint(50, 500))),
                 unit="pcs",
             )
@@ -195,7 +196,7 @@ def generate_inbound_plans(
         for p in selected_products:
             qty = Decimal(str(random.randint(100, 500)))
             line = InboundPlanLine(
-                inbound_plan_id=plan.id, product_id=p.id, planned_quantity=qty, unit="pcs"
+                inbound_plan_id=plan.id, product_group_id=p.id, planned_quantity=qty, unit="pcs"
             )
             db.add(line)
             db.flush()

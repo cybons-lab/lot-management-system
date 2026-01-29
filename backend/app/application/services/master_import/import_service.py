@@ -15,7 +15,6 @@ from app.infrastructure.persistence.models.masters_models import (
     Customer,
     CustomerItem,
     DeliveryPlace,
-    Product,
     ProductMapping,
     Supplier,
 )
@@ -112,7 +111,7 @@ class MasterImportService:
                 for product_row in supplier_row.products:
                     product = self._upsert_product(
                         product_row.maker_part_code,
-                        product_row.product_name,
+                        product_row.product_name or "",
                         product_row.base_unit,
                     )
                     if product:
@@ -221,27 +220,29 @@ class MasterImportService:
             self.db.add(supplier)
             return supplier
 
-    def _upsert_product(self, code: str, name: str | None, base_unit: str | None) -> Product | None:
+    def _upsert_product(
+        self, code: str, name: str | None, base_unit: str | None
+    ) -> SupplierItem | None:
         """Upsert product by maker_part_code."""
-        existing = self.db.query(Product).filter(Product.maker_part_code == code).first()
+        existing = self.db.query(SupplierItem).filter(SupplierItem.maker_part_no == code).first()
         if existing:
             if name:
-                existing.product_name = name
+                existing.display_name = name
             if base_unit:
-                existing.base_unit = base_unit
+                existing.internal_unit = base_unit
             return existing
         else:
-            product = Product(
-                maker_part_code=code,
-                product_name=name or code,
-                base_unit=base_unit or "EA",
+            product = SupplierItem(
+                maker_part_no=code,
+                display_name=name or code,
+                internal_unit=base_unit or "EA",
             )
             self.db.add(product)
             return product
 
     def _upsert_product_supplier(
         self,
-        product_id: int,
+        product_group_id: int,
         supplier_id: int,
         is_primary: bool,
         lead_time_days: int | None,
@@ -250,19 +251,19 @@ class MasterImportService:
         existing = (
             self.db.query(SupplierItem)
             .filter(
-                SupplierItem.product_id == product_id,
+                SupplierItem.product_group_id == product_group_id,  # type: ignore[attr-defined]
                 SupplierItem.supplier_id == supplier_id,
             )
             .first()
         )
         if existing:
-            existing.is_primary = is_primary  # type: ignore[assignment]
+            existing.is_primary = is_primary  # type: ignore[attr-defined]
             if lead_time_days is not None:
-                existing.lead_time_days = lead_time_days  # type: ignore[assignment]
+                existing.lead_time_days = lead_time_days
             return existing
         else:
             ps = SupplierItem(
-                product_id=product_id,
+                product_group_id=product_group_id,
                 supplier_id=supplier_id,
                 is_primary=is_primary,
                 lead_time_days=lead_time_days or 0,
@@ -321,7 +322,11 @@ class MasterImportService:
     ) -> CustomerItem | None:
         """Upsert customer item."""
         # Find product by maker_part_code
-        product = self.db.query(Product).filter(Product.maker_part_code == maker_part_code).first()
+        product = (
+            self.db.query(SupplierItem)
+            .filter(SupplierItem.maker_part_no == maker_part_code)
+            .first()
+        )
         if not product:
             return None
 
@@ -345,7 +350,7 @@ class MasterImportService:
         )
 
         if existing:
-            existing.product_id = product.id
+            existing.product_group_id = product.id
             existing.supplier_id = supplier_id
             if base_unit:
                 existing.base_unit = base_unit
@@ -360,7 +365,7 @@ class MasterImportService:
             ci = CustomerItem(
                 customer_id=customer_id,
                 customer_part_no=customer_part_no,
-                product_id=product.id,
+                product_group_id=product.id,
                 supplier_id=supplier_id,
                 base_unit=base_unit,
                 pack_unit=pack_unit,
@@ -384,7 +389,11 @@ class MasterImportService:
     ) -> ProductMapping | None:
         """Upsert product mapping (4-party relationship)."""
         # Find product by maker_part_code
-        product = self.db.query(Product).filter(Product.maker_part_code == maker_part_code).first()
+        product = (
+            self.db.query(SupplierItem)
+            .filter(SupplierItem.maker_part_no == maker_part_code)
+            .first()
+        )
         if not product:
             return None
 
@@ -405,7 +414,7 @@ class MasterImportService:
         )
 
         if existing:
-            existing.product_id = product.id
+            existing.product_group_id = product.id
             existing.base_unit = base_unit
             if pack_unit:
                 existing.pack_unit = pack_unit
@@ -423,7 +432,7 @@ class MasterImportService:
                 customer_id=customer_id,
                 customer_part_code=customer_part_code,
                 supplier_id=supplier.id,
-                product_id=product.id,
+                product_group_id=product.id,
                 base_unit=base_unit,
                 pack_unit=pack_unit,
                 pack_quantity=pack_quantity,

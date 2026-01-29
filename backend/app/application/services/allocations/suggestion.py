@@ -62,7 +62,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
         self,
         customer_id: int,
         delivery_place_id: int,
-        product_id: int,
+        product_group_id: int,
         forecast_period: str | None = None,
     ) -> AllocationSuggestionPreviewResponse:
         """Regenerate allocation suggestions for a specific forecast group.
@@ -70,14 +70,14 @@ class AllocationSuggestionService(AllocationSuggestionBase):
         Args:
             customer_id: 得意先ID
             delivery_place_id: 納入先ID
-            product_id: 製品ID
+            product_group_id: 製品ID
             forecast_period: 期間 (YYYY-MM)、省略時は全期間
 
         Returns:
             AllocationSuggestionPreviewResponse with suggestions, stats, and gaps.
         """
         return self._group_service.regenerate_for_group(
-            customer_id, delivery_place_id, product_id, forecast_period
+            customer_id, delivery_place_id, product_group_id, forecast_period
         )
 
     def preview_for_order(self, order_line_id: int) -> AllocationSuggestionPreviewResponse:
@@ -96,10 +96,10 @@ class AllocationSuggestionService(AllocationSuggestionBase):
             )
 
         needed = order_line.order_quantity
-        product_id = order_line.product_id
+        product_group_id = order_line.product_group_id
 
         # Fetch lots
-        lots = self._fetch_available_lots([product_id or 0]).get(product_id or 0, [])
+        lots = self._fetch_available_lots([product_group_id or 0]).get(product_group_id or 0, [])
 
         suggestions = []
         allocated_total = Decimal("0")
@@ -123,7 +123,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 forecast_period="PREVIEW",  # Dummy
                 customer_id=order_line.order.customer_id,
                 delivery_place_id=order_line.delivery_place_id,
-                product_id=product_id,
+                product_group_id=product_group_id,
                 lot_id=lot.lot_id,
                 quantity=alloc_qty,
                 priority=priority_counter,
@@ -157,7 +157,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 AllocationGap(
                     customer_id=order_line.order.customer_id,
                     delivery_place_id=order_line.delivery_place_id,
-                    product_id=product_id or 0,
+                    product_group_id=product_group_id or 0,
                     forecast_period="PREVIEW",
                     shortage_quantity=shortage,
                 )
@@ -180,7 +180,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
 
         Args:
             updates: List of dicts with keys:
-                customer_id, delivery_place_id, product_id,
+                customer_id, delivery_place_id, product_group_id,
                 lot_id, forecast_period, quantity
 
         Returns:
@@ -196,7 +196,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 .filter(
                     AllocationSuggestion.customer_id == up["customer_id"],
                     AllocationSuggestion.delivery_place_id == up["delivery_place_id"],
-                    AllocationSuggestion.product_id == up["product_id"],
+                    AllocationSuggestion.product_group_id == up["product_group_id"],
                     AllocationSuggestion.lot_id == up["lot_id"],
                     AllocationSuggestion.forecast_period == up["forecast_period"],
                 )
@@ -219,7 +219,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                     .filter(
                         ForecastCurrent.customer_id == up["customer_id"],
                         ForecastCurrent.delivery_place_id == up["delivery_place_id"],
-                        ForecastCurrent.product_id == up["product_id"],
+                        ForecastCurrent.product_group_id == up["product_group_id"],
                         ForecastCurrent.forecast_period == up["forecast_period"],
                     )
                     .first()
@@ -228,7 +228,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 new_item = AllocationSuggestion(
                     customer_id=up["customer_id"],
                     delivery_place_id=up["delivery_place_id"],
-                    product_id=up["product_id"],
+                    product_group_id=up["product_group_id"],
                     lot_id=up["lot_id"],
                     forecast_period=up["forecast_period"],
                     quantity=quantity,

@@ -61,7 +61,6 @@ if TYPE_CHECKING:
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
     from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
     from app.infrastructure.persistence.models.masters_models import (
-        Product,
         Supplier,
         Warehouse,
     )
@@ -76,7 +75,7 @@ class LotReceipt(Base):
 
     DDL: lot_receipts
     Primary key: id (BIGSERIAL)
-    Foreign keys: product_id, warehouse_id, supplier_id, expected_lot_id, lot_master_id
+    Foreign keys: product_group_id, warehouse_id, supplier_id, expected_lot_id, lot_master_id
     """
 
     __tablename__ = "lot_receipts"
@@ -93,9 +92,9 @@ class LotReceipt(Base):
 
     # Legacy: lot_number column is removed. Use lot_master.lot_number.
     @property
-    def lot_number(self) -> str:
+    def lot_number(self) -> str | None:
         """Get lot number from lot_master (read-only accessor)."""
-        return self.lot_master.lot_number if self.lot_master else ""
+        return self.lot_master.lot_number if self.lot_master else None
 
     @hybrid_property
     def current_quantity(self) -> Decimal:
@@ -106,9 +105,9 @@ class LotReceipt(Base):
     def current_quantity_expr(cls):
         return cls.received_quantity - cls.consumed_quantity
 
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
     warehouse_id: Mapped[int] = mapped_column(
@@ -225,7 +224,7 @@ class LotReceipt(Base):
         UniqueConstraint("temporary_lot_key", name="uq_lot_receipts_temporary_lot_key"),
         # Partial unique index for expected_lot_id (defined in migration)
         # idx_lot_receipts_number is removed (lot_number column dropped)
-        Index("idx_lot_receipts_product_warehouse", "product_id", "warehouse_id"),
+        Index("idx_lot_receipts_product_group_warehouse", "product_group_id", "warehouse_id"),
         Index("idx_lot_receipts_status", "status"),
         Index("idx_lot_receipts_supplier", "supplier_id"),
         Index("idx_lot_receipts_warehouse", "warehouse_id"),
@@ -245,7 +244,7 @@ class LotReceipt(Base):
         # Renamed to FEFO allocation and added expiry_date
         Index(
             "idx_lot_receipts_fefo_allocation",
-            "product_id",
+            "product_group_id",
             "warehouse_id",
             "expiry_date",  # Added for FEFO
             "received_date",
@@ -260,11 +259,13 @@ class LotReceipt(Base):
 
     # Relationships
     lot_master: Mapped[LotMaster] = relationship("LotMaster", back_populates="receipts")
-    product: Mapped[Product] = relationship("Product", back_populates="lot_receipts")
+    product_group: Mapped[SupplierItem] = relationship(
+        "SupplierItem", foreign_keys="[LotReceipt.product_group_id]"
+    )
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lot_receipts")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_receipts")
     supplier_item: Mapped[SupplierItem | None] = relationship(
-        "SupplierItem", back_populates="lot_receipts"
+        "SupplierItem", foreign_keys="[LotReceipt.supplier_item_id]", back_populates="lot_receipts"
     )
     expected_lot: Mapped[ExpectedLot | None] = relationship(
         "ExpectedLot", back_populates="lot_receipt", uselist=False

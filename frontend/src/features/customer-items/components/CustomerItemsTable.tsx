@@ -83,7 +83,7 @@ export function CustomerItemsTable({
       },
       {
         id: "customer_part_no",
-        header: "先方品番",
+        header: "得意先品番",
         accessor: (row) => row.customer_part_no,
         cell: (row) => (
           <span className="font-medium whitespace-nowrap">{row.customer_part_no}</span>
@@ -93,16 +93,16 @@ export function CustomerItemsTable({
       },
       {
         id: "product",
-        header: "商品",
-        accessor: (row) => row.product_name,
+        header: "製品",
+        accessor: (row) => row.display_name,
         cell: (row) => (
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 shrink-0 text-green-600" />
             <div className="min-w-[120px]">
-              <div className="truncate font-medium text-sm" title={row.product_name}>
-                {row.product_name}
+              <div className="truncate font-medium text-sm" title={row.display_name || undefined}>
+                {row.display_name || "-"}
               </div>
-              <div className="text-xs text-gray-500">{row.product_code}</div>
+              <div className="text-xs text-gray-500 font-mono">{row.maker_part_no || "-"}</div>
             </div>
           </div>
         ),

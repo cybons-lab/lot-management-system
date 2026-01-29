@@ -17,7 +17,7 @@ export function useInventoryStats(inventoryItems: InventoryItem[]) {
       (sum, item) => sum + Number(item.available_quantity || 0),
       0,
     );
-    const uniqueProducts = new Set(inventoryItems.map((item) => item.product_id)).size;
+    const uniqueProducts = new Set(inventoryItems.map((item) => item.product_group_id)).size;
     const uniqueWarehouses = new Set(inventoryItems.map((item) => item.warehouse_id)).size;
 
     return {

@@ -90,7 +90,7 @@ export function OrderAllocationInline({ line, logic }: OrderAllocationInlineProp
   // ロット候補の取得 (useAllocationCandidatesを直接使用)
   const { data: candidatesData, isLoading } = useAllocationCandidates({
     order_line_id: line.id,
-    product_id: Number(line.product_id || 0),
+    product_group_id: Number(line.product_group_id || 0),
     strategy: "fefo",
     limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
   });

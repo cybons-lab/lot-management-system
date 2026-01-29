@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.infrastructure.persistence.models.masters_models import Product, Supplier
+from app.infrastructure.persistence.models.masters_models import Supplier
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.routes.auth.auth_router import (
     get_current_admin,
@@ -50,27 +50,25 @@ def list_supplier_items(
         db: データベースセッション
 
     Returns:
-        仕入先品目のリスト（製品情報と仕入先情報を含む）
+        仕入先品目のリスト（仕入先情報を含む）
     """
-    query = (
-        select(
-            SupplierItem.id,
-            SupplierItem.product_id,
-            SupplierItem.supplier_id,
-            SupplierItem.maker_part_no,
-            SupplierItem.is_primary,
-            SupplierItem.lead_time_days,
-            SupplierItem.display_name,
-            SupplierItem.notes,
-            Product.maker_part_code,
-            Product.product_name,
-            Supplier.supplier_code,
-            Supplier.supplier_name,
-            SupplierItem.valid_to,
-        )
-        .join(Product, SupplierItem.product_id == Product.id)
-        .join(Supplier, SupplierItem.supplier_id == Supplier.id)
-    )
+    query = select(
+        SupplierItem.id,
+        SupplierItem.supplier_id,
+        SupplierItem.maker_part_no,
+        SupplierItem.display_name,
+        SupplierItem.base_unit,
+        SupplierItem.internal_unit,
+        SupplierItem.external_unit,
+        SupplierItem.qty_per_internal_unit,
+        SupplierItem.consumption_limit_days,
+        SupplierItem.requires_lot_number,
+        SupplierItem.lead_time_days,
+        SupplierItem.notes,
+        Supplier.supplier_code,
+        Supplier.supplier_name,
+        SupplierItem.valid_to,
+    ).join(Supplier, SupplierItem.supplier_id == Supplier.id)
 
     if supplier_id is not None:
         query = query.where(SupplierItem.supplier_id == supplier_id)
@@ -84,15 +82,17 @@ def list_supplier_items(
     return [
         {
             "id": r.id,
-            "product_id": r.product_id,
             "supplier_id": r.supplier_id,
             "maker_part_no": r.maker_part_no,
-            "is_primary": r.is_primary,
-            "lead_time_days": r.lead_time_days,
             "display_name": r.display_name,
+            "base_unit": r.base_unit,
+            "internal_unit": r.internal_unit,
+            "external_unit": r.external_unit,
+            "qty_per_internal_unit": r.qty_per_internal_unit,
+            "consumption_limit_days": r.consumption_limit_days,
+            "requires_lot_number": r.requires_lot_number,
+            "lead_time_days": r.lead_time_days,
             "notes": r.notes,
-            "product_code": r.maker_part_code,
-            "product_name": r.product_name,
             "supplier_code": r.supplier_code,
             "supplier_name": r.supplier_name,
             "valid_to": r.valid_to,
@@ -112,38 +112,38 @@ def export_supplier_items(format: str = "csv", db: Session = Depends(get_db)):
     Returns:
         Excel形式またはCSV形式のファイルレスポンス
     """
-    query = (
-        select(
-            SupplierItem.id,
-            SupplierItem.product_id,
-            SupplierItem.supplier_id,
-            SupplierItem.maker_part_no,
-            SupplierItem.is_primary,
-            SupplierItem.lead_time_days,
-            SupplierItem.display_name,
-            SupplierItem.notes,
-            Product.maker_part_code,
-            Product.product_name,
-            Supplier.supplier_code,
-            Supplier.supplier_name,
-        )
-        .join(Product, SupplierItem.product_id == Product.id)
-        .join(Supplier, SupplierItem.supplier_id == Supplier.id)
-    )
+    query = select(
+        SupplierItem.id,
+        SupplierItem.supplier_id,
+        SupplierItem.maker_part_no,
+        SupplierItem.display_name,
+        SupplierItem.base_unit,
+        SupplierItem.internal_unit,
+        SupplierItem.external_unit,
+        SupplierItem.qty_per_internal_unit,
+        SupplierItem.consumption_limit_days,
+        SupplierItem.requires_lot_number,
+        SupplierItem.lead_time_days,
+        SupplierItem.notes,
+        Supplier.supplier_code,
+        Supplier.supplier_name,
+    ).join(Supplier, SupplierItem.supplier_id == Supplier.id)
     results = db.execute(query).all()
 
     data = [
         {
             "id": r.id,
-            "product_id": r.product_id,
             "supplier_id": r.supplier_id,
             "maker_part_no": r.maker_part_no,
-            "is_primary": r.is_primary,
-            "lead_time_days": r.lead_time_days,
             "display_name": r.display_name,
+            "base_unit": r.base_unit,
+            "internal_unit": r.internal_unit,
+            "external_unit": r.external_unit,
+            "qty_per_internal_unit": r.qty_per_internal_unit,
+            "consumption_limit_days": r.consumption_limit_days,
+            "requires_lot_number": r.requires_lot_number,
+            "lead_time_days": r.lead_time_days,
             "notes": r.notes,
-            "product_code": r.maker_part_code,
-            "product_name": r.product_name,
             "supplier_code": r.supplier_code,
             "supplier_name": r.supplier_name,
         }
@@ -164,7 +164,7 @@ def get_supplier_item(id: int, db: Session = Depends(get_db)):
         db: データベースセッション
 
     Returns:
-        SupplierItemResponse: 仕入先品目詳細（製品情報と仕入先情報を含む）
+        SupplierItemResponse: 仕入先品目詳細（仕入先情報を含む）
 
     Raises:
         HTTPException: レコードが見つからない場合は404
@@ -173,20 +173,22 @@ def get_supplier_item(id: int, db: Session = Depends(get_db)):
     if not si:
         raise HTTPException(status_code=404, detail="Supplier item not found")
 
-    # Reload relationships to ensure we have product and supplier info
+    # Reload relationships to ensure we have supplier info
     db.refresh(si)
 
     return {
         "id": si.id,
-        "product_id": si.product_id,
         "supplier_id": si.supplier_id,
         "maker_part_no": si.maker_part_no,
-        "is_primary": si.is_primary,
-        "lead_time_days": si.lead_time_days,
         "display_name": si.display_name,
+        "base_unit": si.base_unit,
+        "internal_unit": si.internal_unit,
+        "external_unit": si.external_unit,
+        "qty_per_internal_unit": si.qty_per_internal_unit,
+        "consumption_limit_days": si.consumption_limit_days,
+        "requires_lot_number": si.requires_lot_number,
+        "lead_time_days": si.lead_time_days,
         "notes": si.notes,
-        "product_code": si.product.maker_part_code,
-        "product_name": si.product.product_name,
         "supplier_code": si.supplier.supplier_code,
         "supplier_name": si.supplier.supplier_name,
         "created_at": si.created_at,
@@ -200,7 +202,6 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
     """仕入先品目を新規作成.
 
     仕入先と品目（メーカー品番）の関連を登録します。
-    is_primaryがTrueの場合、同一製品の他のレコードのis_primaryをFalseに更新します。
 
     Args:
         data: 仕入先品目作成データ
@@ -210,7 +211,7 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
         SupplierItemResponse: 作成された仕入先品目情報
 
     Raises:
-        HTTPException: 仕入先-製品のペアが既に存在する場合は400
+        HTTPException: 仕入先-メーカー品番のペアが既に存在する場合は400
     """
     # Check for existing (business key: supplier_id + maker_part_no)
     existing = (
@@ -227,19 +228,17 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
             detail="This supplier-maker_part_no pair already exists",
         )
 
-    # If is_primary is True, unset others for this product
-    if data.is_primary:
-        db.query(SupplierItem).filter(
-            SupplierItem.product_id == data.product_id, SupplierItem.is_primary.is_(True)
-        ).update({"is_primary": False})
-
     si = SupplierItem(
-        product_id=data.product_id,
         supplier_id=data.supplier_id,
         maker_part_no=data.maker_part_no,
-        is_primary=data.is_primary,
-        lead_time_days=data.lead_time_days,
         display_name=data.display_name,
+        base_unit=data.base_unit,
+        internal_unit=data.internal_unit,
+        external_unit=data.external_unit,
+        qty_per_internal_unit=data.qty_per_internal_unit,
+        consumption_limit_days=data.consumption_limit_days,
+        requires_lot_number=data.requires_lot_number,
+        lead_time_days=data.lead_time_days,
         notes=data.notes,
     )
     db.add(si)
@@ -248,15 +247,17 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
 
     return {
         "id": si.id,
-        "product_id": si.product_id,
         "supplier_id": si.supplier_id,
         "maker_part_no": si.maker_part_no,
-        "is_primary": si.is_primary,
-        "lead_time_days": si.lead_time_days,
         "display_name": si.display_name,
+        "base_unit": si.base_unit,
+        "internal_unit": si.internal_unit,
+        "external_unit": si.external_unit,
+        "qty_per_internal_unit": si.qty_per_internal_unit,
+        "consumption_limit_days": si.consumption_limit_days,
+        "requires_lot_number": si.requires_lot_number,
+        "lead_time_days": si.lead_time_days,
         "notes": si.notes,
-        "product_code": si.product.maker_part_code,
-        "product_name": si.product.product_name,
         "supplier_code": si.supplier.supplier_code,
         "supplier_name": si.supplier.supplier_name,
         "created_at": si.created_at,
@@ -274,7 +275,6 @@ def update_supplier_item(
 ):
     """仕入先品目を更新.
 
-    is_primaryをTrueに設定する場合、同一製品の他のレコードのis_primaryをFalseに更新します。
     maker_part_no の変更は管理者のみ許可されています。
 
     Args:
@@ -326,14 +326,6 @@ def update_supplier_item(
                 detail=f"メーカー品番 '{update_data['maker_part_no']}' は既に存在します。",
             )
 
-    # If setting is_primary=True, unset others for this product
-    if update_data.get("is_primary"):
-        db.query(SupplierItem).filter(
-            SupplierItem.product_id == si.product_id,
-            SupplierItem.id != id,
-            SupplierItem.is_primary.is_(True),
-        ).update({"is_primary": False})
-
     for field, value in update_data.items():
         setattr(si, field, value)
 
@@ -342,15 +334,17 @@ def update_supplier_item(
 
     return {
         "id": si.id,
-        "product_id": si.product_id,
         "supplier_id": si.supplier_id,
         "maker_part_no": si.maker_part_no,
-        "is_primary": si.is_primary,
-        "lead_time_days": si.lead_time_days,
         "display_name": si.display_name,
+        "base_unit": si.base_unit,
+        "internal_unit": si.internal_unit,
+        "external_unit": si.external_unit,
+        "qty_per_internal_unit": si.qty_per_internal_unit,
+        "consumption_limit_days": si.consumption_limit_days,
+        "requires_lot_number": si.requires_lot_number,
+        "lead_time_days": si.lead_time_days,
         "notes": si.notes,
-        "product_code": si.product.maker_part_code,
-        "product_name": si.product.product_name,
         "supplier_code": si.supplier.supplier_code,
         "supplier_name": si.supplier.supplier_name,
         "created_at": si.created_at,
@@ -439,15 +433,17 @@ def restore_supplier_item(id: int, db: Session = Depends(get_db)):
 
     return {
         "id": si.id,
-        "product_id": si.product_id,
         "supplier_id": si.supplier_id,
         "maker_part_no": si.maker_part_no,
-        "is_primary": si.is_primary,
-        "lead_time_days": si.lead_time_days,
         "display_name": si.display_name,
+        "base_unit": si.base_unit,
+        "internal_unit": si.internal_unit,
+        "external_unit": si.external_unit,
+        "qty_per_internal_unit": si.qty_per_internal_unit,
+        "consumption_limit_days": si.consumption_limit_days,
+        "requires_lot_number": si.requires_lot_number,
+        "lead_time_days": si.lead_time_days,
         "notes": si.notes,
-        "product_code": si.product.maker_part_code,
-        "product_name": si.product.product_name,
         "supplier_code": si.supplier.supplier_code,
         "supplier_name": si.supplier.supplier_name,
         "created_at": si.created_at,

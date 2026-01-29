@@ -98,7 +98,7 @@ Soft Delete Support:
    - 製品B: 1缶 = 15kg
    → 製品ごとに変換係数が異なる
    実装:
-   - product_id: 製品ID
+   - product_group_id: 製品ID
    - external_unit: 外部単位（例: "KG"）
    - factor: 変換係数（例: 20.0）
    用途:
@@ -162,10 +162,10 @@ from .soft_delete_mixin import SoftDeleteMixin
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .assignments.assignment_models import UserSupplierAssignment
     from .forecast_models import ForecastCurrent
-    from .inbound_models import InboundPlan, InboundPlanLine
+    from .inbound_models import InboundPlan
     from .lot_master_model import LotMaster
     from .lot_receipt_models import LotReceipt
-    from .orders_models import Order, OrderLine
+    from .orders_models import Order
     from .supplier_item_model import SupplierItem
 
 
@@ -364,78 +364,6 @@ class DeliveryPlace(SoftDeleteMixin, Base):
     )
 
 
-class Product(SoftDeleteMixin, Base):
-    """Products master table (製品マスタ).
-
-    DDL: products
-    Primary key: id (BIGSERIAL)
-    Supports soft delete via valid_to column.
-    """
-
-    __tablename__ = "products"
-
-    id: Mapped[int] = mapped_column(
-        BigInteger().with_variant(Integer, "sqlite"),
-        primary_key=True,
-        autoincrement=True,
-    )
-    maker_part_code: Mapped[str] = mapped_column(String(100), nullable=False)
-    product_name: Mapped[str] = mapped_column(String(200), nullable=False)
-    base_unit: Mapped[str] = mapped_column(String(20), nullable=False)
-    consumption_limit_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    valid_to: Mapped[date] = mapped_column(
-        Date, nullable=False, server_default=text("'9999-12-31'")
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
-    )
-    # Unit Conversion Fields
-    internal_unit: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default="CAN"
-    )  # e.g. "CAN" (Allocation Unit)
-    external_unit: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default="KG"
-    )  # e.g. "KG" (Display/Input Unit)
-    qty_per_internal_unit: Mapped[Decimal] = mapped_column(
-        Numeric(10, 4), nullable=False, server_default="1.0"
-    )  # e.g. 20.0 (1 CAN = 20 KG)
-    # External part numbers
-    # Decision D1: Frequency/Scale of demand
-    qty_scale: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default="1", comment="数量スケール（1=通常, 10=小ロット等）"
-    )
-
-    __table_args__ = (
-        UniqueConstraint("maker_part_code", name="uq_products_maker_part_code"),
-        Index("idx_products_name", "product_name"),
-        Index("idx_products_valid_to", "valid_to"),
-    )
-
-    # Relationships
-
-    lot_masters: Mapped[list[LotMaster]] = relationship("LotMaster", back_populates="product")
-    lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="product")
-    order_lines: Mapped[list[OrderLine]] = relationship("OrderLine", back_populates="product")
-    forecast_current: Mapped[list[ForecastCurrent]] = relationship(
-        "ForecastCurrent", back_populates="product"
-    )
-    inbound_plan_lines: Mapped[list[InboundPlanLine]] = relationship(
-        "InboundPlanLine", back_populates="product"
-    )
-    customer_items: Mapped[list[CustomerItem]] = relationship(
-        "CustomerItem", back_populates="product"
-    )
-    uom_conversions: Mapped[list[ProductUomConversion]] = relationship(
-        "ProductUomConversion", back_populates="product"
-    )
-    supplier_items: Mapped[list[SupplierItem]] = relationship(
-        "SupplierItem", back_populates="product", cascade="all, delete-orphan"
-    )
-
-
 class CustomerItem(SoftDeleteMixin, Base):
     """Customer-specific product mappings (得意先品番マッピング).
 
@@ -447,7 +375,7 @@ class CustomerItem(SoftDeleteMixin, Base):
     DDL: customer_items
     Primary key: id (BIGSERIAL) - サロゲートキー
     Business key: UNIQUE(customer_id, customer_part_no)
-    Foreign keys: customer_id -> customers(id), product_id -> products(id),
+    Foreign keys: customer_id -> customers(id), product_group_id -> product_groups(id),
                   supplier_id -> suppliers(id), supplier_item_id -> supplier_items(id)
     Supports soft delete via valid_to column.
     See: docs/SCHEMA_GUIDE.md, docs/adr/ADR-003_customer_items_product_mappings.md
@@ -469,9 +397,9 @@ class CustomerItem(SoftDeleteMixin, Base):
         nullable=False,
         comment="得意先品番（先方品番）",
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
     supplier_id: Mapped[int | None] = mapped_column(
@@ -518,7 +446,7 @@ class CustomerItem(SoftDeleteMixin, Base):
             unique=True,
             postgresql_where=text("is_primary = true AND supplier_item_id IS NOT NULL"),
         ),
-        Index("idx_customer_items_product", "product_id"),
+        Index("idx_customer_items_product_group", "product_group_id"),
         Index("idx_customer_items_supplier", "supplier_id"),
         Index("idx_customer_items_supplier_item", "supplier_item_id"),
         Index("idx_customer_items_valid_to", "valid_to"),
@@ -526,10 +454,16 @@ class CustomerItem(SoftDeleteMixin, Base):
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer", back_populates="customer_items")
-    product: Mapped[Product] = relationship("Product", back_populates="customer_items")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="customer_items")
     supplier_item: Mapped[SupplierItem | None] = relationship(
-        "SupplierItem", back_populates="customer_items"
+        "SupplierItem",
+        foreign_keys="[CustomerItem.supplier_item_id]",
+        back_populates="customer_items",
+    )
+    product_group: Mapped[SupplierItem] = relationship(
+        "SupplierItem",
+        foreign_keys="[CustomerItem.product_group_id]",
+        back_populates="customer_items_as_product_group",
     )
     delivery_settings: Mapped[list[CustomerItemDeliverySetting]] = relationship(
         "CustomerItemDeliverySetting",
@@ -571,9 +505,9 @@ class ProductMapping(SoftDeleteMixin, Base):
         ForeignKey("suppliers.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
     base_unit: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -599,14 +533,13 @@ class ProductMapping(SoftDeleteMixin, Base):
         ),
         Index("idx_product_mappings_customer", "customer_id"),
         Index("idx_product_mappings_supplier", "supplier_id"),
-        Index("idx_product_mappings_product", "product_id"),
+        Index("idx_product_mappings_product_group", "product_group_id"),
         Index("idx_product_mappings_valid_to", "valid_to"),
     )
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
     supplier: Mapped[Supplier] = relationship("Supplier")
-    product: Mapped[Product] = relationship("Product")
 
 
 class ProductUomConversion(SoftDeleteMixin, Base):
@@ -614,16 +547,16 @@ class ProductUomConversion(SoftDeleteMixin, Base):
 
     DDL: product_uom_conversions
     Primary key: conversion_id (BIGSERIAL)
-    Foreign keys: product_id -> products(id)
+    Foreign keys: product_group_id -> product_groups(id)
     Supports soft delete via valid_to column.
     """
 
     __tablename__ = "product_uom_conversions"
 
     conversion_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
+    product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="CASCADE"),
+        ForeignKey("supplier_items.id", ondelete="CASCADE"),
         nullable=False,
     )
     external_unit: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -639,12 +572,11 @@ class ProductUomConversion(SoftDeleteMixin, Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("product_id", "external_unit", name="uq_uom_conversions_product_unit"),
+        UniqueConstraint(
+            "product_group_id", "external_unit", name="uq_uom_conversions_product_group_unit"
+        ),
         Index("idx_product_uom_conversions_valid_to", "valid_to"),
     )
-
-    # Relationships
-    product: Mapped[Product] = relationship("Product", back_populates="uom_conversions")
 
 
 class CustomerItemJikuMapping(Base):
@@ -769,7 +701,7 @@ class WarehouseDeliveryRoute(Base):
     """Warehouse delivery routes table (輸送経路マスタ).
 
     倉庫から納入先への輸送リードタイムを管理。
-    品番別のLT設定も可能（product_id指定）。
+    品番別のLT設定も可能（product_group_id指定）。
 
     直送（supplier warehouse_type）は対象外。
     """
@@ -787,11 +719,11 @@ class WarehouseDeliveryRoute(Base):
         ForeignKey("delivery_places.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_id: Mapped[int | None] = mapped_column(
+    product_group_id: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey("products.id", ondelete="CASCADE"),
+        ForeignKey("supplier_items.id", ondelete="CASCADE"),
         nullable=True,
-        comment="品番（NULLの場合は経路デフォルト）",
+        comment="製品グループ（NULLの場合は経路デフォルト）",
     )
     transport_lead_time_days: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="輸送リードタイム（日）"
@@ -810,11 +742,10 @@ class WarehouseDeliveryRoute(Base):
     __table_args__ = (
         Index("idx_wdr_warehouse", "warehouse_id"),
         Index("idx_wdr_delivery_place", "delivery_place_id"),
-        Index("idx_wdr_product", "product_id"),
+        Index("idx_wdr_product_group", "product_group_id"),
         Index("idx_wdr_active", "is_active"),
     )
 
     # Relationships
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="delivery_routes")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
-    product: Mapped[Product | None] = relationship("Product")

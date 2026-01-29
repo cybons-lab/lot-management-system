@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.application.services.auth.user_service import UserService
+from app.application.services.system_config_service import SystemConfigService
 from app.core.config import settings
 from app.core.database import truncate_all_tables
 from app.infrastructure.persistence.models import (
@@ -130,9 +131,12 @@ def reset_database(
         # 初期管理者ユーザーとロールを再作成
         _seed_admin_user(db)
 
+        # システム設定の初期化
+        _seed_system_config(db)
+
         return ResponseBase(
             success=True,
-            message="データベースをリセットしました（テーブル構造は保持・管理者ユーザー再作成済）",
+            message="データベースをリセットしました（テーブル構造は保持・管理者ユーザー・システム設定を再作成済）",
         )
 
     except Exception as e:
@@ -311,8 +315,8 @@ def get_allocatable_lots(
             SELECT
                 vld.lot_id,
                 vld.lot_number,
-                vld.product_id,
-                p.maker_part_code AS product_code,
+                vld.product_group_id,
+                p.maker_part_no AS product_code,
                 vld.warehouse_id,
                 vld.warehouse_code,
                 vld.current_quantity,
@@ -323,12 +327,12 @@ def get_allocatable_lots(
                 vld.updated_at as last_updated
             FROM
                 v_lot_details vld
-                INNER JOIN products p ON p.id = vld.product_id
+                INNER JOIN products p ON p.id = vld.product_group_id
             WHERE
                 vld.available_quantity > 0
                 AND vld.status = 'active'
                 AND (vld.expiry_date IS NULL OR vld.expiry_date >= CURRENT_DATE)
-                AND (:prod IS NULL OR p.maker_part_code = :prod)
+                AND (:prod IS NULL OR p.maker_part_no = :prod)
                 AND (:wh IS NULL OR vld.warehouse_code = :wh)
             ORDER BY
                 vld.expiry_date NULLS LAST,
@@ -344,7 +348,7 @@ def get_allocatable_lots(
             {
                 "lot_id": row.lot_id,
                 "lot_number": row.lot_number,
-                "product_id": row.product_id,
+                "product_group_id": row.product_group_id,
                 "product_code": row.product_code,
                 "warehouse_id": row.warehouse_id,
                 "warehouse_code": row.warehouse_code,
@@ -452,3 +456,33 @@ def _seed_admin_user(db: Session) -> None:
 
             user_service.assign_roles(admin_user.id, UserRoleAssignment(role_ids=[admin_role.id]))
             logger.info("ユーザー 'admin' に 'admin' ロールを割り当てました")
+
+
+def _seed_system_config(db: Session) -> None:
+    """システム設定の初期値を作成する."""
+    config_service = SystemConfigService(db)
+
+    # デフォルトのシステム設定
+    default_configs = {
+        "maintenance_mode": ("false", "メンテナンスモード（true/false）"),
+        "log_level": ("INFO", "ログレベル（DEBUG/INFO/WARNING/ERROR）"),
+        "enable_db_browser": ("false", "DBブラウザ機能を有効化（true/false）"),
+        "page_visibility": (
+            '{"forecasts":true,"orders":true,"inventory":true,"rpa":true,"ocr":true,"masters":true}',
+            "ページ表示設定（JSON形式）",
+        ),
+        "cloud_flow_url_material_delivery": (
+            "",
+            "Cloud Flow URL - Material Delivery",
+        ),
+        "cloud_flow_url_progress_download": (
+            "",
+            "Cloud Flow URL - Progress Download",
+        ),
+    }
+
+    for key, (value, description) in default_configs.items():
+        config_service.set(key=key, value=value, description=description)
+        logger.info(f"システム設定 '{key}' を初期化しました")
+
+    db.commit()

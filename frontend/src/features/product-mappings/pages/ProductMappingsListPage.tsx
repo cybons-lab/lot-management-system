@@ -40,7 +40,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { useCustomers } from "@/features/customers/hooks";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
-import { useProducts } from "@/features/products/hooks";
+import { useSupplierProducts } from "@/features/supplier-products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks";
 import { useTable } from "@/hooks/ui";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
@@ -74,8 +74,19 @@ export function ProductMappingsListPage() {
   const { data: customers = [] } = useCustomerList();
   const { useList: useSupplierList } = useSuppliers();
   const { data: suppliers = [] } = useSupplierList();
-  const { useList: useProductList } = useProducts();
-  const { data: products = [] } = useProductList();
+  const { useList: useProductList } = useSupplierProducts();
+  const { data: productsRaw = [] } = useProductList();
+
+  // Map SupplierProduct to form expected format
+  const products = useMemo(
+    () =>
+      productsRaw.map((p) => ({
+        id: p.id,
+        product_code: p.maker_part_no,
+        product_name: p.display_name,
+      })),
+    [productsRaw],
+  );
 
   const { mutate: create, isPending: isCreating } = useCreateProductMapping();
   const { mutate: update, isPending: isUpdating } = useUpdateProductMapping();
@@ -143,11 +154,11 @@ export function ProductMappingsListPage() {
         className: "truncate",
       },
       {
-        id: "product_id",
+        id: "product_group_id",
         header: "商品",
         cell: (row) => {
-          const product = productMap.get(row.product_id);
-          if (!product) return `ID: ${row.product_id}`;
+          const product = productMap.get(row.product_group_id);
+          if (!product) return `ID: ${row.product_group_id}`;
           return `${product.product_code} - ${product.product_name}`;
         },
         sortable: true,
@@ -190,7 +201,7 @@ export function ProductMappingsListPage() {
 
     // Product filter
     if (selectedProductId !== "all") {
-      result = result.filter((m) => m.product_id === Number(selectedProductId));
+      result = result.filter((m) => m.product_group_id === Number(selectedProductId));
     }
 
     // Text search
@@ -199,7 +210,7 @@ export function ProductMappingsListPage() {
       result = result.filter((m) => {
         const customer = customerMap.get(m.customer_id);
         const supplier = supplierMap.get(m.supplier_id);
-        const product = productMap.get(m.product_id);
+        const product = productMap.get(m.product_group_id);
         return (
           m.customer_part_code.toLowerCase().includes(query) ||
           customer?.customer_name.toLowerCase().includes(query) ||

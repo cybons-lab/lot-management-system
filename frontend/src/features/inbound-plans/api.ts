@@ -32,7 +32,7 @@ export interface InboundPlanLine {
   id: number;
   inbound_plan_id: number;
   line_number: number;
-  product_id: number;
+  product_group_id: number;
   quantity: number;
   warehouse_id: number;
   notes?: string;
@@ -81,7 +81,7 @@ export interface UpdateInboundPlanRequest {
 
 export interface CreateInboundPlanLineRequest {
   line_number?: number;
-  product_id: number;
+  product_group_id: number;
   quantity: number;
   warehouse_id: number;
   notes?: string;
@@ -89,7 +89,7 @@ export interface CreateInboundPlanLineRequest {
 
 export interface UpdateInboundPlanLineRequest {
   line_number?: number;
-  product_id?: number;
+  product_group_id?: number;
   quantity?: number;
   warehouse_id?: number;
   notes?: string;
@@ -112,7 +112,7 @@ export interface ReceiveInboundResponse {
   generated_lots: Array<{
     lot_id: number;
     lot_number: string;
-    product_id: number;
+    product_group_id: number;
     quantity: number;
     warehouse_id: number;
   }>;
@@ -122,7 +122,7 @@ export interface InboundPlansListParams {
   skip?: number;
   limit?: number;
   supplier_id?: number;
-  product_id?: number;
+  product_group_id?: number;
   status?: "planned" | "partially_received" | "received" | "cancelled";
   date_from?: string;
   date_to?: string;
@@ -140,7 +140,8 @@ export const getInboundPlans = async (params?: InboundPlansListParams) => {
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
-  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params?.product_group_id)
+    searchParams.append("product_group_id", params.product_group_id.toString());
   if (params?.status) searchParams.append("status", params.status);
   if (params?.date_from) searchParams.append("date_from", params.date_from);
   if (params?.date_to) searchParams.append("date_to", params.date_to);

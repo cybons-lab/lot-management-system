@@ -12,7 +12,8 @@ export function getCustomerName(
 
 export function getProductName(line: OrderLine, productMap: Record<number, string>): string {
   if (line.product_name) return line.product_name;
-  if (line.product_id && productMap[line.product_id]) return productMap[line.product_id];
+  if (line.product_group_id && productMap[line.product_group_id])
+    return productMap[line.product_group_id];
   return "商品名不明";
 }
 

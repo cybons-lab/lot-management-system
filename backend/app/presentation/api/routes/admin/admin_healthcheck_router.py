@@ -10,11 +10,11 @@ from app.infrastructure.persistence.models.inventory_models import LotReceipt, S
 from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
-    Product,
     Supplier,
     Warehouse,
 )
 from app.infrastructure.persistence.models.orders_models import Order, OrderLine
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.deps import get_db
 
 
@@ -32,7 +32,7 @@ def get_db_counts(db: Session = Depends(get_db)):
 
     # マスタテーブル
     counts["customers"] = db.scalar(select(func.count()).select_from(Customer)) or 0
-    counts["products"] = db.scalar(select(func.count()).select_from(Product)) or 0
+    counts["supplier_items"] = db.scalar(select(func.count()).select_from(SupplierItem)) or 0
     counts["warehouses"] = db.scalar(select(func.count()).select_from(Warehouse)) or 0
     counts["suppliers"] = db.scalar(select(func.count()).select_from(Supplier)) or 0
 
@@ -52,7 +52,7 @@ def get_db_counts(db: Session = Depends(get_db)):
     # counts["lot_current_stock"] = ...
 
     masters_total = (
-        counts["customers"] + counts["products"] + counts["warehouses"] + counts["suppliers"]
+        counts["customers"] + counts["supplier_items"] + counts["warehouses"] + counts["suppliers"]
     )
     inventory_total = counts["lots"] + counts["stock_movements"]
     orders_total = counts["orders"] + counts["order_lines"] + counts["reservations"]
@@ -87,8 +87,8 @@ def get_masters_health(db: Session = Depends(get_db)):
     result["customers"] = {"count": customer_count, "sample_codes": customer_codes}
 
     # 製品
-    product_count = db.scalar(select(func.count()).select_from(Product)) or 0
-    product_codes = [p for (p,) in db.execute(select(Product.product_code).limit(5)).all()]  # type: ignore[attr-defined]
+    product_count = db.scalar(select(func.count()).select_from(SupplierItem)) or 0
+    product_codes = [p for (p,) in db.execute(select(SupplierItem.maker_part_no).limit(5)).all()]
     result["products"] = {"count": product_count, "sample_codes": product_codes}
 
     # 倉庫

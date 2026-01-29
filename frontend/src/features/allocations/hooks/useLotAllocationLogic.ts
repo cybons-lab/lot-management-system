@@ -140,14 +140,14 @@ export function useLotAllocationLogic() {
     queries: allLines.map((line) => ({
       queryKey: allocationCandidatesKeys.list({
         order_line_id: line.id!,
-        product_id: Number(line.product_id || 0),
+        product_group_id: Number(line.product_group_id || 0),
         strategy: "fefo",
         limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
       }),
       queryFn: async () => {
         return getAllocationCandidates({
           order_line_id: line.id!,
-          product_id: Number(line.product_id || 0),
+          product_group_id: Number(line.product_group_id || 0),
           strategy: "fefo",
           limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
         });
@@ -183,7 +183,7 @@ export function useLotAllocationLogic() {
     if (!productsQuery.data) return {};
     return productsQuery.data.reduce(
       (acc, product) => {
-        acc[product.id] = product.product_name ?? "";
+        acc[product.id] = product.display_name ?? "";
         return acc;
       },
       {} as Record<number, string>,

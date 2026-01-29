@@ -21,7 +21,7 @@ import {
 const routeFormSchema = z.object({
   warehouse_id: z.coerce.number().min(1, "倉庫は必須です"),
   delivery_place_id: z.coerce.number().min(1, "納入先は必須です"),
-  product_id: z.coerce.number().optional().nullable(),
+  product_group_id: z.coerce.number().optional().nullable(),
   transport_lead_time_days: z.coerce.number().min(0, "0以上の値を入力してください"),
   is_active: z.boolean(),
   notes: z.string().max(1000).optional().nullable(),
@@ -44,8 +44,8 @@ interface DeliveryPlace {
 
 interface Product {
   id: number;
-  maker_part_code: string;
-  product_name: string;
+  maker_part_no: string;
+  display_name: string;
 }
 
 export interface WarehouseDeliveryRouteFormProps {
@@ -76,7 +76,7 @@ export function WarehouseDeliveryRouteForm({
     defaultValues: {
       warehouse_id: route?.warehouse_id ?? 0,
       delivery_place_id: route?.delivery_place_id ?? 0,
-      product_id: route?.product_id ?? null,
+      product_group_id: route?.product_group_id ?? null,
       transport_lead_time_days: route?.transport_lead_time_days ?? 1,
       is_active: route?.is_active ?? true,
       notes: route?.notes ?? "",
@@ -85,7 +85,7 @@ export function WarehouseDeliveryRouteForm({
 
   const warehouseId = watch("warehouse_id");
   const deliveryPlaceId = watch("delivery_place_id");
-  const productId = watch("product_id");
+  const productGroupId = watch("product_group_id");
   const isActive = watch("is_active");
   const { errors } = formState;
 
@@ -142,8 +142,8 @@ export function WarehouseDeliveryRouteForm({
       <div className={formStyles.field}>
         <Label className={formStyles.label}>品番（任意）</Label>
         <Select
-          value={productId ? String(productId) : "none"}
-          onValueChange={(v) => setValue("product_id", v === "none" ? null : Number(v))}
+          value={productGroupId ? String(productGroupId) : "none"}
+          onValueChange={(v) => setValue("product_group_id", v === "none" ? null : Number(v))}
           disabled={isEditMode}
         >
           <SelectTrigger className={formStyles.input}>
@@ -153,7 +153,7 @@ export function WarehouseDeliveryRouteForm({
             <SelectItem value="none">経路デフォルト（品番指定なし）</SelectItem>
             {products.map((p) => (
               <SelectItem key={p.id} value={String(p.id)}>
-                {p.maker_part_code} - {p.product_name}
+                {p.maker_part_no} - {p.display_name}
               </SelectItem>
             ))}
           </SelectContent>

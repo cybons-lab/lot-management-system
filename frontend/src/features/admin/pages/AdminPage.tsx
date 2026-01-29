@@ -274,7 +274,7 @@ export function AdminPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>テストデータを生成しますか？</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription asChild>
               <div className="space-y-4 py-4">
                 {isGenerating ? (
                   <div className="space-y-2">

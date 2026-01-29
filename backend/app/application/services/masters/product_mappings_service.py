@@ -36,8 +36,8 @@ class ProductMappingsService(
                 ProductMapping.customer_part_code,
                 Supplier.supplier_code,
                 Supplier.supplier_name,
-                Product.maker_part_code.label("product_code"),
-                Product.product_name,
+                Product.maker_part_no.label("product_code"),
+                Product.display_name,
                 ProductMapping.base_unit,
                 ProductMapping.pack_unit,
                 ProductMapping.pack_quantity,
@@ -45,7 +45,7 @@ class ProductMappingsService(
             )
             .join(Customer, ProductMapping.customer_id == Customer.id)
             .join(Supplier, ProductMapping.supplier_id == Supplier.id)
-            .join(Product, ProductMapping.product_id == Product.id)
+            .join(Product, ProductMapping.product_group_id == Product.id)
         )
 
         results = query.all()
@@ -58,7 +58,7 @@ class ProductMappingsService(
                 "supplier_code": r.supplier_code,
                 "supplier_name": r.supplier_name,
                 "product_code": r.product_code,
-                "product_name": r.product_name,
+                "product_name": r.display_name,
                 "base_unit": r.base_unit,
                 "pack_unit": r.pack_unit,
                 "pack_quantity": r.pack_quantity,

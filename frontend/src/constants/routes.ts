@@ -75,7 +75,7 @@ export const ROUTES = {
     WAREHOUSES: "/warehouses",
     SUPPLIERS: "/suppliers",
     CUSTOMERS: "/customers",
-    PRODUCTS: "/products",
+    SUPPLIER_PRODUCTS: "/supplier-products",
     CUSTOMER_ITEMS: "/customer-items",
     BULK_LOAD: "/masters/bulk-load",
   },

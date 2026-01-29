@@ -23,14 +23,14 @@ from random import Random
 
 from dateutil.relativedelta import relativedelta  # type: ignore
 
+from app.infrastructure.persistence.models import SupplierItem
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
-from app.infrastructure.persistence.models.masters_models import Product
 
 
 def create_daily_forecasts(
     customer_id: int,
     delivery_place_id: int,
-    product: Product,
+    product: SupplierItem,
     start_date: date,
     end_date: date,
     now: datetime,
@@ -103,7 +103,7 @@ def create_daily_forecasts(
                 ForecastCurrent(
                     customer_id=customer_id,
                     delivery_place_id=delivery_place_id,
-                    product_id=product.id,
+                    product_group_id=product.id,
                     forecast_date=current_date,
                     forecast_quantity=qty,
                     unit=product.base_unit or "PCS",
@@ -127,7 +127,7 @@ def create_daily_forecasts(
 def create_jyun_forecasts_from_daily(
     customer_id: int,
     delivery_place_id: int,
-    product: Product,
+    product: SupplierItem,
     target_month: date,
     period_totals: dict[str, Decimal],
     now: datetime,
@@ -202,7 +202,7 @@ def create_jyun_forecasts_from_daily(
             ForecastCurrent(
                 customer_id=customer_id,
                 delivery_place_id=delivery_place_id,
-                product_id=product.id,
+                product_group_id=product.id,
                 forecast_date=forecast_date,
                 forecast_quantity=jyun_quantity.quantize(Decimal("1")),  # Round to integer
                 unit=product.base_unit or "PCS",
@@ -219,7 +219,7 @@ def create_jyun_forecasts_from_daily(
 def create_monthly_forecasts_from_daily(
     customer_id: int,
     delivery_place_id: int,
-    product: Product,
+    product: SupplierItem,
     target_month: date,
     period_totals: dict[str, Decimal],
     now: datetime,
@@ -268,7 +268,7 @@ def create_monthly_forecasts_from_daily(
         ForecastCurrent(
             customer_id=customer_id,
             delivery_place_id=delivery_place_id,
-            product_id=product.id,
+            product_group_id=product.id,
             forecast_date=forecast_date,
             forecast_quantity=monthly_quantity.quantize(Decimal("1")),  # Round to integer
             unit=product.base_unit or "PCS",

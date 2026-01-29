@@ -142,7 +142,172 @@
 
 ---
 
-### 2-10. フロントエンド: Chart Event Handlersに適切な型を定義
+### 2-10. SmartRead OCR処理完了通知機能
+
+**優先度**: Medium
+**難易度**: Medium
+**想定工数**: 1-2日
+
+**背景・課題:**
+- SmartRead OCR処理（ファイルアップロード・監視フォルダ）はバックグラウンドで実行される
+- ユーザーが処理中に他のページに移動すると、処理完了を知る手段がない
+- OCR結果ページを定期的に確認する必要があり、UXが悪い
+
+**現状の動作:**
+1. ファイルをアップロード → バックグラウンド処理開始
+   - 右側（アップロード）: FastAPI `BackgroundTasks` (非同期、軽量)
+   - 左側（監視フォルダ）: `threading.Thread` (同期I/O、ZIP処理等の重い処理)
+2. 即座に202 Acceptedレスポンス
+3. ユーザーがページを離れても処理は継続される ✅
+4. しかし、**処理完了の通知がない** ❌
+
+**注意:** 左右で異なる並行処理方式を使用しているが、これは処理の重さに応じた最適化であり、
+最終的なOCR結果の保存先は共通（`smartread_wide_data`, `smartread_long_data`テーブル）。
+
+**要件:**
+1. **リアルタイム通知** (Phase 1)
+   - OCR処理が完了したらブラウザ通知またはトースト通知
+   - 他のページにいても通知を受け取れる
+
+2. **通知履歴の保存** (Phase 2)
+   - 未読通知をスタックして保存
+   - ヘッダーにベルアイコン + 未読バッジ
+   - 通知一覧ドロップダウンで確認可能
+   - 「OCR読み込み完了: ファイル名.pdf」等の詳細表示
+
+**技術的アプローチ:**
+
+**Option 1: WebSocket / Server-Sent Events (SSE)**
+- リアルタイム双方向通信
+- バックエンドから処理完了時にpush通知
+- 実装コスト: 高
+
+**Option 2: ポーリング (推奨)**
+- フロントエンドが定期的に `/api/notifications` をチェック
+- 実装コスト: 低
+- React QueryのrefetchIntervalで簡単実装可能
+
+**実装タスク:**
+1. バックエンド:
+   - 通知テーブル作成 (user_id, message, type, read, created_at)
+   - SmartRead処理完了時に通知レコード挿入
+   - GET /api/notifications エンドポイント (未読通知取得)
+   - PATCH /api/notifications/{id}/read エンドポイント (既読化)
+
+2. フロントエンド:
+   - 通知コンテキスト/ストア (Jotai)
+   - ヘッダーにベルアイコン + 未読バッジ
+   - 通知ドロップダウンコンポーネント
+   - useNotifications hook (ポーリング: 30秒間隔)
+   - ブラウザ通知API統合 (Notification API)
+
+3. SmartRead統合:
+   - `_run_simple_sync_background` 処理完了時に通知作成
+   - PAD Run完了時に通知作成
+
+**参考実装:**
+- GitHub通知システム
+- Slack通知センター
+
+**元:** ユーザー要望 (2026-01-30)
+
+---
+
+### 2-11. SmartRead: ファイルアップロードとフォルダ監視の処理統一
+
+**優先度**: Medium
+**難易度**: Medium
+**想定工数**: 1-2日
+**前提**: 本番環境でログ確認後に着手
+
+**背景・課題:**
+- 現在、右側（ファイルアップロード）と左側（監視フォルダ）で異なる処理方式を使用
+- 右側: `/analyze-simple` → `BackgroundTasks` → `sync_with_simple_flow`
+- 左側: `/pad-runs` → `threading.Thread` → `execute_run`
+- 右側の処理が実際に動作していたか不明（OCR結果に重複がない = 動いていない可能性）
+- 処理パスが分かれているため、バグの混入リスクが高い
+
+**現状の問題点:**
+```
+右側（アップロード）:
+  UploadFile受信 → analyze-simple API
+    → BackgroundTasks.add_task(_run_simple_sync_background)
+    → SmartReadService.sync_with_simple_flow (async)
+    → OCR結果保存（動作未確認）
+
+左側（監視フォルダ）:
+  filenames受信 → pad-runs API
+    → threading.Thread(execute_run)
+    → SmartReadPadRunnerService.execute_run (sync)
+    → OCR結果保存（動作確認済み ✅）
+```
+
+**統一方針:**
+- **右側を左側（PAD Run）方式に統一**
+- わざわざ監視フォルダに一時保存せず、アップロードファイルを直接PAD Runに渡す
+- 同じ処理パスを通ることで、確実性とメンテナンス性を向上
+
+**実装タスク:**
+
+1. **バックエンド:**
+   - 新エンドポイント追加: `POST /configs/{config_id}/pad-runs/upload`
+   - `UploadFile` を受け取り、PAD Runを開始
+   - 内部で `SmartReadPadRunnerService.execute_run` を使用
+   - 一時ファイル保存は不要（メモリ上で処理）
+
+2. **フロントエンド:**
+   - `SmartReadUploadPanel` を `useStartPadRun` 相当のhookに変更
+   - 既存の `useAnalyzeFile` を廃止
+   - `handleAnalyzeSuccess` は既に修正済み（タスクリスト更新）
+
+3. **既存コードの整理:**
+   - `/analyze-simple` エンドポイントを非推奨化（または削除）
+   - `sync_with_simple_flow` の使用箇所を確認・整理
+
+**技術的詳細:**
+
+```python
+# 新エンドポイント例
+@router.post("/configs/{config_id}/pad-runs/upload")
+async def start_pad_run_from_upload(
+    config_id: int,
+    file: UploadFile,
+    uow: UnitOfWork = Depends(get_uow),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadPadRunStartResponse:
+    """アップロードファイルからPAD Runを開始."""
+    file_content = await file.read()
+    filename = file.filename or "uploaded_file"
+
+    # 一時ファイルとして扱う（監視フォルダ不要）
+    runner = SmartReadPadRunnerService(uow.session)
+    run_id = runner.start_run_from_upload(config_id, filename, file_content)
+
+    # 既存のPAD Run方式でバックグラウンド実行
+    # ...
+```
+
+**メリット:**
+1. 左右で同じコードパスを通る → バグが減る
+2. PAD Runのステータス管理を統一利用 → デバッグしやすい
+3. 実績のある方式に統一 → 確実性が向上
+4. コードの重複を削減 → メンテナンス性向上
+
+**注意事項:**
+- 本番環境で右側の動作ログを確認してから着手
+- もし右側が実際に動いていた場合、統一による影響を慎重に評価
+
+**関連ファイル:**
+- `backend/app/presentation/api/routes/rpa/smartread_router.py`
+- `backend/app/application/services/smartread/pad_runner_service.py`
+- `frontend/src/features/rpa/smartread/components/SmartReadUploadPanel.tsx`
+- `frontend/src/features/rpa/smartread/hooks/file-hooks.ts`
+
+**元:** ユーザー要望 (2026-01-30)
+
+---
+
+### 2-12. フロントエンド: Chart Event Handlersに適切な型を定義
 
 **優先度**: Medium (any型削減 Phase 1)
 **対象**: 4箇所

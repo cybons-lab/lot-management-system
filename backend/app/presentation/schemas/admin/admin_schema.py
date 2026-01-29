@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 from app.presentation.schemas.inventory.inventory_schema import LotCreate
 from app.presentation.schemas.masters.masters_schema import MasterBulkLoadResponse
-from app.presentation.schemas.masters.products_schema import ProductCreate
 
 
 class FullSampleDataRequest(BaseModel):
@@ -13,7 +12,6 @@ class FullSampleDataRequest(BaseModel):
     注意: 投入順序が重要 (マスタ -> ロット -> 受注)
     """
 
-    products: list[ProductCreate] | None = None
     lots: list[LotCreate] | None = None
 
 

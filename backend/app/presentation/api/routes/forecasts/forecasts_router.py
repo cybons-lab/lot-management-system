@@ -67,7 +67,7 @@ def list_forecasts(
     limit: int = Query(default=100, ge=1, le=1000),
     customer_id: int | None = None,
     delivery_place_id: int | None = None,
-    product_id: int | None = None,
+    product_group_id: int | None = None,
     db: Session = Depends(get_db),
 ):
     """フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.
@@ -77,7 +77,7 @@ def list_forecasts(
         limit: 取得件数上限
         customer_id: 得意先IDでフィルタ
         delivery_place_id: 納入先IDでフィルタ
-        product_id: 製品IDでフィルタ
+        product_group_id: 製品IDでフィルタ
         db: データベースセッション
 
     Returns:
@@ -89,7 +89,7 @@ def list_forecasts(
         limit=limit,
         customer_id=customer_id,
         delivery_place_id=delivery_place_id,
-        product_id=product_id,
+        product_group_id=product_group_id,
     )
 
 
@@ -97,7 +97,7 @@ def list_forecasts(
 def export_forecasts(
     customer_id: int | None = None,
     delivery_place_id: int | None = None,
-    product_id: int | None = None,
+    product_group_id: int | None = None,
     db: Session = Depends(get_db),
 ):
     """フォーキャストをExcelでエクスポート.
@@ -107,7 +107,7 @@ def export_forecasts(
     Args:
         customer_id: 得意先IDでフィルタ
         delivery_place_id: 納入先IDでフィルタ
-        product_id: 製品IDでフィルタ
+        product_group_id: 製品IDでフィルタ
         db: データベースセッション
 
     Returns:
@@ -119,7 +119,7 @@ def export_forecasts(
         limit=10000,  # エクスポート用に大きめの上限
         customer_id=customer_id,
         delivery_place_id=delivery_place_id,
-        product_id=product_id,
+        product_group_id=product_group_id,
     )
 
     # グループを展開して明細レベルに変換
@@ -138,7 +138,7 @@ def list_forecast_history(
     limit: int = Query(default=100, ge=1, le=1000),
     customer_id: int | None = None,
     delivery_place_id: int | None = None,
-    product_id: int | None = None,
+    product_group_id: int | None = None,
     db: Session = Depends(get_db),
 ):
     """フォーキャスト履歴取得.
@@ -148,7 +148,7 @@ def list_forecast_history(
         limit: 取得件数上限
         customer_id: 得意先IDでフィルタ
         delivery_place_id: 納入先IDでフィルタ
-        product_id: 製品IDでフィルタ
+        product_group_id: 製品IDでフィルタ
         db: データベースセッション
 
     Returns:
@@ -158,7 +158,7 @@ def list_forecast_history(
     return service.get_history(
         customer_id=customer_id,
         delivery_place_id=delivery_place_id,
-        product_id=product_id,
+        product_group_id=product_group_id,
         skip=skip,
         limit=limit,
     )

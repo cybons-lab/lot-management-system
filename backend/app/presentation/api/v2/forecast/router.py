@@ -40,7 +40,7 @@ def list_forecasts(
     limit: int = Query(100, ge=1, le=1000),
     customer_id: int | None = Query(None),
     delivery_place_id: int | None = Query(None),
-    product_id: int | None = Query(None),
+    product_group_id: int | None = Query(None),
     db: Session = Depends(get_db),
 ) -> Any:
     """フォーキャスト一覧取得（グループ化）."""
@@ -50,7 +50,7 @@ def list_forecasts(
         limit=limit,
         customer_id=customer_id,
         delivery_place_id=delivery_place_id,
-        product_id=product_id,
+        product_group_id=product_group_id,
     )
 
 
@@ -106,7 +106,7 @@ def list_allocation_suggestions(
     skip: int = Query(0, ge=0, description="スキップ件数"),
     limit: int = Query(100, ge=1, le=1000, description="取得件数上限"),
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)"),
-    product_id: int | None = Query(None, description="製品ID"),
+    product_group_id: int | None = Query(None, description="製品ID"),
     customer_id: int | None = Query(None, description="得意先ID"),
     db: Session = Depends(get_db),
 ) -> Any:
@@ -115,8 +115,8 @@ def list_allocation_suggestions(
 
     if forecast_period:
         query = query.filter(AllocationSuggestion.forecast_period == forecast_period)
-    if product_id:
-        query = query.filter(AllocationSuggestion.product_id == product_id)
+    if product_group_id:
+        query = query.filter(AllocationSuggestion.product_group_id == product_group_id)
     if customer_id:
         query = query.filter(AllocationSuggestion.customer_id == customer_id)
 
@@ -138,7 +138,7 @@ def list_allocation_suggestions(
 def regenerate_suggestions_for_group(
     customer_id: int = Query(..., description="得意先ID"),
     delivery_place_id: int = Query(..., description="納入先ID"),
-    product_id: int = Query(..., description="製品ID"),
+    product_group_id: int = Query(..., description="製品ID"),
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)、省略時は全期間"),
     db: Session = Depends(get_db),
 ) -> Any:
@@ -151,7 +151,7 @@ def regenerate_suggestions_for_group(
     return service.regenerate_for_group(
         customer_id=customer_id,
         delivery_place_id=delivery_place_id,
-        product_id=product_id,
+        product_group_id=product_group_id,
         forecast_period=forecast_period,
     )
 
@@ -160,7 +160,7 @@ def regenerate_suggestions_for_group(
 def clear_suggestions_for_group(
     customer_id: int = Query(..., description="得意先ID"),
     delivery_place_id: int = Query(..., description="納入先ID"),
-    product_id: int = Query(..., description="製品ID"),
+    product_group_id: int = Query(..., description="製品ID"),
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)、省略時は全期間"),
     db: Session = Depends(get_db),
 ) -> Any:
@@ -173,7 +173,7 @@ def clear_suggestions_for_group(
     delete_query = db.query(AllocationSuggestion).filter(
         AllocationSuggestion.customer_id == customer_id,
         AllocationSuggestion.delivery_place_id == delivery_place_id,
-        AllocationSuggestion.product_id == product_id,
+        AllocationSuggestion.product_group_id == product_group_id,
     )
     if forecast_period:
         delete_query = delete_query.filter(AllocationSuggestion.forecast_period == forecast_period)
@@ -192,7 +192,7 @@ def clear_suggestions_for_group(
 def get_allocation_suggestions_by_group(
     customer_id: int = Query(..., description="得意先ID"),
     delivery_place_id: int = Query(..., description="納入先ID"),
-    product_id: int = Query(..., description="製品ID"),
+    product_group_id: int = Query(..., description="製品ID"),
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)"),
     db: Session = Depends(get_db),
 ) -> Any:
@@ -203,7 +203,7 @@ def get_allocation_suggestions_by_group(
     query = db.query(AllocationSuggestion).filter(
         AllocationSuggestion.customer_id == customer_id,
         AllocationSuggestion.delivery_place_id == delivery_place_id,
-        AllocationSuggestion.product_id == product_id,
+        AllocationSuggestion.product_group_id == product_group_id,
     )
 
     if forecast_period:
@@ -219,7 +219,7 @@ def get_allocation_suggestions_by_group(
     demand_query = db.query(func.sum(ForecastCurrent.forecast_quantity)).filter(
         ForecastCurrent.customer_id == customer_id,
         ForecastCurrent.delivery_place_id == delivery_place_id,
-        ForecastCurrent.product_id == product_id,
+        ForecastCurrent.product_group_id == product_group_id,
     )
     if forecast_period:
         demand_query = demand_query.filter(ForecastCurrent.forecast_period == forecast_period)
@@ -265,7 +265,7 @@ def get_allocation_suggestions_by_group(
         lot = lot_map.get(lot_id)
         other_group_query = db.query(func.sum(AllocationSuggestion.quantity)).filter(
             AllocationSuggestion.lot_id == lot_id,
-            AllocationSuggestion.product_id == product_id,
+            AllocationSuggestion.product_group_id == product_group_id,
             ~(
                 (AllocationSuggestion.customer_id == customer_id)
                 & (AllocationSuggestion.delivery_place_id == delivery_place_id)

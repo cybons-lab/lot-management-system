@@ -32,7 +32,7 @@ class ComplementResult:
 
     customer_item: CustomerItem | None
     match_type: MatchType
-    product_id: int | None
+    product_group_id: int | None
     message: str | None = None
 
 
@@ -92,7 +92,7 @@ class OcrSapComplementService:
             return ComplementResult(
                 customer_item=None,
                 match_type=MatchType.NOT_FOUND,
-                product_id=None,
+                product_group_id=None,
                 message=f"Customer not found: {customer_code}",
             )
 
@@ -111,14 +111,14 @@ class OcrSapComplementService:
             return ComplementResult(
                 customer_item=None,
                 match_type=MatchType.NOT_FOUND,
-                product_id=None,
+                product_group_id=None,
             )
 
         if len(items) > 1:
             return ComplementResult(
                 customer_item=None,
                 match_type=MatchType.MULTIPLE,
-                product_id=None,
+                product_group_id=None,
                 message=f"Multiple matches found: {len(items)} items",
             )
 
@@ -139,7 +139,7 @@ class OcrSapComplementService:
         return ComplementResult(
             customer_item=item,
             match_type=MatchType.EXACT,
-            product_id=item.product_id,
+            product_group_id=item.product_group_id,
         )
 
     def _find_prefix_match(
@@ -165,7 +165,7 @@ class OcrSapComplementService:
             return ComplementResult(
                 customer_item=None,
                 match_type=MatchType.NOT_FOUND,
-                product_id=None,
+                product_group_id=None,
                 message=f"Customer not found: {customer_code}",
             )
 
@@ -184,7 +184,7 @@ class OcrSapComplementService:
             return ComplementResult(
                 customer_item=None,
                 match_type=MatchType.NOT_FOUND,
-                product_id=None,
+                product_group_id=None,
                 message=f"No match found for: {customer_part_no}",
             )
 
@@ -192,7 +192,7 @@ class OcrSapComplementService:
             return ComplementResult(
                 customer_item=None,
                 match_type=MatchType.MULTIPLE,
-                product_id=None,
+                product_group_id=None,
                 message=f"Multiple prefix matches: {len(items)} items",
             )
 
@@ -200,11 +200,11 @@ class OcrSapComplementService:
         return ComplementResult(
             customer_item=item,
             match_type=MatchType.PREFIX,
-            product_id=item.product_id,
+            product_group_id=item.product_group_id,
             message=f"Prefix match: {customer_part_no} -> {item.customer_part_no}",
         )
 
-    def resolve_product_id(
+    def resolve_product_group_id(
         self,
         customer_code: str,
         jiku_code: str,
@@ -213,7 +213,7 @@ class OcrSapComplementService:
         """製品IDを解決（簡易版）.
 
         Returns:
-            tuple: (product_id, match_type, message)
+            tuple: (product_group_id, match_type, message)
         """
         result = self.find_complement(customer_code, jiku_code, customer_part_no)
-        return (result.product_id, result.match_type, result.message)
+        return (result.product_group_id, result.match_type, result.message)

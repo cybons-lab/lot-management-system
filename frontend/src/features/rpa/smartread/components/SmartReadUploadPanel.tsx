@@ -41,9 +41,17 @@ export function SmartReadUploadPanel({ configId, onAnalyzeSuccess }: SmartReadUp
   };
 
   const handleAnalyze = async () => {
-    if (!configId || selectedFiles.length === 0) return;
+    if (!configId) {
+      toast.error("AI-OCR設定を選択してください");
+      return;
+    }
+    if (selectedFiles.length === 0) {
+      toast.error("ファイルを選択してください");
+      return;
+    }
 
     let successCount = 0;
+    let failCount = 0;
 
     for (const file of selectedFiles) {
       try {
@@ -54,17 +62,21 @@ export function SmartReadUploadPanel({ configId, onAnalyzeSuccess }: SmartReadUp
         if (result.success) {
           successCount++;
         } else {
+          failCount++;
           toast.error(`"${file.name}" の解析に失敗: ${result.error_message}`);
         }
-      } catch {
-        // Ignore error here, handled in mutation
+      } catch (error) {
+        failCount++;
+        console.error(`Failed to analyze file: ${file.name}`, error);
       }
     }
 
     if (successCount > 0) {
-      toast.success(`${successCount}件のファイルを解析しました`);
+      toast.success(`${successCount}件のファイルを解析開始しました`);
       setSelectedFiles([]);
       onAnalyzeSuccess();
+    } else if (failCount > 0) {
+      toast.error(`${failCount}件のファイルの解析に失敗しました`);
     }
   };
 
@@ -126,20 +138,26 @@ export function SmartReadUploadPanel({ configId, onAnalyzeSuccess }: SmartReadUp
           </div>
         )}
 
-        <Button
-          className="w-full"
-          disabled={!configId || selectedFiles.length === 0 || analyzeMutation.isPending}
-          onClick={handleAnalyze}
-        >
-          {analyzeMutation.isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              解析中...
-            </>
-          ) : (
-            "解析開始"
+        <div className="space-y-2">
+          <Button
+            className="w-full"
+            disabled={!configId || selectedFiles.length === 0 || analyzeMutation.isPending}
+            onClick={handleAnalyze}
+          >
+            {analyzeMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                解析中...
+              </>
+            ) : (
+              "解析開始"
+            )}
+          </Button>
+          {!configId && <p className="text-xs text-amber-600">⚠️ AI-OCR設定を選択してください</p>}
+          {configId && selectedFiles.length === 0 && (
+            <p className="text-xs text-gray-500">📁 ファイルをアップロードしてください</p>
           )}
-        </Button>
+        </div>
       </CardContent>
     </Card>
   );

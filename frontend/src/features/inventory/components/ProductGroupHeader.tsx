@@ -52,7 +52,7 @@ export function ProductGroupHeader({
 
       <div className="flex flex-1 items-center gap-8">
         <div className="w-[200px]">
-          <div className="text-xs font-medium text-slate-500">先方品番</div>
+          <div className="text-xs font-medium text-slate-500">メーカー品番</div>
           <div className="truncate font-semibold text-slate-900" title={productCode}>
             {productCode}
           </div>

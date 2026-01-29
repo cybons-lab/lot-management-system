@@ -7531,4 +7531,32 @@ ALTER TABLE ONLY public.withdrawals
 -- PostgreSQL database dump complete
 --
 
+--
+-- Initial roles setup
+--
+INSERT INTO public.roles (role_code, role_name)
+VALUES ('admin', '管理者'), ('user', '一般ユーザー')
+ON CONFLICT (role_code) DO NOTHING;
+
+--
+-- Initial users setup
+-- admin password: admin123
+-- testuser password: test123
+--
+INSERT INTO public.users (username, email, password_hash, display_name, is_active)
+VALUES
+    ('admin', 'admin@example.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqK5WxZvFe', 'Admin User', true),
+    ('testuser', 'testuser@example.com', '$2b$12$9Z9OZFhR4gKXf.nGxvP0yeG3MZ9v8nQXmZ6rL4KZQj4K8XZJqL4zO', 'Test User', true)
+ON CONFLICT (username) DO NOTHING;
+
+--
+-- User-role assignments
+--
+INSERT INTO public.user_roles (user_id, role_id)
+SELECT u.id, r.id
+FROM public.users u, public.roles r
+WHERE (u.username = 'admin' AND r.role_code = 'admin')
+   OR (u.username = 'testuser' AND r.role_code = 'user')
+ON CONFLICT DO NOTHING;
+
 

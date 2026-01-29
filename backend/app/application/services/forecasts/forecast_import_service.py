@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent, ForecastHistory
-from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace, Product
+from app.infrastructure.persistence.models.masters_models import (
+    Customer,
+    DeliveryPlace,
+)
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.schemas.forecasts.forecast_schema import (
     ForecastBulkImportItem,
     ForecastBulkImportSummary,
@@ -53,9 +57,9 @@ class ForecastImportService:
             code_to_id["delivery_place"][dp.delivery_place_code] = dp.id
 
         # Load all products
-        products = self.db.query(Product).all()
+        products = self.db.query(SupplierItem).all()
         for p in products:
-            code_to_id["product"][p.maker_part_code] = p.id
+            code_to_id["product"][p.maker_part_no] = p.id
 
         # Group items by customer × delivery_place × product
         grouped: dict[tuple[int, int, int], list[ForecastBulkImportItem]] = defaultdict(list)
@@ -76,19 +80,19 @@ class ForecastImportService:
                 skipped_count += 1
                 continue
 
-            product_id = code_to_id["product"].get(item.product_code)
-            if product_id is None:
+            product_group_id = code_to_id["product"].get(item.product_code)
+            if product_group_id is None:
                 errors.append(f"Row {i + 1}: Unknown product_code '{item.product_code}'")
                 skipped_count += 1
                 continue
 
-            key = (customer_id, delivery_place_id, product_id)
+            key = (customer_id, delivery_place_id, product_group_id)
             grouped[key].append(item)
 
         # Process each group
         snapshot_at = utcnow()
 
-        for (customer_id, delivery_place_id, product_id), group_items in grouped.items():
+        for (customer_id, delivery_place_id, product_group_id), group_items in grouped.items():
             if replace_existing:
                 # Archive existing forecasts
                 existing = (
@@ -97,7 +101,7 @@ class ForecastImportService:
                         and_(
                             ForecastCurrent.customer_id == customer_id,
                             ForecastCurrent.delivery_place_id == delivery_place_id,
-                            ForecastCurrent.product_id == product_id,
+                            ForecastCurrent.product_group_id == product_group_id,
                         )
                     )
                     .all()
@@ -108,7 +112,7 @@ class ForecastImportService:
                     history = ForecastHistory(
                         customer_id=existing_fc.customer_id,
                         delivery_place_id=existing_fc.delivery_place_id,
-                        product_id=existing_fc.product_id,
+                        product_group_id=existing_fc.product_group_id,
                         forecast_date=existing_fc.forecast_date,
                         forecast_quantity=existing_fc.forecast_quantity,
                         unit=existing_fc.unit,
@@ -126,7 +130,7 @@ class ForecastImportService:
                 db_forecast = ForecastCurrent(
                     customer_id=customer_id,
                     delivery_place_id=delivery_place_id,
-                    product_id=code_to_id["product"][item.product_code],
+                    product_group_id=code_to_id["product"][item.product_code],
                     forecast_date=item.forecast_date,
                     forecast_quantity=item.forecast_quantity,
                     unit=item.unit,

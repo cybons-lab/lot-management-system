@@ -66,7 +66,7 @@ export function ForecastListPage() {
     () =>
       products.map((p) => ({
         value: String(p.id),
-        label: `${p.product_code} - ${p.product_name}`,
+        label: `${p.maker_part_no} - ${p.display_name}`,
       })),
     [products],
   );
@@ -131,7 +131,7 @@ export function ForecastListPage() {
   // Generate unique key for each group
   const getGroupKey = (group: ForecastGroup) => {
     const k = group.group_key;
-    return `${k.customer_id}-${k.delivery_place_id}-${k.product_id}`;
+    return `${k.customer_id}-${k.delivery_place_id}-${k.product_group_id}`;
   };
 
   // データが変わったときにopenGroupKeysを調整
@@ -250,8 +250,8 @@ export function ForecastListPage() {
             <Label className="mb-2 block text-sm font-medium">製品</Label>
             <SearchableSelect
               options={productOptions}
-              value={filters.product_id}
-              onChange={(value) => updateFilter("product_id", value)}
+              value={filters.product_group_id}
+              onChange={(value) => updateFilter("product_group_id", value)}
               placeholder="製品を検索..."
             />
           </div>

@@ -122,16 +122,29 @@ def get_queue_status(
     )
 
 
-@router.get("/configs/{config_key}", response_model=CloudFlowConfigResponse)
+@router.get("/configs/{config_key}", response_model=CloudFlowConfigResponse | None)
 def get_config(
     config_key: str,
+    optional: bool = False,
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
-) -> CloudFlowConfigResponse:
-    """設定を取得."""
+) -> CloudFlowConfigResponse | None:
+    """設定を取得.
+
+    Args:
+        config_key: 設定キー
+        optional: Trueの場合、未設定時に404ではなくnullを返す
+        db: データベースセッション
+        _current_user: 認証済みユーザー
+
+    Returns:
+        設定情報。optionalがTrueで未設定の場合はNone
+    """
     service = CloudFlowService(db)
     config = service.get_config(config_key)
     if not config:
+        if optional:
+            return None
         raise HTTPException(status_code=404, detail=f"Config '{config_key}' not found")
     return CloudFlowConfigResponse.model_validate(config)
 

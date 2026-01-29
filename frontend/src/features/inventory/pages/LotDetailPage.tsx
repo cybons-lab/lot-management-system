@@ -38,9 +38,9 @@ function LotBasicInfo({ lot }: { lot: LotData }) {
         </div>
         <div>
           <div className="text-sm font-medium text-gray-500">製品</div>
-          <div className="mt-1">
-            {lot.product_name || "名称未設定"}
-            <span className="ml-2 text-sm text-gray-500">({lot.product_code || "-"})</span>
+          <div className="mt-1">{lot.product_name || "名称未設定"}</div>
+          <div className="mt-0.5 text-xs text-gray-500">
+            メーカー品番: {lot.product_code || "-"}
           </div>
         </div>
         <div>
@@ -181,11 +181,11 @@ export function LotDetailPage() {
         </TabsContent>
 
         <TabsContent value="intake_history" className="space-y-4">
-          <IntakeHistoryList productId={lot.product_id} warehouseId={lot.warehouse_id} />
+          <IntakeHistoryList productId={lot.product_group_id} warehouseId={lot.warehouse_id} />
         </TabsContent>
 
         <TabsContent value="withdrawal_history" className="space-y-4">
-          <WithdrawalHistoryList productId={lot.product_id} warehouseId={lot.warehouse_id} />
+          <WithdrawalHistoryList productId={lot.product_group_id} warehouseId={lot.warehouse_id} />
         </TabsContent>
       </Tabs>
     </div>

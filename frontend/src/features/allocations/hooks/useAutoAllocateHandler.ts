@@ -33,7 +33,7 @@ export function useAutoAllocateHandler({
   return useCallback(
     (lineId: number) => {
       const line = allLines.find((l) => l.id === lineId);
-      const productId = Number(line?.product_id || 0);
+      const productId = Number(line?.product_group_id || 0);
       const candidates = candidateFetcher(lineId, productId);
 
       // Early return if line or candidates not found

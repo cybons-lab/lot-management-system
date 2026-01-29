@@ -3,7 +3,7 @@ from typing import Any
 from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models.masters_models import CustomerItem, Product
+from app.infrastructure.persistence.models.masters_models import CustomerItem
 from app.infrastructure.persistence.models.rpa_models import (
     RpaRun,
     RpaRunEvent,
@@ -11,6 +11,7 @@ from app.infrastructure.persistence.models.rpa_models import (
     RpaRunGroup,
     RpaRunItem,
 )
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.infrastructure.persistence.models.views_models import VLotDetails
 
 
@@ -90,7 +91,7 @@ class RpaRepository:
        - SAP登録時: 在庫が存在するかを確認
        → active で current_quantity > 0 のロットのみ対象
        フィルタ条件:
-       - product_id: 必須（製品指定）
+       - product_group_id: 必須（製品指定）
        - supplier_id: オプション（仕入先指定）
        ソート順:
        - FEFO順（有効期限が近い順）
@@ -478,18 +479,18 @@ class RpaRepository:
             .first()
         )
 
-    def find_product_by_maker_part_code(self, code: str) -> Product | None:
+    def find_product_by_maker_part_code(self, code: str) -> SupplierItem | None:
         """メーカー品番で商品検索."""
-        return self.db.query(Product).filter(Product.maker_part_code == code).first()
+        return self.db.query(SupplierItem).filter(SupplierItem.maker_part_no == code).first()
 
     def find_active_lots(
         self,
-        product_id: int,
+        product_group_id: int,
         supplier_id: int | None = None,
     ) -> list[VLotDetails]:
         """有効なロット詳細を検索."""
         query = self.db.query(VLotDetails).filter(
-            VLotDetails.product_id == product_id,
+            VLotDetails.product_group_id == product_group_id,
             VLotDetails.status == "active",
             VLotDetails.available_quantity > 0,
         )

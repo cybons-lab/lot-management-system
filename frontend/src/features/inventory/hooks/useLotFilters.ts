@@ -70,7 +70,7 @@ export type LotStatusFilter = "all" | "active" | "allocated" | "shipped" | "inac
 function matchesSearch(lot: LotUI, search: string): boolean {
   const searchLower = search.toLowerCase();
   return (
-    lot.lot_number.toLowerCase().includes(searchLower) ||
+    lot.lot_number?.toLowerCase().includes(searchLower) ||
     lot.product_code?.toLowerCase().includes(searchLower) ||
     lot.product_name?.toLowerCase().includes(searchLower) ||
     false
