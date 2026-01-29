@@ -142,7 +142,78 @@
 
 ---
 
-### 2-10. フロントエンド: Chart Event Handlersに適切な型を定義
+### 2-10. SmartRead OCR処理完了通知機能
+
+**優先度**: Medium
+**難易度**: Medium
+**想定工数**: 1-2日
+
+**背景・課題:**
+- SmartRead OCR処理（ファイルアップロード・監視フォルダ）はバックグラウンドで実行される
+- ユーザーが処理中に他のページに移動すると、処理完了を知る手段がない
+- OCR結果ページを定期的に確認する必要があり、UXが悪い
+
+**現状の動作:**
+1. ファイルをアップロード → バックグラウンド処理開始
+   - 右側（アップロード）: FastAPI `BackgroundTasks` (非同期、軽量)
+   - 左側（監視フォルダ）: `threading.Thread` (同期I/O、ZIP処理等の重い処理)
+2. 即座に202 Acceptedレスポンス
+3. ユーザーがページを離れても処理は継続される ✅
+4. しかし、**処理完了の通知がない** ❌
+
+**注意:** 左右で異なる並行処理方式を使用しているが、これは処理の重さに応じた最適化であり、
+最終的なOCR結果の保存先は共通（`smartread_wide_data`, `smartread_long_data`テーブル）。
+
+**要件:**
+1. **リアルタイム通知** (Phase 1)
+   - OCR処理が完了したらブラウザ通知またはトースト通知
+   - 他のページにいても通知を受け取れる
+
+2. **通知履歴の保存** (Phase 2)
+   - 未読通知をスタックして保存
+   - ヘッダーにベルアイコン + 未読バッジ
+   - 通知一覧ドロップダウンで確認可能
+   - 「OCR読み込み完了: ファイル名.pdf」等の詳細表示
+
+**技術的アプローチ:**
+
+**Option 1: WebSocket / Server-Sent Events (SSE)**
+- リアルタイム双方向通信
+- バックエンドから処理完了時にpush通知
+- 実装コスト: 高
+
+**Option 2: ポーリング (推奨)**
+- フロントエンドが定期的に `/api/notifications` をチェック
+- 実装コスト: 低
+- React QueryのrefetchIntervalで簡単実装可能
+
+**実装タスク:**
+1. バックエンド:
+   - 通知テーブル作成 (user_id, message, type, read, created_at)
+   - SmartRead処理完了時に通知レコード挿入
+   - GET /api/notifications エンドポイント (未読通知取得)
+   - PATCH /api/notifications/{id}/read エンドポイント (既読化)
+
+2. フロントエンド:
+   - 通知コンテキスト/ストア (Jotai)
+   - ヘッダーにベルアイコン + 未読バッジ
+   - 通知ドロップダウンコンポーネント
+   - useNotifications hook (ポーリング: 30秒間隔)
+   - ブラウザ通知API統合 (Notification API)
+
+3. SmartRead統合:
+   - `_run_simple_sync_background` 処理完了時に通知作成
+   - PAD Run完了時に通知作成
+
+**参考実装:**
+- GitHub通知システム
+- Slack通知センター
+
+**元:** ユーザー要望 (2026-01-30)
+
+---
+
+### 2-11. フロントエンド: Chart Event Handlersに適切な型を定義
 
 **優先度**: Medium (any型削減 Phase 1)
 **対象**: 4箇所
