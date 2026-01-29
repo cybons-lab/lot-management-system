@@ -52,3 +52,7 @@ alembic/versions/*.pyc
 
 # Logs
 *.log
+
+# Database backups
+backups/*.sql
+backups/*.sql.gz
