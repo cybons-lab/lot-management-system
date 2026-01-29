@@ -19,7 +19,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/display/alert-dialog";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 const STEP1_CONFIG_KEY = "MATERIAL_DELIVERY_STEP1_URL";

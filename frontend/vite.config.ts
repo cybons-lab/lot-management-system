@@ -44,6 +44,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ["@radix-ui/react-scroll-area", "@radix-ui/react-alert-dialog"],
+    include: ["@radix-ui/react-scroll-area"],
   },
 });
