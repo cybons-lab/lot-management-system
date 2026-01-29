@@ -71,6 +71,9 @@ export function ExcelViewPage() {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [localChanges, setLocalChanges] = useState<Record<string, number>>({});
+  const [lotFieldChanges, setLotFieldChanges] = useState<Record<string, Record<string, string>>>(
+    {},
+  );
   const [addedDates, setAddedDates] = useState<string[]>([]);
   const [isLotIntakeDialogOpen, setIsLotIntakeDialogOpen] = useState(false);
 
@@ -88,29 +91,109 @@ export function ExcelViewPage() {
     [],
   );
 
-  const handleSave = async () => {
-    if (Object.keys(localChanges).length === 0) return setIsEditing(false);
-    const updates = Object.entries(localChanges).map(([key, quantity]) => {
-      const [lotId, dpId, forecastPeriod] = key.split(":");
-      const lot = data?.lots.find((l) => l.lotId === Number(lotId));
-      const dest = lot?.destinations.find((d) => d.deliveryPlaceId === Number(dpId));
-      return {
-        lot_id: Number(lotId),
-        delivery_place_id: Number(dpId),
-        product_group_id: Number(productId),
-        customer_id: dest?.customerId || 0,
-        forecast_period: forecastPeriod,
-        quantity,
-      };
+  const handleLotFieldChange = useCallback((lotId: number, field: string, value: string) => {
+    setLotFieldChanges((prev) => ({
+      ...prev,
+      [lotId]: {
+        ...prev[lotId],
+        [field]: value,
+      },
+    }));
+  }, []);
+
+  const validateLotFieldChanges = useCallback(() => {
+    if (!data || Object.keys(lotFieldChanges).length === 0) return true;
+
+    // Build a map of (lot_number, received_date) combinations
+    const lotCombinations = new Map<string, number>();
+
+    // Add existing lots (not being edited)
+    data.lots.forEach((lot) => {
+      if (!lotFieldChanges[lot.lotId]) {
+        const lotNumber = lot.lotInfo.lotNo || "";
+        const receivedDate = lot.lotInfo.inboundDate;
+        const key = `${lotNumber}:${receivedDate}`;
+        lotCombinations.set(key, lot.lotId);
+      }
     });
+
+    // Check edited lots for duplicates
+    for (const [lotIdStr, fields] of Object.entries(lotFieldChanges)) {
+      const lotId = Number(lotIdStr);
+      const lot = data.lots.find((l) => l.lotId === lotId);
+      if (!lot) continue;
+
+      // Get the new values (or keep existing if not changed)
+      const newLotNumber = fields.lot_number !== undefined ? fields.lot_number : lot.lotInfo.lotNo;
+      const newReceivedDate =
+        fields.received_date !== undefined ? fields.received_date : lot.lotInfo.inboundDate;
+
+      const key = `${newLotNumber || ""}:${newReceivedDate}`;
+      const existingLotId = lotCombinations.get(key);
+
+      if (existingLotId !== undefined && existingLotId !== lotId) {
+        toast.error(
+          `ロット番号「${newLotNumber || "(空欄)"}」と入荷日「${newReceivedDate}」の組み合わせは既に存在します`,
+        );
+        return false;
+      }
+
+      lotCombinations.set(key, lotId);
+    }
+
+    return true;
+  }, [data, lotFieldChanges]);
+
+  const handleSave = async () => {
+    const hasQuantityChanges = Object.keys(localChanges).length > 0;
+    const hasLotFieldChanges = Object.keys(lotFieldChanges).length > 0;
+
+    if (!hasQuantityChanges && !hasLotFieldChanges) {
+      setIsEditing(false);
+      return;
+    }
+
+    // Validate lot field changes for duplicates
+    if (!validateLotFieldChanges()) return;
+
     try {
-      await updateMutation.mutateAsync({ updates });
-      toast.success("計画引当を保存しました");
+      // Save lot field changes first
+      if (hasLotFieldChanges) {
+        const { updateLot } = await import("@/services/api/lot-service");
+        await Promise.all(
+          Object.entries(lotFieldChanges).map(async ([lotIdStr, fields]) => {
+            const lotId = Number(lotIdStr);
+            await updateLot(lotId, fields);
+          }),
+        );
+      }
+
+      // Then save quantity changes
+      if (hasQuantityChanges) {
+        const updates = Object.entries(localChanges).map(([key, quantity]) => {
+          const [lotId, dpId, forecastPeriod] = key.split(":");
+          const lot = data?.lots.find((l) => l.lotId === Number(lotId));
+          const dest = lot?.destinations.find((d) => d.deliveryPlaceId === Number(dpId));
+          return {
+            lot_id: Number(lotId),
+            delivery_place_id: Number(dpId),
+            product_group_id: Number(productId),
+            customer_id: dest?.customerId || 0,
+            forecast_period: forecastPeriod,
+            quantity,
+          };
+        });
+        await updateMutation.mutateAsync({ updates });
+      }
+
+      toast.success("変更を保存しました");
       setLocalChanges({});
+      setLotFieldChanges({});
       setAddedDates([]);
       setIsEditing(false);
-    } catch {
-      toast.error("保存に失敗しました");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "保存に失敗しました";
+      toast.error(errorMessage);
     }
   };
 
@@ -144,6 +227,7 @@ export function ExcelViewPage() {
             onCancel={() => {
               setIsEditing(false);
               setLocalChanges({});
+              setLotFieldChanges({});
               setAddedDates([]);
             }}
             onSave={handleSave}
@@ -160,6 +244,7 @@ export function ExcelViewPage() {
             isEditing={isEditing}
             localChanges={localChanges}
             onQtyChange={handleQtyChange}
+            onLotFieldChange={handleLotFieldChange}
             onAddColumn={handleAddNewColumn}
           />
         ))}

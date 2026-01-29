@@ -47,7 +47,9 @@ export function createLotColumns(): Column<LotUI>[] {
       id: "lot_number",
       header: "ロット番号",
       cell: (lot) => (
-        <span className="font-medium whitespace-nowrap text-slate-900">{lot.lot_number}</span>
+        <span className="font-medium whitespace-nowrap text-slate-900">
+          {lot.lot_number || "-"}
+        </span>
       ),
       sortable: true,
       width: "150px",

@@ -90,7 +90,7 @@ type LotResponse = components["schemas"]["LotResponse"] & {
   maker_part_no?: string | null;
   customer_part_no?: string | null;
 };
-type ProductResponse = components["schemas"]["ProductOut"];
+type ProductResponse = components["schemas"]["SupplierItemResponse"];
 
 // Forward declare OrderLineUI for OrderUI
 export interface OrderLineUI extends Record<string, unknown> {
@@ -146,7 +146,7 @@ export interface OrderUI extends Record<string, unknown> {
 export interface LotUI extends Record<string, unknown> {
   id: number; // Required for UI operations
   lot_id: number; // DDL v2.2
-  lot_number: string;
+  lot_number: string | null;
   maker_part_no: string | null; // Phase 3
   customer_part_no: string | null; // Phase 3
   product_group_id: number; // DDL v2.2
@@ -336,18 +336,18 @@ export function normalizeLot(
 export function normalizeProduct(product: ProductResponse): ProductUI {
   return {
     id: product.id,
-    product_code: S(product.product_code),
-    product_name: S(product.product_name),
+    product_code: S(product.maker_part_no),
+    product_name: S(product.display_name),
     internal_unit: S(product.internal_unit, "CAN"),
     external_unit: S(product.external_unit, "KG"),
-    qty_per_internal_unit: N(product.qty_per_internal_unit, 1),
-    is_active: product.is_active,
+    qty_per_internal_unit: N(Number(product.qty_per_internal_unit), 1),
+    is_active: true, // SupplierItem is active if it exists (valid_to is handled by API)
     created_at: S(product.created_at),
     updated_at: S(product.updated_at),
     // Legacy fields (for backward compatibility)
-    maker_part_code: product.product_code ?? undefined,
+    maker_part_code: product.maker_part_no ?? undefined,
     base_unit: product.internal_unit,
-    consumption_limit_days: undefined,
+    consumption_limit_days: product.consumption_limit_days ?? undefined,
   };
 }
 

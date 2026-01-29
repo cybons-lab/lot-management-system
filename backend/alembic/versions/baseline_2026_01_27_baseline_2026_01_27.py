@@ -26,7 +26,7 @@ def upgrade() -> None:
     sql_path = os.path.join(os.path.dirname(__file__), "..", "baseline_2026_01_27.sql")
 
     if os.path.exists(sql_path):
-        with open(sql_path) as f:
+        with open(sql_path, encoding="utf-8") as f:
             sql = f.read()
 
         # Execute the SQL dump using raw connection to avoid SQLAlchemy/Alembic parsing

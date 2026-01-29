@@ -93,9 +93,9 @@ class LotReceipt(Base):
 
     # Legacy: lot_number column is removed. Use lot_master.lot_number.
     @property
-    def lot_number(self) -> str:
+    def lot_number(self) -> str | None:
         """Get lot number from lot_master (read-only accessor)."""
-        return self.lot_master.lot_number if self.lot_master else ""
+        return self.lot_master.lot_number if self.lot_master else None
 
     @hybrid_property
     def current_quantity(self) -> Decimal:

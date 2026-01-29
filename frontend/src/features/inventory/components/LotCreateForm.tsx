@@ -19,6 +19,7 @@ export interface LotCreateData {
   lot_unit: string;
   receipt_date: string;
   expiry_date?: string;
+  origin_reference?: string; // 入庫No
 }
 
 interface LotCreateFormProps {
@@ -48,6 +49,7 @@ export function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFor
       lot_unit: formData.get("lot_unit") as string,
       receipt_date: formData.get("receipt_date") as string,
       expiry_date: (formData.get("expiry_date") as string) || undefined,
+      origin_reference: (formData.get("origin_reference") as string) || undefined,
     };
 
     await onSubmit(data);
@@ -57,8 +59,13 @@ export function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFor
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="lot_number">ロット番号 *</Label>
-          <Input id="lot_number" name="lot_number" required placeholder="例: LOT-2024-001" />
+          <Label htmlFor="lot_number">ロット番号</Label>
+          <Input id="lot_number" name="lot_number" placeholder="未確定の場合は空欄" />
+        </div>
+
+        <div>
+          <Label htmlFor="origin_reference">入庫No</Label>
+          <Input id="origin_reference" name="origin_reference" placeholder="例: IB-2024-001" />
         </div>
 
         <div>

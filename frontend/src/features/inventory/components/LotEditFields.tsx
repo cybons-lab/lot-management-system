@@ -14,7 +14,7 @@ export function LotEditFields({ initialData }: LotEditFieldsProps) {
         <Input
           id="lot_number"
           name="lot_number"
-          defaultValue={initialData.lot_number}
+          defaultValue={initialData.lot_number || ""}
           disabled
           className="bg-gray-100"
         />

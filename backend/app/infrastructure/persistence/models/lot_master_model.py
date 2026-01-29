@@ -30,7 +30,6 @@ from sqlalchemy import (
     Index,
     Numeric,
     String,
-    UniqueConstraint,
     func,
     text,
 )
@@ -42,6 +41,7 @@ from app.infrastructure.persistence.models.base_model import Base
 if TYPE_CHECKING:
     from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
     from app.infrastructure.persistence.models.masters_models import Supplier
+    from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 
 class LotMaster(Base):
@@ -56,10 +56,10 @@ class LotMaster(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
     # Lot identification
-    lot_number: Mapped[str] = mapped_column(
+    lot_number: Mapped[str | None] = mapped_column(
         String(100),
-        nullable=False,
-        comment="ロット番号（仕入先発番）",
+        nullable=True,
+        comment="ロット番号（仕入先発番、NULL許可）",
     )
     product_group_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -106,7 +106,7 @@ class LotMaster(Base):
     )
 
     # Relationships
-    product_group: Mapped[ProductGroup] = relationship("SupplierItem", back_populates="lot_masters")
+    product_group: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="lot_masters")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_masters")
     receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",
@@ -115,13 +115,18 @@ class LotMaster(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint(
-            "lot_number", "product_group_id", name="uq_lot_master_number_product_group"
+        # Partial unique index: unique on (lot_number, product_group_id) WHERE lot_number IS NOT NULL
+        Index(
+            "idx_lot_master_number_product_group_unique",
+            "lot_number",
+            "product_group_id",
+            unique=True,
+            postgresql_where=text("lot_number IS NOT NULL"),
         ),
         Index("idx_lot_master_product_group", "product_group_id"),
         Index("idx_lot_master_lot_number", "lot_number"),
         Index("idx_lot_master_supplier", "supplier_id"),
-        {"comment": "ロット番号名寄せマスタ - 同一ロット番号の複数入荷を許可"},
+        {"comment": "ロット番号名寄せマスタ - 同一ロット番号の複数入荷を許可、NULL許可"},
     )
 
     def __repr__(self) -> str:

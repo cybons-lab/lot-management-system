@@ -715,17 +715,10 @@ class LotService:
         # Lotモデルに存在しないフィールドを削除
         lot_payload.pop("allocated_quantity", None)
 
-        # 仮入庫対応: lot_number が未指定/空の場合
-        # - temporary_lot_key に UUID を発行
-        # - lot_number に TMP-YYYYMMDD-XXXX 形式の暫定番号を採番
-        is_temporary_lot = (
-            not lot_payload.get("lot_number") or lot_payload["lot_number"].strip() == ""
-        )
-
-        if is_temporary_lot:
-            lot_payload["lot_number"], lot_payload["temporary_lot_key"] = (
-                self._generate_temporary_lot_info()
-            )
+        # lot_number が未指定/空の場合は None に設定（TMP番号は生成しない）
+        # temporary_lot_key は UUID で自動生成（DB default値）
+        if not lot_payload.get("lot_number") or lot_payload["lot_number"].strip() == "":
+            lot_payload["lot_number"] = None
         elif lot_create.origin_type != LotOriginType.ORDER:
             # Auto-generate lot number for non-order origin types if placeholder
             if lot_payload["lot_number"] == "AUTO":
@@ -735,15 +728,18 @@ class LotService:
 
         # B-Plan: Find or create LotMaster
         # lot_master acts as the canonical source for lot_number
-        lot_master = (
-            self.db.query(LotMaster)
-            .filter(
-                LotMaster.lot_number == lot_payload["lot_number"],
-                LotMaster.product_group_id == lot_create.product_group_id,
-                LotMaster.supplier_id == (supplier.id if supplier else None),
+        # lot_numberがNullの場合は常に新規作成（同じNullロットを共有しない）
+        lot_master = None
+        if lot_payload["lot_number"] is not None:
+            lot_master = (
+                self.db.query(LotMaster)
+                .filter(
+                    LotMaster.lot_number == lot_payload["lot_number"],
+                    LotMaster.product_group_id == lot_create.product_group_id,
+                    LotMaster.supplier_id == (supplier.id if supplier else None),
+                )
+                .first()
             )
-            .first()
-        )
 
         if not lot_master:
             lot_master = LotMaster(
@@ -834,33 +830,6 @@ class LotService:
         )
         sequence = (count or 0) + 1
         return f"{prefix}-{today}-{sequence:04d}"
-
-    def _generate_temporary_lot_info(self) -> tuple[str, str]:
-        """Generate temporary lot number and UUID key for provisional inbound.
-
-        仮入庫対応:
-        - lot_number が未確定の場合に呼び出される
-        - UUID を発行し、その一部を lot_number に使用して衝突を完全回避
-        - 形式: TMP-YYYYMMDD-XXXX (XXXX は UUID の先頭8文字)
-
-        Returns:
-            tuple[str, str]: (lot_number, temporary_lot_key)
-
-        Example:
-            ("TMP-20251213-a1b2c3d4", "a1b2c3d4-e5f6-7890-...")
-        """
-        import uuid
-
-        # Generate UUID for unique identification
-        temp_key = uuid.uuid4()
-        temp_key_str = str(temp_key)
-
-        # Use first 8 characters of UUID for readable lot number (衝突ゼロ保証)
-        today = date.today().strftime("%Y%m%d")
-        uuid_prefix = temp_key_str[:8]
-        lot_number = f"TMP-{today}-{uuid_prefix}"
-
-        return lot_number, temp_key_str
 
     def update_lot(self, lot_id: int, lot_update: LotUpdate) -> LotResponse:
         """Update an existing lot."""
