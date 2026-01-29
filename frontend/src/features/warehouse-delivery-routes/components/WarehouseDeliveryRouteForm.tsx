@@ -44,8 +44,8 @@ interface DeliveryPlace {
 
 interface Product {
   id: number;
-  maker_part_code: string;
-  product_name: string;
+  maker_part_no: string;
+  display_name: string;
 }
 
 export interface WarehouseDeliveryRouteFormProps {
@@ -153,7 +153,7 @@ export function WarehouseDeliveryRouteForm({
             <SelectItem value="none">経路デフォルト（品番指定なし）</SelectItem>
             {products.map((p) => (
               <SelectItem key={p.id} value={String(p.id)}>
-                {p.maker_part_code} - {p.product_name}
+                {p.maker_part_no} - {p.display_name}
               </SelectItem>
             ))}
           </SelectContent>
