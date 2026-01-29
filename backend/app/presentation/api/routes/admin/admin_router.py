@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.application.services.auth.user_service import UserService
+from app.application.services.system_config_service import SystemConfigService
 from app.core.config import settings
 from app.core.database import truncate_all_tables
 from app.infrastructure.persistence.models import (
@@ -130,9 +131,12 @@ def reset_database(
         # 初期管理者ユーザーとロールを再作成
         _seed_admin_user(db)
 
+        # システム設定の初期化
+        _seed_system_config(db)
+
         return ResponseBase(
             success=True,
-            message="データベースをリセットしました（テーブル構造は保持・管理者ユーザー再作成済）",
+            message="データベースをリセットしました（テーブル構造は保持・管理者ユーザー・システム設定を再作成済）",
         )
 
     except Exception as e:
@@ -452,3 +456,33 @@ def _seed_admin_user(db: Session) -> None:
 
             user_service.assign_roles(admin_user.id, UserRoleAssignment(role_ids=[admin_role.id]))
             logger.info("ユーザー 'admin' に 'admin' ロールを割り当てました")
+
+
+def _seed_system_config(db: Session) -> None:
+    """システム設定の初期値を作成する."""
+    config_service = SystemConfigService(db)
+
+    # デフォルトのシステム設定
+    default_configs = {
+        "maintenance_mode": ("false", "メンテナンスモード（true/false）"),
+        "log_level": ("INFO", "ログレベル（DEBUG/INFO/WARNING/ERROR）"),
+        "enable_db_browser": ("false", "DBブラウザ機能を有効化（true/false）"),
+        "page_visibility": (
+            '{"forecasts":true,"orders":true,"inventory":true,"rpa":true,"ocr":true,"masters":true}',
+            "ページ表示設定（JSON形式）",
+        ),
+        "cloud_flow_url_material_delivery": (
+            "",
+            "Cloud Flow URL - Material Delivery",
+        ),
+        "cloud_flow_url_progress_download": (
+            "",
+            "Cloud Flow URL - Progress Download",
+        ),
+    }
+
+    for key, (value, description) in default_configs.items():
+        config_service.set(key=key, value=value, description=description)
+        logger.info(f"システム設定 '{key}' を初期化しました")
+
+    db.commit()
