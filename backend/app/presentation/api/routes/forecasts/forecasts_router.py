@@ -37,7 +37,7 @@ class ForecastExportRow:
         self.納入先コード = forecast.delivery_place_code or ""
         self.納入先名 = forecast.delivery_place_name or ""
         self.先方品番 = forecast.product_code or ""
-        self.商品名 = forecast.display_name or ""
+        self.商品名 = forecast.product_name or ""
         self.予測日 = str(forecast.forecast_date)
         self.予測数量 = float(forecast.forecast_quantity)
         self.単位 = forecast.unit or ""

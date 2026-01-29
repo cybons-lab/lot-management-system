@@ -34,9 +34,9 @@ if TYPE_CHECKING:
     from app.infrastructure.persistence.models.auth_models import User
     from app.infrastructure.persistence.models.masters_models import (
         Customer,
-        ProductGroup,
         Supplier,
     )
+    from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 
 class MissingMappingEvent(Base):
@@ -116,7 +116,7 @@ class MissingMappingEvent(Base):
 
     # Relationships
     customer: Mapped[Customer | None] = relationship("Customer", foreign_keys=[customer_id])
-    product_group: Mapped[ProductGroup | None] = relationship(
+    product_group: Mapped[SupplierItem | None] = relationship(
         "SupplierItem", foreign_keys=[product_group_id]
     )
     supplier: Mapped[Supplier | None] = relationship("Supplier", foreign_keys=[supplier_id])

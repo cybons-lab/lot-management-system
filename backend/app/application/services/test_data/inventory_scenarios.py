@@ -323,7 +323,7 @@ def _upsert_lot_receipt(
     lot.locked_quantity = scenario.locked_qty
     lot.status = scenario.status
     lot.lock_reason = scenario.lock_reason
-    lot.unit = product.internal_unit
+    lot.unit = str(product.internal_unit or "PC")
     lot.origin_type = "adhoc"
     lot.origin_reference = f"inventory-scenario-{scenario.key}"
     db.flush()

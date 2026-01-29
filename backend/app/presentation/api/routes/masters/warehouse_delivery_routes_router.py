@@ -46,8 +46,8 @@ def _build_response(route: WarehouseDeliveryRoute) -> dict:
         "delivery_place_name": (
             route.delivery_place.delivery_place_name if route.delivery_place else None
         ),
-        "product_name": route.product_group.display_name if route.product_group else None,
-        "maker_part_code": route.product_group.maker_part_no if route.product_group else None,
+        "product_name": route.product_group.display_name if route.product_group else None,  # type: ignore[attr-defined]
+        "maker_part_code": route.product_group.maker_part_no if route.product_group else None,  # type: ignore[attr-defined]
     }
 
 

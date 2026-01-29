@@ -114,11 +114,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
     service = UomConversionService(db)
 
     # Check if product exists
-    product = (
-        db.query(SupplierItem)
-        .filter(SupplierItem.id == data.product_group_id)
-        .first()
-    )
+    product = db.query(SupplierItem).filter(SupplierItem.id == data.product_group_id).first()
     if not product:
         raise HTTPException(status_code=400, detail="Product not found")
 

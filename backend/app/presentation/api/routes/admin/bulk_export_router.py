@@ -139,19 +139,19 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         from sqlalchemy import select
 
         from app.infrastructure.persistence.models.masters_models import (
-            Product,
             ProductUomConversion,
         )
+        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         uom_query = select(
             ProductUomConversion.conversion_id,
             ProductUomConversion.product_group_id,
             ProductUomConversion.external_unit,
             ProductUomConversion.factor,
-            Product.internal_unit,
-            Product.maker_part_no,
-            Product.display_name,
-        ).join(Product, ProductUomConversion.product_group_id == Product.id)
+            SupplierItem.internal_unit,
+            SupplierItem.maker_part_no,
+            SupplierItem.display_name,
+        ).join(SupplierItem, ProductUomConversion.product_group_id == SupplierItem.id)
 
         uom_results = db.execute(uom_query).all()
         data = [

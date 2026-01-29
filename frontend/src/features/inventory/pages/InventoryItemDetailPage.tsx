@@ -533,7 +533,7 @@ export function InventoryItemDetailPage() {
             await lockLotMutation.mutateAsync({ id: selectedLot.id, reason, quantity });
           }}
           isSubmitting={lockLotMutation.isPending}
-          lotNumber={selectedLot.lot_number}
+          lotNumber={selectedLot.lot_number ?? undefined}
           availableQuantity={calculateAvailable(
             selectedLot.current_quantity,
             selectedLot.allocated_quantity,

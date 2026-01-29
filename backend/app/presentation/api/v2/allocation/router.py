@@ -48,7 +48,7 @@ def _to_preview_response(service_result) -> FefoPreviewResponse:
         lot_items = [
             FefoLotAllocation(
                 lot_id=alloc.lot_id,
-                lot_number=alloc.lot_number,
+                lot_number=alloc.lot_number or "",
                 allocated_quantity=alloc.allocate_qty,
                 expiry_date=alloc.expiry_date,
                 received_date=alloc.receipt_date,
@@ -120,7 +120,7 @@ async def manual_allocate(request: ManualAllocationRequest, db: Session = Depend
     available = get_available_quantity(db, lot) if lot else Decimal("0")
 
     # P3: Map LotReservation fields to response
-    lot_number = lot.lot_number if lot else ""
+    lot_number = (lot.lot_number or "") if lot else ""
     res_status = "allocated" if reservation.status == ReservationStatus.ACTIVE else "confirmed"
 
     return ManualAllocationResponse(
@@ -188,7 +188,7 @@ async def list_allocations_by_order(order_id: int, db: Session = Depends(get_db)
                 id=res.id,
                 order_line_id=res.source_id or 0,
                 lot_id=lot_id,
-                lot_number=lot.lot_number if lot else "",
+                lot_number=(lot.lot_number or "") if lot else "",
                 allocated_quantity=res.reserved_qty,
                 available_quantity=Decimal(available_quantity),
                 product_group_id=product_group_id or 0,

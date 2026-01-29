@@ -44,14 +44,18 @@ export const formatDateForInput = (dateStr: string | null | undefined): string =
   return converted;
 };
 
+const getLot1 = (r: OcrResultItem) => r.manual_lot_no_1 || (r.lot_no_1 ?? r.lot_no ?? "");
+const getShippingDate = (r: OcrResultItem) =>
+  formatDateForInput(r.manual_shipping_date || r.calculated_shipping_date);
+
 export const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
-  lotNo1: row.manual_lot_no_1 || orEmpty(row.lot_no),
-  quantity1: orEmpty(row.manual_quantity_1),
-  lotNo2: orEmpty(row.manual_lot_no_2),
-  quantity2: orEmpty(row.manual_quantity_2),
+  lotNo1: getLot1(row),
+  quantity1: row.manual_quantity_1 || orEmpty(row.quantity_1),
+  lotNo2: row.manual_lot_no_2 || orEmpty(row.lot_no_2),
+  quantity2: row.manual_quantity_2 || orEmpty(row.quantity_2),
   inboundNo1: row.manual_inbound_no || orEmpty(row.inbound_no),
   inboundNo2: orEmpty(row.manual_inbound_no_2),
-  shippingDate: formatDateForInput(row.manual_shipping_date || row.calculated_shipping_date),
+  shippingDate: getShippingDate(row),
   shippingSlipText: orEmpty(row.manual_shipping_slip_text),
   shippingSlipTextEdited: row.manual_shipping_slip_text_edited || false,
   jikuCode: row.manual_jiku_code || orEmpty(row.jiku_code),

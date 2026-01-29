@@ -230,7 +230,7 @@ def generate_customer_items(
             num_suppliers = random.randint(1, min(2, len(suppliers)))
             selected_suppliers = random.sample(suppliers, num_suppliers)
 
-            for idx, s in enumerate(selected_suppliers):
+            for _idx, s in enumerate(selected_suppliers):
                 maker_part_no = p.maker_part_no
                 if (s.id, maker_part_no) not in supplier_maker_pairs:
                     si = SupplierItem(

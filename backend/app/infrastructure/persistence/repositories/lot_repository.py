@@ -204,7 +204,6 @@ class LotRepository:
         expiry_date: date | None = None,
     ) -> LotReceipt:
         """Create a lot placeholder using known identifiers."""
-        warehouse: Warehouse | None = self.db.get(Warehouse, warehouse_id)
         product: Product | None = None
         supplier: Supplier | None = None
         if supplier_code:
@@ -216,14 +215,12 @@ class LotRepository:
 
         lot = LotReceipt(
             supplier_id=supplier.id if supplier else None,
-            supplier_code=supplier.supplier_code if supplier else supplier_code,
             product_group_id=product.id if product else None,
-            product_code=product.maker_part_no if product else product_code,
-            lot_number=lot_number,
+            lot_master_id=0,  # This method seems legacy or incomplete, but for now matching schema
             warehouse_id=warehouse_id,
-            warehouse_code=warehouse.warehouse_code if warehouse else None,
             received_date=receipt_date or date.today(),
             expiry_date=expiry_date,
+            unit="PC",  # Default if missing
         )
         self.db.add(lot)
         return lot
@@ -388,8 +385,8 @@ class LotRepository:
             candidates.append(
                 LotCandidate(
                     lot_id=lot.id,
-                    lot_code=lot.lot_number,
-                    lot_number=lot.lot_number,
+                    lot_code=lot.lot_number or "",
+                    lot_number=lot.lot_number or "",
                     product_code=lot.product_group.maker_part_no if lot.product_group else "",
                     warehouse_code=lot.warehouse.warehouse_code if lot.warehouse else "",
                     available_qty=available,

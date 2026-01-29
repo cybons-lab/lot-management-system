@@ -530,11 +530,17 @@ SELECT
     COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') AS material_code,
     COALESCE(oe.jiku_code, ld.content->>'次区') AS jiku_code,
     COALESCE(oe.delivery_date, ld.content->>'納期', ld.content->>'納入日') AS delivery_date,
-    COALESCE(oe.delivery_quantity, ld.content->>'納入量', ld.content->>'数量') AS delivery_quantity,
+    COALESCE(oe.delivery_quantity, ld.content->>'納入量') AS delivery_quantity,
     COALESCE(ld.content->>'アイテムNo', ld.content->>'アイテム') AS item_no,
     COALESCE(ld.content->>'数量単位', ld.content->>'単位') AS order_unit,
     ld.content->>'入庫No' AS inbound_no,
     COALESCE(ld.content->>'Lot No1', ld.content->>'Lot No', ld.content->>'ロットNo') AS lot_no,
+    
+    -- ロット・数量別（OCR由来、手入力優先）
+    COALESCE(oe.lot_no_1, ld.content->>'Lot No1', ld.content->>'Lot No') AS lot_no_1,
+    COALESCE(oe.quantity_1, ld.content->>'数量1', ld.content->>'数量') AS quantity_1,
+    COALESCE(oe.lot_no_2, ld.content->>'Lot No2') AS lot_no_2,
+    COALESCE(oe.quantity_2, ld.content->>'数量2') AS quantity_2,
 
     -- 手入力結果（OCR結果編集）
     oe.lot_no_1 AS manual_lot_no_1,

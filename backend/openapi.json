@@ -31104,6 +31104,50 @@
             ],
             "title": "Lot No"
           },
+          "lot_no_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No 1"
+          },
+          "quantity_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity 1"
+          },
+          "lot_no_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No 2"
+          },
+          "quantity_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity 2"
+          },
           "manual_lot_no_1": {
             "anyOf": [
               {

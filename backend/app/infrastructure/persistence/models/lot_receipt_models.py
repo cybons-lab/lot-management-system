@@ -61,7 +61,6 @@ if TYPE_CHECKING:
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
     from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
     from app.infrastructure.persistence.models.masters_models import (
-        ProductGroup,
         Supplier,
         Warehouse,
     )
@@ -260,7 +259,7 @@ class LotReceipt(Base):
 
     # Relationships
     lot_master: Mapped[LotMaster] = relationship("LotMaster", back_populates="receipts")
-    product_group: Mapped[ProductGroup] = relationship(
+    product_group: Mapped[SupplierItem] = relationship(
         "SupplierItem", foreign_keys="[LotReceipt.product_group_id]"
     )
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lot_receipts")

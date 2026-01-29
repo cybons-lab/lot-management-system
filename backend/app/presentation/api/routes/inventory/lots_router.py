@@ -199,9 +199,9 @@ class LotExportRow:
         }
 
         return cls(
-            ロット番号=lot.lot_number,
+            ロット番号=lot.lot_number or "",
             先方品番=lot.product_code or "",
-            製品名=lot.display_name or "",
+            製品名=lot.product_name or "",
             仕入先コード=lot.supplier_code or "",
             仕入先名=lot.supplier_name or "",
             倉庫コード=lot.warehouse_code or "",

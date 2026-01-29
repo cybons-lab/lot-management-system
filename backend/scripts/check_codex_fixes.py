@@ -16,7 +16,8 @@ from app.application.services.inventory.lot_reservation_service import (
     ReservationLotNotFoundError,
 )
 from app.application.services.inventory.withdrawal_service import WithdrawalService
-from app.infrastructure.persistence.models import Lot, LotReservation, Product, Warehouse
+from app.infrastructure.persistence.models import LotReceipt as Lot
+from app.infrastructure.persistence.models import LotReservation, Product, Warehouse
 from app.infrastructure.persistence.models.base_model import Base
 from app.presentation.schemas.inventory.withdrawal_schema import WithdrawalCreate, WithdrawalType
 

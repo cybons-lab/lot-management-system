@@ -47,10 +47,9 @@ class ReplenishmentEngine:
         # SupplierItemをベースに、指定されたproduct_group_idがあれば絞り込む
         stmt = select(SupplierItem).where(SupplierItem.valid_to >= as_of_date)
         if product_group_ids:
-            stmt = stmt.where(SupplierItem.product_group_id.in_(product_group_ids))
+            stmt = stmt.where(SupplierItem.id.in_(product_group_ids))
 
         # primaryのみにするか？一旦全supplerについて回すが、通常はprimaryのみ
-        stmt = stmt.where(SupplierItem.is_primary)
 
         product_suppliers = self.db.execute(stmt).scalars().all()
 
@@ -60,10 +59,7 @@ class ReplenishmentEngine:
         estimator = self._create_estimator(method)
 
         for ps in product_suppliers:
-            if ps.product_group_id is None:
-                # 独立運用(product_group_idなし)のSupplierItemは、現状の製品ベースのロジックでは扱えないためスキップ
-                continue
-            product_group_id = int(ps.product_group_id)
+            product_group_id = int(ps.id)
             supplier_id = int(ps.supplier_id)
             # 3. 在庫情報の取得
             on_hand = self._get_on_hand(product_group_id, warehouse_id)
@@ -96,10 +92,10 @@ class ReplenishmentEngine:
             # 今回は MOQ=なし, LotSize=qty_scale * 10 などを仮定、またはマスタにあれば使う
             # Productにqty_scaleを追加したのでそれを使う
 
-            product = self.db.get(ps.product_group_id)
+            # ps (SupplierItem) 自体が以前の ProductGroup の役割を兼ねている
             lot_size = None
-            if product and product.qty_scale:
-                lot_size = Decimal(product.qty_scale)  # 仮: qty_scale をロットサイズとして扱う
+            if ps.qty_per_internal_unit:  # 代わりの属性を使用、または null 許容
+                lot_size = ps.qty_per_internal_unit
 
             rec = self.calculator.calculate(
                 product_group_id=product_group_id,

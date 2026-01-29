@@ -12293,6 +12293,14 @@ export interface components {
       inbound_no?: string | null;
       /** Lot No */
       lot_no?: string | null;
+      /** Lot No 1 */
+      lot_no_1?: string | null;
+      /** Quantity 1 */
+      quantity_1?: string | null;
+      /** Lot No 2 */
+      lot_no_2?: string | null;
+      /** Quantity 2 */
+      quantity_2?: string | null;
       /** Manual Lot No 1 */
       manual_lot_no_1?: string | null;
       /** Manual Quantity 1 */

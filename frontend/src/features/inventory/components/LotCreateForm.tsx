@@ -38,7 +38,6 @@ export function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFor
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-
     const data: LotCreateData = {
       lot_number: formData.get("lot_number") as string,
       product_code: formData.get("product_code") as string,
@@ -51,72 +50,12 @@ export function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFor
       expiry_date: (formData.get("expiry_date") as string) || undefined,
       origin_reference: (formData.get("origin_reference") as string) || undefined,
     };
-
     await onSubmit(data);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="lot_number">ロット番号</Label>
-          <Input id="lot_number" name="lot_number" placeholder="未確定の場合は空欄" />
-        </div>
-
-        <div>
-          <Label htmlFor="origin_reference">入庫No</Label>
-          <Input id="origin_reference" name="origin_reference" placeholder="例: IB-2024-001" />
-        </div>
-
-        <div>
-          <Label htmlFor="product_code">メーカー品番 *</Label>
-          <Input id="product_code" name="product_code" required placeholder="例: P001" />
-        </div>
-
-        <div>
-          <Label htmlFor="supplier_code">仕入先コード *</Label>
-          <Input id="supplier_code" name="supplier_code" required placeholder="例: S001" />
-        </div>
-
-        <div>
-          <Label htmlFor="delivery_place_code">納品先コード</Label>
-          <Input id="delivery_place_code" name="delivery_place_code" placeholder="例: DP-001" />
-        </div>
-
-        <div>
-          <Label htmlFor="delivery_place_name">納品先名</Label>
-          <Input id="delivery_place_name" name="delivery_place_name" placeholder="例: 東京倉庫" />
-        </div>
-
-        <div>
-          <Label htmlFor="quantity">数量 *</Label>
-          <Input
-            id="quantity"
-            name="quantity"
-            type="number"
-            required
-            min="0"
-            step="0.01"
-            placeholder="例: 1000"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="lot_unit">単位 *</Label>
-          <Input id="lot_unit" name="lot_unit" required placeholder="例: EA" defaultValue="EA" />
-        </div>
-
-        <div>
-          <Label htmlFor="receipt_date">入荷日 *</Label>
-          <Input id="receipt_date" name="receipt_date" type="date" required />
-        </div>
-
-        <div>
-          <Label htmlFor="expiry_date">有効期限</Label>
-          <Input id="expiry_date" name="expiry_date" type="date" />
-        </div>
-      </div>
-
+      <FormFields />
       <div className="flex justify-end space-x-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           キャンセル
@@ -126,5 +65,43 @@ export function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFor
         </Button>
       </div>
     </form>
+  );
+}
+
+function FormFields() {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <Field label="ロット番号" id="lot_number" placeholder="未確定の場合は空欄" />
+      <Field label="入庫No" id="origin_reference" placeholder="例: IB-2024-001" />
+      <Field label="メーカー品番 *" id="product_code" required placeholder="例: P001" />
+      <Field label="仕入先コード *" id="supplier_code" required placeholder="例: S001" />
+      <Field label="納品先コード" id="delivery_place_code" placeholder="例: DP-001" />
+      <Field label="納品先名" id="delivery_place_name" placeholder="例: 東京倉庫" />
+      <Field
+        label="数量 *"
+        id="quantity"
+        type="number"
+        required
+        min="0"
+        step="0.01"
+        placeholder="例: 1000"
+      />
+      <Field label="単位 *" id="lot_unit" required placeholder="例: EA" defaultValue="EA" />
+      <Field label="入荷日 *" id="receipt_date" type="date" required />
+      <Field label="有効期限" id="expiry_date" type="date" />
+    </div>
+  );
+}
+
+function Field({
+  label,
+  id,
+  ...props
+}: { label: string; id: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} name={id} {...props} />
+    </div>
   );
 }

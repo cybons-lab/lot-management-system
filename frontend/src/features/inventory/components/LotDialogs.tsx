@@ -40,7 +40,7 @@ export function LotDialogs({ logic }: LotDialogsProps) {
               logic.setSelectedLot(null);
             }}
             title="ロット編集"
-            description={`ロット ${logic.selectedLot.lot_number} を編集します`}
+            description={`ロット ${logic.selectedLot.lot_number || "-"} を編集します`}
             size="lg"
           >
             <LotEditForm
@@ -70,7 +70,7 @@ export function LotDialogs({ logic }: LotDialogsProps) {
               });
             }}
             isSubmitting={logic.lockLotMutation.isPending}
-            lotNumber={logic.selectedLot.lot_number}
+            lotNumber={logic.selectedLot.lot_number || "-"}
             availableQuantity={
               Number(logic.selectedLot.current_quantity) -
               Number(logic.selectedLot.allocated_quantity) -

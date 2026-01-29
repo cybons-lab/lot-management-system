@@ -346,7 +346,7 @@ export function normalizeProduct(product: ProductResponse): ProductUI {
     updated_at: S(product.updated_at),
     // Legacy fields (for backward compatibility)
     maker_part_code: product.maker_part_no ?? undefined,
-    base_unit: product.internal_unit,
+    base_unit: product.internal_unit ?? undefined,
     consumption_limit_days: product.consumption_limit_days ?? undefined,
   };
 }

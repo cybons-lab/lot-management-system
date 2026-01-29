@@ -169,7 +169,7 @@ from .lot_receipt_models import LotReceipt
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .forecast_models import ForecastCurrent
-    from .masters_models import Customer, DeliveryPlace
+    from .masters_models import Customer, DeliveryPlace, SupplierItem
 
 
 # Valid transaction types
@@ -361,7 +361,7 @@ class AllocationSuggestion(Base):
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
-    product_group: Mapped[ProductGroup] = relationship("SupplierItem")
+    product_group: Mapped[SupplierItem] = relationship("SupplierItem")
     lot: Mapped[LotReceipt] = relationship("LotReceipt")
     forecast: Mapped[ForecastCurrent | None] = relationship("ForecastCurrent")
 

@@ -72,9 +72,9 @@ from app.infrastructure.persistence.models import (
     DeliveryPlace,
     LotMaster,
     LotReceipt,
-    Product,
     StockHistory,
     StockTransactionType,
+    SupplierItem,
     WithdrawalLine,
 )
 from app.infrastructure.persistence.models.withdrawal_models import (
@@ -171,13 +171,16 @@ class WithdrawalService:
             query = query.outerjoin(Withdrawal.delivery_place)
 
             # LotMaster needed for lot_number search
+            query = query.join(LotReceipt, Withdrawal.lot_id == LotReceipt.id)
             query = query.join(LotMaster, LotReceipt.lot_master_id == LotMaster.id)
+            # SupplierItem needed for part/name search
+            query = query.join(SupplierItem, LotReceipt.product_group_id == SupplierItem.id)
 
             query = query.filter(
                 or_(
                     LotMaster.lot_number.ilike(term),
-                    Product.maker_part_no.ilike(term),
-                    Product.display_name.ilike(term),
+                    SupplierItem.maker_part_no.ilike(term),
+                    SupplierItem.display_name.ilike(term),
                     Customer.customer_name.ilike(term),
                     DeliveryPlace.delivery_place_name.ilike(term),
                     Withdrawal.reference_number.ilike(term),
@@ -401,7 +404,7 @@ class WithdrawalService:
         return WithdrawalResponse(
             id=withdrawal.id,
             lot_id=withdrawal.lot_id or 0,
-            lot_number=lot.lot_number if lot else "",
+            lot_number=lot.lot_number or "" if lot else "",
             product_group_id=lot.product_group_id if lot else 0,
             product_name=get_product_name(product),
             product_code=get_product_code(product),

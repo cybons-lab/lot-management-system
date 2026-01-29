@@ -45,7 +45,7 @@ class LabelService:
                 # Map Lot entity to LotResponse
                 lot_res = LotResponse(
                     id=lot_entity.id,
-                    lot_number=lot_entity.lot_number,
+                    lot_number=lot_entity.lot_number or "",
                     product_group_id=lot_entity.product_group_id,
                     product_code=lot_entity.product_group.maker_part_no
                     if lot_entity.product_group
@@ -96,7 +96,7 @@ class LabelService:
 
         # Title: Product Name
         c.setFont("Helvetica-Bold", 10)
-        product_name = lot.display_name or "Unknown Product"
+        product_name = lot.product_name or "Unknown Product"
         # Simple truncation if too long
         if len(product_name) > 30:
             product_name = product_name[:27] + "..."

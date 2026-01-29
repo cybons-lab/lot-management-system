@@ -61,11 +61,11 @@ export function CustomerItemFormDialog({
       ? {
           customer_id: item.customer_id,
           customer_part_no: item.customer_part_no,
-          supplier_item_id: item.supplier_item_id,
-          base_unit: item.base_unit,
-          pack_unit: item.pack_unit,
-          pack_quantity: item.pack_quantity,
-          special_instructions: item.special_instructions,
+          supplier_item_id: item.supplier_item_id ?? 0,
+          base_unit: item.base_unit || "EA",
+          pack_unit: item.pack_unit ?? null,
+          pack_quantity: item.pack_quantity ?? null,
+          special_instructions: item.special_instructions ?? null,
         }
       : CUSTOMER_ITEM_FORM_DEFAULTS,
   });

@@ -63,6 +63,7 @@ DETAIL_FIELDS = [
 SUB_DETAIL_FIELDS = [
     "Lot No",
     "梱包数",
+    "数量",
 ]
 
 

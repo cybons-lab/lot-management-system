@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.application.services.common.base_service import BaseService
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.masters_models import ProductUomConversion
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.schemas.masters.masters_schema import BulkUpsertResponse, BulkUpsertSummary
 from app.presentation.schemas.masters.uom_conversions_schema import (
     UomConversionBulkRow,
@@ -167,8 +168,8 @@ class UomConversionService(
 
         # 2. Resolve IDs
         products = (
-            self.db.query(ProductGroup.product_code.id)  # type: ignore[attr-defined]
-            .filter(ProductGroup.product_code.in_(product_codes))  # type: ignore[attr-defined]
+            self.db.query(SupplierItem.maker_part_no, SupplierItem.id)
+            .filter(SupplierItem.maker_part_no.in_(product_codes))
             .all()
         )
         product_map = {code: id for code, id in products}

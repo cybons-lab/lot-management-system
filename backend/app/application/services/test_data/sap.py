@@ -86,15 +86,16 @@ def generate_sap_material_cache(db: Session, connections: list[SapConnection]) -
                 zkdmat_b=mat_code,  # 先方品番
                 kunnr=customer_code,  # 得意先コード
                 raw_data={
-                    "MAKTX": f"サンプル材料{i+1}",
+                    "MAKTX": f"サンプル材料{i + 1}",
                     "MTART": "ROH",  # Raw material
                     "MEINS": "KG",
                     "MATKL": "MAT001",
                     "WERKS": "1000",
                     "LGORT": "0001",
+                    "ZMKMAT_B": f"SAP-MK-{mat_code[-3:]}",  # SAP優先のメーカー品番
                     "description": f"テスト用材料データ {mat_code}",
-                    "weight": f"{(i+1) * 100}",
-                    "dimension": f"{(i+1)*100}x{(i+1)*50}x{(i+1)*10}",
+                    "weight": f"{(i + 1) * 100}",
+                    "dimension": f"{(i + 1) * 100}x{(i + 1) * 50}x{(i + 1) * 10}",
                 },
                 fetched_at=datetime.now(UTC) - timedelta(days=1),
                 fetch_batch_id=f"BATCH-{datetime.now(UTC).strftime('%Y%m%d')}-001",

@@ -258,7 +258,7 @@ class OrderService:
                 select(OrderLine.id)
                 .join(
                     SupplierItem,
-                    SupplierItem.product_group_id == OrderLine.product_group_id,
+                    SupplierItem.id == OrderLine.product_group_id,
                 )
                 .where(
                     OrderLine.order_id == Order.id,

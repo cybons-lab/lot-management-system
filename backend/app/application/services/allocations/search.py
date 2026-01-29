@@ -210,7 +210,7 @@ def _enrich_lot_details(db: Session, candidates: list[CandidateLotItem]) -> None
     for candidate in candidates:
         lot = lot_map.get(candidate.lot_id)
         if lot:
-            candidate.lot_number = lot.lot_number
+            candidate.lot_number = lot.lot_number or ""
             candidate.current_quantity = lot.current_quantity
             # Calculate reserved quantity dynamically
             from app.application.services.inventory.stock_calculation import (

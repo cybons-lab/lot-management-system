@@ -125,7 +125,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .masters_models import Customer, DeliveryPlace
+    from .masters_models import Customer, DeliveryPlace, SupplierItem
 
 
 class ForecastCurrent(Base):
@@ -193,7 +193,7 @@ class ForecastCurrent(Base):
     delivery_place: Mapped[DeliveryPlace] = relationship(
         "DeliveryPlace", back_populates="forecast_current"
     )
-    product_group: Mapped[ProductGroup] = relationship(
+    product_group: Mapped[SupplierItem] = relationship(
         "SupplierItem", back_populates="forecast_current"
     )
 

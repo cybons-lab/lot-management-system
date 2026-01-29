@@ -1100,7 +1100,7 @@ class LotService:
 
         return LotResponse(
             id=db_lot.id,
-            lot_number=db_lot.lot_number,
+            lot_number=db_lot.lot_number or "",
             product_group_id=db_lot.product_group_id,
             warehouse_id=db_lot.warehouse_id,
             supplier_id=db_lot.supplier_id,

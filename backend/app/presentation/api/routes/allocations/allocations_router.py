@@ -302,7 +302,7 @@ def manual_allocate(
             id=reservation.id,
             order_line_id=reservation.source_id or 0,
             lot_id=reservation.lot_id or 0,
-            lot_number=lot.lot_number if lot else "",
+            lot_number=lot.lot_number or "" if lot else "",
             allocated_quantity=reservation.reserved_qty,
             available_quantity=available_qty,
             product_group_id=lot.product_group_id if lot else 0,

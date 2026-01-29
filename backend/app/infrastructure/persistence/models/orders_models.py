@@ -171,7 +171,7 @@ from .base_model import Base
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .auth_models import User
     from .lot_reservations_model import LotReservation
-    from .masters_models import Customer
+    from .masters_models import Customer, SupplierItem
     from .order_groups_models import OrderGroup
 
 
