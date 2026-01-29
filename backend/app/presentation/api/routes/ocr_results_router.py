@@ -630,10 +630,21 @@ async def export_ocr_results(
             )
         )
 
+        # アイテムNo: 下6桁のみ出力
+        item_no_raw = row.get("item_no")
+        item_no = str(item_no_raw)[-6:] if item_no_raw else None
+
         # マスタからの追加フィールド (Y列用)
         # 確実にマスタ生データを使用
         shipping_slip_text_master = row.get("shipping_slip_text")
         transport_lt = row.get("transport_lt_days")
+
+        # メーカー品番: SAP側の値を優先
+        maker_part_no = (
+            sap_result.sap_raw_data.get("ZMKMAT_B")
+            if (sap_result and sap_result.sap_raw_data)
+            else row.get("maker_part_no")
+        )
 
         export_rows.append(
             OcrResultsExportRow.model_validate(
@@ -653,9 +664,9 @@ async def export_ocr_results(
                     "jiku_code": row.get("jiku_code"),
                     "delivery_date": delivery_date,  # 整形済み納期
                     "delivery_quantity": row.get("delivery_quantity"),
-                    "item_no": row.get("item_no"),
+                    "item_no": item_no,  # 下6桁
                     "customer_part_no": row.get("customer_part_no"),
-                    "maker_part_no": row.get("メーカー品番"),
+                    "maker_part_no": maker_part_no,  # SAP優先
                     "order_unit": order_unit,  # SAP優先単位
                     # マスタ由来
                     "customer_name": row.get("customer_code"),  # 得意先コードを出力
