@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import { useOcrColumns } from "../pages/useOcrColumns";
 
@@ -13,12 +13,16 @@ import { useOcrStatusOperations } from "./useOcrStatusOperations";
 export function useOcrPageLogic() {
   const filters = useOcrFiltersState();
 
-  const { data, isLoading, error, errorCount } = useOcrData(
+  const { data, isLoading, error, errorCount, refetch } = useOcrData(
     filters.taskDate,
     filters.statusFilter,
     filters.showErrorsOnly,
     filters.viewMode,
   );
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]); // 初回マウント時に最新データを取得
 
   const { getInputs, updateInputs, flushPendingEdits } = useOcrRowInputs(
     filters.viewMode,
