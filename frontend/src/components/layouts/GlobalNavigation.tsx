@@ -22,6 +22,7 @@ import {
   Calendar,
   FileText,
   FileSpreadsheet,
+  Network,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -98,6 +99,12 @@ const navItems: NavItem[] = [
     href: ROUTES.RPA.ROOT,
     icon: Settings,
     feature: "rpa",
+  },
+  {
+    title: "SAP連携",
+    href: ROUTES.SAP.ROOT,
+    icon: Network,
+    requireAdmin: true,
   },
   {
     title: "管理",
