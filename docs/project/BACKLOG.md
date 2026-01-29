@@ -213,7 +213,101 @@
 
 ---
 
-### 2-11. フロントエンド: Chart Event Handlersに適切な型を定義
+### 2-11. SmartRead: ファイルアップロードとフォルダ監視の処理統一
+
+**優先度**: Medium
+**難易度**: Medium
+**想定工数**: 1-2日
+**前提**: 本番環境でログ確認後に着手
+
+**背景・課題:**
+- 現在、右側（ファイルアップロード）と左側（監視フォルダ）で異なる処理方式を使用
+- 右側: `/analyze-simple` → `BackgroundTasks` → `sync_with_simple_flow`
+- 左側: `/pad-runs` → `threading.Thread` → `execute_run`
+- 右側の処理が実際に動作していたか不明（OCR結果に重複がない = 動いていない可能性）
+- 処理パスが分かれているため、バグの混入リスクが高い
+
+**現状の問題点:**
+```
+右側（アップロード）:
+  UploadFile受信 → analyze-simple API
+    → BackgroundTasks.add_task(_run_simple_sync_background)
+    → SmartReadService.sync_with_simple_flow (async)
+    → OCR結果保存（動作未確認）
+
+左側（監視フォルダ）:
+  filenames受信 → pad-runs API
+    → threading.Thread(execute_run)
+    → SmartReadPadRunnerService.execute_run (sync)
+    → OCR結果保存（動作確認済み ✅）
+```
+
+**統一方針:**
+- **右側を左側（PAD Run）方式に統一**
+- わざわざ監視フォルダに一時保存せず、アップロードファイルを直接PAD Runに渡す
+- 同じ処理パスを通ることで、確実性とメンテナンス性を向上
+
+**実装タスク:**
+
+1. **バックエンド:**
+   - 新エンドポイント追加: `POST /configs/{config_id}/pad-runs/upload`
+   - `UploadFile` を受け取り、PAD Runを開始
+   - 内部で `SmartReadPadRunnerService.execute_run` を使用
+   - 一時ファイル保存は不要（メモリ上で処理）
+
+2. **フロントエンド:**
+   - `SmartReadUploadPanel` を `useStartPadRun` 相当のhookに変更
+   - 既存の `useAnalyzeFile` を廃止
+   - `handleAnalyzeSuccess` は既に修正済み（タスクリスト更新）
+
+3. **既存コードの整理:**
+   - `/analyze-simple` エンドポイントを非推奨化（または削除）
+   - `sync_with_simple_flow` の使用箇所を確認・整理
+
+**技術的詳細:**
+
+```python
+# 新エンドポイント例
+@router.post("/configs/{config_id}/pad-runs/upload")
+async def start_pad_run_from_upload(
+    config_id: int,
+    file: UploadFile,
+    uow: UnitOfWork = Depends(get_uow),
+    _current_user: User = Depends(get_current_user),
+) -> SmartReadPadRunStartResponse:
+    """アップロードファイルからPAD Runを開始."""
+    file_content = await file.read()
+    filename = file.filename or "uploaded_file"
+
+    # 一時ファイルとして扱う（監視フォルダ不要）
+    runner = SmartReadPadRunnerService(uow.session)
+    run_id = runner.start_run_from_upload(config_id, filename, file_content)
+
+    # 既存のPAD Run方式でバックグラウンド実行
+    # ...
+```
+
+**メリット:**
+1. 左右で同じコードパスを通る → バグが減る
+2. PAD Runのステータス管理を統一利用 → デバッグしやすい
+3. 実績のある方式に統一 → 確実性が向上
+4. コードの重複を削減 → メンテナンス性向上
+
+**注意事項:**
+- 本番環境で右側の動作ログを確認してから着手
+- もし右側が実際に動いていた場合、統一による影響を慎重に評価
+
+**関連ファイル:**
+- `backend/app/presentation/api/routes/rpa/smartread_router.py`
+- `backend/app/application/services/smartread/pad_runner_service.py`
+- `frontend/src/features/rpa/smartread/components/SmartReadUploadPanel.tsx`
+- `frontend/src/features/rpa/smartread/hooks/file-hooks.ts`
+
+**元:** ユーザー要望 (2026-01-30)
+
+---
+
+### 2-12. フロントエンド: Chart Event Handlersに適切な型を定義
 
 **優先度**: Medium (any型削減 Phase 1)
 **対象**: 4箇所
