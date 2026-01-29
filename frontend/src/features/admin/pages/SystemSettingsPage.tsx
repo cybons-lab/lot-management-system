@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { AVAILABLE_FEATURES } from "@/constants/features";
 import { http } from "@/shared/api/http-client";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import type { PageVisibilityConfig } from "@/types/system";
@@ -285,10 +286,9 @@ function PageVisibilityEditor({ value, onChange, disabled }: PageVisibilityEdito
     }
   })();
 
-  const features = ["inventory", "forecasts", "masters", "orders", "ocr", "rpa"];
   // Should ideally be dynamic or match GlobalNav, but hardcoded list ensures stability for now.
   // Can verify against current config keys too
-  const allFeatures = Array.from(new Set([...features, ...Object.keys(config)]));
+  const allFeatures = Array.from(new Set([...AVAILABLE_FEATURES, ...Object.keys(config)]));
 
   const handleToggle = (feature: string, role: "guest" | "user", checked: boolean) => {
     const newConfig = { ...config };

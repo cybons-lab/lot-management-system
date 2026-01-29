@@ -32,6 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/display/dropdown-menu";
+import { type FeatureKey } from "@/constants/features";
 import { ROUTES } from "@/constants/routes";
 import { useSystemSettings } from "@/contexts/SystemSettingsContext";
 import { type User, useAuth } from "@/features/auth/AuthContext";
@@ -50,7 +51,7 @@ interface NavItem {
   requireAdmin?: boolean;
   requireRoles?: string[];
   subItems?: { title: string; href: string }[];
-  feature?: string; // Feature key for visibility control
+  feature?: FeatureKey; // Feature key for visibility control
 }
 
 const navItems: NavItem[] = [
@@ -58,6 +59,7 @@ const navItems: NavItem[] = [
     title: "ダッシュボード",
     href: ROUTES.DASHBOARD,
     icon: LayoutDashboard,
+    feature: "dashboard",
   },
   {
     title: "オリジナル（需要予測）",
@@ -105,23 +107,27 @@ const navItems: NavItem[] = [
     href: ROUTES.SAP.ROOT,
     icon: Network,
     requireAdmin: true,
+    feature: "sap",
   },
   {
     title: "管理",
     href: ROUTES.ADMIN.INDEX,
     icon: Settings,
     requireAdmin: true,
+    feature: "admin",
   },
   {
     title: "DBブラウザ",
     href: ROUTES.DEBUG.DB_BROWSER,
     icon: Table,
     requireAdmin: true,
+    feature: "db_browser",
   },
   {
     title: "ログ",
     icon: ClipboardList,
     requireAdmin: true,
+    feature: "logs",
     subItems: [
       { title: "操作ログ", href: ROUTES.ADMIN.OPERATION_LOGS },
       { title: "クライアントログ", href: ROUTES.ADMIN.CLIENT_LOGS },
@@ -138,16 +144,19 @@ const navItems: NavItem[] = [
     href: ROUTES.CALENDAR,
     icon: Calendar,
     requireRoles: ["admin", "user"],
+    feature: "calendar",
   },
   {
     title: "エクスポート",
     href: "/admin/export",
     icon: Download,
     requireAdmin: true,
+    feature: "export",
   },
   {
     title: "ヘルプ",
     icon: HelpCircle,
+    feature: "help",
     subItems: [{ title: "フローマップ", href: ROUTES.HELP.FLOW_MAP }],
   },
 ];
