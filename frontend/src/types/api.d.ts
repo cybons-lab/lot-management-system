@@ -6851,6 +6851,15 @@ export interface paths {
     /**
      * Get Config
      * @description 設定を取得.
+     *
+     *     Args:
+     *         config_key: 設定キー
+     *         optional: Trueの場合、未設定時に404ではなくnullを返す
+     *         db: データベースセッション
+     *         _current_user: 認証済みユーザー
+     *
+     *     Returns:
+     *         設定情報。optionalがTrueで未設定の場合はNone
      */
     get: operations["get_config_api_rpa_cloud_flow_configs__config_key__get"];
     /**
@@ -27443,7 +27452,9 @@ export interface operations {
   };
   get_config_api_rpa_cloud_flow_configs__config_key__get: {
     parameters: {
-      query?: never;
+      query?: {
+        optional?: boolean;
+      };
       header?: never;
       path: {
         config_key: string;
@@ -27458,7 +27469,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CloudFlowConfigResponse"];
+          "application/json": components["schemas"]["CloudFlowConfigResponse"] | null;
         };
       };
       /** @description Validation Error */
