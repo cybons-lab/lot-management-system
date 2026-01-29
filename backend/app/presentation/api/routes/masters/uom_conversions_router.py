@@ -10,7 +10,7 @@ from app.application.services.common.export_service import ExportService
 from app.application.services.masters.uom_conversion_service import UomConversionService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.infrastructure.persistence.models.masters_models import ProductGroup, ProductUomConversion
+from app.infrastructure.persistence.models.masters_models import ProductUomConversion
 from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.masters_schema import BulkUpsertResponse
 from app.presentation.schemas.masters.uom_conversions_schema import (
@@ -41,7 +41,7 @@ def list_uom_conversions(
         ProductGroup.maker_part_code,
         ProductGroup.product_name,
         ProductUomConversion.valid_to,
-    ).join(ProductGroup, ProductUomConversion.product_group_id == ProductGroup.id)
+    ).join(ProductUomConversion.product_group_id == ProductGroup.id)
 
     if product_group_id is not None:
         query = query.where(ProductUomConversion.product_group_id == product_group_id)
@@ -77,7 +77,7 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
         ProductUomConversion.factor,
         ProductGroup.maker_part_code,
         ProductGroup.product_name,
-    ).join(ProductGroup, ProductUomConversion.product_group_id == ProductGroup.id)
+    ).join(ProductUomConversion.product_group_id == ProductGroup.id)
 
     results = db.execute(query).all()
 

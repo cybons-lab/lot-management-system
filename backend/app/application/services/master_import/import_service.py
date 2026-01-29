@@ -15,7 +15,6 @@ from app.infrastructure.persistence.models.masters_models import (
     Customer,
     CustomerItem,
     DeliveryPlace,
-    Product,
     ProductMapping,
     Supplier,
 )

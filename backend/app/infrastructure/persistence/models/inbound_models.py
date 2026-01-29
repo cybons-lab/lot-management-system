@@ -144,7 +144,7 @@ from .base_model import Base
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .lot_receipt_models import LotReceipt
-    from .masters_models import ProductGroup, Supplier
+    from .masters_models import Supplier
 
 
 class InboundPlanStatus(str, PyEnum):
@@ -225,7 +225,7 @@ class InboundPlanLine(Base):
     )
     product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("product_groups.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
     planned_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
@@ -247,7 +247,7 @@ class InboundPlanLine(Base):
 
     inbound_plan: Mapped[InboundPlan] = relationship("InboundPlan", back_populates="lines")
     product_group: Mapped[ProductGroup] = relationship(
-        "ProductGroup", back_populates="inbound_plan_lines"
+        "SupplierItem", back_populates="inbound_plan_lines"
     )
     expected_lots: Mapped[list[ExpectedLot]] = relationship(
         "ExpectedLot", back_populates="inbound_plan_line", cascade="all, delete-orphan"

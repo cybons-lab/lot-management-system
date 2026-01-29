@@ -12,7 +12,8 @@ from app.infrastructure.persistence.models.inbound_models import (
     InboundPlanStatus,
 )
 from app.infrastructure.persistence.models.inventory_models import LotReceipt
-from app.infrastructure.persistence.models.masters_models import ProductGroup, Supplier
+from app.infrastructure.persistence.models.masters_models import Supplier
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 from .scenarios.lt_scenarios import LT_SCENARIOS
 from .utils import fake
@@ -20,7 +21,7 @@ from .utils import fake
 
 def generate_inbound_plans(
     db: Session,
-    products: list[ProductGroup],
+    products: list[SupplierItem],
     suppliers: list[Supplier],
     options: object = None,
     calendar: object = None,

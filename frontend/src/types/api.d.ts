@@ -2653,223 +2653,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/masters/products": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Products
-     * @description 製品一覧を取得.
-     *
-     *     デフォルトでは有効な製品のみを返します。
-     *     論理削除された製品も含める場合はinclude_inactive=trueを指定してください。
-     *
-     *     Args:
-     *         skip: スキップ件数（ページネーション用）
-     *         limit: 取得件数（最大100件）
-     *         search: 検索キーワード（製品コード、製品名で部分一致）
-     *         include_inactive: 論理削除済み製品を含めるか（デフォルト: False）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         list[ProductOut]: 製品情報のリスト
-     */
-    get: operations["list_products_api_masters_products_get"];
-    put?: never;
-    /**
-     * Create Product
-     * @description Create a new product.
-     */
-    post: operations["create_product_api_masters_products_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/masters/products/template/download": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Download Products Template
-     * @description Download product import template.
-     *
-     *     Args:
-     *         format: 'csv' or 'xlsx' (default: csv)
-     *         include_sample: Whether to include a sample row (default: True)
-     *
-     *     Returns:
-     *         Template file for product import
-     */
-    get: operations["download_products_template_api_masters_products_template_download_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/masters/products/export/download": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Export Products
-     * @description 製品データをCSVまたはExcelでエクスポート.
-     *
-     *     Args:
-     *         format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         StreamingResponse: エクスポートファイル
-     */
-    get: operations["export_products_api_masters_products_export_download_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/masters/products/{product_code}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Product
-     * @description 製品コードで製品を取得.
-     *
-     *     Args:
-     *         product_code: 製品コード（maker_part_code）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         ProductOut: 製品詳細情報
-     *
-     *     Raises:
-     *         HTTPException: 製品が存在しない場合（404）
-     */
-    get: operations["get_product_api_masters_products__product_code__get"];
-    /**
-     * Update Product
-     * @description Update an existing product (by maker_part_code).
-     */
-    put: operations["update_product_api_masters_products__product_code__put"];
-    post?: never;
-    /**
-     * Delete Product
-     * @description Soft delete a product.
-     */
-    delete: operations["delete_product_api_masters_products__product_code__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/masters/products/{product_code}/suppliers": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Supplier Items
-     * @description Fetch suppliers for a product by its code.
-     *
-     *     Returns a list of suppliers associated with this product, indicating
-     *     which supplier is the primary one.
-     */
-    get: operations["get_supplier_items_api_masters_products__product_code__suppliers_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/masters/products/{product_code}/permanent": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Permanent Delete Product
-     * @description Permanently delete product (admin only).
-     */
-    delete: operations["permanent_delete_product_api_masters_products__product_code__permanent_delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/masters/products/{product_code}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Restore Product
-     * @description Restore a soft-deleted product.
-     */
-    post: operations["restore_product_api_masters_products__product_code__restore_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/masters/products/bulk-upsert": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Bulk Upsert Products
-     * @description Bulk upsert products by product_code (maker_part_code).
-     *
-     *     - If a product with the same product_code exists, it will be updated
-     *     - If not, a new product will be created
-     *
-     *     Returns summary with counts of created/updated/failed records.
-     */
-    post: operations["bulk_upsert_products_api_masters_products_bulk_upsert_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/masters/suppliers": {
     parameters: {
       query?: never;
@@ -13406,106 +13189,6 @@ export interface components {
       description?: string | null;
     };
     /**
-     * ProductBulkRow
-     * @description Single row for product bulk upsert.
-     */
-    ProductBulkRow: {
-      /** Product Code */
-      product_code: string;
-      /** Product Name */
-      product_name: string;
-      /**
-       * Maker Part Code
-       * @description メーカー品番
-       * @default
-       */
-      maker_part_code: string;
-      /**
-       * Base Unit
-       * @description 基本単位
-       * @default EA
-       */
-      base_unit: string;
-      /**
-       * Consumption Limit Days
-       * @description 消費期限日数
-       */
-      consumption_limit_days?: number | null;
-      /**
-       * Internal Unit
-       * @default CAN
-       */
-      internal_unit: string;
-      /**
-       * External Unit
-       * @default KG
-       */
-      external_unit: string;
-      /**
-       * Qty Per Internal Unit
-       * @default 1
-       */
-      qty_per_internal_unit: number;
-    };
-    /**
-     * ProductBulkUpsertRequest
-     * @description Bulk upsert request for products.
-     */
-    ProductBulkUpsertRequest: {
-      /**
-       * Rows
-       * @description List of product rows to upsert
-       */
-      rows: components["schemas"]["ProductBulkRow"][];
-    };
-    /**
-     * ProductCreate
-     * @description Payload to create a product.
-     */
-    ProductCreate: {
-      /** Product Code */
-      product_code?: string | null;
-      /** Product Name */
-      product_name: string;
-      /**
-       * Maker Part Code
-       * @description メーカー品番
-       * @default
-       */
-      maker_part_code: string;
-      /**
-       * Base Unit
-       * @description 基本単位
-       * @default EA
-       */
-      base_unit: string;
-      /**
-       * Consumption Limit Days
-       * @description 消費期限日数
-       */
-      consumption_limit_days?: number | null;
-      /**
-       * Internal Unit
-       * @default CAN
-       */
-      internal_unit: string;
-      /**
-       * External Unit
-       * @default KG
-       */
-      external_unit: string;
-      /**
-       * Qty Per Internal Unit
-       * @default 1
-       */
-      qty_per_internal_unit: number;
-      /**
-       * Is Active
-       * @default true
-       */
-      is_active: boolean;
-    };
-    /**
      * ProductMappingCreate
      * @description Create product mapping request.
      */
@@ -13698,52 +13381,6 @@ export interface components {
       is_active?: boolean | null;
     };
     /**
-     * ProductOut
-     * @description Product response model.
-     */
-    ProductOut: {
-      /** Id */
-      id: number;
-      /** Product Code */
-      product_code: string;
-      /** Product Name */
-      product_name: string;
-      /** Maker Part Code */
-      maker_part_code?: string | null;
-      /** Base Unit */
-      base_unit?: string | null;
-      /** Consumption Limit Days */
-      consumption_limit_days?: number | null;
-      /** Internal Unit */
-      internal_unit: string;
-      /** External Unit */
-      external_unit: string;
-      /** Qty Per Internal Unit */
-      qty_per_internal_unit: number;
-      /** Is Active */
-      is_active: boolean;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
-      /**
-       * Valid To
-       * Format: date
-       */
-      valid_to: string;
-      /**
-       * Supplier Ids
-       * @default []
-       */
-      supplier_ids: number[];
-    };
-    /**
      * ProductSupplierImportRow
      * @description Product-supplier relationship in import data.
      */
@@ -13774,30 +13411,6 @@ export interface components {
        * @description Lead time in days
        */
       lead_time_days?: number | null;
-    };
-    /**
-     * ProductUpdate
-     * @description Payload to partially update a product.
-     */
-    ProductUpdate: {
-      /** Product Code */
-      product_code?: string | null;
-      /** Product Name */
-      product_name?: string | null;
-      /** Maker Part Code */
-      maker_part_code?: string | null;
-      /** Base Unit */
-      base_unit?: string | null;
-      /** Consumption Limit Days */
-      consumption_limit_days?: number | null;
-      /** Internal Unit */
-      internal_unit?: string | null;
-      /** External Unit */
-      external_unit?: string | null;
-      /** Qty Per Internal Unit */
-      qty_per_internal_unit?: number | null;
-      /** Is Active */
-      is_active?: boolean | null;
     };
     /** PublicSystemSettings */
     PublicSystemSettings: {
@@ -16450,6 +16063,32 @@ export interface components {
        */
       base_unit: string;
       /**
+       * Internal Unit
+       * @description 社内単位/引当単位（例: CAN）
+       */
+      internal_unit?: string | null;
+      /**
+       * External Unit
+       * @description 外部単位/表示単位（例: KG）
+       */
+      external_unit?: string | null;
+      /**
+       * Qty Per Internal Unit
+       * @description 内部単位あたりの数量（例: 1 CAN = 20.0 KG）
+       */
+      qty_per_internal_unit?: number | string | null;
+      /**
+       * Consumption Limit Days
+       * @description 消費期限日数
+       */
+      consumption_limit_days?: number | null;
+      /**
+       * Requires Lot Number
+       * @description ロット番号管理が必要
+       * @default true
+       */
+      requires_lot_number: boolean;
+      /**
        * Lead Time Days
        * @description リードタイム（日）
        */
@@ -16475,6 +16114,16 @@ export interface components {
       display_name: string;
       /** Base Unit */
       base_unit: string;
+      /** Internal Unit */
+      internal_unit: string | null;
+      /** External Unit */
+      external_unit: string | null;
+      /** Qty Per Internal Unit */
+      qty_per_internal_unit: string | null;
+      /** Consumption Limit Days */
+      consumption_limit_days: number | null;
+      /** Requires Lot Number */
+      requires_lot_number: boolean;
       /** Lead Time Days */
       lead_time_days: number | null;
       /** Notes */
@@ -16525,6 +16174,31 @@ export interface components {
        * @description 基本単位
        */
       base_unit?: string | null;
+      /**
+       * Internal Unit
+       * @description 社内単位/引当単位
+       */
+      internal_unit?: string | null;
+      /**
+       * External Unit
+       * @description 外部単位/表示単位
+       */
+      external_unit?: string | null;
+      /**
+       * Qty Per Internal Unit
+       * @description 内部単位あたりの数量
+       */
+      qty_per_internal_unit?: number | string | null;
+      /**
+       * Consumption Limit Days
+       * @description 消費期限日数
+       */
+      consumption_limit_days?: number | null;
+      /**
+       * Requires Lot Number
+       * @description ロット番号管理が必要
+       */
+      requires_lot_number?: boolean | null;
       /**
        * Lead Time Days
        * @description リードタイム（日）
@@ -21311,359 +20985,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["DeliveryPlaceResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_products_api_masters_products_get: {
-    parameters: {
-      query?: {
-        skip?: number;
-        limit?: number;
-        search?: string | null;
-        /** @description Include soft-deleted products */
-        include_inactive?: boolean;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProductOut"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_product_api_masters_products_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ProductCreate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProductOut"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  download_products_template_api_masters_products_template_download_get: {
-    parameters: {
-      query?: {
-        format?: string;
-        include_sample?: boolean;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  export_products_api_masters_products_export_download_get: {
-    parameters: {
-      query?: {
-        format?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_product_api_masters_products__product_code__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        product_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProductOut"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_product_api_masters_products__product_code__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        product_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ProductUpdate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProductOut"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_product_api_masters_products__product_code__delete: {
-    parameters: {
-      query?: {
-        /** @description End date for soft delete */
-        end_date?: string | null;
-      };
-      header?: never;
-      path: {
-        product_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_supplier_items_api_masters_products__product_code__suppliers_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        product_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  permanent_delete_product_api_masters_products__product_code__permanent_delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        product_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  restore_product_api_masters_products__product_code__restore_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        product_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ProductOut"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  bulk_upsert_products_api_masters_products_bulk_upsert_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ProductBulkUpsertRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BulkUpsertResponse"];
         };
       };
       /** @description Validation Error */

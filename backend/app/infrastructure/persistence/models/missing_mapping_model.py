@@ -58,7 +58,7 @@ class MissingMappingEvent(Base):
     )
     product_group_id: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey("product_groups.id", ondelete="SET NULL"),
+        ForeignKey("supplier_items.id", ondelete="SET NULL"),
         nullable=True,
     )
     supplier_id: Mapped[int | None] = mapped_column(
@@ -117,7 +117,7 @@ class MissingMappingEvent(Base):
     # Relationships
     customer: Mapped[Customer | None] = relationship("Customer", foreign_keys=[customer_id])
     product_group: Mapped[ProductGroup | None] = relationship(
-        "ProductGroup", foreign_keys=[product_group_id]
+        "SupplierItem", foreign_keys=[product_group_id]
     )
     supplier: Mapped[Supplier | None] = relationship("Supplier", foreign_keys=[supplier_id])
     created_by_user: Mapped[User | None] = relationship("User", foreign_keys=[created_by])

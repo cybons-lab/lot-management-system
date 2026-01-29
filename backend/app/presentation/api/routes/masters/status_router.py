@@ -11,7 +11,6 @@ from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.masters_models import (
     CustomerItem,
     CustomerItemDeliverySetting,
-    Product,
 )
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.deps import get_db

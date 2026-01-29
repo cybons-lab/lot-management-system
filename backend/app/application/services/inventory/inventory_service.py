@@ -133,7 +133,7 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models.assignments.assignment_models import (
     UserSupplierAssignment,
 )
-from app.infrastructure.persistence.models.masters_models import ProductGroup, Supplier, Warehouse
+from app.infrastructure.persistence.models.masters_models import Supplier, Warehouse
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.schemas.inventory.inventory_schema import (
     InventoryFilterOption,
@@ -706,13 +706,11 @@ class InventoryService:
     ) -> InventoryFilterOptions:
         """Get filter options based on master relationships (legacy behavior)."""
         # 1. Products (filtered by supplier if selected)
-        p_stmt = select(
-            ProductGroup.id, ProductGroup.maker_part_code, ProductGroup.product_name
-        ).where(ProductGroup.valid_to >= "9999-12-31")
+        p_stmt = select(SupplierItem.maker_part_code).where(SupplierItem.valid_to >= "9999-12-31")
         if supplier_id:
             # Filter products supplied by this supplier
             p_stmt = (
-                p_stmt.join(SupplierItem, SupplierItem.product_group_id == ProductGroup.id)
+                p_stmt.join(SupplierItem, SupplierItem.product_group_id == SupplierItem.id)
                 .where(SupplierItem.supplier_id == supplier_id)
                 .where(SupplierItem.valid_to >= "9999-12-31")
             )

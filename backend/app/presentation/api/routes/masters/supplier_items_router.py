@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.infrastructure.persistence.models.masters_models import ProductGroup, Supplier
+from app.infrastructure.persistence.models.masters_models import Supplier
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.routes.auth.auth_router import (
     get_current_admin,
@@ -62,13 +62,13 @@ def list_supplier_items(
             SupplierItem.lead_time_days,
             SupplierItem.display_name,
             SupplierItem.notes,
-            ProductGroup.maker_part_code,
-            ProductGroup.product_name,
+            SupplierItem.maker_part_code,
+            SupplierItem.display_name,
             Supplier.supplier_code,
             Supplier.supplier_name,
             SupplierItem.valid_to,
         )
-        .join(ProductGroup, SupplierItem.product_group_id == ProductGroup.id)
+        .join(SupplierItem.product_group_id == ProductGroup.id)
         .join(Supplier, SupplierItem.supplier_id == Supplier.id)
     )
 
@@ -122,12 +122,12 @@ def export_supplier_items(format: str = "csv", db: Session = Depends(get_db)):
             SupplierItem.lead_time_days,
             SupplierItem.display_name,
             SupplierItem.notes,
-            ProductGroup.maker_part_code,
-            ProductGroup.product_name,
+            SupplierItem.maker_part_code,
+            SupplierItem.display_name,
             Supplier.supplier_code,
             Supplier.supplier_name,
         )
-        .join(ProductGroup, SupplierItem.product_group_id == ProductGroup.id)
+        .join(SupplierItem.product_group_id == ProductGroup.id)
         .join(Supplier, SupplierItem.supplier_id == Supplier.id)
     )
     results = db.execute(query).all()

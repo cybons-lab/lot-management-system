@@ -9,7 +9,6 @@ from app.infrastructure.persistence.models.masters_models import (
     CustomerItemDeliverySetting,
     CustomerItemJikuMapping,
     DeliveryPlace,
-    Product,
     ProductUomConversion,
     Supplier,
     Warehouse,
@@ -124,7 +123,7 @@ def generate_customers_and_delivery_places(
     return customers, delivery_places
 
 
-def generate_products(db: Session, options: object = None) -> list[Product]:
+def generate_products(db: Session, options: object = None) -> list[SupplierItem]:
     products = []
 
     # Scale logic
@@ -190,7 +189,7 @@ def generate_products(db: Session, options: object = None) -> list[Product]:
 def generate_customer_items(
     db: Session,
     customers: list[Customer],
-    products: list[Product],
+    products: list[SupplierItem],
     suppliers: list[Supplier],
     delivery_places: list[DeliveryPlace] | None = None,
     options: object = None,

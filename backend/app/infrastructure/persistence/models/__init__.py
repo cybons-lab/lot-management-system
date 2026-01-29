@@ -50,7 +50,6 @@ from .masters_models import (
     CustomerItemDeliverySetting,
     CustomerItemJikuMapping,
     DeliveryPlace,
-    ProductGroup,
     ProductMapping,
     ProductUomConversion,
     Supplier,
@@ -78,6 +77,13 @@ from .soft_delete_mixin import INFINITE_VALID_TO, SoftDeleteMixin
 
 # SupplierItem (renamed from ProductSupplier)
 from .supplier_item_model import ProductSupplier, SupplierItem
+
+
+# TEMPORARY: Backward compatibility aliases for Product/ProductGroup
+# These should be removed once all code is updated to use SupplierItem directly
+Product = SupplierItem
+ProductGroup = SupplierItem
+
 from .system_config_model import SystemConfig
 from .system_models import ClientLog
 from .views_models import (
@@ -99,9 +105,6 @@ from .withdrawal_line_model import WithdrawalLine
 from .withdrawal_models import Withdrawal, WithdrawalCancelReason, WithdrawalType
 
 
-# Backward compatibility alias
-Product = ProductGroup
-
 __all__ = [
     # Base
     "Base",
@@ -113,8 +116,8 @@ __all__ = [
     "Supplier",
     "Customer",
     "DeliveryPlace",
-    "ProductGroup",
-    "Product",  # Backward compatibility alias for ProductGroup
+    "Product",  # TEMPORARY: Backward compatibility alias for SupplierItem
+    "ProductGroup",  # TEMPORARY: Backward compatibility alias for SupplierItem
     "ProductUomConversion",
     "CustomerItem",
     "CustomerItemDeliverySetting",

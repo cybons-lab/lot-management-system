@@ -7496,540 +7496,6 @@
         }
       }
     },
-    "/api/masters/products": {
-      "get": {
-        "tags": [
-          "products"
-        ],
-        "summary": "List Products",
-        "description": "製品一覧を取得.\n\nデフォルトでは有効な製品のみを返します。\n論理削除された製品も含める場合はinclude_inactive=trueを指定してください。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    search: 検索キーワード（製品コード、製品名で部分一致）\n    include_inactive: 論理削除済み製品を含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    list[ProductOut]: 製品情報のリスト",
-        "operationId": "list_products_api_masters_products_get",
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Search"
-            }
-          },
-          {
-            "name": "include_inactive",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "description": "Include soft-deleted products",
-              "default": false,
-              "title": "Include Inactive"
-            },
-            "description": "Include soft-deleted products"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ProductOut"
-                  },
-                  "title": "Response List Products Api Masters Products Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Create Product",
-        "description": "Create a new product.",
-        "operationId": "create_product_api_masters_products_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProductCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/masters/products/template/download": {
-      "get": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Download Products Template",
-        "description": "Download product import template.\n\nArgs:\n    format: 'csv' or 'xlsx' (default: csv)\n    include_sample: Whether to include a sample row (default: True)\n\nReturns:\n    Template file for product import",
-        "operationId": "download_products_template_api_masters_products_template_download_get",
-        "parameters": [
-          {
-            "name": "format",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "csv",
-              "title": "Format"
-            }
-          },
-          {
-            "name": "include_sample",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true,
-              "title": "Include Sample"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/masters/products/export/download": {
-      "get": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Export Products",
-        "description": "製品データをCSVまたはExcelでエクスポート.\n\nArgs:\n    format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: エクスポートファイル",
-        "operationId": "export_products_api_masters_products_export_download_get",
-        "parameters": [
-          {
-            "name": "format",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "csv",
-              "title": "Format"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/masters/products/{product_code}": {
-      "get": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Get Product",
-        "description": "製品コードで製品を取得.\n\nArgs:\n    product_code: 製品コード（maker_part_code）\n    db: データベースセッション\n\nReturns:\n    ProductOut: 製品詳細情報\n\nRaises:\n    HTTPException: 製品が存在しない場合（404）",
-        "operationId": "get_product_api_masters_products__product_code__get",
-        "parameters": [
-          {
-            "name": "product_code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Product Code"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Update Product",
-        "description": "Update an existing product (by maker_part_code).",
-        "operationId": "update_product_api_masters_products__product_code__put",
-        "parameters": [
-          {
-            "name": "product_code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Product Code"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProductUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Delete Product",
-        "description": "Soft delete a product.",
-        "operationId": "delete_product_api_masters_products__product_code__delete",
-        "parameters": [
-          {
-            "name": "product_code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Product Code"
-            }
-          },
-          {
-            "name": "end_date",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "End date for soft delete",
-              "title": "End Date"
-            },
-            "description": "End date for soft delete"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/masters/products/{product_code}/suppliers": {
-      "get": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Get Supplier Items",
-        "description": "Fetch suppliers for a product by its code.\n\nReturns a list of suppliers associated with this product, indicating\nwhich supplier is the primary one.",
-        "operationId": "get_supplier_items_api_masters_products__product_code__suppliers_get",
-        "parameters": [
-          {
-            "name": "product_code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Product Code"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/masters/products/{product_code}/permanent": {
-      "delete": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Permanent Delete Product",
-        "description": "Permanently delete product (admin only).",
-        "operationId": "permanent_delete_product_api_masters_products__product_code__permanent_delete",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "product_code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Product Code"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/masters/products/{product_code}/restore": {
-      "post": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Restore Product",
-        "description": "Restore a soft-deleted product.",
-        "operationId": "restore_product_api_masters_products__product_code__restore_post",
-        "parameters": [
-          {
-            "name": "product_code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Product Code"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/masters/products/bulk-upsert": {
-      "post": {
-        "tags": [
-          "products"
-        ],
-        "summary": "Bulk Upsert Products",
-        "description": "Bulk upsert products by product_code (maker_part_code).\n\n- If a product with the same product_code exists, it will be updated\n- If not, a new product will be created\n\nReturns summary with counts of created/updated/failed records.",
-        "operationId": "bulk_upsert_products_api_masters_products_bulk_upsert_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProductBulkUpsertRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BulkUpsertResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/masters/suppliers": {
       "get": {
         "tags": [
@@ -33875,165 +33341,6 @@
         "title": "OriginalDeliveryCalendarUpdate",
         "description": "Update request for original delivery calendar."
       },
-      "ProductBulkRow": {
-        "properties": {
-          "product_code": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Product Code"
-          },
-          "product_name": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Product Name"
-          },
-          "maker_part_code": {
-            "type": "string",
-            "maxLength": 100,
-            "title": "Maker Part Code",
-            "description": "メーカー品番",
-            "default": ""
-          },
-          "base_unit": {
-            "type": "string",
-            "maxLength": 20,
-            "title": "Base Unit",
-            "description": "基本単位",
-            "default": "EA"
-          },
-          "consumption_limit_days": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Consumption Limit Days",
-            "description": "消費期限日数"
-          },
-          "internal_unit": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Internal Unit",
-            "default": "CAN"
-          },
-          "external_unit": {
-            "type": "string",
-            "minLength": 1,
-            "title": "External Unit",
-            "default": "KG"
-          },
-          "qty_per_internal_unit": {
-            "type": "number",
-            "exclusiveMinimum": 0.0,
-            "title": "Qty Per Internal Unit",
-            "default": 1.0
-          }
-        },
-        "type": "object",
-        "required": [
-          "product_code",
-          "product_name"
-        ],
-        "title": "ProductBulkRow",
-        "description": "Single row for product bulk upsert."
-      },
-      "ProductBulkUpsertRequest": {
-        "properties": {
-          "rows": {
-            "items": {
-              "$ref": "#/components/schemas/ProductBulkRow"
-            },
-            "type": "array",
-            "minItems": 1,
-            "title": "Rows",
-            "description": "List of product rows to upsert"
-          }
-        },
-        "type": "object",
-        "required": [
-          "rows"
-        ],
-        "title": "ProductBulkUpsertRequest",
-        "description": "Bulk upsert request for products."
-      },
-      "ProductCreate": {
-        "properties": {
-          "product_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Code"
-          },
-          "product_name": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Product Name"
-          },
-          "maker_part_code": {
-            "type": "string",
-            "maxLength": 100,
-            "title": "Maker Part Code",
-            "description": "メーカー品番",
-            "default": ""
-          },
-          "base_unit": {
-            "type": "string",
-            "maxLength": 20,
-            "title": "Base Unit",
-            "description": "基本単位",
-            "default": "EA"
-          },
-          "consumption_limit_days": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Consumption Limit Days",
-            "description": "消費期限日数"
-          },
-          "internal_unit": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Internal Unit",
-            "default": "CAN"
-          },
-          "external_unit": {
-            "type": "string",
-            "minLength": 1,
-            "title": "External Unit",
-            "default": "KG"
-          },
-          "qty_per_internal_unit": {
-            "type": "number",
-            "exclusiveMinimum": 0.0,
-            "title": "Qty Per Internal Unit",
-            "default": 1.0
-          },
-          "is_active": {
-            "type": "boolean",
-            "title": "Is Active",
-            "default": true
-          }
-        },
-        "type": "object",
-        "required": [
-          "product_name"
-        ],
-        "title": "ProductCreate",
-        "description": "Payload to create a product."
-      },
       "ProductMappingCreate": {
         "properties": {
           "customer_id": {
@@ -34428,109 +33735,6 @@
         "title": "ProductMappingUpdate",
         "description": "Update product mapping request."
       },
-      "ProductOut": {
-        "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "product_code": {
-            "type": "string",
-            "title": "Product Code"
-          },
-          "product_name": {
-            "type": "string",
-            "title": "Product Name"
-          },
-          "maker_part_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Maker Part Code"
-          },
-          "base_unit": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Base Unit"
-          },
-          "consumption_limit_days": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Consumption Limit Days"
-          },
-          "internal_unit": {
-            "type": "string",
-            "title": "Internal Unit"
-          },
-          "external_unit": {
-            "type": "string",
-            "title": "External Unit"
-          },
-          "qty_per_internal_unit": {
-            "type": "number",
-            "title": "Qty Per Internal Unit"
-          },
-          "is_active": {
-            "type": "boolean",
-            "title": "Is Active"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "valid_to": {
-            "type": "string",
-            "format": "date",
-            "title": "Valid To"
-          },
-          "supplier_ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Supplier Ids",
-            "default": []
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "product_code",
-          "product_name",
-          "internal_unit",
-          "external_unit",
-          "qty_per_internal_unit",
-          "is_active",
-          "created_at",
-          "updated_at",
-          "valid_to"
-        ],
-        "title": "ProductOut",
-        "description": "Product response model."
-      },
       "ProductSupplierImportRow": {
         "properties": {
           "maker_part_code": {
@@ -34588,112 +33792,6 @@
         ],
         "title": "ProductSupplierImportRow",
         "description": "Product-supplier relationship in import data."
-      },
-      "ProductUpdate": {
-        "properties": {
-          "product_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Code"
-          },
-          "product_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Name"
-          },
-          "maker_part_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Maker Part Code"
-          },
-          "base_unit": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Base Unit"
-          },
-          "consumption_limit_days": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Consumption Limit Days"
-          },
-          "internal_unit": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Internal Unit"
-          },
-          "external_unit": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "External Unit"
-          },
-          "qty_per_internal_unit": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Qty Per Internal Unit"
-          },
-          "is_active": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Active"
-          }
-        },
-        "type": "object",
-        "title": "ProductUpdate",
-        "description": "Payload to partially update a product."
       },
       "PublicSystemSettings": {
         "properties": {
@@ -40784,6 +39882,66 @@
             "title": "Base Unit",
             "description": "基本単位（必須、例: EA, pcs, kg）"
           },
+          "internal_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Internal Unit",
+            "description": "社内単位/引当単位（例: CAN）"
+          },
+          "external_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Unit",
+            "description": "外部単位/表示単位（例: KG）"
+          },
+          "qty_per_internal_unit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qty Per Internal Unit",
+            "description": "内部単位あたりの数量（例: 1 CAN = 20.0 KG）"
+          },
+          "consumption_limit_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumption Limit Days",
+            "description": "消費期限日数"
+          },
+          "requires_lot_number": {
+            "type": "boolean",
+            "title": "Requires Lot Number",
+            "description": "ロット番号管理が必要",
+            "default": true
+          },
           "lead_time_days": {
             "anyOf": [
               {
@@ -40840,6 +39998,55 @@
           "base_unit": {
             "type": "string",
             "title": "Base Unit"
+          },
+          "internal_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Internal Unit"
+          },
+          "external_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Unit"
+          },
+          "qty_per_internal_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qty Per Internal Unit"
+          },
+          "consumption_limit_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumption Limit Days"
+          },
+          "requires_lot_number": {
+            "type": "boolean",
+            "title": "Requires Lot Number"
           },
           "lead_time_days": {
             "anyOf": [
@@ -40910,6 +40117,11 @@
           "maker_part_no",
           "display_name",
           "base_unit",
+          "internal_unit",
+          "external_unit",
+          "qty_per_internal_unit",
+          "consumption_limit_days",
+          "requires_lot_number",
           "lead_time_days",
           "notes",
           "created_at",
@@ -40959,6 +40171,72 @@
             ],
             "title": "Base Unit",
             "description": "基本単位"
+          },
+          "internal_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Internal Unit",
+            "description": "社内単位/引当単位"
+          },
+          "external_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Unit",
+            "description": "外部単位/表示単位"
+          },
+          "qty_per_internal_unit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qty Per Internal Unit",
+            "description": "内部単位あたりの数量"
+          },
+          "consumption_limit_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumption Limit Days",
+            "description": "消費期限日数"
+          },
+          "requires_lot_number": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requires Lot Number",
+            "description": "ロット番号管理が必要"
           },
           "lead_time_days": {
             "anyOf": [

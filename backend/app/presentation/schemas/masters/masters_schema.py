@@ -12,12 +12,6 @@ from pydantic import Field
 
 from app.presentation.schemas.common.base import BaseSchema
 from app.presentation.schemas.common.common_schema import ListResponse
-from app.presentation.schemas.masters.product_groups_schema import (
-    ProductGroupCreate as ProductCreate,
-)
-from app.presentation.schemas.masters.product_groups_schema import (
-    ProductGroupOut as ProductOut,
-)
 
 
 # ============================================================
@@ -289,7 +283,6 @@ class MasterBulkLoadRequest(BaseSchema):
     warehouses: list[WarehouseCreate] = Field(default_factory=list)
     suppliers: list[SupplierCreate] = Field(default_factory=list)
     customers: list[CustomerCreate] = Field(default_factory=list)
-    products: list[ProductCreate] = Field(default_factory=list)
     delivery_places: list[DeliveryPlaceCreate] = Field(default_factory=list)
 
 
@@ -383,9 +376,6 @@ SupplierProductResponse = SupplierItemResponse
 # Using generic ListResponse[T] for consistency
 CustomerListResponse = ListResponse[CustomerResponse]
 """Customer list response."""
-
-ProductListResponse = ListResponse[ProductOut]
-"""Product list response."""
 
 SupplierListResponse = ListResponse[SupplierResponse]
 """Supplier list response."""

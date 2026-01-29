@@ -15,7 +15,7 @@ class ProductWarehouse(Base):
     __tablename__ = "product_warehouse"
 
     product_group_id = Column(
-        BigInteger, ForeignKey("product_groups.id", ondelete="CASCADE"), primary_key=True
+        BigInteger, ForeignKey("supplier_items.id", ondelete="CASCADE"), primary_key=True
     )
     warehouse_id = Column(
         BigInteger, ForeignKey("warehouses.id", ondelete="CASCADE"), primary_key=True

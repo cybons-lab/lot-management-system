@@ -18,7 +18,6 @@ from app.application.services.forecasts.forecast_service import ForecastService
 from app.application.services.inventory.lot_service import LotService
 from app.application.services.masters.customer_items_service import CustomerItemsService
 from app.application.services.masters.customer_service import CustomerService
-from app.application.services.masters.product_groups_service import ProductService
 from app.application.services.masters.product_mappings_service import (
     ProductMappingsService,
 )
@@ -35,7 +34,6 @@ from app.presentation.schemas.masters.masters_schema import (
     SupplierResponse,
     WarehouseResponse,
 )
-from app.presentation.schemas.masters.product_groups_schema import ProductOut
 
 
 router = APIRouter(prefix="/bulk-export", tags=["bulk-export"])
@@ -99,12 +97,6 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         customer_list = customer_service.get_all(limit=10000)
         data = [CustomerResponse.model_validate(c).model_dump() for c in customer_list]
         return data, "customers"
-
-    if target == "products":
-        product_service = ProductService(db)
-        product_list = product_service.get_all(limit=10000)
-        data = [ProductOut.model_validate(p).model_dump() for p in product_list]
-        return data, "products"
 
     if target == "suppliers":
         supplier_service = SupplierService(db)

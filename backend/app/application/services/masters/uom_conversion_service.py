@@ -157,7 +157,7 @@ class UomConversionService(
         Returns:
             BulkUpsertResponse with summary and errors
         """
-        from app.infrastructure.persistence.models.masters_models import ProductGroup
+        # ProductGroup removed
 
         summary = {"total": 0, "created": 0, "updated": 0, "failed": 0}
         errors = []
@@ -167,7 +167,7 @@ class UomConversionService(
 
         # 2. Resolve IDs
         products = (
-            self.db.query(ProductGroup.product_code, ProductGroup.id)  # type: ignore[attr-defined]
+            self.db.query(ProductGroup.product_code.id)  # type: ignore[attr-defined]
             .filter(ProductGroup.product_code.in_(product_codes))  # type: ignore[attr-defined]
             .all()
         )

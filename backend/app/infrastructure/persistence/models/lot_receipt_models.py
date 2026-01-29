@@ -108,7 +108,7 @@ class LotReceipt(Base):
 
     product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("product_groups.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
     warehouse_id: Mapped[int] = mapped_column(
@@ -261,12 +261,12 @@ class LotReceipt(Base):
     # Relationships
     lot_master: Mapped[LotMaster] = relationship("LotMaster", back_populates="receipts")
     product_group: Mapped[ProductGroup] = relationship(
-        "ProductGroup", back_populates="lot_receipts"
+        "SupplierItem", foreign_keys="[LotReceipt.product_group_id]"
     )
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lot_receipts")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_receipts")
     supplier_item: Mapped[SupplierItem | None] = relationship(
-        "SupplierItem", back_populates="lot_receipts"
+        "SupplierItem", foreign_keys="[LotReceipt.supplier_item_id]", back_populates="lot_receipts"
     )
     expected_lot: Mapped[ExpectedLot | None] = relationship(
         "ExpectedLot", back_populates="lot_receipt", uselist=False

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
 from app.core.time_utils import utcnow
-from app.infrastructure.persistence.models.masters_models import CustomerItem, ProductGroup
+from app.infrastructure.persistence.models.masters_models import CustomerItem
 from app.presentation.schemas.masters.customer_items_schema import (
     CustomerItemBulkRow,
     CustomerItemCreate,
@@ -95,13 +95,13 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 CustomerItem,
                 Customer.customer_code,
                 Customer.customer_name,
-                ProductGroup.product_name,
-                ProductGroup.maker_part_code,
+                SupplierItem.product_name,
+                SupplierItem.maker_part_code,
                 Supplier.supplier_code,
                 Supplier.supplier_name,
             )
             .join(Customer, CustomerItem.customer_id == Customer.id)
-            .join(ProductGroup, CustomerItem.product_group_id == ProductGroup.id)
+            .join(CustomerItem.product_group_id == SupplierItem.id)
             .outerjoin(Supplier, CustomerItem.supplier_id == Supplier.id)
         )
 
@@ -356,8 +356,8 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         customer_map = {code: id for code, id in customers}
 
         products = (
-            self.db.query(ProductGroup.maker_part_code, ProductGroup.id)
-            .filter(ProductGroup.maker_part_code.in_(product_codes))
+            self.db.query(SupplierItem.maker_part_code.id)
+            .filter(SupplierItem.maker_part_code.in_(product_codes))
             .all()
         )
         product_map = {code: id for code, id in products}

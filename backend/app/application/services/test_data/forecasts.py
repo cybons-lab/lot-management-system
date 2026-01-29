@@ -14,8 +14,8 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
     DeliveryPlace,
-    ProductGroup,
 )
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 from .inventory import get_any_lot_id
 
@@ -23,9 +23,9 @@ from .inventory import get_any_lot_id
 def generate_forecasts(
     db: Session,
     customers: list[Customer],
-    products: list[ProductGroup],
+    products: list[SupplierItem],
     delivery_places: list[DeliveryPlace],
-) -> tuple[list[ProductGroup], dict[int, int]]:
+) -> tuple[list[SupplierItem], dict[int, int]]:
     """Generate forecasts (daily, dekad, monthly) and return products with
     forecasts + totals.
 

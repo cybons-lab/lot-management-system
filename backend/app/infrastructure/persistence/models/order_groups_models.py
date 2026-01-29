@@ -25,7 +25,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:
-    from .masters_models import Customer, ProductGroup
+    from .masters_models import Customer
     from .orders_models import OrderLine
 
 
@@ -48,7 +48,7 @@ class OrderGroup(Base):
     )
     product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("product_groups.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
     order_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -77,7 +77,7 @@ class OrderGroup(Base):
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
-    product_group: Mapped[ProductGroup] = relationship("ProductGroup")
+    product_group: Mapped[ProductGroup] = relationship("SupplierItem")
     order_lines: Mapped[list[OrderLine]] = relationship(
         "OrderLine",
         back_populates="order_group",

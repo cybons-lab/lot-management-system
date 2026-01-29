@@ -16,7 +16,8 @@ from app.application.services.replenishment.recommendation import ReplenishmentR
 from app.infrastructure.persistence.models.inbound_models import InboundPlan
 from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
 from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
-from app.infrastructure.persistence.models.masters_models import ProductGroup
+
+# ProductGroup removed
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 
@@ -95,7 +96,7 @@ class ReplenishmentEngine:
             # 今回は MOQ=なし, LotSize=qty_scale * 10 などを仮定、またはマスタにあれば使う
             # Productにqty_scaleを追加したのでそれを使う
 
-            product = self.db.get(ProductGroup, ps.product_group_id)
+            product = self.db.get(ps.product_group_id)
             lot_size = None
             if product and product.qty_scale:
                 lot_size = Decimal(product.qty_scale)  # 仮: qty_scale をロットサイズとして扱う

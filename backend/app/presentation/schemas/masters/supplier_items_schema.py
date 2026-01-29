@@ -1,9 +1,11 @@
-"""SupplierItem schemas (仕入先品目マスタ).
+"""SupplierItem schemas (メーカー品番マスタ).
 
-旧: product_suppliers_schema.py
+2コード体系における「メーカー品番」の実体。
+仕入先から仕入れる品目の情報（品番、単位、リードタイムなど）を管理。
 """
 
 from datetime import date, datetime
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
@@ -17,6 +19,19 @@ class SupplierItemBase(BaseModel):
     maker_part_no: str = Field(..., max_length=100, description="メーカー品番（必須・SKUキー）")
     display_name: str = Field(..., max_length=200, description="製品名（必須）")
     base_unit: str = Field(..., max_length=20, description="基本単位（必須、例: EA, pcs, kg）")
+    # Unit conversion fields
+    internal_unit: str | None = Field(
+        None, max_length=20, description="社内単位/引当単位（例: CAN）"
+    )
+    external_unit: str | None = Field(
+        None, max_length=20, description="外部単位/表示単位（例: KG）"
+    )
+    qty_per_internal_unit: Decimal | None = Field(
+        None, description="内部単位あたりの数量（例: 1 CAN = 20.0 KG）"
+    )
+    # Product attributes
+    consumption_limit_days: int | None = Field(None, description="消費期限日数")
+    requires_lot_number: bool = Field(True, description="ロット番号管理が必要")
     lead_time_days: int | None = Field(None, description="リードタイム（日）")
     notes: str | None = Field(None, description="備考")
 
@@ -33,6 +48,11 @@ class SupplierItemUpdate(BaseModel):
     maker_part_no: str | None = Field(None, max_length=100, description="メーカー品番")
     display_name: str | None = Field(None, max_length=200, description="製品名")
     base_unit: str | None = Field(None, max_length=20, description="基本単位")
+    internal_unit: str | None = Field(None, max_length=20, description="社内単位/引当単位")
+    external_unit: str | None = Field(None, max_length=20, description="外部単位/表示単位")
+    qty_per_internal_unit: Decimal | None = Field(None, description="内部単位あたりの数量")
+    consumption_limit_days: int | None = Field(None, description="消費期限日数")
+    requires_lot_number: bool | None = Field(None, description="ロット番号管理が必要")
     lead_time_days: int | None = Field(None, description="リードタイム（日）")
     notes: str | None = Field(None, description="備考")
 
@@ -45,6 +65,11 @@ class SupplierItemResponse(ORMModel):
     maker_part_no: str
     display_name: str
     base_unit: str
+    internal_unit: str | None
+    external_unit: str | None
+    qty_per_internal_unit: Decimal | None
+    consumption_limit_days: int | None
+    requires_lot_number: bool
     lead_time_days: int | None
     notes: str | None
     # Enriched from relationships
@@ -63,8 +88,13 @@ class SupplierItemListItem(BaseModel):
     maker_part_no: str
     display_name: str
     base_unit: str
-    lead_time_days: int | None
-    notes: str | None
+    internal_unit: str | None = None
+    external_unit: str | None = None
+    qty_per_internal_unit: Decimal | None = None
+    consumption_limit_days: int | None = None
+    requires_lot_number: bool = True
+    lead_time_days: int | None = None
+    notes: str | None = None
     supplier_code: str | None = None
     supplier_name: str | None = None
     valid_to: date

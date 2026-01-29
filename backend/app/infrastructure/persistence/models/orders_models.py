@@ -171,7 +171,7 @@ from .base_model import Base
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .auth_models import User
     from .lot_reservations_model import LotReservation
-    from .masters_models import Customer, ProductGroup
+    from .masters_models import Customer
     from .order_groups_models import OrderGroup
 
 
@@ -270,7 +270,7 @@ class OrderLine(Base):
     )
     product_group_id: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey("product_groups.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=True,
         comment="製品グループID（OCR取込時はNULL可、変換後に設定）",
     )
@@ -383,7 +383,7 @@ class OrderLine(Base):
     order_group: Mapped[OrderGroup | None] = relationship(
         "OrderGroup", back_populates="order_lines"
     )
-    product_group: Mapped[ProductGroup] = relationship("ProductGroup", back_populates="order_lines")
+    product_group: Mapped[ProductGroup] = relationship("SupplierItem", back_populates="order_lines")
 
     # P3: Relationship to LotReservation for efficient loading (avoid N+1)
     lot_reservations: Mapped[list[LotReservation]] = relationship(

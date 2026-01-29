@@ -41,7 +41,7 @@ from app.infrastructure.persistence.models.base_model import Base
 
 if TYPE_CHECKING:
     from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
-    from app.infrastructure.persistence.models.masters_models import ProductGroup, Supplier
+    from app.infrastructure.persistence.models.masters_models import Supplier
 
 
 class LotMaster(Base):
@@ -63,7 +63,7 @@ class LotMaster(Base):
     )
     product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("product_groups.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
     supplier_id: Mapped[int | None] = mapped_column(
@@ -106,7 +106,7 @@ class LotMaster(Base):
     )
 
     # Relationships
-    product_group: Mapped[ProductGroup] = relationship("ProductGroup", back_populates="lot_masters")
+    product_group: Mapped[ProductGroup] = relationship("SupplierItem", back_populates="lot_masters")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_masters")
     receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",

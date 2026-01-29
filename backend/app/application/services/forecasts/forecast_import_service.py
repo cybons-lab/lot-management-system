@@ -10,8 +10,8 @@ from app.infrastructure.persistence.models.forecast_models import ForecastCurren
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
     DeliveryPlace,
-    ProductGroup,
 )
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.schemas.forecasts.forecast_schema import (
     ForecastBulkImportItem,
     ForecastBulkImportSummary,
@@ -57,7 +57,7 @@ class ForecastImportService:
             code_to_id["delivery_place"][dp.delivery_place_code] = dp.id
 
         # Load all products
-        products = self.db.query(ProductGroup).all()
+        products = self.db.query(SupplierItem).all()
         for p in products:
             code_to_id["product"][p.maker_part_code] = p.id
 

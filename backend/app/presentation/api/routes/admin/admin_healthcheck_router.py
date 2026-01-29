@@ -10,11 +10,11 @@ from app.infrastructure.persistence.models.inventory_models import LotReceipt, S
 from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
-    Product,
     Supplier,
     Warehouse,
 )
 from app.infrastructure.persistence.models.orders_models import Order, OrderLine
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.deps import get_db
 
 
@@ -32,7 +32,7 @@ def get_db_counts(db: Session = Depends(get_db)):
 
     # マスタテーブル
     counts["customers"] = db.scalar(select(func.count()).select_from(Customer)) or 0
-    counts["products"] = db.scalar(select(func.count()).select_from(Product)) or 0
+    counts["supplier_items"] = db.scalar(select(func.count()).select_from(SupplierItem)) or 0
     counts["warehouses"] = db.scalar(select(func.count()).select_from(Warehouse)) or 0
     counts["suppliers"] = db.scalar(select(func.count()).select_from(Supplier)) or 0
 

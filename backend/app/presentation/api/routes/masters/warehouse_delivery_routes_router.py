@@ -11,10 +11,10 @@ from app.core.database import get_db
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.masters_models import (
     DeliveryPlace,
-    ProductGroup,
     Warehouse,
     WarehouseDeliveryRoute,
 )
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.schemas.masters.warehouse_delivery_routes_schema import (
     TransportLeadTimeResponse,
     WarehouseDeliveryRouteCreate,
@@ -199,7 +199,7 @@ def create_route(
     # Validate product if specified
     if data.product_group_id is not None:
         product = db.execute(
-            select(ProductGroup).where(ProductGroup.id == data.product_group_id)
+            select(SupplierItem).where(SupplierItem.id == data.product_group_id)
         ).scalar_one_or_none()
 
         if not product:

@@ -125,7 +125,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .masters_models import Customer, DeliveryPlace, ProductGroup
+    from .masters_models import Customer, DeliveryPlace
 
 
 class ForecastCurrent(Base):
@@ -151,7 +151,7 @@ class ForecastCurrent(Base):
     )
     product_group_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("product_groups.id", ondelete="RESTRICT"),
+        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -194,7 +194,7 @@ class ForecastCurrent(Base):
         "DeliveryPlace", back_populates="forecast_current"
     )
     product_group: Mapped[ProductGroup] = relationship(
-        "ProductGroup", back_populates="forecast_current"
+        "SupplierItem", back_populates="forecast_current"
     )
 
 
