@@ -134,12 +134,19 @@ def client(db) -> Generator[TestClient]:
         yield TestUnitOfWork(db)
 
     def override_get_current_user():
-        """Override to return no user (or a default valid user if needed)."""
-        return None
+        """Override to return a default test user."""
+        from app.infrastructure.persistence.models import User
+
+        return User(id=1, username="test_user", is_active=True)
 
     application.dependency_overrides[api_deps.get_db] = override_get_db
     application.dependency_overrides[core_database.get_db] = override_get_db
     application.dependency_overrides[api_deps.get_uow] = override_get_uow
+
+    # Override auth dependencies
+    from app.application.services.auth.auth_service import AuthService
+
+    application.dependency_overrides[AuthService.get_current_user] = override_get_current_user
     with TestClient(application) as client:
         yield client
     application.dependency_overrides.clear()

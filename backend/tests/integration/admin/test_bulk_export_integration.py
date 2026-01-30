@@ -42,6 +42,7 @@ def test_bulk_export_download_all_targets_integration(
         base_unit="EA",
     )
     db.add(customer_item)
+    db.flush()
 
     # Customer Item Delivery Settings
     delivery_setting = CustomerItemDeliverySetting(
