@@ -78,6 +78,11 @@ function useLogWebSocket(isPaused: boolean) {
 
     ws.onopen = () => console.log("Connected to log stream");
     ws.onmessage = (event) => {
+      // Ignore ping/pong messages
+      if (event.data === "pong") {
+        return;
+      }
+
       try {
         const logEntry: LogEntry = JSON.parse(event.data);
         if (isPaused) {

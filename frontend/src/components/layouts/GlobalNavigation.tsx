@@ -129,6 +129,7 @@ const navItems: NavItem[] = [
     requireAdmin: true,
     feature: "logs",
     subItems: [
+      { title: "リアルタイムログ", href: "/logs" },
       { title: "操作ログ", href: ROUTES.ADMIN.OPERATION_LOGS },
       { title: "クライアントログ", href: ROUTES.ADMIN.CLIENT_LOGS },
     ],
