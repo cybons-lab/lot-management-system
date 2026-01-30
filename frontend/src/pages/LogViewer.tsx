@@ -70,6 +70,14 @@ function useLogWebSocket(isPaused: boolean) {
   const pausedLogsRef = useRef<LogEntry[]>([]);
 
   useEffect(() => {
+    // Fetch recent logs on mount
+    fetch("/api/system/logs/backend/recent?limit=200")
+      .then((res) => res.json())
+      .then((recentLogs: LogEntry[]) => {
+        setLogs(recentLogs);
+      })
+      .catch((err) => console.error("Failed to fetch recent logs:", err));
+
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/api/logs/stream`;
 

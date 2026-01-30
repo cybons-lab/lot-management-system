@@ -81,8 +81,11 @@ class ErrorLogger {
         const Logger = module?.Logger;
         if (!Logger) return;
 
+        // Extract file info from stack trace
+        const fileInfo = this.extractFileInfo(entry.stack);
+        const fileStr = fileInfo ? ` @ ${fileInfo}` : "";
         const contextStr = context ? ` | ${JSON.stringify(context)}` : "";
-        const message = `[${source}] ${entry.message}${contextStr}`;
+        const message = `[${source}] ${entry.message}${fileStr}${contextStr}`;
 
         switch (level) {
           case "error":
@@ -148,6 +151,30 @@ class ErrorLogger {
    */
   clearLogs(): void {
     this.logs = [];
+  }
+
+  /**
+   * スタックトレースからファイル情報を抽出
+   *
+   * @param stack - スタックトレース文字列
+   * @returns ファイル名:行番号 形式の文字列、または undefined
+   */
+  private extractFileInfo(stack?: string): string | undefined {
+    if (!stack) return undefined;
+
+    // スタックトレースから最初の有効な行を取得
+    // 例: "    at Component (http://localhost:5173/src/features/orders/OrderPage.tsx:45:12)"
+    const lines = stack.split("\n");
+    for (const line of lines) {
+      // URLからファイルパスを抽出
+      const match = line.match(/(?:https?:\/\/[^/]+)?\/src\/(.*?):(\d+):\d+/);
+      if (match) {
+        const [, filePath, lineNum] = match;
+        return `${filePath}:${lineNum}`;
+      }
+    }
+
+    return undefined;
   }
 }
 

@@ -1,5 +1,7 @@
 import json
+import re
 from datetime import UTC, datetime
+from pathlib import Path
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -112,3 +114,93 @@ def get_public_settings(
         visibility = {}
 
     return PublicSystemSettings(page_visibility=visibility, maintenance_mode=maintenance)
+
+
+class BackendLogEntry(BaseModel):
+    timestamp: str
+    level: str
+    logger: str
+    message: str
+    module: str
+    function: str
+    line: int
+
+
+@router.get("/logs/backend/recent", response_model=list[BackendLogEntry])
+def get_recent_backend_logs(
+    limit: int = 200,
+    _current_user: User = Depends(get_current_admin),
+):
+    """Get recent backend logs from log file (Admin only).
+
+    Args:
+        limit: Maximum number of logs to return (default: 200)
+        _current_user: Current admin user (dependency)
+
+    Returns:
+        List of recent backend log entries
+    """
+    log_file = Path("logs/app.log")
+
+    if not log_file.exists():
+        return []
+
+    try:
+        # Read last N lines from log file
+        with open(log_file, encoding="utf-8") as f:
+            # Get all lines
+            lines = f.readlines()
+
+        # Take last 'limit' lines
+        recent_lines = lines[-limit:] if len(lines) > limit else lines
+
+        # Parse log lines (simplified parsing)
+        logs: list[BackendLogEntry] = []
+        for line in recent_lines:
+            parsed = _parse_log_line(line)
+            if parsed:
+                logs.append(parsed)
+
+        return logs
+
+    except Exception:
+        # Return empty list on error
+        return []
+
+
+def _parse_log_line(line: str) -> BackendLogEntry | None:
+    """Parse a log line into BackendLogEntry.
+
+    Expected format: 2024-01-30 12:34:56,789 - logger.name - LEVEL - message
+
+    Args:
+        line: Log line to parse
+
+    Returns:
+        Parsed log entry or None if parsing fails
+    """
+    # Regex pattern for log format
+    pattern = r"(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2},\d{3})\s-\s([\w\.]+)\s-\s(\w+)\s-\s(.+)"
+    match = re.match(pattern, line.strip())
+
+    if not match:
+        return None
+
+    timestamp_str, logger_name, level, message = match.groups()
+
+    # Convert timestamp format
+    try:
+        dt = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S,%f")
+        iso_timestamp = dt.isoformat()
+    except ValueError:
+        iso_timestamp = timestamp_str
+
+    return BackendLogEntry(
+        timestamp=iso_timestamp,
+        level=level,
+        logger=logger_name,
+        message=message,
+        module="",  # Not available from log file
+        function="",  # Not available from log file
+        line=0,  # Not available from log file
+    )
