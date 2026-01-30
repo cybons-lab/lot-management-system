@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Request, status
 from starlette.concurrency import run_in_threadpool
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -6,6 +8,9 @@ from starlette.responses import JSONResponse
 from app.application.services.system_config_service import ConfigKeys, SystemConfigService
 from app.core.database import SessionLocal
 from app.core.security import decode_access_token
+
+
+logger = logging.getLogger(__name__)
 
 
 class MaintenanceMiddleware(BaseHTTPMiddleware):
@@ -49,10 +54,16 @@ class MaintenanceMiddleware(BaseHTTPMiddleware):
                         payload = decode_access_token(token)
                         if payload:
                             roles = payload.get("roles", [])
-                        if "admin" in roles:
-                            return await call_next(request)
+                            if "admin" in roles:
+                                return await call_next(request)
                     except Exception:
-                        pass  # Invalid token, treat as guest
+                        # Log unexpected errors during token verification
+                        # Note: decode_access_token already handles jwt.PyJWTError internally
+                        logger.warning(
+                            "Unexpected error during maintenance mode auth check",
+                            exc_info=True,
+                            extra={"path": request.url.path},
+                        )
 
                 # If we get here, maintenance mode is on and user is not admin
                 return JSONResponse(
