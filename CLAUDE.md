@@ -334,6 +334,322 @@ except Exception:
 - **Limit response bodies**: Max 500 chars for error responses
 - Example: `masked_url = url[:50] + "..." if len(url) > 50 else url`
 
+---
+
+### Error Handling Guidelines
+
+**CRITICAL: Implement comprehensive error handling from the start. Don't ship code without proper error handling.**
+
+#### Exception Hierarchy
+
+Always handle exceptions in order from most specific to most general:
+
+```python
+# GOOD: Specific exceptions first
+try:
+    response = await http_client.post(url, json=data)
+    response.raise_for_status()
+    return response.json()
+except httpx.HTTPStatusError as e:
+    logger.error(
+        "HTTP error from external API",
+        extra={
+            "url": masked_url,
+            "status_code": e.response.status_code,
+            "response_body": e.response.text[:500],
+        },
+    )
+    raise
+except httpx.TimeoutException as e:
+    logger.error("API request timeout", extra={"url": masked_url, "timeout": timeout})
+    raise
+except httpx.RequestError as e:
+    logger.error("API request failed", extra={"url": masked_url, "error": str(e)})
+    raise
+except Exception as e:
+    logger.exception("Unexpected error in API call", extra={"url": masked_url})
+    raise
+
+# BAD: Generic catch-all only
+try:
+    result = external_api.call()
+except Exception:
+    return None  # Lost error context!
+```
+
+#### Database Error Handling
+
+```python
+# GOOD: Handle specific DB errors with context
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
+try:
+    db.add(entity)
+    db.commit()
+except IntegrityError as exc:
+    db.rollback()
+    logger.error(
+        "Database integrity error",
+        extra={
+            "entity_type": entity.__class__.__name__,
+            "entity_id": getattr(entity, "id", None),
+            "error": str(exc.orig)[:500] if exc.orig else str(exc)[:500],
+        },
+    )
+    raise HTTPException(status_code=400, detail="Entity already exists or constraint violation")
+except SQLAlchemyError as exc:
+    db.rollback()
+    logger.error(
+        "Database operation failed",
+        extra={
+            "entity_type": entity.__class__.__name__,
+            "operation": "create",
+            "error": str(exc)[:500],
+        },
+    )
+    raise HTTPException(status_code=500, detail="Database operation failed")
+```
+
+#### API Response Error Handling
+
+```python
+# GOOD: Safe error responses (no exception leakage)
+@router.post("/items")
+def create_item(item: ItemCreate, db: Session = Depends(get_db)):
+    try:
+        result = service.create_item(db, item)
+        return result
+    except IntegrityError:
+        # Don't leak exception details to client
+        raise HTTPException(status_code=400, detail="Item already exists")
+    except Exception:
+        logger.exception("Unexpected error creating item")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# BAD: Exception leakage
+@router.post("/items")
+def create_item(item: ItemCreate):
+    result = service.create_item(item)  # Unhandled exception propagates to client!
+    return result
+```
+
+#### Frontend Error Handling
+
+```typescript
+// GOOD: Specific error handling with user feedback
+try {
+  await createItem(formData);
+  showSuccessToast("Item created successfully");
+  navigate("/items");
+} catch (error) {
+  if (error instanceof HTTPError) {
+    const status = error.response.status;
+    if (status === 400) {
+      showErrorToast("Invalid input. Please check your data.");
+    } else if (status === 409) {
+      showErrorToast("Item already exists.");
+    } else {
+      showErrorToast("Failed to create item. Please try again.");
+    }
+  } else {
+    console.error("Unexpected error:", error);
+    showErrorToast("An unexpected error occurred.");
+  }
+}
+
+// BAD: Silent failure
+try {
+  await createItem(formData);
+} catch (error) {
+  console.log(error); // User has no feedback!
+}
+```
+
+#### When to Raise vs Return
+
+```python
+# RAISE: When the operation cannot complete
+def get_user_by_id(db: Session, user_id: int) -> User:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+# RETURN None: When absence is valid
+def find_active_session(db: Session, user_id: int) -> Session | None:
+    session = db.query(Session).filter(
+        Session.user_id == user_id,
+        Session.active == True
+    ).first()
+    # None is a valid result (no active session)
+    return session
+```
+
+---
+
+### Guard Processing and Access Control
+
+**CRITICAL: Always implement proper access control for sensitive operations.**
+
+#### Route-Level Guards (Frontend)
+
+```tsx
+// GOOD: Use AccessGuard for admin-only pages
+import { AccessGuard } from "@/components/auth/AccessGuard";
+
+function SystemSettingsPage() {
+  return (
+    <AccessGuard roles={["admin"]}>
+      <SystemSettingsContent />
+    </AccessGuard>
+  );
+}
+
+// GOOD: Use routeKey for automatic permission lookup
+function LogViewerPage() {
+  return (
+    <AccessGuard routeKey="ADMIN.LOGS">
+      <LogViewerContent />
+    </AccessGuard>
+  );
+}
+
+// BAD: No guard on sensitive page
+function AdminDashboard() {
+  return <AdminContent />; // Anyone can access!
+}
+```
+
+#### Permission Configuration
+
+Always add new admin routes to `frontend/src/features/auth/permissions/config.ts`:
+
+```typescript
+// Add to routePermissions array
+{ routeKey: "ADMIN.NEW_FEATURE", path: "/admin/new-feature", allowedRoles: ["admin"] },
+```
+
+#### API-Level Guards (Backend)
+
+```python
+# GOOD: Use dependency injection for auth
+from app.presentation.api.routes.auth.auth_router import get_current_admin
+
+@router.get("/admin/sensitive-data")
+def get_sensitive_data(
+    db: Session = Depends(get_db),
+    _current_admin = Depends(get_current_admin)  # Enforces admin role
+):
+    return service.get_sensitive_data(db)
+
+# GOOD: Manual permission check when needed
+from app.presentation.api.routes.auth.auth_router import get_current_user
+
+@router.delete("/items/{item_id}")
+def delete_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    if "admin" not in current_user.roles:
+        raise HTTPException(status_code=403, detail="Admin role required")
+
+    service.delete_item(db, item_id)
+    return {"message": "Item deleted"}
+
+# BAD: No authentication check
+@router.delete("/items/{item_id}")
+def delete_item(item_id: int, db: Session = Depends(get_db)):
+    service.delete_item(db, item_id)  # Anyone can delete!
+    return {"message": "Item deleted"}
+```
+
+#### Input Validation Guards
+
+```python
+# GOOD: Validate input at API boundary
+from pydantic import BaseModel, Field, field_validator
+
+class ItemCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    quantity: int = Field(..., gt=0)
+
+    @field_validator("name")
+    def validate_name(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Name cannot be empty or whitespace")
+        return v.strip()
+
+@router.post("/items")
+def create_item(item: ItemCreate, db: Session = Depends(get_db)):
+    # Pydantic validation already occurred
+    return service.create_item(db, item)
+
+# BAD: No validation
+@router.post("/items")
+def create_item(data: dict, db: Session = Depends(get_db)):
+    # Raw dict, no validation!
+    return service.create_item(db, data)
+```
+
+#### Database Constraint Guards
+
+```python
+# GOOD: Check constraints before operation
+def assign_lot_to_order(db: Session, lot_id: int, order_id: int):
+    lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    if not lot:
+        raise HTTPException(status_code=404, detail="Lot not found")
+
+    if lot.available_quantity <= 0:
+        raise HTTPException(status_code=400, detail="Lot has no available quantity")
+
+    if lot.is_expired():
+        raise HTTPException(status_code=400, detail="Cannot assign expired lot")
+
+    # Proceed with assignment
+    allocation = Allocation(lot_id=lot_id, order_id=order_id, ...)
+    db.add(allocation)
+    db.commit()
+
+# BAD: Let database catch constraint violations
+def assign_lot_to_order(db: Session, lot_id: int, order_id: int):
+    allocation = Allocation(lot_id=lot_id, order_id=order_id, ...)
+    db.add(allocation)  # May fail with cryptic DB error!
+    db.commit()
+```
+
+#### Operation Permission Guards
+
+```typescript
+// GOOD: Check permissions before showing UI
+import { usePermission } from "@/features/auth/permissions";
+
+function ItemActions({ item }) {
+  const canDelete = usePermission({ operation: "inventory:delete" });
+  const canUpdate = usePermission({ operation: "inventory:update" });
+
+  return (
+    <div>
+      {canUpdate && <EditButton onClick={() => editItem(item)} />}
+      {canDelete && <DeleteButton onClick={() => deleteItem(item)} />}
+    </div>
+  );
+}
+
+// BAD: Show all actions to all users
+function ItemActions({ item }) {
+  return (
+    <div>
+      <EditButton onClick={() => editItem(item)} />
+      <DeleteButton onClick={() => deleteItem(item)} />  {/* Everyone sees this! */}
+    </div>
+  );
+}
+```
+
+---
+
 ### Key Concepts
 - **FEFO:** First Expiry First Out allocation
 - **stock_history:** Immutable event log (never update)
