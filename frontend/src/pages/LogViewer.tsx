@@ -108,7 +108,11 @@ function useLogWebSocket(isPaused: boolean) {
     wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log("Connected to log stream");
+      // Avoid log noise if already closed or closing
+      if (ws.readyState === WebSocket.OPEN) {
+        console.log("Connected to log stream");
+      }
+
       // Start ping/pong to keep connection alive
       const pingInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -144,9 +148,19 @@ function useLogWebSocket(isPaused: boolean) {
       }
     };
 
-    ws.onerror = (error) => console.error("WebSocket error:", error);
+    ws.onerror = (error) => {
+      // Don't log error if we are closing (common in Strict Mode)
+      if (ws.readyState !== WebSocket.CLOSING && ws.readyState !== WebSocket.CLOSED) {
+        console.error("WebSocket error:", error);
+      }
+    };
+
     ws.onclose = () => {
-      console.log("Disconnected from log stream");
+      // Only log if it was intentional or a real drop, not Strict Mode cleanup
+      if (wsRef.current === ws) {
+        console.log("Disconnected from log stream");
+      }
+
       // Clean up ping interval if it exists
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((ws as any)._pingInterval) {
@@ -162,7 +176,14 @@ function useLogWebSocket(isPaused: boolean) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearInterval((ws as any)._pingInterval);
       }
-      ws.close();
+
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.close();
+      }
+
+      if (wsRef.current === ws) {
+        wsRef.current = null;
+      }
     };
   }, []); // Remove isPaused dependency to prevent reconnections
 
