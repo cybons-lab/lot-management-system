@@ -43,6 +43,7 @@ from app.presentation.api.routes.inventory import (
     lots_router,
     withdrawals_router,
 )
+from app.presentation.api.routes.logs import router as logs_router
 from app.presentation.api.routes.masters import (
     customer_item_delivery_settings_router,
     customer_items_router,
@@ -179,6 +180,9 @@ def register_all_routers(app: FastAPI) -> None:
 
     # Debug endpoints (flag enforced inside router)
     app.include_router(db_browser_router, prefix=prefix)
+
+    # Log streaming endpoint
+    app.include_router(logs_router, prefix=prefix)
 
 
 __all__ = [

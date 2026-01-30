@@ -79,6 +79,7 @@ import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehouseDeliveryRoutesListPage } from "@/features/warehouse-delivery-routes";
 import { WarehousesListPage } from "@/features/warehouses";
 import { WithdrawalCreatePage, WithdrawalsListPage } from "@/features/withdrawals/pages";
+import { LogViewer } from "@/pages/LogViewer";
 
 // --- Route Groups ---
 
@@ -365,6 +366,16 @@ export function MainRoutes() {
           element={
             <AdminGuard>
               <SapIntegrationPage />
+            </AdminGuard>
+          }
+        />
+
+        {/* Log Viewer */}
+        <Route
+          path="/logs"
+          element={
+            <AdminGuard>
+              <LogViewer />
             </AdminGuard>
           }
         />

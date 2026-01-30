@@ -241,6 +241,7 @@ git checkout -b feature/xxx
 6. Document domain logic with docstrings
 7. Commit frequently with atomic changes (avoid large bulk commits). Commits do not require user confirmation.
 8. Create feature branches for new work (e.g., `feature/order-filters`).
+9. **Add comprehensive logging from the start** (see Logging Guidelines below)
 
 ### DON'T
 1. Bypass service layer (routes → repositories directly)
@@ -249,6 +250,89 @@ git checkout -b feature/xxx
 4. Mix business logic in components
 5. Use `any` types in TypeScript
 6. Hardcode configuration values
+7. Write code without logging critical operations
+
+### Logging Guidelines
+
+**CRITICAL: Always add logging when writing new code. Don't wait for debugging to add logs.**
+
+#### When to Add Logging
+
+1. **External API Calls** (P0 - Always log)
+   - Request parameters (mask sensitive data)
+   - Response status and size
+   - Timeout and error details
+   - Example: RPA flows, SAP integration, SmartRead API
+
+2. **Database Operations** (P0 - Always log errors)
+   - IntegrityError with entity details
+   - SQLAlchemyError with operation context
+   - Include: entity ID, operation type, error message
+
+3. **Business Logic Decision Points** (P1 - Log decisions)
+   - FEFO/FIFO candidate selection (filter params, result counts)
+   - Allocation logic (why candidates were selected/rejected)
+   - Order state transitions
+   - Include: "why" not just "what"
+
+4. **Background Tasks** (P1 - Log progress)
+   - Task start/completion
+   - File processing progress
+   - State transitions
+   - Success/failure with context
+
+5. **Return None Cases** (P2 - Warn when unexpected)
+   - Log why None is returned
+   - Include context for debugging
+
+#### Logging Patterns
+
+```python
+# GOOD: Structured logging with context
+logger.info(
+    "FEFO candidates found",
+    extra={
+        "product_id": product_id,
+        "candidate_count": len(candidates),
+        "policy": "FEFO",
+    },
+)
+
+# GOOD: Error logging with entity context
+logger.error(
+    "Lot creation failed",
+    extra={
+        "lot_number": lot_number,
+        "product_code": product_code,
+        "error": str(exc)[:500],
+    },
+    exc_info=True,
+)
+
+# BAD: F-string logging (no structured data)
+logger.error(f"Failed to create lot {lot_number}")
+
+# BAD: No logging
+try:
+    result = external_api.call()
+except Exception:
+    return None  # Silent failure!
+```
+
+#### Log Levels
+
+- `DEBUG`: Detailed diagnostic info (filter params, intermediate values)
+- `INFO`: Normal operations (API calls, task completion, business events)
+- `WARNING`: Unexpected but handled (no candidates found, fallback used)
+- `ERROR`: Errors requiring attention (API failures, DB errors)
+- `EXCEPTION`: Like ERROR but with traceback (use `logger.exception()`)
+
+#### Security Considerations
+
+- **Mask sensitive data**: URLs, credentials, tokens, API keys
+- **Redact PII**: Customer data, email addresses (in production)
+- **Limit response bodies**: Max 500 chars for error responses
+- Example: `masked_url = url[:50] + "..." if len(url) > 50 else url`
 
 ### Key Concepts
 - **FEFO:** First Expiry First Out allocation
@@ -272,6 +356,10 @@ Detailed standards are maintained in `docs/standards/`:
 
 - **Swagger UI:** http://localhost:8000/api/docs
 - **ReDoc:** http://localhost:8000/api/redoc
+- **Log Viewer:** http://localhost:3000/logs (Admin only)
+  - リアルタイムログストリーミング
+  - レベル/テキストフィルタリング
+  - 一時停止/再開、エクスポート機能
 
 ---
 

@@ -129,6 +129,7 @@ from app.application.services.smartread.auto_sync_runner import SmartReadAutoSyn
 from app.core import errors
 from app.core.config import settings
 from app.core.database import init_db
+from app.core.log_broadcaster import setup_log_broadcasting
 from app.core.logging import setup_logging
 from app.domain.errors import DomainError
 from app.middleware.logging import RequestLoggingMiddleware
@@ -139,6 +140,7 @@ from app.presentation.api.routes import register_all_routers
 
 logger = logging.getLogger(__name__)
 setup_logging()
+setup_log_broadcasting()  # Enable WebSocket log broadcasting
 
 
 def _mask_database_url(db_url: str) -> str:
