@@ -15,7 +15,6 @@ from app.domain.errors import InsufficientStockError
 from app.infrastructure.persistence.models import (
     LotMaster,
     LotReceipt,
-    Supplier,
     SupplierItem,
     Warehouse,
 )
@@ -23,18 +22,19 @@ from app.infrastructure.persistence.models import (
 
 @pytest.fixture()
 def fifo_inventory(db_session, supplier):
-    supplier = Supplier(supplier_code="SUP1", supplier_name="Supplier One")
     warehouse = Warehouse(
         warehouse_code="W01", warehouse_name="Main Warehouse", warehouse_type="internal"
     )
+    db_session.add(warehouse)
+    db_session.flush()
+
     product = SupplierItem(
         supplier_id=supplier.id,
         maker_part_no="P001",
         display_name="Sample Product",
         base_unit="EA",
     )
-
-    db_session.add_all([supplier, warehouse, product])
+    db_session.add(product)
     db_session.flush()
 
     base_date = date(2024, 1, 1)

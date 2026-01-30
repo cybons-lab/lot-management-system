@@ -26,7 +26,6 @@ from app.infrastructure.persistence.models import (
     OrderLine,
     ReservationSourceType,
     ReservationStatus,
-    Supplier,
     SupplierItem,
     Warehouse,
 )
@@ -87,34 +86,14 @@ def master_data(db: Session, supplier):
     db.add(lot_master)
     db.commit()
 
-    # Create Supplier for SupplierItem
-    supplier = Supplier(
-        supplier_code="SUP-001",
-        supplier_name="Test Supplier",
-    )
-    db.add(supplier)
-    db.commit()
-    db.refresh(supplier)
-
-    supplier_item = SupplierItem(
-        supplier_id=supplier.id,
-        product_group_id=product.id,
-        maker_part_no=product.maker_part_no,
-        is_primary=True,
-        lead_time_days=1,
-    )
-    db.add(supplier_item)
-    db.commit()
-    db.refresh(supplier_item)
-
-    # Create CustomerItem (Primary Mapping)
+    # Create CustomerItem (Primary Mapping) - using the product (SupplierItem) we already created
     from app.infrastructure.persistence.models.masters_models import CustomerItem
 
     customer_item = CustomerItem(
         customer_id=customer.id,
         customer_part_no="CUST-PART-001",
         product_group_id=product.id,
-        supplier_item_id=supplier_item.id,
+        supplier_id=supplier.id,
         is_primary=True,
         base_unit="EA",
     )
@@ -132,7 +111,6 @@ def master_data(db: Session, supplier):
         expiry_date=date.today() + timedelta(days=90),
         origin_type="order",
         supplier_id=supplier.id,
-        supplier_item_id=supplier_item.id,
     )
     db.add(lot)
     db.commit()
@@ -145,7 +123,6 @@ def master_data(db: Session, supplier):
         "delivery_place": delivery_place,
         "lot": lot,
         "supplier": supplier,
-        "supplier_item": supplier_item,
         "customer_item": customer_item,
     }
 

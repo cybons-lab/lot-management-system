@@ -95,13 +95,16 @@ def _setup_delivery_place(db: Session):
 def _setup_customer_item(db: Session):
     customer = Customer(customer_code="PERM-CUST-CI", customer_name="Customer for Item")
     supplier = Supplier(supplier_code="PERM-SUP-CI", supplier_name="Supplier for Item")
+    db.add_all([customer, supplier])
+    db.flush()
+
     product = SupplierItem(
         supplier_id=supplier.id,
         maker_part_no="PERM-PROD-CI",
         display_name="Product for Item",
         base_unit="EA",
     )
-    db.add_all([customer, supplier, product])
+    db.add(product)
     db.flush()
     item = CustomerItem(
         customer_id=customer.id,
@@ -149,13 +152,16 @@ def _setup_uom_conversion(db: Session, supplier):
 
 def _setup_supplier_product(db: Session):
     supplier = Supplier(supplier_code="PERM-SUP-SP", supplier_name="Supplier for SP")
+    db.add(supplier)
+    db.flush()
+
     product = SupplierItem(
         supplier_id=supplier.id,
         maker_part_no="PERM-PROD-SP",
         display_name="Product for SP",
         base_unit="EA",
     )
-    db.add_all([supplier, product])
+    db.add(product)
     db.flush()
     sp = ProductSupplier(
         product_group_id=product.id,

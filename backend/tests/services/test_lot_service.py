@@ -36,14 +36,17 @@ def setup_lot_test_data(db_session: Session, supplier):
     wh1 = Warehouse(warehouse_code="W1", warehouse_name="Main", warehouse_type="internal")
     wh2 = Warehouse(warehouse_code="W2", warehouse_name="Sub", warehouse_type="internal")
     sup = Supplier(supplier_code="S1", supplier_name="Supplier")
+    db_session.add_all([wh1, wh2, sup])
+    db_session.flush()
+
     prod = SupplierItem(
-        supplier_id=supplier.id,
+        supplier_id=sup.id,
         maker_part_no="P1",
         display_name="Product 1",
         internal_unit="EA",
         base_unit="EA",
     )
-    db_session.add_all([wh1, wh2, sup, prod])
+    db_session.add(prod)
     db_session.flush()
 
     return {
@@ -153,6 +156,9 @@ class TestCreateLot:
             warehouse_code="WH-TEST", warehouse_name="Test Warehouse", warehouse_type="internal"
         )
         supplier = Supplier(supplier_code="SUP-TEST", supplier_name="Test Supplier")
+        db_session.add_all([warehouse, supplier])
+        db_session.flush()
+
         product = SupplierItem(
             supplier_id=supplier.id,
             maker_part_no="PRD-TEST",
@@ -160,7 +166,7 @@ class TestCreateLot:
             internal_unit="EA",
             base_unit="EA",
         )
-        db_session.add_all([warehouse, supplier, product])
+        db_session.add(product)
         db_session.flush()
 
         return {
