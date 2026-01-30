@@ -1,5 +1,5 @@
 /**
- * フローマップ型定義
+ * 業務フローガイド型定義
  * 一般事務員向けの業務フロー可視化用
  */
 
@@ -7,7 +7,7 @@
 export type FlowNodeType = "input" | "confirm" | "register" | "print" | "complete";
 
 /** フローの種別 */
-export type FlowType = "order" | "allocation" | "shipment";
+export type FlowType = "order" | "allocation";
 
 /** ノード定義 */
 export interface FlowNode {

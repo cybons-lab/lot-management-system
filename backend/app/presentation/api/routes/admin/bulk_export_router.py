@@ -27,6 +27,8 @@ from app.application.services.orders.order_service import OrderService
 from app.core.database import get_db
 from app.infrastructure.persistence.models import DeliveryPlace
 from app.infrastructure.persistence.models.auth_models import User
+from app.infrastructure.persistence.models.masters_models import Supplier
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.api.routes.auth.auth_router import get_current_user
 from app.presentation.schemas.masters.masters_schema import (
     CustomerResponse,
@@ -34,6 +36,7 @@ from app.presentation.schemas.masters.masters_schema import (
     SupplierResponse,
     WarehouseResponse,
 )
+from app.presentation.schemas.masters.supplier_items_schema import SupplierItemResponse
 
 
 router = APIRouter(prefix="/bulk-export", tags=["bulk-export"])
@@ -51,7 +54,7 @@ class ExportTarget(BaseModel):
 EXPORT_TARGETS: list[dict[str, str]] = [
     # マスターデータ
     {"key": "customers", "name": "顧客マスタ", "description": "顧客一覧データ"},
-    {"key": "products", "name": "製品マスタ", "description": "製品一覧データ"},
+    {"key": "products", "name": "製品マスタ", "description": "製品（仕入先品目）一覧データ"},
     {"key": "suppliers", "name": "仕入先マスタ", "description": "仕入先一覧データ"},
     {"key": "warehouses", "name": "倉庫マスタ", "description": "倉庫一覧データ"},
     {"key": "delivery_places", "name": "納入先マスタ", "description": "納入先一覧データ"},
@@ -61,11 +64,6 @@ EXPORT_TARGETS: list[dict[str, str]] = [
         "description": "得意先・仕入先・製品の紐付け",
     },
     {"key": "customer_items", "name": "顧客別品番設定", "description": "顧客固有の品番マッピング"},
-    {
-        "key": "supplier_products",
-        "name": "仕入先商品関連",
-        "description": "仕入先ごとのリードタイム設定",
-    },
     {"key": "uom_conversions", "name": "単位換算マスタ", "description": "製品ごとの単位換算定義"},
     {
         "key": "warehouse_delivery_routes",
@@ -97,6 +95,28 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         customer_list = customer_service.get_all(limit=10000)
         data = [CustomerResponse.model_validate(c).model_dump() for c in customer_list]
         return data, "customers"
+
+    if target == "products":
+        from sqlalchemy.orm import joinedload
+
+        # Fetch all supplier items with supplier info join
+        results = (
+            db.query(SupplierItem)
+            .options(joinedload(SupplierItem.supplier))
+            .join(Supplier, SupplierItem.supplier_id == Supplier.id)
+            .all()
+        )
+        data = []
+        for si in results:
+            # SupplierItemResponse handles supplier_code/supplier_name if present in the object
+            # Our query might need adjustment if they are not joined properties
+            item_dict = SupplierItemResponse.model_validate(si).model_dump()
+            # Ensure supplier info is included even if relation not eager-loaded
+            if si.supplier:
+                item_dict["supplier_code"] = si.supplier.supplier_code
+                item_dict["supplier_name"] = si.supplier.supplier_name
+            data.append(item_dict)
+        return data, "products"
 
     if target == "suppliers":
         supplier_service = SupplierService(db)
@@ -141,7 +161,6 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         from app.infrastructure.persistence.models.masters_models import (
             ProductUomConversion,
         )
-        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         uom_query = select(
             ProductUomConversion.conversion_id,
@@ -169,38 +188,6 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         ]
         return data, "uom_conversions"
 
-    if target == "supplier_products":
-        from sqlalchemy import select
-
-        from app.infrastructure.persistence.models.masters_models import Supplier
-        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
-
-        sp_query = select(
-            SupplierItem.id,
-            SupplierItem.supplier_id,
-            SupplierItem.maker_part_no,
-            SupplierItem.display_name,
-            SupplierItem.base_unit,
-            SupplierItem.lead_time_days,
-            Supplier.supplier_code,
-            Supplier.supplier_name,
-        ).join(Supplier, SupplierItem.supplier_id == Supplier.id)
-        sp_results = db.execute(sp_query).all()
-        data = [
-            {
-                "id": r.id,
-                "supplier_id": r.supplier_id,
-                "maker_part_no": r.maker_part_no,
-                "display_name": r.display_name,
-                "base_unit": r.base_unit,
-                "lead_time_days": r.lead_time_days,
-                "supplier_code": r.supplier_code,
-                "supplier_name": r.supplier_name,
-            }
-            for r in sp_results
-        ]
-        return data, "supplier_products"
-
     if target == "warehouse_delivery_routes":
         from sqlalchemy import select
 
@@ -216,8 +203,6 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
             product_name = None
             maker_part_no = None
             if route.product_group_id:
-                from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
-
                 supplier_item = (
                     db.query(SupplierItem).filter(SupplierItem.id == route.product_group_id).first()
                 )

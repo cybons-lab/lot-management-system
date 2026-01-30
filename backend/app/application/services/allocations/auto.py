@@ -118,6 +118,7 @@ v3.0: Delegates to AllocationCandidateService (SSOT).
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
@@ -138,6 +139,8 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
 
 if TYPE_CHECKING:
     from app.domain.lot import LotCandidate
+
+logger = logging.getLogger(__name__)
 
 
 def _get_fefo_candidates_for_line(
@@ -184,8 +187,11 @@ def auto_reserve_line(
     Raises:
         ValueError: 受注明細が見つからない場合
     """
+    logger.info("Starting auto reserve for order line", extra={"order_line_id": order_line_id})
+
     line = db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
     if not line:
+        logger.warning("OrderLine not found", extra={"order_line_id": order_line_id})
         raise ValueError(f"OrderLine {order_line_id} not found")
 
     existing_reservations = (
@@ -201,12 +207,36 @@ def auto_reserve_line(
 
     required_qty = Decimal(str(line.order_quantity)) - already_reserved
     if required_qty <= 0:
+        logger.debug(
+            "Order line already fully reserved",
+            extra={"order_line_id": order_line_id, "already_reserved": float(already_reserved)},
+        )
         return []
+
+    logger.debug(
+        "Calculating auto reserve requirements",
+        extra={
+            "order_line_id": order_line_id,
+            "order_quantity": float(line.order_quantity or 0),
+            "already_reserved": float(already_reserved),
+            "required_qty": float(required_qty),
+        },
+    )
 
     # Use SSOT for candidate fetching with warehouse filter
     warehouse_id = getattr(line, "warehouse_id", None)
     candidates = _get_fefo_candidates_for_line(
         db, line.product_group_id or 0, warehouse_id=warehouse_id, lock=True
+    )
+
+    logger.debug(
+        "FEFO candidates retrieved",
+        extra={
+            "order_line_id": order_line_id,
+            "candidate_count": len(candidates),
+            "product_group_id": line.product_group_id,
+            "warehouse_id": warehouse_id,
+        },
     )
 
     created_reservations: list[LotReservation] = []
@@ -232,10 +262,29 @@ def auto_reserve_line(
         created_reservations.append(reservation)
         remaining_qty -= reserve_qty
 
+        logger.info(
+            "Lot reserved",
+            extra={
+                "order_line_id": order_line_id,
+                "lot_id": candidate.lot_id,
+                "reserved_qty": float(reserve_qty),
+                "remaining_qty": float(remaining_qty),
+            },
+        )
+
     if created_reservations:
         db.commit()
         for res in created_reservations:
             db.refresh(res)
+
+    logger.info(
+        "Auto reserve completed",
+        extra={
+            "order_line_id": order_line_id,
+            "reservations_created": len(created_reservations),
+            "unfulfilled_qty": float(remaining_qty) if remaining_qty > 0 else 0,
+        },
+    )
 
     return created_reservations
 
@@ -341,6 +390,17 @@ def auto_reserve_bulk(
 
     order_lines = query.order_by(OrderLine.delivery_date.asc()).all()
 
+    logger.info(
+        "Starting bulk auto reserve",
+        extra={
+            "order_line_count": len(order_lines),
+            "product_group_id": product_group_id,
+            "customer_id": customer_id,
+            "delivery_place_id": delivery_place_id,
+            "order_type": order_type,
+        },
+    )
+
     result: dict[str, Any] = {
         "processed_lines": 0,
         "reserved_lines": 0,
@@ -374,9 +434,25 @@ def auto_reserve_bulk(
                 result["reserved_lines"] += 1
                 result["total_reservations"] += len(reservations)
         except Exception as e:
+            logger.error(
+                "Auto reserve failed for line",
+                extra={"order_line_id": line.id, "error": str(e)},
+                exc_info=True,
+            )
             result["failed_lines"].append({"line_id": line.id, "error": str(e)})
 
     if result["total_reservations"] > 0:
         db.commit()
+
+    logger.info(
+        "Bulk auto reserve completed",
+        extra={
+            "processed_lines": result["processed_lines"],
+            "reserved_lines": result["reserved_lines"],
+            "total_reservations": result["total_reservations"],
+            "skipped_lines": result["skipped_lines"],
+            "failed_count": len(result["failed_lines"]),
+        },
+    )
 
     return result

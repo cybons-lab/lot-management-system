@@ -24,71 +24,19 @@ from app.infrastructure.persistence.models import (
     LotReservation,
     Order,
     OrderLine,
-    Product,
     ReservationSourceType,
     ReservationStatus,
-    Supplier,
+    SupplierItem,
     Warehouse,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
-from app.main import application
-from app.presentation.api.deps import get_db
 
 
 # ---- Test DB session using conftest.py fixtures
-def _truncate_all(db: Session):
-    """Clean up test data in dependency order."""
-    for table in [
-        LotReservation,
-        OrderLine,
-        Order,
-        LotReceipt,
-        LotMaster,
-        DeliveryPlace,
-        Product,
-        Customer,
-        Warehouse,
-    ]:
-        try:
-            db.query(table).delete()
-        except Exception:
-            db.rollback()
-    db.commit()
 
 
 @pytest.fixture
-def test_db(db: Session):
-    """Provide clean database session for each test (uses conftest.py fixture)."""
-    # Clean before test
-    _truncate_all(db)
-
-    from app.application.services.auth.auth_service import AuthService
-    from app.core import database as core_database
-    from app.infrastructure.persistence.models import User
-
-    # Override FastAPI dependency
-    def override_get_db():
-        yield db
-
-    def override_get_current_user():
-        return User(id=1, username="test_user", is_active=True)
-
-    application.dependency_overrides[get_db] = override_get_db
-    application.dependency_overrides[core_database.get_db] = override_get_db
-    application.dependency_overrides[AuthService.get_current_user] = override_get_current_user
-
-    yield db
-    db.rollback()
-
-    # Clean after test
-    _truncate_all(db)
-
-    # Remove override
-    application.dependency_overrides.clear()
-
-
-@pytest.fixture
-def master_data(test_db: Session):
+def master_data(db: Session, supplier):
     """Create master data for allocations testing."""
     # Warehouse (explicitly set ID for SQLite compatibility)
     warehouse = Warehouse(
@@ -96,28 +44,29 @@ def master_data(test_db: Session):
         warehouse_name="Main Warehouse",
         warehouse_type="internal",
     )
-    test_db.add(warehouse)
-    test_db.commit()
-    test_db.refresh(warehouse)
+    db.add(warehouse)
+    db.commit()
+    db.refresh(warehouse)
 
     # Customer (explicitly set ID)
     customer = Customer(
         customer_code="CUST-001",
         customer_name="Test Customer",
     )
-    test_db.add(customer)
-    test_db.commit()
-    test_db.refresh(customer)
+    db.add(customer)
+    db.commit()
+    db.refresh(customer)
 
     # Product (explicitly set ID)
-    product = Product(
-        maker_part_code="PROD-001",
-        product_name="Test Product",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PROD-001",
+        display_name="Test Product",
         base_unit="EA",
     )
-    test_db.add(product)
-    test_db.commit()
-    test_db.refresh(product)
+    db.add(product)
+    db.commit()
+    db.refresh(product)
 
     # Delivery Place
     delivery_place = DeliveryPlace(
@@ -125,59 +74,37 @@ def master_data(test_db: Session):
         delivery_place_code="DEL-001",
         delivery_place_name="Test Delivery Place",
     )
-    test_db.add(delivery_place)
-    test_db.commit()
-    test_db.refresh(delivery_place)
+    db.add(delivery_place)
+    db.commit()
+    db.refresh(delivery_place)
 
     # Create LotMaster
     lot_master = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         lot_number="LOT-001",
     )
-    test_db.add(lot_master)
-    test_db.commit()
+    db.add(lot_master)
+    db.commit()
 
-    # Create Supplier for SupplierItem
-    supplier = Supplier(
-        supplier_code="SUP-001",
-        supplier_name="Test Supplier",
-    )
-    test_db.add(supplier)
-    test_db.commit()
-    test_db.refresh(supplier)
-
-    # Create SupplierItem
-    from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
-
-    supplier_item = SupplierItem(
-        supplier_id=supplier.id,
-        product_id=product.id,
-        maker_part_no=product.maker_part_code,
-        is_primary=True,
-        lead_time_days=1,
-    )
-    test_db.add(supplier_item)
-    test_db.commit()
-    test_db.refresh(supplier_item)
-
-    # Create CustomerItem (Primary Mapping)
+    # Create CustomerItem (Primary Mapping) - using the product (SupplierItem) we already created
     from app.infrastructure.persistence.models.masters_models import CustomerItem
 
     customer_item = CustomerItem(
         customer_id=customer.id,
         customer_part_no="CUST-PART-001",
-        product_id=product.id,
-        supplier_item_id=supplier_item.id,
+        product_group_id=product.id,
+        supplier_id=supplier.id,
         is_primary=True,
         base_unit="EA",
     )
-    test_db.add(customer_item)
-    test_db.commit()
+    db.add(customer_item)
+    db.commit()
 
     # Create lot with stock
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_id=product.id,
+        product_group_id=product.id,
+        supplier_item_id=product.id,  # Phase 2: supplier_item_id for mapping validation
         warehouse_id=warehouse.id,
         received_quantity=Decimal("100.000"),
         unit="EA",
@@ -185,11 +112,10 @@ def master_data(test_db: Session):
         expiry_date=date.today() + timedelta(days=90),
         origin_type="order",
         supplier_id=supplier.id,
-        supplier_item_id=supplier_item.id,
     )
-    test_db.add(lot)
-    test_db.commit()
-    test_db.refresh(lot)
+    db.add(lot)
+    db.commit()
+    db.refresh(lot)
 
     return {
         "warehouse": warehouse,
@@ -198,7 +124,6 @@ def master_data(test_db: Session):
         "delivery_place": delivery_place,
         "lot": lot,
         "supplier": supplier,
-        "supplier_item": supplier_item,
         "customer_item": customer_item,
     }
 
@@ -208,9 +133,8 @@ def master_data(test_db: Session):
 # ============================================================
 
 
-def test_drag_assign_success(test_db: Session, master_data: dict):
+def test_drag_assign_success(db: Session, client: TestClient, master_data: dict):
     """Test manual allocation (drag-assign) success."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -219,20 +143,20 @@ def test_drag_assign_success(test_db: Session, master_data: dict):
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Test: Manual allocation
     payload = {
@@ -253,9 +177,8 @@ def test_drag_assign_success(test_db: Session, master_data: dict):
     )  # Soft auth doesn't reduce available until confirmed
 
 
-def test_drag_assign_with_deprecated_field(test_db: Session, master_data: dict):
+def test_drag_assign_with_deprecated_field(db: Session, client: TestClient, master_data: dict):
     """Test manual allocation with deprecated allocate_qty field."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -264,20 +187,20 @@ def test_drag_assign_with_deprecated_field(test_db: Session, master_data: dict):
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("5.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Test: Use deprecated field name
     payload = {
@@ -290,9 +213,10 @@ def test_drag_assign_with_deprecated_field(test_db: Session, master_data: dict):
     assert response.status_code == 422
 
 
-def test_drag_assign_missing_quantity_returns_400(test_db: Session, master_data: dict):
+def test_drag_assign_missing_quantity_returns_400(
+    db: Session, client: TestClient, master_data: dict
+):
     """Test manual allocation without quantity returns 400."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -301,20 +225,20 @@ def test_drag_assign_missing_quantity_returns_400(test_db: Session, master_data:
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Test: Missing quantity
     payload = {
@@ -327,9 +251,10 @@ def test_drag_assign_missing_quantity_returns_400(test_db: Session, master_data:
     assert response.status_code == 422
 
 
-def test_drag_assign_insufficient_stock_returns_400(test_db: Session, master_data: dict):
+def test_drag_assign_insufficient_stock_returns_400(
+    db: Session, client: TestClient, master_data: dict
+):
     """Test manual allocation with insufficient stock returns 400."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -338,20 +263,20 @@ def test_drag_assign_insufficient_stock_returns_400(test_db: Session, master_dat
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("200.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Test: Allocate more than available (lot has 100)
     payload = {
@@ -369,10 +294,8 @@ def test_drag_assign_insufficient_stock_returns_400(test_db: Session, master_dat
 # ============================================================
 
 
-@pytest.mark.xfail(reason="Persistent SQLAlchemy session error: Instance is not persistent")
-def test_cancel_allocation_success(test_db: Session, master_data: dict):
+def test_cancel_allocation_success(db: Session, client: TestClient, master_data: dict):
     """Test canceling an allocation."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -381,20 +304,20 @@ def test_cancel_allocation_success(test_db: Session, master_data: dict):
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Create allocation (using LotReservation check)
     lot = master_data["lot"]
@@ -405,21 +328,20 @@ def test_cancel_allocation_success(test_db: Session, master_data: dict):
         reserved_qty=Decimal("10.000"),
         status=ReservationStatus.ACTIVE,
     )
-    test_db.add(reservation)
-    test_db.commit()
+    db.add(reservation)
+    db.commit()
 
     # Test: Cancel allocation
     response = client.delete(f"/api/allocations/{reservation.id}")
     assert response.status_code == 204
 
     # Verify allocation is cancelled (soft delete or status change)
-    test_db.refresh(reservation)
+    db.refresh(reservation)
     # Depending on implementation: check deleted_at or status
 
 
-def test_cancel_allocation_not_found(test_db: Session):
+def test_cancel_allocation_not_found(db: Session, client: TestClient):
     """Test canceling non-existent allocation returns 404."""
-    client = TestClient(application)
 
     # Test: Cancel non-existent allocation
     response = client.delete("/api/allocations/99999")
@@ -431,9 +353,8 @@ def test_cancel_allocation_not_found(test_db: Session):
 # ============================================================
 
 
-def test_preview_allocations_success(test_db: Session, master_data: dict):
+def test_preview_allocations_success(db: Session, client: TestClient, master_data: dict):
     """Test FEFO allocation preview."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -442,20 +363,20 @@ def test_preview_allocations_success(test_db: Session, master_data: dict):
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Test: Preview FEFO allocation
     payload = {"order_id": order.id}
@@ -469,9 +390,8 @@ def test_preview_allocations_success(test_db: Session, master_data: dict):
     assert len(data["lines"]) > 0
 
 
-def test_preview_allocations_order_not_found(test_db: Session):
+def test_preview_allocations_order_not_found(db: Session, client: TestClient):
     """Test FEFO preview for non-existent order returns 404."""
-    client = TestClient(application)
 
     # Test: Preview for non-existent order
     payload = {"order_id": 99999}
@@ -485,9 +405,8 @@ def test_preview_allocations_order_not_found(test_db: Session):
 # ============================================================
 
 
-def test_commit_allocation_success(test_db: Session, master_data: dict):
+def test_commit_allocation_success(db: Session, client: TestClient, master_data: dict):
     """Test committing allocation."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -496,20 +415,20 @@ def test_commit_allocation_success(test_db: Session, master_data: dict):
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Test: Commit allocation
     payload = {"order_id": order.id}
@@ -524,9 +443,8 @@ def test_commit_allocation_success(test_db: Session, master_data: dict):
     assert len(data["created_allocation_ids"]) > 0
 
 
-def test_commit_allocation_order_not_found(test_db: Session):
+def test_commit_allocation_order_not_found(db: Session, client: TestClient):
     """Test committing allocation for non-existent order returns 404."""
-    client = TestClient(application)
 
     # Test: Commit for non-existent order
     payload = {"order_id": 99999}
@@ -540,9 +458,8 @@ def test_commit_allocation_order_not_found(test_db: Session):
 # ============================================================
 
 
-def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
+def test_confirm_hard_allocation_success(db: Session, client: TestClient, master_data: dict):
     """Test confirming a soft allocation to hard allocation."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -551,20 +468,20 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("50.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Create soft allocation (LotReservation)
     reservation = LotReservation(
@@ -574,13 +491,15 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
         reserved_qty=Decimal("50.000"),
         status=ReservationStatus.ACTIVE,
     )
-    test_db.add(reservation)
-    test_db.commit()
+    db.add(reservation)
+    db.commit()
 
     # Test: Confirm soft → hard
     payload = {"confirmed_by": "test_user"}
 
     response = client.patch(f"/api/allocations/{reservation.id}/confirm", json=payload)
+    if response.status_code != 200:
+        print(f"Error response: {response.json()}")
     assert response.status_code == 200
 
     data = response.json()
@@ -594,14 +513,13 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
         get_reserved_quantity,
     )
 
-    lot = test_db.get(LotReceipt, master_data["lot"].id)
+    lot = db.get(LotReceipt, master_data["lot"].id)
     assert lot is not None
-    assert get_reserved_quantity(test_db, lot.id) == Decimal("50.000")
+    assert get_reserved_quantity(db, lot.id) == Decimal("50.000")
 
 
-def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
+def test_confirm_hard_allocation_partial(db: Session, client: TestClient, master_data: dict):
     """Test partial confirmation of soft allocation."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -610,20 +528,20 @@ def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("100.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Create soft allocation for 100 (LotReservation)
     reservation = LotReservation(
@@ -633,8 +551,8 @@ def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
         reserved_qty=Decimal("100.000"),
         status=ReservationStatus.ACTIVE,
     )
-    test_db.add(reservation)
-    test_db.commit()
+    db.add(reservation)
+    db.commit()
 
     # Test: Partial confirm (60 of 100)
     payload = {"confirmed_by": "test_user", "quantity": 60.0}
@@ -648,7 +566,7 @@ def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
 
     # Verify remaining soft allocation was created
     all_reservations = (
-        test_db.query(LotReservation).filter(LotReservation.source_id == order_line.id).all()
+        db.query(LotReservation).filter(LotReservation.source_id == order_line.id).all()
     )
     assert len(all_reservations) == 2
 
@@ -661,9 +579,10 @@ def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
     assert hard_reservations[0].reserved_qty == Decimal("60.000")
 
 
-def test_confirm_hard_allocation_already_confirmed(test_db: Session, master_data: dict):
+def test_confirm_hard_allocation_already_confirmed(
+    db: Session, client: TestClient, master_data: dict
+):
     """Test confirming already hard allocation returns 400."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -672,20 +591,20 @@ def test_confirm_hard_allocation_already_confirmed(test_db: Session, master_data
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Create already hard allocation (using LotReservation)
     reservation = LotReservation(
@@ -696,8 +615,8 @@ def test_confirm_hard_allocation_already_confirmed(test_db: Session, master_data
         status=ReservationStatus.CONFIRMED,
         confirmed_at=utcnow(),
     )
-    test_db.add(reservation)
-    test_db.commit()
+    db.add(reservation)
+    db.commit()
 
     # Test: Try to confirm already hard allocation (Idempotent success)
     payload = {"confirmed_by": "test_user"}
@@ -712,7 +631,9 @@ def test_confirm_hard_allocation_already_confirmed(test_db: Session, master_data
 @pytest.mark.xfail(
     reason="DB constraint chk_lots_allocation_limit prevents current_quantity < allocated_quantity"
 )
-def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_data: dict):
+def test_confirm_hard_allocation_insufficient_stock(
+    db: Session, client: TestClient, master_data: dict
+):
     """Test confirming allocation with insufficient stock returns 409.
 
     Scenario: A soft allocation was created when stock was available,
@@ -724,7 +645,6 @@ def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_dat
     less than allocated_quantity, making this scenario impossible
     in the actual application.
     """
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -733,20 +653,20 @@ def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_dat
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("80.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Create soft allocation for 80 (LotReservation)
     lot = master_data["lot"]
@@ -757,14 +677,14 @@ def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_dat
         reserved_qty=Decimal("80.000"),
         status=ReservationStatus.ACTIVE,
     )
-    test_db.add(reservation)
-    test_db.commit()
+    db.add(reservation)
+    db.commit()
 
     # Now simulate stock decrease after soft allocation was made
     # (e.g., inventory adjustment, partial shipping, etc.)
     # Reduce current_quantity below allocated_quantity to trigger insufficient stock
     lot.current_quantity = Decimal("50.000")  # Less than allocated 80
-    test_db.commit()
+    db.commit()
 
     # Test: Try to confirm (should fail due to insufficient stock)
     # Because current_quantity (50) < allocated_quantity (80)
@@ -777,9 +697,8 @@ def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_dat
     assert data["error"] == "INSUFFICIENT_STOCK"
 
 
-def test_confirm_hard_allocation_not_found(test_db: Session):
+def test_confirm_hard_allocation_not_found(db: Session, client: TestClient):
     """Test confirming non-existent allocation returns 404."""
-    client = TestClient(application)
 
     payload = {"confirmed_by": "test_user"}
 
@@ -795,9 +714,8 @@ def test_confirm_hard_allocation_not_found(test_db: Session):
 # ============================================================
 
 
-def test_confirm_batch_success(test_db: Session, master_data: dict):
+def test_confirm_batch_success(db: Session, client: TestClient, master_data: dict):
     """Test batch confirmation of multiple soft allocations."""
-    client = TestClient(application)
 
     # Create order with lines
     order = Order(
@@ -806,20 +724,20 @@ def test_confirm_batch_success(test_db: Session, master_data: dict):
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("30.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Create multiple soft allocations (LotReservation)
     reservation1 = LotReservation(
@@ -836,8 +754,8 @@ def test_confirm_batch_success(test_db: Session, master_data: dict):
         reserved_qty=Decimal("20.000"),
         status=ReservationStatus.ACTIVE,
     )
-    test_db.add_all([reservation1, reservation2])
-    test_db.commit()
+    db.add_all([reservation1, reservation2])
+    db.commit()
 
     # Test: Batch confirm
     payload = {
@@ -855,9 +773,8 @@ def test_confirm_batch_success(test_db: Session, master_data: dict):
     assert len(data["failed"]) == 0
 
 
-def test_confirm_batch_partial_failure(test_db: Session, master_data: dict):
+def test_confirm_batch_partial_failure(db: Session, client: TestClient, master_data: dict):
     """Test batch confirmation with some failures."""
-    client = TestClient(application)
 
     # Create order with line
     order = Order(
@@ -866,20 +783,20 @@ def test_confirm_batch_partial_failure(test_db: Session, master_data: dict):
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("20.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Create one soft allocation (LotReservation)
     reservation = LotReservation(
@@ -889,8 +806,8 @@ def test_confirm_batch_partial_failure(test_db: Session, master_data: dict):
         reserved_qty=Decimal("20.000"),
         status=ReservationStatus.ACTIVE,
     )
-    test_db.add(reservation)
-    test_db.commit()
+    db.add(reservation)
+    db.commit()
 
     # Test: Batch confirm with one valid and one invalid ID
     payload = {
@@ -909,9 +826,10 @@ def test_confirm_batch_partial_failure(test_db: Session, master_data: dict):
     assert data["failed"][0]["error"] == "RESERVATION_NOT_FOUND"
 
 
-def test_drag_assign_without_primary_mapping_success(test_db: Session, master_data: dict):
+def test_drag_assign_without_primary_mapping_success(
+    db: Session, client: TestClient, master_data: dict
+):
     """Test manual allocation succeeds even if customer item primary mapping is missing (Strict Mode relaxed)."""
-    client = TestClient(application)
 
     # Note: master_data's customer_item has is_primary=True.
     # We need to simulate a scenario where supplier_item exists but NO customer_item has is_primary.
@@ -919,10 +837,10 @@ def test_drag_assign_without_primary_mapping_success(test_db: Session, master_da
     from app.infrastructure.persistence.models import CustomerItem
 
     try:
-        test_db.query(CustomerItem).delete()
-        test_db.commit()
+        db.query(CustomerItem).delete()
+        db.commit()
     except Exception:
-        test_db.rollback()
+        db.rollback()
 
     # Create order with line
     order = Order(
@@ -931,20 +849,20 @@ def test_drag_assign_without_primary_mapping_success(test_db: Session, master_da
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Test: Manual allocation with NO primary mapping but WITH supplier_item_id (from fixture)
     payload = {

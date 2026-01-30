@@ -1,43 +1,20 @@
 # backend/tests/api/test_business_rules.py
 """Tests for business rules API endpoints."""
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
 from app.infrastructure.persistence.models import BusinessRule
-from app.main import app
 
 
-def _truncate_all(db: Session):
-    db.query(BusinessRule).delete()
-    db.commit()
-
-
-@pytest.fixture
-def test_db(db: Session):
-    _truncate_all(db)
-
-    def override_get_db():
-        yield db
-
-    app.dependency_overrides[get_db] = override_get_db
-    yield db
-    _truncate_all(db)
-    app.dependency_overrides.clear()
-
-
-def test_list_business_rules_empty(test_db: Session):
+def test_list_business_rules_empty(db: Session, client: TestClient):
     """Test listing business rules when none exist."""
-    client = TestClient(app)
     response = client.get("/api/business-rules")
     assert response.status_code == 200
 
 
-def test_list_business_rules_with_category_filter(test_db: Session):
+def test_list_business_rules_with_category_filter(db: Session, client: TestClient):
     """Test filtering by rule_type."""
-    client = TestClient(app)
 
     rule = BusinessRule(
         rule_code="FEFO_ENABLED",
@@ -45,8 +22,8 @@ def test_list_business_rules_with_category_filter(test_db: Session):
         rule_type="allocation",
         rule_parameters={"value": "true"},
     )
-    test_db.add(rule)
-    test_db.commit()
+    db.add(rule)
+    db.commit()
 
     response = client.get("/api/business-rules", params={"rule_type": "allocation"})
     assert response.status_code == 200
@@ -55,9 +32,8 @@ def test_list_business_rules_with_category_filter(test_db: Session):
     assert data["rules"][0]["rule_code"] == "FEFO_ENABLED"
 
 
-def test_get_business_rule_success(test_db: Session):
+def test_get_business_rule_success(db: Session, client: TestClient):
     """Test getting business rule by code."""
-    client = TestClient(app)
 
     rule = BusinessRule(
         rule_code="TEST_RULE",
@@ -65,8 +41,8 @@ def test_get_business_rule_success(test_db: Session):
         rule_type="other",
         rule_parameters={"value": "100"},
     )
-    test_db.add(rule)
-    test_db.commit()
+    db.add(rule)
+    db.commit()
 
     response = client.get("/api/business-rules/TEST_RULE")
     # The router endpoint for get by code is /api/business-rules/code/{rule_code}
@@ -81,16 +57,14 @@ def test_get_business_rule_success(test_db: Session):
     assert response.json()["rule_code"] == "TEST_RULE"
 
 
-def test_get_business_rule_not_found(test_db: Session):
+def test_get_business_rule_not_found(db: Session, client: TestClient):
     """Test getting non-existent business rule."""
-    client = TestClient(app)
     response = client.get("/api/business-rules/code/NONEXISTENT")
     assert response.status_code == 404
 
 
-def test_update_business_rule_success(test_db: Session):
+def test_update_business_rule_success(db: Session, client: TestClient):
     """Test updating business rule."""
-    client = TestClient(app)
 
     rule = BusinessRule(
         rule_code="UPDATE_TEST",
@@ -98,8 +72,8 @@ def test_update_business_rule_success(test_db: Session):
         rule_type="other",
         rule_parameters={"value": "old_value"},
     )
-    test_db.add(rule)
-    test_db.commit()
+    db.add(rule)
+    db.commit()
 
     # Update by ID
     update_data = {"rule_parameters": {"value": "new_value"}}
@@ -108,8 +82,7 @@ def test_update_business_rule_success(test_db: Session):
     assert response.json()["rule_parameters"]["value"] == "new_value"
 
 
-def test_update_business_rule_not_found(test_db: Session):
+def test_update_business_rule_not_found(db: Session, client: TestClient):
     """Test updating non-existent business rule."""
-    client = TestClient(app)
     response = client.put("/api/business-rules/99999", json={"rule_parameters": {"value": "test"}})
     assert response.status_code == 404

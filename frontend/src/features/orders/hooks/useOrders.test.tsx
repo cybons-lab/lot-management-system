@@ -60,31 +60,16 @@ describe("useOrders Hooks", () => {
   );
 
   describe("useOrdersList", () => {
-    it.skip("fetches and normalizes orders list", async () => {
-      vi.mocked(ordersApi.getOrders).mockImplementation(async () => {
-        console.log("TEST: Mock getOrders called");
-        return [mockOrderResponse] as any;
-      });
+    it("fetches and normalizes orders list", async () => {
+      vi.mocked(ordersApi.getOrders).mockResolvedValue([mockOrderResponse] as any);
 
       const { result } = renderHook(() => useOrdersList({}), { wrapper });
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-      // Initial state has data=[] due to initialData:[]
-      expect(result.current.data).toEqual([]);
-
-      // Wait for the query to resolve with mocked data
-      await waitFor(
-        () => {
-          if (result.current.isError) {
-            console.error("Query Error:", result.current.error);
-          }
-          expect(result.current.isError).toBe(false);
-          expect(result.current.data?.length).toBeGreaterThan(0);
-          expect(result.current.data).toHaveLength(1);
-        },
-        { timeout: 3000 },
-      );
+      // Wait for the query to resolve
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+        expect(result.current.data).toHaveLength(1);
+      });
 
       expect(ordersApi.getOrders).toHaveBeenCalledWith({});
       expect(result.current.data![0]).toMatchObject({

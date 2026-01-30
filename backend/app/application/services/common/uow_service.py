@@ -72,10 +72,14 @@ r"""Unit of Work (UoW) パターンの実装.
    ```
 """
 
+import logging
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 
 from sqlalchemy.orm import Session
+
+
+logger = logging.getLogger(__name__)
 
 
 class UnitOfWork(AbstractContextManager):
@@ -86,6 +90,7 @@ class UnitOfWork(AbstractContextManager):
     def __enter__(self):
         self.session = self._session_factory()
         self.session.begin()  # 明示開始
+        logger.debug("Transaction started")
         return self
 
     def __exit__(self, exc_type, exc, tb):
@@ -93,7 +98,14 @@ class UnitOfWork(AbstractContextManager):
         try:
             if exc_type is None:
                 self.session.commit()
+                logger.debug("Transaction committed")
             else:
                 self.session.rollback()
+                logger.warning(
+                    "Transaction rolled back due to exception",
+                    extra={"exception_type": exc_type.__name__ if exc_type else None},
+                    exc_info=(exc_type, exc, tb) if exc_type else False,
+                )
         finally:
             self.session.close()
+            logger.debug("Session closed")

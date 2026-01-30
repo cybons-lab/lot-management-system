@@ -4031,7 +4031,15 @@ export interface paths {
     };
     /**
      * Get Recent Logs
-     * @description Get recent system logs (Admin only ideally).
+     * @description Get recent system logs with filtering (Admin only).
+     *
+     *     Args:
+     *         limit: Maximum number of logs to return (default: 500)
+     *         level: Filter by log level (error, warning, info)
+     *         user_id: Filter by user ID
+     *         search: Search in message content
+     *         current_user: Current admin user (dependency)
+     *         db: Database session (dependency)
      */
     get: operations["get_recent_logs_api_system_logs_recent_get"];
     put?: never;
@@ -4054,6 +4062,33 @@ export interface paths {
      * @description フロントエンド用の公開システム設定を取得.
      */
     get: operations["get_public_settings_api_system_public_settings_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/system/logs/backend/recent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Recent Backend Logs
+     * @description Get recent backend logs from log file (Admin only).
+     *
+     *     Args:
+     *         limit: Maximum number of logs to return (default: 200)
+     *         _current_user: Current admin user (dependency)
+     *
+     *     Returns:
+     *         List of recent backend log entries
+     */
+    get: operations["get_recent_backend_logs_api_system_logs_backend_recent_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -8574,6 +8609,38 @@ export interface components {
       /** Receipt Date */
       receipt_date?: string | null;
     };
+    /** BackendLogEntry */
+    BackendLogEntry: {
+      /** Timestamp */
+      timestamp: string;
+      /** Level */
+      level: string;
+      /** Logger */
+      logger: string;
+      /** Message */
+      message: string;
+      /**
+       * Module
+       * @default
+       */
+      module: string;
+      /**
+       * Function
+       * @default
+       */
+      function: string;
+      /**
+       * Line
+       * @default 0
+       */
+      line: number;
+      /** Extra */
+      extra?: {
+        [key: string]: unknown;
+      } | null;
+      /** Exception */
+      exception?: string | null;
+    };
     /**
      * BatchJobCreate
      * @description バッチジョブ作成スキーマ.
@@ -11536,7 +11603,7 @@ export interface components {
       /** Updated At */
       updated_at?: string | null;
       /** Lot Number */
-      lot_number: string;
+      lot_number?: string | null;
       /** Product Group Id */
       product_group_id: number;
       /** Warehouse Id */
@@ -16322,8 +16389,11 @@ export interface components {
        * @description 説明
        */
       description?: string | null;
-      /** Id */
-      id: number;
+      /**
+       * Id
+       * @description 設定ID（DBに保存されていない場合はNone）
+       */
+      id?: number | null;
     };
     /** SystemSettingUpdate */
     SystemSettingUpdate: {
@@ -23199,6 +23269,9 @@ export interface operations {
     parameters: {
       query?: {
         limit?: number;
+        level?: string | null;
+        user_id?: number | null;
+        search?: string | null;
       };
       header?: never;
       path?: never;
@@ -23242,6 +23315,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["PublicSystemSettings"];
+        };
+      };
+    };
+  };
+  get_recent_backend_logs_api_system_logs_backend_recent_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BackendLogEntry"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

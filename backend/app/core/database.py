@@ -121,7 +121,7 @@ def _drop_dependent_views() -> None:
                 logger.warning(f"⚠️ VIEW削除に失敗しました ({view_name}): {e}")
 
 
-def truncate_all_tables() -> None:
+def truncate_all_tables(db: Session | None = None) -> None:
     """全テーブルのデータを削除（開発/検証用途）.
 
     - テーブル構造は保持
@@ -133,7 +133,11 @@ def truncate_all_tables() -> None:
 
     # PostgreSQL: 全テーブルをTRUNCATE
     logger.info("🗑️ Truncating all tables in schema 'public'...")
-    with engine.begin() as conn:
+
+    def _truncate(conn):
+        # 開発/テスト環境でのデッドロック防止: ロックタイムアウトを設定
+        conn.execute(text("SET LOCAL lock_timeout = '30s'"))
+
         # public配下の全テーブル名を取得（alembic_versionを除く）
         result = conn.execute(
             text("""
@@ -151,11 +155,17 @@ def truncate_all_tables() -> None:
             return
 
         # TRUNCATE実行（RESTART IDENTITYでシーケンスもリセット、CASCADEで外部キー制約を無視）
-        for table in tables:
-            conn.execute(text(f'TRUNCATE TABLE "{table}" RESTART IDENTITY CASCADE'))
-            logger.debug(f"  - Truncated: {table}")
-
+        # まとめて1つのクエリで実行して高速化とロック最小化
+        tables_str = ", ".join([f'"{t}"' for t in tables])
+        conn.execute(text(f"TRUNCATE TABLE {tables_str} RESTART IDENTITY CASCADE"))
         logger.info(f"✅ {len(tables)} テーブルのデータを削除しました")
+
+    if db:
+        _truncate(db)
+        db.flush()  # 反映を確実にする
+    else:
+        with engine.begin() as conn:
+            _truncate(conn)
 
     logger.info("ℹ️ alembic_versionは保持されました（マイグレーション履歴を維持）")
 

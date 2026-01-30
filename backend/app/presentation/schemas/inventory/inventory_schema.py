@@ -64,7 +64,7 @@ class LotLock(BaseSchema):
 class LotBase(BaseSchema):
     """Shared attributes for lot payloads."""
 
-    lot_number: str
+    lot_number: str | None = None
     product_group_id: int
     warehouse_id: int
     supplier_id: int | None = None

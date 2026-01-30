@@ -12,6 +12,7 @@ from app.presentation.api.routes.rpa.material_delivery_note.common import _get_m
 from app.presentation.api.routes.rpa.material_delivery_note.router import router
 from app.presentation.schemas.rpa_run_schema import (
     ActivityItemResponse,
+    LoopSummaryResponse,
     LotSuggestionsResponse,
     RpaRunItemFailureRequest,
     RpaRunItemResponse,
@@ -64,11 +65,11 @@ def update_item(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error in update_item")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {e!s}",
+            detail="Internal server error",
         )
 
 
@@ -325,3 +326,22 @@ def export_failed_items(
         return ExportService.export_to_excel(export_rows, filename=filename, column_map=column_map)
     except ValueError as e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get(
+    "/runs/{run_id}/loop-summary",
+    response_model=LoopSummaryResponse,
+)
+def get_loop_summary(
+    run_id: int,
+    top_n: int = Query(default=5, ge=1, le=100),
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """PADループの集計情報を取得する."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    run = service.get_run(run_id)
+    if not run:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run not found")
+
+    result = service.get_loop_summary(run_id, top_n=top_n)
+    return LoopSummaryResponse(**result)

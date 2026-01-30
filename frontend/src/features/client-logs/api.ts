@@ -26,17 +26,23 @@ export interface ClientLog {
  */
 export interface ClientLogsListParams {
   limit?: number;
+  level?: "info" | "warning" | "error";
+  user_id?: number;
+  search?: string;
 }
 
 // ===== API Functions =====
 
 /**
- * Get recent client logs
+ * Get recent client logs with filtering
  * @endpoint GET /system/logs/recent
  */
 export const getClientLogs = (params?: ClientLogsListParams) => {
   const searchParams = new URLSearchParams();
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
+  if (params?.level) searchParams.append("level", params.level);
+  if (params?.user_id !== undefined) searchParams.append("user_id", params.user_id.toString());
+  if (params?.search) searchParams.append("search", params.search);
 
   const queryString = searchParams.toString();
   return http.get<ClientLog[]>(`system/logs/recent${queryString ? "?" + queryString : ""}`);

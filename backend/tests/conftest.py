@@ -90,7 +90,8 @@ def db(db_engine) -> Generator[Session]:
     yield session
 
     session.close()
-    transaction.rollback()
+    if transaction.is_active:
+        transaction.rollback()
     connection.close()
 
 
@@ -134,21 +135,118 @@ def client(db) -> Generator[TestClient]:
         yield TestUnitOfWork(db)
 
     def override_get_current_user():
-        """Override to return no user (or a default valid user if needed)."""
-        return None
+        """Override to return a default test user with admin role.
+
+        Creates the user in the test database to avoid FK violations in operation_logs.
+        """
+        from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
+
+        # Check if admin user already exists
+        existing_user = db.query(User).filter(User.username == "test_admin").first()
+        if existing_user:
+            return existing_user
+
+        # Create or get admin role
+        admin_role = db.query(Role).filter(Role.role_code == "admin").first()
+        if not admin_role:
+            admin_role = Role(role_code="admin", role_name="Administrator")
+            db.add(admin_role)
+            db.flush()
+
+        # Create admin user (email, display_name are required NOT NULL)
+        user = User(
+            username="test_admin",
+            email="test_admin@example.com",
+            password_hash="dummy_hash",
+            display_name="Test Admin User",
+            is_active=True,
+        )
+        db.add(user)
+        db.flush()
+
+        # Assign admin role
+        user_role = UserRole(user_id=user.id, role_id=admin_role.id)
+        db.add(user_role)
+        db.flush()
+
+        # Refresh to load relationships
+        db.refresh(user)
+        return user
+
+    # Import oauth2_scheme for dependency injection
+    from fastapi import Depends
+    from fastapi.security import OAuth2PasswordBearer
+
+    # Create local oauth2_scheme (same as in auth_router)
+    local_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
+
+    def override_get_current_user_optional(
+        token: str | None = Depends(local_oauth2_scheme),
+        db_session: Session = Depends(override_get_db),
+    ):
+        """Override get_current_user_optional.
+
+        If a token is provided, use the real auth flow (for tests with token headers).
+        If no token, return the default admin user (for tests without auth).
+        """
+        if token:
+            # Token provided - use real authentication flow
+            from app.core.security import decode_access_token
+            from app.infrastructure.persistence.models.auth_models import User
+
+            payload = decode_access_token(token)
+            if not payload:
+                return None
+            user_id = payload.get("sub")
+            if user_id is None:
+                return None
+            # Use the injected db_session
+            return db_session.query(User).filter(User.id == int(user_id)).first()
+
+        # No token - return default admin user for tests
+        return override_get_current_user()
+
+    def override_get_current_user_required(
+        user=Depends(override_get_current_user_optional),
+    ):
+        """Override get_current_user (required version).
+
+        Depends on get_current_user_optional and raises 401 if user is None.
+        This maintains the same dependency chain as the original.
+        """
+        if not user:
+            from fastapi import HTTPException, status
+
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return user
 
     application.dependency_overrides[api_deps.get_db] = override_get_db
     application.dependency_overrides[core_database.get_db] = override_get_db
     application.dependency_overrides[api_deps.get_uow] = override_get_uow
+
+    # Override auth dependencies
+    from app.application.services.auth.auth_service import AuthService
+    from app.presentation.api.routes.auth.auth_router import (
+        get_current_user,
+        get_current_user_optional,
+    )
+
+    application.dependency_overrides[AuthService.get_current_user] = override_get_current_user
+    application.dependency_overrides[get_current_user] = override_get_current_user_required
+    application.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
     with TestClient(application) as client:
         yield client
     application.dependency_overrides.clear()
 
 
 @pytest.fixture
-def setup_search_data(db_session):
+def setup_search_data(db_session, supplier):
     """Setup basic master data for search and label tests."""
-    from app.infrastructure.persistence.models import Product, Supplier, Warehouse
+    from app.infrastructure.persistence.models import Supplier, SupplierItem, Warehouse
 
     # Supplier
     supplier = Supplier(supplier_code="sup-search", supplier_name="Search Supplier")
@@ -156,9 +254,10 @@ def setup_search_data(db_session):
     db_session.flush()
 
     # Product
-    product = Product(
-        maker_part_code="SEARCH-PROD-001",
-        product_name="Search Test Product",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="SEARCH-PROD-001",
+        display_name="Search Test Product",
         base_unit="EA",
     )
     db_session.add(product)
@@ -179,13 +278,13 @@ def setup_search_data(db_session):
 
 
 @pytest.fixture
-def master_data(db):
+def master_data(db, supplier):
     """Create common master data for tests."""
     from app.infrastructure.persistence.models import (
         Customer,
         DeliveryPlace,
-        Product,
         Supplier,
+        SupplierItem,
         Warehouse,
     )
     from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
@@ -199,18 +298,23 @@ def master_data(db):
     # Create Supplier
     supplier = Supplier(supplier_code="SUP-TEST", supplier_name="Test Supplier")
     db.add(supplier)
+    db.flush()  # Ensure supplier.id is generated
 
-    # Create Products
-    product1 = Product(
-        maker_part_code="PRD-TEST-001",
-        product_name="Test Product 1",
+    # Create Products (SupplierItems)
+    product1 = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PRD-TEST-001",
+        display_name="Test Product 1",
         base_unit="EA",
         internal_unit="BOX",
         external_unit="PLT",
         qty_per_internal_unit=10,
     )
-    product2 = Product(
-        maker_part_code="PRD-TEST-002", product_name="Test Product 2", base_unit="KG"
+    product2 = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PRD-TEST-002",
+        display_name="Test Product 2",
+        base_unit="KG",
     )
     db.add(product1)
     db.add(product2)
@@ -225,6 +329,7 @@ def master_data(db):
         customer_id=customer.id,
         delivery_place_code="DP-TEST",
         delivery_place_name="Test Delivery Place",
+        jiku_code="TEST-JIKU",
     )
     db.add(delivery_place)
 
@@ -265,6 +370,17 @@ def master_data(db):
         "delivery_place": delivery_place,
         "user": user,
     }
+
+
+@pytest.fixture
+def supplier(db):
+    """Create a simple test supplier."""
+    from app.infrastructure.persistence.models import Supplier
+
+    supplier = Supplier(supplier_code="SUP-TEST-DEFAULT", supplier_name="Default Test Supplier")
+    db.add(supplier)
+    db.flush()  # Use flush for transaction safety
+    return supplier
 
 
 @pytest.fixture

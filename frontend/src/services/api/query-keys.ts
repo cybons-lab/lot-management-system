@@ -182,7 +182,7 @@ export const orderKeys = {
  * マスタ関連のクエリキー
  */
 export const masterKeys = {
-  products: createMasterKeyFactory("products"),
+  products: createMasterKeyFactory("supplier-items"),
   suppliers: createMasterKeyFactory("suppliers"),
   warehouses: createMasterKeyFactory("warehouses"),
   customers: createMasterKeyFactory("customers"),

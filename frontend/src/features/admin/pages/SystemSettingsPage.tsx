@@ -17,7 +17,7 @@ import { PageContainer, PageHeader } from "@/shared/components/layout";
 import type { PageVisibilityConfig } from "@/types/system";
 
 interface SystemSetting {
-  id: number;
+  id: number | null;
   config_key: string;
   config_value: string;
   description: string | null;

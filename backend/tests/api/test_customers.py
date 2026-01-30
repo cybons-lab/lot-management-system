@@ -1,46 +1,14 @@
 # backend/tests/api/test_customers.py
 """Comprehensive tests for customers API endpoints."""
 
-import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
 from app.infrastructure.persistence.models import Customer
-from app.main import app
 
 
-def _truncate_all(db: Session):
-    """Clean up test data."""
-    try:
-        # Use TRUNCATE CASCADE to ensure cleanup
-        db.execute(text("TRUNCATE TABLE customers RESTART IDENTITY CASCADE"))
-        db.commit()
-    except Exception:
-        db.rollback()
-
-
-@pytest.fixture
-def test_db(db: Session):
-    """Provide clean database session for each test."""
-    _truncate_all(db)
-
-    def override_get_db():
-        yield db
-
-    app.dependency_overrides[get_db] = override_get_db
-    yield db
-    _truncate_all(db)
-    app.dependency_overrides.clear()
-
-
-# ===== GET /api/masters/customers Tests =====
-
-
-def test_list_customers_success(test_db: Session):
+def test_list_customers_success(db: Session, client: TestClient):
     """Test listing customers."""
-    client = TestClient(app)
 
     c1 = Customer(
         customer_code="LIST-001",
@@ -50,8 +18,8 @@ def test_list_customers_success(test_db: Session):
         customer_code="LIST-002",
         customer_name="Customer 2",
     )
-    test_db.add_all([c1, c2])
-    test_db.commit()
+    db.add_all([c1, c2])
+    db.commit()
 
     response = client.get("/api/masters/customers")
     assert response.status_code == 200
@@ -61,9 +29,8 @@ def test_list_customers_success(test_db: Session):
     assert "LIST-002" in customer_codes
 
 
-def test_list_customers_with_pagination(test_db: Session):
+def test_list_customers_with_pagination(db: Session, client: TestClient):
     """Test listing customers with pagination."""
-    client = TestClient(app)
 
     # Create 15 customers
     customers = [
@@ -73,8 +40,8 @@ def test_list_customers_with_pagination(test_db: Session):
         )
         for i in range(1, 16)
     ]
-    test_db.add_all(customers)
-    test_db.commit()
+    db.add_all(customers)
+    db.commit()
 
     # Get first page (10 items)
     response = client.get("/api/masters/customers?skip=0&limit=10")
@@ -94,16 +61,15 @@ def test_list_customers_with_pagination(test_db: Session):
 # ===== GET /api/masters/customers/{code} Tests =====
 
 
-def test_get_customer_success(test_db: Session):
+def test_get_customer_success(db: Session, client: TestClient):
     """Test getting a single customer."""
-    client = TestClient(app)
 
     c = Customer(
         customer_code="GET-TEST",
         customer_name="Test Customer",
     )
-    test_db.add(c)
-    test_db.commit()
+    db.add(c)
+    db.commit()
 
     response = client.get("/api/masters/customers/GET-TEST")
     assert response.status_code == 200
@@ -112,9 +78,8 @@ def test_get_customer_success(test_db: Session):
     assert data["customer_name"] == "Test Customer"
 
 
-def test_get_customer_not_found(test_db: Session):
+def test_get_customer_not_found(db: Session, client: TestClient):
     """Test getting a non-existent customer."""
-    client = TestClient(app)
     response = client.get("/api/masters/customers/NON-EXISTENT")
     assert response.status_code == 404
 
@@ -122,9 +87,8 @@ def test_get_customer_not_found(test_db: Session):
 # ===== POST /api/masters/customers Tests =====
 
 
-def test_create_customer_success(test_db: Session, superuser_token_headers):
+def test_create_customer_success(db: Session, client: TestClient, superuser_token_headers):
     """Test creating a new customer."""
-    client = TestClient(app)
 
     customer_data = {
         "customer_code": "CREATE-001",
@@ -141,16 +105,17 @@ def test_create_customer_success(test_db: Session, superuser_token_headers):
     assert "id" in data
 
 
-def test_create_customer_duplicate_returns_409(test_db: Session, superuser_token_headers):
+def test_create_customer_duplicate_returns_409(
+    db: Session, client: TestClient, superuser_token_headers
+):
     """Test creating duplicate customer returns 409."""
-    client = TestClient(app)
 
     existing = Customer(
         customer_code="DUP-001",
         customer_name="Existing",
     )
-    test_db.add(existing)
-    test_db.commit()
+    db.add(existing)
+    db.commit()
 
     customer_data = {
         "customer_code": "DUP-001",
@@ -166,16 +131,15 @@ def test_create_customer_duplicate_returns_409(test_db: Session, superuser_token
 # ===== PUT /api/masters/customers/{code} Tests =====
 
 
-def test_update_customer_success(test_db: Session, superuser_token_headers):
+def test_update_customer_success(db: Session, client: TestClient, superuser_token_headers):
     """Test updating a customer."""
-    client = TestClient(app)
 
     c = Customer(
         customer_code="UPDATE-001",
         customer_name="Old Name",
     )
-    test_db.add(c)
-    test_db.commit()
+    db.add(c)
+    db.commit()
 
     update_data = {
         "customer_name": "New Name",
@@ -190,9 +154,8 @@ def test_update_customer_success(test_db: Session, superuser_token_headers):
     assert data["customer_name"] == "New Name"
 
 
-def test_update_customer_not_found(test_db: Session, superuser_token_headers):
+def test_update_customer_not_found(db: Session, client: TestClient, superuser_token_headers):
     """Test updating a non-existent customer."""
-    client = TestClient(app)
 
     update_data = {"customer_name": "New Name"}
     response = client.put(
@@ -201,16 +164,17 @@ def test_update_customer_not_found(test_db: Session, superuser_token_headers):
     assert response.status_code == 404
 
 
-def test_update_customer_code_change_success(test_db: Session, superuser_token_headers):
+def test_update_customer_code_change_success(
+    db: Session, client: TestClient, superuser_token_headers
+):
     """Test updating customer code (admin only, no related data)."""
-    client = TestClient(app)
 
     c = Customer(
         customer_code="OLD-CODE-001",
         customer_name="Test Customer",
     )
-    test_db.add(c)
-    test_db.commit()
+    db.add(c)
+    db.commit()
 
     update_data = {
         "customer_code": "NEW-CODE-001",
@@ -236,15 +200,14 @@ def test_update_customer_code_change_success(test_db: Session, superuser_token_h
 
 
 def test_update_customer_code_change_duplicate_returns_409(
-    test_db: Session, superuser_token_headers
+    db: Session, client: TestClient, superuser_token_headers
 ):
     """Test updating customer code to existing code returns 409."""
-    client = TestClient(app)
 
     c1 = Customer(customer_code="EXISTING-CODE", customer_name="Customer 1")
     c2 = Customer(customer_code="TO-CHANGE", customer_name="Customer 2")
-    test_db.add_all([c1, c2])
-    test_db.commit()
+    db.add_all([c1, c2])
+    db.commit()
 
     update_data = {
         "customer_code": "EXISTING-CODE",  # Duplicate
@@ -257,14 +220,13 @@ def test_update_customer_code_change_duplicate_returns_409(
 
 
 def test_update_customer_code_change_non_admin_forbidden(
-    test_db: Session, normal_user_token_headers
+    db: Session, client: TestClient, normal_user_token_headers
 ):
     """Test non-admin user cannot change customer code."""
-    client = TestClient(app)
 
     c = Customer(customer_code="ADMIN-ONLY", customer_name="Test Customer")
-    test_db.add(c)
-    test_db.commit()
+    db.add(c)
+    db.commit()
 
     update_data = {"customer_code": "NEW-CODE"}
 
@@ -277,20 +239,19 @@ def test_update_customer_code_change_non_admin_forbidden(
 # ===== DELETE /api/masters/customers/{code} Tests =====
 
 
-def test_delete_customer_success(test_db: Session, superuser_token_headers):
+def test_delete_customer_success(db: Session, client: TestClient, superuser_token_headers):
     """Test soft deleting a customer.
 
     Soft delete sets valid_to to today. The customer can still be retrieved
     by code but is excluded from list by default.
     """
-    client = TestClient(app)
 
     c = Customer(
         customer_code="DELETE-001",
         customer_name="To Delete",
     )
-    test_db.add(c)
-    test_db.commit()
+    db.add(c)
+    db.commit()
 
     response = client.delete("/api/masters/customers/DELETE-001", headers=superuser_token_headers)
     assert response.status_code == 204
@@ -314,8 +275,7 @@ def test_delete_customer_success(test_db: Session, superuser_token_headers):
     assert "DELETE-001" in customer_codes
 
 
-def test_delete_customer_not_found(test_db: Session, superuser_token_headers):
+def test_delete_customer_not_found(db: Session, client: TestClient, superuser_token_headers):
     """Test deleting a non-existent customer."""
-    client = TestClient(app)
     response = client.delete("/api/masters/customers/NON-EXISTENT", headers=superuser_token_headers)
     assert response.status_code == 404

@@ -4,6 +4,7 @@
 v3.0: Allocation を廃止し、LotReservation のみを使用。
 """
 
+import logging
 from typing import cast
 
 from sqlalchemy import select
@@ -16,6 +17,9 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
     ReservationSourceType,
     ReservationStatus,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ReservationRepository:
@@ -161,12 +165,19 @@ class ReservationRepository:
         Returns:
             予約エンティティ（存在しない場合はNone）
         """
+        logger.debug("Finding reservation by ID", extra={"reservation_id": reservation_id})
         stmt = (
             select(LotReservation)
             .options(joinedload(LotReservation.lot))  # type: ignore[attr-defined]
             .where(LotReservation.id == reservation_id)
         )
-        return cast(LotReservation | None, self.db.execute(stmt).scalar_one_or_none())
+        result = cast(LotReservation | None, self.db.execute(stmt).scalar_one_or_none())
+        if result:
+            logger.debug(
+                "Reservation found",
+                extra={"reservation_id": reservation_id, "status": str(result.status)},
+            )
+        return result
 
     def find_by_order_line_id(self, order_line_id: int) -> list[LotReservation]:
         """受注明細IDで予約を取得.
@@ -260,6 +271,16 @@ class ReservationRepository:
         """
         from decimal import Decimal
 
+        logger.info(
+            "Creating reservation",
+            extra={
+                "lot_id": lot_id,
+                "source_type": source_type.value,
+                "source_id": source_id,
+                "reserved_qty": reserved_qty,
+            },
+        )
+
         reservation = LotReservation(
             lot_id=lot_id,
             source_type=source_type,
@@ -277,6 +298,11 @@ class ReservationRepository:
                 reservation=reservation,
                 change_reason=f"Created via {source_type.value}",
             )
+
+        logger.info(
+            "Reservation created",
+            extra={"reservation_id": reservation.id, "lot_id": lot_id},
+        )
 
         return reservation
 
@@ -320,6 +346,17 @@ class ReservationRepository:
             change_reason: 変更理由（任意）
         """
         old_status = reservation.status
+
+        logger.info(
+            "Updating reservation status",
+            extra={
+                "reservation_id": reservation.id,
+                "old_status": str(old_status),
+                "new_status": str(new_status),
+                "changed_by": changed_by,
+            },
+        )
+
         reservation.status = new_status
         reservation.updated_at = utcnow()
 
@@ -336,6 +373,14 @@ class ReservationRepository:
                 changed_by=changed_by,
                 change_reason=change_reason,
             )
+
+        logger.info(
+            "Reservation status updated",
+            extra={
+                "reservation_id": reservation.id,
+                "new_status": str(new_status),
+            },
+        )
 
     def release(self, reservation: LotReservation) -> None:
         """予約を解放（論理削除）.

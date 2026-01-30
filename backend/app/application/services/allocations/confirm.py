@@ -121,6 +121,7 @@ All operations now use LotReservation exclusively.
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -151,6 +152,9 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 def confirm_reservation(
     db: Session,
     reservation_id: int,
@@ -173,15 +177,25 @@ def confirm_reservation(
     Returns:
         確定された予約
     """
+    logger.info(
+        "Starting reservation confirmation",
+        extra={"reservation_id": reservation_id, "confirmed_by": confirmed_by},
+    )
+
     # Use select with_for_update to lock the reservation row
     stmt = select(LotReservation).where(LotReservation.id == reservation_id).with_for_update()
     reservation = db.execute(stmt).scalar_one_or_none()
 
     if not reservation:
+        logger.warning("Reservation not found", extra={"reservation_id": reservation_id})
         raise AllocationNotFoundError(f"Reservation {reservation_id} not found")
 
     # Idempotent: return success if already confirmed
     if str(reservation.status) == ReservationStatus.CONFIRMED.value:
+        logger.debug(
+            "Reservation already confirmed (idempotent)",
+            extra={"reservation_id": reservation_id},
+        )
         return reservation
 
     # H-04/H-05 Fix: Use ReservationStateMachine for strict state transition validation
@@ -267,13 +281,49 @@ def confirm_reservation(
 
     # Call SAP Gateway for CONFIRMED transition
     gateway = sap_gateway or get_sap_gateway()
+    logger.info(
+        "Calling SAP Gateway for allocation registration",
+        extra={
+            "reservation_id": reservation_id,
+            "lot_id": lot.id,
+            "lot_number": lot.lot_number,
+            "quantity": float(confirm_qty),
+            "source_type": reservation.source_type,
+            "source_id": reservation.source_id,
+        },
+    )
     sap_result = gateway.register_allocation(reservation)
 
     if not sap_result.success:
+        logger.error(
+            "SAP registration failed",
+            extra={
+                "reservation_id": reservation_id,
+                "lot_id": lot.id,
+                "lot_number": lot.lot_number,
+                "quantity": float(confirm_qty),
+                "error_message": sap_result.error_message,
+                "error_code": sap_result.error_code if hasattr(sap_result, "error_code") else None,
+            },
+        )
         raise AllocationCommitError(
             "SAP_REGISTRATION_FAILED",
             f"SAP登録に失敗しました: {sap_result.error_message}",
         )
+
+    logger.info(
+        "SAP registration succeeded",
+        extra={
+            "reservation_id": reservation_id,
+            "lot_id": lot.id,
+            "lot_number": lot.lot_number,
+            "quantity": float(confirm_qty),
+            "sap_document_no": sap_result.document_no,
+            "registered_at": sap_result.registered_at.isoformat()
+            if sap_result.registered_at
+            else None,
+        },
+    )
 
     # SAP registration succeeded - update reservation with SAP info
     reservation.status = ReservationStatus.CONFIRMED
@@ -306,6 +356,17 @@ def confirm_reservation(
         )
         EventDispatcher.queue(event)
 
+    logger.info(
+        "Reservation confirmed",
+        extra={
+            "reservation_id": reservation_id,
+            "lot_id": lot.id,
+            "lot_number": lot.lot_number,
+            "quantity": float(confirm_qty),
+            "sap_document_no": sap_result.document_no,
+        },
+    )
+
     return reservation
 
 
@@ -331,10 +392,16 @@ def confirm_reservations_batch(
         C-02 Fix: 処理開始前に全予約の行ロックを事前取得することで、
         途中で他プロセスが同じロットの在庫を使い切る問題を防止。
     """
+    logger.info(
+        "Starting batch reservation confirmation",
+        extra={"reservation_count": len(reservation_ids), "confirmed_by": confirmed_by},
+    )
+
     confirmed_ids: list[int] = []
     failed_items: list[dict] = []
 
     if not reservation_ids:
+        logger.debug("No reservations to confirm")
         return confirmed_ids, failed_items
 
     # C-02 Fix: 全予約の行ロックを事前取得してレースコンディションを防止
@@ -381,5 +448,13 @@ def confirm_reservations_batch(
 
     if confirmed_ids:
         db.commit()
+
+    logger.info(
+        "Batch reservation confirmation completed",
+        extra={
+            "confirmed_count": len(confirmed_ids),
+            "failed_count": len(failed_items),
+        },
+    )
 
     return confirmed_ids, failed_items

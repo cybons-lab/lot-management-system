@@ -129,6 +129,7 @@ from app.application.services.smartread.auto_sync_runner import SmartReadAutoSyn
 from app.core import errors
 from app.core.config import settings
 from app.core.database import init_db
+from app.core.log_broadcaster import setup_log_broadcasting
 from app.core.logging import setup_logging
 from app.domain.errors import DomainError
 from app.middleware.logging import RequestLoggingMiddleware
@@ -139,6 +140,27 @@ from app.presentation.api.routes import register_all_routers
 
 logger = logging.getLogger(__name__)
 setup_logging()
+setup_log_broadcasting()  # Enable WebSocket log broadcasting
+
+
+def _mask_database_url(db_url: str) -> str:
+    """Mask credentials in database URL for safe logging.
+
+    Example: postgresql://user:password@host:5432/db -> postgresql://user:****@host:5432/db
+    """
+    if not db_url or "://" not in db_url:
+        return db_url
+
+    try:
+        protocol, rest = db_url.split("://", 1)
+        if "@" in rest:
+            auth, location = rest.split("@", 1)
+            if ":" in auth:
+                user, _ = auth.split(":", 1)
+                return f"{protocol}://{user}:****@{location}"
+        return db_url
+    except Exception:
+        return "****"
 
 
 @asynccontextmanager
@@ -146,7 +168,7 @@ async def lifespan(app: FastAPI):
     """アプリケーションのライフサイクル管理."""
     logger.info(f"🚀 {settings.APP_NAME} v{settings.APP_VERSION} を起動しています...")
     logger.info(f"📦 環境: {settings.ENVIRONMENT}")
-    logger.info(f"💾 データベース: {settings.DATABASE_URL}")
+    logger.info(f"💾 データベース: {_mask_database_url(settings.DATABASE_URL)}")
 
     init_db()
     auto_sync_runner = None

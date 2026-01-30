@@ -30,10 +30,9 @@ jobs:
         working-directory: frontend
         run: npm run lint
 
-      # Temporarily disabled: type definitions sync issue
-      # - name: Run type check
-      #   working-directory: frontend
-      #   run: npm run typecheck
+      - name: Run type check
+        working-directory: frontend
+        run: npm run typecheck
 
       - name: Run tests
         working-directory: frontend

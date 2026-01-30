@@ -131,9 +131,11 @@ v2.2: lot_current_stock 依存を削除。Lot モデルを直接使用。
 
 from __future__ import annotations
 
+import logging
 from datetime import date
 from decimal import Decimal
 
+from sqlalchemy import case, desc, func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 
@@ -174,6 +176,9 @@ from app.presentation.schemas.inventory.inventory_schema import (
     StockMovementCreate,
     StockMovementResponse,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class LotService:
@@ -424,8 +429,6 @@ class LotService:
         Returns:
             LotResponseのリスト
         """
-        from sqlalchemy import case
-
         query = self.db.query(VLotDetails)
 
         if product_group_id is not None:
@@ -487,7 +490,7 @@ class LotService:
         for lot_view in lot_views:
             response = LotResponse(
                 id=lot_view.lot_id,
-                lot_number=lot_view.lot_number,
+                lot_number=lot_view.lot_number or "",
                 product_group_id=lot_view.product_group_id,
                 product_code=lot_view.maker_part_no or "",
                 product_name=lot_view.display_name,
@@ -541,7 +544,7 @@ class LotService:
         status: str | None = None,
     ) -> dict:
         """Search lots with pagination, sorting, and rich filtering."""
-        from sqlalchemy import desc, or_
+        from sqlalchemy import or_
 
         db_query = self.db.query(VLotDetails)
 
@@ -715,10 +718,20 @@ class LotService:
         # Lotモデルに存在しないフィールドを削除
         lot_payload.pop("allocated_quantity", None)
 
-        # lot_number が未指定/空の場合は None に設定（TMP番号は生成しない）
-        # temporary_lot_key は UUID で自動生成（DB default値）
+        # lot_number が未指定/空の場合は TMP-YYYYMMDD-XXXXXXXX 形式を生成
+        # temporary_lot_key は UUID で自動生成
         if not lot_payload.get("lot_number") or lot_payload["lot_number"].strip() == "":
-            lot_payload["lot_number"] = None
+            import uuid
+            from datetime import datetime
+
+            # Generate temporary lot key (UUID)
+            temp_uuid = uuid.uuid4()
+            lot_payload["temporary_lot_key"] = temp_uuid
+
+            # Generate TMP-format lot number: TMP-YYYYMMDD-first8chars
+            today_str = datetime.now().strftime("%Y%m%d")
+            uuid_prefix = str(temp_uuid).replace("-", "")[:8]
+            lot_payload["lot_number"] = f"TMP-{today_str}-{uuid_prefix}"
         elif lot_create.origin_type != LotOriginType.ORDER:
             # Auto-generate lot number for non-order origin types if placeholder
             if lot_payload["lot_number"] == "AUTO":
@@ -789,6 +802,15 @@ class LotService:
             self.db.rollback()
             # 重複キーエラーを検出してユーザーフレンドリーなメッセージを返す
             error_str = str(exc.orig) if exc.orig else str(exc)
+            logger.error(
+                "Lot creation integrity error",
+                extra={
+                    "lot_number": lot_payload.get("lot_number"),
+                    "product_code": lot_payload.get("product_code"),
+                    "warehouse_code": lot_payload.get("warehouse_code"),
+                    "error": error_str[:500],
+                },
+            )
             if (
                 "uq_lots_number_product_warehouse" in error_str
                 or "duplicate key" in error_str.lower()
@@ -799,6 +821,16 @@ class LotService:
             raise LotDatabaseError("ロット作成時のDB整合性エラー", exc) from exc
         except SQLAlchemyError as exc:
             self.db.rollback()
+            logger.error(
+                "Lot creation database error",
+                extra={
+                    "lot_number": lot_payload.get("lot_number"),
+                    "product_code": lot_payload.get("product_code"),
+                    "warehouse_code": lot_payload.get("warehouse_code"),
+                    "error_type": type(exc).__name__,
+                },
+                exc_info=True,
+            )
             raise LotDatabaseError("ロット作成時のDBエラー", exc) from exc
 
         # Response Construction
@@ -810,8 +842,6 @@ class LotService:
         Format: {PREFIX}-{YYYYMMDD}-{SEQUENCE}
         Example: SAF-20250304-0001, SMP-20250304-0001
         """
-        from sqlalchemy import func
-
         prefix_map = {
             "forecast": "FCT",
             "sample": "SMP",
@@ -875,9 +905,28 @@ class LotService:
             self.db.refresh(db_lot)
         except IntegrityError as exc:
             self.db.rollback()
+            logger.error(
+                "Lot update integrity error",
+                extra={
+                    "lot_id": lot_id,
+                    "lot_number": db_lot.lot_master.lot_number if db_lot.lot_master else None,
+                    "updates": list(updates.keys()),
+                    "error": str(exc.orig)[:500] if exc.orig else str(exc)[:500],
+                },
+            )
             raise LotDatabaseError("ロット更新時のDB整合性エラー", exc) from exc
         except SQLAlchemyError as exc:
             self.db.rollback()
+            logger.error(
+                "Lot update database error",
+                extra={
+                    "lot_id": lot_id,
+                    "lot_number": db_lot.lot_master.lot_number if db_lot.lot_master else None,
+                    "updates": list(updates.keys()),
+                    "error_type": type(exc).__name__,
+                },
+                exc_info=True,
+            )
             raise LotDatabaseError("ロット更新時のDBエラー", exc) from exc
 
         return self._build_lot_response(db_lot.id)
@@ -923,6 +972,16 @@ class LotService:
             self.db.refresh(db_lot)
         except IntegrityError as exc:
             self.db.rollback()
+            logger.error(
+                "Lot lock integrity error",
+                extra={
+                    "lot_id": lot_id,
+                    "lot_number": db_lot.lot_master.lot_number if db_lot.lot_master else None,
+                    "quantity_to_lock": float(quantity_to_lock),
+                    "available_qty": float(available_qty),
+                    "error": str(exc.orig)[:500] if exc.orig else str(exc)[:500],
+                },
+            )
             raise LotDatabaseError("ロットロック時のDB整合性エラー", exc) from exc
 
         # Return view-based response

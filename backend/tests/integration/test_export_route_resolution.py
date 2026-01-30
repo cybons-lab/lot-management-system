@@ -45,20 +45,21 @@ class TestProductMappingsExportRoute:
         """Ensure /export/download route is correctly resolved."""
         response = client.get("/api/masters/product-mappings/export/download?format=xlsx")
 
-        assert response.status_code != 422, (
-            "Got 422 - Route order issue. /export/download must be defined before /{id}"
-        )
+        assert (
+            response.status_code != 422
+        ), "Got 422 - Route order issue. /export/download must be defined before /{id}"
         assert response.status_code in [200, 401], f"Unexpected status: {response.status_code}"
 
 
 class TestSupplierProductsExportRoute:
-    """Test that /export/download route is correctly matched for supplier-products."""
+    """Test that /export/download route is correctly matched for supplier-items."""
 
     def test_export_download_returns_file_not_422(self, client):
         """Ensure /export/download route is correctly resolved."""
-        response = client.get("/api/masters/supplier-products/export/download?format=xlsx")
+        # Note: Endpoint is /supplier-items not /supplier-products (Phase 2 migration)
+        response = client.get("/api/masters/supplier-items/export/download?format=xlsx")
 
-        assert response.status_code != 422, (
-            "Got 422 - Route order issue. /export/download must be defined before /{id}"
-        )
+        assert (
+            response.status_code != 422
+        ), "Got 422 - Route order issue. /export/download must be defined before /{id}"
         assert response.status_code in [200, 401], f"Unexpected status: {response.status_code}"

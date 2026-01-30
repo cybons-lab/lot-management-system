@@ -30,7 +30,7 @@ export function useSupplierProductsQuery(options?: {
 }): UseQueryResult<SupplierProduct[], Error> {
   return useQuery({
     queryKey: QUERY_KEYS.masters.products(),
-    queryFn: () => http.get<SupplierProduct[]>("masters/products"),
+    queryFn: () => http.get<SupplierProduct[]>("masters/supplier-items"),
     staleTime: options?.staleTime ?? 300000, // 5分（マスタは変更頻度が低い）
     enabled: options?.enabled ?? true,
   });
@@ -111,7 +111,7 @@ export function useSupplierProductQuery(
 ): UseQueryResult<SupplierProduct | undefined, Error> {
   return useQuery({
     queryKey: QUERY_KEYS.masters.product(productCode!),
-    queryFn: () => http.get<SupplierProduct>(`masters/products/${productCode}`),
+    queryFn: () => http.get<SupplierProduct>(`masters/supplier-items/${productCode}`),
     enabled: !!productCode,
     staleTime: 300000,
   });

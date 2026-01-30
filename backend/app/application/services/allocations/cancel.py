@@ -115,6 +115,8 @@ P3: Uses LotReservation exclusively.
 
 from __future__ import annotations
 
+import logging
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -139,6 +141,9 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
     ReservationStateMachine,
     ReservationStatus,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ReservationCancelReason:
@@ -174,12 +179,19 @@ def release_reservation(db: Session, reservation_id: int, *, commit_db: bool = T
     Raises:
         AllocationNotFoundError: 予約が見つからない場合
     """
+    logger.info("Releasing reservation", extra={"reservation_id": reservation_id})
+
     reservation = db.get(LotReservation, reservation_id)
     if not reservation:
+        logger.warning("Reservation not found", extra={"reservation_id": reservation_id})
         raise AllocationNotFoundError(f"Reservation {reservation_id} not found")
 
     # Already released - idempotent
     if reservation.status == ReservationStatus.RELEASED:
+        logger.debug(
+            "Reservation already released (idempotent)",
+            extra={"reservation_id": reservation_id},
+        )
         return
 
     # H-04/H-05 Fix: Use ReservationStateMachine for strict state transition validation
@@ -218,6 +230,14 @@ def release_reservation(db: Session, reservation_id: int, *, commit_db: bool = T
             update_order_allocation_status(db, line.order_id)
             update_order_line_status(db, line.id)
 
+    logger.info(
+        "Reservation released",
+        extra={
+            "reservation_id": reservation_id,
+            "lot_id": reservation.lot_id,
+        },
+    )
+
     if commit_db:
         db.commit()
 
@@ -234,6 +254,11 @@ def bulk_release_reservations(
     Returns:
         tuple[list[int], list[int]]: (成功したID一覧, 失敗したID一覧)
     """
+    logger.info(
+        "Starting bulk reservation release",
+        extra={"reservation_count": len(reservation_ids)},
+    )
+
     released_ids: list[int] = []
     failed_ids: list[int] = []
 
@@ -241,11 +266,20 @@ def bulk_release_reservations(
         try:
             release_reservation(db, reservation_id, commit_db=False)
             released_ids.append(reservation_id)
-        except (AllocationNotFoundError, AllocationCommitError):
+        except (AllocationNotFoundError, AllocationCommitError) as e:
+            logger.warning(
+                "Failed to release reservation",
+                extra={"reservation_id": reservation_id, "error": str(e)},
+            )
             failed_ids.append(reservation_id)
 
     if released_ids:
         db.commit()
+
+    logger.info(
+        "Bulk reservation release completed",
+        extra={"released_count": len(released_ids), "failed_count": len(failed_ids)},
+    )
 
     return released_ids, failed_ids
 
@@ -325,8 +359,20 @@ def cancel_confirmed_reservation(
         AllocationNotFoundError: 予約が見つからない場合
         AllocationCommitError: 不正な状態遷移の場合
     """
+    logger.info(
+        "Cancelling confirmed reservation",
+        extra={
+            "reservation_id": reservation_id,
+            "cancel_reason": cancel_reason,
+            "cancelled_by": cancelled_by,
+        },
+    )
+
     reservation = db.get(LotReservation, reservation_id)
     if not reservation:
+        logger.warning(
+            "Reservation not found for cancellation", extra={"reservation_id": reservation_id}
+        )
         raise AllocationNotFoundError(f"Reservation {reservation_id} not found")
 
     # Already released - idempotent
@@ -383,5 +429,14 @@ def cancel_confirmed_reservation(
 
     if commit_db:
         db.commit()
+
+    logger.info(
+        "Confirmed reservation cancelled",
+        extra={
+            "reservation_id": reservation_id,
+            "lot_id": reservation.lot_id,
+            "cancel_reason": cancel_reason,
+        },
+    )
 
     return reservation

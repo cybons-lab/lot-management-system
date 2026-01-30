@@ -8,7 +8,7 @@ class SystemSettingBase(BaseModel):
 
 
 class SystemSettingResponse(SystemSettingBase):
-    id: int
+    id: int | None = Field(None, description="設定ID（DBに保存されていない場合はNone）")
 
     class Config:
         """Pydantic config."""

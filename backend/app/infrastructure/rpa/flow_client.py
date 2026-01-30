@@ -3,9 +3,13 @@
 Handles communication with external RPA flows (Power Automate).
 """
 
+import logging
 from typing import Any, cast
 
 import httpx
+
+
+logger = logging.getLogger(__name__)
 
 
 class RpaFlowClient:
@@ -31,16 +35,78 @@ class RpaFlowClient:
             httpx.RequestError: リクエストエラー
             httpx.HTTPStatusError: HTTPステータスエラー
         """
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                flow_url,
-                json=json_payload,
-                timeout=timeout,
-                headers={"Content-Type": "application/json"},
-            )
-            response.raise_for_status()
+        # Mask flow URL to avoid logging sensitive trigger URLs
+        masked_url = flow_url[:50] + "..." if len(flow_url) > 50 else flow_url
 
-            try:
-                return cast(dict[str, Any], response.json())
-            except Exception:
-                return {"status_code": response.status_code, "text": response.text}
+        logger.info(
+            "Calling RPA flow",
+            extra={
+                "flow_url": masked_url,
+                "payload_keys": list(json_payload.keys()),
+                "timeout": timeout,
+            },
+        )
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    flow_url,
+                    json=json_payload,
+                    timeout=timeout,
+                    headers={"Content-Type": "application/json"},
+                )
+
+                logger.info(
+                    "RPA flow response received",
+                    extra={
+                        "flow_url": masked_url,
+                        "status_code": response.status_code,
+                        "content_type": response.headers.get("content-type"),
+                        "response_size": len(response.content),
+                    },
+                )
+
+                response.raise_for_status()
+
+                try:
+                    return cast(dict[str, Any], response.json())
+                except Exception:
+                    logger.warning(
+                        "RPA flow response is not JSON, returning raw response",
+                        extra={
+                            "flow_url": masked_url,
+                            "status_code": response.status_code,
+                            "content_type": response.headers.get("content-type"),
+                        },
+                    )
+                    return {"status_code": response.status_code, "text": response.text}
+
+        except httpx.TimeoutException as e:
+            logger.error(
+                "RPA flow request timeout",
+                extra={
+                    "flow_url": masked_url,
+                    "timeout": timeout,
+                    "error": str(e),
+                },
+            )
+            raise
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                "RPA flow returned error status",
+                extra={
+                    "flow_url": masked_url,
+                    "status_code": e.response.status_code,
+                    "response_body": e.response.text[:500] if e.response else None,
+                },
+            )
+            raise
+        except httpx.RequestError as e:
+            logger.error(
+                "RPA flow request failed",
+                extra={
+                    "flow_url": masked_url,
+                    "error": str(e),
+                },
+            )
+            raise

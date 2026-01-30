@@ -7,95 +7,31 @@ Tests cover:
 - Error scenarios (validation, missing parameters)
 """
 
-import os
 from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
-from app.core.database import get_db
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
-    AllocationSuggestion,
     Customer,
     DeliveryPlace,
     LotReceipt,
     Order,
     OrderLine,
-    Product,
+    SupplierItem,
     Warehouse,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
-from app.main import application
 
 
 # ---- Test DB session using conftest.py fixtures
-def _truncate_all(db: Session):
-    """Clean up test data in dependency order."""
-    for table in [
-        AllocationSuggestion,
-        OrderLine,
-        Order,
-        LotReceipt,
-        LotMaster,
-        DeliveryPlace,
-        Product,
-        Customer,
-        Warehouse,
-    ]:
-        try:
-            db.query(table).delete()
-        except Exception:
-            db.rollback()
-    db.commit()
 
 
 @pytest.fixture
-def test_db(db_engine):
-    """Provide clean database session for each test with COMMIT behavior."""
-    # Create engine for this test module
-    TEST_DATABASE_URL = os.getenv(
-        "TEST_DATABASE_URL",
-        "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
-    )
-    engine = create_engine(TEST_DATABASE_URL)
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    session = TestingSessionLocal()
-
-    # Clean before test
-    _truncate_all(session)
-
-    from app.application.services.auth.auth_service import AuthService
-    from app.core import database as core_database
-    from app.infrastructure.persistence.models import User
-
-    # Override FastAPI dependency
-    def override_get_db():
-        yield session
-
-    def override_get_current_user():
-        return User(id=1, username="test_user", is_active=True)
-
-    application.dependency_overrides[get_db] = override_get_db
-    application.dependency_overrides[core_database.get_db] = override_get_db
-    application.dependency_overrides[AuthService.get_current_user] = override_get_current_user
-
-    yield session
-    session.rollback()
-
-    # Clean after test
-    _truncate_all(session)
-    session.close()
-
-    # Remove override
-    application.dependency_overrides.clear()
-
-
-@pytest.fixture
-def master_data(test_db: Session):
+def master_data(db: Session, supplier):
     """Create master data for allocation suggestions testing."""
     # Warehouse (explicitly set ID for SQLite compatibility)
     warehouse = Warehouse(
@@ -103,28 +39,29 @@ def master_data(test_db: Session):
         warehouse_name="Main Warehouse",
         warehouse_type="internal",
     )
-    test_db.add(warehouse)
-    test_db.commit()
-    test_db.refresh(warehouse)
+    db.add(warehouse)
+    db.commit()
+    db.refresh(warehouse)
 
     # Customer (explicitly set ID)
     customer = Customer(
         customer_code="CUST-001",
         customer_name="Test Customer",
     )
-    test_db.add(customer)
-    test_db.commit()
-    test_db.refresh(customer)
+    db.add(customer)
+    db.commit()
+    db.refresh(customer)
 
     # Product (explicitly set ID)
-    product = Product(
-        maker_part_code="PROD-001",
-        product_name="Test Product",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PROD-001",
+        display_name="Test Product",
         base_unit="EA",
     )
-    test_db.add(product)
-    test_db.commit()
-    test_db.refresh(product)
+    db.add(product)
+    db.commit()
+    db.refresh(product)
 
     # Delivery Place
     delivery_place = DeliveryPlace(
@@ -132,33 +69,33 @@ def master_data(test_db: Session):
         delivery_place_code="DEL-001",
         delivery_place_name="Test Delivery Place",
     )
-    test_db.add(delivery_place)
-    test_db.commit()
-    test_db.refresh(delivery_place)
+    db.add(delivery_place)
+    db.commit()
+    db.refresh(delivery_place)
 
-    test_db.refresh(delivery_place)
+    db.refresh(delivery_place)
 
     # Create LotMaster
     lot_master = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         lot_number="LOT-001",
     )
-    test_db.add(lot_master)
-    test_db.commit()
+    db.add(lot_master)
+    db.commit()
 
     # Create lot with stock
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("100.000"),
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=90),
     )
-    test_db.add(lot)
-    test_db.commit()
-    test_db.refresh(lot)
+    db.add(lot)
+    db.commit()
+    db.refresh(lot)
 
     return {
         "warehouse": warehouse,
@@ -174,9 +111,10 @@ def master_data(test_db: Session):
 # ============================================================
 
 
-def test_preview_allocation_suggestions_order_mode_success(test_db: Session, master_data: dict):
+def test_preview_allocation_suggestions_order_mode_success(
+    db: Session, client: TestClient, master_data: dict
+):
     """Test preview allocation suggestions in order mode."""
-    client = TestClient(application)
 
     # Create order explicitly for this test
     order = Order(
@@ -185,20 +123,20 @@ def test_preview_allocation_suggestions_order_mode_success(test_db: Session, mas
         status="open",
         created_at=utcnow(),
     )
-    test_db.add(order)
-    test_db.commit()
+    db.add(order)
+    db.commit()
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product"].id,
+        product_group_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
         delivery_place_id=master_data["delivery_place"].id,
         status="pending",
     )
-    test_db.add(order_line)
-    test_db.commit()
+    db.add(order_line)
+    db.commit()
 
     # Test: Preview in order mode
     payload = {"mode": "order", "order_scope": {"order_line_id": order_line.id}}

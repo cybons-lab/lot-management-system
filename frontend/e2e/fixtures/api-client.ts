@@ -81,10 +81,11 @@ export class ApiClient {
    */
   async login(credentials: LoginCredentials): Promise<AuthToken> {
     const response = await this.request.post(`${API_BASE_URL}/api/auth/login`, {
-      form: {
+      data: {
         username: credentials.username,
         password: credentials.password,
       },
+      timeout: 30000,
     });
 
     expect(response.ok(), `Login failed: ${await response.text()}`).toBeTruthy();
@@ -104,6 +105,7 @@ export class ApiClient {
   async resetDatabase(): Promise<void> {
     const response = await this.request.post(`${API_BASE_URL}/api/admin/reset-database`, {
       headers: this.getHeaders(),
+      timeout: 60000,
     });
 
     expect(response.ok(), `Database reset failed: ${await response.text()}`).toBeTruthy();
@@ -116,6 +118,7 @@ export class ApiClient {
     const response = await this.request.post(`${API_BASE_URL}/api/admin/test-data/generate`, {
       headers: this.getHeaders(),
       data: options || {},
+      timeout: 60000,
     });
 
     // Handle asynchronous generation (202 Accepted)

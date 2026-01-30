@@ -97,6 +97,10 @@ function useRestoreSession(
         } catch (error) {
           console.warn("Failed to restore session", error);
           clearAuthToken();
+          // Notify user that session could not be restored
+          toast.info("セッションの有効期限が切れました", {
+            description: "再度ログインしてください",
+          });
         }
       }
       setIsLoading(false);

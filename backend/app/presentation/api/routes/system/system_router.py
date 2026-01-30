@@ -1,5 +1,7 @@
 import json
+import re
 from datetime import UTC, datetime
+from pathlib import Path
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -42,19 +44,36 @@ def create_client_log(
 
 @router.get("/logs/recent", response_model=list[ClientLogResponse])
 def get_recent_logs(
-    limit: int = 100,
-    current_user: User = Depends(get_current_admin),  # Require Admin
+    limit: int = 500,
+    level: str | None = None,
+    user_id: int | None = None,
+    search: str | None = None,
+    current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
-    """Get recent system logs (Admin only ideally)."""
-    # Join User to get username
-    logs = (
-        db.query(ClientLog, User)
-        .outerjoin(User, ClientLog.user_id == User.id)
-        .order_by(desc(ClientLog.created_at))
-        .limit(limit)
-        .all()
-    )
+    """Get recent system logs with filtering (Admin only).
+
+    Args:
+        limit: Maximum number of logs to return (default: 500)
+        level: Filter by log level (error, warning, info)
+        user_id: Filter by user ID
+        search: Search in message content
+        current_user: Current admin user (dependency)
+        db: Database session (dependency)
+    """
+    # Build query with filters
+    query = db.query(ClientLog, User).outerjoin(User, ClientLog.user_id == User.id)
+
+    if level:
+        query = query.filter(ClientLog.level == level)
+
+    if user_id is not None:
+        query = query.filter(ClientLog.user_id == user_id)
+
+    if search:
+        query = query.filter(ClientLog.message.ilike(f"%{search}%"))
+
+    logs = query.order_by(desc(ClientLog.created_at)).limit(limit).all()
 
     return [
         {
@@ -95,3 +114,123 @@ def get_public_settings(
         visibility = {}
 
     return PublicSystemSettings(page_visibility=visibility, maintenance_mode=maintenance)
+
+
+class BackendLogEntry(BaseModel):
+    timestamp: str
+    level: str
+    logger: str
+    message: str
+    module: str = ""
+    function: str = ""
+    line: int = 0
+    extra: dict | None = None
+    exception: str | None = None
+
+
+@router.get("/logs/backend/recent", response_model=list[BackendLogEntry])
+def get_recent_backend_logs(
+    limit: int = 200,
+    _current_user: User = Depends(get_current_admin),
+):
+    """Get recent backend logs from log file (Admin only).
+
+    Args:
+        limit: Maximum number of logs to return (default: 200)
+        _current_user: Current admin user (dependency)
+
+    Returns:
+        List of recent backend log entries
+    """
+    log_file = Path("logs/app.log")
+
+    if not log_file.exists():
+        return []
+
+    try:
+        # Read last N lines from log file
+        with open(log_file, encoding="utf-8") as f:
+            # Get all lines
+            lines = f.readlines()
+
+        # Take last 'limit' lines
+        recent_lines = lines[-limit:] if len(lines) > limit else lines
+
+        # Parse log lines (simplified parsing)
+        logs: list[BackendLogEntry] = []
+        for line in recent_lines:
+            parsed = _parse_log_line(line)
+            if parsed:
+                logs.append(parsed)
+
+        return logs
+
+    except Exception:
+        # Return empty list on error
+        return []
+
+
+def _parse_log_line(line: str) -> BackendLogEntry | None:
+    """Parse a log line into BackendLogEntry.
+
+    Supports both JSON format and plain text format.
+
+    Args:
+        line: Log line to parse
+
+    Returns:
+        Parsed log entry or None if parsing fails
+    """
+    line = line.strip()
+    if not line:
+        return None
+
+    # Try parsing as JSON first (current format)
+    if line.startswith("{"):
+        try:
+            data = json.loads(line)
+            return BackendLogEntry(
+                timestamp=data.get("timestamp", ""),
+                level=data.get("level", "INFO").upper(),
+                logger=data.get("logger", ""),
+                message=data.get("event", data.get("message", "")),
+                module="",
+                function="",
+                line=0,
+                extra={
+                    k: v
+                    for k, v in data.items()
+                    if k not in {"timestamp", "level", "logger", "event", "message"}
+                },
+                exception=None,
+            )
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+    # Fallback to plain text format: 2024-01-30 12:34:56,789 - logger.name - LEVEL - message
+    pattern = r"(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2},\d{3})\s-\s([\w\.]+)\s-\s(\w+)\s-\s(.+)"
+    match = re.match(pattern, line)
+
+    if not match:
+        return None
+
+    timestamp_str, logger_name, level, message = match.groups()
+
+    # Convert timestamp format
+    try:
+        dt = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S,%f")
+        iso_timestamp = dt.isoformat()
+    except ValueError:
+        iso_timestamp = timestamp_str
+
+    return BackendLogEntry(
+        timestamp=iso_timestamp,
+        level=level,
+        logger=logger_name,
+        message=message,
+        module="",
+        function="",
+        line=0,
+        extra=None,
+        exception=None,
+    )

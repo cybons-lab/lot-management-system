@@ -124,6 +124,7 @@ P3: Uses LotReservation exclusively.
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -152,6 +153,9 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 def validate_commit_eligibility(order: Order) -> None:
     """Validate order status for commit operation.
 
@@ -162,9 +166,17 @@ def validate_commit_eligibility(order: Order) -> None:
         ValueError: If order status does not allow commit
     """
     if order.status not in {"open", "part_allocated"}:
+        logger.warning(
+            "Order status not eligible for commit",
+            extra={"order_id": order.id, "status": order.status},
+        )
         raise ValueError(
             f"Order status '{order.status}' does not allow commit. Allowed: open, part_allocated"
         )
+    logger.debug(
+        "Order validated for commit",
+        extra={"order_id": order.id, "status": order.status},
+    )
 
 
 def persist_reservation_entities(
@@ -254,6 +266,16 @@ def persist_reservation_entities(
         lot.updated_at = now
         created.append(reservation)
 
+        logger.info(
+            "Reservation persisted",
+            extra={
+                "order_line_id": line.id,
+                "lot_id": lot.id,
+                "reserved_qty": float(alloc_plan.allocate_qty),
+                "lot_number": lot.lot_number,
+            },
+        )
+
 
 def commit_fefo_reservation(db: Session, order_id: int) -> FefoCommitResult:
     """FEFO予約確定（状態: open|part_allocated のみ許容）.
@@ -269,6 +291,8 @@ def commit_fefo_reservation(db: Session, order_id: int) -> FefoCommitResult:
         ValueError: 注文が見つからない、または状態が不正な場合
         AllocationCommitError: 予約確定中にエラーが発生した場合
     """
+    logger.info("Starting FEFO reservation commit", extra={"order_id": order_id})
+
     order = _load_order(db, order_id)
     validate_commit_eligibility(order)
 
@@ -282,7 +306,19 @@ def commit_fefo_reservation(db: Session, order_id: int) -> FefoCommitResult:
         update_order_allocation_status(db, order_id)
 
         db.commit()
-    except (AllocationCommitError, SQLAlchemyError, ValueError):
+        logger.info(
+            "FEFO reservation commit completed",
+            extra={
+                "order_id": order_id,
+                "reservations_created": len(created),
+            },
+        )
+    except (AllocationCommitError, SQLAlchemyError, ValueError) as e:
+        logger.error(
+            "FEFO reservation commit failed",
+            extra={"order_id": order_id, "error": str(e)},
+            exc_info=True,
+        )
         db.rollback()
         raise
 

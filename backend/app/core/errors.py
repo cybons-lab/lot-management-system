@@ -19,6 +19,7 @@ from app.application.services.allocations.schemas import (
 from app.application.services.allocations.schemas import (
     InsufficientStockError as ServiceInsufficientStockError,
 )
+from app.core.config import settings
 
 # Allocation domain
 from app.domain.allocation.exceptions import (
@@ -254,14 +255,20 @@ async def validation_exception_handler(
     errors = []
     for error in exc.errors():
         error_dict = dict(error)
-        # ctx内の例外オブジェクトを文字列化
-        if "ctx" in error_dict and error_dict["ctx"]:
-            ctx = error_dict["ctx"]
-            for key, value in ctx.items():
-                if isinstance(value, Exception):
-                    ctx[key] = str(value)
-            error_dict["ctx"] = ctx
-        errors.append(error_dict)
+
+        # Iterate through all values and ensure they are JSON serializable
+        def _make_serializable(data):
+            if isinstance(data, dict):
+                return {k: _make_serializable(v) for k, v in data.items()}
+            elif isinstance(data, list):
+                return [_make_serializable(v) for v in data]
+            elif isinstance(data, bytes):
+                return data.decode("utf-8", errors="replace")
+            elif isinstance(data, Exception):
+                return str(data)
+            return data
+
+        errors.append(_make_serializable(error_dict))
 
     # バリデーションエラーの詳細ログ
     logger.warning(
@@ -297,19 +304,31 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     Returns:
         JSONResponse（Problem+JSON形式）
     """
+
+    def _mask_sensitive_headers(headers: dict[str, str]) -> dict[str, str]:
+        masked = {}
+        for key, value in headers.items():
+            key_lower = key.lower()
+            if any(sensitive in key_lower for sensitive in settings.LOG_SENSITIVE_FIELDS):
+                masked[key] = "***MASKED***"
+            else:
+                masked[key] = value
+        return masked
+
     # リクエストボディを取得（可能な場合）
-    request_body = None
-    try:
-        body_bytes = await request.body()
-        if body_bytes:
-            try:
-                request_body = body_bytes.decode("utf-8")[:1000]  # 最初の1000文字のみ
-            except UnicodeDecodeError:
-                request_body = "<binary data>"
-    except (RuntimeError, ValueError) as e:
-        # Body already consumed or stream closed
-        logger.debug(f"Failed to read request body: {e}")
-        request_body = "<unavailable>"
+    request_body = "<redacted>" if settings.ENVIRONMENT == "production" else None
+    if settings.ENVIRONMENT != "production":
+        try:
+            body_bytes = await request.body()
+            if body_bytes:
+                try:
+                    request_body = body_bytes.decode("utf-8")[:1000]  # 最初の1000文字のみ
+                except UnicodeDecodeError:
+                    request_body = "<binary data>"
+        except (RuntimeError, ValueError) as e:
+            # Body already consumed or stream closed
+            logger.debug(f"Failed to read request body: {e}")
+            request_body = "<unavailable>"
 
     # 詳細なエラーログ
     logger.error(
@@ -320,7 +339,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
             "path": request.url.path,
             "method": request.method,
             "query_params": dict(request.query_params),
-            "headers": dict(request.headers),
+            "headers": _mask_sensitive_headers(dict(request.headers)),
             "request_body": request_body,
             "traceback": traceback.format_exc(),
         },

@@ -241,6 +241,7 @@ git checkout -b feature/xxx
 6. Document domain logic with docstrings
 7. Commit frequently with atomic changes (avoid large bulk commits). Commits do not require user confirmation.
 8. Create feature branches for new work (e.g., `feature/order-filters`).
+9. **Add comprehensive logging from the start** (see Logging Guidelines below)
 
 ### DON'T
 1. Bypass service layer (routes → repositories directly)
@@ -249,6 +250,467 @@ git checkout -b feature/xxx
 4. Mix business logic in components
 5. Use `any` types in TypeScript
 6. Hardcode configuration values
+7. Write code without logging critical operations
+
+### Logging Guidelines
+
+**CRITICAL: Always add logging when writing new code. Don't wait for debugging to add logs.**
+
+#### When to Add Logging
+
+1. **External API Calls** (P0 - Always log)
+   - Request parameters (mask sensitive data)
+   - Response status and size
+   - Timeout and error details
+   - Example: RPA flows, SAP integration, SmartRead API
+
+2. **Database Operations** (P0 - Always log errors)
+   - IntegrityError with entity details
+   - SQLAlchemyError with operation context
+   - Include: entity ID, operation type, error message
+
+3. **Business Logic Decision Points** (P1 - Log decisions)
+   - FEFO/FIFO candidate selection (filter params, result counts)
+   - Allocation logic (why candidates were selected/rejected)
+   - Order state transitions
+   - Include: "why" not just "what"
+
+4. **Background Tasks** (P1 - Log progress)
+   - Task start/completion
+   - File processing progress
+   - State transitions
+   - Success/failure with context
+
+5. **Return None Cases** (P2 - Warn when unexpected)
+   - Log why None is returned
+   - Include context for debugging
+
+#### Logging Patterns
+
+```python
+# GOOD: Structured logging with context
+logger.info(
+    "FEFO candidates found",
+    extra={
+        "product_id": product_id,
+        "candidate_count": len(candidates),
+        "policy": "FEFO",
+    },
+)
+
+# GOOD: Error logging with entity context
+logger.error(
+    "Lot creation failed",
+    extra={
+        "lot_number": lot_number,
+        "product_code": product_code,
+        "error": str(exc)[:500],
+    },
+    exc_info=True,
+)
+
+# BAD: F-string logging (no structured data)
+logger.error(f"Failed to create lot {lot_number}")
+
+# BAD: No logging
+try:
+    result = external_api.call()
+except Exception:
+    return None  # Silent failure!
+```
+
+#### Log Levels
+
+- `DEBUG`: Detailed diagnostic info (filter params, intermediate values)
+- `INFO`: Normal operations (API calls, task completion, business events)
+- `WARNING`: Unexpected but handled (no candidates found, fallback used)
+- `ERROR`: Errors requiring attention (API failures, DB errors)
+- `EXCEPTION`: Like ERROR but with traceback (use `logger.exception()`)
+
+#### Security Considerations
+
+- **Mask sensitive data**: URLs, credentials, tokens, API keys
+- **Redact PII**: Customer data, email addresses (in production)
+- **Limit response bodies**: Max 500 chars for error responses
+- Example: `masked_url = url[:50] + "..." if len(url) > 50 else url`
+
+---
+
+### Error Handling Guidelines
+
+**CRITICAL: Implement comprehensive error handling from the start. Don't ship code without proper error handling.**
+
+#### Exception Hierarchy
+
+Always handle exceptions in order from most specific to most general:
+
+```python
+# GOOD: Specific exceptions first
+try:
+    response = await http_client.post(url, json=data)
+    response.raise_for_status()
+    return response.json()
+except httpx.HTTPStatusError as e:
+    logger.error(
+        "HTTP error from external API",
+        extra={
+            "url": masked_url,
+            "status_code": e.response.status_code,
+            "response_body": e.response.text[:500],
+        },
+    )
+    raise
+except httpx.TimeoutException as e:
+    logger.error("API request timeout", extra={"url": masked_url, "timeout": timeout})
+    raise
+except httpx.RequestError as e:
+    logger.error("API request failed", extra={"url": masked_url, "error": str(e)})
+    raise
+except Exception as e:
+    logger.exception("Unexpected error in API call", extra={"url": masked_url})
+    raise
+
+# BAD: Generic catch-all only
+try:
+    result = external_api.call()
+except Exception:
+    return None  # Lost error context!
+```
+
+#### Database Error Handling
+
+```python
+# GOOD: Handle specific DB errors with context
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
+try:
+    db.add(entity)
+    db.commit()
+except IntegrityError as exc:
+    db.rollback()
+    logger.error(
+        "Database integrity error",
+        extra={
+            "entity_type": entity.__class__.__name__,
+            "entity_id": getattr(entity, "id", None),
+            "error": str(exc.orig)[:500] if exc.orig else str(exc)[:500],
+        },
+    )
+    raise HTTPException(status_code=400, detail="Entity already exists or constraint violation")
+except SQLAlchemyError as exc:
+    db.rollback()
+    logger.error(
+        "Database operation failed",
+        extra={
+            "entity_type": entity.__class__.__name__,
+            "operation": "create",
+            "error": str(exc)[:500],
+        },
+    )
+    raise HTTPException(status_code=500, detail="Database operation failed")
+```
+
+#### API Response Error Handling
+
+```python
+# GOOD: Safe error responses (no exception leakage)
+@router.post("/items")
+def create_item(item: ItemCreate, db: Session = Depends(get_db)):
+    try:
+        result = service.create_item(db, item)
+        return result
+    except IntegrityError:
+        # Don't leak exception details to client
+        raise HTTPException(status_code=400, detail="Item already exists")
+    except Exception:
+        logger.exception("Unexpected error creating item")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# BAD: Exception leakage
+@router.post("/items")
+def create_item(item: ItemCreate):
+    result = service.create_item(item)  # Unhandled exception propagates to client!
+    return result
+```
+
+#### Frontend Error Handling
+
+```typescript
+// GOOD: Specific error handling with user feedback
+try {
+  await createItem(formData);
+  showSuccessToast("Item created successfully");
+  navigate("/items");
+} catch (error) {
+  if (error instanceof HTTPError) {
+    const status = error.response.status;
+    if (status === 400) {
+      showErrorToast("Invalid input. Please check your data.");
+    } else if (status === 409) {
+      showErrorToast("Item already exists.");
+    } else {
+      showErrorToast("Failed to create item. Please try again.");
+    }
+  } else {
+    console.error("Unexpected error:", error);
+    showErrorToast("An unexpected error occurred.");
+  }
+}
+
+// BAD: Silent failure
+try {
+  await createItem(formData);
+} catch (error) {
+  console.log(error); // User has no feedback!
+}
+```
+
+#### When to Raise vs Return
+
+```python
+# RAISE: When the operation cannot complete
+def get_user_by_id(db: Session, user_id: int) -> User:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+# RETURN None: When absence is valid
+def find_active_session(db: Session, user_id: int) -> Session | None:
+    session = db.query(Session).filter(
+        Session.user_id == user_id,
+        Session.active == True
+    ).first()
+    # None is a valid result (no active session)
+    return session
+```
+
+---
+
+### Guard Processing and Access Control
+
+**CRITICAL: Always implement proper access control for sensitive operations.**
+
+#### Route-Level Guards (Frontend)
+
+```tsx
+// GOOD: Use AccessGuard for admin-only pages
+import { AccessGuard } from "@/components/auth/AccessGuard";
+
+function SystemSettingsPage() {
+  return (
+    <AccessGuard roles={["admin"]}>
+      <SystemSettingsContent />
+    </AccessGuard>
+  );
+}
+
+// GOOD: Use routeKey for automatic permission lookup
+function LogViewerPage() {
+  return (
+    <AccessGuard routeKey="ADMIN.LOGS">
+      <LogViewerContent />
+    </AccessGuard>
+  );
+}
+
+// BAD: No guard on sensitive page
+function AdminDashboard() {
+  return <AdminContent />; // Anyone can access!
+}
+```
+
+#### Permission Configuration
+
+Always add new admin routes to `frontend/src/features/auth/permissions/config.ts`:
+
+```typescript
+// Add to routePermissions array
+{ routeKey: "ADMIN.NEW_FEATURE", path: "/admin/new-feature", allowedRoles: ["admin"] },
+```
+
+#### API-Level Guards (Backend)
+
+```python
+# GOOD: Use dependency injection for auth
+from app.presentation.api.routes.auth.auth_router import get_current_admin
+
+@router.get("/admin/sensitive-data")
+def get_sensitive_data(
+    db: Session = Depends(get_db),
+    _current_admin = Depends(get_current_admin)  # Enforces admin role
+):
+    return service.get_sensitive_data(db)
+
+# GOOD: Manual permission check when needed
+from app.presentation.api.routes.auth.auth_router import get_current_user
+
+@router.delete("/items/{item_id}")
+def delete_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    if "admin" not in current_user.roles:
+        raise HTTPException(status_code=403, detail="Admin role required")
+
+    service.delete_item(db, item_id)
+    return {"message": "Item deleted"}
+
+# BAD: No authentication check
+@router.delete("/items/{item_id}")
+def delete_item(item_id: int, db: Session = Depends(get_db)):
+    service.delete_item(db, item_id)  # Anyone can delete!
+    return {"message": "Item deleted"}
+```
+
+#### Input Validation Guards
+
+```python
+# GOOD: Validate input at API boundary
+from pydantic import BaseModel, Field, field_validator
+
+class ItemCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    quantity: int = Field(..., gt=0)
+
+    @field_validator("name")
+    def validate_name(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Name cannot be empty or whitespace")
+        return v.strip()
+
+@router.post("/items")
+def create_item(item: ItemCreate, db: Session = Depends(get_db)):
+    # Pydantic validation already occurred
+    return service.create_item(db, item)
+
+# BAD: No validation
+@router.post("/items")
+def create_item(data: dict, db: Session = Depends(get_db)):
+    # Raw dict, no validation!
+    return service.create_item(db, data)
+```
+
+#### Database Constraint Guards
+
+```python
+# GOOD: Check constraints before operation
+def assign_lot_to_order(db: Session, lot_id: int, order_id: int):
+    lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    if not lot:
+        raise HTTPException(status_code=404, detail="Lot not found")
+
+    if lot.available_quantity <= 0:
+        raise HTTPException(status_code=400, detail="Lot has no available quantity")
+
+    if lot.is_expired():
+        raise HTTPException(status_code=400, detail="Cannot assign expired lot")
+
+    # Proceed with assignment
+    allocation = Allocation(lot_id=lot_id, order_id=order_id, ...)
+    db.add(allocation)
+    db.commit()
+
+# BAD: Let database catch constraint violations
+def assign_lot_to_order(db: Session, lot_id: int, order_id: int):
+    allocation = Allocation(lot_id=lot_id, order_id=order_id, ...)
+    db.add(allocation)  # May fail with cryptic DB error!
+    db.commit()
+```
+
+#### Operation Permission Guards
+
+```typescript
+// GOOD: Check permissions before showing UI
+import { usePermission } from "@/features/auth/permissions";
+
+function ItemActions({ item }) {
+  const canDelete = usePermission({ operation: "inventory:delete" });
+  const canUpdate = usePermission({ operation: "inventory:update" });
+
+  return (
+    <div>
+      {canUpdate && <EditButton onClick={() => editItem(item)} />}
+      {canDelete && <DeleteButton onClick={() => deleteItem(item)} />}
+    </div>
+  );
+}
+
+// BAD: Show all actions to all users
+function ItemActions({ item }) {
+  return (
+    <div>
+      <EditButton onClick={() => editItem(item)} />
+      <DeleteButton onClick={() => deleteItem(item)} />  {/* Everyone sees this! */}
+    </div>
+  );
+}
+```
+
+---
+
+### Common Tasks Checklists
+
+#### グローバルナビゲーションに新機能を追加する場合
+
+**CRITICAL: 以下の3箇所を必ず更新してください。忘れるとシステム設定ページで表示されません。**
+
+1. **GlobalNavigation.tsx** - メニュー項目を追加
+   ```tsx
+   <NavItem to="/new-feature" feature="new_feature" label="新機能" />
+   ```
+
+2. **`frontend/src/constants/features.ts`** - 機能キーを追加
+   ```typescript
+   export const AVAILABLE_FEATURES = [
+     // ... existing
+     "new_feature",  // ← 追加
+   ] as const;
+
+   export const FEATURE_LABELS: Record<FeatureKey, string> = {
+     // ... existing
+     new_feature: "新機能",  // ← 追加
+   };
+   ```
+
+3. **`frontend/src/features/auth/permissions/config.ts`** - ルート権限を追加
+   ```typescript
+   {
+     routeKey: "NEW_FEATURE",
+     path: "/new-feature",
+     allowedRoles: ["admin", "user", "guest"]  // 適切なロールを指定
+   },
+   ```
+
+**これにより:**
+- グローバルナビゲーションにメニューが表示される
+- システム設定の「セキュリティ・アクセス制御」で表示/非表示を制御可能
+- ロールベースのアクセス制御が適用される
+
+#### 新しいadmin専用ページを追加する場合
+
+1. **ルート定義** - `MainRoutes.tsx`
+   ```tsx
+   <Route
+     path="/admin/new-page"
+     element={
+       <AccessGuard roles={["admin"]}>
+         <NewAdminPage />
+       </AccessGuard>
+     }
+   />
+   ```
+
+2. **権限設定** - `config.ts`
+   ```typescript
+   { routeKey: "ADMIN.NEW_PAGE", path: "/admin/new-page", allowedRoles: ["admin"] },
+   ```
+
+3. **グローバルナビに追加** (オプション)
+   - 上記「グローバルナビゲーションに新機能を追加」を参照
+
+---
 
 ### Key Concepts
 - **FEFO:** First Expiry First Out allocation
@@ -272,6 +734,10 @@ Detailed standards are maintained in `docs/standards/`:
 
 - **Swagger UI:** http://localhost:8000/api/docs
 - **ReDoc:** http://localhost:8000/api/redoc
+- **Log Viewer:** http://localhost:3000/logs (Admin only)
+  - リアルタイムログストリーミング
+  - レベル/テキストフィルタリング
+  - 一時停止/再開、エクスポート機能
 
 ---
 

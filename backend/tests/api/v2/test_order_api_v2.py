@@ -8,16 +8,17 @@ from app.infrastructure.persistence.models import (
     DeliveryPlace,
     Order,
     OrderLine,
-    Product,
+    SupplierItem,
 )
 
 
 @pytest.fixture
-def setup_order_data(db_session):
+def setup_order_data(db_session, supplier):
     # Master Data
-    product = Product(
-        maker_part_code="PRD-ORD-001",
-        product_name="Test Product Order",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PRD-ORD-001",
+        display_name="Test Product Order",
         base_unit="EA",
     )
     db_session.add(product)
@@ -49,7 +50,7 @@ def setup_order_data(db_session):
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=product.id,
+        product_group_id=product.id,
         delivery_place_id=delivery_place.id,
         delivery_date=date.today() + timedelta(days=5),
         order_quantity=Decimal("50.0"),
@@ -109,7 +110,7 @@ def test_create_order(client, setup_order_data):
         # But setup_order_data used it for Model. Let's stick to Schema.
         "lines": [
             {
-                "product_id": product.id,
+                "product_group_id": product.id,
                 "order_quantity": 20.0,
                 "unit": "EA",
                 "delivery_date": (date.today() + timedelta(days=10)).isoformat(),
@@ -142,7 +143,7 @@ def test_import_orders(client, setup_order_data):
 
     payload = {
         "customer_code": customer.customer_code,
-        "product_code": product.maker_part_code,
+        "product_code": product.maker_part_no,
         "order_date": date.today().isoformat(),
         "order_id": order.id,
         "delivery_place_id": delivery_place.id,

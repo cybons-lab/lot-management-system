@@ -3,6 +3,8 @@
 Refactored: Split into smaller modules for better maintainability.
 """
 
+import logging
+
 from sqlalchemy.orm import Session
 
 from .test_data.calendar_wrapper import TestDataCalendar
@@ -23,6 +25,7 @@ from .test_data.rpa_material_delivery import generate_rpa_material_delivery_data
 from .test_data.sap import generate_sap_data
 from .test_data.shipping_master import generate_shipping_master_data
 from .test_data.smartread import generate_smartread_data
+from .test_data.system_config import generate_system_config
 from .test_data.utils import clear_data
 from .test_data.withdrawals import generate_withdrawals
 
@@ -47,7 +50,10 @@ __all__ = [
     "generate_shipping_master_data",
     "generate_rpa_material_delivery_data",
     "generate_sap_data",
+    "generate_system_config",
 ]
+
+logger = logging.getLogger(__name__)
 
 
 def generate_all_test_data(db: Session, options: object = None, progress_callback=None):
@@ -139,12 +145,17 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
             progress_callback(98, "Generating SAP Integration Data...")
         generate_sap_data(db)
 
+        # Step 10: Initialize system configuration
+        if progress_callback:
+            progress_callback(99, "Initializing System Configuration...")
+        generate_system_config(db)
+
         db.commit()
 
         if progress_callback:
             progress_callback(100, "Completed!")
         return True
-    except Exception as e:
+    except Exception:
         db.rollback()
-        print(f"Error generating test data: {e}")
-        raise e
+        logger.exception("Error generating test data")
+        raise

@@ -14,10 +14,10 @@ from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
     DeliveryPlace,
-    Product,
     Supplier,
     Warehouse,
 )
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 
 def test_regenerate_for_periods(db):
@@ -30,6 +30,7 @@ def test_regenerate_for_periods(db):
 
     supplier = Supplier(supplier_code="SUP1", supplier_name="Supplier 1")
     db.add(supplier)
+    db.flush()
 
     customer = Customer(customer_code="CUST1", customer_name="Customer 1")
     db.add(customer)
@@ -38,15 +39,18 @@ def test_regenerate_for_periods(db):
         delivery_place_code="DP1", delivery_place_name="Place 1", customer=customer
     )
     db.add(delivery_place)
+    db.flush()
 
-    product = Product(maker_part_code="PROD1", product_name="Product 1", base_unit="EA")
+    product = SupplierItem(
+        supplier_id=supplier.id, maker_part_no="PROD1", display_name="Product 1", base_unit="EA"
+    )
     db.add(product)
     db.commit()
 
     # Setup Lots (FEFO test)
     # Lot 1: Expires sooner (2025-12-01), Qty 100
     lot_master1 = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         lot_number="LOT1",
     )
     db.add(lot_master1)
@@ -54,7 +58,7 @@ def test_regenerate_for_periods(db):
 
     lot1 = LotReceipt(
         lot_master_id=lot_master1.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
         expiry_date=date(2026, 12, 1),
@@ -67,7 +71,7 @@ def test_regenerate_for_periods(db):
 
     # Lot 2: Expires later (2026-01-01), Qty 100
     lot_master2 = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         lot_number="LOT2",
     )
     db.add(lot_master2)
@@ -75,7 +79,7 @@ def test_regenerate_for_periods(db):
 
     lot2 = LotReceipt(
         lot_master_id=lot_master2.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
         expiry_date=date(2027, 1, 1),
@@ -92,7 +96,7 @@ def test_regenerate_for_periods(db):
     forecast = ForecastCurrent(
         customer_id=customer.id,
         delivery_place_id=delivery_place.id,
-        product_id=product.id,
+        product_group_id=product.id,
         forecast_date=date(2025, 11, 1),
         forecast_quantity=Decimal("150"),
         unit="EA",
@@ -132,6 +136,7 @@ def test_regenerate_with_shortage(db):
 
     supplier = Supplier(supplier_code="SUP2", supplier_name="Supplier 2")
     db.add(supplier)
+    db.flush()
 
     customer = Customer(customer_code="CUST2", customer_name="Customer 2")
     db.add(customer)
@@ -140,15 +145,18 @@ def test_regenerate_with_shortage(db):
         delivery_place_code="DP2", delivery_place_name="Place 2", customer=customer
     )
     db.add(delivery_place)
+    db.flush()
 
-    product = Product(maker_part_code="PROD2", product_name="Product 2", base_unit="EA")
+    product = SupplierItem(
+        supplier_id=supplier.id, maker_part_no="PROD2", display_name="Product 2", base_unit="EA"
+    )
     db.add(product)
     db.commit()
 
     # Setup Lots (Shortage test)
     # Lot 1: Qty 50
     lot_master1 = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         lot_number="LOT3",
     )
     db.add(lot_master1)
@@ -156,7 +164,7 @@ def test_regenerate_with_shortage(db):
 
     lot1 = LotReceipt(
         lot_master_id=lot_master1.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
         expiry_date=date(2026, 12, 1),
@@ -173,7 +181,7 @@ def test_regenerate_with_shortage(db):
     forecast = ForecastCurrent(
         customer_id=customer.id,
         delivery_place_id=delivery_place.id,
-        product_id=product.id,
+        product_group_id=product.id,
         forecast_date=date(2025, 11, 1),
         forecast_quantity=Decimal("100"),
         unit="EA",
@@ -213,6 +221,7 @@ def test_regenerate_single_lot_fit(db):
 
     supplier = Supplier(supplier_code="SUP3", supplier_name="Supplier 3")
     db.add(supplier)
+    db.flush()
 
     customer = Customer(customer_code="CUST3", customer_name="Customer 3")
     db.add(customer)
@@ -221,15 +230,18 @@ def test_regenerate_single_lot_fit(db):
         delivery_place_code="DP3", delivery_place_name="Place 3", customer=customer
     )
     db.add(delivery_place)
+    db.flush()
 
-    product = Product(maker_part_code="PROD3", product_name="Product 3", base_unit="EA")
+    product = SupplierItem(
+        supplier_id=supplier.id, maker_part_no="PROD3", display_name="Product 3", base_unit="EA"
+    )
     db.add(product)
     db.commit()
 
     # Setup Lots
     # Lot 1 (Older): Qty 50. Expires 2025-11-01.
     lot_master1 = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         lot_number="LOT_OLD_SMALL",
     )
     db.add(lot_master1)
@@ -237,7 +249,7 @@ def test_regenerate_single_lot_fit(db):
 
     lot1 = LotReceipt(
         lot_master_id=lot_master1.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
         expiry_date=date(2026, 11, 1),
@@ -250,7 +262,7 @@ def test_regenerate_single_lot_fit(db):
 
     # Lot 2 (Newer): Qty 100. Expires 2025-12-01.
     lot_master2 = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         lot_number="LOT_NEW_LARGE",
     )
     db.add(lot_master2)
@@ -258,7 +270,7 @@ def test_regenerate_single_lot_fit(db):
 
     lot2 = LotReceipt(
         lot_master_id=lot_master2.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 2, 1),
         expiry_date=date(2026, 12, 1),
@@ -277,7 +289,7 @@ def test_regenerate_single_lot_fit(db):
     forecast = ForecastCurrent(
         customer_id=customer.id,
         delivery_place_id=delivery_place.id,
-        product_id=product.id,
+        product_group_id=product.id,
         forecast_date=date(2025, 11, 15),
         forecast_quantity=Decimal("80"),
         unit="EA",

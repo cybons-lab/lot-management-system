@@ -32,7 +32,7 @@ class TestReplenishmentCalculator:
         # on_hand=40 < 50 => Order triggered.
 
         rec = calc.calculate(
-            product_id=1,
+            product_group_id=1,
             warehouse_id=1,
             supplier_id=1,
             as_of_date=as_of,
@@ -64,7 +64,7 @@ class TestReplenishmentCalculator:
         # ROP = 500
         # on_hand = 60
         rec = calc.calculate(
-            product_id=1,
+            product_group_id=1,
             warehouse_id=1,
             supplier_id=1,
             as_of_date=as_of,

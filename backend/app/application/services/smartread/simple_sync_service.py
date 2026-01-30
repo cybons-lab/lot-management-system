@@ -440,8 +440,8 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                 "filename": filename,
             }
 
-        except Exception as e:
-            logger.error(f"[SimpleSync] Failed: {e}")
+        except Exception:
+            logger.exception("[SimpleSync] Failed")
             raise
         finally:
             session.close()
@@ -573,8 +573,8 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                 ],
                 "requests": request_states,
             }
-        except Exception as e:
-            logger.error(f"[SimpleSync] Watch dir failed: {e}")
+        except Exception:
+            logger.exception("[SimpleSync] Watch dir failed")
             raise
         finally:
             session.close()

@@ -6,6 +6,7 @@ All allocation-related candidate queries should go through this service.
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session
@@ -17,6 +18,9 @@ from app.infrastructure.persistence.repositories.lot_repository import LotReposi
 
 if TYPE_CHECKING:
     pass
+
+
+logger = logging.getLogger(__name__)
 
 
 class AllocationCandidateService:
@@ -120,7 +124,23 @@ class AllocationCandidateService:
         Returns:
             List of LotCandidate sorted by policy
         """
-        return self._repo.find_allocation_candidates(
+        logger.debug(
+            "Finding allocation candidates",
+            extra={
+                "product_group_id": product_group_id,
+                "policy": policy.value if hasattr(policy, "value") else str(policy),
+                "lock_mode": lock_mode.value if hasattr(lock_mode, "value") else str(lock_mode),
+                "warehouse_id": warehouse_id,
+                "exclude_expired": exclude_expired,
+                "safety_days": safety_days,
+                "exclude_locked": exclude_locked,
+                "include_sample": include_sample,
+                "include_adhoc": include_adhoc,
+                "min_available_qty": min_available_qty,
+            },
+        )
+
+        candidates = self._repo.find_allocation_candidates(
             product_group_id=product_group_id,
             policy=policy,
             lock_mode=lock_mode,
@@ -132,6 +152,32 @@ class AllocationCandidateService:
             include_adhoc=include_adhoc,
             min_available_qty=min_available_qty,
         )
+
+        logger.info(
+            "Allocation candidates found",
+            extra={
+                "product_group_id": product_group_id,
+                "policy": policy.value if hasattr(policy, "value") else str(policy),
+                "candidate_count": len(candidates),
+                "total_available_qty": sum(c.available_qty for c in candidates),
+                "warehouse_id": warehouse_id,
+            },
+        )
+
+        if not candidates:
+            logger.warning(
+                "No allocation candidates found - check filters",
+                extra={
+                    "product_group_id": product_group_id,
+                    "policy": policy.value if hasattr(policy, "value") else str(policy),
+                    "warehouse_id": warehouse_id,
+                    "exclude_expired": exclude_expired,
+                    "exclude_locked": exclude_locked,
+                    "min_available_qty": min_available_qty,
+                },
+            )
+
+        return candidates
 
     def get_candidates_for_products(
         self,

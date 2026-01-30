@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 from datetime import date, timedelta
 from typing import TYPE_CHECKING, cast
@@ -13,6 +14,9 @@ from app.infrastructure.persistence.models import (
     Supplier,
     Warehouse,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
@@ -116,12 +120,18 @@ class LotRepository:
 
     def find_by_id(self, lot_id: int) -> LotReceipt | None:
         """Return a lot by its primary key."""
+        logger.debug("Finding lot by ID", extra={"lot_id": lot_id})
         stmt: Select[tuple[LotReceipt]] = (
             select(LotReceipt)
             .options(joinedload(LotReceipt.product_group), joinedload(LotReceipt.warehouse))
             .where(LotReceipt.id == lot_id)
         )
-        return cast(LotReceipt | None, self.db.execute(stmt).scalar_one_or_none())
+        result = cast(LotReceipt | None, self.db.execute(stmt).scalar_one_or_none())
+        if result:
+            logger.debug("Lot found", extra={"lot_id": lot_id, "lot_number": result.lot_number})
+        else:
+            logger.debug("Lot not found", extra={"lot_id": lot_id})
+        return result
 
     def find_available_lots(
         self,
@@ -158,8 +168,18 @@ class LotRepository:
             min_quantity: Minimum available quantity threshold
             excluded_origin_types: List of origin_types to exclude (e.g., ['sample', 'adhoc'])
         """
+        logger.debug(
+            "Finding available lots",
+            extra={
+                "product_code": product_code,
+                "warehouse_code": warehouse_code,
+                "min_quantity": min_quantity,
+            },
+        )
+
         product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
         if not product:
+            logger.debug("Product not found", extra={"product_code": product_code})
             return []
 
         # First, get all active lots for this product
@@ -192,6 +212,14 @@ class LotRepository:
         available_lots = [
             lot for lot in lots if float(get_available_quantity(self.db, lot)) > min_quantity
         ]
+        logger.debug(
+            "Available lots found",
+            extra={
+                "product_code": product_code,
+                "total_lots": len(lots),
+                "available_lots": len(available_lots),
+            },
+        )
         return available_lots
 
     def create(
@@ -204,6 +232,15 @@ class LotRepository:
         expiry_date: date | None = None,
     ) -> LotReceipt:
         """Create a lot placeholder using known identifiers."""
+        logger.info(
+            "Creating lot",
+            extra={
+                "supplier_code": supplier_code,
+                "product_code": product_code,
+                "lot_number": lot_number,
+                "warehouse_id": warehouse_id,
+            },
+        )
         product: Product | None = None
         supplier: Supplier | None = None
         if supplier_code:
@@ -223,6 +260,14 @@ class LotRepository:
             unit="PC",  # Default if missing
         )
         self.db.add(lot)
+        logger.info(
+            "Lot created",
+            extra={
+                "lot_number": lot_number,
+                "product_id": product.id if product else None,
+                "supplier_id": supplier.id if supplier else None,
+            },
+        )
         return lot
 
     def find_allocation_candidates(
@@ -259,6 +304,18 @@ class LotRepository:
         Returns:
             List of LotCandidate sorted by policy
         """
+        logger.debug(
+            "Finding allocation candidates",
+            extra={
+                "product_group_id": product_group_id,
+                "policy": str(policy),
+                "lock_mode": str(lock_mode),
+                "warehouse_id": warehouse_id,
+                "exclude_expired": exclude_expired,
+                "min_available_qty": min_available_qty,
+            },
+        )
+
         # Build base query using db.query() for session compatibility
         from sqlalchemy import nulls_last
 
@@ -394,5 +451,14 @@ class LotRepository:
                     receipt_date=lot.received_date,
                 )
             )
+
+        logger.debug(
+            "Allocation candidates found",
+            extra={
+                "product_group_id": product_group_id,
+                "total_lots_queried": len(lots),
+                "candidates_returned": len(candidates),
+            },
+        )
 
         return candidates

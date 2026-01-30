@@ -147,6 +147,7 @@ r"""FEFO引当プレビュー機能.
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -161,6 +162,9 @@ from .utils import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 def validate_preview_eligibility(order: Order) -> None:
     """Validate order status for preview operation.
 
@@ -171,10 +175,18 @@ def validate_preview_eligibility(order: Order) -> None:
         ValueError: If order status does not allow preview
     """
     if order.status not in {"draft", "open", "part_allocated", "allocated"}:
+        logger.warning(
+            "Order status not eligible for preview",
+            extra={"order_id": order.id, "status": order.status},
+        )
         raise ValueError(
             f"Order status '{order.status}' does not allow preview. "
             f"Allowed: draft, open, part_allocated, allocated"
         )
+    logger.debug(
+        "Order validated for preview",
+        extra={"order_id": order.id, "status": order.status},
+    )
 
 
 def load_order_for_preview(db: Session, order_id: int) -> Order:
@@ -219,6 +231,16 @@ def calculate_line_allocations(
     )
     already_allocated = _existing_allocated_qty(line)
     remaining = required_qty - already_allocated
+
+    logger.debug(
+        "Calculating line allocation",
+        extra={
+            "order_line_id": line.id,
+            "required_qty": required_qty,
+            "already_allocated": already_allocated,
+            "remaining": remaining,
+        },
+    )
 
     product_group_id = getattr(line, "product_group_id", None)
     warehouse_id = getattr(line, "warehouse_id", None)
@@ -283,6 +305,16 @@ def calculate_line_allocations(
             min_available_qty=0.001,  # Filter out 0 qty candidates
         )
 
+        logger.debug(
+            "Retrieved FEFO candidates",
+            extra={
+                "order_line_id": line.id,
+                "product_group_id": product_group_id,
+                "warehouse_id": warehouse_id,
+                "candidate_count": len(candidates),
+            },
+        )
+
         valid_candidates = []
         temp_allocations: dict[int, Decimal] = {}
 
@@ -313,6 +345,16 @@ def calculate_line_allocations(
             Decimal(str(remaining)), valid_candidates, temp_allocations
         )
 
+        logger.debug(
+            "Allocation results",
+            extra={
+                "order_line_id": line.id,
+                "valid_candidate_count": len(valid_candidates),
+                "allocation_count": len(results),
+                "requested_qty": remaining,
+            },
+        )
+
         for res in results:
             # Map back to FefoLotPlan
             # Find the lot object (candidates has it)
@@ -337,9 +379,29 @@ def calculate_line_allocations(
             available_per_lot[allocated_lot.lot_id] = current_avail - allocated_qty_float
             remaining -= allocated_qty_float
 
+            logger.info(
+                "Lot allocated",
+                extra={
+                    "order_line_id": line.id,
+                    "lot_id": allocated_lot.lot_id,
+                    "lot_number": allocated_lot.lot_number,
+                    "allocated_qty": allocated_qty_float,
+                    "expiry_date": str(allocated_lot.expiry_date),
+                    "remaining_in_lot": available_per_lot[allocated_lot.lot_id],
+                },
+            )
+
     if remaining > 0:
         message = f"在庫不足: 製品 {product_code} に対して {remaining:.2f} 足りません"
         line_plan.warnings.append(message)
+        logger.warning(
+            "Insufficient stock for allocation",
+            extra={
+                "order_line_id": line.id,
+                "product_code": product_code,
+                "shortage_qty": remaining,
+            },
+        )
 
     return line_plan
 
@@ -377,12 +439,19 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
     Raises:
         ValueError: 注文が見つからない、または状態が不正な場合
     """
+    logger.info("Starting FEFO preview", extra={"order_id": order_id})
+
     order = load_order_for_preview(db, order_id)
 
     available_per_lot: dict[int, float] = {}
     preview_lines: list[FefoLinePlan] = []
 
     sorted_lines = sorted(order.order_lines, key=lambda l: l.id)
+    logger.debug(
+        "Processing order lines",
+        extra={"order_id": order_id, "line_count": len(sorted_lines)},
+    )
+
     for line in sorted_lines:
         required_qty = float(
             line.converted_quantity
@@ -398,4 +467,13 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
         line_plan = calculate_line_allocations(db, line, order, available_per_lot)
         preview_lines.append(line_plan)
 
-    return build_preview_result(order_id, preview_lines)
+    result = build_preview_result(order_id, preview_lines)
+    logger.info(
+        "FEFO preview completed",
+        extra={
+            "order_id": order_id,
+            "lines_processed": len(preview_lines),
+            "warning_count": len(result.warnings),
+        },
+    )
+    return result

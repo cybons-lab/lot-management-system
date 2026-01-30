@@ -153,7 +153,7 @@ class VLotDetails(Base):
     __table_args__ = {"info": {"is_view": True}}
 
     lot_id: Mapped[int] = mapped_column("lot_id", BigInteger, primary_key=True)
-    lot_number: Mapped[str] = mapped_column(String(100))
+    lot_number: Mapped[str | None] = mapped_column(String(100))
     product_group_id: Mapped[int] = mapped_column(BigInteger)
     product_code: Mapped[str] = mapped_column(String)  # New in Phase 2
     maker_part_no: Mapped[str] = mapped_column(String)  # Alias for backward compatibility

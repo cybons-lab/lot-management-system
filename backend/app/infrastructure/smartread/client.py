@@ -15,6 +15,44 @@ import httpx
 logger = logging.getLogger(__name__)
 
 
+def _safe_response_body(response: httpx.Response | None, limit: int = 500) -> str | None:
+    if response is None:
+        return None
+    try:
+        body = response.text
+    except Exception:
+        return None
+    return body[:limit] if body else None
+
+
+def _log_http_error(
+    message: str,
+    error: httpx.HTTPStatusError,
+    context: dict[str, Any],
+) -> None:
+    response = error.response
+    payload = {
+        **context,
+        "status_code": response.status_code if response else None,
+        "url": str(error.request.url) if error.request else None,
+        "response_body": _safe_response_body(response),
+    }
+    logger.error(message, extra=payload)
+
+
+def _log_request_error(
+    message: str,
+    error: httpx.RequestError,
+    context: dict[str, Any],
+) -> None:
+    payload = {
+        **context,
+        "url": str(error.request.url) if error.request else None,
+        "error": str(error),
+    }
+    logger.error(message, extra=payload)
+
+
 @dataclass
 class SmartReadResult:
     """SmartRead OCR解析結果."""
@@ -580,8 +618,25 @@ class SmartReadClient:
                     error_message=data.get("errorMessage"),
                 )
 
-        except Exception as e:
-            logger.error(f"Failed to get export status: {e}")
+        except httpx.HTTPStatusError as e:
+            _log_http_error(
+                "Failed to get export status",
+                e,
+                {"task_id": task_id, "export_id": export_id},
+            )
+            return None
+        except httpx.RequestError as e:
+            _log_request_error(
+                "Request error while getting export status",
+                e,
+                {"task_id": task_id, "export_id": export_id},
+            )
+            return None
+        except Exception:
+            logger.exception(
+                "Unexpected error while getting export status",
+                extra={"task_id": task_id, "export_id": export_id},
+            )
             return None
 
     async def download_export(
@@ -613,8 +668,25 @@ class SmartReadClient:
                 logger.debug(f"Download Size: {len(response.content)} bytes")
                 return response.content
 
-        except Exception as e:
-            logger.error(f"Failed to download export: {e}")
+        except httpx.HTTPStatusError as e:
+            _log_http_error(
+                "Failed to download export",
+                e,
+                {"task_id": task_id, "export_id": export_id},
+            )
+            return None
+        except httpx.RequestError as e:
+            _log_request_error(
+                "Request error while downloading export",
+                e,
+                {"task_id": task_id, "export_id": export_id},
+            )
+            return None
+        except Exception:
+            logger.exception(
+                "Unexpected error while downloading export",
+                extra={"task_id": task_id, "export_id": export_id},
+            )
             return None
 
     async def poll_export_until_ready(
@@ -705,10 +777,24 @@ class SmartReadClient:
                 )
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"Failed to get request status: {e.response.status_code}")
+            _log_http_error(
+                "Failed to get request status",
+                e,
+                {"request_id": request_id},
+            )
             return None
-        except Exception as e:
-            logger.error(f"Failed to get request status: {e}")
+        except httpx.RequestError as e:
+            _log_request_error(
+                "Request error while getting request status",
+                e,
+                {"request_id": request_id},
+            )
+            return None
+        except Exception:
+            logger.exception(
+                "Unexpected error while getting request status",
+                extra={"request_id": request_id},
+            )
             return None
 
     async def get_request_results(
@@ -745,7 +831,10 @@ class SmartReadClient:
 
                 # 処理中の場合は400エラーになる可能性がある
                 if response.status_code == 400:
-                    error_data = response.json()
+                    try:
+                        error_data = response.json()
+                    except ValueError:
+                        error_data = {"message": _safe_response_body(response)}
                     return SmartReadRequestResults(
                         request_id=request_id,
                         results=[],
@@ -765,7 +854,11 @@ class SmartReadClient:
                 )
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"Failed to get request results: {e.response.status_code}")
+            _log_http_error(
+                "Failed to get request results",
+                e,
+                {"request_id": request_id, "offset": offset, "limit": limit},
+            )
             return SmartReadRequestResults(
                 request_id=request_id,
                 results=[],
@@ -773,8 +866,24 @@ class SmartReadClient:
                 success=False,
                 error_message=f"HTTP Error: {e.response.status_code}",
             )
+        except httpx.RequestError as e:
+            _log_request_error(
+                "Request error while getting request results",
+                e,
+                {"request_id": request_id, "offset": offset, "limit": limit},
+            )
+            return SmartReadRequestResults(
+                request_id=request_id,
+                results=[],
+                raw_response={},
+                success=False,
+                error_message=str(e),
+            )
         except Exception as e:
-            logger.error(f"Failed to get request results: {e}")
+            logger.exception(
+                "Unexpected error while getting request results",
+                extra={"request_id": request_id, "offset": offset, "limit": limit},
+            )
             return SmartReadRequestResults(
                 request_id=request_id,
                 results=[],
@@ -887,10 +996,24 @@ class SmartReadClient:
                 return task_id
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"Failed to create task: {e.response.status_code}")
+            _log_http_error(
+                "Failed to create task",
+                e,
+                {"task_name": task_name},
+            )
             return None
-        except Exception as e:
-            logger.error(f"Failed to create task: {e}")
+        except httpx.RequestError as e:
+            _log_request_error(
+                "Request error while creating task",
+                e,
+                {"task_name": task_name},
+            )
+            return None
+        except Exception:
+            logger.exception(
+                "Unexpected error while creating task",
+                extra={"task_name": task_name},
+            )
             return None
 
     async def submit_request(
@@ -927,8 +1050,22 @@ class SmartReadClient:
                 return request_id
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"Failed to submit request: {e.response.status_code}")
+            _log_http_error(
+                "Failed to submit request",
+                e,
+                {"task_id": task_id, "filename": filename},
+            )
             return None
-        except Exception as e:
-            logger.error(f"Failed to submit request: {e}")
+        except httpx.RequestError as e:
+            _log_request_error(
+                "Request error while submitting request",
+                e,
+                {"task_id": task_id, "filename": filename},
+            )
+            return None
+        except Exception:
+            logger.exception(
+                "Unexpected error while submitting request",
+                extra={"task_id": task_id, "filename": filename},
+            )
             return None

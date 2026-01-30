@@ -13,21 +13,21 @@ from app.domain.lot import LotCandidate
 from app.infrastructure.persistence.models import (
     LotCurrentStock,
     LotReceipt,
-    Product,
     Supplier,
+    SupplierItem,
     Warehouse,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
 @pytest.fixture
-def setup_lot_test_data(db_session: Session):
+def setup_lot_test_data(db_session: Session, supplier):
     """ロットテスト用の基本データをセットアップ"""
     # 既存データをクリア
     db_session.query(LotCurrentStock).delete()
     db_session.query(LotReceipt).delete()
     db_session.query(LotMaster).delete()
-    db_session.query(Product).delete()
+    db_session.query(SupplierItem).delete()
     db_session.query(Supplier).delete()
     db_session.query(Warehouse).delete()
     db_session.commit()
@@ -36,13 +36,17 @@ def setup_lot_test_data(db_session: Session):
     wh1 = Warehouse(warehouse_code="W1", warehouse_name="Main", warehouse_type="internal")
     wh2 = Warehouse(warehouse_code="W2", warehouse_name="Sub", warehouse_type="internal")
     sup = Supplier(supplier_code="S1", supplier_name="Supplier")
-    prod = Product(
-        maker_part_code="P1",
-        product_name="Product 1",
+    db_session.add_all([wh1, wh2, sup])
+    db_session.flush()
+
+    prod = SupplierItem(
+        supplier_id=sup.id,
+        maker_part_no="P1",
+        display_name="Product 1",
         internal_unit="EA",
         base_unit="EA",
     )
-    db_session.add_all([wh1, wh2, sup, prod])
+    db_session.add(prod)
     db_session.flush()
 
     return {
@@ -62,14 +66,14 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
     prod = data["product"]
 
     # 期限が違うロットを2つ（W1に2つ置く）
-    lm_a = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="A")
+    lm_a = LotMaster(product_group_id=prod.id, supplier_id=sup.id, lot_number="A")
     db_session.add(lm_a)
     db_session.flush()
 
     lot_a = LotReceipt(
         lot_master_id=lm_a.id,
         supplier_id=sup.id,
-        product_id=prod.id,
+        product_group_id=prod.id,
         warehouse_id=wh1.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=10),
@@ -77,14 +81,14 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
         received_quantity=3,
         origin_type="order",  # Explicitly set for FEFO candidate filtering
     )
-    lm_b = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="B")
+    lm_b = LotMaster(product_group_id=prod.id, supplier_id=sup.id, lot_number="B")
     db_session.add(lm_b)
     db_session.flush()
 
     lot_b = LotReceipt(
         lot_master_id=lm_b.id,
         supplier_id=sup.id,
-        product_id=prod.id,
+        product_group_id=prod.id,
         warehouse_id=wh1.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=20),
@@ -93,14 +97,14 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
         origin_type="order",  # Explicitly set for FEFO candidate filtering
     )
     # W2にも1つ（フィルタで除外される想定）
-    lm_c = LotMaster(product_id=prod.id, supplier_id=sup.id, lot_number="C")
+    lm_c = LotMaster(product_group_id=prod.id, supplier_id=sup.id, lot_number="C")
     db_session.add(lm_c)
     db_session.flush()
 
     lot_c = LotReceipt(
         lot_master_id=lm_c.id,
         supplier_id=sup.id,
-        product_id=prod.id,
+        product_group_id=prod.id,
         warehouse_id=wh2.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=5),
@@ -130,7 +134,7 @@ class TestCreateLot:
     """LotService.create_lot() のテスト"""
 
     @pytest.fixture
-    def lot_master_data(self, db_session: Session):
+    def lot_master_data(self, db_session: Session, supplier):
         """ロット作成テスト用のマスタデータをセットアップ"""
         # 既存データをクリア
         from app.infrastructure.persistence.models import (
@@ -142,7 +146,7 @@ class TestCreateLot:
         db_session.query(LotCurrentStock).delete()
         db_session.query(LotReceipt).delete()
         db_session.query(LotMaster).delete()
-        db_session.query(Product).delete()
+        db_session.query(SupplierItem).delete()
         db_session.query(Supplier).delete()
         db_session.query(Warehouse).delete()
         db_session.commit()
@@ -152,13 +156,17 @@ class TestCreateLot:
             warehouse_code="WH-TEST", warehouse_name="Test Warehouse", warehouse_type="internal"
         )
         supplier = Supplier(supplier_code="SUP-TEST", supplier_name="Test Supplier")
-        product = Product(
-            maker_part_code="PRD-TEST",
-            product_name="Test Product",
+        db_session.add_all([warehouse, supplier])
+        db_session.flush()
+
+        product = SupplierItem(
+            supplier_id=supplier.id,
+            maker_part_no="PRD-TEST",
+            display_name="Test Product",
             internal_unit="EA",
             base_unit="EA",
         )
-        db_session.add_all([warehouse, supplier, product])
+        db_session.add(product)
         db_session.flush()
 
         return {
@@ -178,7 +186,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="TEST-LOT-001",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
             received_quantity=Decimal("100"),
@@ -189,7 +197,7 @@ class TestCreateLot:
         result = svc.create_lot(lot_create)
 
         assert result.lot_number == "TEST-LOT-001"
-        assert result.product_id == data["product"].id
+        assert result.product_group_id == data["product"].id
         assert result.warehouse_id == data["warehouse"].id
         assert result.current_quantity == Decimal("100")
         assert result.status.value == "active"
@@ -206,7 +214,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="SMP-001",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
             received_quantity=Decimal("10"),
@@ -232,7 +240,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="SAF-001",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
             received_quantity=Decimal("500"),
@@ -256,7 +264,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="TEST-LOT-WITH-SUPPLIER",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             supplier_code="SUP-TEST",
             received_date=date.today(),
@@ -282,7 +290,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="TEST-NO-SUPPLIER",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             supplier_code=None,
             received_date=date.today(),
@@ -308,7 +316,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="TEST-INVALID-SUPPLIER",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             supplier_code="INVALID-SUPPLIER",
             received_date=date.today(),
@@ -322,7 +330,7 @@ class TestCreateLot:
 
         assert "INVALID-SUPPLIER" in str(exc_info.value)
 
-    def test_create_lot_invalid_product_id(self, db_session: Session, lot_master_data):
+    def test_create_lot_invalid_product_group_id(self, db_session: Session, lot_master_data):
         """存在しない製品IDでエラーとなるテスト"""
         from decimal import Decimal
 
@@ -334,7 +342,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="TEST-INVALID-PRODUCT",
-            product_id=99999,  # 存在しないID
+            product_group_id=99999,  # 存在しないID
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
             received_quantity=Decimal("50"),
@@ -357,7 +365,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="TEST-INVALID-WAREHOUSE",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=99999,  # 存在しないID
             received_date=date.today(),
             received_quantity=Decimal("50"),
@@ -382,7 +390,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="TEST-NEW-MASTER",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
             received_quantity=Decimal("100"),
@@ -401,7 +409,7 @@ class TestCreateLot:
             db_session.query(LotMaster).filter(LotMaster.lot_number == "TEST-NEW-MASTER").first()
         )
         assert lot_master is not None
-        assert lot_master.product_id == data["product"].id
+        assert lot_master.product_group_id == data["product"].id
         assert lot_master.supplier_id is None
 
     def test_create_lot_reuses_existing_lot_master(self, db_session: Session, lot_master_data):
@@ -416,7 +424,7 @@ class TestCreateLot:
         # 最初のロット作成
         lot_create1 = LotCreate(
             lot_number="SHARED-MASTER",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
             received_quantity=Decimal("100"),
@@ -430,7 +438,7 @@ class TestCreateLot:
         # 同じロット番号で2番目のロット作成（小分け入荷のシナリオ）
         lot_create2 = LotCreate(
             lot_number="SHARED-MASTER",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
             received_quantity=Decimal("50"),
@@ -459,7 +467,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="TEST-WITH-EXPIRY",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
             expiry_date=expiry,
@@ -484,7 +492,7 @@ class TestCreateLot:
 
         lot_create = LotCreate(
             lot_number="TEST-STOCK-HISTORY",
-            product_id=data["product"].id,
+            product_group_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
             received_date=date.today(),
             received_quantity=Decimal("100"),
