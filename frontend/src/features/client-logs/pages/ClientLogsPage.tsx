@@ -8,7 +8,6 @@ import { RefreshCw, AlertCircle, Search, X } from "lucide-react";
 import { useState } from "react";
 
 import type { ClientLogsListParams } from "../api";
-import { ClientLogDetailDialog } from "../components/ClientLogDetailDialog";
 import { useClientLogs } from "../hooks";
 
 import { Button, Badge, Input, Label } from "@/components/ui";
@@ -38,7 +37,7 @@ interface ClientLog {
   created_at: string;
 }
 
-function LogEntryComponent({ log, onClick }: { log: ClientLog; onClick: () => void }) {
+function LogEntryComponent({ log }: { log: ClientLog }) {
   const formattedTime = new Date(log.created_at).toLocaleString("ja-JP", {
     year: "numeric",
     month: "2-digit",
@@ -49,18 +48,7 @@ function LogEntryComponent({ log, onClick }: { log: ClientLog; onClick: () => vo
   });
 
   return (
-    <div
-      className="hover:bg-gray-800 p-2 rounded cursor-pointer transition-colors"
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      role="button"
-      tabIndex={0}
-    >
+    <div className="hover:bg-gray-800 p-2 rounded transition-colors">
       <div className="flex items-start gap-3">
         {/* Timestamp - Left side */}
         <span className="text-gray-400 text-xs whitespace-nowrap font-mono">{formattedTime}</span>
@@ -87,9 +75,6 @@ function LogEntryComponent({ log, onClick }: { log: ClientLog; onClick: () => vo
 
 /* eslint-disable max-lines-per-function, complexity */
 export function ClientLogsPage() {
-  const [selectedLog, setSelectedLog] = useState<ClientLog | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
   // Filter states
   const [selectedLevel, setSelectedLevel] = useState<"all" | "error" | "warning" | "info">("all");
   const [searchText, setSearchText] = useState("");
@@ -103,11 +88,6 @@ export function ClientLogsPage() {
   };
 
   const { data: logs = [], isLoading, isError, refetch, isFetching } = useClientLogs(queryParams);
-
-  const handleRowClick = (log: ClientLog) => {
-    setSelectedLog(log);
-    setIsDialogOpen(true);
-  };
 
   const handleSearch = () => {
     setAppliedSearch(searchText);
@@ -145,40 +125,46 @@ export function ClientLogsPage() {
           <div className="flex-1 min-w-[200px]">
             <Label className="text-sm font-medium mb-2 block">ログレベル</Label>
             <div className="flex gap-2">
-              <Button
-                variant={selectedLevel === "all" ? "default" : "outline"}
-                size="sm"
+              <button
                 onClick={() => setSelectedLevel("all")}
+                className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                  selectedLevel === "all"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                }`}
               >
                 すべて
-              </Button>
-              <Button
-                variant={selectedLevel === "error" ? "default" : "outline"}
-                size="sm"
+              </button>
+              <button
                 onClick={() => setSelectedLevel("error")}
+                className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                  selectedLevel === "error"
+                    ? "bg-red-600 text-white border-red-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                }`}
               >
-                <Badge variant="destructive" className="mr-1">
-                  error
-                </Badge>
-              </Button>
-              <Button
-                variant={selectedLevel === "warning" ? "default" : "outline"}
-                size="sm"
+                error
+              </button>
+              <button
                 onClick={() => setSelectedLevel("warning")}
+                className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                  selectedLevel === "warning"
+                    ? "bg-yellow-600 text-white border-yellow-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                }`}
               >
-                <Badge variant="secondary" className="mr-1">
-                  warning
-                </Badge>
-              </Button>
-              <Button
-                variant={selectedLevel === "info" ? "default" : "outline"}
-                size="sm"
+                warning
+              </button>
+              <button
                 onClick={() => setSelectedLevel("info")}
+                className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                  selectedLevel === "info"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                }`}
               >
-                <Badge variant="outline" className="mr-1">
-                  info
-                </Badge>
-              </Button>
+                info
+              </button>
             </div>
           </div>
 
@@ -246,14 +232,12 @@ export function ClientLogsPage() {
           <div className="border rounded-lg bg-gray-900 text-gray-100 p-4 h-[600px] overflow-y-auto">
             <div className="space-y-1">
               {logs.map((log) => (
-                <LogEntryComponent key={log.id} log={log} onClick={() => handleRowClick(log)} />
+                <LogEntryComponent key={log.id} log={log} />
               ))}
             </div>
           </div>
         </div>
       )}
-
-      <ClientLogDetailDialog log={selectedLog} open={isDialogOpen} onOpenChange={setIsDialogOpen} />
     </PageContainer>
   );
 }
