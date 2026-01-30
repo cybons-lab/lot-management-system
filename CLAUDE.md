@@ -650,6 +650,68 @@ function ItemActions({ item }) {
 
 ---
 
+### Common Tasks Checklists
+
+#### グローバルナビゲーションに新機能を追加する場合
+
+**CRITICAL: 以下の3箇所を必ず更新してください。忘れるとシステム設定ページで表示されません。**
+
+1. **GlobalNavigation.tsx** - メニュー項目を追加
+   ```tsx
+   <NavItem to="/new-feature" feature="new_feature" label="新機能" />
+   ```
+
+2. **`frontend/src/constants/features.ts`** - 機能キーを追加
+   ```typescript
+   export const AVAILABLE_FEATURES = [
+     // ... existing
+     "new_feature",  // ← 追加
+   ] as const;
+
+   export const FEATURE_LABELS: Record<FeatureKey, string> = {
+     // ... existing
+     new_feature: "新機能",  // ← 追加
+   };
+   ```
+
+3. **`frontend/src/features/auth/permissions/config.ts`** - ルート権限を追加
+   ```typescript
+   {
+     routeKey: "NEW_FEATURE",
+     path: "/new-feature",
+     allowedRoles: ["admin", "user", "guest"]  // 適切なロールを指定
+   },
+   ```
+
+**これにより:**
+- グローバルナビゲーションにメニューが表示される
+- システム設定の「セキュリティ・アクセス制御」で表示/非表示を制御可能
+- ロールベースのアクセス制御が適用される
+
+#### 新しいadmin専用ページを追加する場合
+
+1. **ルート定義** - `MainRoutes.tsx`
+   ```tsx
+   <Route
+     path="/admin/new-page"
+     element={
+       <AccessGuard roles={["admin"]}>
+         <NewAdminPage />
+       </AccessGuard>
+     }
+   />
+   ```
+
+2. **権限設定** - `config.ts`
+   ```typescript
+   { routeKey: "ADMIN.NEW_PAGE", path: "/admin/new-page", allowedRoles: ["admin"] },
+   ```
+
+3. **グローバルナビに追加** (オプション)
+   - 上記「グローバルナビゲーションに新機能を追加」を参照
+
+---
+
 ### Key Concepts
 - **FEFO:** First Expiry First Out allocation
 - **stock_history:** Immutable event log (never update)
