@@ -490,7 +490,7 @@ class LotService:
         for lot_view in lot_views:
             response = LotResponse(
                 id=lot_view.lot_id,
-                lot_number=lot_view.lot_number,
+                lot_number=lot_view.lot_number or "",
                 product_group_id=lot_view.product_group_id,
                 product_code=lot_view.maker_part_no or "",
                 product_name=lot_view.display_name,
@@ -718,10 +718,20 @@ class LotService:
         # Lotモデルに存在しないフィールドを削除
         lot_payload.pop("allocated_quantity", None)
 
-        # lot_number が未指定/空の場合は None に設定（TMP番号は生成しない）
-        # temporary_lot_key は UUID で自動生成（DB default値）
+        # lot_number が未指定/空の場合は TMP-YYYYMMDD-XXXXXXXX 形式を生成
+        # temporary_lot_key は UUID で自動生成
         if not lot_payload.get("lot_number") or lot_payload["lot_number"].strip() == "":
-            lot_payload["lot_number"] = None
+            import uuid
+            from datetime import datetime
+
+            # Generate temporary lot key (UUID)
+            temp_uuid = uuid.uuid4()
+            lot_payload["temporary_lot_key"] = temp_uuid
+
+            # Generate TMP-format lot number: TMP-YYYYMMDD-first8chars
+            today_str = datetime.now().strftime("%Y%m%d")
+            uuid_prefix = str(temp_uuid).replace("-", "")[:8]
+            lot_payload["lot_number"] = f"TMP-{today_str}-{uuid_prefix}"
         elif lot_create.origin_type != LotOriginType.ORDER:
             # Auto-generate lot number for non-order origin types if placeholder
             if lot_payload["lot_number"] == "AUTO":

@@ -9,50 +9,18 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models import (
     BusinessRule,
     LotReceipt,
-    Product,
     ProductWarehouse,
+    SupplierItem,
     Warehouse,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
-from app.main import app
-from app.presentation.api.deps import get_db
 
 
 # ---- テスト用DBセッションを使う（トランザクションは外側のpytest設定に依存）
-@pytest.fixture
-def test_db(db: Session):
-    """
-    Wrap the standard db fixture to set up dependency override.
-    Ensures API requests use the same session as the test.
-    """
-
-    def override_get_db():
-        # Return the same db session instance directly
-        # This ensures transaction isolation is maintained
-        return db
-
-    app.dependency_overrides[get_db] = override_get_db
-    yield db
-    app.dependency_overrides.clear()
-
-
-def _truncate_all(db: Session):
-    """テスト用にデータをクリア."""
-    try:
-        db.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert").delete()
-        db.query(LotReceipt).delete()
-        db.query(LotMaster).delete()
-        db.query(Product).delete()
-        db.query(Warehouse).delete()
-        db.flush()  # Flush instead of commit
-    except Exception:
-        db.rollback()
 
 
 def _setup_test_data(db: Session):
     """テストデータをセットアップ."""
-    _truncate_all(db)
-
     # 倉庫と商品を作成
     wh = Warehouse(
         warehouse_code="WH01", warehouse_name="Main Warehouse", warehouse_type="internal"
@@ -68,9 +36,10 @@ def _setup_test_data(db: Session):
     db.flush()
 
     products = [
-        Product(
-            maker_part_code=f"P{i:03d}",
-            product_name=f"Product {i}",
+        SupplierItem(
+            supplier_id=supplier.id,
+            maker_part_no=f"P{i:03d}",
+            display_name=f"Product {i}",
             internal_unit="EA",
             base_unit="EA",
         )
@@ -82,7 +51,7 @@ def _setup_test_data(db: Session):
     # Create ProductWarehouse records
     product_warehouses = [
         ProductWarehouse(
-            product_id=p.id,
+            product_group_id=p.id,
             warehouse_id=wh.id,
             is_active=True,
         )
@@ -94,7 +63,7 @@ def _setup_test_data(db: Session):
     # Create LotMasters first
     for i in range(1, 4):
         lm = LotMaster(
-            product_id=products[i - 1].id,
+            product_group_id=products[i - 1].id,
             lot_number=f"LOT{i:03d}",
             supplier_id=supplier.id,
         )
@@ -108,7 +77,7 @@ def _setup_test_data(db: Session):
     lots = [
         LotReceipt(
             supplier_id=supplier.id,
-            product_id=products[i - 1].id,
+            product_group_id=products[i - 1].id,
             lot_master_id=lot_masters[i - 1].id,
             warehouse_id=wh.id,
             received_quantity=100.0 * i,  # 100, 200, 300
@@ -124,9 +93,8 @@ def _setup_test_data(db: Session):
     return {"warehouse": wh, "products": products, "lots": lots}
 
 
-def test_inventory_sync_execute_success(test_db: Session):
+def test_inventory_sync_execute_success(db: Session):
     """SAP在庫同期サービスの正常実行テスト（サービス直接呼び出し版）."""
-    db = test_db
 
     data = _setup_test_data(db)
     products = data["products"]
@@ -169,9 +137,8 @@ def test_inventory_sync_execute_success(test_db: Session):
     assert result["alerts_created"] == 0
 
 
-def test_inventory_sync_execute_with_discrepancies(test_db: Session):
+def test_inventory_sync_execute_with_discrepancies(db: Session):
     """差異がある場合のテスト（サービス直接呼び出し版）."""
-    db = test_db
 
     data = _setup_test_data(db)
     products = data["products"]
@@ -217,7 +184,7 @@ def test_inventory_sync_execute_with_discrepancies(test_db: Session):
     details = result["details"]
     assert len(details) == 1
     disc = details[0]
-    assert disc["product_id"] == products[1].id
+    assert disc["product_group_id"] == products[1].id
     assert disc["local_qty"] == 200.0
     assert disc["sap_qty"] == 220.0
     # 差異率は約10%であることを確認（200→220は10%増加）
@@ -230,15 +197,13 @@ def test_inventory_sync_execute_with_discrepancies(test_db: Session):
     assert alerts[0].is_active is True
 
 
-def test_inventory_sync_execute_error_handling(test_db: Session):
+def test_inventory_sync_execute_error_handling(db: Session):
     """エラー時の処理テスト（サービス直接呼び出し版）."""
-    db = test_db
 
     _setup_test_data(db)
 
     # サービスを直接呼び出し（エラー発生）
     # SAPMockClient自体がエラーを投げる場合をテスト
-    import pytest
 
     with patch(
         "app.application.services.batch.inventory_sync_service.SAPMockClient",
@@ -253,9 +218,8 @@ def test_inventory_sync_execute_error_handling(test_db: Session):
         assert "SAP connection failed" in str(exc_info.value)
 
 
-def test_inventory_sync_multiple_executions(test_db: Session):
+def test_inventory_sync_multiple_executions(db: Session):
     """複数回実行時のアラート更新テスト（サービス直接呼び出し版）."""
-    db = test_db
 
     data = _setup_test_data(db)
     products = data["products"]

@@ -3,18 +3,19 @@ from decimal import Decimal
 
 import pytest
 
-from app.infrastructure.persistence.models import LotReceipt, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models import LotReceipt, Supplier, SupplierItem, Warehouse
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.product_warehouse_model import ProductWarehouse
 
 
 @pytest.fixture
-def setup_inventory_data(db_session):
+def setup_inventory_data(db_session, supplier):
     """Set up test data for inventory tests."""
     # Create product
-    product = Product(
-        maker_part_code="PRD-INV-001",
-        product_name="Test Product Inventory",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PRD-INV-001",
+        display_name="Test Product Inventory",
         base_unit="EA",
     )
     db_session.add(product)
@@ -36,12 +37,12 @@ def setup_inventory_data(db_session):
     db_session.flush()
 
     # Register product_warehouse (required for v_inventory_summary)
-    pw = ProductWarehouse(product_id=product.id, warehouse_id=warehouse.id)
+    pw = ProductWarehouse(product_group_id=product.id, warehouse_id=warehouse.id)
     db_session.add(pw)
 
     # Create LotMaster
     lot_master = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         supplier_id=supplier.id,
         lot_number="LOT-INV-001",
     )
@@ -51,7 +52,7 @@ def setup_inventory_data(db_session):
     # Create lot with stock
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_id=product.id,
+        product_group_id=product.id,
         supplier_id=supplier.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("100.0"),
@@ -87,14 +88,14 @@ def test_list_inventory(client, setup_inventory_data):
 
 
 def test_get_inventory_item(client, setup_inventory_data):
-    """Test GET /api/v2/inventory/{product_id}/{warehouse_id}"""
+    """Test GET /api/v2/inventory/{product_group_id}/{warehouse_id}"""
     product = setup_inventory_data["product"]
     warehouse = setup_inventory_data["warehouse"]
 
     response = client.get(f"/api/v2/inventory/{product.id}/{warehouse.id}")
     assert response.status_code == 200
     data = response.json()
-    assert data["product_id"] == product.id
+    assert data["product_group_id"] == product.id
     assert data["warehouse_id"] == warehouse.id
 
 

@@ -15,20 +15,21 @@ from app.infrastructure.persistence.models import (
     LotMaster,
     LotReceipt,
     LotReservation,
-    Product,
     ReservationSourceType,
     ReservationStatus,
+    SupplierItem,
     Warehouse,
 )
 
 
 @pytest.fixture
-def stock_test_data(db_session: Session):
+def stock_test_data(db_session: Session, supplier):
     """Setup data for stock calculation tests."""
     # Basic master data
-    prod = Product(
-        maker_part_code="CALC-TEST-001",
-        product_name="Calculation Test Product",
+    prod = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="CALC-TEST-001",
+        display_name="Calculation Test Product",
         base_unit="EA",
     )
     wh = Warehouse(
@@ -41,7 +42,7 @@ def stock_test_data(db_session: Session):
 
     # Lot Master
     lm = LotMaster(
-        product_id=prod.id,
+        product_group_id=prod.id,
         lot_number="LOT-CALC-001",
     )
     db_session.add(lm)
@@ -50,7 +51,7 @@ def stock_test_data(db_session: Session):
     # Lot (Initial state: 100 qty, no locks)
     lot = LotReceipt(
         lot_master_id=lm.id,
-        product_id=prod.id,
+        product_group_id=prod.id,
         warehouse_id=wh.id,
         received_quantity=Decimal("100.0"),
         locked_quantity=Decimal("0.0"),

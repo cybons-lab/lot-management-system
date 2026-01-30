@@ -1,6 +1,6 @@
 # タスクバックログ (統合版)
 
-**最終更新:** 2026-01-29
+**最終更新:** 2026-01-31
 
 ---
 
@@ -51,7 +51,44 @@
 
 ---
 
-### 1-3. 在庫計算ロジックの厳密化とSSOT固定
+### ~~1-3. CI/CDでtypecheckが無効化されていた~~ ✅ 対応済み
+
+**優先度**: 高
+**作成**: 2026-01-31
+**完了**: 2026-01-31
+**カテゴリ**: CI/CD・品質保証
+
+**問題:**
+- Typecheckが `.github/workflows/ci.yml` でコメントアウトされていた
+- 理由: "type definitions sync issue" (実際には問題なし)
+
+**対応内容:**
+- ✅ Typecheckを有効化（L34-36のコメント解除）
+- ✅ ローカルでtypecheck実行 → エラーなし確認
+- ✅ E2Eテストは既に別ジョブ (`e2e-smoke`, L103-199) として実装済み
+
+**確認結果:**
+```yaml
+CI構成:
+  Job 1: Frontend Tests
+    ✅ Lint (ESLint)
+    ✅ Typecheck (有効化)
+    ✅ Unit Tests (Vitest)
+
+  Job 2: Backend Tests
+    ✅ Lint (ruff)
+    ✅ Tests (pytest)
+
+  Job 3: E2E Smoke Tests (needs: frontend + backend)
+    ✅ Playwright smoke tests (P0 critical paths)
+```
+
+**関連ファイル:**
+- `.github/workflows/ci.yml` (L34-36: typecheck有効化)
+
+---
+
+### 1-4. 在庫計算ロジックの厳密化とSSOT固定
 
 **優先度**: High
 **難易度**: Medium
@@ -70,7 +107,11 @@
 
 ---
 
+<<<<<<< HEAD
 ### ~~1-4. エラー処理・ログ出力の改善（2026-01-29 レビュー）~~ ✅ 対応済み
+=======
+### ~~1-5. エラー処理・ログ出力の改善（2026-01-29 レビュー）~~ ✅ 対応済み
+>>>>>>> origin/main
 
 **優先度**: High
 **作成**: 2026-01-29
@@ -153,7 +194,30 @@
 
 ---
 
-### 2-3. Toast通知の不足
+### 2-3. SmartRead設定フォーム送信のE2Eテスト追加
+
+**優先度**: 中
+**作成**: 2026-01-31
+**カテゴリ**: テスト品質向上
+
+**背景:**
+- SmartRead設定モーダルのフォーム送信（作成・更新）は、shadcn/uiのSelectコンポーネントの複雑なモック要件により、Vitestでのユニットテストが困難
+- 現在はフォーム表示のみテストされており、実際の送信フローは未検証
+
+**タスク内容:**
+1. Playwrightを使用したE2Eテストの追加
+   - SmartRead設定の新規作成フロー
+   - 既存設定の更新フロー
+   - フォームバリデーションの確認
+2. テストファイル配置: `frontend/e2e/rpa-smartread-settings.spec.ts`
+
+**参考:**
+- 削除されたユニットテスト: `frontend/src/features/rpa/smartread/components/SmartReadSettingsModal.test.tsx` (L120-168)
+- 既存E2Eテスト: `frontend/e2e/auth.spec.ts`, `frontend/e2e/allocation.spec.ts`
+
+---
+
+### 2-4. Toast通知の不足
 
 - 保存成功時にフィードバックが出ない。
 - 対象:
@@ -597,7 +661,66 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 
 ## 5. テスト・自動化
 
-### 5-1. テスト基盤拡張（低優先度）
+### 5-1. 統合テスト・E2Eテストの拡充
+
+**優先度**: High
+**作成**: 2026-01-30
+**カテゴリ**: 品質保証・回帰テスト
+
+**背景:**
+昨日の大規模改修（Phase 2移行）後、手動テストで以下の500エラーが発見されました。これらはテストで検出されず、本番相当の環境で初めて発覚しました：
+
+1. **単位換算ページ**: SQLAlchemy join構文ミス
+2. **一括エクスポート**: Pythonスコープルール違反（ローカルインポートの重複）
+3. **材料ロット管理ページ**: `lot_number` NULL/空文字列のPydanticバリデーションエラー
+
+**課題:**
+- 主要APIエンドポイントの統合テストが不足
+- 画面遷移・UI操作を含むE2Eテストが存在しない
+- テストデータに境界値ケース（NULL値など）が不足
+
+**タスク内容:**
+
+#### 5-1-1. バックエンド統合テストの追加
+- [ ] 主要APIエンドポイントの統合テスト（実際のDB接続）
+  - マスタ系: 顧客、製品、仕入先、倉庫、単位換算、etc.
+  - トランザクション系: ロット、受注、引当、入出庫
+  - システム系: 一括エクスポート、ログビューア
+- [ ] エッジケース・境界値テスト
+  - NULL許容フィールドのテスト
+  - 空文字列、ゼロ値のテスト
+  - 外部キー制約違反のテスト
+- [ ] SQLクエリのテスト
+  - JOIN構文の正当性
+  - N+1問題の検出
+  - パフォーマンステスト
+
+#### 5-1-2. E2Eテスト基盤の構築
+- [ ] E2Eテストフレームワークの選定・導入（Playwright推奨）
+- [ ] 主要ユーザーフロー
+  - ログイン → ダッシュボード → マスタ画面遷移
+  - ロット新規登録 → 在庫確認
+  - 受注登録 → 引当 → 出庫
+  - データエクスポート
+- [ ] クリティカルパスのテスト
+  - FEFO引当アルゴリズム
+  - 在庫計算ロジック
+  - 権限制御（RBAC）
+
+#### 5-1-3. テストデータの拡充
+- [ ] 境界値・異常系のテストデータ追加
+  - `lot_number` が NULL/空文字列のロット
+  - 消費期限切れのロット
+  - 論理削除されたマスタを参照するデータ
+- [ ] `factory_boy` によるテストデータ生成の自動化
+
+**想定工数**: 1-2週間（段階的に実装）
+
+**元:** 2026-01-30 手動テスト結果のレビュー
+
+---
+
+### 5-2. テスト基盤拡張（低優先度）
 
 - **C3: Data Factory (Backend) 拡張**: `factory_boy` 等を使用したバックエンドテストデータ生成ファクトリの整備。現在は `services/test_data_generator.py` で代用中。
 - **C4: Test Matrix 定義**: テストケースの組み合わせ表（マトリクス）のドキュメント化と管理。
@@ -610,7 +733,7 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 
 ---
 
-### 5-2. テストDBでAlembic Migrationsを実行
+### 5-3. テストDBでAlembic Migrationsを実行
 
 **優先度**: Medium
 **難易度**: Medium
@@ -785,9 +908,51 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 
 ---
 
-## 7. 保留（再現確認・調査待ち）
+## 7. コード品質・アンチパターン検出
 
-### 7-1. フォーキャスト編集後の更新問題
+### 7-1. テストアンチパターンの検出と修正
+
+**優先度**: Medium
+**作成**: 2026-01-30
+**カテゴリ**: コード品質・保守性
+
+**背景:**
+テスト修正中に、複数のアンチパターンが発見されました：
+1. **独自test_dbセッション**: 21個のAPIテストファイルが独自のDBセッションを作成し、グローバルfixtureと互換性がない
+2. **fixture の重複**: 同じ master data を各ファイルで重複して定義
+3. **トランザクション管理の不統一**: commit/flush/rollback の使い分けが統一されていない
+
+**タスク内容:**
+
+#### 7-1-1. 既知アンチパターンの修正
+- [x] 独自test_dbセッションの削除（21ファイル）→ グローバル `db` fixture に統一
+- [ ] 重複fixture の共通化（supplier, warehouse, customer など）
+- [ ] トランザクション管理の統一（conftest.pyのパターンに従う）
+
+#### 7-1-2. アンチパターン検出ツールの導入
+- [ ] pytest-best-practices などのlinterツール検討
+- [ ] カスタムpytest pluginでアンチパターン検出
+  - 独自セッション作成の検出
+  - fixture スコープの不適切な使用
+  - 重複するsetup/teardown
+- [ ] CI/CDに組み込み
+
+#### 7-1-3. テストベストプラクティスのドキュメント化
+- [ ] `docs/standards/testing.md` の作成
+  - Fixture の使い方
+  - トランザクション管理
+  - テストデータの作成パターン
+  - 避けるべきアンチパターン
+
+**想定工数**: 2-3日
+
+**元:** 2026-01-30 テスト修正作業
+
+---
+
+## 9. 保留（再現確認・調査待ち）
+
+### 9-1. フォーキャスト編集後の更新問題
 
 - フォーキャスト編集後、計画引当サマリ・関連受注が更新されない。
 - 手動リフレッシュでは回避可能。バックエンド再計算の確認が必要。
@@ -796,7 +961,7 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 
 ---
 
-### 7-2. 過去データの可視性向上
+### 9-2. 過去データの可視性向上
 
 - **入荷予定一覧**: 過去データの表示確認と「過去/未来」タブまたはフィルタの実装。
 - **受注管理**: 過去の受注データの表示確認とステータス/日付フィルタの強化。
@@ -806,7 +971,7 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 
 ---
 
-### 7-3. RPA通常版 (Step1) の実行不可修正
+### 9-3. RPA通常版 (Step1) の実行不可修正
 
 - **症状**: `/rpa/material-delivery-note` のStep1実行ボタンを押しても、設定キー不一致によりBackendで即座にエラーとなる。
 - **原因**: Frontend (`STEP1_URL`) と Backend (`progress_download_url`) の設定キー不整合。
@@ -817,9 +982,9 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 
 ---
 
-## 8. 技術負債 (低優先度)
+## 9. 技術負債 (低優先度)
 
-### 8-1. フロントエンド: 外部モジュール型定義を改善
+### 9-1. フロントエンド: 外部モジュール型定義を改善
 
 **優先度**: Low (any型削減 Phase 3)
 **対象**: 16箇所
@@ -834,7 +999,7 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 
 ---
 
-### 8-2. バックエンド: Repository Methodsにジェネリクスを導入
+### 9-2. バックエンド: Repository Methodsにジェネリクスを導入
 
 **優先度**: Low (any型削減 Phase 3)
 **対象**: 3箇所
@@ -863,7 +1028,7 @@ def add(self, entity: T) -> None:
 
 ---
 
-### 8-3. バックエンド: Export Serviceの型を改善
+### 9-3. バックエンド: Export Serviceの型を改善
 
 **優先度**: Low (any型削減 Phase 3)
 **対象**: 2箇所
@@ -876,7 +1041,7 @@ def add(self, entity: T) -> None:
 
 ---
 
-### 8-4. SmartRead Logging Gaps - errorLogger Integration
+### 9-4. SmartRead Logging Gaps - errorLogger Integration
 
 **優先度**: Medium
 **作成**: 2026-01-21
@@ -902,7 +1067,7 @@ PR #454 added `errorLogger` to main features for success/error logging. However,
 
 ---
 
-### 8-5. SmartRead Cache-to-DB Save Inconsistency
+### 9-5. SmartRead Cache-to-DB Save Inconsistency
 
 **優先度**: Medium
 **作成**: 2026-01-21
@@ -923,7 +1088,7 @@ IDBに「DB保存済み」フラグを追加し、未保存データのみDB保�
 
 ---
 
-### 8-6. SSOT統一: CustomerItems 複合キーAPI廃止
+### 9-6. SSOT統一: CustomerItems 複合キーAPI廃止
 
 **優先度**: Low
 **作成**: 2026-01-26
@@ -953,7 +1118,7 @@ CustomerItemsのCRUD APIは現在、後方互換性のため`/{customer_id}/{cus
 
 ---
 
-### 8-7. SSOT統一: ShipmentTextRequest の customer_item_id 対応
+### 9-7. SSOT統一: ShipmentTextRequest の customer_item_id 対応
 
 **優先度**: Low
 **作成**: 2026-01-26
@@ -976,7 +1141,7 @@ OrderLineに`customer_item_id`が追加されれば、直接`customer_item_id`�
 
 ---
 
-### 8-8. スキーマ重複解消: SupplierItem
+### 9-8. スキーマ重複解消: SupplierItem
 
 **優先度**: Low
 **作成**: 2026-01-26
@@ -999,7 +1164,7 @@ SupplierItemエンティティに対して2箇所でスキーマが定義され�
 
 
 
-### 8-11. 大規模ファイルの分割 (600行超)
+### 9-11. 大規模ファイルの分割 (600行超)
 
 **優先度**: Medium
 **作成**: 2026-01-26
@@ -1018,7 +1183,7 @@ CLAUDE.md で推奨される300行を大幅に超えるファイルが存在。
 
 ---
 
-### 8-12. 空の Schema クラス (pass only) の整理
+### 9-12. 空の Schema クラス (pass only) の整理
 
 **優先度**: Low
 **作成**: 2026-01-26
@@ -1041,7 +1206,7 @@ CLAUDE.md で推奨される300行を大幅に超えるファイルが存在。
 
 ---
 
-### 8-13. セキュリティ: db_browser_router の権限チェック
+### 9-13. セキュリティ: db_browser_router の権限チェック
 
 **優先度**: High
 **作成**: 2026-01-26
@@ -1060,7 +1225,7 @@ CLAUDE.md で推奨される300行を大幅に超えるファイルが存在。
 
 ---
 
-### 8-14. Infrastructure → Service の逆依存解消
+### 9-14. Infrastructure → Service の逆依存解消
 
 **優先度**: Medium
 **作成**: 2026-01-26
@@ -1081,7 +1246,7 @@ Infrastructure層（clients/）がService層にアクセスしている箇所が
 
 ---
 
-### 8-15. TODO/FIXME コメントの棚卸し
+### 9-15. TODO/FIXME コメントの棚卸し
 
 **優先度**: Low
 **作成**: 2026-01-26
@@ -1103,7 +1268,7 @@ Infrastructure層（clients/）がService層にアクセスしている箇所が
 
 ---
 
-### 8-16. InventoryTable 展開キー形式の統一
+### 9-16. InventoryTable 展開キー形式の統一
 
 **優先度**: Low
 **作成**: 2026-01-26

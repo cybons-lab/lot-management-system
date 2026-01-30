@@ -5,7 +5,8 @@ from sqlalchemy import text
 
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
-from app.infrastructure.persistence.models.masters_models import Product, Supplier, Warehouse
+from app.infrastructure.persistence.models.masters_models import Supplier, Warehouse
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 
 @pytest.fixture
@@ -79,24 +80,26 @@ def apply_trigger(db_session_triggers):
 def test_lot_master_aggregation_trigger(db_session_triggers, apply_trigger):
     session = db_session_triggers
 
-    # 1. Setup Master Data
-    product = Product(
-        maker_part_code="PART-TRIG-01",
-        product_name="Trigger Test Part",
-        internal_unit="pcs",
-        base_unit="pcs",  # Added required field
-    )
     warehouse = Warehouse(
         warehouse_code="WH-TRIG-01", warehouse_name="Trigger Test WH", warehouse_type="internal"
     )
     supplier = Supplier(supplier_code="SUP-TRIG-01", supplier_name="Trigger Test Supplier")
-    session.add_all([product, warehouse, supplier])
+    session.add_all([warehouse, supplier])
+    session.flush()
+
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PART-TRIG-01",
+        display_name="Trigger Test Part",
+        base_unit="pcs",
+    )
+    session.add(product)
     session.flush()
 
     # 2. Create LotMaster
     lot_master = LotMaster(
         lot_number="LOT-TRIG-001",
-        product_id=product.id,
+        product_group_id=product.id,
         supplier_id=supplier.id,
         total_quantity=0,  # Initial check (though default is 0)
     )
@@ -111,7 +114,7 @@ def test_lot_master_aggregation_trigger(db_session_triggers, apply_trigger):
     # 3. Add first LotReceipt (Qty 100)
     receipt1 = LotReceipt(
         lot_master_id=lot_master.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 10),
         received_quantity=100,
@@ -128,7 +131,7 @@ def test_lot_master_aggregation_trigger(db_session_triggers, apply_trigger):
     # 4. Add second LotReceipt (Qty 50)
     receipt2 = LotReceipt(
         lot_master_id=lot_master.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 15),
         expiry_date=date(2025, 12, 31),

@@ -1,6 +1,9 @@
 /* eslint-disable max-lines-per-function */
 import { useEffect, useRef, useState } from "react";
 
+import { http } from "@/shared/api/http-client";
+import { getAuthToken } from "@/shared/auth/token";
+
 interface LogEntry {
   timestamp: string;
   level: string;
@@ -68,48 +71,126 @@ function useLogWebSocket(isPaused: boolean) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const pausedLogsRef = useRef<LogEntry[]>([]);
+  const isPausedRef = useRef(isPaused);
+
+  // Keep isPausedRef in sync with isPaused prop
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
 
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.hostname}:8000/api/logs/stream`;
-
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => console.log("Connected to log stream");
-    ws.onmessage = (event) => {
-      // Ignore ping/pong messages
-      if (event.data === "pong") {
-        return;
-      }
-
-      try {
-        const logEntry: LogEntry = JSON.parse(event.data);
-        if (isPaused) {
-          pausedLogsRef.current.push(logEntry);
+    // Fetch recent logs on mount
+    http
+      .get<LogEntry[]>("system/logs/backend/recent?limit=200")
+      .then((recentLogs) => {
+        // Ensure recentLogs is an array
+        if (Array.isArray(recentLogs)) {
+          setLogs(recentLogs);
         } else {
-          setLogs((prev) => {
-            const updated = [...prev, logEntry];
-            return updated.length > 1000 ? updated.slice(-1000) : updated;
-          });
+          console.warn("Received non-array logs:", recentLogs);
+          setLogs([]);
         }
-      } catch (error) {
-        console.error("Failed to parse log entry:", error);
-      }
-    };
+      })
+      .catch((err) => {
+        if (err.response?.status === 401) {
+          console.warn("Not authenticated to fetch recent logs");
+        } else {
+          console.error("Failed to fetch recent logs:", err);
+        }
+        setLogs([]); // Set empty array on error
+      });
 
-    ws.onerror = (error) => console.error("WebSocket error:", error);
-    ws.onclose = () => console.log("Disconnected from log stream");
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const token = getAuthToken();
+    const wsUrl = `${protocol}//${window.location.host}/api/logs/stream${token ? `?token=${token}` : ""}`;
 
-    const pingInterval = setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) ws.send("ping");
-    }, 30000);
+    // Use a small timeout to avoid the "WebSocket is closed before the connection is established"
+    // warning caused by React Strict Mode double-invoking effects.
+    const connectTimeout = window.setTimeout(() => {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        // Avoid log noise if already closed or closing
+        if (ws.readyState === WebSocket.OPEN) {
+          console.log("Connected to log stream");
+        }
+
+        // Start ping/pong to keep connection alive
+        const pingInterval = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send("ping");
+          }
+        }, 30000);
+        // Store interval ID for cleanup
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (ws as any)._pingInterval = pingInterval;
+      };
+
+      ws.onmessage = (event) => {
+        // Ignore ping/pong messages
+        if (event.data === "pong") {
+          return;
+        }
+
+        try {
+          const logEntry: LogEntry = JSON.parse(event.data);
+          // Use ref instead of prop to avoid triggering useEffect
+          if (isPausedRef.current) {
+            pausedLogsRef.current.push(logEntry);
+          } else {
+            setLogs((prev) => {
+              // Ensure prev is always an array
+              const prevArray = Array.isArray(prev) ? prev : [];
+              const updated = [...prevArray, logEntry];
+              return updated.length > 1000 ? updated.slice(-1000) : updated;
+            });
+          }
+        } catch (error) {
+          console.error("Failed to parse log entry:", error);
+        }
+      };
+
+      ws.onerror = (error) => {
+        // Don't log error if we are closing (common in Strict Mode)
+        if (ws.readyState !== WebSocket.CLOSING && ws.readyState !== WebSocket.CLOSED) {
+          console.error("WebSocket error:", error);
+        }
+      };
+
+      ws.onclose = () => {
+        // Only log if it was intentional or a real drop, not Strict Mode cleanup
+        if (wsRef.current === ws) {
+          console.log("Disconnected from log stream");
+        }
+
+        // Clean up ping interval if it exists
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((ws as any)._pingInterval) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          clearInterval((ws as any)._pingInterval);
+        }
+      };
+    }, 10);
 
     return () => {
-      clearInterval(pingInterval);
-      ws.close();
+      window.clearTimeout(connectTimeout);
+      const ws = wsRef.current;
+      if (ws) {
+        // Clean up ping interval
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((ws as any)._pingInterval) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          clearInterval((ws as any)._pingInterval);
+        }
+
+        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+          ws.close();
+        }
+        wsRef.current = null;
+      }
     };
-  }, [isPaused]);
+  }, []); // Remove isPaused dependency to prevent reconnections
 
   return { logs, setLogs, pausedLogsRef };
 }
@@ -134,9 +215,9 @@ export function LogViewer() {
     if (filterText) {
       const searchText = filterText.toLowerCase();
       return (
-        log.message.toLowerCase().includes(searchText) ||
-        log.logger.toLowerCase().includes(searchText) ||
-        log.module.toLowerCase().includes(searchText)
+        log.message?.toLowerCase().includes(searchText) ||
+        log.logger?.toLowerCase().includes(searchText) ||
+        log.module?.toLowerCase().includes(searchText)
       );
     }
     return true;
@@ -150,7 +231,9 @@ export function LogViewer() {
   const handlePauseToggle = () => {
     if (isPaused && pausedLogsRef.current.length > 0) {
       setLogs((prev) => {
-        const updated = [...prev, ...pausedLogsRef.current];
+        // Ensure prev is always an array
+        const prevArray = Array.isArray(prev) ? prev : [];
+        const updated = [...prevArray, ...pausedLogsRef.current];
         pausedLogsRef.current = [];
         return updated.length > 1000 ? updated.slice(-1000) : updated;
       });

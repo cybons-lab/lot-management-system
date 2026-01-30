@@ -26,7 +26,7 @@ def test_create_inbound_plan_success(db: Session, service_master_data):
         status="planned",
         lines=[
             InboundPlanLineCreate(
-                product_id=product.id,
+                product_group_id=product.id,
                 planned_quantity=100,
                 unit="EA",
                 expected_lots=[
@@ -45,7 +45,7 @@ def test_create_inbound_plan_success(db: Session, service_master_data):
     assert plan.plan_number == "IP-SVC-001"
     assert plan.supplier_id == supplier.id
     assert len(plan.lines) == 1
-    assert plan.lines[0].product_id == product.id
+    assert plan.lines[0].product_group_id == product.id
     assert len(plan.lines[0].expected_lots) == 1
     assert plan.lines[0].expected_lots[0].expected_lot_number == "LOT-EXP-001"
 
@@ -68,7 +68,7 @@ def test_get_inbound_plans_filtering(db: Session, service_master_data):
     db.flush()
 
     line1 = InboundPlanLine(
-        inbound_plan_id=plan1.id, product_id=product1.id, planned_quantity=10, unit="EA"
+        inbound_plan_id=plan1.id, product_group_id=product1.id, planned_quantity=10, unit="EA"
     )
     db.add(line1)
 
@@ -82,7 +82,7 @@ def test_get_inbound_plans_filtering(db: Session, service_master_data):
     db.flush()
 
     line2 = InboundPlanLine(
-        inbound_plan_id=plan2.id, product_id=product2.id, planned_quantity=20, unit="KG"
+        inbound_plan_id=plan2.id, product_group_id=product2.id, planned_quantity=20, unit="KG"
     )
     db.add(line2)
     db.commit()
@@ -94,7 +94,7 @@ def test_get_inbound_plans_filtering(db: Session, service_master_data):
     assert not any(p.plan_number == "IP-FILT-2" for p in plans)
 
     # Test product filter
-    plans, total = service.get_inbound_plans(product_id=product1.id)
+    plans, total = service.get_inbound_plans(product_group_id=product1.id)
     assert any(p.plan_number == "IP-FILT-1" for p in plans)
     assert not any(p.plan_number == "IP-FILT-2" for p in plans)
 
@@ -156,7 +156,7 @@ def test_delete_inbound_plan(db: Session, service_master_data):
     db.flush()
 
     line = InboundPlanLine(
-        inbound_plan_id=plan.id, product_id=product.id, planned_quantity=10, unit="EA"
+        inbound_plan_id=plan.id, product_group_id=product.id, planned_quantity=10, unit="EA"
     )
     db.add(line)
     db.commit()
@@ -182,7 +182,7 @@ def test_create_line(db: Session, service_master_data):
     db.commit()
 
     line_data = InboundPlanLineCreate(
-        product_id=product.id,
+        product_group_id=product.id,
         planned_quantity=50,
         unit="EA",
         expected_lots=[
@@ -197,7 +197,7 @@ def test_create_line(db: Session, service_master_data):
     line = service.create_line(plan.id, line_data)
 
     assert line.inbound_plan_id == plan.id
-    assert line.product_id == product.id
+    assert line.product_group_id == product.id
     assert len(line.expected_lots) == 1
     assert line.expected_lots[0].expected_lot_number == "LOT-LINE-1"
 
@@ -207,7 +207,7 @@ def test_create_line_plan_not_found(db: Session, service_master_data):
     service = InboundService(db)
     product = service_master_data["product1"]
 
-    line_data = InboundPlanLineCreate(product_id=product.id, planned_quantity=50, unit="EA")
+    line_data = InboundPlanLineCreate(product_group_id=product.id, planned_quantity=50, unit="EA")
 
     with pytest.raises(ValueError) as exc:
         service.create_line(99999, line_data)

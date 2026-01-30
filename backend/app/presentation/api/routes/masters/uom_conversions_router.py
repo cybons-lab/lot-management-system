@@ -42,7 +42,7 @@ def list_uom_conversions(
         SupplierItem.maker_part_no,
         SupplierItem.display_name,
         ProductUomConversion.valid_to,
-    ).join(ProductUomConversion.product_group_id == SupplierItem.id)
+    ).join(SupplierItem, ProductUomConversion.product_group_id == SupplierItem.id)
 
     if product_group_id is not None:
         query = query.where(ProductUomConversion.product_group_id == product_group_id)
@@ -78,7 +78,7 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
         ProductUomConversion.factor,
         SupplierItem.maker_part_no,
         SupplierItem.display_name,
-    ).join(ProductUomConversion.product_group_id == SupplierItem.id)
+    ).join(SupplierItem, ProductUomConversion.product_group_id == SupplierItem.id)
 
     results = db.execute(query).all()
 

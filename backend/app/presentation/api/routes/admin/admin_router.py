@@ -122,10 +122,13 @@ def reset_database(
         )
 
     try:
-        # データのみを削除（テーブル構造は保持）
-        truncate_all_tables()
+        # 依存関係（get_current_admin）で発生したマスタ（roles等）へのSELECTロックを解放するため一度コミット
+        db.commit()
 
-        # セッションをリフレッシュ
+        # データのみを削除（テーブル構造は保持）
+        truncate_all_tables(db)
+
+        # 変更を再度コミットして永続化
         db.commit()
 
         # 初期管理者ユーザーとロールを再作成

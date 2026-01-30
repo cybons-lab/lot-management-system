@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-import pytest
 from fastapi import status
 from sqlalchemy.orm import Session
 
@@ -183,7 +182,6 @@ def test_failure_report_unlocks_and_persists_error(client, db: Session):
     assert item.locked_by is None
 
 
-@pytest.mark.skip(reason="Skipping due to naive/aware datetime comparison issue")
 def test_lock_owner_mismatch_returns_409(client, db: Session):
     run = _create_run_with_items(db, status=RpaRunStatus.STEP3_RUNNING, item_count=1)
     next_item = client.get(
@@ -339,7 +337,6 @@ def test_failed_items_returns_only_failures_in_row_order(client, db: Session):
     assert [item["row_no"] for item in data] == [1, 3]
 
 
-@pytest.mark.skip(reason="Skipping due to KeyError: 'total' in response")
 def test_loop_summary_counts_and_error_codes(client, db: Session):
     run = _create_run_with_items(db, status=RpaRunStatus.STEP3_RUNNING, item_count=6)
     items = (

@@ -5,18 +5,25 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.application.services.orders.order_service import OrderService
-from app.infrastructure.persistence.models import Customer, DeliveryPlace, Order, OrderLine, Product
+from app.infrastructure.persistence.models import (
+    Customer,
+    DeliveryPlace,
+    Order,
+    OrderLine,
+    SupplierItem,
+)
 
 
 @pytest.fixture
-def order_filtering_data(db: Session):
+def order_filtering_data(db: Session, supplier):
     # Create master data
     customer = Customer(customer_code="CUST-FILTER", customer_name="Filter Customer")
     db.add(customer)
 
-    product = Product(
-        maker_part_code="PROD-FILTER",
-        product_name="Filter Product",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PROD-FILTER",
+        display_name="Filter Product",
         internal_unit="EA",
         base_unit="EA",
     )
@@ -44,7 +51,7 @@ def order_filtering_data(db: Session):
     db.add(
         OrderLine(
             order_id=order1.id,
-            product_id=product.id,
+            product_group_id=product.id,
             delivery_place_id=delivery_place.id,
             order_quantity=Decimal("10"),
             unit="EA",
@@ -65,7 +72,7 @@ def order_filtering_data(db: Session):
     db.add(
         OrderLine(
             order_id=order2.id,
-            product_id=product.id,
+            product_group_id=product.id,
             delivery_place_id=delivery_place.id,
             order_quantity=Decimal("20"),
             unit="EA",

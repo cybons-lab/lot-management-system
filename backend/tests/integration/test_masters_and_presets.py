@@ -81,7 +81,7 @@
 #     create_product(
 #         ProductCreate(
 #             product_code="PROD-CRUD",
-#             product_name="製品CRUD",
+#             display_name="製品CRUD",
 #             packaging_qty=1,
 #             packaging_unit="EA",
 #             internal_unit="EA",
@@ -92,11 +92,11 @@
 #     )
 #     update_product(
 #         "PROD-CRUD",
-#         ProductUpdate(product_name="製品CRUD更新", requires_lot_number=False),
+#         ProductUpdate(display_name="製品CRUD更新", requires_lot_number=False),
 #         db=db_session,
 #     )
 #     product = get_product("PROD-CRUD", db=db_session)
-#     assert product.product_name == "製品CRUD更新"
+#     assert product.display_name == "製品CRUD更新"
 #     assert bool(product.requires_lot_number) is False
 
 #     # Prepare duplicate supplier for bulk warnings
@@ -116,7 +116,7 @@
 #             products=[
 #                 ProductCreate(
 #                     product_code="PROD-BULK",
-#                     product_name="製品バルク",
+#                     display_name="製品バルク",
 #                     packaging_qty=1,
 #                     packaging_unit="EA",
 #                     internal_unit="EA",
@@ -138,4 +138,4 @@
 #     assert "PRST-PROD1" in load_result.result.created["products"]
 
 #     preset_product = get_product("PRST-PROD1", db=db_session)
-#     assert preset_product.product_name == "プリセット製品"
+#     assert preset_product.display_name == "プリセット製品"

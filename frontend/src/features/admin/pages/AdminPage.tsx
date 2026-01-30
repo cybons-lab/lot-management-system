@@ -65,7 +65,7 @@ export function AdminPage() {
           description: string;
           options: object;
         }>
-      >("/admin/test-data/presets");
+      >("admin/test-data/presets");
       setPresets(data);
     } catch (e) {
       console.error("Failed to load presets", e);
@@ -151,7 +151,7 @@ export function AdminPage() {
     setSyncResult(null);
     try {
       const result = await http.post<InventorySyncResult>(
-        "/admin/batch-jobs/inventory-sync/execute",
+        "admin/batch-jobs/inventory-sync/execute",
       );
       setSyncResult(result);
 
@@ -270,8 +270,30 @@ export function AdminPage() {
       </div>
 
       {/* Generate Confirm Dialog */}
-      <AlertDialog open={showGenerateConfirm} onOpenChange={setShowGenerateConfirm}>
-        <AlertDialogContent>
+      <AlertDialog
+        open={showGenerateConfirm}
+        onOpenChange={(open) => {
+          if (!open) {
+            // Reset state when dialog is closed
+            setIsGenerating(false);
+            setProgress(0);
+            setProgressMessage("");
+          }
+          setShowGenerateConfirm(open);
+        }}
+      >
+        <AlertDialogContent
+          onEscapeKeyDown={(e) => {
+            if (isGenerating) {
+              // Allow closing even during generation
+              e.preventDefault();
+              setIsGenerating(false);
+              setProgress(0);
+              setProgressMessage("");
+              setShowGenerateConfirm(false);
+            }
+          }}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>テストデータを生成しますか？</AlertDialogTitle>
             <AlertDialogDescription asChild>

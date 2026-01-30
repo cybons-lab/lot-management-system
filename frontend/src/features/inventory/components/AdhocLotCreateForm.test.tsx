@@ -94,9 +94,6 @@ describe("AdhocLotCreateForm", () => {
     expect(screen.getByLabelText(/単位/)).toBeInTheDocument();
     expect(screen.getByLabelText(/入荷日/)).toBeInTheDocument();
     expect(screen.getByLabelText("出荷予定日")).toBeInTheDocument();
-    expect(screen.getByLabelText("仕入単価")).toBeInTheDocument();
-    expect(screen.getByLabelText("販売単価")).toBeInTheDocument();
-    expect(screen.getByLabelText("税率")).toBeInTheDocument();
   });
 
   it("shows validation errors for empty required fields on submit", async () => {
@@ -144,18 +141,8 @@ describe("AdhocLotCreateForm", () => {
     const originSelect = selects[0];
     expect(originSelect).toHaveValue("adhoc");
 
-    // 8. Fill Financials (New Phase 1)
     const shippingDateInput = screen.getByLabelText("出荷予定日");
     fireEvent.change(shippingDateInput, { target: { value: "2025-02-01" } });
-
-    const costPriceInput = screen.getByLabelText("仕入単価");
-    await user.type(costPriceInput, "500");
-
-    const salesPriceInput = screen.getByLabelText("販売単価");
-    await user.type(salesPriceInput, "800");
-
-    const taxRateInput = screen.getByLabelText("税率");
-    await user.type(taxRateInput, "0.1");
 
     // Check submit button enabled
     const submitButton = screen.getByRole("button", { name: "入庫登録" });
@@ -175,9 +162,6 @@ describe("AdhocLotCreateForm", () => {
           received_date: "2025-01-01",
           origin_type: "adhoc",
           shipping_date: "2025-02-01",
-          cost_price: 500,
-          sales_price: 800,
-          tax_rate: 0.1,
         }),
       );
     });
