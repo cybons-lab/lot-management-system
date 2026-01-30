@@ -42,19 +42,36 @@ def create_client_log(
 
 @router.get("/logs/recent", response_model=list[ClientLogResponse])
 def get_recent_logs(
-    limit: int = 100,
-    current_user: User = Depends(get_current_admin),  # Require Admin
+    limit: int = 500,
+    level: str | None = None,
+    user_id: int | None = None,
+    search: str | None = None,
+    current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
-    """Get recent system logs (Admin only ideally)."""
-    # Join User to get username
-    logs = (
-        db.query(ClientLog, User)
-        .outerjoin(User, ClientLog.user_id == User.id)
-        .order_by(desc(ClientLog.created_at))
-        .limit(limit)
-        .all()
-    )
+    """Get recent system logs with filtering (Admin only).
+
+    Args:
+        limit: Maximum number of logs to return (default: 500)
+        level: Filter by log level (error, warning, info)
+        user_id: Filter by user ID
+        search: Search in message content
+        current_user: Current admin user (dependency)
+        db: Database session (dependency)
+    """
+    # Build query with filters
+    query = db.query(ClientLog, User).outerjoin(User, ClientLog.user_id == User.id)
+
+    if level:
+        query = query.filter(ClientLog.level == level)
+
+    if user_id is not None:
+        query = query.filter(ClientLog.user_id == user_id)
+
+    if search:
+        query = query.filter(ClientLog.message.ilike(f"%{search}%"))
+
+    logs = query.order_by(desc(ClientLog.created_at)).limit(limit).all()
 
     return [
         {

@@ -124,15 +124,21 @@ const navItems: NavItem[] = [
     feature: "db_browser",
   },
   {
-    title: "ログ",
+    title: "システムログ",
     icon: ClipboardList,
     requireAdmin: true,
     feature: "logs",
     subItems: [
       { title: "リアルタイムログ", href: "/logs" },
-      { title: "操作ログ", href: ROUTES.ADMIN.OPERATION_LOGS },
       { title: "クライアントログ", href: ROUTES.ADMIN.CLIENT_LOGS },
     ],
+  },
+  {
+    title: "操作ログ",
+    href: ROUTES.ADMIN.OPERATION_LOGS,
+    icon: FileText,
+    requireAdmin: true,
+    feature: "operation_logs",
   },
   {
     title: "マスタ",
@@ -175,7 +181,7 @@ function NavItemDropdown({ item, currentPath }: { item: NavItem; currentPath: st
   );
 
   return (
-    <DropdownMenu key={item.title}>
+    <DropdownMenu key={item.title} modal={false}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
