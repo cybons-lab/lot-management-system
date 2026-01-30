@@ -157,8 +157,8 @@ def setup_search_data(db_session):
 
     # Product
     product = Product(
-        maker_part_code="SEARCH-PROD-001",
-        product_name="Search Test Product",
+        maker_part_no="SEARCH-PROD-001",
+        display_name="Search Test Product",
         base_unit="EA",
     )
     db_session.add(product)
@@ -199,18 +199,23 @@ def master_data(db):
     # Create Supplier
     supplier = Supplier(supplier_code="SUP-TEST", supplier_name="Test Supplier")
     db.add(supplier)
+    db.flush()  # Ensure supplier.id is generated
 
-    # Create Products
+    # Create Products (SupplierItems)
     product1 = Product(
-        maker_part_code="PRD-TEST-001",
-        product_name="Test Product 1",
+        supplier_id=supplier.id,
+        maker_part_no="PRD-TEST-001",
+        display_name="Test Product 1",
         base_unit="EA",
         internal_unit="BOX",
         external_unit="PLT",
         qty_per_internal_unit=10,
     )
     product2 = Product(
-        maker_part_code="PRD-TEST-002", product_name="Test Product 2", base_unit="KG"
+        supplier_id=supplier.id,
+        maker_part_no="PRD-TEST-002",
+        display_name="Test Product 2",
+        base_unit="KG",
     )
     db.add(product1)
     db.add(product2)
@@ -225,6 +230,7 @@ def master_data(db):
         customer_id=customer.id,
         delivery_place_code="DP-TEST",
         delivery_place_name="Test Delivery Place",
+        jiku_code="TEST-JIKU",
     )
     db.add(delivery_place)
 

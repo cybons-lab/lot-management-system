@@ -5,7 +5,6 @@ from app.infrastructure.persistence.models import (
     CustomerItem,
     CustomerItemDeliverySetting,
     ProductMapping,
-    ProductSupplier,
     ProductUomConversion,
     WarehouseDeliveryRoute,
 )
@@ -26,7 +25,7 @@ def test_bulk_export_download_all_targets_integration(
     mapping = ProductMapping(
         customer_id=master_data["customer"].id,
         supplier_id=master_data["supplier"].id,
-        product_id=master_data["product1"].id,
+        product_group_id=master_data["product1"].id,
         customer_part_code="CUST-PART-001",
         base_unit="EA",
         pack_unit="BOX",
@@ -37,7 +36,8 @@ def test_bulk_export_download_all_targets_integration(
     # Customer Items
     customer_item = CustomerItem(
         customer_id=master_data["customer"].id,
-        product_id=master_data["product1"].id,
+        product_group_id=master_data["product1"].id,
+        supplier_item_id=master_data["product1"].id,
         customer_part_no="CP-001",
         base_unit="EA",
     )
@@ -52,18 +52,13 @@ def test_bulk_export_download_all_targets_integration(
     )
     db.add(delivery_setting)
 
-    # Supplier Products
-    prod_supplier = ProductSupplier(
-        product_id=master_data["product1"].id,
-        supplier_id=master_data["supplier"].id,
-        is_primary=True,
-        lead_time_days=5,
-    )
-    db.add(prod_supplier)
+    # ProductUomConversion (No need to add SupplierItem here as it's already in master_data)
 
     # UOM Conversions
     uom = ProductUomConversion(
-        product_id=master_data["product1"].id, external_unit="CTN", factor=20
+        product_group_id=master_data["product1"].id,
+        external_unit="CTN",
+        factor=20,
     )
     db.add(uom)
 
@@ -71,7 +66,7 @@ def test_bulk_export_download_all_targets_integration(
     route = WarehouseDeliveryRoute(
         warehouse_id=master_data["warehouse"].id,
         delivery_place_id=master_data["delivery_place"].id,
-        product_id=master_data["product1"].id,
+        product_group_id=master_data["product1"].id,
         transport_lead_time_days=3,
     )
     db.add(route)
@@ -84,16 +79,19 @@ def test_bulk_export_download_all_targets_integration(
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
     lm = LotMaster(
-        product_id=master_data["product1"].id,
+        product_group_id=master_data["product1"].id,
         supplier_id=master_data["supplier"].id,
         lot_number="LOT-001",
     )
     db.add(lm)
     db.flush()
 
+    import uuid
+
     lot = LotReceipt(
         lot_master_id=lm.id,
-        product_id=master_data["product1"].id,
+        product_group_id=master_data["product1"].id,
+        supplier_item_id=master_data["product1"].id,
         warehouse_id=master_data["warehouse"].id,
         supplier_id=master_data["supplier"].id,
         received_quantity=Decimal("100"),
@@ -101,6 +99,7 @@ def test_bulk_export_download_all_targets_integration(
         received_date=date.today(),
         expiry_date=date.today(),
         status="active",
+        receipt_key=uuid.uuid4(),
     )
 
     db.add(lot)
@@ -114,7 +113,8 @@ def test_bulk_export_download_all_targets_integration(
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=master_data["product1"].id,
+        product_group_id=master_data["product1"].id,
+        supplier_item_id=master_data["product1"].id,
         delivery_place_id=master_data["delivery_place"].id,
         delivery_date=date.today(),
         order_quantity=Decimal("50"),
@@ -129,7 +129,8 @@ def test_bulk_export_download_all_targets_integration(
 
     forecast = ForecastCurrent(
         customer_id=master_data["customer"].id,
-        product_id=master_data["product1"].id,
+        product_group_id=master_data["product1"].id,
+        supplier_item_id=master_data["product1"].id,
         delivery_place_id=master_data["delivery_place"].id,
         forecast_date=date.today(),
         forecast_quantity=Decimal("200"),
@@ -149,11 +150,10 @@ def test_bulk_export_download_all_targets_integration(
         "delivery_places",
         "product_mappings",
         "customer_items",
-        "supplier_products",
         "uom_conversions",
         "warehouse_delivery_routes",
         "customer_item_delivery_settings",
-        "lot_receipts",  # Renamed from "lots" to match Phase 1 schema
+        "lot_receipts",
         "orders",
         "forecasts",
         "users",
