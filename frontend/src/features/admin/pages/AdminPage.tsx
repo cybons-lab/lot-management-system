@@ -270,7 +270,18 @@ export function AdminPage() {
       </div>
 
       {/* Generate Confirm Dialog */}
-      <AlertDialog open={showGenerateConfirm} onOpenChange={setShowGenerateConfirm}>
+      <AlertDialog
+        open={showGenerateConfirm}
+        onOpenChange={(open) => {
+          if (!open) {
+            // Reset state when dialog is closed
+            setIsGenerating(false);
+            setProgress(0);
+            setProgressMessage("");
+          }
+          setShowGenerateConfirm(open);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>テストデータを生成しますか？</AlertDialogTitle>
