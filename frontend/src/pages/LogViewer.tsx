@@ -104,84 +104,89 @@ function useLogWebSocket(isPaused: boolean) {
     const token = getAuthToken();
     const wsUrl = `${protocol}//${window.location.host}/api/logs/stream${token ? `?token=${token}` : ""}`;
 
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
+    // Use a small timeout to avoid the "WebSocket is closed before the connection is established"
+    // warning caused by React Strict Mode double-invoking effects.
+    const connectTimeout = window.setTimeout(() => {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-    ws.onopen = () => {
-      // Avoid log noise if already closed or closing
-      if (ws.readyState === WebSocket.OPEN) {
-        console.log("Connected to log stream");
-      }
-
-      // Start ping/pong to keep connection alive
-      const pingInterval = setInterval(() => {
+      ws.onopen = () => {
+        // Avoid log noise if already closed or closing
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send("ping");
+          console.log("Connected to log stream");
         }
-      }, 30000);
-      // Store interval ID for cleanup
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (ws as any)._pingInterval = pingInterval;
-    };
 
-    ws.onmessage = (event) => {
-      // Ignore ping/pong messages
-      if (event.data === "pong") {
-        return;
-      }
-
-      try {
-        const logEntry: LogEntry = JSON.parse(event.data);
-        // Use ref instead of prop to avoid triggering useEffect
-        if (isPausedRef.current) {
-          pausedLogsRef.current.push(logEntry);
-        } else {
-          setLogs((prev) => {
-            // Ensure prev is always an array
-            const prevArray = Array.isArray(prev) ? prev : [];
-            const updated = [...prevArray, logEntry];
-            return updated.length > 1000 ? updated.slice(-1000) : updated;
-          });
-        }
-      } catch (error) {
-        console.error("Failed to parse log entry:", error);
-      }
-    };
-
-    ws.onerror = (error) => {
-      // Don't log error if we are closing (common in Strict Mode)
-      if (ws.readyState !== WebSocket.CLOSING && ws.readyState !== WebSocket.CLOSED) {
-        console.error("WebSocket error:", error);
-      }
-    };
-
-    ws.onclose = () => {
-      // Only log if it was intentional or a real drop, not Strict Mode cleanup
-      if (wsRef.current === ws) {
-        console.log("Disconnected from log stream");
-      }
-
-      // Clean up ping interval if it exists
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((ws as any)._pingInterval) {
+        // Start ping/pong to keep connection alive
+        const pingInterval = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send("ping");
+          }
+        }, 30000);
+        // Store interval ID for cleanup
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        clearInterval((ws as any)._pingInterval);
-      }
-    };
+        (ws as any)._pingInterval = pingInterval;
+      };
+
+      ws.onmessage = (event) => {
+        // Ignore ping/pong messages
+        if (event.data === "pong") {
+          return;
+        }
+
+        try {
+          const logEntry: LogEntry = JSON.parse(event.data);
+          // Use ref instead of prop to avoid triggering useEffect
+          if (isPausedRef.current) {
+            pausedLogsRef.current.push(logEntry);
+          } else {
+            setLogs((prev) => {
+              // Ensure prev is always an array
+              const prevArray = Array.isArray(prev) ? prev : [];
+              const updated = [...prevArray, logEntry];
+              return updated.length > 1000 ? updated.slice(-1000) : updated;
+            });
+          }
+        } catch (error) {
+          console.error("Failed to parse log entry:", error);
+        }
+      };
+
+      ws.onerror = (error) => {
+        // Don't log error if we are closing (common in Strict Mode)
+        if (ws.readyState !== WebSocket.CLOSING && ws.readyState !== WebSocket.CLOSED) {
+          console.error("WebSocket error:", error);
+        }
+      };
+
+      ws.onclose = () => {
+        // Only log if it was intentional or a real drop, not Strict Mode cleanup
+        if (wsRef.current === ws) {
+          console.log("Disconnected from log stream");
+        }
+
+        // Clean up ping interval if it exists
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((ws as any)._pingInterval) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          clearInterval((ws as any)._pingInterval);
+        }
+      };
+    }, 10);
 
     return () => {
-      // Clean up ping interval
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((ws as any)._pingInterval) {
+      window.clearTimeout(connectTimeout);
+      const ws = wsRef.current;
+      if (ws) {
+        // Clean up ping interval
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        clearInterval((ws as any)._pingInterval);
-      }
+        if ((ws as any)._pingInterval) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          clearInterval((ws as any)._pingInterval);
+        }
 
-      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-        ws.close();
-      }
-
-      if (wsRef.current === ws) {
+        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+          ws.close();
+        }
         wsRef.current = null;
       }
     };
