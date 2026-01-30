@@ -73,10 +73,19 @@ function useLogWebSocket(isPaused: boolean) {
     // Fetch recent logs on mount
     fetch("/api/system/logs/backend/recent?limit=200")
       .then((res) => res.json())
-      .then((recentLogs: LogEntry[]) => {
-        setLogs(recentLogs);
+      .then((recentLogs) => {
+        // Ensure recentLogs is an array
+        if (Array.isArray(recentLogs)) {
+          setLogs(recentLogs);
+        } else {
+          console.warn("Received non-array logs:", recentLogs);
+          setLogs([]);
+        }
       })
-      .catch((err) => console.error("Failed to fetch recent logs:", err));
+      .catch((err) => {
+        console.error("Failed to fetch recent logs:", err);
+        setLogs([]); // Set empty array on error
+      });
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/api/logs/stream`;
@@ -97,7 +106,9 @@ function useLogWebSocket(isPaused: boolean) {
           pausedLogsRef.current.push(logEntry);
         } else {
           setLogs((prev) => {
-            const updated = [...prev, logEntry];
+            // Ensure prev is always an array
+            const prevArray = Array.isArray(prev) ? prev : [];
+            const updated = [...prevArray, logEntry];
             return updated.length > 1000 ? updated.slice(-1000) : updated;
           });
         }
@@ -158,7 +169,9 @@ export function LogViewer() {
   const handlePauseToggle = () => {
     if (isPaused && pausedLogsRef.current.length > 0) {
       setLogs((prev) => {
-        const updated = [...prev, ...pausedLogsRef.current];
+        // Ensure prev is always an array
+        const prevArray = Array.isArray(prev) ? prev : [];
+        const updated = [...prevArray, ...pausedLogsRef.current];
         pausedLogsRef.current = [];
         return updated.length > 1000 ? updated.slice(-1000) : updated;
       });
