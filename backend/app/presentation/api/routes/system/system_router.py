@@ -121,9 +121,11 @@ class BackendLogEntry(BaseModel):
     level: str
     logger: str
     message: str
-    module: str
-    function: str
-    line: int
+    module: str = ""
+    function: str = ""
+    line: int = 0
+    extra: dict | None = None
+    exception: str | None = None
 
 
 @router.get("/logs/backend/recent", response_model=list[BackendLogEntry])
@@ -200,7 +202,9 @@ def _parse_log_line(line: str) -> BackendLogEntry | None:
         level=level,
         logger=logger_name,
         message=message,
-        module="",  # Not available from log file
-        function="",  # Not available from log file
-        line=0,  # Not available from log file
+        module="",
+        function="",
+        line=0,
+        extra=None,
+        exception=None,
     )

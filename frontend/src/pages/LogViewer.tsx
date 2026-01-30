@@ -142,9 +142,9 @@ export function LogViewer() {
     if (filterText) {
       const searchText = filterText.toLowerCase();
       return (
-        log.message.toLowerCase().includes(searchText) ||
-        log.logger.toLowerCase().includes(searchText) ||
-        log.module.toLowerCase().includes(searchText)
+        log.message?.toLowerCase().includes(searchText) ||
+        log.logger?.toLowerCase().includes(searchText) ||
+        log.module?.toLowerCase().includes(searchText)
       );
     }
     return true;
