@@ -81,11 +81,6 @@ const FLOW_TYPE_CONFIG: Record<FlowType, { label: string; color: string; gradien
     color: "#06b6d4",
     gradient: "linear-gradient(90deg, #06b6d4, #22d3ee)",
   },
-  shipment: {
-    label: "出荷",
-    color: "#10b981",
-    gradient: "linear-gradient(90deg, #10b981, #34d399)",
-  },
 };
 
 // ─────────────────────────────────────────────
@@ -239,7 +234,6 @@ function FlowTab({
     const groups: Record<FlowType, FlowNode[]> = {
       order: [],
       allocation: [],
-      shipment: [],
     };
 
     nodes.forEach((node) => {
@@ -294,7 +288,6 @@ function FlowTab({
     <div className="flow-container">
       {renderFlowLine(flowGroups.order, "order")}
       {renderFlowLine(flowGroups.allocation, "allocation")}
-      {renderFlowLine(flowGroups.shipment, "shipment")}
     </div>
   );
 }

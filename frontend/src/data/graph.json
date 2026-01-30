@@ -1,152 +1,118 @@
 {
   "nodes": [
     {
-      "id": "order-input",
+      "id": "order-paper",
       "type": "input",
-      "label": "注文入力",
+      "label": "紙・FAX",
       "flowType": "order",
-      "description": "顧客からの注文情報を入力します。品番・数量・納期を入力してください。",
-      "commonMistakes": [
-        "品番の入力ミス（似た品番に注意）",
-        "数量の単位間違い（個/箱/ケース）",
-        "納期の曜日確認漏れ"
-      ],
-      "nextAction": { "label": "内容確認へ進む" },
+      "description": "顧客から届いた紙やFAXの注文書を確認・整理します。",
+      "commonMistakes": ["文字の判別ミス", "情報の欠落（納期や場所の確認）"],
+      "nextAction": {
+        "label": "OCR読み取りへ"
+      },
       "order": 1
     },
     {
-      "id": "order-confirm",
-      "type": "confirm",
-      "label": "内容確認",
+      "id": "order-ocr",
+      "type": "register",
+      "label": "OCR",
       "flowType": "order",
-      "description": "入力した注文内容を確認します。特に金額と納期をダブルチェックしてください。",
-      "commonMistakes": ["単価の確認漏れ", "送料の計算ミス", "特記事項の見落とし"],
-      "nextAction": { "label": "受注確定へ進む" },
+      "description": "SmartReadなどのOCRツールを使用して、注文書をデジタルデータに変換します。",
+      "commonMistakes": ["読み取りエラーの見落とし", "低解像度による誤変換"],
+      "nextAction": {
+        "label": "OCR結果確認へ"
+      },
       "order": 2
     },
     {
-      "id": "order-register",
-      "type": "register",
-      "label": "受注確定",
+      "id": "order-ocr-result",
+      "type": "confirm",
+      "label": "OCR結果(ロット引当)",
       "flowType": "order",
-      "description": "確認が完了したら「確定」ボタンを押します。確定後は修正できません。",
-      "commonMistakes": ["確定前の最終確認を忘れた", "重複登録（2回押し）"],
-      "nextAction": { "label": "引当処理へ" },
-      "relatedExceptions": ["キャンセル対応"],
+      "description": "OCR結果を確認し、ロットを引き当てます。先方品番＋次区をキーにロット管理表からロット番号を発番し、引当を行います。",
+      "commonMistakes": ["先方品番のマッピング間違い", "次区（配送ルート）の不一致"],
+      "nextAction": {
+        "label": "SAP連携へ"
+      },
       "order": 3
     },
     {
-      "id": "alloc-input",
-      "type": "input",
-      "label": "引当指示",
-      "flowType": "allocation",
-      "description": "受注に対して在庫を引き当てます。自動引当または手動選択ができます。",
-      "commonMistakes": ["ロット指定の間違い", "倉庫の選択ミス"],
-      "nextAction": { "label": "自動引当を実行" },
+      "id": "order-sap",
+      "type": "register",
+      "label": "SAP連携",
+      "flowType": "order",
+      "description": "確定した注文データと引当情報をSAP（基幹システム）に送信し、正式な受注として登録します。",
+      "commonMistakes": ["API送信エラー", "マスタデータの同期不備"],
+      "relatedExceptions": ["SAP登録失敗対応"],
       "order": 4
     },
     {
-      "id": "alloc-confirm",
+      "id": "alloc-detail",
       "type": "confirm",
-      "label": "引当結果確認",
+      "label": "引当詳細",
       "flowType": "allocation",
-      "description": "引当結果を確認します。在庫不足の場合は「保留」になります。",
-      "commonMistakes": ["保留状態の見落とし", "部分引当の確認漏れ"],
-      "nextAction": { "label": "出荷指示へ" },
+      "description": "引当済みの在庫詳細を確認します。倉庫別の割り当てや、特定のロット情報の確認を行います。",
+      "commonMistakes": ["ロットの有効期限切れ見落とし", "倉庫の間違い"],
       "relatedExceptions": ["在庫不足対応"],
       "order": 5
-    },
-    {
-      "id": "ship-input",
-      "type": "input",
-      "label": "出荷指示",
-      "flowType": "shipment",
-      "description": "出荷日と配送先を確認し、出荷指示を登録します。",
-      "commonMistakes": ["配送先住所の確認漏れ", "出荷日の曜日確認忘れ"],
-      "nextAction": { "label": "出荷実績を登録" },
-      "order": 6
-    },
-    {
-      "id": "ship-register",
-      "type": "register",
-      "label": "出荷実績登録",
-      "flowType": "shipment",
-      "description": "実際に出荷したら実績を登録します。伝票番号を入力してください。",
-      "commonMistakes": ["伝票番号の入力ミス", "出荷数量の間違い"],
-      "nextAction": { "label": "完了へ" },
-      "order": 7
-    },
-    {
-      "id": "ship-complete",
-      "type": "complete",
-      "label": "完了",
-      "flowType": "shipment",
-      "description": "出荷処理が完了しました。請求処理に進みます。",
-      "order": 8
     }
   ],
   "edges": [
-    { "id": "e1", "source": "order-input", "target": "order-confirm", "label": "確認" },
-    { "id": "e2", "source": "order-confirm", "target": "order-register", "label": "確定" },
-    { "id": "e3", "source": "order-register", "target": "alloc-input", "label": "引当へ" },
-    { "id": "e4", "source": "alloc-input", "target": "alloc-confirm", "label": "実行" },
-    { "id": "e5", "source": "alloc-confirm", "target": "ship-input", "label": "出荷へ" },
-    { "id": "e6", "source": "ship-input", "target": "ship-register", "label": "登録" },
-    { "id": "e7", "source": "ship-register", "target": "ship-complete", "label": "完了" }
+    {
+      "id": "e1",
+      "source": "order-paper",
+      "target": "order-ocr",
+      "label": "読み取り"
+    },
+    {
+      "id": "e2",
+      "source": "order-ocr",
+      "target": "order-ocr-result",
+      "label": "データ化"
+    },
+    {
+      "id": "e3",
+      "source": "order-ocr-result",
+      "target": "order-sap",
+      "label": "確定"
+    },
+    {
+      "id": "e4",
+      "source": "order-sap",
+      "target": "alloc-detail",
+      "label": "引当確認へ"
+    }
   ],
   "exceptions": [
     {
       "id": "ex-stock-shortage",
       "title": "在庫不足",
       "description": "引当時に在庫が足りない場合の対応",
-      "trigger": "引当結果確認で「保留」と表示された場合",
-      "steps": [
-        "保留理由を確認（不足数量をメモ）",
-        "入荷予定を確認",
-        "担当者に連絡（TEL/チャット）",
-        "顧客への納期回答を調整"
-      ]
+      "trigger": "OCR結果確認時に「在庫不足」の警告が出た場合",
+      "steps": ["不足数量を確認", "入荷予定を確認", "担当者に連絡", "顧客への納期回答を調整"]
     },
     {
-      "id": "ex-cancel",
-      "title": "キャンセル対応",
-      "description": "顧客から注文キャンセルの連絡があった場合",
-      "trigger": "顧客からキャンセル依頼を受けた",
+      "id": "ex-sap-failed",
+      "title": "SAP登録失敗",
+      "description": "SAPへのデータ送信でエラーが発生した場合",
+      "trigger": "SAP連携時にエラーメッセージが表示された場合",
       "steps": [
-        "受注番号を確認",
-        "出荷済みかどうかを確認",
-        "未出荷なら「取消登録」画面へ",
-        "出荷済みなら返品処理へ"
+        "エラーログから原因（マスタ未登録など）を特定",
+        "マスタを修正し、再送信を実行",
+        "解消しない場合はシステム管理者に連絡"
       ]
-    },
-    {
-      "id": "ex-address-change",
-      "title": "配送先変更",
-      "description": "出荷前に配送先の変更依頼があった場合",
-      "trigger": "顧客から住所変更の連絡があった",
-      "steps": ["出荷指示の状態を確認", "未出荷なら住所を修正", "出荷済みなら配送会社に連絡"]
     }
   ],
   "terms": [
     {
-      "term": "引当",
-      "definition": "受注に対して在庫を予約すること。引当済みの在庫は他の受注には使えません。",
-      "relatedNodes": ["alloc-input", "alloc-confirm"]
+      "term": "ロット引当",
+      "definition": "注文に対して特定の製造ロットを予約すること。先方品番と次区コードを用いて最適なロットが選択されます。",
+      "relatedNodes": ["order-ocr-result"]
     },
     {
-      "term": "ロット",
-      "definition": "同じ条件で製造・入荷した商品のまとまり。賞味期限や製造日で管理します。",
-      "relatedNodes": ["alloc-input"]
-    },
-    {
-      "term": "保留",
-      "definition": "在庫不足などで処理を一時停止している状態。担当者の確認が必要です。",
-      "relatedNodes": ["alloc-confirm"]
-    },
-    {
-      "term": "出荷実績",
-      "definition": "実際に商品を発送したことを記録すること。伝票番号と紐付けます。",
-      "relatedNodes": ["ship-register"]
+      "term": "次区",
+      "definition": "配送先や配送ルートを特定するためのコード。ロットの選定においても重要なキーとなります。",
+      "relatedNodes": ["order-ocr-result"]
     }
   ]
 }

@@ -164,7 +164,7 @@ const navItems: NavItem[] = [
     title: "ヘルプ",
     icon: HelpCircle,
     feature: "help",
-    subItems: [{ title: "フローマップ", href: ROUTES.HELP.FLOW_MAP }],
+    subItems: [{ title: "業務フローガイド", href: ROUTES.HELP.FLOW_MAP }],
   },
 ];
 
