@@ -51,59 +51,40 @@
 
 ---
 
-### 1-3. CI/CDでE2Eテストとtypecheckが実行されていない
+### ~~1-3. CI/CDでtypecheckが無効化されていた~~ ✅ 対応済み
 
 **優先度**: 高
 **作成**: 2026-01-31
+**完了**: 2026-01-31
 **カテゴリ**: CI/CD・品質保証
 
-**現状の問題:**
+**問題:**
+- Typecheckが `.github/workflows/ci.yml` でコメントアウトされていた
+- 理由: "type definitions sync issue" (実際には問題なし)
 
-1. **E2Eテストが実行されていない** ❌
-   - CI実行コマンド: `npm run test:run` (Vitestのみ)
-   - 実装済みのPlaywright E2Eテストが漏れている
-   - `test:ci` スクリプト (Vitest + E2E smoke) が定義されているが未使用
+**対応内容:**
+- ✅ Typecheckを有効化（L34-36のコメント解除）
+- ✅ ローカルでtypecheck実行 → エラーなし確認
+- ✅ E2Eテストは既に別ジョブ (`e2e-smoke`, L103-199) として実装済み
 
-2. **Typecheckが無効化されている** ⚠️
-   - `.github/workflows/ci.yml` でコメントアウト
-   - 理由: "type definitions sync issue"
-   - TypeScript型エラーが本番に混入する可能性
-
-**影響:**
-- UIの統合バグがマージ後に発覚
-- TypeScript型の不整合が検知されない
-- テスト品質の低下
-
-**推奨対応:**
-
+**確認結果:**
 ```yaml
-# .github/workflows/ci.yml 修正箇所
+CI構成:
+  Job 1: Frontend Tests
+    ✅ Lint (ESLint)
+    ✅ Typecheck (有効化)
+    ✅ Unit Tests (Vitest)
 
-# Frontend Tests
-- name: Run unit tests
-  working-directory: frontend
-  run: npm run test:run
+  Job 2: Backend Tests
+    ✅ Lint (ruff)
+    ✅ Tests (pytest)
 
-- name: Run E2E smoke tests  # 追加
-  working-directory: frontend
-  run: npm run test:e2e:smoke
-
-- name: Run type check  # コメント解除
-  working-directory: frontend
-  run: npm run typecheck
-```
-
-**代替案 (より簡潔):**
-```yaml
-- name: Run tests
-  working-directory: frontend
-  run: npm run test:ci  # test:run + test:e2e:smoke
+  Job 3: E2E Smoke Tests (needs: frontend + backend)
+    ✅ Playwright smoke tests (P0 critical paths)
 ```
 
 **関連ファイル:**
-- `.github/workflows/ci.yml`
-- `frontend/package.json` (test:ci スクリプト)
-- `frontend/playwright.config.ts`
+- `.github/workflows/ci.yml` (L34-36: typecheck有効化)
 
 ---
 
