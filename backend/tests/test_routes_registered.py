@@ -29,9 +29,8 @@ def test_masters_routes_loaded():
     """Test that masters endpoints are available after restoration."""
     # Check that at least some masters endpoints are loaded
     # This validates the dynamic import mechanism
+    # Updated after Product -> SupplierItem migration
     masters_paths = [
-        path
-        for r in app.routes
-        if (path := getattr(r, "path", "")).startswith("/api/masters/products")
+        path for r in app.routes if (path := getattr(r, "path", "")).startswith("/api/masters/")
     ]
     assert len(masters_paths) > 0, "No masters routes were loaded"
