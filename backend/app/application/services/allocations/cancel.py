@@ -370,7 +370,9 @@ def cancel_confirmed_reservation(
 
     reservation = db.get(LotReservation, reservation_id)
     if not reservation:
-        logger.warning("Reservation not found for cancellation", extra={"reservation_id": reservation_id})
+        logger.warning(
+            "Reservation not found for cancellation", extra={"reservation_id": reservation_id}
+        )
         raise AllocationNotFoundError(f"Reservation {reservation_id} not found")
 
     # Already released - idempotent
