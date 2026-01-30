@@ -67,7 +67,7 @@ function LogEntryComponent({ log }: { log: ClientLog }) {
         <span className="flex-1 break-words text-sm whitespace-pre-wrap">{log.message}</span>
 
         {/* ID */}
-        <span className="text-gray-500 text-xs whitespace-nowrap">#${log.id}</span>
+        <span className="text-gray-500 text-xs whitespace-nowrap">#{log.id}</span>
       </div>
     </div>
   );
