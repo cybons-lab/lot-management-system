@@ -10,18 +10,25 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import LotReceipt, Order, OrderLine, Product, Warehouse
+from app.infrastructure.persistence.models import (
+    LotReceipt,
+    Order,
+    OrderLine,
+    SupplierItem,
+    Warehouse,
+)
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
 
-def test_order_allocation_single_lot_fit(db: Session):
+def test_order_allocation_single_lot_fit(db: Session, supplier):
     """
     Test that Order Allocation prefers "Single Lot Fit" over strict FEFO splitting.
     """
     # 1. Setup Master Data
-    product = Product(
-        maker_part_code="TEST-AUTO-001",
-        product_name="Test Auto Product",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="TEST-AUTO-001",
+        display_name="Test Auto Product",
         base_unit="pcs",
         internal_unit="pcs",
         external_unit="pcs",
@@ -41,7 +48,7 @@ def test_order_allocation_single_lot_fit(db: Session):
     # Lot A: Older (Expiry D+5), Small Qty (50)
     # Lot A
     lot_master_a = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         lot_number="LOT-A-SMALL",
     )
     db.add(lot_master_a)
@@ -49,7 +56,7 @@ def test_order_allocation_single_lot_fit(db: Session):
 
     lot_a = LotReceipt(
         lot_master_id=lot_master_a.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("50"),
         expiry_date=today + timedelta(days=5),
@@ -63,7 +70,7 @@ def test_order_allocation_single_lot_fit(db: Session):
     # Lot B: Newer (Expiry D+10), Large Qty (100)
     # Lot B
     lot_master_b = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         lot_number="LOT-B-LARGE",
     )
     db.add(lot_master_b)
@@ -71,7 +78,7 @@ def test_order_allocation_single_lot_fit(db: Session):
 
     lot_b = LotReceipt(
         lot_master_id=lot_master_b.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("100"),
         expiry_date=today + timedelta(days=10),
@@ -109,7 +116,7 @@ def test_order_allocation_single_lot_fit(db: Session):
 
     order_line = OrderLine(
         order_id=order.id,
-        product_id=product.id,
+        product_group_id=product.id,
         delivery_place_id=delivery_place.id,
         delivery_date=today + timedelta(days=20),
         order_quantity=Decimal("80"),

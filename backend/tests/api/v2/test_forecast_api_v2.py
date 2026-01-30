@@ -3,16 +3,17 @@ import pytest
 from app.infrastructure.persistence.models import (
     Customer,
     DeliveryPlace,
-    Product,
+    SupplierItem,
 )
 
 
 @pytest.fixture
-def setup_forecast_data(db_session):
+def setup_forecast_data(db_session, supplier):
     # Master Data
-    product = Product(
-        maker_part_code="PRD-FCST-001",
-        product_name="Test Product Forecast",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PRD-FCST-001",
+        display_name="Test Product Forecast",
         base_unit="EA",
     )
     db_session.add(product)
@@ -52,7 +53,7 @@ def test_import_forecasts(client, setup_forecast_data):
             {
                 "customer_code": customer.customer_code,
                 "delivery_place_code": delivery_place.delivery_place_code,
-                "product_code": product.maker_part_code,
+                "product_code": product.maker_part_no,
                 "forecast_date": "2025-12-01",
                 "forecast_quantity": 100.0,
                 "unit": "EA",
@@ -61,7 +62,7 @@ def test_import_forecasts(client, setup_forecast_data):
             {
                 "customer_code": customer.customer_code,
                 "delivery_place_code": delivery_place.delivery_place_code,
-                "product_code": product.maker_part_code,
+                "product_code": product.maker_part_no,
                 "forecast_date": "2025-12-08",
                 "forecast_quantity": 120.0,
                 "unit": "EA",

@@ -16,9 +16,9 @@ def test_list_lots_maps_computed_fields():
     mock_lot_view = MagicMock(spec=VLotDetails)
     mock_lot_view.lot_id = 1
     mock_lot_view.lot_number = "TEST-LOT-001"
-    mock_lot_view.product_id = 10
-    mock_lot_view.maker_part_code = "PRD-001"
-    mock_lot_view.product_name = "Test Product"
+    mock_lot_view.product_group_id = 10
+    mock_lot_view.maker_part_no = "PRD-001"
+    mock_lot_view.display_name = "Test Product"
     mock_lot_view.supplier_id = 20
     mock_lot_view.supplier_code = "SUP-001"
     mock_lot_view.supplier_name = "Test Supplier"

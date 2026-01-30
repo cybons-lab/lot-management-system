@@ -2,39 +2,15 @@
 """Tests for operation logs API endpoints."""
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from starlette.testclient import TestClient
 
-from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.logs_models import OperationLog
-from app.main import app
-
-
-def _truncate_all(db: Session):
-    for table in [OperationLog]:
-        try:
-            db.query(table).delete()
-        except Exception:
-            pass
-    db.commit()
 
 
 @pytest.fixture
-def test_db(db: Session):
-    _truncate_all(db)
-
-    def override_get_db():
-        yield db
-
-    app.dependency_overrides[get_db] = override_get_db
-    yield db
-    _truncate_all(db)
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def sample_user(test_db: Session):
+def sample_user(db: Session):
     """Create sample user for logs."""
     user = User(
         username="testuser",
@@ -42,24 +18,22 @@ def sample_user(test_db: Session):
         password_hash="hashed",
         display_name="Test User",
     )
-    test_db.add(user)
-    test_db.commit()
-    test_db.refresh(user)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
     return user
 
 
-def test_list_operation_logs_empty(test_db: Session, superuser_token_headers):
+def test_list_operation_logs_empty(db: Session, client: TestClient, superuser_token_headers):
     """Test listing logs when none exist."""
-    client = TestClient(app)
     response = client.get("/api/operation-logs", headers=superuser_token_headers)
     assert response.status_code == 200
 
 
 def test_list_operation_logs_with_user_filter(
-    test_db: Session, sample_user: User, superuser_token_headers
+    db: Session, client: TestClient, sample_user: User, superuser_token_headers
 ):
     """Test listing logs filtered by user."""
-    client = TestClient(app)
 
     # Create log
     log = OperationLog(
@@ -69,8 +43,8 @@ def test_list_operation_logs_with_user_filter(
         target_id=1,
         changes={"description": "Test log"},
     )
-    test_db.add(log)
-    test_db.commit()
+    db.add(log)
+    db.commit()
 
     response = client.get(
         "/api/operation-logs",
@@ -83,10 +57,9 @@ def test_list_operation_logs_with_user_filter(
 
 
 def test_list_operation_logs_with_type_filter(
-    test_db: Session, sample_user: User, superuser_token_headers
+    db: Session, client: TestClient, sample_user: User, superuser_token_headers
 ):
     """Test filtering by operation type."""
-    client = TestClient(app)
 
     log = OperationLog(
         user_id=sample_user.id,
@@ -94,8 +67,8 @@ def test_list_operation_logs_with_type_filter(
         target_table="warehouses",
         target_id=2,
     )
-    test_db.add(log)
-    test_db.commit()
+    db.add(log)
+    db.commit()
 
     response = client.get(
         "/api/operation-logs",
@@ -109,10 +82,9 @@ def test_list_operation_logs_with_type_filter(
 
 
 def test_list_operation_logs_with_target_table_filter(
-    test_db: Session, sample_user: User, superuser_token_headers
+    db: Session, client: TestClient, sample_user: User, superuser_token_headers
 ):
     """Test filtering by target table."""
-    client = TestClient(app)
 
     log = OperationLog(
         user_id=sample_user.id,
@@ -120,8 +92,8 @@ def test_list_operation_logs_with_target_table_filter(
         target_table="products",
         target_id=1,
     )
-    test_db.add(log)
-    test_db.commit()
+    db.add(log)
+    db.commit()
 
     response = client.get(
         "/api/operation-logs",
@@ -151,10 +123,9 @@ def test_get_filters(
 
 
 def test_list_operation_logs_with_pagination(
-    test_db: Session, sample_user: User, superuser_token_headers
+    db: Session, client: TestClient, sample_user: User, superuser_token_headers
 ):
     """Test pagination."""
-    client = TestClient(app)
 
     # Create multiple logs
     for i in range(5):
@@ -164,8 +135,8 @@ def test_list_operation_logs_with_pagination(
             target_table="products",
             target_id=i + 10,
         )
-        test_db.add(log)
-    test_db.commit()
+        db.add(log)
+    db.commit()
 
     response = client.get(
         "/api/operation-logs",

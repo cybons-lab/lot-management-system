@@ -15,21 +15,22 @@ from app.domain.errors import InsufficientStockError
 from app.infrastructure.persistence.models import (
     LotMaster,
     LotReceipt,
-    Product,
     Supplier,
+    SupplierItem,
     Warehouse,
 )
 
 
 @pytest.fixture()
-def fifo_inventory(db_session):
+def fifo_inventory(db_session, supplier):
     supplier = Supplier(supplier_code="SUP1", supplier_name="Supplier One")
     warehouse = Warehouse(
         warehouse_code="W01", warehouse_name="Main Warehouse", warehouse_type="internal"
     )
-    product = Product(
-        maker_part_code="P001",
-        product_name="Sample Product",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="P001",
+        display_name="Sample Product",
         base_unit="EA",
     )
 
@@ -47,7 +48,7 @@ def fifo_inventory(db_session):
         # Create LotMaster first
         lot_master = LotMaster(
             lot_number=f"LOT{idx:03d}",
-            product_id=product.id,
+            product_group_id=product.id,
             supplier_id=supplier.id,
         )
         db_session.add(lot_master)
@@ -56,7 +57,7 @@ def fifo_inventory(db_session):
         lot = LotReceipt(
             lot_master_id=lot_master.id,
             supplier_id=supplier.id,
-            product_id=product.id,
+            product_group_id=product.id,
             expiry_date=expiry,
             warehouse_id=warehouse.id,
             received_date=base_date,
@@ -82,7 +83,7 @@ def test_validate_lines_success(db_session, fifo_inventory):
     service = OrderValidationService(db_session)
 
     demand = OrderLineDemand(
-        product_code=fifo_inventory["product"].maker_part_code,
+        product_code=fifo_inventory["product"].maker_part_no,
         warehouse_code=fifo_inventory["warehouse"].warehouse_code,
         quantity=70,
     )
@@ -97,7 +98,7 @@ def test_validate_lines_insufficient_stock(db_session, fifo_inventory):
     service = OrderValidationService(db_session)
 
     demand = OrderLineDemand(
-        product_code=fifo_inventory["product"].maker_part_code,
+        product_code=fifo_inventory["product"].maker_part_no,
         warehouse_code=fifo_inventory["warehouse"].warehouse_code,
         quantity=90,
     )
@@ -108,7 +109,7 @@ def test_validate_lines_insufficient_stock(db_session, fifo_inventory):
         service.validate_lines([demand], ship_date=ship_date, lock=False)
 
     error = exc_info.value
-    assert error.product_code == fifo_inventory["product"].maker_part_code
+    assert error.product_code == fifo_inventory["product"].maker_part_no
     assert error.required == 90
     assert error.available == 70
     assert error.details["warehouse_code"] == fifo_inventory["warehouse"].warehouse_code

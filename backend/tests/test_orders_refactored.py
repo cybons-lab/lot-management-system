@@ -13,7 +13,13 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 
-from app.infrastructure.persistence.models import Customer, DeliveryPlace, Order, OrderLine, Product
+from app.infrastructure.persistence.models import (
+    Customer,
+    DeliveryPlace,
+    Order,
+    OrderLine,
+    SupplierItem,
+)
 from app.main import app
 from app.presentation.api.deps import get_db, get_uow
 
@@ -65,7 +71,7 @@ def client(db_session):
 
 
 @pytest.fixture
-def setup_test_data(db_session):
+def setup_test_data(db_session, supplier):
     """テストデータをセットアップ"""
     customer = Customer(customer_code="CUS-001", customer_name="得意先A")
     db_session.add(customer)
@@ -78,9 +84,10 @@ def setup_test_data(db_session):
     )
     db_session.add(delivery_place)
 
-    product = Product(
-        maker_part_code="PROD-001",
-        product_name="製品A",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PROD-001",
+        display_name="製品A",
         internal_unit="EA",
         base_unit="EA",
     )
@@ -92,7 +99,7 @@ def setup_test_data(db_session):
         "customer_code": "CUS-001",
         "customer_id": customer.id,
         "product_code": "PROD-001",
-        "product_id": product.id,
+        "product_group_id": product.id,
         "delivery_place_id": delivery_place.id,
     }
 
@@ -109,7 +116,7 @@ class TestOrderAPI:
                 "order_date": "2024-11-01",
                 "lines": [
                     {
-                        "product_id": setup_test_data["product_id"],
+                        "product_group_id": setup_test_data["product_group_id"],
                         "order_quantity": 100.0,
                         "unit": "EA",
                         "delivery_date": "2024-11-15",
@@ -137,7 +144,7 @@ class TestOrderAPI:
 
         order_line = OrderLine(
             order_id=order.id,
-            product_id=setup_test_data["product_id"],
+            product_group_id=setup_test_data["product_group_id"],
             order_quantity=100.0,
             unit="EA",
             delivery_date=date(2024, 11, 15),

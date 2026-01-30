@@ -8,78 +8,54 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import (
-    InboundPlan,
-    InboundPlanLine,
-    Product,
     Supplier,
+    SupplierItem,
     Warehouse,
 )
-from app.main import app
-from app.presentation.api.deps import get_db
-
-
-def _truncate_all(db: Session):
-    for table in [InboundPlanLine, InboundPlan, Product, Supplier, Warehouse]:
-        try:
-            db.query(table).delete()
-        except Exception:
-            pass
-    db.commit()
 
 
 @pytest.fixture
-def test_db(db: Session):
-    _truncate_all(db)
-
-    def override_get_db():
-        yield db
-
-    app.dependency_overrides[get_db] = override_get_db
-    yield db
-    _truncate_all(db)
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def sample_data(test_db: Session):
+def sample_data(db: Session, supplier):
     """Create sample data."""
     supplier = Supplier(supplier_code="SUP-001", supplier_name="Test Supplier")
-    test_db.add(supplier)
-    test_db.commit()
-    test_db.refresh(supplier)
+    db.add(supplier)
+    db.commit()
+    db.refresh(supplier)
 
-    product = Product(maker_part_code="PROD-001", product_name="Test Product", base_unit="EA")
-    test_db.add(product)
-    test_db.commit()
-    test_db.refresh(product)
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PROD-001",
+        display_name="Test Product",
+        base_unit="EA",
+    )
+    db.add(product)
+    db.commit()
+    db.refresh(product)
 
     warehouse = Warehouse(
         warehouse_code="WH-001", warehouse_name="Test WH", warehouse_type="internal"
     )
-    test_db.add(warehouse)
-    test_db.commit()
-    test_db.refresh(warehouse)
+    db.add(warehouse)
+    db.commit()
+    db.refresh(warehouse)
 
     return {"supplier": supplier, "product": product, "warehouse": warehouse}
 
 
-def test_list_inbound_plans_empty(test_db: Session):
+def test_list_inbound_plans_empty(db: Session, client: TestClient):
     """Test listing inbound plans when none exist."""
-    client = TestClient(app)
     response = client.get("/api/inbound-plans")
     assert response.status_code == 200
 
 
-def test_list_inbound_plans_with_filters(test_db: Session, sample_data):
+def test_list_inbound_plans_with_filters(db: Session, client: TestClient, sample_data):
     """Test listing inbound plans with filters."""
-    client = TestClient(app)
     response = client.get("/api/inbound-plans", params={"supplier_id": sample_data["supplier"].id})
     assert response.status_code == 200
 
 
-def test_create_inbound_plan_success(test_db: Session, sample_data):
+def test_create_inbound_plan_success(db: Session, client: TestClient, sample_data):
     """Test creating an inbound plan."""
-    client = TestClient(app)
 
     plan_data = {
         "supplier_id": sample_data["supplier"].id,
@@ -87,7 +63,7 @@ def test_create_inbound_plan_success(test_db: Session, sample_data):
         "status": "planned",
         "lines": [
             {
-                "product_id": sample_data["product"].id,
+                "product_group_id": sample_data["product"].id,
                 "warehouse_id": sample_data["warehouse"].id,
                 "expected_quantity": 100.0,
                 "unit": "EA",
@@ -100,22 +76,19 @@ def test_create_inbound_plan_success(test_db: Session, sample_data):
     assert response.status_code in [201, 400, 422]
 
 
-def test_get_inbound_plan_not_found(test_db: Session):
+def test_get_inbound_plan_not_found(db: Session, client: TestClient):
     """Test getting non-existent plan."""
-    client = TestClient(app)
     response = client.get("/api/inbound-plans/99999")
     assert response.status_code == 404
 
 
-def test_update_inbound_plan_not_found(test_db: Session):
+def test_update_inbound_plan_not_found(db: Session, client: TestClient):
     """Test updating non-existent plan."""
-    client = TestClient(app)
     response = client.put("/api/inbound-plans/99999", json={"status": "received"})
     assert response.status_code == 404
 
 
-def test_delete_inbound_plan_not_found(test_db: Session):
+def test_delete_inbound_plan_not_found(db: Session, client: TestClient):
     """Test deleting non-existent plan."""
-    client = TestClient(app)
     response = client.delete("/api/inbound-plans/99999")
     assert response.status_code == 404

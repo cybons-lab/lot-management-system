@@ -135,12 +135,12 @@ class TestCustomerServiceHardDelete:
 class TestCustomerServiceSoftDeleteOrderTransition:
     """Tests for order status transitions on soft delete."""
 
-    def test_soft_delete_cancels_unallocated_orders(self, db_session: Session):
+    def test_soft_delete_cancels_unallocated_orders(self, db_session: Session, supplier):
         """Soft delete should cancel orders without allocations."""
         from app.infrastructure.persistence.models.masters_models import (
             Customer,
             DeliveryPlace,
-            Product,
+            SupplierItem,
         )
         from app.infrastructure.persistence.models.orders_models import Order, OrderLine
 
@@ -162,9 +162,10 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         db_session.commit()
 
         # Create product
-        product = Product(
-            maker_part_code="SOFT001-PROD",
-            product_name="Test Product SOFT001",
+        product = SupplierItem(
+            supplier_id=supplier.id,
+            maker_part_no="SOFT001-PROD",
+            display_name="Test Product SOFT001",
             base_unit="EA",
         )
         db_session.add(product)
@@ -181,7 +182,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
 
         order_line = OrderLine(
             order_id=order.id,
-            product_id=product.id,
+            product_group_id=product.id,
             delivery_place_id=delivery_place.id,
             delivery_date=date.today(),
             order_quantity=Decimal("100"),
@@ -212,7 +213,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         db_session.delete(customer)
         db_session.commit()
 
-    def test_soft_delete_holds_allocated_orders(self, db_session: Session):
+    def test_soft_delete_holds_allocated_orders(self, db_session: Session, supplier):
         """Soft delete should put allocated orders on hold."""
         from app.infrastructure.persistence.models.inventory_models import LotReceipt
         from app.infrastructure.persistence.models.lot_master_model import LotMaster
@@ -222,7 +223,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         from app.infrastructure.persistence.models.masters_models import (
             Customer,
             DeliveryPlace,
-            Product,
+            SupplierItem,
             Warehouse,
         )
         from app.infrastructure.persistence.models.orders_models import Order, OrderLine
@@ -245,9 +246,10 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         db_session.commit()
 
         # Create product
-        product = Product(
-            maker_part_code="SOFT002-PROD",
-            product_name="Test Product SOFT002",
+        product = SupplierItem(
+            supplier_id=supplier.id,
+            maker_part_no="SOFT002-PROD",
+            display_name="Test Product SOFT002",
             base_unit="EA",
         )
         db_session.add(product)
@@ -263,13 +265,13 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         db_session.commit()
 
         # Create lot
-        lm = LotMaster(product_id=product.id, lot_number="SOFT002-LOT")
+        lm = LotMaster(product_group_id=product.id, lot_number="SOFT002-LOT")
         db_session.add(lm)
         db_session.flush()
 
         lot = LotReceipt(
             lot_master_id=lm.id,
-            product_id=product.id,
+            product_group_id=product.id,
             warehouse_id=warehouse.id,
             received_quantity=Decimal("1000"),
             received_date=date.today(),
@@ -289,7 +291,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
 
         order_line = OrderLine(
             order_id=order.id,
-            product_id=product.id,
+            product_group_id=product.id,
             delivery_place_id=delivery_place.id,
             delivery_date=date.today(),
             order_quantity=Decimal("100"),

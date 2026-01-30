@@ -7,7 +7,7 @@
 
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Product, Supplier
+from app.infrastructure.persistence.models import Supplier, SupplierItem
 
 
 class TestSupplierProductErrors:
@@ -18,23 +18,27 @@ class TestSupplierProductErrors:
     ):
         """同じ製品-仕入先ペアで2回作成 → 2回目は400/409/422"""
         # 製品と仕入先を作成
-        product = Product(
-            maker_part_code="PROD-SP-DUP-ERR",
-            product_name="製品SP重複ERR",
-            base_unit="EA",
-        )
         supplier = Supplier(
             supplier_code="SUP-SP-DUP-ERR",
             supplier_name="仕入先SP重複ERR",
         )
-        db.add_all([product, supplier])
+        db.add(supplier)
+        db.flush()
+
+        product = SupplierItem(
+            supplier_id=supplier.id,
+            maker_part_no="PROD-SP-DUP-ERR",
+            display_name="製品SP重複ERR",
+            base_unit="EA",
+        )
+        db.add(product)
         db.flush()
 
         # 最初の作成
         response1 = client.post(
             "/api/masters/supplier-products",
             json={
-                "product_id": product.id,
+                "product_group_id": product.id,
                 "supplier_id": supplier.id,
                 "supplier_product_code": "SP-ERR-001",
             },
@@ -47,7 +51,7 @@ class TestSupplierProductErrors:
             response2 = client.post(
                 "/api/masters/supplier-products",
                 json={
-                    "product_id": product.id,
+                    "product_group_id": product.id,
                     "supplier_id": supplier.id,
                     "supplier_product_code": "SP-ERR-002",
                 },
@@ -66,8 +70,8 @@ class TestProductErrors:
         response = client.post(
             "/api/masters/products",
             json={
-                # maker_part_code missing
-                "product_name": "テスト製品",
+                # maker_part_no missing
+                "display_name": "テスト製品",
                 "base_unit": "EA",
             },
             headers=superuser_token_headers,
@@ -82,8 +86,8 @@ class TestProductErrors:
         response = client.post(
             "/api/masters/products",
             json={
-                "maker_part_code": "PROD-TYPE-ERR",
-                "product_name": "テスト製品",
+                "maker_part_no": "PROD-TYPE-ERR",
+                "display_name": "テスト製品",
                 "base_unit": "EA",
                 "base_price": "not_a_number",  # 数値フィールドに文字列
             },

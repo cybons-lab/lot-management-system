@@ -10,7 +10,7 @@ def _build_forecast(master_data):
     return ForecastCurrent(
         customer_id=master_data["customer"].id,
         delivery_place_id=master_data["delivery_place"].id,
-        product_id=master_data["product1"].id,
+        product_group_id=master_data["product1"].id,
         forecast_date=date(2026, 1, 15),
         forecast_quantity=Decimal("10.0"),
         unit="EA",

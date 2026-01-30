@@ -146,9 +146,9 @@ def client(db) -> Generator[TestClient]:
 
 
 @pytest.fixture
-def setup_search_data(db_session):
+def setup_search_data(db_session, supplier):
     """Setup basic master data for search and label tests."""
-    from app.infrastructure.persistence.models import Product, Supplier, Warehouse
+    from app.infrastructure.persistence.models import Supplier, SupplierItem, Warehouse
 
     # Supplier
     supplier = Supplier(supplier_code="sup-search", supplier_name="Search Supplier")
@@ -156,7 +156,8 @@ def setup_search_data(db_session):
     db_session.flush()
 
     # Product
-    product = Product(
+    product = SupplierItem(
+        supplier_id=supplier.id,
         maker_part_no="SEARCH-PROD-001",
         display_name="Search Test Product",
         base_unit="EA",
@@ -179,13 +180,13 @@ def setup_search_data(db_session):
 
 
 @pytest.fixture
-def master_data(db):
+def master_data(db, supplier):
     """Create common master data for tests."""
     from app.infrastructure.persistence.models import (
         Customer,
         DeliveryPlace,
-        Product,
         Supplier,
+        SupplierItem,
         Warehouse,
     )
     from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
@@ -202,7 +203,7 @@ def master_data(db):
     db.flush()  # Ensure supplier.id is generated
 
     # Create Products (SupplierItems)
-    product1 = Product(
+    product1 = SupplierItem(
         supplier_id=supplier.id,
         maker_part_no="PRD-TEST-001",
         display_name="Test Product 1",
@@ -211,7 +212,7 @@ def master_data(db):
         external_unit="PLT",
         qty_per_internal_unit=10,
     )
-    product2 = Product(
+    product2 = SupplierItem(
         supplier_id=supplier.id,
         maker_part_no="PRD-TEST-002",
         display_name="Test Product 2",
@@ -271,6 +272,17 @@ def master_data(db):
         "delivery_place": delivery_place,
         "user": user,
     }
+
+
+@pytest.fixture
+def supplier(db):
+    """Create a simple test supplier."""
+    from app.infrastructure.persistence.models import Supplier
+
+    supplier = Supplier(supplier_code="SUP-TEST-DEFAULT", supplier_name="Default Test Supplier")
+    db.add(supplier)
+    db.flush()  # Use flush for transaction safety
+    return supplier
 
 
 @pytest.fixture

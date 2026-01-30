@@ -19,13 +19,13 @@ def test_create_adjustment_increase(db: Session, service_master_data):
 
     user = service_master_data["user"]
 
-    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-1")
+    lm = LotMaster(product_group_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-1")
     db.add(lm)
     db.flush()
 
     lot = LotReceipt(
         lot_master_id=lm.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=100,
@@ -77,13 +77,13 @@ def test_create_adjustment_decrease(db: Session, service_master_data):
 
     user = service_master_data["user"]
 
-    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-2")
+    lm = LotMaster(product_group_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-2")
     db.add(lm)
     db.flush()
 
     lot = LotReceipt(
         lot_master_id=lm.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=100,
@@ -119,13 +119,13 @@ def test_create_adjustment_deplete(db: Session, service_master_data):
 
     user = service_master_data["user"]
 
-    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-3")
+    lm = LotMaster(product_group_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-3")
     db.add(lm)
     db.flush()
 
     lot = LotReceipt(
         lot_master_id=lm.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=10,
@@ -160,13 +160,13 @@ def test_create_adjustment_negative_balance_error(db: Session, service_master_da
 
     user = service_master_data["user"]
 
-    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-4")
+    lm = LotMaster(product_group_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-4")
     db.add(lm)
     db.flush()
 
     lot = LotReceipt(
         lot_master_id=lm.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=10,
@@ -212,13 +212,13 @@ def test_get_adjustments_filtering(db: Session, service_master_data):
 
     user = service_master_data["user"]
 
-    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-FILT")
+    lm = LotMaster(product_group_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-FILT")
     db.add(lm)
     db.flush()
 
     lot = LotReceipt(
         lot_master_id=lm.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=100,
@@ -267,13 +267,13 @@ def test_get_adjustment_by_id(db: Session, service_master_data):
 
     user = service_master_data["user"]
 
-    lm = LotMaster(product_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-GET")
+    lm = LotMaster(product_group_id=product.id, supplier_id=supplier.id, lot_number="LOT-ADJ-GET")
     db.add(lm)
     db.flush()
 
     lot = LotReceipt(
         lot_master_id=lm.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=100,

@@ -10,55 +10,21 @@ from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import (
     LotReceipt,
-    Product,
     Role,
-    StockHistory,
+    SupplierItem,
     User,
     Warehouse,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
-from app.main import application
-from app.presentation.api.deps import get_db
-
-
-def _truncate_all(db: Session):
-    for table in [StockHistory, LotReceipt, Product, Warehouse, User, Role]:
-        try:
-            db.query(table).delete()
-        except Exception:
-            pass
-    db.commit()
 
 
 @pytest.fixture
-def test_db(db: Session):
-    _truncate_all(db)
-
-    from app.application.services.auth.auth_service import AuthService
-    from app.core import database as core_database
-    from app.infrastructure.persistence.models import User
-
-    def override_get_db():
-        yield db
-
-    def override_get_current_user():
-        return User(id=1, username="test_user", is_active=True)
-
-    application.dependency_overrides[get_db] = override_get_db
-    application.dependency_overrides[core_database.get_db] = override_get_db
-    application.dependency_overrides[AuthService.get_current_user] = override_get_current_user
-    yield db
-    _truncate_all(db)
-    application.dependency_overrides.clear()
-
-
-@pytest.fixture
-def sample_lot(test_db: Session):
+def sample_lot(db: Session, supplier):
     """Create sample data for testing."""
     # Create user first (for adjusted_by foreign key)
     role = Role(role_code="admin", role_name="Administrator")
-    test_db.add(role)
-    test_db.flush()
+    db.add(role)
+    db.flush()
 
     user = User(
         username="testuser",
@@ -67,50 +33,54 @@ def sample_lot(test_db: Session):
         display_name="Test User",
         is_active=True,
     )
-    test_db.add(user)
-    test_db.commit()
-    test_db.refresh(user)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
     wh = Warehouse(warehouse_code="WH-001", warehouse_name="Test WH", warehouse_type="internal")
-    test_db.add(wh)
-    test_db.commit()
-    test_db.refresh(wh)
+    db.add(wh)
+    db.commit()
+    db.refresh(wh)
 
-    prod = Product(maker_part_code="PROD-001", product_name="Test Product", base_unit="EA")
-    test_db.add(prod)
-    test_db.commit()
-    test_db.refresh(prod)
+    prod = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PROD-001",
+        display_name="Test Product",
+        base_unit="EA",
+    )
+    db.add(prod)
+    db.commit()
+    db.refresh(prod)
 
-    test_db.refresh(prod)
+    db.refresh(prod)
 
     # Create LotMaster
     lot_master = LotMaster(
-        product_id=prod.id,
+        product_group_id=prod.id,
         lot_number="LOT-001",
     )
-    test_db.add(lot_master)
-    test_db.commit()
+    db.add(lot_master)
+    db.commit()
 
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_id=prod.id,
+        product_group_id=prod.id,
         warehouse_id=wh.id,
         received_quantity=Decimal("100.000"),
         unit="EA",
         received_date=date.today(),
     )
-    test_db.add(lot)
-    test_db.commit()
-    test_db.refresh(lot)
+    db.add(lot)
+    db.commit()
+    db.refresh(lot)
 
     # Return both lot and user_id
     lot.test_user_id = user.id  # type: ignore[attr-defined]
     return lot
 
 
-def test_create_adjustment_success(test_db: Session, sample_lot: LotReceipt):
+def test_create_adjustment_success(db: Session, client: TestClient, sample_lot: LotReceipt):
     """Test creating an adjustment."""
-    client = TestClient(application)
 
     adjustment_data = {
         "lot_id": sample_lot.id,
@@ -127,9 +97,10 @@ def test_create_adjustment_success(test_db: Session, sample_lot: LotReceipt):
     assert float(data["adjusted_quantity"]) == 10.0
 
 
-def test_create_adjustment_negative_quantity(test_db: Session, sample_lot: LotReceipt):
+def test_create_adjustment_negative_quantity(
+    db: Session, client: TestClient, sample_lot: LotReceipt
+):
     """Test creating adjustment with negative quantity."""
-    client = TestClient(application)
 
     adjustment_data = {
         "lot_id": sample_lot.id,
@@ -143,9 +114,10 @@ def test_create_adjustment_negative_quantity(test_db: Session, sample_lot: LotRe
     assert response.status_code == 201
 
 
-def test_create_adjustment_invalid_lot_returns_400(test_db: Session, sample_lot: LotReceipt):
+def test_create_adjustment_invalid_lot_returns_400(
+    db: Session, client: TestClient, sample_lot: LotReceipt
+):
     """Test creating adjustment for non-existent lot."""
-    client = TestClient(application)
 
     adjustment_data = {
         "lot_id": 99999,
@@ -159,9 +131,8 @@ def test_create_adjustment_invalid_lot_returns_400(test_db: Session, sample_lot:
     assert response.status_code == 422
 
 
-def test_list_adjustments_success(test_db: Session, sample_lot: LotReceipt):
+def test_list_adjustments_success(db: Session, client: TestClient, sample_lot: LotReceipt):
     """Test listing adjustments."""
-    client = TestClient(application)
 
     # Create some adjustments
     adj_data = {
@@ -178,9 +149,8 @@ def test_list_adjustments_success(test_db: Session, sample_lot: LotReceipt):
     assert len(response.json()) >= 1
 
 
-def test_list_adjustments_with_lot_filter(test_db: Session, sample_lot: LotReceipt):
+def test_list_adjustments_with_lot_filter(db: Session, client: TestClient, sample_lot: LotReceipt):
     """Test listing adjustments filtered by lot_id."""
-    client = TestClient(application)
 
     adj_data = {
         "lot_id": sample_lot.id,
@@ -198,9 +168,8 @@ def test_list_adjustments_with_lot_filter(test_db: Session, sample_lot: LotRecei
     assert all(adj["lot_id"] == sample_lot.id for adj in data)
 
 
-def test_list_adjustments_with_type_filter(test_db: Session, sample_lot: LotReceipt):
+def test_list_adjustments_with_type_filter(db: Session, client: TestClient, sample_lot: LotReceipt):
     """Test listing adjustments filtered by type."""
-    client = TestClient(application)
 
     adj_data = {
         "lot_id": sample_lot.id,

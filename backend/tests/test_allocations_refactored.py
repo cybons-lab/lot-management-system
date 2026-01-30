@@ -19,8 +19,8 @@ from app.infrastructure.persistence.models import (
     LotReceipt,
     Order,
     OrderLine,
-    Product,
     Supplier,
+    SupplierItem,
     Warehouse,
 )
 from app.main import app
@@ -56,7 +56,7 @@ def client(db_session):
 
 
 @pytest.fixture
-def setup_test_data(db_session):
+def setup_test_data(db_session, supplier):
     """テストデータをセットアップ"""
     # Note: commit() is required instead of flush() because SQL views
     # (VOrderLineContext, VLotAvailableQty) cannot see uncommitted data
@@ -77,9 +77,10 @@ def setup_test_data(db_session):
     db_session.commit()
 
     # 製品
-    product = Product(
-        maker_part_code="PROD-001",
-        product_name="製品A",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PROD-001",
+        display_name="製品A",
         base_unit="EA",
     )
     db_session.add(product)
@@ -101,7 +102,7 @@ def setup_test_data(db_session):
     forecast = ForecastCurrent(
         customer_id=customer.id,
         delivery_place_id=delivery_place.id,
-        product_id=product.id,
+        product_group_id=product.id,
         forecast_date=today,
         forecast_quantity=100,
         forecast_period=today.strftime("%Y-%m"),
@@ -113,7 +114,7 @@ def setup_test_data(db_session):
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
     lot_master = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         supplier_id=supplier.id,
         lot_number="LOT-001",
     )
@@ -124,7 +125,7 @@ def setup_test_data(db_session):
     lot = LotReceipt(
         lot_master_id=lot_master.id,
         supplier_id=supplier.id,
-        product_id=product.id,
+        product_group_id=product.id,
         received_date=today - timedelta(days=7),
         expiry_date=today + timedelta(days=180),
         warehouse_id=warehouse.id,
@@ -143,7 +144,7 @@ def setup_test_data(db_session):
     # 受注明細 (with business keys)
     order_line = OrderLine(
         order_id=order.id,
-        product_id=product.id,
+        product_group_id=product.id,
         delivery_date=today + timedelta(days=1),
         order_quantity=50.0,
         unit="EA",
@@ -160,7 +161,7 @@ def setup_test_data(db_session):
         "order_line_id": order_line.id,
         "customer_id": customer.id,
         "delivery_place_id": delivery_place.id,
-        "product_id": product.id,
+        "product_group_id": product.id,
         "warehouse_id": warehouse.id,
         "supplier_id": supplier.id,
     }
@@ -191,18 +192,19 @@ class TestAllocationAPI:
         assert "items" in data
         assert len(data["items"]) > 0  # 候補ロットが返る
         # 最初の候補ロットが期待通りの商品であることを確認
-        assert data["items"][0]["product_id"] == setup_test_data["product_id"]
+        assert data["items"][0]["product_group_id"] == setup_test_data["product_group_id"]
 
     @pytest.mark.xfail(
         reason="View VOrderLineContext not visible in test transaction - requires architecture fix"
     )
-    def test_candidate_lots_without_forecast(self, client, db_session, setup_test_data):
+    def test_candidate_lots_without_forecast(self, client, db_session, setup_test_data, supplier):
         """forecast に含まれない商品でも、有効在庫があれば候補ロットが返ること"""
         # 新しい商品を作成（forecast 無し）
 
-        product_no_forecast = Product(
-            maker_part_code="PROD-NO-FORECAST",
-            product_name="Forecast無し商品",
+        product_no_forecast = SupplierItem(
+            supplier_id=supplier.id,
+            maker_part_no="PROD-NO-FORECAST",
+            display_name="Forecast無し商品",
             base_unit="EA",
         )
         db_session.add(product_no_forecast)
@@ -213,7 +215,7 @@ class TestAllocationAPI:
         from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
         lot_master_no_forecast = LotMaster(
-            product_id=product_no_forecast.id,
+            product_group_id=product_no_forecast.id,
             supplier_id=setup_test_data.get("supplier_id"),
             lot_number="LOT-NO-FORECAST",
         )
@@ -223,7 +225,7 @@ class TestAllocationAPI:
         lot_no_forecast = LotReceipt(
             lot_master_id=lot_master_no_forecast.id,
             supplier_id=setup_test_data.get("supplier_id"),
-            product_id=product_no_forecast.id,
+            product_group_id=product_no_forecast.id,
             received_date=today - timedelta(days=3),
             expiry_date=today + timedelta(days=90),
             warehouse_id=setup_test_data["warehouse_id"],
@@ -237,7 +239,7 @@ class TestAllocationAPI:
         # この商品の受注明細を作成
         order_line_no_forecast = OrderLine(
             order_id=setup_test_data["order_id"],
-            product_id=product_no_forecast.id,
+            product_group_id=product_no_forecast.id,
             delivery_date=today + timedelta(days=2),
             order_quantity=20.0,
             unit="EA",
@@ -256,7 +258,7 @@ class TestAllocationAPI:
         data = response.json()
         assert "items" in data
         assert len(data["items"]) > 0, "forecast無しでも候補ロットが返るべき"
-        assert data["items"][0]["product_id"] == product_no_forecast.id
+        assert data["items"][0]["product_group_id"] == product_no_forecast.id
         assert data["items"][0]["lot_id"] == lot_no_forecast.id
 
 

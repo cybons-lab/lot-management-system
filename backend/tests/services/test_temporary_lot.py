@@ -12,7 +12,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.application.services.inventory.lot_service import LotService
-from app.infrastructure.persistence.models import LotReceipt, Product, Warehouse
+from app.infrastructure.persistence.models import LotReceipt, Supplier, SupplierItem, Warehouse
 from app.presentation.schemas.inventory.inventory_schema import LotCreate
 
 
@@ -20,12 +20,25 @@ class TestTemporaryLotRegistration:
     """Tests for temporary lot registration (仮入庫対応)."""
 
     @pytest.fixture
-    def product(self, db: Session) -> Product:
+    def supplier(self, db: Session, supplier) -> Supplier:
+        """Create a test supplier."""
+        supplier = Supplier(
+            id=99000,
+            supplier_code="TEST-SUP-001",
+            supplier_name="Test Supplier for Temp Lot",
+        )
+        db.add(supplier)
+        db.commit()
+        return supplier
+
+    @pytest.fixture
+    def product(self, db: Session, supplier: Supplier) -> SupplierItem:
         """Create a test product."""
-        product = Product(
+        product = SupplierItem(
             id=99001,
-            maker_part_code="TEST-PROD-001",
-            product_name="Test Product for Temp Lot",
+            supplier_id=supplier.id,
+            maker_part_no="TEST-PROD-001",
+            display_name="Test Product for Temp Lot",
             base_unit="PCS",
             internal_unit="PCS",
             external_unit="PCS",
@@ -35,7 +48,7 @@ class TestTemporaryLotRegistration:
         return product
 
     @pytest.fixture
-    def warehouse(self, db: Session) -> Warehouse:
+    def warehouse(self, db: Session, supplier) -> Warehouse:
         """Create a test warehouse."""
         warehouse = Warehouse(
             id=99001,
@@ -48,7 +61,7 @@ class TestTemporaryLotRegistration:
         return warehouse
 
     def test_create_lot_with_empty_lot_number_generates_temporary(
-        self, db: Session, product: Product, warehouse: Warehouse
+        self, db: Session, product: SupplierItem, warehouse: Warehouse
     ):
         """Test that empty lot_number generates TMP-format lot number and UUID key."""
         service = LotService(db)
@@ -56,7 +69,7 @@ class TestTemporaryLotRegistration:
         # Create lot without lot_number (empty string triggers temporary lot)
         lot_create = LotCreate(
             lot_number="",  # Empty triggers temporary lot
-            product_id=product.id,
+            product_group_id=product.id,
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",
@@ -89,7 +102,7 @@ class TestTemporaryLotRegistration:
         assert db_lot.temporary_lot_key is not None
 
     def test_create_lot_with_normal_lot_number_no_temporary_key(
-        self, db: Session, product: Product, warehouse: Warehouse
+        self, db: Session, product: SupplierItem, warehouse: Warehouse
     ):
         """Test that normal lot_number does not generate temporary_lot_key."""
         service = LotService(db)
@@ -97,7 +110,7 @@ class TestTemporaryLotRegistration:
         # Create lot with explicit lot_number
         lot_create = LotCreate(
             lot_number="NORMAL-LOT-001",
-            product_id=product.id,
+            product_group_id=product.id,
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",
@@ -112,7 +125,9 @@ class TestTemporaryLotRegistration:
         # Verify no temporary_lot_key
         assert response.temporary_lot_key is None
 
-    def test_temporary_lot_key_is_unique(self, db: Session, product: Product, warehouse: Warehouse):
+    def test_temporary_lot_key_is_unique(
+        self, db: Session, product: SupplierItem, warehouse: Warehouse
+    ):
         """Test that each temporary lot gets a unique UUID key."""
         service = LotService(db)
 
@@ -123,7 +138,7 @@ class TestTemporaryLotRegistration:
         for i in range(3):
             lot_create = LotCreate(
                 lot_number="",  # Empty triggers temporary lot
-                product_id=product.id,
+                product_group_id=product.id,
                 warehouse_id=warehouse.id,
                 received_date=date.today(),
                 unit="PCS",
@@ -145,15 +160,30 @@ class TestTemporaryLotUpdate:
     """Tests for updating temporary lots to official lot numbers."""
 
     @pytest.fixture
-    def temp_lot(self, db: Session) -> LotReceipt:
+    def supplier(self, db: Session, supplier) -> Supplier:
+        """Create a test supplier."""
+        supplier = db.query(Supplier).filter(Supplier.id == 99000).first()
+        if not supplier:
+            supplier = Supplier(
+                id=99000,
+                supplier_code="TEST-SUP-001",
+                supplier_name="Test Supplier for Temp Lot",
+            )
+            db.add(supplier)
+            db.commit()
+        return supplier
+
+    @pytest.fixture
+    def temp_lot(self, db: Session, supplier: Supplier) -> LotReceipt:
         """Create a temporary lot for testing."""
         # First ensure we have product and warehouse
-        product = db.query(Product).filter(Product.id == 99002).first()
+        product = db.query(SupplierItem).filter(SupplierItem.id == 99002).first()
         if not product:
-            product = Product(
+            product = SupplierItem(
                 id=99002,
-                maker_part_code="TEST-PROD-002",
-                product_name="Test Product 2",
+                supplier_id=supplier.id,
+                maker_part_no="TEST-PROD-002",
+                display_name="Test Product 2",
                 base_unit="PCS",
                 internal_unit="PCS",
                 external_unit="PCS",
@@ -176,7 +206,7 @@ class TestTemporaryLotUpdate:
         service = LotService(db)
         lot_create = LotCreate(
             lot_number="",
-            product_id=product.id,
+            product_group_id=product.id,
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",

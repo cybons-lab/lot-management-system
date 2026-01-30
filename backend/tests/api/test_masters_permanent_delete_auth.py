@@ -10,10 +10,10 @@ from app.infrastructure.persistence.models import (
     Customer,
     CustomerItem,
     DeliveryPlace,
-    Product,
     ProductSupplier,
     ProductUomConversion,
     Supplier,
+    SupplierItem,
     Warehouse,
 )
 
@@ -58,18 +58,19 @@ def _setup_warehouse(db: Session):
     )
 
 
-def _setup_product(db: Session):
-    product = Product(
-        maker_part_code="PERM-PROD",
-        product_name="Permanent Product",
+def _setup_product(db: Session, supplier):
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PERM-PROD",
+        display_name="Permanent Product",
         base_unit="EA",
     )
     db.add(product)
     db.flush()
     return (
-        f"/api/masters/products/{product.maker_part_code}/permanent",
-        lambda session: session.query(Product)
-        .filter(Product.maker_part_code == product.maker_part_code)
+        f"/api/masters/products/{product.maker_part_no}/permanent",
+        lambda session: session.query(SupplierItem)
+        .filter(SupplierItem.maker_part_no == product.maker_part_no)
         .first(),
     )
 
@@ -94,9 +95,10 @@ def _setup_delivery_place(db: Session):
 def _setup_customer_item(db: Session):
     customer = Customer(customer_code="PERM-CUST-CI", customer_name="Customer for Item")
     supplier = Supplier(supplier_code="PERM-SUP-CI", supplier_name="Supplier for Item")
-    product = Product(
-        maker_part_code="PERM-PROD-CI",
-        product_name="Product for Item",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PERM-PROD-CI",
+        display_name="Product for Item",
         base_unit="EA",
     )
     db.add_all([customer, supplier, product])
@@ -104,7 +106,7 @@ def _setup_customer_item(db: Session):
     item = CustomerItem(
         customer_id=customer.id,
         customer_part_no="EXT-ITEM",
-        product_id=product.id,
+        product_group_id=product.id,
         supplier_id=supplier.id,
         base_unit="EA",
     )
@@ -121,16 +123,17 @@ def _setup_customer_item(db: Session):
     )
 
 
-def _setup_uom_conversion(db: Session):
-    product = Product(
-        maker_part_code="PERM-PROD-UOM",
-        product_name="Product for UOM",
+def _setup_uom_conversion(db: Session, supplier):
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PERM-PROD-UOM",
+        display_name="Product for UOM",
         base_unit="EA",
     )
     db.add(product)
     db.flush()
     conversion = ProductUomConversion(
-        product_id=product.id,
+        product_group_id=product.id,
         external_unit="BOX",
         factor=Decimal("10.0"),
     )
@@ -146,15 +149,16 @@ def _setup_uom_conversion(db: Session):
 
 def _setup_supplier_product(db: Session):
     supplier = Supplier(supplier_code="PERM-SUP-SP", supplier_name="Supplier for SP")
-    product = Product(
-        maker_part_code="PERM-PROD-SP",
-        product_name="Product for SP",
+    product = SupplierItem(
+        supplier_id=supplier.id,
+        maker_part_no="PERM-PROD-SP",
+        display_name="Product for SP",
         base_unit="EA",
     )
     db.add_all([supplier, product])
     db.flush()
     sp = ProductSupplier(
-        product_id=product.id,
+        product_group_id=product.id,
         supplier_id=supplier.id,
         maker_part_no="M-PART-SP",
         is_primary=True,

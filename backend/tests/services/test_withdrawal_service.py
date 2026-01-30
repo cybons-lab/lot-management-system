@@ -31,7 +31,7 @@ def create_lot(db, master_data, quantity=100):
 
     # Create LotMaster
     lot_master = LotMaster(
-        product_id=product.id,
+        product_group_id=product.id,
         lot_number="LOT-TEST-001",
         supplier_id=supplier.id,
     )
@@ -41,7 +41,7 @@ def create_lot(db, master_data, quantity=100):
     # Create LotReceipt
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_id=product.id,
+        product_group_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_date=date.today(),

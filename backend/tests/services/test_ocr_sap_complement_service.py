@@ -15,12 +15,12 @@ class TestOcrSapComplementService:
     """Test cases for OCR→SAP complement search service."""
 
     @pytest.fixture
-    def service(self, db_session):
+    def service(self, db_session, supplier):
         """Create service instance."""
         return OcrSapComplementService(db_session)
 
     @pytest.fixture
-    def setup_test_data(self, db_session):
+    def setup_test_data(self, db_session, supplier):
         """Setup test data for search tests."""
         # Create customer
         customer = Customer(
@@ -122,9 +122,9 @@ class TestOcrSapComplementService:
         assert result.match_type == MatchType.NOT_FOUND
         assert "Customer not found" in (result.message or "")
 
-    def test_resolve_product_id_shorthand(self, service, setup_test_data):
-        """Test resolve_product_id returns tuple."""
-        product_group_id, match_type, message = service.resolve_product_id(
+    def test_resolve_product_group_id_shorthand(self, service, setup_test_data):
+        """Test resolve_product_group_id returns tuple."""
+        product_group_id, match_type, message = service.resolve_product_group_id(
             customer_code="CUST001",
             jiku_code="J01",
             customer_part_no="ABC-123",
