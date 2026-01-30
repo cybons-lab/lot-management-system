@@ -1,19 +1,17 @@
 /**
  * ClientLogsPage
- * クライアントログ（フロントエンドエラーログ）一覧画面
- * Enhanced with filters, search, and better UX
+ * クライアントログ(フロントエンドエラーログ)一覧画面
+ * Terminal-style UI with filters and search
  */
 
 import { RefreshCw, AlertCircle, Search, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import type { ClientLogsListParams } from "../api";
 import { ClientLogDetailDialog } from "../components/ClientLogDetailDialog";
 import { useClientLogs } from "../hooks";
 
 import { Button, Badge, Input, Label } from "@/components/ui";
-import type { Column } from "@/shared/components/data/DataTable";
-import { DataTable } from "@/shared/components/data/DataTable";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 type LogLevel = "error" | "warning" | "info" | string;
@@ -40,6 +38,55 @@ interface ClientLog {
   created_at: string;
 }
 
+function LogEntryComponent({ log, onClick }: { log: ClientLog; onClick: () => void }) {
+  const formattedTime = new Date(log.created_at).toLocaleString("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  return (
+    <div
+      className="hover:bg-gray-800 p-2 rounded cursor-pointer transition-colors"
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+    >
+      <div className="flex items-start gap-3">
+        {/* Timestamp - Left side */}
+        <span className="text-gray-400 text-xs whitespace-nowrap font-mono">{formattedTime}</span>
+
+        {/* Level Badge */}
+        <Badge variant={getLevelBadgeVariant(log.level)} className="text-xs shrink-0">
+          {log.level}
+        </Badge>
+
+        {/* Username */}
+        <span className="text-gray-400 text-xs whitespace-nowrap w-24 truncate">
+          {log.username || "anonymous"}
+        </span>
+
+        {/* Message */}
+        <span className="flex-1 break-words text-sm">
+          {log.message.length > 150 ? log.message.substring(0, 150) + "..." : log.message}
+        </span>
+
+        {/* ID */}
+        <span className="text-gray-500 text-xs whitespace-nowrap">#${log.id}</span>
+      </div>
+    </div>
+  );
+}
+
 /* eslint-disable max-lines-per-function, complexity */
 export function ClientLogsPage() {
   const [selectedLog, setSelectedLog] = useState<ClientLog | null>(null);
@@ -58,60 +105,6 @@ export function ClientLogsPage() {
   };
 
   const { data: logs = [], isLoading, isError, refetch, isFetching } = useClientLogs(queryParams);
-
-  // Column definitions
-  const columns = useMemo<Column<ClientLog>[]>(
-    () => [
-      {
-        id: "id",
-        header: "ID",
-        accessor: (row) => row.id,
-        width: 60,
-        sortable: true,
-      },
-      {
-        id: "level",
-        header: "レベル",
-        accessor: (row) => row.level,
-        cell: (row) => <Badge variant={getLevelBadgeVariant(row.level)}>{row.level}</Badge>,
-        width: 80,
-        sortable: true,
-      },
-      {
-        id: "message",
-        header: "メッセージ",
-        accessor: (row) => row.message,
-        cell: (row) => (
-          <div
-            className="max-w-2xl font-mono text-sm cursor-pointer hover:text-blue-600"
-            title="クリックして全文表示"
-          >
-            {row.message.length > 150 ? row.message.substring(0, 150) + "..." : row.message}
-          </div>
-        ),
-        sortable: true,
-      },
-      {
-        id: "username",
-        header: "ユーザー",
-        accessor: (row) => row.username || "-",
-        cell: (row) => <span>{row.username || "-"}</span>,
-        width: 120,
-        sortable: true,
-      },
-      {
-        id: "created_at",
-        header: "日時",
-        accessor: (row) => row.created_at,
-        cell: (row) => (
-          <span className="text-gray-600">{new Date(row.created_at).toLocaleString("ja-JP")}</span>
-        ),
-        width: 180,
-        sortable: true,
-      },
-    ],
-    [],
-  );
 
   const handleRowClick = (log: ClientLog) => {
     setSelectedLog(log);
@@ -137,7 +130,7 @@ export function ClientLogsPage() {
     <PageContainer>
       <PageHeader
         title="クライアントログ"
-        subtitle="フロントエンドエラーログ（システム管理者向け）"
+        subtitle="フロントエンドエラーログ(システム管理者向け)"
         actions={
           <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
@@ -231,9 +224,9 @@ export function ClientLogsPage() {
         )}
       </div>
 
-      {/* Data display area */}
+      {/* Terminal-style log display */}
       {isLoading ? (
-        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
+        <div className="rounded-lg border bg-gray-900 text-gray-100 p-8 text-center">
           読み込み中...
         </div>
       ) : isError ? (
@@ -244,21 +237,21 @@ export function ClientLogsPage() {
           </div>
         </div>
       ) : logs.length === 0 ? (
-        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
+        <div className="rounded-lg border bg-gray-900 text-gray-400 p-8 text-center">
           {appliedSearch || selectedLevel !== "all"
             ? "条件に一致するログが見つかりません"
             : "クライアントログが登録されていません"}
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="text-sm text-gray-600">{logs.length} 件のログ（最大500件まで表示）</div>
-          <DataTable
-            data={logs}
-            columns={columns}
-            getRowId={(row) => row.id}
-            onRowClick={handleRowClick}
-            emptyMessage="クライアントログがありません"
-          />
+        <div className="space-y-2">
+          <div className="text-sm text-gray-600">{logs.length} 件のログ(最大500件まで表示)</div>
+          <div className="border rounded-lg bg-gray-900 text-gray-100 p-4 h-[600px] overflow-y-auto">
+            <div className="space-y-1">
+              {logs.map((log) => (
+                <LogEntryComponent key={log.id} log={log} onClick={() => handleRowClick(log)} />
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

@@ -71,7 +71,7 @@ function useLogWebSocket(isPaused: boolean) {
 
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.hostname}:8000/api/logs/stream`;
+    const wsUrl = `${protocol}//${window.location.host}/api/logs/stream`;
 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
