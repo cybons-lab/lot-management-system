@@ -1,6 +1,6 @@
 # タスクバックログ (統合版)
 
-**最終更新:** 2026-01-29
+**最終更新:** 2026-01-31
 
 ---
 
@@ -51,7 +51,63 @@
 
 ---
 
-### 1-3. 在庫計算ロジックの厳密化とSSOT固定
+### 1-3. CI/CDでE2Eテストとtypecheckが実行されていない
+
+**優先度**: 高
+**作成**: 2026-01-31
+**カテゴリ**: CI/CD・品質保証
+
+**現状の問題:**
+
+1. **E2Eテストが実行されていない** ❌
+   - CI実行コマンド: `npm run test:run` (Vitestのみ)
+   - 実装済みのPlaywright E2Eテストが漏れている
+   - `test:ci` スクリプト (Vitest + E2E smoke) が定義されているが未使用
+
+2. **Typecheckが無効化されている** ⚠️
+   - `.github/workflows/ci.yml` でコメントアウト
+   - 理由: "type definitions sync issue"
+   - TypeScript型エラーが本番に混入する可能性
+
+**影響:**
+- UIの統合バグがマージ後に発覚
+- TypeScript型の不整合が検知されない
+- テスト品質の低下
+
+**推奨対応:**
+
+```yaml
+# .github/workflows/ci.yml 修正箇所
+
+# Frontend Tests
+- name: Run unit tests
+  working-directory: frontend
+  run: npm run test:run
+
+- name: Run E2E smoke tests  # 追加
+  working-directory: frontend
+  run: npm run test:e2e:smoke
+
+- name: Run type check  # コメント解除
+  working-directory: frontend
+  run: npm run typecheck
+```
+
+**代替案 (より簡潔):**
+```yaml
+- name: Run tests
+  working-directory: frontend
+  run: npm run test:ci  # test:run + test:e2e:smoke
+```
+
+**関連ファイル:**
+- `.github/workflows/ci.yml`
+- `frontend/package.json` (test:ci スクリプト)
+- `frontend/playwright.config.ts`
+
+---
+
+### 1-4. 在庫計算ロジックの厳密化とSSOT固定
 
 **優先度**: High
 **難易度**: Medium
@@ -70,7 +126,7 @@
 
 ---
 
-### ~~1-4. エラー処理・ログ出力の改善（2026-01-29 レビュー）~~ ✅ 対応済み
+### ~~1-5. エラー処理・ログ出力の改善（2026-01-29 レビュー）~~ ✅ 対応済み
 
 **優先度**: High
 **作成**: 2026-01-29
