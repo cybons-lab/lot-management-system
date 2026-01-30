@@ -490,7 +490,7 @@ class LotService:
         for lot_view in lot_views:
             response = LotResponse(
                 id=lot_view.lot_id,
-                lot_number=lot_view.lot_number,
+                lot_number=lot_view.lot_number or "",
                 product_group_id=lot_view.product_group_id,
                 product_code=lot_view.maker_part_no or "",
                 product_name=lot_view.display_name,

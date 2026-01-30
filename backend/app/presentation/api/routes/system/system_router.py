@@ -173,7 +173,7 @@ def get_recent_backend_logs(
 def _parse_log_line(line: str) -> BackendLogEntry | None:
     """Parse a log line into BackendLogEntry.
 
-    Expected format: 2024-01-30 12:34:56,789 - logger.name - LEVEL - message
+    Supports both JSON format and plain text format.
 
     Args:
         line: Log line to parse
@@ -181,9 +181,35 @@ def _parse_log_line(line: str) -> BackendLogEntry | None:
     Returns:
         Parsed log entry or None if parsing fails
     """
-    # Regex pattern for log format
+    line = line.strip()
+    if not line:
+        return None
+
+    # Try parsing as JSON first (current format)
+    if line.startswith("{"):
+        try:
+            data = json.loads(line)
+            return BackendLogEntry(
+                timestamp=data.get("timestamp", ""),
+                level=data.get("level", "INFO").upper(),
+                logger=data.get("logger", ""),
+                message=data.get("event", data.get("message", "")),
+                module="",
+                function="",
+                line=0,
+                extra={
+                    k: v
+                    for k, v in data.items()
+                    if k not in {"timestamp", "level", "logger", "event", "message"}
+                },
+                exception=None,
+            )
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+    # Fallback to plain text format: 2024-01-30 12:34:56,789 - logger.name - LEVEL - message
     pattern = r"(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2},\d{3})\s-\s([\w\.]+)\s-\s(\w+)\s-\s(.+)"
-    match = re.match(pattern, line.strip())
+    match = re.match(pattern, line)
 
     if not match:
         return None

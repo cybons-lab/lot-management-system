@@ -161,7 +161,6 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         from app.infrastructure.persistence.models.masters_models import (
             ProductUomConversion,
         )
-        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         uom_query = select(
             ProductUomConversion.conversion_id,
@@ -204,8 +203,6 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
             product_name = None
             maker_part_no = None
             if route.product_group_id:
-                from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
-
                 supplier_item = (
                     db.query(SupplierItem).filter(SupplierItem.id == route.product_group_id).first()
                 )

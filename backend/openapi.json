@@ -10864,7 +10864,7 @@
     "/api/system/logs/recent": {
       "get": {
         "summary": "Get Recent Logs",
-        "description": "Get recent system logs (Admin only ideally).",
+        "description": "Get recent system logs with filtering (Admin only).\n\nArgs:\n    limit: Maximum number of logs to return (default: 500)\n    level: Filter by log level (error, warning, info)\n    user_id: Filter by user ID\n    search: Search in message content\n    current_user: Current admin user (dependency)\n    db: Database session (dependency)",
         "operationId": "get_recent_logs_api_system_logs_recent_get",
         "security": [
           {
@@ -10878,8 +10878,56 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 100,
+              "default": 500,
               "title": "Limit"
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
             }
           }
         ],
@@ -10933,6 +10981,56 @@
             "OAuth2PasswordBearer": []
           }
         ]
+      }
+    },
+    "/api/system/logs/backend/recent": {
+      "get": {
+        "summary": "Get Recent Backend Logs",
+        "description": "Get recent backend logs from log file (Admin only).\n\nArgs:\n    limit: Maximum number of logs to return (default: 200)\n    _current_user: Current admin user (dependency)\n\nReturns:\n    List of recent backend log entries",
+        "operationId": "get_recent_backend_logs_api_system_logs_backend_recent_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 200,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BackendLogEntry"
+                  },
+                  "title": "Response Get Recent Backend Logs Api System Logs Backend Recent Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/calendar/holidays": {
@@ -22631,6 +22729,72 @@
         ],
         "title": "AvailableLotResponse"
       },
+      "BackendLogEntry": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "logger": {
+            "type": "string",
+            "title": "Logger"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "module": {
+            "type": "string",
+            "title": "Module",
+            "default": ""
+          },
+          "function": {
+            "type": "string",
+            "title": "Function",
+            "default": ""
+          },
+          "line": {
+            "type": "integer",
+            "title": "Line",
+            "default": 0
+          },
+          "extra": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra"
+          },
+          "exception": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exception"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "level",
+          "logger",
+          "message"
+        ],
+        "title": "BackendLogEntry"
+      },
       "BatchJobCreate": {
         "properties": {
           "job_name": {
@@ -29246,7 +29410,14 @@
             "title": "Updated At"
           },
           "lot_number": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Lot Number"
           },
           "product_group_id": {
@@ -29597,7 +29768,6 @@
         "type": "object",
         "required": [
           "created_at",
-          "lot_number",
           "product_group_id",
           "warehouse_id",
           "received_date",
