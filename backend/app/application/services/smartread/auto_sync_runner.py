@@ -78,17 +78,43 @@ class SmartReadAutoSyncRunner:
                 if not files:
                     continue
 
+                logger.info(
+                    "[SmartRead AutoSync] Processing watch directory files",
+                    extra={
+                        "config_id": config.id,
+                        "watch_dir": str(config.watch_dir) if config.watch_dir else None,
+                        "file_count": len(files),
+                        "files": [f[1] for f in files][:10],  # Log first 10 filenames
+                    },
+                )
+
                 task_id, results, watch_dir = await service.process_watch_dir_files_with_task(
                     config.id, files
                 )
 
                 if task_id:
+                    logger.info(
+                        "[SmartRead AutoSync] Task created for watch directory",
+                        extra={
+                            "config_id": config.id,
+                            "task_id": task_id,
+                            "file_count": len(files),
+                        },
+                    )
                     self._pending_tasks[task_id] = PendingTask(
                         config_id=config.id,
                         task_date=date.today(),
                     )
 
                 if settings.SMARTREAD_AUTO_SYNC_MOVE_PROCESSED and watch_dir and results:
+                    logger.info(
+                        "[SmartRead AutoSync] Moving processed files",
+                        extra={
+                            "config_id": config.id,
+                            "task_id": task_id,
+                            "file_count": len(files),
+                        },
+                    )
                     self._move_processed_files(watch_dir, results)
 
             await self._sync_pending_tasks(service, session)
@@ -125,11 +151,34 @@ class SmartReadAutoSyncRunner:
 
             state = result.get("state")
             if state in {"PENDING"}:
+                logger.debug(
+                    "[SmartRead AutoSync] Task still pending",
+                    extra={"task_id": task_id, "config_id": pending.config_id, "state": state},
+                )
                 continue
             if state in {"FAILED", "EMPTY"}:
+                logger.warning(
+                    "[SmartRead AutoSync] Task failed or empty, removing from pending",
+                    extra={
+                        "task_id": task_id,
+                        "config_id": pending.config_id,
+                        "state": state,
+                        "error_message": result.get("error_message"),
+                    },
+                )
                 self._pending_tasks.pop(task_id, None)
                 continue
 
+            logger.info(
+                "[SmartRead AutoSync] Task completed successfully",
+                extra={
+                    "task_id": task_id,
+                    "config_id": pending.config_id,
+                    "state": state,
+                    "wide_row_count": len(result.get("wide_data", [])),
+                    "long_row_count": len(result.get("long_data", [])),
+                },
+            )
             session.commit()
             self._pending_tasks.pop(task_id, None)
 

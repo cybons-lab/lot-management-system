@@ -281,9 +281,16 @@ def confirm_reservation(
 
     # Call SAP Gateway for CONFIRMED transition
     gateway = sap_gateway or get_sap_gateway()
-    logger.debug(
+    logger.info(
         "Calling SAP Gateway for allocation registration",
-        extra={"reservation_id": reservation_id, "lot_id": lot.id},
+        extra={
+            "reservation_id": reservation_id,
+            "lot_id": lot.id,
+            "lot_number": lot.lot_number,
+            "quantity": float(confirm_qty),
+            "source_type": reservation.source_type,
+            "source_id": reservation.source_id,
+        },
     )
     sap_result = gateway.register_allocation(reservation)
 
@@ -292,7 +299,11 @@ def confirm_reservation(
             "SAP registration failed",
             extra={
                 "reservation_id": reservation_id,
+                "lot_id": lot.id,
+                "lot_number": lot.lot_number,
+                "quantity": float(confirm_qty),
                 "error_message": sap_result.error_message,
+                "error_code": sap_result.error_code if hasattr(sap_result, "error_code") else None,
             },
         )
         raise AllocationCommitError(
@@ -304,7 +315,13 @@ def confirm_reservation(
         "SAP registration succeeded",
         extra={
             "reservation_id": reservation_id,
+            "lot_id": lot.id,
+            "lot_number": lot.lot_number,
+            "quantity": float(confirm_qty),
             "sap_document_no": sap_result.document_no,
+            "registered_at": sap_result.registered_at.isoformat()
+            if sap_result.registered_at
+            else None,
         },
     )
 

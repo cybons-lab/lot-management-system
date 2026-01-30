@@ -150,6 +150,7 @@ Design:
     ```
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
@@ -159,6 +160,9 @@ from app.core.time_utils import utcnow
 
 if TYPE_CHECKING:
     from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -213,6 +217,18 @@ class MockSapGateway:
         """
         now = utcnow()
         document_no = f"SAP-{now.strftime('%Y%m%d')}-{reservation.id:06d}"
+
+        logger.info(
+            "Mock SAP allocation registration",
+            extra={
+                "reservation_id": reservation.id,
+                "lot_id": reservation.lot_id,
+                "reserved_qty": float(reservation.reserved_qty),
+                "source_type": reservation.source_type,
+                "source_id": reservation.source_id,
+                "mock_document_no": document_no,
+            },
+        )
 
         return SapRegistrationResult(
             success=True,
