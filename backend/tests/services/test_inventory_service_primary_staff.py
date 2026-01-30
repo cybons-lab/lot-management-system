@@ -101,7 +101,7 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     print(f"DEBUG: All Items: {len(items_all)}")
     for i in items_all:
         print(
-            f"DEBUG: Item: pid={i.product_group_id}, wid={i.warehouse_id}, qty={i.total_quantity}, name={i.display_name}"
+            f"DEBUG: Item: pid={i.product_group_id}, wid={i.warehouse_id}, qty={i.total_quantity}, name={i.product_name}"
         )
 
     target_all = [

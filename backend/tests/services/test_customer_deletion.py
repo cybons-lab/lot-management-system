@@ -140,9 +140,9 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         from app.infrastructure.persistence.models.masters_models import (
             Customer,
             DeliveryPlace,
-            SupplierItem,
         )
         from app.infrastructure.persistence.models.orders_models import Order, OrderLine
+        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         # Create customer
         customer = Customer(
@@ -223,10 +223,10 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         from app.infrastructure.persistence.models.masters_models import (
             Customer,
             DeliveryPlace,
-            SupplierItem,
             Warehouse,
         )
         from app.infrastructure.persistence.models.orders_models import Order, OrderLine
+        from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         # Create customer
         customer = Customer(

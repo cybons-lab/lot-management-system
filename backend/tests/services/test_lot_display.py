@@ -18,6 +18,7 @@ def test_list_lots_maps_computed_fields():
     mock_lot_view.lot_number = "TEST-LOT-001"
     mock_lot_view.product_group_id = 10
     mock_lot_view.maker_part_no = "PRD-001"
+    mock_lot_view.supplier_maker_part_no = "PRD-001"
     mock_lot_view.display_name = "Test Product"
     mock_lot_view.supplier_id = 20
     mock_lot_view.supplier_code = "SUP-001"
@@ -25,6 +26,14 @@ def test_list_lots_maps_computed_fields():
     mock_lot_view.warehouse_id = 30
     mock_lot_view.warehouse_code = "WH-001"
     mock_lot_view.warehouse_name = "Test Warehouse"
+
+    # Additional Phase 2 fields required for LotResponse
+    mock_lot_view.customer_part_no = "CUST-001"
+    mock_lot_view.supplier_item_id = 100
+    mock_lot_view.mapping_status = "active"
+    mock_lot_view.product_deleted = False
+    mock_lot_view.warehouse_deleted = False
+    mock_lot_view.supplier_deleted = False
     mock_lot_view.received_quantity = Decimal("100.00")
     # DBビューが返す値をシミュレート
     mock_lot_view.remaining_quantity = Decimal("80.00")

@@ -1,6 +1,7 @@
 import pytest
 
 from app.application.services.system_config_service import SystemConfigService
+from app.infrastructure.persistence.models.system_config_model import SystemConfig
 
 
 @pytest.mark.usefixtures("db")
@@ -39,13 +40,21 @@ def test_set_updates_existing_and_preserves_description(db):
 def test_get_all_filters_prefix_and_orders_by_key(db):
     service = SystemConfigService(db)
 
-    service.set("alpha.one", "1")
-    service.set("alpha.two", "2")
-    service.set("beta.one", "3")
+    # Use keys that match DEFAULT_SETTINGS prefix
+    db.add(SystemConfig(config_key="cloud_flow_url_custom", config_value="http://test1"))
+    db.add(SystemConfig(config_key="cloud_flow_url_another", config_value="http://test2"))
+    db.add(SystemConfig(config_key="other_config", config_value="other"))
+    db.flush()
 
-    configs = service.get_all(prefix="alpha")
+    configs = service.get_all(prefix="cloud_flow")
 
-    assert [config.config_key for config in configs] == ["alpha.one", "alpha.two"]
+    # Should return both DEFAULT_SETTINGS entries + custom ones
+    config_keys = [config.config_key for config in configs]
+    assert "cloud_flow_url_material_delivery" in config_keys
+    assert "cloud_flow_url_progress_download" in config_keys
+    assert "cloud_flow_url_custom" in config_keys
+    assert "cloud_flow_url_another" in config_keys
+    assert "other_config" not in config_keys
 
 
 @pytest.mark.usefixtures("db")

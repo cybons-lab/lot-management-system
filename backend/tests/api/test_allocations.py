@@ -104,6 +104,7 @@ def master_data(db: Session, supplier):
     lot = LotReceipt(
         lot_master_id=lot_master.id,
         product_group_id=product.id,
+        supplier_item_id=product.id,  # Phase 2: supplier_item_id for mapping validation
         warehouse_id=warehouse.id,
         received_quantity=Decimal("100.000"),
         unit="EA",
@@ -498,6 +499,8 @@ def test_confirm_hard_allocation_success(db: Session, client: TestClient, master
     payload = {"confirmed_by": "test_user"}
 
     response = client.patch(f"/api/allocations/{reservation.id}/confirm", json=payload)
+    if response.status_code != 200:
+        print(f"Error response: {response.json()}")
     assert response.status_code == 200
 
     data = response.json()

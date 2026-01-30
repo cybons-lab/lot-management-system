@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from starlette.websockets import WebSocketDisconnect
 
 from app.core.security import create_access_token
 from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
@@ -59,14 +60,14 @@ def normal_user(db: Session):
 def test_websocket_logs_stream_no_token(client: TestClient):
     """トークンなしの場合、4003 (Policy Violation) で閉じられることを確認."""
     with client.websocket_connect("/api/logs/stream") as websocket:
-        with pytest.raises(RuntimeError):
+        with pytest.raises(WebSocketDisconnect):
             websocket.receive_text()
 
 
 def test_websocket_logs_stream_invalid_token(client: TestClient):
     """無効なトークンの場合、閉じられることを確認."""
     with client.websocket_connect("/api/logs/stream?token=invalid") as websocket:
-        with pytest.raises(RuntimeError):
+        with pytest.raises(WebSocketDisconnect):
             websocket.receive_text()
 
 
@@ -74,6 +75,11 @@ def test_websocket_logs_stream_admin_success(client: TestClient, admin_user: Use
     """管理者の場合、WebSocket接続が成功し、ping/pongができることを確認."""
     token = create_access_token(data={"sub": str(admin_user.id)})
     with client.websocket_connect(f"/api/logs/stream?token={token}") as websocket:
+        # Skip initial log message ("Log streaming client connected")
+        initial_msg = websocket.receive_text()
+        assert "Log streaming client connected" in initial_msg
+
+        # Now test ping/pong
         websocket.send_text("ping")
         data = websocket.receive_text()
         assert data == "pong"
@@ -83,5 +89,5 @@ def test_websocket_logs_stream_normal_user_denied(client: TestClient, normal_use
     """一般ユーザーの場合、管理者権限がないため閉じられることを確認."""
     token = create_access_token(data={"sub": str(normal_user.id)})
     with client.websocket_connect(f"/api/logs/stream?token={token}") as websocket:
-        with pytest.raises(RuntimeError):
+        with pytest.raises(WebSocketDisconnect):
             websocket.receive_text()

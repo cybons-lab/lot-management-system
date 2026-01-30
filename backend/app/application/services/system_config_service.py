@@ -106,6 +106,9 @@ class SystemConfigService:
 
         # デフォルト設定とマージ
         result = []
+        processed_keys = set()
+
+        # First, process DEFAULT_SETTINGS
         for default in DEFAULT_SETTINGS:
             if prefix and not default["config_key"].startswith(prefix):
                 continue
@@ -113,6 +116,7 @@ class SystemConfigService:
             # DB値があればそれを使用、なければデフォルト値でSystemConfigオブジェクトを作成
             if default["config_key"] in db_configs:
                 result.append(db_configs[default["config_key"]])
+                processed_keys.add(default["config_key"])
             else:
                 # デフォルト値でSystemConfigインスタンスを作成（DBには保存しない）
                 config = SystemConfig(
@@ -120,6 +124,12 @@ class SystemConfigService:
                     config_value=default["config_value"],
                     description=default["description"],
                 )
+                result.append(config)
+                processed_keys.add(default["config_key"])
+
+        # Add DB configs that are not in DEFAULT_SETTINGS
+        for key, config in db_configs.items():
+            if key not in processed_keys:
                 result.append(config)
 
         return sorted(result, key=lambda x: x.config_key)

@@ -134,10 +134,94 @@ def client(db) -> Generator[TestClient]:
         yield TestUnitOfWork(db)
 
     def override_get_current_user():
-        """Override to return a default test user."""
-        from app.infrastructure.persistence.models import User
+        """Override to return a default test user with admin role.
 
-        return User(id=1, username="test_user", is_active=True)
+        Creates the user in the test database to avoid FK violations in operation_logs.
+        """
+        from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
+
+        # Check if admin user already exists
+        existing_user = db.query(User).filter(User.username == "test_admin").first()
+        if existing_user:
+            return existing_user
+
+        # Create or get admin role
+        admin_role = db.query(Role).filter(Role.role_code == "admin").first()
+        if not admin_role:
+            admin_role = Role(role_code="admin", role_name="Administrator")
+            db.add(admin_role)
+            db.flush()
+
+        # Create admin user (email, display_name are required NOT NULL)
+        user = User(
+            username="test_admin",
+            email="test_admin@example.com",
+            password_hash="dummy_hash",
+            display_name="Test Admin User",
+            is_active=True,
+        )
+        db.add(user)
+        db.flush()
+
+        # Assign admin role
+        user_role = UserRole(user_id=user.id, role_id=admin_role.id)
+        db.add(user_role)
+        db.flush()
+
+        # Refresh to load relationships
+        db.refresh(user)
+        return user
+
+    # Import oauth2_scheme for dependency injection
+    from fastapi import Depends
+    from fastapi.security import OAuth2PasswordBearer
+
+    # Create local oauth2_scheme (same as in auth_router)
+    local_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
+
+    def override_get_current_user_optional(
+        token: str | None = Depends(local_oauth2_scheme),
+        db_session: Session = Depends(override_get_db),
+    ):
+        """Override get_current_user_optional.
+
+        If a token is provided, use the real auth flow (for tests with token headers).
+        If no token, return the default admin user (for tests without auth).
+        """
+        if token:
+            # Token provided - use real authentication flow
+            from app.core.security import decode_access_token
+            from app.infrastructure.persistence.models.auth_models import User
+
+            payload = decode_access_token(token)
+            if not payload:
+                return None
+            user_id = payload.get("sub")
+            if user_id is None:
+                return None
+            # Use the injected db_session
+            return db_session.query(User).filter(User.id == int(user_id)).first()
+
+        # No token - return default admin user for tests
+        return override_get_current_user()
+
+    def override_get_current_user_required(
+        user=Depends(override_get_current_user_optional),
+    ):
+        """Override get_current_user (required version).
+
+        Depends on get_current_user_optional and raises 401 if user is None.
+        This maintains the same dependency chain as the original.
+        """
+        if not user:
+            from fastapi import HTTPException, status
+
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return user
 
     application.dependency_overrides[api_deps.get_db] = override_get_db
     application.dependency_overrides[core_database.get_db] = override_get_db
@@ -145,8 +229,14 @@ def client(db) -> Generator[TestClient]:
 
     # Override auth dependencies
     from app.application.services.auth.auth_service import AuthService
+    from app.presentation.api.routes.auth.auth_router import (
+        get_current_user,
+        get_current_user_optional,
+    )
 
     application.dependency_overrides[AuthService.get_current_user] = override_get_current_user
+    application.dependency_overrides[get_current_user] = override_get_current_user_required
+    application.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
     with TestClient(application) as client:
         yield client
     application.dependency_overrides.clear()

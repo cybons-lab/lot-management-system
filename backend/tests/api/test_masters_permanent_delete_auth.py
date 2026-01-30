@@ -58,7 +58,11 @@ def _setup_warehouse(db: Session):
     )
 
 
-def _setup_product(db: Session, supplier):
+def _setup_product(db: Session):
+    supplier = Supplier(supplier_code="PERM-SUP-PROD", supplier_name="Supplier for Product")
+    db.add(supplier)
+    db.flush()
+
     product = SupplierItem(
         supplier_id=supplier.id,
         maker_part_no="PERM-PROD",
@@ -68,10 +72,8 @@ def _setup_product(db: Session, supplier):
     db.add(product)
     db.flush()
     return (
-        f"/api/masters/products/{product.maker_part_no}/permanent",
-        lambda session: session.query(SupplierItem)
-        .filter(SupplierItem.maker_part_no == product.maker_part_no)
-        .first(),
+        f"/api/masters/supplier-items/{product.id}/permanent",  # Use ID instead of maker_part_no
+        lambda session: session.query(SupplierItem).filter(SupplierItem.id == product.id).first(),
     )
 
 
@@ -126,7 +128,11 @@ def _setup_customer_item(db: Session):
     )
 
 
-def _setup_uom_conversion(db: Session, supplier):
+def _setup_uom_conversion(db: Session):
+    supplier = Supplier(supplier_code="PERM-SUP-UOM", supplier_name="Supplier for UOM")
+    db.add(supplier)
+    db.flush()
+
     product = SupplierItem(
         supplier_id=supplier.id,
         maker_part_no="PERM-PROD-UOM",
@@ -186,7 +192,7 @@ PERMANENT_DELETE_CASES = [
     _setup_delivery_place,
     _setup_customer_item,
     _setup_uom_conversion,
-    _setup_supplier_product,
+    # _setup_supplier_product removed - ProductSupplier deprecated in Phase 2
 ]
 
 

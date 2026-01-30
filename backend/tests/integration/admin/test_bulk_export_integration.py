@@ -115,7 +115,6 @@ def test_bulk_export_download_all_targets_integration(
     order_line = OrderLine(
         order_id=order.id,
         product_group_id=master_data["product1"].id,
-        supplier_item_id=master_data["product1"].id,
         delivery_place_id=master_data["delivery_place"].id,
         delivery_date=date.today(),
         order_quantity=Decimal("50"),
@@ -131,7 +130,6 @@ def test_bulk_export_download_all_targets_integration(
     forecast = ForecastCurrent(
         customer_id=master_data["customer"].id,
         product_group_id=master_data["product1"].id,
-        supplier_item_id=master_data["product1"].id,
         delivery_place_id=master_data["delivery_place"].id,
         forecast_date=date.today(),
         forecast_quantity=Decimal("200"),

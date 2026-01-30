@@ -241,7 +241,7 @@ def test_populate_additional_info(db: Session, service_master_data):
     assert len(result.lines) == 1
     line_resp = result.lines[0]
 
-    # These fields come from the view
-    assert line_resp.display_name == product.display_name
+    # These fields come from the view (Phase 2: display_name → product_name)
+    assert line_resp.product_name == product.display_name
     assert line_resp.product_code == product.maker_part_no
     assert line_resp.delivery_place_name == delivery_place.delivery_place_name

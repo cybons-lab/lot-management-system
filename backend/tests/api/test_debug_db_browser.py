@@ -1,9 +1,6 @@
-import os
-
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.infrastructure.persistence.models.auth_models import User
 
 
@@ -44,14 +41,17 @@ def test_db_browser_rows_missing_table_returns_404(
 
 
 def test_db_browser_disabled_returns_404(
-    client: TestClient, superuser_token_headers: dict[str, str]
+    client: TestClient, db: Session, superuser_token_headers: dict[str, str]
 ):
-    original_value = settings.ENABLE_DB_BROWSER
-    settings.ENABLE_DB_BROWSER = False
-    os.environ["ENABLE_DB_BROWSER"] = "false"
+    from app.application.services.system_config_service import ConfigKeys, SystemConfigService
+
+    service = SystemConfigService(db)
+    original_value = service.get(ConfigKeys.ENABLE_DB_BROWSER, "true")
+    service.set(ConfigKeys.ENABLE_DB_BROWSER, "false")
 
     try:
         response = client.get("/api/debug/db/objects", headers=superuser_token_headers)
         assert response.status_code == 404
+        assert response.json()["detail"] == "DB browser is disabled"
     finally:
-        settings.ENABLE_DB_BROWSER = original_value
+        service.set(ConfigKeys.ENABLE_DB_BROWSER, original_value)

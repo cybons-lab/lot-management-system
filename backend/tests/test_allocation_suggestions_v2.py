@@ -30,6 +30,7 @@ def test_regenerate_for_periods(db):
 
     supplier = Supplier(supplier_code="SUP1", supplier_name="Supplier 1")
     db.add(supplier)
+    db.flush()
 
     customer = Customer(customer_code="CUST1", customer_name="Customer 1")
     db.add(customer)
@@ -38,6 +39,7 @@ def test_regenerate_for_periods(db):
         delivery_place_code="DP1", delivery_place_name="Place 1", customer=customer
     )
     db.add(delivery_place)
+    db.flush()
 
     product = SupplierItem(
         supplier_id=supplier.id, maker_part_no="PROD1", display_name="Product 1", base_unit="EA"
@@ -134,6 +136,7 @@ def test_regenerate_with_shortage(db):
 
     supplier = Supplier(supplier_code="SUP2", supplier_name="Supplier 2")
     db.add(supplier)
+    db.flush()
 
     customer = Customer(customer_code="CUST2", customer_name="Customer 2")
     db.add(customer)
@@ -142,6 +145,7 @@ def test_regenerate_with_shortage(db):
         delivery_place_code="DP2", delivery_place_name="Place 2", customer=customer
     )
     db.add(delivery_place)
+    db.flush()
 
     product = SupplierItem(
         supplier_id=supplier.id, maker_part_no="PROD2", display_name="Product 2", base_unit="EA"
@@ -217,6 +221,7 @@ def test_regenerate_single_lot_fit(db):
 
     supplier = Supplier(supplier_code="SUP3", supplier_name="Supplier 3")
     db.add(supplier)
+    db.flush()
 
     customer = Customer(customer_code="CUST3", customer_name="Customer 3")
     db.add(customer)
@@ -225,6 +230,7 @@ def test_regenerate_single_lot_fit(db):
         delivery_place_code="DP3", delivery_place_name="Place 3", customer=customer
     )
     db.add(delivery_place)
+    db.flush()
 
     product = SupplierItem(
         supplier_id=supplier.id, maker_part_no="PROD3", display_name="Product 3", base_unit="EA"
