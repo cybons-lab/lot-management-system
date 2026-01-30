@@ -1,6 +1,9 @@
 /* eslint-disable max-lines-per-function */
 import { useEffect, useRef, useState } from "react";
 
+import { http } from "@/shared/api/http-client";
+import { getAuthToken } from "@/shared/auth/token";
+
 interface LogEntry {
   timestamp: string;
   level: string;
@@ -68,11 +71,17 @@ function useLogWebSocket(isPaused: boolean) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const pausedLogsRef = useRef<LogEntry[]>([]);
+  const isPausedRef = useRef(isPaused);
+
+  // Keep isPausedRef in sync with isPaused prop
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
 
   useEffect(() => {
     // Fetch recent logs on mount
-    fetch("/api/system/logs/backend/recent?limit=200")
-      .then((res) => res.json())
+    http
+      .get<LogEntry[]>("system/logs/backend/recent?limit=200")
       .then((recentLogs) => {
         // Ensure recentLogs is an array
         if (Array.isArray(recentLogs)) {
@@ -83,17 +92,34 @@ function useLogWebSocket(isPaused: boolean) {
         }
       })
       .catch((err) => {
-        console.error("Failed to fetch recent logs:", err);
+        if (err.response?.status === 401) {
+          console.warn("Not authenticated to fetch recent logs");
+        } else {
+          console.error("Failed to fetch recent logs:", err);
+        }
         setLogs([]); // Set empty array on error
       });
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/api/logs/stream`;
+    const token = getAuthToken();
+    const wsUrl = `${protocol}//${window.location.host}/api/logs/stream${token ? `?token=${token}` : ""}`;
 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
-    ws.onopen = () => console.log("Connected to log stream");
+    ws.onopen = () => {
+      console.log("Connected to log stream");
+      // Start ping/pong to keep connection alive
+      const pingInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send("ping");
+        }
+      }, 30000);
+      // Store interval ID for cleanup
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (ws as any)._pingInterval = pingInterval;
+    };
+
     ws.onmessage = (event) => {
       // Ignore ping/pong messages
       if (event.data === "pong") {
@@ -102,7 +128,8 @@ function useLogWebSocket(isPaused: boolean) {
 
       try {
         const logEntry: LogEntry = JSON.parse(event.data);
-        if (isPaused) {
+        // Use ref instead of prop to avoid triggering useEffect
+        if (isPausedRef.current) {
           pausedLogsRef.current.push(logEntry);
         } else {
           setLogs((prev) => {
@@ -118,17 +145,26 @@ function useLogWebSocket(isPaused: boolean) {
     };
 
     ws.onerror = (error) => console.error("WebSocket error:", error);
-    ws.onclose = () => console.log("Disconnected from log stream");
-
-    const pingInterval = setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) ws.send("ping");
-    }, 30000);
+    ws.onclose = () => {
+      console.log("Disconnected from log stream");
+      // Clean up ping interval if it exists
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((ws as any)._pingInterval) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        clearInterval((ws as any)._pingInterval);
+      }
+    };
 
     return () => {
-      clearInterval(pingInterval);
+      // Clean up ping interval
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((ws as any)._pingInterval) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        clearInterval((ws as any)._pingInterval);
+      }
       ws.close();
     };
-  }, [isPaused]);
+  }, []); // Remove isPaused dependency to prevent reconnections
 
   return { logs, setLogs, pausedLogsRef };
 }
