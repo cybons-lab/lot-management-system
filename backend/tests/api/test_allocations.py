@@ -294,7 +294,6 @@ def test_drag_assign_insufficient_stock_returns_400(
 # ============================================================
 
 
-@pytest.mark.xfail(reason="Persistent SQLAlchemy session error: Instance is not persistent")
 def test_cancel_allocation_success(db: Session, client: TestClient, master_data: dict):
     """Test canceling an allocation."""
 

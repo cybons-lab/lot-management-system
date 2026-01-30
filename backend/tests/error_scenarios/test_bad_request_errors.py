@@ -5,7 +5,6 @@
 これらのテストは異常系の仕様を固定し、リグレッションを防止する。
 """
 
-import pytest
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import Supplier, SupplierItem
@@ -37,40 +36,40 @@ class TestSupplierProductErrors:
 
         # 最初の作成
         response1 = client.post(
-            "/api/masters/supplier-products",
+            "/api/masters/supplier-items",
             json={
-                "product_group_id": product.id,
                 "supplier_id": supplier.id,
-                "supplier_product_code": "SP-ERR-001",
+                "maker_part_no": "SP-ERR-DUP",
+                "display_name": "製品SP重複ERR-1",
+                "base_unit": "EA",
             },
             headers=superuser_token_headers,
         )
+        assert response1.status_code in [200, 201]
 
-        # 最初が成功した場合のみ重複テスト
-        if response1.status_code in [200, 201]:
-            # 同じペアで再度作成
-            response2 = client.post(
-                "/api/masters/supplier-products",
-                json={
-                    "product_group_id": product.id,
-                    "supplier_id": supplier.id,
-                    "supplier_product_code": "SP-ERR-002",
-                },
-                headers=superuser_token_headers,
-            )
-            assert response2.status_code in [400, 409, 422]
+        # 同じペアで再度作成
+        response2 = client.post(
+            "/api/masters/supplier-items",
+            json={
+                "supplier_id": supplier.id,
+                "maker_part_no": "SP-ERR-DUP",  # 重複
+                "display_name": "製品SP重複ERR-2",
+                "base_unit": "EA",
+            },
+            headers=superuser_token_headers,
+        )
+        assert response2.status_code in [400, 409, 422]
 
 
-@pytest.mark.skip(reason="Product model deprecated after Phase 2 migration to SupplierItem")
-class TestProductErrors:
-    """製品マスタの異常系テスト"""
+class TestSupplierItemErrors:
+    """仕入先製品マスタの異常系テスト (Phase 2対応)"""
 
     def test_create_with_missing_required_fields(
         self, client, db: Session, superuser_token_headers: dict[str, str]
     ):
-        """必須フィールドなしで製品作成 → 422"""
+        """必須フィールドなしで仕入先製品作成 → 422"""
         response = client.post(
-            "/api/masters/products",
+            "/api/masters/supplier-items",
             json={
                 # maker_part_no missing
                 "display_name": "テスト製品",
@@ -84,9 +83,9 @@ class TestProductErrors:
     def test_create_with_invalid_data_type(
         self, client, db: Session, superuser_token_headers: dict[str, str]
     ):
-        """型が不正なデータで製品作成 → 422"""
+        """型が不正なデータで仕入先製品作成 → 422"""
         response = client.post(
-            "/api/masters/products",
+            "/api/masters/supplier-items",
             json={
                 "maker_part_no": "PROD-TYPE-ERR",
                 "display_name": "テスト製品",

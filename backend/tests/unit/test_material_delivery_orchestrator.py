@@ -202,7 +202,6 @@ class TestMaterialDeliveryNoteOrchestrator:
         mock_client.call_flow.assert_awaited_once()
         assert mock_client.call_flow.await_args.args[0] == "http://configured-flow"
 
-    @pytest.mark.skip(reason="Skipping due to InternalError (Deadlock) in test environment")
     def test_csv_parser_integration(self, orchestrator: MaterialDeliveryNoteOrchestrator):
         # Test valid CSV parsing interaction integration
         csv_content = "ステータス,出荷先,層別,材質コード,納期,納入量,出荷便".encode()

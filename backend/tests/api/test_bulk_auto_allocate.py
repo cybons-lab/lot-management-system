@@ -1,9 +1,7 @@
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 
-@pytest.mark.skip(reason="Flaky TestClient db visibility - UndefinedTable")
 def test_bulk_auto_allocate_endpoint_reachability(db: Session, client: TestClient):
     """Test bulk auto-allocate endpoint reachability."""
 

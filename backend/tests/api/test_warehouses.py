@@ -13,7 +13,7 @@ def test_list_warehouses_success(db: Session, client: TestClient):
     w1 = Warehouse(warehouse_code="WH-001", warehouse_name="Warehouse 1", warehouse_type="internal")
     w2 = Warehouse(warehouse_code="WH-002", warehouse_name="Warehouse 2", warehouse_type="external")
     db.add_all([w1, w2])
-    db.commit()
+    db.flush()
 
     response = client.get("/api/masters/warehouses")
     assert response.status_code == 200
@@ -34,7 +34,7 @@ def test_list_warehouses_with_pagination(db: Session, client: TestClient):
             warehouse_type="internal",
         )
         db.add(w)
-    db.commit()
+    db.flush()
 
     # Test pagination
     response = client.get("/api/masters/warehouses", params={"skip": 0, "limit": 3})
@@ -53,7 +53,7 @@ def test_get_warehouse_success(db: Session, client: TestClient):
         warehouse_code="GET-TEST", warehouse_name="Test Warehouse", warehouse_type="internal"
     )
     db.add(w)
-    db.commit()
+    db.flush()
 
     response = client.get("/api/masters/warehouses/GET-TEST")
     assert response.status_code == 200
@@ -99,7 +99,7 @@ def test_create_warehouse_duplicate_returns_409(db: Session, client: TestClient)
         warehouse_code="DUP-001", warehouse_name="Existing", warehouse_type="internal"
     )
     db.add(existing)
-    db.commit()
+    db.flush()
 
     warehouse_data = {
         "warehouse_code": "DUP-001",
@@ -119,7 +119,7 @@ def test_update_warehouse_success(db: Session, client: TestClient):
 
     w = Warehouse(warehouse_code="UPD-001", warehouse_name="Old Name", warehouse_type="internal")
     db.add(w)
-    db.commit()
+    db.flush()
 
     update_data = {"warehouse_name": "Updated Name"}
     response = client.put("/api/masters/warehouses/UPD-001", json=update_data)
@@ -143,7 +143,7 @@ def test_update_warehouse_code_change_success(db: Session, client: TestClient):
         warehouse_type="internal",
     )
     db.add(w)
-    db.commit()
+    db.flush()
 
     update_data = {
         "warehouse_code": "NEW-WH-CODE",
@@ -178,7 +178,7 @@ def test_update_warehouse_code_change_duplicate_returns_409(db: Session, client:
         warehouse_code="TO-CHANGE-WH", warehouse_name="Warehouse 2", warehouse_type="internal"
     )
     db.add_all([w1, w2])
-    db.commit()
+    db.flush()
 
     update_data = {
         "warehouse_code": "EXISTING-WH",  # Duplicate
@@ -200,7 +200,7 @@ def test_delete_warehouse_success(db: Session, client: TestClient):
 
     w = Warehouse(warehouse_code="DEL-001", warehouse_name="Delete Me", warehouse_type="internal")
     db.add(w)
-    db.commit()
+    db.flush()
 
     response = client.delete("/api/masters/warehouses/DEL-001")
     assert response.status_code == 204
@@ -237,7 +237,7 @@ def test_bulk_upsert_warehouses(db: Session, client: TestClient):
         warehouse_code="BULK-001", warehouse_name="Original Name", warehouse_type="internal"
     )
     db.add(w)
-    db.commit()
+    db.flush()
 
     upsert_data = {
         "rows": [
