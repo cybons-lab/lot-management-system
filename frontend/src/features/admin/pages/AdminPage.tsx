@@ -282,7 +282,18 @@ export function AdminPage() {
           setShowGenerateConfirm(open);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent
+          onEscapeKeyDown={(e) => {
+            if (isGenerating) {
+              // Allow closing even during generation
+              e.preventDefault();
+              setIsGenerating(false);
+              setProgress(0);
+              setProgressMessage("");
+              setShowGenerateConfirm(false);
+            }
+          }}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>テストデータを生成しますか？</AlertDialogTitle>
             <AlertDialogDescription asChild>
