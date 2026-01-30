@@ -16322,8 +16322,11 @@ export interface components {
        * @description 説明
        */
       description?: string | null;
-      /** Id */
-      id: number;
+      /**
+       * Id
+       * @description 設定ID（DBに保存されていない場合はNone）
+       */
+      id?: number | null;
     };
     /** SystemSettingUpdate */
     SystemSettingUpdate: {

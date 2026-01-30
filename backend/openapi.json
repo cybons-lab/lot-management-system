@@ -40503,15 +40503,22 @@
             "description": "説明"
           },
           "id": {
-            "type": "integer",
-            "title": "Id"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "設定ID（DBに保存されていない場合はNone）"
           }
         },
         "type": "object",
         "required": [
           "config_key",
-          "config_value",
-          "id"
+          "config_value"
         ],
         "title": "SystemSettingResponse"
       },
