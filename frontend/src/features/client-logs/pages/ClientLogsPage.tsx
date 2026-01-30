@@ -76,9 +76,7 @@ function LogEntryComponent({ log, onClick }: { log: ClientLog; onClick: () => vo
         </span>
 
         {/* Message */}
-        <span className="flex-1 break-words text-sm">
-          {log.message.length > 150 ? log.message.substring(0, 150) + "..." : log.message}
-        </span>
+        <span className="flex-1 break-words text-sm whitespace-pre-wrap">{log.message}</span>
 
         {/* ID */}
         <span className="text-gray-500 text-xs whitespace-nowrap">#${log.id}</span>
