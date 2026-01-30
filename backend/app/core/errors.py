@@ -19,6 +19,7 @@ from app.application.services.allocations.schemas import (
 from app.application.services.allocations.schemas import (
     InsufficientStockError as ServiceInsufficientStockError,
 )
+from app.core.config import settings
 
 # Allocation domain
 from app.domain.allocation.exceptions import (
@@ -297,19 +298,31 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     Returns:
         JSONResponse（Problem+JSON形式）
     """
+
+    def _mask_sensitive_headers(headers: dict[str, str]) -> dict[str, str]:
+        masked = {}
+        for key, value in headers.items():
+            key_lower = key.lower()
+            if any(sensitive in key_lower for sensitive in settings.LOG_SENSITIVE_FIELDS):
+                masked[key] = "***MASKED***"
+            else:
+                masked[key] = value
+        return masked
+
     # リクエストボディを取得（可能な場合）
-    request_body = None
-    try:
-        body_bytes = await request.body()
-        if body_bytes:
-            try:
-                request_body = body_bytes.decode("utf-8")[:1000]  # 最初の1000文字のみ
-            except UnicodeDecodeError:
-                request_body = "<binary data>"
-    except (RuntimeError, ValueError) as e:
-        # Body already consumed or stream closed
-        logger.debug(f"Failed to read request body: {e}")
-        request_body = "<unavailable>"
+    request_body = "<redacted>" if settings.ENVIRONMENT == "production" else None
+    if settings.ENVIRONMENT != "production":
+        try:
+            body_bytes = await request.body()
+            if body_bytes:
+                try:
+                    request_body = body_bytes.decode("utf-8")[:1000]  # 最初の1000文字のみ
+                except UnicodeDecodeError:
+                    request_body = "<binary data>"
+        except (RuntimeError, ValueError) as e:
+            # Body already consumed or stream closed
+            logger.debug(f"Failed to read request body: {e}")
+            request_body = "<unavailable>"
 
     # 詳細なエラーログ
     logger.error(
@@ -320,7 +333,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
             "path": request.url.path,
             "method": request.method,
             "query_params": dict(request.query_params),
-            "headers": dict(request.headers),
+            "headers": _mask_sensitive_headers(dict(request.headers)),
             "request_body": request_body,
             "traceback": traceback.format_exc(),
         },

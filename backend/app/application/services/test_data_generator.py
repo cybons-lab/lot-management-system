@@ -3,6 +3,8 @@
 Refactored: Split into smaller modules for better maintainability.
 """
 
+import logging
+
 from sqlalchemy.orm import Session
 
 from .test_data.calendar_wrapper import TestDataCalendar
@@ -48,6 +50,8 @@ __all__ = [
     "generate_rpa_material_delivery_data",
     "generate_sap_data",
 ]
+
+logger = logging.getLogger(__name__)
 
 
 def generate_all_test_data(db: Session, options: object = None, progress_callback=None):
@@ -144,7 +148,7 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
         if progress_callback:
             progress_callback(100, "Completed!")
         return True
-    except Exception as e:
+    except Exception:
         db.rollback()
-        print(f"Error generating test data: {e}")
-        raise e
+        logger.exception("Error generating test data")
+        raise
