@@ -316,6 +316,7 @@ export const routePermissions: RoutePermission[] = [
   { routeKey: "ADMIN.CLIENT_LOGS", path: "/admin/client-logs", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.EXPORT", path: "/admin/export", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.SYSTEM_SETTINGS", path: "/admin/system-settings", allowedRoles: ["admin"] },
+  { routeKey: "ADMIN.LOGS", path: "/logs", allowedRoles: ["admin"] },
   { routeKey: "DEBUG.DB_BROWSER", path: "/debug/db", allowedRoles: ["admin"] },
   { routeKey: "SAP.ROOT", path: "/sap", allowedRoles: ["admin"] },
 ];

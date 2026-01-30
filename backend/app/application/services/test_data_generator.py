@@ -25,6 +25,7 @@ from .test_data.rpa_material_delivery import generate_rpa_material_delivery_data
 from .test_data.sap import generate_sap_data
 from .test_data.shipping_master import generate_shipping_master_data
 from .test_data.smartread import generate_smartread_data
+from .test_data.system_config import generate_system_config
 from .test_data.utils import clear_data
 from .test_data.withdrawals import generate_withdrawals
 
@@ -49,6 +50,7 @@ __all__ = [
     "generate_shipping_master_data",
     "generate_rpa_material_delivery_data",
     "generate_sap_data",
+    "generate_system_config",
 ]
 
 logger = logging.getLogger(__name__)
@@ -142,6 +144,11 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
         if progress_callback:
             progress_callback(98, "Generating SAP Integration Data...")
         generate_sap_data(db)
+
+        # Step 10: Initialize system configuration
+        if progress_callback:
+            progress_callback(99, "Initializing System Configuration...")
+        generate_system_config(db)
 
         db.commit()
 
