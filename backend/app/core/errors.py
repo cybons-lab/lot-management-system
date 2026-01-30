@@ -255,14 +255,20 @@ async def validation_exception_handler(
     errors = []
     for error in exc.errors():
         error_dict = dict(error)
-        # ctx内の例外オブジェクトを文字列化
-        if "ctx" in error_dict and error_dict["ctx"]:
-            ctx = error_dict["ctx"]
-            for key, value in ctx.items():
-                if isinstance(value, Exception):
-                    ctx[key] = str(value)
-            error_dict["ctx"] = ctx
-        errors.append(error_dict)
+
+        # Iterate through all values and ensure they are JSON serializable
+        def _make_serializable(data):
+            if isinstance(data, dict):
+                return {k: _make_serializable(v) for k, v in data.items()}
+            elif isinstance(data, list):
+                return [_make_serializable(v) for v in data]
+            elif isinstance(data, bytes):
+                return data.decode("utf-8", errors="replace")
+            elif isinstance(data, Exception):
+                return str(data)
+            return data
+
+        errors.append(_make_serializable(error_dict))
 
     # バリデーションエラーの詳細ログ
     logger.warning(

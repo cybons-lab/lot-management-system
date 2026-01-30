@@ -153,7 +153,30 @@
 
 ---
 
-### 2-3. Toast通知の不足
+### 2-3. SmartRead設定フォーム送信のE2Eテスト追加
+
+**優先度**: 中
+**作成**: 2026-01-31
+**カテゴリ**: テスト品質向上
+
+**背景:**
+- SmartRead設定モーダルのフォーム送信（作成・更新）は、shadcn/uiのSelectコンポーネントの複雑なモック要件により、Vitestでのユニットテストが困難
+- 現在はフォーム表示のみテストされており、実際の送信フローは未検証
+
+**タスク内容:**
+1. Playwrightを使用したE2Eテストの追加
+   - SmartRead設定の新規作成フロー
+   - 既存設定の更新フロー
+   - フォームバリデーションの確認
+2. テストファイル配置: `frontend/e2e/rpa-smartread-settings.spec.ts`
+
+**参考:**
+- 削除されたユニットテスト: `frontend/src/features/rpa/smartread/components/SmartReadSettingsModal.test.tsx` (L120-168)
+- 既存E2Eテスト: `frontend/e2e/auth.spec.ts`, `frontend/e2e/allocation.spec.ts`
+
+---
+
+### 2-4. Toast通知の不足
 
 - 保存成功時にフィードバックが出ない。
 - 対象:
