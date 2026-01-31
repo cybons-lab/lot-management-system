@@ -38,27 +38,27 @@ export function SystemSettingsProvider({ children }: { children: ReactNode }) {
 
   const isFeatureVisible = useCallback(
     (feature: string) => {
-      if (!settings?.page_visibility) return true; // Default to visible if no config
+      if (!settings?.page_visibility) return true;
+
+      // Handle hierarchical features (e.g., "inventory:lots")
+      // If parent is visible, sub-feature is unconditionally visible (Parent Override)
+      if (feature.includes(":")) {
+        const parent = feature.split(":")[0];
+        if (isFeatureVisible(parent)) {
+          return true;
+        }
+      }
 
       const config = settings.page_visibility[feature];
-      if (!config) return true; // Default to visible if feature not configured
-
-      // Determine role (simplified: admin is user, or treated specially?)
-      // User request said: "Guest" vs "General User"
-      // My auth system has: roles=["admin", "user"] etc.
+      if (!config) return true; // Default to visible if not configured
 
       const roles = user?.roles || [];
       const isAdmin = roles.includes("admin");
-
-      // Admin always sees everything? Or subject to "user" config?
-      // Usually admin sees everything.
       if (isAdmin) return true;
 
       const isUser = roles.includes("user");
-      // If has "user" role, check "user" config
       if (isUser) return config.user;
 
-      // Otherwise treat as guest (or "guest" role if it exists)
       return config.guest;
     },
     [settings, user],

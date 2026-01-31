@@ -98,6 +98,7 @@ export const ROUTES = {
     BATCH_JOBS: "/admin/batch-jobs",
     MASTER_CHANGE_LOGS: "/admin/master-change-logs",
     SEED_SNAPSHOTS: "/admin/seed-snapshots",
+    SYSTEM_LOGS: "/admin/logs",
     SYSTEM_SETTINGS: "/admin/system-settings",
   },
 
@@ -130,6 +131,7 @@ export const ROUTES = {
 
   HELP: {
     FLOW_MAP: "/help/flow-map",
+    DATABASE_SCHEMA: "/help/database-schema",
   },
 
   DEBUG: {

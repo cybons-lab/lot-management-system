@@ -6448,6 +6448,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/material-delivery-note/runs/{run_id}/loop-summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Loop Summary
+     * @description PADループの集計情報を取得する.
+     */
+    get: operations["get_loop_summary_api_rpa_material_delivery_note_runs__run_id__loop_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/rpa/material-delivery-note/runs": {
     parameters: {
       query?: never;
@@ -8045,6 +8065,52 @@ export interface paths {
     };
     /** Get Object Relations */
     get: operations["get_object_relations_api_debug_db_objects__schema___name__relations_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/schema/tables": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Tables
+     * @description Get all tables with their columns and relationships.
+     *
+     *     Returns:
+     *         Dictionary with table metadata including columns, relationships, and comments.
+     */
+    get: operations["get_tables_api_schema_tables_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/schema/mermaid": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Mermaid Er Diagram
+     * @description Generate Mermaid ER diagram syntax (simplified for large schemas).
+     *
+     *     Returns:
+     *         Dictionary with 'diagram' key containing Mermaid syntax string.
+     */
+    get: operations["get_mermaid_er_diagram_api_schema_mermaid_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -11410,6 +11476,44 @@ export interface components {
       user_id?: number | null;
       /** Username */
       username?: string | null;
+    };
+    /**
+     * LoopErrorCodeCount
+     * @description PADループ失敗コード集計.
+     */
+    LoopErrorCodeCount: {
+      /** Error Code */
+      error_code: string;
+      /** Count */
+      count: number;
+    };
+    /**
+     * LoopSummaryResponse
+     * @description PADループ集計レスポンス.
+     */
+    LoopSummaryResponse: {
+      /** Total */
+      total: number;
+      /** Queued */
+      queued: number;
+      /** Pending */
+      pending: number;
+      /** Processing */
+      processing: number;
+      /** Success */
+      success: number;
+      /** Failure */
+      failure: number;
+      /** Done */
+      done: number;
+      /** Remaining */
+      remaining: number;
+      /** Percent */
+      percent: number;
+      /** Last Activity At */
+      last_activity_at: string | null;
+      /** Error Code Counts */
+      error_code_counts?: components["schemas"]["LoopErrorCodeCount"][];
     };
     /**
      * LotArchiveRequest
@@ -26846,6 +26950,39 @@ export interface operations {
       };
     };
   };
+  get_loop_summary_api_rpa_material_delivery_note_runs__run_id__loop_summary_get: {
+    parameters: {
+      query?: {
+        top_n?: number;
+      };
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LoopSummaryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_runs_api_rpa_material_delivery_note_runs_get: {
     parameters: {
       query?: {
@@ -29714,6 +29851,50 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_tables_api_schema_tables_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+    };
+  };
+  get_mermaid_er_diagram_api_schema_mermaid_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: string;
+          };
         };
       };
     };

@@ -1,4 +1,5 @@
 import { AlertTriangle, Settings2, Shield } from "lucide-react";
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -11,9 +12,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AVAILABLE_FEATURES } from "@/constants/features";
+import { FEATURE_CONFIG } from "@/config/feature-config";
 import { http } from "@/shared/api/http-client";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
+import { cn } from "@/shared/libs/utils";
 import type { PageVisibilityConfig } from "@/types/system";
 
 interface SystemSetting {
@@ -277,8 +279,76 @@ interface PageVisibilityEditorProps {
   disabled: boolean;
 }
 
+interface VisibilityRowProps {
+  id: string;
+  label: string;
+  isSub?: boolean;
+  config: PageVisibilityConfig;
+  onToggle: (id: string, role: "guest" | "user", checked: boolean) => void;
+  disabled: boolean;
+}
+
+/* eslint-disable-next-line complexity */
+function VisibilityRow({ id, label, isSub, config, onToggle, disabled }: VisibilityRowProps) {
+  const featureConf = config[id] || { guest: true, user: true };
+
+  let userInherited = false;
+  let guestInherited = false;
+
+  if (isSub) {
+    const parentId = id.split(":")[0];
+    const parentConf = config[parentId] || { guest: true, user: true };
+    userInherited = parentConf.user;
+    guestInherited = parentConf.guest;
+  }
+
+  return (
+    <TableRow className={cn(isSub ? "bg-slate-50/50" : "bg-white")}>
+      <TableCell
+        className={cn("font-medium", isSub ? "pl-8 text-slate-500 text-sm" : "text-slate-900")}
+      >
+        <div className="flex items-center gap-2">
+          {isSub ? "└ " : ""}
+          {label}
+          {!isSub && (
+            <span className="ml-1 text-[10px] text-slate-400 font-mono uppercase">#{id}</span>
+          )}
+          {isSub && (userInherited || guestInherited) && (
+            <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-md border border-blue-100 font-medium">
+              親から継承中
+            </span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-center">
+        <div className="flex flex-col items-center gap-1">
+          <Switch
+            checked={featureConf.user}
+            onCheckedChange={(checked) => onToggle(id, "user", checked)}
+            disabled={disabled}
+          />
+          {isSub && userInherited && !featureConf.user && (
+            <span className="text-[9px] text-green-600 font-bold whitespace-nowrap">実質: ON</span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-center">
+        <div className="flex flex-col items-center gap-1">
+          <Switch
+            checked={featureConf.guest}
+            onCheckedChange={(checked) => onToggle(id, "guest", checked)}
+            disabled={disabled}
+          />
+          {isSub && guestInherited && !featureConf.guest && (
+            <span className="text-[9px] text-green-600 font-bold whitespace-nowrap">実質: ON</span>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 function PageVisibilityEditor({ value, onChange, disabled }: PageVisibilityEditorProps) {
-  // Parse JSON or use default
   const config = ((): PageVisibilityConfig => {
     try {
       return JSON.parse(value);
@@ -287,61 +357,49 @@ function PageVisibilityEditor({ value, onChange, disabled }: PageVisibilityEdito
     }
   })();
 
-  // Should ideally be dynamic or match GlobalNav, but hardcoded list ensures stability for now.
-  // Can verify against current config keys too
-  const allFeatures = Array.from(new Set([...AVAILABLE_FEATURES, ...Object.keys(config)]));
-
-  const handleToggle = (feature: string, role: "guest" | "user", checked: boolean) => {
+  const handleToggle = (featureKey: string, role: "guest" | "user", checked: boolean) => {
     const newConfig = { ...config };
-    if (!newConfig[feature]) {
-      newConfig[feature] = { guest: true, user: true };
-    }
-
-    // Type assertion or manual update
-    const featureConfig = newConfig[feature]!;
-    if (role === "guest") featureConfig.guest = checked;
-    if (role === "user") featureConfig.user = checked;
-
+    const current = newConfig[featureKey] || { guest: true, user: true };
+    newConfig[featureKey] = {
+      ...current,
+      [role]: checked,
+    };
     onChange(JSON.stringify(newConfig));
   };
 
   return (
-    <div className="rounded-md border mt-2">
+    <div className="rounded-md border mt-2 overflow-hidden">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-slate-100">
           <TableRow>
-            <TableHead className="w-[200px]">機能 (Feature)</TableHead>
-            <TableHead className="text-center w-[100px]">General User</TableHead>
-            <TableHead className="text-center w-[100px]">Guest</TableHead>
+            <TableHead className="w-[300px]">機能・ページ・タブ</TableHead>
+            <TableHead className="text-center w-[120px]">一般ユーザー</TableHead>
+            <TableHead className="text-center w-[120px]">ゲスト</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {allFeatures.map((feature) => {
-            const featureConf = config[feature] || { guest: true, user: true };
-            return (
-              <TableRow key={feature}>
-                <TableCell className="font-medium capitalize">{feature}</TableCell>
-                <TableCell className="text-center">
-                  <div className="flex justify-center">
-                    <Switch
-                      checked={featureConf.user}
-                      onCheckedChange={(checked) => handleToggle(feature, "user", checked)}
-                      disabled={disabled}
-                    />
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex justify-center">
-                    <Switch
-                      checked={featureConf.guest}
-                      onCheckedChange={(checked) => handleToggle(feature, "guest", checked)}
-                      disabled={disabled}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
+          {Object.values(FEATURE_CONFIG).map((feature) => (
+            <React.Fragment key={feature.id}>
+              <VisibilityRow
+                id={feature.id}
+                label={feature.label}
+                config={config}
+                onToggle={handleToggle}
+                disabled={disabled}
+              />
+              {feature.subFeatures?.map((sub) => (
+                <VisibilityRow
+                  key={`${feature.id}:${sub.id}`}
+                  id={`${feature.id}:${sub.id}`}
+                  label={sub.label}
+                  isSub
+                  config={config}
+                  onToggle={handleToggle}
+                  disabled={disabled}
+                />
+              ))}
+            </React.Fragment>
+          ))}
         </TableBody>
       </Table>
     </div>

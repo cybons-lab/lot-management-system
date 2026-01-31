@@ -34,6 +34,11 @@ export const routePermissions: RoutePermission[] = [
   { routeKey: "ROOT", path: "/", allowedRoles: ["admin", "user", "guest"] },
   { routeKey: "DASHBOARD", path: "/dashboard", allowedRoles: ["admin", "user", "guest"] },
   { routeKey: "HELP.FLOW_MAP", path: "/help/flow-map", allowedRoles: ["admin", "user", "guest"] },
+  {
+    routeKey: "HELP.DATABASE_SCHEMA",
+    path: "/help/database-schema*",
+    allowedRoles: ["admin", "user", "guest"],
+  },
 
   // 受注一覧（閲覧）
   { routeKey: "ORDERS.LIST", path: "/orders", allowedRoles: ["admin", "user", "guest"] },
@@ -59,7 +64,7 @@ export const routePermissions: RoutePermission[] = [
   },
   {
     routeKey: "INVENTORY.ITEMS.DETAIL",
-    path: "/inventory/items/:productId/:warehouseId",
+    path: "/inventory/items/:productId/:warehouseId*",
     allowedRoles: ["admin", "user", "guest"],
   },
 
@@ -205,7 +210,7 @@ export const routePermissions: RoutePermission[] = [
     path: "/rpa/generic-cloud-flow",
     allowedRoles: ["admin", "user"],
   },
-  { routeKey: "RPA.SMARTREAD", path: "/rpa/smartread", allowedRoles: ["admin", "user"] },
+  { routeKey: "RPA.SMARTREAD", path: "/rpa/smartread*", allowedRoles: ["admin", "user"] },
   {
     routeKey: "RPA.MATERIAL_DELIVERY_NOTE.ROOT",
     path: "/rpa/material-delivery-note",
@@ -316,9 +321,9 @@ export const routePermissions: RoutePermission[] = [
   { routeKey: "ADMIN.CLIENT_LOGS", path: "/admin/client-logs", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.EXPORT", path: "/admin/export", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.SYSTEM_SETTINGS", path: "/admin/system-settings", allowedRoles: ["admin"] },
-  { routeKey: "ADMIN.LOGS", path: "/logs", allowedRoles: ["admin"] },
-  { routeKey: "DEBUG.DB_BROWSER", path: "/debug/db", allowedRoles: ["admin"] },
-  { routeKey: "SAP.ROOT", path: "/sap", allowedRoles: ["admin"] },
+  { routeKey: "ADMIN.LOGS", path: "/admin/logs*", allowedRoles: ["admin"] },
+  { routeKey: "DEBUG.DB_BROWSER", path: "/debug/db*", allowedRoles: ["admin"] },
+  { routeKey: "SAP.ROOT", path: "/sap*", allowedRoles: ["admin"] },
 ];
 
 /**

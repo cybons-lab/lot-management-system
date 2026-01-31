@@ -4,6 +4,7 @@
 
 import { Settings2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { type DbObject, type DbObjectType } from "../api";
 import { DbObjectDetail } from "../components/DbObjectDetail";
@@ -18,7 +19,9 @@ type ActiveTab = "schema" | "rows" | "definition" | "relations";
 
 // eslint-disable-next-line max-lines-per-function, complexity
 export function DbBrowserPage() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("schema");
+  const { tab = "schema" } = useParams<{ tab: ActiveTab }>();
+  const navigate = useNavigate();
+  const activeTab = tab as ActiveTab;
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<DbObjectType | "all">("all");
   const [selected, setSelected] = useState<DbObject | null>(null);
@@ -96,7 +99,7 @@ export function DbBrowserPage() {
         <DbObjectDetail
           selected={selected}
           activeTab={activeTab}
-          onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
+          onTabChange={(tab) => navigate(`../${tab}`)}
           isSchemaLoading={isSchemaLoading}
           schemaInfo={schemaInfo}
           isRowsLoading={isRowsLoading}

@@ -37,10 +37,14 @@ import { getLotStatuses } from "@/shared/utils/status";
 
 // eslint-disable-next-line max-lines-per-function, complexity
 export function InventoryItemDetailPage() {
-  const { productId, warehouseId } = useParams<{ productId: string; warehouseId: string }>();
+  const {
+    productId,
+    warehouseId,
+    tab = "summary",
+  } = useParams<{ productId: string; warehouseId: string; tab: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("summary");
+  const activeTab = tab;
   const [showArchived, setShowArchived] = useState(false);
 
   // Pagination state
@@ -315,7 +319,11 @@ export function InventoryItemDetailPage() {
       </div>
 
       {/* Tabbed Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => navigate(`/inventory/items/${productId}/${warehouseId}/${value}`)}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="summary">サマリ</TabsTrigger>
           <TabsTrigger value="lots">

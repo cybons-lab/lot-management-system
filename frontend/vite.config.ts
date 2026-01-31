@@ -44,6 +44,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ["@radix-ui/react-scroll-area"],
+    include: ["@radix-ui/react-scroll-area", "d3", "dagre-d3"],
   },
 });

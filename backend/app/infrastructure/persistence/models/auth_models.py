@@ -162,26 +162,6 @@ class User(Base):
     """
 
     __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    username: Mapped[str] = mapped_column(String(50), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), nullable=False)
-    # Auth fields
-    auth_provider: Mapped[str] = mapped_column(
-        String(50), nullable=False, server_default=text("'local'")
-    )
-    azure_object_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
-    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    display_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
-    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
-    )
-
     __table_args__ = (
         UniqueConstraint("username", name="uq_users_username"),
         UniqueConstraint("email", name="uq_users_email"),
@@ -194,6 +174,41 @@ class User(Base):
             "is_active",
             postgresql_where=text("is_active = TRUE"),
         ),
+        {"comment": "ユーザーマスタ：システムユーザー情報を管理"},
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, comment="ID（主キー）")
+    username: Mapped[str] = mapped_column(
+        String(50), nullable=False, comment="ユーザー名（ログインID、ユニーク）"
+    )
+    email: Mapped[str] = mapped_column(
+        String(255), nullable=False, comment="メールアドレス（ユニーク）"
+    )
+    # Auth fields
+    auth_provider: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        server_default=text("'local'"),
+        comment="認証プロバイダ（local/azure等）",
+    )
+    azure_object_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, unique=True, comment="Azure AD オブジェクトID（ユニーク）"
+    )
+    password_hash: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, comment="パスワードハッシュ"
+    )
+    display_name: Mapped[str] = mapped_column(String(100), nullable=False, comment="表示名")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true"), comment="アクティブフラグ"
+    )
+    last_login_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, comment="最終ログイン日時"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp(), comment="作成日時"
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp(), comment="更新日時"
     )
 
     # Relationships
@@ -213,19 +228,23 @@ class Role(Base):
     """
 
     __tablename__ = "roles"
+    __table_args__ = (
+        UniqueConstraint("role_code", name="uq_roles_role_code"),
+        {"comment": "ロールマスタ：システムロール（権限グループ）を管理"},
+    )
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    role_code: Mapped[str] = mapped_column(String(50), nullable=False)
-    role_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, comment="ID（主キー）")
+    role_code: Mapped[str] = mapped_column(
+        String(50), nullable=False, comment="ロールコード（admin/user/guest等、ユニーク）"
+    )
+    role_name: Mapped[str] = mapped_column(String(100), nullable=False, comment="ロール名")
+    description: Mapped[str | None] = mapped_column(Text, nullable=True, comment="説明")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
+        DateTime, nullable=False, server_default=func.current_timestamp(), comment="作成日時"
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
+        DateTime, nullable=False, server_default=func.current_timestamp(), comment="更新日時"
     )
-
-    __table_args__ = (UniqueConstraint("role_code", name="uq_roles_role_code"),)
 
     # Relationships
     user_roles: Mapped[list[UserRole]] = relationship(
@@ -242,26 +261,28 @@ class UserRole(Base):
     """
 
     __tablename__ = "user_roles"
+    __table_args__ = (
+        Index("idx_user_roles_user", "user_id"),
+        Index("idx_user_roles_role", "role_id"),
+        {"comment": "ユーザー-ロール関連：ユーザーとロールの多対多関連を管理"},
+    )
 
     user_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
         nullable=False,
+        comment="ユーザーID（複合PK）",
     )
     role_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("roles.id", ondelete="CASCADE"),
         primary_key=True,
         nullable=False,
+        comment="ロールID（複合PK）",
     )
     assigned_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
-    )
-
-    __table_args__ = (
-        Index("idx_user_roles_user", "user_id"),
-        Index("idx_user_roles_role", "role_id"),
+        DateTime, nullable=False, server_default=func.current_timestamp(), comment="割り当て日時"
     )
 
     # Relationships

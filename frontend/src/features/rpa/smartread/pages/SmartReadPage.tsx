@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines */
 /**
  * SmartReadPage
  * SmartRead OCR PDFインポートページ
@@ -7,7 +7,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Settings, Loader2, RefreshCw } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { diagnoseWatchDirFile } from "../api";
 import { SmartReadConfigSelector } from "../components/SmartReadConfigSelector";
@@ -26,8 +26,7 @@ import {
 import { SMARTREAD_QUERY_KEYS } from "../hooks";
 import { logger } from "../utils/logger";
 
-import { Button } from "@/components/ui";
-import { Checkbox } from "@/components/ui";
+import { Button, Checkbox } from "@/components/ui";
 import {
   Card,
   CardContent,
@@ -43,15 +42,16 @@ import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
+/* eslint-disable-next-line max-lines-per-function */
 export function SmartReadPage() {
   const [selectedConfigId, setSelectedConfigId] = useState<number | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedWatchFiles, setSelectedWatchFiles] = useState<string[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("import");
+  const { tab = "import" } = useParams<{ tab: string }>();
+  const navigate = useNavigate();
   const [isDiagnosing, setIsDiagnosing] = useState(false);
 
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: configs, isLoading: configsLoading } = useSmartReadConfigs();
   const {
@@ -83,62 +83,46 @@ export function SmartReadPage() {
   const pageMountedAt = useRef(new Date());
 
   useEffect(() => {
-    if (padRuns?.runs) {
-      if (isInitialLoadRef.current) {
-        // 初回ロード時は既存の成功済みタスクを「既知」として記録するだけ
-        prevRunsRef.current = padRuns.runs
-          .filter((run) => run.status === "SUCCEEDED")
-          .map((run) => run.run_id);
-        isInitialLoadRef.current = false;
-        return;
-      }
+    if (!padRuns?.runs) return;
 
-      const succeededRun = padRuns.runs.find((run) => {
-        // 成功している 且つ まだ遷移済みでない 且つ ページを開いた後に作成されたタスクであること
-        const isSucceeded = run.status === "SUCCEEDED";
-        const isAlreadyProcessed = prevRunsRef.current.includes(run.run_id);
-        const createdAt = new Date(run.created_at);
-        const isNewRun = createdAt >= pageMountedAt.current;
-
-        return isSucceeded && !isAlreadyProcessed && isNewRun;
-      });
-
-      if (succeededRun) {
-        logger.info("新しく処理が完了しました。結果一覧へ移動します。", {
-          run_id: succeededRun.run_id,
-        });
-        navigate(ROUTES.OCR_RESULTS.LIST);
-      }
-
-      // 成功済みリストを更新
+    if (isInitialLoadRef.current) {
       prevRunsRef.current = padRuns.runs
-        .filter((run) => run.status === "SUCCEEDED")
-        .map((run) => run.run_id);
+        .filter((r) => r.status === "SUCCEEDED")
+        .map((r) => r.run_id);
+      isInitialLoadRef.current = false;
+      return;
     }
+
+    const succeededRun = findNewSucceededRun(
+      padRuns.runs,
+      prevRunsRef.current,
+      pageMountedAt.current,
+    );
+
+    if (succeededRun) {
+      logger.info("新しく処理が完了しました。結果一覧へ移動します。", {
+        run_id: succeededRun.run_id,
+      });
+      navigate(ROUTES.OCR_RESULTS.LIST);
+    }
+
+    prevRunsRef.current = padRuns.runs.filter((r) => r.status === "SUCCEEDED").map((r) => r.run_id);
   }, [padRuns, navigate]);
 
-  const handleProcessWatchFiles = async () => {
+  const onProcessFiles = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0) return;
-
-    // PAD互換フロー: /pad-runs API を使用
     await startPadRunMutation.mutateAsync({
       configId: selectedConfigId,
       filenames: selectedWatchFiles,
     });
-
-    // Remove successfully processed files from selection
     setSelectedWatchFiles([]);
     setSelectedTaskId(null);
-
-    // Refresh file list and PAD runs list
     refetchWatchFiles();
     refetchPadRuns();
-
-    // タスクタブに切り替え（PAD Runの状態表示はタスクタブで行う）
     await queryClient.invalidateQueries({
       queryKey: selectedConfigId ? SMARTREAD_QUERY_KEYS.managedTasks(selectedConfigId) : [],
     });
-    setActiveTab("tasks");
+    navigate(`../tasks`);
   };
 
   const toggleWatchFile = (filename: string) => {
@@ -147,13 +131,9 @@ export function SmartReadPage() {
     );
   };
 
-  const toggleAllWatchFiles = () => {
+  const onToggleAll = () => {
     if (!watchFiles) return;
-    if (selectedWatchFiles.length === watchFiles.length) {
-      setSelectedWatchFiles([]);
-    } else {
-      setSelectedWatchFiles([...watchFiles]);
-    }
+    setSelectedWatchFiles(selectedWatchFiles.length === watchFiles.length ? [] : [...watchFiles]);
   };
 
   const handleAnalyzeSuccess = () => {
@@ -164,27 +144,14 @@ export function SmartReadPage() {
       });
       refetchPadRuns();
     }
-    setActiveTab("tasks");
-  };
-
-  const handleSelectTask = (taskId: string) => {
-    setSelectedTaskId(taskId);
+    navigate(`../tasks`);
   };
 
   const handleDiagnoseWatchFile = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0 || isDiagnosing) return;
-    const targetFile = selectedWatchFiles[0];
     setIsDiagnosing(true);
-    logger.info("API診断開始", { configId: selectedConfigId, filename: targetFile });
     try {
-      const response = await diagnoseWatchDirFile(selectedConfigId, targetFile);
-      logger.info("API診断完了", {
-        requestFlowSuccess: response.request_flow.success,
-        exportFlowSuccess: response.export_flow.success,
-      });
-      logger.debug("API診断詳細", response as unknown as Record<string, unknown>);
-    } catch (error) {
-      logger.error("API診断失敗", error);
+      await runDiagnostic(selectedConfigId, selectedWatchFiles[0]);
     } finally {
       setIsDiagnosing(false);
     }
@@ -218,8 +185,8 @@ export function SmartReadPage() {
 
         {/* Tabs Layout */}
         <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
+          value={tab}
+          onValueChange={(value) => navigate(`../${value}`)}
           className="flex-1 flex flex-col min-h-0"
         >
           <TabsList className="grid w-full grid-cols-3 shrink-0">
@@ -228,157 +195,261 @@ export function SmartReadPage() {
             <TabsTrigger value="saved">3. 保存済みデータ</TabsTrigger>
           </TabsList>
 
-          {/* Tab 1: Import (Watch Folder & Upload) */}
-          <TabsContent value="import" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
-            <div className="grid grid-cols-2 gap-4 h-full">
-              {/* Watch Folder */}
-              <Card className="flex flex-col h-full">
-                <CardHeader className="py-3 px-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">監視フォルダ</CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => refetchWatchFiles()}
-                      disabled={!selectedConfigId}
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex flex-1 flex-col gap-4 overflow-hidden p-0">
-                  {!selectedConfigId ? (
-                    <div className="flex h-full items-center justify-center p-4 text-center text-sm text-gray-400">
-                      設定を選択してください
-                    </div>
-                  ) : isWatchFilesLoading ? (
-                    <div className="flex h-full items-center justify-center">
-                      <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                    </div>
-                  ) : !watchFiles || watchFiles.length === 0 ? (
-                    <div className="flex h-full items-center justify-center p-4 text-center text-sm text-gray-400">
-                      ファイルはありません
-                    </div>
-                  ) : (
-                    <>
-                      <div className="border-b px-4 py-2 bg-gray-50/50">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="select-all"
-                            checked={
-                              watchFiles.length > 0 &&
-                              selectedWatchFiles.length === watchFiles.length
-                            }
-                            onCheckedChange={toggleAllWatchFiles}
-                          />
-                          <label
-                            htmlFor="select-all"
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                          >
-                            すべて選択
-                          </label>
-                        </div>
-                      </div>
-                      <ScrollArea className="flex-1">
-                        <div className="p-2 space-y-1">
-                          {watchFiles.map((file) => (
-                            <div
-                              key={file}
-                              className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
-                              onClick={() => toggleWatchFile(file)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  toggleWatchFile(file);
-                                }
-                              }}
-                              role="button"
-                              tabIndex={0}
-                            >
-                              <Checkbox
-                                checked={selectedWatchFiles.includes(file)}
-                                onCheckedChange={() => toggleWatchFile(file)}
-                              />
-                              <span className="text-sm truncate" title={file}>
-                                {file}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                      <div className="p-4 border-t space-y-2">
-                        <Button
-                          className="w-full"
-                          size="sm"
-                          disabled={
-                            selectedWatchFiles.length === 0 || startPadRunMutation.isPending
-                          }
-                          onClick={handleProcessWatchFiles}
-                        >
-                          {startPadRunMutation.isPending && (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          )}
-                          選択ファイルを処理
-                        </Button>
-                        <Button
-                          className="w-full"
-                          size="sm"
-                          variant="outline"
-                          disabled={selectedWatchFiles.length === 0 || isDiagnosing}
-                          onClick={handleDiagnoseWatchFile}
-                        >
-                          {isDiagnosing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          API診断（選択ファイル先頭）
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+          <SmartReadImportTab
+            selectedConfigId={selectedConfigId}
+            isWatchFilesLoading={isWatchFilesLoading}
+            watchFiles={watchFiles}
+            selectedWatchFiles={selectedWatchFiles}
+            isPending={startPadRunMutation.isPending}
+            isDiagnosing={isDiagnosing}
+            onToggleAll={onToggleAll}
+            toggleWatchFile={toggleWatchFile}
+            onProcessFiles={onProcessFiles}
+            onDiagnose={handleDiagnoseWatchFile}
+            onRefetch={refetchWatchFiles}
+            onAnalyzeSuccess={handleAnalyzeSuccess}
+          />
 
-              {/* Upload Panel */}
-              <div className="h-full">
-                {!selectedConfigId ? (
-                  <Card className="h-full flex items-center justify-center text-gray-400">
-                    <p>設定を選択してください</p>
-                  </Card>
-                ) : (
-                  <SmartReadUploadPanel
-                    configId={selectedConfigId}
-                    onAnalyzeSuccess={handleAnalyzeSuccess}
-                  />
-                )}
-              </div>
-            </div>
-          </TabsContent>
+          <SmartReadTasksTab
+            runs={padRuns?.runs}
+            configId={selectedConfigId}
+            selectedTaskId={selectedTaskId}
+            onSelectTask={setSelectedTaskId}
+          />
 
-          {/* Tab 2: Tasks (Merged) */}
-          <TabsContent value="tasks" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
-            <div className="h-full overflow-hidden flex flex-col gap-4">
-              {/* PAD Run Status (最新の実行状態) */}
-              <SmartReadPadRunStatusList runs={padRuns?.runs} />
-              {/* Managed Task List */}
-              <div className="flex-1 overflow-hidden">
-                <SmartReadManagedTaskList
-                  configId={selectedConfigId}
-                  selectedTaskId={selectedTaskId}
-                  onSelectTask={handleSelectTask}
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Tab 4: Saved Data */}
-          <TabsContent value="saved" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
-            <div className="h-full overflow-hidden">
-              <SmartReadSavedDataList configId={selectedConfigId} />
-            </div>
-          </TabsContent>
+          <SmartReadSavedTab configId={selectedConfigId} />
         </Tabs>
       </div>
 
       <SmartReadSettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </PageContainer>
   );
+}
+
+interface ImportTabProps {
+  selectedConfigId: number | null;
+  isWatchFilesLoading: boolean;
+  watchFiles: string[] | undefined;
+  selectedWatchFiles: string[];
+  isPending: boolean;
+  isDiagnosing: boolean;
+  onToggleAll: () => void;
+  toggleWatchFile: (f: string) => void;
+  onProcessFiles: () => void;
+  onDiagnose: () => void;
+  onRefetch: () => void;
+  onAnalyzeSuccess: () => void;
+}
+
+interface TasksTabProps {
+  runs: PadRun[] | undefined;
+  configId: number | null;
+  selectedTaskId: string | null;
+  onSelectTask: (id: string | null) => void;
+}
+
+/* eslint-disable-next-line max-lines-per-function */
+function SmartReadImportTab({
+  selectedConfigId,
+  isWatchFilesLoading,
+  watchFiles,
+  selectedWatchFiles,
+  isPending,
+  isDiagnosing,
+  onToggleAll,
+  toggleWatchFile,
+  onProcessFiles,
+  onDiagnose,
+  onRefetch,
+  onAnalyzeSuccess,
+}: ImportTabProps) {
+  return (
+    <TabsContent value="import" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
+      <div className="grid grid-cols-2 gap-4 h-full">
+        <Card className="flex flex-col h-full">
+          <CardHeader className="py-3 px-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">監視フォルダ</CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onRefetch}
+                disabled={!selectedConfigId}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col gap-4 overflow-hidden p-0">
+            {!selectedConfigId ? (
+              <div className="flex h-full items-center justify-center p-4 text-center text-sm text-gray-400">
+                設定を選択してください
+              </div>
+            ) : isWatchFilesLoading ? (
+              <div className="flex h-full items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              </div>
+            ) : !watchFiles || watchFiles.length === 0 ? (
+              <div className="flex h-full items-center justify-center p-4 text-center text-sm text-gray-400">
+                ファイルはありません
+              </div>
+            ) : (
+              <>
+                <div className="border-b px-4 py-2 bg-gray-50/50">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="select-all"
+                      checked={
+                        watchFiles.length > 0 && selectedWatchFiles.length === watchFiles.length
+                      }
+                      onCheckedChange={onToggleAll}
+                    />
+                    <label
+                      htmlFor="select-all"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      すべて選択
+                    </label>
+                  </div>
+                </div>
+                <ScrollArea className="flex-1">
+                  <div className="p-2 space-y-1">
+                    {watchFiles.map((file: string) => (
+                      <WatchFileItem
+                        key={file}
+                        file={file}
+                        isSelected={selectedWatchFiles.includes(file)}
+                        onToggle={() => toggleWatchFile(file)}
+                      />
+                    ))}
+                  </div>
+                </ScrollArea>
+                <div className="p-4 border-t space-y-2">
+                  <Button
+                    className="w-full"
+                    size="sm"
+                    disabled={selectedWatchFiles.length === 0 || isPending}
+                    onClick={onProcessFiles}
+                  >
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    選択ファイルを処理
+                  </Button>
+                  <Button
+                    className="w-full"
+                    size="sm"
+                    variant="outline"
+                    disabled={selectedWatchFiles.length === 0 || isDiagnosing}
+                    onClick={onDiagnose}
+                  >
+                    {isDiagnosing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    API診断（選択ファイル先頭）
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="h-full">
+          {!selectedConfigId ? (
+            <Card className="h-full flex items-center justify-center text-gray-400">
+              <p>設定を選択してください</p>
+            </Card>
+          ) : (
+            <SmartReadUploadPanel configId={selectedConfigId} onAnalyzeSuccess={onAnalyzeSuccess} />
+          )}
+        </div>
+      </div>
+    </TabsContent>
+  );
+}
+
+function WatchFileItem({
+  file,
+  isSelected,
+  onToggle,
+}: {
+  file: string;
+  isSelected: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
+      onClick={onToggle}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onToggle())}
+    >
+      <Checkbox checked={isSelected} onCheckedChange={onToggle} />
+      <span className="text-sm truncate" title={file}>
+        {file}
+      </span>
+    </div>
+  );
+}
+
+function SmartReadTasksTab({ runs, configId, selectedTaskId, onSelectTask }: TasksTabProps) {
+  return (
+    <TabsContent value="tasks" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
+      <div className="h-full overflow-hidden flex flex-col gap-4">
+        <SmartReadPadRunStatusList runs={runs} />
+        <div className="flex-1 overflow-hidden">
+          <SmartReadManagedTaskList
+            configId={configId}
+            selectedTaskId={selectedTaskId}
+            onSelectTask={onSelectTask}
+          />
+        </div>
+      </div>
+    </TabsContent>
+  );
+}
+
+function SmartReadSavedTab({ configId }: { configId: number | null }) {
+  return (
+    <TabsContent value="saved" className="flex-1 min-h-0 data-[state=inactive]:hidden pt-4">
+      <div className="h-full overflow-hidden">
+        <SmartReadSavedDataList configId={configId} />
+      </div>
+    </TabsContent>
+  );
+}
+
+// --- Helper Functions ---
+
+interface PadRun {
+  run_id: string;
+  status: string;
+  step: string;
+  filenames: string[] | null;
+  wide_data_count: number;
+  long_data_count: number;
+  created_at: string;
+}
+
+function findNewSucceededRun(runs: PadRun[], knownRunIds: string[], mountedAt: Date) {
+  return runs.find((run) => {
+    const isSucceeded = run.status === "SUCCEEDED";
+    const isAlreadyProcessed = knownRunIds.includes(run.run_id);
+    const isNew = new Date(run.created_at) >= mountedAt;
+    return isSucceeded && !isAlreadyProcessed && isNew;
+  });
+}
+
+async function runDiagnostic(configId: number, filename: string) {
+  logger.info("API診断開始", { configId, filename });
+  try {
+    const response = await diagnoseWatchDirFile(configId, filename);
+    logger.info("API診断完了", {
+      requestFlowSuccess: response.request_flow.success,
+      exportFlowSuccess: response.export_flow.success,
+    });
+    logger.debug("API診断詳細", response as unknown as Record<string, unknown>);
+    return response;
+  } catch (error) {
+    logger.error("API診断失敗", error);
+    throw error;
+  }
 }
