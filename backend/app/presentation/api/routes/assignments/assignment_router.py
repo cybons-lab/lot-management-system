@@ -200,7 +200,7 @@ def set_primary_user(
     user_id: int,
     db: Session = Depends(get_db),
 ) -> UserSupplierAssignmentResponse:
-    """仕入先の主担当者を設定."""
+    """仕入先の担当者を設定（複数の担当者を許可）."""
     service = UserSupplierAssignmentService(db)
     try:
         assignment = service.set_primary_assignment(user_id, supplier_id)
@@ -213,6 +213,46 @@ def set_primary_user(
             created_at=assignment.created_at,
             updated_at=assignment.updated_at,
         )
+    except Exception as e:
+        from app.domain.order import OrderValidationError
+
+        raise OrderValidationError(str(e)) from e
+
+
+@router.delete(
+    "/supplier/{supplier_id}/unset-primary/{user_id}", response_model=UserSupplierAssignmentResponse
+)
+def unset_primary_user(
+    supplier_id: int,
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserSupplierAssignmentResponse:
+    """仕入先別担当者を解除.
+
+    自分の設定のみ変更可能（管理者は全ユーザーの設定を変更可能）.
+    """
+    # 権限チェック: 自分の設定のみ変更可能（管理者は全ユーザーの設定を変更可能）
+    user_role_codes = (
+        [ur.role.role_code for ur in current_user.user_roles] if current_user.user_roles else []
+    )
+    if current_user.id != user_id and "admin" not in user_role_codes:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    service = UserSupplierAssignmentService(db)
+    try:
+        assignment = service.unset_primary_assignment(user_id, supplier_id)
+        return UserSupplierAssignmentResponse(
+            id=assignment.id,
+            user_id=assignment.user_id,
+            supplier_id=assignment.supplier_id,
+            is_primary=assignment.is_primary,
+            assigned_at=assignment.assigned_at,
+            created_at=assignment.created_at,
+            updated_at=assignment.updated_at,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         from app.domain.order import OrderValidationError
 

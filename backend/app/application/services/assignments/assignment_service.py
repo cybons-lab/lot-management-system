@@ -105,22 +105,13 @@ class UserSupplierAssignmentService(
     def set_primary_assignment(self, user_id: int, supplier_id: int) -> UserSupplierAssignment:
         """Set a user as the primary contact for a supplier.
 
+        This allows multiple users to be primary contacts for the same supplier
+        (e.g., during handover periods).
+
         This will:
-        1. Remove primary flag from any existing primary user for this supplier
-        2. Create or update the assignment for this user to be primary
+        1. Find or create the assignment for this user
+        2. Set is_primary=True for this assignment
         """
-        # Remove existing primary for this supplier
-        stmt = select(UserSupplierAssignment).where(
-            UserSupplierAssignment.supplier_id == supplier_id,
-            UserSupplierAssignment.is_primary.is_(True),
-        )
-        existing_primary = cast(
-            UserSupplierAssignment | None, self.db.execute(stmt).scalar_one_or_none()
-        )
-
-        if existing_primary:
-            existing_primary.is_primary = False
-
         # Find or create assignment for this user
         stmt = select(UserSupplierAssignment).where(
             UserSupplierAssignment.user_id == user_id,
@@ -138,6 +129,33 @@ class UserSupplierAssignmentService(
             )
             self.db.add(assignment)
 
+        self.db.commit()
+        self.db.refresh(assignment)
+        return assignment
+
+    def unset_primary_assignment(self, user_id: int, supplier_id: int) -> UserSupplierAssignment:
+        """Remove primary contact status from a user for a supplier.
+
+        Args:
+            user_id: User ID
+            supplier_id: Supplier ID
+
+        Returns:
+            The updated assignment
+
+        Raises:
+            ValueError: If the assignment does not exist
+        """
+        stmt = select(UserSupplierAssignment).where(
+            UserSupplierAssignment.user_id == user_id,
+            UserSupplierAssignment.supplier_id == supplier_id,
+        )
+        assignment = cast(UserSupplierAssignment | None, self.db.execute(stmt).scalar_one_or_none())
+
+        if not assignment:
+            raise ValueError("Assignment not found")
+
+        assignment.is_primary = False
         self.db.commit()
         self.db.refresh(assignment)
         return assignment
