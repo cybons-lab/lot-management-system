@@ -465,35 +465,49 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
   );
 }
 
-export function LotEntryCell({
-  row,
-  lotField,
-  quantityField,
-}: {
-  row: OcrResultItem;
-  lotField: Extract<keyof RowInputState, string>;
-  quantityField: Extract<keyof RowInputState, string>;
-}) {
-  // 数量が空でもエラーにしない（ロバストネス要件）
-  const hasIncomplete = false;
-
+export function LotInfoCell({ row }: { row: OcrResultItem }) {
   return (
-    <div className="flex flex-col gap-1.5 py-1">
-      <EditableTextCell
-        row={row}
-        field={lotField}
-        placeholder="ロットNo"
-        hasWarning={hasIncomplete}
-      />
-      <div className="flex items-center justify-end gap-1">
-        <span className="text-[10px] text-slate-400 shrink-0">数量:</span>
+    <div className="flex flex-col gap-2 py-2">
+      {/* ロット1 */}
+      <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+        <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
+        <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
         <EditableTextCell
           row={row}
-          field={quantityField}
-          placeholder="数量"
-          inputClassName="w-[70px] text-right"
-          hasWarning={hasIncomplete}
+          field="quantity1"
+          placeholder="数量(1)"
+          inputClassName="text-right"
         />
+      </div>
+      {/* ロット2 */}
+      <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+        <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
+        <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
+        <EditableTextCell
+          row={row}
+          field="quantity2"
+          placeholder="数量(2)"
+          inputClassName="text-right"
+        />
+      </div>
+    </div>
+  );
+}
+
+export function LotInfoReadOnlyCell({ row }: { row: OcrResultItem }) {
+  return (
+    <div className="flex flex-col gap-1 py-1 text-xs">
+      {/* ロット1 */}
+      <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+        <span>{row.manual_lot_no_1 || row.lot_no || "-"}</span>
+        <span>{row.manual_inbound_no || row.inbound_no || "-"}</span>
+        <span className="text-right">{row.manual_quantity_1 || "-"}</span>
+      </div>
+      {/* ロット2 */}
+      <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+        <span>{row.manual_lot_no_2 || "-"}</span>
+        <span>{row.manual_inbound_no_2 || "-"}</span>
+        <span className="text-right">{row.manual_quantity_2 || "-"}</span>
       </div>
     </div>
   );

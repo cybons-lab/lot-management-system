@@ -26,14 +26,16 @@ interface OcrResultEditModalProps {
   onClose: () => void;
 }
 
-function MaterialAndDeliverySection({ row }: { row: OcrResultItem }) {
+// eslint-disable-next-line max-lines-per-function -- ModalフォームUI全体の論理的なまとまり
+function EditFormGrid({ row }: { row: OcrResultItem }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 py-4">
+      {/* 商品コード情報 + 納期・数量 */}
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          商品コード情報
+          商品コード情報・納期・数量
         </Label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <div className="space-y-1">
             <Label className="text-[10px]">材質コード</Label>
             <EditableTextCell row={row} field="materialCode" placeholder="材質コード" />
@@ -42,14 +44,6 @@ function MaterialAndDeliverySection({ row }: { row: OcrResultItem }) {
             <Label className="text-[10px]">次区</Label>
             <EditableTextCell row={row} field="jikuCode" placeholder="次区" />
           </div>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          納期・数量
-        </Label>
-        <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-[10px]">納期</Label>
             <EditableDateCell row={row} field="deliveryDate" />
@@ -66,27 +60,15 @@ function MaterialAndDeliverySection({ row }: { row: OcrResultItem }) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          出荷情報
-        </Label>
-        <div className="space-y-1">
-          <Label className="text-[10px]">出荷日</Label>
-          <EditableDateCell row={row} field="shippingDate" />
-        </div>
-      </div>
-    </div>
-  );
-}
+      {/* 区切り線 */}
+      <div className="border-t border-slate-200"></div>
 
-function LotAndTextSection({ row }: { row: OcrResultItem }) {
-  return (
-    <div className="space-y-4">
+      {/* ロット情報(1) */}
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
           ロット情報(1)
         </Label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
           <div className="space-y-1">
             <Label className="text-[10px]">ロットNo(1)</Label>
             <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
@@ -107,11 +89,12 @@ function LotAndTextSection({ row }: { row: OcrResultItem }) {
         </div>
       </div>
 
+      {/* ロット情報(2) */}
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
           ロット情報(2)
         </Label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
           <div className="space-y-1">
             <Label className="text-[10px]">ロットNo(2)</Label>
             <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
@@ -132,6 +115,23 @@ function LotAndTextSection({ row }: { row: OcrResultItem }) {
         </div>
       </div>
 
+      {/* 出荷情報 */}
+      <div className="space-y-2">
+        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          出荷情報
+        </Label>
+        <div className="grid grid-cols-4 gap-2">
+          <div className="space-y-1">
+            <Label className="text-[10px]">出荷日</Label>
+            <EditableDateCell row={row} field="shippingDate" />
+          </div>
+        </div>
+      </div>
+
+      {/* 区切り線 */}
+      <div className="border-t border-slate-200"></div>
+
+      {/* 出荷票テキスト（全幅） */}
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
           出荷票テキスト
@@ -143,15 +143,6 @@ function LotAndTextSection({ row }: { row: OcrResultItem }) {
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function EditFormGrid({ row }: { row: OcrResultItem }) {
-  return (
-    <div className="grid grid-cols-2 gap-6 py-4">
-      <MaterialAndDeliverySection row={row} />
-      <LotAndTextSection row={row} />
     </div>
   );
 }
