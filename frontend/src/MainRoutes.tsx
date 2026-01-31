@@ -45,6 +45,7 @@ import { LotDetailPage } from "@/features/inventory/pages/LotDetailPage";
 import { MovesPage } from "@/features/inventory/pages/MovesPage";
 import { StockHistoryPage } from "@/features/inventory/pages/StockHistoryPage";
 import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPage";
+import { MastersPage } from "@/features/masters/pages/MastersPage";
 import { OcrResultsListPage } from "@/features/ocr-results/pages/OcrResultsListPage";
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
@@ -128,7 +129,7 @@ function MasterRoutes() {
   return (
     <Route element={<FeatureGuardLayout feature="masters" />}>
       {/* Masters - Phase G-1 */}
-      <Route path="/masters" element={<Navigate to={ROUTES.MASTERS.SUPPLIERS} replace />} />
+      <Route path="/masters" element={<MastersPage />} />
       <Route
         path={ROUTES.MASTERS.SUPPLIER_PRODUCTS}
         element={
