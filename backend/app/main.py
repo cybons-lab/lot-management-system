@@ -132,6 +132,7 @@ from app.core.database import init_db
 from app.core.log_broadcaster import setup_log_broadcasting
 from app.core.logging import setup_logging
 from app.domain.errors import DomainError
+from app.infrastructure.monitoring.sql_profiler import SQLProfilerMiddleware, register_sql_profiler
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.metrics import MetricsMiddleware
 from app.presentation.api.middleware.maintenance_middleware import MaintenanceMiddleware
@@ -170,6 +171,13 @@ async def lifespan(app: FastAPI):
     logger.info(f"📦 環境: {settings.ENVIRONMENT}")
     logger.info(f"💾 データベース: {_mask_database_url(settings.DATABASE_URL)}")
 
+    # SQL Profiler登録
+    if settings.SQL_PROFILER_ENABLED:
+        from app.core.database import engine
+
+        register_sql_profiler(engine)
+        logger.info("🕵️ SQL Profiler enabled")
+
     init_db()
     auto_sync_runner = None
     if settings.SMARTREAD_AUTO_SYNC_ENABLED:
@@ -206,7 +214,7 @@ application.add_exception_handler(Exception, errors.generic_exception_handler)
 # ミドルウェア登録
 # ========================================
 # 注: add_middlewareは逆順で実行される
-# 実行順: CORS → Metrics → RequestLogging → CorrelationId
+# 実行順: CORS → Metrics → Custom(SQLProfiler) → RequestLogging → CorrelationId
 application.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -215,6 +223,9 @@ application.add_middleware(
     allow_headers=["*"],
 )
 application.add_middleware(MetricsMiddleware)
+# SQL ProfilerはMetricsの後、メンテナンスの前あたりに入れるのが良い（レスポンスを返す直前に計算したい）
+application.add_middleware(SQLProfilerMiddleware)
+
 application.add_middleware(MaintenanceMiddleware)
 application.add_middleware(
     RequestLoggingMiddleware,

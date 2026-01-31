@@ -178,6 +178,34 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("ENABLE_DB_BROWSER", "enable_db_browser"),
     )
 
+    # SQL Profiler Settings
+    SQL_PROFILER_ENABLED: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("SQL_PROFILER_ENABLED", "sql_profiler_enabled"),
+    )
+    SQL_PROFILER_THRESHOLD_COUNT: int = Field(
+        default=10,
+        validation_alias=AliasChoices(
+            "SQL_PROFILER_THRESHOLD_COUNT", "sql_profiler_threshold_count"
+        ),
+    )
+    SQL_PROFILER_THRESHOLD_TIME: float = Field(
+        default=500.0,
+        validation_alias=AliasChoices("SQL_PROFILER_THRESHOLD_TIME", "sql_profiler_threshold_time"),
+    )
+    SQL_PROFILER_N_PLUS_ONE_THRESHOLD: int = Field(
+        default=5,
+        validation_alias=AliasChoices(
+            "SQL_PROFILER_N_PLUS_ONE_THRESHOLD", "sql_profiler_n_plus_one_threshold"
+        ),
+    )
+    SQL_PROFILER_NORMALIZE_LITERALS: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "SQL_PROFILER_NORMALIZE_LITERALS", "sql_profiler_normalize_literals"
+        ),
+    )
+
     @model_validator(mode="after")
     def apply_debug_defaults(self):
         if "ENABLE_DB_BROWSER" not in self.model_fields_set and self.ENVIRONMENT != "production":
