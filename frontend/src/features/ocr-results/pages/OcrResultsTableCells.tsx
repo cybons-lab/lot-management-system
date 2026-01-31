@@ -131,9 +131,8 @@ const validateLotInfo = (
   const hasValidLot2 = lot2HasNo && lot2HasQty;
   const hasValidLot = hasValidLot1 || hasValidLot2;
 
-  const lot1Incomplete = lot1HasNo !== lot1HasQty;
-  const lot2Incomplete = lot2HasNo !== lot2HasQty;
-  const hasIncomplete = lot1Incomplete || lot2Incomplete;
+  // 数量が空でもエラーにしない（ロバストネス要件）
+  const hasIncomplete = false;
 
   return { hasValidLot, hasIncomplete };
 };
@@ -475,15 +474,8 @@ export function LotEntryCell({
   lotField: Extract<keyof RowInputState, string>;
   quantityField: Extract<keyof RowInputState, string>;
 }) {
-  const { getInputs } = useOcrInputs();
-  const input = getInputs(row);
-
-  const lotValue = input[lotField] as string;
-  const qtyValue = input[quantityField] as string;
-  const hasLot = Boolean(lotValue);
-  const hasQty = Boolean(qtyValue);
-
-  const hasIncomplete = hasLot !== hasQty;
+  // 数量が空でもエラーにしない（ロバストネス要件）
+  const hasIncomplete = false;
 
   return (
     <div className="flex flex-col gap-1.5 py-1">

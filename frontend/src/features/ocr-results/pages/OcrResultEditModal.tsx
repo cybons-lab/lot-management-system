@@ -94,40 +94,38 @@ function LotAndTextSection({ row }: { row: OcrResultItem }) {
     <div className="space-y-4">
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          ロット情報(1)
+          ロット番号
         </Label>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="col-span-2 space-y-1">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
             <Label className="text-[10px]">ロットNo(1)</Label>
-            <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo" />
+            <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
           </div>
           <div className="space-y-1">
-            <Label className="text-[10px]">数量(1)</Label>
-            <EditableTextCell
-              row={row}
-              field="quantity1"
-              placeholder="数量"
-              inputClassName="text-right"
-            />
+            <Label className="text-[10px]">ロットNo(2)</Label>
+            <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
           </div>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          ロット情報(2)
-        </Label>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="col-span-2 space-y-1">
-            <Label className="text-[10px]">ロットNo(2)</Label>
-            <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo" />
+        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">数量</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label className="text-[10px]">数量(1)</Label>
+            <EditableTextCell
+              row={row}
+              field="quantity1"
+              placeholder="数量(1)"
+              inputClassName="text-right"
+            />
           </div>
           <div className="space-y-1">
             <Label className="text-[10px]">数量(2)</Label>
             <EditableTextCell
               row={row}
               field="quantity2"
-              placeholder="数量"
+              placeholder="数量(2)"
               inputClassName="text-right"
             />
           </div>

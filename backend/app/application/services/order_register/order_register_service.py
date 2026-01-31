@@ -193,9 +193,9 @@ class OrderRegisterService:
 
         lot_string = "、".join(lot_info)
         return (
-            base_text.replace("ロット番号(数量)", lot_string)
+            base_text.replace("ロット", lot_string)
             if lot_string
-            else base_text.replace("ロット番号(数量)", "")
+            else base_text.replace("ロット", "")
         )
 
     def _parse_date(self, value: str | date | None) -> date | None:
