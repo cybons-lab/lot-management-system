@@ -471,7 +471,7 @@ def _seed_system_config(db: Session) -> None:
         "log_level": ("INFO", "ログレベル（DEBUG/INFO/WARNING/ERROR）"),
         "enable_db_browser": ("false", "DBブラウザ機能を有効化（true/false）"),
         "page_visibility": (
-            '{"forecasts":true,"orders":true,"inventory":true,"rpa":true,"ocr":true,"masters":true}',
+            "{}",
             "ページ表示設定（JSON形式）",
         ),
         "cloud_flow_url_material_delivery": (

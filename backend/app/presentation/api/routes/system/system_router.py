@@ -95,6 +95,27 @@ class PublicSystemSettings(BaseModel):
     maintenance_mode: bool
 
 
+def _normalize_page_visibility(value: dict | None) -> dict:
+    if not isinstance(value, dict):
+        return {}
+
+    normalized: dict[str, dict[str, bool]] = {}
+    for key, entry in value.items():
+        if isinstance(entry, bool):
+            normalized[key] = {"user": entry, "guest": entry}
+            continue
+
+        if isinstance(entry, dict):
+            user = entry.get("user") if isinstance(entry.get("user"), bool) else True
+            guest = entry.get("guest") if isinstance(entry.get("guest"), bool) else True
+            normalized[key] = {"user": user, "guest": guest}
+            continue
+
+        normalized[key] = {"user": True, "guest": True}
+
+    return normalized
+
+
 @router.get("/public-settings", response_model=PublicSystemSettings)
 def get_public_settings(
     db: Session = Depends(get_db),
@@ -113,7 +134,10 @@ def get_public_settings(
     except json.JSONDecodeError:
         visibility = {}
 
-    return PublicSystemSettings(page_visibility=visibility, maintenance_mode=maintenance)
+    return PublicSystemSettings(
+        page_visibility=_normalize_page_visibility(visibility),
+        maintenance_mode=maintenance,
+    )
 
 
 class BackendLogEntry(BaseModel):

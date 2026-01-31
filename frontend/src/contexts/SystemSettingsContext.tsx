@@ -14,6 +14,23 @@ interface SystemSettingsContextType {
 
 const SystemSettingsContext = createContext<SystemSettingsContextType | null>(null);
 
+type VisibilityEntry = { user: boolean; guest: boolean };
+
+function normalizeVisibilityEntry(value: unknown): VisibilityEntry {
+  if (typeof value === "boolean") {
+    return { user: value, guest: value };
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const user = typeof record.user === "boolean" ? record.user : true;
+    const guest = typeof record.guest === "boolean" ? record.guest : true;
+    return { user, guest };
+  }
+
+  return { user: true, guest: true };
+}
+
 export function SystemSettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [settings, setSettings] = useState<PublicSystemSettings | null>(null);
@@ -38,28 +55,35 @@ export function SystemSettingsProvider({ children }: { children: ReactNode }) {
 
   const isFeatureVisible = useCallback(
     (feature: string) => {
-      if (!settings?.page_visibility) return true;
+      const checkVisibility = (key: string): boolean => {
+        if (!settings?.page_visibility) return true;
 
-      // Handle hierarchical features (e.g., "inventory:lots")
-      // If parent is visible, sub-feature is unconditionally visible (Parent Override)
-      if (feature.includes(":")) {
-        const parent = feature.split(":")[0];
-        if (isFeatureVisible(parent)) {
-          return true;
+        // Handle hierarchical features (e.g., "inventory:lots")
+        if (key.includes(":")) {
+          const parent = key.split(":")[0];
+          // If parent is NOT visible, child is automatically NOT visible.
+          // But if parent IS visible, we do NOT return true immediately;
+          // we allow the child's own configuration to decide.
+          if (!checkVisibility(parent)) {
+            return false;
+          }
         }
-      }
 
-      const config = settings.page_visibility[feature];
-      if (!config) return true; // Default to visible if not configured
+        const rawConfig = settings.page_visibility[key];
+        if (rawConfig === undefined) return true; // Default to visible if not configured
+        const config = normalizeVisibilityEntry(rawConfig);
 
-      const roles = user?.roles || [];
-      const isAdmin = roles.includes("admin");
-      if (isAdmin) return true;
+        const roles = user?.roles || [];
+        const isAdmin = roles.includes("admin");
+        if (isAdmin) return true;
 
-      const isUser = roles.includes("user");
-      if (isUser) return config.user;
+        const isUser = roles.includes("user");
+        if (isUser) return config.user;
 
-      return config.guest;
+        return config.guest;
+      };
+
+      return checkVisibility(feature);
     },
     [settings, user],
   );
