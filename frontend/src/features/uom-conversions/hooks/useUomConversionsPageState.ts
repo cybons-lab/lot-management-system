@@ -29,10 +29,11 @@ interface DialogState {
 // eslint-disable-next-line max-lines-per-function
 export function useUomConversionsPageState() {
   // 担当仕入先フィルターロジック（共通フック）
-  const { primarySupplierIds } = useSupplierFilter();
+  const { assignedSupplierIds } = useSupplierFilter();
 
   // 担当仕入先が1つのみの場合、自動選択
-  const initialSupplierId = primarySupplierIds.length === 1 ? String(primarySupplierIds[0]) : "all";
+  const initialSupplierId =
+    assignedSupplierIds.length === 1 ? String(assignedSupplierIds[0]) : "all";
 
   // Filter state
   const [showInactive, setShowInactive] = useState(false);
@@ -40,10 +41,10 @@ export function useUomConversionsPageState() {
 
   // 担当仕入先が変更された場合、初期値を更新
   useEffect(() => {
-    if (primarySupplierIds.length === 1 && selectedSupplierId === "all") {
-      setSelectedSupplierId(String(primarySupplierIds[0]));
+    if (assignedSupplierIds.length === 1 && selectedSupplierId === "all") {
+      setSelectedSupplierId(String(assignedSupplierIds[0]));
     }
-  }, [primarySupplierIds, selectedSupplierId]);
+  }, [assignedSupplierIds, selectedSupplierId]);
 
   // Dialog state
   const [dialogState, setDialogState] = useState<DialogState>({

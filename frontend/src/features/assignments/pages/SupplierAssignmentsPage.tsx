@@ -13,16 +13,17 @@ import { UserCheck } from "lucide-react";
 import { useState } from "react";
 
 import { AddAssignmentDialog } from "../components/AddAssignmentDialog";
-import { PrimaryAssignmentSummary } from "../components/PrimaryAssignmentSummary";
-import { PrimaryAssignmentTable } from "../components/PrimaryAssignmentTable";
 import { SupplierAssignmentEditDialog } from "../components/SupplierAssignmentEditDialog";
-import { usePrimaryAssignments } from "../hooks/usePrimaryAssignments";
+import { SupplierAssignmentSummary } from "../components/SupplierAssignmentSummary";
+import { SupplierAssignmentTable } from "../components/SupplierAssignmentTable";
+import { useSupplierAssignmentsList } from "../hooks/useSupplierAssignmentsList";
 import type { SupplierGroup } from "../types";
 
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-export function PrimaryAssignmentsPage() {
-  const { isLoading, error, supplierGroups, sortedGroups, handleRefresh } = usePrimaryAssignments();
+export function SupplierAssignmentsPage() {
+  const { isLoading, error, supplierGroups, sortedGroups, handleRefresh } =
+    useSupplierAssignmentsList();
   const [editGroup, setEditGroup] = useState<SupplierGroup | null>(null);
 
   if (isLoading) {
@@ -46,19 +47,19 @@ export function PrimaryAssignmentsPage() {
       {/* ヘッダー */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
-            <UserCheck className="h-5 w-5 text-amber-600" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+            <UserCheck className="h-5 w-5 text-blue-600" />
           </div>
-          <PageHeader title="主担当設定" subtitle="仕入先ごとの主担当者を確認・設定します" />
+          <PageHeader title="仕入先担当管理" subtitle="仕入先ごとの担当者を確認・設定します" />
         </div>
         <AddAssignmentDialog onSuccess={handleRefresh} />
       </div>
 
       {/* サマリーカード */}
-      <PrimaryAssignmentSummary supplierGroups={supplierGroups} />
+      <SupplierAssignmentSummary supplierGroups={supplierGroups} />
 
       {/* 担当者リスト */}
-      <PrimaryAssignmentTable sortedGroups={sortedGroups} onEdit={setEditGroup} />
+      <SupplierAssignmentTable sortedGroups={sortedGroups} onEdit={setEditGroup} />
 
       {/* 編集ダイアログ */}
       {editGroup && (

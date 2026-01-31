@@ -5,8 +5,7 @@ import type { SupplierAssignment, SupplierGroup } from "../types";
 
 import { http } from "@/shared/api/http-client";
 
-// eslint-disable-next-line max-lines-per-function -- AbortControllerとエラー処理の追加により行数増加
-export function usePrimaryAssignments() {
+export function useSupplierAssignmentsList() {
   const [assignments, setAssignments] = useState<SupplierAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,13 +67,9 @@ export function usePrimaryAssignments() {
                 supplier_code: assignment.supplier_code,
                 supplier_name: assignment.supplier_name,
                 assignments: [],
-                primaryUser: null,
               };
             }
             acc[key].assignments.push(assignment);
-            if (assignment.is_primary) {
-              acc[key].primaryUser = assignment;
-            }
             return acc;
           },
           {} as Record<number, SupplierGroup>,
@@ -83,14 +78,9 @@ export function usePrimaryAssignments() {
     [assignments],
   );
 
-  // 主担当がいない仕入先を上に表示
+  // 仕入先コード順にソート
   const sortedGroups = useMemo(
-    () =>
-      [...supplierGroups].sort((a, b) => {
-        if (!a.primaryUser && b.primaryUser) return -1;
-        if (a.primaryUser && !b.primaryUser) return 1;
-        return a.supplier_code.localeCompare(b.supplier_code);
-      }),
+    () => [...supplierGroups].sort((a, b) => a.supplier_code.localeCompare(b.supplier_code)),
     [supplierGroups],
   );
 

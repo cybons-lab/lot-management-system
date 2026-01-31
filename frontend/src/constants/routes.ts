@@ -80,7 +80,7 @@ export const ROUTES = {
     DELIVERY_PLACES: "/delivery-places",
     SHIPPING_MASTERS: "/masters/shipping-masters",
     UOM_CONVERSIONS: "/masters/uom-conversions",
-    PRIMARY_ASSIGNMENTS: "/masters/primary-assignments",
+    SUPPLIER_ASSIGNMENTS: "/masters/supplier-assignments",
     BULK_LOAD: "/masters/bulk-load",
   },
 

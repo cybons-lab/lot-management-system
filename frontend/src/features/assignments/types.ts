@@ -19,5 +19,4 @@ export interface SupplierGroup {
   supplier_code: string;
   supplier_name: string;
   assignments: SupplierAssignment[];
-  primaryUser: SupplierAssignment | null;
 }

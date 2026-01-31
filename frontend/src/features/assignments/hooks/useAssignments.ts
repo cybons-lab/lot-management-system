@@ -99,6 +99,6 @@ export function useAssignmentMutations() {
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
-    isSettingPrimary: setPrimaryMutation.isPending,
+    isSettingPrimary: setPrimaryMutation.isPending, // Keep for now but deprecate usage
   };
 }

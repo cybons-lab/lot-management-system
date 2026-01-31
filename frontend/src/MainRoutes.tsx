@@ -13,7 +13,7 @@ import { BulkExportPage } from "@/features/admin/pages/BulkExportPage";
 import { MasterChangeLogsPage } from "@/features/admin/pages/MasterChangeLogsPage";
 import { SeedSnapshotsPage } from "@/features/admin/pages/SeedSnapshotsPage";
 import { SystemSettingsPage } from "@/features/admin/pages/SystemSettingsPage";
-import { PrimaryAssignmentsPage } from "@/features/assignments/pages/PrimaryAssignmentsPage";
+import { SupplierAssignmentsPage } from "@/features/assignments/pages/SupplierAssignmentsPage";
 import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
 import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
 import { CalendarSettingsPage } from "@/features/calendar";
@@ -135,7 +135,7 @@ function MasterRoutes() {
       <Route path={ROUTES.MASTERS.CUSTOMERS} element={<CustomersListPage />} />
       <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
       <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
-      <Route path={ROUTES.MASTERS.PRIMARY_ASSIGNMENTS} element={<PrimaryAssignmentsPage />} />
+      <Route path={ROUTES.MASTERS.SUPPLIER_ASSIGNMENTS} element={<SupplierAssignmentsPage />} />
       <Route path={ROUTES.MASTERS.SHIPPING_MASTERS} element={<ShippingMasterListPage />} />
       <Route path={ROUTES.MASTERS.DELIVERY_PLACES} element={<DeliveryPlacesListPage />} />
       <Route path="/warehouse-delivery-routes" element={<WarehouseDeliveryRoutesListPage />} />

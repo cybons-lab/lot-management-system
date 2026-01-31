@@ -34,12 +34,12 @@ export function useSupplierFilter(options: UseSupplierFilterOptions = {}) {
 
   // 担当仕入先を取得
   const { data: mySuppliers } = useMySuppliers();
-  const primarySupplierIds = useMemo(
-    () => mySuppliers?.primary_supplier_ids || [],
-    [mySuppliers?.primary_supplier_ids],
+  const assignedSupplierIds = useMemo(
+    () => mySuppliers?.all_supplier_ids || [],
+    [mySuppliers?.all_supplier_ids],
   );
 
-  const hasAssignedSuppliers = primarySupplierIds.length > 0;
+  const hasAssignedSuppliers = assignedSupplierIds.length > 0;
 
   // フィルタの有効/無効状態
   // - 自動フィルタが無効の場合: 常にfalse
@@ -72,10 +72,10 @@ export function useSupplierFilter(options: UseSupplierFilterOptions = {}) {
       // 担当が0件の場合は空配列が返る（正しい挙動）
       return data.filter((item) => {
         const supplierId = getSupplier(item);
-        return supplierId != null && primarySupplierIds.includes(supplierId);
+        return supplierId != null && assignedSupplierIds.includes(supplierId);
       });
     },
-    [filterEnabled, primarySupplierIds],
+    [filterEnabled, assignedSupplierIds],
   );
 
   return {
@@ -88,6 +88,6 @@ export function useSupplierFilter(options: UseSupplierFilterOptions = {}) {
     /** 担当仕入先が設定されているか */
     hasAssignedSuppliers,
     /** 担当仕入先IDの配列 */
-    primarySupplierIds,
+    assignedSupplierIds,
   };
 }

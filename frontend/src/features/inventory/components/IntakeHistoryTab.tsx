@@ -95,10 +95,10 @@ export function IntakeHistoryTab() {
   const [intakeViewMode, setIntakeViewMode] = useState<IntakeViewMode>("list");
 
   // 担当仕入先フィルターロジック（共通フック）
-  const { filterEnabled, toggleFilter, primarySupplierIds, filterSuppliers } = useSupplierFilter();
+  const { filterEnabled, toggleFilter, assignedSupplierIds, filterSuppliers } = useSupplierFilter();
 
   // 担当仕入先が1つのみの場合、自動選択
-  const initialSupplierId = primarySupplierIds.length === 1 ? String(primarySupplierIds[0]) : "";
+  const initialSupplierId = assignedSupplierIds.length === 1 ? String(assignedSupplierIds[0]) : "";
 
   const [supplierId, setSupplierId] = useState<string>(initialSupplierId);
   const [warehouseId, setWarehouseId] = useState<string>("");
@@ -106,10 +106,10 @@ export function IntakeHistoryTab() {
 
   // 担当仕入先が変更された場合、初期値を更新
   useEffect(() => {
-    if (primarySupplierIds.length === 1 && !supplierId) {
-      setSupplierId(String(primarySupplierIds[0]));
+    if (assignedSupplierIds.length === 1 && !supplierId) {
+      setSupplierId(String(assignedSupplierIds[0]));
     }
-  }, [primarySupplierIds, supplierId]);
+  }, [assignedSupplierIds, supplierId]);
 
   const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
     product_group_id: productId || undefined,

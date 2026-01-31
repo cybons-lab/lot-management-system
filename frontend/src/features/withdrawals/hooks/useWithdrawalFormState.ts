@@ -66,10 +66,10 @@ export function useWithdrawalFormState({
   const today = new Date().toISOString().split("T")[0];
 
   // 担当仕入先フィルターロジック（共通フック）
-  const { primarySupplierIds } = useSupplierFilter();
+  const { assignedSupplierIds } = useSupplierFilter();
 
   // 担当仕入先が1つのみの場合、自動選択
-  const initialSupplierId = primarySupplierIds.length === 1 ? primarySupplierIds[0] : 0;
+  const initialSupplierId = assignedSupplierIds.length === 1 ? assignedSupplierIds[0] : 0;
 
   // Master data queries
   const { data: suppliers = [], isLoading: isLoadingSuppliers } = useSuppliersQuery();
@@ -126,10 +126,10 @@ export function useWithdrawalFormState({
 
   // 担当仕入先が変更された場合、初期値を更新（preselectedLotがない場合のみ）
   useEffect(() => {
-    if (primarySupplierIds.length === 1 && !preselectedLot && filters.supplier_id === 0) {
-      setFilters((prev) => ({ ...prev, supplier_id: primarySupplierIds[0] }));
+    if (assignedSupplierIds.length === 1 && !preselectedLot && filters.supplier_id === 0) {
+      setFilters((prev) => ({ ...prev, supplier_id: assignedSupplierIds[0] }));
     }
-  }, [primarySupplierIds, preselectedLot, filters.supplier_id]);
+  }, [assignedSupplierIds, preselectedLot, filters.supplier_id]);
 
   // Fetch delivery places when customer changes
   // Use ref to track current customer_id for race condition prevention

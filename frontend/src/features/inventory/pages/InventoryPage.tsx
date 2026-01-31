@@ -93,8 +93,6 @@ export function InventoryPage() {
   const warehouseQuery = useInventoryByWarehouse();
   const productQuery = useInventoryByProduct();
 
-  // Stats (removed - KPI cards no longer displayed)
-
   // Mutual filtering with auto-selection
   const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
     product_group_id: filters.product_group_id || undefined,
@@ -106,12 +104,6 @@ export function InventoryPage() {
     onAutoSelectSupplier: (id) => updateFilter("supplier_id", id),
     onAutoSelectProduct: (id) => updateFilter("product_group_id", id),
   });
-
-  // Note: Auto-clearing of invalid filters is NOT needed here because:
-  // 1. The filter-options API endpoint only returns valid combinations
-  // 2. SearchableSelect prevents selecting invalid options
-  // 3. Auto-selection in useFilterOptions handles single-option cases
-  // So filters naturally stay valid without explicit clearing logic
 
   useEffect(() => {
     if (filters.candidate_mode === "stock" && filters.tab === "no_stock") {
