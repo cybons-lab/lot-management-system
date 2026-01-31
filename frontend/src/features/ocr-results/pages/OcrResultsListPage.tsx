@@ -35,21 +35,16 @@ export function OcrResultsListPage() {
         onProcess={actions.handleExportProcess}
       />
 
-      <FilterCard
-        taskDate={state.taskDate}
-        setTaskDate={setters.setTaskDate}
-        viewMode={state.viewMode}
-        statusFilter={state.statusFilter}
-        setStatusFilter={setters.setStatusFilter}
-        showErrorsOnly={state.showErrorsOnly}
-        setShowErrorsOnly={setters.setShowErrorsOnly}
-      />
-
-      <div className="flex justify-between items-center">
-        <StatsDisplay
-          dataTotal={state.data?.total}
-          errorCount={state.errorCount}
-          selectedCount={state.selectedIds.length}
+      {/* フィルタ + アクションボタンを同じ行に配置 */}
+      <div className="flex justify-between items-center gap-4">
+        <FilterCard
+          taskDate={state.taskDate}
+          setTaskDate={setters.setTaskDate}
+          viewMode={state.viewMode}
+          statusFilter={state.statusFilter}
+          setStatusFilter={setters.setStatusFilter}
+          showErrorsOnly={state.showErrorsOnly}
+          setShowErrorsOnly={setters.setShowErrorsOnly}
         />
         <ActionButtons
           viewMode={state.viewMode}
@@ -65,6 +60,13 @@ export function OcrResultsListPage() {
           isRpaStarting={actions.isRpaStarting}
         />
       </div>
+
+      {/* データ件数表示をテーブル直前に配置 */}
+      <StatsDisplay
+        dataTotal={state.data?.total}
+        errorCount={state.errorCount}
+        selectedCount={state.selectedIds.length}
+      />
 
       <OcrResultsTable
         viewMode={state.viewMode}

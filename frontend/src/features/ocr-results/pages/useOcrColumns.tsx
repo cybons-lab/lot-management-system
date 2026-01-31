@@ -138,7 +138,11 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
         },
         {
           id: "shipping_slip_text_input",
-          header: "出荷票テキスト",
+          header: (
+            <div className="flex items-center h-full">
+              <span>出荷票テキスト</span>
+            </div>
+          ),
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
               <span className="text-xs whitespace-pre-wrap">
