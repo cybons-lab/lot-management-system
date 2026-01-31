@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { useMySuppliers } from "@/features/assignments/hooks/useMySuppliers";
 import type { OrderLineRow } from "@/features/orders/hooks/useOrderLines";
 import { useOrderLines } from "@/features/orders/hooks/useOrderLines";
 import { useCreateOrder } from "@/hooks/mutations";
@@ -58,10 +59,36 @@ function applyUnallocatedFilter(line: OrderLineRow): boolean {
 }
 
 /**
+ * 担当仕入先フィルター適用
+ */
+function applyPrimarySuppliersFilter(
+  line: OrderLineRow,
+  primarySupplierIds: number[] | undefined,
+): boolean {
+  if (!primarySupplierIds) return true;
+  const supplierId = line.supplier_id as number | undefined;
+  return !!supplierId && primarySupplierIds.includes(supplierId);
+}
+
+/**
+ * 無効な得意先フィルター適用
+ */
+function applyInactiveCustomersFilter(line: OrderLineRow, showInactiveCustomers: boolean): boolean {
+  if (showInactiveCustomers || !line.customer_valid_to) return true;
+  const todayStr = new Date().toISOString().split("T")[0];
+  return line.customer_valid_to >= todayStr;
+}
+
+/**
  * OrdersListPage のビジネスロジックを管理するカスタムフック
  */
+// eslint-disable-next-line max-lines-per-function -- 論理的なまとまりを優先し、フィルタ・テーブル・ダイアログロジックを1つのフックで管理
 export function useOrdersListLogic() {
   const createDialog = useDialog();
+
+  // 担当仕入先を取得
+  const { data: mySuppliers } = useMySuppliers();
+  const hasAssignedSuppliers = (mySuppliers?.primary_supplier_ids?.length ?? 0) > 0;
 
   const table = useTable({
     initialPageSize: 25,
@@ -74,7 +101,7 @@ export function useOrdersListLogic() {
     status: "all",
     order_type: "all",
     unallocatedOnly: false,
-    primarySuppliersOnly: false,
+    primarySuppliersOnly: hasAssignedSuppliers, // 担当仕入先がある場合、自動的にON
     showInactiveCustomers: false,
   });
 
@@ -107,28 +134,34 @@ export function useOrdersListLogic() {
 
   const filteredLines = useMemo(() => {
     return allOrderLines.filter((line: OrderLineRow) => {
+      // 検索フィルタ
       if (filters.values.search && !applySearchFilter(line, filters.values.search as string)) {
         return false;
       }
+      // 未引当フィルタ
       if (filters.values.unallocatedOnly && !applyUnallocatedFilter(line)) {
         return false;
       }
-
-      // Filter inactive customers
-      if (!filters.values.showInactiveCustomers && line.customer_valid_to) {
-        const todayStr = new Date().toISOString().split("T")[0];
-        if (line.customer_valid_to < todayStr) {
-          return false;
-        }
+      // 担当仕入先フィルタ
+      if (
+        filters.values.primarySuppliersOnly &&
+        !applyPrimarySuppliersFilter(line, mySuppliers?.primary_supplier_ids)
+      ) {
+        return false;
       }
-
+      // 無効な得意先フィルタ
+      if (!applyInactiveCustomersFilter(line, !!filters.values.showInactiveCustomers)) {
+        return false;
+      }
       return true;
     });
   }, [
     allOrderLines,
     filters.values.search,
     filters.values.unallocatedOnly,
+    filters.values.primarySuppliersOnly,
     filters.values.showInactiveCustomers,
+    mySuppliers,
   ]);
 
   const sortedLines = table.sortData(filteredLines);
@@ -149,5 +182,6 @@ export function useOrdersListLogic() {
     refetch,
     createDialog,
     createOrderMutation,
+    hasAssignedSuppliers,
   };
 }
