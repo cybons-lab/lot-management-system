@@ -4,11 +4,12 @@
  * 入庫履歴タブのコンテンツ（StockHistoryPageから分離）
  */
 import { Calendar, Table } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
+import { useMySuppliers } from "@/features/assignments/hooks/useMySuppliers";
 import { IntakeHistoryCalendar, IntakeHistoryList } from "@/features/intake-history";
 import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 import { Section } from "@/shared/components/layout";
@@ -85,11 +86,30 @@ function IntakeFilters({
   );
 }
 
+// eslint-disable-next-line max-lines-per-function -- 入庫履歴タブのフィルタ・表示切替・データ取得ロジックを1つのコンポーネントで管理
 export function IntakeHistoryTab() {
   const [intakeViewMode, setIntakeViewMode] = useState<IntakeViewMode>("list");
-  const [supplierId, setSupplierId] = useState<string>("");
+
+  // 担当仕入先を取得
+  const { data: mySuppliers } = useMySuppliers();
+  const primarySupplierIds = useMemo(
+    () => mySuppliers?.primary_supplier_ids || [],
+    [mySuppliers?.primary_supplier_ids],
+  );
+
+  // 担当仕入先が1つのみの場合、自動選択
+  const initialSupplierId = primarySupplierIds.length === 1 ? String(primarySupplierIds[0]) : "";
+
+  const [supplierId, setSupplierId] = useState<string>(initialSupplierId);
   const [warehouseId, setWarehouseId] = useState<string>("");
   const [productId, setProductId] = useState<string>("");
+
+  // 担当仕入先が変更された場合、初期値を更新
+  useEffect(() => {
+    if (primarySupplierIds.length === 1 && !supplierId) {
+      setSupplierId(String(primarySupplierIds[0]));
+    }
+  }, [primarySupplierIds, supplierId]);
 
   const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
     product_group_id: productId || undefined,
