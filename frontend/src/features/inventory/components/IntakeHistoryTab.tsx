@@ -4,12 +4,12 @@
  * 入庫履歴タブのコンテンツ（StockHistoryPageから分離）
  */
 import { Calendar, Table } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
-import { useMySuppliers } from "@/features/assignments/hooks/useMySuppliers";
+import { useSupplierFilter } from "@/features/assignments/hooks";
 import { IntakeHistoryCalendar, IntakeHistoryList } from "@/features/intake-history";
 import { useFilterOptions } from "@/features/inventory/hooks/useFilterOptions";
 import { Section } from "@/shared/components/layout";
@@ -90,12 +90,8 @@ function IntakeFilters({
 export function IntakeHistoryTab() {
   const [intakeViewMode, setIntakeViewMode] = useState<IntakeViewMode>("list");
 
-  // 担当仕入先を取得
-  const { data: mySuppliers } = useMySuppliers();
-  const primarySupplierIds = useMemo(
-    () => mySuppliers?.primary_supplier_ids || [],
-    [mySuppliers?.primary_supplier_ids],
-  );
+  // 担当仕入先フィルターロジック（共通フック）
+  const { primarySupplierIds } = useSupplierFilter();
 
   // 担当仕入先が1つのみの場合、自動選択
   const initialSupplierId = primarySupplierIds.length === 1 ? String(primarySupplierIds[0]) : "";

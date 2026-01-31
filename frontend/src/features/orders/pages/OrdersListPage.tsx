@@ -64,7 +64,11 @@ export function OrdersListPage() {
       />
 
       <div className="space-y-6">
-        <OrdersFilters filters={logic.filters} />
+        <OrdersFilters
+          filters={logic.filters}
+          filterEnabled={logic.filterEnabled}
+          onToggleFilter={logic.toggleFilter}
+        />
 
         {!logic.hasAssignedSuppliers && (
           <Alert>

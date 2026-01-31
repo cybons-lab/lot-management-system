@@ -6,6 +6,7 @@ import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { Badge } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
+import { SupplierFilterCheckbox } from "@/features/assignments/components";
 import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
 import { useSuppliersQuery } from "@/hooks/api/useMastersQuery";
 import { useTable } from "@/hooks/ui";
@@ -67,6 +68,8 @@ interface InboundPlansListProps {
   onDelete: (id: number) => void;
   onViewDetail: (id: number) => void;
   isDeleting?: boolean;
+  filterEnabled: boolean;
+  onToggleFilter: (enabled: boolean) => void;
 }
 
 // ============================================
@@ -82,6 +85,8 @@ export function InboundPlansList({
   onDelete,
   onViewDetail,
   isDeleting,
+  filterEnabled,
+  onToggleFilter,
 }: InboundPlansListProps) {
   // Master data for filter options
   const { data: suppliers = [] } = useSuppliersQuery();
@@ -168,22 +173,7 @@ export function InboundPlansList({
           />
         </div>
         <div className="flex items-end pb-2">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="prioritize_primary"
-              checked={!!filters.prioritize_primary}
-              onChange={(e) => onFilterChange({ ...filters, prioritize_primary: e.target.checked })}
-              className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-            />
-            <Label
-              htmlFor="prioritize_primary"
-              className="flex cursor-pointer items-center gap-1 text-sm font-medium text-slate-700"
-            >
-              <User className="h-3.5 w-3.5 text-blue-600" />
-              担当仕入先のみ
-            </Label>
-          </div>
+          <SupplierFilterCheckbox enabled={filterEnabled} onToggle={onToggleFilter} />
         </div>
         <div className="md:col-span-2">
           <Label className="mb-2 block text-sm font-medium">キーワード検索</Label>

@@ -16,9 +16,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { Button, Checkbox, Label } from "@/components/ui";
+import { Button, Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { ROUTES } from "@/constants/routes";
+import { SupplierFilterCheckbox } from "@/features/assignments/components";
+import { useSupplierFilter } from "@/features/assignments/hooks";
 import { InventoryByProductTable } from "@/features/inventory/components/InventoryByProductTable";
 import { InventoryBySupplierTable } from "@/features/inventory/components/InventoryBySupplierTable";
 import { InventoryByWarehouseTable } from "@/features/inventory/components/InventoryByWarehouseTable";
@@ -42,6 +44,9 @@ export function InventoryPage() {
   // Refresh loading state
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // 担当仕入先フィルターロジック（共通フック）
+  const { filterEnabled, toggleFilter } = useSupplierFilter();
+
   // Page state (Jotai atom - persisted in sessionStorage)
   const {
     overviewMode,
@@ -56,6 +61,11 @@ export function InventoryPage() {
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+
+  // 共通フックのfilterEnabledとfiltersのprimary_staff_onlyを同期
+  useEffect(() => {
+    updateFilter("primary_staff_only", filterEnabled);
+  }, [filterEnabled, updateFilter]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -324,21 +334,7 @@ export function InventoryPage() {
                 </div>
 
                 {showPrimaryStaffOnly && (
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="primary_staff_only"
-                      checked={filters.primary_staff_only}
-                      onCheckedChange={(checked) =>
-                        handleFilterChange("primary_staff_only", !!checked)
-                      }
-                    />
-                    <Label
-                      htmlFor="primary_staff_only"
-                      className="cursor-pointer text-sm font-medium"
-                    >
-                      主担当の仕入先のみ
-                    </Label>
-                  </div>
+                  <SupplierFilterCheckbox enabled={filterEnabled} onToggle={toggleFilter} />
                 )}
               </div>
               {filters.candidate_mode === "master" && (

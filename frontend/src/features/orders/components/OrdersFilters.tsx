@@ -1,5 +1,3 @@
-import { User } from "lucide-react";
-
 import {
   Button,
   Input,
@@ -9,18 +7,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
+import { SupplierFilterCheckbox } from "@/features/assignments/components";
 import type { useFilters } from "@/hooks/ui";
 import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
 
 interface OrdersFiltersProps {
   filters: ReturnType<typeof useFilters>;
+  filterEnabled: boolean;
+  onToggleFilter: (enabled: boolean) => void;
 }
 
 /**
  * 受注管理画面のフィルターUI（FilterContainer使用版）
  */
 // eslint-disable-next-line max-lines-per-function
-export function OrdersFilters({ filters }: OrdersFiltersProps) {
+export function OrdersFilters({ filters, filterEnabled, onToggleFilter }: OrdersFiltersProps) {
   return (
     <SimpleFilterContainer
       searchValue={(filters.values.search as string) || ""}
@@ -108,22 +109,7 @@ export function OrdersFilters({ filters }: OrdersFiltersProps) {
               未引当のみ表示
             </label>
           </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="primarySuppliersOnly"
-              checked={!!filters.values.primarySuppliersOnly}
-              onChange={(e) => filters.set("primarySuppliersOnly", e.target.checked)}
-              className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-            />
-            <label
-              htmlFor="primarySuppliersOnly"
-              className="flex items-center gap-1 text-sm font-medium text-slate-700"
-            >
-              <User className="h-3.5 w-3.5 text-blue-600" />
-              担当仕入先のみ
-            </label>
-          </div>
+          <SupplierFilterCheckbox enabled={filterEnabled} onToggle={onToggleFilter} />
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"

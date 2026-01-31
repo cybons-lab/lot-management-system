@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 import type { WithdrawalCreateRequest, WithdrawalType } from "../api";
 
-import { useMySuppliers } from "@/features/assignments/hooks/useMySuppliers";
+import { useSupplierFilter } from "@/features/assignments/hooks";
 import { useAuth } from "@/features/auth/AuthContext";
 import {
   useCustomersQuery,
@@ -65,12 +65,8 @@ export function useWithdrawalFormState({
   const { user } = useAuth();
   const today = new Date().toISOString().split("T")[0];
 
-  // 担当仕入先を取得
-  const { data: mySuppliers } = useMySuppliers();
-  const primarySupplierIds = useMemo(
-    () => mySuppliers?.primary_supplier_ids || [],
-    [mySuppliers?.primary_supplier_ids],
-  );
+  // 担当仕入先フィルターロジック（共通フック）
+  const { primarySupplierIds } = useSupplierFilter();
 
   // 担当仕入先が1つのみの場合、自動選択
   const initialSupplierId = primarySupplierIds.length === 1 ? primarySupplierIds[0] : 0;
