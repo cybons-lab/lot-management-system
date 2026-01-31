@@ -3141,8 +3141,13 @@
           "lots"
         ],
         "summary": "Archive Lot",
-        "description": "Archive a lot with optional confirmation.\n\nFor lots with remaining inventory, lot_number confirmation is required\nin the request body to prevent accidental archiving.\n\nArchived lots are excluded from default list views but remain in the database.\n\nArgs:\n    lot_id: ロットID\n    request: アーカイブリクエスト（在庫がある場合はlot_number必須）\n    db: データベースセッション\n\nReturns:\n    LotResponse: アーカイブされたロット情報\n\nRaises:\n    HTTPException: ロット番号不一致または在庫があるのに確認なし",
+        "description": "Archive a lot with optional confirmation.\n\nFor lots with remaining inventory, lot_number confirmation is required\nin the request body to prevent accidental archiving.\n\nArchived lots are excluded from default list views but remain in the database.\n\nArgs:\n    lot_id: ロットID\n    request: アーカイブリクエスト（在庫がある場合はlot_number必須）\n    db: データベースセッション\n    current_user: 現在のログインユーザー（権限チェック用）\n\nReturns:\n    LotResponse: アーカイブされたロット情報\n\nRaises:\n    HTTPException: ロット番号不一致または在庫があるのに確認なし",
         "operationId": "archive_lot_api_lots__lot_id__archive_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "lot_id",

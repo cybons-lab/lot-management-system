@@ -876,6 +876,7 @@ export interface paths {
      *         lot_id: ロットID
      *         request: アーカイブリクエスト（在庫がある場合はlot_number必須）
      *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（権限チェック用）
      *
      *     Returns:
      *         LotResponse: アーカイブされたロット情報
