@@ -1,5 +1,10 @@
-import { Card, CardContent } from "@/components/ui";
+import { Menu } from "lucide-react";
+import { useState } from "react";
 
+import { Card, CardContent } from "@/components/ui";
+import { cn } from "@/shared/libs/utils";
+
+// eslint-disable-next-line max-lines-per-function -- フィルタUIの論理的なまとまり
 export function FilterCard({
   taskDate,
   setTaskDate,
@@ -17,10 +22,31 @@ export function FilterCard({
   showErrorsOnly: boolean;
   setShowErrorsOnly: (v: boolean) => void;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="flex gap-4 flex-wrap">
+        {/* ハンバーガーメニュートグル（小型画面用） */}
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="lg:hidden flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 mb-3 transition-colors"
+          aria-label="フィルタを表示/非表示"
+        >
+          <Menu className="h-5 w-5" />
+          <span>フィルタ</span>
+          <span className="text-xs text-gray-500">{isExpanded ? "（開く）" : "（閉じる）"}</span>
+        </button>
+
+        {/* フィルタコンテンツ（大画面では常に表示、小画面では折りたたみ可能） */}
+        <div
+          className={cn(
+            "flex gap-4 flex-wrap",
+            "lg:flex", // 大画面では常に表示
+            !isExpanded && "hidden lg:flex", // 小画面では折りたたみ状態に応じて表示/非表示
+          )}
+        >
           <div className="flex-1 min-w-[200px]">
             <label htmlFor="task-date" className="block text-sm font-medium text-gray-700 mb-1">
               タスク日付

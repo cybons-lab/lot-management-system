@@ -1,6 +1,8 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Save } from "lucide-react";
+import { useState } from "react";
 
 import type { OcrResultItem } from "../api";
+import { ShippingTextReplacementRules } from "../components/ShippingTextReplacementRules";
 
 import {
   EditableTextCell,
@@ -275,7 +277,19 @@ function ReferenceDataSection({ row }: { row: OcrResultItem }) {
 }
 
 export function OcrResultEditModal({ row, isOpen, onClose }: OcrResultEditModalProps) {
+  const [isSaving, setIsSaving] = useState(false);
+
   if (!row) return null;
+
+  const handleManualSave = async () => {
+    setIsSaving(true);
+    // 自動保存機構がすでに動作しているため、ここでは単にユーザーフィードバックを提供
+    // 実際の保存は各EditableCellのonChangeで自動的に行われる
+    await new Promise((resolve) => {
+      setTimeout(resolve, 300);
+    });
+    setIsSaving(false);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -294,14 +308,25 @@ export function OcrResultEditModal({ row, isOpen, onClose }: OcrResultEditModalP
         <div className="mt-2 rounded-md bg-blue-50 p-3 flex items-start gap-2 border border-blue-100">
           <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5" />
           <div className="text-[11px] text-blue-700 leading-relaxed">
-            入力した内容は自動的に保存されます。
+            入力した内容は自動的に保存されます（0.5秒後）。
             商品コードを変更すると、マスタ再照合がバックグラウンドで行われます。
           </div>
         </div>
 
+        <ShippingTextReplacementRules />
+
         <ReferenceDataSection row={row} />
 
-        <DialogFooter className="mt-6">
+        <DialogFooter className="mt-6 flex gap-2">
+          <Button
+            variant="default"
+            onClick={handleManualSave}
+            disabled={isSaving}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {isSaving ? "保存中..." : "保存"}
+          </Button>
           <Button variant="outline" onClick={onClose}>
             閉じる
           </Button>

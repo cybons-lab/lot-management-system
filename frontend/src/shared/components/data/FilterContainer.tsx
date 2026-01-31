@@ -8,7 +8,7 @@
  * - レスポンシブ対応
  */
 
-import { ChevronDown, ChevronRight, X } from "lucide-react";
+import { ChevronDown, ChevronRight, X, Menu } from "lucide-react";
 import { useState } from "react";
 
 import { SearchBar } from "./SearchBar";
@@ -71,7 +71,7 @@ export interface FilterContainerProps {
  * </FilterContainer>
  * ```
  */
-// eslint-disable-next-line complexity
+// eslint-disable-next-line complexity, max-lines-per-function -- フィルタコンテナの論理的なまとまり
 export function FilterContainer({
   children,
   searchValue = "",
@@ -85,14 +85,27 @@ export function FilterContainer({
   hideSearch = false,
 }: FilterContainerProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   const hasAdvancedFilters = children !== undefined && children !== null;
   const showExpandButton = collapsible && hasAdvancedFilters;
 
   return (
     <div className={cn("rounded-lg border border-slate-200 bg-white p-4 shadow-sm", className)}>
+      {/* ハンバーガーメニュートグル（小型画面用） */}
+      <button
+        type="button"
+        onClick={() => setIsFilterVisible(!isFilterVisible)}
+        className="lg:hidden flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 mb-3 transition-colors"
+        aria-label="フィルタを表示/非表示"
+      >
+        <Menu className="h-5 w-5" />
+        <span>フィルタ</span>
+        <span className="text-xs text-gray-500">{isFilterVisible ? "（開く）" : "（閉じる）"}</span>
+      </button>
+
       {/* 検索バー + ボタンエリア */}
-      <div className="flex gap-2">
+      <div className={cn("flex gap-2", "lg:flex", !isFilterVisible && "hidden lg:flex")}>
         {/* 検索バー */}
         {!hideSearch && onSearchChange && (
           <div className="flex-1">
@@ -137,7 +150,15 @@ export function FilterContainer({
 
       {/* 詳細フィルターエリア */}
       {hasAdvancedFilters && (!collapsible || isExpanded) && (
-        <div className="mt-4 space-y-4 border-t border-slate-200 pt-4">{children}</div>
+        <div
+          className={cn(
+            "mt-4 space-y-4 border-t border-slate-200 pt-4",
+            "lg:block",
+            !isFilterVisible && "hidden lg:block",
+          )}
+        >
+          {children}
+        </div>
       )}
     </div>
   );

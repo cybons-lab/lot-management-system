@@ -2,6 +2,9 @@
  * 出荷用マスタフィルター
  */
 
+import { Menu } from "lucide-react";
+import { useState } from "react";
+
 import {
   Input,
   Label,
@@ -11,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { cn } from "@/shared/libs/utils";
 
 interface ShippingMasterFiltersProps {
   customerCode: string;
@@ -29,13 +33,28 @@ export function ShippingMasterFilters({
   onMaterialCodeChange,
   onJikuCodeChange,
 }: ShippingMasterFiltersProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>フィルター</CardTitle>
-        <CardDescription>得意先コード、材質コード、次区で絞り込み</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>フィルター</CardTitle>
+            <CardDescription>得意先コード、材質コード、次区で絞り込み</CardDescription>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="lg:hidden flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+            aria-label="フィルタを表示/非表示"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="text-xs text-gray-500">{isExpanded ? "閉じる" : "開く"}</span>
+          </button>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className={cn("lg:block", !isExpanded && "hidden lg:block")}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label htmlFor="customer-code">得意先コード</Label>
