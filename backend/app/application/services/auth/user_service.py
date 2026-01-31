@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
 from app.core.time_utils import utcnow
-from app.infrastructure.persistence.models.auth_models import User, UserRole
+from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
 from app.presentation.schemas.system.users_schema import UserCreate, UserRoleAssignment, UserUpdate
 
 
@@ -78,7 +78,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
         return cast(User | None, self.db.query(User).filter(User.email == email).first())
 
     def create(self, user: UserCreate, *, auto_commit: bool = True) -> User:
-        """Create a new user with hashed password."""
+        """Create a new user with hashed password and default 'user' role."""
         db_user = User(
             username=user.username,
             email=user.email,
@@ -87,6 +87,14 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
             is_active=user.is_active,
         )
         self.db.add(db_user)
+        self.db.flush()  # IDを確定させる
+
+        # デフォルトロール ("user") を付与
+        default_role = self.db.query(Role).filter(Role.role_code == "user").first()
+        if default_role:
+            user_role = UserRole(user_id=db_user.id, role_id=default_role.id)
+            self.db.add(user_role)
+
         if auto_commit:
             self.db.commit()
             self.db.refresh(db_user)

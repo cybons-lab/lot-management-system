@@ -88,35 +88,8 @@ export const routePermissions: RoutePermission[] = [
     allowedRoles: ["admin", "user", "guest"],
   },
 
-  // マスタ一覧（閲覧）
+  // マスタ一覧（閲覧） - Note: /masters/* は下に定義されています
   { routeKey: "MASTERS.INDEX", path: "/masters", allowedRoles: ["admin", "user", "guest"] },
-  {
-    routeKey: "MASTERS.WAREHOUSES",
-    path: "/warehouses",
-    allowedRoles: ["admin", "user", "guest"],
-  },
-  { routeKey: "MASTERS.SUPPLIERS", path: "/suppliers", allowedRoles: ["admin", "user", "guest"] },
-  { routeKey: "MASTERS.CUSTOMERS", path: "/customers", allowedRoles: ["admin", "user", "guest"] },
-  {
-    routeKey: "MASTERS.SUPPLIER_PRODUCTS",
-    path: "/supplier-products",
-    allowedRoles: ["admin", "user", "guest"],
-  },
-  {
-    routeKey: "MASTERS.CUSTOMER_ITEMS",
-    path: "/customer-items",
-    allowedRoles: ["admin", "user", "guest"],
-  },
-  {
-    routeKey: "MASTERS.DELIVERY_PLACES",
-    path: "/delivery-places",
-    allowedRoles: ["admin", "user", "guest"],
-  },
-  {
-    routeKey: "MASTERS.PRODUCT_MAPPINGS",
-    path: "/product-mappings",
-    allowedRoles: ["admin", "user", "guest"],
-  },
   {
     routeKey: "MASTERS.SHIPPING_MASTERS",
     path: "/masters/shipping-masters",
@@ -285,17 +258,17 @@ export const routePermissions: RoutePermission[] = [
   {
     routeKey: "MASTERS.SUPPLIER_PRODUCTS",
     path: "/masters/supplier-products",
-    allowedRoles: ["admin", "user"],
+    allowedRoles: ["admin", "user", "guest"],
   },
   {
     routeKey: "MASTERS.UOM_CONVERSIONS",
     path: "/masters/uom-conversions",
-    allowedRoles: ["admin", "user"],
+    allowedRoles: ["admin", "user", "guest"],
   },
   {
     routeKey: "MASTERS.SUPPLIER_ASSIGNMENTS",
     path: "/masters/supplier-assignments",
-    allowedRoles: ["admin", "user"],
+    allowedRoles: ["admin", "user", "guest"],
   },
   {
     routeKey: "MASTERS.WAREHOUSE_DELIVERY_ROUTES",
