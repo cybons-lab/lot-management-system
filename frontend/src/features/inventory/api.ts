@@ -3,7 +3,20 @@ import type { paths } from "@/types/api";
 
 // ===== Lots Types (v2) =====
 
-export type LotsGetParams = paths["/api/v2/lot/"]["get"]["parameters"]["query"];
+export type LotsGetParams = {
+  skip?: number;
+  limit?: number;
+  product_group_id?: number | null;
+  product_code?: string | null;
+  supplier_code?: string | null;
+  warehouse_id?: number | null;
+  warehouse_code?: string | null;
+  expiry_from?: string | null;
+  expiry_to?: string | null;
+  with_stock?: boolean;
+  status?: string | null;
+  prioritize_assigned?: boolean;
+};
 export type LotResponse =
   paths["/api/v2/lot/"]["get"]["responses"][200]["content"]["application/json"][number];
 export type LotDetailResponse =
@@ -24,9 +37,9 @@ export type InventoryState = "in_stock" | "depleted_only" | "no_lots";
 export type GroupByMode = "supplier_product_warehouse" | "product_warehouse";
 
 export interface SuppliersSummary {
-  primary_supplier_id: number;
-  primary_supplier_code: string;
-  primary_supplier_name: string;
+  representative_supplier_id: number;
+  representative_supplier_code: string;
+  representative_supplier_name: string;
   other_count: number;
 }
 
@@ -40,6 +53,7 @@ export type InventoryItem =
     supplier_code?: string;
     // Aggregated suppliers (for product_warehouse grouping with multiple suppliers)
     suppliers_summary?: SuppliersSummary;
+    is_assigned_supplier?: boolean;
   };
 
 export type InventoryListResponse = {
@@ -49,14 +63,44 @@ export type InventoryListResponse = {
   size: number;
 };
 
-export type InventoryItemsListParams = paths["/api/v2/inventory/"]["get"]["parameters"]["query"];
+export type InventoryItemsListParams = {
+  skip?: number;
+  limit?: number;
+  product_group_id?: number | null;
+  warehouse_id?: number | null;
+  supplier_id?: number | null;
+  tab?: string;
+  group_by?: string;
+  assigned_staff_only?: boolean;
+};
 
-export type InventoryBySupplierResponse =
-  paths["/api/v2/inventory/by-supplier"]["get"]["responses"][200]["content"]["application/json"][number];
-export type InventoryByWarehouseResponse =
-  paths["/api/v2/inventory/by-warehouse"]["get"]["responses"][200]["content"]["application/json"][number];
-export type InventoryByProductResponse =
-  paths["/api/v2/inventory/by-product"]["get"]["responses"][200]["content"]["application/json"][number];
+export type InventoryBySupplierResponse = {
+  supplier_id: number;
+  supplier_name: string;
+  supplier_code: string;
+  is_assigned_supplier: boolean;
+  total_quantity: string;
+  lot_count: number;
+  product_count: number;
+};
+export type InventoryByWarehouseResponse = {
+  warehouse_id: number;
+  warehouse_name: string;
+  warehouse_code: string;
+  total_quantity: string;
+  lot_count: number;
+  product_count: number;
+};
+export type InventoryByProductResponse = {
+  product_group_id: number;
+  product_name: string;
+  product_code: string;
+  total_quantity: string;
+  allocated_quantity: string;
+  available_quantity: string;
+  lot_count: number;
+  warehouse_count: number;
+};
 
 export interface FilterOption {
   id: number;
@@ -93,8 +137,8 @@ export const getLots = (params?: LotsGetParams) => {
   if (params?.with_stock !== undefined)
     searchParams.append("with_stock", params.with_stock.toString());
   if (params?.status) searchParams.append("status", params.status);
-  if (params?.prioritize_primary !== undefined)
-    searchParams.append("prioritize_primary", params.prioritize_primary.toString());
+  if (params?.prioritize_assigned !== undefined)
+    searchParams.append("prioritize_assigned", params.prioritize_assigned.toString());
 
   const queryString = searchParams.toString();
   return http.get<LotResponse[]>(`v2/lot/${queryString ? "?" + queryString : ""}`);
@@ -202,7 +246,7 @@ export const downloadLotLabels = async (lotIds: number[]) => {
 export const getInventoryItems = (
   params?: InventoryItemsListParams & {
     tab?: string;
-    primary_staff_only?: boolean;
+    assigned_staff_only?: boolean;
     group_by?: string;
   },
 ) => {
@@ -215,8 +259,8 @@ export const getInventoryItems = (
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
   if (params?.tab) searchParams.append("tab", params.tab);
   if (params?.group_by) searchParams.append("group_by", params.group_by);
-  if (params?.primary_staff_only)
-    searchParams.append("primary_staff_only", params.primary_staff_only.toString());
+  if (params?.assigned_staff_only)
+    searchParams.append("assigned_staff_only", params.assigned_staff_only.toString());
 
   const queryString = searchParams.toString();
   return http.get<InventoryListResponse>(`v2/inventory/${queryString ? "?" + queryString : ""}`);
@@ -263,7 +307,7 @@ export const getFilterOptions = (params?: {
   warehouse_id?: number;
   supplier_id?: number;
   tab?: string;
-  primary_staff_only?: boolean;
+  assigned_staff_only?: boolean;
   mode?: "stock" | "master";
 }) => {
   const searchParams = new URLSearchParams();
@@ -272,8 +316,8 @@ export const getFilterOptions = (params?: {
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
   if (params?.tab) searchParams.append("tab", params.tab);
-  if (params?.primary_staff_only)
-    searchParams.append("primary_staff_only", params.primary_staff_only.toString());
+  if (params?.assigned_staff_only)
+    searchParams.append("assigned_staff_only", params.assigned_staff_only.toString());
   if (params?.mode) searchParams.append("mode", params.mode);
 
   const queryString = searchParams.toString();

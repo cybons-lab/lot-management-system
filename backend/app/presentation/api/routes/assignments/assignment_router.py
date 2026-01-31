@@ -23,7 +23,7 @@ class MySuppliersResponse(BaseModel):
 
     user_id: int
     all_supplier_ids: list[int]
-    primary_supplier_ids: list[int] | None = None  # Deprecated: use all_supplier_ids
+    assigned_supplier_ids: list[int] | None = None  # Deprecated: use all_supplier_ids
 
 
 @router.get("/my-suppliers", response_model=MySuppliersResponse)
@@ -39,7 +39,7 @@ def get_my_suppliers(
     return MySuppliersResponse(
         user_id=current_user.id,
         all_supplier_ids=assigned_ids,
-        primary_supplier_ids=assigned_ids,  # For backwards compatibility with FE
+        assigned_supplier_ids=assigned_ids,  # For backwards compatibility with FE
     )
 
 

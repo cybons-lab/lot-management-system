@@ -28,18 +28,18 @@
    - 履歴確認画面: with_stock=False
    → 「このロットはいつ在庫ゼロになったか」を確認
 
-3. prioritize_primary による優先表示（L37, L57, L64-69）
+3. prioritize_assigned による優先表示（L37, L57, L64-69）
    理由: 営業担当の業務効率化
    背景:
    - 自動車部品商社: 営業担当が複数のサプライヤーを担当
    - ロット一覧: 全サプライヤーのロットが混在
    → 自分の担当サプライヤーのロットを探すのが大変
    解決:
-   - prioritize_primary=True（デフォルト）
+   - prioritize_assigned=True（デフォルト）
    → 主担当サプライヤーのロットを上位表示
    実装:
-   - UserSupplierAssignmentService で is_primary=True の割り当てを取得
-   - LotService.list_lots() に primary_supplier_ids を渡す
+   - UserSupplierAssignmentService で is_assigned=True の割り当てを取得
+   - LotService.list_lots() に assigned_supplier_ids を渡す
    → SQLのCASE式で優先順位をつけてソート
    業務シナリオ:
    - 営業担当A: サプライヤー1, 2を主担当
@@ -49,7 +49,7 @@
    理由: 未ログイン時も一覧表示可能
    設計:
    - get_current_user_optional: 認証トークンがあれば検証、なければNone
-   → prioritize_primary機能は無効化（全ロットを日付順表示）
+   → prioritize_assigned機能は無効化（全ロットを日付順表示）
    用途:
    - 管理画面: ログイン必須
    - 公開在庫照会: ログイン不要でロット一覧を表示
@@ -259,7 +259,7 @@ def export_lots(
         expiry_from=expiry_from,
         expiry_to=expiry_to,
         with_stock=with_stock,
-        primary_supplier_ids=None,
+        assigned_supplier_ids=None,
     )
 
     # Export rows - convert dataclass to dict
@@ -278,7 +278,7 @@ def list_lots(
     expiry_from: date | None = None,
     expiry_to: date | None = None,
     with_stock: bool = True,
-    prioritize_primary: bool = True,
+    prioritize_assigned: bool = True,
     current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
@@ -298,19 +298,19 @@ def list_lots(
         expiry_from: 有効期限開始日（フィルタ）
         expiry_to: 有効期限終了日（フィルタ）
         with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）
-        prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
-        current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）
+        prioritize_assigned: 担当の仕入先を優先表示するかどうか（デフォルト: True）
+        current_user: 現在のログインユーザー（担当仕入先取得に使用、オプショナル）
         db: データベースセッション
 
     Returns:
         list[LotResponse]: ロット情報のリスト
     """
-    # 主担当の仕入先IDを取得
-    primary_supplier_ids: list[int] | None = None
-    if prioritize_primary and current_user:
+    # 担当仕入先IDを取得
+    assigned_supplier_ids: list[int] | None = None
+    if prioritize_assigned and current_user:
         assignment_service = UserSupplierAssignmentService(db)
         assignments = assignment_service.get_user_suppliers(current_user.id)
-        primary_supplier_ids = [a.supplier_id for a in assignments if a.is_primary]
+        assigned_supplier_ids = [a.supplier_id for a in assignments]
 
     service = LotService(db)
     return service.list_lots(
@@ -323,7 +323,7 @@ def list_lots(
         expiry_from=expiry_from,
         expiry_to=expiry_to,
         with_stock=with_stock,
-        primary_supplier_ids=primary_supplier_ids,
+        assigned_supplier_ids=assigned_supplier_ids,
     )
 
 

@@ -172,10 +172,7 @@ export interface LotUI extends Record<string, unknown> {
   inspection_date: string | null;
   inspection_cert_number: string | null;
 
-  // User assignment fields
-  primary_user_id?: number | null;
-  primary_username?: string | null;
-  primary_user_display_name?: string | null;
+  // No longer used: primary_user_id, primary_username, primary_user_display_name
 
   // Low-level tracking
   origin_type: "adhoc" | "manual" | "migration" | "delivery_fulfillment";
@@ -201,6 +198,7 @@ export interface LotUI extends Record<string, unknown> {
   receipt_date?: string;
   delivery_place_id?: number | null;
   delivery_place_code?: string | null;
+  is_assigned_supplier?: boolean;
 }
 
 export interface ProductUI extends Record<string, unknown> {
@@ -327,6 +325,8 @@ export function normalizeLot(
     supplier_name: lot.supplier_name,
     supplier_code: lot.supplier_code,
     warehouse_name: ((lot as Record<string, unknown>).warehouse_name as string | null) ?? null,
+    is_assigned_supplier:
+      ((lot as Record<string, unknown>).is_assigned_supplier as boolean | null) ?? false,
   };
 }
 

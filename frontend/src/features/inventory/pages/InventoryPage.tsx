@@ -65,9 +65,9 @@ export function InventoryPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  // 共通フックのfilterEnabledとfiltersのprimary_staff_onlyを同期
+  // 共通フックのfilterEnabledとfiltersのassigned_staff_onlyを同期
   useEffect(() => {
-    updateFilter("primary_staff_only", filterEnabled);
+    updateFilter("assigned_staff_only", filterEnabled);
   }, [filterEnabled, updateFilter]);
 
   // Reset page when filters change
@@ -99,7 +99,7 @@ export function InventoryPage() {
     supplier_id: filters.supplier_id || undefined,
     warehouse_id: filters.warehouse_id || undefined,
     tab: filters.tab,
-    primary_staff_only: filters.primary_staff_only,
+    assigned_staff_only: filters.assigned_staff_only,
     mode: filters.candidate_mode,
     onAutoSelectSupplier: (id) => updateFilter("supplier_id", id),
     onAutoSelectProduct: (id) => updateFilter("product_group_id", id),
@@ -116,11 +116,11 @@ export function InventoryPage() {
     if (filters.supplier_id) {
       data = data.filter((row) => row.supplier_id === Number(filters.supplier_id));
     }
-    if (filters.primary_staff_only) {
-      data = data.filter((row) => row.is_primary_supplier);
+    if (filters.assigned_staff_only) {
+      data = data.filter((row) => row.is_assigned_supplier);
     }
     return data;
-  }, [supplierQuery.data, filters.supplier_id, filters.primary_staff_only]);
+  }, [supplierQuery.data, filters.supplier_id, filters.assigned_staff_only]);
 
   const filteredWarehouseData = useMemo(() => {
     let data = warehouseQuery.data || [];
@@ -143,7 +143,7 @@ export function InventoryPage() {
   const showSupplierFilter = overviewMode === "items" || overviewMode === "supplier";
   const showWarehouseFilter = overviewMode === "items" || overviewMode === "warehouse";
   const showProductFilter = overviewMode === "items" || overviewMode === "product";
-  const showPrimaryStaffOnly = overviewMode === "items" || overviewMode === "supplier";
+  const showAssignedStaffOnly = overviewMode === "items" || overviewMode === "supplier";
 
   const handleFilterChange = <K extends keyof typeof filters>(
     key: K,
@@ -331,7 +331,7 @@ export function InventoryPage() {
                   </span>
                 </div>
 
-                {showPrimaryStaffOnly && (
+                {showAssignedStaffOnly && (
                   <SupplierFilterCheckbox enabled={filterEnabled} onToggle={toggleFilter} />
                 )}
               </div>

@@ -180,13 +180,13 @@
             }
           },
           {
-            "name": "prioritize_primary",
+            "name": "prioritize_assigned",
             "in": "query",
             "required": false,
             "schema": {
               "type": "boolean",
               "default": true,
-              "title": "Prioritize Primary"
+              "title": "Prioritize Assigned"
             }
           }
         ],
@@ -2033,13 +2033,13 @@
             "description": "Grouping mode: 'supplier_product_warehouse' (default) or 'product_warehouse'"
           },
           {
-            "name": "primary_staff_only",
+            "name": "assigned_staff_only",
             "in": "query",
             "required": false,
             "schema": {
               "type": "boolean",
               "default": false,
-              "title": "Primary Staff Only"
+              "title": "Assigned Staff Only"
             }
           }
         ],
@@ -2141,13 +2141,13 @@
             }
           },
           {
-            "name": "primary_staff_only",
+            "name": "assigned_staff_only",
             "in": "query",
             "required": false,
             "schema": {
               "type": "boolean",
               "default": false,
-              "title": "Primary Staff Only"
+              "title": "Assigned Staff Only"
             }
           },
           {
@@ -2669,7 +2669,7 @@
           "lots"
         ],
         "summary": "List Lots",
-        "description": "ロット一覧取得.\n\nv_lots_with_master ビューを使用してロット一覧を取得します。\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能で、\nFEFO (First Expiry First Out) 順に並べて返します。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    product_group_id: 製品ID（フィルタ）\n    product_code: 製品コード（フィルタ）\n    supplier_code: 仕入先コード（フィルタ）\n    warehouse_code: 倉庫コード（フィルタ）\n    expiry_from: 有効期限開始日（フィルタ）\n    expiry_to: 有効期限終了日（フィルタ）\n    with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）\n    db: データベースセッション\n\nReturns:\n    list[LotResponse]: ロット情報のリスト",
+        "description": "ロット一覧取得.\n\nv_lots_with_master ビューを使用してロット一覧を取得します。\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能で、\nFEFO (First Expiry First Out) 順に並べて返します。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    product_group_id: 製品ID（フィルタ）\n    product_code: 製品コード（フィルタ）\n    supplier_code: 仕入先コード（フィルタ）\n    warehouse_code: 倉庫コード（フィルタ）\n    expiry_from: 有効期限開始日（フィルタ）\n    expiry_to: 有効期限終了日（フィルタ）\n    with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）\n    prioritize_assigned: 担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（担当仕入先取得に使用、オプショナル）\n    db: データベースセッション\n\nReturns:\n    list[LotResponse]: ロット情報のリスト",
         "operationId": "list_lots_api_lots_get",
         "security": [
           {
@@ -2806,13 +2806,13 @@
             }
           },
           {
-            "name": "prioritize_primary",
+            "name": "prioritize_assigned",
             "in": "query",
             "required": false,
             "schema": {
               "type": "boolean",
               "default": true,
-              "title": "Prioritize Primary"
+              "title": "Prioritize Assigned"
             }
           }
         ],
@@ -3610,7 +3610,7 @@
           "orders"
         ],
         "summary": "List Orders",
-        "description": "受注一覧取得（読み取り専用）.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    status: ステータスフィルタ\n    customer_code: 顧客コードフィルタ\n    date_from: 受注日開始日フィルタ\n    date_to: 受注日終了日フィルタ\n    order_type: 受注種別フィルタ\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    db: データベースセッション\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）\n\nReturns:\n    list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）",
+        "description": "受注一覧取得（読み取り専用）.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    status: ステータスフィルタ\n    customer_code: 顧客コードフィルタ\n    date_from: 受注日開始日フィルタ\n    date_to: 受注日終了日フィルタ\n    order_type: 受注種別フィルタ\n    prioritize_assigned: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    db: データベースセッション\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）\n\nReturns:\n    list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）",
         "operationId": "list_orders_api_orders_get",
         "security": [
           {
@@ -3721,13 +3721,13 @@
             }
           },
           {
-            "name": "prioritize_primary",
+            "name": "prioritize_assigned",
             "in": "query",
             "required": false,
             "schema": {
               "type": "boolean",
               "default": true,
-              "title": "Prioritize Primary"
+              "title": "Prioritize Assigned"
             }
           }
         ],
@@ -5110,7 +5110,7 @@
           "inbound-plans"
         ],
         "summary": "List Inbound Plans",
-        "description": "入荷予定一覧取得.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    supplier_id: 仕入先IDでフィルタ\n    product_group_id: 商品IDでフィルタ\n    status: ステータスでフィルタ（planned/partially_received/received/cancelled）\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用）\n    db: データベースセッション\n\nReturns:\n    入荷予定リスト",
+        "description": "入荷予定一覧取得.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    supplier_id: 仕入先IDでフィルタ\n    product_group_id: 商品IDでフィルタ\n    status: ステータスでフィルタ（planned/partially_received/received/cancelled）\n    prioritize_assigned: 担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（担当仕入先取得に使用）\n    db: データベースセッション\n\nReturns:\n    入荷予定リスト",
         "operationId": "list_inbound_plans_api_inbound_plans_get",
         "security": [
           {
@@ -5190,13 +5190,13 @@
             }
           },
           {
-            "name": "prioritize_primary",
+            "name": "prioritize_assigned",
             "in": "query",
             "required": false,
             "schema": {
               "type": "boolean",
               "default": true,
-              "title": "Prioritize Primary"
+              "title": "Prioritize Assigned"
             }
           }
         ],
@@ -12591,7 +12591,7 @@
           "assignments"
         ],
         "summary": "Update Assignment",
-        "description": "担当割り当てを更新（主担当の変更など）.",
+        "description": "担当割り当てを更新.",
         "operationId": "update_assignment_api_assignments__assignment_id__put",
         "parameters": [
           {
@@ -12664,58 +12664,6 @@
                   "type": "object",
                   "additionalProperties": true,
                   "title": "Response Delete Assignment Api Assignments  Assignment Id  Delete"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/assignments/supplier/{supplier_id}/set-primary/{user_id}": {
-      "post": {
-        "tags": [
-          "assignments"
-        ],
-        "summary": "Set Primary User",
-        "description": "仕入先の主担当者を設定.",
-        "operationId": "set_primary_user_api_assignments_supplier__supplier_id__set_primary__user_id__post",
-        "parameters": [
-          {
-            "name": "supplier_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Supplier Id"
-            }
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserSupplierAssignmentResponse"
                 }
               }
             }
@@ -27882,9 +27830,9 @@
             "title": "Total Quantity",
             "description": "Sum of planned_quantity from all lines"
           },
-          "is_primary_supplier": {
+          "is_assigned_supplier": {
             "type": "boolean",
-            "title": "Is Primary Supplier",
+            "title": "Is Assigned Supplier",
             "default": false
           },
           "lines": {
@@ -28199,9 +28147,9 @@
             "title": "Total Quantity",
             "description": "Sum of planned_quantity from all lines"
           },
-          "is_primary_supplier": {
+          "is_assigned_supplier": {
             "type": "boolean",
-            "title": "Is Primary Supplier",
+            "title": "Is Assigned Supplier",
             "default": false
           }
         },
@@ -28522,9 +28470,9 @@
             "type": "string",
             "title": "Supplier Code"
           },
-          "is_primary_supplier": {
+          "is_assigned_supplier": {
             "type": "boolean",
-            "title": "Is Primary Supplier",
+            "title": "Is Assigned Supplier",
             "default": false
           },
           "total_quantity": {
@@ -29891,9 +29839,9 @@
             ],
             "title": "Warehouse Code"
           },
-          "is_primary_supplier": {
+          "is_assigned_supplier": {
             "type": "boolean",
-            "title": "Is Primary Supplier",
+            "title": "Is Assigned Supplier",
             "default": false
           },
           "available_quantity": {
@@ -30786,25 +30734,31 @@
             "type": "integer",
             "title": "User Id"
           },
-          "primary_supplier_ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Primary Supplier Ids"
-          },
           "all_supplier_ids": {
             "items": {
               "type": "integer"
             },
             "type": "array",
             "title": "All Supplier Ids"
+          },
+          "assigned_supplier_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Supplier Ids"
           }
         },
         "type": "object",
         "required": [
           "user_id",
-          "primary_supplier_ids",
           "all_supplier_ids"
         ],
         "title": "MySuppliersResponse",
@@ -40809,17 +40763,17 @@
       },
       "SuppliersSummary": {
         "properties": {
-          "primary_supplier_id": {
+          "representative_supplier_id": {
             "type": "integer",
-            "title": "Primary Supplier Id"
+            "title": "Representative Supplier Id"
           },
-          "primary_supplier_code": {
+          "representative_supplier_code": {
             "type": "string",
-            "title": "Primary Supplier Code"
+            "title": "Representative Supplier Code"
           },
-          "primary_supplier_name": {
+          "representative_supplier_name": {
             "type": "string",
-            "title": "Primary Supplier Name"
+            "title": "Representative Supplier Name"
           },
           "other_count": {
             "type": "integer",
@@ -40829,9 +40783,9 @@
         },
         "type": "object",
         "required": [
-          "primary_supplier_id",
-          "primary_supplier_code",
-          "primary_supplier_name"
+          "representative_supplier_id",
+          "representative_supplier_code",
+          "representative_supplier_name"
         ],
         "title": "SuppliersSummary",
         "description": "製品×倉庫ビューで複数サプライヤーをまとめる場合の情報.\n\nUsed when group_by='product_warehouse' and multiple suppliers exist\nfor the same product/warehouse combination."

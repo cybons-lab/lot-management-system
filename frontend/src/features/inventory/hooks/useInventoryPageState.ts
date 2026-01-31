@@ -51,7 +51,7 @@ export function useInventoryPageState() {
         warehouse_id: "",
         supplier_id: "",
         tab: "all",
-        primary_staff_only: false,
+        assigned_staff_only: false,
         candidate_mode: "stock",
       },
     }));

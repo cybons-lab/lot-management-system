@@ -12,7 +12,7 @@ import { http } from "@/shared/api/http-client";
 
 export interface MySuppliersResponse {
   user_id: number;
-  primary_supplier_ids: number[];
+  assigned_supplier_ids: number[];
   all_supplier_ids: number[];
   assignments?: SupplierAssignment[];
 }
@@ -30,7 +30,7 @@ export function useMySuppliers(userId?: number) {
         const assignments = await http.get<SupplierAssignment[]>(`assignments/user/${userId}`);
         return {
           user_id: userId,
-          primary_supplier_ids: [], // 非推奨
+          assigned_supplier_ids: [], // 非推奨
           all_supplier_ids: assignments.map((a) => a.supplier_id),
           assignments, // 実データも返すように拡張
         };

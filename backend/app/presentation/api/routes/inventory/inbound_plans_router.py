@@ -41,7 +41,7 @@ def list_inbound_plans(
     supplier_id: int | None = None,
     product_group_id: int | None = None,
     status: str | None = None,
-    prioritize_primary: bool = True,
+    prioritize_assigned: bool = True,
     current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
@@ -53,19 +53,19 @@ def list_inbound_plans(
         supplier_id: 仕入先IDでフィルタ
         product_group_id: 商品IDでフィルタ
         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
-        prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
-        current_user: 現在のログインユーザー（主担当仕入先取得に使用）
+        prioritize_assigned: 担当の仕入先を優先表示するかどうか（デフォルト: True）
+        current_user: 現在のログインユーザー（担当仕入先取得に使用）
         db: データベースセッション
 
     Returns:
         入荷予定リスト
     """
-    # 主担当の仕入先IDを取得
-    primary_supplier_ids: list[int] | None = None
-    if prioritize_primary and current_user:
+    # 担当仕入先IDを取得
+    assigned_supplier_ids: list[int] | None = None
+    if prioritize_assigned and current_user:
         assignment_service = UserSupplierAssignmentService(db)
         assignments = assignment_service.get_user_suppliers(current_user.id)
-        primary_supplier_ids = [a.supplier_id for a in assignments if a.is_primary]
+        assigned_supplier_ids = [a.supplier_id for a in assignments]
 
     service = InboundService(db)
     plans, total = service.get_inbound_plans(
@@ -74,7 +74,7 @@ def list_inbound_plans(
         supplier_id=supplier_id,
         product_group_id=product_group_id,
         status=status,
-        primary_supplier_ids=primary_supplier_ids,
+        assigned_supplier_ids=assigned_supplier_ids,
     )
 
     return InboundPlanListResponse(
@@ -93,7 +93,7 @@ def list_inbound_plans(
                 total_quantity=Decimal(str(sum(line.planned_quantity for line in plan.lines)))
                 if plan.lines
                 else Decimal("0"),
-                is_primary_supplier=plan.supplier_id in (primary_supplier_ids or []),
+                is_assigned_supplier=plan.supplier_id in (assigned_supplier_ids or []),
             )
             for plan in plans
         ],

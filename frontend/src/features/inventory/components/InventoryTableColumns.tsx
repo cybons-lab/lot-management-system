@@ -31,8 +31,10 @@ export const inventoryColumns: Column<InventoryItem>[] = [
         return `${row.supplier_name} (${row.supplier_code})`;
       }
       if (row.suppliers_summary) {
-        const { primary_supplier_code, other_count } = row.suppliers_summary;
-        return other_count > 0 ? `${primary_supplier_code} +${other_count}` : primary_supplier_code;
+        const { representative_supplier_code, other_count } = row.suppliers_summary;
+        return other_count > 0
+          ? `${representative_supplier_code} +${other_count}`
+          : representative_supplier_code;
       }
       return "-";
     },
@@ -51,19 +53,20 @@ export const inventoryColumns: Column<InventoryItem>[] = [
         );
       }
       if (row.suppliers_summary) {
-        const { primary_supplier_name, primary_supplier_code, other_count } = row.suppliers_summary;
+        const { representative_supplier_name, representative_supplier_code, other_count } =
+          row.suppliers_summary;
         return (
           <div className="flex flex-col">
             <span
               className="block truncate font-medium text-slate-700"
-              title={primary_supplier_name}
+              title={representative_supplier_name}
             >
-              {primary_supplier_name}
+              {representative_supplier_name}
               {other_count > 0 && (
                 <span className="ml-1 text-[10px] text-blue-600">+{other_count}社</span>
               )}
             </span>
-            <span className="text-[11px] text-slate-500">{primary_supplier_code}</span>
+            <span className="text-[11px] text-slate-500">{representative_supplier_code}</span>
           </div>
         );
       }

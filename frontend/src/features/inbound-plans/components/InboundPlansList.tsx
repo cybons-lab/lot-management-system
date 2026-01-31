@@ -45,7 +45,7 @@ export interface InboundPlan {
   planned_arrival_date: string;
   status: "planned" | "partially_received" | "received" | "cancelled";
   created_at: string;
-  is_primary_supplier?: boolean;
+  is_assigned_supplier?: boolean;
   sap_po_number?: string | null; // SAP購買発注番号
   total_quantity?: number; // 明細数量計
 }
@@ -56,7 +56,7 @@ export interface InboundPlansFilters {
   status: "" | "planned" | "partially_received" | "received" | "cancelled";
   date_from: string;
   date_to: string;
-  prioritize_primary?: boolean;
+  prioritize_assigned?: boolean;
 }
 
 interface InboundPlansListProps {
@@ -114,7 +114,7 @@ export function InboundPlansList({
       status: "",
       date_from: "",
       date_to: "",
-      prioritize_primary: false,
+      prioritize_assigned: false,
     });
     setSearchQuery("");
   };
@@ -278,7 +278,7 @@ export function InboundPlansList({
                 `ID: ${row.supplier_id}`
               )}
             </span>
-            {row.is_primary_supplier && (
+            {row.is_assigned_supplier && (
               <Badge
                 variant="outline"
                 className="mt-1 gap-1 border-blue-300 bg-blue-50 text-blue-600"

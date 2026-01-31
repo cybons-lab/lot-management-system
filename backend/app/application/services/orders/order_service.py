@@ -189,7 +189,7 @@ class OrderService:
         date_from: date | None = None,
         date_to: date | None = None,
         order_type: str | None = None,
-        primary_supplier_ids: list[int] | None = None,
+        assigned_supplier_ids: list[int] | None = None,
     ) -> list[OrderWithLinesResponse]:
         """受注一覧を取得（明細含む）.
 
@@ -214,7 +214,7 @@ class OrderService:
            - JOIN: 該当製品の数だけ受注レコードが重複 → DISTINCT必要、パフォーマンス劣化
            → EXISTSの方が効率的かつシンプル
 
-        4. デフォルトソート（primary_supplier_ids未指定時）
+        4. デフォルトソート（assigned_supplier_ids未指定時）
            理由: 全受注を見る場合は、新しい受注を優先表示
            → 通常の業務フロー（新規受注から処理）に沿った設計
 
@@ -226,7 +226,7 @@ class OrderService:
             date_from: 受注日開始日フィルタ
             date_to: 受注日終了日フィルタ
             order_type: 受注種別フィルタ
-            primary_supplier_ids: 主担当サプライヤーIDリスト（優先ソート用）
+            assigned_supplier_ids: 主担当サプライヤーIDリスト（優先ソート用）
 
         Returns:
             list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）
@@ -251,7 +251,7 @@ class OrderService:
 
         # Primary supplier priority sort
         # 【設計】主担当製品を含む受注を優先表示（スコア0 = 高優先度）
-        if primary_supplier_ids:
+        if assigned_supplier_ids:
             # Create a subquery to check if any order line's product is associated
             # with the user's primary suppliers
             has_primary_product = exists(
@@ -262,7 +262,7 @@ class OrderService:
                 )
                 .where(
                     OrderLine.order_id == Order.id,
-                    SupplierItem.supplier_id.in_(primary_supplier_ids),
+                    SupplierItem.supplier_id.in_(assigned_supplier_ids),
                 )
             )
             priority_score = case(

@@ -36,15 +36,15 @@ export function InboundPlansListPage() {
     status: (searchParams.get("status") as InboundPlansFilters["status"]) || "",
     date_from: searchParams.get("date_from") || "",
     date_to: searchParams.get("date_to") || "",
-    prioritize_primary: searchParams.get("prioritize_primary") === "true" || filterEnabled,
+    prioritize_assigned: searchParams.get("prioritize_assigned") === "true" || filterEnabled,
   });
 
   // 削除ダイアログの状態
   const [deletingItem, setDeletingItem] = useState<InboundPlan | null>(null);
 
-  // 共通フックのfilterEnabledとfiltersのprioritize_primaryを同期
+  // 共通フックのfilterEnabledとfiltersのprioritize_assignedを同期
   useEffect(() => {
-    setFilters((prev) => ({ ...prev, prioritize_primary: filterEnabled }));
+    setFilters((prev) => ({ ...prev, prioritize_assigned: filterEnabled }));
   }, [filterEnabled]);
 
   // Build query params
@@ -54,7 +54,7 @@ export function InboundPlansListPage() {
     status: filters.status || undefined,
     date_from: filters.date_from || undefined,
     date_to: filters.date_to || undefined,
-    prioritize_primary: filters.prioritize_primary || undefined,
+    prioritize_assigned: filters.prioritize_assigned || undefined,
   };
 
   // Fetch inbound plans
