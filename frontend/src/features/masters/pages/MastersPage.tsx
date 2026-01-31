@@ -207,7 +207,7 @@ function MasterStatusAlert() {
   const hasUnmappedCustomerItems = status.unmapped_customer_items_count > 0;
   const hasUnmappedProducts = status.unmapped_products_count > 0;
   const hasUnmappedDeliverySettings = status.unmapped_customer_item_delivery_settings_count > 0;
-  const isMissingAssignments = !status.current_user_has_primary_assignments;
+  const isMissingAssignments = !status.current_user_has_assignments;
 
   if (
     !hasUnmappedCustomerItems &&

@@ -80,20 +80,3 @@ export function useDeleteAssignment() {
     },
   });
 }
-
-/**
- * 仕入先の主担当者を設定するフック
- */
-export function useSetPrimaryUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation<UserSupplierAssignmentResponse, Error, { supplierId: number; userId: number }>(
-    {
-      mutationFn: ({ supplierId, userId }) => assignmentsApi.setPrimaryUser(supplierId, userId),
-      onSuccess: (data) => {
-        queryClient.invalidateQueries({ queryKey: ["assignments", "user", data.user_id] });
-        queryClient.invalidateQueries({ queryKey: ["assignments", "supplier", data.supplier_id] });
-      },
-    },
-  );
-}

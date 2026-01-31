@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function */
 /**
  * MySupplierAssignmentDialog - 自分の担当仕入先を追加するダイアログ
  *
@@ -14,7 +13,6 @@ import { useAssignmentMutations } from "../hooks/useAssignments";
 
 import {
   Button,
-  Checkbox,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -37,7 +35,6 @@ interface MySupplierAssignmentDialogProps {
 
 interface FormValues {
   supplierId: string;
-  isPrimary: boolean;
 }
 
 export function MySupplierAssignmentDialog({
@@ -53,7 +50,6 @@ export function MySupplierAssignmentDialog({
   const form = useForm<FormValues>({
     defaultValues: {
       supplierId: "",
-      isPrimary: true, // デフォルトで主担当として設定
     },
   });
 
@@ -62,11 +58,13 @@ export function MySupplierAssignmentDialog({
       await createAssignment({
         user_id: userId,
         supplier_id: Number(data.supplierId),
-        is_primary: data.isPrimary,
+        is_primary: false, // Unified all as false for frontend (handled by backend or future logic)
       });
 
-      // my-suppliers クエリを invalidate してリアルタイム反映
-      await queryClient.invalidateQueries({ queryKey: ["my-suppliers"] });
+      // キャッシュを無効化してリアルタイム反映
+      // Note: useMySuppliers は ["user-suppliers", userId] を使用
+      await queryClient.invalidateQueries({ queryKey: ["user-suppliers", userId] });
+      await queryClient.invalidateQueries({ queryKey: ["user-suppliers", undefined] });
 
       onOpenChange(false);
       form.reset();
@@ -105,24 +103,6 @@ export function MySupplierAssignmentDialog({
                     />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isPrimary"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>主担当として設定</FormLabel>
-                    <p className="text-muted-foreground text-sm">
-                      この仕入先の主担当者として設定します
-                    </p>
-                  </div>
                 </FormItem>
               )}
             />

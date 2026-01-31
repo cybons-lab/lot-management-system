@@ -198,7 +198,7 @@ def list_orders(
     primary_supplier_ids: list[int] | None = None
     if prioritize_primary and current_user:
         assignment_service = UserSupplierAssignmentService(db)
-        primary_supplier_ids = assignment_service.get_primary_supplier_ids(current_user.id)
+        primary_supplier_ids = assignment_service.get_assigned_supplier_ids(current_user.id)
 
     service = OrderService(db)
     return service.get_orders(

@@ -1,7 +1,7 @@
 /**
- * useMySupplers.ts
+ * useMySuppliers.ts
  *
- * 現在のユーザーの主担当仕入先情報を取得するフック
+ * 現在のユーザーの担当仕入先情報を取得するフック
  */
 
 import { useQuery } from "@tanstack/react-query";

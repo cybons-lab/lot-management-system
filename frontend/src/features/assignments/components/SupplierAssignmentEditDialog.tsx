@@ -2,7 +2,6 @@
  * SupplierAssignmentEditDialog.tsx
  *
  * 仕入先ごとの担当者を編集するダイアログ
- * - 主担当者の変更
  * - 担当者の削除
  */
 

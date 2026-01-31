@@ -293,8 +293,8 @@ export const routePermissions: RoutePermission[] = [
     allowedRoles: ["admin", "user"],
   },
   {
-    routeKey: "MASTERS.PRIMARY_ASSIGNMENTS",
-    path: "/masters/primary-assignments",
+    routeKey: "MASTERS.SUPPLIER_ASSIGNMENTS",
+    path: "/masters/supplier-assignments",
     allowedRoles: ["admin", "user"],
   },
   {

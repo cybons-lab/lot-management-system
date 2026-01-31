@@ -1,12 +1,12 @@
 /**
- * PrimaryAssignmentsPage.tsx
+ * SupplierAssignmentsPage.tsx
  *
- * 主担当設定ページ
- * 仕入先ごとの主担当者を一覧表示・管理する
+ * 担当仕入先設定ページ
+ * 仕入先ごとの担当者を一覧表示・管理する
  *
  * 将来的な拡張:
- * - 主担当者がログインしていない場合のアラート表示
- * - 受注時の主担当者確認
+ * - 担当者がログインしていない場合のアラート表示
+ * - 受注時の担当者確認
  */
 
 import { UserCheck } from "lucide-react";

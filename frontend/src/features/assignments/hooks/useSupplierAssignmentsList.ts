@@ -1,58 +1,22 @@
-import { useEffect, useState, useMemo, useRef } from "react";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 import type { SupplierAssignment, SupplierGroup } from "../types";
+
+import { assignmentKeys } from "./useAssignments";
 
 import { http } from "@/shared/api/http-client";
 
 export function useSupplierAssignmentsList() {
-  const [assignments, setAssignments] = useState<SupplierAssignment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  // Use ref to track current refreshKey for race condition prevention
-  const refreshKeyRef = useRef(refreshKey);
-  refreshKeyRef.current = refreshKey;
-
-  useEffect(() => {
-    const currentRefreshKey = refreshKey;
-    const abortController = new AbortController();
-
-    const fetchAssignments = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await http.get<SupplierAssignment[]>("assignments", {
-          signal: abortController.signal,
-        });
-        // Check if refreshKey hasn't changed during the request
-        if (refreshKeyRef.current === currentRefreshKey) {
-          setAssignments(data);
-        }
-      } catch (err) {
-        // Ignore AbortError (expected when component unmounts or refreshKey changes)
-        if ((err as Error).name !== "AbortError") {
-          console.error("Failed to fetch assignments", err);
-          const errorMessage = "データの取得に失敗しました";
-          if (refreshKeyRef.current === currentRefreshKey) {
-            setError(errorMessage);
-          }
-          toast.error(errorMessage);
-        }
-      } finally {
-        if (refreshKeyRef.current === currentRefreshKey) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchAssignments();
-
-    return () => {
-      abortController.abort();
-    };
-  }, [refreshKey]);
+  const {
+    data: assignments = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: assignmentKeys.all,
+    queryFn: () => http.get<SupplierAssignment[]>("assignments"),
+  });
 
   // 仕入先ごとにグループ化
   const supplierGroups: SupplierGroup[] = useMemo(
@@ -84,14 +48,12 @@ export function useSupplierAssignmentsList() {
     [supplierGroups],
   );
 
-  const handleRefresh = () => setRefreshKey((k) => k + 1);
-
   return {
     assignments,
     isLoading,
-    error,
+    error: error ? "データの取得に失敗しました" : null,
     supplierGroups,
     sortedGroups,
-    handleRefresh,
+    handleRefresh: refetch,
   };
 }

@@ -44,20 +44,22 @@ export function useSupplierFilter(options: UseSupplierFilterOptions = {}) {
   // フィルタの有効/無効状態
   // - 自動フィルタが無効の場合: 常にfalse
   // - 自動フィルタが有効の場合: デフォルトtrue（担当がなくてもON）
-  // 理由: 担当がない場合でも「担当仕入先のみ」がONであれば警告が意味を持つ
   const [filterEnabled, setFilterEnabled] = useState(!disableAutoFilter);
+  // 初期化済みフラグ
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // 担当仕入先が変更された場合、フィルタ状態を更新（自動フィルタが有効な場合のみ）
-  // 注: ユーザーが手動でOFFにした場合は、担当が追加されても自動でONにはしない
+  // 担当仕入先が読み込まれた時に一度だけ自動的にONにする（自動フィルタが有効な場合）
   useEffect(() => {
-    if (!disableAutoFilter && hasAssignedSuppliers && !filterEnabled) {
+    if (!isInitialized && !disableAutoFilter && hasAssignedSuppliers) {
       setFilterEnabled(true);
+      setIsInitialized(true);
     }
-  }, [disableAutoFilter, hasAssignedSuppliers, filterEnabled]);
+  }, [disableAutoFilter, hasAssignedSuppliers, isInitialized]);
 
   // フィルタのON/OFFを切り替え
   const toggleFilter = useCallback((enabled: boolean) => {
     setFilterEnabled(enabled);
+    setIsInitialized(true); // 手動操作された場合も「初期化済み」とする
   }, []);
 
   // データをフィルタリングする汎用関数

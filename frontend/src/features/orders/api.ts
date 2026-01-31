@@ -21,7 +21,7 @@ type OrderGetResponse =
  * - status: ステータスフィルタ
  * - customer_code: 得意先コードフィルタ
  * - date_from, date_to: 日付範囲フィルタ
- * - prioritize_primary: 主担当仕入先を優先表示
+ * - prioritize_primary: 担当仕入先を優先表示
  */
 export const getOrders = (params?: OrdersListParams & { prioritize_primary?: boolean }) => {
   const searchParams = new URLSearchParams();
