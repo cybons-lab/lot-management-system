@@ -43,12 +43,12 @@ export function useSupplierFilter(options: UseSupplierFilterOptions = {}) {
 
   // フィルタの有効/無効状態
   // - 自動フィルタが無効の場合: 常にfalse
-  // - 自動フィルタが有効の場合: 担当仕入先がある場合はtrue
-  const [filterEnabled, setFilterEnabled] = useState(
-    disableAutoFilter ? false : hasAssignedSuppliers,
-  );
+  // - 自動フィルタが有効の場合: デフォルトtrue（担当がなくてもON）
+  // 理由: 担当がない場合でも「担当仕入先のみ」がONであれば警告が意味を持つ
+  const [filterEnabled, setFilterEnabled] = useState(!disableAutoFilter);
 
   // 担当仕入先が変更された場合、フィルタ状態を更新（自動フィルタが有効な場合のみ）
+  // 注: ユーザーが手動でOFFにした場合は、担当が追加されても自動でONにはしない
   useEffect(() => {
     if (!disableAutoFilter && hasAssignedSuppliers && !filterEnabled) {
       setFilterEnabled(true);
@@ -63,12 +63,13 @@ export function useSupplierFilter(options: UseSupplierFilterOptions = {}) {
   // データをフィルタリングする汎用関数
   const filterSuppliers = useCallback(
     <T>(data: T[], getSupplier: (item: T) => number | undefined | null): T[] => {
-      // フィルタが無効、または担当仕入先がない場合は全データを返す
-      if (!filterEnabled || primarySupplierIds.length === 0) {
+      // フィルタが無効な場合は全データを返す
+      if (!filterEnabled) {
         return data;
       }
 
       // 担当仕入先のみをフィルタリング
+      // 担当が0件の場合は空配列が返る（正しい挙動）
       return data.filter((item) => {
         const supplierId = getSupplier(item);
         return supplierId != null && primarySupplierIds.includes(supplierId);

@@ -6,7 +6,10 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button, Input } from "@/components/ui";
-import { SupplierFilterCheckbox } from "@/features/assignments/components";
+import {
+  SupplierAssignmentWarning,
+  SupplierFilterCheckbox,
+} from "@/features/assignments/components";
 import { useSupplierFilter } from "@/features/assignments/hooks";
 import { getCustomerItems, type CustomerItem } from "@/features/customer-items/api";
 import { useInventoryItems } from "@/features/inventory/hooks";
@@ -195,6 +198,9 @@ export function ExcelPortalPage() {
       />
 
       <div className="mx-auto max-w-5xl space-y-6 py-6">
+        {/* 担当仕入先未設定警告 */}
+        <SupplierAssignmentWarning />
+
         {/* Progress Stepper */}
         <div className="flex items-center gap-4 text-sm font-medium text-slate-500 mb-8">
           <div className={`flex items-center gap-2 ${step === "supplier" ? "text-blue-600" : ""}`}>

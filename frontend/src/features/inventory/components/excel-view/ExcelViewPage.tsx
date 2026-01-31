@@ -1,15 +1,15 @@
-import { ArrowLeft, Edit3, Info, Plus, Save, X } from "lucide-react";
+import { ArrowLeft, Edit3, Plus, Save, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { LotSection } from "./LotSection";
 import { ProductHeader } from "./ProductHeader";
 import { useExcelViewData } from "./useExcelViewData";
 
-import { Alert, AlertDescription, AlertTitle, Button } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { useUpdateAllocationSuggestionsBatch } from "@/features/allocations/hooks/api/useAllocationSuggestions";
-import { useSupplierFilter } from "@/features/assignments/hooks";
+import { SupplierFilterSet } from "@/features/assignments/components";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 
@@ -78,19 +78,12 @@ export function ExcelViewPage() {
   const [addedDates, setAddedDates] = useState<string[]>([]);
   const [isLotIntakeDialogOpen, setIsLotIntakeDialogOpen] = useState(false);
 
-  // 担当仕入先フィルターロジック（共通フック）
-  const { primarySupplierIds, hasAssignedSuppliers } = useSupplierFilter();
-
   const { data, isLoading, supplierId } = useExcelViewData(
     Number(productId),
     Number(warehouseId),
     customerItemId ? Number(customerItemId) : undefined,
   );
   const updateMutation = useUpdateAllocationSuggestionsBatch();
-
-  // 担当仕入先以外の製品を開いている場合
-  const isNonAssignedSupplier =
-    hasAssignedSuppliers && supplierId && !primarySupplierIds.includes(supplierId);
 
   const handleQtyChange = useCallback(
     (lotId: number, dpId: number, date: string, value: number) => {
@@ -243,19 +236,8 @@ export function ExcelViewPage() {
         </div>
       </div>
 
-      {/* 担当仕入先以外の製品を開いている場合の警告 */}
-      {isNonAssignedSupplier && (
-        <Alert variant="warning" className="mb-4">
-          <Info className="h-4 w-4" />
-          <AlertTitle>担当外の仕入先の製品です</AlertTitle>
-          <AlertDescription>
-            この製品は担当仕入先以外のものです。
-            <Link to="/settings/account" className="ml-2 underline">
-              アカウント設定で担当仕入先を確認
-            </Link>
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* 担当仕入先関連の警告 */}
+      <SupplierFilterSet warningOnly warningClassName="mb-4" />
 
       <div className="space-y-4">
         <ProductHeader data={data.header} involvedDestinations={data.involvedDestinations} />

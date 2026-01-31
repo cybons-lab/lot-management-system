@@ -6,10 +6,11 @@
  * - 得意先・種別を含む全情報を1テーブルで表示
  */
 
-import { Info, Plus, RefreshCw, Send } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Plus, RefreshCw, Send } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-import { Alert, AlertDescription, AlertTitle, Badge, Button } from "@/components/ui";
+import { Badge, Button } from "@/components/ui";
+import { SupplierAssignmentWarning } from "@/features/assignments/components";
 import { ErrorState } from "@/features/inventory/components/ErrorState";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
 import { OrdersFilters } from "@/features/orders/components/OrdersFilters";
@@ -70,18 +71,7 @@ export function OrdersListPage() {
           onToggleFilter={logic.toggleFilter}
         />
 
-        {!logic.hasAssignedSuppliers && (
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertTitle>担当仕入先が設定されていません</AlertTitle>
-            <AlertDescription>
-              担当する仕入先を設定すると、自動的にフィルタが適用されます。
-              <Link to="/settings/account" className="ml-2 underline">
-                アカウント設定で担当仕入先を設定
-              </Link>
-            </AlertDescription>
-          </Alert>
-        )}
+        <SupplierAssignmentWarning />
 
         <ErrorState error={logic.error} onRetry={logic.refetch} />
 

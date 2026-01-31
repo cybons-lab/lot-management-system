@@ -19,7 +19,10 @@ import { toast } from "sonner";
 import { Button, Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { ROUTES } from "@/constants/routes";
-import { SupplierFilterCheckbox } from "@/features/assignments/components";
+import {
+  SupplierAssignmentWarning,
+  SupplierFilterCheckbox,
+} from "@/features/assignments/components";
 import { useSupplierFilter } from "@/features/assignments/hooks";
 import { InventoryByProductTable } from "@/features/inventory/components/InventoryByProductTable";
 import { InventoryBySupplierTable } from "@/features/inventory/components/InventoryBySupplierTable";
@@ -218,6 +221,9 @@ export function InventoryPage() {
       />
 
       <div className="space-y-6">
+        {/* 担当仕入先未設定警告 */}
+        <SupplierAssignmentWarning />
+
         {/* View Mode Switcher & Actions */}
         <div className="flex items-center justify-between">
           <div className="flex gap-2">

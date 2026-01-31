@@ -3,9 +3,8 @@
  * Inbound plans list page
  */
 
-import { Info } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import {
@@ -16,8 +15,9 @@ import {
 import { useInboundPlans, useDeleteInboundPlan, useSyncFromSAP } from "../hooks";
 
 import { PermanentDeleteDialog } from "@/components/common";
-import { Alert, AlertDescription, AlertTitle, Button } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { SupplierAssignmentWarning } from "@/features/assignments/components";
 import { useSupplierFilter } from "@/features/assignments/hooks";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -28,7 +28,7 @@ export function InboundPlansListPage() {
   const [searchParams] = useSearchParams();
 
   // 担当仕入先フィルターロジック（共通フック）
-  const { filterEnabled, toggleFilter, hasAssignedSuppliers } = useSupplierFilter();
+  const { filterEnabled, toggleFilter } = useSupplierFilter();
 
   const [filters, setFilters] = useState<InboundPlansFilters>({
     supplier_id: searchParams.get("supplier_id") || "",
@@ -117,18 +117,7 @@ export function InboundPlansListPage() {
         }
       />
 
-      {!hasAssignedSuppliers && (
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertTitle>担当仕入先が設定されていません</AlertTitle>
-          <AlertDescription>
-            担当する仕入先を設定すると、自動的にフィルタが適用されます。
-            <Link to="/settings/account" className="ml-2 underline">
-              アカウント設定で担当仕入先を設定
-            </Link>
-          </AlertDescription>
-        </Alert>
-      )}
+      <SupplierAssignmentWarning />
 
       <InboundPlansList
         plans={plans}
