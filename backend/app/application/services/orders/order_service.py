@@ -417,9 +417,11 @@ class OrderService:
                     # qty = 40 / 20 = 2
                     converted_qty = line_data.order_quantity / product.qty_per_internal_unit
                 else:
-                    # Unknown unit, fallback to order_quantity or handle as error?
-                    # For now, fallback to order_quantity (assuming 1:1 if unknown)
-                    converted_qty = line_data.order_quantity
+                    # Unknown unit, raise error for data integrity
+                    raise OrderValidationError(
+                        f"Unknown unit '{line_data.unit}' for product {product.maker_part_no}. "
+                        f"Expected internal='{product.internal_unit}' or external='{product.external_unit}'."
+                    )
 
             # Create order line (DDL v2.2 compliant)
             line = OrderLine(
@@ -452,14 +454,16 @@ class OrderService:
             from app.application.services.allocations.actions import auto_reserve_line
 
             for line_id in lines_for_auto_alloc:
+                # Use nested transaction (savepoint) for allocation
                 try:
-                    auto_reserve_line(self.db, line_id)
+                    with self.db.begin_nested():
+                        auto_reserve_line(self.db, line_id)
                 except Exception as e:
                     # Log but don't fail order creation
                     import logging
 
                     logging.getLogger(__name__).warning(
-                        f"Auto-allocation failed for line {line_id}: {e}"
+                        f"Auto-allocation failed for line {line_id} (soft failure handled): {e}"
                     )
 
         return cast(OrderWithLinesResponse, OrderWithLinesResponse.model_validate(order))
@@ -483,9 +487,28 @@ class OrderService:
 
     def acquire_lock(self, order_id: int, user_id: int) -> dict:
         """Acquire edit lock for an order."""
-        # Join with locked_by_user to get name for error message
-        stmt = select(Order).options(selectinload(Order.locked_by_user)).where(Order.id == order_id)
-        order = self.db.execute(stmt).scalar_one_or_none()
+        # Use pessimistic locking: SELECT ... FOR UPDATE NOWAIT
+        # This prevents race conditions where two users check "locked_by" simultaneously
+        stmt = (
+            select(Order)
+            .options(selectinload(Order.locked_by_user))
+            .where(Order.id == order_id)
+            .with_for_update(nowait=True)
+        )
+
+        try:
+            # Note: handle DBAPIError/OperationalError if row is locked by another transaction
+            order = self.db.execute(stmt).scalar_one_or_none()
+        except Exception:
+            # If we cannot acquire row lock, it means another transaction is working on it
+            # For simplicity, treat as locked, or let it propagate if handled upstream
+            # Generally with_for_update(nowait=True) raises OperationalError
+            raise OrderLockedError(
+                order_id=order_id,
+                locked_by_user_name="Another Transaction",
+                locked_at=None,
+            )
+
         if not order:
             raise OrderNotFoundError(order_id)
 
@@ -493,13 +516,13 @@ class OrderService:
 
         now = utcnow()
 
-        # Check existing lock
+        # Check existing lock (logical lock)
         if order.locked_by_user_id and order.lock_expires_at:
             if order.lock_expires_at > now:
                 # If locked by same user, extend lock
                 if order.locked_by_user_id == user_id:
                     order.lock_expires_at = now + timedelta(minutes=10)
-                    self.db.flush()  # Let caller commit (dependency injection or UoW)
+                    self.db.flush()  # Commit is handled by caller or UoW
                     return {"message": "Lock renewed"}
                 else:
                     # Locked by another user

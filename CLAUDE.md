@@ -154,6 +154,16 @@ cd backend && ruff check app/ --fix && ruff format app/
 - Files: `*_router.py`, `*_service.py`, `*_repository.py`, `*_schema.py`, `*_models.py`
 - Absolute imports only: `from app.services.order_service import OrderService`
 
+**Transaction Management:**
+- **Default:** `auto_commit=True` (Simple CRUD)
+- **Unit of Work:** Use `auto_commit=False` for complex transactions spanning multiple services.
+- **Partial Failure:** Use `db.begin_nested()` to create savepoints for best-effort sub-tasks (e.g. auto-allocation).
+- **Locking:** Use `acquire_lock` (SELECT FOR UPDATE) for critical resource access.
+
+**Data Integrity:**
+- **Precision:** Use `Decimal` for all quantities and monetary values. Never use `float`.
+- **Validation:** Fail fast on invalid data (e.g. unknown units). Avoid silent fallbacks.
+
 ### Frontend (TypeScript)
 
 **Quality Requirements (STRICT):**

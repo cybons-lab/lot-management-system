@@ -55,12 +55,15 @@ def allocate_soft_for_forecast(
 
     for lot in candidate_lots:
         offset = temp_allocations.get(lot.lot_id, Decimal("0"))
-        # Use Decimal for calculation, but LotCandidate expects float for now
+        # Use Decimal for calculation. Ensure lot.available_qty is handled as Decimal string first if it's float.
+        # Ideally LotCandidate should have Decimal fields, but casting here protects calculation.
         real_avail_dec = Decimal(str(lot.available_qty)) - offset
 
         # Only include if actually available
         if real_avail_dec > Decimal("0"):
             # Create a copy with adjusted availability
+            # Note: keeping available_qty as float for compatibility if LotCandidate field is float,
+            # but calculation above was safe.
             new_lot = replace(lot, available_qty=float(real_avail_dec))
             adjusted_candidates.append(new_lot)
 

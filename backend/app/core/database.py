@@ -76,6 +76,8 @@ logger = logging.getLogger(__name__)
 engine = create_engine(
     settings.DATABASE_URL,
     echo=False,  # ログ出力は logging.py で制御（sqlalchemy.engine を使用）
+    pool_pre_ping=True,  # 接続切れ検知・自動再接続
+    pool_recycle=3600,  # 1時間毎に接続をリサイクル
 )
 
 # --- Session --------------------------------------------------------------

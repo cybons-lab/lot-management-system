@@ -77,7 +77,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
         """Get user by email."""
         return cast(User | None, self.db.query(User).filter(User.email == email).first())
 
-    def create(self, user: UserCreate) -> User:
+    def create(self, user: UserCreate, *, auto_commit: bool = True) -> User:
         """Create a new user with hashed password."""
         db_user = User(
             username=user.username,
@@ -87,11 +87,15 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
             is_active=user.is_active,
         )
         self.db.add(db_user)
-        self.db.commit()
-        self.db.refresh(db_user)
+        if auto_commit:
+            self.db.commit()
+            self.db.refresh(db_user)
+        else:
+            self.db.flush()
+            self.db.refresh(db_user)
         return db_user
 
-    def update(self, user_id: int, user: UserUpdate) -> User:
+    def update(self, user_id: int, user: UserUpdate, *, auto_commit: bool = True) -> User:
         """Update an existing user with password hashing."""
         db_user = self.get_by_id(user_id)
         assert db_user is not None  # raise_404=True ensures this
@@ -106,8 +110,12 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
             setattr(db_user, key, value)
 
         db_user.updated_at = utcnow()
-        self.db.commit()
-        self.db.refresh(db_user)
+        if auto_commit:
+            self.db.commit()
+            self.db.refresh(db_user)
+        else:
+            self.db.flush()
+            self.db.refresh(db_user)
         return db_user
 
     def assign_roles(self, user_id: int, assignment: UserRoleAssignment) -> User | None:
