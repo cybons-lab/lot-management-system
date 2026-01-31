@@ -129,6 +129,24 @@ class SQLProfilerMiddleware(BaseHTTPMiddleware):
             )
 
 
+# 正規化用正規表現
+_IN_CLAUSE_RE = re.compile(r"\bIN\s*\(([^)]+)\)", re.IGNORECASE)
+
+
+def _collapse_in_clause(sql: str, threshold: int = 10) -> str:
+    """IN句の中身が閾値以上の場合に IN (?) に圧縮する."""
+
+    def _replace(match: re.Match[str]) -> str:
+        values = match.group(1)
+        # カンマで分割して要素数をカウント（簡易的なパース）
+        count = len([v for v in values.split(",") if v.strip()])
+        if count >= threshold:
+            return "IN (?)"
+        return match.group(0)
+
+    return _IN_CLAUSE_RE.sub(_replace, sql)
+
+
 def _normalize_sql(sql: str) -> str:
     """SQLを正規化する（スペース圧縮、リテラル置換など）."""
     # 連続する空白を1つに
@@ -139,6 +157,9 @@ def _normalize_sql(sql: str) -> str:
         sql = re.sub(r"\b\d+\b", "?", sql)
         # 文字列リテラルを ? に置換 (簡易版: '...' -> ?)
         sql = re.sub(r"'[^']*'", "?", sql)
+
+        # IN句の圧縮 (閾値は仮で 5 とする、または設定に追加しても良いが今回は固定で実装)
+        sql = _collapse_in_clause(sql, threshold=5)
 
     return sql
 
@@ -197,11 +218,22 @@ def after_cursor_execute(
             qs.example_sql = normalized_sql  # 初回のみ保存（あるいは常に短い方を保存するなど）
 
 
-def register_sql_profiler(engine: Engine) -> None:
-    """SQLAlchemyエンジンにプロファイラ用のイベントリスナーを登録する."""
+def register_sql_profiler(engine: Engine | Any) -> None:
+    """SQLAlchemyエンジンにプロファイラ用のイベントリスナーを登録する.
+
+    Args:
+        engine: Engine または AsyncEngine
+    """
     if not settings.SQL_PROFILER_ENABLED:
         return
 
-    event.listen(engine, "before_cursor_execute", before_cursor_execute)
-    event.listen(engine, "after_cursor_execute", after_cursor_execute)
+    # AsyncEngineの場合はSyncEngineを取り出す
+    target_engine = engine
+    # AsyncEngine型チェックは直接インポートせずに属性チェックで簡易対応
+    # (sqlalchemy.ext.asyncio.AsyncEngineへの依存を必須にしないため)
+    if hasattr(engine, "sync_engine"):
+        target_engine = engine.sync_engine
+
+    event.listen(target_engine, "before_cursor_execute", before_cursor_execute)
+    event.listen(target_engine, "after_cursor_execute", after_cursor_execute)
     logger.info("✅ SQL Profiler events registered")
