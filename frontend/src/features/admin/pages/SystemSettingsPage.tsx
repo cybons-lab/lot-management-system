@@ -39,6 +39,38 @@ const SETTING_CONFIGS: Record<string, SettingConfig> = {
     category: "security",
     description: "機能ごとの表示/非表示をロール別に制御します。",
   },
+  // SQL Profiler
+  sql_profiler_enabled: {
+    label: "SQLプロファイラ有効化",
+    type: "boolean",
+    category: "debug",
+    description: "API毎のSQL実行数・時間を計測し、ログに出力します。",
+  },
+  sql_profiler_threshold_count: {
+    label: "SQL実行数・警告しきい値",
+    type: "number",
+    category: "debug",
+    description: "1リクエストでこの回数を超えると警告ログを出します（デフォルト: 10）。",
+  },
+  sql_profiler_threshold_time: {
+    label: "SQL実行時間・警告しきい値(ms)",
+    type: "number",
+    category: "debug",
+    description: "1リクエストでこの時間を超えると警告ログを出します（デフォルト: 500ms）。",
+  },
+  sql_profiler_n_plus_one_threshold: {
+    label: "N+1検知・重複しきい値",
+    type: "number",
+    category: "debug",
+    description:
+      "同一形状のSQLがこの回数を超えて実行されるとN+1として警告します（デフォルト: 5）。",
+  },
+  sql_profiler_normalize_literals: {
+    label: "SQLリテラル正規化",
+    type: "boolean",
+    category: "debug",
+    description: "N+1検知時に数値や文字列リテラルを同一視するかどうか（デフォルト: 有効）。",
+  },
 };
 
 /* eslint-disable-next-line max-lines-per-function */

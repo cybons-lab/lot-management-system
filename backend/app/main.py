@@ -179,6 +179,46 @@ async def lifespan(app: FastAPI):
         logger.info("🕵️ SQL Profiler enabled")
 
     init_db()
+
+    # Load system settings from DB to override env vars
+    try:
+        from app.application.services.system_config_service import ConfigKeys, SystemConfigService
+        from app.core.database import SessionLocal
+
+        # Use a separate session for config loading
+        db = SessionLocal()
+        try:
+            service = SystemConfigService(db)
+            settings.SQL_PROFILER_ENABLED = service.get_bool(
+                ConfigKeys.SQL_PROFILER_ENABLED, settings.SQL_PROFILER_ENABLED
+            )
+            settings.SQL_PROFILER_THRESHOLD_COUNT = service.get_int(
+                ConfigKeys.SQL_PROFILER_THRESHOLD_COUNT, settings.SQL_PROFILER_THRESHOLD_COUNT
+            )
+            # Threshold Time is float
+            th_time = service.get(ConfigKeys.SQL_PROFILER_THRESHOLD_TIME)
+            if th_time:
+                settings.SQL_PROFILER_THRESHOLD_TIME = float(th_time)
+
+            settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD = service.get_int(
+                ConfigKeys.SQL_PROFILER_N_PLUS_ONE_THRESHOLD,
+                settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD,
+            )
+            settings.SQL_PROFILER_NORMALIZE_LITERALS = service.get_bool(
+                ConfigKeys.SQL_PROFILER_NORMALIZE_LITERALS, settings.SQL_PROFILER_NORMALIZE_LITERALS
+            )
+
+            logger.info(
+                f"🔧 Loaded System Settings: Profiler={'ON' if settings.SQL_PROFILER_ENABLED else 'OFF'}"
+            )
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to load system settings from DB: {e}")
+        finally:
+            db.close()
+
+    except Exception as e:
+        logger.error(f"❌ Error during system config loading: {e}")
+
     auto_sync_runner = None
     if settings.SMARTREAD_AUTO_SYNC_ENABLED:
         auto_sync_runner = SmartReadAutoSyncRunner()

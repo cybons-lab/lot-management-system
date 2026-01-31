@@ -2,7 +2,7 @@ import type { SystemSetting, SettingConfig } from "../types";
 
 import { PageVisibilityEditor } from "./PageVisibilityEditor";
 
-import { Label, Switch } from "@/components/ui";
+import { Input, Label, Switch } from "@/components/ui";
 
 interface SystemSettingItemProps {
   setting: SystemSetting;
@@ -44,6 +44,15 @@ export function SystemSettingItem({ setting, config, isSaving, onUpdate }: Syste
               </option>
             ))}
           </select>
+        )}
+        {config.type === "number" && (
+          <Input
+            type="number"
+            className="w-[120px]"
+            value={setting.config_value}
+            onChange={(e) => onUpdate(setting.config_key, e.target.value)}
+            disabled={isSaving}
+          />
         )}
         {config.type === "json" && setting.config_key === "page_visibility" && (
           <PageVisibilityEditor

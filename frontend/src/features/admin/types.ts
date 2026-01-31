@@ -5,7 +5,7 @@ export interface SystemSetting {
   description: string | null;
 }
 
-export type SettingType = "boolean" | "select" | "json" | "text";
+export type SettingType = "boolean" | "select" | "json" | "text" | "number";
 
 export interface SettingConfig {
   label: string;
