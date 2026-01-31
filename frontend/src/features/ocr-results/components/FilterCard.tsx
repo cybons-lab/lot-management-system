@@ -1,4 +1,12 @@
-import { Card, CardContent } from "@/components/ui";
+import { Filter } from "lucide-react";
+import { useState } from "react";
+
+import { Button } from "@/components/ui";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/display/dropdown-menu";
 
 export function FilterCard({
   taskDate,
@@ -17,9 +25,17 @@ export function FilterCard({
   showErrorsOnly: boolean;
   setShowErrorsOnly: (v: boolean) => void;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <Card>
-      <CardContent className="p-4">
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Filter className="h-4 w-4" />
+          <span>フィルタ</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-[400px] p-4">
         <div className="flex gap-4 flex-wrap">
           <div className="flex-1 min-w-[200px]">
             <label htmlFor="task-date" className="block text-sm font-medium text-gray-700 mb-1">
@@ -63,7 +79,7 @@ export function FilterCard({
             </label>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

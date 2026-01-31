@@ -55,7 +55,7 @@ def generate_shipping_master_data(db: Session) -> None:
             "delivery_place_name": "納入先東京工場",
             "shipping_warehouse_code": "W01",
             "shipping_warehouse_name": "東京倉庫",
-            "shipping_slip_text": f"{DEFAULT_CUSTOMER_CODE}/M001/ロット番号(数量)",
+            "shipping_slip_text": f"{DEFAULT_CUSTOMER_CODE}/M001/ロット",
             "transport_lt_days": 2,
         },
         {
@@ -75,7 +75,7 @@ def generate_shipping_master_data(db: Session) -> None:
             "delivery_place_name": "納入先東京工場",
             "shipping_warehouse_code": "W01",
             "shipping_warehouse_name": "東京倉庫",
-            "shipping_slip_text": f"{DEFAULT_CUSTOMER_CODE}/M002/ロット番号(数量)",
+            "shipping_slip_text": f"{DEFAULT_CUSTOMER_CODE}/M002/ロット",
             "transport_lt_days": 2,
         },
         # Pattern C: 別の次区
@@ -96,7 +96,7 @@ def generate_shipping_master_data(db: Session) -> None:
             "delivery_place_name": "納入先大阪工場",
             "shipping_warehouse_code": "W02",
             "shipping_warehouse_name": "大阪倉庫",
-            "shipping_slip_text": f"{DEFAULT_CUSTOMER_CODE}/M003/ロット番号(数量)",
+            "shipping_slip_text": f"{DEFAULT_CUSTOMER_CODE}/M003/ロット",
             "transport_lt_days": 3,
         },
         # Pattern D: 別の材質
@@ -117,7 +117,7 @@ def generate_shipping_master_data(db: Session) -> None:
             "delivery_place_name": "納入先東京工場",
             "shipping_warehouse_code": "W01",
             "shipping_warehouse_name": "東京倉庫",
-            "shipping_slip_text": f"{DEFAULT_CUSTOMER_CODE}/M004/ロット番号(数量)",
+            "shipping_slip_text": f"{DEFAULT_CUSTOMER_CODE}/M004/ロット",
             "transport_lt_days": 2,
         },
         # 追加パターン: 複数倉庫/次区の組み合わせ
@@ -138,7 +138,7 @@ def generate_shipping_master_data(db: Session) -> None:
             "delivery_place_name": "納入先大阪工場",
             "shipping_warehouse_code": "W02",
             "shipping_warehouse_name": "大阪倉庫",
-            "shipping_slip_text": f"{DEFAULT_CUSTOMER_CODE}/M001/ロット番号(数量)",
+            "shipping_slip_text": f"{DEFAULT_CUSTOMER_CODE}/M001/ロット",
             "transport_lt_days": 3,
         },
     ]

@@ -1,4 +1,5 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Save } from "lucide-react";
+import { useState } from "react";
 
 import type { OcrResultItem } from "../api";
 
@@ -24,14 +25,16 @@ interface OcrResultEditModalProps {
   onClose: () => void;
 }
 
-function MaterialAndDeliverySection({ row }: { row: OcrResultItem }) {
+// eslint-disable-next-line max-lines-per-function -- ModalフォームUI全体の論理的なまとまり
+function EditFormGrid({ row }: { row: OcrResultItem }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 py-4">
+      {/* 商品コード情報 + 納期・数量 */}
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          商品コード情報
+          商品コード情報・納期・数量
         </Label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <div className="space-y-1">
             <Label className="text-[10px]">材質コード</Label>
             <EditableTextCell row={row} field="materialCode" placeholder="材質コード" />
@@ -40,14 +43,6 @@ function MaterialAndDeliverySection({ row }: { row: OcrResultItem }) {
             <Label className="text-[10px]">次区</Label>
             <EditableTextCell row={row} field="jikuCode" placeholder="次区" />
           </div>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          納期・数量
-        </Label>
-        <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-[10px]">納期</Label>
             <EditableDateCell row={row} field="deliveryDate" />
@@ -64,74 +59,78 @@ function MaterialAndDeliverySection({ row }: { row: OcrResultItem }) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          出荷・入庫情報
-        </Label>
-        <div className="space-y-1">
-          <Label className="text-[10px]">出荷日</Label>
-          <EditableDateCell row={row} field="shippingDate" />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px]">入庫No(1)</Label>
-            <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[10px]">入庫No(2)</Label>
-            <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+      {/* 区切り線 */}
+      <div className="border-t border-slate-200"></div>
 
-function LotAndTextSection({ row }: { row: OcrResultItem }) {
-  return (
-    <div className="space-y-4">
+      {/* ロット情報(1) */}
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
           ロット情報(1)
         </Label>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="col-span-2 space-y-1">
+        <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+          <div className="space-y-1">
             <Label className="text-[10px]">ロットNo(1)</Label>
-            <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo" />
+            <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px]">入庫No(1)</Label>
+            <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
           </div>
           <div className="space-y-1">
             <Label className="text-[10px]">数量(1)</Label>
             <EditableTextCell
               row={row}
               field="quantity1"
-              placeholder="数量"
+              placeholder="数量(1)"
               inputClassName="text-right"
             />
           </div>
         </div>
       </div>
 
+      {/* ロット情報(2) */}
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
           ロット情報(2)
         </Label>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="col-span-2 space-y-1">
+        <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+          <div className="space-y-1">
             <Label className="text-[10px]">ロットNo(2)</Label>
-            <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo" />
+            <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px]">入庫No(2)</Label>
+            <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
           </div>
           <div className="space-y-1">
             <Label className="text-[10px]">数量(2)</Label>
             <EditableTextCell
               row={row}
               field="quantity2"
-              placeholder="数量"
+              placeholder="数量(2)"
               inputClassName="text-right"
             />
           </div>
         </div>
       </div>
 
+      {/* 出荷情報 */}
+      <div className="space-y-2">
+        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          出荷情報
+        </Label>
+        <div className="grid grid-cols-4 gap-2">
+          <div className="space-y-1">
+            <Label className="text-[10px]">出荷日</Label>
+            <EditableDateCell row={row} field="shippingDate" />
+          </div>
+        </div>
+      </div>
+
+      {/* 区切り線 */}
+      <div className="border-t border-slate-200"></div>
+
+      {/* 出荷票テキスト（全幅） */}
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
           出荷票テキスト
@@ -143,15 +142,6 @@ function LotAndTextSection({ row }: { row: OcrResultItem }) {
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function EditFormGrid({ row }: { row: OcrResultItem }) {
-  return (
-    <div className="grid grid-cols-2 gap-6 py-4">
-      <MaterialAndDeliverySection row={row} />
-      <LotAndTextSection row={row} />
     </div>
   );
 }
@@ -275,7 +265,19 @@ function ReferenceDataSection({ row }: { row: OcrResultItem }) {
 }
 
 export function OcrResultEditModal({ row, isOpen, onClose }: OcrResultEditModalProps) {
+  const [isSaving, setIsSaving] = useState(false);
+
   if (!row) return null;
+
+  const handleManualSave = async () => {
+    setIsSaving(true);
+    // 自動保存機構がすでに動作しているため、ここでは単にユーザーフィードバックを提供
+    // 実際の保存は各EditableCellのonChangeで自動的に行われる
+    await new Promise((resolve) => {
+      setTimeout(resolve, 300);
+    });
+    setIsSaving(false);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -294,14 +296,23 @@ export function OcrResultEditModal({ row, isOpen, onClose }: OcrResultEditModalP
         <div className="mt-2 rounded-md bg-blue-50 p-3 flex items-start gap-2 border border-blue-100">
           <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5" />
           <div className="text-[11px] text-blue-700 leading-relaxed">
-            入力した内容は自動的に保存されます。
+            入力した内容は自動的に保存されます（0.5秒後）。
             商品コードを変更すると、マスタ再照合がバックグラウンドで行われます。
           </div>
         </div>
 
         <ReferenceDataSection row={row} />
 
-        <DialogFooter className="mt-6">
+        <DialogFooter className="mt-6 flex gap-2">
+          <Button
+            variant="default"
+            onClick={handleManualSave}
+            disabled={isSaving}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {isSaving ? "保存中..." : "保存"}
+          </Button>
           <Button variant="outline" onClick={onClose}>
             閉じる
           </Button>

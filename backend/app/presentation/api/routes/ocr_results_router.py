@@ -221,47 +221,123 @@ def build_shipping_slip_text(
     quantity_2: str | None,
     shipping_date: str | None = None,
     delivery_date: str | None = None,
+    inbound_no_2: str | None = None,
 ) -> str | None:
     """出荷票テンプレートにロット・入庫・日付情報を反映.
 
-    部分置換ロジック:
-    情報がある場合のみプレースホルダー（ロット、入庫番号、納期、出荷日）を置換し、
-    情報がない場合はプレースホルダー文字列をそのまま残す。
+    確定仕様 (2026-01-31) に基づく置換ロジック:
+    - 日付プレースホルダー: ▲/▲ (出荷日), ●/● (納期) を mm/dd 形式に置換
+    - 数量表記: 半角カッコ (数量)、数量が空欄の場合はカッコごと非表示
+    - 複数項目の区切り: / (スラッシュ)
+    - シナリオ分岐: Case A/B/C に応じた置換
     """
     if not template:
         return None
 
     result = template
 
-    # 1. ロット情報の置換
-    # どちらかのロット情報がある場合のみ置換を実行
-    if lot_no_1 or lot_no_2:
-        lot_entries = []
-        if lot_no_1:
-            lot_entries.append(f"{lot_no_1}（{quantity_1 or ''}）")
-        if lot_no_2:
-            lot_entries.append(f"{lot_no_2}（{quantity_2 or ''}）")
+    # テンプレート内のプレースホルダー判定
+    has_inbound_placeholder = "入庫番号" in result
+    has_lot_placeholder = "ロット" in result
 
-        lot_text = "・".join(lot_entries)
+    # 日付フォーマット変換 (YYYY-MM-DD または YYYY/MM/DD → mm/dd)
+    def format_date_mmdd(date_str: str | None) -> str | None:
+        if not date_str:
+            return None
+        try:
+            # ハイフンまたはスラッシュを許容
+            cleaned = str(date_str).replace("-", "/")
+            dt = datetime.strptime(cleaned, "%Y/%m/%d")
+            return dt.strftime("%m/%d")
+        except (ValueError, Exception):
+            return None
 
-        # ロット表記を正規化 (ロット, ロット/, /ロット, /ロット/ などに対応)
-        normalized = re.sub(r"(^|/)ロット($|/)", r"\1ロット番号(数量)\2", result)
-
-        # キーワード置換（全角カッコや表記揺れにもある程度対応）
-        result = re.sub(r"ロット番号\s*[（(]数量[）)]", lot_text, normalized)
-
-    # 2. 入庫番号の置換
-    # 入庫番号がある場合のみ置換
-    if inbound_no:
-        result = result.replace("入庫番号", inbound_no)
-
-    # 3. 納期の置換
-    if delivery_date:
-        result = result.replace("納期", delivery_date)
-
-    # 4. 出荷日の置換
+    # 1. 日付プレースホルダーの置換
+    # 出荷日 ▲/▲ (▲▲/▲▲ などの揺らぎにも対応)
     if shipping_date:
-        result = result.replace("出荷日", shipping_date)
+        shipping_date_formatted = format_date_mmdd(shipping_date)
+        if shipping_date_formatted:
+            result = re.sub(r"▲+/▲+", shipping_date_formatted, result)
+    else:
+        # 出荷日がない場合はプレースホルダーを削除
+        result = re.sub(r"▲+/▲+", "", result)
+
+    # 納期 ●/●
+    if delivery_date:
+        delivery_date_formatted = format_date_mmdd(delivery_date)
+        if delivery_date_formatted:
+            result = re.sub(r"●+/●+", delivery_date_formatted, result)
+    else:
+        # 納期がない場合はプレースホルダーを削除
+        result = re.sub(r"●+/●+", "", result)
+
+    # 2. ロット・入庫番号の置換 (シナリオ分岐)
+    # ロット情報の構築（数量がある場合のみカッコ付き）
+    def build_lot_with_quantity(lot: str | None, qty: str | None) -> str | None:
+        if not lot:
+            return None
+        if qty:
+            return f"{lot}({qty})"
+        return lot
+
+    lot_1_text = build_lot_with_quantity(lot_no_1, quantity_1)
+    lot_2_text = build_lot_with_quantity(lot_no_2, quantity_2)
+
+    # 複数ロットをスラッシュで結合
+    lot_combined = None
+    if lot_1_text and lot_2_text:
+        lot_combined = f"{lot_1_text}/{lot_2_text}"
+    elif lot_1_text:
+        lot_combined = lot_1_text
+    elif lot_2_text:
+        lot_combined = lot_2_text
+
+    # Case A: テンプレートに「入庫番号」のみがある場合（ロットプレースホルダーなし）
+    if has_inbound_placeholder and not has_lot_placeholder:
+        # ロット番号が入力されていても、テンプレートに「ロット」がないので無視
+        # 入庫番号のみを置換する（数量がある場合は入庫番号(数量)形式）
+        if inbound_no:
+            inbound_1_with_qty = build_lot_with_quantity(inbound_no, quantity_1)
+            inbound_2_with_qty = (
+                build_lot_with_quantity(inbound_no_2, quantity_2) if inbound_no_2 else None
+            )
+
+            # 入庫番号部分の構築（複数入庫番号はスラッシュで区切り）
+            inbound_combined = None
+            if inbound_1_with_qty and inbound_2_with_qty:
+                inbound_combined = f"{inbound_1_with_qty}/{inbound_2_with_qty}"
+            elif inbound_1_with_qty:
+                inbound_combined = inbound_1_with_qty
+            elif inbound_2_with_qty:
+                inbound_combined = inbound_2_with_qty
+
+            result = result.replace(
+                "入庫番号", inbound_combined if inbound_combined else inbound_no
+            )
+        else:
+            # 何もない場合はプレースホルダーを削除
+            result = result.replace("入庫番号", "")
+
+    # Case B: テンプレートに「入庫番号」と「ロット」がある場合
+    elif has_inbound_placeholder and has_lot_placeholder:
+        # 入庫番号 → 入庫番号（数量なし）
+        if inbound_no:
+            result = result.replace("入庫番号", inbound_no)
+        else:
+            result = result.replace("入庫番号", "")
+
+        # ロット → ロット(数量)
+        if lot_combined:
+            result = result.replace("ロット", lot_combined)
+        else:
+            result = result.replace("ロット", "")
+
+    # Case C: テンプレートに「ロット」のみがある場合（入庫番号プレースホルダーなし）
+    elif has_lot_placeholder and not has_inbound_placeholder:
+        if lot_combined:
+            result = result.replace("ロット", lot_combined)
+        else:
+            result = result.replace("ロット", "")
 
     return result
 
@@ -631,6 +707,7 @@ async def export_ocr_results(
                 quantity_2,
                 shipping_date=shipping_date,
                 delivery_date=delivery_date,
+                inbound_no_2=inbound_no_2,
             )
         )
 
