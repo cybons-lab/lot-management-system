@@ -14,6 +14,7 @@ import { toast } from "sonner";
 
 import type { WithdrawalCreateRequest, WithdrawalType } from "../api";
 
+import { useMySuppliers } from "@/features/assignments/hooks/useMySuppliers";
 import { useAuth } from "@/features/auth/AuthContext";
 import {
   useCustomersQuery,
@@ -64,6 +65,16 @@ export function useWithdrawalFormState({
   const { user } = useAuth();
   const today = new Date().toISOString().split("T")[0];
 
+  // 担当仕入先を取得
+  const { data: mySuppliers } = useMySuppliers();
+  const primarySupplierIds = useMemo(
+    () => mySuppliers?.primary_supplier_ids || [],
+    [mySuppliers?.primary_supplier_ids],
+  );
+
+  // 担当仕入先が1つのみの場合、自動選択
+  const initialSupplierId = primarySupplierIds.length === 1 ? primarySupplierIds[0] : 0;
+
   // Master data queries
   const { data: suppliers = [], isLoading: isLoadingSuppliers } = useSuppliersQuery();
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
@@ -75,7 +86,7 @@ export function useWithdrawalFormState({
 
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
-    supplier_id: 0,
+    supplier_id: initialSupplierId,
     customer_id: 0,
     delivery_place_id: 0,
     product_group_id: 0,
@@ -116,6 +127,13 @@ export function useWithdrawalFormState({
       }
     }
   }, [preselectedLot]);
+
+  // 担当仕入先が変更された場合、初期値を更新（preselectedLotがない場合のみ）
+  useEffect(() => {
+    if (primarySupplierIds.length === 1 && !preselectedLot && filters.supplier_id === 0) {
+      setFilters((prev) => ({ ...prev, supplier_id: primarySupplierIds[0] }));
+    }
+  }, [primarySupplierIds, preselectedLot, filters.supplier_id]);
 
   // Fetch delivery places when customer changes
   // Use ref to track current customer_id for race condition prevention
