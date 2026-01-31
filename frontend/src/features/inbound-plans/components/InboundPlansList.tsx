@@ -1,4 +1,4 @@
-import { Crown } from "lucide-react";
+import { User } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 
 import { Button } from "@/components/ui";
@@ -174,14 +174,14 @@ export function InboundPlansList({
               id="prioritize_primary"
               checked={!!filters.prioritize_primary}
               onChange={(e) => onFilterChange({ ...filters, prioritize_primary: e.target.checked })}
-              className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
+              className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
             />
             <Label
               htmlFor="prioritize_primary"
               className="flex cursor-pointer items-center gap-1 text-sm font-medium text-slate-700"
             >
-              <Crown className="h-3.5 w-3.5 text-amber-600" />
-              主担当の仕入先のみ
+              <User className="h-3.5 w-3.5 text-blue-600" />
+              担当仕入先のみ
             </Label>
           </div>
         </div>
@@ -291,10 +291,10 @@ export function InboundPlansList({
             {row.is_primary_supplier && (
               <Badge
                 variant="outline"
-                className="mt-1 gap-1 border-amber-300 bg-amber-50 text-amber-600"
+                className="mt-1 gap-1 border-blue-300 bg-blue-50 text-blue-600"
               >
-                <Crown className="h-3 w-3" />
-                主担当
+                <User className="h-3 w-3" />
+                担当仕入先
               </Badge>
             )}
           </div>

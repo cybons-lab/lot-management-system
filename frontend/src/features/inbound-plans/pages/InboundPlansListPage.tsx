@@ -3,8 +3,9 @@
  * Inbound plans list page
  */
 
+import { Info } from "lucide-react";
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import {
@@ -15,8 +16,9 @@ import {
 import { useInboundPlans, useDeleteInboundPlan, useSyncFromSAP } from "../hooks";
 
 import { PermanentDeleteDialog } from "@/components/common";
-import { Button } from "@/components/ui";
+import { Alert, AlertDescription, AlertTitle, Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { useMySuppliers } from "@/features/assignments/hooks/useMySuppliers";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -25,13 +27,17 @@ export function InboundPlansListPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // 担当仕入先を取得
+  const { data: mySuppliers } = useMySuppliers();
+  const hasAssignedSuppliers = (mySuppliers?.primary_supplier_ids?.length ?? 0) > 0;
+
   const [filters, setFilters] = useState<InboundPlansFilters>({
     supplier_id: searchParams.get("supplier_id") || "",
     product_group_id: searchParams.get("product_group_id") || "",
     status: (searchParams.get("status") as InboundPlansFilters["status"]) || "",
     date_from: searchParams.get("date_from") || "",
     date_to: searchParams.get("date_to") || "",
-    prioritize_primary: searchParams.get("prioritize_primary") === "true",
+    prioritize_primary: searchParams.get("prioritize_primary") === "true" || hasAssignedSuppliers,
   });
 
   // 削除ダイアログの状態
@@ -106,6 +112,20 @@ export function InboundPlansListPage() {
           </Button>
         }
       />
+
+      {!hasAssignedSuppliers && (
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>担当仕入先が設定されていません</AlertTitle>
+          <AlertDescription>
+            担当する仕入先を設定すると、自動的にフィルタが適用されます。
+            <Link to="/settings/account" className="ml-2 underline">
+              アカウント設定で担当仕入先を設定
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <InboundPlansList
         plans={plans}
         isLoading={isLoading}
