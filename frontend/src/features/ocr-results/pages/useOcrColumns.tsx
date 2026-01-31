@@ -8,8 +8,6 @@ import {
   EditableDateCell,
   EditableShippingSlipCell,
   EditableTextCell,
-  LotInfoCell,
-  LotInfoReadOnlyCell,
   StatusReviewCell,
 } from "./OcrResultsTableCells";
 
@@ -65,21 +63,65 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           minWidth: 120,
         },
         {
-          id: "lot_info",
-          header: (
-            <div className="flex flex-col gap-0.5 leading-tight py-1">
-              <span className="text-xs font-semibold">ロット・入庫番号・数量</span>
-              <div className="grid grid-cols-[2fr_2fr_1fr] gap-2 text-[10px] font-normal text-slate-500">
-                <span>ロットNo</span>
-                <span>入庫No</span>
-                <span className="text-right">数量</span>
-              </div>
-            </div>
-          ),
+          id: "lot_no",
+          header: "ロットNo",
           accessor: (row: OcrResultItem) =>
-            isReadOnly ? <LotInfoReadOnlyCell row={row} /> : <LotInfoCell row={row} />,
-          minWidth: 450,
-          className: "align-top",
+            isReadOnly ? (
+              <div className="flex flex-col gap-1 text-xs">
+                <span>{row.manual_lot_no_1 || row.lot_no || "-"}</span>
+                <span>{row.manual_lot_no_2 || "-"}</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
+                <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
+              </div>
+            ),
+          minWidth: 150,
+        },
+        {
+          id: "inbound_no",
+          header: "入庫No",
+          accessor: (row: OcrResultItem) =>
+            isReadOnly ? (
+              <div className="flex flex-col gap-1 text-xs">
+                <span>{row.manual_inbound_no || row.inbound_no || "-"}</span>
+                <span>{row.manual_inbound_no_2 || "-"}</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
+                <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
+              </div>
+            ),
+          minWidth: 150,
+        },
+        {
+          id: "quantity",
+          header: "数量",
+          accessor: (row: OcrResultItem) =>
+            isReadOnly ? (
+              <div className="flex flex-col gap-1 text-xs text-right">
+                <span>{row.manual_quantity_1 || "-"}</span>
+                <span>{row.manual_quantity_2 || "-"}</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <EditableTextCell
+                  row={row}
+                  field="quantity1"
+                  placeholder="数量(1)"
+                  inputClassName="text-right"
+                />
+                <EditableTextCell
+                  row={row}
+                  field="quantity2"
+                  placeholder="数量(2)"
+                  inputClassName="text-right"
+                />
+              </div>
+            ),
+          minWidth: 100,
         },
         {
           id: "shipping_date_input",
@@ -96,11 +138,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
         },
         {
           id: "shipping_slip_text_input",
-          header: (
-            <div className="flex items-center h-full">
-              <span>出荷票テキスト</span>
-            </div>
-          ),
+          header: "出荷票テキスト",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
               <span className="text-xs whitespace-pre-wrap">
@@ -110,7 +148,6 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
               <EditableShippingSlipCell row={row} />
             ),
           minWidth: 320,
-          className: "align-top",
         },
         {
           id: "shipping_slip_source",
