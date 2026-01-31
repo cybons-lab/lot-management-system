@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Navigate, Route, Routes, Outlet } from "react-router-dom";
 
 import { AccessGuard } from "@/components/auth/AccessGuard";
@@ -44,7 +45,6 @@ import { LotDetailPage } from "@/features/inventory/pages/LotDetailPage";
 import { MovesPage } from "@/features/inventory/pages/MovesPage";
 import { StockHistoryPage } from "@/features/inventory/pages/StockHistoryPage";
 import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPage";
-import { MastersPage } from "@/features/masters/pages/MastersPage";
 import { OcrResultsListPage } from "@/features/ocr-results/pages/OcrResultsListPage";
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
@@ -123,22 +123,100 @@ function InventoryRoutes() {
   );
 }
 
+/* eslint-disable-next-line max-lines-per-function */
 function MasterRoutes() {
   return (
     <Route element={<FeatureGuardLayout feature="masters" />}>
       {/* Masters - Phase G-1 */}
-      <Route path="/masters" element={<MastersPage />} />
-      <Route path={ROUTES.MASTERS.SUPPLIER_PRODUCTS} element={<SupplierProductsPage />} />
-      <Route path="/masters/uom-conversions" element={<UomConversionsPage />} />
-      <Route path={ROUTES.MASTERS.WAREHOUSES} element={<WarehousesListPage />} />
-      <Route path={ROUTES.MASTERS.SUPPLIERS} element={<SuppliersListPage />} />
-      <Route path={ROUTES.MASTERS.CUSTOMERS} element={<CustomersListPage />} />
-      <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
-      <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
-      <Route path={ROUTES.MASTERS.SUPPLIER_ASSIGNMENTS} element={<SupplierAssignmentsPage />} />
-      <Route path={ROUTES.MASTERS.SHIPPING_MASTERS} element={<ShippingMasterListPage />} />
-      <Route path={ROUTES.MASTERS.DELIVERY_PLACES} element={<DeliveryPlacesListPage />} />
-      <Route path="/warehouse-delivery-routes" element={<WarehouseDeliveryRoutesListPage />} />
+      <Route path="/masters" element={<Navigate to={ROUTES.MASTERS.SUPPLIERS} replace />} />
+      <Route
+        path={ROUTES.MASTERS.SUPPLIER_PRODUCTS}
+        element={
+          <FeatureGuard feature="masters:supplier-products">
+            <SupplierProductsPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path="/masters/uom-conversions"
+        element={
+          <FeatureGuard feature="masters:uom-conversions">
+            <UomConversionsPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path={ROUTES.MASTERS.WAREHOUSES}
+        element={
+          <FeatureGuard feature="masters:warehouses">
+            <WarehousesListPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path={ROUTES.MASTERS.SUPPLIERS}
+        element={
+          <FeatureGuard feature="masters:suppliers">
+            <SuppliersListPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path={ROUTES.MASTERS.CUSTOMERS}
+        element={
+          <FeatureGuard feature="masters:customers">
+            <CustomersListPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path={ROUTES.MASTERS.CUSTOMER_ITEMS}
+        element={
+          <FeatureGuard feature="masters:customer-items">
+            <CustomerItemsListPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path={ROUTES.MASTERS.BULK_LOAD}
+        element={
+          <FeatureGuard feature="masters:bulk-load">
+            <MastersBulkLoadPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path={ROUTES.MASTERS.SUPPLIER_ASSIGNMENTS}
+        element={
+          <FeatureGuard feature="masters:supplier-assignments">
+            <SupplierAssignmentsPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path={ROUTES.MASTERS.SHIPPING_MASTERS}
+        element={
+          <FeatureGuard feature="masters:shipping-masters">
+            <ShippingMasterListPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path={ROUTES.MASTERS.DELIVERY_PLACES}
+        element={
+          <FeatureGuard feature="masters:delivery-places">
+            <DeliveryPlacesListPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path="/warehouse-delivery-routes"
+        element={
+          <FeatureGuard feature="masters:warehouse-delivery-routes">
+            <WarehouseDeliveryRoutesListPage />
+          </FeatureGuard>
+        }
+      />
 
       {/* Settings - Phase G-2 (Admin Only) */}
       <Route

@@ -63,11 +63,11 @@ export function validateRouteDefinitions(actualPaths: string[]): ValidationResul
       continue;
     }
 
-    // パラメータ化ルートとのマッチングチェック
+    // パラメータ化/ワイルドカードルートとのマッチングチェック
     let matched = false;
     for (const definedPath of definedPaths) {
-      if (definedPath.includes(":")) {
-        const pattern = definedPath.replace(/:[^/]+/g, "[^/]+");
+      if (definedPath.includes(":") || definedPath.includes("*")) {
+        const pattern = definedPath.replace(/:[^/]+/g, "[^/]+").replace(/\*/g, ".*");
         const regex = new RegExp(`^${pattern}$`);
         if (regex.test(actualPath)) {
           usedDefinitions.add(definedPath);
