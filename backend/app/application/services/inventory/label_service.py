@@ -74,7 +74,7 @@ class LabelService:
                     created_at=lot_entity.created_at,
                     updated_at=lot_entity.updated_at,
                     last_updated=lot_entity.updated_at,
-                    is_primary_supplier=False,
+                    is_assigned_supplier=False,
                 )
                 label_lots.append(lot_res)
 

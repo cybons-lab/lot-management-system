@@ -66,7 +66,7 @@ export const FEATURE_CONFIG: Record<string, FeatureDefinition> = {
       { id: "customer-items", label: "得意先品目マスタ" },
       { id: "uom-conversions", label: "単位変換マスタ" },
       { id: "shipping-masters", label: "出荷元マスタ" },
-      { id: "primary-assignments", label: "優先割当マスタ" },
+      { id: "supplier-assignments", label: "担当仕入先割当" },
       { id: "bulk-load", label: "一括登録" },
       { id: "delivery-places", label: "納品先マスタ" },
       { id: "warehouse-delivery-routes", label: "倉庫配送ルートマスタ" },

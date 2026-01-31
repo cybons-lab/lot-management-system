@@ -16,7 +16,7 @@ v2.2: lot_current_stock 依存を削除。Lot モデルを直接使用。
    - 引当候補ロジックが1箇所に集中 → 変更時の影響範囲を限定
    - FEFO/FIFO の切り替えが容易
 
-2. なぜ primary_supplier_ids で優先ソートするのか（L220-236）
+2. なぜ assigned_supplier_ids で優先ソートするのか（L220-236）
    理由: 営業担当者の業務効率化
    業務的背景:
    - 営業担当者: 自分の担当サプライヤーのロットを優先的に確認
@@ -407,7 +407,7 @@ class LotService:
         expiry_to: date | None = None,
         with_stock: bool = True,
         status: str | None = None,
-        primary_supplier_ids: list[int] | None = None,
+        assigned_supplier_ids: list[int] | None = None,
     ) -> list[LotResponse]:
         """List lots using VLotDetails view.
 
@@ -419,12 +419,11 @@ class LotService:
             supplier_code: 仕入先コード
             warehouse_id: 倉庫ID
             warehouse_code: 倉庫コード
-            warehouse_code: 倉庫コード
             expiry_from: 有効期限開始日
             expiry_to: 有効期限終了日
             with_stock: 在庫ありのみ取得するかどうか
             status: ロットステータス（'active', 'expired', 'depleted' 等）
-            primary_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
+            assigned_supplier_ids: 担当仕入先IDリスト。指定された場合、これらを優先表示。
 
         Returns:
             LotResponseのリスト
@@ -465,10 +464,10 @@ class LotService:
         if status:
             query = query.filter(VLotDetails.status == status)
 
-        # ソート: 主担当優先 → 製品コード → 仕入先 → 有効期限(FEFO)
-        if primary_supplier_ids:
+        # ソート: 担当仕入先優先 → 製品コード → 仕入先 → 有効期限(FEFO)
+        if assigned_supplier_ids:
             priority_case = case(
-                (VLotDetails.supplier_id.in_(primary_supplier_ids), 0),
+                (VLotDetails.supplier_id.in_(assigned_supplier_ids), 0),
                 else_=1,
             )
             query = query.order_by(
@@ -514,8 +513,8 @@ class LotService:
                 status=LotStatus(lot_view.status) if lot_view.status else LotStatus.ACTIVE,
                 created_at=lot_view.created_at,
                 updated_at=lot_view.updated_at,
-                is_primary_supplier=bool(
-                    primary_supplier_ids and lot_view.supplier_id in primary_supplier_ids
+                is_assigned_supplier=bool(
+                    assigned_supplier_ids and lot_view.supplier_id in assigned_supplier_ids
                 ),
                 # Phase 2 Mapping
                 maker_part_no=lot_view.supplier_maker_part_no,
@@ -640,7 +639,7 @@ class LotService:
                 status=LotStatus(lot_view.status) if lot_view.status else LotStatus.ACTIVE,
                 created_at=lot_view.created_at,
                 updated_at=lot_view.updated_at,
-                is_primary_supplier=False,  # View doesn't have is_primary flag for current user easily
+                is_assigned_supplier=False,  # View doesn't have is_primary flag for current user easily
                 # Phase 1 Fields
                 origin_type=LotOriginType(lot_view.origin_type)
                 if lot_view.origin_type

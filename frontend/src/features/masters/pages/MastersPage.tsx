@@ -86,9 +86,9 @@ const masterSections: MasterSection[] = [
         color: "bg-purple-50 text-purple-600 hover:bg-purple-100",
       },
       {
-        title: "仕入先担当設定",
-        description: "仕入先ごとの主担当者を設定",
-        href: ROUTES.MASTERS.PRIMARY_ASSIGNMENTS,
+        title: "仕入先担当管理",
+        description: "仕入先ごとの担当者を設定",
+        href: ROUTES.MASTERS.SUPPLIER_ASSIGNMENTS,
         icon: UserCheck,
         color: "bg-amber-50 text-amber-600 hover:bg-amber-100",
       },
@@ -207,13 +207,13 @@ function MasterStatusAlert() {
   const hasUnmappedCustomerItems = status.unmapped_customer_items_count > 0;
   const hasUnmappedProducts = status.unmapped_products_count > 0;
   const hasUnmappedDeliverySettings = status.unmapped_customer_item_delivery_settings_count > 0;
-  const isMissingPrimaryAssignments = !status.current_user_has_primary_assignments;
+  const isMissingAssignments = !status.current_user_has_assignments;
 
   if (
     !hasUnmappedCustomerItems &&
     !hasUnmappedProducts &&
     !hasUnmappedDeliverySettings &&
-    !isMissingPrimaryAssignments
+    !isMissingAssignments
   )
     return null;
 
@@ -267,17 +267,17 @@ function MasterStatusAlert() {
           </AlertDescription>
         </Alert>
       )}
-      {isMissingPrimaryAssignments && (
+      {isMissingAssignments && (
         <Alert className="border-blue-200 bg-blue-50 text-blue-900">
           <AlertCircle className="h-4 w-4 text-blue-900" />
-          <AlertTitle>お知らせ: 主担当が設定されていません</AlertTitle>
+          <AlertTitle>お知らせ: 担当仕入先が設定されていません</AlertTitle>
           <AlertDescription>
-            あなたの主担当仕入先が設定されていません。業務を円滑に進めるため、設定を行ってください。
+            あなたの担当仕入先が設定されていません。業務を円滑に進めるため、設定を行ってください。
             <Link
-              to={ROUTES.MASTERS.PRIMARY_ASSIGNMENTS}
+              to={ROUTES.MASTERS.SUPPLIER_ASSIGNMENTS}
               className="ml-1 font-medium underline hover:text-blue-950"
             >
-              仕入先担当設定を確認
+              仕入先担当管理を確認
             </Link>
           </AlertDescription>
         </Alert>

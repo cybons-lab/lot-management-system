@@ -38,13 +38,12 @@ export function AdhocLotCreatePage() {
   const { data: suppliers = [], isLoading: isLoadingSuppliers } = useSupplierList();
 
   // 仕入先のフィルタリングロジック
-  // ユーザーに主担当(is_primary=true)の仕入先がある場合、それに絞り込む
-  const primaryAssignmentIds =
-    user?.assignments?.filter((a) => a.is_primary).map((a) => a.supplier_id) || [];
+  // ユーザーに割り当てられた仕入先がある場合、それに絞り込む
+  const assignedSupplierIds = user?.assignments?.map((a) => a.supplier_id) || [];
 
   const filteredSuppliers =
-    primaryAssignmentIds.length > 0
-      ? suppliers.filter((s) => primaryAssignmentIds.includes(s.id))
+    assignedSupplierIds.length > 0
+      ? suppliers.filter((s) => assignedSupplierIds.includes(s.id))
       : suppliers;
 
   // ロット作成Mutation

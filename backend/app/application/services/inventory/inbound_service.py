@@ -2,11 +2,11 @@
 
 【設計意図】入荷計画サービスの設計判断:
 
-1. 主担当仕入先の優先表示（L86-93）
+1. 担当仕入先の優先表示（L86-93）
    理由: ユーザーの業務フローに合わせた表示順
    → 営業担当者は、自分が主担当の仕入先を優先的に確認したい
    実装:
-   - primary_supplier_ids が指定された場合、SQL の CASE式で優先度をつける
+   - assigned_supplier_ids が指定された場合、SQL の CASE式で優先度をつける
    - case((supplier_id IN (...), 0), else_=1) → 主担当は0、それ以外は1
    - ORDER BY priority_case ASC → 0が先に表示される
    → その後、入荷予定日の降順でソート
@@ -67,7 +67,7 @@ class InboundService:
         supplier_id: int | None = None,
         product_group_id: int | None = None,
         status: str | None = None,
-        primary_supplier_ids: list[int] | None = None,
+        assigned_supplier_ids: list[int] | None = None,
     ) -> tuple[list[InboundPlan], int]:
         """Get inbound plans with optional filtering.
 
@@ -77,7 +77,7 @@ class InboundService:
             supplier_id: Filter by supplier ID
             product_group_id: Filter by product ID
             status: Filter by status (planned/partially_received/received/cancelled)
-            primary_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
+            assigned_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
 
         Returns:
             Tuple of (list of inbound plans, total count)
@@ -119,11 +119,11 @@ class InboundService:
             count_query = count_query.filter(InboundPlan.status == status)
         total = count_query.count()
 
-        # ソート: 主担当優先 → 入荷予定日
+        # ソート: 担当仕入先優先 → 入荷予定日
         # 【設計】CASE式で主担当仕入先を優先表示（priority_case=0が先頭）
-        if primary_supplier_ids:
+        if assigned_supplier_ids:
             priority_case = case(
-                (InboundPlan.supplier_id.in_(primary_supplier_ids), 0),
+                (InboundPlan.supplier_id.in_(assigned_supplier_ids), 0),
                 else_=1,
             )
             query = query.order_by(priority_case, InboundPlan.planned_arrival_date.desc())

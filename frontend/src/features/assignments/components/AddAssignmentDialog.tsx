@@ -13,7 +13,6 @@ import { useAssignmentMutations } from "../hooks/useAssignments";
 
 import {
   Button,
-  Checkbox,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -43,7 +42,6 @@ interface AddAssignmentDialogProps {
 interface FormValues {
   userId: string;
   supplierId: string;
-  isPrimary: boolean;
 }
 
 // ダイアログのフォームとUIを一箇所にまとめるため分割しない
@@ -59,7 +57,6 @@ export function AddAssignmentDialog({ trigger, onSuccess }: AddAssignmentDialogP
     defaultValues: {
       userId: "",
       supplierId: "",
-      isPrimary: false,
     },
   });
 
@@ -68,7 +65,7 @@ export function AddAssignmentDialog({ trigger, onSuccess }: AddAssignmentDialogP
       await createAssignment({
         user_id: Number(data.userId),
         supplier_id: Number(data.supplierId),
-        is_primary: data.isPrimary,
+        is_primary: false,
       });
       setOpen(false);
       form.reset();
@@ -144,24 +141,6 @@ export function AddAssignmentDialog({ trigger, onSuccess }: AddAssignmentDialogP
                     </SelectContent>
                   </Select>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isPrimary"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>主担当として設定</FormLabel>
-                    <p className="text-muted-foreground text-sm">
-                      この仕入先の主担当者として設定します（既存の主担当者は解除されます）
-                    </p>
-                  </div>
                 </FormItem>
               )}
             />

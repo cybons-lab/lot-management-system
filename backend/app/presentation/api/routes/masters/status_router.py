@@ -53,12 +53,11 @@ def get_master_status(
         .scalar()
     )
 
-    # 4. Current User Primary Assignment Check
-    current_user_has_primary_assignments = (
+    # 4. Current User Assignment Check
+    current_user_has_assignments = (
         db.query(UserSupplierAssignment)
         .filter(
             UserSupplierAssignment.user_id == current_user.id,
-            UserSupplierAssignment.is_primary.is_(True),
         )
         .first()
         is not None
@@ -68,5 +67,5 @@ def get_master_status(
         "unmapped_customer_items_count": unmapped_customer_items_count,
         "unmapped_products_count": unmapped_products_count,
         "unmapped_customer_item_delivery_settings_count": unmapped_customer_item_delivery_settings_count,
-        "current_user_has_primary_assignments": current_user_has_primary_assignments,
+        "current_user_has_assignments": current_user_has_assignments,
     }

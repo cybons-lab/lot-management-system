@@ -7,6 +7,13 @@ type UserSupplierAssignmentUpdate = components["schemas"]["UserSupplierAssignmen
 type UserSupplierAssignmentResponse = components["schemas"]["UserSupplierAssignmentResponse"];
 
 /**
+ * 全ての担当割り当てを取得
+ */
+export async function getAssignments(): Promise<UserSupplierAssignmentResponse[]> {
+  return fetchApi.get<UserSupplierAssignmentResponse[]>("assignments");
+}
+
+/**
  * ユーザーの担当仕入先一覧を取得
  */
 export async function getUserSuppliers(userId: number): Promise<UserSupplierAssignmentResponse[]> {
@@ -46,16 +53,4 @@ export async function updateAssignment(
  */
 export async function deleteAssignment(assignmentId: number): Promise<void> {
   return fetchApi.delete(`assignments/${assignmentId}`);
-}
-
-/**
- * 仕入先の主担当者を設定
- */
-export async function setPrimaryUser(
-  supplierId: number,
-  userId: number,
-): Promise<UserSupplierAssignmentResponse> {
-  return fetchApi.post<UserSupplierAssignmentResponse>(
-    `assignments/supplier/${supplierId}/set-primary/${userId}`,
-  );
 }

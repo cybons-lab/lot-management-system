@@ -1,7 +1,5 @@
 """User-Supplier assignment service."""
 
-from typing import cast
-
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -52,16 +50,13 @@ class UserSupplierAssignmentService(
         result = self.db.execute(stmt)
         return list(result.unique().scalars().all())
 
-    def get_primary_supplier_ids(self, user_id: int) -> list[int]:
-        """Get list of primary supplier IDs for a user.
+    def get_assigned_supplier_ids(self, user_id: int) -> list[int]:
+        """Get list of assigned supplier IDs for a user.
 
-        Returns the supplier_id for each assignment where
-        is_primary=True. Used for primary supplier priority sorting in
-        lists.
+        Used for supplier priority sorting in lists.
         """
         stmt = select(UserSupplierAssignment.supplier_id).where(
             UserSupplierAssignment.user_id == user_id,
-            UserSupplierAssignment.is_primary.is_(True),
         )
         result = self.db.execute(stmt)
         return list(result.scalars().all())
@@ -101,43 +96,3 @@ class UserSupplierAssignmentService(
     def delete_assignment(self, assignment_id: int) -> None:
         """Delete an assignment."""
         self.delete(assignment_id)
-
-    def set_primary_assignment(self, user_id: int, supplier_id: int) -> UserSupplierAssignment:
-        """Set a user as the primary contact for a supplier.
-
-        This will:
-        1. Remove primary flag from any existing primary user for this supplier
-        2. Create or update the assignment for this user to be primary
-        """
-        # Remove existing primary for this supplier
-        stmt = select(UserSupplierAssignment).where(
-            UserSupplierAssignment.supplier_id == supplier_id,
-            UserSupplierAssignment.is_primary.is_(True),
-        )
-        existing_primary = cast(
-            UserSupplierAssignment | None, self.db.execute(stmt).scalar_one_or_none()
-        )
-
-        if existing_primary:
-            existing_primary.is_primary = False
-
-        # Find or create assignment for this user
-        stmt = select(UserSupplierAssignment).where(
-            UserSupplierAssignment.user_id == user_id,
-            UserSupplierAssignment.supplier_id == supplier_id,
-        )
-        assignment = cast(UserSupplierAssignment | None, self.db.execute(stmt).scalar_one_or_none())
-
-        if assignment:
-            assignment.is_primary = True
-        else:
-            assignment = UserSupplierAssignment(
-                user_id=user_id,
-                supplier_id=supplier_id,
-                is_primary=True,
-            )
-            self.db.add(assignment)
-
-        self.db.commit()
-        self.db.refresh(assignment)
-        return assignment

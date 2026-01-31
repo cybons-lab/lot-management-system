@@ -16,9 +16,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { Button, Checkbox, Label } from "@/components/ui";
+import { Button, Label } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { ROUTES } from "@/constants/routes";
+import {
+  SupplierAssignmentWarning,
+  SupplierFilterCheckbox,
+} from "@/features/assignments/components";
+import { useSupplierFilter } from "@/features/assignments/hooks";
 import { InventoryByProductTable } from "@/features/inventory/components/InventoryByProductTable";
 import { InventoryBySupplierTable } from "@/features/inventory/components/InventoryBySupplierTable";
 import { InventoryByWarehouseTable } from "@/features/inventory/components/InventoryByWarehouseTable";
@@ -42,6 +47,9 @@ export function InventoryPage() {
   // Refresh loading state
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // 担当仕入先フィルターロジック（共通フック）
+  const { filterEnabled, toggleFilter } = useSupplierFilter();
+
   // Page state (Jotai atom - persisted in sessionStorage)
   const {
     overviewMode,
@@ -56,6 +64,11 @@ export function InventoryPage() {
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+
+  // 共通フックのfilterEnabledとfiltersのassigned_staff_onlyを同期
+  useEffect(() => {
+    updateFilter("assigned_staff_only", filterEnabled);
+  }, [filterEnabled, updateFilter]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -80,25 +93,17 @@ export function InventoryPage() {
   const warehouseQuery = useInventoryByWarehouse();
   const productQuery = useInventoryByProduct();
 
-  // Stats (removed - KPI cards no longer displayed)
-
   // Mutual filtering with auto-selection
   const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
     product_group_id: filters.product_group_id || undefined,
     supplier_id: filters.supplier_id || undefined,
     warehouse_id: filters.warehouse_id || undefined,
     tab: filters.tab,
-    primary_staff_only: filters.primary_staff_only,
+    assigned_staff_only: filters.assigned_staff_only,
     mode: filters.candidate_mode,
     onAutoSelectSupplier: (id) => updateFilter("supplier_id", id),
     onAutoSelectProduct: (id) => updateFilter("product_group_id", id),
   });
-
-  // Note: Auto-clearing of invalid filters is NOT needed here because:
-  // 1. The filter-options API endpoint only returns valid combinations
-  // 2. SearchableSelect prevents selecting invalid options
-  // 3. Auto-selection in useFilterOptions handles single-option cases
-  // So filters naturally stay valid without explicit clearing logic
 
   useEffect(() => {
     if (filters.candidate_mode === "stock" && filters.tab === "no_stock") {
@@ -111,11 +116,11 @@ export function InventoryPage() {
     if (filters.supplier_id) {
       data = data.filter((row) => row.supplier_id === Number(filters.supplier_id));
     }
-    if (filters.primary_staff_only) {
-      data = data.filter((row) => row.is_primary_supplier);
+    if (filters.assigned_staff_only) {
+      data = data.filter((row) => row.is_assigned_supplier);
     }
     return data;
-  }, [supplierQuery.data, filters.supplier_id, filters.primary_staff_only]);
+  }, [supplierQuery.data, filters.supplier_id, filters.assigned_staff_only]);
 
   const filteredWarehouseData = useMemo(() => {
     let data = warehouseQuery.data || [];
@@ -138,7 +143,7 @@ export function InventoryPage() {
   const showSupplierFilter = overviewMode === "items" || overviewMode === "supplier";
   const showWarehouseFilter = overviewMode === "items" || overviewMode === "warehouse";
   const showProductFilter = overviewMode === "items" || overviewMode === "product";
-  const showPrimaryStaffOnly = overviewMode === "items" || overviewMode === "supplier";
+  const showAssignedStaffOnly = overviewMode === "items" || overviewMode === "supplier";
 
   const handleFilterChange = <K extends keyof typeof filters>(
     key: K,
@@ -208,6 +213,9 @@ export function InventoryPage() {
       />
 
       <div className="space-y-6">
+        {/* 担当仕入先未設定警告 */}
+        <SupplierAssignmentWarning />
+
         {/* View Mode Switcher & Actions */}
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
@@ -323,22 +331,8 @@ export function InventoryPage() {
                   </span>
                 </div>
 
-                {showPrimaryStaffOnly && (
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="primary_staff_only"
-                      checked={filters.primary_staff_only}
-                      onCheckedChange={(checked) =>
-                        handleFilterChange("primary_staff_only", !!checked)
-                      }
-                    />
-                    <Label
-                      htmlFor="primary_staff_only"
-                      className="cursor-pointer text-sm font-medium"
-                    >
-                      主担当の仕入先のみ
-                    </Label>
-                  </div>
+                {showAssignedStaffOnly && (
+                  <SupplierFilterCheckbox enabled={filterEnabled} onToggle={toggleFilter} />
                 )}
               </div>
               {filters.candidate_mode === "master" && (

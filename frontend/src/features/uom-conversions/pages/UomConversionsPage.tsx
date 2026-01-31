@@ -9,6 +9,8 @@ import { UomConversionsPageHeader } from "../components/UomConversionsPageHeader
 import { UomConversionsTable } from "../components/UomConversionsTable";
 import { useUomConversionsPageState } from "../hooks";
 
+import { SupplierAssignmentWarning } from "@/features/assignments/components";
+
 export function UomConversionsPage() {
   const state = useUomConversionsPageState();
 
@@ -16,6 +18,9 @@ export function UomConversionsPage() {
 
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
+      {/* 担当仕入先未設定警告 */}
+      <SupplierAssignmentWarning />
+
       <UomConversionsPageHeader
         onImportClick={state.openImportDialog}
         onCreateClick={state.openCreateDialog}

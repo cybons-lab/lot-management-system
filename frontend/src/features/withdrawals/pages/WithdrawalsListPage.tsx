@@ -22,6 +22,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Table,
   TableBody,
   TableCell,
@@ -29,14 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui";
-import {
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui";
+import { SupplierAssignmentWarning } from "@/features/assignments/components";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 const PAGE_SIZE = 20;
@@ -123,6 +122,9 @@ export function WithdrawalsListPage() {
           </Button>
         </div>
       </div>
+
+      {/* 担当仕入先未設定警告 */}
+      <SupplierAssignmentWarning className="mb-6" />
 
       {/* Filters */}
       <Card className="mb-6">

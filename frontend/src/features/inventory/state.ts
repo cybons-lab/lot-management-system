@@ -191,7 +191,7 @@ export interface InventoryItemFilters {
   warehouse_id: string;
   supplier_id: string;
   tab: InventoryTab;
-  primary_staff_only: boolean;
+  assigned_staff_only: boolean;
   candidate_mode: "stock" | "master";
 }
 
@@ -211,7 +211,7 @@ export const inventoryPageStateAtom = atomWithStorage<{
       warehouse_id: "",
       supplier_id: "",
       tab: "all",
-      primary_staff_only: false,
+      assigned_staff_only: false,
       candidate_mode: "stock",
     },
   },
@@ -233,6 +233,6 @@ export const inventoryPageQueryParamsAtom = atom((get) => {
     warehouse_id: filters.warehouse_id ? Number(filters.warehouse_id) : undefined,
     supplier_id: filters.supplier_id ? Number(filters.supplier_id) : undefined,
     tab: filters.tab,
-    primary_staff_only: filters.primary_staff_only,
+    assigned_staff_only: filters.assigned_staff_only,
   };
 });

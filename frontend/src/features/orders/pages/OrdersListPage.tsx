@@ -10,6 +10,7 @@ import { Plus, RefreshCw, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Badge, Button } from "@/components/ui";
+import { SupplierAssignmentWarning } from "@/features/assignments/components";
 import { ErrorState } from "@/features/inventory/components/ErrorState";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
 import { OrdersFilters } from "@/features/orders/components/OrdersFilters";
@@ -64,7 +65,13 @@ export function OrdersListPage() {
       />
 
       <div className="space-y-6">
-        <OrdersFilters filters={logic.filters} />
+        <OrdersFilters
+          filters={logic.filters}
+          filterEnabled={logic.filterEnabled}
+          onToggleFilter={logic.toggleFilter}
+        />
+
+        <SupplierAssignmentWarning />
 
         <ErrorState error={logic.error} onRetry={logic.refetch} />
 

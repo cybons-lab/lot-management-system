@@ -2,11 +2,10 @@
  * SupplierAssignmentEditDialog.tsx
  *
  * 仕入先ごとの担当者を編集するダイアログ
- * - 主担当者の変更
  * - 担当者の削除
  */
 
-import { Crown, Trash2, User } from "lucide-react";
+import { Trash2, User } from "lucide-react";
 import { useState } from "react";
 
 import { useAssignmentMutations } from "../hooks/useAssignments";
@@ -27,7 +26,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  Badge,
 } from "@/components/ui";
 
 interface SupplierAssignmentEditDialogProps {
@@ -43,18 +41,8 @@ export function SupplierAssignmentEditDialog({
   open,
   onOpenChange,
 }: SupplierAssignmentEditDialogProps) {
-  const { setPrimaryUser, deleteAssignment, isSettingPrimary, isDeleting } =
-    useAssignmentMutations();
+  const { deleteAssignment, isDeleting } = useAssignmentMutations();
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
-
-  const handleSetPrimary = async (userId: number) => {
-    try {
-      await setPrimaryUser({ supplierId: group.supplier_id, userId });
-      onOpenChange(false);
-    } catch {
-      // Error handled in mutation hook
-    }
-  };
 
   const handleDelete = async () => {
     if (deleteTarget === null) return;
@@ -66,7 +54,7 @@ export function SupplierAssignmentEditDialog({
     }
   };
 
-  const isPending = isSettingPrimary || isDeleting;
+  const isPending = isDeleting;
 
   return (
     <>
@@ -76,7 +64,7 @@ export function SupplierAssignmentEditDialog({
             <DialogTitle>
               {group.supplier_name} ({group.supplier_code}) の担当者編集
             </DialogTitle>
-            <DialogDescription>主担当者の変更や担当者の削除を行えます</DialogDescription>
+            <DialogDescription>担当者の削除を行えます</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 py-4">
@@ -89,30 +77,10 @@ export function SupplierAssignmentEditDialog({
                   className="flex items-center justify-between rounded-lg border p-3"
                 >
                   <div className="flex items-center gap-2">
-                    {assignment.is_primary ? (
-                      <Crown className="h-4 w-4 text-amber-500" />
-                    ) : (
-                      <User className="h-4 w-4 text-gray-400" />
-                    )}
+                    <User className="h-4 w-4 text-gray-400" />
                     <span className="font-medium">{assignment.display_name}</span>
-                    {assignment.is_primary && (
-                      <Badge variant="secondary" className="text-xs">
-                        主担当
-                      </Badge>
-                    )}
                   </div>
                   <div className="flex gap-2">
-                    {!assignment.is_primary && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleSetPrimary(assignment.user_id)}
-                        disabled={isPending}
-                      >
-                        <Crown className="mr-1 h-3 w-3" />
-                        主担当に設定
-                      </Button>
-                    )}
                     <Button
                       size="sm"
                       variant="ghost"

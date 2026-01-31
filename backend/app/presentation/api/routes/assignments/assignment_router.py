@@ -22,8 +22,8 @@ class MySuppliersResponse(BaseModel):
     """現在のユーザーの担当仕入先ID一覧."""
 
     user_id: int
-    primary_supplier_ids: list[int]
     all_supplier_ids: list[int]
+    assigned_supplier_ids: list[int] | None = None  # Deprecated: use all_supplier_ids
 
 
 @router.get("/my-suppliers", response_model=MySuppliersResponse)
@@ -33,15 +33,13 @@ def get_my_suppliers(
 ) -> MySuppliersResponse:
     """現在ログイン中のユーザーの担当仕入先ID一覧を取得."""
     service = UserSupplierAssignmentService(db)
-    assignments = service.get_user_suppliers(current_user.id)
-
-    primary_ids = [a.supplier_id for a in assignments if a.is_primary]
-    all_ids = [a.supplier_id for a in assignments]
+    # Get all assigned supplier IDs (concept of primary is phasing out)
+    assigned_ids = service.get_assigned_supplier_ids(current_user.id)
 
     return MySuppliersResponse(
         user_id=current_user.id,
-        primary_supplier_ids=primary_ids,
-        all_supplier_ids=all_ids,
+        all_supplier_ids=assigned_ids,
+        assigned_supplier_ids=assigned_ids,  # For backwards compatibility with FE
     )
 
 
@@ -153,7 +151,7 @@ def update_assignment(
     data: UserSupplierAssignmentUpdate,
     db: Session = Depends(get_db),
 ) -> UserSupplierAssignmentResponse:
-    """担当割り当てを更新（主担当の変更など）."""
+    """担当割り当てを更新."""
     service = UserSupplierAssignmentService(db)
     try:
         assignment = service.update_assignment(assignment_id, data)
@@ -186,33 +184,6 @@ def delete_assignment(
         return {"message": "Assignment deleted successfully"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
-    except Exception as e:
-        from app.domain.order import OrderValidationError
-
-        raise OrderValidationError(str(e)) from e
-
-
-@router.post(
-    "/supplier/{supplier_id}/set-primary/{user_id}", response_model=UserSupplierAssignmentResponse
-)
-def set_primary_user(
-    supplier_id: int,
-    user_id: int,
-    db: Session = Depends(get_db),
-) -> UserSupplierAssignmentResponse:
-    """仕入先の主担当者を設定."""
-    service = UserSupplierAssignmentService(db)
-    try:
-        assignment = service.set_primary_assignment(user_id, supplier_id)
-        return UserSupplierAssignmentResponse(
-            id=assignment.id,
-            user_id=assignment.user_id,
-            supplier_id=assignment.supplier_id,
-            is_primary=assignment.is_primary,
-            assigned_at=assignment.assigned_at,
-            created_at=assignment.created_at,
-            updated_at=assignment.updated_at,
-        )
     except Exception as e:
         from app.domain.order import OrderValidationError
 

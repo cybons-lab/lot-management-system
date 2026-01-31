@@ -87,17 +87,17 @@ export function AccessGuard({ children, roles, routeKey, fallbackPath }: AccessG
 
   // 現在のユーザーロール（未ログイン = ["guest"]）
   const currentRoles = normalizeUserRoles(user?.roles);
-
-  // 許可ロールの決定
   const { allowedRoles } = resolvePermission(roles, routeKey, location.pathname);
 
   // 権限チェック（空配列 = 誰もアクセス不可）
   const isAllowed =
-    allowedRoles.length > 0 && allowedRoles.some((role) => currentRoles.includes(role));
+    allowedRoles &&
+    allowedRoles.length > 0 &&
+    allowedRoles.some((role) => currentRoles.includes(role));
 
   if (!isAllowed) {
     // 未ログインでguestが許可されていない → ログインへ（returnTo付き）
-    if (!user && !allowedRoles.includes("guest")) {
+    if (!user && !allowedRoles?.includes("guest")) {
       const returnTo = encodeURIComponent(`${location.pathname}${location.search}`);
       return <Navigate to={`/login?returnTo=${returnTo}`} replace state={{ from: location }} />;
     }

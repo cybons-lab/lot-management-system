@@ -3,7 +3,7 @@
  * Inbound plans list page
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -17,6 +17,8 @@ import { useInboundPlans, useDeleteInboundPlan, useSyncFromSAP } from "../hooks"
 import { PermanentDeleteDialog } from "@/components/common";
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { SupplierAssignmentWarning } from "@/features/assignments/components";
+import { useSupplierFilter } from "@/features/assignments/hooks";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -25,17 +27,25 @@ export function InboundPlansListPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // 担当仕入先フィルターロジック（共通フック）
+  const { filterEnabled, toggleFilter } = useSupplierFilter();
+
   const [filters, setFilters] = useState<InboundPlansFilters>({
     supplier_id: searchParams.get("supplier_id") || "",
     product_group_id: searchParams.get("product_group_id") || "",
     status: (searchParams.get("status") as InboundPlansFilters["status"]) || "",
     date_from: searchParams.get("date_from") || "",
     date_to: searchParams.get("date_to") || "",
-    prioritize_primary: searchParams.get("prioritize_primary") === "true",
+    prioritize_assigned: searchParams.get("prioritize_assigned") === "true" || filterEnabled,
   });
 
   // 削除ダイアログの状態
   const [deletingItem, setDeletingItem] = useState<InboundPlan | null>(null);
+
+  // 共通フックのfilterEnabledとfiltersのprioritize_assignedを同期
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, prioritize_assigned: filterEnabled }));
+  }, [filterEnabled]);
 
   // Build query params
   const queryParams = {
@@ -44,7 +54,7 @@ export function InboundPlansListPage() {
     status: filters.status || undefined,
     date_from: filters.date_from || undefined,
     date_to: filters.date_to || undefined,
-    prioritize_primary: filters.prioritize_primary || undefined,
+    prioritize_assigned: filters.prioritize_assigned || undefined,
   };
 
   // Fetch inbound plans
@@ -106,6 +116,9 @@ export function InboundPlansListPage() {
           </Button>
         }
       />
+
+      <SupplierAssignmentWarning />
+
       <InboundPlansList
         plans={plans}
         isLoading={isLoading}
@@ -115,6 +128,8 @@ export function InboundPlansListPage() {
         onDelete={handleDeleteClick}
         onViewDetail={handleViewDetail}
         isDeleting={deleteMutation.isPending}
+        filterEnabled={filterEnabled}
+        onToggleFilter={toggleFilter}
       />
 
       <PermanentDeleteDialog

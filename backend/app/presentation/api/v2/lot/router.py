@@ -56,17 +56,16 @@ async def list_lots(
     expiry_to: date | None = None,
     with_stock: bool = True,
     status: str | None = None,
-    prioritize_primary: bool = True,
+    prioritize_assigned: bool = True,
     current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     service = LotService(db)
 
-    primary_supplier_ids: list[int] | None = None
-    if prioritize_primary and current_user:
+    assigned_supplier_ids: list[int] | None = None
+    if prioritize_assigned and current_user:
         assignment_service = UserSupplierAssignmentService(db)
-        assignments = assignment_service.get_user_suppliers(current_user.id)
-        primary_supplier_ids = [a.supplier_id for a in assignments if a.is_primary]
+        assigned_supplier_ids = assignment_service.get_assigned_supplier_ids(current_user.id)
 
     return service.list_lots(
         skip=skip,
@@ -80,7 +79,7 @@ async def list_lots(
         expiry_to=expiry_to,
         with_stock=with_stock,
         status=status,
-        primary_supplier_ids=primary_supplier_ids,
+        assigned_supplier_ids=assigned_supplier_ids,
     )
 
 

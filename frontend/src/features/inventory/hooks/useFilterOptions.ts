@@ -11,7 +11,7 @@ interface UseFilterOptionsParams {
   supplier_id?: string;
   warehouse_id?: string;
   tab?: string;
-  primary_staff_only?: boolean;
+  assigned_staff_only?: boolean;
   mode?: "stock" | "master";
   onAutoSelectSupplier?: (supplierId: string) => void;
   onAutoSelectProduct?: (productId: string) => void;
@@ -22,7 +22,7 @@ export function useFilterOptions({
   supplier_id,
   warehouse_id,
   tab,
-  primary_staff_only,
+  assigned_staff_only,
   mode = "stock",
   onAutoSelectSupplier,
   onAutoSelectProduct,
@@ -34,7 +34,7 @@ export function useFilterOptions({
       supplier_id,
       warehouse_id,
       tab,
-      primary_staff_only,
+      assigned_staff_only,
       mode,
     ],
     queryFn: () =>
@@ -43,7 +43,7 @@ export function useFilterOptions({
         supplier_id: supplier_id ? Number(supplier_id) : undefined,
         warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
         tab,
-        primary_staff_only,
+        assigned_staff_only,
         mode,
       }),
     staleTime: 30000, // 30秒間キャッシュ

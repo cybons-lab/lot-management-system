@@ -2,12 +2,11 @@
  * InventoryBySupplierTable - Aggregated inventory by supplier.
  * Refactored to use DataTable component.
  */
-import { Crown } from "lucide-react";
 import { useMemo } from "react";
 
 import type { InventoryBySupplierResponse } from "../api";
 
-import { Badge, Button } from "@/components/ui";
+import { Button } from "@/components/ui";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
 import { fmt } from "@/shared/utils/number";
@@ -42,15 +41,6 @@ export function InventoryBySupplierTable({
         cell: (row) => (
           <div className="flex items-center gap-2">
             <span className="whitespace-nowrap">{row.supplier_name}</span>
-            {row.is_primary_supplier && (
-              <Badge
-                variant="outline"
-                className="shrink-0 gap-1 border-amber-300 bg-amber-50 px-1 py-0 text-[10px] text-amber-600"
-              >
-                <Crown className="h-3 w-3" />
-                主担当
-              </Badge>
-            )}
           </div>
         ),
         width: 250,

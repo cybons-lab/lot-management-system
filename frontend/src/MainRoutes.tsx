@@ -14,7 +14,7 @@ import { BulkExportPage } from "@/features/admin/pages/BulkExportPage";
 import { MasterChangeLogsPage } from "@/features/admin/pages/MasterChangeLogsPage";
 import { SeedSnapshotsPage } from "@/features/admin/pages/SeedSnapshotsPage";
 import { SystemSettingsPage } from "@/features/admin/pages/SystemSettingsPage";
-import { PrimaryAssignmentsPage } from "@/features/assignments/pages/PrimaryAssignmentsPage";
+import { SupplierAssignmentsPage } from "@/features/assignments/pages/SupplierAssignmentsPage";
 import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
 import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
 import { CalendarSettingsPage } from "@/features/calendar";
@@ -45,6 +45,7 @@ import { LotDetailPage } from "@/features/inventory/pages/LotDetailPage";
 import { MovesPage } from "@/features/inventory/pages/MovesPage";
 import { StockHistoryPage } from "@/features/inventory/pages/StockHistoryPage";
 import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPage";
+import { MastersPage } from "@/features/masters/pages/MastersPage";
 import { OcrResultsListPage } from "@/features/ocr-results/pages/OcrResultsListPage";
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
@@ -128,8 +129,7 @@ function MasterRoutes() {
   return (
     <Route element={<FeatureGuardLayout feature="masters" />}>
       {/* Masters - Phase G-1 */}
-      {/* Masters - Phase G-1 */}
-      <Route path="/masters" element={<Navigate to={ROUTES.MASTERS.SUPPLIERS} replace />} />
+      <Route path="/masters" element={<MastersPage />} />
       <Route
         path={ROUTES.MASTERS.SUPPLIER_PRODUCTS}
         element={
@@ -187,10 +187,10 @@ function MasterRoutes() {
         }
       />
       <Route
-        path={ROUTES.MASTERS.PRIMARY_ASSIGNMENTS}
+        path={ROUTES.MASTERS.SUPPLIER_ASSIGNMENTS}
         element={
-          <FeatureGuard feature="masters:primary-assignments">
-            <PrimaryAssignmentsPage />
+          <FeatureGuard feature="masters:supplier-assignments">
+            <SupplierAssignmentsPage />
           </FeatureGuard>
         }
       />

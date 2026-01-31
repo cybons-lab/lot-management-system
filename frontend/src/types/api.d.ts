@@ -699,8 +699,8 @@ export interface paths {
      *         expiry_from: 有効期限開始日（フィルタ）
      *         expiry_to: 有効期限終了日（フィルタ）
      *         with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）
-     *         prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
-     *         current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）
+     *         prioritize_assigned: 担当の仕入先を優先表示するかどうか（デフォルト: True）
+     *         current_user: 現在のログインユーザー（担当仕入先取得に使用、オプショナル）
      *         db: データベースセッション
      *
      *     Returns:
@@ -1068,7 +1068,7 @@ export interface paths {
      *         date_from: 受注日開始日フィルタ
      *         date_to: 受注日終了日フィルタ
      *         order_type: 受注種別フィルタ
-     *         prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
+     *         prioritize_assigned: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
      *         db: データベースセッション
      *         current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）
      *
@@ -1710,8 +1710,8 @@ export interface paths {
      *         supplier_id: 仕入先IDでフィルタ
      *         product_group_id: 商品IDでフィルタ
      *         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
-     *         prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
-     *         current_user: 現在のログインユーザー（主担当仕入先取得に使用）
+     *         prioritize_assigned: 担当の仕入先を優先表示するかどうか（デフォルト: True）
+     *         current_user: 現在のログインユーザー（担当仕入先取得に使用）
      *         db: データベースセッション
      *
      *     Returns:
@@ -4669,7 +4669,7 @@ export interface paths {
     get?: never;
     /**
      * Update Assignment
-     * @description 担当割り当てを更新（主担当の変更など）.
+     * @description 担当割り当てを更新.
      */
     put: operations["update_assignment_api_assignments__assignment_id__put"];
     post?: never;
@@ -4678,26 +4678,6 @@ export interface paths {
      * @description 担当割り当てを削除.
      */
     delete: operations["delete_assignment_api_assignments__assignment_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/assignments/supplier/{supplier_id}/set-primary/{user_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Set Primary User
-     * @description 仕入先の主担当者を設定.
-     */
-    post: operations["set_primary_user_api_assignments_supplier__supplier_id__set_primary__user_id__post"];
-    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -10985,10 +10965,10 @@ export interface components {
        */
       total_quantity?: string | null;
       /**
-       * Is Primary Supplier
+       * Is Assigned Supplier
        * @default false
        */
-      is_primary_supplier: boolean;
+      is_assigned_supplier: boolean;
       /** Lines */
       lines?: components["schemas"]["InboundPlanLineResponse"][];
     };
@@ -11121,10 +11101,10 @@ export interface components {
        */
       total_quantity?: string | null;
       /**
-       * Is Primary Supplier
+       * Is Assigned Supplier
        * @default false
        */
-      is_primary_supplier: boolean;
+      is_assigned_supplier: boolean;
     };
     /**
      * InboundPlanStatus
@@ -11258,10 +11238,10 @@ export interface components {
       /** Supplier Code */
       supplier_code: string;
       /**
-       * Is Primary Supplier
+       * Is Assigned Supplier
        * @default false
        */
-      is_primary_supplier: boolean;
+      is_assigned_supplier: boolean;
       /** Total Quantity */
       total_quantity: string;
       /** Lot Count */
@@ -11793,10 +11773,10 @@ export interface components {
       /** Warehouse Code */
       warehouse_code?: string | null;
       /**
-       * Is Primary Supplier
+       * Is Assigned Supplier
        * @default false
        */
-      is_primary_supplier: boolean;
+      is_assigned_supplier: boolean;
       /**
        * Available Quantity
        * @default 0
@@ -12208,10 +12188,10 @@ export interface components {
     MySuppliersResponse: {
       /** User Id */
       user_id: number;
-      /** Primary Supplier Ids */
-      primary_supplier_ids: number[];
       /** All Supplier Ids */
       all_supplier_ids: number[];
+      /** Assigned Supplier Ids */
+      assigned_supplier_ids?: number[] | null;
     };
     /**
      * OcrImportLineRequest
@@ -16454,12 +16434,12 @@ export interface components {
      *     for the same product/warehouse combination.
      */
     SuppliersSummary: {
-      /** Primary Supplier Id */
-      primary_supplier_id: number;
-      /** Primary Supplier Code */
-      primary_supplier_code: string;
-      /** Primary Supplier Name */
-      primary_supplier_name: string;
+      /** Representative Supplier Id */
+      representative_supplier_id: number;
+      /** Representative Supplier Code */
+      representative_supplier_code: string;
+      /** Representative Supplier Name */
+      representative_supplier_name: string;
       /**
        * Other Count
        * @default 0
@@ -17343,7 +17323,7 @@ export interface operations {
         expiry_to?: string | null;
         with_stock?: boolean;
         status?: string | null;
-        prioritize_primary?: boolean;
+        prioritize_assigned?: boolean;
       };
       header?: never;
       path?: never;
@@ -18247,7 +18227,7 @@ export interface operations {
         tab?: string;
         /** @description Grouping mode: 'supplier_product_warehouse' (default) or 'product_warehouse' */
         group_by?: string;
-        primary_staff_only?: boolean;
+        assigned_staff_only?: boolean;
       };
       header?: never;
       path?: never;
@@ -18282,7 +18262,7 @@ export interface operations {
         warehouse_id?: number | null;
         supplier_id?: number | null;
         tab?: string;
-        primary_staff_only?: boolean;
+        assigned_staff_only?: boolean;
         mode?: string;
       };
       header?: never;
@@ -18589,7 +18569,7 @@ export interface operations {
         expiry_from?: string | null;
         expiry_to?: string | null;
         with_stock?: boolean;
-        prioritize_primary?: boolean;
+        prioritize_assigned?: boolean;
       };
       header?: never;
       path?: never;
@@ -19020,7 +19000,7 @@ export interface operations {
         date_from?: string | null;
         date_to?: string | null;
         order_type?: string | null;
-        prioritize_primary?: boolean;
+        prioritize_assigned?: boolean;
       };
       header?: never;
       path?: never;
@@ -19885,7 +19865,7 @@ export interface operations {
         supplier_id?: number | null;
         product_group_id?: number | null;
         status?: string | null;
-        prioritize_primary?: boolean;
+        prioritize_assigned?: boolean;
       };
       header?: never;
       path?: never;
@@ -24535,38 +24515,6 @@ export interface operations {
           "application/json": {
             [key: string]: unknown;
           };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  set_primary_user_api_assignments_supplier__supplier_id__set_primary__user_id__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        supplier_id: number;
-        user_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserSupplierAssignmentResponse"];
         };
       };
       /** @description Validation Error */

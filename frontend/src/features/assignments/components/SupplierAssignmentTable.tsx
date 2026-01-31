@@ -1,4 +1,4 @@
-import { Crown, Edit, User } from "lucide-react";
+import { Edit, User } from "lucide-react";
 import { useMemo } from "react";
 
 import type { SupplierGroup } from "../types";
@@ -8,13 +8,12 @@ import { useAuth } from "@/features/auth/AuthContext";
 import type { Column } from "@/shared/components/data/DataTable";
 import { DataTable } from "@/shared/components/data/DataTable";
 
-interface PrimaryAssignmentTableProps {
+interface SupplierAssignmentTableProps {
   sortedGroups: SupplierGroup[];
   onEdit: (group: SupplierGroup) => void;
 }
 
-// eslint-disable-next-line max-lines-per-function
-export function PrimaryAssignmentTable({ sortedGroups, onEdit }: PrimaryAssignmentTableProps) {
+export function SupplierAssignmentTable({ sortedGroups, onEdit }: SupplierAssignmentTableProps) {
   const { user: currentUser } = useAuth();
 
   // 列定義
@@ -32,54 +31,32 @@ export function PrimaryAssignmentTable({ sortedGroups, onEdit }: PrimaryAssignme
         id: "supplier_name",
         header: "仕入先名",
         accessor: (row) => row.supplier_name,
-        width: 200,
+        width: 250,
         sortable: true,
       },
       {
-        id: "primary_user",
-        header: "主担当者",
-        accessor: (row) => row.primaryUser?.display_name,
-        cell: (row) =>
-          row.primaryUser ? (
-            <div className="flex items-center gap-2">
-              <Crown className="h-4 w-4 text-amber-500" />
-              <span className="font-medium">{row.primaryUser.display_name}</span>
-              {row.primaryUser.user_id === currentUser?.id && (
-                <Badge variant="secondary" className="text-xs">
-                  あなた
-                </Badge>
-              )}
-            </div>
-          ) : (
-            <span className="font-medium text-amber-600">⚠ 未設定</span>
-          ),
-        width: 200,
-        sortable: true,
-      },
-      {
-        id: "secondary_users",
-        header: "副担当者",
-        accessor: (row) =>
-          row.assignments
-            .filter((a) => !a.is_primary)
-            .map((a) => a.display_name)
-            .join(", "),
+        id: "assigned_users",
+        header: "担当者",
+        accessor: (row) => row.assignments.map((a) => a.display_name).join(", "),
         cell: (row) => (
           <div className="flex flex-wrap gap-1">
-            {row.assignments
-              .filter((a) => !a.is_primary)
-              .map((a) => (
-                <Badge key={a.id} variant="outline" className="text-xs">
-                  <User className="mr-1 h-3 w-3" />
-                  {a.display_name}
-                </Badge>
-              ))}
-            {row.assignments.filter((a) => !a.is_primary).length === 0 && (
-              <span className="text-sm text-gray-400">-</span>
+            {row.assignments.map((a) => (
+              <Badge
+                key={a.id}
+                variant={a.user_id === currentUser?.id ? "secondary" : "outline"}
+                className="text-xs"
+              >
+                <User className="mr-1 h-3 w-3" />
+                {a.display_name}
+                {a.user_id === currentUser?.id && " (あなた)"}
+              </Badge>
+            ))}
+            {row.assignments.length === 0 && (
+              <span className="font-medium text-amber-600">⚠ 未設定</span>
             )}
           </div>
         ),
-        width: 250,
+        width: 400,
       },
     ],
     [currentUser?.id],

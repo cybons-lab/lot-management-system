@@ -106,8 +106,10 @@ def _normalize_page_visibility(value: dict | None) -> dict:
             continue
 
         if isinstance(entry, dict):
-            user = entry.get("user") if isinstance(entry.get("user"), bool) else True
-            guest = entry.get("guest") if isinstance(entry.get("guest"), bool) else True
+            user_val = entry.get("user")
+            user = user_val if isinstance(user_val, bool) else True
+            guest_val = entry.get("guest")
+            guest = guest_val if isinstance(guest_val, bool) else True
             normalized[key] = {"user": user, "guest": guest}
             continue
 

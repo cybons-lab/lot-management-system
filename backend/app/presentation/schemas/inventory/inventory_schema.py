@@ -172,7 +172,7 @@ class LotResponse(LotBase, TimestampMixin):
     warehouse_name: str | None = None
     warehouse_code: str | None = None
 
-    is_primary_supplier: bool = False
+    is_assigned_supplier: bool = False
 
     # Computed fields from view
     available_quantity: Decimal = Decimal("0")
@@ -279,9 +279,9 @@ class SuppliersSummary(BaseSchema):
     for the same product/warehouse combination.
     """
 
-    primary_supplier_id: int
-    primary_supplier_code: str
-    primary_supplier_name: str
+    representative_supplier_id: int
+    representative_supplier_code: str
+    representative_supplier_name: str
     other_count: int = 0  # Number of additional suppliers
 
 
@@ -346,7 +346,7 @@ class InventoryBySupplierResponse(BaseSchema):
     supplier_id: int
     supplier_name: str
     supplier_code: str
-    is_primary_supplier: bool = False
+    is_assigned_supplier: bool = False
     total_quantity: Decimal
     lot_count: int
     product_count: int

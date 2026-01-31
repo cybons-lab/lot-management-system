@@ -163,7 +163,7 @@ class InventoryService:
         warehouse_id: int | None = None,
         supplier_id: int | None = None,
         tab: str = "all",
-        primary_staff_only: bool = False,
+        assigned_staff_only: bool = False,
         current_user_id: int | None = None,
         group_by: str = "product_warehouse",
     ) -> InventoryListResponse:
@@ -176,8 +176,8 @@ class InventoryService:
             warehouse_id: Filter by warehouse ID
             supplier_id: Filter by supplier ID (filters lots by supplier)
             tab: Tab filter - 'in_stock', 'no_stock', or 'all'
-            primary_staff_only: Filter by primary staff (current user)
-            current_user_id: Current user ID (required if primary_staff_only=True)
+            assigned_staff_only: Filter by primary staff (current user)
+            current_user_id: Current user ID (required if assigned_staff_only=True)
             group_by: Grouping mode - 'product_warehouse' (default) or 'supplier_product_warehouse'
 
         Returns:
@@ -206,14 +206,13 @@ class InventoryService:
             where_clauses.append("v.warehouse_id = :warehouse_id")
             params["warehouse_id"] = warehouse_id
 
-        # JOIN for primary_staff_only filter
+        # JOIN for assigned_staff_only filter
         join_assignment = ""
-        if primary_staff_only and current_user_id:
+        if assigned_staff_only and current_user_id:
             join_assignment = (
                 " JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
             )
             where_clauses.append("usa.user_id = :current_user_id")
-            where_clauses.append("usa.is_primary = TRUE")
             params["current_user_id"] = current_user_id
 
         where_str = " AND ".join(where_clauses)
@@ -648,7 +647,7 @@ class InventoryService:
         warehouse_id: int | None = None,
         supplier_id: int | None = None,
         tab: str = "all",
-        primary_staff_only: bool = False,
+        assigned_staff_only: bool = False,
         current_user_id: int | None = None,
         mode: str = "stock",
     ) -> InventoryFilterOptions:
@@ -659,8 +658,8 @@ class InventoryService:
             warehouse_id: Currently selected warehouse ID
             supplier_id: Currently selected supplier ID
             tab: Tab filter - 'in_stock', 'no_stock', or 'all'
-            primary_staff_only: Filter by primary staff (current user)
-            current_user_id: Current user ID (required if primary_staff_only=True)
+            assigned_staff_only: Filter by primary staff (current user)
+            current_user_id: Current user ID (required if assigned_staff_only=True)
             mode: Candidate source mode ("stock" or "master")
 
         Returns:
@@ -674,7 +673,7 @@ class InventoryService:
                 product_group_id=product_group_id,
                 warehouse_id=warehouse_id,
                 supplier_id=supplier_id,
-                primary_staff_only=primary_staff_only,
+                assigned_staff_only=assigned_staff_only,
                 current_user_id=current_user_id,
                 effective_tab=tab,
             )
@@ -690,7 +689,7 @@ class InventoryService:
             warehouse_id=warehouse_id,
             supplier_id=supplier_id,
             tab=tab,
-            primary_staff_only=primary_staff_only,
+            assigned_staff_only=assigned_staff_only,
             current_user_id=current_user_id,
             effective_tab=effective_tab,
         )
@@ -700,7 +699,7 @@ class InventoryService:
         product_group_id: int | None = None,
         warehouse_id: int | None = None,
         supplier_id: int | None = None,
-        primary_staff_only: bool = False,
+        assigned_staff_only: bool = False,
         current_user_id: int | None = None,
         effective_tab: str = "all",
     ) -> InventoryFilterOptions:
@@ -724,15 +723,11 @@ class InventoryService:
         s_stmt = select(Supplier.id, Supplier.supplier_code, Supplier.supplier_name).where(
             Supplier.valid_to >= "9999-12-31"
         )
-        if primary_staff_only and current_user_id:
-            s_stmt = (
-                s_stmt.join(
-                    UserSupplierAssignment,
-                    UserSupplierAssignment.supplier_id == Supplier.id,
-                )
-                .where(UserSupplierAssignment.user_id == current_user_id)
-                .where(UserSupplierAssignment.is_primary.is_(True))
-            )
+        if assigned_staff_only and current_user_id:
+            s_stmt = s_stmt.join(
+                UserSupplierAssignment,
+                UserSupplierAssignment.supplier_id == Supplier.id,
+            ).where(UserSupplierAssignment.user_id == current_user_id)
         if product_group_id:
             # Filter suppliers supplying this product
             s_stmt = (
@@ -771,7 +766,7 @@ class InventoryService:
         warehouse_id: int | None = None,
         supplier_id: int | None = None,
         tab: str = "all",
-        primary_staff_only: bool = False,
+        assigned_staff_only: bool = False,
         current_user_id: int | None = None,
         effective_tab: str = "all",
     ) -> InventoryFilterOptions:
@@ -792,12 +787,11 @@ class InventoryService:
             params["supplier_id"] = supplier_id
 
         join_assignment = ""
-        if primary_staff_only and current_user_id:
+        if assigned_staff_only and current_user_id:
             join_assignment = (
                 "JOIN user_supplier_assignments usa ON v.supplier_id = usa.supplier_id"
             )
             where_clauses.append("usa.user_id = :current_user_id")
-            where_clauses.append("usa.is_primary = TRUE")
             params["current_user_id"] = current_user_id
 
         where_str = " AND ".join(where_clauses)

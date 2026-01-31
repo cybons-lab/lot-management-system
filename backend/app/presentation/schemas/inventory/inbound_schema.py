@@ -112,7 +112,7 @@ class InboundPlanResponse(InboundPlanBase, TimestampMixin):
     total_quantity: Decimal | None = Field(
         default=None, description="Sum of planned_quantity from all lines"
     )
-    is_primary_supplier: bool = False
+    is_assigned_supplier: bool = False
 
 
 class InboundPlanDetailResponse(InboundPlanResponse):

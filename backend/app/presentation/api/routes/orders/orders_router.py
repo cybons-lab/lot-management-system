@@ -27,14 +27,14 @@ r"""受注エンドポイント（全修正版） I/O整形のみを責務とし
    - 一覧表示: 高速レスポンス必要 → get_db()
    - 受注作成: 整合性が最優先 → get_uow()
 
-3. prioritize_primary パラメータの設計（L45, L59, L68-70）
+3. prioritize_assigned パラメータの設計（L45, L59, L68-70）
    理由: 営業担当の業務効率化
    背景:
    - 自動車部品商社: 営業担当が複数のサプライヤーを担当
    - 受注一覧: 全ての受注が混在表示
    → 自分の担当製品を含む受注を探すのが大変
    解決:
-   - prioritize_primary=True（デフォルト）
+   - prioritize_assigned=True（デフォルト）
    → 主担当サプライヤーの製品を含む受注を上位表示
    実装:
    - UserSupplierAssignmentService で主担当サプライヤーID取得
@@ -47,7 +47,7 @@ r"""受注エンドポイント（全修正版） I/O整形のみを責務とし
    理由: 未ログイン時も受注一覧を表示可能
    設計:
    - get_current_user_optional: 認証トークンがあれば検証、なければNone
-   → prioritize_primary機能は無効化（全受注を日付順表示）
+   → prioritize_assigned機能は無効化（全受注を日付順表示）
    用途:
    - 管理画面: ログイン必須
    - 公開ダッシュボード: ログイン不要で受注一覧を表示
@@ -173,7 +173,7 @@ def list_orders(
     date_from: date | None = None,
     date_to: date | None = None,
     order_type: str | None = None,
-    prioritize_primary: bool = True,
+    prioritize_assigned: bool = True,
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_current_user_optional),
 ):
@@ -187,18 +187,18 @@ def list_orders(
         date_from: 受注日開始日フィルタ
         date_to: 受注日終了日フィルタ
         order_type: 受注種別フィルタ
-        prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
+        prioritize_assigned: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
         db: データベースセッション
         current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）
 
     Returns:
         list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）
     """
-    # Get primary supplier IDs for sorting
-    primary_supplier_ids: list[int] | None = None
-    if prioritize_primary and current_user:
+    # Get assigned supplier IDs for sorting
+    assigned_supplier_ids: list[int] | None = None
+    if prioritize_assigned and current_user:
         assignment_service = UserSupplierAssignmentService(db)
-        primary_supplier_ids = assignment_service.get_primary_supplier_ids(current_user.id)
+        assigned_supplier_ids = assignment_service.get_assigned_supplier_ids(current_user.id)
 
     service = OrderService(db)
     return service.get_orders(
@@ -209,7 +209,7 @@ def list_orders(
         date_from=date_from,
         date_to=date_to,
         order_type=order_type,
-        primary_supplier_ids=primary_supplier_ids,
+        assigned_supplier_ids=assigned_supplier_ids,
     )
 
 

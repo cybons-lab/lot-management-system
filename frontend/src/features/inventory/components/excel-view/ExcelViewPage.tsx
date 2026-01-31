@@ -9,6 +9,7 @@ import { useExcelViewData } from "./useExcelViewData";
 
 import { Button } from "@/components/ui";
 import { useUpdateAllocationSuggestionsBatch } from "@/features/allocations/hooks/api/useAllocationSuggestions";
+import { SupplierFilterSet } from "@/features/assignments/components";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 
@@ -234,6 +235,10 @@ export function ExcelViewPage() {
           />
         </div>
       </div>
+
+      {/* 担当仕入先関連の警告 */}
+      <SupplierFilterSet warningOnly warningClassName="mb-4" />
+
       <div className="space-y-4">
         <ProductHeader data={data.header} involvedDestinations={data.involvedDestinations} />
         {data.lots.map((lot) => (

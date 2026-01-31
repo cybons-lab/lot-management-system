@@ -6,6 +6,11 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button, Input } from "@/components/ui";
+import {
+  SupplierAssignmentWarning,
+  SupplierFilterCheckbox,
+} from "@/features/assignments/components";
+import { useSupplierFilter } from "@/features/assignments/hooks";
 import { getCustomerItems, type CustomerItem } from "@/features/customer-items/api";
 import { useInventoryItems } from "@/features/inventory/hooks";
 import { useSuppliersQuery, useWarehousesQuery } from "@/hooks/api/useMastersQuery";
@@ -31,6 +36,9 @@ export function ExcelPortalPage() {
     customerItem: null,
   });
   const [searchTerm, setSearchTerm] = useState("");
+
+  // 担当仕入先フィルターロジック（共通フック）
+  const { filterEnabled, toggleFilter, filterSuppliers } = useSupplierFilter();
 
   const { data: suppliers = [], isLoading: isLoadingSuppliers } = useSuppliersQuery();
   const { data: warehouses = [], isLoading: isLoadingWarehouses } = useWarehousesQuery();
@@ -133,11 +141,20 @@ export function ExcelPortalPage() {
     setSearchTerm("");
   };
 
-  const filteredSuppliers = suppliers.filter(
-    (s) =>
-      s.supplier_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.supplier_code.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // 仕入先フィルタ: 検索 + 担当仕入先フィルタ
+  const filteredSuppliers = useMemo(() => {
+    // 1. 検索フィルタを適用
+    let result = suppliers.filter(
+      (s) =>
+        s.supplier_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.supplier_code.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+
+    // 2. 担当仕入先フィルタを適用（共通ロジック使用）
+    result = filterSuppliers(result, (supplier) => supplier.id);
+
+    return result;
+  }, [suppliers, searchTerm, filterSuppliers]);
 
   const filteredProductGroups = productGroups.filter(
     (group) =>
@@ -181,6 +198,9 @@ export function ExcelPortalPage() {
       />
 
       <div className="mx-auto max-w-5xl space-y-6 py-6">
+        {/* 担当仕入先未設定警告 */}
+        <SupplierAssignmentWarning />
+
         {/* Progress Stepper */}
         <div className="flex items-center gap-4 text-sm font-medium text-slate-500 mb-8">
           <div className={`flex items-center gap-2 ${step === "supplier" ? "text-blue-600" : ""}`}>
@@ -226,20 +246,28 @@ export function ExcelPortalPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input
-            placeholder={
-              step === "supplier"
-                ? "仕入先を検索..."
-                : step === "customer-item"
-                  ? "製品・得意先品番を検索..."
-                  : "倉庫を検索..."
-            }
-            className="pl-10 h-12 text-lg"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              placeholder={
+                step === "supplier"
+                  ? "仕入先を検索..."
+                  : step === "customer-item"
+                    ? "製品・得意先品番を検索..."
+                    : "倉庫を検索..."
+              }
+              className="pl-10 h-12 text-lg"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          {/* 担当仕入先フィルタ（ステップ1のみ表示） */}
+          {step === "supplier" && (
+            <div className="flex justify-end">
+              <SupplierFilterCheckbox enabled={filterEnabled} onToggle={toggleFilter} />
+            </div>
+          )}
         </div>
 
         {/* Selection Context */}

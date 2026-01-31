@@ -1,4 +1,4 @@
-import { Crown } from "lucide-react";
+import { User } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 
 import { Button } from "@/components/ui";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { Badge } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
+import { SupplierFilterCheckbox } from "@/features/assignments/components";
 import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
 import { useSuppliersQuery } from "@/hooks/api/useMastersQuery";
 import { useTable } from "@/hooks/ui";
@@ -44,7 +45,7 @@ export interface InboundPlan {
   planned_arrival_date: string;
   status: "planned" | "partially_received" | "received" | "cancelled";
   created_at: string;
-  is_primary_supplier?: boolean;
+  is_assigned_supplier?: boolean;
   sap_po_number?: string | null; // SAP購買発注番号
   total_quantity?: number; // 明細数量計
 }
@@ -55,7 +56,7 @@ export interface InboundPlansFilters {
   status: "" | "planned" | "partially_received" | "received" | "cancelled";
   date_from: string;
   date_to: string;
-  prioritize_primary?: boolean;
+  prioritize_assigned?: boolean;
 }
 
 interface InboundPlansListProps {
@@ -67,6 +68,8 @@ interface InboundPlansListProps {
   onDelete: (id: number) => void;
   onViewDetail: (id: number) => void;
   isDeleting?: boolean;
+  filterEnabled: boolean;
+  onToggleFilter: (enabled: boolean) => void;
 }
 
 // ============================================
@@ -82,6 +85,8 @@ export function InboundPlansList({
   onDelete,
   onViewDetail,
   isDeleting,
+  filterEnabled,
+  onToggleFilter,
 }: InboundPlansListProps) {
   // Master data for filter options
   const { data: suppliers = [] } = useSuppliersQuery();
@@ -109,7 +114,7 @@ export function InboundPlansList({
       status: "",
       date_from: "",
       date_to: "",
-      prioritize_primary: false,
+      prioritize_assigned: false,
     });
     setSearchQuery("");
   };
@@ -168,22 +173,7 @@ export function InboundPlansList({
           />
         </div>
         <div className="flex items-end pb-2">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="prioritize_primary"
-              checked={!!filters.prioritize_primary}
-              onChange={(e) => onFilterChange({ ...filters, prioritize_primary: e.target.checked })}
-              className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
-            />
-            <Label
-              htmlFor="prioritize_primary"
-              className="flex cursor-pointer items-center gap-1 text-sm font-medium text-slate-700"
-            >
-              <Crown className="h-3.5 w-3.5 text-amber-600" />
-              主担当の仕入先のみ
-            </Label>
-          </div>
+          <SupplierFilterCheckbox enabled={filterEnabled} onToggle={onToggleFilter} />
         </div>
         <div className="md:col-span-2">
           <Label className="mb-2 block text-sm font-medium">キーワード検索</Label>
@@ -288,13 +278,13 @@ export function InboundPlansList({
                 `ID: ${row.supplier_id}`
               )}
             </span>
-            {row.is_primary_supplier && (
+            {row.is_assigned_supplier && (
               <Badge
                 variant="outline"
-                className="mt-1 gap-1 border-amber-300 bg-amber-50 text-amber-600"
+                className="mt-1 gap-1 border-blue-300 bg-blue-50 text-blue-600"
               >
-                <Crown className="h-3 w-3" />
-                主担当
+                <User className="h-3 w-3" />
+                担当仕入先
               </Badge>
             )}
           </div>

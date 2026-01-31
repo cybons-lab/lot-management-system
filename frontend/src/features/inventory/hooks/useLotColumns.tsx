@@ -2,9 +2,8 @@
 /* eslint-disable max-lines-per-function */
 import { format } from "date-fns";
 import { Lock } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 
-import { PrimaryBadge } from "@/features/assignments/components/PrimaryBadge";
 import { LotActionCell } from "@/features/inventory/components/LotActionCell";
 import type { Column } from "@/shared/components/data/DataTable";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
@@ -17,24 +16,9 @@ interface UseLotColumnsProps {
   onEdit: (lot: LotUI) => void;
   onLock: (lot: LotUI) => void;
   onUnlock: (lot: LotUI) => void;
-  primarySupplierIds?: number[];
 }
 
-export function useLotColumns({
-  viewMode,
-  onEdit,
-  onLock,
-  onUnlock,
-  primarySupplierIds,
-}: UseLotColumnsProps) {
-  const isPrimary = useCallback(
-    (supplierId: number | undefined | null): boolean => {
-      if (!supplierId || !primarySupplierIds) return false;
-      return primarySupplierIds.includes(supplierId);
-    },
-    [primarySupplierIds],
-  );
-
+export function useLotColumns({ viewMode, onEdit, onLock, onUnlock }: UseLotColumnsProps) {
   const baseColumns: Column<LotUI>[] = useMemo(
     () => [
       {
@@ -132,18 +116,13 @@ export function useLotColumns({
       {
         id: "supplier_name",
         header: "仕入先",
-        cell: (lot) => (
-          <div className="flex items-center gap-2">
-            <span className="whitespace-nowrap">{lot.supplier_name ?? "–"}</span>
-            {isPrimary(lot.supplier_id) && <PrimaryBadge />}
-          </div>
-        ),
+        cell: (lot) => <span className="whitespace-nowrap">{lot.supplier_name ?? "–"}</span>,
         sortable: true,
         width: "200px",
       },
       ...baseColumns.slice(1), // current_quantity以降
     ],
-    [baseColumns, isPrimary],
+    [baseColumns],
   );
 
   return viewMode === "grouped" ? baseColumns : flatColumns;

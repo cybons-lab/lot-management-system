@@ -60,7 +60,7 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
     delivery_place_code: null,
     delivery_place_name: null,
     lot_no: null,
-    is_primary_supplier: false,
+    is_assigned_supplier: false,
 
     product_deleted: false,
     warehouse_deleted: false,
