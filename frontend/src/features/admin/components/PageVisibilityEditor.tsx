@@ -22,16 +22,33 @@ interface VisibilityRowProps {
   disabled: boolean;
 }
 
+type VisibilityEntry = { user: boolean; guest: boolean };
+
+function normalizeVisibilityEntry(value: unknown): VisibilityEntry {
+  if (typeof value === "boolean") {
+    return { user: value, guest: value };
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const user = typeof record.user === "boolean" ? record.user : true;
+    const guest = typeof record.guest === "boolean" ? record.guest : true;
+    return { user, guest };
+  }
+
+  return { user: true, guest: true };
+}
+
 /* eslint-disable-next-line complexity */
 function VisibilityRow({ id, label, isSub, config, onToggle, disabled }: VisibilityRowProps) {
-  const featureConf = config[id] || { guest: true, user: true };
+  const featureConf = normalizeVisibilityEntry(config[id]);
 
   let userInherited = false;
   let guestInherited = false;
 
   if (isSub) {
     const parentId = id.split(":")[0];
-    const parentConf = config[parentId] || { guest: true, user: true };
+    const parentConf = normalizeVisibilityEntry(config[parentId]);
     userInherited = parentConf.user;
     guestInherited = parentConf.guest;
   }
@@ -99,11 +116,8 @@ export function PageVisibilityEditor({ value, onChange, disabled }: PageVisibili
 
   const handleToggle = (featureKey: string, role: "guest" | "user", checked: boolean) => {
     const newConfig = { ...config };
-    const current = newConfig[featureKey] || { guest: true, user: true };
-    newConfig[featureKey] = {
-      ...current,
-      [role]: checked,
-    };
+    const current = normalizeVisibilityEntry(newConfig[featureKey]);
+    newConfig[featureKey] = { ...current, [role]: checked };
     onChange(JSON.stringify(newConfig));
   };
 
