@@ -398,7 +398,7 @@ def copy_docs(temp_dir: Path) -> bool:
     dest_docs.mkdir(parents=True, exist_ok=True)
 
     # 運用ドキュメントをコピー
-    src_ops = DOCS_DIR / "ops"
+    src_ops = DOCS_DIR / "operations"
     if src_ops.exists():
         for file in src_ops.glob("*.md"):
             shutil.copy2(file, dest_docs / file.name)
@@ -501,7 +501,7 @@ def main() -> int:
         print(f"\n出力ファイル: {output_path}")
         print("\n次のステップ:")
         print("  1. ZIP ファイルを本番サーバーにコピー")
-        print("  2. docs/ops/PRODUCTION_DEPLOYMENT.md の手順に従ってデプロイ")
+        print("  2. docs/operations/PRODUCTION_UPDATE_GUIDE.md の手順に従ってデプロイ")
         print()
 
         return 0

@@ -1,1 +1,0 @@
-export { ProductMappingsListPage } from "./ProductMappingsListPage";

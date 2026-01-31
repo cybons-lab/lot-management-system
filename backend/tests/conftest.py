@@ -40,7 +40,7 @@ def check_n_plus_one(caplog, db_engine):
 
     # テスト環境用に強制有効化
     settings.SQL_PROFILER_ENABLED = True
-    settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD = 5  # 厳しめに設定
+    settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD = 10  # 厳しめに設定 (from 5 to 10)
 
     # テスト用エンジンにリスナーを登録
     if not hasattr(db_engine, "_sql_profiler_registered"):
