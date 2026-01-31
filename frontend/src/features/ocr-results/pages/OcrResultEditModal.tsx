@@ -1,12 +1,14 @@
 import { AlertCircle, Save } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { OcrResultItem } from "../api";
 
 import {
+  OcrCellEditingContext,
   EditableTextCell,
   EditableDateCell,
   EditableShippingSlipCell,
+  type EditableFieldKey,
 } from "./OcrResultsTableCells";
 
 import { Button } from "@/components/ui";
@@ -27,122 +29,156 @@ interface OcrResultEditModalProps {
 
 // eslint-disable-next-line max-lines-per-function -- ModalフォームUI全体の論理的なまとまり
 function EditFormGrid({ row }: { row: OcrResultItem }) {
+  const [activeCell, setActiveCell] = useState<{
+    rowId: number;
+    field: EditableFieldKey;
+  } | null>(null);
+
+  const editableFieldOrder = useMemo<EditableFieldKey[]>(
+    () => [
+      "materialCode",
+      "jikuCode",
+      "deliveryDate",
+      "deliveryQuantity",
+      "lotNo1",
+      "inboundNo1",
+      "quantity1",
+      "lotNo2",
+      "inboundNo2",
+      "quantity2",
+      "shippingDate",
+      "shippingSlipText",
+    ],
+    [],
+  );
+
   return (
-    <div className="space-y-4 py-4">
-      {/* 商品コード情報 + 納期・数量 */}
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          商品コード情報・納期・数量
-        </Label>
-        <div className="grid grid-cols-4 gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px]">材質コード</Label>
-            <EditableTextCell row={row} field="materialCode" placeholder="材質コード" />
+    <OcrCellEditingContext.Provider
+      value={{
+        activeCell,
+        setActiveCell,
+        editableFieldOrder,
+        rowIds: [row.id],
+        isReadOnly: false,
+        getRowById: () => row,
+      }}
+    >
+      <div className="space-y-4 py-4">
+        {/* 商品コード情報 + 納期・数量 */}
+        <div className="space-y-2">
+          <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            商品コード情報・納期・数量
+          </Label>
+          <div className="grid grid-cols-4 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[10px]">材質コード</Label>
+              <EditableTextCell row={row} field="materialCode" placeholder="材質コード" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px]">次区</Label>
+              <EditableTextCell row={row} field="jikuCode" placeholder="次区" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px]">納期</Label>
+              <EditableDateCell row={row} field="deliveryDate" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px]">納入量</Label>
+              <EditableTextCell
+                row={row}
+                field="deliveryQuantity"
+                placeholder="納入量"
+                inputClassName="text-right"
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            <Label className="text-[10px]">次区</Label>
-            <EditableTextCell row={row} field="jikuCode" placeholder="次区" />
+        </div>
+
+        {/* 区切り線 */}
+        <div className="border-t border-slate-200"></div>
+
+        {/* ロット情報(1) */}
+        <div className="space-y-2">
+          <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            ロット情報(1)
+          </Label>
+          <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+            <div className="space-y-1">
+              <Label className="text-[10px]">ロットNo(1)</Label>
+              <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px]">入庫No(1)</Label>
+              <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px]">数量(1)</Label>
+              <EditableTextCell
+                row={row}
+                field="quantity1"
+                placeholder="数量(1)"
+                inputClassName="text-right"
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            <Label className="text-[10px]">納期</Label>
-            <EditableDateCell row={row} field="deliveryDate" />
+        </div>
+
+        {/* ロット情報(2) */}
+        <div className="space-y-2">
+          <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            ロット情報(2)
+          </Label>
+          <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+            <div className="space-y-1">
+              <Label className="text-[10px]">ロットNo(2)</Label>
+              <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px]">入庫No(2)</Label>
+              <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px]">数量(2)</Label>
+              <EditableTextCell
+                row={row}
+                field="quantity2"
+                placeholder="数量(2)"
+                inputClassName="text-right"
+              />
+            </div>
           </div>
+        </div>
+
+        {/* 出荷情報 */}
+        <div className="space-y-2">
+          <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            出荷情報
+          </Label>
+          <div className="grid grid-cols-4 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[10px]">出荷日</Label>
+              <EditableDateCell row={row} field="shippingDate" />
+            </div>
+          </div>
+        </div>
+
+        {/* 区切り線 */}
+        <div className="border-t border-slate-200"></div>
+
+        {/* 出荷票テキスト（全幅） */}
+        <div className="space-y-2">
+          <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            出荷票テキスト
+          </Label>
           <div className="space-y-1">
-            <Label className="text-[10px]">納入量</Label>
-            <EditableTextCell
-              row={row}
-              field="deliveryQuantity"
-              placeholder="納入量"
-              inputClassName="text-right"
-            />
+            <EditableShippingSlipCell row={row} />
+            <p className="text-[9px] text-muted-foreground">
+              Enterで確定、Tabで次のセルへ移動
+            </p>
           </div>
         </div>
       </div>
-
-      {/* 区切り線 */}
-      <div className="border-t border-slate-200"></div>
-
-      {/* ロット情報(1) */}
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          ロット情報(1)
-        </Label>
-        <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px]">ロットNo(1)</Label>
-            <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[10px]">入庫No(1)</Label>
-            <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[10px]">数量(1)</Label>
-            <EditableTextCell
-              row={row}
-              field="quantity1"
-              placeholder="数量(1)"
-              inputClassName="text-right"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* ロット情報(2) */}
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          ロット情報(2)
-        </Label>
-        <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px]">ロットNo(2)</Label>
-            <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[10px]">入庫No(2)</Label>
-            <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[10px]">数量(2)</Label>
-            <EditableTextCell
-              row={row}
-              field="quantity2"
-              placeholder="数量(2)"
-              inputClassName="text-right"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 出荷情報 */}
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          出荷情報
-        </Label>
-        <div className="grid grid-cols-4 gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px]">出荷日</Label>
-            <EditableDateCell row={row} field="shippingDate" />
-          </div>
-        </div>
-      </div>
-
-      {/* 区切り線 */}
-      <div className="border-t border-slate-200"></div>
-
-      {/* 出荷票テキスト（全幅） */}
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          出荷票テキスト
-        </Label>
-        <div className="space-y-1">
-          <EditableShippingSlipCell row={row} />
-          <p className="text-[9px] text-muted-foreground">
-            ダブルクリックで直接編集、Ctrl+Enterで確定
-          </p>
-        </div>
-      </div>
-    </div>
+    </OcrCellEditingContext.Provider>
   );
 }
 

@@ -360,7 +360,7 @@ export function DataTable<T = never>({
   const rowVirtualizer = useVirtualizer({
     count: table.getRowModel().rows.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 60,
+    estimateSize: () => 72,
     overscan: 10,
     enabled: enableVirtualization,
   });
@@ -381,12 +381,12 @@ export function DataTable<T = never>({
         <div className="flex items-center justify-end">
           <Skeleton className="h-8 w-24 rounded-md" />
         </div>
-        <div className="relative overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-md">
+        <div className="relative overflow-x-auto rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] shadow-[var(--shadow-soft)]">
           <table className="w-full" style={{ tableLayout: "fixed" }}>
-            <thead className="border-b bg-slate-50">
+            <thead className="border-b border-[hsl(var(--border))] bg-[hsl(var(--surface-2))]">
               <tr>
                 {tableColumns.map((_, i) => (
-                  <th key={i} className="px-4 py-3">
+                  <th key={i} className="px-6 py-4">
                     <Skeleton className="h-4 w-20 bg-slate-200" />
                   </th>
                 ))}
@@ -394,9 +394,9 @@ export function DataTable<T = never>({
             </thead>
             <tbody>
               {Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b border-slate-100 last:border-0">
+                <tr key={i} className="border-b border-[hsl(var(--border))]/60 last:border-0">
                   {tableColumns.map((_, j) => (
-                    <td key={j} className="px-4 py-3">
+                    <td key={j} className="px-6 py-4">
                       <Skeleton className="h-4 w-full" />
                     </td>
                   ))}
@@ -456,7 +456,7 @@ export function DataTable<T = never>({
       <div
         ref={parentRef}
         className={cn(
-          "relative rounded-lg border border-slate-200 bg-white shadow-md",
+          "relative rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] shadow-[var(--shadow-soft)]",
           enableVirtualization ? "overflow-y-auto" : "overflow-x-auto",
         )}
         style={
@@ -467,7 +467,10 @@ export function DataTable<T = never>({
       >
         <table className="responsive-table w-full" style={{ tableLayout: "fixed" }}>
           <thead
-            className={cn("border-b bg-slate-50", enableVirtualization && "sticky top-0 z-10")}
+            className={cn(
+              "border-b border-[hsl(var(--border))] bg-[hsl(var(--surface-2))]",
+              enableVirtualization && "sticky top-0 z-10",
+            )}
           >
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -479,11 +482,11 @@ export function DataTable<T = never>({
                     <th
                       key={header.id}
                       className={cn(
-                        "relative bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700",
+                        "relative bg-[hsl(var(--surface-2))] px-6 py-4 text-left text-sm font-semibold text-slate-600",
                         meta?.align === "center" && "text-center",
                         meta?.align === "right" && "text-right",
                         header.column.getCanSort() &&
-                          "cursor-pointer transition-colors select-none hover:bg-slate-100",
+                          "cursor-pointer transition-colors select-none hover:bg-slate-100/70",
                         meta?.className,
                       )}
                       style={{ width: header.getSize() }}
@@ -544,10 +547,12 @@ export function DataTable<T = never>({
                       className={cn(
                         "relative transition-all duration-150",
                         "group",
-                        row.index % 2 === 0 ? "bg-white" : "bg-slate-50/30",
-                        (onRowClick || renderHoverActions) && "hover:bg-blue-50/30",
+                        row.index % 2 === 0
+                          ? "bg-[hsl(var(--surface-1))]"
+                          : "bg-[hsl(var(--surface-2))]",
+                        (onRowClick || renderHoverActions) && "hover:bg-slate-100/60",
                         onRowClick && "cursor-pointer",
-                        row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/80",
+                        row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/70",
                         customClassName,
                       )}
                       onClick={() => onRowClick?.(row.original)}
@@ -560,7 +565,7 @@ export function DataTable<T = never>({
                           <td
                             key={cell.id}
                             className={cn(
-                              "overflow-hidden px-4 py-3 text-sm text-slate-900",
+                              "overflow-hidden px-6 py-4 text-sm text-slate-800",
                               meta?.align === "center" && "text-center",
                               meta?.align === "right" && "text-right",
                               meta?.className,
@@ -578,7 +583,7 @@ export function DataTable<T = never>({
                       })}
                       {renderHoverActions && (
                         <td className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:opacity-100">
-                          <div className="pointer-events-auto flex gap-1 rounded-md border border-slate-200 bg-white p-1.5 shadow-lg">
+                          <div className="pointer-events-auto flex gap-1 rounded-md border border-[hsl(var(--border))] bg-white/90 p-1.5 shadow-[var(--shadow-soft)]">
                             {renderHoverActions(row.original)}
                           </div>
                         </td>
@@ -617,10 +622,12 @@ export function DataTable<T = never>({
                       className={cn(
                         "relative transition-all duration-150",
                         "group",
-                        row.index % 2 === 0 ? "bg-white" : "bg-slate-50/30",
-                        (onRowClick || renderHoverActions) && "hover:bg-blue-50/30",
+                        row.index % 2 === 0
+                          ? "bg-[hsl(var(--surface-1))]"
+                          : "bg-[hsl(var(--surface-2))]",
+                        (onRowClick || renderHoverActions) && "hover:bg-slate-100/60",
                         onRowClick && "cursor-pointer",
-                        row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/80",
+                        row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/70",
                         customClassName,
                       )}
                       onClick={() => onRowClick?.(row.original)}
@@ -633,7 +640,7 @@ export function DataTable<T = never>({
                           <td
                             key={cell.id}
                             className={cn(
-                              "overflow-hidden px-4 py-3 text-sm text-slate-900",
+                              "overflow-hidden px-6 py-4 text-sm text-slate-800",
                               meta?.align === "center" && "text-center",
                               meta?.align === "right" && "text-right",
                               meta?.className,
@@ -652,7 +659,7 @@ export function DataTable<T = never>({
 
                       {renderHoverActions && (
                         <td className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:opacity-100">
-                          <div className="pointer-events-auto flex gap-1 rounded-md border border-slate-200 bg-white p-1.5 shadow-lg">
+                          <div className="pointer-events-auto flex gap-1 rounded-md border border-[hsl(var(--border))] bg-white/90 p-1.5 shadow-[var(--shadow-soft)]">
                             {renderHoverActions(row.original)}
                           </div>
                         </td>

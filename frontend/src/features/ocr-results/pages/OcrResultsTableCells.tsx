@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { AlertCircle, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { type KeyboardEvent, createContext, useContext, useEffect, useRef, useState } from "react";
 
 import type { OcrResultItem } from "../api";
 
@@ -182,6 +182,108 @@ export const useOcrInputs = () => {
   return context;
 };
 
+export type EditableFieldKey =
+  | "lotNo1"
+  | "inboundNo1"
+  | "quantity1"
+  | "lotNo2"
+  | "inboundNo2"
+  | "quantity2"
+  | "shippingDate"
+  | "shippingSlipText"
+  | "materialCode"
+  | "jikuCode"
+  | "deliveryDate"
+  | "deliveryQuantity";
+
+export type ActiveCell = {
+  rowId: number;
+  field: EditableFieldKey;
+};
+
+export interface OcrCellEditingContextType {
+  activeCell: ActiveCell | null;
+  setActiveCell: (cell: ActiveCell | null) => void;
+  editableFieldOrder: EditableFieldKey[];
+  rowIds: number[];
+  isReadOnly: boolean;
+  getRowById: (rowId: number) => OcrResultItem | undefined;
+}
+
+export const OcrCellEditingContext = createContext<OcrCellEditingContextType | null>(null);
+
+export const useOcrCellEditing = () => {
+  const context = useContext(OcrCellEditingContext);
+  if (!context) throw new Error("useOcrCellEditing must be used within OcrCellEditingContext");
+  return context;
+};
+
+const isValidDateInput = (value: string) => {
+  if (!value) return true;
+  const normalized = value.replace(/\//g, "-");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return false;
+  const date = new Date(normalized);
+  return !Number.isNaN(date.getTime());
+};
+
+const resolveTabTarget = (
+  rowId: number,
+  field: EditableFieldKey,
+  direction: 1 | -1,
+  editableFieldOrder: EditableFieldKey[],
+  rowIds: number[],
+  getRowById: (rowId: number) => OcrResultItem | undefined,
+): ActiveCell | null => {
+  const fieldIndex = editableFieldOrder.indexOf(field);
+  if (fieldIndex === -1) return null;
+  const rowIndex = rowIds.indexOf(rowId);
+  if (rowIndex === -1) return null;
+
+  const nextFieldIndex = fieldIndex + direction;
+  if (nextFieldIndex >= 0 && nextFieldIndex < editableFieldOrder.length) {
+    return { rowId, field: editableFieldOrder[nextFieldIndex] };
+  }
+
+  const step = direction;
+  let nextRowIndex = rowIndex + step;
+  while (nextRowIndex >= 0 && nextRowIndex < rowIds.length) {
+    const candidateId = rowIds[nextRowIndex];
+    const candidateRow = getRowById(candidateId);
+    if (candidateRow && candidateRow.status !== "processing") {
+      const targetField =
+        direction === 1
+          ? editableFieldOrder[0]
+          : editableFieldOrder[editableFieldOrder.length - 1];
+      return { rowId: candidateId, field: targetField };
+    }
+    nextRowIndex += step;
+  }
+
+  return null;
+};
+
+const resolveEnterTarget = (
+  rowId: number,
+  field: EditableFieldKey,
+  direction: 1 | -1,
+  rowIds: number[],
+  getRowById: (rowId: number) => OcrResultItem | undefined,
+): ActiveCell | null => {
+  const rowIndex = rowIds.indexOf(rowId);
+  if (rowIndex === -1) return null;
+  const step = direction;
+  let nextRowIndex = rowIndex + step;
+  while (nextRowIndex >= 0 && nextRowIndex < rowIds.length) {
+    const candidateId = rowIds[nextRowIndex];
+    const candidateRow = getRowById(candidateId);
+    if (candidateRow && candidateRow.status !== "processing") {
+      return { rowId: candidateId, field };
+    }
+    nextRowIndex += step;
+  }
+  return null;
+};
+
 // ============================================
 // Components
 // ============================================
@@ -285,7 +387,7 @@ export function getRowClassName(row: OcrResultItem): string {
 
 export function StatusLegend() {
   return (
-    <div className="flex flex-col gap-2 text-xs text-gray-600 bg-white p-2 rounded border border-gray-100 shadow-sm">
+    <div className="flex flex-col gap-2 text-xs text-gray-600 bg-[hsl(var(--surface-1))] p-3 rounded-xl border border-[hsl(var(--border))] shadow-[var(--shadow-soft)]">
       <div className="flex items-center gap-2">
         <span className="font-bold text-[10px] text-gray-400 w-12">OCR状態:</span>
         <div className="flex gap-2">
@@ -332,29 +434,169 @@ export function EditableTextCell({
   hasWarning = false,
 }: {
   row: OcrResultItem;
-  field: Extract<keyof RowInputState, string>;
+  field: EditableFieldKey;
   placeholder?: string;
   inputClassName?: string;
   hasWarning?: boolean;
 }) {
   const { getInputs, updateInputs } = useOcrInputs();
+  const { activeCell, setActiveCell, editableFieldOrder, rowIds, isReadOnly, getRowById } =
+    useOcrCellEditing();
   const value = getInputs(row)[field] as string;
+  const isActive = activeCell?.rowId === row.id && activeCell?.field === field;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const initialValueRef = useRef(value);
+  const [isComposing, setIsComposing] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    if (isActive) {
+      initialValueRef.current = value;
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+        inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+      });
+    }
+  }, [isActive, value]);
+
+  const isDisabled = row.status === "processing" || isReadOnly;
+
+  const validateValue = (nextValue: string) => {
+    if (field === "shippingDate" || field === "deliveryDate") {
+      return isValidDateInput(nextValue);
+    }
+    return true;
+  };
+
+  const exitEditing = () => {
+    setActiveCell(null);
+  };
+
+  const handleFinalize = () => {
+    const isValid = validateValue(value);
+    setHasError(!isValid);
+    if (!isValid) {
+      requestAnimationFrame(() => inputRef.current?.focus());
+      return false;
+    }
+    exitEditing();
+    return true;
+  };
+
+  const handleNavigate = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (isComposing) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      updateInputs(row, { [field]: initialValueRef.current });
+      setHasError(false);
+      exitEditing();
+      return;
+    }
+    if (event.key === "Tab") {
+      event.preventDefault();
+      if (!validateValue(value)) {
+        setHasError(true);
+        return;
+      }
+      const direction = event.shiftKey ? -1 : 1;
+      const target = resolveTabTarget(
+        row.id,
+        field,
+        direction,
+        editableFieldOrder,
+        rowIds,
+        getRowById,
+      );
+      if (target) {
+        setHasError(false);
+        setActiveCell(target);
+      } else {
+        exitEditing();
+      }
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (!validateValue(value)) {
+        setHasError(true);
+        return;
+      }
+      const direction = event.shiftKey ? -1 : 1;
+      const target = resolveEnterTarget(row.id, field, direction, rowIds, getRowById);
+      if (target) {
+        setHasError(false);
+        setActiveCell(target);
+      } else {
+        exitEditing();
+      }
+    }
+  };
+
+  const displayValue = value || placeholder || "-";
+  const isPlaceholder = !value && !!placeholder;
+
+  if (isActive) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={(e) => {
+          const nextValue = e.target.value;
+          updateInputs(row, { [field]: nextValue });
+          if (hasError && isValidDateInput(nextValue)) {
+            setHasError(false);
+          }
+        }}
+        onBlur={() => {
+          if (!isActive) return;
+          handleFinalize();
+        }}
+        onKeyDown={handleNavigate}
+        onCompositionStart={() => setIsComposing(true)}
+        onCompositionEnd={() => setIsComposing(false)}
+        placeholder={placeholder}
+        className={cn(
+          "w-full rounded-md border bg-white/90 px-3 py-2 text-xs shadow-sm outline-none transition focus:ring-2",
+          hasWarning || hasError
+            ? "border-red-300 focus:border-red-400 focus:ring-red-200"
+            : "border-slate-200 focus:border-blue-300 focus:ring-blue-200",
+          inputClassName,
+        )}
+        disabled={isDisabled}
+      />
+    );
+  }
 
   return (
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => updateInputs(row, { [field]: e.target.value })}
-      placeholder={placeholder}
+    <button
+      type="button"
+      onClick={() => {
+        if (isDisabled) return;
+        setActiveCell({ rowId: row.id, field });
+      }}
+      onKeyDown={(event) => {
+        if (isDisabled) return;
+        if (event.key === "Enter" || event.key === "F2") {
+          event.preventDefault();
+          setActiveCell({ rowId: row.id, field });
+        }
+      }}
       className={cn(
-        "w-full rounded-md border px-2 py-1 text-xs focus:outline-none focus:ring-1",
+        "w-full rounded-md px-3 py-2 text-left text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
+        "hover:bg-slate-50/80",
         hasWarning
-          ? "border-red-400 bg-red-50 focus:border-red-600 focus:ring-red-500"
-          : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
+          ? "text-red-700 bg-red-50/60"
+          : "text-slate-700 bg-transparent",
+        isPlaceholder && "text-slate-400",
+        isDisabled && "cursor-not-allowed opacity-60",
         inputClassName,
       )}
-      disabled={row.status === "processing"}
-    />
+      disabled={isDisabled}
+    >
+      {displayValue}
+    </button>
   );
 }
 
@@ -363,84 +605,127 @@ export function EditableDateCell({
   field,
 }: {
   row: OcrResultItem;
-  field: Extract<keyof RowInputState, string>;
+  field: EditableFieldKey;
 }) {
   const { getInputs, updateInputs } = useOcrInputs();
+  const { activeCell, setActiveCell, editableFieldOrder, rowIds, isReadOnly, getRowById } =
+    useOcrCellEditing();
   const value = getInputs(row)[field] as string;
 
   const hasDateError = field === "deliveryDate" && row.date_format_error;
   const isShippingDate = field === "shippingDate";
   const isCalculated = isShippingDate && !value && row.calculated_shipping_date;
   const displayValue = isCalculated ? row.calculated_shipping_date : value;
-
-  return (
-    <input
-      type="date"
-      value={displayValue || ""}
-      onChange={(e) => updateInputs(row, { [field]: e.target.value })}
-      title={isCalculated ? `自動計算（LT=${row.transport_lt_days}日）` : ""}
-      className={cn(
-        "w-full rounded-md border px-2 py-1 text-xs focus:outline-none focus:ring-1",
-        hasDateError
-          ? "border-red-500 bg-red-50 focus:border-red-600 focus:ring-red-500"
-          : isCalculated
-            ? "border-blue-300 bg-blue-50 focus:border-blue-500 focus:ring-blue-500"
-            : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
-      )}
-      disabled={row.status === "processing"}
-    />
-  );
-}
-
-export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
-  const { getInputs, updateInputs } = useOcrInputs();
-  const input = getInputs(row);
-  const computedText = buildShippingSlipText(row.shipping_slip_text, input, row);
-  const displayText = input.shippingSlipTextEdited ? input.shippingSlipText : computedText;
-  const fallbackText = displayText || "-";
-  const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState("");
-
-  const startEditing = () => {
-    setDraft(displayText || "");
-    setIsEditing(true);
-  };
-
-  const commit = () => {
-    if (draft === computedText) {
-      updateInputs(row, { shippingSlipText: "", shippingSlipTextEdited: false });
-    } else {
-      updateInputs(row, { shippingSlipText: draft, shippingSlipTextEdited: true });
-    }
-    setIsEditing(false);
-  };
-
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputValue = value || (isCalculated ? formatDateForInput(row.calculated_shipping_date) : "");
+  const isActive = activeCell?.rowId === row.id && activeCell?.field === field;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const initialValueRef = useRef(value);
+  const [isComposing, setIsComposing] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    if (isEditing) {
-      inputRef.current?.focus();
+    if (isActive) {
+      initialValueRef.current = value;
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+        inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+      });
     }
-  }, [isEditing]);
+  }, [isActive, value]);
 
-  if (isEditing) {
+  const isDisabled = row.status === "processing" || isReadOnly;
+
+  const handleFinalize = () => {
+    const isValid = isValidDateInput(value);
+    setHasError(!isValid);
+    if (!isValid) {
+      requestAnimationFrame(() => inputRef.current?.focus());
+      return false;
+    }
+    setActiveCell(null);
+    return true;
+  };
+
+  const handleNavigate = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (isComposing) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      updateInputs(row, { [field]: initialValueRef.current });
+      setHasError(false);
+      setActiveCell(null);
+      return;
+    }
+    if (event.key === "Tab") {
+      event.preventDefault();
+      if (!isValidDateInput(value)) {
+        setHasError(true);
+        return;
+      }
+      const direction = event.shiftKey ? -1 : 1;
+      const target = resolveTabTarget(
+        row.id,
+        field,
+        direction,
+        editableFieldOrder,
+        rowIds,
+        getRowById,
+      );
+      if (target) {
+        setHasError(false);
+        setActiveCell(target);
+      } else {
+        setActiveCell(null);
+      }
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (!isValidDateInput(value)) {
+        setHasError(true);
+        return;
+      }
+      const direction = event.shiftKey ? -1 : 1;
+      const target = resolveEnterTarget(row.id, field, direction, rowIds, getRowById);
+      if (target) {
+        setHasError(false);
+        setActiveCell(target);
+      } else {
+        setActiveCell(null);
+      }
+    }
+  };
+
+  if (isActive) {
     return (
-      <textarea
+      <input
         ref={inputRef}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            setIsEditing(false);
-            setDraft(displayText || "");
-          }
-          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-            event.preventDefault();
-            commit();
+        type="date"
+        value={inputValue || ""}
+        onChange={(e) => {
+          const nextValue = e.target.value;
+          updateInputs(row, { [field]: nextValue });
+          if (hasError && isValidDateInput(nextValue)) {
+            setHasError(false);
           }
         }}
-        className="w-full min-h-[2.5rem] rounded-md border border-gray-300 bg-white px-2 py-1 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        onBlur={() => {
+          if (!isActive) return;
+          handleFinalize();
+        }}
+        onKeyDown={handleNavigate}
+        onCompositionStart={() => setIsComposing(true)}
+        onCompositionEnd={() => setIsComposing(false)}
+        title={isCalculated ? `自動計算（LT=${row.transport_lt_days}日）` : ""}
+        className={cn(
+          "w-full rounded-md border bg-white/90 px-3 py-2 text-xs shadow-sm outline-none transition focus:ring-2",
+          hasDateError || hasError
+            ? "border-red-300 focus:border-red-400 focus:ring-red-200"
+            : isCalculated
+              ? "border-blue-200 focus:border-blue-300 focus:ring-blue-200"
+              : "border-slate-200 focus:border-blue-300 focus:ring-blue-200",
+        )}
+        disabled={isDisabled}
       />
     );
   }
@@ -448,17 +733,157 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
   return (
     <button
       type="button"
-      onDoubleClick={startEditing}
+      onClick={() => {
+        if (isDisabled) return;
+        setActiveCell({ rowId: row.id, field });
+      }}
       onKeyDown={(event) => {
-        if (event.key === "Enter") {
-          startEditing();
+        if (isDisabled) return;
+        if (event.key === "Enter" || event.key === "F2") {
+          event.preventDefault();
+          setActiveCell({ rowId: row.id, field });
         }
       }}
       className={cn(
-        "min-h-[2.5rem] w-full cursor-text rounded-md border border-gray-300 bg-slate-50 px-2 py-1 text-left text-xs whitespace-pre-wrap break-words",
-        row.status === "processing" && "cursor-not-allowed opacity-70",
+        "w-full rounded-md px-3 py-2 text-left text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
+        "hover:bg-slate-50/80",
+        hasDateError
+          ? "text-red-700 bg-red-50/60"
+          : "text-slate-700 bg-transparent",
+        isCalculated && "text-blue-700",
+        isDisabled && "cursor-not-allowed opacity-60",
       )}
-      disabled={row.status === "processing"}
+      disabled={isDisabled}
+    >
+      {displayValue || "-"}
+    </button>
+  );
+}
+
+export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
+  const { getInputs, updateInputs } = useOcrInputs();
+  const { activeCell, setActiveCell, editableFieldOrder, rowIds, isReadOnly, getRowById } =
+    useOcrCellEditing();
+  const input = getInputs(row);
+  const computedText = buildShippingSlipText(row.shipping_slip_text, input, row);
+  const displayText = input.shippingSlipTextEdited ? input.shippingSlipText : computedText;
+  const fallbackText = displayText || "-";
+  const [draft, setDraft] = useState("");
+  const [isComposing, setIsComposing] = useState(false);
+  const isActive = activeCell?.rowId === row.id && activeCell?.field === "shippingSlipText";
+  const initialStateRef = useRef({
+    text: input.shippingSlipText,
+    edited: input.shippingSlipTextEdited,
+  });
+
+  const isDisabled = row.status === "processing" || isReadOnly;
+
+  const commit = () => {
+    if (draft === computedText) {
+      updateInputs(row, { shippingSlipText: "", shippingSlipTextEdited: false });
+    } else {
+      updateInputs(row, { shippingSlipText: draft, shippingSlipTextEdited: true });
+    }
+    setActiveCell(null);
+  };
+
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (isActive) {
+      initialStateRef.current = {
+        text: input.shippingSlipText,
+        edited: input.shippingSlipTextEdited,
+      };
+      setDraft(displayText || "");
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+        inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+      });
+    }
+  }, [isActive, displayText, input.shippingSlipText, input.shippingSlipTextEdited]);
+
+  const handleNavigate = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isComposing) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      updateInputs(row, {
+        shippingSlipText: initialStateRef.current.text,
+        shippingSlipTextEdited: initialStateRef.current.edited,
+      });
+      setDraft(displayText || "");
+      setActiveCell(null);
+      return;
+    }
+    if (event.key === "Tab") {
+      event.preventDefault();
+      const direction = event.shiftKey ? -1 : 1;
+      commit();
+      const target = resolveTabTarget(
+        row.id,
+        "shippingSlipText",
+        direction,
+        editableFieldOrder,
+        rowIds,
+        getRowById,
+      );
+      if (target) {
+        setActiveCell(target);
+      }
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const direction = event.shiftKey ? -1 : 1;
+      commit();
+      const target = resolveEnterTarget(row.id, "shippingSlipText", direction, rowIds, getRowById);
+      if (target) {
+        setActiveCell(target);
+      }
+    }
+  };
+
+  if (isActive) {
+    return (
+      <textarea
+        ref={inputRef}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          if (!isActive) return;
+          commit();
+        }}
+        onKeyDown={handleNavigate}
+        onCompositionStart={() => setIsComposing(true)}
+        onCompositionEnd={() => setIsComposing(false)}
+        className="w-full min-h-[2.75rem] rounded-md border border-slate-200 bg-white/90 px-3 py-2 text-xs shadow-sm focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        disabled={isDisabled}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (isDisabled) return;
+        setActiveCell({ rowId: row.id, field: "shippingSlipText" });
+      }}
+      onKeyDown={(event) => {
+        if (isDisabled) return;
+        if (event.key === "Enter" || event.key === "F2") {
+          event.preventDefault();
+          setActiveCell({ rowId: row.id, field: "shippingSlipText" });
+        }
+      }}
+      className={cn(
+        "min-h-[2.75rem] w-full cursor-text rounded-md px-3 py-2 text-left text-xs whitespace-pre-wrap break-words transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
+        "hover:bg-slate-50/80",
+        "text-slate-700",
+        isDisabled && "cursor-not-allowed opacity-70",
+      )}
+      disabled={isDisabled}
     >
       {fallbackText}
     </button>
@@ -467,9 +892,9 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
 
 export function LotInfoCell({ row }: { row: OcrResultItem }) {
   return (
-    <div className="flex flex-col gap-2 py-2">
+    <div className="flex flex-col gap-3 py-2">
       {/* ロット1 */}
-      <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+      <div className="grid grid-cols-[2fr_2fr_1fr] gap-3">
         <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
         <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
         <EditableTextCell
@@ -480,7 +905,7 @@ export function LotInfoCell({ row }: { row: OcrResultItem }) {
         />
       </div>
       {/* ロット2 */}
-      <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+      <div className="grid grid-cols-[2fr_2fr_1fr] gap-3">
         <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
         <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
         <EditableTextCell

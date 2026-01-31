@@ -130,7 +130,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
               <EditableTextCell
                 row={row}
                 field="materialCode"
-                inputClassName={row.master_not_found ? "border-red-300 bg-red-50" : ""}
+                hasWarning={row.master_not_found}
               />
             ),
           minWidth: 120,
@@ -145,7 +145,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
               <EditableTextCell
                 row={row}
                 field="jikuCode"
-                inputClassName={row.jiku_format_error ? "border-red-300 bg-red-50" : ""}
+                hasWarning={row.jiku_format_error}
               />
             ),
           minWidth: 100,
