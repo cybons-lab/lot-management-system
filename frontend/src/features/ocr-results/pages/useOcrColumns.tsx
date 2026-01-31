@@ -8,7 +8,6 @@ import {
   EditableDateCell,
   EditableShippingSlipCell,
   EditableTextCell,
-  LotEntryCell,
   StatusReviewCell,
 } from "./OcrResultsTableCells";
 
@@ -64,42 +63,15 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           minWidth: 120, // Increased width for 2-row layout
         },
         {
-          id: "lot_entry_1",
-          header: (
-            <div className="flex flex-col leading-tight py-1">
-              <span className="text-xs font-semibold">ロットNo(1)</span>
-              <span className="text-[10px] font-normal text-slate-500">数量(1)</span>
-            </div>
-          ),
+          id: "lot_no_1_input",
+          header: "ロットNo(1)",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <div className="flex flex-col gap-1 text-xs">
-                <span>{row.manual_lot_no_1 || row.lot_no || "-"}</span>
-                <span className="text-gray-500">{row.manual_quantity_1 || "-"}</span>
-              </div>
+              <span className="text-xs">{row.manual_lot_no_1 || row.lot_no || "-"}</span>
             ) : (
-              <LotEntryCell row={row} lotField="lotNo1" quantityField="quantity1" />
+              <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
             ),
-          minWidth: 160,
-        },
-        {
-          id: "lot_entry_2",
-          header: (
-            <div className="flex flex-col leading-tight py-1">
-              <span className="text-xs font-semibold">ロットNo(2)</span>
-              <span className="text-[10px] font-normal text-slate-500">数量(2)</span>
-            </div>
-          ),
-          accessor: (row: OcrResultItem) =>
-            isReadOnly ? (
-              <div className="flex flex-col gap-1 text-xs">
-                <span>{row.manual_lot_no_2 || "-"}</span>
-                <span className="text-gray-500">{row.manual_quantity_2 || "-"}</span>
-              </div>
-            ) : (
-              <LotEntryCell row={row} lotField="lotNo2" quantityField="quantity2" />
-            ),
-          minWidth: 160,
+          minWidth: 140,
         },
         {
           id: "inbound_no_1_input",
@@ -108,9 +80,36 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
             isReadOnly ? (
               <span className="text-xs">{row.manual_inbound_no || row.inbound_no || "-"}</span>
             ) : (
-              <EditableTextCell row={row} field="inboundNo1" />
+              <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
             ),
           minWidth: 120,
+        },
+        {
+          id: "quantity_1_input",
+          header: "数量(1)",
+          accessor: (row: OcrResultItem) =>
+            isReadOnly ? (
+              <span className="text-xs text-right block">{row.manual_quantity_1 || "-"}</span>
+            ) : (
+              <EditableTextCell
+                row={row}
+                field="quantity1"
+                placeholder="数量(1)"
+                inputClassName="text-right"
+              />
+            ),
+          minWidth: 90,
+        },
+        {
+          id: "lot_no_2_input",
+          header: "ロットNo(2)",
+          accessor: (row: OcrResultItem) =>
+            isReadOnly ? (
+              <span className="text-xs">{row.manual_lot_no_2 || "-"}</span>
+            ) : (
+              <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
+            ),
+          minWidth: 140,
         },
         {
           id: "inbound_no_2_input",
@@ -119,9 +118,25 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
             isReadOnly ? (
               <span className="text-xs">{row.manual_inbound_no_2 || "-"}</span>
             ) : (
-              <EditableTextCell row={row} field="inboundNo2" />
+              <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
             ),
           minWidth: 120,
+        },
+        {
+          id: "quantity_2_input",
+          header: "数量(2)",
+          accessor: (row: OcrResultItem) =>
+            isReadOnly ? (
+              <span className="text-xs text-right block">{row.manual_quantity_2 || "-"}</span>
+            ) : (
+              <EditableTextCell
+                row={row}
+                field="quantity2"
+                placeholder="数量(2)"
+                inputClassName="text-right"
+              />
+            ),
+          minWidth: 90,
         },
         {
           id: "shipping_date_input",

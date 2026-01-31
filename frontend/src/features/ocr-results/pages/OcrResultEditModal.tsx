@@ -68,21 +68,11 @@ function MaterialAndDeliverySection({ row }: { row: OcrResultItem }) {
 
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          出荷・入庫情報
+          出荷情報
         </Label>
         <div className="space-y-1">
           <Label className="text-[10px]">出荷日</Label>
           <EditableDateCell row={row} field="shippingDate" />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px]">入庫No(1)</Label>
-            <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[10px]">入庫No(2)</Label>
-            <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
-          </div>
         </div>
       </div>
     </div>
@@ -94,23 +84,17 @@ function LotAndTextSection({ row }: { row: OcrResultItem }) {
     <div className="space-y-4">
       <div className="space-y-2">
         <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          ロット番号
+          ロット情報(1)
         </Label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1">
             <Label className="text-[10px]">ロットNo(1)</Label>
             <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
           </div>
           <div className="space-y-1">
-            <Label className="text-[10px]">ロットNo(2)</Label>
-            <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
+            <Label className="text-[10px]">入庫No(1)</Label>
+            <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
           </div>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">数量</Label>
-        <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-[10px]">数量(1)</Label>
             <EditableTextCell
@@ -119,6 +103,22 @@ function LotAndTextSection({ row }: { row: OcrResultItem }) {
               placeholder="数量(1)"
               inputClassName="text-right"
             />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          ロット情報(2)
+        </Label>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="space-y-1">
+            <Label className="text-[10px]">ロットNo(2)</Label>
+            <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px]">入庫No(2)</Label>
+            <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
           </div>
           <div className="space-y-1">
             <Label className="text-[10px]">数量(2)</Label>
