@@ -7,13 +7,14 @@
  * - Filter state (supplier, inactive toggle)
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 
 import type { UomConversionCreate, UomConversionResponse } from "../api";
 
 import { useInlineEdit } from "./useInlineEdit";
 import { useCreateUomConversion, useUomConversions } from "./useUomConversions";
 
+import { useMySuppliers } from "@/features/assignments/hooks/useMySuppliers";
 import { useSupplierProducts } from "@/features/supplier-products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
 
@@ -27,9 +28,26 @@ interface DialogState {
 
 // eslint-disable-next-line max-lines-per-function
 export function useUomConversionsPageState() {
+  // 担当仕入先を取得
+  const { data: mySuppliers } = useMySuppliers();
+  const primarySupplierIds = useMemo(
+    () => mySuppliers?.primary_supplier_ids || [],
+    [mySuppliers?.primary_supplier_ids],
+  );
+
+  // 担当仕入先が1つのみの場合、自動選択
+  const initialSupplierId = primarySupplierIds.length === 1 ? String(primarySupplierIds[0]) : "all";
+
   // Filter state
   const [showInactive, setShowInactive] = useState(false);
-  const [selectedSupplierId, setSelectedSupplierId] = useState<string>("all");
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>(initialSupplierId);
+
+  // 担当仕入先が変更された場合、初期値を更新
+  useEffect(() => {
+    if (primarySupplierIds.length === 1 && selectedSupplierId === "all") {
+      setSelectedSupplierId(String(primarySupplierIds[0]));
+    }
+  }, [primarySupplierIds, selectedSupplierId]);
 
   // Dialog state
   const [dialogState, setDialogState] = useState<DialogState>({
