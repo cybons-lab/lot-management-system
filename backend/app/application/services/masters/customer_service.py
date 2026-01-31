@@ -52,7 +52,9 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
             changes=changes,
         )
 
-    def create(self, payload: CustomerCreate, *, user_id: int | None = None) -> Customer:
+    def create(
+        self, payload: CustomerCreate, *, user_id: int | None = None, auto_commit: bool = True
+    ) -> Customer:
         """Create new customer."""
         customer = Customer(**payload.model_dump())
         self.db.add(customer)
@@ -60,8 +62,12 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
 
         self._log_operation(user_id, "create", customer.id, payload.model_dump(mode="json"))
 
-        self.db.commit()
-        self.db.refresh(customer)
+        if auto_commit:
+            self.db.commit()
+            self.db.refresh(customer)
+        else:
+            self.db.flush()
+            self.db.refresh(customer)
         return customer
 
     def get_by_code(self, code: str, *, raise_404: bool = True) -> Customer | None:

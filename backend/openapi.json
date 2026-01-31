@@ -16722,6 +16722,61 @@
         }
       }
     },
+    "/api/rpa/material-delivery-note/runs/{run_id}/loop-summary": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Get Loop Summary",
+        "description": "PADループの集計情報を取得する.",
+        "operationId": "get_loop_summary_api_rpa_material_delivery_note_runs__run_id__loop_summary_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 5,
+              "title": "Top N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoopSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rpa/material-delivery-note/runs": {
       "post": {
         "tags": [
@@ -21565,6 +21620,56 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schema/tables": {
+      "get": {
+        "tags": [
+          "schema"
+        ],
+        "summary": "Get Tables",
+        "description": "Get all tables with their columns and relationships.\n\nReturns:\n    Dictionary with table metadata including columns, relationships, and comments.",
+        "operationId": "get_tables_api_schema_tables_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Tables Api Schema Tables Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schema/mermaid": {
+      "get": {
+        "tags": [
+          "schema"
+        ],
+        "summary": "Get Mermaid Er Diagram",
+        "description": "Generate Mermaid ER diagram syntax (simplified for large schemas).\n\nReturns:\n    Dictionary with 'diagram' key containing Mermaid syntax string.",
+        "operationId": "get_mermaid_er_diagram_api_schema_mermaid_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Get Mermaid Er Diagram Api Schema Mermaid Get"
                 }
               }
             }
@@ -28924,6 +29029,99 @@
         "type": "object",
         "title": "LoginRequest",
         "description": "Login request (Simplified for dev)."
+      },
+      "LoopErrorCodeCount": {
+        "properties": {
+          "error_code": {
+            "type": "string",
+            "title": "Error Code"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error_code",
+          "count"
+        ],
+        "title": "LoopErrorCodeCount",
+        "description": "PADループ失敗コード集計."
+      },
+      "LoopSummaryResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "queued": {
+            "type": "integer",
+            "title": "Queued"
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "processing": {
+            "type": "integer",
+            "title": "Processing"
+          },
+          "success": {
+            "type": "integer",
+            "title": "Success"
+          },
+          "failure": {
+            "type": "integer",
+            "title": "Failure"
+          },
+          "done": {
+            "type": "integer",
+            "title": "Done"
+          },
+          "remaining": {
+            "type": "integer",
+            "title": "Remaining"
+          },
+          "percent": {
+            "type": "number",
+            "title": "Percent"
+          },
+          "last_activity_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity At"
+          },
+          "error_code_counts": {
+            "items": {
+              "$ref": "#/components/schemas/LoopErrorCodeCount"
+            },
+            "type": "array",
+            "title": "Error Code Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "queued",
+          "pending",
+          "processing",
+          "success",
+          "failure",
+          "done",
+          "remaining",
+          "percent",
+          "last_activity_at"
+        ],
+        "title": "LoopSummaryResponse",
+        "description": "PADループ集計レスポンス."
       },
       "LotArchiveRequest": {
         "properties": {

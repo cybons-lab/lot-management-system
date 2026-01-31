@@ -79,7 +79,6 @@ class LotReceipt(Base):
     """
 
     __tablename__ = "lot_receipts"
-
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
 
     # Lot identification (linked to lot_master)
@@ -109,17 +108,20 @@ class LotReceipt(Base):
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
+        comment="仕入先品目ID（メーカー品番への参照）",
     )
     warehouse_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("warehouses.id", ondelete="RESTRICT"),
         nullable=False,
+        comment="倉庫ID",
     )
 
     supplier_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("suppliers.id", ondelete="SET NULL"),
         nullable=True,
+        comment="仕入先ID（仕入元）",
     )
     expected_lot_id: Mapped[int | None] = mapped_column(
         BigInteger,
@@ -253,6 +255,7 @@ class LotReceipt(Base):
                 "status = 'active' AND inspection_status IN ('not_required', 'passed')"
             ),
         ),
+        {"comment": "ロット入荷実体：個別の入荷記録を管理。在庫の単一ソース"},
     )
 
     __mapper_args__ = {"version_id_col": version}

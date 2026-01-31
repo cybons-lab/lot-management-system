@@ -2,36 +2,11 @@ import { AlertTriangle, Settings2, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
-import { Label, Switch } from "@/components/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { AVAILABLE_FEATURES } from "@/constants/features";
+import { SystemSettingItem } from "../components/SystemSettingItem";
+import type { SystemSetting, SettingConfig } from "../types";
+
 import { http } from "@/shared/api/http-client";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
-import type { PageVisibilityConfig } from "@/types/system";
-
-interface SystemSetting {
-  id: number | null;
-  config_key: string;
-  config_value: string;
-  description: string | null;
-}
-
-type SettingType = "boolean" | "select" | "json" | "text";
-
-interface SettingConfig {
-  label: string;
-  type: SettingType;
-  category: "debug" | "system" | "security";
-  description?: string;
-  options?: { label: string; value: string }[]; // For select type
-}
 
 const SETTING_CONFIGS: Record<string, SettingConfig> = {
   enable_db_browser: {
@@ -63,6 +38,38 @@ const SETTING_CONFIGS: Record<string, SettingConfig> = {
     type: "json",
     category: "security",
     description: "機能ごとの表示/非表示をロール別に制御します。",
+  },
+  // SQL Profiler
+  sql_profiler_enabled: {
+    label: "SQLプロファイラ有効化",
+    type: "boolean",
+    category: "debug",
+    description: "API毎のSQL実行数・時間を計測し、ログに出力します。",
+  },
+  sql_profiler_threshold_count: {
+    label: "SQL実行数・警告しきい値",
+    type: "number",
+    category: "debug",
+    description: "1リクエストでこの回数を超えると警告ログを出します（デフォルト: 10）。",
+  },
+  sql_profiler_threshold_time: {
+    label: "SQL実行時間・警告しきい値(ms)",
+    type: "number",
+    category: "debug",
+    description: "1リクエストでこの時間を超えると警告ログを出します（デフォルト: 500ms）。",
+  },
+  sql_profiler_n_plus_one_threshold: {
+    label: "N+1検知・重複しきい値",
+    type: "number",
+    category: "debug",
+    description:
+      "同一形状のSQLがこの回数を超えて実行されるとN+1として警告します（デフォルト: 5）。",
+  },
+  sql_profiler_normalize_literals: {
+    label: "SQLリテラル正規化",
+    type: "boolean",
+    category: "debug",
+    description: "N+1検知時に数値や文字列リテラルを同一視するかどうか（デフォルト: 有効）。",
   },
 };
 
@@ -215,135 +222,5 @@ export function SystemSettingsPage() {
         )}
       </div>
     </PageContainer>
-  );
-}
-
-interface SystemSettingItemProps {
-  setting: SystemSetting;
-  config: SettingConfig;
-  isSaving: boolean;
-  onUpdate: (key: string, value: string) => Promise<void>;
-}
-
-function SystemSettingItem({ setting, config, isSaving, onUpdate }: SystemSettingItemProps) {
-  if (!config) return null;
-  return (
-    <div
-      className={
-        config.type === "json" ? "block space-y-4" : "flex items-center justify-between gap-4"
-      }
-    >
-      <div className="space-y-0.5">
-        <Label className="text-base font-semibold">{config.label}</Label>
-        <p className="text-muted-foreground text-sm">{config.description || setting.description}</p>
-      </div>
-      <div className={config.type === "json" ? "w-full" : "flex items-center gap-4"}>
-        {config.type === "boolean" && (
-          <Switch
-            checked={setting.config_value === "true"}
-            onCheckedChange={(checked) => onUpdate(setting.config_key, checked ? "true" : "false")}
-            disabled={isSaving}
-          />
-        )}
-        {config.type === "select" && (
-          <select
-            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
-            value={setting.config_value}
-            onChange={(e) => onUpdate(setting.config_key, e.target.value)}
-            disabled={isSaving}
-          >
-            {config.options?.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        )}
-        {config.type === "json" && setting.config_key === "page_visibility" && (
-          <PageVisibilityEditor
-            value={setting.config_value}
-            onChange={(newValue) => onUpdate(setting.config_key, newValue)}
-            disabled={isSaving}
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface PageVisibilityEditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  disabled: boolean;
-}
-
-function PageVisibilityEditor({ value, onChange, disabled }: PageVisibilityEditorProps) {
-  // Parse JSON or use default
-  const config = ((): PageVisibilityConfig => {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return {};
-    }
-  })();
-
-  // Should ideally be dynamic or match GlobalNav, but hardcoded list ensures stability for now.
-  // Can verify against current config keys too
-  const allFeatures = Array.from(new Set([...AVAILABLE_FEATURES, ...Object.keys(config)]));
-
-  const handleToggle = (feature: string, role: "guest" | "user", checked: boolean) => {
-    const newConfig = { ...config };
-    if (!newConfig[feature]) {
-      newConfig[feature] = { guest: true, user: true };
-    }
-
-    // Type assertion or manual update
-    const featureConfig = newConfig[feature]!;
-    if (role === "guest") featureConfig.guest = checked;
-    if (role === "user") featureConfig.user = checked;
-
-    onChange(JSON.stringify(newConfig));
-  };
-
-  return (
-    <div className="rounded-md border mt-2">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[200px]">機能 (Feature)</TableHead>
-            <TableHead className="text-center w-[100px]">General User</TableHead>
-            <TableHead className="text-center w-[100px]">Guest</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {allFeatures.map((feature) => {
-            const featureConf = config[feature] || { guest: true, user: true };
-            return (
-              <TableRow key={feature}>
-                <TableCell className="font-medium capitalize">{feature}</TableCell>
-                <TableCell className="text-center">
-                  <div className="flex justify-center">
-                    <Switch
-                      checked={featureConf.user}
-                      onCheckedChange={(checked) => handleToggle(feature, "user", checked)}
-                      disabled={disabled}
-                    />
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex justify-center">
-                    <Switch
-                      checked={featureConf.guest}
-                      onCheckedChange={(checked) => handleToggle(feature, "guest", checked)}
-                      disabled={disabled}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
   );
 }

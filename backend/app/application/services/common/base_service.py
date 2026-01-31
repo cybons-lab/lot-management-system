@@ -236,11 +236,12 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
             )
         return instance
 
-    def create(self, payload: CreateSchemaType) -> ModelType:
+    def create(self, payload: CreateSchemaType, *, auto_commit: bool = True) -> ModelType:
         """Create new entity.
 
         Args:
             payload: Pydantic schema with create data
+            auto_commit: If True, commit the transaction. If False, only flush.
 
         Returns:
             Created entity instance
@@ -251,8 +252,12 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         instance = self.model(**payload.model_dump())
         self.db.add(instance)
         try:
-            self.db.commit()
-            self.db.refresh(instance)
+            if auto_commit:
+                self.db.commit()
+                self.db.refresh(instance)
+            else:
+                self.db.flush()
+                self.db.refresh(instance)
             return instance
         except IntegrityError as exc:
             self.db.rollback()
@@ -262,12 +267,15 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
             user_message = parse_db_error(exc, payload.model_dump())
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=user_message) from exc
 
-    def update(self, id: IDType, payload: UpdateSchemaType) -> ModelType:
+    def update(
+        self, id: IDType, payload: UpdateSchemaType, *, auto_commit: bool = True
+    ) -> ModelType:
         """Update existing entity.
 
         Args:
             id: Primary key of the entity to update
             payload: Pydantic schema with update data
+            auto_commit: If True, commit the transaction. If False, only flush.
 
         Returns:
             Updated entity instance
@@ -281,8 +289,12 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
             setattr(instance, field, value)
 
         try:
-            self.db.commit()
-            self.db.refresh(instance)
+            if auto_commit:
+                self.db.commit()
+                self.db.refresh(instance)
+            else:
+                self.db.flush()
+                self.db.refresh(instance)
             return instance
         except IntegrityError as exc:
             self.db.rollback()
@@ -291,7 +303,7 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
             user_message = parse_db_error(exc, payload.model_dump())
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=user_message) from exc
 
-    def delete(self, id: IDType, *, end_date: date | None = None) -> None:
+    def delete(self, id: IDType, *, end_date: date | None = None, auto_commit: bool = True) -> None:
         """Delete entity (soft delete for models with SoftDeleteMixin, hard delete otherwise).
 
         For models with SoftDeleteMixin, this performs a soft delete by setting
@@ -303,6 +315,7 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
             id: Primary key of the entity to delete
             end_date: For soft delete, the date until which the record is valid.
                      Defaults to today (immediately inactive).
+            auto_commit: If True, commit the transaction. If False, only flush.
 
         Raises:
             HTTPException: 404 if entity not found
@@ -313,13 +326,21 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         if self._has_soft_delete_mixin():
             # Soft delete: set valid_to
             cast(SoftDeleteMixin, instance).soft_delete(end_date)
-            self.db.commit()
+            if auto_commit:
+                self.db.commit()
+            else:
+                self.db.flush()
         else:
             # Hard delete for models without soft delete support
             self.db.delete(instance)
-            self.db.commit()
+            if auto_commit:
+                self.db.commit()
+            else:
+                self.db.flush()
 
-    def soft_delete(self, id: IDType, *, end_date: date | None = None) -> ModelType:
+    def soft_delete(
+        self, id: IDType, *, end_date: date | None = None, auto_commit: bool = True
+    ) -> ModelType:
         """Soft delete entity by setting valid_to.
 
         This method is only available for models with SoftDeleteMixin.
@@ -328,6 +349,7 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
             id: Primary key of the entity to soft delete
             end_date: The date until which the record is valid.
                      Defaults to today (immediately inactive).
+            auto_commit: If True, commit the transaction. If False, only flush.
 
         Returns:
             The soft-deleted entity
@@ -343,8 +365,12 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         assert instance is not None
 
         cast(SoftDeleteMixin, instance).soft_delete(end_date)
-        self.db.commit()
-        self.db.refresh(instance)
+        if auto_commit:
+            self.db.commit()
+            self.db.refresh(instance)
+        else:
+            self.db.flush()
+            self.db.refresh(instance)
         return instance
 
     def hard_delete(self, id: IDType) -> None:
@@ -378,13 +404,14 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
                 "Use soft delete instead or remove the referencing records first.",
             ) from exc
 
-    def restore(self, id: IDType) -> ModelType:
+    def restore(self, id: IDType, *, auto_commit: bool = True) -> ModelType:
         """Restore a soft-deleted entity.
 
         This method is only available for models with SoftDeleteMixin.
 
         Args:
             id: Primary key of the entity to restore
+            auto_commit: If True, commit the transaction. If False, only flush.
 
         Returns:
             The restored entity
@@ -400,8 +427,12 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         assert instance is not None
 
         cast(SoftDeleteMixin, instance).restore()
-        self.db.commit()
-        self.db.refresh(instance)
+        if auto_commit:
+            self.db.commit()
+            self.db.refresh(instance)
+        else:
+            self.db.flush()
+            self.db.refresh(instance)
         return instance
 
     def _execute_in_transaction(self, func: Any) -> Any:

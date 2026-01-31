@@ -45,4 +45,26 @@ def update_system_setting(
         # Re-configure logging with new level immediately
         setup_logging(level=update_data.config_value)
 
+    # SQL Profiler side effects
+    elif key.startswith("sql_profiler_"):
+        from app.core.config import settings
+
+        val = update_data.config_value
+        if key == ConfigKeys.SQL_PROFILER_ENABLED:
+            settings.SQL_PROFILER_ENABLED = val.lower() in ("true", "1", "yes", "on")
+
+            # If enabled dynamically, we might want to register listener,
+            # but listeners are usually registered at startup.
+            # However, since the listener checks the flag at runtime, this is fine.
+            # But if we wanted to *start* measuring, the flag is enough.
+
+        elif key == ConfigKeys.SQL_PROFILER_THRESHOLD_COUNT:
+            settings.SQL_PROFILER_THRESHOLD_COUNT = int(val)
+        elif key == ConfigKeys.SQL_PROFILER_THRESHOLD_TIME:
+            settings.SQL_PROFILER_THRESHOLD_TIME = float(val)
+        elif key == ConfigKeys.SQL_PROFILER_N_PLUS_ONE_THRESHOLD:
+            settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD = int(val)
+        elif key == ConfigKeys.SQL_PROFILER_NORMALIZE_LITERALS:
+            settings.SQL_PROFILER_NORMALIZE_LITERALS = val.lower() in ("true", "1", "yes", "on")
+
     return config

@@ -7,6 +7,12 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 
+# Set dummy DATABASE_URL if not set, to pass Pydantic validation during imports
+# MUST point to the test database so that any global engines created during import (like in app.core.database)
+# point to the correct DB and don't fail connection checks.
+os.environ.setdefault(
+    "DATABASE_URL", "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test"
+)
 os.environ.setdefault("ENABLE_DB_BROWSER", "true")
 
 from app.infrastructure.persistence.models.base_model import Base
@@ -18,6 +24,58 @@ from .db_utils import (
     drop_known_view_relations,
     get_non_view_tables,
 )
+
+
+# SQL Profiler fixture
+@pytest.fixture(autouse=True)
+def check_n_plus_one(caplog, db_engine):
+    """全てのテスト実行中にN+1警告が出ていないか監視する."""
+
+    from app.core.config import settings
+    from app.infrastructure.monitoring.sql_profiler import register_sql_profiler
+
+    # 既存の設定を退避 & プロファイル有効化
+    original_enabled = settings.SQL_PROFILER_ENABLED
+    original_n_plus_one = settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD
+
+    # テスト環境用に強制有効化
+    settings.SQL_PROFILER_ENABLED = True
+    settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD = 10  # 厳しめに設定 (from 5 to 10)
+
+    # テスト用エンジンにリスナーを登録
+    if not hasattr(db_engine, "_sql_profiler_registered"):
+        register_sql_profiler(db_engine)
+        db_engine._sql_profiler_registered = True
+
+    # ContextVarを初期化 (Middlewareを通らない直接的なDB操作も計測するため)
+    from app.infrastructure.monitoring.sql_profiler import RequestStats, _profiler_context
+
+    # ContextVarが既にセットされている場合（例えば他でセットされている場合）も考慮しつつ
+    # 基本はここで新規セットする
+    stats = RequestStats()
+    token = _profiler_context.set(stats)
+
+    yield
+
+    # statsの中身を直接検査
+    n_plus_one_errors = []
+
+    # N+1検知ロジック (middlewareと同等)
+    for _sql_norm, query_stat in stats.queries.items():
+        if query_stat.count > settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD:
+            n_plus_one_errors.append(f"Count: {query_stat.count}, SQL: {query_stat.example_sql}")
+
+    _profiler_context.reset(token)
+
+    # 設定を戻す
+    settings.SQL_PROFILER_ENABLED = original_enabled
+    settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD = original_n_plus_one
+
+    if n_plus_one_errors:
+        pytest.fail(
+            f"N+1 Detected in test! (Threshold: {settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD})\n"
+            + "\n".join(n_plus_one_errors)
+        )
 
 
 # Load Hypothesis settings

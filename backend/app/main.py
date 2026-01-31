@@ -132,6 +132,7 @@ from app.core.database import init_db
 from app.core.log_broadcaster import setup_log_broadcasting
 from app.core.logging import setup_logging
 from app.domain.errors import DomainError
+from app.infrastructure.monitoring.sql_profiler import SQLProfilerMiddleware, register_sql_profiler
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.metrics import MetricsMiddleware
 from app.presentation.api.middleware.maintenance_middleware import MaintenanceMiddleware
@@ -170,7 +171,54 @@ async def lifespan(app: FastAPI):
     logger.info(f"📦 環境: {settings.ENVIRONMENT}")
     logger.info(f"💾 データベース: {_mask_database_url(settings.DATABASE_URL)}")
 
+    # SQL Profiler登録
+    if settings.SQL_PROFILER_ENABLED:
+        from app.core.database import engine
+
+        register_sql_profiler(engine)
+        logger.info("🕵️ SQL Profiler enabled")
+
     init_db()
+
+    # Load system settings from DB to override env vars
+    try:
+        from app.application.services.system_config_service import ConfigKeys, SystemConfigService
+        from app.core.database import SessionLocal
+
+        # Use a separate session for config loading
+        db = SessionLocal()
+        try:
+            service = SystemConfigService(db)
+            settings.SQL_PROFILER_ENABLED = service.get_bool(
+                ConfigKeys.SQL_PROFILER_ENABLED, settings.SQL_PROFILER_ENABLED
+            )
+            settings.SQL_PROFILER_THRESHOLD_COUNT = service.get_int(
+                ConfigKeys.SQL_PROFILER_THRESHOLD_COUNT, settings.SQL_PROFILER_THRESHOLD_COUNT
+            )
+            # Threshold Time is float
+            th_time = service.get(ConfigKeys.SQL_PROFILER_THRESHOLD_TIME)
+            if th_time:
+                settings.SQL_PROFILER_THRESHOLD_TIME = float(th_time)
+
+            settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD = service.get_int(
+                ConfigKeys.SQL_PROFILER_N_PLUS_ONE_THRESHOLD,
+                settings.SQL_PROFILER_N_PLUS_ONE_THRESHOLD,
+            )
+            settings.SQL_PROFILER_NORMALIZE_LITERALS = service.get_bool(
+                ConfigKeys.SQL_PROFILER_NORMALIZE_LITERALS, settings.SQL_PROFILER_NORMALIZE_LITERALS
+            )
+
+            logger.info(
+                f"🔧 Loaded System Settings: Profiler={'ON' if settings.SQL_PROFILER_ENABLED else 'OFF'}"
+            )
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to load system settings from DB: {e}")
+        finally:
+            db.close()
+
+    except Exception as e:
+        logger.error(f"❌ Error during system config loading: {e}")
+
     auto_sync_runner = None
     if settings.SMARTREAD_AUTO_SYNC_ENABLED:
         auto_sync_runner = SmartReadAutoSyncRunner()
@@ -206,7 +254,7 @@ application.add_exception_handler(Exception, errors.generic_exception_handler)
 # ミドルウェア登録
 # ========================================
 # 注: add_middlewareは逆順で実行される
-# 実行順: CORS → Metrics → RequestLogging → CorrelationId
+# 実行順: CORS → Metrics → Custom(SQLProfiler) → RequestLogging → CorrelationId
 application.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -215,6 +263,9 @@ application.add_middleware(
     allow_headers=["*"],
 )
 application.add_middleware(MetricsMiddleware)
+# SQL ProfilerはMetricsの後、メンテナンスの前あたりに入れるのが良い（レスポンスを返す直前に計算したい）
+application.add_middleware(SQLProfilerMiddleware)
+
 application.add_middleware(MaintenanceMiddleware)
 application.add_middleware(
     RequestLoggingMiddleware,

@@ -74,6 +74,7 @@ from app.presentation.api.routes.rpa import (
     sap_orders_router,
     smartread_router,
 )
+from app.presentation.api.routes.schema_router import router as schema_router
 from app.presentation.api.routes.shipping_master_router import router as shipping_master_router
 from app.presentation.api.routes.system.calendar_router import router as calendar_router
 from app.presentation.api.routes.system.system_router import router as system_router
@@ -183,6 +184,9 @@ def register_all_routers(app: FastAPI) -> None:
 
     # Log streaming endpoint
     app.include_router(logs_router, prefix=prefix)
+
+    # Schema inspection endpoint
+    app.include_router(schema_router, prefix=prefix)
 
 
 __all__ = [

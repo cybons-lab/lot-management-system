@@ -45,8 +45,8 @@ const masterSections: MasterSection[] = [
         color: "bg-orange-50 text-orange-600 hover:bg-orange-100",
       },
       {
-        title: "得意先品番マスタ",
-        description: "得意先の注文書に記載される品番（変換ルール）を管理",
+        title: "得意先品番マッピング",
+        description: "お得意先・商品・メーカー品番の組合せ（変換ルール）を管理",
         href: ROUTES.MASTERS.CUSTOMER_ITEMS,
         icon: Database,
         color: "bg-teal-50 text-teal-600 hover:bg-teal-100",
@@ -74,7 +74,7 @@ const masterSections: MasterSection[] = [
       {
         title: "納入先マスタ",
         description: "納入先の基本情報を管理",
-        href: "/delivery-places",
+        href: ROUTES.MASTERS.DELIVERY_PLACES,
         icon: Truck,
         color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
       },
@@ -85,6 +85,13 @@ const masterSections: MasterSection[] = [
         icon: Warehouse,
         color: "bg-purple-50 text-purple-600 hover:bg-purple-100",
       },
+      {
+        title: "仕入先担当設定",
+        description: "仕入先ごとの主担当者を設定",
+        href: ROUTES.MASTERS.PRIMARY_ASSIGNMENTS,
+        icon: UserCheck,
+        color: "bg-amber-50 text-amber-600 hover:bg-amber-100",
+      },
     ],
   },
   {
@@ -94,23 +101,16 @@ const masterSections: MasterSection[] = [
       {
         title: "出荷制御マスタ",
         description: "OCR変換ルールや出荷時の特殊制御を管理",
-        href: "/masters/shipping-masters",
+        href: ROUTES.MASTERS.SHIPPING_MASTERS,
         icon: Truck,
         color: "bg-sky-50 text-sky-600 hover:bg-sky-100",
       },
       {
         title: "単位換算",
         description: "商品ごとの単位換算係数を管理",
-        href: "/masters/uom-conversions",
+        href: ROUTES.MASTERS.UOM_CONVERSIONS,
         icon: Package,
         color: "bg-indigo-50 text-indigo-600 hover:bg-indigo-100",
-      },
-      {
-        title: "主担当設定",
-        description: "仕入先ごとの主担当者を設定",
-        href: "/masters/primary-assignments",
-        icon: UserCheck,
-        color: "bg-amber-50 text-amber-600 hover:bg-amber-100",
       },
     ],
   },
@@ -243,10 +243,10 @@ function MasterStatusAlert() {
             仕入先が設定されていない商品構成が <strong>{status.unmapped_products_count}件</strong>{" "}
             あります。
             <Link
-              to="/masters/supplier-products"
+              to={ROUTES.MASTERS.CUSTOMER_ITEMS}
               className="ml-1 font-medium underline hover:text-red-950"
             >
-              メーカー品番マスタを確認
+              得意先品番マッピングを確認
             </Link>
           </AlertDescription>
         </Alert>
@@ -274,10 +274,10 @@ function MasterStatusAlert() {
           <AlertDescription>
             あなたの主担当仕入先が設定されていません。業務を円滑に進めるため、設定を行ってください。
             <Link
-              to="/masters/primary-assignments"
+              to={ROUTES.MASTERS.PRIMARY_ASSIGNMENTS}
               className="ml-1 font-medium underline hover:text-blue-950"
             >
-              主担当設定を確認
+              仕入先担当設定を確認
             </Link>
           </AlertDescription>
         </Alert>

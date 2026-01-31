@@ -179,6 +179,31 @@ DEFAULT_SETTINGS = [
         "config_value": "",
         "description": "進捗ダウンロードCloud Flow URL",
     },
+    {
+        "config_key": "sql_profiler_enabled",
+        "config_value": "false",
+        "description": "SQLプロファイラの有効化 (true/false)",
+    },
+    {
+        "config_key": "sql_profiler_threshold_count",
+        "config_value": "10",
+        "description": "SQL実行数警告しきい値 (回)",
+    },
+    {
+        "config_key": "sql_profiler_threshold_time",
+        "config_value": "500",
+        "description": "SQL実行時間警告しきい値 (ms)",
+    },
+    {
+        "config_key": "sql_profiler_n_plus_one_threshold",
+        "config_value": "5",
+        "description": "N+1検知しきい値 (重複回数)",
+    },
+    {
+        "config_key": "sql_profiler_normalize_literals",
+        "config_value": "true",
+        "description": "SQLリテラルの正規化 (true/false)",
+    },
 ]
 
 
@@ -192,3 +217,10 @@ class ConfigKeys:
     MAINTENANCE_MODE = "maintenance_mode"
     LOG_LEVEL = "log_level"
     PAGE_VISIBILITY = "page_visibility"
+
+    # SQL Profiler
+    SQL_PROFILER_ENABLED = "sql_profiler_enabled"
+    SQL_PROFILER_THRESHOLD_COUNT = "sql_profiler_threshold_count"
+    SQL_PROFILER_THRESHOLD_TIME = "sql_profiler_threshold_time"
+    SQL_PROFILER_N_PLUS_ONE_THRESHOLD = "sql_profiler_n_plus_one_threshold"
+    SQL_PROFILER_NORMALIZE_LITERALS = "sql_profiler_normalize_literals"

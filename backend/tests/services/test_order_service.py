@@ -29,7 +29,7 @@ def test_create_order_success(db: Session, service_master_data):
             OrderLineCreate(
                 product_group_id=product1.id,
                 order_quantity=100,
-                unit="EA",
+                unit="BOX",
                 delivery_date=date.today() + timedelta(days=7),
                 delivery_place_id=delivery_place.id,
             )

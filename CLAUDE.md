@@ -154,12 +154,23 @@ cd backend && ruff check app/ --fix && ruff format app/
 - Files: `*_router.py`, `*_service.py`, `*_repository.py`, `*_schema.py`, `*_models.py`
 - Absolute imports only: `from app.services.order_service import OrderService`
 
+**Transaction Management:**
+- **Default:** `auto_commit=True` (Simple CRUD)
+- **Unit of Work:** Use `auto_commit=False` for complex transactions spanning multiple services.
+- **Partial Failure:** Use `db.begin_nested()` to create savepoints for best-effort sub-tasks (e.g. auto-allocation).
+- **Locking:** Use `acquire_lock` (SELECT FOR UPDATE) for critical resource access.
+
+**Data Integrity:**
+- **Precision:** Use `Decimal` for all quantities and monetary values. Never use `float`.
+- **Validation:** Fail fast on invalid data (e.g. unknown units). Avoid silent fallbacks.
+
 ### Frontend (TypeScript)
 
 **Quality Requirements (STRICT):**
 - **TypeScript:** Strict mode, 0 errors
 - **ESLint:** 0 warnings
-- **File size:** < 300 lines per component
+- **File size:** < 300 lines per component (論理的なまとまりを優先し、意味のある塊であれば `eslint-disable` で抑制してよい。機械的な分割による過度な断片化は避けること)
+- **Sub-routing:** Use sub-routing for internal tabs/sections (e.g., `:tab` params) to ensure bookmarkability and enable hierarchical access control via `FEATURE_CONFIG`.
 
 **Commands:**
 ```bash
@@ -242,6 +253,7 @@ git checkout -b feature/xxx
 7. Commit frequently with atomic changes (avoid large bulk commits). Commits do not require user confirmation.
 8. Create feature branches for new work (e.g., `feature/order-filters`).
 9. **Add comprehensive logging from the start** (see Logging Guidelines below)
+10. **Use sub-routing for all page tabs/sub-views** to ensure bookmarkability and support hierarchical access control.
 
 ### DON'T
 1. Bypass service layer (routes → repositories directly)

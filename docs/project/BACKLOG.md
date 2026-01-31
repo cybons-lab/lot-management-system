@@ -245,6 +245,29 @@ CI構成:
 
 **関連:** `next_reviews_ja.md::2`
 
+---
+
+### 2-8. ライブラリのメジャーアップデート対応
+
+**優先度**: 中
+**作成**: 2026-01-31
+**カテゴリ**: メンテナンス・技術債
+
+**背景:**
+2026-01-31の定期アップデート確認において、以下のライブラリでメジャーバージョンの更新が確認された。これらは破壊的変更を含む可能性があるため、個別にテストと検証を行いつつ適用する必要がある。
+
+**検討中のアップデート:**
+- `pandas`: 2.3.3 -> 3.0.0
+- `websockets`: 15.0.1 -> 16.0
+- `pycparser`: 2.23 -> 3.0
+
+**タスク内容:**
+1. 各ライブラリのリリースノート（破壊的変更）の確認。
+2. 開発環境でのアップグレード適用。
+3. 既存機能（特にデータ分析、WebSocket通信）の回帰テスト実施。
+4. 問題なければ本番環境へ適用。
+
+---
 **元:** `backlog.md::8-2` (2026-01-18) & `next_reviews_ja.md` (日付なし)
 
 ---
@@ -657,7 +680,33 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 
 **元:** `any-type-reduction.md` (2026-01-18)
 
+
 ---
+
+### 4-6. バックエンド: ProductMapping 関連コードの削除
+
+**優先度**: Low
+**作成**: 2026-01-31
+**カテゴリ**: リファクタリング
+
+**背景:**
+- 2026-01-31のマスタページ改修により、フロントエンドから「商品マッピング（`ProductMapping`）」ページが削除され、機能は「得意先品番マッピング（`CustomerItem`）」に一元化された。
+- しかし、バックエンドには `ProductMapping` モデル、Router、Service、Import/Exportロジックが残存している。
+- これらは `replenishment/engine.py` 等から参照されており、影響調査が必要なため今回は温存された。
+
+**タスク内容:**
+1. `ProductMapping` の参照箇所を洗い出す。
+2. 必要なロジック（もしあれば）を `CustomerItem` ベースに移行する。
+3. 以下のファイルを削除・修正する:
+   - `backend/app/infrastructure/persistence/models/masters_models.py` (Class `ProductMapping`)
+   - `backend/app/presentation/api/routes/masters/product_mappings_router.py`
+   - `backend/app/application/services/masters/product_mappings_service.py`
+   - `backend/app/presentation/schemas/masters/masters_schema.py`
+   - その他 Import/Export 関連
+4. テストを修正する。
+
+**元:** 2026-01-31 マスタページ改修
+
 
 ## 5. テスト・自動化
 

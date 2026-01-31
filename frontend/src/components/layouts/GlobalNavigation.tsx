@@ -129,7 +129,7 @@ const navItems: NavItem[] = [
     requireAdmin: true,
     feature: "logs",
     subItems: [
-      { title: "リアルタイムログ", href: "/logs" },
+      { title: "リアルタイムログ", href: ROUTES.ADMIN.SYSTEM_LOGS },
       { title: "クライアントログ", href: ROUTES.ADMIN.CLIENT_LOGS },
     ],
   },
@@ -164,7 +164,10 @@ const navItems: NavItem[] = [
     title: "ヘルプ",
     icon: HelpCircle,
     feature: "help",
-    subItems: [{ title: "業務フローガイド", href: ROUTES.HELP.FLOW_MAP }],
+    subItems: [
+      { title: "業務フローガイド", href: ROUTES.HELP.FLOW_MAP },
+      { title: "データベーススキーマ", href: ROUTES.HELP.DATABASE_SCHEMA },
+    ],
   },
 ];
 

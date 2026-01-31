@@ -458,8 +458,8 @@ def archive_lot(
     lot_id: int,
     request: LotArchiveRequest | None = None,
     db: Session = Depends(get_db),
-    # TODO: Add permission check
-    # current_user: User = Depends(get_current_active_user),
+    # Add permission check
+    current_user: User = Depends(AuthService.get_current_user),
 ) -> Any:
     """Archive a lot with optional confirmation.
 
@@ -472,6 +472,7 @@ def archive_lot(
         lot_id: ロットID
         request: アーカイブリクエスト（在庫がある場合はlot_number必須）
         db: データベースセッション
+        current_user: 現在のログインユーザー（権限チェック用）
 
     Returns:
         LotResponse: アーカイブされたロット情報

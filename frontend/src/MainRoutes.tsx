@@ -28,6 +28,7 @@ import { ForecastDetailPage } from "@/features/forecasts/pages/ForecastDetailPag
 import { ForecastEditPage } from "@/features/forecasts/pages/ForecastEditPage";
 import { ForecastImportPage } from "@/features/forecasts/pages/ForecastImportPage";
 import { ForecastListPage } from "@/features/forecasts/pages/ForecastListPage";
+import { DatabaseSchemaPage } from "@/features/help/pages/DatabaseSchemaPage";
 import { FlowMapHelpPage } from "@/features/help/pages/FlowMapHelpPage";
 import { InboundPlanCreatePage } from "@/features/inbound-plans/pages/InboundPlanCreatePage";
 import { InboundPlanDetailPage } from "@/features/inbound-plans/pages/InboundPlanDetailPage";
@@ -49,7 +50,6 @@ import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogs
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
-import { ProductMappingsListPage } from "@/features/product-mappings";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { RPAPage } from "@/features/rpa";
 import {
@@ -114,10 +114,10 @@ function InventoryRoutes() {
       </Route>
 
       {/* Inventory Item Detail & Lot Detail */}
-      <Route
-        path="/inventory/items/:productId/:warehouseId"
-        element={<InventoryItemDetailPage />}
-      />
+      <Route path="/inventory/items/:productId/:warehouseId">
+        <Route index element={<Navigate to="summary" replace />} />
+        <Route path=":tab" element={<InventoryItemDetailPage />} />
+      </Route>
       <Route path="/inventory/lots/:lotId" element={<LotDetailPage />} />
     </Route>
   );
@@ -135,10 +135,9 @@ function MasterRoutes() {
       <Route path={ROUTES.MASTERS.CUSTOMERS} element={<CustomersListPage />} />
       <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
       <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
-      <Route path="/masters/primary-assignments" element={<PrimaryAssignmentsPage />} />
-      <Route path="/masters/shipping-masters" element={<ShippingMasterListPage />} />
-      <Route path="/delivery-places" element={<DeliveryPlacesListPage />} />
-      <Route path="/product-mappings" element={<ProductMappingsListPage />} />
+      <Route path={ROUTES.MASTERS.PRIMARY_ASSIGNMENTS} element={<PrimaryAssignmentsPage />} />
+      <Route path={ROUTES.MASTERS.SHIPPING_MASTERS} element={<ShippingMasterListPage />} />
+      <Route path={ROUTES.MASTERS.DELIVERY_PLACES} element={<DeliveryPlacesListPage />} />
       <Route path="/warehouse-delivery-routes" element={<WarehouseDeliveryRoutesListPage />} />
 
       {/* Settings - Phase G-2 (Admin Only) */}
@@ -240,11 +239,29 @@ function AdminRoutes() {
           </AdminGuard>
         }
       />
+      <Route path={ROUTES.DEBUG.DB_BROWSER}>
+        <Route
+          index
+          element={
+            <AdminGuard>
+              <Navigate to="schema" replace />
+            </AdminGuard>
+          }
+        />
+        <Route
+          path=":tab"
+          element={
+            <AdminGuard>
+              <DbBrowserPage />
+            </AdminGuard>
+          }
+        />
+      </Route>
       <Route
-        path={ROUTES.DEBUG.DB_BROWSER}
+        path={ROUTES.ADMIN.SYSTEM_LOGS}
         element={
           <AdminGuard>
-            <DbBrowserPage />
+            <LogViewer />
           </AdminGuard>
         }
       />
@@ -324,7 +341,10 @@ export function MainRoutes() {
             element={<MaterialDeliverySimplePage />}
           />
           <Route path={ROUTES.RPA.GENERIC_CLOUD_FLOW} element={<GenericCloudFlowExecutePage />} />
-          <Route path={ROUTES.RPA.SMARTREAD} element={<SmartReadPage />} />
+          <Route path={ROUTES.RPA.SMARTREAD}>
+            <Route index element={<Navigate to="import" replace />} />
+            <Route path=":tab" element={<SmartReadPage />} />
+          </Route>
           <Route
             path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES}
             element={<LayerCodeMappingsPage />}
@@ -359,26 +379,30 @@ export function MainRoutes() {
 
         {/* Help */}
         <Route path={ROUTES.HELP.FLOW_MAP} element={<FlowMapHelpPage />} />
+        <Route path={ROUTES.HELP.DATABASE_SCHEMA}>
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route path=":tab" element={<DatabaseSchemaPage />} />
+        </Route>
 
         {/* SAP Integration */}
-        <Route
-          path={ROUTES.SAP.ROOT}
-          element={
-            <AdminGuard>
-              <SapIntegrationPage />
-            </AdminGuard>
-          }
-        />
-
-        {/* Log Viewer */}
-        <Route
-          path="/logs"
-          element={
-            <AdminGuard>
-              <LogViewer />
-            </AdminGuard>
-          }
-        />
+        <Route path={ROUTES.SAP.ROOT}>
+          <Route
+            index
+            element={
+              <AdminGuard>
+                <Navigate to="connections" replace />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path=":tab"
+            element={
+              <AdminGuard>
+                <SapIntegrationPage />
+              </AdminGuard>
+            }
+          />
+        </Route>
       </Route>
 
       {/* Catch all - redirect to dashboard */}

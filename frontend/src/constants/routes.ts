@@ -77,6 +77,10 @@ export const ROUTES = {
     CUSTOMERS: "/customers",
     SUPPLIER_PRODUCTS: "/supplier-products",
     CUSTOMER_ITEMS: "/customer-items",
+    DELIVERY_PLACES: "/delivery-places",
+    SHIPPING_MASTERS: "/masters/shipping-masters",
+    UOM_CONVERSIONS: "/masters/uom-conversions",
+    PRIMARY_ASSIGNMENTS: "/masters/primary-assignments",
     BULK_LOAD: "/masters/bulk-load",
   },
 
@@ -98,6 +102,7 @@ export const ROUTES = {
     BATCH_JOBS: "/admin/batch-jobs",
     MASTER_CHANGE_LOGS: "/admin/master-change-logs",
     SEED_SNAPSHOTS: "/admin/seed-snapshots",
+    SYSTEM_LOGS: "/admin/logs",
     SYSTEM_SETTINGS: "/admin/system-settings",
   },
 
@@ -130,6 +135,7 @@ export const ROUTES = {
 
   HELP: {
     FLOW_MAP: "/help/flow-map",
+    DATABASE_SCHEMA: "/help/database-schema",
   },
 
   DEBUG: {
