@@ -230,18 +230,18 @@ const resolveTabTarget = (
   rowId: number,
   field: EditableFieldKey,
   direction: 1 | -1,
-  fieldOrder: EditableFieldKey[],
+  editableFieldOrder: EditableFieldKey[],
   rowIds: number[],
   getRowById: (rowId: number) => OcrResultItem | undefined,
 ): ActiveCell | null => {
-  const fieldIndex = fieldOrder.indexOf(field);
+  const fieldIndex = editableFieldOrder.indexOf(field);
   if (fieldIndex === -1) return null;
   const rowIndex = rowIds.indexOf(rowId);
   if (rowIndex === -1) return null;
 
   const nextFieldIndex = fieldIndex + direction;
-  if (nextFieldIndex >= 0 && nextFieldIndex < fieldOrder.length) {
-    return { rowId, field: fieldOrder[nextFieldIndex] };
+  if (nextFieldIndex >= 0 && nextFieldIndex < editableFieldOrder.length) {
+    return { rowId, field: editableFieldOrder[nextFieldIndex] };
   }
 
   const step = direction;
@@ -250,10 +250,9 @@ const resolveTabTarget = (
     const candidateId = rowIds[nextRowIndex];
     const candidateRow = getRowById(candidateId);
     if (candidateRow && candidateRow.status !== "processing") {
-      if (fieldOrder.length > 0) {
-        const targetField = direction === 1 ? fieldOrder[0] : fieldOrder[fieldOrder.length - 1];
-        return { rowId: candidateId, field: targetField };
-      }
+      const targetField =
+        direction === 1 ? editableFieldOrder[0] : editableFieldOrder[editableFieldOrder.length - 1];
+      return { rowId: candidateId, field: targetField };
     }
     nextRowIndex += step;
   }
@@ -868,14 +867,12 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         }
       }}
       className={cn(
-        "min-h-[2.75rem] w-full cursor-text rounded-md px-3 py-2 text-left text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
-        "truncate whitespace-nowrap",
+        "min-h-[2.75rem] w-full cursor-text rounded-md px-3 py-2 text-left text-xs whitespace-pre-wrap break-words transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
         "hover:bg-slate-50/80",
         "text-slate-700",
         isDisabled && "cursor-not-allowed opacity-70",
       )}
       disabled={isDisabled}
-      title={displayText || ""}
     >
       {fallbackText}
     </button>
@@ -896,7 +893,7 @@ export function LotInfoCell({ row }: { row: OcrResultItem }) {
           inputClassName="text-right"
         />
       </div>
-      {/* ロット2 - 常に表示 */}
+      {/* ロット2 */}
       <div className="grid grid-cols-[2fr_2fr_1fr] gap-3">
         <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
         <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
@@ -913,14 +910,14 @@ export function LotInfoCell({ row }: { row: OcrResultItem }) {
 
 export function LotInfoReadOnlyCell({ row }: { row: OcrResultItem }) {
   return (
-    <div className="flex flex-col gap-2 py-1 text-xs">
+    <div className="flex flex-col gap-1 py-1 text-xs">
       {/* ロット1 */}
       <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
         <span>{row.manual_lot_no_1 || row.lot_no || "-"}</span>
         <span>{row.manual_inbound_no || row.inbound_no || "-"}</span>
         <span className="text-right">{row.manual_quantity_1 || "-"}</span>
       </div>
-      {/* ロット2 - 常に表示 */}
+      {/* ロット2 */}
       <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
         <span>{row.manual_lot_no_2 || "-"}</span>
         <span>{row.manual_inbound_no_2 || "-"}</span>

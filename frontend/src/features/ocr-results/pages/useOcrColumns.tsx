@@ -103,10 +103,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           ),
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <span
-                className="text-xs truncate block"
-                title={row.manual_shipping_slip_text || "-"}
-              >
+              <span className="text-xs whitespace-pre-wrap">
                 {row.manual_shipping_slip_text || "-"}
               </span>
             ) : (
@@ -130,11 +127,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
                 {row.manual_material_code || row.material_code || "-"}
               </span>
             ) : (
-              <EditableTextCell
-                row={row}
-                field="materialCode"
-                hasWarning={row.master_not_found}
-              />
+              <EditableTextCell row={row} field="materialCode" hasWarning={row.master_not_found} />
             ),
           minWidth: 120,
         },
@@ -145,11 +138,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
             isReadOnly ? (
               <span className="text-xs">{row.manual_jiku_code || row.jiku_code || "-"}</span>
             ) : (
-              <EditableTextCell
-                row={row}
-                field="jikuCode"
-                hasWarning={row.jiku_format_error}
-              />
+              <EditableTextCell row={row} field="jikuCode" hasWarning={row.jiku_format_error} />
             ),
           minWidth: 100,
         },
