@@ -55,29 +55,35 @@ export function SystemSettingsProvider({ children }: { children: ReactNode }) {
 
   const isFeatureVisible = useCallback(
     (feature: string) => {
-      if (!settings?.page_visibility) return true;
+      const checkVisibility = (key: string): boolean => {
+        if (!settings?.page_visibility) return true;
 
-      // Handle hierarchical features (e.g., "inventory:lots")
-      // If parent is visible, sub-feature is unconditionally visible (Parent Override)
-      if (feature.includes(":")) {
-        const parent = feature.split(":")[0];
-        if (isFeatureVisible(parent)) {
-          return true;
+        // Handle hierarchical features (e.g., "inventory:lots")
+        if (key.includes(":")) {
+          const parent = key.split(":")[0];
+          // If parent is NOT visible, child is automatically NOT visible.
+          // But if parent IS visible, we do NOT return true immediately;
+          // we allow the child's own configuration to decide.
+          if (!checkVisibility(parent)) {
+            return false;
+          }
         }
-      }
 
-      const rawConfig = settings.page_visibility[feature];
-      if (rawConfig === undefined) return true; // Default to visible if not configured
-      const config = normalizeVisibilityEntry(rawConfig);
+        const rawConfig = settings.page_visibility[key];
+        if (rawConfig === undefined) return true; // Default to visible if not configured
+        const config = normalizeVisibilityEntry(rawConfig);
 
-      const roles = user?.roles || [];
-      const isAdmin = roles.includes("admin");
-      if (isAdmin) return true;
+        const roles = user?.roles || [];
+        const isAdmin = roles.includes("admin");
+        if (isAdmin) return true;
 
-      const isUser = roles.includes("user");
-      if (isUser) return config.user;
+        const isUser = roles.includes("user");
+        if (isUser) return config.user;
 
-      return config.guest;
+        return config.guest;
+      };
+
+      return checkVisibility(feature);
     },
     [settings, user],
   );

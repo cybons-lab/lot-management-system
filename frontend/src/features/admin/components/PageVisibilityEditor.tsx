@@ -39,18 +39,19 @@ function normalizeVisibilityEntry(value: unknown): VisibilityEntry {
   return { user: true, guest: true };
 }
 
-/* eslint-disable-next-line complexity */
 function VisibilityRow({ id, label, isSub, config, onToggle, disabled }: VisibilityRowProps) {
   const featureConf = normalizeVisibilityEntry(config[id]);
 
-  let userInherited = false;
-  let guestInherited = false;
+  let userParentDisabled = false;
+  let guestParentDisabled = false;
 
   if (isSub) {
     const parentId = id.split(":")[0];
     const parentConf = normalizeVisibilityEntry(config[parentId]);
-    userInherited = parentConf.user;
-    guestInherited = parentConf.guest;
+    // New Logic: If parent is FALSE, child is forced FALSE.
+    // If parent is TRUE, child is configurable.
+    userParentDisabled = !parentConf.user;
+    guestParentDisabled = !parentConf.guest;
   }
 
   return (
@@ -64,11 +65,6 @@ function VisibilityRow({ id, label, isSub, config, onToggle, disabled }: Visibil
           {!isSub && (
             <span className="ml-1 text-[10px] text-slate-400 font-mono uppercase">#{id}</span>
           )}
-          {isSub && (userInherited || guestInherited) && (
-            <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-md border border-blue-100 font-medium">
-              親から継承中
-            </span>
-          )}
         </div>
       </TableCell>
       <TableCell className="text-center">
@@ -76,10 +72,12 @@ function VisibilityRow({ id, label, isSub, config, onToggle, disabled }: Visibil
           <Switch
             checked={featureConf.user}
             onCheckedChange={(checked) => onToggle(id, "user", checked)}
-            disabled={disabled}
+            disabled={disabled || userParentDisabled}
           />
-          {isSub && userInherited && !featureConf.user && (
-            <span className="text-[9px] text-green-600 font-bold whitespace-nowrap">実質: ON</span>
+          {isSub && userParentDisabled && (
+            <span className="text-[9px] text-slate-400 font-medium whitespace-nowrap">
+              親が無効
+            </span>
           )}
         </div>
       </TableCell>
@@ -88,10 +86,12 @@ function VisibilityRow({ id, label, isSub, config, onToggle, disabled }: Visibil
           <Switch
             checked={featureConf.guest}
             onCheckedChange={(checked) => onToggle(id, "guest", checked)}
-            disabled={disabled}
+            disabled={disabled || guestParentDisabled}
           />
-          {isSub && guestInherited && !featureConf.guest && (
-            <span className="text-[9px] text-green-600 font-bold whitespace-nowrap">実質: ON</span>
+          {isSub && guestParentDisabled && (
+            <span className="text-[9px] text-slate-400 font-medium whitespace-nowrap">
+              親が無効
+            </span>
           )}
         </div>
       </TableCell>
