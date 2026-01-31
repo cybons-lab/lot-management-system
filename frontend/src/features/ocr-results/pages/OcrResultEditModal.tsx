@@ -58,9 +58,14 @@ function EditFormGrid({ row }: { row: OcrResultItem }) {
         activeCell,
         setActiveCell,
         editableFieldOrder,
+        getRowFieldOrder: () => editableFieldOrder,
         rowIds: [row.id],
         isReadOnly: false,
         getRowById: () => row,
+        hasSecondRow: () => true,
+        isSecondRowExpanded: () => true,
+        toggleSecondRow: () => {},
+        enableSecondRow: () => {},
       }}
     >
       <div className="space-y-4 py-4">

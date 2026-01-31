@@ -1,5 +1,5 @@
 import { AlertCircle } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { type OcrResultItem } from "../api";
 import { OcrResultEditModal } from "../pages/OcrResultEditModal";
@@ -48,6 +48,8 @@ export function OcrResultsTable({
     rowId: number;
     field: EditableFieldKey;
   } | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [userEnabledSecondRows, setUserEnabledSecondRows] = useState<Set<number>>(new Set());
 
   const rowIds = data.map((row) => row.id);
   const rowMap = useMemo(() => new Map(data.map((row) => [row.id, row])), [data]);
@@ -81,6 +83,79 @@ export function OcrResultsTable({
     return order;
   }, [columns, isReadOnly]);
 
+  const hasSecondRow = useCallback(
+    (rowId: number) => {
+      const row = rowMap.get(rowId);
+      if (!row) return false;
+      const input = contextValue.getInputs(row);
+      const dataHasSecondRow = [input.lotNo2, input.inboundNo2, input.quantity2].some(
+        (value) => value.trim().length > 0,
+      );
+      return dataHasSecondRow || userEnabledSecondRows.has(rowId);
+    },
+    [contextValue, rowMap, userEnabledSecondRows],
+  );
+
+  const getRowFieldOrder = useCallback(
+    (rowId: number) => {
+      if (!hasSecondRow(rowId)) {
+        return editableFieldOrder.filter(
+          (field) => field !== "lotNo2" && field !== "inboundNo2" && field !== "quantity2",
+        );
+      }
+      return editableFieldOrder;
+    },
+    [editableFieldOrder, hasSecondRow],
+  );
+
+  const isSecondRowExpanded = useCallback(
+    (rowId: number) => expandedRows.has(rowId),
+    [expandedRows],
+  );
+
+  const toggleSecondRow = useCallback((rowId: number) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(rowId)) {
+        next.delete(rowId);
+      } else {
+        next.add(rowId);
+      }
+      return next;
+    });
+  }, []);
+
+  const enableSecondRow = useCallback((rowId: number) => {
+    setUserEnabledSecondRows((prev) => {
+      const next = new Set(prev);
+      next.add(rowId);
+      return next;
+    });
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      next.add(rowId);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (rowIds.length === 0) return;
+    setExpandedRows((prev) => {
+      const next = new Set<number>();
+      rowIds.forEach((id) => {
+        if (prev.has(id)) next.add(id);
+      });
+      return next;
+    });
+    setUserEnabledSecondRows((prev) => {
+      const next = new Set<number>();
+      rowIds.forEach((id) => {
+        if (prev.has(id)) next.add(id);
+      });
+      return next;
+    });
+  }, [rowIds]);
+
   useEffect(() => {
     if (!activeCell) return;
     if (isReadOnly) {
@@ -108,9 +183,14 @@ export function OcrResultsTable({
                 activeCell,
                 setActiveCell,
                 editableFieldOrder,
+                getRowFieldOrder,
                 rowIds,
                 isReadOnly,
                 getRowById: (rowId) => rowMap.get(rowId),
+                hasSecondRow,
+                isSecondRowExpanded,
+                toggleSecondRow,
+                enableSecondRow,
               }}
             >
             {viewMode === "completed" && (

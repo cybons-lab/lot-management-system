@@ -103,7 +103,10 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           ),
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <span className="text-xs whitespace-pre-wrap">
+              <span
+                className="text-xs truncate block"
+                title={row.manual_shipping_slip_text || "-"}
+              >
                 {row.manual_shipping_slip_text || "-"}
               </span>
             ) : (
