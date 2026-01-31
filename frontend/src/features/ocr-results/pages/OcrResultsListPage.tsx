@@ -173,10 +173,12 @@ export function OcrResultsListPage() {
                           <code className="bg-white px-1 rounded">B911/12345/専/路線</code>
                         </p>
                         <p className="text-[10px]">
-                          • 入庫番号+ロット → ロット情報を自動挿入:{" "}
-                          <code className="bg-white px-1 rounded">
-                            B911/Lot123(10)/12345(10)/専/路線
-                          </code>
+                          • 入庫番号+数量 → 入庫番号(数量):{" "}
+                          <code className="bg-white px-1 rounded">B911/12345(10)/専/路線</code>
+                        </p>
+                        <p className="text-[10px] text-amber-700">
+                          ※
+                          ロット番号が入力されていても、テンプレートに「ロット」がないため無視されます
                         </p>
                       </div>
                       <div className="bg-slate-50 p-2 rounded border border-slate-300">

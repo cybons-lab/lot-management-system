@@ -294,26 +294,26 @@ def build_shipping_slip_text(
 
     # Case A: テンプレートに「入庫番号」のみがある場合（ロットプレースホルダーなし）
     if has_inbound_placeholder and not has_lot_placeholder:
-        if inbound_no and lot_combined:
-            # 入庫番号+ロット → ロット(数量)/入庫番号(数量) に自動拡張
+        # ロット番号が入力されていても、テンプレートに「ロット」がないので無視
+        # 入庫番号のみを置換する（数量がある場合は入庫番号(数量)形式）
+        if inbound_no:
             inbound_1_with_qty = build_lot_with_quantity(inbound_no, quantity_1)
             inbound_2_with_qty = (
                 build_lot_with_quantity(inbound_no_2, quantity_2) if inbound_no_2 else None
             )
 
-            # 入庫番号部分の構築
+            # 入庫番号部分の構築（複数入庫番号はスラッシュで区切り）
             inbound_combined = None
             if inbound_1_with_qty and inbound_2_with_qty:
                 inbound_combined = f"{inbound_1_with_qty}/{inbound_2_with_qty}"
             elif inbound_1_with_qty:
                 inbound_combined = inbound_1_with_qty
+            elif inbound_2_with_qty:
+                inbound_combined = inbound_2_with_qty
 
-            # 自動拡張: ロット(数量)/入庫番号(数量)
-            replacement = f"{lot_combined}/{inbound_combined}" if inbound_combined else lot_combined
-            result = result.replace("入庫番号", replacement)
-        elif inbound_no:
-            # 入庫番号のみ → そのまま置換
-            result = result.replace("入庫番号", inbound_no)
+            result = result.replace(
+                "入庫番号", inbound_combined if inbound_combined else inbound_no
+            )
         else:
             # 何もない場合はプレースホルダーを削除
             result = result.replace("入庫番号", "")
