@@ -2,7 +2,6 @@ import { AlertCircle, Save } from "lucide-react";
 import { useState } from "react";
 
 import type { OcrResultItem } from "../api";
-import { ShippingTextReplacementRules } from "../components/ShippingTextReplacementRules";
 
 import {
   EditableTextCell,
@@ -301,8 +300,6 @@ export function OcrResultEditModal({ row, isOpen, onClose }: OcrResultEditModalP
             商品コードを変更すると、マスタ再照合がバックグラウンドで行われます。
           </div>
         </div>
-
-        <ShippingTextReplacementRules />
 
         <ReferenceDataSection row={row} />
 
