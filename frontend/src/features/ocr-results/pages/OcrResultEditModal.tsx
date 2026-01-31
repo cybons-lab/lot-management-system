@@ -58,14 +58,9 @@ function EditFormGrid({ row }: { row: OcrResultItem }) {
         activeCell,
         setActiveCell,
         editableFieldOrder,
-        getRowFieldOrder: () => editableFieldOrder,
         rowIds: [row.id],
         isReadOnly: false,
         getRowById: () => row,
-        hasSecondRow: () => true,
-        isSecondRowExpanded: () => true,
-        toggleSecondRow: () => {},
-        enableSecondRow: () => {},
       }}
     >
       <div className="space-y-4 py-4">
@@ -177,9 +172,7 @@ function EditFormGrid({ row }: { row: OcrResultItem }) {
           </Label>
           <div className="space-y-1">
             <EditableShippingSlipCell row={row} />
-            <p className="text-[9px] text-muted-foreground">
-              Enterで確定、Tabで次のセルへ移動
-            </p>
+            <p className="text-[9px] text-muted-foreground">Enterで確定、Tabで次のセルへ移動</p>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines, max-lines-per-function, complexity, max-params */
 import { AlertCircle, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { type KeyboardEvent, createContext, useContext, useEffect, useRef, useState } from "react";
 
@@ -205,14 +205,9 @@ export interface OcrCellEditingContextType {
   activeCell: ActiveCell | null;
   setActiveCell: (cell: ActiveCell | null) => void;
   editableFieldOrder: EditableFieldKey[];
-  getRowFieldOrder: (rowId: number) => EditableFieldKey[];
   rowIds: number[];
   isReadOnly: boolean;
   getRowById: (rowId: number) => OcrResultItem | undefined;
-  hasSecondRow: (rowId: number) => boolean;
-  isSecondRowExpanded: (rowId: number) => boolean;
-  toggleSecondRow: (rowId: number) => void;
-  enableSecondRow: (rowId: number) => void;
 }
 
 export const OcrCellEditingContext = createContext<OcrCellEditingContextType | null>(null);
@@ -231,19 +226,14 @@ const isValidDateInput = (value: string) => {
   return !Number.isNaN(date.getTime());
 };
 
-const secondRowFields: EditableFieldKey[] = ["lotNo2", "inboundNo2", "quantity2"];
-
-const isSecondRowField = (field: EditableFieldKey) => secondRowFields.includes(field);
-
 const resolveTabTarget = (
   rowId: number,
   field: EditableFieldKey,
   direction: 1 | -1,
-  getRowFieldOrder: (rowId: number) => EditableFieldKey[],
+  fieldOrder: EditableFieldKey[],
   rowIds: number[],
   getRowById: (rowId: number) => OcrResultItem | undefined,
 ): ActiveCell | null => {
-  const fieldOrder = getRowFieldOrder(rowId);
   const fieldIndex = fieldOrder.indexOf(field);
   if (fieldIndex === -1) return null;
   const rowIndex = rowIds.indexOf(rowId);
@@ -260,10 +250,8 @@ const resolveTabTarget = (
     const candidateId = rowIds[nextRowIndex];
     const candidateRow = getRowById(candidateId);
     if (candidateRow && candidateRow.status !== "processing") {
-      const candidateOrder = getRowFieldOrder(candidateId);
-      if (candidateOrder.length > 0) {
-        const targetField =
-          direction === 1 ? candidateOrder[0] : candidateOrder[candidateOrder.length - 1];
+      if (fieldOrder.length > 0) {
+        const targetField = direction === 1 ? fieldOrder[0] : fieldOrder[fieldOrder.length - 1];
         return { rowId: candidateId, field: targetField };
       }
     }
@@ -279,7 +267,6 @@ const resolveEnterTarget = (
   direction: 1 | -1,
   rowIds: number[],
   getRowById: (rowId: number) => OcrResultItem | undefined,
-  hasSecondRow: (rowId: number) => boolean,
 ): ActiveCell | null => {
   const rowIndex = rowIds.indexOf(rowId);
   if (rowIndex === -1) return null;
@@ -289,10 +276,6 @@ const resolveEnterTarget = (
     const candidateId = rowIds[nextRowIndex];
     const candidateRow = getRowById(candidateId);
     if (candidateRow && candidateRow.status !== "processing") {
-      if (isSecondRowField(field) && !hasSecondRow(candidateId)) {
-        nextRowIndex += step;
-        continue;
-      }
       return { rowId: candidateId, field };
     }
     nextRowIndex += step;
@@ -456,17 +439,8 @@ export function EditableTextCell({
   hasWarning?: boolean;
 }) {
   const { getInputs, updateInputs } = useOcrInputs();
-  const {
-    activeCell,
-    setActiveCell,
-    getRowFieldOrder,
-    rowIds,
-    isReadOnly,
-    getRowById,
-    hasSecondRow,
-    isSecondRowExpanded,
-    enableSecondRow,
-  } = useOcrCellEditing();
+  const { activeCell, setActiveCell, editableFieldOrder, rowIds, isReadOnly, getRowById } =
+    useOcrCellEditing();
   const value = getInputs(row)[field] as string;
   const isActive = activeCell?.rowId === row.id && activeCell?.field === field;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -477,9 +451,6 @@ export function EditableTextCell({
   useEffect(() => {
     if (isActive) {
       initialValueRef.current = value;
-      if (isSecondRowField(field) && !isSecondRowExpanded(row.id)) {
-        enableSecondRow(row.id);
-      }
       requestAnimationFrame(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
@@ -532,7 +503,7 @@ export function EditableTextCell({
         row.id,
         field,
         direction,
-        getRowFieldOrder,
+        editableFieldOrder,
         rowIds,
         getRowById,
       );
@@ -551,7 +522,7 @@ export function EditableTextCell({
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget(row.id, field, direction, rowIds, getRowById, hasSecondRow);
+      const target = resolveEnterTarget(row.id, field, direction, rowIds, getRowById);
       if (target) {
         setHasError(false);
         setActiveCell(target);
@@ -614,9 +585,7 @@ export function EditableTextCell({
       className={cn(
         "w-full rounded-md px-3 py-2 text-left text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
         "hover:bg-slate-50/80",
-        hasWarning
-          ? "text-red-700 bg-red-50/60"
-          : "text-slate-700 bg-transparent",
+        hasWarning ? "text-red-700 bg-red-50/60" : "text-slate-700 bg-transparent",
         isPlaceholder && "text-slate-400",
         isDisabled && "cursor-not-allowed opacity-60",
         inputClassName,
@@ -628,30 +597,18 @@ export function EditableTextCell({
   );
 }
 
-export function EditableDateCell({
-  row,
-  field,
-}: {
-  row: OcrResultItem;
-  field: EditableFieldKey;
-}) {
+export function EditableDateCell({ row, field }: { row: OcrResultItem; field: EditableFieldKey }) {
   const { getInputs, updateInputs } = useOcrInputs();
-  const {
-    activeCell,
-    setActiveCell,
-    getRowFieldOrder,
-    rowIds,
-    isReadOnly,
-    getRowById,
-    hasSecondRow,
-  } = useOcrCellEditing();
+  const { activeCell, setActiveCell, editableFieldOrder, rowIds, isReadOnly, getRowById } =
+    useOcrCellEditing();
   const value = getInputs(row)[field] as string;
 
   const hasDateError = field === "deliveryDate" && row.date_format_error;
   const isShippingDate = field === "shippingDate";
   const isCalculated = isShippingDate && !value && row.calculated_shipping_date;
   const displayValue = isCalculated ? row.calculated_shipping_date : value;
-  const inputValue = value || (isCalculated ? formatDateForInput(row.calculated_shipping_date) : "");
+  const inputValue =
+    value || (isCalculated ? formatDateForInput(row.calculated_shipping_date) : "");
   const isActive = activeCell?.rowId === row.id && activeCell?.field === field;
   const inputRef = useRef<HTMLInputElement>(null);
   const initialValueRef = useRef(value);
@@ -702,7 +659,7 @@ export function EditableDateCell({
         row.id,
         field,
         direction,
-        getRowFieldOrder,
+        editableFieldOrder,
         rowIds,
         getRowById,
       );
@@ -721,7 +678,7 @@ export function EditableDateCell({
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget(row.id, field, direction, rowIds, getRowById, hasSecondRow);
+      const target = resolveEnterTarget(row.id, field, direction, rowIds, getRowById);
       if (target) {
         setHasError(false);
         setActiveCell(target);
@@ -782,9 +739,7 @@ export function EditableDateCell({
       className={cn(
         "w-full rounded-md px-3 py-2 text-left text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
         "hover:bg-slate-50/80",
-        hasDateError
-          ? "text-red-700 bg-red-50/60"
-          : "text-slate-700 bg-transparent",
+        hasDateError ? "text-red-700 bg-red-50/60" : "text-slate-700 bg-transparent",
         isCalculated && "text-blue-700",
         isDisabled && "cursor-not-allowed opacity-60",
       )}
@@ -797,15 +752,9 @@ export function EditableDateCell({
 
 export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
   const { getInputs, updateInputs } = useOcrInputs();
-  const {
-    activeCell,
-    setActiveCell,
-    getRowFieldOrder,
-    rowIds,
-    isReadOnly,
-    getRowById,
-    hasSecondRow,
-  } = useOcrCellEditing();
+  const { activeCell, setActiveCell, editableFieldOrder, rowIds, isReadOnly, getRowById } =
+    useOcrCellEditing();
+  const input = getInputs(row);
   const computedText = buildShippingSlipText(row.shipping_slip_text, input, row);
   const displayText = input.shippingSlipTextEdited ? input.shippingSlipText : computedText;
   const fallbackText = displayText || "-";
@@ -865,7 +814,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         row.id,
         "shippingSlipText",
         direction,
-        getRowFieldOrder,
+        editableFieldOrder,
         rowIds,
         getRowById,
       );
@@ -878,14 +827,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
       event.preventDefault();
       const direction = event.shiftKey ? -1 : 1;
       commit();
-      const target = resolveEnterTarget(
-        row.id,
-        "shippingSlipText",
-        direction,
-        rowIds,
-        getRowById,
-        hasSecondRow,
-      );
+      const target = resolveEnterTarget(row.id, "shippingSlipText", direction, rowIds, getRowById);
       if (target) {
         setActiveCell(target);
       }
@@ -941,17 +883,6 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
 }
 
 export function LotInfoCell({ row }: { row: OcrResultItem }) {
-  const {
-    hasSecondRow,
-    isSecondRowExpanded,
-    toggleSecondRow,
-    enableSecondRow,
-    setActiveCell,
-    isReadOnly,
-  } = useOcrCellEditing();
-  const showSecondRow = hasSecondRow(row.id) && isSecondRowExpanded(row.id);
-  const isDisabled = row.status === "processing" || isReadOnly;
-
   return (
     <div className="flex flex-col gap-3 py-2">
       {/* ロット1 */}
@@ -965,60 +896,22 @@ export function LotInfoCell({ row }: { row: OcrResultItem }) {
           inputClassName="text-right"
         />
       </div>
-      <div className="flex items-center justify-end">
-        {hasSecondRow(row.id) ? (
-          <button
-            type="button"
-            onClick={() => {
-              if (isDisabled) return;
-              toggleSecondRow(row.id);
-            }}
-            className={cn(
-              "text-[10px] text-slate-500 transition hover:text-slate-700",
-              isDisabled && "cursor-not-allowed opacity-60",
-            )}
-            disabled={isDisabled}
-          >
-            {showSecondRow ? "▲ 2行目を隠す" : "▼ 2行目を表示"}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              if (isDisabled) return;
-              enableSecondRow(row.id);
-              setActiveCell({ rowId: row.id, field: "lotNo2" });
-            }}
-            className={cn(
-              "text-[10px] text-slate-500 transition hover:text-slate-700",
-              isDisabled && "cursor-not-allowed opacity-60",
-            )}
-            disabled={isDisabled}
-          >
-            ＋ 2行目を追加
-          </button>
-        )}
+      {/* ロット2 - 常に表示 */}
+      <div className="grid grid-cols-[2fr_2fr_1fr] gap-3">
+        <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
+        <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
+        <EditableTextCell
+          row={row}
+          field="quantity2"
+          placeholder="数量(2)"
+          inputClassName="text-right"
+        />
       </div>
-      {showSecondRow && (
-        <div className="grid grid-cols-[2fr_2fr_1fr] gap-3">
-          <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
-          <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
-          <EditableTextCell
-            row={row}
-            field="quantity2"
-            placeholder="数量(2)"
-            inputClassName="text-right"
-          />
-        </div>
-      )}
     </div>
   );
 }
 
 export function LotInfoReadOnlyCell({ row }: { row: OcrResultItem }) {
-  const { hasSecondRow, isSecondRowExpanded, toggleSecondRow } = useOcrCellEditing();
-  const showSecondRow = hasSecondRow(row.id) && isSecondRowExpanded(row.id);
-
   return (
     <div className="flex flex-col gap-2 py-1 text-xs">
       {/* ロット1 */}
@@ -1027,24 +920,12 @@ export function LotInfoReadOnlyCell({ row }: { row: OcrResultItem }) {
         <span>{row.manual_inbound_no || row.inbound_no || "-"}</span>
         <span className="text-right">{row.manual_quantity_1 || "-"}</span>
       </div>
-      {hasSecondRow(row.id) && (
-        <div className="flex items-center justify-end">
-          <button
-            type="button"
-            onClick={() => toggleSecondRow(row.id)}
-            className="text-[10px] text-slate-500 transition hover:text-slate-700"
-          >
-            {showSecondRow ? "▲ 2行目を隠す" : "▼ 2行目を表示"}
-          </button>
-        </div>
-      )}
-      {showSecondRow && (
-        <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
-          <span>{row.manual_lot_no_2 || "-"}</span>
-          <span>{row.manual_inbound_no_2 || "-"}</span>
-          <span className="text-right">{row.manual_quantity_2 || "-"}</span>
-        </div>
-      )}
+      {/* ロット2 - 常に表示 */}
+      <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
+        <span>{row.manual_lot_no_2 || "-"}</span>
+        <span>{row.manual_inbound_no_2 || "-"}</span>
+        <span className="text-right">{row.manual_quantity_2 || "-"}</span>
+      </div>
     </div>
   );
 }
