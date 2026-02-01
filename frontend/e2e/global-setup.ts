@@ -22,8 +22,10 @@ export default async function globalSetup() {
     await client.resetDatabase();
     console.log("[Global Setup] Database reset successful");
 
-    // Generate initial test data if needed
-    // await client.generateTestData({ category: "basic" });
+    // Generate test data for all tests
+    console.log("[Global Setup] Generating test data...");
+    await client.generateTestData({ category: "full" });
+    console.log("[Global Setup] Test data generated successfully");
   } catch (error) {
     console.error("[Global Setup] CRITICAL: Global setup failed:", error);
     throw new Error(

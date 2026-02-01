@@ -17,17 +17,10 @@
  * @tags @smoke @p0 @critical-path
  */
 import { test, expect } from "@playwright/test";
-import { ApiClient } from "../../fixtures/api-client";
 import { loginAs } from "../../fixtures/login-helper";
 
 test.describe("E2E-01: 注文作成→引当→出荷フロー", () => {
-  let apiClient: ApiClient;
-
-  test.beforeAll(async ({ request }) => {
-    // Note: DB reset is done in globalSetup (once for all tests)
-    apiClient = await ApiClient.create(request);
-    await apiClient.generateTestData({ category: "full" });
-  });
+  // Note: DB reset and test data generation are done in globalSetup
 
   test("ハッピーパス: 注文を確定→引当→出荷", async ({ page }) => {
     // ===========================
