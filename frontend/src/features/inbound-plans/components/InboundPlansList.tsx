@@ -211,9 +211,19 @@ export function InboundPlansList({
   const sortedPlans = useMemo(() => {
     const sorted = [...filteredPlans];
     sorted.sort((a, b) => {
-      const aVal = a[sort.column as keyof InboundPlan];
-      const bVal = b[sort.column as keyof InboundPlan];
-      if (aVal === undefined || aVal === null || bVal === undefined || bVal === null) return 0;
+      const colId = sort.column as keyof InboundPlan;
+      const aVal = a[colId];
+      const bVal = b[colId];
+
+      if (aVal === undefined || aVal === null) return 1;
+      if (bVal === undefined || bVal === null) return -1;
+
+      // 数値ソート
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sort.direction === "asc" ? aVal - bVal : bVal - aVal;
+      }
+
+      // 文字列ソート（ロケール考慮）
       const cmp = String(aVal).localeCompare(String(bVal), "ja");
       return sort.direction === "asc" ? cmp : -cmp;
     });
@@ -251,7 +261,7 @@ export function InboundPlansList({
         sortable: true,
       },
       {
-        id: "supplier",
+        id: "supplier_name",
         header: "仕入先",
         accessor: (row) =>
           row.supplier_name
