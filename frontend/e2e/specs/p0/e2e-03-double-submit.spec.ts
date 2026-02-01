@@ -44,7 +44,8 @@ test.describe("E2E-03: 二重送信防止テスト", () => {
     // ===========================
     // Step 3: ユニークなテストデータを入力
     // ===========================
-    const testCode = `DBLSUB-${Date.now() % 100000}`;
+    const workerIndex = test.info().workerIndex;
+    const testCode = `DBLSUB-W${workerIndex}-${Date.now() % 100000}`;
     const testName = `二重送信テスト ${testCode}`;
 
     const codeInput = dialog.getByLabel("倉庫コード").or(dialog.getByPlaceholder("コード"));
@@ -166,7 +167,8 @@ test.describe("E2E-03: 二重送信防止テスト", () => {
     await expect(dialog).toBeVisible();
 
     // テストデータ入力
-    const testCode = `DBLCLK-${Date.now() % 100000}`;
+    const workerIndex = test.info().workerIndex;
+    const testCode = `DBLCLK-W${workerIndex}-${Date.now() % 100000}`;
     const codeInput = dialog.getByLabel("倉庫コード").or(dialog.getByPlaceholder("コード"));
     const nameInput = dialog.getByLabel("倉庫名").or(dialog.getByPlaceholder("名前"));
 

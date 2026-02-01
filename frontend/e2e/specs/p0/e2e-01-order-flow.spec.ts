@@ -56,10 +56,14 @@ test.describe("E2E-01: 注文作成→引当→出荷フロー", () => {
     }
 
     // ===========================
-    // Step 3: 最初の注文の詳細を開く
+    // Step 3: ワーカー固有の注文詳細を開く
     // ===========================
-    const firstRow = tableRows.first();
-    await firstRow.click();
+    const workerIndex = test.info().workerIndex;
+    const targetIndex = workerIndex % rowCount;
+    const targetRow = tableRows.nth(targetIndex);
+
+    console.log(`Worker ${workerIndex}: Row ${targetIndex} を選択します`);
+    await targetRow.click();
     await page.waitForLoadState("networkidle");
 
     // 詳細ページに遷移したことを確認

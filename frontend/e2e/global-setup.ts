@@ -24,7 +24,7 @@ export default async function globalSetup() {
 
     // Generate test data for all tests
     console.log("[Global Setup] Generating test data...");
-    await client.generateTestData({ category: "full" });
+    await client.generateTestData({ preset_id: "quick" });
     console.log("[Global Setup] Test data generated successfully");
   } catch (error) {
     console.error("[Global Setup] CRITICAL: Global setup failed:", error);

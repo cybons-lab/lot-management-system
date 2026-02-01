@@ -6,6 +6,7 @@
  */
 import { APIRequestContext, expect } from "@playwright/test";
 
+// @ts-expect-error - process is defined in the test environment
 const API_BASE_URL = process.env.E2E_API_URL || "http://localhost:18000";
 
 export interface ApiClientOptions {
@@ -145,18 +146,18 @@ export class ApiClient {
     }
   }
 
-  async generateTestData(options?: { category?: string }): Promise<void> {
-    try {
-      const response = await this.request.post(`${API_BASE_URL}/api/admin/test-data/generate`, {
-        headers: this.getHeaders(),
-        data: options || {},
-        timeout: 5000, // 5秒でタイムアウト
-      });
-      expect(response.ok(), `Test data generation failed: ${await response.text()}`).toBeTruthy();
-    } catch (e) {
-      console.warn(`⚠️ Test data generation timed out or failed: ${e.message}`);
-      // Continue anyway - data might already exist
+  async generateTestData(options?: { preset_id?: string }): Promise<void> {
+    const response = await this.request.post(`${API_BASE_URL}/api/admin/test-data/generate`, {
+      headers: this.getHeaders(),
+      data: options || {},
+      timeout: 30000, // 30秒に延長
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      throw new Error(`Test data generation failed: ${response.status()} - ${errorText}`);
     }
+    console.log("Test data generation successful");
   }
 
   // ===========================
