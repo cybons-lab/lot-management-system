@@ -1,7 +1,10 @@
 import { AlertTriangle, CheckCircle2, Circle, Loader2 } from "lucide-react";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
-import { getPadRunStepIndex, PAD_RUN_STEP_ORDER } from "@/features/rpa/smartread/utils/pad-run-steps";
+import {
+  getPadRunStepIndex,
+  PAD_RUN_STEP_ORDER,
+} from "@/features/rpa/smartread/utils/pad-run-steps";
 
 interface PadRun {
   run_id: string;
