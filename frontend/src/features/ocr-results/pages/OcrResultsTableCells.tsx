@@ -562,7 +562,7 @@ export function EditableTextCell({
         onCompositionEnd={() => setIsComposing(false)}
         placeholder={placeholder}
         className={cn(
-          "w-full rounded-md border bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:ring-2",
+          "w-full rounded-md border bg-white px-2 py-1 text-sm shadow-sm outline-none transition focus:ring-2",
           hasWarning || hasError
             ? "border-red-300 focus:border-red-400 focus:ring-red-200"
             : "border-slate-300 focus:border-blue-400 focus:ring-blue-200", // Stronger border
@@ -588,7 +588,7 @@ export function EditableTextCell({
         }
       }}
       className={cn(
-        "w-full rounded-md px-3 py-2 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border", // Base styles
+        "w-full rounded-md px-2 py-1 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border", // Base styles
         // Default state: Transparent bg/border (looks like text), Hover: visible border/bg
         "bg-transparent border-transparent hover:bg-white hover:border-slate-300",
         // Active/Warning states override default
@@ -717,7 +717,7 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         onCompositionEnd={() => setIsComposing(false)}
         title={isCalculated ? `自動計算（LT=${row.transport_lt_days}日）` : ""}
         className={cn(
-          "w-full rounded-md border bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:ring-2",
+          "w-full rounded-md border bg-white px-2 py-1 text-sm shadow-sm outline-none transition focus:ring-2",
           hasDateError || hasError
             ? "border-red-300 focus:border-red-400 focus:ring-red-200"
             : isCalculated
@@ -744,7 +744,7 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         }
       }}
       className={cn(
-        "w-full rounded-md px-3 py-2 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border",
+        "w-full rounded-md px-2 py-1 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border",
         // Default: Transparent. Hover: Visible.
         "bg-transparent border-transparent hover:bg-white hover:border-slate-300",
         hasDateError ? "text-red-700 bg-red-50/60 border-red-200" : "text-slate-700",
@@ -855,7 +855,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         onKeyDown={handleNavigate}
         onCompositionStart={() => setIsComposing(true)}
         onCompositionEnd={() => setIsComposing(false)}
-        className="w-full min-h-[2.75rem] rounded-md border border-slate-200 bg-white/90 px-3 py-2 text-xs shadow-sm focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        className="w-full min-h-[2rem] rounded-md border border-slate-200 bg-white/90 px-2 py-1 text-sm shadow-sm focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
         disabled={isDisabled}
       />
     );
@@ -876,7 +876,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         }
       }}
       className={cn(
-        "w-full rounded-md px-3 py-2 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border",
+        "w-full rounded-md px-2 py-1 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border",
         // Default: Transparent. Hover: Visible.
         "bg-transparent border-transparent hover:bg-white hover:border-slate-300",
         // No explicit error state for shipping slip text, so we omit the error styling for now.

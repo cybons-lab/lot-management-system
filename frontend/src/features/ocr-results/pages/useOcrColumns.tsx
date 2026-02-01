@@ -69,12 +69,12 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           header: "ロットNo",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <div className="flex flex-col gap-0.5 text-sm py-0.5">
+              <div className="flex flex-col gap-0.5 text-sm">
                 <span>{row.manual_lot_no_1 || row.lot_no || "-"}</span>
                 <span className="text-slate-400">{row.manual_lot_no_2 || "-"}</span>
               </div>
             ) : (
-              <div className="flex flex-col gap-1.5 py-0.5">
+              <div className="flex flex-col gap-1">
                 <EditableTextCell row={row} field="lotNo1" placeholder="" />
                 <EditableTextCell row={row} field="lotNo2" placeholder="2行目" />
               </div>
@@ -86,12 +86,12 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           header: "入庫No",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <div className="flex flex-col gap-0.5 text-sm py-0.5">
+              <div className="flex flex-col gap-0.5 text-sm">
                 <span>{row.manual_inbound_no || row.inbound_no || "-"}</span>
                 <span className="text-slate-400">{row.manual_inbound_no_2 || "-"}</span>
               </div>
             ) : (
-              <div className="flex flex-col gap-1.5 py-0.5">
+              <div className="flex flex-col gap-1">
                 <EditableTextCell row={row} field="inboundNo1" placeholder="" />
                 <EditableTextCell row={row} field="inboundNo2" placeholder="2行目" />
               </div>
@@ -103,12 +103,12 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           header: "数量",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <div className="flex flex-col gap-0.5 text-sm text-right py-0.5">
+              <div className="flex flex-col gap-0.5 text-sm text-right">
                 <span>{row.manual_quantity_1 || "-"}</span>
                 <span className="text-slate-400">{row.manual_quantity_2 || "-"}</span>
               </div>
             ) : (
-              <div className="flex flex-col gap-1.5 py-0.5">
+              <div className="flex flex-col gap-1">
                 <EditableTextCell
                   row={row}
                   field="quantity1"
@@ -123,7 +123,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
                 />
               </div>
             ),
-          minWidth: 100,
+          minWidth: 80,
         },
         {
           id: "shipping_date_input",
@@ -179,7 +179,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
             ) : (
               <EditableTextCell row={row} field="jikuCode" hasWarning={row.jiku_format_error} />
             ),
-          minWidth: 100,
+          minWidth: 80,
         },
         {
           id: "delivery_date",
