@@ -26,8 +26,8 @@ export default defineConfig({
   /* Retry on CI only - max 1 retry to detect flaky tests */
   retries: process.env.CI ? 1 : 0,
 
-  /* Workers: CI uses 1 for stability, local uses 4 for speed */
-  workers: process.env.CI ? 1 : 4,
+  /* Workers: Always use 1 for DB reset stability (parallel execution causes lock timeouts) */
+  workers: 1,
 
   /* Timeout settings */
   timeout: 30_000, // 30s per test

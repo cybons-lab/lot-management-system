@@ -36,10 +36,9 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/reset-database", response_model=ResponseBase)
-def reset_database(
-    # db: Session = Depends(get_db),  # Remove dependency to avoid "OperationalError" during cleanup
-    current_admin=Depends(get_current_user_optional),  # Allow unauthenticated in dev for bootstrap
-):
+def reset_database():
+    # No dependencies to avoid DB session lock conflicts during TRUNCATE
+    # This endpoint is dev-only and doesn't need authentication
     """データベースリセット（開発環境のみ）.
 
     - テーブル構造は保持したまま、全データを削除
