@@ -29,6 +29,28 @@ from app.infrastructure.persistence.models.smartread_models import (
 DEFAULT_CUSTOMER_CODE = "100427105"
 
 
+def _get_sap_data_for_material(material_code: str | None) -> tuple[str, str, str]:
+    """Get SAP supplier code, name, and quantity unit based on material code.
+
+    Args:
+        material_code: Material code (e.g., "M001", "M002", etc.)
+
+    Returns:
+        Tuple of (sap_supplier_code, sap_supplier_name, sap_qty_unit)
+    """
+    if not material_code:
+        return "S999", "その他仕入先", "EA"
+
+    mapping = {
+        "M001": ("S001", "仕入先名_S001", "KG"),
+        "M002": ("S002", "仕入先名_S002", "PC"),
+        "M003": ("S001", "仕入先名_S001", "M"),
+        "M004": ("S002", "仕入先名_S002", "KG"),
+    }
+
+    return mapping.get(material_code, ("S999", "その他仕入先", "EA"))
+
+
 def clear_smartread_data(db: Session) -> None:
     """Clear existing SmartRead data (keep config)."""
     # Delete in correct order (respecting FK constraints)
@@ -553,6 +575,15 @@ def generate_long_data_from_wide(db: Session) -> None:
             )
 
         for idx, det in enumerate(details):
+            # Generate SAP supplier and quantity unit based on material code
+            material_code_value = det["material_code"]
+            material_code_str = (
+                str(material_code_value) if material_code_value is not None else None
+            )
+            sap_supplier_code, sap_supplier_name, sap_qty_unit = _get_sap_data_for_material(
+                material_code_str
+            )
+
             long_content = {
                 "材質コード": det["material_code"],
                 "次区": det["jiku"],
@@ -560,6 +591,10 @@ def generate_long_data_from_wide(db: Session) -> None:
                 "アイテムNo": det["item_no"],
                 "納入日": content.get("納入日"),
                 "ファイル名": wide.filename,
+                # SAP fields
+                "SAP仕入先コード": sap_supplier_code,
+                "SAP仕入先名": sap_supplier_name,
+                "数量単位": sap_qty_unit,
             }
             # Add lots/quantities to content
             long_content.update(det["lots"] or {})
