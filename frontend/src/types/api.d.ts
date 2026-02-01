@@ -1218,6 +1218,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/dashboard/stats": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Dashboard Stats
+     * @description ダッシュボード用の統計情報を返す.
+     *
+     *     在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock
+     *     ビューは使用しない（v2.2 以降は廃止）。
+     */
+    get: operations["get_dashboard_stats_api_dashboard_stats_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/forecasts": {
     parameters: {
       query?: never;
@@ -4683,29 +4706,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/admin/stats": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Dashboard Stats
-     * @description ダッシュボード用の統計情報を返す.
-     *
-     *     在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock
-     *     ビューは使用しない（v2.2 以降は廃止）。
-     */
-    get: operations["get_dashboard_stats_api_admin_stats_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/admin/reset-database": {
     parameters: {
       query?: never;
@@ -4722,6 +4722,10 @@ export interface paths {
      *     - テーブル構造は保持したまま、全データを削除
      *     - alembic_versionは保持（マイグレーション履歴を維持）
      *     - TRUNCATE ... RESTART IDENTITY CASCADEで高速にデータをクリア.
+     *
+     *     Note:
+     *         開発環境ではE2Eテストのブートストラップのため認証不要。
+     *         本番環境では403エラーを返す。
      */
     post: operations["reset_database_api_admin_reset_database_post"];
     delete?: never;
@@ -19217,6 +19221,26 @@ export interface operations {
       };
     };
   };
+  get_dashboard_stats_api_dashboard_stats_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DashboardStatsResponse"];
+        };
+      };
+    };
+  };
   list_forecasts_api_forecasts_get: {
     parameters: {
       query?: {
@@ -24503,26 +24527,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_dashboard_stats_api_admin_stats_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DashboardStatsResponse"];
         };
       };
     };
