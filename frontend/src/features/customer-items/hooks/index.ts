@@ -7,6 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import type {
   CustomerItemsListParams,
@@ -84,6 +85,7 @@ export const useCreateCustomerItem = () => {
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
+      toast.success("得意先品番マッピングを登録しました");
     },
   });
 };
@@ -100,6 +102,7 @@ export const useUpdateCustomerItem = () => {
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
+      toast.success("得意先品番マッピングを更新しました");
     },
   });
 };
@@ -116,6 +119,7 @@ export const useDeleteCustomerItem = () => {
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
+      toast.success("得意先品番マッピングを無効化しました");
     },
   });
 };
@@ -131,6 +135,7 @@ export const usePermanentDeleteCustomerItem = () => {
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
+      toast.success("得意先品番マッピングを削除しました");
     },
   });
 };
@@ -146,6 +151,7 @@ export const useRestoreCustomerItem = () => {
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
+      toast.success("得意先品番マッピングを復元しました");
     },
   });
 };
