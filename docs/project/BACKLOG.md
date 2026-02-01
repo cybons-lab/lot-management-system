@@ -1,6 +1,6 @@
 # タスクバックログ (統合版)
 
-**最終更新:** 2026-01-31
+**最終更新:** 2026-02-01
 
 ---
 
@@ -16,15 +16,18 @@
 
 **現状:** P0テストの信頼性が向上（`e2e-04` socket hang up解消、`reset-database`復元）。直列実行(`--workers=1`)では安定してパスするが、並列実行時にDBリセット起因のエラーが多発する。
 
-**残存問題（3件）:**
+**残存問題（2件）:**
 
-1. **DBリセットの並列実行競合 (Critical)**
-   - 症状: `npx playwright test` (デフォルト並列) で実行すると、`reset-database` エンドポイントが `500 OperationalError` で失敗する。
-   - 原因: `backend/app/core/database.py` の `truncate_all_tables` 内にある `pg_terminate_backend` が、並列実行中の他テストのDB接続も強制切断してしまうため。
-   - **暫定対応**: `--workers=1` (直列実行) を推奨。
-   - **恒久対応案**:
-     - A案: テスト並列実行をやめ、常に直列で実行する（最も安全・低コスト）。
-     - B案: テストごとに異なるスキーマ/DBを使用する（実装コスト高）。
+1. ~~**DBリセットの並列実行競合 (Critical)**~~ ✅ **対応済み (2026-02-01)**
+   - 症状: `reset-database` エンドポイントが `500 OperationalError (LockNotAvailable)` で失敗する。
+   - 原因: アドバイザリロックの残留により、後続のリセット処理がロック取得待ちでタイムアウト。
+   - **対応内容**:
+     - アドバイザリロック (`pg_advisory_lock`) を廃止し、TRUNCATE自体のロックに依存する方式に変更。
+     - TRUNCATE は自動的に ACCESS EXCLUSIVE LOCK を取得するため、複数呼び出しは自然に直列化される。
+     - E2Eテストのエラーハンドリングを改善: エラーを握りつぶさず、失敗時に即座に例外をスロー。
+   - **残存課題**:
+     - システム設定画面でログレベルを変更しても、実行中のバックエンドには反映されない（要再起動）。
+     - E2Eテストの `api-client.ts` で一部のエラーを握りつぶしている箇所が残っている可能性（要精査）。
 
 2. **UI要素の検出遅延・不一致**
    - テスト: `e2e-02-save-persistence.spec.ts`
@@ -328,7 +331,57 @@ CI構成:
 
 ---
 
-### 2-10. SmartRead OCR処理完了通知機能
+### 2-10. ログレベルの動的変更機能
+
+**優先度**: 中
+**作成**: 2026-02-01
+**カテゴリ**: 運用・監視
+
+**背景:**
+- システム設定画面でログレベルを DEBUG に変更しても、実行中のバックエンドには反映されない
+- ログレベルは起動時に `settings.LOG_LEVEL` から設定され、以降は固定される
+- デバッグ時にバックエンドの再起動が必要で、運用上不便
+
+**現状の動作:**
+1. システム設定画面でログレベルを変更 → DB (`system_configs`) に保存
+2. バックエンド起動時に `configure_logging()` が `settings.LOG_LEVEL` を読み込み
+3. 実行中は `logging.getLogger().setLevel()` を呼んでも、構造化ログ設定が再構築されない
+
+**タスク内容:**
+1. ログレベル変更APIエンドポイントの追加 (`POST /api/admin/log-level`)
+2. `configure_logging()` を呼び出して、実行中のログ設定を更新
+3. システム設定画面にログレベル変更ボタンを追加（または保存時に自動反映）
+
+**参考ファイル:**
+- `backend/app/core/logging.py` - `configure_logging()` 関数
+- `backend/app/core/config.py` - `LOG_LEVEL` 設定
+- `frontend/src/features/system/SystemSettingsPage.tsx` - システム設定画面
+
+---
+
+### 2-11. E2Eテストのエラーハンドリング改善
+
+**優先度**: 中
+**作成**: 2026-02-01
+**カテゴリ**: テスト品質
+
+**背景:**
+- E2Eテストの `api-client.ts` で一部のエラーを握りつぶしている
+- `generateTestData()` がタイムアウトした場合、警告のみ出して続行する
+- テスト失敗の原因が不明瞭になる
+
+**タスク内容:**
+1. `api-client.ts` の全エラーハンドリング箇所を精査
+2. 握りつぶすべきエラーと、スローすべきエラーを明確化
+3. エラーメッセージを改善し、デバッグしやすくする
+
+**参考:**
+- `frontend/e2e/fixtures/api-client.ts` - L150-162 (`generateTestData`)
+- `frontend/e2e/fixtures/db-reset.ts` - 修正済み（エラーをスロー）
+
+---
+
+### 2-12. SmartRead OCR処理完了通知機能
 
 **優先度**: Medium
 **難易度**: Medium

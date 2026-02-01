@@ -38,14 +38,20 @@ logger = logging.getLogger(__name__)
 @router.post("/reset-database", response_model=ResponseBase)
 def reset_database(
     # db: Session = Depends(get_db),  # Remove dependency to avoid "OperationalError" during cleanup
-    current_admin=Depends(get_current_admin),  # Only admin can reset database
+    current_admin=Depends(get_current_user_optional),  # Allow unauthenticated in dev for bootstrap
 ):
     """データベースリセット（開発環境のみ）.
 
     - テーブル構造は保持したまま、全データを削除
     - alembic_versionは保持（マイグレーション履歴を維持）
     - TRUNCATE ... RESTART IDENTITY CASCADEで高速にデータをクリア.
+
+    Note:
+        開発環境ではE2Eテストのブートストラップのため認証不要。
+        本番環境では403エラーを返す。
     """
+    logger.info("DBリセット開始", extra={"environment": settings.ENVIRONMENT})
+
     if settings.ENVIRONMENT == "production":
         raise HTTPException(
             status_code=403, detail="本番環境ではデータベースのリセットはできません"
@@ -57,31 +63,40 @@ def reset_database(
 
         # データのみを削除（テーブル構造は保持）
         # db=None を渡すことで、truncate_all_tables内で新しいエンジン接続を使用
+        logger.info("truncate_all_tables 呼び出し開始")
         truncate_all_tables(db=None)
+        logger.info("truncate_all_tables 完了")
 
         # 新しいセッションを作成して初期データを投入
+        logger.info("初期データ投入開始")
 
         from app.core.database import SessionLocal
 
         new_db = SessionLocal()
         try:
             # 初期管理者ユーザーとロールを再作成
+            logger.info("_seed_admin_user 呼び出し開始")
             _seed_admin_user(new_db)
+            logger.info("_seed_admin_user 完了")
 
             # システム設定の初期化
+            logger.info("_seed_system_config 呼び出し開始")
             _seed_system_config(new_db)
+            logger.info("_seed_system_config 完了")
 
             new_db.commit()
+            logger.info("初期データ投入完了（コミット済）")
         finally:
             new_db.close()
 
+        logger.info("DBリセット成功")
         return ResponseBase(
             success=True,
             message="データベースをリセットしました（テーブル構造は保持・管理者ユーザー・システム設定を再作成済）",
         )
 
     except Exception as e:
-        logger.exception(f"DBリセット失敗: {e}")
+        logger.exception("DBリセット失敗", extra={"error": str(e)[:500]})
         raise  # Let global handler format the response
 
 

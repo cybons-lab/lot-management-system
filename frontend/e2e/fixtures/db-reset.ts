@@ -60,9 +60,12 @@ export const test = base.extend<
         await client.resetDatabase();
         console.log("[DB Reset] Database reset successful");
       } catch (error) {
-        console.error("[DB Reset] Failed to reset database:", error);
-        // Don't throw - allow tests to continue even if reset fails
-        // Individual tests will fail with more meaningful errors
+        console.error("[DB Reset] CRITICAL: Failed to reset database:", error);
+        console.error("[DB Reset] Tests will likely fail due to dirty database state");
+        // Throw to fail fast - continuing with dirty DB state causes confusing test failures
+        throw new Error(
+          `Database reset failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
 
       await use();
