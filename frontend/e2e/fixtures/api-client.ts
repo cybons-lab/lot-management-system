@@ -130,7 +130,7 @@ export class ApiClient {
     const response = await this.request.post(`${API_BASE_URL}/api/admin/test-data/generate`, {
       headers: this.getHeaders(),
       data: options || {},
-      timeout: 60000,
+      timeout: 120000, // Extended timeout for test data generation
     });
 
     // Handle asynchronous generation (202 Accepted)
