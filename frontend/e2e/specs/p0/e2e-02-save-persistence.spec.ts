@@ -20,11 +20,18 @@ import { test, expect } from "@playwright/test";
 import { loginAs } from "../../fixtures/login-helper";
 
 test.describe("E2E-02: 保存永続化テスト", () => {
+  test.beforeEach(async ({ page }) => {
+    // デバッグ: 全リクエストを監視
+    page.on("request", (req) => {
+      if (req.url().includes("/api/")) {
+        console.log(`[Network] ${req.method()} ${req.url()}`);
+      }
+    });
+  });
+
   test("マスタ編集: 保存→APIリクエスト確認→リロード後も残る", async ({ page }) => {
     const workerIndex = test.info().workerIndex;
-    const testCodeA = `E2E-02-A${workerIndex}-${Date.now() % 100000}`;
-    const testNameA = `Persistence Test ${testCodeA}`;
-    console.log(`テスト開始: code=${testCodeA}`);
+    console.log("新規作成テストを開始します");
 
     // ===========================
     // Step 1: ログインとマスタ一覧へ移動
@@ -37,141 +44,105 @@ test.describe("E2E-02: 保存永続化テスト", () => {
     // ===========================
     // Step 2: 新規作成ダイアログを開く
     // ===========================
-    const createButton = page.getByRole("button", { name: /新規|作成|追加/ });
-    if (!(await createButton.isVisible())) {
-      test.skip(true, "新規作成ボタンが見つかりません");
-      return;
-    }
-
-    await createButton.click();
+    console.log("新規作成ボタンを探しています...");
+    const createButton = page
+      .getByRole("button", { name: "新規登録" })
+      .or(page.locator("button:has-text('新規')"));
+    await expect(createButton.first()).toBeVisible({ timeout: 15000 });
+    await createButton.first().click();
 
     // ダイアログ待機
+    console.log("ダイアログの表示を待っています...");
     const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible({ timeout: 5000 });
+    await expect(dialog).toBeVisible({ timeout: 10000 });
 
     // ===========================
     // Step 3: ユニークなテストデータを入力
     // ===========================
-    // (testCode は最上部で定義済)
+    const testCodeA = `E2E-02-A${workerIndex}-${Date.now() % 100000}`;
+    const testNameA = `Persistence Test ${testCodeA}`;
 
-    // 倉庫コードと名前を入力
-    const codeInput = dialog.getByLabel("倉庫コード").or(dialog.getByPlaceholder("コード"));
-    const nameInput = dialog.getByLabel("倉庫名").or(dialog.getByPlaceholder("名前"));
-
-    if (await codeInput.isVisible()) {
-      await codeInput.fill(testCodeA);
-    }
-    if (await nameInput.isVisible()) {
-      await nameInput.fill(testNameA);
-    }
+    await dialog.locator('input[id="warehouse_code"]').fill(testCodeA);
+    await dialog.locator('input[id="warehouse_name"]').fill(testNameA);
+    // 倉庫タイプは初期値(internal)のまま
 
     // ===========================
-    // Step 4: 保存 - APIリクエストを待つ（重要！）
+    // Step 4: 保存 - Enterキーで送信を確実に発火させる
     // ===========================
-    const saveButton = dialog.getByRole("button", { name: /保存|作成|登録|更新/ });
-    await expect(saveButton).toBeEnabled();
+    console.log("Enterキーを入力して送信を試みます...");
 
-    // 【重要】APIレスポンスを待つ
-    const apiResponsePromise = page.waitForResponse(
-      (response) =>
-        response.url().includes("/api/") &&
-        (response.request().method() === "POST" || response.request().method() === "PUT"),
-      { timeout: 15000 },
-    );
+    // バリデーションエラーが出ていないか確認
+    const errorMessages = dialog.locator('p[class*="error"]');
+    const errorCount = await errorMessages.count();
+    if (errorCount > 0) {
+      console.log(
+        `警告: バリデーションエラーを検知しました: ${await errorMessages.first().innerText()}`,
+      );
+    }
 
-    // ダブルクリック防止のために少し待つ
-    await page.waitForTimeout(300);
-    await saveButton.click({ force: true });
+    const [response] = await Promise.all([
+      page
+        .waitForResponse(
+          (res) =>
+            res.url().includes("/api/masters/warehouses") && res.request().method() === "POST",
+          { timeout: 15000 },
+        )
+        .catch(() => null), // タイムアウトしても次へ
+      page.keyboard.press("Enter"),
+    ]);
 
-    // APIレスポンスを確認
-    const response = await apiResponsePromise;
-    const status = response.status();
-
-    // 2xx成功確認
-    expect(status >= 200 && status < 300, `保存API失敗: status=${status}`).toBeTruthy();
-
-    console.log(`保存APIレスポンス: status=${status}`);
+    if (!response) {
+      console.log("警告: EnterキーでAPIが発生しませんでした。ボタンをクリックします。");
+      const saveButton = dialog.getByRole("button", { name: /登録|保存|作成/ }).first();
+      await saveButton.click({ force: true });
+      // ここでもう一度待つ
+      await page
+        .waitForResponse(
+          (r) => r.url().includes("/api/masters/warehouses") && r.request().method() === "POST",
+          { timeout: 5000 },
+        )
+        .catch(() => null);
+    } else {
+      console.log(`保存APIレスポンス取得成功: status=${response.status()}`);
+    }
     const createdData = await response.json();
     console.log(`[Debug] Created Data: ${JSON.stringify(createdData)}`);
 
     // ===========================
     // Step 5: 成功トースト確認
     // ===========================
-    await expect(
-      page
-        .locator('[data-sonner-toast][data-type="success"]')
-        .or(page.locator("[data-sonner-toast]")),
-    ).toBeVisible({ timeout: 10000 });
-
-    // DBへの書き込み完了を確実に待つ（リロード後のデータ不在対策）
-    await page.waitForTimeout(3000);
-
-    // ダイアログが閉じることを確認（オプション: 閉じない場合もあるため、明示的に閉じる）
-    // Note: shadcn/ui Dialog の挙動により、保存後すぐに閉じない場合がある
-    // ESCキーでダイアログを閉じる
-    await page.keyboard.press("Escape");
-    await page.waitForTimeout(500); // Wait for dialog close animation
+    const successToast = page.locator("[data-sonner-toast]").first();
+    await expect(successToast).toBeVisible({ timeout: 10000 });
+    console.log("成功トーストを確認しました。");
 
     // ===========================
-    // Step 6: ページリロード - 永続化確認（重要！）
+    // Step 6: ページリロード - 永続化確認
     // ===========================
-    // リロード時のデータ取得レスポンスを監視
-    const listResponsePromise = page.waitForResponse(
-      (resp) =>
-        resp.url().includes("/api/") && // MUST include /api/
-        resp.url().includes("/warehouses") &&
-        resp.request().method() === "GET" &&
-        resp.status() === 200,
-      { timeout: 30000 },
-    );
-
+    await page.waitForTimeout(1000); // 書き込み猶予
     await page.reload();
-
-    // レスポンス内容を確認
-    try {
-      const listResponse = await listResponsePromise;
-      const listData = await listResponse.json();
-      console.log(
-        `[Debug] List API Response Count: ${Array.isArray(listData) ? listData.length : "Not an array"}`,
-      );
-      console.log(`[Debug] Full List Data: ${JSON.stringify(listData)}`);
-    } catch (e) {
-      console.log(`[Debug] Failed to capture list response: ${e}`);
-    }
-
     await page.waitForLoadState("networkidle");
 
-    // デバッグ: 現在のURLを確認
-    const currentUrl = page.url();
-    console.log(`リロード後のURL: ${currentUrl}`);
-
-    // ログイン状態を確認（リロード後にログアウトされている可能性）
-    await loginAs(page, "admin");
-    await page.waitForLoadState("networkidle");
-
-    // デバッグ: ログイン遷移後のURLを確認
-    console.log(`ログイン遷移後のURL: ${page.url()}`);
-
-    // 正しいURLにいることを確認（ログイン後のリダイレクト先が / 等の場合、再度移動が必要）
-    // URLの末尾が /warehouses であるか、パスに含まれているかを確認
-    if (!page.url().includes("/warehouses")) {
-      console.log(`警告: /warehouses ではなく ${page.url()} にいます。再度移動します。`);
-      await page.goto("/warehouses");
+    // ログイン状態復旧（リロード対策）
+    const header = page.locator("header");
+    if ((await header.innerText()).includes("ゲスト")) {
+      await loginAs(page, "admin");
       await page.waitForLoadState("networkidle");
     }
 
-    // テーブルが読み込まれるのを待つ
-    await expect(page.locator("table")).toBeVisible({ timeout: 30000 });
+    // テーブル表示待機
+    await expect(page.locator("table tbody tr").first()).toBeVisible({ timeout: 20000 });
 
     // ===========================
-    // Step 7: 作成したデータが残っていることを確認
+    // Step 7: 検索して確認
     // ===========================
-    // Note: デフォルトのページネーション（5件）により、新規作成した項目（6件目）が
-    // 一覧に表示されない場合があるため、一覧での存在確認はスキップし、
-    // 編集テスト（下記）で永続化を検証する。
-    console.log(
-      "新規作成確認: 201 Createdを確認しました。一覧表示確認はスキップします（ページネーション制限のため）",
-    );
+    console.log(`作成したコード "${testCodeA}" で検索します...`);
+    const searchInput = page.getByPlaceholder(/検索/);
+    await searchInput.fill(testCodeA);
+    await page.waitForTimeout(1000); // デバウンス待ち
+
+    const createdRow = page.locator("table tbody tr").filter({ hasText: testCodeA });
+    await expect(createdRow).toBeVisible({ timeout: 10000 });
+    console.log("新規作成したデータの永続化を確認しました。");
   });
 
   test("編集保存: 既存データ編集→保存→リロード確認", async ({ page }) => {
@@ -192,17 +163,37 @@ test.describe("E2E-02: 保存永続化テスト", () => {
     // Step 2: ワーカー固有の行をクリック（詳細/編集画面へ）
     // ===========================
     const tableRows = page.locator("table tbody tr");
-    const rowCount = await tableRows.count();
+    let rowCount = await tableRows.count();
 
     if (rowCount === 0) {
-      test.skip(true, "編集可能なデータがありません");
-      return;
+      // 登録倉庫数カードの数字を確認
+      const statsValue = page.locator('[class*="statsValue"]');
+      const count = await statsValue.innerText();
+      if (count === "0") {
+        test.skip(true, "編集可能なデータがありません");
+        return;
+      }
+      // 少し待ってから再取得
+      await page.waitForTimeout(2000);
+      rowCount = await tableRows.count();
+      if (rowCount === 0) {
+        test.skip(true, "データ取得に時間がかかっています");
+        return;
+      }
     }
 
     // ワーカーIDに基づいて衝突しにくい行を選択
     const targetIndex = workerIndex % rowCount;
     const targetRow = tableRows.nth(targetIndex);
     console.log(`Worker ${workerIndex}: Row ${targetIndex} を編集します`);
+
+    // 確実に何か入っているセルからコードを抽出 (セル位置を確認)
+    // 1列目: チェックボックス, 2列目: 倉庫コード ...
+    const warehouseCode = await targetRow.locator("td").nth(1).innerText();
+    console.log(`対象の倉庫コード: "${warehouseCode}"`);
+    if (!warehouseCode) {
+      throw new Error("倉庫コードが取得できませんでした。");
+    }
 
     const editButton = targetRow.getByRole("button", { name: /編集/ });
     if (await editButton.isVisible()) {
@@ -260,30 +251,26 @@ test.describe("E2E-02: 保存永続化テスト", () => {
     }
 
     // ===========================
-    // Step 4: 保存 - APIリクエスト確認
+    // Step 4: 保存 - トースト通知確認
     // ===========================
     const saveButton = dialog.getByRole("button", { name: /保存|更新|作成|登録/ });
     await expect(saveButton).toBeEnabled();
 
-    // API監視: 非常に緩く設定、もしくはダイアログが閉じるのを待つ方針に変更
     // 保存ボタン押下
     await page.waitForTimeout(500);
     await saveButton.click({ force: true });
 
-    // APIレスポンス待ちでタイムアウトする可能性があるため、
-    // ダイアログが閉じることを成功の証とする (もしエラーならダイアログは閉じないはず)
-    await expect(dialog)
-      .not.toBeVisible({ timeout: 10000 })
-      .catch(async () => {
-        // 失敗した場合、エラーメッセージが出ているか確認
-        console.log(
-          "保存後にダイアログが閉じませんでした。バリデーションエラーの可能性があります。",
-        );
-        // Escで閉じてみる
-        await page.keyboard.press("Escape");
-      });
+    // 成功トースト確認
+    console.log("編集保存後の成功トーストを待ちます...");
+    const successToast = page
+      .locator('[data-sonner-toast][data-type="success"]')
+      .or(page.locator("[data-sonner-toast]"))
+      .first();
+    await expect(successToast).toBeVisible({ timeout: 15000 });
+    console.log("編集保存の成功を確認しました。");
 
-    console.log("保存処理完了（ダイアログ閉）");
+    // DBへの書き込み完了を確実に待つ
+    await page.waitForTimeout(2000);
 
     // ===========================
     // Step 5: リロードして確認
@@ -296,9 +283,18 @@ test.describe("E2E-02: 保存永続化テスト", () => {
     await expect(page.locator("table")).toBeVisible({ timeout: 15000 });
 
     // 変更した行を探す
-    // 注: ページネーション内にあるはず（既存データを編集したため）
-    const updatedRows = page.locator("table tbody tr").filter({ hasText: `_MOD_${workerIndex}` });
-    await expect(updatedRows.first()).toBeVisible({ timeout: 10000 });
+    // 元々の「倉庫コード」で検索するのが最も確実
+    console.log(`元の倉庫コード "${warehouseCode}" で検索して永続化を確認します...`);
+    const searchInput = page.getByPlaceholder(/検索/);
+    await expect(searchInput).toBeVisible({ timeout: 10000 });
+    await searchInput.fill(warehouseCode);
+    await page.waitForTimeout(1000); // フィルタリング反映待ち
+
+    const updatedRow = page.locator("table tbody tr").filter({ hasText: warehouseCode });
+    await expect(updatedRow.first()).toBeVisible({ timeout: 15000 });
+
+    // 編集した内容（MODの文字）が含まれていることも確認
+    await expect(updatedRow.first()).toContainText(`_MOD_${workerIndex}`);
 
     console.log("編集内容の永続化を確認しました");
   });

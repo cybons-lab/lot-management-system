@@ -926,6 +926,10 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
   - パフォーマンステスト
 
 #### 5-1-2. E2Eテスト基盤の構築
+- [ ] [P0] E2Eテストの永続化検証失敗の調査と修正
+    - 状況: `e2e-02` テストで保存API自体がフロントエンドから送信されていない現象を確認。
+    - 原因調査レポート: [e2e_persistence_failure_report.md](../investigation/e2e_persistence_failure_report.md)
+    - [x] 並列実行時のDBリセット干渉 (`e2e-04`) は修正済み。
 - [ ] E2Eテストフレームワークの選定・導入（Playwright推奨）
 - [ ] 主要ユーザーフロー
   - ログイン → ダッシュボード → マスタ画面遷移

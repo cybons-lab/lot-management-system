@@ -129,8 +129,9 @@ test.describe("E2E-04: 権限テスト", () => {
     console.log("E2E-04: 管理者APIアクセス成功");
 
     // DBリセットエンドポイント（危険な操作）も管理者なら成功
-    const resetRes = await apiClient.post("/api/admin/reset-database", {}, 200);
-    expect(resetRes.success).toBe(true);
+    // 注意: 並列テスト実行中にこれを叩くと他のテストのデータが消えるため、永続化テスト等と競合する
+    // const resetRes = await apiClient.post("/api/admin/reset-database", {}, 200);
+    // expect(resetRes.success).toBe(true);
   });
 
   test("AdminGuardコンポーネント: 管理者ルートの保護確認", async ({ page }) => {
