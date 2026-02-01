@@ -16,27 +16,6 @@
 
 **現状:** P0テストは **32 passed, 6 skipped** で安定稼働。並列実行 (workers=4) も正常に動作する。
 
-**解決済み（2026-02-01）:**
-
-1. ✅ **DBリセットの並列実行競合 (Critical)** - 完全解決
-   - 症状: `reset-database` エンドポイントが `500 OperationalError (LockNotAvailable)` で失敗する。
-   - 原因: アドバイザリロックの残留により、後続のリセット処理がロック取得待ちでタイムアウト。
-   - **対応内容**:
-     - アドバイザリロック (`pg_advisory_lock`) を廃止し、TRUNCATE自体のロックに依存する方式に変更。
-     - TRUNCATE は自動的に ACCESS EXCLUSIVE LOCK を取得するため、複数呼び出しは自然に直列化される。
-     - **globalSetup 導入**: DBリセットを全テスト開始前に1回だけ実行する方式に変更 (`e2e/global-setup.ts`)
-     - **並列実行再開**: workers=4 (CI: 1) で安定稼働、実行時間 2.6分 → 36.5秒に短縮 (7倍高速化)
-     - E2Eテストのエラーハンドリングを改善: エラーを握りつぶさず、失敗時に即座に例外をスロー。
-   - **参考**: ブランチ `fix/e2e-test-remaining-issues`、コミット d4d5f9b7
-
-2. ✅ **socket hang up (`e2e-04`)**:
-  - 原因: Playwrightのコネクション問題と、API設計（`/admin`配下の混同）。
-  - 対応: エンドポイントを`/api/dashboard/stats`に分離し、テストを直列実行(`test.describe.configure({ mode: 'serial' })`)に設定。
-
-3. ✅ **reset-database 500エラー**:
-  - 原因: リファクタリング時の実装漏れと、セッション管理の問題。
-  - 対応: エンドポイント復元と実装修正（依存関係削除）。
-
 **残存問題（2件 - 低優先度）:**
 
 1. **テストデータ生成が warehouse/product を作成しない**
@@ -48,17 +27,8 @@
    - 症状: テストデータ生成APIのタイムアウトや失敗により、ユーザーが存在せずログインに失敗する。
    - 現状: globalSetup導入後は未発生。継続監視中。
 
-**解決済み（2026-02-01）:**
-- ✅ **socket hang up (`e2e-04`)**:
-  - 原因: Playwrightのコネクション問題と、API設計（`/admin`配下の混同）。
-  - 対応: エンドポイントを`/api/dashboard/stats`に分離し、テストを直列実行(`test.describe.configure({ mode: 'serial' })`)に設定。
-- ✅ **reset-database 500エラー**:
-  - 原因: リファクタリング時の実装漏れと、セッション管理の問題。
-  - 対応: エンドポイント復元と実装修正（依存関係削除）。
-
-**参考:**
-- ブランチ: `fix/e2e-permission-socket-hangup`
-- 最新検証: workers=1 で `e2e-01`, `e2e-04` pass確認済み
+**解決済みタスク:**
+- ✅ DBリセットの並列実行競合、socket hang up、reset-database 500エラー → [ARCHIVE.md](./ARCHIVE.md) に移動済み
 
 ---
 
@@ -1359,29 +1329,6 @@ Excelビューのロット情報に「発注NO.」列があるが、常に `-` �
 統合後のバックログファイルは `docs/project/BACKLOG.md` に配置されています。
 元のファイルは `docs/archive/backlog/` に保管されています。
 
-### 5-3. Playwright E2Eテスト DBリセット失敗 (500 Error)
-
-**優先度**: High
-**作成**: 2026-02-01
-**カテゴリ**: テスト環境・CI
-
-**背景・課題:**
-PlaywrightによるE2Eテスト実行時、`beforeAll` フックで呼び出される `/api/admin/reset-database` エンドポイントが `500 Internal Server Error` で失敗する。これにより後続のテストが全て失敗する。
-
-**症状:**
-- `curl` コマンドによる手動実行は **成功 (200 OK)** する。
-- Playwrightテストランナーからの実行時のみ **失敗 (500 Error)** する。
-- エラー内容は `psycopg2.errors.LockNotAvailable` であったが、対策後も500エラーが継続（詳細ログはテストランナーが出力）。
-
-**実施済みの対応:**
-1. **DBロック競合対策**: `truncate_all_tables` に `pg_terminate_backend` を使用した他セッション強制切断処理を追加（`backend/app/core/database.py`）。
-2. **テストユーザー自動作成**: DBリセット時に管理者だけでなく一般ユーザー(`user`)も作成するように修正（`backend/app/presentation/api/routes/admin/admin_router.py`）。
-3. **テストコード修正**: `e2e-04-permission.spec.ts` で `resetDatabase` と `generateTestData` を呼ぶように修正。
-
-**残課題:**
-- Playwright環境特有の接続処理などが原因で、依然としてリセット処理が失敗している。
-- テストランナーのDB接続設定、待機時間、ドライバの挙動などの調査が必要。
-
 ---
 
 ### 更新履歴
@@ -1390,3 +1337,4 @@ PlaywrightによるE2Eテスト実行時、`beforeAll` フックで呼び出さ�
 - 2026-01-26: クイックウィン4件対応 (1-4, 2-2, 2-4, 8-9)
 - 2026-01-26: Excelビュー機能タスク追加 (セクション10)、仕入先表示・forecast_period表示修正完了
 - 2026-02-01: ロットアーカイブ時の 401 Unauthorized エラーの修正、認証ロジックの統合を完了
+- 2026-02-02: E2Eテスト並列実行の安定化完了タスクをARCHIVE.mdに移動、認証・認可システム再設計提案を追加

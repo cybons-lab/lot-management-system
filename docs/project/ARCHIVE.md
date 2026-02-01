@@ -296,3 +296,34 @@
 - Mypy: ✅ パス
 
 **コミット**: `67f5d7bb`
+
+---
+
+## 2026-02-02 完了タスク
+
+### E2Eテスト並列実行の安定化 ✅ 対応済み
+**完了**: 2026-02-01
+**カテゴリ**: テスト品質・CI/CD
+
+**解決した問題:**
+1. **DBリセットの並列実行競合** - 完全解決
+   - 症状: `reset-database` エンドポイントが `500 OperationalError (LockNotAvailable)` で失敗
+   - 原因: アドバイザリロックの残留により、後続のリセット処理がロック取得待ちでタイムアウト
+   - 対応内容:
+     - アドバイザリロック (`pg_advisory_lock`) を廃止し、TRUNCATE自体のロックに依存する方式に変更
+     - TRUNCATE は自動的に ACCESS EXCLUSIVE LOCK を取得するため、複数呼び出しは自然に直列化される
+     - **globalSetup 導入**: DBリセットを全テスト開始前に1回だけ実行する方式に変更 (`e2e/global-setup.ts`)
+     - **並列実行再開**: workers=4 (CI: 1) で安定稼働、実行時間 2.6分 → 36.5秒に短縮 (7倍高速化)
+     - E2Eテストのエラーハンドリングを改善: エラーを握りつぶさず、失敗時に即座に例外をスロー
+
+2. **socket hang up (`e2e-04`)**
+   - 原因: Playwrightのコネクション問題と、API設計（`/admin`配下の混同）
+   - 対応: エンドポイントを`/api/dashboard/stats`に分離し、テストを直列実行(`test.describe.configure({ mode: 'serial' })`)に設定
+
+3. **reset-database 500エラー**
+   - 原因: リファクタリング時の実装漏れと、セッション管理の問題
+   - 対応: エンドポイント復元と実装修正（依存関係削除）
+
+**参考:**
+- ブランチ: `fix/e2e-test-remaining-issues`, `fix/e2e-permission-socket-hangup`
+- コミット: `d4d5f9b7`
