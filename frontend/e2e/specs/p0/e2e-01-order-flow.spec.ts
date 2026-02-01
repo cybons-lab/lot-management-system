@@ -18,6 +18,7 @@
  */
 import { test, expect } from "@playwright/test";
 import { ApiClient } from "../../fixtures/api-client";
+import { loginAs } from "../../fixtures/login-helper";
 
 test.describe("E2E-01: 注文作成→引当→出荷フロー", () => {
   let apiClient: ApiClient;
@@ -39,13 +40,8 @@ test.describe("E2E-01: 注文作成→引当→出荷フロー", () => {
     await page.goto("/orders");
     await page.waitForLoadState("networkidle");
 
-    // ログイン画面にリダイレクトされた場合はログイン
-    if (page.url().includes("/login") || page.url().includes("/auth")) {
-      await page.getByLabel("ユーザー名").or(page.getByPlaceholder("ユーザー名")).fill("admin");
-      await page.getByLabel("パスワード").or(page.getByPlaceholder("パスワード")).fill("admin123");
-      await page.getByRole("button", { name: /ログイン/ }).click();
-      await page.waitForLoadState("networkidle");
-    }
+    // ログイン処理
+    await loginAs(page, "admin");
 
     // 注文一覧が表示されることを確認
     await expect(page.locator("table").or(page.getByText("注文"))).toBeVisible({ timeout: 10000 });

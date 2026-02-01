@@ -15,6 +15,7 @@
  * @tags @smoke @p0 @error-handling
  */
 import { test, expect } from "@playwright/test";
+import { loginAs } from "../../fixtures/login-helper";
 
 test.describe("E2E-06: 失敗系テスト（エラーハンドリング）", () => {
   test("API 500: エラートースト表示とUIの安定性", async ({ page }) => {
@@ -40,15 +41,7 @@ test.describe("E2E-06: 失敗系テスト（エラーハンドリング）", () 
     await page.waitForLoadState("networkidle");
 
     // ログイン処理
-    if (page.url().includes("/login") || page.url().includes("/auth")) {
-      await page.getByLabel("ユーザー名").or(page.getByPlaceholder("ユーザー名")).fill("admin");
-      await page.getByLabel("パスワード").or(page.getByPlaceholder("パスワード")).fill("admin123");
-      await page.getByRole("button", { name: /ログイン/ }).click();
-
-      // ログイン後、再度製品ページへ
-      await page.goto("/products");
-      await page.waitForLoadState("networkidle");
-    }
+    await loginAs(page, "admin");
 
     // ===========================
     // Step 3: エラー表示確認
@@ -111,15 +104,7 @@ test.describe("E2E-06: 失敗系テスト（エラーハンドリング）", () 
     await page.waitForLoadState("networkidle");
 
     // ログイン処理
-    if (page.url().includes("/login") || page.url().includes("/auth")) {
-      await page.getByLabel("ユーザー名").or(page.getByPlaceholder("ユーザー名")).fill("admin");
-      await page.getByLabel("パスワード").or(page.getByPlaceholder("パスワード")).fill("admin123");
-      await page.getByRole("button", { name: /ログイン/ }).click();
-      await page.waitForLoadState("networkidle");
-
-      await page.goto("/orders");
-      await page.waitForLoadState("networkidle");
-    }
+    await loginAs(page, "admin");
 
     // テーブルが表示されることを確認
     await expect(page.locator("table").or(page.getByText("注文"))).toBeVisible({ timeout: 10000 });
@@ -204,15 +189,7 @@ test.describe("E2E-06: 失敗系テスト（エラーハンドリング）", () 
     await page.waitForLoadState("networkidle");
 
     // ログイン処理
-    if (page.url().includes("/login") || page.url().includes("/auth")) {
-      await page.getByLabel("ユーザー名").or(page.getByPlaceholder("ユーザー名")).fill("admin");
-      await page.getByLabel("パスワード").or(page.getByPlaceholder("パスワード")).fill("admin123");
-      await page.getByRole("button", { name: /ログイン/ }).click();
-      await page.waitForLoadState("networkidle");
-
-      await page.goto("/warehouses");
-      await page.waitForLoadState("networkidle");
-    }
+    await loginAs(page, "admin");
 
     // ===========================
     // Step 2: 新規作成
