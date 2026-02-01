@@ -8,15 +8,13 @@ import {
   Home,
   List,
   Package,
-  RefreshCw,
   Search,
   Truck,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 
-import { Button, Label } from "@/components/ui";
+import { Button, Label, RefreshButton } from "@/components/ui";
 import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { ROUTES } from "@/constants/routes";
 import {
@@ -44,8 +42,6 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function InventoryPage() {
   const navigate = useNavigate();
-  // Refresh loading state
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // 担当仕入先フィルターロジック（共通フック）
   const { filterEnabled, toggleFilter } = useSupplierFilter();
@@ -152,30 +148,45 @@ export function InventoryPage() {
     updateFilter(key as keyof typeof filters, value);
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      switch (overviewMode) {
-        case "items":
-          await refetchItems();
-          break;
-        case "supplier":
-          await supplierQuery.refetch();
-          break;
-        case "warehouse":
-          await warehouseQuery.refetch();
-          break;
-        case "product":
-          await productQuery.refetch();
-          break;
-      }
-      toast.success("データを更新しました");
-    } catch {
-      toast.error("データの更新に失敗しました");
-    } finally {
-      setIsRefreshing(false);
+  // Determine query key based on current overview mode
+  const currentQueryKey = useMemo(() => {
+    switch (overviewMode) {
+      case "items":
+        return ["inventoryItems", "list", queryParams];
+      case "supplier":
+        return ["inventory", "by-supplier"];
+      case "warehouse":
+        return ["inventory", "by-warehouse"];
+      case "product":
+        return ["inventory", "by-product"];
+      case "lots":
+        return ["lots"]; // Default for lot search
+      default:
+        return ["inventoryItems"];
     }
-  };
+  }, [overviewMode, queryParams]);
+
+  // Determine loading state based on current overview mode
+  const isCurrentModeLoading = useMemo(() => {
+    switch (overviewMode) {
+      case "items":
+        return isItemsLoading;
+      case "supplier":
+        return supplierQuery.isLoading;
+      case "warehouse":
+        return warehouseQuery.isLoading;
+      case "product":
+        return productQuery.isLoading;
+      default:
+        return false;
+    }
+  }, [
+    overviewMode,
+    isItemsLoading,
+    supplierQuery.isLoading,
+    warehouseQuery.isLoading,
+    productQuery.isLoading,
+  ]);
 
   return (
     <PageContainer>
@@ -261,10 +272,11 @@ export function InventoryPage() {
             </Button>
           </div>
 
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            データを更新
-          </Button>
+          <RefreshButton
+            queryKey={currentQueryKey}
+            isLoading={isCurrentModeLoading}
+            successMessage="データを再読み込みしました"
+          />
         </div>
 
         {/* Tab Filters (Items Only) */}

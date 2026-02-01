@@ -21,6 +21,9 @@ export * from "./layout";
 // Feedback components
 export * from "./feedback";
 
+// Data components
+export * from "./data";
+
 export * from "./calendar";
 export * from "./popover";
 export * from "./skeleton";

@@ -15,7 +15,7 @@ import {
   BulkPermanentDeleteDialog,
   BulkSoftDeleteDialog,
 } from "@/components/common";
-import { Button, Input, Checkbox } from "@/components/ui";
+import { Button, Input, Checkbox, RefreshButton } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -328,12 +328,18 @@ export function SuppliersListPage() {
         subtitle="仕入先の作成・編集・削除、一括インポート/エクスポート"
         backLink={{ to: "/masters", label: "マスタ管理" }}
         actions={
-          <MasterPageActions
-            exportApiPath="masters/suppliers/export/download"
-            exportFilePrefix="suppliers"
-            onImportClick={openImport}
-            onCreateClick={openCreate}
-          />
+          <div className="flex gap-2">
+            <RefreshButton
+              queryKey={["suppliers", { includeInactive: showInactive }]}
+              isLoading={isLoading}
+            />
+            <MasterPageActions
+              exportApiPath="masters/suppliers/export/download"
+              exportFilePrefix="suppliers"
+              onImportClick={openImport}
+              onCreateClick={openCreate}
+            />
+          </div>
         }
       />
 
