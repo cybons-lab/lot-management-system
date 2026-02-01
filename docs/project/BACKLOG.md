@@ -269,73 +269,7 @@ async def start_pad_run_from_upload(
 
 ---
 
-### 2-11. データ再読み込みボタンの共通化
-
-**優先度**: Medium
-**難易度**: Low
-**想定工数**: 0.5-1日
-
-**背景:**
-現在、OCR結果ページには手動でデータを再読み込みするボタンが実装されています（2026-01-23実装）。しかし、他のデータ一覧ページ（出荷用マスタ、在庫一覧、受注一覧など）には同様の機能がありません。
-
-ユーザーがF5キーでページ全体をリロードすると、以下の問題が発生します：
-- ログイン状態が失われる可能性
-- フォーム入力内容が消える
-- アプリケーション全体の再初期化が発生（不要なリソース消費）
-
-**提案:** 共通コンポーネント `RefreshButton` を作成し、全主要ページに配置。
-
-**対象ページ:**
-1. ✅ OCR結果ページ (`OcrResultsListPage.tsx`)
-2. ❌ 出荷用マスタページ (`ShippingMasterListPage.tsx`)
-3. ❌ 在庫一覧ページ (`InventoryListPage.tsx`)
-4. ❌ 受注一覧ページ (`OrdersListPage.tsx`)
-5. ❌ ロット一覧ページ (`LotsListPage.tsx`)
-6. ❌ 仕入先マスタページ (`SuppliersListPage.tsx`)
-7. ❌ 得意先マスタページ (`CustomersListPage.tsx`)
-8. ❌ SAP統合ページ (`DataFetchTab.tsx`)
-9. ❌ フォーキャストページ (`ForecastPage.tsx`)
-
-**元:** `FUTURE_IMPROVEMENTS.md`
-
----
-
-### 2-12. テストデータの拡充（SAP仕入先・数量単位）
-
-**優先度**: Medium
-**作成**: 2026-02-01
-**カテゴリ**: テストデータ品質
-
-**背景:**
-OCR結果テーブルにおいて、以下のフィールドのテストデータが不足している：
-1. **SAP仕入先** (`sap_supplier_code`, `sap_supplier_name`)
-2. **数量単位** (`sap_qty_unit`)
-
-これらのフィールドが常に空表示となっており、UI表示の検証が困難。
-
-**タスク内容:**
-1. テストデータ生成スクリプト（`generate_sample_data.py` 等）を更新
-2. 以下のデータを追加:
-   - SAP仕入先情報（SAP関連ページのテストデータ）
-   - 数量単位情報（出荷用マスタデータページのテストデータ）
-3. OCR結果のサンプルデータに上記フィールドを含める
-
-**関連ファイル:**
-- `backend/app/application/services/test_data_generator.py` (または類似のテストデータ生成スクリプト)
-- `backend/app/infrastructure/persistence/models/ocr_models.py`
-
-**元:** ユーザー要望 (2026-02-01)
-
----
-
 ## 3. DB/UI整合性・データ表示改善
-
-### 3-2. Orders の一部フィールドがUI未表示
-
-- `ocr_source_filename`, `cancel_reason`, `external_product_code`, `shipping_document_text`
-- 対象: 受注詳細画面
-
-**元:** `backlog.md::3-2` (2026-01-18)
 
 ---
 
@@ -406,38 +340,6 @@ def get_product_name(product: Optional[HasProductName], default: str = "") -> st
 ```
 
 **元:** `any-type-reduction.md` (2026-01-18)
-
----
-
-### 4-5. フロントエンド: Zod Resolverの型問題を解決
-
-**優先度**: Medium (any型削減 Phase 2)
-**対象**: 6箇所
-
-**場所**:
-- `features/warehouses/components/WarehouseForm.tsx`
-- `features/rpa/smartread/components/SmartReadSettingsModal.tsx`
-- `features/uom-conversions/components/UomConversionForm.tsx`
-- `features/warehouse-delivery-routes/components/WarehouseDeliveryRouteForm.tsx`
-- `features/product-mappings/components/ProductMappingForm.tsx`
-- `features/delivery-places/components/DeliveryPlaceForm.tsx`
-
-**現状:**
-```typescript
-resolver: zodResolver(warehouseFormSchema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-```
-
-**対応:**
-```typescript
-// Before
-resolver: zodResolver(schema) as any,
-
-// After
-resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
-```
-
-**元:** `any-type-reduction.md` (2026-01-18)
-
 
 ---
 
@@ -985,31 +887,6 @@ CLAUDE.md で推奨される300行を大幅に超えるファイルが存在。
 | `smartread_router.py` | 1108 | 機能別に複数 APIRouter に分割 |
 | `smartread/client.py` | 935 | SmartReadUploader, SmartReadDownloader, SmartReadParser に分割 |
 | `forecast_service.py` | 681 | ForecastImportService, ForecastCalculationService に分割 |
-
----
-
-### 9-12. 空の Schema クラス (pass only) の整理
-
-**優先度**: Low
-**作成**: 2026-01-26
-
-**背景:**
-`pass` のみの空クラスが29箇所存在。
-目的が不明確で、コードの意図が伝わりにくい。
-
-**対象 (一部):**
-- `forecast_schema.py:30`
-- `orders_schema.py:145`
-- `masters_schema.py:40,96,150,206,250,340`
-- `customer_items_schema.py:47`
-- その他20+箇所
-
-**対応:**
-1. 継承のみが目的なら、docstringでその旨を明記
-2. 不要なクラスは削除
-3. フィールドを追加すべきなら追加
-
----
 
 ---
 

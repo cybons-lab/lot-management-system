@@ -181,3 +181,96 @@
 - `_ensure_enabled()` 関数によるシステム設定ベースの有効/無効制御が実装済み。
 - バックログのタスク9-13は既に対応済みであることを確認。
 - ファイル: `backend/app/presentation/api/routes/debug/db_browser_router.py`
+
+---
+
+## 2026-02-01 完了タスク (バックログ整理)
+
+### 2-11. データ再読み込みボタンの共通化 ✅ 対応済み
+**完了**: 2026-02-01
+**優先度**: Medium
+**カテゴリ**: UI/UX改善
+**対応内容**:
+- 共通コンポーネント `RefreshButton` を作成 (`frontend/src/components/ui/data/RefreshButton.tsx`)
+- React Query の `invalidateQueries` を使用したキャッシュ無効化
+- 以下のページに配置完了:
+  - ✅ OCR結果ページ (`OcrResultsListPage.tsx`)
+  - ✅ 在庫一覧ページ (`InventoryPage.tsx`)
+  - ✅ 受注一覧ページ (`OrdersPage.tsx`)
+  - ✅ 仕入先マスタページ (`SuppliersListPage.tsx`)
+  - ✅ 得意先マスタページ (`CustomersListPage.tsx`)
+- ユーザーがF5キーでページ全体をリロードする必要がなくなり、ログイン状態やフォーム入力が保持される。
+
+**コミット**: `50cf9d2d`
+
+### 2-12. テストデータの拡充（SAP仕入先・数量単位） ✅ 対応済み
+**完了**: 2026-02-01
+**優先度**: Medium
+**カテゴリ**: テストデータ品質
+**対応内容**:
+- `backend/app/application/services/test_data/sap.py` を更新
+  - `SapMaterialCache.raw_data` に `ZLIFNR_H` (SAP仕入先コード) を追加
+  - `SapMaterialCache.raw_data` に `MEINS` (数量単位) を追加
+  - Material code → (supplier_code, qty_unit) のマッピングを実装
+    - M001 → S001, KG
+    - M002 → S002, PC
+    - M003 → S001, M
+    - M004 → S002, KG
+    - M005 → S999, EA (fallback)
+- OCR結果テーブルでSAP仕入先・数量単位フィールドが表示され、UI検証が可能になった。
+
+**コミット**: `50cf9d2d`
+
+### 3-2. Orders の一部フィールドがUI未表示 ✅ 対応済み
+**完了**: 2026-02-01
+**優先度**: Medium
+**カテゴリ**: UI改善
+**対応内容**:
+- `frontend/src/features/orders/pages/OrderDetailPage.tsx` を更新
+- `shipping_document_text` を注文明細テーブルの商品名・コード下に表示
+- その他フィールド確認結果:
+  - `ocr_source_filename` → 既に表示済み確認
+  - `cancel_reason` → 既に表示済み確認
+  - `external_product_code` → `customer_part_no` に改名済み（該当なし）
+
+**コミット**: `6af69108`
+
+### 4-5. フロントエンド: Zod Resolverの型問題を解決 ✅ 対応済み
+**完了**: 2026-02-01
+**優先度**: Medium (any型削減 Phase 2)
+**カテゴリ**: コード品質・型安全性
+**対応内容**:
+- 5ファイルで `zodResolver(...) as any` を `Resolver<FormDataType>` 型に修正
+- 対象ファイル:
+  - `features/warehouses/components/WarehouseForm.tsx`
+  - `features/rpa/smartread/components/SmartReadSettingsModal.tsx`
+  - `features/uom-conversions/components/UomConversionForm.tsx`
+  - `features/warehouse-delivery-routes/components/WarehouseDeliveryRouteForm.tsx`
+  - `features/delivery-places/components/DeliveryPlaceForm.tsx`
+- TypeScript の型安全性が向上し、潜在的なバグリスクが低減。
+- TypeScript型チェック: ✅ 0エラー
+- ESLint: ✅ 0警告
+
+**コミット**: `55e10c6d`
+
+### 9-12. 空の Schema クラス (pass only) の整理 ✅ 対応済み
+**完了**: 2026-02-01
+**優先度**: Low
+**カテゴリ**: コード品質・可読性
+**対応内容**:
+- 28個の空クラス（`pass`のみ）に説明的なdocstringを追加
+- 継承のみが目的であることを明示:
+  ```python
+  class ForecastCreate(ForecastBase):
+      """Payload for creating a new forecast entry.
+
+      Inherits all fields from ForecastBase without additional fields.
+      Exists for type distinction and API schema generation.
+      """
+      pass
+  ```
+- 20ファイル更新、コードの意図が明確になった。
+- Ruff check/format: ✅ パス
+- Mypy: ✅ パス
+
+**コミット**: `67f5d7bb`
