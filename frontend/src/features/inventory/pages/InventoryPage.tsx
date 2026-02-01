@@ -37,8 +37,8 @@ import {
   useInventoryBySupplier,
   useInventoryByWarehouse,
 } from "@/hooks/api";
+import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
 import { ExportButton } from "@/shared/components/ExportButton";
-import { Section } from "@/shared/components/layout";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -311,13 +311,13 @@ export function InventoryPage() {
 
         {/* Filters */}
         {showFilters && (
-          <Section>
+          <SimpleFilterContainer onReset={resetFilters} hideSearch className="mb-0">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap items-start justify-between gap-4 pt-2">
+              <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <Label className="text-sm font-medium">候補の基準</Label>
+                  <Label className="text-sm font-medium text-slate-700">候補の基準</Label>
                   <select
-                    className="h-9 rounded-md border border-slate-300 bg-transparent px-3 text-sm"
+                    className="h-9 rounded-md border border-slate-300 bg-transparent px-3 text-sm focus:border-blue-500 focus:outline-none"
                     value={filters.candidate_mode}
                     onChange={(event) =>
                       updateFilter("candidate_mode", event.target.value as "stock" | "master")
@@ -342,10 +342,10 @@ export function InventoryPage() {
               )}
 
               {/* Filter Inputs Row */}
-              <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {showSupplierFilter && (
                   <div>
-                    <Label className="mb-2 block text-sm font-medium">仕入先</Label>
+                    <Label className="mb-2 block text-sm font-medium text-slate-700">仕入先</Label>
                     <SearchableSelect
                       options={supplierOptions}
                       value={filters.supplier_id}
@@ -356,7 +356,7 @@ export function InventoryPage() {
                 )}
                 {showWarehouseFilter && (
                   <div>
-                    <Label className="mb-2 block text-sm font-medium">倉庫</Label>
+                    <Label className="mb-2 block text-sm font-medium text-slate-700">倉庫</Label>
                     <SearchableSelect
                       options={warehouseOptions}
                       value={filters.warehouse_id}
@@ -367,7 +367,7 @@ export function InventoryPage() {
                 )}
                 {showProductFilter && (
                   <div>
-                    <Label className="mb-2 block text-sm font-medium">製品</Label>
+                    <Label className="mb-2 block text-sm font-medium text-slate-700">製品</Label>
                     <SearchableSelect
                       options={productOptions}
                       value={filters.product_group_id}
@@ -376,14 +376,9 @@ export function InventoryPage() {
                     />
                   </div>
                 )}
-                <div>
-                  <Button variant="outline" onClick={resetFilters} className="w-full">
-                    フィルタをリセット
-                  </Button>
-                </div>
               </div>
             </div>
-          </Section>
+          </SimpleFilterContainer>
         )}
 
         {/* Tables */}
