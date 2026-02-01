@@ -46,16 +46,6 @@ class SmartReadWatchService(SmartReadBaseService):
             self, config_id: int
         ) -> tuple[SmartReadClient | None, SmartReadConfig | None]: ...
 
-        async def sync_with_simple_flow(
-            self,
-            config_id: int,
-            file_content: bytes,
-            filename: str,
-            *,
-            export_type_override: str | None = None,
-            aggregation_override: str | None = None,
-        ) -> dict[str, Any]: ...
-
         async def sync_watch_dir_files(
             self,
             config_id: int,

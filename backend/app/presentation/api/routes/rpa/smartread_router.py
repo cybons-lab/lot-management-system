@@ -257,6 +257,7 @@ async def analyze_file_simple(
         config_id=config_id,
         file_content=file_content,
         filename=filename,
+        user_id=_current_user.id,
     )
 
     return JSONResponse(
@@ -273,12 +274,15 @@ async def _run_simple_sync_background(
     config_id: int,
     file_content: bytes,
     filename: str,
+    user_id: int,
 ) -> None:
     """バックグラウンドでシンプル同期フローを実行."""
     import logging
 
     from app.application.services.common.uow_service import UnitOfWork
+    from app.application.services.notification_service import NotificationService
     from app.core.database import SessionLocal
+    from app.presentation.schemas.notification_schema import NotificationCreate
 
     logger = logging.getLogger(__name__)
     logger.info(f"[SimpleSync Background] Starting processing: {filename}")
@@ -292,6 +296,7 @@ async def _run_simple_sync_background(
                 config_id=config_id,
                 file_content=file_content,
                 filename=filename,
+                user_id=user_id,
             )
 
             logger.info(
@@ -302,6 +307,23 @@ async def _run_simple_sync_background(
 
     except Exception as e:
         logger.error(f"[SimpleSync Background] Failed: {filename}, error: {e}")
+
+        # エラー通知を別トランザクションで作成
+        try:
+            with UnitOfWork(SessionLocal) as error_uow:
+                assert error_uow.session is not None
+                notif_service = NotificationService(error_uow.session)
+                notif_service.create_notification(
+                    NotificationCreate(
+                        user_id=user_id,
+                        title="SmartRead処理失敗",
+                        message=f"ファイルの処理中にエラーが発生しました: {filename}\n{str(e)}",
+                        type="error",
+                    )
+                )
+                error_uow.session.commit()
+        except Exception as notify_error:
+            logger.error(f"エラー通知の作成に失敗しました: {notify_error}")
 
 
 # --- エクスポート ---

@@ -36,6 +36,7 @@ import { type FeatureKey } from "@/constants/features";
 import { ROUTES } from "@/constants/routes";
 import { useSystemSettings } from "@/contexts/SystemSettingsContext";
 import { type User, useAuth } from "@/features/auth/AuthContext";
+import { NotificationBell } from "@/features/notifications/components";
 import { cn } from "@/shared/libs/utils";
 
 // ============================================
@@ -294,6 +295,7 @@ function UserMenu({ user, logout }: { user: User | null; logout: () => void }) {
     <div className="flex items-center gap-3 border-l border-gray-200 pl-3">
       {user ? (
         <>
+          <NotificationBell />
           <div className="hidden flex-col items-end justify-center md:flex">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-green-500" />

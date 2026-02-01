@@ -58,6 +58,7 @@ from app.presentation.api.routes.masters import (
     warehouse_delivery_routes_router,
     warehouses_router,
 )
+from app.presentation.api.routes.notification_router import router as notification_router
 from app.presentation.api.routes.ocr import router as ocr_router
 from app.presentation.api.routes.ocr_results_router import router as ocr_results_router
 from app.presentation.api.routes.order_register_router import router as order_register_router
@@ -142,6 +143,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(users_router, prefix=prefix)
     app.include_router(roles_router, prefix=prefix)
     app.include_router(assignments_router, prefix=prefix)
+    app.include_router(notification_router, prefix=prefix)
 
     # Admin & System endpoints
     app.include_router(admin_router, prefix=prefix)
