@@ -21,19 +21,13 @@ import { loginAs } from "../../fixtures/login-helper";
 
 test.describe("E2E-02: 保存永続化テスト", () => {
   test("マスタ編集: 保存→APIリクエスト確認→リロード後も残る", async ({ page }) => {
-    // Note: This test creates a new warehouse and verifies it persists after reload
-    // SKIP: Temporarily skipped due to test data generation not creating warehouses
-    // TODO: Re-enable once backend test-data/generate properly creates warehouse data
-    test.skip(true, "テストデータ生成が倉庫を作成しないため、一時的にスキップ");
-
     // ===========================
     // Step 1: ログインとマスタ一覧へ移動
     // ===========================
+    await page.goto("/login");
+    await loginAs(page, "admin");
     await page.goto("/warehouses");
     await page.waitForLoadState("networkidle");
-
-    // ログイン処理
-    await loginAs(page, "admin");
 
     // ===========================
     // Step 2: 新規作成ダイアログを開く
@@ -131,7 +125,7 @@ test.describe("E2E-02: 保存永続化テスト", () => {
     // Step 7: 作成したデータが残っていることを確認
     // ===========================
     // 検索してデータを探す
-    const searchInput = page.getByPlaceholder("検索").or(page.getByLabel("検索"));
+    const searchInput = page.getByPlaceholder(/検索/).or(page.getByLabel(/検索/));
     if (await searchInput.isVisible()) {
       await searchInput.fill(testCode);
       await page.keyboard.press("Enter");
@@ -154,18 +148,13 @@ test.describe("E2E-02: 保存永続化テスト", () => {
   });
 
   test("編集保存: 既存データ編集→保存→リロード確認", async ({ page }) => {
-    // SKIP: Temporarily skipped due to test data generation not creating product data
-    // TODO: Re-enable once backend test-data/generate properly creates product data
-    test.skip(true, "テストデータ生成が製品を作成しないため、一時的にスキップ");
-
     // ===========================
     // Step 1: 製品マスタ一覧へ移動
     // ===========================
-    await page.goto("/products");
-    await page.waitForLoadState("networkidle");
-
-    // ログイン処理
+    await page.goto("/login");
     await loginAs(page, "admin");
+    await page.goto("/supplier-products");
+    await page.waitForLoadState("networkidle");
 
     // テーブルが表示されるのを待つ
     await expect(page.locator("table")).toBeVisible({ timeout: 10000 });

@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { httpAuth } from "@/shared/api/http-client";
-import { useAuthenticatedQuery } from "@/shared/hooks/useAuthenticatedQuery";
+import { httpAuth, httpPublic } from "@/shared/api/http-client";
+import { hasAuthToken } from "@/shared/auth/token";
+import { useAuthAwareQuery } from "@/shared/hooks/useAuthenticatedQuery";
 
 /**
  * Generic hook for master data CRUD operations.
@@ -27,19 +28,23 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
 
   // List (with optional include_inactive parameter)
   const useList = (includeInactive = false) =>
-    useAuthenticatedQuery({
+    useAuthAwareQuery({
       queryKey: [queryKey, { includeInactive }],
       queryFn: () => {
         const url = includeInactive ? `${resourcePath}?include_inactive=true` : resourcePath;
-        return httpAuth.get<T[]>(url);
+        const client = hasAuthToken() ? httpAuth : httpPublic;
+        return client.get<T[]>(url);
       },
     });
 
   // Get
   const useGet = (id: string | number) =>
-    useAuthenticatedQuery({
+    useAuthAwareQuery({
       queryKey: [queryKey, id],
-      queryFn: () => httpAuth.get<T>(`${resourcePath}/${id}`),
+      queryFn: () => {
+        const client = hasAuthToken() ? httpAuth : httpPublic;
+        return client.get<T>(`${resourcePath}/${id}`);
+      },
       enabled: !!id,
     });
 

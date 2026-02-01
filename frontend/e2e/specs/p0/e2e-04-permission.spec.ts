@@ -55,11 +55,10 @@ test.describe("E2E-04: 権限テスト", () => {
     // 一般ユーザーとしてログイン
     // 注: 実際のテスト環境では一般ユーザーを使用
     // ===========================
+    await page.goto("/login");
+    await loginAs(page, "user");
     await page.goto("/orders");
     await page.waitForLoadState("networkidle");
-
-    // ログイン処理
-    await loginAs(page, "user");
 
     // テーブルの存在確認
     await expect(page.locator("table")).toBeVisible({ timeout: 10000 });
