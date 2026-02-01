@@ -19,10 +19,12 @@ import {
 import { SMARTREAD_QUERY_KEYS } from "../hooks";
 import type { SmartReadPadRunListItem as PadRun } from "../types";
 import { logger } from "../utils/logger";
+import { PAD_RUN_STEP_ORDER } from "../utils/pad-run-steps";
 
 import { Button } from "@/components/ui";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { useAuth } from "@/features/auth/AuthContext";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -32,9 +34,12 @@ export function SmartReadPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedWatchFiles, setSelectedWatchFiles] = useState<string[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [testRuns, setTestRuns] = useState<PadRun[] | null>(null);
   const { tab = "import" } = useParams<{ tab: string }>();
   const navigate = useNavigate();
   const [isDiagnosing, setIsDiagnosing] = useState(false);
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes("admin") ?? false;
 
   const queryClient = useQueryClient();
   const { data: configs, isLoading: configsLoading } = useSmartReadConfigs();
@@ -65,6 +70,7 @@ export function SmartReadPage() {
   const prevRunsRef = useRef<string[]>([]);
   const isInitialLoadRef = useRef(true);
   const pageMountedAt = useRef(new Date());
+  const testIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!padRuns?.runs) return;
@@ -92,6 +98,14 @@ export function SmartReadPage() {
 
     prevRunsRef.current = padRuns.runs.filter((r) => r.status === "SUCCEEDED").map((r) => r.run_id);
   }, [padRuns, navigate]);
+
+  useEffect(() => {
+    return () => {
+      if (testIntervalRef.current) {
+        window.clearInterval(testIntervalRef.current);
+      }
+    };
+  }, []);
 
   const onProcessFiles = async () => {
     if (!selectedConfigId || selectedWatchFiles.length === 0) return;
@@ -141,6 +155,58 @@ export function SmartReadPage() {
     }
   };
 
+  const startWatchFolderTest = () => {
+    if (testIntervalRef.current) {
+      window.clearInterval(testIntervalRef.current);
+      testIntervalRef.current = null;
+    }
+
+    const createdAt = new Date().toISOString();
+    const runId = `test-${Date.now()}`;
+    let stepIndex = 0;
+
+    setTestRuns([
+      {
+        run_id: runId,
+        status: "RUNNING",
+        step: PAD_RUN_STEP_ORDER[0].key,
+        filenames: ["sample-invoice.pdf"],
+        wide_data_count: 0,
+        long_data_count: 0,
+        created_at: createdAt,
+        completed_at: null,
+      },
+    ]);
+
+    navigate(`../tasks`);
+
+    testIntervalRef.current = window.setInterval(() => {
+      stepIndex += 1;
+      const nextIndex = Math.min(stepIndex, PAD_RUN_STEP_ORDER.length - 1);
+      const isDone = nextIndex === PAD_RUN_STEP_ORDER.length - 1;
+      const now = new Date().toISOString();
+
+      setTestRuns((current) => {
+        if (!current) return current;
+        return current.map((run) => ({
+          ...run,
+          status: isDone ? "SUCCEEDED" : "RUNNING",
+          step: PAD_RUN_STEP_ORDER[nextIndex].key,
+          wide_data_count: isDone ? 12 : run.wide_data_count,
+          long_data_count: isDone ? 36 : run.long_data_count,
+          completed_at: isDone ? now : null,
+        }));
+      });
+
+      if (isDone && testIntervalRef.current) {
+        window.clearInterval(testIntervalRef.current);
+        testIntervalRef.current = null;
+      }
+    }, 1200);
+  };
+
+  const runsForDisplay = testRuns ?? padRuns?.runs;
+
   return (
     <PageContainer>
       {/* ... PageHeader ... */}
@@ -186,16 +252,18 @@ export function SmartReadPage() {
             selectedWatchFiles={selectedWatchFiles}
             isPending={startPadRunMutation.isPending}
             isDiagnosing={isDiagnosing}
+            canRunTest={isAdmin}
             onToggleAll={onToggleAll}
             toggleWatchFile={toggleWatchFile}
             onProcessFiles={onProcessFiles}
             onDiagnose={handleDiagnoseWatchFile}
+            onStartTest={isAdmin ? startWatchFolderTest : undefined}
             onRefetch={refetchWatchFiles}
             onAnalyzeSuccess={handleAnalyzeSuccess}
           />
 
           <SmartReadTasksTab
-            runs={padRuns?.runs}
+            runs={runsForDisplay}
             configId={selectedConfigId}
             selectedTaskId={selectedTaskId}
             onSelectTask={setSelectedTaskId}
