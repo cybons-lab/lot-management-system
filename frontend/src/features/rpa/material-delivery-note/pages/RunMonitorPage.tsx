@@ -11,6 +11,7 @@ import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import type { LoopSummary, RpaRun, RpaRunEvent, RpaRunItem } from "../api";
+import { MaterialDeliveryRunProgress } from "../components/MaterialDeliveryRunProgress";
 import {
   useCancelRun,
   useDownloadFailedItems,
@@ -127,6 +128,14 @@ export function RunMonitorPage() {
       />
 
       <div className="space-y-6">
+        {/* 進捗チェックリスト */}
+        <MaterialDeliveryRunProgress
+          runId={run.id}
+          events={events}
+          status={run.status}
+          isLoading={false}
+        />
+
         <div className="rounded-lg border bg-white p-6 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-2">

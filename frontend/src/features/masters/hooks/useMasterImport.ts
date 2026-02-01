@@ -27,7 +27,9 @@ async function downloadTemplate(group: TemplateGroup): Promise<void> {
     endpoint = "/masters/customers/template/download?format=xlsx";
   }
 
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}${endpoint}`);
+  // 開発環境では常にViteプロキシ(/api)を使用する
+  const apiBase = import.meta.env.DEV ? "/api" : import.meta.env.VITE_API_BASE || "/api";
+  const response = await fetch(`${apiBase}${endpoint}`);
   if (!response.ok) {
     throw new Error("テンプレートのダウンロードに失敗しました");
   }
