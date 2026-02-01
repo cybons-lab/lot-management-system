@@ -22,16 +22,23 @@ export async function loginAs(page: Page, username: string = "admin"): Promise<v
   // Wait for login page to load
   await page.waitForLoadState("networkidle");
 
-  // Find and click the user selection dropdown
-  const selectTrigger = page.getByRole("combobox").or(page.locator('[role="combobox"]'));
+  // Wait for user list to load (dropdown options)
+  await page.waitForTimeout(500);
+
+  // Find and click the user selection dropdown (Select component)
+  const selectTrigger = page.locator('[role="combobox"]').first();
   await selectTrigger.click();
 
   // Wait for dropdown to open
   await page.waitForTimeout(300);
 
   // Select the user by username (matches display_name or username in parentheses)
+  // The SelectItem renders as: "Display Name (username)"
   const userOption = page.getByRole("option", { name: new RegExp(username, "i") });
   await userOption.click();
+
+  // Wait a bit for selection to register
+  await page.waitForTimeout(200);
 
   // Click login button
   const loginButton = page.getByRole("button", { name: /ログイン/ });
