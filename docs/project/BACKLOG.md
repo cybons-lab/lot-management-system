@@ -83,42 +83,6 @@
 
 ---
 
-### ~~1-3. CI/CDでtypecheckが無効化されていた~~ ✅ 対応済み
-
-**優先度**: 高
-**作成**: 2026-01-31
-**完了**: 2026-01-31
-**カテゴリ**: CI/CD・品質保証
-
-**問題:**
-- Typecheckが `.github/workflows/ci.yml` でコメントアウトされていた
-- 理由: "type definitions sync issue" (実際には問題なし)
-
-**対応内容:**
-- ✅ Typecheckを有効化（L34-36のコメント解除）
-- ✅ ローカルでtypecheck実行 → エラーなし確認
-- ✅ E2Eテストは既に別ジョブ (`e2e-smoke`, L103-199) として実装済み
-
-**確認結果:**
-```yaml
-CI構成:
-  Job 1: Frontend Tests
-    ✅ Lint (ESLint)
-    ✅ Typecheck (有効化)
-    ✅ Unit Tests (Vitest)
-
-  Job 2: Backend Tests
-    ✅ Lint (ruff)
-    ✅ Tests (pytest)
-
-  Job 3: E2E Smoke Tests (needs: frontend + backend)
-    ✅ Playwright smoke tests (P0 critical paths)
-```
-
-**関連ファイル:**
-- `.github/workflows/ci.yml` (L34-36: typecheck有効化)
-
----
 
 ### 1-4. 在庫計算ロジックの厳密化とSSOT固定
 
@@ -139,70 +103,6 @@ CI構成:
 
 ---
 
-<<<<<<< HEAD
-### ~~1-4. エラー処理・ログ出力の改善（2026-01-29 レビュー）~~ ✅ 対応済み
-=======
-### ~~1-5. エラー処理・ログ出力の改善（2026-01-29 レビュー）~~ ✅ 対応済み
->>>>>>> origin/main
-
-**優先度**: High
-**作成**: 2026-01-29
-**完了**: 2026-01-30
-**カテゴリ**: 可観測性・デバッグ性
-
-**背景:**
-エラー処理とログ出力のコードレビューにより、重大な問題が発見された。
-特にロット管理システムの核心部分（FEFO引当、Repository）にログがなく、障害時の原因追跡が困難だった。
-
-#### ✅ 重大な問題（対応完了）
-
-**1. ✅ Repositoryレイヤーにログを追加**
-- `lot_repository.py`, `allocation_repository.py` にログ追加
-- コミット: `74876ec`
-
-**2. ✅ FEFOアロケーションにログを追加**
-- `fefo.py`, `auto.py`, `commit.py`, `confirm.py`, `cancel.py` にログ追加
-- コミット: `74876ec`
-
-**3. ✅ トランザクション境界のログを追加**
-- `uow_service.py` にcommit/rollbackログを追加
-- コミット: `74876ec`
-
-**4. ✅ MaintenanceMiddlewareのサイレント例外を修正**
-- 例外時にwarningログを出力、ロジックバグも修正
-- コミット: `74876ec`
-
-#### ✅ 中程度の問題（対応完了）
-
-**5. ✅ フロントエンドのサイレントエラーを修正**
-- `AuthContext.tsx` にセッション復元失敗時のtoast通知を追加
-- 注: `ExportButton.tsx`, `MasterPageActions.tsx`, `useDatabaseReset.ts` は既にtoast通知実装済み
-- コミット: `38da2e0`
-
-**6. ✅ 機密データのログ出力リスクを修正**
-- `main.py` に `_mask_database_url()` を追加、DATABASE_URLをマスク
-- コミット: `38da2e0`
-
-**7. ✅ ログ量の不均衡を改善**
-- FEFO/Allocationにログを追加（項目2で対応）
-- コミット: `74876ec`
-
-**8. ✅ 例外ハンドリングパターンのドキュメント作成**
-- `docs/development/standards/error-handling.md` を作成
-- コミット: `38da2e0`
-
-#### ✅ 良い点（参考）
-
-- RFC 7807 Problem+JSON 準拠のエラーレスポンス
-- 構造化されたドメイン例外階層
-- グローバル例外ハンドラで一貫したHTTPステータスマッピング
-- UnitOfWorkパターンでトランザクションの原子性確保
-- structlogによる構造化ログ設定
-- フロントエンドのkyクライアント集中エラー処理
-
-**元:** 2026-01-29 エラー処理・ログ出力レビュー
-
----
 
 ## 2. 優先度: 中 (UI/UX・不整合修正)
 
@@ -1034,9 +934,7 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 **タスク内容:**
 
 #### 7-1-1. 既知アンチパターンの修正
-- [x] 独自test_dbセッションの削除（21ファイル）→ グローバル `db` fixture に統一
-- [ ] 重複fixture の共通化（supplier, warehouse, customer など）
-- [ ] トランザクション管理の統一（conftest.pyのパターンに従う）
+- [x] 独自test_dbセッションの削除（21ファイル）→ グローバル `db` fixture に統一 (ARCHIVE.mdへ移動)
 
 #### 7-1-2. アンチパターン検出ツールの導入
 - [ ] pytest-best-practices などのlinterツール検討
@@ -1554,34 +1452,6 @@ Excelビューのロット情報に「発注NO.」列があるが、常に `-` �
 
 ---
 
-### 10-5. ✅ 仕入先情報の表示修正（対応済み）
-
-**解決日**: 2026-01-26
-
-**問題:**
-Excelビューのヘッダーで「仕入先」「仕入先名称」が `-` 表示だった。
-
-**原因:**
-`GET /api/v2/inventory/{product_id}/{warehouse_id}` が `supplier_id`, `supplier_code`, `supplier_name` を返していなかった。
-
-**対応:**
-`inventory_service.py` の `get_inventory_item_by_product_warehouse()` にサプライヤー取得クエリを追加し、レスポンスに含めるように修正。
-
----
-
-### 10-6. ✅ forecast_period 日付表示の修正（対応済み）
-
-**解決日**: 2026-01-26
-
-**問題:**
-`forecast_period` は `YYYY-MM` 形式（月単位）だが、フロントエンドは `parseISO()` で日付としてパースしようとしていた。
-
-**対応:**
-`DateGrid.tsx` に `formatPeriodHeader()` 関数を追加:
-- `YYYY-MM` 形式 → `1月`, `2月` のように月表示
-- `YYYY-MM-DD` 形式 → `01/15` のように日付表示
-
----
 
 ### 10-7. 日付列の仕様整理（予測 vs 実績）
 
@@ -1627,56 +1497,6 @@ Excelビューのヘッダーで「仕入先」「仕入先名称」が `-` 表�
 
 ---
 
-## 11. 対応済み
-
-### 11-1. テストデータ生成の問題 (inventory_scenarios)
-
-**解決日**: 2026-01-18
-**マイグレーション**: `b77dcffc2d98`
-
-ビュー定義を修正し、消費（consumed）が現在在庫に即座に反映されるようになりました。
-
-**元:** `TODO.md::対応済み` (2026-01-10)
-
----
-
-### 11-2. Date Handling の型を明示 (orchestrator.py)
-
-**解決日**: 2026-01-26
-
-`execute_step2` の `start_date` / `end_date` パラメータを `Any` から `date | None` に変更。
-
-**元:** `any-type-reduction.md` (1-4)
-
----
-
-### 11-3. InboundPlansList のステータス日本語化
-
-**解決日**: 2026-01-26
-
-フィルターのステータスドロップダウンを日本語のみに統一（Planned → 予定 等）。
-
-**元:** `backlog.md::2-2` (2026-01-18)
-
----
-
-### 11-4. ConfirmedLinesPage のSAP一括登録ボタン重複
-
-**解決日**: 2026-01-26
-**状態**: 確認時点で既に修正済み（ボタンは1箇所のみ）
-
-**元:** `backlog.md::2-4` (2026-01-18)
-
----
-
-### 11-5. 本番コードの print() 文削除
-
-**解決日**: 2026-01-26
-**状態**: 確認時点で既に対応済み（logger使用に移行済み、またはコメント/テストコード内のみ）
-
-**元:** `BACKLOG.md::8-9` (2026-01-26)
-
----
 
 ## 参考情報
 
