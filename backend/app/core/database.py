@@ -140,39 +140,33 @@ def truncate_all_tables(db: Session | None = None) -> None:
         # 開発/テスト環境でのデッドロック防止: ロックタイムアウトを設定
         conn.execute(text("SET LOCAL lock_timeout = '30s'"))
 
-        # 他のセッションによるロックを強制解除
-        # 自分自身 (pg_backend_pid()) 以外の接続を切断する
-        conn.execute(
-            text("""
-            SELECT pg_terminate_backend(pid)
-            FROM pg_stat_activity
-            WHERE datname = current_database()
-            AND pid <> pg_backend_pid()
-            AND state != 'idle' -- トランザクション中のものを優先（必要ならidleも含める）
+        # reset-database 同士の競合を避けるため、アドバイザリロックで直列化
+        lock_key = "reset_database_truncate"
+        conn.execute(text("SELECT pg_advisory_lock(hashtext(:key))"), {"key": lock_key})
+        try:
+            # public配下の全テーブル名を取得（alembic_versionを除く）
+            result = conn.execute(
+                text("""
+                SELECT tablename
+                FROM pg_tables
+                WHERE schemaname = 'public'
+                AND tablename != 'alembic_version'
+                ORDER BY tablename
             """)
-        )
+            )
+            tables = [row[0] for row in result]
 
-        # public配下の全テーブル名を取得（alembic_versionを除く）
-        result = conn.execute(
-            text("""
-            SELECT tablename
-            FROM pg_tables
-            WHERE schemaname = 'public'
-            AND tablename != 'alembic_version'
-            ORDER BY tablename
-        """)
-        )
-        tables = [row[0] for row in result]
+            if not tables:
+                logger.info("ℹ️ Truncate対象のテーブルがありません")
+                return
 
-        if not tables:
-            logger.info("ℹ️ Truncate対象のテーブルがありません")
-            return
-
-        # TRUNCATE実行（RESTART IDENTITYでシーケンスもリセット、CASCADEで外部キー制約を無視）
-        # まとめて1つのクエリで実行して高速化とロック最小化
-        tables_str = ", ".join([f'"{t}"' for t in tables])
-        conn.execute(text(f"TRUNCATE TABLE {tables_str} RESTART IDENTITY CASCADE"))
-        logger.info(f"✅ {len(tables)} テーブルのデータを削除しました")
+            # TRUNCATE実行（RESTART IDENTITYでシーケンスもリセット、CASCADEで外部キー制約を無視）
+            # まとめて1つのクエリで実行して高速化とロック最小化
+            tables_str = ", ".join([f'"{t}"' for t in tables])
+            conn.execute(text(f"TRUNCATE TABLE {tables_str} RESTART IDENTITY CASCADE"))
+            logger.info(f"✅ {len(tables)} テーブルのデータを削除しました")
+        finally:
+            conn.execute(text("SELECT pg_advisory_unlock(hashtext(:key))"), {"key": lock_key})
 
     if db:
         _truncate(db)
