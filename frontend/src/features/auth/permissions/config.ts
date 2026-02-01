@@ -64,7 +64,12 @@ export const routePermissions: RoutePermission[] = [
   },
   {
     routeKey: "INVENTORY.ITEMS.DETAIL",
-    path: "/inventory/items/:productId/:warehouseId*",
+    path: "/inventory/items/:productId/:warehouseId",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "INVENTORY.ITEMS.DETAIL_TAB",
+    path: "/inventory/items/:productId/:warehouseId/*",
     allowedRoles: ["admin", "user", "guest"],
   },
 
@@ -99,7 +104,12 @@ export const routePermissions: RoutePermission[] = [
   // レガシーリダイレクト用 / ユーティリティ
   {
     routeKey: "LEGACY.ALLOCATIONS",
-    path: "/allocations",
+    path: "/allocations*",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "LEGACY.FORECAST",
+    path: "/forecast*",
     allowedRoles: ["admin", "user", "guest"],
   },
   {
@@ -257,7 +267,7 @@ export const routePermissions: RoutePermission[] = [
   { routeKey: "MASTERS.BULK_LOAD", path: "/masters/bulk-load", allowedRoles: ["admin", "user"] },
   {
     routeKey: "MASTERS.SUPPLIER_PRODUCTS",
-    path: "/masters/supplier-products",
+    path: "/supplier-products",
     allowedRoles: ["admin", "user", "guest"],
   },
   {
@@ -268,6 +278,31 @@ export const routePermissions: RoutePermission[] = [
   {
     routeKey: "MASTERS.SUPPLIER_ASSIGNMENTS",
     path: "/masters/supplier-assignments",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "MASTERS.WAREHOUSES",
+    path: "/warehouses",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "MASTERS.SUPPLIERS",
+    path: "/suppliers",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "MASTERS.CUSTOMERS",
+    path: "/customers",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "MASTERS.CUSTOMER_ITEMS",
+    path: "/customer-items",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "MASTERS.DELIVERY_PLACES",
+    path: "/delivery-places",
     allowedRoles: ["admin", "user", "guest"],
   },
   {

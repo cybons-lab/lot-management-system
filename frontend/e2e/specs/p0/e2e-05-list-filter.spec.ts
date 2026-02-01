@@ -18,6 +18,7 @@
  */
 import { test, expect } from "@playwright/test";
 import { ApiClient } from "../../fixtures/api-client";
+import { loginAs } from "../../fixtures/login-helper";
 
 test.describe("E2E-05: 一覧フィルタ/ソート/ページングテスト", () => {
   let apiClient: ApiClient;
@@ -35,12 +36,7 @@ test.describe("E2E-05: 一覧フィルタ/ソート/ページングテスト", (
     await page.waitForLoadState("networkidle");
 
     // ログイン処理
-    if (page.url().includes("/login") || page.url().includes("/auth")) {
-      await page.getByLabel("ユーザー名").or(page.getByPlaceholder("ユーザー名")).fill("admin");
-      await page.getByLabel("パスワード").or(page.getByPlaceholder("パスワード")).fill("admin123");
-      await page.getByRole("button", { name: /ログイン/ }).click();
-      await page.waitForLoadState("networkidle");
-    }
+    await loginAs(page, "admin");
 
     await expect(page.locator("table")).toBeVisible({ timeout: 10000 });
 

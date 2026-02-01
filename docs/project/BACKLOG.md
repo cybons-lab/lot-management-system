@@ -12,7 +12,39 @@
 
 ## 1. 優先度: 高 (即時対応)
 
-### 1-1. 入庫履歴が表示されない問題（調査済み）
+### 1-1. E2Eテスト残存問題の修正
+
+**現状:** P0テスト 28/36パス（78%）達成。主要な問題は解決済み。
+
+**残存問題（4件）:**
+
+1. **ダイアログクローズタイミング（2件）**
+   - テスト: `e2e-02-save-persistence.spec.ts` (smoke & chromium)
+   - 症状: 保存後のダイアログが10秒以内に閉じない
+   - 原因: UI実装の問題（自動クローズ処理が遅い）
+   - 対応: フロントエンドのダイアログクローズ処理を改善
+
+2. **socket hang up（2件）**
+   - テスト: `e2e-04-permission.spec.ts` (smoke & chromium)
+   - 症状: `POST /api/auth/login` でsocket hang up
+   - 原因: Playwright固有の問題（curlでは成功）
+   - 対応: Playwrightのタイムアウト設定やkeep-alive設定を調査
+
+3. **ログイン401エラー（一部のテスト）**
+   - テスト: e2e-03, e2e-04, e2e-05 (chromium)
+   - 症状: テストデータ生成失敗によるユーザー不在
+   - 原因: タイミング問題またはテストデータ生成の失敗
+   - 対応: テストデータ生成の安定化
+
+**参考:**
+- 初回: 15/36パス（42%）
+- 最終: 28/36パス（78%）= +87%改善
+- ブランチ: `fix/e2e-test-login-ui-update`
+- コミット: `a52997b7`
+
+---
+
+### 1-2. 入庫履歴が表示されない問題（調査済み）
 
 **症状:** 入庫履歴タブで「入庫履歴はありません」と表示される。
 **原因:** `lot_service.create_lot()` で `StockHistory` の INBOUND レコードが作成されていない。
@@ -1664,6 +1696,31 @@ Excelビューのヘッダーで「仕入先」「仕入先名称」が `-` 表�
 
 統合後のバックログファイルは `docs/project/BACKLOG.md` に配置されています。
 元のファイルは `docs/archive/backlog/` に保管されています。
+
+### 5-3. Playwright E2Eテスト DBリセット失敗 (500 Error)
+
+**優先度**: High
+**作成**: 2026-02-01
+**カテゴリ**: テスト環境・CI
+
+**背景・課題:**
+PlaywrightによるE2Eテスト実行時、`beforeAll` フックで呼び出される `/api/admin/reset-database` エンドポイントが `500 Internal Server Error` で失敗する。これにより後続のテストが全て失敗する。
+
+**症状:**
+- `curl` コマンドによる手動実行は **成功 (200 OK)** する。
+- Playwrightテストランナーからの実行時のみ **失敗 (500 Error)** する。
+- エラー内容は `psycopg2.errors.LockNotAvailable` であったが、対策後も500エラーが継続（詳細ログはテストランナーが出力）。
+
+**実施済みの対応:**
+1. **DBロック競合対策**: `truncate_all_tables` に `pg_terminate_backend` を使用した他セッション強制切断処理を追加（`backend/app/core/database.py`）。
+2. **テストユーザー自動作成**: DBリセット時に管理者だけでなく一般ユーザー(`user`)も作成するように修正（`backend/app/presentation/api/routes/admin/admin_router.py`）。
+3. **テストコード修正**: `e2e-04-permission.spec.ts` で `resetDatabase` と `generateTestData` を呼ぶように修正。
+
+**残課題:**
+- Playwright環境特有の接続処理などが原因で、依然としてリセット処理が失敗している。
+- テストランナーのDB接続設定、待機時間、ドライバの挙動などの調査が必要。
+
+---
 
 ### 更新履歴
 
