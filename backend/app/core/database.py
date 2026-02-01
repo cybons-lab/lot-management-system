@@ -138,21 +138,12 @@ def truncate_all_tables(db: Session | None = None) -> None:
 
     def _truncate(conn):
         # 開発/テスト環境でのデッドロック防止: ロックタイムアウトを設定
+        # TRUNCATE自体が排他ロックを取得するため、アドバイザリロックは不要
+        logger.info("ロックタイムアウト設定: 30秒")
         conn.execute(text("SET LOCAL lock_timeout = '30s'"))
 
-        # 他のセッションによるロックを強制解除
-        # 自分自身 (pg_backend_pid()) 以外の接続を切断する
-        conn.execute(
-            text("""
-            SELECT pg_terminate_backend(pid)
-            FROM pg_stat_activity
-            WHERE datname = current_database()
-            AND pid <> pg_backend_pid()
-            AND state != 'idle' -- トランザクション中のものを優先（必要ならidleも含める）
-            """)
-        )
-
         # public配下の全テーブル名を取得（alembic_versionを除く）
+        logger.info("テーブル一覧取得開始")
         result = conn.execute(
             text("""
             SELECT tablename
@@ -163,14 +154,17 @@ def truncate_all_tables(db: Session | None = None) -> None:
         """)
         )
         tables = [row[0] for row in result]
+        logger.info("テーブル一覧取得完了", extra={"table_count": len(tables)})
 
         if not tables:
             logger.info("ℹ️ Truncate対象のテーブルがありません")
             return
 
         # TRUNCATE実行（RESTART IDENTITYでシーケンスもリセット、CASCADEで外部キー制約を無視）
-        # まとめて1つのクエリで実行して高速化とロック最小化
+        # TRUNCATE自体が各テーブルに対してACCESS EXCLUSIVE LOCKを取得するため、
+        # 複数のreset-database呼び出しは自動的に直列化される
         tables_str = ", ".join([f'"{t}"' for t in tables])
+        logger.info("TRUNCATE実行開始", extra={"table_count": len(tables)})
         conn.execute(text(f"TRUNCATE TABLE {tables_str} RESTART IDENTITY CASCADE"))
         logger.info(f"✅ {len(tables)} テーブルのデータを削除しました")
 

@@ -15,17 +15,9 @@
  * @tags @smoke @p0 @double-submit
  */
 import { test, expect } from "@playwright/test";
-import { ApiClient } from "../../fixtures/api-client";
 import { loginAs } from "../../fixtures/login-helper";
 
 test.describe("E2E-03: 二重送信防止テスト", () => {
-  let apiClient: ApiClient;
-
-  test.beforeAll(async ({ request }) => {
-    apiClient = await ApiClient.create(request);
-    await apiClient.resetDatabase();
-  });
-
   test("保存ボタン連打: 二重登録されない", async ({ page }) => {
     // ===========================
     // Step 1: ログインと倉庫マスタへ移動
@@ -52,7 +44,8 @@ test.describe("E2E-03: 二重送信防止テスト", () => {
     // ===========================
     // Step 3: ユニークなテストデータを入力
     // ===========================
-    const testCode = `DBLSUB-${Date.now() % 100000}`;
+    const workerIndex = test.info().workerIndex;
+    const testCode = `DBLSUB-W${workerIndex}-${Date.now() % 100000}`;
     const testName = `二重送信テスト ${testCode}`;
 
     const codeInput = dialog.getByLabel("倉庫コード").or(dialog.getByPlaceholder("コード"));
@@ -174,7 +167,8 @@ test.describe("E2E-03: 二重送信防止テスト", () => {
     await expect(dialog).toBeVisible();
 
     // テストデータ入力
-    const testCode = `DBLCLK-${Date.now() % 100000}`;
+    const workerIndex = test.info().workerIndex;
+    const testCode = `DBLCLK-W${workerIndex}-${Date.now() % 100000}`;
     const codeInput = dialog.getByLabel("倉庫コード").or(dialog.getByPlaceholder("コード"));
     const nameInput = dialog.getByLabel("倉庫名").or(dialog.getByPlaceholder("名前"));
 

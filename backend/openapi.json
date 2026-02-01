@@ -4051,6 +4051,33 @@
         }
       }
     },
+    "/api/dashboard/stats": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Get Dashboard Stats",
+        "description": "ダッシュボード用の統計情報を返す.\n\n在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock\nビューは使用しない（v2.2 以降は廃止）。",
+        "operationId": "get_dashboard_stats_api_dashboard_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardStatsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/forecasts": {
       "get": {
         "tags": [
@@ -12693,40 +12720,13 @@
         }
       }
     },
-    "/api/admin/stats": {
-      "get": {
-        "tags": [
-          "admin"
-        ],
-        "summary": "Get Dashboard Stats",
-        "description": "ダッシュボード用の統計情報を返す.\n\n在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock\nビューは使用しない（v2.2 以降は廃止）。",
-        "operationId": "get_dashboard_stats_api_admin_stats_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DashboardStatsResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
-      }
-    },
     "/api/admin/reset-database": {
       "post": {
         "tags": [
           "admin"
         ],
         "summary": "Reset Database",
-        "description": "データベースリセット（開発環境のみ）.\n\n- テーブル構造は保持したまま、全データを削除\n- alembic_versionは保持（マイグレーション履歴を維持）\n- TRUNCATE ... RESTART IDENTITY CASCADEで高速にデータをクリア.",
+        "description": "データベースリセット（開発環境のみ）.\n\n- テーブル構造は保持したまま、全データを削除\n- alembic_versionは保持（マイグレーション履歴を維持）\n- TRUNCATE ... RESTART IDENTITY CASCADEで高速にデータをクリア.\n\nNote:\n    開発環境ではE2Eテストのブートストラップのため認証不要。\n    本番環境では403エラーを返す。",
         "operationId": "reset_database_api_admin_reset_database_post",
         "responses": {
           "200": {
@@ -12739,12 +12739,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
+        }
       }
     },
     "/api/admin/diagnostics/allocatable-lots": {

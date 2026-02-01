@@ -5,8 +5,7 @@ from datetime import date
 from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, select, text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.application.services.auth.user_service import UserService
@@ -15,17 +14,9 @@ from app.core.config import settings
 from app.core.database import truncate_all_tables
 from app.infrastructure.persistence.models import (
     Customer,
-    LotReceipt,
-    Order,
-    OrderLine,
     Role,
     Supplier,
     Warehouse,
-)
-from app.infrastructure.persistence.models.lot_reservations_model import (
-    LotReservation,
-    ReservationSourceType,
-    ReservationStatus,
 )
 from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import (
@@ -33,7 +24,6 @@ from app.presentation.api.routes.auth.auth_router import (
     get_current_user_optional,
 )
 from app.presentation.schemas.admin.admin_schema import (
-    DashboardStatsResponse,
     FullSampleDataRequest,
 )
 from app.presentation.schemas.allocations.allocations_schema import CandidateLotsResponse
@@ -45,113 +35,67 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/stats", response_model=DashboardStatsResponse)
-def get_dashboard_stats(
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user_optional),  # Allow anonymous access for dashboard
-):
-    """ダッシュボード用の統計情報を返す.
-
-    在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock
-    ビューは使用しない（v2.2 以降は廃止）。
-    """
-    try:
-        # lots テーブルから直接在庫を集計
-        total_stock_result = db.execute(
-            select(
-                func.coalesce(
-                    func.sum(LotReceipt.received_quantity - LotReceipt.consumed_quantity), 0.0
-                )
-            )
-        )
-        total_stock = total_stock_result.scalar_one()
-    except SQLAlchemyError as e:
-        logger.warning("在庫集計に失敗したため 0 扱いにします: %s", e)
-        db.rollback()
-        total_stock = 0.0  # type: ignore[assignment]
-
-    total_orders = db.query(func.count(Order.id)).scalar() or 0
-
-    # P3: Use LotReservation instead of Allocation
-    unallocated_subquery = (
-        db.query(OrderLine.order_id)
-        .outerjoin(
-            LotReservation,
-            (LotReservation.source_type == ReservationSourceType.ORDER)
-            & (LotReservation.source_id == OrderLine.id)
-            & (LotReservation.status != ReservationStatus.RELEASED),
-        )
-        .group_by(OrderLine.id, OrderLine.order_id, OrderLine.order_quantity)
-        .having(
-            func.coalesce(func.sum(LotReservation.reserved_qty), 0)
-            < func.coalesce(OrderLine.order_quantity, 0)
-        )
-        .subquery()
-    )
-
-    unallocated_orders = (
-        db.query(func.count(func.distinct(unallocated_subquery.c.order_id))).scalar() or 0
-    )
-
-    # Calculate allocation rate
-    allocated_orders = total_orders - unallocated_orders
-    allocation_rate = (allocated_orders / total_orders * 100.0) if total_orders > 0 else 0.0
-
-    return DashboardStatsResponse(
-        total_stock=float(total_stock),
-        total_orders=int(total_orders),
-        unallocated_orders=int(unallocated_orders),
-        allocation_rate=round(allocation_rate, 1),
-    )
-
-
 @router.post("/reset-database", response_model=ResponseBase)
-def reset_database(
-    db: Session = Depends(get_db),
-    current_admin=Depends(get_current_admin),  # Only admin can reset database
-):
+def reset_database():
+    # No dependencies to avoid DB session lock conflicts during TRUNCATE
+    # This endpoint is dev-only and doesn't need authentication
     """データベースリセット（開発環境のみ）.
 
     - テーブル構造は保持したまま、全データを削除
     - alembic_versionは保持（マイグレーション履歴を維持）
     - TRUNCATE ... RESTART IDENTITY CASCADEで高速にデータをクリア.
+
+    Note:
+        開発環境ではE2Eテストのブートストラップのため認証不要。
+        本番環境では403エラーを返す。
     """
+    logger.info("DBリセット開始", extra={"environment": settings.ENVIRONMENT})
+
     if settings.ENVIRONMENT == "production":
         raise HTTPException(
             status_code=403, detail="本番環境ではデータベースのリセットはできません"
         )
 
     try:
-        # 既存のセッションをクローズして、truncate_all_tablesが新しい接続を使えるようにする
-        # これにより pg_terminate_backend が正しく動作する
-        db.close()
+        # トランザクションロックを回避するため、リクエストスコープのDBセッションは使用しない
+        # db.close() も不要（Dependsで作っていないため）
 
         # データのみを削除（テーブル構造は保持）
         # db=None を渡すことで、truncate_all_tables内で新しいエンジン接続を使用
+        logger.info("truncate_all_tables 呼び出し開始")
         truncate_all_tables(db=None)
+        logger.info("truncate_all_tables 完了")
 
         # 新しいセッションを作成して初期データを投入
+        logger.info("初期データ投入開始")
+
         from app.core.database import SessionLocal
 
         new_db = SessionLocal()
         try:
             # 初期管理者ユーザーとロールを再作成
+            logger.info("_seed_admin_user 呼び出し開始")
             _seed_admin_user(new_db)
+            logger.info("_seed_admin_user 完了")
 
             # システム設定の初期化
+            logger.info("_seed_system_config 呼び出し開始")
             _seed_system_config(new_db)
+            logger.info("_seed_system_config 完了")
 
             new_db.commit()
+            logger.info("初期データ投入完了（コミット済）")
         finally:
             new_db.close()
 
+        logger.info("DBリセット成功")
         return ResponseBase(
             success=True,
             message="データベースをリセットしました（テーブル構造は保持・管理者ユーザー・システム設定を再作成済）",
         )
 
     except Exception as e:
-        logger.exception(f"DBリセット失敗: {e}")
+        logger.exception("DBリセット失敗", extra={"error": str(e)[:500]})
         raise  # Let global handler format the response
 
 
@@ -435,6 +379,7 @@ def _seed_admin_user(db: Session) -> None:
     db.commit()
 
     # 2. 管理者ユーザーの作成
+    # 2. 管理者ユーザーの作成
     user_service = UserService(db)
     admin_user = user_service.get_by_username("admin")
 
@@ -452,22 +397,24 @@ def _seed_admin_user(db: Session) -> None:
             logger.info("管理者ユーザー 'admin' を作成しました")
         except Exception as e:
             logger.error(f"管理者ユーザー作成失敗: {e}")
-            return
+            # エラーでも続行（一般ユーザー作成のため）
 
-    # 3. ロールの割り当て
-    current_roles = user_service.get_user_roles(admin_user.id)
-    if "admin" not in current_roles:
-        # adminロールを取得
-        admin_role = db.query(Role).filter(Role.role_code == "admin").first()
-        if admin_role:
-            # 既存のロールをクリアしてadminのみ設定する形になるが、初期化後なので問題ない
-            # UserService.assign_rolesは既存を削除して上書きする仕様
-            from app.presentation.schemas.system.users_schema import UserRoleAssignment
+    # 3. ロールの割り当て（admin_userが存在する場合のみ）
+    if admin_user:
+        current_roles = user_service.get_user_roles(admin_user.id)
+        if "admin" not in current_roles:
+            # adminロールを取得
+            admin_role = db.query(Role).filter(Role.role_code == "admin").first()
+            if admin_role:
+                from app.presentation.schemas.system.users_schema import UserRoleAssignment
 
-            user_service.assign_roles(admin_user.id, UserRoleAssignment(role_ids=[admin_role.id]))
-            logger.info("ユーザー 'admin' に 'admin' ロールを割り当てました")
+                user_service.assign_roles(
+                    admin_user.id, UserRoleAssignment(role_ids=[admin_role.id])
+                )
+                logger.info("ユーザー 'admin' に 'admin' ロールを割り当てました")
 
     # 4. 一般ユーザーの作成（テスト用）
+    # 明示的にトランザクションを区切るか検討したが、呼び出し元でコミットするため不要
     general_user = user_service.get_by_username("user")
     if not general_user:
         try:

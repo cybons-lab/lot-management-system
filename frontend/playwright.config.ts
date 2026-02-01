@@ -17,6 +17,9 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
 
+  /* Global setup: runs once before all tests */
+  globalSetup: "./e2e/global-setup.ts",
+
   /* Run tests in files in parallel */
   fullyParallel: true,
 
@@ -26,7 +29,7 @@ export default defineConfig({
   /* Retry on CI only - max 1 retry to detect flaky tests */
   retries: process.env.CI ? 1 : 0,
 
-  /* Workers: CI uses 1 for stability, local uses 4 for speed */
+  /* Workers: Use 4 for parallel execution (DB reset is now done once in globalSetup) */
   workers: process.env.CI ? 1 : 4,
 
   /* Timeout settings */
@@ -46,7 +49,7 @@ export default defineConfig({
   /* Shared settings for all projects */
   use: {
     /* Base URL */
-    baseURL: process.env.E2E_BASE_URL || "http://localhost:5173",
+    baseURL: process.env.E2E_BASE_URL || "http://localhost:5174",
 
     /* API URL for direct API calls */
     extraHTTPHeaders: {
@@ -102,9 +105,9 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
+    command: "VITE_BACKEND_ORIGIN=http://localhost:18000 npm run dev -- --port 5174",
+    url: "http://localhost:5174",
+    reuseExistingServer: false,
     timeout: 120_000, // 2 minutes for server startup
   },
 });

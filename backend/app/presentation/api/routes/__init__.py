@@ -33,6 +33,7 @@ from app.presentation.api.routes.alerts import alerts_router
 from app.presentation.api.routes.allocations import allocations_router
 from app.presentation.api.routes.assignments.assignment_router import router as assignments_router
 from app.presentation.api.routes.auth.auth_router import router as auth_router
+from app.presentation.api.routes.dashboard.dashboard_router import router as dashboard_router
 from app.presentation.api.routes.debug import db_browser_router
 from app.presentation.api.routes.forecasts import forecasts_router
 from app.presentation.api.routes.integration.sap_router import router as sap_router
@@ -101,6 +102,9 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(confirmed_lines_router, prefix=prefix)  # Must be before orders_router
     app.include_router(order_lines_router, prefix=prefix)
     app.include_router(orders_router, prefix=prefix)
+
+    # Dashboard endpoint (Public/Authenticated)
+    app.include_router(dashboard_router, prefix=prefix)
 
     # Forecast & Alert endpoints
     app.include_router(forecasts_router, prefix=prefix)
@@ -213,7 +217,10 @@ __all__ = [
     # Forecasts (1)
     "forecasts_router",
     # Alerts (1)
+    # Alerts (1)
     "alerts_router",
+    # Dashboard (1)
+    "dashboard_router",
     # Admin (8)
     "admin_healthcheck_router",
     "admin_router",

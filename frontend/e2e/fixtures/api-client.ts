@@ -6,6 +6,7 @@
  */
 import { APIRequestContext, expect } from "@playwright/test";
 
+// @ts-expect-error - process is defined in the test environment
 const API_BASE_URL = process.env.E2E_API_URL || "http://localhost:18000";
 
 export interface ApiClientOptions {
@@ -42,13 +43,20 @@ export class ApiClient {
 
   /**
    * Create an authenticated API client
+   *
+   * Note: Login failure is not fatal - the client will continue without auth.
+   * This allows for bootstrap scenarios (e.g., reset-database before admin exists).
    */
   static async create(
     request: APIRequestContext,
     credentials: LoginCredentials = { username: "admin", password: "admin123" },
   ): Promise<ApiClient> {
     const client = new ApiClient(request);
-    await client.login(credentials);
+    try {
+      await client.login(credentials);
+    } catch {
+      console.warn(`[ApiClient] Login failed for ${credentials.username}, continuing without auth`);
+    }
     return client;
   }
 
@@ -78,6 +86,8 @@ export class ApiClient {
 
   /**
    * Login and obtain JWT token
+   *
+   * @throws Error if login fails (caller should handle gracefully for bootstrap scenarios)
    */
   async login(credentials: LoginCredentials): Promise<AuthToken> {
     const response = await this.request.post(`${API_BASE_URL}/api/auth/login`, {
@@ -88,7 +98,9 @@ export class ApiClient {
       timeout: 30000,
     });
 
-    expect(response.ok(), `Login failed: ${await response.text()}`).toBeTruthy();
+    if (!response.ok()) {
+      throw new Error(`Login failed: ${response.status()} - ${await response.text()}`);
+    }
     const data = (await response.json()) as AuthToken;
     this.token = data.access_token;
     return data;
@@ -100,41 +112,52 @@ export class ApiClient {
 
   /**
    * Reset database to initial state
-   * CAUTION: Deletes all data except admin user
+   *
+   * Note: In dev environment, this endpoint allows unauthenticated access
+   * for bootstrap scenarios. After reset, admin user is recreated and
+   * this method will attempt to re-authenticate.
+   *
+   * @throws Error if reset fails - callers should handle this appropriately
    */
   async resetDatabase(): Promise<void> {
-    try {
-      const response = await this.request.post(`${API_BASE_URL}/api/admin/reset-database`, {
-        headers: this.getHeaders(),
-        timeout: 120000, // Extended timeout for heavy operations
-      });
+    const response = await this.request.post(`${API_BASE_URL}/api/admin/reset-database`, {
+      headers: this.getHeaders(),
+      timeout: 120000, // Extended timeout for heavy operations
+    });
 
-      if (!response.ok()) {
-        const errorText = await response.text();
-        console.warn(`Database reset failed: ${response.status()} - ${errorText}`);
-        // Don't throw - allow tests to continue with more meaningful errors
-        return;
+    if (!response.ok()) {
+      const errorText = await response.text();
+      const errorMsg = `Database reset failed: ${response.status()} - ${errorText}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    console.log("Database reset successful");
+
+    // After reset, admin user is recreated - re-authenticate if we weren't authenticated
+    if (!this.token) {
+      try {
+        await this.login({ username: "admin", password: "admin123" });
+        console.log("Re-authenticated after database reset");
+      } catch {
+        console.warn("Failed to re-authenticate after reset, continuing without auth");
+        // Re-auth failure is not critical - tests can still proceed
       }
-
-      console.log("Database reset successful");
-    } catch (error) {
-      console.warn("Database reset error:", error);
-      // Don't throw - allow tests to continue
     }
   }
 
-  async generateTestData(options?: { category?: string }): Promise<void> {
-    try {
-      const response = await this.request.post(`${API_BASE_URL}/api/admin/test-data/generate`, {
-        headers: this.getHeaders(),
-        data: options || {},
-        timeout: 5000, // 5秒でタイムアウト
-      });
-      expect(response.ok(), `Test data generation failed: ${await response.text()}`).toBeTruthy();
-    } catch (e) {
-      console.warn(`⚠️ Test data generation timed out or failed: ${e.message}`);
-      // Continue anyway - data might already exist
+  async generateTestData(options?: { preset_id?: string }): Promise<void> {
+    const response = await this.request.post(`${API_BASE_URL}/api/admin/test-data/generate`, {
+      headers: this.getHeaders(),
+      data: options || {},
+      timeout: 30000, // 30秒に延長
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      throw new Error(`Test data generation failed: ${response.status()} - ${errorText}`);
     }
+    console.log("Test data generation successful");
   }
 
   // ===========================

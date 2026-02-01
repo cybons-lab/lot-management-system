@@ -27,18 +27,41 @@ export async function loginAs(page: Page, username: string = "admin"): Promise<v
 
   // Find and click the user selection dropdown (Select component)
   const selectTrigger = page.locator('[role="combobox"]').first();
-  await selectTrigger.click();
+  await selectTrigger.click({ force: true });
 
-  // Wait for dropdown to open
-  await page.waitForTimeout(300);
+  // Wait for dropdown to open and options to be visible
+  await page.waitForTimeout(500);
 
   // Select the user by username (matches display_name or username in parentheses)
   // The SelectItem renders as: "Display Name (username)"
+  // 明示的にオプションが表示されるのを待つ
   const userOption = page.getByRole("option", { name: new RegExp(username, "i") });
-  await userOption.click();
+
+  try {
+    // オプションが表示されるまで待機
+    await userOption.first().waitFor({ state: "visible", timeout: 3000 });
+    await userOption.first().click({ force: true });
+  } catch {
+    console.log(`ユーザー選択失敗: ${username} - クリック再試行とキーボード操作を試みます`);
+
+    // コンボボックスを強制クリックしてフォーカス
+    await selectTrigger.click({ force: true });
+    await page.waitForTimeout(500);
+
+    // キーボードで下矢印を押してドロップダウンをアクティブにする
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(200);
+
+    try {
+      await userOption.first().click({ force: true });
+    } catch (e2) {
+      console.error(`ユーザー選択完全失敗: ${username}`, e2);
+      throw e2;
+    }
+  }
 
   // Wait a bit for selection to register
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(300);
 
   // Click login button
   const loginButton = page.getByRole("button", { name: /ログイン/ });

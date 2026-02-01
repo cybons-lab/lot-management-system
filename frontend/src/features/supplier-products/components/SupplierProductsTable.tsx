@@ -131,6 +131,7 @@ export function SupplierProductsTable({
               <Button
                 variant="ghost"
                 size="sm"
+                aria-label="編集"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit(row);

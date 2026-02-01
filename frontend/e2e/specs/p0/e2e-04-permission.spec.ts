@@ -14,21 +14,13 @@
  * @tags @smoke @p0 @permission
  */
 import { test, expect } from "@playwright/test";
-import { ApiClient } from "../../fixtures/api-client";
 import { loginAs } from "../../fixtures/login-helper";
+import { ApiClient } from "../../fixtures/api-client";
+
+test.describe.configure({ mode: "serial" });
 
 test.describe("E2E-04: 権限テスト", () => {
-  // テスト実行前にデータを準備
-  test.beforeAll(async ({ request }) => {
-    // 1. 管理者としてAPIクライアント作成
-    const client = await ApiClient.create(request);
-
-    // 2. DBリセット（管理者・一般ユーザー作成含む）
-    await client.resetDatabase();
-
-    // 3. テストデータの生成（マスタ、オーダーなど）
-    // await client.generateTestData({ category: "basic" });
-  });
+  // Note: DB reset is done in globalSetup (once for all tests)
 
   test("管理者専用ページ: 一般ユーザーはアクセス不可", async ({ page }) => {
     // ===========================
@@ -63,11 +55,10 @@ test.describe("E2E-04: 権限テスト", () => {
     // 一般ユーザーとしてログイン
     // 注: 実際のテスト環境では一般ユーザーを使用
     // ===========================
+    await page.goto("/login");
+    await loginAs(page, "user");
     await page.goto("/orders");
     await page.waitForLoadState("networkidle");
-
-    // ログイン処理
-    await loginAs(page, "user");
 
     // テーブルの存在確認
     await expect(page.locator("table")).toBeVisible({ timeout: 10000 });
@@ -86,41 +77,61 @@ test.describe("E2E-04: 権限テスト", () => {
     console.log("E2E-04: UI権限制御確認完了");
   });
 
-  test("API直接呼び出し: 未認証は401", async ({ request }) => {
+  test("公開エンドポイント: 未認証でもアクセス可能", async ({ request }) => {
     // ===========================
-    // 認証なしでAPIを叩く
+    // 公開ダッシュボード統計へのアクセス確認
     // ===========================
-    const response = await request.get("http://localhost:18000/api/admin/stats", {
+    const response = await request.get("http://localhost:18000/api/dashboard/stats", {
       headers: {
         "Content-Type": "application/json",
-        // 認証ヘッダなし
+        Connection: "close", // Socket hang up 対策
       },
+      timeout: 10000,
     });
 
     // 200 OK が返ること（未認証でもアクセス可能なエンドポイント）
     const status = response.status();
     expect(status).toBe(200);
 
-    console.log(`E2E-04: 未認証API呼び出し -> ${status} (期待通り)`);
+    console.log(`E2E-04: 公開API呼び出し -> ${status} (期待通り)`);
   });
 
-  test("API直接呼び出し: 管理者専用エンドポイントの確認", async ({ request }) => {
+  test("管理者専用API: 未認証は401", async ({ request }) => {
+    // ===========================
+    // 認証なしで管理者専用APIを叩く
+    // ===========================
+    // /api/admin/metrics は管理者専用 (get_current_admin使用)
+    const response = await request.get("http://localhost:18000/api/admin/metrics", {
+      headers: {
+        "Content-Type": "application/json",
+        Connection: "close", // Socket hang up 対策
+      },
+      timeout: 10000,
+    });
+
+    // 未認証なので 401 が返るべき
+    const status = response.status();
+    expect(status).toBe(401);
+
+    console.log(`E2E-04: 未認証AdminAPI呼び出し -> ${status} (期待通り)`);
+  });
+
+  test("API直接呼び出し: 管理者としてのアクセス確認", async ({ request }) => {
     // ===========================
     // 管理者として認証してAPI確認
     // ===========================
     const apiClient = await ApiClient.create(request);
 
-    // 管理者なので成功するはず
-    const stats = await apiClient.get("/api/admin/stats", 200);
+    // 管理者なので成功するはず (admin/metricsは管理者専用)
+    const stats = await apiClient.get("/api/admin/metrics", 200);
     expect(stats).toBeDefined();
 
     console.log("E2E-04: 管理者APIアクセス成功");
 
     // DBリセットエンドポイント（危険な操作）も管理者なら成功
-    // 注: 実際にリセットはしない、権限確認のみ
-    // reset-databaseは副作用があるのでここではスキップ
-
-    console.log("E2E-04: API権限テスト完了");
+    // 注意: 並列テスト実行中にこれを叩くと他のテストのデータが消えるため、永続化テスト等と競合する
+    // const resetRes = await apiClient.post("/api/admin/reset-database", {}, 200);
+    // expect(resetRes.success).toBe(true);
   });
 
   test("AdminGuardコンポーネント: 管理者ルートの保護確認", async ({ page }) => {

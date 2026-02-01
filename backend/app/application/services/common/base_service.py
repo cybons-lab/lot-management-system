@@ -119,6 +119,7 @@ Soft Delete Support:
    - 例外時の自動rollback保証
 """
 
+import logging
 from datetime import date
 from typing import Any, Generic, TypeVar, cast
 
@@ -131,6 +132,9 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models.soft_delete_mixin import (
     SoftDeleteMixin,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 ModelType = TypeVar("ModelType")
