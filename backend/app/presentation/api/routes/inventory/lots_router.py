@@ -130,6 +130,7 @@
     - パフォーマンス最適化（読み取り専用は軽量）
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
@@ -157,6 +158,7 @@ from app.presentation.schemas.inventory.inventory_schema import (
 
 
 router = APIRouter(prefix="/lots", tags=["lots"])
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -480,6 +482,15 @@ def archive_lot(
     Raises:
         HTTPException: ロット番号不一致または在庫があるのに確認なし
     """
+    logger.info(
+        "Lot archive request received",
+        extra={
+            "lot_id": lot_id,
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "has_confirmation": request is not None and request.lot_number is not None,
+        },
+    )
     service = LotService(db)
     confirmation_lot_number = request.lot_number if request else None
     return service.archive_lot(lot_id, confirmation_lot_number)
