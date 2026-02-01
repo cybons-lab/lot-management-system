@@ -5,7 +5,6 @@
  * Follows the pattern: reset at worker level, unique prefix per test.
  */
 import { test as base, APIRequestContext } from "@playwright/test";
-import { ApiClient } from "./api-client";
 
 // Re-export test with DB reset extensions
 export const test = base.extend<
@@ -48,29 +47,14 @@ export const test = base.extend<
   ],
 
   /**
-   * Reset database at worker level (before all tests in worker)
-   * This runs once per worker, not per test
+   * Database reset is now handled in globalSetup (runs once before all tests).
+   * This worker-level fixture is no longer needed but kept for backwards compatibility.
+   * Tests should use unique IDs to avoid data conflicts.
    */
   resetDatabase: [
-    async ({ workerRequest }, use) => {
-      console.log("[DB Reset] Resetting database for worker...");
-
-      try {
-        const client = await ApiClient.create(workerRequest);
-        await client.resetDatabase();
-        console.log("[DB Reset] Database reset successful");
-      } catch (error) {
-        console.error("[DB Reset] CRITICAL: Failed to reset database:", error);
-        console.error("[DB Reset] Tests will likely fail due to dirty database state");
-        // Throw to fail fast - continuing with dirty DB state causes confusing test failures
-        throw new Error(
-          `Database reset failed: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-
+    async (_fixtures, use) => {
+      // No-op: DB reset is done in globalSetup
       await use();
-
-      // No cleanup needed - next worker will reset
     },
     { scope: "worker", auto: true },
   ],

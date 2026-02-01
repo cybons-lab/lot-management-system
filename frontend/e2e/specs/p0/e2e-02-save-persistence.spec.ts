@@ -17,17 +17,9 @@
  * @tags @smoke @p0 @save-verification
  */
 import { test, expect } from "@playwright/test";
-import { ApiClient } from "../../fixtures/api-client";
 import { loginAs } from "../../fixtures/login-helper";
 
 test.describe("E2E-02: 保存永続化テスト", () => {
-  let apiClient: ApiClient;
-
-  test.beforeAll(async ({ request }) => {
-    apiClient = await ApiClient.create(request);
-    await apiClient.resetDatabase();
-  });
-
   test("マスタ編集: 保存→APIリクエスト確認→リロード後も残る", async ({ page }) => {
     // ===========================
     // Step 1: ログインとマスタ一覧へ移動

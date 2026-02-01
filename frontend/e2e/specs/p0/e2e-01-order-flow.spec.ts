@@ -24,12 +24,8 @@ test.describe("E2E-01: 注文作成→引当→出荷フロー", () => {
   let apiClient: ApiClient;
 
   test.beforeAll(async ({ request }) => {
-    // タイムアウト設定（DBリセットは重いため）
-    test.setTimeout(60000);
-
-    // DBリセットと認証
+    // Note: DB reset is done in globalSetup (once for all tests)
     apiClient = await ApiClient.create(request);
-    await apiClient.resetDatabase();
     await apiClient.generateTestData({ category: "full" });
   });
 

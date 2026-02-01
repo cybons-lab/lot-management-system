@@ -15,17 +15,9 @@
  * @tags @smoke @p0 @double-submit
  */
 import { test, expect } from "@playwright/test";
-import { ApiClient } from "../../fixtures/api-client";
 import { loginAs } from "../../fixtures/login-helper";
 
 test.describe("E2E-03: 二重送信防止テスト", () => {
-  let apiClient: ApiClient;
-
-  test.beforeAll(async ({ request }) => {
-    apiClient = await ApiClient.create(request);
-    await apiClient.resetDatabase();
-  });
-
   test("保存ボタン連打: 二重登録されない", async ({ page }) => {
     // ===========================
     // Step 1: ログインと倉庫マスタへ移動

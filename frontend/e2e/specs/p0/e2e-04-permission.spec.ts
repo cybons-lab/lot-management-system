@@ -14,23 +14,12 @@
  * @tags @smoke @p0 @permission
  */
 import { test, expect } from "@playwright/test";
-import { ApiClient } from "../../fixtures/api-client";
 import { loginAs } from "../../fixtures/login-helper";
 
 test.describe.configure({ mode: "serial" });
 
 test.describe("E2E-04: 権限テスト", () => {
-  // テスト実行前にデータを準備
-  test.beforeAll(async ({ request }) => {
-    // 1. 管理者としてAPIクライアント作成
-    const client = await ApiClient.create(request);
-
-    // 2. DBリセット（管理者・一般ユーザー作成含む）
-    await client.resetDatabase();
-
-    // 3. テストデータの生成（マスタ、オーダーなど）
-    // await client.generateTestData({ category: "basic" });
-  });
+  // Note: DB reset is done in globalSetup (once for all tests)
 
   test("管理者専用ページ: 一般ユーザーはアクセス不可", async ({ page }) => {
     // ===========================

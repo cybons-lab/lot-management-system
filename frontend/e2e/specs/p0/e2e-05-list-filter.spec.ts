@@ -17,17 +17,9 @@
  * @tags @smoke @p0 @list-filter
  */
 import { test, expect } from "@playwright/test";
-import { ApiClient } from "../../fixtures/api-client";
 import { loginAs } from "../../fixtures/login-helper";
 
 test.describe("E2E-05: 一覧フィルタ/ソート/ページングテスト", () => {
-  let apiClient: ApiClient;
-
-  test.beforeAll(async ({ request }) => {
-    apiClient = await ApiClient.create(request);
-    await apiClient.resetDatabase();
-  });
-
   test("検索フィルタ: キーワード入力→結果絞り込み", async ({ page }) => {
     // ===========================
     // Step 1: 製品マスタ一覧へ移動

@@ -17,6 +17,9 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
 
+  /* Global setup: runs once before all tests */
+  globalSetup: "./e2e/global-setup.ts",
+
   /* Run tests in files in parallel */
   fullyParallel: true,
 
@@ -26,8 +29,8 @@ export default defineConfig({
   /* Retry on CI only - max 1 retry to detect flaky tests */
   retries: process.env.CI ? 1 : 0,
 
-  /* Workers: Always use 1 for DB reset stability (parallel execution causes lock timeouts) */
-  workers: 1,
+  /* Workers: Use 4 for parallel execution (DB reset is now done once in globalSetup) */
+  workers: process.env.CI ? 1 : 4,
 
   /* Timeout settings */
   timeout: 30_000, // 30s per test
