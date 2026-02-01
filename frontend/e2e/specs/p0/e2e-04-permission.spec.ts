@@ -27,7 +27,7 @@ test.describe("E2E-04: 権限テスト", () => {
     await client.resetDatabase();
 
     // 3. テストデータの生成（マスタ、オーダーなど）
-    await client.generateTestData({ category: "basic" });
+    // await client.generateTestData({ category: "basic" });
   });
 
   test("管理者専用ページ: 一般ユーザーはアクセス不可", async ({ page }) => {

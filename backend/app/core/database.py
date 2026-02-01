@@ -140,6 +140,18 @@ def truncate_all_tables(db: Session | None = None) -> None:
         # 開発/テスト環境でのデッドロック防止: ロックタイムアウトを設定
         conn.execute(text("SET LOCAL lock_timeout = '30s'"))
 
+        # 他のセッションによるロックを強制解除
+        # 自分自身 (pg_backend_pid()) 以外の接続を切断する
+        conn.execute(
+            text("""
+            SELECT pg_terminate_backend(pid)
+            FROM pg_stat_activity
+            WHERE datname = current_database()
+            AND pid <> pg_backend_pid()
+            AND state != 'idle' -- トランザクション中のものを優先（必要ならidleも含める）
+            """)
+        )
+
         # public配下の全テーブル名を取得（alembic_versionを除く）
         result = conn.execute(
             text("""

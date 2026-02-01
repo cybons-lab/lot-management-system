@@ -33,7 +33,7 @@ services:
   db-postgres-test:
     image: postgres:15-alpine
     container_name: lot-db-postgres-test
-    profiles: ["test"]  # テスト時のみ起動
+    profiles: [ "e2e" ] # E2E実行時のみ起動
     environment:
       POSTGRES_DB: lot_management_test
       POSTGRES_USER: testuser
@@ -41,7 +41,7 @@ services:
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=ja_JP.UTF-8"
       TZ: Asia/Tokyo
     ports:
-      - "5433:5432"  # ホストの5433にマップ
+      - "5433:5432" # ホストの5433にマップ
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U testuser -d lot_management_test -h 127.0.0.1 || exit 1" ]
       interval: 3s
@@ -51,7 +51,7 @@ services:
     networks:
       - lot-network
     tmpfs:
-      - /var/lib/postgresql/data  # 高速化のためメモリ上に配置
+      - /var/lib/postgresql/data # 高速化のためメモリ上に配置
     restart: unless-stopped
 
   # ========================================
@@ -95,6 +95,38 @@ services:
           action: rebuild
         - path: ./backend/pyproject.toml
           action: rebuild
+    networks:
+      - lot-network
+    restart: unless-stopped
+
+  # ========================================
+  # Backend (Test) - E2E専用
+  # ========================================
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lot-backend-test
+    profiles: [ "e2e" ] # E2E実行時のみ起動
+    environment:
+      ENVIRONMENT: testing
+      POSTGRES_DB: lot_management_test
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      DATABASE_URL: postgresql://testuser:testpass@db-postgres-test:5432/lot_management_test
+      TEST_DATABASE_URL: postgresql+psycopg2://testuser:testpass@db-postgres-test:5432/lot_management_test
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      TZ: Asia/Tokyo
+    ports:
+      - "18000:8000" # テスト用ポート
+    depends_on:
+      db-postgres-test:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app:cached
+      - backend-cache:/root/.cache/pip
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000
     networks:
       - lot-network
     restart: unless-stopped

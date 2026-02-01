@@ -1,0 +1,44 @@
+Logging in...
+Login successful.
+Resetting database at http://localhost:8000/api/admin/reset-database...
+Traceback (most recent call last):
+  File "/Users/kazuya/dev/projects/lot-management-system/test_reset_db.py", line 22, in <module>
+    resp = requests.post(reset_url, headers=headers, json={}, timeout=60)
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/site-packages/requests/api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/site-packages/requests/adapters.py", line 644, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/site-packages/urllib3/connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/site-packages/urllib3/connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/http/client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/http/client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/http/client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/kazuya/.pyenv/versions/3.13.9/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+KeyboardInterrupt
