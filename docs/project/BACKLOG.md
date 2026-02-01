@@ -44,25 +44,6 @@
 
 ---
 
-### 1-2. 入庫履歴が表示されない問題（調査済み）
-
-**症状:** 入庫履歴タブで「入庫履歴はありません」と表示される。
-**原因:** `lot_service.create_lot()` で `StockHistory` の INBOUND レコードが作成されていない。
-**影響:** 画面からのロット新規登録・API経由のロット作成で入庫履歴が欠落する。
-
-**推奨対応:**
-1. `lot_service.create_lot()` に INBOUND の `StockHistory` 生成を追加
-2. 既存データ用のマイグレーションを用意
-3. 入庫履歴画面で再確認
-
-**関連ファイル:**
-- `backend/app/application/services/inventory/lot_service.py`
-- `backend/app/application/services/inventory/intake_history_service.py`
-
-**元:** `TODO.md` (2026-01-10) & `backlog.md::1-1` (2026-01-18)
-
----
-
 ### 1-2. 未実装 API エンドポイント
 
 以下のPOSTエンドポイントはテストコード（`tests/error_scenarios/`）に記載がありますが、まだ実装されていません。
@@ -83,25 +64,6 @@
 
 ---
 
-
-### 1-4. 在庫計算ロジックの厳密化とSSOT固定
-
-**優先度**: High
-**難易度**: Medium
-**想定工数**: 2-3日
-
-**背景・課題:**
-- ドメイン定義（仮予約Activeは在庫を減らさない）と、現在のビュー/サービス計算に一部乖離や二重控除のリスクが指摘されている。
-- 「利用可能在庫」の真の情報源（SSOT）を1箇所に固定し、不整合を排除する必要がある。
-
-**タスク内容:**
-1. `allocated_quantity` の定義を `confirmed_only` に統一し、Activeは `reserved_quantity_active` 等で分離表示する。
-2. ロック数量の二重控除（ビューで減算済みかつ計算ロジックでも減算）のリスクを解消。
-3. UI上の説明（ツールチップ等）と実計算式を完全に一致させる。
-
-**元:** `FUTURE_IMPROVEMENTS.md`
-
----
 
 
 ## 2. 優先度: 中 (UI/UX・不整合修正)

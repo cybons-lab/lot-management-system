@@ -90,3 +90,24 @@
 **対応内容**:
 - `TopProductsChart`, `WarehouseDistributionChart` の `any` 型を削減し、ランタイムチェックを追加。
 - `SmartReadSettingsModal`, `WarehouseForm` の `zodResolver` 型エラーを `eslint-disable` で抑制（ビルド安定化のため）。
+
+---
+
+## 2026-02-01 完了タスク (高優先度検証)
+
+### 入庫履歴表示問題の検証 ✅ 実装済み確認
+**完了**: 2026-02-01
+**カテゴリ**: バグ調査・検証
+**対応内容**:
+- `lot_service.create_lot()` で `StockMovement` (INBOUND) レコードが正しく作成されることを確認。
+- `intake_history_service.py` が正しく履歴を取得することを確認。
+- バックログの問題報告は古い情報と判断。
+
+### 在庫計算ロジックのSSOT検証 ✅ 正しく実装済み確認
+**完了**: 2026-02-01
+**カテゴリ**: リファクタリング調査・検証
+**対応内容**:
+- `allocated_quantity` が確定予約(CONFIRMED)のみを計算していることを確認。
+- `reserved_quantity_active` が分離表示されていることを確認。
+- `locked_quantity` の二重控除がないことを確認。
+- ビュー定義(`v_lot_details`)とサービス層(`stock_calculation.py`)の計算式が一致していることを確認。
