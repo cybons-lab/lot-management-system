@@ -68,26 +68,6 @@
 
 ## 2. 優先度: 中 (UI/UX・不整合修正)
 
-### 2-1. InboundPlansList のテーブルソート機能が動かない
-
-- `sortable: true` なのに `DataTable` へ `sort` / `onSortChange` を渡していない。
-- 対象: `frontend/src/features/inbound-plans/components/InboundPlansList.tsx`
-
-**元:** `backlog.md::2-1` (2026-01-18)
-
----
-
-### 2-2. フィルターリセットボタンの欠如
-
-- `AdjustmentsListPage`, `WithdrawalsListPage` にリセット操作がない。
-- 対象:
-  - `frontend/src/features/adjustments/pages/AdjustmentsListPage.tsx`
-  - `frontend/src/features/withdrawals/pages/WithdrawalsListPage.tsx`
-
-**元:** `backlog.md::2-3` (2026-01-18)
-
----
-
 ### 2-3. SmartRead設定フォーム送信のE2Eテスト追加
 
 **優先度**: 中
@@ -108,27 +88,6 @@
 **参考:**
 - 削除されたユニットテスト: `frontend/src/features/rpa/smartread/components/SmartReadSettingsModal.test.tsx` (L120-168)
 - 既存E2Eテスト: `frontend/e2e/auth.spec.ts`, `frontend/e2e/allocation.spec.ts`
-
----
-
-### 2-4. Toast通知の不足
-
-- 保存成功時にフィードバックが出ない。
-- 対象:
-  - `frontend/src/features/warehouses/hooks/useWarehouseMutations.ts`
-  - `frontend/src/features/product-mappings/hooks/useProductMappings.ts`
-  - `frontend/src/features/delivery-places/hooks/useDeliveryPlaces.ts`
-
-**元:** `backlog.md::2-5` (2026-01-18)
-
----
-
-### 2-6. ProductDetailPage のコード変更後リダイレクト
-
-- 商品コード変更時にURLが更新されず表示が残る。
-- 対象: `frontend/src/features/products/pages/ProductDetailPage.tsx`
-
-**元:** `backlog.md::2-6` (2026-01-18)
 
 ---
 

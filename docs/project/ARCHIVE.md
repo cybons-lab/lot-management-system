@@ -111,3 +111,12 @@
 - `reserved_quantity_active` が分離表示されていることを確認。
 - `locked_quantity` の二重控除がないことを確認。
 - ビュー定義(`v_lot_details`)とサービス層(`stock_calculation.py`)の計算式が一致していることを確認。
+
+### Quick Wins Round 2 検証 ✅ 対応済み・確認済み
+**完了**: 2026-02-01
+**カテゴリ**: バグ修正・UX改善
+**対応内容**:
+- **InboundPlansListのソート機能**: `DataTable` への `sort`/`onSortChange` プロパティ渡しが既に実装済みであることを確認。
+- **AdjustmentsListPageのリセットボタン**: `onReset` ハンドラが実装済みであることを確認。
+- **Toast通知追加**: `useWarehouseMutations`, `useDeliveryPlaces`, `useCustomerItemsPage` (ProductMapping) 全て実装済みを確認。
+- **ProductDetailPageのリダイレクト**: 対象ファイルが存在しないためスキップ（古いタスク）。
