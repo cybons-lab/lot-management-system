@@ -123,7 +123,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
                 />
               </div>
             ),
-          minWidth: 80,
+          minWidth: 60,
         },
         {
           id: "shipping_date_input",
@@ -179,7 +179,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
             ) : (
               <EditableTextCell row={row} field="jikuCode" hasWarning={row.jiku_format_error} />
             ),
-          minWidth: 80,
+          minWidth: 60,
         },
         {
           id: "delivery_date",
@@ -203,7 +203,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
             ) : (
               <EditableTextCell row={row} field="deliveryQuantity" inputClassName="text-right" />
             ),
-          minWidth: 100,
+          minWidth: 60,
         },
 
         {
