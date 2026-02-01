@@ -406,14 +406,6 @@ OCR結果テーブルにおいて、以下のフィールドのテストデー�
 
 ---
 
-### 4-2. 日付ユーティリティの統合
-
-- `shared/utils/date.ts`, `shared/libs/utils/date.ts`, `features/forecasts/.../date-utils.ts` の重複整理。
-
-**元:** `backlog.md::4-2` (2026-01-18)
-
----
-
 ### 4-3. 削除ダイアログの統合
 
 - `SoftDeleteDialog`, `PermanentDeleteDialog`, `BulkSoftDeleteDialog`, `BulkPermanentDeleteDialog` を統合。

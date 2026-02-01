@@ -110,6 +110,12 @@
 **対応内容**:
 - 在庫一覧・ロット詳細で `inspection_status`/`inspection_date`/`inspection_cert_number`/`origin_reference` を表示対応。
 
+### 日付ユーティリティの統合 ✅ 対応済み
+**完了**: 2026-02-01
+**カテゴリ**: リファクタリング
+**対応内容**:
+- `shared/utils/date.ts` に統合されており、重複ファイルが存在しないことを確認。
+
 ---
 
 ## 2026-02-01 完了タスク (高優先度検証)
