@@ -8,9 +8,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   // Docker Compose environment: backend service name is "backend"
-  // Development environment: can override with VITE_BACKEND_ORIGIN
+  // Development environment: can override with BACKEND_ORIGIN (no VITE_ prefix)
   // Use http://localhost:8000 as a fallback for local development if not in Docker or env not set
-  const target = env.VITE_BACKEND_ORIGIN || "http://localhost:8000";
+  const target = env.BACKEND_ORIGIN || env.VITE_BACKEND_ORIGIN || "http://localhost:8000";
 
   return {
     plugins: [react(), tailwindcss()],

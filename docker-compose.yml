@@ -141,8 +141,10 @@ services:
     container_name: lot-frontend
     working_dir: /app
     environment:
+      # VITE_API_BASE: クライアント側のAPI base URL（常に /api を使用）
       VITE_API_BASE: "/api"
-      VITE_BACKEND_ORIGIN: "http://backend:8000"
+      # BACKEND_ORIGIN: Viteプロキシのターゲット（クライアント側には埋め込まれない）
+      BACKEND_ORIGIN: "http://backend:8000"
       TZ: Asia/Tokyo
       # 監視をポーリングに切替（Win/Mac安定化）
       CHOKIDAR_USEPOLLING: "1"

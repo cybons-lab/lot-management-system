@@ -228,11 +228,7 @@ export function SmartReadPage() {
         subtitle="AI-OCRを使用してPDFや画像を解析し、データを抽出します"
         actions={
           <div className="flex gap-2">
-            {isAdmin && (
-              <Button variant="secondary" onClick={startWatchFolderTest}>
-                管理者テスト（監視フォルダ）
-              </Button>
-            )}
+            {isAdmin && <Button onClick={startWatchFolderTest}>OCRテスト</Button>}
             <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
               <Settings className="mr-2 h-4 w-4" />
               設定
