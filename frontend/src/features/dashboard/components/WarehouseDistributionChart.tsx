@@ -36,13 +36,11 @@ export function WarehouseDistributionChart() {
 
   const totalQuantity = chartData.reduce((sum, item) => sum + item.value, 0);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handlePieClick = (data: any) => {
+  const handlePieClick = (data: ChartData | { payload: ChartData }) => {
     // Recharts Pie onClick passes the data object directly (or via payload)
-    // data might be the entry object
-    if (data && data.id) {
+    if ("id" in data) {
       navigate(`/inventory?warehouse_id=${data.id}`);
-    } else if (data && data.payload && data.payload.id) {
+    } else if ("payload" in data && data.payload.id) {
       navigate(`/inventory?warehouse_id=${data.payload.id}`);
     }
   };
@@ -92,8 +90,10 @@ export function WarehouseDistributionChart() {
                 borderRadius: "0.5rem",
                 fontSize: "12px",
               }}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={(value: any) => [value?.toLocaleString("ja-JP") ?? "0", "在庫数"]}
+              formatter={(value: number | string | Array<number | string>) => [
+                value?.toLocaleString("ja-JP") ?? "0",
+                "在庫数",
+              ]}
             />
             <Legend wrapperStyle={{ fontSize: "11px" }} iconType="circle" />
           </PieChart>
