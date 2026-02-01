@@ -24,3 +24,4 @@ export * from "./feedback";
 export * from "./calendar";
 export * from "./popover";
 export * from "./skeleton";
+export * from "./tooltip";

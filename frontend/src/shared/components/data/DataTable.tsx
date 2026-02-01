@@ -435,13 +435,22 @@ export function DataTable<T = never>({
   }
 
   return (
-    <div className={cn("relative flex flex-col gap-2", className)}>
+    <div className={cn("relative flex flex-col", className)}>
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2">
-        <div>{headerSlot}</div>
+      <div className="flex items-center justify-between py-2 mb-2">
+        <div className="flex items-center gap-4">
+          {headerSlot}
+          <span className="text-sm text-slate-600">
+            {table.getFilteredRowModel().rows.length}件のデータ
+          </span>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="ml-auto h-8">
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto h-8 hover:bg-slate-50 bg-gray-50"
+            >
               <Settings2 className="h-4 w-4 lg:mr-2" />
               <span className="hidden lg:inline">表示列</span>
             </Button>
@@ -472,7 +481,7 @@ export function DataTable<T = never>({
       <div
         ref={parentRef}
         className={cn(
-          "relative rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] shadow-[var(--shadow-soft)]",
+          "relative rounded-xl border border-[hsl(var(--border))] bg-white shadow-[var(--shadow-soft)]",
           enableVirtualization ? "overflow-y-auto" : "overflow-x-auto",
         )}
         style={
@@ -484,7 +493,7 @@ export function DataTable<T = never>({
         <table className="responsive-table w-full" style={{ tableLayout: "fixed" }}>
           <thead
             className={cn(
-              "border-b border-[hsl(var(--border))] bg-[hsl(var(--surface-2))]",
+              "border-b-2 border-slate-300 bg-gray-50", // Match page background
               enableVirtualization && "sticky top-0 z-10",
             )}
           >
@@ -501,7 +510,7 @@ export function DataTable<T = never>({
                     <th
                       key={header.id}
                       className={cn(
-                        "relative bg-[hsl(var(--surface-2))] text-left text-sm font-semibold text-slate-600",
+                        "relative bg-gray-50 text-left text-sm font-semibold text-slate-600 border-r border-slate-300 last:border-r-0",
                         dense ? "px-2 py-2" : "px-6 py-4",
                         "first:pl-4", // Add padding to first column for better visual spacing
                         meta?.align === "center" && "text-center",
@@ -570,7 +579,7 @@ export function DataTable<T = never>({
                       data-index={virtualItem.index}
                       ref={rowVirtualizer.measureElement}
                       className={cn(
-                        "relative transition-all duration-150",
+                        "relative transition-all duration-150 border-b border-slate-300",
                         "group",
                         row.index % 2 === 0
                           ? "bg-[hsl(var(--surface-1))]"
@@ -594,7 +603,7 @@ export function DataTable<T = never>({
                           <td
                             key={cell.id}
                             className={cn(
-                              "overflow-hidden text-sm text-slate-800",
+                              "overflow-hidden text-sm text-slate-800 border-r border-slate-300 last:border-r-0",
                               dense ? "px-2 py-2" : "px-6 py-4",
                               "first:pl-4", // Add padding to first column
                               meta?.align === "center" && "text-center",
@@ -664,7 +673,7 @@ export function DataTable<T = never>({
                   <React.Fragment key={row.id}>
                     <tr
                       className={cn(
-                        "relative transition-all duration-150",
+                        "relative transition-all duration-150 border-b border-slate-300",
                         "group",
                         row.index % 2 === 0
                           ? "bg-[hsl(var(--surface-1))]"
@@ -688,7 +697,7 @@ export function DataTable<T = never>({
                           <td
                             key={cell.id}
                             className={cn(
-                              "overflow-hidden text-sm text-slate-800",
+                              "overflow-hidden text-sm text-slate-800 border-r border-slate-300 last:border-r-0",
                               dense ? "px-2 py-2" : "px-6 py-4",
                               "first:pl-4", // Add padding to first column
                               meta?.align === "center" && "text-center",

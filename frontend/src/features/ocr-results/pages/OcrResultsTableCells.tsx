@@ -4,6 +4,7 @@ import { type KeyboardEvent, createContext, useContext, useEffect, useRef, useSt
 
 import type { OcrResultItem } from "../api";
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 // ============================================
@@ -301,24 +302,29 @@ function OcrStatusBadge({ row }: { row: OcrResultItem }) {
   }
 
   return (
-    <div
-      className={cn(
-        "group flex items-center gap-1 rounded px-1.5 py-1 w-fit transition-all duration-300 ease-in-out border",
-        status === "ok"
-          ? "bg-green-50 text-green-700 border-green-200"
-          : status === "error"
-            ? "bg-red-50 text-red-700 border-red-200"
-            : "bg-orange-50 text-orange-700 border-orange-200",
-      )}
-      title={label}
-    >
-      {status === "ok" && <CheckCircle className="h-4 w-4" />}
-      {status === "error" && <XCircle className="h-4 w-4" />}
-      {status === "warning" && <AlertCircle className="h-4 w-4" />}
-      <span className="font-medium whitespace-nowrap overflow-hidden w-0 opacity-0 group-hover:w-auto group-hover:opacity-100 transition-all duration-300 text-[10px]">
-        {label}
-      </span>
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={cn(
+              "group flex items-center justify-center rounded p-1 w-6 h-6 transition-all duration-300 ease-in-out border cursor-help",
+              status === "ok"
+                ? "bg-green-50 text-green-700 border-green-200"
+                : status === "error"
+                  ? "bg-red-50 text-red-700 border-red-200"
+                  : "bg-orange-50 text-orange-700 border-orange-200",
+            )}
+          >
+            {status === "ok" && <CheckCircle className="h-4 w-4" />}
+            {status === "error" && <XCircle className="h-4 w-4" />}
+            {status === "warning" && <AlertCircle className="h-4 w-4" />}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -341,30 +347,35 @@ function MasterStatusBadge({ row }: { row: OcrResultItem }) {
   }
 
   return (
-    <div
-      className={cn(
-        "group flex items-center gap-1 rounded px-1.5 py-1 w-fit transition-all duration-300 ease-in-out border",
-        status === "ok"
-          ? "bg-blue-50 text-blue-700 border-blue-200"
-          : status === "error"
-            ? "bg-red-50 text-red-700 border-red-200"
-            : "bg-yellow-50 text-yellow-700 border-yellow-200",
-      )}
-      title={label}
-    >
-      {status === "ok" && <CheckCircle className="h-4 w-4" />}
-      {status === "error" && <XCircle className="h-4 w-4" />}
-      {status === "warning" && <AlertTriangle className="h-4 w-4" />}
-      <span className="font-medium whitespace-nowrap overflow-hidden w-0 opacity-0 group-hover:w-auto group-hover:opacity-100 transition-all duration-300 text-[10px]">
-        {label}
-      </span>
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={cn(
+              "group flex items-center justify-center rounded p-1 w-6 h-6 transition-all duration-300 ease-in-out border cursor-help",
+              status === "ok"
+                ? "bg-blue-50 text-blue-700 border-blue-200"
+                : status === "error"
+                  ? "bg-red-50 text-red-700 border-red-200"
+                  : "bg-yellow-50 text-yellow-700 border-yellow-200",
+            )}
+          >
+            {status === "ok" && <CheckCircle className="h-4 w-4" />}
+            {status === "error" && <XCircle className="h-4 w-4" />}
+            {status === "warning" && <AlertTriangle className="h-4 w-4" />}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
 export function StatusReviewCell({ row }: { row: OcrResultItem }) {
   return (
-    <div className="flex flex-col gap-1 text-[10px] items-start">
+    <div className="flex flex-col gap-1 text-[10px] items-center">
       <OcrStatusBadge row={row} />
       <MasterStatusBadge row={row} />
     </div>
@@ -462,7 +473,7 @@ export function EditableTextCell({
         inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
-  }, [isActive, value]);
+  }, [isActive]);
 
   const isDisabled = row.status === "processing" || isReadOnly;
 
@@ -538,7 +549,6 @@ export function EditableTextCell({
   };
 
   const displayValue = value || placeholder || "-";
-  const isPlaceholder = !value && !!placeholder;
 
   if (isActive) {
     return (
@@ -588,18 +598,23 @@ export function EditableTextCell({
         }
       }}
       className={cn(
-        "w-full rounded-md px-2 py-1 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border", // Base styles
+        "group w-full rounded-md px-2 py-1 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border", // Base styles
         // Default state: Transparent bg/border (looks like text), Hover: visible border/bg
         "bg-transparent border-transparent hover:bg-white hover:border-slate-300",
         // Active/Warning states override default
         hasWarning ? "text-red-700 bg-red-50/60 border-red-200" : "text-slate-700",
-        isPlaceholder && "text-slate-400",
         isDisabled && "cursor-not-allowed opacity-60",
         inputClassName,
       )}
       disabled={isDisabled}
     >
-      {displayValue}
+      {value ? (
+        <span>{displayValue}</span>
+      ) : (
+        <span className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+          {placeholder || "\u00A0"}
+        </span>
+      )}
     </button>
   );
 }
@@ -631,7 +646,7 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
-  }, [isActive, value]);
+  }, [isActive]);
 
   const isDisabled = row.status === "processing" || isReadOnly;
 
@@ -753,7 +768,7 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
       )}
       disabled={isDisabled}
     >
-      {displayValue || "-"}
+      {displayValue || ""}
     </button>
   );
 }
@@ -765,7 +780,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
   const input = getInputs(row);
   const computedText = buildShippingSlipText(row.shipping_slip_text, input, row);
   const displayText = input.shippingSlipTextEdited ? input.shippingSlipText : computedText;
-  const fallbackText = displayText || "-";
+  const fallbackText = displayText || "";
   const [draft, setDraft] = useState("");
   const [isComposing, setIsComposing] = useState(false);
   const isActive = activeCell?.rowId === row.id && activeCell?.field === "shippingSlipText";
@@ -800,7 +815,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
-  }, [isActive, displayText, input.shippingSlipText, input.shippingSlipTextEdited]);
+  }, [isActive]);
 
   const handleNavigate = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (isComposing) return;

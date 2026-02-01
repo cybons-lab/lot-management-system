@@ -1,5 +1,5 @@
 /* eslint-disable max-lines-per-function */
-import { Pencil } from "lucide-react";
+import { Activity, Pencil, SlidersHorizontal } from "lucide-react";
 import React, { useMemo } from "react";
 
 import type { OcrResultItem } from "../api";
@@ -37,7 +37,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
         // Edit button column
         {
           id: "edit_action",
-          header: "",
+          header: <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />,
           accessor: (row: OcrResultItem) =>
             !isReadOnly && (
               <Button
@@ -56,13 +56,18 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           width: 40,
           enableHiding: false,
           sticky: "left" as const,
+          sortable: false,
+          align: "center" as const,
         },
         {
           id: "status_icon",
-          header: "ステータス",
+          header: <Activity className="h-3.5 w-3.5 text-slate-500" />,
           accessor: (row: OcrResultItem) => <StatusReviewCell row={row} />,
-          minWidth: 60, // Icon only, narrower
+          minWidth: 20, // Minimal width for icon only
+          width: 40, // Force narrow width
           sticky: "left" as const,
+          sortable: false,
+          align: "center" as const,
         },
         {
           id: "lot_no",
@@ -70,13 +75,17 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
               <div className="flex flex-col gap-0.5 text-sm">
-                <span>{row.manual_lot_no_1 || row.lot_no || "-"}</span>
-                <span className="text-slate-400">{row.manual_lot_no_2 || "-"}</span>
+                <span>{row.manual_lot_no_1 || row.lot_no || ""}</span>
+                <span className="text-slate-400 border-t border-dotted border-slate-300 pt-0.5">
+                  {row.manual_lot_no_2 || ""}
+                </span>
               </div>
             ) : (
               <div className="flex flex-col gap-1">
                 <EditableTextCell row={row} field="lotNo1" placeholder="" />
-                <EditableTextCell row={row} field="lotNo2" placeholder="2行目" />
+                <div className="border-t border-dotted border-slate-300 pt-1">
+                  <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo2" />
+                </div>
               </div>
             ),
           minWidth: 180,
@@ -87,13 +96,17 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
               <div className="flex flex-col gap-0.5 text-sm">
-                <span>{row.manual_inbound_no || row.inbound_no || "-"}</span>
-                <span className="text-slate-400">{row.manual_inbound_no_2 || "-"}</span>
+                <span>{row.manual_inbound_no || row.inbound_no || ""}</span>
+                <span className="text-slate-400 border-t border-dotted border-slate-300 pt-0.5">
+                  {row.manual_inbound_no_2 || ""}
+                </span>
               </div>
             ) : (
               <div className="flex flex-col gap-1">
                 <EditableTextCell row={row} field="inboundNo1" placeholder="" />
-                <EditableTextCell row={row} field="inboundNo2" placeholder="2行目" />
+                <div className="border-t border-dotted border-slate-300 pt-1">
+                  <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No2" />
+                </div>
               </div>
             ),
           minWidth: 180,
@@ -104,8 +117,10 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
               <div className="flex flex-col gap-0.5 text-sm text-right">
-                <span>{row.manual_quantity_1 || "-"}</span>
-                <span className="text-slate-400">{row.manual_quantity_2 || "-"}</span>
+                <span>{row.manual_quantity_1 || ""}</span>
+                <span className="text-slate-400 border-t border-dotted border-slate-300 pt-0.5">
+                  {row.manual_quantity_2 || ""}
+                </span>
               </div>
             ) : (
               <div className="flex flex-col gap-1">
@@ -115,15 +130,18 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
                   placeholder=""
                   inputClassName="text-right"
                 />
-                <EditableTextCell
-                  row={row}
-                  field="quantity2"
-                  placeholder="2行目"
-                  inputClassName="text-right"
-                />
+                <div className="border-t border-dotted border-slate-300 pt-1">
+                  <EditableTextCell
+                    row={row}
+                    field="quantity2"
+                    placeholder="数量2"
+                    inputClassName="text-right"
+                  />
+                </div>
               </div>
             ),
-          minWidth: 60,
+          minWidth: 45,
+          width: 80, // Force narrow width
         },
         {
           id: "shipping_date_input",
@@ -131,7 +149,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
               <span className="text-sm">
-                {row.manual_shipping_date || row.calculated_shipping_date || "-"}
+                {row.manual_shipping_date || row.calculated_shipping_date || ""}
               </span>
             ) : (
               <EditableDateCell row={row} field="shippingDate" />
@@ -144,7 +162,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
               <span className="text-sm whitespace-pre-wrap">
-                {row.manual_shipping_slip_text || "-"}
+                {row.manual_shipping_slip_text || ""}
               </span>
             ) : (
               <EditableShippingSlipCell row={row} />
@@ -179,7 +197,8 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
             ) : (
               <EditableTextCell row={row} field="jikuCode" hasWarning={row.jiku_format_error} />
             ),
-          minWidth: 60,
+          minWidth: 45,
+          width: 60, // Force narrow width
         },
         {
           id: "delivery_date",
@@ -203,7 +222,8 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
             ) : (
               <EditableTextCell row={row} field="deliveryQuantity" inputClassName="text-right" />
             ),
-          minWidth: 60,
+          minWidth: 45,
+          width: 60, // Force narrow width
         },
 
         {
