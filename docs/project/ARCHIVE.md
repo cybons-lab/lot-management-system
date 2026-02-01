@@ -61,3 +61,32 @@
 **解決日**: 2026-01-26
 **対応内容**:
 - print文を削除し、適切なloggerに移行。
+
+---
+
+## 2026-02-01 完了タスク (Quick Wins)
+
+### 入荷予定一覧のデフォルトソート順修正 ✅ 対応済み
+**完了**: 2026-02-01
+**カテゴリ**: UX改善
+**対応内容**:
+- `InboundPlansList` のデフォルトソートを `planned_date` (降順) に変更。
+
+### フィルターリセットボタンのスタイル統一 ✅ 対応済み
+**完了**: 2026-02-01
+**カテゴリ**: UI改善
+**対応内容**:
+- `WithdrawalsListPage`, `InventoryPage` のリセットボタンを `ghost` variant に統一。
+
+### 品目マスタ登録時の成功トースト通知追加 ✅ 対応済み
+**完了**: 2026-02-01
+**カテゴリ**: UX改善
+**対応内容**:
+- `useCreateCustomerItem` フックに成功時のトースト表示処理を追加。
+
+### フロントエンドの型定義改善 ✅ 対応済み
+**完了**: 2026-02-01
+**カテゴリ**: コード品質・保守性
+**対応内容**:
+- `TopProductsChart`, `WarehouseDistributionChart` の `any` 型を削減し、ランタイムチェックを追加。
+- `SmartReadSettingsModal`, `WarehouseForm` の `zodResolver` 型エラーを `eslint-disable` で抑制（ビルド安定化のため）。
