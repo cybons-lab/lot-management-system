@@ -379,6 +379,7 @@ def _seed_admin_user(db: Session) -> None:
     db.commit()
 
     # 2. 管理者ユーザーの作成
+    # 2. 管理者ユーザーの作成
     user_service = UserService(db)
     admin_user = user_service.get_by_username("admin")
 
@@ -396,22 +397,24 @@ def _seed_admin_user(db: Session) -> None:
             logger.info("管理者ユーザー 'admin' を作成しました")
         except Exception as e:
             logger.error(f"管理者ユーザー作成失敗: {e}")
-            return
+            # エラーでも続行（一般ユーザー作成のため）
 
-    # 3. ロールの割り当て
-    current_roles = user_service.get_user_roles(admin_user.id)
-    if "admin" not in current_roles:
-        # adminロールを取得
-        admin_role = db.query(Role).filter(Role.role_code == "admin").first()
-        if admin_role:
-            # 既存のロールをクリアしてadminのみ設定する形になるが、初期化後なので問題ない
-            # UserService.assign_rolesは既存を削除して上書きする仕様
-            from app.presentation.schemas.system.users_schema import UserRoleAssignment
+    # 3. ロールの割り当て（admin_userが存在する場合のみ）
+    if admin_user:
+        current_roles = user_service.get_user_roles(admin_user.id)
+        if "admin" not in current_roles:
+            # adminロールを取得
+            admin_role = db.query(Role).filter(Role.role_code == "admin").first()
+            if admin_role:
+                from app.presentation.schemas.system.users_schema import UserRoleAssignment
 
-            user_service.assign_roles(admin_user.id, UserRoleAssignment(role_ids=[admin_role.id]))
-            logger.info("ユーザー 'admin' に 'admin' ロールを割り当てました")
+                user_service.assign_roles(
+                    admin_user.id, UserRoleAssignment(role_ids=[admin_role.id])
+                )
+                logger.info("ユーザー 'admin' に 'admin' ロールを割り当てました")
 
     # 4. 一般ユーザーの作成（テスト用）
+    # 明示的にトランザクションを区切るか検討したが、呼び出し元でコミットするため不要
     general_user = user_service.get_by_username("user")
     if not general_user:
         try:

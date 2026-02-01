@@ -105,9 +105,9 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
+    command: "VITE_BACKEND_ORIGIN=http://localhost:18000 npm run dev -- --port 5174",
+    url: "http://localhost:5174",
+    reuseExistingServer: false,
     timeout: 120_000, // 2 minutes for server startup
   },
 });
