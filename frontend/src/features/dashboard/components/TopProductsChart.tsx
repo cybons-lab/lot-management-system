@@ -36,7 +36,8 @@ const TOOLTIP_STYLE = {
   fontSize: "12px",
 } as const;
 
-const formatTooltipValue = (value: number | string | Array<number | string>) =>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const formatTooltipValue = (value: any) =>
   [value?.toLocaleString("ja-JP") ?? "0", "在庫数"] as const;
 
 export function TopProductsChart() {
@@ -59,9 +60,10 @@ export function TopProductsChart() {
     }));
   }, [data]);
 
-  const handleBarClick = (data: { activePayload?: Array<{ payload: ChartData }> }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload.length > 0) {
-      const payload = data.activePayload[0].payload;
+      const payload = data.activePayload[0].payload as ChartData;
       navigate(`/inventory?product_group_id=${payload.id}`);
     }
   };

@@ -1,4 +1,3 @@
-/* eslint-disable */
 /* eslint-disable max-lines-per-function, complexity, max-lines */
 /**
  * SmartReadSettingsModal
@@ -97,6 +96,7 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
   const deleteMutation = useDeleteSmartReadConfig();
 
   const form = useForm<ConfigFormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(configFormSchema) as any,
     defaultValues: {
       name: "",
