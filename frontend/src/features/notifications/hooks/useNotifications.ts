@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "../api";
@@ -8,25 +8,11 @@ import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "../
 export function useNotifications() {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const notificationsEnabled = useMemo(() => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) return true;
-    try {
-      const resolvedUrl = new URL(baseUrl, window.location.origin);
-      if (resolvedUrl.hostname === "backend" && window.location.hostname !== "backend") {
-        return false;
-      }
-    } catch {
-      return true;
-    }
-    return true;
-  }, []);
 
-  // Initialize audio
-  useEffect(() => {
-    audioRef.current = new Audio("/sounds/notification.mp3"); // Ensure this file exists or use a default browser sound logic if preferred
-  }, []);
+  // 開発環境では常に有効、本番環境でもViteプロキシ経由なので有効
+  // Note: VITE_API_BASE_URLは本番ビルド時のみ使用される（静的ファイル配信時）
+  // 開発環境ではViteプロキシ（/api）を使用するため、常に接続可能
+  const notificationsEnabled = true;
 
   const { data: notifications = [], refetch: refetchNotifications } = useQuery({
     queryKey: ["notifications"],

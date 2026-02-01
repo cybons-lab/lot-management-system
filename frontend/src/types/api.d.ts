@@ -4716,7 +4716,14 @@ export interface paths {
     /** Get Notifications */
     get: operations["get_notifications_api_notifications__get"];
     put?: never;
-    post?: never;
+    /**
+     * Create Notification
+     * @description 通知を作成する.
+     *
+     *     Note: 通常はシステム内部で作成されるが、
+     *     テスト用やSmartReadテスト完了通知など、明示的に作成するケースもある。
+     */
+    post: operations["create_notification_api_notifications__post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -12279,6 +12286,22 @@ export interface components {
       all_supplier_ids: number[];
       /** Assigned Supplier Ids */
       assigned_supplier_ids?: number[] | null;
+    };
+    /** NotificationCreate */
+    NotificationCreate: {
+      /** Title */
+      title: string;
+      /** Message */
+      message: string;
+      /**
+       * Type
+       * @default info
+       */
+      type: string;
+      /** Link */
+      link?: string | null;
+      /** User Id */
+      user_id: number;
     };
     /** NotificationResponse */
     NotificationResponse: {
@@ -24719,6 +24742,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["NotificationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_notification_api_notifications__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["NotificationCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationResponse"];
         };
       };
       /** @description Validation Error */

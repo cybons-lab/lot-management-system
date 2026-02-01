@@ -21,12 +21,10 @@ interface ImportTabProps {
   selectedWatchFiles: string[];
   isPending: boolean;
   isDiagnosing: boolean;
-  canRunTest?: boolean;
   onToggleAll: () => void;
   toggleWatchFile: (f: string) => void;
   onProcessFiles: () => void;
   onDiagnose: () => void;
-  onStartTest?: () => void;
   onRefetch: () => void;
   onAnalyzeSuccess: () => void;
 }
@@ -38,12 +36,10 @@ export function SmartReadImportTab({
   selectedWatchFiles,
   isPending,
   isDiagnosing,
-  canRunTest,
   onToggleAll,
   toggleWatchFile,
   onProcessFiles,
   onDiagnose,
-  onStartTest,
   onRefetch,
   onAnalyzeSuccess,
 }: ImportTabProps) {
@@ -77,11 +73,6 @@ export function SmartReadImportTab({
             ) : !watchFiles || watchFiles.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-4 p-4 text-center text-sm text-gray-400">
                 <span>ファイルはありません</span>
-                {canRunTest && onStartTest && (
-                  <Button size="sm" variant="secondary" onClick={onStartTest}>
-                    管理者テスト（監視フォルダ）
-                  </Button>
-                )}
               </div>
             ) : (
               <>

@@ -23,8 +23,8 @@ import { PAD_RUN_STEP_ORDER } from "../utils/pad-run-steps";
 
 import { Button } from "@/components/ui";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui";
-import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/features/auth/AuthContext";
+import { createNotification } from "@/features/notifications/api";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -93,7 +93,7 @@ export function SmartReadPage() {
       logger.info("新しく処理が完了しました。結果一覧へ移動します。", {
         run_id: succeededRun.run_id,
       });
-      navigate(ROUTES.OCR_RESULTS.LIST);
+      navigate("/ocr-results");
     }
 
     prevRunsRef.current = padRuns.runs.filter((r) => r.status === "SUCCEEDED").map((r) => r.run_id);
@@ -201,6 +201,19 @@ export function SmartReadPage() {
       if (isDone && testIntervalRef.current) {
         window.clearInterval(testIntervalRef.current);
         testIntervalRef.current = null;
+
+        // テスト完了時に通知を送信
+        if (user?.id) {
+          createNotification({
+            user_id: user.id,
+            title: "SmartReadテスト完了",
+            message: "監視フォルダのテスト処理が完了しました（横持ち: 12件、縦持ち: 36件）",
+            type: "success",
+            link: "/rpa/smartread/tasks",
+          }).catch((error) => {
+            logger.error("通知の送信に失敗しました", error);
+          });
+        }
       }
     }, 1200);
   };
@@ -214,10 +227,17 @@ export function SmartReadPage() {
         title="AI-OCR PDFインポート"
         subtitle="AI-OCRを使用してPDFや画像を解析し、データを抽出します"
         actions={
-          <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
-            <Settings className="mr-2 h-4 w-4" />
-            設定
-          </Button>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Button variant="secondary" onClick={startWatchFolderTest}>
+                管理者テスト（監視フォルダ）
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
+              <Settings className="mr-2 h-4 w-4" />
+              設定
+            </Button>
+          </div>
         }
       />
 
@@ -252,12 +272,10 @@ export function SmartReadPage() {
             selectedWatchFiles={selectedWatchFiles}
             isPending={startPadRunMutation.isPending}
             isDiagnosing={isDiagnosing}
-            canRunTest={isAdmin}
             onToggleAll={onToggleAll}
             toggleWatchFile={toggleWatchFile}
             onProcessFiles={onProcessFiles}
             onDiagnose={handleDiagnoseWatchFile}
-            onStartTest={isAdmin ? startWatchFolderTest : undefined}
             onRefetch={refetchWatchFiles}
             onAnalyzeSuccess={handleAnalyzeSuccess}
           />

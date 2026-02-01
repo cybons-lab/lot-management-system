@@ -5,7 +5,11 @@ from app.application.services.notification_service import NotificationService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.routes.auth.auth_router import get_current_user
-from app.presentation.schemas.notification_schema import NotificationResponse, UnreadCountResponse
+from app.presentation.schemas.notification_schema import (
+    NotificationCreate,
+    NotificationResponse,
+    UnreadCountResponse,
+)
 
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
@@ -53,3 +57,25 @@ def mark_all_as_read(
 ):
     service.mark_all_as_read(current_user.id)
     return UnreadCountResponse(count=0)
+
+
+@router.post("/", response_model=NotificationResponse, status_code=201)
+def create_notification(
+    notification_data: NotificationCreate,
+    current_user: User = Depends(get_current_user),
+    service: NotificationService = Depends(get_service),
+):
+    """通知を作成する.
+
+    Note: 通常はシステム内部で作成されるが、
+    テスト用やSmartReadテスト完了通知など、明示的に作成するケースもある。
+    """
+    # 他のユーザーへの通知作成を防ぐ（admin権限がない限り）
+    if notification_data.user_id != current_user.id:
+        # admin権限チェック（将来的に実装）
+        # 現時点では自分宛のみ作成可能
+        if "admin" not in getattr(current_user, "roles", []):
+            raise HTTPException(status_code=403, detail="他のユーザーへの通知は作成できません")
+
+    notification = service.create_notification(notification_data)
+    return notification
