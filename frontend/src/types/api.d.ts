@@ -4889,32 +4889,11 @@ export interface paths {
     put?: never;
     /**
      * Generate Test Data Endpoint
-     * @description Generate test data in background.
+     * @description Generate test data synchronously for E2E tests.
      *
-     *     Returns a job_id to track progress.
      *     WARNING: This will DELETE all existing data in related tables.
      */
     post: operations["generate_test_data_endpoint_api_admin_test_data_generate_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/test-data/progress/{job_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Progress
-     * @description Get generation progress.
-     */
-    get: operations["get_progress_api_admin_test_data_progress__job_id__get"];
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -24713,37 +24692,6 @@ export interface operations {
         "application/json": components["schemas"]["GenerateRequest"] | null;
       };
     };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_progress_api_admin_test_data_progress__job_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        job_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
     responses: {
       /** @description Successful Response */
       200: {
