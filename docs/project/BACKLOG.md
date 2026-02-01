@@ -44,26 +44,6 @@
 
 ---
 
-### 1-2. 未実装 API エンドポイント
-
-以下のPOSTエンドポイントはテストコード（`tests/error_scenarios/`）に記載がありますが、まだ実装されていません。
-
-**優先度: 中**
-
-| エンドポイント | 説明 | 関連テスト |
-|---------------|------|-----------|
-| `POST /api/roles/` | ロール作成API | `test_constraints.py::test_duplicate_role_code` |
-| `POST /api/orders/` | 受注作成API | `test_validation_errors.py::test_create_order_validation_error` |
-| `POST /api/inbound-plans/` | 入荷計画作成API | `test_validation_errors.py::test_create_inbound_plan_validation_error` |
-| `POST /api/adjustments/` | 在庫調整作成API | `test_validation_errors.py::test_create_adjustment_validation_error` |
-
-> **Note**: これらのテストは現在 `@pytest.mark.skip` でスキップされています。
-> 実装完了後、スキップマーカーを削除してテストを有効化してください。
-
-**元:** `TODO.md` (2026-01-10)
-
----
-
 
 
 ## 2. 優先度: 中 (UI/UX・不整合修正)
@@ -91,16 +71,7 @@
 
 ---
 
-### 2-7. アーカイブ済みロットの表示バグ
-
-**症状**: 在庫ロット一覧で「アーカイブ済みを表示」にチェックを入れても、アーカイブ済みロットが表示されない（または期待通りに機能しない）。
-**タスク**: フィルタリングロジック（バックエンド/フロントエンド）の調査と修正。
-
-**関連:** `next_reviews_ja.md::2`
-
----
-
-### 2-8. ライブラリのメジャーアップデート対応
+### 2-7. ライブラリのメジャーアップデート対応
 
 **優先度**: 中
 **作成**: 2026-01-31
@@ -120,21 +91,11 @@
 3. 既存機能（特にデータ分析、WebSocket通信）の回帰テスト実施。
 4. 問題なければ本番環境へ適用。
 
----
 **元:** `backlog.md::8-2` (2026-01-18) & `next_reviews_ja.md` (日付なし)
 
 ---
 
-### 2-8. フロントエンド・コンソールエラー
-
-**症状**: React Key重複エラー（"Encountered two children with the same key"）などがコンソールに出力されている。
-**タスク**: リストレンダリング時のkey生成ロジック修正。
-
-**元:** `backlog.md::8-3` (2026-01-18)
-
----
-
-### 2-9. 在庫詳細の仕入先固定
+### 2-8. 在庫詳細の仕入先固定
 
 **要望**: 在庫詳細画面において、仕入先が固定（または明確化）されるべき。
 **タスク**: 製品×倉庫のコンテキストにおける仕入先特定ロジックの実装とUI反映。
@@ -143,7 +104,7 @@
 
 ---
 
-### 2-10. SmartRead OCR処理完了通知機能
+### 2-9. SmartRead OCR処理完了通知機能
 
 **優先度**: Medium
 **難易度**: Medium
@@ -214,7 +175,7 @@
 
 ---
 
-### 2-11. SmartRead: ファイルアップロードとフォルダ監視の処理統一
+### 2-10. SmartRead: ファイルアップロードとフォルダ監視の処理統一
 
 **優先度**: Medium
 **難易度**: Medium
@@ -339,7 +300,7 @@ async def start_pad_run_from_upload(
 
 ---
 
-### 2-14. テストデータの拡充（SAP仕入先・数量単位）
+### 2-12. テストデータの拡充（SAP仕入先・数量単位）
 
 **優先度**: Medium
 **作成**: 2026-02-01
@@ -1049,23 +1010,6 @@ CLAUDE.md で推奨される300行を大幅に超えるファイルが存在。
 3. フィールドを追加すべきなら追加
 
 ---
-
-### 9-13. セキュリティ: db_browser_router の権限チェック
-
-**優先度**: High
-**作成**: 2026-01-26
-
-**背景:**
-`/api/debug/db-browser` エンドポイントが認可チェックなしでアクセス可能。
-本番環境で有効化されると重大なセキュリティリスク。
-
-**対象:**
-- `backend/app/presentation/api/routes/debug/db_browser_router.py`
-
-**対応:**
-1. `settings.ENVIRONMENT == "development"` チェックを追加
-2. または管理者ロール（`is_admin`）のみアクセス可能に
-3. 本番デプロイ時にはルーター自体を無効化
 
 ---
 

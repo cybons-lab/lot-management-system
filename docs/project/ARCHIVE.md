@@ -145,3 +145,39 @@
 - **AdjustmentsListPageのリセットボタン**: `onReset` ハンドラが実装済みであることを確認。
 - **Toast通知追加**: `useWarehouseMutations`, `useDeliveryPlaces`, `useCustomerItemsPage` (ProductMapping) 全て実装済みを確認。
 - **ProductDetailPageのリダイレクト**: 対象ファイルが存在しないためスキップ（古いタスク）。
+
+### アーカイブ済みロットの表示バグ ✅ 対応済み
+**完了**: 2026-02-01 (commit 9f765b55)
+**カテゴリ**: バグ修正
+**対応内容**:
+- v2 search API (`/api/v2/lot/search`) に `include_archived` パラメータを追加。
+- フロントエンドの `LotSearchPanel` で「アーカイブ済みを表示」チェックボックスが正しく機能するように対応。
+- バックエンド: `backend/app/presentation/api/v2/lot/router.py`
+- フロントエンド: `frontend/src/features/inventory/api.ts`, `frontend/src/features/inventory/components/LotSearchPanel.tsx`
+
+### フロントエンド・コンソールエラー ✅ 部分的に対応済み
+**完了**: 2026-02-01
+**カテゴリ**: コード品質
+**対応内容**:
+- TypeScript strict mode の導入により、多くの型エラーが解消。
+- React Key重複エラーについては、主要コンポーネントで修正済み。
+- 残存するエラーは個別対応が必要（低優先度）。
+
+### 未実装 API エンドポイント ✅ 実装済み確認
+**完了**: 2026-02-01
+**カテゴリ**: API実装
+**対応内容**:
+- `POST /api/roles/` - 実装済み (`backend/app/presentation/api/routes/admin/roles_router.py:56`)
+- `POST /api/orders/` - 実装済み (`backend/app/presentation/api/routes/orders/orders_router.py:275`)
+- `POST /api/inbound-plans/` - 実装確認（未検証）
+- `POST /api/adjustments/` - 実装確認（未検証）
+- バックログのタスク1-2は古い情報であることを確認。
+
+### セキュリティ: db_browser_router の権限チェック ✅ 実装済み確認
+**完了**: 2026-02-01
+**カテゴリ**: セキュリティ
+**対応内容**:
+- 全エンドポイントで `Depends(get_current_admin)` による管理者認証チェックが実装済み。
+- `_ensure_enabled()` 関数によるシステム設定ベースの有効/無効制御が実装済み。
+- バックログのタスク9-13は既に対応済みであることを確認。
+- ファイル: `backend/app/presentation/api/routes/debug/db_browser_router.py`
