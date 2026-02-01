@@ -260,7 +260,11 @@ class AdjustmentBase(BaseSchema):
 
 
 class AdjustmentCreate(AdjustmentBase):
-    """Payload for recording adjustments."""
+    """Payload for recording adjustments.
+
+    Inherits all fields from AdjustmentBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

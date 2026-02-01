@@ -26,7 +26,11 @@ class WarehouseDeliveryRouteBase(BaseModel):
 
 
 class WarehouseDeliveryRouteCreate(WarehouseDeliveryRouteBase):
-    """Create warehouse delivery route request."""
+    """Create warehouse delivery route request.
+
+    Inherits all fields from WarehouseDeliveryRouteBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 
@@ -58,7 +62,11 @@ class WarehouseDeliveryRouteResponse(WarehouseDeliveryRouteBase):
 
 
 class WarehouseDeliveryRouteBulkRow(WarehouseDeliveryRouteBase):
-    """Single row for bulk upsert."""
+    """Single row for bulk upsert.
+
+    Inherits all fields from WarehouseDeliveryRouteBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

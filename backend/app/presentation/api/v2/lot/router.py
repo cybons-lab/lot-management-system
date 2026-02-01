@@ -112,6 +112,10 @@ async def search_lots(
     expiry_from: date | None = Query(None, description="Filter by Expiry Date (From)"),
     expiry_to: date | None = Query(None, description="Filter by Expiry Date (To)"),
     status: str | None = Query(None, description="Filter by Status"),
+    with_stock: bool = Query(
+        True,
+        description="Filter to lots with available quantity only when true",
+    ),
     db: Session = Depends(get_db),
 ):
     """Search lots with pagination and filtering."""
@@ -128,6 +132,7 @@ async def search_lots(
         expiry_from=expiry_from,
         expiry_to=expiry_to,
         status=status,
+        with_stock=with_stock,
     )
     return result
 

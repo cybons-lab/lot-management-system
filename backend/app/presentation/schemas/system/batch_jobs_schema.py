@@ -22,7 +22,11 @@ class BatchJobBase(BaseModel):
 
 
 class BatchJobCreate(BatchJobBase):
-    """バッチジョブ作成スキーマ."""
+    """バッチジョブ作成スキーマ.
+
+    Inherits all fields from BatchJobBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

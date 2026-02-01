@@ -38,7 +38,11 @@ class ShippingMasterCuratedBase(BaseModel):
 
 
 class ShippingMasterCuratedCreate(ShippingMasterCuratedBase):
-    """出荷用マスタ新規作成リクエスト."""
+    """出荷用マスタ新規作成リクエスト.
+
+    Inherits all fields from ShippingMasterCuratedBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

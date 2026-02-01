@@ -30,7 +30,11 @@ class CustomerItemBase(BaseSchema):
 
 
 class CustomerItemCreate(CustomerItemBase):
-    """Schema for creating a customer item mapping."""
+    """Schema for creating a customer item mapping.
+
+    Inherits all fields from CustomerItemBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

@@ -30,7 +30,11 @@ class ExpectedLotBase(BaseSchema):
 
 
 class ExpectedLotCreate(ExpectedLotBase):
-    """Payload for creating expected lots."""
+    """Payload for creating expected lots.
+
+    Inherits all fields from ExpectedLotBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

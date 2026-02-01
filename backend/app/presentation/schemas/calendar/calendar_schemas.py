@@ -17,7 +17,11 @@ class HolidayCalendarBase(BaseSchema):
 
 
 class HolidayCalendarCreate(HolidayCalendarBase):
-    """Create request for holiday calendar."""
+    """Create request for holiday calendar.
+
+    Inherits all fields from HolidayCalendarBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 
@@ -46,7 +50,11 @@ class CompanyCalendarBase(BaseSchema):
 
 
 class CompanyCalendarCreate(CompanyCalendarBase):
-    """Create request for company calendar."""
+    """Create request for company calendar.
+
+    Inherits all fields from CompanyCalendarBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 
@@ -75,7 +83,11 @@ class OriginalDeliveryCalendarBase(BaseSchema):
 
 
 class OriginalDeliveryCalendarCreate(OriginalDeliveryCalendarBase):
-    """Create request for original delivery calendar."""
+    """Create request for original delivery calendar.
+
+    Inherits all fields from OriginalDeliveryCalendarBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

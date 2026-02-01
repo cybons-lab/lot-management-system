@@ -17,6 +17,7 @@ import { getLotStatuses } from "@/shared/utils/status";
 
 type LotData = NonNullable<ReturnType<typeof useLot>["data"]>;
 
+/* eslint-disable complexity */
 function LotBasicInfo({ lot }: { lot: LotData }) {
   const statuses = getLotStatuses(lot);
 
@@ -74,6 +75,24 @@ function LotBasicInfo({ lot }: { lot: LotData }) {
           <div className="mt-1">
             {lot.expiry_date ? format(new Date(lot.expiry_date), "yyyy/MM/dd") : "-"}
           </div>
+        </div>
+        <div>
+          <div className="text-sm font-medium text-gray-500">検査ステータス</div>
+          <div className="mt-1">{lot.inspection_status ?? "-"}</div>
+        </div>
+        <div>
+          <div className="text-sm font-medium text-gray-500">検査日</div>
+          <div className="mt-1">
+            {lot.inspection_date ? format(new Date(lot.inspection_date), "yyyy/MM/dd") : "-"}
+          </div>
+        </div>
+        <div>
+          <div className="text-sm font-medium text-gray-500">成績書番号</div>
+          <div className="mt-1">{lot.inspection_cert_number ?? "-"}</div>
+        </div>
+        <div>
+          <div className="text-sm font-medium text-gray-500">参照情報</div>
+          <div className="mt-1">{lot.origin_reference ?? "-"}</div>
         </div>
       </div>
     </div>
