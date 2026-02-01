@@ -2,7 +2,7 @@
  * WarehouseForm - 倉庫新規登録/編集フォーム
  */
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { z } from "zod";
 
 import type { Warehouse } from "../api";
@@ -52,8 +52,7 @@ export function WarehouseForm({
     setValue,
     watch,
   } = useForm<WarehouseFormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(warehouseFormSchema) as any,
+    resolver: zodResolver(warehouseFormSchema) as Resolver<WarehouseFormData>,
     defaultValues: {
       warehouse_code: warehouse?.warehouse_code ?? "",
       warehouse_name: warehouse?.warehouse_name ?? "",

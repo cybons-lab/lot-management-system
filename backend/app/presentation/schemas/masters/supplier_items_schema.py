@@ -37,7 +37,11 @@ class SupplierItemBase(BaseModel):
 
 
 class SupplierItemCreate(SupplierItemBase):
-    """Payload to create a supplier item."""
+    """Payload to create a supplier item.
+
+    Inherits all fields from SupplierItemBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

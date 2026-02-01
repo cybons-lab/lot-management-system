@@ -140,7 +140,11 @@ class OrderLineBase(BaseSchema):
 
 
 class OrderLineCreate(OrderLineBase):
-    """Create order line request."""
+    """Create order line request.
+
+    Inherits all fields from OrderLineBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

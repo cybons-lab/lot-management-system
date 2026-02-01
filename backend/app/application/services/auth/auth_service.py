@@ -114,11 +114,10 @@
 """
 
 from datetime import UTC, datetime, timedelta
-from typing import cast
 
+import jwt  # PyJWT
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from app.application.services.auth.user_service import UserService
@@ -161,8 +160,9 @@ class AuthService:
         else:
             expire = datetime.now(UTC) + timedelta(minutes=15)
         to_encode.update({"exp": expire})
+        # Use PyJWT consistently
         encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-        return cast(str, encoded_jwt)
+        return str(encoded_jwt)
 
     @staticmethod
     def get_current_user(
@@ -175,54 +175,58 @@ class AuthService:
             headers={"WWW-Authenticate": "Bearer"},
         )
         try:
+            # Use PyJWT
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-            # Prefer "username" field if present, otherwise fall back to "sub"
-            username: str | None = payload.get("username") or payload.get("sub")
-            if username is None:
-                raise credentials_exception
-        except JWTError:
-            raise credentials_exception
 
-        user_service = UserService(db)
-        user = user_service.get_by_username(username=username)
-        if user is None:
+            # Implementation alignment:
+            # 1. Try "sub" as user ID (current standard in auth_router)
+            # 2. Fallback to "username" or "sub" as username (legacy)
+            user_id = payload.get("sub")
+            username = payload.get("username")
+
+            user: User | None = None
+            user_service = UserService(db)
+
+            if user_id and str(user_id).isdigit():
+                user = user_service.get_by_id(int(user_id), raise_404=False)
+
+            if user is None and (username or user_id):
+                target_username = username or str(user_id)
+                user = user_service.get_by_username(username=target_username)
+
+            if user is None:
+                raise credentials_exception
+            return user
+
+        except (jwt.PyJWTError, ValueError):
             raise credentials_exception
-        return user
 
     @staticmethod
     def get_current_user_optional(
         token: str | None = Depends(optional_oauth2_scheme), db: Session = Depends(get_db)
     ) -> User | None:
-        """Get the current user if authenticated, otherwise return None.
-
-        This allows optional authentication - endpoints can work both
-        for authenticated and unauthenticated users.
-
-        Use case:
-        - Display personalized content for logged-in users
-        - Prioritize user's assigned suppliers in list views
-        - Allow access to all users but enhance experience for authenticated ones
-
-        Args:
-            token: JWT token from Authorization header (optional)
-            db: Database session
-
-        Returns:
-            User object if authenticated and valid, None otherwise
-        """
+        """Get the current user if authenticated, otherwise return None."""
         if not token:
             return None
 
         try:
+            # Use PyJWT
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-            # Prefer "username" field if present, otherwise fall back to "sub"
-            username: str | None = payload.get("username") or payload.get("sub")
-            if username is None:
-                return None
-        except JWTError:
-            return None
 
-        user_service = UserService(db)
-        # username is guaranteed to be str after the None check above
-        user = user_service.get_by_username(username=username)
-        return user
+            user_id = payload.get("sub")
+            username = payload.get("username")
+
+            user: User | None = None
+            user_service = UserService(db)
+
+            if user_id and str(user_id).isdigit():
+                user = user_service.get_by_id(int(user_id), raise_404=False)
+
+            if user is None and (username or user_id):
+                target_username = username or str(user_id)
+                user = user_service.get_by_username(username=target_username)
+
+            return user
+
+        except (jwt.PyJWTError, ValueError):
+            return None

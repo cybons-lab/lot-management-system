@@ -90,6 +90,31 @@
 **対応内容**:
 - `TopProductsChart`, `WarehouseDistributionChart` の `any` 型を削減し、ランタイムチェックを追加。
 - `SmartReadSettingsModal`, `WarehouseForm` の `zodResolver` 型エラーを `eslint-disable` で抑制（ビルド安定化のため）。
+- BACKLOG 2-12「Chart Event Handlersに適切な型を定義」を本対応で完了扱いに移行。
+
+### 在庫一覧ページネーションの「総件数」対応 ✅ 対応済み
+**完了**: 2026-02-01
+**カテゴリ**: UI改善
+**対応内容**:
+- 在庫一覧のページネーションで総件数が表示できる状態になっていることを確認。
+
+### 在庫管理トップのフィルタ仕様の調査・改善 ✅ 対応済み
+**完了**: 2026-02-01
+**カテゴリ**: UX改善
+**対応内容**:
+- 在庫管理トップのフィルタ連動が改善済みであることを確認。
+
+### Lots のステータス系フィールドがUI未表示 ✅ 対応済み
+**完了**: 2026-02-01
+**カテゴリ**: UI改善
+**対応内容**:
+- 在庫一覧・ロット詳細で `inspection_status`/`inspection_date`/`inspection_cert_number`/`origin_reference` を表示対応。
+
+### 日付ユーティリティの統合 ✅ 対応済み
+**完了**: 2026-02-01
+**カテゴリ**: リファクタリング
+**対応内容**:
+- `shared/utils/date.ts` に統合されており、重複ファイルが存在しないことを確認。
 
 ---
 
@@ -120,3 +145,132 @@
 - **AdjustmentsListPageのリセットボタン**: `onReset` ハンドラが実装済みであることを確認。
 - **Toast通知追加**: `useWarehouseMutations`, `useDeliveryPlaces`, `useCustomerItemsPage` (ProductMapping) 全て実装済みを確認。
 - **ProductDetailPageのリダイレクト**: 対象ファイルが存在しないためスキップ（古いタスク）。
+
+### アーカイブ済みロットの表示バグ ✅ 対応済み
+**完了**: 2026-02-01 (commit 9f765b55)
+**カテゴリ**: バグ修正
+**対応内容**:
+- v2 search API (`/api/v2/lot/search`) に `include_archived` パラメータを追加。
+- フロントエンドの `LotSearchPanel` で「アーカイブ済みを表示」チェックボックスが正しく機能するように対応。
+- バックエンド: `backend/app/presentation/api/v2/lot/router.py`
+- フロントエンド: `frontend/src/features/inventory/api.ts`, `frontend/src/features/inventory/components/LotSearchPanel.tsx`
+
+### フロントエンド・コンソールエラー ✅ 部分的に対応済み
+**完了**: 2026-02-01
+**カテゴリ**: コード品質
+**対応内容**:
+- TypeScript strict mode の導入により、多くの型エラーが解消。
+- React Key重複エラーについては、主要コンポーネントで修正済み。
+- 残存するエラーは個別対応が必要（低優先度）。
+
+### 未実装 API エンドポイント ✅ 実装済み確認
+**完了**: 2026-02-01
+**カテゴリ**: API実装
+**対応内容**:
+- `POST /api/roles/` - 実装済み (`backend/app/presentation/api/routes/admin/roles_router.py:56`)
+- `POST /api/orders/` - 実装済み (`backend/app/presentation/api/routes/orders/orders_router.py:275`)
+- `POST /api/inbound-plans/` - 実装確認（未検証）
+- `POST /api/adjustments/` - 実装確認（未検証）
+- バックログのタスク1-2は古い情報であることを確認。
+
+### セキュリティ: db_browser_router の権限チェック ✅ 実装済み確認
+**完了**: 2026-02-01
+**カテゴリ**: セキュリティ
+**対応内容**:
+- 全エンドポイントで `Depends(get_current_admin)` による管理者認証チェックが実装済み。
+- `_ensure_enabled()` 関数によるシステム設定ベースの有効/無効制御が実装済み。
+- バックログのタスク9-13は既に対応済みであることを確認。
+- ファイル: `backend/app/presentation/api/routes/debug/db_browser_router.py`
+
+---
+
+## 2026-02-01 完了タスク (バックログ整理)
+
+### 2-11. データ再読み込みボタンの共通化 ✅ 対応済み
+**完了**: 2026-02-01
+**優先度**: Medium
+**カテゴリ**: UI/UX改善
+**対応内容**:
+- 共通コンポーネント `RefreshButton` を作成 (`frontend/src/components/ui/data/RefreshButton.tsx`)
+- React Query の `invalidateQueries` を使用したキャッシュ無効化
+- 以下のページに配置完了:
+  - ✅ OCR結果ページ (`OcrResultsListPage.tsx`)
+  - ✅ 在庫一覧ページ (`InventoryPage.tsx`)
+  - ✅ 受注一覧ページ (`OrdersPage.tsx`)
+  - ✅ 仕入先マスタページ (`SuppliersListPage.tsx`)
+  - ✅ 得意先マスタページ (`CustomersListPage.tsx`)
+- ユーザーがF5キーでページ全体をリロードする必要がなくなり、ログイン状態やフォーム入力が保持される。
+
+**コミット**: `50cf9d2d`
+
+### 2-12. テストデータの拡充（SAP仕入先・数量単位） ✅ 対応済み
+**完了**: 2026-02-01
+**優先度**: Medium
+**カテゴリ**: テストデータ品質
+**対応内容**:
+- `backend/app/application/services/test_data/sap.py` を更新
+  - `SapMaterialCache.raw_data` に `ZLIFNR_H` (SAP仕入先コード) を追加
+  - `SapMaterialCache.raw_data` に `MEINS` (数量単位) を追加
+  - Material code → (supplier_code, qty_unit) のマッピングを実装
+    - M001 → S001, KG
+    - M002 → S002, PC
+    - M003 → S001, M
+    - M004 → S002, KG
+    - M005 → S999, EA (fallback)
+- OCR結果テーブルでSAP仕入先・数量単位フィールドが表示され、UI検証が可能になった。
+
+**コミット**: `50cf9d2d`
+
+### 3-2. Orders の一部フィールドがUI未表示 ✅ 対応済み
+**完了**: 2026-02-01
+**優先度**: Medium
+**カテゴリ**: UI改善
+**対応内容**:
+- `frontend/src/features/orders/pages/OrderDetailPage.tsx` を更新
+- `shipping_document_text` を注文明細テーブルの商品名・コード下に表示
+- その他フィールド確認結果:
+  - `ocr_source_filename` → 既に表示済み確認
+  - `cancel_reason` → 既に表示済み確認
+  - `external_product_code` → `customer_part_no` に改名済み（該当なし）
+
+**コミット**: `6af69108`
+
+### 4-5. フロントエンド: Zod Resolverの型問題を解決 ✅ 対応済み
+**完了**: 2026-02-01
+**優先度**: Medium (any型削減 Phase 2)
+**カテゴリ**: コード品質・型安全性
+**対応内容**:
+- 5ファイルで `zodResolver(...) as any` を `Resolver<FormDataType>` 型に修正
+- 対象ファイル:
+  - `features/warehouses/components/WarehouseForm.tsx`
+  - `features/rpa/smartread/components/SmartReadSettingsModal.tsx`
+  - `features/uom-conversions/components/UomConversionForm.tsx`
+  - `features/warehouse-delivery-routes/components/WarehouseDeliveryRouteForm.tsx`
+  - `features/delivery-places/components/DeliveryPlaceForm.tsx`
+- TypeScript の型安全性が向上し、潜在的なバグリスクが低減。
+- TypeScript型チェック: ✅ 0エラー
+- ESLint: ✅ 0警告
+
+**コミット**: `55e10c6d`
+
+### 9-12. 空の Schema クラス (pass only) の整理 ✅ 対応済み
+**完了**: 2026-02-01
+**優先度**: Low
+**カテゴリ**: コード品質・可読性
+**対応内容**:
+- 28個の空クラス（`pass`のみ）に説明的なdocstringを追加
+- 継承のみが目的であることを明示:
+  ```python
+  class ForecastCreate(ForecastBase):
+      """Payload for creating a new forecast entry.
+
+      Inherits all fields from ForecastBase without additional fields.
+      Exists for type distinction and API schema generation.
+      """
+      pass
+  ```
+- 20ファイル更新、コードの意図が明確になった。
+- Ruff check/format: ✅ パス
+- Mypy: ✅ パス
+
+**コミット**: `67f5d7bb`

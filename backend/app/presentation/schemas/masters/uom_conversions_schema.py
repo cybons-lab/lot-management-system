@@ -18,7 +18,11 @@ class UomConversionBase(BaseSchema):
 
 
 class UomConversionCreate(UomConversionBase):
-    """Schema for creating a UOM conversion."""
+    """Schema for creating a UOM conversion.
+
+    Inherits all fields from UomConversionBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

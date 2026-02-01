@@ -209,6 +209,20 @@ function logApiErrorDev(
 }
 
 /**
+ * Log 401 error details for debugging
+ */
+function log401Error(request: Request, error: HTTPError, body: unknown): void {
+  console.error("[HTTP] 401 Unauthorized Error", {
+    url: request?.url,
+    method: request?.method,
+    message: error.message,
+    body,
+    hasAuthHeader: request?.headers.has("Authorization"),
+    authHeaderPrefix: request?.headers.get("Authorization")?.substring(0, 20) + "...",
+  });
+}
+
+/**
  * Handle API errors (with response)
  */
 async function handleApiError(
@@ -228,6 +242,7 @@ async function handleApiError(
 
   // Handle 401 Unauthorized - session expired or invalid token
   if (status === 401) {
+    log401Error(request, error, body);
     handleUnauthorizedError(request, error.message);
   }
   if (status === 403) {
@@ -307,6 +322,17 @@ function createApiClient(authMode: AuthMode): KyInstance {
           if (authMode === "auth") {
             const token = ensureAuthToken();
             request.headers.set("Authorization", `Bearer ${token}`);
+
+            // DEBUG: Log token for archive requests
+            if (request.url.includes("/archive")) {
+              console.log("[HTTP] Archive request", {
+                url: request.url,
+                method: request.method,
+                hasToken: !!token,
+                tokenPrefix: token ? token.substring(0, 20) + "..." : "none",
+                authMode,
+              });
+            }
           }
           request.headers.set("X-Request-ID", createRequestId());
           // Note: Request logging removed to reduce console noise

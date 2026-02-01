@@ -27,7 +27,11 @@ class AllocationSuggestionBase(BaseModel):
 
 
 class AllocationSuggestionCreate(AllocationSuggestionBase):
-    """引当推奨作成スキーマ."""
+    """引当推奨作成スキーマ.
+
+    Inherits all fields from AllocationSuggestionBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

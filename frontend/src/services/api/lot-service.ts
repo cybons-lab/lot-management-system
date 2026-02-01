@@ -90,9 +90,29 @@ export async function unlockLot(id: number, quantity?: number): Promise<LotRespo
  * @param lotNumber 確認用ロット番号（在庫がある場合は必須）
  */
 export async function archiveLot(id: number, lotNumber?: string): Promise<LotResponse> {
-  return http.patch<LotResponse>(`${BASE_PATH}/${id}/archive`, {
-    lot_number: lotNumber,
+  console.log("[ArchiveLot] Sending archive request", {
+    id,
+    lotNumber,
+    url: `${BASE_PATH}/${id}/archive`,
+    timestamp: new Date().toISOString(),
   });
+
+  try {
+    const response = await http.patch<LotResponse>(`${BASE_PATH}/${id}/archive`, {
+      lot_number: lotNumber,
+    });
+    console.log("[ArchiveLot] Archive successful", { id, response });
+    return response;
+  } catch (error) {
+    console.error("[ArchiveLot] Archive failed", {
+      id,
+      lotNumber,
+      error,
+      errorType: error?.constructor?.name,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 }
 
 export type StockMovementType = "inbound" | "allocation" | "shipment" | "adjustment" | "return";

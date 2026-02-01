@@ -162,6 +162,7 @@ npm run build
 - [ ] 解凍してファイルを配置した
 - [ ] Python 仮想環境をセットアップした (`pip install -r requirements.txt`)
 - [ ] 環境変数が正しく読み込まれている (`python check_env.py`)
+- [ ] `SECRET_KEY` が正しく設定されている (401エラー防止のため)
 - [ ] バックエンドを再起動した
 - [ ] `curl http://localhost:8000/api/health` が成功する
 - [ ] ブラウザで外部からアクセスできる

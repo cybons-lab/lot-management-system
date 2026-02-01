@@ -17,7 +17,11 @@ class ProductSupplierBase(BaseModel):
 
 
 class ProductSupplierCreate(ProductSupplierBase):
-    """Payload to create a product-supplier relationship."""
+    """Payload to create a product-supplier relationship.
+
+    Inherits all fields from ProductSupplierBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

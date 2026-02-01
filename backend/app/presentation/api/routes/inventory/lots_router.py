@@ -130,6 +130,7 @@
     - パフォーマンス最適化（読み取り専用は軽量）
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
@@ -139,12 +140,11 @@ from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.application.services.assignments.assignment_service import UserSupplierAssignmentService
-from app.application.services.auth.auth_service import AuthService
 from app.application.services.common.export_service import ExportService
 from app.application.services.inventory.lot_service import LotService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.presentation.api.routes.auth.auth_router import get_current_user_optional
+from app.presentation.api.routes.auth.auth_router import get_current_user, get_current_user_optional
 from app.presentation.schemas.inventory.inventory_schema import (
     LotArchiveRequest,
     LotCreate,
@@ -157,6 +157,7 @@ from app.presentation.schemas.inventory.inventory_schema import (
 
 
 router = APIRouter(prefix="/lots", tags=["lots"])
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -391,7 +392,7 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
 def delete_lot(
     lot_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(AuthService.get_current_user),  # M-04 Fix: 認証必須
+    current_user: User = Depends(get_current_user),  # M-04 Fix: 認証必須
 ):
     """ロット削除 (無効化).
 
@@ -459,7 +460,7 @@ def archive_lot(
     request: LotArchiveRequest | None = None,
     db: Session = Depends(get_db),
     # Add permission check
-    current_user: User = Depends(AuthService.get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """Archive a lot with optional confirmation.
 
@@ -480,6 +481,15 @@ def archive_lot(
     Raises:
         HTTPException: ロット番号不一致または在庫があるのに確認なし
     """
+    logger.info(
+        "Lot archive request received",
+        extra={
+            "lot_id": lot_id,
+            "user_id": current_user.id,
+            "username": current_user.username,
+            "has_confirmation": request is not None and request.lot_number is not None,
+        },
+    )
     service = LotService(db)
     confirmation_lot_number = request.lot_number if request else None
     return service.archive_lot(lot_id, confirmation_lot_number)

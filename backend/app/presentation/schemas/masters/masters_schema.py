@@ -34,7 +34,11 @@ class WarehouseBase(BaseSchema):
 
 
 class WarehouseCreate(WarehouseBase):
-    """Create warehouse request."""
+    """Create warehouse request.
+
+    Inherits all fields from WarehouseBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 
@@ -90,7 +94,11 @@ class SupplierBase(BaseSchema):
 
 
 class SupplierCreate(SupplierBase):
-    """Create supplier request."""
+    """Create supplier request.
+
+    Inherits all fields from SupplierBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 
@@ -144,7 +152,11 @@ class CustomerBase(BaseSchema):
 
 
 class CustomerCreate(CustomerBase):
-    """Create customer request."""
+    """Create customer request.
+
+    Inherits all fields from CustomerBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 
@@ -200,7 +212,11 @@ class DeliveryPlaceBase(BaseSchema):
 
 
 class DeliveryPlaceCreate(DeliveryPlaceBase):
-    """Create delivery place request."""
+    """Create delivery place request.
+
+    Inherits all fields from DeliveryPlaceBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 
@@ -244,7 +260,11 @@ class ProductMappingBase(BaseSchema):
 
 
 class ProductMappingCreate(ProductMappingBase):
-    """Create product mapping request."""
+    """Create product mapping request.
+
+    Inherits all fields from ProductMappingBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 
@@ -333,7 +353,11 @@ class SupplierItemBase(BaseSchema):
 
 
 class SupplierItemCreate(SupplierItemBase):
-    """Create supplier item request."""
+    """Create supplier item request.
+
+    Inherits all fields from SupplierItemBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 
