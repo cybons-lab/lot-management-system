@@ -15,6 +15,7 @@
  */
 import { test, expect } from "@playwright/test";
 import { loginAs } from "../../fixtures/login-helper";
+import { ApiClient } from "../../fixtures/api-client";
 
 test.describe.configure({ mode: "serial" });
 
