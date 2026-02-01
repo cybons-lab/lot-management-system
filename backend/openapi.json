@@ -12926,7 +12926,7 @@
     "/api/admin/test-data/generate": {
       "post": {
         "summary": "Generate Test Data Endpoint",
-        "description": "Generate test data in background.\n\nReturns a job_id to track progress.\nWARNING: This will DELETE all existing data in related tables.",
+        "description": "Generate test data synchronously for E2E tests.\n\nWARNING: This will DELETE all existing data in related tables.",
         "operationId": "generate_test_data_endpoint_api_admin_test_data_generate_post",
         "requestBody": {
           "content": {
@@ -12945,44 +12945,6 @@
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/test-data/progress/{job_id}": {
-      "get": {
-        "summary": "Get Progress",
-        "description": "Get generation progress.",
-        "operationId": "get_progress_api_admin_test_data_progress__job_id__get",
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",

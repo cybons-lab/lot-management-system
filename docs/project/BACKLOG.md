@@ -26,9 +26,13 @@
 
 2. **socket hang up（2件）**
    - テスト: `e2e-04-permission.spec.ts` (smoke & chromium)
-   - 症状: `POST /api/auth/login` でsocket hang up
-   - 原因: Playwright固有の問題（curlでは成功）
-   - 対応: Playwrightのタイムアウト設定やkeep-alive設定を調査
+   - 症状: `/api/admin/stats` へのアクセスで socket hang up
+   - 原因: テスト名と実装の矛盾、Playwright固有の問題
+   - 詳細: [調査レポート](../investigation/e2e-socket-hang-up-investigation.md)
+   - 対応案:
+     - **短期**: テストを `/api/admin/metrics`（管理者専用）に変更
+     - **推奨**: `/api/admin/stats` を `/api/dashboard/stats` にリネーム後、テスト修正
+   - 理由: `/api/admin/stats` は公開エンドポイントだが、名前が管理者専用に見えて混乱を招く
 
 3. **ログイン401エラー（一部のテスト）**
    - テスト: e2e-03, e2e-04, e2e-05 (chromium)
