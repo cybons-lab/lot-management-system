@@ -73,7 +73,7 @@ test.describe("E2E-02: 保存永続化テスト", () => {
     // ===========================
     // Step 4: 保存 - APIリクエストを待つ（重要！）
     // ===========================
-    const saveButton = dialog.getByRole("button", { name: /保存|作成|登録/ });
+    const saveButton = dialog.getByRole("button", { name: /保存|作成|登録|更新/ });
 
     // 【重要】APIレスポンスを待つ
     const apiResponsePromise = page.waitForResponse(
@@ -193,7 +193,7 @@ test.describe("E2E-02: 保存永続化テスト", () => {
     // ===========================
     // Step 4: 保存 - APIリクエスト確認
     // ===========================
-    const saveButton = page.getByRole("button", { name: /保存|更新/ });
+    const saveButton = page.getByRole("button", { name: /保存|更新|作成|登録/ });
 
     const apiResponsePromise = page.waitForResponse(
       (response) =>

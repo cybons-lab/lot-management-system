@@ -27,7 +27,7 @@ export const api = {
    * ダッシュボード統計を取得
    * @returns ダッシュボード統計情報
    */
-  getDashboardStats: () => http.get<DashboardStats>("admin/stats"),
+  getDashboardStats: () => http.get<DashboardStats>("dashboard/stats"),
 
   /**
    * マスタ変更履歴を取得

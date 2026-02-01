@@ -15,7 +15,7 @@ export type ResetResponse = {
  * 認証トークンは httpAuth で統一付与されます（localStorage "token"）。
  */
 
-export const getStats = () => httpAuth.get<DashboardStats>("/admin/stats");
+export const getStats = () => httpAuth.get<DashboardStats>("/dashboard/stats");
 
 export const resetDatabase = () => httpAuth.post<ResetResponse>("/admin/reset-database");
 

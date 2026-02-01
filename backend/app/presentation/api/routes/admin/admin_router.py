@@ -5,8 +5,7 @@ from datetime import date
 from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, select, text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.application.services.auth.user_service import UserService
@@ -15,17 +14,9 @@ from app.core.config import settings
 from app.core.database import truncate_all_tables
 from app.infrastructure.persistence.models import (
     Customer,
-    LotReceipt,
-    Order,
-    OrderLine,
     Role,
     Supplier,
     Warehouse,
-)
-from app.infrastructure.persistence.models.lot_reservations_model import (
-    LotReservation,
-    ReservationSourceType,
-    ReservationStatus,
 )
 from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import (
@@ -33,7 +24,6 @@ from app.presentation.api.routes.auth.auth_router import (
     get_current_user_optional,
 )
 from app.presentation.schemas.admin.admin_schema import (
-    DashboardStatsResponse,
     FullSampleDataRequest,
 )
 from app.presentation.schemas.allocations.allocations_schema import CandidateLotsResponse
@@ -45,69 +35,9 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/stats", response_model=DashboardStatsResponse)
-def get_dashboard_stats(
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user_optional),  # Allow anonymous access for dashboard
-):
-    """ダッシュボード用の統計情報を返す.
-
-    在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock
-    ビューは使用しない（v2.2 以降は廃止）。
-    """
-    try:
-        # lots テーブルから直接在庫を集計
-        total_stock_result = db.execute(
-            select(
-                func.coalesce(
-                    func.sum(LotReceipt.received_quantity - LotReceipt.consumed_quantity), 0.0
-                )
-            )
-        )
-        total_stock = total_stock_result.scalar_one()
-    except SQLAlchemyError as e:
-        logger.warning("在庫集計に失敗したため 0 扱いにします: %s", e)
-        db.rollback()
-        total_stock = 0.0  # type: ignore[assignment]
-
-    total_orders = db.query(func.count(Order.id)).scalar() or 0
-
-    # P3: Use LotReservation instead of Allocation
-    unallocated_subquery = (
-        db.query(OrderLine.order_id)
-        .outerjoin(
-            LotReservation,
-            (LotReservation.source_type == ReservationSourceType.ORDER)
-            & (LotReservation.source_id == OrderLine.id)
-            & (LotReservation.status != ReservationStatus.RELEASED),
-        )
-        .group_by(OrderLine.id, OrderLine.order_id, OrderLine.order_quantity)
-        .having(
-            func.coalesce(func.sum(LotReservation.reserved_qty), 0)
-            < func.coalesce(OrderLine.order_quantity, 0)
-        )
-        .subquery()
-    )
-
-    unallocated_orders = (
-        db.query(func.count(func.distinct(unallocated_subquery.c.order_id))).scalar() or 0
-    )
-
-    # Calculate allocation rate
-    allocated_orders = total_orders - unallocated_orders
-    allocation_rate = (allocated_orders / total_orders * 100.0) if total_orders > 0 else 0.0
-
-    return DashboardStatsResponse(
-        total_stock=float(total_stock),
-        total_orders=int(total_orders),
-        unallocated_orders=int(unallocated_orders),
-        allocation_rate=round(allocation_rate, 1),
-    )
-
-
 @router.post("/reset-database", response_model=ResponseBase)
 def reset_database(
-    db: Session = Depends(get_db),
+    # db: Session = Depends(get_db),  # Remove dependency to avoid "OperationalError" during cleanup
     current_admin=Depends(get_current_admin),  # Only admin can reset database
 ):
     """データベースリセット（開発環境のみ）.
@@ -122,15 +52,15 @@ def reset_database(
         )
 
     try:
-        # 既存のセッションをクローズして、truncate_all_tablesが新しい接続を使えるようにする
-        # これにより pg_terminate_backend が正しく動作する
-        db.close()
+        # トランザクションロックを回避するため、リクエストスコープのDBセッションは使用しない
+        # db.close() も不要（Dependsで作っていないため）
 
         # データのみを削除（テーブル構造は保持）
         # db=None を渡すことで、truncate_all_tables内で新しいエンジン接続を使用
         truncate_all_tables(db=None)
 
         # 新しいセッションを作成して初期データを投入
+
         from app.core.database import SessionLocal
 
         new_db = SessionLocal()

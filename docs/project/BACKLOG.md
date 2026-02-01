@@ -12,39 +12,41 @@
 
 ## 1. 優先度: 高 (即時対応)
 
-### 1-1. E2Eテスト残存問題の修正
+### 1-1. E2Eテスト残存問題・不安定性
 
-**現状:** P0テスト 28/36パス（78%）達成。主要な問題は解決済み。
+**現状:** P0テストの信頼性が向上（`e2e-04` socket hang up解消、`reset-database`復元）。直列実行(`--workers=1`)では安定してパスするが、並列実行時にDBリセット起因のエラーが多発する。
 
-**残存問題（4件）:**
+**残存問題（3件）:**
 
-1. **ダイアログクローズタイミング（2件）**
-   - テスト: `e2e-02-save-persistence.spec.ts` (smoke & chromium)
-   - 症状: 保存後のダイアログが10秒以内に閉じない
-   - 原因: UI実装の問題（自動クローズ処理が遅い）
-   - 対応: フロントエンドのダイアログクローズ処理を改善
+1. **DBリセットの並列実行競合 (Critical)**
+   - 症状: `npx playwright test` (デフォルト並列) で実行すると、`reset-database` エンドポイントが `500 OperationalError` で失敗する。
+   - 原因: `backend/app/core/database.py` の `truncate_all_tables` 内にある `pg_terminate_backend` が、並列実行中の他テストのDB接続も強制切断してしまうため。
+   - **暫定対応**: `--workers=1` (直列実行) を推奨。
+   - **恒久対応案**:
+     - A案: テスト並列実行をやめ、常に直列で実行する（最も安全・低コスト）。
+     - B案: テストごとに異なるスキーマ/DBを使用する（実装コスト高）。
 
-2. **socket hang up（2件）**
-   - テスト: `e2e-04-permission.spec.ts` (smoke & chromium)
-   - 症状: `/api/admin/stats` へのアクセスで socket hang up
-   - 原因: テスト名と実装の矛盾、Playwright固有の問題
-   - 詳細: [調査レポート](../investigation/e2e-socket-hang-up-investigation.md)
-   - 対応案:
-     - **短期**: テストを `/api/admin/metrics`（管理者専用）に変更
-     - **推奨**: `/api/admin/stats` を `/api/dashboard/stats` にリネーム後、テスト修正
-   - 理由: `/api/admin/stats` は公開エンドポイントだが、名前が管理者専用に見えて混乱を招く
+2. **UI要素の検出遅延・不一致**
+   - テスト: `e2e-02-save-persistence.spec.ts`
+   - 症状: マスタ編集ダイアログで「更新」ボタンが見つからずタイムアウトする。
+   - 原因: ボタン名のRegex不一致（`保存|更新` vs `作成|登録`）や、ダイアログ表示タイミング。
+   - 対応: セレクタは修正済み(`保存|更新|作成|登録`)。引き続き安定性を監視。
 
-3. **ログイン401エラー（一部のテスト）**
-   - テスト: e2e-03, e2e-04, e2e-05 (chromium)
-   - 症状: テストデータ生成失敗によるユーザー不在
-   - 原因: タイミング問題またはテストデータ生成の失敗
-   - 対応: テストデータ生成の安定化
+3. **ログイン401エラー（散発的）**
+   - 症状: テストデータ生成APIのタイムアウトや失敗により、ユーザーが存在せずログインに失敗する。
+   - 原因: `reset-database` 直後のデータ投入(`test-data/generate`)が重い、または競合している。
+
+**解決済み（2026-02-01）:**
+- ✅ **socket hang up (`e2e-04`)**:
+  - 原因: Playwrightのコネクション問題と、API設計（`/admin`配下の混同）。
+  - 対応: エンドポイントを`/api/dashboard/stats`に分離し、テストを直列実行(`test.describe.configure({ mode: 'serial' })`)に設定。
+- ✅ **reset-database 500エラー**:
+  - 原因: リファクタリング時の実装漏れと、セッション管理の問題。
+  - 対応: エンドポイント復元と実装修正（依存関係削除）。
 
 **参考:**
-- 初回: 15/36パス（42%）
-- 最終: 28/36パス（78%）= +87%改善
-- ブランチ: `fix/e2e-test-login-ui-update`
-- コミット: `a52997b7`
+- ブランチ: `fix/e2e-permission-socket-hangup`
+- 最新検証: workers=1 で `e2e-01`, `e2e-04` pass確認済み
 
 ---
 
