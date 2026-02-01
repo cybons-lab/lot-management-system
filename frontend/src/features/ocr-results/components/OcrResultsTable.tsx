@@ -137,6 +137,8 @@ export function OcrResultsTable({
                   selectedIds={selectedIds}
                   onSelectionChange={onSelectionChange}
                   isRowSelectable={(row) => row.status !== "processing"}
+                  dense={true}
+                  striped={true}
                 />
               )}
               <OcrResultEditModal

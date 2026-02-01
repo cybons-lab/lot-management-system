@@ -55,68 +55,70 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
             ),
           width: 40,
           enableHiding: false,
+          sticky: "left" as const,
         },
         {
           id: "status_icon",
           header: "ステータス",
           accessor: (row: OcrResultItem) => <StatusReviewCell row={row} />,
-          minWidth: 120,
+          minWidth: 60, // Icon only, narrower
+          sticky: "left" as const,
         },
         {
           id: "lot_no",
           header: "ロットNo",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <div className="flex flex-col gap-1 text-xs">
+              <div className="flex flex-col gap-0.5 text-sm py-0.5">
                 <span>{row.manual_lot_no_1 || row.lot_no || "-"}</span>
-                <span>{row.manual_lot_no_2 || "-"}</span>
+                <span className="text-slate-400">{row.manual_lot_no_2 || "-"}</span>
               </div>
             ) : (
-              <div className="flex flex-col gap-3">
-                <EditableTextCell row={row} field="lotNo1" placeholder="ロットNo(1)" />
-                <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
+              <div className="flex flex-col gap-1.5 py-0.5">
+                <EditableTextCell row={row} field="lotNo1" placeholder="" />
+                <EditableTextCell row={row} field="lotNo2" placeholder="2行目" />
               </div>
             ),
-          minWidth: 150,
+          minWidth: 180,
         },
         {
           id: "inbound_no",
           header: "入庫No",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <div className="flex flex-col gap-1 text-xs">
+              <div className="flex flex-col gap-0.5 text-sm py-0.5">
                 <span>{row.manual_inbound_no || row.inbound_no || "-"}</span>
-                <span>{row.manual_inbound_no_2 || "-"}</span>
+                <span className="text-slate-400">{row.manual_inbound_no_2 || "-"}</span>
               </div>
             ) : (
-              <div className="flex flex-col gap-3">
-                <EditableTextCell row={row} field="inboundNo1" placeholder="入庫No(1)" />
-                <EditableTextCell row={row} field="inboundNo2" placeholder="入庫No(2)" />
+              <div className="flex flex-col gap-1.5 py-0.5">
+                <EditableTextCell row={row} field="inboundNo1" placeholder="" />
+                <EditableTextCell row={row} field="inboundNo2" placeholder="2行目" />
               </div>
             ),
-          minWidth: 150,
+          minWidth: 180,
         },
         {
           id: "quantity",
           header: "数量",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <div className="flex flex-col gap-1 text-xs text-right">
+              <div className="flex flex-col gap-0.5 text-sm text-right py-0.5">
                 <span>{row.manual_quantity_1 || "-"}</span>
-                <span>{row.manual_quantity_2 || "-"}</span>
+                <span className="text-slate-400">{row.manual_quantity_2 || "-"}</span>
               </div>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5 py-0.5">
                 <EditableTextCell
                   row={row}
                   field="quantity1"
-                  placeholder="数量(1)"
+                  placeholder=""
                   inputClassName="text-right"
                 />
                 <EditableTextCell
                   row={row}
                   field="quantity2"
-                  placeholder="数量(2)"
+                  placeholder="2行目"
                   inputClassName="text-right"
                 />
               </div>
@@ -128,7 +130,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           header: "出荷日",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <span className="text-xs">
+              <span className="text-sm">
                 {row.manual_shipping_date || row.calculated_shipping_date || "-"}
               </span>
             ) : (
@@ -141,7 +143,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           header: "出荷票テキスト",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <span className="text-xs whitespace-pre-wrap">
+              <span className="text-sm whitespace-pre-wrap">
                 {row.manual_shipping_slip_text || "-"}
               </span>
             ) : (
@@ -152,7 +154,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
         {
           id: "shipping_slip_source",
           header: "取得元",
-          accessor: () => <span className="text-xs text-gray-600">OCR</span>,
+          accessor: () => <span className="text-sm text-gray-600">OCR</span>,
           minWidth: 80,
         },
         {
@@ -160,7 +162,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           header: "材質コード",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <span className="text-xs">
+              <span className="text-sm">
                 {row.manual_material_code || row.material_code || "-"}
               </span>
             ) : (
@@ -173,7 +175,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           header: "次区",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <span className="text-xs">{row.manual_jiku_code || row.jiku_code || "-"}</span>
+              <span className="text-sm">{row.manual_jiku_code || row.jiku_code || "-"}</span>
             ) : (
               <EditableTextCell row={row} field="jikuCode" hasWarning={row.jiku_format_error} />
             ),
@@ -184,7 +186,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           header: "納期",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <span className="text-xs">{row.delivery_date || "-"}</span>
+              <span className="text-sm">{row.delivery_date || "-"}</span>
             ) : (
               <EditableDateCell row={row} field="deliveryDate" />
             ),
@@ -195,7 +197,7 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
           header: "納入量",
           accessor: (row: OcrResultItem) =>
             isReadOnly ? (
-              <span className="text-right text-xs block">
+              <span className="text-right text-sm block">
                 {row.manual_delivery_quantity || row.delivery_quantity || "-"}
               </span>
             ) : (
@@ -211,9 +213,9 @@ export const useOcrColumns = (isReadOnly: boolean, onEdit?: (row: OcrResultItem)
             if (!row.sap_supplier_code) return "-";
             return (
               <div className="flex flex-col">
-                <span className="text-xs font-medium">{row.sap_supplier_code}</span>
+                <span className="text-sm font-medium">{row.sap_supplier_code}</span>
                 {row.sap_supplier_name && (
-                  <span className="text-[10px] text-gray-500">{row.sap_supplier_name}</span>
+                  <span className="text-xs text-gray-500">{row.sap_supplier_name}</span>
                 )}
               </div>
             );

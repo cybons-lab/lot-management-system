@@ -303,18 +303,21 @@ function OcrStatusBadge({ row }: { row: OcrResultItem }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1 rounded px-1 py-0.5 w-full",
+        "group flex items-center gap-1 rounded px-1.5 py-1 w-fit transition-all duration-300 ease-in-out border",
         status === "ok"
-          ? "bg-green-50 text-green-700"
+          ? "bg-green-50 text-green-700 border-green-200"
           : status === "error"
-            ? "bg-red-50 text-red-700"
-            : "bg-orange-50 text-orange-700",
+            ? "bg-red-50 text-red-700 border-red-200"
+            : "bg-orange-50 text-orange-700 border-orange-200",
       )}
+      title={label}
     >
-      {status === "ok" && <CheckCircle className="h-3 w-3" />}
-      {status === "error" && <XCircle className="h-3 w-3" />}
-      {status === "warning" && <AlertCircle className="h-3 w-3" />}
-      <span className="font-medium whitespace-nowrap">{label}</span>
+      {status === "ok" && <CheckCircle className="h-4 w-4" />}
+      {status === "error" && <XCircle className="h-4 w-4" />}
+      {status === "warning" && <AlertCircle className="h-4 w-4" />}
+      <span className="font-medium whitespace-nowrap overflow-hidden w-0 opacity-0 group-hover:w-auto group-hover:opacity-100 transition-all duration-300 text-[10px]">
+        {label}
+      </span>
     </div>
   );
 }
@@ -340,18 +343,21 @@ function MasterStatusBadge({ row }: { row: OcrResultItem }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1 rounded px-1 py-0.5 w-full",
+        "group flex items-center gap-1 rounded px-1.5 py-1 w-fit transition-all duration-300 ease-in-out border",
         status === "ok"
-          ? "bg-blue-50 text-blue-700"
+          ? "bg-blue-50 text-blue-700 border-blue-200"
           : status === "error"
-            ? "bg-red-50 text-red-700"
-            : "bg-yellow-50 text-yellow-700",
+            ? "bg-red-50 text-red-700 border-red-200"
+            : "bg-yellow-50 text-yellow-700 border-yellow-200",
       )}
+      title={label}
     >
-      {status === "ok" && <CheckCircle className="h-3 w-3" />}
-      {status === "error" && <XCircle className="h-3 w-3" />}
-      {status === "warning" && <AlertTriangle className="h-3 w-3" />}
-      <span className="font-medium whitespace-nowrap">{label}</span>
+      {status === "ok" && <CheckCircle className="h-4 w-4" />}
+      {status === "error" && <XCircle className="h-4 w-4" />}
+      {status === "warning" && <AlertTriangle className="h-4 w-4" />}
+      <span className="font-medium whitespace-nowrap overflow-hidden w-0 opacity-0 group-hover:w-auto group-hover:opacity-100 transition-all duration-300 text-[10px]">
+        {label}
+      </span>
     </div>
   );
 }
@@ -556,10 +562,10 @@ export function EditableTextCell({
         onCompositionEnd={() => setIsComposing(false)}
         placeholder={placeholder}
         className={cn(
-          "w-full rounded-md border bg-white/90 px-3 py-2 text-xs shadow-sm outline-none transition focus:ring-2",
+          "w-full rounded-md border bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:ring-2",
           hasWarning || hasError
             ? "border-red-300 focus:border-red-400 focus:ring-red-200"
-            : "border-slate-200 focus:border-blue-300 focus:ring-blue-200",
+            : "border-slate-300 focus:border-blue-400 focus:ring-blue-200", // Stronger border
           inputClassName,
         )}
         disabled={isDisabled}
@@ -582,9 +588,11 @@ export function EditableTextCell({
         }
       }}
       className={cn(
-        "w-full rounded-md px-3 py-2 text-left text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
-        "hover:bg-slate-50/80",
-        hasWarning ? "text-red-700 bg-red-50/60" : "text-slate-700 bg-transparent",
+        "w-full rounded-md px-3 py-2 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border", // Base styles
+        // Default state: Transparent bg/border (looks like text), Hover: visible border/bg
+        "bg-transparent border-transparent hover:bg-white hover:border-slate-300",
+        // Active/Warning states override default
+        hasWarning ? "text-red-700 bg-red-50/60 border-red-200" : "text-slate-700",
         isPlaceholder && "text-slate-400",
         isDisabled && "cursor-not-allowed opacity-60",
         inputClassName,
@@ -709,12 +717,12 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         onCompositionEnd={() => setIsComposing(false)}
         title={isCalculated ? `自動計算（LT=${row.transport_lt_days}日）` : ""}
         className={cn(
-          "w-full rounded-md border bg-white/90 px-3 py-2 text-xs shadow-sm outline-none transition focus:ring-2",
+          "w-full rounded-md border bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:ring-2",
           hasDateError || hasError
             ? "border-red-300 focus:border-red-400 focus:ring-red-200"
             : isCalculated
-              ? "border-blue-200 focus:border-blue-300 focus:ring-blue-200"
-              : "border-slate-200 focus:border-blue-300 focus:ring-blue-200",
+              ? "border-blue-300 focus:border-blue-400 focus:ring-blue-200"
+              : "border-slate-300 focus:border-blue-400 focus:ring-blue-200",
         )}
         disabled={isDisabled}
       />
@@ -736,9 +744,10 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         }
       }}
       className={cn(
-        "w-full rounded-md px-3 py-2 text-left text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
-        "hover:bg-slate-50/80",
-        hasDateError ? "text-red-700 bg-red-50/60" : "text-slate-700 bg-transparent",
+        "w-full rounded-md px-3 py-2 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border",
+        // Default: Transparent. Hover: Visible.
+        "bg-transparent border-transparent hover:bg-white hover:border-slate-300",
+        hasDateError ? "text-red-700 bg-red-50/60 border-red-200" : "text-slate-700",
         isCalculated && "text-blue-700",
         isDisabled && "cursor-not-allowed opacity-60",
       )}
@@ -867,14 +876,19 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         }
       }}
       className={cn(
-        "min-h-[2.75rem] w-full cursor-text rounded-md px-3 py-2 text-left text-xs whitespace-pre-wrap break-words transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200",
-        "hover:bg-slate-50/80",
+        "w-full rounded-md px-3 py-2 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border",
+        // Default: Transparent. Hover: Visible.
+        "bg-transparent border-transparent hover:bg-white hover:border-slate-300",
+        // No explicit error state for shipping slip text, so we omit the error styling for now.
+        // If an error state is introduced later, it can be added here.
         "text-slate-700",
-        isDisabled && "cursor-not-allowed opacity-70",
+        isDisabled && "cursor-not-allowed opacity-60",
       )}
       disabled={isDisabled}
     >
-      {fallbackText}
+      <div className="flex h-full flex-col justify-center">
+        <span className="line-clamp-2 whitespace-pre-wrap">{fallbackText}</span>
+      </div>
     </button>
   );
 }
