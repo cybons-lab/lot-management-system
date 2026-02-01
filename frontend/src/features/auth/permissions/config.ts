@@ -64,7 +64,12 @@ export const routePermissions: RoutePermission[] = [
   },
   {
     routeKey: "INVENTORY.ITEMS.DETAIL",
-    path: "/inventory/items/:productId/:warehouseId/:tab",
+    path: "/inventory/items/:productId/:warehouseId",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+  {
+    routeKey: "INVENTORY.ITEMS.DETAIL_TAB",
+    path: "/inventory/items/:productId/:warehouseId/*",
     allowedRoles: ["admin", "user", "guest"],
   },
 
