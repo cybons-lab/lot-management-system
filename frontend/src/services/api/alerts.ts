@@ -11,7 +11,8 @@ import type {
   AlertSummaryResponse,
 } from "../../shared/types/alerts";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+// 開発環境では常にViteプロキシ(/api)を使用する
+const API_BASE = import.meta.env.DEV ? "/api" : import.meta.env.VITE_API_BASE || "/api";
 
 interface AlertListParams {
   severity?: AlertSeverity | AlertSeverity[];

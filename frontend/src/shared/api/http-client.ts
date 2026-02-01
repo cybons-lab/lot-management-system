@@ -36,7 +36,9 @@ import { AuthorizationError, createApiError, NetworkError } from "@/utils/errors
  *   -> 通常のAPI呼び出しは5秒以内だが、複雑なレポート生成等を考慮
  *   -> ただし、30秒を超える処理は非同期バッチ処理に移行すべき
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+// 開発環境(DEV)では常にViteプロキシ(/api)を使用する
+// 本番環境(PROD)では環境変数で指定されたURL、またはデフォルトの/apiを使用する
+const API_BASE_URL = import.meta.env.DEV ? "/api" : import.meta.env.VITE_API_BASE_URL || "/api";
 const API_TIMEOUT = 30000; // 30 seconds
 
 /**

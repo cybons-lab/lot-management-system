@@ -15,7 +15,8 @@ build/
 *.swo
 *~
 
-# 環境変数
+# 環境変数（docker-compose.ymlで環境変数を設定するため、.envはコンテナに含めない）
+.env
 .env.local
 .env.development.local
 .env.test.local

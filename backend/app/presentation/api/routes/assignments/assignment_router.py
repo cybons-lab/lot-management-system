@@ -121,7 +121,7 @@ def get_supplier_users(
     ]
 
 
-@router.post("/", response_model=UserSupplierAssignmentResponse)
+@router.post("", response_model=UserSupplierAssignmentResponse)
 def create_assignment(
     data: UserSupplierAssignmentCreate,
     db: Session = Depends(get_db),

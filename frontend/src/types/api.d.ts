@@ -4706,6 +4706,81 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/notifications/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Notifications */
+    get: operations["get_notifications_api_notifications__get"];
+    put?: never;
+    /**
+     * Create Notification
+     * @description 通知を作成する.
+     *
+     *     Note: 通常はシステム内部で作成されるが、
+     *     テスト用やSmartReadテスト完了通知など、明示的に作成するケースもある。
+     */
+    post: operations["create_notification_api_notifications__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/notifications/unread-count": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Unread Count */
+    get: operations["get_unread_count_api_notifications_unread_count_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/notifications/{notification_id}/read": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Mark As Read */
+    patch: operations["mark_as_read_api_notifications__notification_id__read_patch"];
+    trace?: never;
+  };
+  "/api/notifications/mark-all-read": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark All As Read */
+    post: operations["mark_all_as_read_api_notifications_mark_all_read_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/admin/reset-database": {
     parameters: {
       query?: never;
@@ -12212,6 +12287,47 @@ export interface components {
       /** Assigned Supplier Ids */
       assigned_supplier_ids?: number[] | null;
     };
+    /** NotificationCreate */
+    NotificationCreate: {
+      /** Title */
+      title: string;
+      /** Message */
+      message: string;
+      /**
+       * Type
+       * @default info
+       */
+      type: string;
+      /** Link */
+      link?: string | null;
+      /** User Id */
+      user_id: number;
+    };
+    /** NotificationResponse */
+    NotificationResponse: {
+      /** Title */
+      title: string;
+      /** Message */
+      message: string;
+      /**
+       * Type
+       * @default info
+       */
+      type: string;
+      /** Link */
+      link?: string | null;
+      /** Id */
+      id: number;
+      /** User Id */
+      user_id: number;
+      /** Is Read */
+      is_read: boolean;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
     /**
      * OcrImportLineRequest
      * @description OCR取込明細行.
@@ -16604,6 +16720,11 @@ export interface components {
        * @description LT取得元: 'route_product', 'route_default', 'warehouse_default', 'not_found'
        */
       source: string;
+    };
+    /** UnreadCountResponse */
+    UnreadCountResponse: {
+      /** Count */
+      count: number;
     };
     /**
      * UomConversionBulkRow
@@ -24598,6 +24719,142 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_notifications_api_notifications__get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_notification_api_notifications__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["NotificationCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_unread_count_api_notifications_unread_count_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UnreadCountResponse"];
+        };
+      };
+    };
+  };
+  mark_as_read_api_notifications__notification_id__read_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        notification_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  mark_all_as_read_api_notifications_mark_all_read_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UnreadCountResponse"];
         };
       };
     };

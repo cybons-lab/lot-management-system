@@ -1,49 +1,54 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import tailwindcss from "@tailwindcss/vite";
 
-// Docker Compose environment: backend service name is "backend"
-// Development environment: can override with VITE_BACKEND_ORIGIN
-const target = process.env.VITE_BACKEND_ORIGIN || "http://backend:8000";
-
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+
+  // Docker Compose environment: backend service name is "backend"
+  // Development environment: can override with BACKEND_ORIGIN (no VITE_ prefix)
+  // Use http://localhost:8000 as a fallback for local development if not in Docker or env not set
+  const target = env.BACKEND_ORIGIN || env.VITE_BACKEND_ORIGIN || "http://localhost:8000";
+
+  return {
+    plugins: [react(), tailwindcss()],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
     },
-  },
-  server: {
-    host: true,
-    port: 5173,
-    strictPort: true,
-    hmr: {
-      host: "localhost", // ホスト側からHMRする
+    server: {
+      host: true,
       port: 5173,
-    },
-    watch: {
-      usePolling: true, // Docker環境でのファイル監視安定化
-    },
-    proxy: {
-      "/api": {
-        target,
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-        configure: (proxy, _options) => {
-          proxy.on("error", (err, _req, _res) => {
-            console.log("[vite] proxy error:", err);
-          });
-          proxy.on("proxyReq", (proxyReq, req, _res) => {
-            console.log("[vite] proxy request:", req.method, req.url, "->", target);
-          });
+      strictPort: true,
+      hmr: {
+        host: "localhost", // ホスト側からHMRする
+        port: 5173,
+      },
+      watch: {
+        usePolling: true, // Docker環境でのファイル監視安定化
+      },
+      proxy: {
+        "/api": {
+          target,
+          changeOrigin: true,
+          secure: false,
+          ws: true,
+          configure: (proxy, _options) => {
+            proxy.on("error", (err, _req, _res) => {
+              console.log("[vite] proxy error:", err);
+            });
+            proxy.on("proxyReq", (proxyReq, req, _res) => {
+              console.log("[vite] proxy request:", req.method, req.url, "->", target);
+            });
+          },
         },
       },
     },
-  },
-  optimizeDeps: {
-    include: ["@radix-ui/react-scroll-area", "d3", "dagre-d3"],
-  },
+    optimizeDeps: {
+      include: ["@radix-ui/react-scroll-area", "d3", "dagre-d3"],
+    },
+  };
 });

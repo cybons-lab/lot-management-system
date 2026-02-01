@@ -140,12 +140,21 @@ def db(db_engine) -> Generator[Session]:
     """
     Create a fresh database session for each test.
     Rollback transaction after each test to ensure isolation.
+    Monkey patch session.commit to prevent actual commits during tests.
     """
     connection = db_engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
 
+    # Monkey patch commit to flush instead
+    # This prevents application code from committing the transaction
+    original_commit = session.commit
+    session.commit = session.flush
+
     yield session
+
+    # Restore commit
+    session.commit = original_commit
 
     session.close()
     if transaction.is_active:
@@ -465,13 +474,11 @@ def normal_user(db):
 
     # Assign role
     db.add(UserRole(user_id=user.id, role_id=user_role.id))
+    db.flush()
 
-    db.commit()
     db.refresh(user)
     yield user
-    # Cleanup
-    db.delete(user)
-    db.commit()
+    # Cleanup is handled by transaction rollback
 
 
 @pytest.fixture
