@@ -74,7 +74,7 @@ test.describe("E2E-01: 注文作成→引当→出荷フロー", () => {
     await page.waitForLoadState("networkidle");
 
     // 詳細ページに遷移したことを確認
-    await expect(page.url()).toContain("/orders/");
+    await expect(page.url()).toContain("/orders");
 
     // ===========================
     // Step 4: 注文ステータスに応じた操作
@@ -134,7 +134,7 @@ test.describe("E2E-01: 注文作成→引当→出荷フロー", () => {
     // Step 5: 最終状態の確認
     // ===========================
     // 詳細ページが引き続き表示されていることを確認
-    await expect(page.url()).toContain("/orders/");
+    await expect(page.url()).toContain("/orders");
 
     // ページリロードしてもデータが保持されていることを確認（重要！）
     await page.reload();

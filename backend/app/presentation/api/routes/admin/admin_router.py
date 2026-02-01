@@ -475,7 +475,7 @@ def _seed_admin_user(db: Session) -> None:
                 UserCreate(
                     username="user",
                     email="user@example.com",
-                    password="user123",  # UserServiceがハッシュ化
+                    password="user12345",  # UserServiceがハッシュ化
                     display_name="General User",
                     is_active=True,
                 )
