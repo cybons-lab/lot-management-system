@@ -308,45 +308,6 @@ async def start_pad_run_from_upload(
 
 ---
 
-### 2-12. フロントエンド: Chart Event Handlersに適切な型を定義
-
-**優先度**: Medium (any型削減 Phase 1)
-**対象**: 4箇所
-
-**場所**:
-- `features/dashboard/components/WarehouseDistributionChart.tsx`
-- `features/dashboard/components/TopProductsChart.tsx`
-
-**現状:**
-```typescript
-const handlePieClick = (data: any) => {
-  if (data && data.id) {
-    navigate(`/inventory?warehouse_id=${data.id}`);
-  }
-}
-```
-
-**対応:**
-```typescript
-interface PieClickData {
-  id?: number;
-  payload?: {
-    id?: number;
-  };
-}
-
-const handlePieClick = (data: PieClickData) => {
-  const warehouseId = data?.id ?? data?.payload?.id;
-  if (warehouseId) {
-    navigate(`/inventory?warehouse_id=${warehouseId}`);
-  }
-}
-```
-
-**元:** `any-type-reduction.md` (2026-01-18)
-
----
-
 ### 2-11. データ再読み込みボタンの共通化
 
 **優先度**: Medium

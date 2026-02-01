@@ -90,6 +90,7 @@
 **対応内容**:
 - `TopProductsChart`, `WarehouseDistributionChart` の `any` 型を削減し、ランタイムチェックを追加。
 - `SmartReadSettingsModal`, `WarehouseForm` の `zodResolver` 型エラーを `eslint-disable` で抑制（ビルド安定化のため）。
+- BACKLOG 2-12「Chart Event Handlersに適切な型を定義」を本対応で完了扱いに移行。
 
 ---
 

@@ -195,6 +195,7 @@ export type LotSearchParams = {
   expiry_to?: string;
 
   status?: string;
+  with_stock?: boolean;
 };
 
 export const searchLots = (params: LotSearchParams) => {
@@ -214,6 +215,8 @@ export const searchLots = (params: LotSearchParams) => {
   if (params.expiry_to) searchParams.append("expiry_to", params.expiry_to);
 
   if (params.status) searchParams.append("status", params.status);
+  if (params.with_stock !== undefined)
+    searchParams.append("with_stock", params.with_stock.toString());
 
   const queryString = searchParams.toString();
   return http.get<LotSearchResponse>(`v2/lot/search?${queryString}`);
