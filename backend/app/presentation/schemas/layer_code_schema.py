@@ -12,6 +12,12 @@ class LayerCodeCreate(LayerCodeBase):
 
 
 class LayerCodeUpdate(LayerCodeBase):
+    """Update layercode request.
+
+    Inherits all fields from LayerCodeBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
+
     pass
 
 

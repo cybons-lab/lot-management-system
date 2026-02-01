@@ -23,7 +23,11 @@ class OrderGroupBase(BaseSchema):
 
 
 class OrderGroupCreate(OrderGroupBase):
-    """Create order group request."""
+    """Create order group request.
+
+    Inherits all fields from OrderGroupBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

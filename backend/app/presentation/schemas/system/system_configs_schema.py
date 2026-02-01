@@ -19,7 +19,11 @@ class SystemConfigBase(BaseSchema):
 
 
 class SystemConfigCreate(SystemConfigBase):
-    """Schema for creating a system config."""
+    """Schema for creating a system config.
+
+    Inherits all fields from SystemConfigBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

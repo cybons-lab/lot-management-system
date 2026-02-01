@@ -19,7 +19,11 @@ class RoleBase(BaseSchema):
 
 
 class RoleCreate(RoleBase):
-    """Schema for creating a role."""
+    """Schema for creating a role.
+
+    Inherits all fields from RoleBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 
