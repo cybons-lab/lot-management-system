@@ -164,6 +164,23 @@ cd backend && ruff check app/ --fix && ruff format app/
 - **Precision:** Use `Decimal` for all quantities and monetary values. Never use `float`.
 - **Validation:** Fail fast on invalid data (e.g. unknown units). Avoid silent fallbacks.
 
+**API Router Best Practices:**
+- **末尾スラッシュ問題の回避:** `APIRouter` の `prefix` と組み合わせる場合、エンドポイントのパスは空文字 `""` を使用する
+  ```python
+  # GOOD: 末尾スラッシュなしで直接処理
+  @router.get("")
+  def get_items():
+      ...
+
+  # BAD: FastAPIが /items を /items/ にリダイレクト
+  # → Docker内部のホスト名 backend:8000 を含むURLを返す
+  # → ブラウザで ERR_NAME_NOT_RESOLVED
+  @router.get("/")
+  def get_items():
+      ...
+  ```
+- **理由:** FastAPIは末尾スラッシュの有無でリダイレクトを発行する。Docker環境では内部ホスト名がブラウザに露出してDNS解決に失敗する。
+
 ### Frontend (TypeScript)
 
 **Quality Requirements (STRICT):**
