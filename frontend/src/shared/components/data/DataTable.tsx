@@ -510,8 +510,8 @@ export function DataTable<T = never>({
                     <th
                       key={header.id}
                       className={cn(
-                        "relative bg-gray-50 text-left text-sm font-semibold text-slate-600 border-r border-slate-300 last:border-r-0",
-                        dense ? "px-2 py-2" : "px-6 py-4",
+                        "relative bg-gray-50 text-left text-sm font-semibold text-slate-600 border-r border-slate-200/50 last:border-r-0",
+                        dense ? "px-2 py-1.5" : "px-6 py-4",
                         "first:pl-4", // Add padding to first column for better visual spacing
                         meta?.align === "center" && "text-center",
                         meta?.align === "right" && "text-right",
@@ -603,8 +603,8 @@ export function DataTable<T = never>({
                           <td
                             key={cell.id}
                             className={cn(
-                              "overflow-hidden text-sm text-slate-800 border-r border-slate-300 last:border-r-0",
-                              dense ? "px-2 py-2" : "px-6 py-4",
+                              "overflow-hidden text-sm text-slate-800 border-r border-slate-200/40 last:border-r-0",
+                              dense ? "px-2 py-1" : "px-6 py-4",
                               "first:pl-4", // Add padding to first column
                               meta?.align === "center" && "text-center",
                               meta?.align === "right" && "text-right",
@@ -697,8 +697,8 @@ export function DataTable<T = never>({
                           <td
                             key={cell.id}
                             className={cn(
-                              "overflow-hidden text-sm text-slate-800 border-r border-slate-300 last:border-r-0",
-                              dense ? "px-2 py-2" : "px-6 py-4",
+                              "overflow-hidden text-sm text-slate-800 border-r border-slate-200/40 last:border-r-0",
+                              dense ? "px-2 py-1.5" : "px-6 py-4",
                               "first:pl-4", // Add padding to first column
                               meta?.align === "center" && "text-center",
                               meta?.align === "right" && "text-right",

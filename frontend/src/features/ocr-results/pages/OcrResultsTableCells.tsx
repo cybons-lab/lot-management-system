@@ -4,7 +4,6 @@ import { type KeyboardEvent, createContext, useContext, useEffect, useRef, useSt
 
 import type { OcrResultItem } from "../api";
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 // ============================================
@@ -120,177 +119,158 @@ const applyDateReplacements = (
   return result;
 };
 
-const validateLotInfo = (
-  input: RowInputState,
-): { hasValidLot: boolean; hasIncomplete: boolean } => {
-  const lot1HasNo = Boolean(input.lotNo1);
-  const lot1HasQty = Boolean(input.quantity1);
-  const lot2HasNo = Boolean(input.lotNo2);
-  const lot2HasQty = Boolean(input.quantity2);
-
-  const hasValidLot1 = lot1HasNo && lot1HasQty;
-  const hasValidLot2 = lot2HasNo && lot2HasQty;
-  const hasValidLot = hasValidLot1 || hasValidLot2;
-
-  // 数量が空でもエラーにしない（ロバストネス要件）
-  const hasIncomplete = false;
-
-  return { hasValidLot, hasIncomplete };
-};
-
 const buildShippingSlipText = (
   template: string | null,
   input: RowInputState,
   row: OcrResultItem,
 ): string => {
   if (!template) return "";
-
-  const { hasValidLot } = validateLotInfo(input);
-  const hasInboundNo = Boolean(input.inboundNo1);
-
-  if (!hasValidLot && !hasInboundNo) {
-    return template;
-  }
-
-  let result = template;
-  if (hasValidLot) {
-    result = applyLotReplacement(result, input);
-  }
-
-  if (hasInboundNo) {
-    result = result.replace(/入庫番号/g, input.inboundNo1);
-  }
-
+  let result = applyLotReplacement(template, input);
   result = applyDateReplacements(result, input, row);
-
   return result;
 };
 
+const isValidDateInput = (v: string): boolean => {
+  if (!v) return true;
+  return /^\d{4}-\d{2}-\d{2}$/.test(v);
+};
+
+const insertSoftBreaks = (text: string) => {
+  return text.split("/").map((part, i, arr) => (
+    <span key={i}>
+      {part}
+      {i < arr.length - 1 && (
+        <>
+          /<wbr />
+        </>
+      )}
+    </span>
+  ));
+};
+
 // ============================================
-// Context
+// Contexts
 // ============================================
 
-export interface OcrInputsContextType {
+export type EditableFieldKey = keyof RowInputState;
+
+type OcrInputsContextType = {
   getInputs: (row: OcrResultItem) => RowInputState;
   updateInputs: (row: OcrResultItem, patch: Partial<RowInputState>) => void;
-}
+};
 
 export const OcrInputsContext = createContext<OcrInputsContextType | null>(null);
 
-export const useOcrInputs = () => {
+export function useOcrInputs() {
   const context = useContext(OcrInputsContext);
-  if (!context) throw new Error("useOcrInputs must be used within OcrInputsProvider");
+  if (!context) throw new Error("useOcrInputs must be used within OcrInputsContext.Provider");
   return context;
-};
+}
 
-export type EditableFieldKey =
-  | "lotNo1"
-  | "inboundNo1"
-  | "quantity1"
-  | "lotNo2"
-  | "inboundNo2"
-  | "quantity2"
-  | "shippingDate"
-  | "shippingSlipText"
-  | "materialCode"
-  | "jikuCode"
-  | "deliveryDate"
-  | "deliveryQuantity";
+type ActiveCell = { rowId: number; field: EditableFieldKey } | null;
 
-export type ActiveCell = {
-  rowId: number;
-  field: EditableFieldKey;
-};
-
-export interface OcrCellEditingContextType {
-  activeCell: ActiveCell | null;
-  setActiveCell: (cell: ActiveCell | null) => void;
+type OcrCellEditingContextType = {
+  activeCell: ActiveCell;
+  setActiveCell: (cell: ActiveCell) => void;
   editableFieldOrder: EditableFieldKey[];
   rowIds: number[];
-  isReadOnly: boolean;
   getRowById: (rowId: number) => OcrResultItem | undefined;
-}
+  isReadOnly?: boolean;
+};
 
 export const OcrCellEditingContext = createContext<OcrCellEditingContextType | null>(null);
 
-export const useOcrCellEditing = () => {
+export function useOcrCellEditing() {
   const context = useContext(OcrCellEditingContext);
-  if (!context) throw new Error("useOcrCellEditing must be used within OcrCellEditingContext");
+  if (!context)
+    throw new Error("useOcrCellEditing must be used within OcrCellEditingContext.Provider");
   return context;
-};
+}
 
-const isValidDateInput = (value: string) => {
-  if (!value) return true;
-  const normalized = value.replace(/\//g, "-");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return false;
-  const date = new Date(normalized);
-  return !Number.isNaN(date.getTime());
-};
+// ============================================
+// Internal Navigation Logic
+// ============================================
 
 const resolveTabTarget = (
-  rowId: number,
-  field: EditableFieldKey,
+  currentRowId: number,
+  currentField: EditableFieldKey,
   direction: 1 | -1,
-  editableFieldOrder: EditableFieldKey[],
+  fieldOrder: EditableFieldKey[],
   rowIds: number[],
   getRowById: (rowId: number) => OcrResultItem | undefined,
-): ActiveCell | null => {
-  const fieldIndex = editableFieldOrder.indexOf(field);
-  if (fieldIndex === -1) return null;
-  const rowIndex = rowIds.indexOf(rowId);
-  if (rowIndex === -1) return null;
+): ActiveCell => {
+  const currentFieldIndex = fieldOrder.indexOf(currentField);
+  const currentRowIndex = rowIds.indexOf(currentRowId);
 
-  const nextFieldIndex = fieldIndex + direction;
-  if (nextFieldIndex >= 0 && nextFieldIndex < editableFieldOrder.length) {
-    return { rowId, field: editableFieldOrder[nextFieldIndex] };
+  let nextFieldIndex = currentFieldIndex + direction;
+  let nextRowIndex = currentRowIndex;
+
+  if (nextFieldIndex >= fieldOrder.length) {
+    nextFieldIndex = 0;
+    nextRowIndex++;
+  } else if (nextFieldIndex < 0) {
+    nextFieldIndex = fieldOrder.length - 1;
+    nextRowIndex--;
   }
 
-  const step = direction;
-  let nextRowIndex = rowIndex + step;
-  while (nextRowIndex >= 0 && nextRowIndex < rowIds.length) {
-    const candidateId = rowIds[nextRowIndex];
-    const candidateRow = getRowById(candidateId);
-    if (candidateRow && candidateRow.status !== "processing") {
-      const targetField =
-        direction === 1 ? editableFieldOrder[0] : editableFieldOrder[editableFieldOrder.length - 1];
-      return { rowId: candidateId, field: targetField };
-    }
-    nextRowIndex += step;
+  if (nextRowIndex < 0 || nextRowIndex >= rowIds.length) {
+    return null;
   }
 
-  return null;
+  const nextRowId = rowIds[nextRowIndex];
+  const nextRow = getRowById(nextRowId);
+
+  // ステータスが処理中の場合はその行を飛ばす
+  if (nextRow?.status === "processing") {
+    return resolveTabTarget(
+      nextRowId,
+      fieldOrder[nextFieldIndex],
+      direction,
+      fieldOrder,
+      rowIds,
+      getRowById,
+    );
+  }
+
+  return { rowId: nextRowId, field: fieldOrder[nextFieldIndex] };
 };
 
 const resolveEnterTarget = (
-  rowId: number,
-  field: EditableFieldKey,
+  currentRowId: number,
+  currentField: EditableFieldKey,
   direction: 1 | -1,
   rowIds: number[],
   getRowById: (rowId: number) => OcrResultItem | undefined,
-): ActiveCell | null => {
-  const rowIndex = rowIds.indexOf(rowId);
-  if (rowIndex === -1) return null;
-  const step = direction;
-  let nextRowIndex = rowIndex + step;
-  while (nextRowIndex >= 0 && nextRowIndex < rowIds.length) {
-    const candidateId = rowIds[nextRowIndex];
-    const candidateRow = getRowById(candidateId);
-    if (candidateRow && candidateRow.status !== "processing") {
-      return { rowId: candidateId, field };
-    }
-    nextRowIndex += step;
+): ActiveCell => {
+  const currentRowIndex = rowIds.indexOf(currentRowId);
+  const nextRowIndex = currentRowIndex + direction;
+
+  if (nextRowIndex < 0 || nextRowIndex >= rowIds.length) {
+    return null;
   }
-  return null;
+
+  const nextRowId = rowIds[nextRowIndex];
+  const nextRow = getRowById(nextRowId);
+
+  if (nextRow?.status === "processing") {
+    return resolveEnterTarget(nextRowId, currentField, direction, rowIds, getRowById);
+  }
+
+  return { rowId: nextRowId, field: currentField };
 };
 
 // ============================================
-// Components
+// Individual Cell Components
 // ============================================
 
+/**
+ * OCR状態バッジ
+ */
 function OcrStatusBadge({ row }: { row: OcrResultItem }) {
   let status: "ok" | "error" | "warning" = "ok";
   let label = "OCR正常";
-  if (row.status === "ERROR") {
+
+  if (row.status === "ERROR" || row.status === "error") {
     status = "error";
     label = "読取エラー";
   } else if (row.jiku_format_error || row.date_format_error) {
@@ -302,32 +282,27 @@ function OcrStatusBadge({ row }: { row: OcrResultItem }) {
   }
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className={cn(
-              "group flex items-center justify-center rounded p-1 w-6 h-6 transition-all duration-300 ease-in-out border cursor-help",
-              status === "ok"
-                ? "bg-green-50 text-green-700 border-green-200"
-                : status === "error"
-                  ? "bg-red-50 text-red-700 border-red-200"
-                  : "bg-orange-50 text-orange-700 border-orange-200",
-            )}
-          >
-            {status === "ok" && <CheckCircle className="h-4 w-4" />}
-            {status === "error" && <XCircle className="h-4 w-4" />}
-            {status === "warning" && <AlertCircle className="h-4 w-4" />}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{label}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div
+      className={cn(
+        "flex items-center gap-1 rounded px-1 py-0.5 w-full",
+        status === "ok"
+          ? "bg-green-50 text-green-700"
+          : status === "error"
+            ? "bg-red-50 text-red-700"
+            : "bg-orange-50 text-orange-700",
+      )}
+    >
+      {status === "ok" && <CheckCircle className="h-3 w-3" />}
+      {status === "error" && <XCircle className="h-3 w-3" />}
+      {status === "warning" && <AlertCircle className="h-3 w-3" />}
+      <span className="font-medium whitespace-nowrap text-[10px]">{label}</span>
+    </div>
   );
 }
 
+/**
+ * マスタ判定バッジ
+ */
 function MasterStatusBadge({ row }: { row: OcrResultItem }) {
   let status: "ok" | "error" | "warning" = "ok";
   let label = "マスタ一致";
@@ -347,99 +322,36 @@ function MasterStatusBadge({ row }: { row: OcrResultItem }) {
   }
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className={cn(
-              "group flex items-center justify-center rounded p-1 w-6 h-6 transition-all duration-300 ease-in-out border cursor-help",
-              status === "ok"
-                ? "bg-blue-50 text-blue-700 border-blue-200"
-                : status === "error"
-                  ? "bg-red-50 text-red-700 border-red-200"
-                  : "bg-yellow-50 text-yellow-700 border-yellow-200",
-            )}
-          >
-            {status === "ok" && <CheckCircle className="h-4 w-4" />}
-            {status === "error" && <XCircle className="h-4 w-4" />}
-            {status === "warning" && <AlertTriangle className="h-4 w-4" />}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{label}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div
+      className={cn(
+        "flex items-center gap-1 rounded px-1 py-0.5 w-full",
+        status === "ok"
+          ? "bg-blue-50 text-blue-700"
+          : status === "error"
+            ? "bg-red-50 text-red-700"
+            : "bg-yellow-50 text-yellow-700",
+      )}
+    >
+      {status === "ok" && <CheckCircle className="h-3 w-3" />}
+      {status === "error" && <XCircle className="h-3 w-3" />}
+      {status === "warning" && <AlertTriangle className="h-3 w-3" />}
+      <span className="font-medium whitespace-nowrap text-[10px]">{label}</span>
+    </div>
   );
 }
 
 export function StatusReviewCell({ row }: { row: OcrResultItem }) {
   return (
-    <div className="flex flex-col gap-1 text-[10px] items-center">
+    <div className="flex flex-col gap-1 items-start justify-center h-full">
       <OcrStatusBadge row={row} />
       <MasterStatusBadge row={row} />
     </div>
   );
 }
 
-// Deprecated individual icons replaced by StatusReviewCell, but keeping exports if needed by other files (though we will update useOcrColumns)
-export function StatusIcon({ row }: { row: OcrResultItem }) {
-  return <StatusReviewCell row={row} />;
-}
-
-export function SapMatchIcon({ row }: { row: OcrResultItem }) {
-  // Satisfy unused row lint while returning nothing visible
-  return <span className="hidden">{row.id}</span>;
-}
-
-export function getRowClassName(row: OcrResultItem): string {
-  if (row.status === "ERROR") return "bg-red-50/50";
-  if (row.master_not_found) return "bg-red-50/50"; // Master missing is critical
-  if (row.jiku_format_error || row.date_format_error) return "bg-orange-50/50";
-  if (row.status === "processing") return "bg-blue-50/30 animate-pulse";
-  return "";
-}
-
-export function StatusLegend() {
-  return (
-    <div className="flex flex-col gap-2 text-xs text-gray-600 bg-[hsl(var(--surface-1))] p-3 rounded-xl border border-[hsl(var(--border))] shadow-[var(--shadow-soft)]">
-      <div className="flex items-center gap-2">
-        <span className="font-bold text-[10px] text-gray-400 w-12">OCR状態:</span>
-        <div className="flex gap-2">
-          <span className="flex items-center gap-1 px-1 bg-green-50 text-green-700 rounded">
-            <CheckCircle className="h-3 w-3" />
-            正常
-          </span>
-          <span className="flex items-center gap-1 px-1 bg-orange-50 text-orange-700 rounded">
-            <AlertCircle className="h-3 w-3" />
-            形式エラー
-          </span>
-          <span className="flex items-center gap-1 px-1 bg-red-50 text-red-700 rounded">
-            <XCircle className="h-3 w-3" />
-            読取エラー
-          </span>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="font-bold text-[10px] text-gray-400 w-12">マスタ判定:</span>
-        <div className="flex gap-2 flex-wrap">
-          <span className="flex items-center gap-1 px-1 bg-blue-50 text-blue-700 rounded">
-            <CheckCircle className="h-3 w-3" />
-            一致
-          </span>
-          <span className="flex items-center gap-1 px-1 bg-yellow-50 text-yellow-700 rounded">
-            <AlertTriangle className="h-3 w-3" />
-            前方一致/SAP未一致
-          </span>
-          <span className="flex items-center gap-1 px-1 bg-red-50 text-red-700 rounded">
-            <XCircle className="h-3 w-3" />
-            マスタ未登録
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
+const resolveIsSecondary = (field: EditableFieldKey) => {
+  return field === "lotNo2" || field === "inboundNo2" || field === "quantity2";
+};
 
 export function EditableTextCell({
   row,
@@ -463,6 +375,7 @@ export function EditableTextCell({
   const initialValueRef = useRef(value);
   const [isComposing, setIsComposing] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const isSecondary = resolveIsSecondary(field);
 
   useEffect(() => {
     if (isActive) {
@@ -473,6 +386,7 @@ export function EditableTextCell({
         inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   const isDisabled = row.status === "processing" || isReadOnly;
@@ -572,7 +486,7 @@ export function EditableTextCell({
         onCompositionEnd={() => setIsComposing(false)}
         placeholder={placeholder}
         className={cn(
-          "w-full rounded-md border bg-white px-2 py-1 text-sm shadow-sm outline-none transition focus:ring-2",
+          "w-full rounded-md border bg-white px-2 py-0.5 text-sm shadow-sm outline-none transition focus:ring-2",
           hasWarning || hasError
             ? "border-red-300 focus:border-red-400 focus:ring-red-200"
             : "border-slate-300 focus:border-blue-400 focus:ring-blue-200", // Stronger border
@@ -598,11 +512,19 @@ export function EditableTextCell({
         }
       }}
       className={cn(
-        "group w-full rounded-md px-2 py-1 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border", // Base styles
-        // Default state: Transparent bg/border (looks like text), Hover: visible border/bg
-        "bg-transparent border-transparent hover:bg-white hover:border-slate-300",
-        // Active/Warning states override default
-        hasWarning ? "text-red-700 bg-red-50/60 border-red-200" : "text-slate-700",
+        "group flex w-full rounded-md px-2 py-0.5 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border cursor-text items-center",
+        // 空欄時の枠表示（(1)は目立つ、(2)は弱い）
+        !value &&
+          !hasWarning &&
+          (isSecondary
+            ? "border-dashed border-slate-200 bg-slate-50/20" // (2)弱い
+            : "border-dashed border-slate-300 bg-slate-50/30"), // (1)強め
+        // 値あり or Warning時
+        value && !hasWarning && "bg-transparent border-transparent",
+        // Hover: 白背景+実線に変化
+        "hover:bg-white hover:border-slate-300 hover:border-solid",
+        // Warning状態
+        hasWarning ? "text-red-700 bg-red-50/60 border-red-200 border-solid" : "text-slate-700",
         isDisabled && "cursor-not-allowed opacity-60",
         inputClassName,
       )}
@@ -646,6 +568,7 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   const isDisabled = row.status === "processing" || isReadOnly;
@@ -732,7 +655,7 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         onCompositionEnd={() => setIsComposing(false)}
         title={isCalculated ? `自動計算（LT=${row.transport_lt_days}日）` : ""}
         className={cn(
-          "w-full rounded-md border bg-white px-2 py-1 text-sm shadow-sm outline-none transition focus:ring-2",
+          "w-full rounded-md border bg-white px-2 py-0.5 text-sm shadow-sm outline-none transition focus:ring-2",
           hasDateError || hasError
             ? "border-red-300 focus:border-red-400 focus:ring-red-200"
             : isCalculated
@@ -759,16 +682,20 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         }
       }}
       className={cn(
-        "w-full rounded-md px-2 py-1 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border",
-        // Default: Transparent. Hover: Visible.
-        "bg-transparent border-transparent hover:bg-white hover:border-slate-300",
-        hasDateError ? "text-red-700 bg-red-50/60 border-red-200" : "text-slate-700",
+        "group flex w-full rounded-md px-2 py-0.5 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border cursor-text items-center",
+        // 空欄時の枠表示（日付フィールドは常に(1)扱い）
+        !displayValue && !hasDateError && "border-dashed border-slate-300 bg-slate-50/30",
+        // 値あり or Error時
+        displayValue && !hasDateError && "bg-transparent border-transparent",
+        // Hover
+        "hover:bg-white hover:border-slate-300 hover:border-solid",
+        hasDateError ? "text-red-700 bg-red-50/60 border-red-200 border-solid" : "text-slate-700",
         isCalculated && "text-blue-700",
         isDisabled && "cursor-not-allowed opacity-60",
       )}
       disabled={isDisabled}
     >
-      {displayValue || ""}
+      {displayValue || "\u00A0"}
     </button>
   );
 }
@@ -815,6 +742,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   const handleNavigate = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -825,14 +753,13 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         shippingSlipText: initialStateRef.current.text,
         shippingSlipTextEdited: initialStateRef.current.edited,
       });
-      setDraft(displayText || "");
       setActiveCell(null);
       return;
     }
     if (event.key === "Tab") {
       event.preventDefault();
-      const direction = event.shiftKey ? -1 : 1;
       commit();
+      const direction = event.shiftKey ? -1 : 1;
       const target = resolveTabTarget(
         row.id,
         "shippingSlipText",
@@ -846,10 +773,10 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
       }
       return;
     }
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
-      const direction = event.shiftKey ? -1 : 1;
       commit();
+      const direction = event.shiftKey ? -1 : 1;
       const target = resolveEnterTarget(row.id, "shippingSlipText", direction, rowIds, getRowById);
       if (target) {
         setActiveCell(target);
@@ -870,7 +797,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         onKeyDown={handleNavigate}
         onCompositionStart={() => setIsComposing(true)}
         onCompositionEnd={() => setIsComposing(false)}
-        className="w-full min-h-[2rem] rounded-md border border-slate-200 bg-white/90 px-2 py-1 text-sm shadow-sm focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        className="w-full min-h-[2rem] rounded-md border border-slate-200 bg-white/90 px-2 py-0.5 text-sm shadow-sm focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
         disabled={isDisabled}
       />
     );
@@ -891,18 +818,22 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         }
       }}
       className={cn(
-        "w-full rounded-md px-2 py-1 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border",
-        // Default: Transparent. Hover: Visible.
-        "bg-transparent border-transparent hover:bg-white hover:border-slate-300",
-        // No explicit error state for shipping slip text, so we omit the error styling for now.
-        // If an error state is introduced later, it can be added here.
+        "group flex w-full rounded-md px-2 py-0.5 text-left text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-200 border cursor-text items-center",
+        // 空欄時の枠表示
+        !fallbackText && "border-dashed border-slate-300 bg-slate-50/30",
+        // 値あり時
+        fallbackText && "bg-transparent border-transparent",
+        // Hover
+        "hover:bg-white hover:border-slate-300 hover:border-solid",
         "text-slate-700",
         isDisabled && "cursor-not-allowed opacity-60",
       )}
       disabled={isDisabled}
     >
-      <div className="flex h-full flex-col justify-center">
-        <span className="line-clamp-2 whitespace-pre-wrap">{fallbackText}</span>
+      <div className="flex h-full flex-col justify-center leading-relaxed">
+        <span className="whitespace-pre-wrap" style={{ overflowWrap: "break-word" }}>
+          {fallbackText ? insertSoftBreaks(fallbackText) : "\u00A0"}
+        </span>
       </div>
     </button>
   );
@@ -922,6 +853,7 @@ export function LotInfoCell({ row }: { row: OcrResultItem }) {
           inputClassName="text-right"
         />
       </div>
+
       {/* ロット2 */}
       <div className="grid grid-cols-[2fr_2fr_1fr] gap-3">
         <EditableTextCell row={row} field="lotNo2" placeholder="ロットNo(2)" />
@@ -937,21 +869,60 @@ export function LotInfoCell({ row }: { row: OcrResultItem }) {
   );
 }
 
-export function LotInfoReadOnlyCell({ row }: { row: OcrResultItem }) {
+// ============================================
+// Shared Components for Table
+// ============================================
+
+/**
+ * ステータス凡例コンポーネント
+ */
+export function StatusLegend() {
   return (
-    <div className="flex flex-col gap-1 py-1 text-xs">
-      {/* ロット1 */}
-      <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
-        <span>{row.manual_lot_no_1 || row.lot_no || "-"}</span>
-        <span>{row.manual_inbound_no || row.inbound_no || "-"}</span>
-        <span className="text-right">{row.manual_quantity_1 || "-"}</span>
+    <div className="flex flex-col gap-2 text-xs text-gray-600 bg-white p-2 rounded border border-gray-100 shadow-sm">
+      <div className="flex items-center gap-2">
+        <span className="font-bold text-[10px] text-gray-400 w-16 shrink-0">OCR状態:</span>
+        <div className="flex gap-2">
+          <span className="flex items-center gap-1 px-1 bg-green-50 text-green-700 rounded">
+            <CheckCircle className="h-3 w-3" />
+            正常
+          </span>
+          <span className="flex items-center gap-1 px-1 bg-orange-50 text-orange-700 rounded">
+            <AlertCircle className="h-3 w-3" />
+            形式エラー
+          </span>
+          <span className="flex items-center gap-1 px-1 bg-red-50 text-red-700 rounded">
+            <XCircle className="h-3 w-3" />
+            読取エラー
+          </span>
+        </div>
       </div>
-      {/* ロット2 */}
-      <div className="grid grid-cols-[2fr_2fr_1fr] gap-2">
-        <span>{row.manual_lot_no_2 || "-"}</span>
-        <span>{row.manual_inbound_no_2 || "-"}</span>
-        <span className="text-right">{row.manual_quantity_2 || "-"}</span>
+      <div className="flex items-center gap-2">
+        <span className="font-bold text-[10px] text-gray-400 w-16 shrink-0">マスタ判定:</span>
+        <div className="flex gap-2 flex-wrap">
+          <span className="flex items-center gap-1 px-1 bg-blue-50 text-blue-700 rounded">
+            <CheckCircle className="h-3 w-3" />
+            一致
+          </span>
+          <span className="flex items-center gap-1 px-1 bg-yellow-50 text-yellow-700 rounded">
+            <AlertTriangle className="h-3 w-3" />
+            前方一致
+          </span>
+          <span className="flex items-center gap-1 px-1 bg-red-50 text-red-700 rounded">
+            <XCircle className="h-3 w-3" />
+            マスタ未登録
+          </span>
+        </div>
       </div>
     </div>
   );
+}
+
+/**
+ * 行のスタイリング取得
+ */
+export function getRowClassName(row: OcrResultItem): string {
+  if (row.status === "ERROR" || row.status === "error") return "bg-red-50/30";
+  if (row.master_not_found) return "bg-amber-50/30";
+  if (row.jiku_format_error || row.date_format_error) return "bg-amber-50/30";
+  return "";
 }

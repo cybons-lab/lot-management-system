@@ -56,7 +56,8 @@ export function OcrResultsTable({
     if (isReadOnly) return [];
     const columnIds = new Set(columns.map((col) => col.id));
     const order: EditableFieldKey[] = [];
-    if (columnIds.has("lot_info")) {
+    // ユーザー指定の順序: ロット1 -> 入庫1 -> 数量1 -> ロット2 -> 入庫2 -> 数量2
+    if (columnIds.has("lot_no") || columnIds.has("inbound_no") || columnIds.has("quantity")) {
       order.push("lotNo1", "inboundNo1", "quantity1", "lotNo2", "inboundNo2", "quantity2");
     }
     if (columnIds.has("shipping_date_input")) {
