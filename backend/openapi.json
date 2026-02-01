@@ -531,6 +531,18 @@
               "title": "Status"
             },
             "description": "Filter by Status"
+          },
+          {
+            "name": "with_stock",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Filter to lots with available quantity only when true",
+              "default": true,
+              "title": "With Stock"
+            },
+            "description": "Filter to lots with available quantity only when true"
           }
         ],
         "responses": {
@@ -21749,7 +21761,7 @@
           "adjusted_by"
         ],
         "title": "AdjustmentCreate",
-        "description": "Payload for recording adjustments."
+        "description": "Payload for recording adjustments.\n\nInherits all fields from AdjustmentBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "AdjustmentResponse": {
         "properties": {
@@ -22843,7 +22855,7 @@
           "job_type"
         ],
         "title": "BatchJobCreate",
-        "description": "バッチジョブ作成スキーマ."
+        "description": "バッチジョブ作成スキーマ.\n\nInherits all fields from BatchJobBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "BatchJobExecuteRequest": {
         "properties": {
@@ -23463,7 +23475,7 @@
           "rule_parameters"
         ],
         "title": "BusinessRuleCreate",
-        "description": "業務ルール作成スキーマ."
+        "description": "業務ルール作成スキーマ.\n\nInherits all fields from BusinessRuleBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "BusinessRuleListResponse": {
         "properties": {
@@ -24174,7 +24186,7 @@
           "is_workday"
         ],
         "title": "CompanyCalendarCreate",
-        "description": "Create request for company calendar."
+        "description": "Create request for company calendar.\n\nInherits all fields from CompanyCalendarBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "CompanyCalendarResponse": {
         "properties": {
@@ -24544,7 +24556,7 @@
           "customer_name"
         ],
         "title": "CustomerCreate",
-        "description": "Create customer request."
+        "description": "Create customer request.\n\nInherits all fields from CustomerBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "CustomerDataImport": {
         "properties": {
@@ -24809,7 +24821,7 @@
           "base_unit"
         ],
         "title": "CustomerItemCreate",
-        "description": "Schema for creating a customer item mapping."
+        "description": "Schema for creating a customer item mapping.\n\nInherits all fields from CustomerItemBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "CustomerItemDeliverySettingCreate": {
         "properties": {
@@ -26001,7 +26013,7 @@
           "customer_id"
         ],
         "title": "DeliveryPlaceCreate",
-        "description": "Create delivery place request."
+        "description": "Create delivery place request.\n\nInherits all fields from DeliveryPlaceBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "DeliveryPlaceImportRow": {
         "properties": {
@@ -26315,7 +26327,7 @@
           "expected_quantity"
         ],
         "title": "ExpectedLotCreate",
-        "description": "Payload for creating expected lots."
+        "description": "Payload for creating expected lots.\n\nInherits all fields from ExpectedLotBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "ExpectedLotResponse": {
         "properties": {
@@ -26722,7 +26734,7 @@
           "forecast_quantity"
         ],
         "title": "ForecastCreate",
-        "description": "Payload for creating a new forecast entry."
+        "description": "Payload for creating a new forecast entry.\n\nInherits all fields from ForecastBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "ForecastGroupKey": {
         "properties": {
@@ -27515,7 +27527,7 @@
           "holiday_date"
         ],
         "title": "HolidayCalendarCreate",
-        "description": "Create request for holiday calendar."
+        "description": "Create request for holiday calendar.\n\nInherits all fields from HolidayCalendarBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "HolidayCalendarResponse": {
         "properties": {
@@ -28846,7 +28858,8 @@
         "required": [
           "maker_name"
         ],
-        "title": "LayerCodeUpdate"
+        "title": "LayerCodeUpdate",
+        "description": "Update layercode request.\n\nInherits all fields from LayerCodeBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "ListResponse_CandidateLotItem_": {
         "properties": {
@@ -32481,7 +32494,7 @@
           "delivery_place_id"
         ],
         "title": "OrderLineCreate",
-        "description": "Create order line request."
+        "description": "Create order line request.\n\nInherits all fields from OrderLineBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "OrderLineImportRow": {
         "properties": {
@@ -33606,7 +33619,7 @@
           "delivery_date"
         ],
         "title": "OriginalDeliveryCalendarCreate",
-        "description": "Create request for original delivery calendar."
+        "description": "Create request for original delivery calendar.\n\nInherits all fields from OriginalDeliveryCalendarBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "OriginalDeliveryCalendarResponse": {
         "properties": {
@@ -33775,7 +33788,7 @@
           "base_unit"
         ],
         "title": "ProductMappingCreate",
-        "description": "Create product mapping request."
+        "description": "Create product mapping request.\n\nInherits all fields from ProductMappingBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "ProductMappingImportRow": {
         "properties": {
@@ -34721,7 +34734,7 @@
           "role_name"
         ],
         "title": "RoleCreate",
-        "description": "Schema for creating a role."
+        "description": "Schema for creating a role.\n\nInherits all fields from RoleBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "RoleResponse": {
         "properties": {
@@ -37768,7 +37781,7 @@
           "jiku_code"
         ],
         "title": "ShippingMasterCuratedCreate",
-        "description": "出荷用マスタ新規作成リクエスト."
+        "description": "出荷用マスタ新規作成リクエスト.\n\nInherits all fields from ShippingMasterCuratedBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "ShippingMasterCuratedListResponse": {
         "properties": {
@@ -40172,7 +40185,7 @@
           "supplier_name"
         ],
         "title": "SupplierCreate",
-        "description": "Create supplier request."
+        "description": "Create supplier request.\n\nInherits all fields from SupplierBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "SupplierImportRow": {
         "properties": {
@@ -40321,7 +40334,7 @@
           "base_unit"
         ],
         "title": "SupplierItemCreate",
-        "description": "Payload to create a supplier item."
+        "description": "Payload to create a supplier item.\n\nInherits all fields from SupplierItemBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "SupplierItemResponse": {
         "properties": {
@@ -41039,7 +41052,7 @@
           "factor"
         ],
         "title": "UomConversionCreate",
-        "description": "Schema for creating a UOM conversion."
+        "description": "Schema for creating a UOM conversion.\n\nInherits all fields from UomConversionBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "UomConversionResponse": {
         "properties": {
@@ -41221,7 +41234,7 @@
           "supplier_id"
         ],
         "title": "UserSupplierAssignmentCreate",
-        "description": "Schema for creating a user-supplier assignment."
+        "description": "Schema for creating a user-supplier assignment.\n\nInherits all fields from UserSupplierAssignmentBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "UserSupplierAssignmentResponse": {
         "properties": {
@@ -41630,7 +41643,7 @@
           "warehouse_type"
         ],
         "title": "WarehouseCreate",
-        "description": "Create warehouse request."
+        "description": "Create warehouse request.\n\nInherits all fields from WarehouseBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "WarehouseDeliveryRouteCreate": {
         "properties": {
@@ -41692,7 +41705,7 @@
           "transport_lead_time_days"
         ],
         "title": "WarehouseDeliveryRouteCreate",
-        "description": "Create warehouse delivery route request."
+        "description": "Create warehouse delivery route request.\n\nInherits all fields from WarehouseDeliveryRouteBase without additional fields.\nExists for type distinction and API schema generation."
       },
       "WarehouseDeliveryRouteResponse": {
         "properties": {

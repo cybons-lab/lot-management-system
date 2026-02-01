@@ -25,7 +25,11 @@ class ForecastBase(BaseSchema):
 
 
 class ForecastCreate(ForecastBase):
-    """Payload for creating a new forecast entry."""
+    """Payload for creating a new forecast entry.
+
+    Inherits all fields from ForecastBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

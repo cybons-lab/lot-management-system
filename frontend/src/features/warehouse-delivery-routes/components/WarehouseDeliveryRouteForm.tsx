@@ -2,7 +2,7 @@
  * WarehouseDeliveryRouteForm - 輸送経路登録/編集フォーム
  */
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { z } from "zod";
 
 import type { WarehouseDeliveryRoute } from "../api";
@@ -72,7 +72,7 @@ export function WarehouseDeliveryRouteForm({
   const availableWarehouses = warehouses.filter((w) => w.warehouse_type !== "supplier");
 
   const { register, handleSubmit, formState, setValue, watch } = useForm<RouteFormData>({
-    resolver: zodResolver(routeFormSchema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(routeFormSchema) as Resolver<RouteFormData>,
     defaultValues: {
       warehouse_id: route?.warehouse_id ?? 0,
       delivery_place_id: route?.delivery_place_id ?? 0,

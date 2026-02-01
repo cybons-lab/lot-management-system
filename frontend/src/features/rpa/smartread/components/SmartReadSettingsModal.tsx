@@ -1,4 +1,3 @@
-/* eslint-disable */
 /* eslint-disable max-lines-per-function, complexity, max-lines */
 /**
  * SmartReadSettingsModal
@@ -8,7 +7,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2, Edit, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { z } from "zod";
 
 import type { SmartReadConfig } from "../api";
@@ -97,7 +96,7 @@ export function SmartReadSettingsModal({ open, onOpenChange }: SmartReadSettings
   const deleteMutation = useDeleteSmartReadConfig();
 
   const form = useForm<ConfigFormData>({
-    resolver: zodResolver(configFormSchema) as any,
+    resolver: zodResolver(configFormSchema) as Resolver<ConfigFormData>,
     defaultValues: {
       name: "",
       endpoint: "",

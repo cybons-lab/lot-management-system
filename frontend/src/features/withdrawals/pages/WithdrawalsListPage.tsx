@@ -1,12 +1,6 @@
-/**
- * WithdrawalsListPage
- *
- * 出庫履歴一覧ページ（フィルタ永続化対応）
- */
-
 import { formatDistanceToNow } from "date-fns";
 import { ja } from "date-fns/locale";
-import { ArrowLeft, Plus, RotateCcw, Search, XCircle } from "lucide-react";
+import { ArrowLeft, Plus, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -21,13 +15,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Table,
   TableBody,
   TableCell,
@@ -36,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui";
 import { SupplierAssignmentWarning } from "@/features/assignments/components";
+import { SimpleFilterContainer } from "@/shared/components/data/FilterContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 const PAGE_SIZE = 20;
@@ -126,50 +114,33 @@ export function WithdrawalsListPage() {
       {/* 担当仕入先未設定警告 */}
       <SupplierAssignmentWarning className="mb-6" />
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">フィルター</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="w-48">
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="出庫タイプ" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">すべて</SelectItem>
-                  <SelectItem value="order_manual">受注（手動）</SelectItem>
-                  <SelectItem value="internal_use">社内使用</SelectItem>
-                  <SelectItem value="disposal">廃棄処理</SelectItem>
-                  <SelectItem value="return">返品対応</SelectItem>
-                  <SelectItem value="sample">サンプル出荷</SelectItem>
-                  <SelectItem value="other">その他</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-1 items-center gap-2 sm:max-w-sm">
-              <Search className="h-4 w-4 text-gray-400" />
-              <Input
-                type="search"
-                placeholder="ロット・商品・得意先・納入先・参照番号で検索..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetFilters}
-              className="text-slate-600 hover:text-slate-900"
+      <SimpleFilterContainer
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        onReset={handleResetFilters}
+        searchPlaceholder="ロット・商品・得意先・納入先・参照番号で検索..."
+        className="mb-6"
+      >
+        <div className="flex flex-wrap gap-4">
+          <div className="w-48">
+            <select
+              value={filterType}
+              onChange={(e) =>
+                setFilterType(e.target.value as WithdrawalResponse["withdrawal_type"] | "all")
+              }
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <RotateCcw className="mr-1.5 h-4 w-4" />
-              リセット
-            </Button>
+              <option value="all">すべての出庫タイプ</option>
+              <option value="order_manual">受注（手動）</option>
+              <option value="internal_use">社内使用</option>
+              <option value="disposal">廃棄処理</option>
+              <option value="return">返品対応</option>
+              <option value="sample">サンプル出荷</option>
+              <option value="other">その他</option>
+            </select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </SimpleFilterContainer>
 
       {/* Table */}
       <Card>

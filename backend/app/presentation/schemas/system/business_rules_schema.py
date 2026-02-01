@@ -16,7 +16,11 @@ class BusinessRuleBase(BaseModel):
 
 
 class BusinessRuleCreate(BusinessRuleBase):
-    """業務ルール作成スキーマ."""
+    """業務ルール作成スキーマ.
+
+    Inherits all fields from BusinessRuleBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

@@ -39,7 +39,6 @@ export function WarehouseDistributionChart() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handlePieClick = (data: any) => {
     // Recharts Pie onClick passes the data object directly (or via payload)
-    // data might be the entry object
     if (data && data.id) {
       navigate(`/inventory?warehouse_id=${data.id}`);
     } else if (data && data.payload && data.payload.id) {

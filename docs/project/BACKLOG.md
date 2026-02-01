@@ -62,187 +62,9 @@
 
 ---
 
-### 1-2. 入庫履歴が表示されない問題（調査済み）
 
-**症状:** 入庫履歴タブで「入庫履歴はありません」と表示される。
-**原因:** `lot_service.create_lot()` で `StockHistory` の INBOUND レコードが作成されていない。
-**影響:** 画面からのロット新規登録・API経由のロット作成で入庫履歴が欠落する。
-
-**推奨対応:**
-1. `lot_service.create_lot()` に INBOUND の `StockHistory` 生成を追加
-2. 既存データ用のマイグレーションを用意
-3. 入庫履歴画面で再確認
-
-**関連ファイル:**
-- `backend/app/application/services/inventory/lot_service.py`
-- `backend/app/application/services/inventory/intake_history_service.py`
-
-**元:** `TODO.md` (2026-01-10) & `backlog.md::1-1` (2026-01-18)
-
----
-
-### 1-2. 未実装 API エンドポイント
-
-以下のPOSTエンドポイントはテストコード（`tests/error_scenarios/`）に記載がありますが、まだ実装されていません。
-
-**優先度: 中**
-
-| エンドポイント | 説明 | 関連テスト |
-|---------------|------|-----------|
-| `POST /api/roles/` | ロール作成API | `test_constraints.py::test_duplicate_role_code` |
-| `POST /api/orders/` | 受注作成API | `test_validation_errors.py::test_create_order_validation_error` |
-| `POST /api/inbound-plans/` | 入荷計画作成API | `test_validation_errors.py::test_create_inbound_plan_validation_error` |
-| `POST /api/adjustments/` | 在庫調整作成API | `test_validation_errors.py::test_create_adjustment_validation_error` |
-
-> **Note**: これらのテストは現在 `@pytest.mark.skip` でスキップされています。
-> 実装完了後、スキップマーカーを削除してテストを有効化してください。
-
-**元:** `TODO.md` (2026-01-10)
-
----
-
-### ~~1-3. CI/CDでtypecheckが無効化されていた~~ ✅ 対応済み
-
-**優先度**: 高
-**作成**: 2026-01-31
-**完了**: 2026-01-31
-**カテゴリ**: CI/CD・品質保証
-
-**問題:**
-- Typecheckが `.github/workflows/ci.yml` でコメントアウトされていた
-- 理由: "type definitions sync issue" (実際には問題なし)
-
-**対応内容:**
-- ✅ Typecheckを有効化（L34-36のコメント解除）
-- ✅ ローカルでtypecheck実行 → エラーなし確認
-- ✅ E2Eテストは既に別ジョブ (`e2e-smoke`, L103-199) として実装済み
-
-**確認結果:**
-```yaml
-CI構成:
-  Job 1: Frontend Tests
-    ✅ Lint (ESLint)
-    ✅ Typecheck (有効化)
-    ✅ Unit Tests (Vitest)
-
-  Job 2: Backend Tests
-    ✅ Lint (ruff)
-    ✅ Tests (pytest)
-
-  Job 3: E2E Smoke Tests (needs: frontend + backend)
-    ✅ Playwright smoke tests (P0 critical paths)
-```
-
-**関連ファイル:**
-- `.github/workflows/ci.yml` (L34-36: typecheck有効化)
-
----
-
-### 1-4. 在庫計算ロジックの厳密化とSSOT固定
-
-**優先度**: High
-**難易度**: Medium
-**想定工数**: 2-3日
-
-**背景・課題:**
-- ドメイン定義（仮予約Activeは在庫を減らさない）と、現在のビュー/サービス計算に一部乖離や二重控除のリスクが指摘されている。
-- 「利用可能在庫」の真の情報源（SSOT）を1箇所に固定し、不整合を排除する必要がある。
-
-**タスク内容:**
-1. `allocated_quantity` の定義を `confirmed_only` に統一し、Activeは `reserved_quantity_active` 等で分離表示する。
-2. ロック数量の二重控除（ビューで減算済みかつ計算ロジックでも減算）のリスクを解消。
-3. UI上の説明（ツールチップ等）と実計算式を完全に一致させる。
-
-**元:** `FUTURE_IMPROVEMENTS.md`
-
----
-
-<<<<<<< HEAD
-### ~~1-4. エラー処理・ログ出力の改善（2026-01-29 レビュー）~~ ✅ 対応済み
-=======
-### ~~1-5. エラー処理・ログ出力の改善（2026-01-29 レビュー）~~ ✅ 対応済み
->>>>>>> origin/main
-
-**優先度**: High
-**作成**: 2026-01-29
-**完了**: 2026-01-30
-**カテゴリ**: 可観測性・デバッグ性
-
-**背景:**
-エラー処理とログ出力のコードレビューにより、重大な問題が発見された。
-特にロット管理システムの核心部分（FEFO引当、Repository）にログがなく、障害時の原因追跡が困難だった。
-
-#### ✅ 重大な問題（対応完了）
-
-**1. ✅ Repositoryレイヤーにログを追加**
-- `lot_repository.py`, `allocation_repository.py` にログ追加
-- コミット: `74876ec`
-
-**2. ✅ FEFOアロケーションにログを追加**
-- `fefo.py`, `auto.py`, `commit.py`, `confirm.py`, `cancel.py` にログ追加
-- コミット: `74876ec`
-
-**3. ✅ トランザクション境界のログを追加**
-- `uow_service.py` にcommit/rollbackログを追加
-- コミット: `74876ec`
-
-**4. ✅ MaintenanceMiddlewareのサイレント例外を修正**
-- 例外時にwarningログを出力、ロジックバグも修正
-- コミット: `74876ec`
-
-#### ✅ 中程度の問題（対応完了）
-
-**5. ✅ フロントエンドのサイレントエラーを修正**
-- `AuthContext.tsx` にセッション復元失敗時のtoast通知を追加
-- 注: `ExportButton.tsx`, `MasterPageActions.tsx`, `useDatabaseReset.ts` は既にtoast通知実装済み
-- コミット: `38da2e0`
-
-**6. ✅ 機密データのログ出力リスクを修正**
-- `main.py` に `_mask_database_url()` を追加、DATABASE_URLをマスク
-- コミット: `38da2e0`
-
-**7. ✅ ログ量の不均衡を改善**
-- FEFO/Allocationにログを追加（項目2で対応）
-- コミット: `74876ec`
-
-**8. ✅ 例外ハンドリングパターンのドキュメント作成**
-- `docs/development/standards/error-handling.md` を作成
-- コミット: `38da2e0`
-
-#### ✅ 良い点（参考）
-
-- RFC 7807 Problem+JSON 準拠のエラーレスポンス
-- 構造化されたドメイン例外階層
-- グローバル例外ハンドラで一貫したHTTPステータスマッピング
-- UnitOfWorkパターンでトランザクションの原子性確保
-- structlogによる構造化ログ設定
-- フロントエンドのkyクライアント集中エラー処理
-
-**元:** 2026-01-29 エラー処理・ログ出力レビュー
-
----
 
 ## 2. 優先度: 中 (UI/UX・不整合修正)
-
-### 2-1. InboundPlansList のテーブルソート機能が動かない
-
-- `sortable: true` なのに `DataTable` へ `sort` / `onSortChange` を渡していない。
-- 対象: `frontend/src/features/inbound-plans/components/InboundPlansList.tsx`
-
-**元:** `backlog.md::2-1` (2026-01-18)
-
----
-
-### 2-2. フィルターリセットボタンの欠如
-
-- `AdjustmentsListPage`, `WithdrawalsListPage` にリセット操作がない。
-- 対象:
-  - `frontend/src/features/adjustments/pages/AdjustmentsListPage.tsx`
-  - `frontend/src/features/withdrawals/pages/WithdrawalsListPage.tsx`
-
-**元:** `backlog.md::2-3` (2026-01-18)
-
----
 
 ### 2-3. SmartRead設定フォーム送信のE2Eテスト追加
 
@@ -267,6 +89,7 @@ CI構成:
 
 ---
 
+<<<<<<< HEAD
 ### 2-4. Toast通知の不足
 
 - 保存成功時にフィードバックが出ない。
@@ -322,35 +145,8 @@ CI構成:
 
 ---
 
-### 2-9. テストデータ生成が warehouse/product データを作成しない
 
-**優先度**: 中
-**作成**: 2026-02-01
-**カテゴリ**: E2Eテスト・テストデータ
-
-**症状:**
-- `POST /api/admin/test-data/generate` を呼び出しても、warehouse/product データが生成されない。
-- `e2e-02-save-persistence.spec.ts` の2テストが一時的にスキップされている。
-
-**影響範囲:**
-- 倉庫マスタ・製品マスタのE2Eテストが実行できない。
-- 手動でのテストデータ準備が必要。
-
-**推奨対応:**
-1. バックエンドの `test-data/generate` エンドポイント実装を調査
-2. warehouse/product データ生成ロジックを追加
-3. e2e-02 の `test.skip()` を削除して再有効化
-
-**現状回避策:**
-- 該当テストを `test.skip(true, "テストデータ生成が倉庫/製品を作成しないため、一時的にスキップ")` で一時スキップ。
-
-**関連ファイル:**
-- `frontend/e2e/specs/p0/e2e-02-save-persistence.spec.ts` (L27, L159)
-- バックエンド: `app/presentation/api/routes/admin/*` (test-data生成エンドポイント)
-
----
-
-### 2-8. ライブラリのメジャーアップデート対応
+### 2-7. ライブラリのメジャーアップデート対応
 
 **優先度**: 中
 **作成**: 2026-01-31
@@ -370,21 +166,11 @@ CI構成:
 3. 既存機能（特にデータ分析、WebSocket通信）の回帰テスト実施。
 4. 問題なければ本番環境へ適用。
 
----
 **元:** `backlog.md::8-2` (2026-01-18) & `next_reviews_ja.md` (日付なし)
 
 ---
 
-### 2-8. フロントエンド・コンソールエラー
-
-**症状**: React Key重複エラー（"Encountered two children with the same key"）などがコンソールに出力されている。
-**タスク**: リストレンダリング時のkey生成ロジック修正。
-
-**元:** `backlog.md::8-3` (2026-01-18)
-
----
-
-### 2-9. 在庫詳細の仕入先固定
+### 2-8. 在庫詳細の仕入先固定
 
 **要望**: 在庫詳細画面において、仕入先が固定（または明確化）されるべき。
 **タスク**: 製品×倉庫のコンテキストにおける仕入先特定ロジックの実装とUI反映。
@@ -393,57 +179,7 @@ CI構成:
 
 ---
 
-### 2-10. ログレベルの動的変更機能
-
-**優先度**: 中
-**作成**: 2026-02-01
-**カテゴリ**: 運用・監視
-
-**背景:**
-- システム設定画面でログレベルを DEBUG に変更しても、実行中のバックエンドには反映されない
-- ログレベルは起動時に `settings.LOG_LEVEL` から設定され、以降は固定される
-- デバッグ時にバックエンドの再起動が必要で、運用上不便
-
-**現状の動作:**
-1. システム設定画面でログレベルを変更 → DB (`system_configs`) に保存
-2. バックエンド起動時に `configure_logging()` が `settings.LOG_LEVEL` を読み込み
-3. 実行中は `logging.getLogger().setLevel()` を呼んでも、構造化ログ設定が再構築されない
-
-**タスク内容:**
-1. ログレベル変更APIエンドポイントの追加 (`POST /api/admin/log-level`)
-2. `configure_logging()` を呼び出して、実行中のログ設定を更新
-3. システム設定画面にログレベル変更ボタンを追加（または保存時に自動反映）
-
-**参考ファイル:**
-- `backend/app/core/logging.py` - `configure_logging()` 関数
-- `backend/app/core/config.py` - `LOG_LEVEL` 設定
-- `frontend/src/features/system/SystemSettingsPage.tsx` - システム設定画面
-
----
-
-### 2-11. E2Eテストのエラーハンドリング改善
-
-**優先度**: 中
-**作成**: 2026-02-01
-**カテゴリ**: テスト品質
-
-**背景:**
-- E2Eテストの `api-client.ts` で一部のエラーを握りつぶしている
-- `generateTestData()` がタイムアウトした場合、警告のみ出して続行する
-- テスト失敗の原因が不明瞭になる
-
-**タスク内容:**
-1. `api-client.ts` の全エラーハンドリング箇所を精査
-2. 握りつぶすべきエラーと、スローすべきエラーを明確化
-3. エラーメッセージを改善し、デバッグしやすくする
-
-**参考:**
-- `frontend/e2e/fixtures/api-client.ts` - L150-162 (`generateTestData`)
-- `frontend/e2e/fixtures/db-reset.ts` - 修正済み（エラーをスロー）
-
----
-
-### 2-12. SmartRead OCR処理完了通知機能
+### 2-9. SmartRead OCR処理完了通知機能
 
 **優先度**: Medium
 **難易度**: Medium
@@ -514,7 +250,7 @@ CI構成:
 
 ---
 
-### 2-11. SmartRead: ファイルアップロードとフォルダ監視の処理統一
+### 2-10. SmartRead: ファイルアップロードとフォルダ監視の処理統一
 
 **優先度**: Medium
 **難易度**: Medium
@@ -608,149 +344,87 @@ async def start_pad_run_from_upload(
 
 ---
 
-### 2-12. フロントエンド: Chart Event Handlersに適切な型を定義
-
-**優先度**: Medium (any型削減 Phase 1)
-**対象**: 4箇所
-
-**場所**:
-- `features/dashboard/components/WarehouseDistributionChart.tsx`
-- `features/dashboard/components/TopProductsChart.tsx`
-
-**現状:**
-```typescript
-const handlePieClick = (data: any) => {
-  if (data && data.id) {
-    navigate(`/inventory?warehouse_id=${data.id}`);
-  }
-}
-```
-
-**対応:**
-```typescript
-interface PieClickData {
-  id?: number;
-  payload?: {
-    id?: number;
-  };
-}
-
-const handlePieClick = (data: PieClickData) => {
-  const warehouseId = data?.id ?? data?.payload?.id;
-  if (warehouseId) {
-    navigate(`/inventory?warehouse_id=${warehouseId}`);
-  }
-}
-```
-
-**元:** `any-type-reduction.md` (2026-01-18)
-
 ---
 
-### 2-11. データ再読み込みボタンの共通化
+### 2-11. ログレベルの動的変更機能
 
-**優先度**: Medium
-**難易度**: Low
-**想定工数**: 0.5-1日
-
-**背景:**
-現在、OCR結果ページには手動でデータを再読み込みするボタンが実装されています（2026-01-23実装）。しかし、他のデータ一覧ページ（出荷用マスタ、在庫一覧、受注一覧など）には同様の機能がありません。
-
-ユーザーがF5キーでページ全体をリロードすると、以下の問題が発生します：
-- ログイン状態が失われる可能性
-- フォーム入力内容が消える
-- アプリケーション全体の再初期化が発生（不要なリソース消費）
-
-**提案:** 共通コンポーネント `RefreshButton` を作成し、全主要ページに配置。
-
-**対象ページ:**
-1. ✅ OCR結果ページ (`OcrResultsListPage.tsx`)
-2. ❌ 出荷用マスタページ (`ShippingMasterListPage.tsx`)
-3. ❌ 在庫一覧ページ (`InventoryListPage.tsx`)
-4. ❌ 受注一覧ページ (`OrdersListPage.tsx`)
-5. ❌ ロット一覧ページ (`LotsListPage.tsx`)
-6. ❌ 仕入先マスタページ (`SuppliersListPage.tsx`)
-7. ❌ 得意先マスタページ (`CustomersListPage.tsx`)
-8. ❌ SAP統合ページ (`DataFetchTab.tsx`)
-9. ❌ フォーキャストページ (`ForecastPage.tsx`)
-
-**元:** `FUTURE_IMPROVEMENTS.md`
-
----
-
-### 2-12. 在庫一覧ページネーションの「総件数」対応
-
-**現状**: APIが総件数（total count）を返さないため、フロントエンドでは「現在のページ番号」と「現在の表示件数」のみを表示しています（例: 「ページ 1 (表示件数: 20)」）。
-
-**課題**: ユーザーにとって全体のボリュームが把握しづらい状態です。
-
-**タスク:**
-- バックエンドAPI (`/api/v2/inventory/`) が総件数を返すように修正できるか調査する。
-- 修正可能な場合、APIレスポンスに `total` フィールドを追加し、フロントエンドのページネーションコンポーネントで総ページ数を計算・表示できるようにする。
-
-**元:** `next_reviews_ja.md::1`
-
----
-
-### 2-13. 在庫管理トップのフィルタ仕様の調査・改善
-
-**現状**: フィルタの挙動が直感的でないとの指摘があります。
-- 「製品」を選択した後に「仕入先」を変更すると、リストからデータが消える（AND検索がきつすぎる、または連動していない等）。
-- 倉庫フィルタが他と連動していない。
-
-**タスク:**
-- 現在のフィルタ実装（`useInventoryPageState` や `useFilterOptions`）の依存関係と絞り込みロジックを整理する。
-- ユーザーが期待する挙動（例: 選択可能な選択肢のみを表示する動的フィルタリング、あるいはOR検索の導入など）を明確にし、実装案を策定する。
-
-**元:** `next_reviews_ja.md::3`
-
----
-
-### 2-14. テストデータの拡充（SAP仕入先・数量単位）
-
-**優先度**: Medium
+**優先度**: 中
 **作成**: 2026-02-01
-**カテゴリ**: テストデータ品質
+**カテゴリ**: 運用・監視
 
 **背景:**
-OCR結果テーブルにおいて、以下のフィールドのテストデータが不足している：
-1. **SAP仕入先** (`sap_supplier_code`, `sap_supplier_name`)
-2. **数量単位** (`sap_qty_unit`)
+- システム設定画面でログレベルを DEBUG に変更しても、実行中のバックエンドには反映されない
+- ログレベルは起動時に `settings.LOG_LEVEL` から設定され、以降は固定される
+- デバッグ時にバックエンドの再起動が必要で、運用上不便
 
-これらのフィールドが常に空表示となっており、UI表示の検証が困難。
+**現状の動作:**
+1. システム設定画面でログレベルを変更 → DB (`system_configs`) に保存
+2. バックエンド起動時に `configure_logging()` が `settings.LOG_LEVEL` を読み込み
+3. 実行中は `logging.getLogger().setLevel()` を呼んでも、構造化ログ設定が再構築されない
 
 **タスク内容:**
-1. テストデータ生成スクリプト（`generate_sample_data.py` 等）を更新
-2. 以下のデータを追加:
-   - SAP仕入先情報（SAP関連ページのテストデータ）
-   - 数量単位情報（出荷用マスタデータページのテストデータ）
-3. OCR結果のサンプルデータに上記フィールドを含める
+1. ログレベル変更APIエンドポイントの追加 (`POST /api/admin/log-level`)
+2. `configure_logging()` を呼び出して、実行中のログ設定を更新
+3. システム設定画面にログレベル変更ボタンを追加（または保存時に自動反映）
+
+**参考ファイル:**
+- `backend/app/core/logging.py` - `configure_logging()` 関数
+- `backend/app/core/config.py` - `LOG_LEVEL` 設定
+- `frontend/src/features/system/SystemSettingsPage.tsx` - システム設定画面
+
+---
+
+### 2-12. E2Eテストのエラーハンドリング改善
+
+**優先度**: 中
+**作成**: 2026-02-01
+**カテゴリ**: テスト品質
+
+**背景:**
+- E2Eテストの `api-client.ts` で一部のエラーを握りつぶしている
+- `generateTestData()` がタイムアウトした場合、警告のみ出して続行する
+- テスト失敗の原因が不明瞭になる
+
+**タスク内容:**
+1. `api-client.ts` の全エラーハンドリング箇所を精査
+2. 握りつぶすべきエラーと、スローすべきエラーを明確化
+3. エラーメッセージを改善し、デバッグしやすくする
+
+**参考:**
+- `frontend/e2e/fixtures/api-client.ts` - L150-162 (`generateTestData`)
+- `frontend/e2e/fixtures/db-reset.ts` - 修正済み（エラーをスロー）
+
+---
+
+### 2-13. テストデータ生成が warehouse/product データを作成しない
+
+**優先度**: 中
+**作成**: 2026-02-01
+**カテゴリ**: E2Eテスト・テストデータ
+
+**症状:**
+- `POST /api/admin/test-data/generate` を呼び出しても、warehouse/product データが生成されない。
+- `e2e-02-save-persistence.spec.ts` の2テストが一時的にスキップされている。
+
+**影響範囲:**
+- 倉庫マスタ・製品マスタのE2Eテストが実行できない。
+- 手動でのテストデータ準備が必要。
+
+**推奨対応:**
+1. バックエンドの `test-data/generate` エンドポイント実装を調査
+2. warehouse/product データ生成ロジックを追加
+3. e2e-02 の `test.skip()` を削除して再有効化
+
+**現状回避策:**
+- 該当テストを `test.skip(true, "テストデータ生成が倉庫/製品を作成しないため、一時的にスキップ")` で一時スキップ。
 
 **関連ファイル:**
-- `backend/app/application/services/test_data_generator.py` (または類似のテストデータ生成スクリプト)
-- `backend/app/infrastructure/persistence/models/ocr_models.py`
-
-**元:** ユーザー要望 (2026-02-01)
+- `frontend/e2e/specs/p0/e2e-02-save-persistence.spec.ts` (L27, L159)
+- バックエンド: `app/presentation/api/routes/admin/*` (test-data生成エンドポイント)
 
 ---
 
 ## 3. DB/UI整合性・データ表示改善
-
-### 3-1. Lots のステータス系フィールドがUI未表示
-
-- `status`, `inspection_status`, `inspection_date`, `inspection_cert_number`, `origin_reference`
-- 対象: 在庫一覧・ロット詳細の表示コンポーネント
-
-**元:** `backlog.md::3-1` (2026-01-18)
-
----
-
-### 3-2. Orders の一部フィールドがUI未表示
-
-- `ocr_source_filename`, `cancel_reason`, `external_product_code`, `shipping_document_text`
-- 対象: 受注詳細画面
-
-**元:** `backlog.md::3-2` (2026-01-18)
 
 ---
 
@@ -779,14 +453,6 @@ OCR結果テーブルにおいて、以下のフィールドのテストデー�
 - `AllocationDialog.tsx`, `ForecastsTab.tsx`, `InboundPlansTab.tsx`, `WithdrawalCalendar.tsx` など。
 
 **元:** `backlog.md::4-1` (2026-01-18)
-
----
-
-### 4-2. 日付ユーティリティの統合
-
-- `shared/utils/date.ts`, `shared/libs/utils/date.ts`, `features/forecasts/.../date-utils.ts` の重複整理。
-
-**元:** `backlog.md::4-2` (2026-01-18)
 
 ---
 
@@ -829,38 +495,6 @@ def get_product_name(product: Optional[HasProductName], default: str = "") -> st
 ```
 
 **元:** `any-type-reduction.md` (2026-01-18)
-
----
-
-### 4-5. フロントエンド: Zod Resolverの型問題を解決
-
-**優先度**: Medium (any型削減 Phase 2)
-**対象**: 6箇所
-
-**場所**:
-- `features/warehouses/components/WarehouseForm.tsx`
-- `features/rpa/smartread/components/SmartReadSettingsModal.tsx`
-- `features/uom-conversions/components/UomConversionForm.tsx`
-- `features/warehouse-delivery-routes/components/WarehouseDeliveryRouteForm.tsx`
-- `features/product-mappings/components/ProductMappingForm.tsx`
-- `features/delivery-places/components/DeliveryPlaceForm.tsx`
-
-**現状:**
-```typescript
-resolver: zodResolver(warehouseFormSchema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-```
-
-**対応:**
-```typescript
-// Before
-resolver: zodResolver(schema) as any,
-
-// After
-resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
-```
-
-**元:** `any-type-reduction.md` (2026-01-18)
-
 
 ---
 
@@ -1159,9 +793,7 @@ resolver: zodResolver(schema) as Resolver<WarehouseFormData>,
 **タスク内容:**
 
 #### 7-1-1. 既知アンチパターンの修正
-- [x] 独自test_dbセッションの削除（21ファイル）→ グローバル `db` fixture に統一
-- [ ] 重複fixture の共通化（supplier, warehouse, customer など）
-- [ ] トランザクション管理の統一（conftest.pyのパターンに従う）
+- [x] 独自test_dbセッションの削除（21ファイル）→ グローバル `db` fixture に統一 (ARCHIVE.mdへ移動)
 
 #### 7-1-2. アンチパターン検出ツールの導入
 - [ ] pytest-best-practices などのlinterツール検討
@@ -1417,48 +1049,6 @@ CLAUDE.md で推奨される300行を大幅に超えるファイルが存在。
 
 ---
 
-### 9-12. 空の Schema クラス (pass only) の整理
-
-**優先度**: Low
-**作成**: 2026-01-26
-
-**背景:**
-`pass` のみの空クラスが29箇所存在。
-目的が不明確で、コードの意図が伝わりにくい。
-
-**対象 (一部):**
-- `forecast_schema.py:30`
-- `orders_schema.py:145`
-- `masters_schema.py:40,96,150,206,250,340`
-- `customer_items_schema.py:47`
-- その他20+箇所
-
-**対応:**
-1. 継承のみが目的なら、docstringでその旨を明記
-2. 不要なクラスは削除
-3. フィールドを追加すべきなら追加
-
----
-
-### 9-13. セキュリティ: db_browser_router の権限チェック
-
-**優先度**: High
-**作成**: 2026-01-26
-
-**背景:**
-`/api/debug/db-browser` エンドポイントが認可チェックなしでアクセス可能。
-本番環境で有効化されると重大なセキュリティリスク。
-
-**対象:**
-- `backend/app/presentation/api/routes/debug/db_browser_router.py`
-
-**対応:**
-1. `settings.ENVIRONMENT == "development"` チェックを追加
-2. または管理者ロール（`is_admin`）のみアクセス可能に
-3. 本番デプロイ時にはルーター自体を無効化
-
----
-
 ### 9-14. Infrastructure → Service の逆依存解消
 
 **優先度**: Medium
@@ -1490,7 +1080,7 @@ Infrastructure層（clients/）がService層にアクセスしている箇所が
 対応が必要なものと、もはや不要なものが混在している可能性。
 
 **主なTODO:**
-- `lots_router.py:461` - "Add permission check"（権限チェック未実装）
+- `lots_router.py:461` - "Add permission check"（認証不具合は解消済、詳細なロール制限は今後検討）
 - `replenishment_router.py:57` - "Implement persistence"（永続化未実装）
 - `smartread_router.py:857` - "SSE実装"（リアルタイム通知未実装）
 - `confirm.py:237` - "Support configurable expiry margin"（有効期限マージン設定）
@@ -1679,34 +1269,6 @@ Excelビューのロット情報に「発注NO.」列があるが、常に `-` �
 
 ---
 
-### 10-5. ✅ 仕入先情報の表示修正（対応済み）
-
-**解決日**: 2026-01-26
-
-**問題:**
-Excelビューのヘッダーで「仕入先」「仕入先名称」が `-` 表示だった。
-
-**原因:**
-`GET /api/v2/inventory/{product_id}/{warehouse_id}` が `supplier_id`, `supplier_code`, `supplier_name` を返していなかった。
-
-**対応:**
-`inventory_service.py` の `get_inventory_item_by_product_warehouse()` にサプライヤー取得クエリを追加し、レスポンスに含めるように修正。
-
----
-
-### 10-6. ✅ forecast_period 日付表示の修正（対応済み）
-
-**解決日**: 2026-01-26
-
-**問題:**
-`forecast_period` は `YYYY-MM` 形式（月単位）だが、フロントエンドは `parseISO()` で日付としてパースしようとしていた。
-
-**対応:**
-`DateGrid.tsx` に `formatPeriodHeader()` 関数を追加:
-- `YYYY-MM` 形式 → `1月`, `2月` のように月表示
-- `YYYY-MM-DD` 形式 → `01/15` のように日付表示
-
----
 
 ### 10-7. 日付列の仕様整理（予測 vs 実績）
 
@@ -1752,56 +1314,6 @@ Excelビューのヘッダーで「仕入先」「仕入先名称」が `-` 表�
 
 ---
 
-## 11. 対応済み
-
-### 11-1. テストデータ生成の問題 (inventory_scenarios)
-
-**解決日**: 2026-01-18
-**マイグレーション**: `b77dcffc2d98`
-
-ビュー定義を修正し、消費（consumed）が現在在庫に即座に反映されるようになりました。
-
-**元:** `TODO.md::対応済み` (2026-01-10)
-
----
-
-### 11-2. Date Handling の型を明示 (orchestrator.py)
-
-**解決日**: 2026-01-26
-
-`execute_step2` の `start_date` / `end_date` パラメータを `Any` から `date | None` に変更。
-
-**元:** `any-type-reduction.md` (1-4)
-
----
-
-### 11-3. InboundPlansList のステータス日本語化
-
-**解決日**: 2026-01-26
-
-フィルターのステータスドロップダウンを日本語のみに統一（Planned → 予定 等）。
-
-**元:** `backlog.md::2-2` (2026-01-18)
-
----
-
-### 11-4. ConfirmedLinesPage のSAP一括登録ボタン重複
-
-**解決日**: 2026-01-26
-**状態**: 確認時点で既に修正済み（ボタンは1箇所のみ）
-
-**元:** `backlog.md::2-4` (2026-01-18)
-
----
-
-### 11-5. 本番コードの print() 文削除
-
-**解決日**: 2026-01-26
-**状態**: 確認時点で既に対応済み（logger使用に移行済み、またはコメント/テストコード内のみ）
-
-**元:** `BACKLOG.md::8-9` (2026-01-26)
-
----
 
 ## 参考情報
 
@@ -1852,3 +1364,4 @@ PlaywrightによるE2Eテスト実行時、`beforeAll` フックで呼び出さ�
 - 2026-01-24: 9ファイルを統合し、単一バックログとして整理
 - 2026-01-26: クイックウィン4件対応 (1-4, 2-2, 2-4, 8-9)
 - 2026-01-26: Excelビュー機能タスク追加 (セクション10)、仕入先表示・forecast_period表示修正完了
+- 2026-02-01: ロットアーカイブ時の 401 Unauthorized エラーの修正、認証ロジックの統合を完了

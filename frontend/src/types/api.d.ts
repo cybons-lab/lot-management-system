@@ -8118,6 +8118,9 @@ export interface components {
     /**
      * AdjustmentCreate
      * @description Payload for recording adjustments.
+     *
+     *     Inherits all fields from AdjustmentBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     AdjustmentCreate: {
       /** Lot Id */
@@ -8674,6 +8677,9 @@ export interface components {
     /**
      * BatchJobCreate
      * @description バッチジョブ作成スキーマ.
+     *
+     *     Inherits all fields from BatchJobBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     BatchJobCreate: {
       /**
@@ -9062,6 +9068,9 @@ export interface components {
     /**
      * BusinessRuleCreate
      * @description 業務ルール作成スキーマ.
+     *
+     *     Inherits all fields from BusinessRuleBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     BusinessRuleCreate: {
       /**
@@ -9377,6 +9386,9 @@ export interface components {
     /**
      * CompanyCalendarCreate
      * @description Create request for company calendar.
+     *
+     *     Inherits all fields from CompanyCalendarBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     CompanyCalendarCreate: {
       /**
@@ -9520,6 +9532,9 @@ export interface components {
     /**
      * CustomerCreate
      * @description Create customer request.
+     *
+     *     Inherits all fields from CustomerBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     CustomerCreate: {
       /** Customer Code */
@@ -9644,6 +9659,9 @@ export interface components {
     /**
      * CustomerItemCreate
      * @description Schema for creating a customer item mapping.
+     *
+     *     Inherits all fields from CustomerItemBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     CustomerItemCreate: {
       /**
@@ -10198,6 +10216,9 @@ export interface components {
     /**
      * DeliveryPlaceCreate
      * @description Create delivery place request.
+     *
+     *     Inherits all fields from DeliveryPlaceBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     DeliveryPlaceCreate: {
       /**
@@ -10331,6 +10352,9 @@ export interface components {
     /**
      * ExpectedLotCreate
      * @description Payload for creating expected lots.
+     *
+     *     Inherits all fields from ExpectedLotBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     ExpectedLotCreate: {
       /** Expected Lot Number */
@@ -10496,6 +10520,9 @@ export interface components {
     /**
      * ForecastCreate
      * @description Payload for creating a new forecast entry.
+     *
+     *     Inherits all fields from ForecastBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     ForecastCreate: {
       /** Customer Id */
@@ -10795,6 +10822,9 @@ export interface components {
     /**
      * HolidayCalendarCreate
      * @description Create request for holiday calendar.
+     *
+     *     Inherits all fields from HolidayCalendarBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     HolidayCalendarCreate: {
       /**
@@ -11396,7 +11426,13 @@ export interface components {
        */
       updated_at: string;
     };
-    /** LayerCodeUpdate */
+    /**
+     * LayerCodeUpdate
+     * @description Update layercode request.
+     *
+     *     Inherits all fields from LayerCodeBase without additional fields.
+     *     Exists for type distinction and API schema generation.
+     */
     LayerCodeUpdate: {
       /** Maker Name */
       maker_name: string;
@@ -12719,6 +12755,9 @@ export interface components {
     /**
      * OrderLineCreate
      * @description Create order line request.
+     *
+     *     Inherits all fields from OrderLineBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     OrderLineCreate: {
       /**
@@ -13281,6 +13320,9 @@ export interface components {
     /**
      * OriginalDeliveryCalendarCreate
      * @description Create request for original delivery calendar.
+     *
+     *     Inherits all fields from OriginalDeliveryCalendarBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     OriginalDeliveryCalendarCreate: {
       /**
@@ -13343,6 +13385,9 @@ export interface components {
     /**
      * ProductMappingCreate
      * @description Create product mapping request.
+     *
+     *     Inherits all fields from ProductMappingBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     ProductMappingCreate: {
       /**
@@ -13771,6 +13816,9 @@ export interface components {
     /**
      * RoleCreate
      * @description Schema for creating a role.
+     *
+     *     Inherits all fields from RoleBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     RoleCreate: {
       /**
@@ -14949,6 +14997,9 @@ export interface components {
     /**
      * ShippingMasterCuratedCreate
      * @description 出荷用マスタ新規作成リクエスト.
+     *
+     *     Inherits all fields from ShippingMasterCuratedBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     ShippingMasterCuratedCreate: {
       /**
@@ -16156,6 +16207,9 @@ export interface components {
     /**
      * SupplierCreate
      * @description Create supplier request.
+     *
+     *     Inherits all fields from SupplierBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     SupplierCreate: {
       /** Supplier Code */
@@ -16192,6 +16246,9 @@ export interface components {
     /**
      * SupplierItemCreate
      * @description Payload to create a supplier item.
+     *
+     *     Inherits all fields from SupplierItemBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     SupplierItemCreate: {
       /**
@@ -16585,6 +16642,9 @@ export interface components {
     /**
      * UomConversionCreate
      * @description Schema for creating a UOM conversion.
+     *
+     *     Inherits all fields from UomConversionBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     UomConversionCreate: {
       /**
@@ -16709,6 +16769,9 @@ export interface components {
     /**
      * UserSupplierAssignmentCreate
      * @description Schema for creating a user-supplier assignment.
+     *
+     *     Inherits all fields from UserSupplierAssignmentBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     UserSupplierAssignmentCreate: {
       /** User Id */
@@ -16890,6 +16953,9 @@ export interface components {
     /**
      * WarehouseCreate
      * @description Create warehouse request.
+     *
+     *     Inherits all fields from WarehouseBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     WarehouseCreate: {
       /** Warehouse Code */
@@ -16915,6 +16981,9 @@ export interface components {
     /**
      * WarehouseDeliveryRouteCreate
      * @description Create warehouse delivery route request.
+     *
+     *     Inherits all fields from WarehouseDeliveryRouteBase without additional fields.
+     *     Exists for type distinction and API schema generation.
      */
     WarehouseDeliveryRouteCreate: {
       /**
@@ -17428,6 +17497,8 @@ export interface operations {
         expiry_to?: string | null;
         /** @description Filter by Status */
         status?: string | null;
+        /** @description Filter to lots with available quantity only when true */
+        with_stock?: boolean;
       };
       header?: never;
       path?: never;

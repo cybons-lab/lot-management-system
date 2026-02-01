@@ -1,8 +1,6 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, Download, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
 
-import { Button } from "@/components/ui";
+import { Button, RefreshButton } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 interface ActionButtonsProps {
@@ -32,8 +30,6 @@ export function ActionButtons({
   handleSapLinkage,
   isRpaStarting,
 }: ActionButtonsProps) {
-  const queryClient = useQueryClient();
-
   return (
     <div className="flex gap-2">
       {viewMode === "current" && selectedIds.length > 0 && (
@@ -75,19 +71,8 @@ export function ActionButtons({
         </Button>
       )}
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="bg-gray-50"
-        onClick={() => {
-          queryClient.invalidateQueries({ queryKey: ["ocr-results"] });
-          toast.success("データを再読み込みしました");
-        }}
-        disabled={isLoading}
-      >
-        <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
-        再読み込み
-      </Button>
+      <RefreshButton queryKey={["ocr-results"]} isLoading={isLoading} />
+
       {viewMode === "current" && (
         <Button
           variant="outline"

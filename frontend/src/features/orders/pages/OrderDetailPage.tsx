@@ -116,6 +116,11 @@ function OrderLinesTable({
               <TableCell>
                 <div className="font-medium">{line.product_name}</div>
                 <div className="text-xs text-slate-500">{line.product_code}</div>
+                {line.shipping_document_text && (
+                  <div className="mt-1 text-xs text-slate-600">
+                    <span className="font-medium">出荷表:</span> {line.shipping_document_text}
+                  </div>
+                )}
               </TableCell>
               <TableCell>{line.delivery_place_name}</TableCell>
               <TableCell>

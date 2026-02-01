@@ -2,7 +2,7 @@
  * DeliveryPlaceForm - 納入先登録/編集フォーム
  */
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { useForm, type Resolver, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui";
@@ -62,7 +62,7 @@ export function DeliveryPlaceForm({
   isEdit = false,
 }: DeliveryPlaceFormProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema) as Resolver<FormValues>,
     defaultValues: {
       delivery_place_code: initialData?.delivery_place_code ?? "",
       delivery_place_name: initialData?.delivery_place_name ?? "",

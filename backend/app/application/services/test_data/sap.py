@@ -70,32 +70,41 @@ def generate_sap_connections(db: Session) -> list[SapConnection]:
 
 
 def generate_sap_material_cache(db: Session, connections: list[SapConnection]) -> None:
-    """Generate SAP material cache data."""
+    """Generate SAP material cache data with supplier and unit information."""
     # Use production connection for cache data
     prod_conn = next((c for c in connections if c.environment == "production"), connections[0])
 
-    # Sample material codes (zkdmat_b) that might exist in the system
-    material_codes = ["M001", "M002", "M003", "M004", "M005"]
     customer_code = "100427105"  # Default customer code
 
+    # Material code → (supplier_code, qty_unit) mapping
+    # Matches the pattern in smartread.py test data
+    material_mapping = {
+        "M001": ("S001", "KG"),
+        "M002": ("S002", "PC"),
+        "M003": ("S001", "M"),
+        "M004": ("S002", "KG"),
+        "M005": ("S999", "EA"),  # Fallback for unmapped materials
+    }
+
     cache_entries = []
-    for i, mat_code in enumerate(material_codes):
+    for i, (mat_code, (supplier_code, qty_unit)) in enumerate(material_mapping.items(), start=1):
         cache_entries.append(
             SapMaterialCache(
                 connection_id=prod_conn.id,
                 zkdmat_b=mat_code,  # 先方品番
                 kunnr=customer_code,  # 得意先コード
                 raw_data={
-                    "MAKTX": f"サンプル材料{i + 1}",
+                    "MAKTX": f"サンプル材料{i}",
                     "MTART": "ROH",  # Raw material
-                    "MEINS": "KG",
+                    "MEINS": qty_unit,  # 数量単位
                     "MATKL": "MAT001",
                     "WERKS": "1000",
                     "LGORT": "0001",
+                    "ZLIFNR_H": supplier_code,  # SAP仕入先コード
                     "ZMKMAT_B": f"SAP-MK-{mat_code[-3:]}",  # SAP優先のメーカー品番
                     "description": f"テスト用材料データ {mat_code}",
-                    "weight": f"{(i + 1) * 100}",
-                    "dimension": f"{(i + 1) * 100}x{(i + 1) * 50}x{(i + 1) * 10}",
+                    "weight": f"{i * 100}",
+                    "dimension": f"{i * 100}x{i * 50}x{i * 10}",
                 },
                 fetched_at=datetime.now(UTC) - timedelta(days=1),
                 fetch_batch_id=f"BATCH-{datetime.now(UTC).strftime('%Y%m%d')}-001",

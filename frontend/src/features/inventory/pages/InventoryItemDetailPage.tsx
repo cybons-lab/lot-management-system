@@ -242,6 +242,36 @@ export function InventoryItemDetailPage() {
       align: "left",
     },
     {
+      id: "inspection_status",
+      header: "検査ステータス",
+      cell: (lot) => lot.inspection_status ?? "-",
+      sortable: true,
+      align: "left",
+    },
+    {
+      id: "inspection_date",
+      header: "検査日",
+      cell: (lot) =>
+        lot.inspection_date && lot.inspection_date !== "-"
+          ? format(new Date(lot.inspection_date), "yyyy/MM/dd")
+          : "-",
+      sortable: true,
+    },
+    {
+      id: "inspection_cert_number",
+      header: "成績書番号",
+      cell: (lot) => lot.inspection_cert_number ?? "-",
+      sortable: true,
+      align: "left",
+    },
+    {
+      id: "origin_reference",
+      header: "参照情報",
+      cell: (lot) => lot.origin_reference ?? "-",
+      sortable: true,
+      align: "left",
+    },
+    {
       id: "actions",
       header: "操作",
       cell: (lot) => (
@@ -307,6 +337,13 @@ export function InventoryItemDetailPage() {
             <div className={styles.detailGrid.label}>倉庫</div>
             <div className={styles.detailGrid.value}>
               {item.warehouse_name || "名称未設定"} ({item.warehouse_code || "-"})
+            </div>
+          </div>
+          <div>
+            <div className={styles.detailGrid.label}>仕入先</div>
+            <div className={styles.detailGrid.value}>
+              {item.supplier_name || "名称未設定"}
+              {item.supplier_code ? ` (${item.supplier_code})` : ""}
             </div>
           </div>
           <div>

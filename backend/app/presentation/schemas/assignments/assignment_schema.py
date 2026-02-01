@@ -14,7 +14,11 @@ class UserSupplierAssignmentBase(BaseModel):
 
 
 class UserSupplierAssignmentCreate(UserSupplierAssignmentBase):
-    """Schema for creating a user-supplier assignment."""
+    """Schema for creating a user-supplier assignment.
+
+    Inherits all fields from UserSupplierAssignmentBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
 
     pass
 

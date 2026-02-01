@@ -1,10 +1,10 @@
-import { Loader2, RefreshCcw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
 import { useOrdersPageState } from "./hooks/useOrdersPageState";
 
-import { Button } from "@/components/ui";
+import { RefreshButton } from "@/components/ui";
 import { OrderCard } from "@/features/orders/components/display/OrderCard";
 import { OrderFilters } from "@/features/orders/components/filters/OrderFilters";
 import { useOrdersList } from "@/features/orders/hooks/useOrders";
@@ -67,16 +67,11 @@ export function OrdersPage() {
         title="受注一覧"
         subtitle="受注と引当状況を確認します"
         actions={
-          <Button
-            variant="outline"
-            onClick={() => ordersQuery.refetch()}
-            disabled={ordersQuery.isFetching}
-          >
-            <RefreshCcw
-              className={`mr-2 h-4 w-4 ${ordersQuery.isFetching ? "animate-spin" : ""}`}
-            />
-            最新の状態を取得
-          </Button>
+          <RefreshButton
+            queryKey={["orders", filters]}
+            isLoading={ordersQuery.isFetching}
+            successMessage="最新の状態を取得しました"
+          />
         }
         className="pb-0"
       />
