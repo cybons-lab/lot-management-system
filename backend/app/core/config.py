@@ -105,7 +105,7 @@ class Settings(BaseSettings):
 
     # JWT設定
     secret_key: str = Field(
-        default="dev-secret-key-change-in-production",
+        default="dev-secret-key-change-me-in-production",
         validation_alias=AliasChoices("SECRET_KEY", "secret_key"),
     )
     algorithm: str = Field(

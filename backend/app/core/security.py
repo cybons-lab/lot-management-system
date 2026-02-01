@@ -29,13 +29,9 @@
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-import jwt  # type: ignore[import-not-found]
+import jwt  # PyJWT
 
-
-# Hardcoded secret for dev (In prod, load from env)
-SECRET_KEY = "dev-secret-key-change-me-in-production"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day (社内システムのため許容)
+from app.core.config import settings
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
@@ -44,17 +40,19 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(minutes=15)
+        expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
 
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
     return str(encoded_jwt)
 
 
 def decode_access_token(token: str) -> dict[str, Any] | None:
     """Decode and verify JWT."""
     try:
-        payload: dict[str, Any] = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload: dict[str, Any] = jwt.decode(
+            token, settings.secret_key, algorithms=[settings.algorithm]
+        )
         return payload
     except jwt.PyJWTError:
         return None

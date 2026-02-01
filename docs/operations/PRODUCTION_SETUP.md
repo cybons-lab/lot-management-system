@@ -35,7 +35,30 @@ SECRET_KEY=ランダムな長い文字列に変更すること
 CORS_ORIGINS=http://本番サーバーのIP:8000
 ```
 
-### ステップ 2: PostgreSQL のインストールと設定
+> [!WARNING]
+> `SECRET_KEY` が設定されていない、または開発用デフォルト値のままだと、セキュリティリスクがあるだけでなく、トークンの検証に失敗して **401 Unauthorized** エラーの原因となります。必ず一意な値を設定してください。
+
+### ステップ 2: システム環境変数での設定 (推奨)
+
+`.env` ファイルを使用する代わりに、OSのシステム環境変数に直接設定することで、ファイル管理の手間とリスクを減らせます。
+
+#### Windows サーバーの場合
+1. 「システムのプロパティ」>「詳細設定」>「環境変数」を開きます。
+2. 「システム環境変数」の「新規」をクリックします。
+3. 変数名: `SECRET_KEY`、変数値: `(生成したランダム文字列)` を入力して保存します。
+4. サーバー（またはアプリケーション実行プロセス）を再起動して反映させます。
+
+#### Docker / Docker Compose の場合
+`docker-compose.yml` 内に記述します：
+```yaml
+services:
+  backend:
+    environment:
+      - SECRET_KEY=your-secure-random-key
+      - DATABASE_URL=...
+```
+
+### ステップ 3: PostgreSQL のインストールと設定
 
 ```bash
 # PostgreSQL のインストール (Ubuntu/Debian の例)

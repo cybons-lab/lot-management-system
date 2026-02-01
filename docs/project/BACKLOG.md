@@ -921,7 +921,7 @@ Infrastructure層（clients/）がService層にアクセスしている箇所が
 対応が必要なものと、もはや不要なものが混在している可能性。
 
 **主なTODO:**
-- `lots_router.py:461` - "Add permission check"（権限チェック未実装）
+- `lots_router.py:461` - "Add permission check"（認証不具合は解消済、詳細なロール制限は今後検討）
 - `replenishment_router.py:57` - "Implement persistence"（永続化未実装）
 - `smartread_router.py:857` - "SSE実装"（リアルタイム通知未実装）
 - `confirm.py:237` - "Support configurable expiry margin"（有効期限マージン設定）
@@ -1205,3 +1205,4 @@ PlaywrightによるE2Eテスト実行時、`beforeAll` フックで呼び出さ�
 - 2026-01-24: 9ファイルを統合し、単一バックログとして整理
 - 2026-01-26: クイックウィン4件対応 (1-4, 2-2, 2-4, 8-9)
 - 2026-01-26: Excelビュー機能タスク追加 (セクション10)、仕入先表示・forecast_period表示修正完了
+- 2026-02-01: ロットアーカイブ時の 401 Unauthorized エラーの修正、認証ロジックの統合を完了
