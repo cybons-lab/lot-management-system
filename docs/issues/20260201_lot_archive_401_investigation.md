@@ -125,45 +125,96 @@ console.error("[HTTP] 401 Unauthorized Error", {
 
 ---
 
-## 次のステップ（再現手順）
+## 🔍 根本原因の特定
 
-1. **ブラウザDevToolsを開く**（Consoleタブ）
-2. **ログイン**
-3. **ロット一覧ページに移動**
-4. **アーカイブ可能なロットを選択してアーカイブボタンをクリック**
-5. **以下を確認**:
-   - `[ArchiveLot] Sending archive request` ログ
-   - `[HTTP] Archive request` ログ（hasToken, tokenPrefixを確認）
-   - `[HTTP] 401 Unauthorized Error` ログ（発生した場合）
-   - バックエンドログ (`docker compose logs -f backend`)で `Lot archive request received` を確認
+**ステータス**: ✅ 原因特定完了
+
+### 検証結果
+
+1. **バックエンドログの確認**:
+   ```
+   {"event": "HTTP exception: 401", "path": "/api/lots/11/archive", "method": "PATCH"}
+   ```
+   - 401エラーは確実に発生している
+   - `Lot archive request received` ログが**出力されていない** → 認証レイヤーで拒否
+
+2. **SECRET_KEY検証**:
+   ```bash
+   $ docker compose exec backend python -c "from app.core.config import settings; print(settings.secret_key[:30])"
+   dev-secret-key-change-in-produ
+   ```
+   - バックエンドは `dev-secret-key-change-in-production` を使用（デフォルト値）
+
+3. **トークン検証テスト**:
+   ```bash
+   $ docker compose exec backend python
+   >>> token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   >>> payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+   ❌ JWTError: Signature verification failed.
+   ```
+   - **署名検証エラー**: トークンは別のSECRET_KEYで生成されている
+
+### 🎯 根本原因
+
+**トークンの署名検証失敗**:
+- ユーザーのトークンは**以前のSECRET_KEYで生成**された
+- バックエンド再起動後、`docker-compose.yml`にSECRET_KEYの設定がないため、デフォルト値を使用
+- バックエンドが再起動されるたびに、既存トークンは無効化される可能性がある
+
+### ✅ 解決方法
+
+**即座の対応**: 再ログインしてトークンを再生成
+1. ブラウザで**ログアウト**
+2. 再度**ログイン**
+3. 新しいトークンが現在のSECRET_KEYで生成される
+4. アーカイブ機能が正常動作する
+
+**恒久対策** (オプション):
+1. `docker-compose.yml`に固定のSECRET_KEYを設定:
+   ```yaml
+   backend:
+     environment:
+       SECRET_KEY: "your-fixed-secret-key-here"
+   ```
+2. または `.env` ファイルを作成してSECRET_KEYを管理
 
 ---
 
-## 想定される原因候補
+## ~~次のステップ（再現手順）~~（検証完了）
 
-### 仮説1: トークンの不正な状態
-- ローカルストレージにトークンが存在するが、バックエンドで検証に失敗
-- 可能性: トークンの署名検証エラー、ペイロード不正
+~~1. **ブラウザDevToolsを開く**（Consoleタブ）~~
+~~2. **ログイン**~~
+~~3. **ロット一覧ページに移動**~~
+~~4. **アーカイブ可能なロットを選択してアーカイブボタンをクリック**~~
+~~5. **以下を確認**:~~
+   ~~- `[ArchiveLot] Sending archive request` ログ~~
+   ~~- `[HTTP] Archive request` ログ（hasToken, tokenPrefixを確認）~~
+   ~~- `[HTTP] 401 Unauthorized Error` ログ（発生した場合）~~
+   ~~- バックエンドログ (`docker compose logs -f backend`)で `Lot archive request received` を確認~~
 
-### 仮説2: タイミング問題
-- トークン有効期限ギリギリでのリクエスト
-- リクエスト送信からバックエンド到達までの間に期限切れ
+---
 
-### 仮説3: ヘッダー送信の問題
-- `Authorization` ヘッダーが実際には送信されていない
-- HTTPクライアントのbeforeRequestフックが正しく動作していない
+## ~~想定される原因候補~~（検証完了）
 
-### 仮説4: PATCH固有の問題
-- PATCHリクエストはリトライ対象外 (http-client.ts:301)
-- ネットワーク一時不通時にリトライされず、401が返される
+### ~~仮説1~~: **✅ 確定**: トークンの署名検証エラー
+- ~~ローカルストレージにトークンが存在するが、バックエンドで検証に失敗~~
+- ~~可能性~~: **確定**: トークンは別のSECRET_KEYで生成されており、現在のバックエンドで検証できない
 
-### 仮説5: 他のアーカイブ系APIでも同様の問題
-- `/api/lots/{id}/archive` 以外のアーカイブ系エンドポイントでも発生する可能性
-- 確認対象:
-  - `/api/customers/{code}/restore`
-  - `/api/suppliers/{code}/restore`
-  - `/api/warehouses/{code}/restore`
-  - その他のrestore/archiveエンドポイント
+### ~~仮説2~~: **❌ 否定**: タイミング問題
+- ~~トークン有効期限ギリギリでのリクエスト~~
+- トークンのexp: 1770023830 (2026-04-02) → 期限切れではない
+
+### ~~仮説3~~: **❌ 否定**: ヘッダー送信の問題
+- ~~`Authorization` ヘッダーが実際には送信されていない~~
+- スクリーンショットで確認: `Authorization: Bearer ...` は正しく送信されている
+
+### ~~仮説4~~: **❌ 関係なし**: PATCH固有の問題
+- ~~PATCHリクエストはリトライ対象外 (http-client.ts:301)~~
+- リトライ対象外だが、401エラーの原因ではない（認証の問題）
+
+### ~~仮説5~~: **❓ 未検証**: 他のアーカイブ系APIでも同様の問題
+- 同じトークンを使用するため、**全てのAPIで同じ401エラー**が発生する可能性が高い
+- 再ログイン後は全て正常動作するはず
 
 ---
 
@@ -201,3 +252,28 @@ console.error("[HTTP] 401 Unauthorized Error", {
   - バックエンドログ追加（lots_router.py）
   - フロントエンドログ追加（lot-service.ts, http-client.ts）
   - 401エラー詳細ログ（トークン状態、ヘッダー確認）
+
+- **原因特定と解決方法の追記**: `[pending]` (2026-02-01)
+  - 根本原因: SECRET_KEYミスマッチによる署名検証エラー
+  - 解決方法: 再ログインでトークン再生成
+  - 恒久対策: docker-compose.ymlまたは.envでSECRET_KEYを固定
+
+---
+
+## 教訓
+
+### システム設計の改善点
+
+1. **SECRET_KEY管理**:
+   - 現状: デフォルト値に依存、バックエンド再起動でトークン無効化
+   - 改善: `.env`ファイルまたは`docker-compose.yml`で固定値を設定
+   - 影響: 本番環境では必須（再起動のたびに全ユーザーがログアウトされる）
+
+2. **トークン検証エラーの可視化**:
+   - 現状: フロントエンドで「Could not validate credentials」のみ
+   - 改善案: バックエンドで具体的なエラー理由をログ出力（JWTError, ExpiredSignatureError等）
+   - メリット: デバッグ時間の短縮（今回は署名検証エラーが原因と特定するまで時間がかかった）
+
+3. **デバッグログの重要性**:
+   - 今回追加したログにより、リクエストが認証レイヤーで拒否されていることが判明
+   - **教訓**: 認証周りは最初から詳細なログを仕込むべき（事後対応では原因特定に時間がかかる）
