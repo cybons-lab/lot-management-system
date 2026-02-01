@@ -18,6 +18,8 @@ Phase1実装: SKU駆動による在庫管理修正
   docker compose exec backend python -m app.scripts.phase1_audit
 """
 
+from datetime import date
+
 import sqlalchemy as sa
 
 from alembic import op
@@ -120,8 +122,10 @@ def upgrade():
         # Separate active and inactive records
         active_rows = []
         inactive_rows = []
+        today = date.today()
         for row in rows:
-            if row.valid_to is None or row.valid_to >= sa.func.current_date():
+            # row.valid_to is a Python date object, not a SQL expression
+            if row.valid_to is None or row.valid_to >= today:
                 active_rows.append(row)
             else:
                 inactive_rows.append(row)
