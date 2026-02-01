@@ -75,8 +75,13 @@ export function SmartReadImportTab({
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
             ) : !watchFiles || watchFiles.length === 0 ? (
-              <div className="flex h-full items-center justify-center p-4 text-center text-sm text-gray-400">
-                ファイルはありません
+              <div className="flex h-full flex-col items-center justify-center gap-4 p-4 text-center text-sm text-gray-400">
+                <span>ファイルはありません</span>
+                {canRunTest && onStartTest && (
+                  <Button size="sm" variant="secondary" onClick={onStartTest}>
+                    管理者テスト（監視フォルダ）
+                  </Button>
+                )}
               </div>
             ) : (
               <>
@@ -129,11 +134,6 @@ export function SmartReadImportTab({
                     {isDiagnosing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     API診断（選択ファイル先頭）
                   </Button>
-                  {canRunTest && onStartTest && (
-                    <Button className="w-full" size="sm" variant="secondary" onClick={onStartTest}>
-                      管理者テスト（監視フォルダ）
-                    </Button>
-                  )}
                 </div>
               </>
             )}

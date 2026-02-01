@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "../api";
@@ -9,6 +9,19 @@ export function useNotifications() {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const notificationsEnabled = useMemo(() => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (!baseUrl) return true;
+    try {
+      const resolvedUrl = new URL(baseUrl, window.location.origin);
+      if (resolvedUrl.hostname === "backend" && window.location.hostname !== "backend") {
+        return false;
+      }
+    } catch {
+      return true;
+    }
+    return true;
+  }, []);
 
   // Initialize audio
   useEffect(() => {
@@ -18,13 +31,17 @@ export function useNotifications() {
   const { data: notifications = [], refetch: refetchNotifications } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => getNotifications(0, 50),
+    enabled: notificationsEnabled,
     refetchInterval: 30000, // 30 seconds polling
+    retry: false,
   });
 
   const { data: unreadCountData, refetch: refetchUnreadCount } = useQuery({
     queryKey: ["notifications", "unread-count"],
     queryFn: getUnreadCount,
+    enabled: notificationsEnabled,
     refetchInterval: 30000,
+    retry: false,
   });
 
   // Check for new notifications to show toast
