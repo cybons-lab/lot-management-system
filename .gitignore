@@ -148,3 +148,4 @@ mypy_*.txt
 # ============================================
 backend/MagicMock/
 backend/test_exports/
+.env.backup
