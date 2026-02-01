@@ -86,8 +86,8 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     db.add(lot2)
     db.flush()
 
-    # 5. Fetch with primary_staff_only=True
-    response = service.get_inventory_items(primary_staff_only=True, current_user_id=user.id)
+    # 5. Fetch with assigned_staff_only=True
+    response = service.get_inventory_items(assigned_staff_only=True, current_user_id=user.id)
     items = response.items
 
     # 6. Verify results
