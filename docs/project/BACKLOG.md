@@ -553,6 +553,34 @@ const handlePieClick = (data: PieClickData) => {
 
 ---
 
+### 2-14. テストデータの拡充（SAP仕入先・数量単位）
+
+**優先度**: Medium
+**作成**: 2026-02-01
+**カテゴリ**: テストデータ品質
+
+**背景:**
+OCR結果テーブルにおいて、以下のフィールドのテストデータが不足している：
+1. **SAP仕入先** (`sap_supplier_code`, `sap_supplier_name`)
+2. **数量単位** (`sap_qty_unit`)
+
+これらのフィールドが常に空表示となっており、UI表示の検証が困難。
+
+**タスク内容:**
+1. テストデータ生成スクリプト（`generate_sample_data.py` 等）を更新
+2. 以下のデータを追加:
+   - SAP仕入先情報（SAP関連ページのテストデータ）
+   - 数量単位情報（出荷用マスタデータページのテストデータ）
+3. OCR結果のサンプルデータに上記フィールドを含める
+
+**関連ファイル:**
+- `backend/app/application/services/test_data_generator.py` (または類似のテストデータ生成スクリプト)
+- `backend/app/infrastructure/persistence/models/ocr_models.py`
+
+**元:** ユーザー要望 (2026-02-01)
+
+---
+
 ## 3. DB/UI整合性・データ表示改善
 
 ### 3-1. Lots のステータス系フィールドがUI未表示

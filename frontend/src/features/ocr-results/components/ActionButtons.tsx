@@ -66,6 +66,7 @@ export function ActionButtons({
         <Button
           variant="outline"
           size="sm"
+          className="bg-gray-50"
           onClick={handleManualRestore}
           disabled={restoreMutationPending}
         >
@@ -77,6 +78,7 @@ export function ActionButtons({
       <Button
         variant="outline"
         size="sm"
+        className="bg-gray-50"
         onClick={() => {
           queryClient.invalidateQueries({ queryKey: ["ocr-results"] });
           toast.success("データを再読み込みしました");
@@ -87,7 +89,13 @@ export function ActionButtons({
         再読み込み
       </Button>
       {viewMode === "current" && (
-        <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-gray-50"
+          onClick={handleExport}
+          disabled={isExporting}
+        >
           <Download className="mr-2 h-4 w-4" />
           {isExporting ? "エクスポート中..." : "Excelエクスポート"}
         </Button>

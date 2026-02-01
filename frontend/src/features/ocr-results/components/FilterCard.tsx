@@ -30,7 +30,7 @@ export function FilterCard({
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className="flex items-center gap-2 bg-gray-50">
           <Filter className="h-4 w-4" />
           <span>フィルタ</span>
         </Button>
