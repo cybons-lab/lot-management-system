@@ -122,20 +122,28 @@ def reset_database(
         )
 
     try:
-        # 依存関係（get_current_admin）で発生したマスタ（roles等）へのSELECTロックを解放するため一度コミット
-        db.commit()
+        # 既存のセッションをクローズして、truncate_all_tablesが新しい接続を使えるようにする
+        # これにより pg_terminate_backend が正しく動作する
+        db.close()
 
         # データのみを削除（テーブル構造は保持）
-        truncate_all_tables(db)
+        # db=None を渡すことで、truncate_all_tables内で新しいエンジン接続を使用
+        truncate_all_tables(db=None)
 
-        # 変更を再度コミットして永続化
-        db.commit()
+        # 新しいセッションを作成して初期データを投入
+        from app.core.database import SessionLocal
 
-        # 初期管理者ユーザーとロールを再作成
-        _seed_admin_user(db)
+        new_db = SessionLocal()
+        try:
+            # 初期管理者ユーザーとロールを再作成
+            _seed_admin_user(new_db)
 
-        # システム設定の初期化
-        _seed_system_config(db)
+            # システム設定の初期化
+            _seed_system_config(new_db)
+
+            new_db.commit()
+        finally:
+            new_db.close()
 
         return ResponseBase(
             success=True,
@@ -143,7 +151,6 @@ def reset_database(
         )
 
     except Exception as e:
-        db.rollback()
         logger.exception(f"DBリセット失敗: {e}")
         raise  # Let global handler format the response
 
@@ -459,6 +466,37 @@ def _seed_admin_user(db: Session) -> None:
 
             user_service.assign_roles(admin_user.id, UserRoleAssignment(role_ids=[admin_role.id]))
             logger.info("ユーザー 'admin' に 'admin' ロールを割り当てました")
+
+    # 4. 一般ユーザーの作成（テスト用）
+    general_user = user_service.get_by_username("user")
+    if not general_user:
+        try:
+            general_user = user_service.create(
+                UserCreate(
+                    username="user",
+                    email="user@example.com",
+                    password="user123",  # UserServiceがハッシュ化
+                    display_name="General User",
+                    is_active=True,
+                )
+            )
+            logger.info("一般ユーザー 'user' を作成しました")
+        except Exception as e:
+            logger.error(f"一般ユーザー作成失敗: {e}")
+            # 一般ユーザー作成失敗は致命的ではないため続行
+
+    # 5. 一般ユーザーロールの割り当て
+    if general_user:
+        current_user_roles = user_service.get_user_roles(general_user.id)
+        if "user" not in current_user_roles:
+            user_role = db.query(Role).filter(Role.role_code == "user").first()
+            if user_role:
+                from app.presentation.schemas.system.users_schema import UserRoleAssignment
+
+                user_service.assign_roles(
+                    general_user.id, UserRoleAssignment(role_ids=[user_role.id])
+                )
+                logger.info("ユーザー 'user' に 'user' ロールを割り当てました")
 
 
 def _seed_system_config(db: Session) -> None:
