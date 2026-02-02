@@ -88,6 +88,8 @@ function useRestoreSession(
     // Restore session on initial mount only
     const initAuth = async () => {
       const storedToken = getAuthToken();
+      const isLoginPage = window.location.pathname === "/login";
+
       if (storedToken) {
         try {
           // http-client's beforeRequest hook automatically adds Authorization header
@@ -97,12 +99,17 @@ function useRestoreSession(
         } catch (error) {
           console.warn("Failed to restore session", error);
           clearAuthToken();
-          // Try guest auto-login instead of showing error
-          await performGuestAutoLogin(setToken, setUser);
+          // Skip guest auto-login on login page
+          if (!isLoginPage) {
+            await performGuestAutoLogin(setToken, setUser);
+          }
         }
       } else {
         // No stored token - perform guest auto-login (方式A)
-        await performGuestAutoLogin(setToken, setUser);
+        // Skip on login page to allow manual login
+        if (!isLoginPage) {
+          await performGuestAutoLogin(setToken, setUser);
+        }
       }
       setIsLoading(false);
     };
