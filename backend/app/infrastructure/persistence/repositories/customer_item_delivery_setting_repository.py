@@ -50,7 +50,7 @@ class CustomerItemDeliverySettingRepository:
         """Find a setting matching the given criteria with priority.
 
         Note: Uses composite key lookup for ShipmentTextRequest (order line context).
-        This is intentional as the /shipment-text endpoint receives customer_id + product_group_id
+        This is intentional as the /shipment-text endpoint receives customer_id + supplier_item_id
         from OrderLine and needs to resolve to customer_part_no internally.
         Not part of the SSOT refactoring for CRUD operations.
 
@@ -105,7 +105,7 @@ class CustomerItemDeliverySettingRepository:
     ) -> str | None:
         """Get customer_part_no from customer_items by customer_id and supplier_item_id.
 
-        Phase1: product_group_id renamed to supplier_item_id.
+        Phase1: supplier_item_id renamed to supplier_item_id.
         Note: Used by ShipmentTextRequest to convert supplier_item_id to customer_part_no.
         See find_matching_setting() for context.
         """

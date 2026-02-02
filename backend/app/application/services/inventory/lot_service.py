@@ -309,7 +309,7 @@ class LotService:
         )
         from app.domain.allocation_policy import AllocationPolicy, LockMode
 
-        # Resolve product_code to product_group_id
+        # Resolve product_code to supplier_item_id
         product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
         if not product:
             return []

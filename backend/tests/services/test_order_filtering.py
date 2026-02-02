@@ -51,7 +51,7 @@ def order_filtering_data(db: Session, supplier):
     db.add(
         OrderLine(
             order_id=order1.id,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             delivery_place_id=delivery_place.id,
             order_quantity=Decimal("10"),
             unit="EA",
@@ -72,7 +72,7 @@ def order_filtering_data(db: Session, supplier):
     db.add(
         OrderLine(
             order_id=order2.id,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             delivery_place_id=delivery_place.id,
             order_quantity=Decimal("20"),
             unit="EA",

@@ -40,7 +40,7 @@ def list_forecasts(
     limit: int = Query(100, ge=1, le=1000),
     customer_id: int | None = Query(None),
     delivery_place_id: int | None = Query(None),
-    supplier_item_id: int | None = Query(None, alias="product_group_id"),
+    supplier_item_id: int | None = Query(None, alias="supplier_item_id"),
     db: Session = Depends(get_db),
 ) -> Any:
     """フォーキャスト一覧取得（グループ化）."""
@@ -106,7 +106,7 @@ def list_allocation_suggestions(
     skip: int = Query(0, ge=0, description="スキップ件数"),
     limit: int = Query(100, ge=1, le=1000, description="取得件数上限"),
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)"),
-    supplier_item_id: int | None = Query(None, alias="product_group_id", description="製品ID"),
+    supplier_item_id: int | None = Query(None, alias="supplier_item_id", description="製品ID"),
     customer_id: int | None = Query(None, description="得意先ID"),
     db: Session = Depends(get_db),
 ) -> Any:
@@ -138,7 +138,7 @@ def list_allocation_suggestions(
 def regenerate_suggestions_for_group(
     customer_id: int = Query(..., description="得意先ID"),
     delivery_place_id: int = Query(..., description="納入先ID"),
-    supplier_item_id: int = Query(..., alias="product_group_id", description="製品ID"),
+    supplier_item_id: int = Query(..., alias="supplier_item_id", description="製品ID"),
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)、省略時は全期間"),
     db: Session = Depends(get_db),
 ) -> Any:
@@ -160,7 +160,7 @@ def regenerate_suggestions_for_group(
 def clear_suggestions_for_group(
     customer_id: int = Query(..., description="得意先ID"),
     delivery_place_id: int = Query(..., description="納入先ID"),
-    supplier_item_id: int = Query(..., alias="product_group_id", description="製品ID"),
+    supplier_item_id: int = Query(..., alias="supplier_item_id", description="製品ID"),
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)、省略時は全期間"),
     db: Session = Depends(get_db),
 ) -> Any:
@@ -192,7 +192,7 @@ def clear_suggestions_for_group(
 def get_allocation_suggestions_by_group(
     customer_id: int = Query(..., description="得意先ID"),
     delivery_place_id: int = Query(..., description="納入先ID"),
-    supplier_item_id: int = Query(..., alias="product_group_id", description="製品ID"),
+    supplier_item_id: int = Query(..., alias="supplier_item_id", description="製品ID"),
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)"),
     db: Session = Depends(get_db),
 ) -> Any:

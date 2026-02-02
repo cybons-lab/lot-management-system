@@ -182,7 +182,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
 
         order_line = OrderLine(
             order_id=order.id,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             delivery_place_id=delivery_place.id,
             delivery_date=date.today(),
             order_quantity=Decimal("100"),
@@ -265,13 +265,13 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         db_session.commit()
 
         # Create lot
-        lm = LotMaster(product_group_id=product.id, lot_number="SOFT002-LOT")
+        lm = LotMaster(supplier_item_id=product.id, lot_number="SOFT002-LOT")
         db_session.add(lm)
         db_session.flush()
 
         lot = LotReceipt(
             lot_master_id=lm.id,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             warehouse_id=warehouse.id,
             received_quantity=Decimal("1000"),
             received_date=date.today(),
@@ -291,7 +291,7 @@ class TestCustomerServiceSoftDeleteOrderTransition:
 
         order_line = OrderLine(
             order_id=order.id,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             delivery_place_id=delivery_place.id,
             delivery_date=date.today(),
             order_quantity=Decimal("100"),

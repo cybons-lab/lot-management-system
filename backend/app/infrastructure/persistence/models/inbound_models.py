@@ -10,7 +10,7 @@
    → ヘッダ（入荷日、仕入先）と明細（製品、数量）を分離
    実装:
    - InboundPlan: 入荷計画全体の情報（plan_number, supplier_id, arrival_date）
-   - InboundPlanLine: 製品ごとの情報（product_group_id, quantity）
+   - InboundPlanLine: 製品ごとの情報（supplier_item_id, quantity）
    → 1対多の関係
 
 2. なぜ sap_po_number をユニークにするのか（L50-55, L77-78）
@@ -137,7 +137,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
 
@@ -224,12 +224,11 @@ class InboundPlanLine(Base):
         nullable=False,
     )
     supplier_item_id: Mapped[int] = mapped_column(
-        "product_group_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
+    # P3: Synonym removed
     planned_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
@@ -244,14 +243,13 @@ class InboundPlanLine(Base):
 
     __table_args__ = (
         Index("idx_inbound_plan_lines_plan", "inbound_plan_id"),
-        Index("idx_inbound_plan_lines_supplier_item", "product_group_id"),
+        Index("idx_inbound_plan_lines_supplier_item", "supplier_item_id"),
     )
 
     inbound_plan: Mapped[InboundPlan] = relationship("InboundPlan", back_populates="lines")
     supplier_item: Mapped[SupplierItem] = relationship(
         "SupplierItem", back_populates="inbound_plan_lines"
     )
-    product_group = synonym("supplier_item")  # Alias
     expected_lots: Mapped[list[ExpectedLot]] = relationship(
         "ExpectedLot", back_populates="inbound_plan_line", cascade="all, delete-orphan"
     )

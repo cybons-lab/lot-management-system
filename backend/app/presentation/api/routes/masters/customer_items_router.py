@@ -43,7 +43,7 @@ def list_customer_items(
 ):
     """得意先品番マッピング一覧取得.
 
-    Phase1: product_group_id → supplier_item_id に変更
+    Phase1: supplier_item_id → supplier_item_id に変更
 
     Args:
         skip: スキップ件数

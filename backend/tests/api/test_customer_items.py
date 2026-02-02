@@ -46,7 +46,7 @@ def test_list_customer_items_with_filters(db: Session, client: TestClient, maste
 
     item = CustomerItem(
         customer_id=master_data["customer"].id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         customer_part_no="CUST-PROD-001",
         base_unit="EA",
     )
@@ -61,9 +61,9 @@ def test_list_customer_items_with_filters(db: Session, client: TestClient, maste
     data = response.json()
     assert len(data) >= 1
 
-    # Filter by product_group_id
+    # Filter by supplier_item_id
     response = client.get(
-        "/api/masters/customer-items", params={"product_group_id": master_data["product"].id}
+        "/api/masters/customer-items", params={"supplier_item_id": master_data["product"].id}
     )
     assert response.status_code == 200
 
@@ -73,7 +73,7 @@ def test_list_customer_items_by_customer(db: Session, client: TestClient, master
 
     item = CustomerItem(
         customer_id=master_data["customer"].id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         customer_part_no="CUST-PROD-001",
         base_unit="EA",
     )
@@ -93,7 +93,7 @@ def test_create_customer_item_success(db: Session, client: TestClient, master_da
 
     item_data = {
         "customer_id": master_data["customer"].id,
-        "product_group_id": master_data["product"].id,
+        "supplier_item_id": master_data["product"].id,
         "customer_part_no": "CUST-NEW-001",
         "base_unit": "EA",
     }
@@ -110,7 +110,7 @@ def test_create_customer_item_duplicate_returns_409(db: Session, client: TestCli
 
     existing = CustomerItem(
         customer_id=master_data["customer"].id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         customer_part_no="CUST-DUP-001",
         base_unit="EA",
     )
@@ -119,7 +119,7 @@ def test_create_customer_item_duplicate_returns_409(db: Session, client: TestCli
 
     item_data = {
         "customer_id": master_data["customer"].id,
-        "product_group_id": master_data["product"].id,
+        "supplier_item_id": master_data["product"].id,
         "customer_part_no": "CUST-DUP-001",  # Duplicate
         "base_unit": "EA",
     }
@@ -133,7 +133,7 @@ def test_update_customer_item_success(db: Session, client: TestClient, master_da
 
     item = CustomerItem(
         customer_id=master_data["customer"].id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         customer_part_no="CUST-UPD-001",
         base_unit="EA",
     )
@@ -169,7 +169,7 @@ def test_delete_customer_item_success(db: Session, client: TestClient, master_da
 
     item = CustomerItem(
         customer_id=master_data["customer"].id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         customer_part_no="CUST-DEL-001",
         base_unit="EA",
     )
@@ -198,7 +198,7 @@ def test_bulk_upsert_customer_items(db: Session, client: TestClient, master_data
     # Create existing item
     existing = CustomerItem(
         customer_id=master_data["customer"].id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         customer_part_no="CUST-EXIST-001",
         base_unit="EA",
     )

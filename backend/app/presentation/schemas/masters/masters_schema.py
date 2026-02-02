@@ -252,7 +252,7 @@ class ProductMappingBase(BaseSchema):
     customer_part_code: str = Field(..., min_length=1, max_length=100, description="先方品番")
     supplier_id: int = Field(..., gt=0, description="仕入先ID")
     supplier_item_id: int = Field(
-        ..., serialization_alias="product_group_id", gt=0, description="製品ID"
+        ..., serialization_alias="supplier_item_id", gt=0, description="製品ID"
     )
     base_unit: str = Field(..., min_length=1, max_length=20, description="基本単位")
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
@@ -277,7 +277,7 @@ class ProductMappingUpdate(BaseSchema):
     customer_id: int | None = Field(None, gt=0)
     customer_part_code: str | None = Field(None, min_length=1, max_length=100)
     supplier_id: int | None = Field(None, gt=0)
-    supplier_item_id: int | None = Field(None, serialization_alias="product_group_id", gt=0)
+    supplier_item_id: int | None = Field(None, serialization_alias="supplier_item_id", gt=0)
     base_unit: str | None = Field(None, min_length=1, max_length=20)
     pack_unit: str | None = Field(None, max_length=20)
     pack_quantity: int | None = Field(None, ge=0)
@@ -345,7 +345,7 @@ class BulkUpsertResponse(BaseSchema):
 class SupplierItemBase(BaseSchema):
     """Base supplier item schema (DDL: supplier_items)."""
 
-    supplier_item_id: int = Field(..., serialization_alias="product_group_id", gt=0)
+    supplier_item_id: int = Field(..., serialization_alias="supplier_item_id", gt=0)
     supplier_id: int = Field(..., gt=0)
     maker_part_no: str = Field(..., min_length=1, max_length=100, description="メーカー品番")
     is_primary: bool = Field(False)

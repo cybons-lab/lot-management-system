@@ -16,7 +16,7 @@ JSON形式でのログ出力、リクエストコンテキスト管理、セン�
    → エラーコード、製品ID等の構造化データが取り出しにくい
    解決:
    - JSON形式ログ
-   → {"level": "ERROR", "error_code": "INSUFFICIENT_STOCK", "product_group_id": 123}
+   → {"level": "ERROR", "error_code": "INSUFFICIENT_STOCK", "supplier_item_id": 123}
    → ログ分析ツール（Elasticsearch, CloudWatch Insights等）で簡単に集計
    メリット:
    - エラー率の計測

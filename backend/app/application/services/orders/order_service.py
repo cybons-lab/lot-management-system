@@ -114,7 +114,7 @@
    - Step2: 自動的に仮受注作成（FORECAST_LINKED）
    - Step3: 実際の受注が入ったら、仮受注を実受注に変換
    実装:
-   - forecast_reference: "FC-{customer_id}-{delivery_place_id}-{product_group_id}-{forecast_date}"
+   - forecast_reference: "FC-{customer_id}-{delivery_place_id}-{supplier_item_id}-{forecast_date}"
    → 予測データとの紐付けキー
    用途:
    - 予測削除時: 関連する仮受注も削除

@@ -28,7 +28,7 @@ tables.
 3. なぜ複合ユニーク制約が2つあるのか（L64-79）
    理由: 検索性能とデータ整合性の両立
    インデックス1（L65-70）:
-   - idx_forecast_current_unique: (customer_id, delivery_place_id, product_group_id)
+   - idx_forecast_current_unique: (customer_id, delivery_place_id, supplier_item_id)
    → 顧客×納品先×製品での検索を高速化（ユニーク制約なし）
    インデックス2（L71-78）:
    - ux_forecast_current_unique: + forecast_date, forecast_period
@@ -97,7 +97,7 @@ tables.
    - 検索頻度: 低い（分析時のみ）
    → インデックスは最小限に抑える
    インデックス選定:
-   - ix_forecast_history_key: (customer_id, delivery_place_id, product_group_id)
+   - ix_forecast_history_key: (customer_id, delivery_place_id, supplier_item_id)
    → 分析時の主要な検索軸
    → date や period はインデックス不要（全件スキャンで十分）
 
@@ -119,7 +119,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from sqlalchemy import BigInteger, Date, DateTime, ForeignKey, Index, Numeric, String, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
 
@@ -150,12 +150,10 @@ class ForecastCurrent(Base):
         nullable=False,
     )
     supplier_item_id: Mapped[int] = mapped_column(
-        "product_group_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -178,13 +176,13 @@ class ForecastCurrent(Base):
             "idx_forecast_current_unique",
             "customer_id",
             "delivery_place_id",
-            "product_group_id",
+            "supplier_item_id",
         ),
         Index(
             "ux_forecast_current_unique",
             "customer_id",
             "delivery_place_id",
-            "product_group_id",
+            "supplier_item_id",
             "forecast_date",
             "forecast_period",
             unique=True,
@@ -212,8 +210,7 @@ class ForecastHistory(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     customer_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     delivery_place_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    supplier_item_id: Mapped[int] = mapped_column("product_group_id", BigInteger, nullable=False)
-    product_group_id = synonym("supplier_item_id")  # type: ignore # Alias
+    supplier_item_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -230,7 +227,7 @@ class ForecastHistory(Base):
             "ix_forecast_history_key",
             "customer_id",
             "delivery_place_id",
-            "product_group_id",
+            "supplier_item_id",
         ),
     )
 

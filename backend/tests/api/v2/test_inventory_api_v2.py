@@ -37,12 +37,12 @@ def setup_inventory_data(db_session, supplier):
     db_session.flush()
 
     # Register product_warehouse (required for v_inventory_summary)
-    pw = ProductWarehouse(product_group_id=product.id, warehouse_id=warehouse.id)
+    pw = ProductWarehouse(supplier_item_id=product.id, warehouse_id=warehouse.id)
     db_session.add(pw)
 
     # Create LotMaster
     lot_master = LotMaster(
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         supplier_id=supplier.id,
         lot_number="LOT-INV-001",
     )
@@ -52,7 +52,7 @@ def setup_inventory_data(db_session, supplier):
     # Create lot with stock
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         supplier_id=supplier.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("100.0"),
@@ -88,14 +88,14 @@ def test_list_inventory(client, setup_inventory_data):
 
 
 def test_get_inventory_item(client, setup_inventory_data):
-    """Test GET /api/v2/inventory/{product_group_id}/{warehouse_id}"""
+    """Test GET /api/v2/inventory/{supplier_item_id}/{warehouse_id}"""
     product = setup_inventory_data["product"]
     warehouse = setup_inventory_data["warehouse"]
 
     response = client.get(f"/api/v2/inventory/{product.id}/{warehouse.id}")
     assert response.status_code == 200
     data = response.json()
-    assert data["product_group_id"] == product.id
+    assert data["supplier_item_id"] == product.id
     assert data["warehouse_id"] == warehouse.id
 
 

@@ -57,7 +57,6 @@ class MissingMappingEvent(Base):
         nullable=True,
     )
     supplier_item_id: Mapped[int | None] = mapped_column(
-        "product_group_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="SET NULL"),
         nullable=True,
@@ -126,7 +125,7 @@ class MissingMappingEvent(Base):
 
     __table_args__ = (
         Index("idx_missing_mapping_events_customer", "customer_id"),
-        Index("idx_missing_mapping_events_supplier_item", "product_group_id"),
+        Index("idx_missing_mapping_events_supplier_item", "supplier_item_id"),
         Index("idx_missing_mapping_events_occurred", "occurred_at"),
         Index(
             "idx_missing_mapping_events_unresolved",

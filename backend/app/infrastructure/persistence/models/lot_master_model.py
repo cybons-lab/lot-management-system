@@ -5,7 +5,7 @@ B-Plan: Lot number consolidation master - allows multiple receipts per lot numbe
 Design rationale:
 1. なぜ lot_master を分離するのか
    - 同一ロット番号の小分け入荷を許可するため
-   - lot_number + product_group_id でユニーク、複数の lot_receipts が紐づく
+   - lot_number + supplier_item_id でユニーク、複数の lot_receipts が紐づく
 
 2. supplier_id の扱い
    - ユニーク制約には含めない（NULLになるケースがあるため）
@@ -33,7 +33,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.persistence.models.base_model import Base
 
@@ -48,7 +48,7 @@ class LotMaster(Base):
     """Lot number consolidation master.
 
     Allows multiple receipts (lot_receipts) to share the same lot number.
-    Unique constraint: (lot_number, product_group_id)
+    Unique constraint: (lot_number, supplier_item_id)
     """
 
     __tablename__ = "lot_master"
@@ -62,12 +62,10 @@ class LotMaster(Base):
         comment="ロット番号（仕入先発番、NULL許可）",
     )
     supplier_item_id: Mapped[int] = mapped_column(
-        "product_group_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
     supplier_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("suppliers.id", ondelete="SET NULL"),
@@ -109,7 +107,6 @@ class LotMaster(Base):
 
     # Relationships
     supplier_item: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="lot_masters")
-    product_group = synonym("supplier_item")  # Alias
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_masters")
     receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",
@@ -122,11 +119,11 @@ class LotMaster(Base):
         Index(
             "idx_lot_master_number_supplier_item_unique",
             "lot_number",
-            "product_group_id",
+            "supplier_item_id",
             unique=True,
             postgresql_where=text("lot_number IS NOT NULL"),
         ),
-        Index("idx_lot_master_supplier_item", "product_group_id"),
+        Index("idx_lot_master_supplier_item", "supplier_item_id"),
         Index("idx_lot_master_lot_number", "lot_number"),
         Index("idx_lot_master_supplier", "supplier_id"),
         {"comment": "ロット番号名寄せマスタ - 同一ロット番号の複数入荷を許可、NULL許可"},

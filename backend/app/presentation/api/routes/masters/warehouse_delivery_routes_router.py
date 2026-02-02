@@ -32,7 +32,7 @@ def _build_response(route: WarehouseDeliveryRoute) -> dict:
         "id": route.id,
         "warehouse_id": route.warehouse_id,
         "delivery_place_id": route.delivery_place_id,
-        "product_group_id": route.product_group_id,
+        "supplier_item_id": route.supplier_item_id,
         "transport_lead_time_days": route.transport_lead_time_days,
         "is_active": route.is_active,
         "notes": route.notes,
@@ -80,25 +80,25 @@ def list_routes(
 def lookup_lead_time(
     warehouse_id: int = Query(..., description="Warehouse ID"),
     delivery_place_id: int = Query(..., description="Delivery place ID"),
-    product_group_id: int | None = Query(None, description="Product ID (optional)"),
+    supplier_item_id: int | None = Query(None, description="Product ID (optional)"),
     db: Session = Depends(get_db),
 ):
     """Lookup transport lead time with fallback logic.
 
     Priority:
     1. Route with matching warehouse + delivery_place + product
-    2. Route default (warehouse + delivery_place + product_group_id=NULL)
+    2. Route default (warehouse + delivery_place + supplier_item_id=NULL)
     3. Warehouse default (default_transport_lead_time_days)
     4. Not found
     """
     # 1. Try product-specific route
-    if product_group_id is not None:
+    if supplier_item_id is not None:
         route = db.execute(
             select(WarehouseDeliveryRoute).where(
                 and_(
                     WarehouseDeliveryRoute.warehouse_id == warehouse_id,
                     WarehouseDeliveryRoute.delivery_place_id == delivery_place_id,
-                    WarehouseDeliveryRoute.product_group_id == product_group_id,
+                    WarehouseDeliveryRoute.supplier_item_id == supplier_item_id,
                     WarehouseDeliveryRoute.is_active == True,  # noqa: E712
                 )
             )
@@ -110,13 +110,13 @@ def lookup_lead_time(
                 source="route_product",
             )
 
-    # 2. Try route default (product_group_id=NULL)
+    # 2. Try route default (supplier_item_id=NULL)
     route = db.execute(
         select(WarehouseDeliveryRoute).where(
             and_(
                 WarehouseDeliveryRoute.warehouse_id == warehouse_id,
                 WarehouseDeliveryRoute.delivery_place_id == delivery_place_id,
-                WarehouseDeliveryRoute.product_group_id.is_(None),
+                WarehouseDeliveryRoute.supplier_item_id.is_(None),
                 WarehouseDeliveryRoute.is_active == True,  # noqa: E712
             )
         )
@@ -218,10 +218,10 @@ def create_route(
 
     if data.supplier_item_id is not None:
         existing_query = existing_query.where(
-            WarehouseDeliveryRoute.product_group_id == data.supplier_item_id
+            WarehouseDeliveryRoute.supplier_item_id == data.supplier_item_id
         )
     else:
-        existing_query = existing_query.where(WarehouseDeliveryRoute.product_group_id.is_(None))
+        existing_query = existing_query.where(WarehouseDeliveryRoute.supplier_item_id.is_(None))
 
     existing = db.execute(existing_query).scalar_one_or_none()
 
@@ -234,7 +234,7 @@ def create_route(
     route = WarehouseDeliveryRoute(
         warehouse_id=data.warehouse_id,
         delivery_place_id=data.delivery_place_id,
-        product_group_id=data.supplier_item_id,
+        supplier_item_id=data.supplier_item_id,
         transport_lead_time_days=data.transport_lead_time_days,
         is_active=data.is_active,
         notes=data.notes,

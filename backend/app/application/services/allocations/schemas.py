@@ -31,7 +31,7 @@ Data transfer objects (DTOs) for allocation operations:
    理由: 1明細の引当計画を表現
    フィールド:
    - order_line_id: どの明細
-   - product_group_id, warehouse_id: 引当条件
+   - supplier_item_id, warehouse_id: 引当条件
    - required_qty: 必要数量
    - already_allocated_qty: 既存引当数量
    - allocations: ロット別の引当計画（FefoLotPlan のリスト）

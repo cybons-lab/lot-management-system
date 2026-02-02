@@ -2,7 +2,7 @@
 Default Destination Router.
 
 GET /api/v2/withdrawals/default-destination
-Lookup customer and delivery place based on product_group_id from customer_items and
+Lookup customer and delivery place based on supplier_item_id from customer_items and
 customer_item_delivery_settings tables.
 """
 
@@ -64,7 +64,7 @@ def _record_missing_mapping_event(
 @router.get("/default-destination", response_model=DefaultDestinationResponse)
 def get_default_destination(
     supplier_item_id: int = Query(
-        ..., alias="product_group_id", description="仕入先品目ID (メーカー品番ID)"
+        ..., alias="supplier_item_id", description="仕入先品目ID (メーカー品番ID)"
     ),
     supplier_id: int | None = Query(None, description="仕入先ID (任意)"),
     db: Session = Depends(get_db),
@@ -72,7 +72,7 @@ def get_default_destination(
     """
     仕入先品目IDからデフォルトの得意先・納入先を取得する.
 
-    Phase1: product_group_id → supplier_item_id, supplier_id は supplier_item 経由で取得
+    Phase1: supplier_item_id → supplier_item_id, supplier_id は supplier_item 経由で取得
 
     1. customer_items テーブルから supplier_item_id でマッピングを検索
     2. 見つかれば customer_id を取得

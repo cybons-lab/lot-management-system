@@ -98,7 +98,7 @@ Soft Delete Support:
    - 製品B: 1缶 = 15kg
    → 製品ごとに変換係数が異なる
    実装:
-   - product_group_id: 製品ID
+   - supplier_item_id: 製品ID
    - external_unit: 外部単位（例: "KG"）
    - factor: 変換係数（例: 20.0）
    用途:
@@ -376,7 +376,7 @@ class CustomerItem(SoftDeleteMixin, Base):
     Supports soft delete via valid_to column.
 
     Phase1 cleanup:
-    - Removed: product_group_id, supplier_id, is_primary
+    - Removed: supplier_item_id, supplier_id, is_primary
     - Now directly links to supplier_items via supplier_item_id (NOT NULL)
     """
 
@@ -474,7 +474,7 @@ class ProductMapping(SoftDeleteMixin, Base):
         nullable=False,
     )
     supplier_item_id: Mapped[int] = mapped_column(
-        "product_group_id",
+        "supplier_item_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
@@ -502,7 +502,7 @@ class ProductMapping(SoftDeleteMixin, Base):
         ),
         Index("idx_product_mappings_customer", "customer_id"),
         Index("idx_product_mappings_supplier", "supplier_id"),
-        Index("idx_product_mappings_supplier_item", "product_group_id"),
+        Index("idx_product_mappings_supplier_item", "supplier_item_id"),
         Index("idx_product_mappings_valid_to", "valid_to"),
     )
 
@@ -516,14 +516,14 @@ class ProductUomConversion(SoftDeleteMixin, Base):
 
     DDL: product_uom_conversions
     Primary key: conversion_id (BIGSERIAL)
-    Foreign keys: product_group_id -> product_groups(id)
+    Foreign keys: supplier_item_id -> product_groups(id)
     Supports soft delete via valid_to column.
     """
 
     __tablename__ = "product_uom_conversions"
 
     conversion_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    product_group_id: Mapped[int] = mapped_column(
+    supplier_item_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="CASCADE"),
         nullable=False,
@@ -542,7 +542,7 @@ class ProductUomConversion(SoftDeleteMixin, Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "product_group_id", "external_unit", name="uq_uom_conversions_product_group_unit"
+            "supplier_item_id", "external_unit", name="uq_uom_conversions_supplier_item_unit"
         ),
         Index("idx_product_uom_conversions_valid_to", "valid_to"),
     )
@@ -670,7 +670,7 @@ class WarehouseDeliveryRoute(Base):
     """Warehouse delivery routes table (輸送経路マスタ).
 
     倉庫から納入先への輸送リードタイムを管理。
-    品番別のLT設定も可能（product_group_id指定）。
+    品番別のLT設定も可能（supplier_item_id指定）。
 
     直送（supplier warehouse_type）は対象外。
     """
@@ -688,11 +688,11 @@ class WarehouseDeliveryRoute(Base):
         ForeignKey("delivery_places.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_group_id: Mapped[int | None] = mapped_column(
+    supplier_item_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="CASCADE"),
         nullable=True,
-        comment="製品グループ（NULLの場合は経路デフォルト）",
+        comment="仕入先品目ID（NULLの場合は経路デフォルト）",
     )
     transport_lead_time_days: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="輸送リードタイム（日）"
@@ -711,7 +711,7 @@ class WarehouseDeliveryRoute(Base):
     __table_args__ = (
         Index("idx_wdr_warehouse", "warehouse_id"),
         Index("idx_wdr_delivery_place", "delivery_place_id"),
-        Index("idx_wdr_product_group", "product_group_id"),
+        Index("idx_wdr_supplier_item", "supplier_item_id"),
         Index("idx_wdr_active", "is_active"),
     )
 

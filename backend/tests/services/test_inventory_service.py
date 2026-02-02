@@ -19,7 +19,7 @@ def test_get_inventory_items(db: Session, service_master_data):
     # Create LotMaster
     lot_master = LotMaster(
         lot_number="LOT-INV-1",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier.id,
     )
     db.add(lot_master)
@@ -28,7 +28,7 @@ def test_get_inventory_items(db: Session, service_master_data):
     # Create lots
     lot1 = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=100,
@@ -40,7 +40,7 @@ def test_get_inventory_items(db: Session, service_master_data):
     db.flush()
 
     # Register to product_warehouse
-    pw = ProductWarehouse(product_group_id=product1.id, warehouse_id=warehouse.id)
+    pw = ProductWarehouse(supplier_item_id=product1.id, warehouse_id=warehouse.id)
     db.merge(pw)
     db.flush()
 
@@ -72,7 +72,7 @@ def test_get_inventory_items(db: Session, service_master_data):
 
     # Filter for our test data
     target_items = [
-        i for i in items if i.product_group_id == product1.id and i.warehouse_id == warehouse.id
+        i for i in items if i.supplier_item_id == product1.id and i.warehouse_id == warehouse.id
     ]
 
     assert len(target_items) == 1
@@ -83,10 +83,10 @@ def test_get_inventory_items(db: Session, service_master_data):
 
     # Test filtering
     # Test filtering
-    response_filtered = service.get_inventory_items(product_group_id=product1.id)
+    response_filtered = service.get_inventory_items(supplier_item_id=product1.id)
     items_filtered = response_filtered.items
     assert len(items_filtered) >= 1
-    assert items_filtered[0].product_group_id == product1.id
+    assert items_filtered[0].supplier_item_id == product1.id
 
 
 def test_get_inventory_item_by_product_warehouse(db: Session, service_master_data):
@@ -99,7 +99,7 @@ def test_get_inventory_item_by_product_warehouse(db: Session, service_master_dat
     # Create LotMaster
     lot_master = LotMaster(
         lot_number="LOT-INV-2",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier.id,
     )
     db.add(lot_master)
@@ -107,7 +107,7 @@ def test_get_inventory_item_by_product_warehouse(db: Session, service_master_dat
 
     lot1 = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=50,
@@ -119,7 +119,7 @@ def test_get_inventory_item_by_product_warehouse(db: Session, service_master_dat
     db.flush()
 
     # Register to product_warehouse
-    pw = ProductWarehouse(product_group_id=product1.id, warehouse_id=warehouse.id)
+    pw = ProductWarehouse(supplier_item_id=product1.id, warehouse_id=warehouse.id)
     db.merge(pw)
     db.flush()
 
@@ -141,7 +141,7 @@ def test_get_inventory_by_supplier(db: Session, service_master_data):
     # Create LotMaster
     lot_master = LotMaster(
         lot_number="LOT-SUP-1",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier.id,
     )
     db.add(lot_master)
@@ -149,7 +149,7 @@ def test_get_inventory_by_supplier(db: Session, service_master_data):
 
     lot1 = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=30,
@@ -161,7 +161,7 @@ def test_get_inventory_by_supplier(db: Session, service_master_data):
     db.flush()
 
     # Register to product_warehouse
-    pw = ProductWarehouse(product_group_id=product1.id, warehouse_id=warehouse.id)
+    pw = ProductWarehouse(supplier_item_id=product1.id, warehouse_id=warehouse.id)
     db.merge(pw)
     db.flush()
 
@@ -183,7 +183,7 @@ def test_get_inventory_by_warehouse(db: Session, service_master_data):
     # Create LotMaster
     lot_master = LotMaster(
         lot_number="LOT-WH-1",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier.id,
     )
     db.add(lot_master)
@@ -191,7 +191,7 @@ def test_get_inventory_by_warehouse(db: Session, service_master_data):
 
     lot1 = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=40,
@@ -219,7 +219,7 @@ def test_get_inventory_by_product(db: Session, service_master_data):
     # Create LotMaster
     lot_master = LotMaster(
         lot_number="LOT-PRD-1",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier.id,
     )
     db.add(lot_master)
@@ -227,7 +227,7 @@ def test_get_inventory_by_product(db: Session, service_master_data):
 
     lot1 = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=60,
@@ -239,7 +239,7 @@ def test_get_inventory_by_product(db: Session, service_master_data):
     db.flush()
 
     # Register to product_warehouse
-    pw = ProductWarehouse(product_group_id=product1.id, warehouse_id=warehouse.id)
+    pw = ProductWarehouse(supplier_item_id=product1.id, warehouse_id=warehouse.id)
     db.merge(pw)
     db.flush()
 
@@ -261,7 +261,7 @@ def test_get_inventory_by_product(db: Session, service_master_data):
     db.flush()
 
     results = service.get_inventory_by_product()
-    target = next((r for r in results if r["product_group_id"] == product1.id), None)
+    target = next((r for r in results if r["supplier_item_id"] == product1.id), None)
 
     assert target is not None
     assert target["total_quantity"] >= 60
@@ -279,7 +279,7 @@ def test_get_filter_options_stock_mode(db: Session, service_master_data):
 
     lot_master = LotMaster(
         lot_number="LOT-FILTER-1",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier.id,
     )
     db.add(lot_master)
@@ -287,7 +287,7 @@ def test_get_filter_options_stock_mode(db: Session, service_master_data):
 
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=25,
@@ -300,7 +300,7 @@ def test_get_filter_options_stock_mode(db: Session, service_master_data):
 
     null_supplier_master = LotMaster(
         lot_number="LOT-FILTER-NULL",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=None,
     )
     db.add(null_supplier_master)
@@ -308,7 +308,7 @@ def test_get_filter_options_stock_mode(db: Session, service_master_data):
 
     null_supplier_lot = LotReceipt(
         lot_master_id=null_supplier_master.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=None,
         received_quantity=5,
@@ -320,12 +320,12 @@ def test_get_filter_options_stock_mode(db: Session, service_master_data):
     db.flush()
 
     stock_options = service.get_filter_options(mode="stock")
-    stock_product_group_ids = {p.id for p in stock_options.products}
+    stock_supplier_item_ids = {p.id for p in stock_options.products}
     stock_supplier_ids = {s.id for s in stock_options.suppliers}
     stock_warehouse_ids = {w.id for w in stock_options.warehouses}
 
-    assert product1.id in stock_product_group_ids
-    assert product2.id not in stock_product_group_ids
+    assert product1.id in stock_supplier_item_ids
+    assert product2.id not in stock_supplier_item_ids
     assert supplier.id in stock_supplier_ids
     assert None not in stock_supplier_ids
     assert warehouse.id in stock_warehouse_ids
@@ -334,10 +334,10 @@ def test_get_filter_options_stock_mode(db: Session, service_master_data):
     assert coerced_options.effective_tab == "in_stock"
 
     master_options = service.get_filter_options(mode="master")
-    master_product_group_ids = {p.id for p in master_options.products}
+    master_supplier_item_ids = {p.id for p in master_options.products}
 
-    assert product1.id in master_product_group_ids
-    assert product2.id in master_product_group_ids
+    assert product1.id in master_supplier_item_ids
+    assert product2.id in master_supplier_item_ids
     assert master_options.effective_tab == "all"
 
 
@@ -358,12 +358,12 @@ def test_get_filter_options_stock_mode_mutuality(db: Session, service_master_dat
 
     master1 = LotMaster(
         lot_number="LOT-MUT-1",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier1.id,
     )
     master2 = LotMaster(
         lot_number="LOT-MUT-2",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier2.id,
     )
     db.add(master1)
@@ -372,7 +372,7 @@ def test_get_filter_options_stock_mode_mutuality(db: Session, service_master_dat
 
     lot1 = LotReceipt(
         lot_master_id=master1.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse1.id,
         supplier_id=supplier1.id,
         received_quantity=10,
@@ -382,7 +382,7 @@ def test_get_filter_options_stock_mode_mutuality(db: Session, service_master_dat
     )
     lot2 = LotReceipt(
         lot_master_id=master2.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse2.id,
         supplier_id=supplier2.id,
         received_quantity=10,
@@ -395,21 +395,21 @@ def test_get_filter_options_stock_mode_mutuality(db: Session, service_master_dat
     db.flush()
 
     options_by_supplier = service.get_filter_options(
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier1.id,
         mode="stock",
     )
     assert {w.id for w in options_by_supplier.warehouses} == {warehouse1.id}
 
     options_by_warehouse = service.get_filter_options(
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse2.id,
         mode="stock",
     )
     assert {s.id for s in options_by_warehouse.suppliers} == {supplier2.id}
 
     master_options = service.get_filter_options(
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier1.id,
         mode="master",
     )
@@ -433,12 +433,12 @@ def test_get_inventory_items_group_by_supplier_product_warehouse(db: Session, se
     # Create lot masters for each supplier
     master1 = LotMaster(
         lot_number="LOT-GROUP-1",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier1.id,
     )
     master2 = LotMaster(
         lot_number="LOT-GROUP-2",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier2.id,
     )
     db.add(master1)
@@ -448,7 +448,7 @@ def test_get_inventory_items_group_by_supplier_product_warehouse(db: Session, se
     # Create lots with same product and warehouse, different suppliers
     lot1 = LotReceipt(
         lot_master_id=master1.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier1.id,
         received_quantity=100,
@@ -458,7 +458,7 @@ def test_get_inventory_items_group_by_supplier_product_warehouse(db: Session, se
     )
     lot2 = LotReceipt(
         lot_master_id=master2.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier2.id,
         received_quantity=200,
@@ -471,13 +471,13 @@ def test_get_inventory_items_group_by_supplier_product_warehouse(db: Session, se
     db.flush()
 
     # Register to product_warehouse
-    pw = ProductWarehouse(product_group_id=product1.id, warehouse_id=warehouse.id)
+    pw = ProductWarehouse(supplier_item_id=product1.id, warehouse_id=warehouse.id)
     db.merge(pw)
     db.flush()
 
     # Test with supplier_product_warehouse grouping (default)
     response = service.get_inventory_items(
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         group_by="supplier_product_warehouse",
     )
@@ -517,12 +517,12 @@ def test_get_inventory_items_group_by_product_warehouse_with_multiple_suppliers(
     # Create lot masters for each supplier
     master1 = LotMaster(
         lot_number="LOT-AGG-1",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier1.id,
     )
     master2 = LotMaster(
         lot_number="LOT-AGG-2",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=supplier2.id,
     )
     db.add(master1)
@@ -532,7 +532,7 @@ def test_get_inventory_items_group_by_product_warehouse_with_multiple_suppliers(
     # Create lots with same product and warehouse, different suppliers
     lot1 = LotReceipt(
         lot_master_id=master1.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier1.id,
         received_quantity=100,
@@ -542,7 +542,7 @@ def test_get_inventory_items_group_by_product_warehouse_with_multiple_suppliers(
     )
     lot2 = LotReceipt(
         lot_master_id=master2.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier2.id,
         received_quantity=200,
@@ -555,13 +555,13 @@ def test_get_inventory_items_group_by_product_warehouse_with_multiple_suppliers(
     db.flush()
 
     # Register to product_warehouse
-    pw = ProductWarehouse(product_group_id=product1.id, warehouse_id=warehouse.id)
+    pw = ProductWarehouse(supplier_item_id=product1.id, warehouse_id=warehouse.id)
     db.merge(pw)
     db.flush()
 
     # Test with product_warehouse grouping
     response = service.get_inventory_items(
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         group_by="product_warehouse",
     )

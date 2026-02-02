@@ -180,7 +180,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
 
         Args:
             updates: List of dicts with keys:
-                customer_id, delivery_place_id, product_group_id,
+                customer_id, delivery_place_id, supplier_item_id,
                 lot_id, forecast_period, quantity
 
         Returns:
@@ -196,7 +196,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 .filter(
                     AllocationSuggestion.customer_id == up["customer_id"],
                     AllocationSuggestion.delivery_place_id == up["delivery_place_id"],
-                    AllocationSuggestion.supplier_item_id == up["product_group_id"],
+                    AllocationSuggestion.supplier_item_id == up["supplier_item_id"],
                     AllocationSuggestion.lot_id == up["lot_id"],
                     AllocationSuggestion.forecast_period == up["forecast_period"],
                 )
@@ -219,7 +219,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                     .filter(
                         ForecastCurrent.customer_id == up["customer_id"],
                         ForecastCurrent.delivery_place_id == up["delivery_place_id"],
-                        ForecastCurrent.supplier_item_id == up["product_group_id"],
+                        ForecastCurrent.supplier_item_id == up["supplier_item_id"],
                         ForecastCurrent.forecast_period == up["forecast_period"],
                     )
                     .first()
@@ -228,7 +228,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 new_item = AllocationSuggestion(
                     customer_id=up["customer_id"],
                     delivery_place_id=up["delivery_place_id"],
-                    supplier_item_id=up["product_group_id"],
+                    supplier_item_id=up["supplier_item_id"],
                     lot_id=up["lot_id"],
                     forecast_period=up["forecast_period"],
                     quantity=quantity,

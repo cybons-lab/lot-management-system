@@ -60,12 +60,12 @@ class InventorySyncService:
         """ローカルDBから商品別在庫合計を取得.
 
         Returns:
-            dict: {product_group_id: total_quantity}
+            dict: {supplier_item_id: total_quantity}
         """
         query = text(
             """
             SELECT 
-                product_group_id,
+                supplier_item_id,
                 total_quantity
             FROM v_inventory_summary
         """
@@ -75,9 +75,9 @@ class InventorySyncService:
         local_totals = {}
 
         for row in result:
-            product_group_id = row.supplier_item_id
+            supplier_item_id = row.supplier_item_id
             total_qty = Decimal(str(row.total_quantity)) if row.total_quantity else Decimal("0")
-            local_totals[product_group_id] = total_qty
+            local_totals[supplier_item_id] = total_qty
 
         return local_totals
 
@@ -85,8 +85,8 @@ class InventorySyncService:
         """差異検出.
 
         Args:
-            local: ローカルDB在庫 {product_group_id: quantity}
-            sap: SAP在庫 {product_group_id: {"sap_total": Decimal, "timestamp": datetime}}
+            local: ローカルDB在庫 {supplier_item_id: quantity}
+            sap: SAP在庫 {supplier_item_id: {"sap_total": Decimal, "timestamp": datetime}}
 
         Returns:
             list: 差異リスト
@@ -94,8 +94,8 @@ class InventorySyncService:
         discrepancies = []
 
         # ローカルDBにある商品をチェック
-        for product_group_id, local_qty in local.items():
-            sap_data = sap.get(product_group_id, {})
+        for supplier_item_id, local_qty in local.items():
+            sap_data = sap.get(supplier_item_id, {})
             sap_qty = sap_data.get("sap_total", Decimal("0"))
 
             # 差異率計算
@@ -109,7 +109,7 @@ class InventorySyncService:
             if diff_pct > Decimal(str(self.TOLERANCE_PCT)):
                 discrepancies.append(
                     {
-                        "product_group_id": product_group_id,
+                        "supplier_item_id": supplier_item_id,
                         "local_qty": float(local_qty),
                         "sap_qty": float(sap_qty),
                         "diff_pct": float(diff_pct),
@@ -137,17 +137,17 @@ class InventorySyncService:
             existing_alert = (
                 self.db.query(BusinessRule)
                 .filter(
-                    BusinessRule.rule_code == f"inv_sync_alert_{disc['product_group_id']}",
+                    BusinessRule.rule_code == f"inv_sync_alert_{disc['supplier_item_id']}",
                 )
                 .first()
             )
 
             if existing_alert:
                 # 既存アラートを更新
-                existing_alert.rule_name = f"在庫差異アラート: Product {disc['product_group_id']}"
+                existing_alert.rule_name = f"在庫差異アラート: Product {disc['supplier_item_id']}"
                 existing_alert.rule_type = "inventory_sync_alert"
                 existing_alert.rule_parameters = {
-                    "product_group_id": disc["product_group_id"],
+                    "supplier_item_id": disc["supplier_item_id"],
                     "local_qty": disc["local_qty"],
                     "sap_qty": disc["sap_qty"],
                     "diff_pct": disc["diff_pct"],
@@ -160,11 +160,11 @@ class InventorySyncService:
             else:
                 # 新しいアラート作成
                 alert = BusinessRule(
-                    rule_code=f"inv_sync_alert_{disc['product_group_id']}",
-                    rule_name=f"在庫差異アラート: Product {disc['product_group_id']}",
+                    rule_code=f"inv_sync_alert_{disc['supplier_item_id']}",
+                    rule_name=f"在庫差異アラート: Product {disc['supplier_item_id']}",
                     rule_type="inventory_sync_alert",
                     rule_parameters={
-                        "product_group_id": disc["product_group_id"],
+                        "supplier_item_id": disc["supplier_item_id"],
                         "local_qty": disc["local_qty"],
                         "sap_qty": disc["sap_qty"],
                         "diff_pct": disc["diff_pct"],

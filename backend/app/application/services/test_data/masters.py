@@ -182,7 +182,7 @@ def generate_products(
         if random.random() < 0.6:
             # 1 PCS = 15-25 KG
             factor = Decimal(random.randint(15, 25))
-            conv = ProductUomConversion(product_group_id=p.id, external_unit="KG", factor=factor)
+            conv = ProductUomConversion(supplier_item_id=p.id, external_unit="KG", factor=factor)
             db.add(conv)
 
     db.commit()
@@ -206,7 +206,7 @@ def generate_customer_items(
     """
     # Track which supplier-maker_part_no pairs already exist to avoid duplicates
     supplier_maker_pairs: set[tuple[int, str]] = set()
-    # Map product_group_id + supplier_id -> supplier_item for linking
+    # Map supplier_item_id + supplier_id -> supplier_item for linking
     supplier_item_map: dict[tuple[int, int], SupplierItem] = {}
 
     for p in products:
@@ -261,7 +261,7 @@ def generate_customer_items(
                 customers_for_product.extend(additional)
 
         # Create CustomerItem and CustomerItemDeliverySettings for each customer
-        for idx, c in enumerate(customers_for_product):
+        for _idx, c in enumerate(customers_for_product):
             # Use meaningful customer part number (not EXT- prefix)
             customer_part_no = f"{c.customer_code}-{p.maker_part_no}"
 
@@ -273,19 +273,14 @@ def generate_customer_items(
             if not product_supplier_items:
                 # Fallback to the product itself (which is also a SupplierItem)
                 supplier_item = p
-                selected_supplier_id = p.supplier_id
             else:
                 supplier_item = random.choice(product_supplier_items)
-                selected_supplier_id = supplier_item.supplier_id
 
             ci = CustomerItem(
                 customer_id=c.id,
-                product_group_id=p.id,
+                supplier_item_id=supplier_item.id,
                 customer_part_no=customer_part_no,
                 base_unit="pcs",
-                supplier_id=selected_supplier_id,
-                supplier_item_id=supplier_item.id,
-                is_primary=(idx == 0),
             )
             db.add(ci)
             db.flush()  # Get the ID for related tables

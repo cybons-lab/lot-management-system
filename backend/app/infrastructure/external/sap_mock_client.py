@@ -25,7 +25,7 @@ class SAPMockClient:
 
         Returns:
             dict: {
-                product_group_id: {
+                supplier_item_id: {
                     "sap_total": Decimal,
                     "timestamp": datetime
                 }
@@ -38,7 +38,7 @@ class SAPMockClient:
         # モック: 商品ID 1-20 の在庫データを生成
         mock_data = {}
 
-        for product_group_id in range(1, 21):
+        for supplier_item_id in range(1, 21):
             # ベース数量（100-1000の範囲）
             base_qty = random.randint(100, 1000)
 
@@ -52,7 +52,7 @@ class SAPMockClient:
                 variance = random.choice([random.uniform(-0.1, -0.02), random.uniform(0.02, 0.1)])
                 sap_qty = base_qty * (1 + variance)
 
-            mock_data[product_group_id] = {
+            mock_data[supplier_item_id] = {
                 "sap_total": Decimal(str(round(sap_qty, 2))),
                 "timestamp": utcnow(),
             }

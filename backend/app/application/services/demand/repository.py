@@ -17,7 +17,7 @@ class DemandRepository:
 
     def get_demand_history(
         self,
-        product_group_id: int,
+        supplier_item_id: int,
         warehouse_id: int | None,
         start_date: date,
         end_date: date,
@@ -28,7 +28,7 @@ class DemandRepository:
         Returns:
             List[tuple[date, Decimal]]: (日付, 数量) のリスト
         """
-        # Withdrawal -> WithdrawalLine -> LotReceipt (where product_group_id)
+        # Withdrawal -> WithdrawalLine -> LotReceipt (where supplier_item_id)
         # Sum quantity by date
         stmt = (
             select(
@@ -38,7 +38,7 @@ class DemandRepository:
             .join(WithdrawalLine, Withdrawal.id == WithdrawalLine.withdrawal_id)
             .join(LotReceipt, WithdrawalLine.lot_receipt_id == LotReceipt.id)
             .where(
-                LotReceipt.supplier_item_id == product_group_id,
+                LotReceipt.supplier_item_id == supplier_item_id,
                 Withdrawal.ship_date >= start_date,
                 Withdrawal.ship_date <= end_date,
                 Withdrawal.withdrawal_type.in_(demand_types),

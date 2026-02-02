@@ -163,7 +163,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
 
@@ -251,7 +251,7 @@ class OrderLine(Base):
 
     DDL: order_lines
     Primary key: id (BIGSERIAL)
-    Foreign keys: order_id -> orders(id), product_group_id -> product_groups(id)
+    Foreign keys: order_id -> orders(id), supplier_item_id -> product_groups(id)
     """
 
     __tablename__ = "order_lines"
@@ -268,14 +268,12 @@ class OrderLine(Base):
         nullable=True,
         comment="受注グループへの参照（得意先×製品×受注日）",
     )
-    supplier_item_id: Mapped[int | None] = mapped_column(
-        "product_group_id",
+    supplier_item_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
-        nullable=True,
-        comment="仕入先製品ID（OCR取込時はNULL可、変換後に設定）",
+        nullable=False,
+        comment="仕入先製品ID",
     )
-    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
 
     # OCR取込時の元データ
     customer_part_no: Mapped[str | None] = mapped_column(
@@ -341,7 +339,7 @@ class OrderLine(Base):
 
     __table_args__ = (
         Index("idx_order_lines_order", "order_id"),
-        Index("idx_order_lines_supplier_item", "product_group_id"),
+        Index("idx_order_lines_supplier_item", "supplier_item_id"),
         Index("idx_order_lines_date", "delivery_date"),
         Index("idx_order_lines_delivery_place", "delivery_place_id"),
         Index("idx_order_lines_status", "status"),
@@ -386,7 +384,6 @@ class OrderLine(Base):
         "OrderGroup", back_populates="order_lines"
     )
     supplier_item: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="order_lines")
-    product_group = synonym("supplier_item")  # Alias
 
     # P3: Relationship to LotReservation for efficient loading (avoid N+1)
     lot_reservations: Mapped[list[LotReservation]] = relationship(

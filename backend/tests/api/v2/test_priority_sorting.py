@@ -91,7 +91,7 @@ def priority_test_data(db_session):
 
     line_1 = OrderLine(
         order_id=order_1.id,
-        product_group_id=prod_b.id,
+        supplier_item_id=prod_b.id,
         order_quantity=10,
         delivery_date=date.today(),
         delivery_place_id=dp.id,
@@ -101,7 +101,7 @@ def priority_test_data(db_session):
     )
     line_2 = OrderLine(
         order_id=order_2.id,
-        product_group_id=prod_a.id,
+        supplier_item_id=prod_a.id,
         order_quantity=10,
         delivery_date=date.today(),
         delivery_place_id=dp.id,
@@ -124,15 +124,15 @@ def priority_test_data(db_session):
     db_session.add(wh)
     db_session.flush()
 
-    lot_master_a = LotMaster(lot_number="LOT-ZZZ", product_group_id=prod_a.id, supplier_id=sup_a.id)
-    lot_master_b = LotMaster(lot_number="LOT-AAA", product_group_id=prod_b.id, supplier_id=sup_b.id)
+    lot_master_a = LotMaster(lot_number="LOT-ZZZ", supplier_item_id=prod_a.id, supplier_id=sup_a.id)
+    lot_master_b = LotMaster(lot_number="LOT-AAA", supplier_item_id=prod_b.id, supplier_id=sup_b.id)
     db_session.add(lot_master_a)
     db_session.add(lot_master_b)
     db_session.flush()
 
     lot_a = LotReceipt(
         lot_master_id=lot_master_a.id,
-        product_group_id=prod_a.id,
+        supplier_item_id=prod_a.id,
         warehouse_id=wh.id,
         supplier_id=sup_a.id,
         received_quantity=100,
@@ -143,7 +143,7 @@ def priority_test_data(db_session):
     )
     lot_b = LotReceipt(
         lot_master_id=lot_master_b.id,
-        product_group_id=prod_b.id,
+        supplier_item_id=prod_b.id,
         warehouse_id=wh.id,
         supplier_id=sup_b.id,
         received_quantity=100,

@@ -56,7 +56,7 @@ def sample_lot(db: Session, supplier):
 
     # Create LotMaster
     lot_master = LotMaster(
-        product_group_id=prod.id,
+        supplier_item_id=prod.id,
         lot_number="LOT-001",
     )
     db.add(lot_master)
@@ -64,7 +64,7 @@ def sample_lot(db: Session, supplier):
 
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=prod.id,
+        supplier_item_id=prod.id,
         warehouse_id=wh.id,
         received_quantity=Decimal("100.000"),
         unit="EA",

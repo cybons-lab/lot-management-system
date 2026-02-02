@@ -46,7 +46,7 @@ class CustomerItemDeliverySettingService:
         Returns:
             ShipmentTextResponse with shipment_text, packing_note, lead_time_days, source
         """
-        # Convert product_group_id to customer_part_no
+        # Convert supplier_item_id to customer_part_no
         customer_part_no = self.repository.find_customer_part_no(
             customer_id=customer_id,
             supplier_item_id=supplier_item_id,

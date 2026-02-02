@@ -155,7 +155,7 @@ class BulkAutoAllocateRequest(BaseSchema):
 
     supplier_item_id: int | None = Field(
         None,
-        serialization_alias="product_group_id",
+        serialization_alias="supplier_item_id",
         description="製品ID（指定時はその製品のみ対象）",
     )
     customer_id: int | None = Field(None, description="得意先ID（指定時はその得意先のみ対象）")

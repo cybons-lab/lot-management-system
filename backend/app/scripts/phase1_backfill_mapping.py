@@ -10,11 +10,11 @@ Usage:
     docker compose exec backend python -m app.scripts.phase1_backfill_mapping
 
 Strategy:
-    customer_items の product_group_id を使って、対応する supplier_items を検索し、
+    customer_items の supplier_item_id を使って、対応する supplier_items を検索し、
     supplier_item_id を自動設定します。
 
     Matching logic:
-    1. product_group_id が一致する supplier_items を検索
+    1. supplier_item_id が一致する supplier_items を検索
     2. 複数ある場合は is_primary=True を優先
     3. 見つかった supplier_item_id を customer_items に設定
 """
@@ -36,7 +36,7 @@ def print_header(title: str) -> None:
 
 
 def backfill_supplier_item_mappings(session: Session, dry_run: bool = True) -> tuple[int, int, int]:
-    """Backfill customer_items.supplier_item_id based on product_group_id.
+    """Backfill customer_items.supplier_item_id based on supplier_item_id.
 
     Args:
         session: Database session
@@ -51,7 +51,7 @@ def backfill_supplier_item_mappings(session: Session, dry_run: bool = True) -> t
             SELECT
                 ci.id,
                 ci.customer_part_no,
-                ci.product_group_id,
+                ci.supplier_item_id,
                 ci.supplier_id as old_supplier_id,
                 c.customer_name
             FROM customer_items ci
@@ -74,33 +74,33 @@ def backfill_supplier_item_mappings(session: Session, dry_run: bool = True) -> t
 
     for item in unmapped:
         customer_item_id = item.id
-        product_group_id = item.product_group_id
+        supplier_item_id = item.supplier_item_id
         customer_part_no = item.customer_part_no
         customer_name = item.customer_name
 
-        if product_group_id is None:
-            print(f"  ⚠️  ID {customer_item_id}: No product_group_id, cannot map")
+        if supplier_item_id is None:
+            print(f"  ⚠️  ID {customer_item_id}: No supplier_item_id, cannot map")
             skipped_count += 1
             continue
 
-        # Find supplier_item for this product_group_id
+        # Find supplier_item for this supplier_item_id
         # Priority: is_primary=True, then any
         result = session.execute(
             text("""
                 SELECT id, maker_part_no, supplier_id, is_primary
                 FROM supplier_items
-                WHERE product_group_id = :product_group_id
+                WHERE supplier_item_id = :supplier_item_id
                 ORDER BY is_primary DESC, id ASC
                 LIMIT 1
             """),
-            {"product_group_id": product_group_id},
+            {"supplier_item_id": supplier_item_id},
         )
         supplier_item = result.first()
 
         if not supplier_item:
             print(
                 f"  ❌ ID {customer_item_id} ({customer_name}): "
-                f"No supplier_item found for product_group_id={product_group_id}"
+                f"No supplier_item found for supplier_item_id={supplier_item_id}"
             )
             not_found_count += 1
             continue

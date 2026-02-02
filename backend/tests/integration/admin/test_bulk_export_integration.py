@@ -25,7 +25,7 @@ def test_bulk_export_download_all_targets_integration(
     mapping = ProductMapping(
         customer_id=master_data["customer"].id,
         supplier_id=master_data["supplier"].id,
-        product_group_id=master_data["product1"].id,
+        supplier_item_id=master_data["product1"].id,
         customer_part_code="CUST-PART-001",
         base_unit="EA",
         pack_unit="BOX",
@@ -36,7 +36,6 @@ def test_bulk_export_download_all_targets_integration(
     # Customer Items
     customer_item = CustomerItem(
         customer_id=master_data["customer"].id,
-        product_group_id=master_data["product1"].id,
         supplier_item_id=master_data["product1"].id,
         customer_part_no="CP-001",
         base_unit="EA",
@@ -57,7 +56,7 @@ def test_bulk_export_download_all_targets_integration(
 
     # UOM Conversions
     uom = ProductUomConversion(
-        product_group_id=master_data["product1"].id,
+        supplier_item_id=master_data["product1"].id,
         external_unit="CTN",
         factor=20,
     )
@@ -67,7 +66,7 @@ def test_bulk_export_download_all_targets_integration(
     route = WarehouseDeliveryRoute(
         warehouse_id=master_data["warehouse"].id,
         delivery_place_id=master_data["delivery_place"].id,
-        product_group_id=master_data["product1"].id,
+        supplier_item_id=master_data["product1"].id,
         transport_lead_time_days=3,
     )
     db.add(route)
@@ -80,7 +79,7 @@ def test_bulk_export_download_all_targets_integration(
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
     lm = LotMaster(
-        product_group_id=master_data["product1"].id,
+        supplier_item_id=master_data["product1"].id,
         supplier_id=master_data["supplier"].id,
         lot_number="LOT-001",
     )
@@ -91,7 +90,6 @@ def test_bulk_export_download_all_targets_integration(
 
     lot = LotReceipt(
         lot_master_id=lm.id,
-        product_group_id=master_data["product1"].id,
         supplier_item_id=master_data["product1"].id,
         warehouse_id=master_data["warehouse"].id,
         supplier_id=master_data["supplier"].id,
@@ -114,7 +112,7 @@ def test_bulk_export_download_all_targets_integration(
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product1"].id,
+        supplier_item_id=master_data["product1"].id,
         delivery_place_id=master_data["delivery_place"].id,
         delivery_date=date.today(),
         order_quantity=Decimal("50"),
@@ -129,7 +127,7 @@ def test_bulk_export_download_all_targets_integration(
 
     forecast = ForecastCurrent(
         customer_id=master_data["customer"].id,
-        product_group_id=master_data["product1"].id,
+        supplier_item_id=master_data["product1"].id,
         delivery_place_id=master_data["delivery_place"].id,
         forecast_date=date.today(),
         forecast_quantity=Decimal("200"),

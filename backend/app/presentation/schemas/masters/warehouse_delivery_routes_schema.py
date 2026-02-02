@@ -19,7 +19,7 @@ class WarehouseDeliveryRouteBase(BaseModel):
     delivery_place_id: int = Field(..., gt=0, description="納入先ID")
     supplier_item_id: int | None = Field(
         None,
-        serialization_alias="product_group_id",
+        serialization_alias="supplier_item_id",
         gt=0,
         description="品番ID（NULLの場合は経路デフォルト）",
     )
@@ -92,7 +92,7 @@ class TransportLeadTimeQuery(BaseModel):
 
     warehouse_id: int = Field(..., gt=0)
     delivery_place_id: int = Field(..., gt=0)
-    supplier_item_id: int | None = Field(None, serialization_alias="product_group_id", gt=0)
+    supplier_item_id: int | None = Field(None, serialization_alias="supplier_item_id", gt=0)
 
 
 class TransportLeadTimeResponse(BaseModel):

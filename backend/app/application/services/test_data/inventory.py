@@ -23,7 +23,7 @@ def generate_lots(
     products: list[SupplierItem],
     warehouses: list[Warehouse],
     suppliers: list[Supplier],
-    forecast_totals: dict[int, int],  # product_group_id -> total forecast quantity
+    forecast_totals: dict[int, int],  # supplier_item_id -> total forecast quantity
 ):
     """Generate lots based on forecast data (planned procurement).
 
@@ -80,13 +80,13 @@ def generate_lots(
                 existing = (
                     db.query(ProductWarehouse)
                     .filter(
-                        ProductWarehouse.product_group_id == p.id,
+                        ProductWarehouse.supplier_item_id == p.id,
                         ProductWarehouse.warehouse_id == warehouse.id,
                     )
                     .first()
                 )
                 if not existing:
-                    db.add(ProductWarehouse(product_group_id=p.id, warehouse_id=warehouse.id))
+                    db.add(ProductWarehouse(supplier_item_id=p.id, warehouse_id=warehouse.id))
                 continue
             elif scenario == "archived_lots":
                 lots_to_create = [("archived", "archived"), ("archived", "archived")]
@@ -147,7 +147,7 @@ def generate_lots(
             # Create LotMaster
             master = LotMaster(
                 lot_number=lot_number,
-                product_group_id=p.id,
+                supplier_item_id=p.id,
                 supplier_id=supplier_id,
                 first_receipt_date=received_date,
                 latest_expiry_date=expiry_date,
@@ -157,7 +157,7 @@ def generate_lots(
 
             lot = LotReceipt(
                 lot_master_id=master.id,
-                product_group_id=p.id,
+                supplier_item_id=p.id,
                 warehouse_id=warehouse.id,
                 supplier_id=supplier_id,
                 received_date=received_date,
@@ -187,13 +187,13 @@ def generate_lots(
             existing = (
                 db.query(ProductWarehouse)
                 .filter(
-                    ProductWarehouse.product_group_id == p.id,
+                    ProductWarehouse.supplier_item_id == p.id,
                     ProductWarehouse.warehouse_id == warehouse.id,
                 )
                 .first()
             )
             if not existing:
-                db.add(ProductWarehouse(product_group_id=p.id, warehouse_id=warehouse.id))
+                db.add(ProductWarehouse(supplier_item_id=p.id, warehouse_id=warehouse.id))
 
     db.commit()
     print(f"[INFO] Generated {generated_count} lots for {len(products)} products")
@@ -208,19 +208,19 @@ def generate_lots(
 
     if lot_counts:
         print("\n[WARNING] Products with >3 lots after generation:")
-        for product_group_id, count in lot_counts:
-            product = db.query(SupplierItem).filter(SupplierItem.id == product_group_id).first()
+        for supplier_item_id, count in lot_counts:
+            product = db.query(SupplierItem).filter(SupplierItem.id == supplier_item_id).first()
             product_code = product.maker_part_no if product else "UNKNOWN"
-            print(f"  - Product {product_code} (id={product_group_id}): {count} lots")
+            print(f"  - Product {product_code} (id={supplier_item_id}): {count} lots")
     else:
         print("\n[SUCCESS] All products have ≤3 lots")
 
 
 def get_any_lot_id(
-    db: Session, product_group_id: int, required_qty: Decimal | None = None
+    db: Session, supplier_item_id: int, required_qty: Decimal | None = None
 ) -> int | None:
     query = db.query(LotReceipt).filter(
-        LotReceipt.supplier_item_id == product_group_id, LotReceipt.status == "active"
+        LotReceipt.supplier_item_id == supplier_item_id, LotReceipt.status == "active"
     )
 
     if required_qty is not None:
@@ -235,7 +235,7 @@ def get_any_lot_id(
     if not lot and required_qty is not None:
         lot = (
             db.query(LotReceipt)
-            .filter(LotReceipt.supplier_item_id == product_group_id, LotReceipt.status == "active")
+            .filter(LotReceipt.supplier_item_id == supplier_item_id, LotReceipt.status == "active")
             .order_by(
                 (LotReceipt.received_quantity - LotReceipt.consumed_quantity).desc(),
                 LotReceipt.id.asc(),

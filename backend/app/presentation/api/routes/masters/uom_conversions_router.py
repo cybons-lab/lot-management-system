@@ -36,16 +36,16 @@ def list_uom_conversions(
     """Get UOM conversions (単位換算一覧)."""
     query = select(
         ProductUomConversion.conversion_id,
-        ProductUomConversion.product_group_id,
+        ProductUomConversion.supplier_item_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
         SupplierItem.maker_part_no,
         SupplierItem.display_name,
         ProductUomConversion.valid_to,
-    ).join(SupplierItem, ProductUomConversion.product_group_id == SupplierItem.id)
+    ).join(SupplierItem, ProductUomConversion.supplier_item_id == SupplierItem.id)
 
     if supplier_item_id is not None:
-        query = query.where(ProductUomConversion.product_group_id == supplier_item_id)
+        query = query.where(ProductUomConversion.supplier_item_id == supplier_item_id)
 
     if not include_inactive:
         query = query.where(ProductUomConversion.get_active_filter())
@@ -56,7 +56,7 @@ def list_uom_conversions(
     return [
         {
             "conversion_id": r.conversion_id,
-            "supplier_item_id": r.product_group_id,
+            "supplier_item_id": r.supplier_item_id,
             "external_unit": r.external_unit,
             "conversion_factor": float(r.factor),
             "remarks": None,
@@ -73,19 +73,19 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
     """Export UOM conversions."""
     query = select(
         ProductUomConversion.conversion_id,
-        ProductUomConversion.product_group_id,
+        ProductUomConversion.supplier_item_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
         SupplierItem.maker_part_no,
         SupplierItem.display_name,
-    ).join(SupplierItem, ProductUomConversion.product_group_id == SupplierItem.id)
+    ).join(SupplierItem, ProductUomConversion.supplier_item_id == SupplierItem.id)
 
     results = db.execute(query).all()
 
     data = [
         {
             "conversion_id": r.conversion_id,
-            "supplier_item_id": r.product_group_id,
+            "supplier_item_id": r.supplier_item_id,
             "external_unit": r.external_unit,
             "conversion_factor": float(r.factor),
             "remarks": None,
@@ -105,7 +105,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
     """Create a new UOM conversion.
 
     Args:
-        data: UOM conversion data (product_group_id, external_unit, factor)
+        data: UOM conversion data (supplier_item_id, external_unit, factor)
         db: Database session
 
     Returns:
@@ -128,7 +128,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
 
     # Create new conversion
     new_conversion = ProductUomConversion(
-        product_group_id=data.supplier_item_id,
+        supplier_item_id=data.supplier_item_id,
         external_unit=data.external_unit,
         factor=data.factor,
     )
@@ -138,7 +138,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
 
     return {
         "conversion_id": new_conversion.conversion_id,
-        "supplier_item_id": new_conversion.product_group_id,
+        "supplier_item_id": new_conversion.supplier_item_id,
         "external_unit": new_conversion.external_unit,
         "conversion_factor": float(new_conversion.factor),
         "remarks": None,
@@ -152,7 +152,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
 def bulk_upsert_uom_conversions(
     request: UomConversionBulkUpsertRequest, db: Session = Depends(get_db)
 ):
-    """Bulk upsert UOM conversions by composite key (product_group_id,
+    """Bulk upsert UOM conversions by composite key (supplier_item_id,
     external_unit).
 
     - If a UOM conversion with the same composite key exists, it will be updated

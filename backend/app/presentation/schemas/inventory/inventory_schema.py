@@ -189,7 +189,7 @@ class LotResponse(LotBase, TimestampMixin):
     # Phase 2: Mapping fields
     maker_part_no: str | None = Field(None, serialization_alias="supplier_maker_part_no")
     customer_part_no: str | None = None
-    supplier_item_id: int = Field(..., validation_alias="product_group_id")
+    supplier_item_id: int = Field(..., validation_alias="supplier_item_id")
 
     @property
     @computed_field
@@ -307,7 +307,7 @@ class InventoryItemResponse(BaseSchema):
     """
 
     id: int = Field(serialization_alias="inventory_item_id")
-    supplier_item_id: int = Field(..., validation_alias="product_group_id")
+    supplier_item_id: int = Field(..., validation_alias="supplier_item_id")
 
     @property
     @computed_field
@@ -387,7 +387,7 @@ class InventoryByProductResponse(BaseSchema):
 
     supplier_item_id: int = Field(
         ...,
-        validation_alias="product_group_id",
+        validation_alias="supplier_item_id",
         description="仕入先品目ID",
     )
 

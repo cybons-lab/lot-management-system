@@ -51,7 +51,7 @@ def _setup_test_data(db: Session):
     # Create ProductWarehouse records
     product_warehouses = [
         ProductWarehouse(
-            product_group_id=p.id,
+            supplier_item_id=p.id,
             warehouse_id=wh.id,
             is_active=True,
         )
@@ -63,7 +63,7 @@ def _setup_test_data(db: Session):
     # Create LotMasters first
     for i in range(1, 4):
         lm = LotMaster(
-            product_group_id=products[i - 1].id,
+            supplier_item_id=products[i - 1].id,
             lot_number=f"LOT{i:03d}",
             supplier_id=supplier.id,
         )
@@ -77,7 +77,7 @@ def _setup_test_data(db: Session):
     lots = [
         LotReceipt(
             supplier_id=supplier.id,
-            product_group_id=products[i - 1].id,
+            supplier_item_id=products[i - 1].id,
             lot_master_id=lot_masters[i - 1].id,
             warehouse_id=wh.id,
             received_quantity=100.0 * i,  # 100, 200, 300
@@ -184,7 +184,7 @@ def test_inventory_sync_execute_with_discrepancies(db: Session):
     details = result["details"]
     assert len(details) == 1
     disc = details[0]
-    assert disc["product_group_id"] == products[1].id
+    assert disc["supplier_item_id"] == products[1].id
     assert disc["local_qty"] == 200.0
     assert disc["sap_qty"] == 220.0
     # 差異率は約10%であることを確認（200→220は10%増加）

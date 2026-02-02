@@ -242,7 +242,7 @@ def calculate_line_allocations(
         },
     )
 
-    supplier_item_id = getattr(line, "product_group_id", None)
+    supplier_item_id = getattr(line, "supplier_item_id", None)
     warehouse_id = getattr(line, "warehouse_id", None)
     product_code = None
     warehouse_code = None

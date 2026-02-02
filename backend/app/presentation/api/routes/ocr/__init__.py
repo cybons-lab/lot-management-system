@@ -27,7 +27,7 @@ def import_ocr_data(
     """OCRデータを取り込み、受注を作成.
 
     - 完全一致/前方一致の2段階検索で製品IDを解決
-    - 未解決の場合もproduct_group_id=NULLで登録（後から手動補完可能）
+    - 未解決の場合もsupplier_item_id=NULLで登録（後から手動補完可能）
     """
     try:
         service = OcrImportService(db)

@@ -47,7 +47,8 @@ class AvailableLotResponse(BaseSchema):
 async def list_lots(
     skip: int = 0,
     limit: int = 100,
-    supplier_item_id: int | None = Query(None, alias="product_group_id"),
+    supplier_item_id: int | None = Query(None),
+    product_group_id: int | None = Query(None, include_in_schema=False),
     product_code: str | None = None,
     supplier_code: str | None = None,
     warehouse_id: int | None = None,
@@ -61,6 +62,7 @@ async def list_lots(
     db: Session = Depends(get_db),
 ):
     service = LotService(db)
+    supplier_item_id = supplier_item_id or product_group_id
 
     assigned_supplier_ids: list[int] | None = None
     if prioritize_assigned and current_user:
@@ -85,11 +87,20 @@ async def list_lots(
 
 @router.get("/available", response_model=list[AvailableLotResponse])
 async def get_available_lots(
-    supplier_item_id: int = Query(..., alias="product_group_id", description="製品ID"),
+    supplier_item_id: int | None = Query(None, description="仕入先品目ID"),
+    product_group_id: int | None = Query(
+        None, description="製品ID (互換用)", include_in_schema=False
+    ),
     warehouse_id: int | None = Query(None, description="倉庫ID"),
     min_quantity: Decimal = Query(Decimal("0"), description="最小必要数量"),
     db: Session = Depends(get_db),
 ):
+    supplier_item_id = supplier_item_id or supplier_item_id
+    if supplier_item_id is None:
+        raise HTTPException(
+            status_code=422, detail="supplier_item_id or supplier_item_id is required"
+        )
+
     client = InProcessLotClient(LotService(db))
     # client.get_available_lots call is likely non-async inside InProcessLotClient but here awaited?
     # Checking InProcessLotClient implementation, it was defined as async def in previous steps.
@@ -107,7 +118,7 @@ async def search_lots(
     sort_by: str = Query("expiry_date", description="Sort field"),
     sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort order"),
     supplier_item_id: int | None = Query(
-        None, alias="product_group_id", description="Filter by Product ID"
+        None, alias="supplier_item_id", description="Filter by Product ID"
     ),
     warehouse_id: int | None = Query(None, description="Filter by Warehouse ID"),
     supplier_code: str | None = Query(None, description="Filter by Supplier Code"),

@@ -80,7 +80,7 @@ def master_data(db: Session, supplier):
 
     # Create LotMaster
     lot_master = LotMaster(
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         lot_number="LOT-001",
     )
     db.add(lot_master)
@@ -92,7 +92,7 @@ def master_data(db: Session, supplier):
     customer_item = CustomerItem(
         customer_id=customer.id,
         customer_part_no="CUST-PART-001",
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         supplier_id=supplier.id,
         is_primary=True,
         base_unit="EA",
@@ -103,8 +103,7 @@ def master_data(db: Session, supplier):
     # Create lot with stock
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product.id,
-        supplier_item_id=product.id,  # Phase 2: supplier_item_id for mapping validation
+        supplier_item_id=product.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("100.000"),
         unit="EA",
@@ -148,7 +147,7 @@ def test_drag_assign_success(db: Session, client: TestClient, master_data: dict)
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
@@ -192,7 +191,7 @@ def test_drag_assign_with_deprecated_field(db: Session, client: TestClient, mast
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("5.000"),
         unit="EA",
@@ -230,7 +229,7 @@ def test_drag_assign_missing_quantity_returns_400(
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
@@ -268,7 +267,7 @@ def test_drag_assign_insufficient_stock_returns_400(
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("200.000"),
         unit="EA",
@@ -309,7 +308,7 @@ def test_cancel_allocation_success(db: Session, client: TestClient, master_data:
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
@@ -368,7 +367,7 @@ def test_preview_allocations_success(db: Session, client: TestClient, master_dat
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
@@ -420,7 +419,7 @@ def test_commit_allocation_success(db: Session, client: TestClient, master_data:
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
@@ -473,7 +472,7 @@ def test_confirm_hard_allocation_success(db: Session, client: TestClient, master
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("50.000"),
         unit="EA",
@@ -533,7 +532,7 @@ def test_confirm_hard_allocation_partial(db: Session, client: TestClient, master
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("100.000"),
         unit="EA",
@@ -596,7 +595,7 @@ def test_confirm_hard_allocation_already_confirmed(
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
@@ -658,7 +657,7 @@ def test_confirm_hard_allocation_insufficient_stock(
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("80.000"),
         unit="EA",
@@ -729,7 +728,7 @@ def test_confirm_batch_success(db: Session, client: TestClient, master_data: dic
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("30.000"),
         unit="EA",
@@ -788,7 +787,7 @@ def test_confirm_batch_partial_failure(db: Session, client: TestClient, master_d
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("20.000"),
         unit="EA",
@@ -854,7 +853,7 @@ def test_drag_assign_without_primary_mapping_success(
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",

@@ -67,7 +67,7 @@ v3.0: Delegates to AllocationCandidateService (SSOT).
    - 管理者: 「FORECAST_LINKED の受注を全て引当」
    - バッチ処理: 「夜間に全受注を一括引当」
    実装:
-   - フィルタ: product_group_id, customer_id, delivery_place_id, order_type
+   - フィルタ: supplier_item_id, customer_id, delivery_place_id, order_type
    - ORDER BY delivery_date ASC: 納期が早い順に引当
    業務影響:
    - 手動で1件ずつ引当する手間を削減

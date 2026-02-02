@@ -214,7 +214,7 @@ def test_get_order_success(db: Session, client: TestClient, master_data: dict):
 
     line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=10.0,
         unit="EA",
@@ -260,7 +260,7 @@ def test_create_order_success(db: Session, client: TestClient, master_data: dict
         "order_date": str(date.today()),
         "lines": [
             {
-                "product_group_id": master_data["product"].id,
+                "supplier_item_id": master_data["product"].id,
                 "delivery_date": str(date.today() + timedelta(days=7)),
                 "order_quantity": 5.0,
                 "unit": "EA",
@@ -291,7 +291,7 @@ def test_create_order_with_invalid_customer(db: Session, client: TestClient, mas
         "order_date": str(date.today()),
         "lines": [
             {
-                "product_group_id": master_data["product"].id,
+                "supplier_item_id": master_data["product"].id,
                 "delivery_date": str(date.today() + timedelta(days=7)),
                 "order_quantity": 5.0,
                 "unit": "EA",

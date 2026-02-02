@@ -18,14 +18,14 @@ class CustomerItemBase(BaseSchema):
     """Base schema for customer items.
 
     Phase1 update: supplier_item_id is now required (NOT NULL in DB).
-    product_group_id is removed as customer_items now directly link to supplier_items.
+    supplier_item_id is removed as customer_items now directly link to supplier_items.
     """
 
     customer_id: int = Field(..., description="得意先ID")
     customer_part_no: str = Field(..., max_length=100, description="得意先品番（先方品番）")
     supplier_item_id: int = Field(
         ...,
-        validation_alias="product_group_id",
+        validation_alias="supplier_item_id",
         description="仕入先品目ID (Phase1: required)",
     )
     base_unit: str = Field(..., max_length=20, description="基本単位")
@@ -50,7 +50,7 @@ class CustomerItemUpdate(BaseSchema):
     customer_part_no: str | None = Field(None, max_length=100, description="得意先品番")
     supplier_item_id: int | None = Field(
         None,
-        validation_alias="product_group_id",
+        validation_alias="supplier_item_id",
         description="仕入先品目ID",
     )
     base_unit: str | None = Field(None, max_length=20, description="基本単位")
@@ -62,7 +62,7 @@ class CustomerItemUpdate(BaseSchema):
 class CustomerItemResponse(BaseSchema):
     """Schema for customer item response with enriched data.
 
-    Phase1: supplier_item_id is required, product_group_id removed.
+    Phase1: supplier_item_id is required, supplier_item_id removed.
     Enriched fields (maker_part_no, display_name) come from supplier_items.
     """
 
@@ -71,7 +71,7 @@ class CustomerItemResponse(BaseSchema):
     customer_part_no: str = Field(..., description="得意先品番（先方品番）")
     supplier_item_id: int = Field(
         ...,
-        validation_alias="product_group_id",
+        validation_alias="supplier_item_id",
         description="仕入先品目ID (Phase1: required)",
     )
 

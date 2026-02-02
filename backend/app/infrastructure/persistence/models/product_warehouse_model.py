@@ -14,8 +14,11 @@ class ProductWarehouse(Base):
 
     __tablename__ = "product_warehouse"
 
-    product_group_id = Column(
-        BigInteger, ForeignKey("supplier_items.id", ondelete="CASCADE"), primary_key=True
+    supplier_item_id = Column(
+        "supplier_item_id",
+        BigInteger,
+        ForeignKey("supplier_items.id", ondelete="CASCADE"),
+        primary_key=True,
     )
     warehouse_id = Column(
         BigInteger, ForeignKey("warehouses.id", ondelete="CASCADE"), primary_key=True
@@ -28,6 +31,6 @@ class ProductWarehouse(Base):
 
     def __repr__(self) -> str:
         return (
-            f"<ProductWarehouse product_group={self.product_group_id} "
+            f"<ProductWarehouse supplier_item={self.supplier_item_id} "
             f"warehouse={self.warehouse_id}>"
         )

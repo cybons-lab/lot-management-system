@@ -68,7 +68,7 @@ class AllocationSuggestionBase:
 
         Args:
             forecasts: List of forecast records to process
-            lots_by_product: Available lots grouped by product_group_id (LotCandidate)
+            lots_by_product: Available lots grouped by supplier_item_id (LotCandidate)
             source: Source identifier for suggestions (e.g., "forecast_import", "group_regenerate")
 
         Returns:
@@ -94,7 +94,7 @@ class AllocationSuggestionBase:
                     forecast_id=f.id,
                     customer_id=f.customer_id,
                     delivery_place_id=f.delivery_place_id,
-                    product_group_id=f.supplier_item_id,
+                    supplier_item_id=f.supplier_item_id,
                     lot_id=res.lot_id,
                     quantity=res.quantity,
                     priority=res.priority,
@@ -143,12 +143,12 @@ def finalize_stats_and_gaps(
     gaps_list: list[AllocationGap] = []
 
     for key, data in stats_agg.items():
-        customer_id, delivery_place_id, product_group_id, forecast_period = key
+        customer_id, delivery_place_id, supplier_item_id, forecast_period = key
         stats_list.append(
             AllocationStatsPerKey(
                 customer_id=customer_id,
                 delivery_place_id=delivery_place_id,
-                supplier_item_id=product_group_id,
+                supplier_item_id=supplier_item_id,
                 forecast_period=forecast_period,
                 forecast_quantity=data["forecast_quantity"],
                 allocated_quantity=data["allocated_quantity"],
@@ -160,7 +160,7 @@ def finalize_stats_and_gaps(
                 AllocationGap(
                     customer_id=customer_id,
                     delivery_place_id=delivery_place_id,
-                    supplier_item_id=product_group_id,
+                    supplier_item_id=supplier_item_id,
                     forecast_period=forecast_period,
                     shortage_quantity=data["shortage_quantity"],
                 )

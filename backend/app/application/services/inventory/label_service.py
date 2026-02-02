@@ -46,7 +46,7 @@ class LabelService:
                 lot_res = LotResponse(
                     id=lot_entity.id,
                     lot_number=lot_entity.lot_number or "",
-                    product_group_id=lot_entity.supplier_item_id,
+                    supplier_item_id=lot_entity.supplier_item_id or 0,
                     product_code=lot_entity.supplier_item.maker_part_no
                     if lot_entity.supplier_item
                     else "",

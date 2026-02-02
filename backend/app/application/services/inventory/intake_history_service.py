@@ -54,7 +54,7 @@ class IntakeHistoryService:
         limit: int = 100,
         supplier_id: int | None = None,
         warehouse_id: int | None = None,
-        product_group_id: int | None = None,
+        supplier_item_id: int | None = None,
         start_date: date | None = None,
         end_date: date | None = None,
         search_query: str | None = None,
@@ -66,7 +66,7 @@ class IntakeHistoryService:
             limit: 取得件数上限
             supplier_id: 仕入先IDでフィルタ
             warehouse_id: 倉庫IDでフィルタ
-            product_group_id: 製品IDでフィルタ
+            supplier_item_id: 製品IDでフィルタ
             start_date: 開始日（入庫日）
             end_date: 終了日（入庫日）
             search_query: キーワード検索（ロット番号、製品名、仕入先名）
@@ -89,19 +89,19 @@ class IntakeHistoryService:
         )
 
         # Lot結合が必要なフィルタ
-        if supplier_id is not None or warehouse_id is not None or product_group_id is not None:
+        if supplier_id is not None or warehouse_id is not None or supplier_item_id is not None:
             query = query.join(StockHistory.lot)
             if supplier_id is not None:
                 query = query.filter(LotReceipt.supplier_id == supplier_id)
             if warehouse_id is not None:
                 query = query.filter(LotReceipt.warehouse_id == warehouse_id)
-            if product_group_id is not None:
-                query = query.filter(LotReceipt.supplier_item_id == product_group_id)
+            if supplier_item_id is not None:
+                query = query.filter(LotReceipt.supplier_item_id == supplier_item_id)
 
         if search_query:
             term = f"%{search_query}%"
             # 検索に必要なテーブルを結合
-            if supplier_id is None and warehouse_id is None and product_group_id is None:
+            if supplier_id is None and warehouse_id is None and supplier_item_id is None:
                 query = query.join(StockHistory.lot)
             query = query.join(LotReceipt.supplier_item)
             query = query.outerjoin(LotReceipt.supplier)
@@ -216,7 +216,7 @@ class IntakeHistoryService:
         year: int,
         month: int,
         warehouse_id: int | None = None,
-        product_group_id: int | None = None,
+        supplier_item_id: int | None = None,
         supplier_id: int | None = None,
     ) -> list[DailyIntakeSummary]:
         """月間の日別入庫集計を取得.
@@ -225,7 +225,7 @@ class IntakeHistoryService:
             year: 年
             month: 月
             warehouse_id: 倉庫IDフィルタ
-            product_group_id: 製品IDフィルタ
+            supplier_item_id: 製品IDフィルタ
             supplier_id: 仕入先IDフィルタ
 
         Returns:
@@ -252,8 +252,8 @@ class IntakeHistoryService:
 
         if warehouse_id:
             stmt = stmt.where(LotReceipt.warehouse_id == warehouse_id)
-        if product_group_id:
-            stmt = stmt.where(LotReceipt.supplier_item_id == product_group_id)
+        if supplier_item_id:
+            stmt = stmt.where(LotReceipt.supplier_item_id == supplier_item_id)
         if supplier_id:
             stmt = stmt.where(LotReceipt.supplier_id == supplier_id)
 

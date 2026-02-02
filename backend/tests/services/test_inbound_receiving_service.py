@@ -32,7 +32,7 @@ def test_receive_inbound_plan_with_expected_lots(db: Session, service_master_dat
     db.flush()
 
     line = InboundPlanLine(
-        inbound_plan_id=plan.id, product_group_id=product.id, planned_quantity=100, unit="EA"
+        inbound_plan_id=plan.id, supplier_item_id=product.id, planned_quantity=100, unit="EA"
     )
     db.add(line)
     db.flush()
@@ -94,7 +94,7 @@ def test_receive_inbound_plan_without_expected_lots(db: Session, service_master_
     db.flush()
 
     line = InboundPlanLine(
-        inbound_plan_id=plan.id, product_group_id=product.id, planned_quantity=50, unit="EA"
+        inbound_plan_id=plan.id, supplier_item_id=product.id, planned_quantity=50, unit="EA"
     )
     db.add(line)
     db.commit()
@@ -112,7 +112,7 @@ def test_receive_inbound_plan_without_expected_lots(db: Session, service_master_
         assert len(response.created_lot_ids) == 1
 
         lot = db.query(LotReceipt).filter(LotReceipt.id == response.created_lot_ids[0]).first()
-        # Lot number should be generated: plan_number-product_group_id-001
+        # Lot number should be generated: plan_number-supplier_item_id-001
         assert lot.lot_number == f"IP-RCV-AUTO-{product.id}-001"
         assert lot.received_quantity == 50
 

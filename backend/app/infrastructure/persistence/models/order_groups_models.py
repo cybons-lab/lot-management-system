@@ -33,10 +33,10 @@ if TYPE_CHECKING:
 class OrderGroup(Base):
     """受注グループ（論理ヘッダ）.
 
-    業務キー: customer_id × product_group_id × order_date
+    業務キー: customer_id × supplier_item_id × order_date
 
     仮想的な受注ナンバーを別途採番するのではなく、
-    「得意先 × 製品グループ × 受注日」を1つの受注グループとして扱う。
+    「得意先 × 仕入先品目ID × 受注日」を1つの受注グループとして扱う。
     """
 
     __tablename__ = "order_groups"
@@ -47,7 +47,7 @@ class OrderGroup(Base):
         ForeignKey("customers.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_group_id: Mapped[int] = mapped_column(
+    supplier_item_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
@@ -67,12 +67,12 @@ class OrderGroup(Base):
     __table_args__ = (
         UniqueConstraint(
             "customer_id",
-            "product_group_id",
+            "supplier_item_id",
             "order_date",
             name="uq_order_groups_business_key",
         ),
         Index("idx_order_groups_customer", "customer_id"),
-        Index("idx_order_groups_product_group", "product_group_id"),
+        Index("idx_order_groups_supplier_item", "supplier_item_id"),
         Index("idx_order_groups_date", "order_date"),
     )
 

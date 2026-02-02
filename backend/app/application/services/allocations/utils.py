@@ -56,7 +56,7 @@ Shared utilities for allocation operations:
    - 自動車部品: 製品ごとに梱包単位が異なる
    → 「次区」マスタで管理（例: 100個入り、50個入り）
    処理フロー:
-   - line.supplier_item から取得 → なければ product_group_id で検索
+   - line.supplier_item から取得 → なければ supplier_item_id で検索
    → それでも見つからなければ warning 返却
    用途:
    - 引当数量の丸め処理（100個単位で引当等）
@@ -182,7 +182,7 @@ def _existing_allocated_qty(line: OrderLine) -> float:
 def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> tuple[str | None, str | None]:
     """Resolve next_div value and generate warning if missing."""
     product = getattr(line, "product", None)
-    if product is None and getattr(line, "product_group_id", None):
+    if product is None and getattr(line, "supplier_item_id", None):
         stmt = select(Product).where(Product.id == line.supplier_item_id)
         product = db.execute(stmt).scalar_one_or_none()
     if product is None:

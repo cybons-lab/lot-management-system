@@ -164,19 +164,19 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
 
         uom_query = select(
             ProductUomConversion.conversion_id,
-            ProductUomConversion.product_group_id,
+            ProductUomConversion.supplier_item_id,
             ProductUomConversion.external_unit,
             ProductUomConversion.factor,
             SupplierItem.internal_unit,
             SupplierItem.maker_part_no,
             SupplierItem.display_name,
-        ).join(SupplierItem, ProductUomConversion.product_group_id == SupplierItem.id)
+        ).join(SupplierItem, ProductUomConversion.supplier_item_id == SupplierItem.id)
 
         uom_results = db.execute(uom_query).all()
         data = [
             {
                 "conversion_id": r.conversion_id,
-                "product_group_id": r.product_group_id,
+                "supplier_item_id": r.supplier_item_id,
                 "external_unit": r.external_unit,
                 "factor": float(r.factor),
                 "internal_unit": r.internal_unit,
@@ -198,13 +198,13 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
         # Reuse internal router's builder function logic
         data = []
         for route in routes:
-            # product_group_id is optional FK to supplier_items
-            # Load SupplierItem if product_group_id exists
+            # supplier_item_id is optional FK to supplier_items
+            # Load SupplierItem if supplier_item_id exists
             product_name = None
             maker_part_no = None
-            if route.product_group_id:
+            if route.supplier_item_id:
                 supplier_item = (
-                    db.query(SupplierItem).filter(SupplierItem.id == route.product_group_id).first()
+                    db.query(SupplierItem).filter(SupplierItem.id == route.supplier_item_id).first()
                 )
                 if supplier_item:
                     product_name = supplier_item.display_name

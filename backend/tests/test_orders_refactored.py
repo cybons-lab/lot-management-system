@@ -99,7 +99,7 @@ def setup_test_data(db_session, supplier):
         "customer_code": "CUS-001",
         "customer_id": customer.id,
         "product_code": "PROD-001",
-        "product_group_id": product.id,
+        "supplier_item_id": product.id,
         "delivery_place_id": delivery_place.id,
     }
 
@@ -116,7 +116,7 @@ class TestOrderAPI:
                 "order_date": "2024-11-01",
                 "lines": [
                     {
-                        "product_group_id": setup_test_data["product_group_id"],
+                        "supplier_item_id": setup_test_data["supplier_item_id"],
                         "order_quantity": 100.0,
                         "unit": "EA",
                         "delivery_date": "2024-11-15",
@@ -144,7 +144,7 @@ class TestOrderAPI:
 
         order_line = OrderLine(
             order_id=order.id,
-            product_group_id=setup_test_data["product_group_id"],
+            supplier_item_id=setup_test_data["supplier_item_id"],
             order_quantity=100.0,
             unit="EA",
             delivery_date=date(2024, 11, 15),

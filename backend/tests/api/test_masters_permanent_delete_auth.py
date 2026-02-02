@@ -111,7 +111,7 @@ def _setup_customer_item(db: Session):
     item = CustomerItem(
         customer_id=customer.id,
         customer_part_no="EXT-ITEM",
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         supplier_id=supplier.id,
         base_unit="EA",
     )
@@ -142,7 +142,7 @@ def _setup_uom_conversion(db: Session):
     db.add(product)
     db.flush()
     conversion = ProductUomConversion(
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         external_unit="BOX",
         factor=Decimal("10.0"),
     )
@@ -170,7 +170,7 @@ def _setup_supplier_product(db: Session):
     db.add(product)
     db.flush()
     sp = ProductSupplier(
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         supplier_id=supplier.id,
         maker_part_no="M-PART-SP",
         is_primary=True,

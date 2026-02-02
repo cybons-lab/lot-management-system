@@ -35,7 +35,8 @@ class InventoryStats(BaseSchema):
 async def list_inventory(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=1000),
-    supplier_item_id: int | None = Query(None, alias="product_group_id"),
+    supplier_item_id: int | None = Query(None),
+    product_group_id: int | None = Query(None, include_in_schema=False),
     warehouse_id: int | None = None,
     supplier_id: int | None = None,
     tab: str = Query(default="all", pattern="^(in_stock|no_stock|all)$"),
@@ -52,6 +53,7 @@ async def list_inventory(
         raise HTTPException(status_code=401, detail="Authentication required for this filter")
 
     service = InventoryService(db)
+    supplier_item_id = supplier_item_id or product_group_id
     return service.get_inventory_items(
         skip=skip,
         limit=limit,
@@ -67,7 +69,8 @@ async def list_inventory(
 
 @router.get("/filter-options", response_model=InventoryFilterOptions)
 async def get_filter_options(
-    supplier_item_id: int | None = Query(None, alias="product_group_id"),
+    supplier_item_id: int | None = Query(None),
+    product_group_id: int | None = Query(None, include_in_schema=False),
     warehouse_id: int | None = None,
     supplier_id: int | None = None,
     tab: str = Query(default="all", pattern="^(in_stock|no_stock|all)$"),
@@ -80,6 +83,7 @@ async def get_filter_options(
     if assigned_staff_only and not current_user:
         raise HTTPException(status_code=401, detail="Authentication required for this filter")
     service = InventoryService(db)
+    supplier_item_id = supplier_item_id or product_group_id
     return service.get_filter_options(
         supplier_item_id=supplier_item_id,
         warehouse_id=warehouse_id,

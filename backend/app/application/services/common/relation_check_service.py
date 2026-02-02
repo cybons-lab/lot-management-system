@@ -127,7 +127,7 @@ class RelationCheckService:
 
         return False
 
-    def product_has_related_data(self, product_group_id: int) -> bool:
+    def product_has_related_data(self, supplier_item_id: int) -> bool:
         """製品に関連データが存在するかチェック.
 
         チェック対象:
@@ -137,7 +137,7 @@ class RelationCheckService:
         - forecasts: 需要予測
 
         Args:
-            product_group_id: 製品ID
+            supplier_item_id: 製品ID
 
         Returns:
             True if related data exists, False otherwise
@@ -151,7 +151,7 @@ class RelationCheckService:
         # ロットチェック
         lot_count = (
             self.db.query(func.count(LotReceipt.id))
-            .filter(LotReceipt.supplier_item_id == product_group_id)
+            .filter(LotReceipt.supplier_item_id == supplier_item_id)
             .scalar()
         )
         if lot_count > 0:
@@ -160,7 +160,7 @@ class RelationCheckService:
         # 受注明細チェック
         order_line_count = (
             self.db.query(func.count(OrderLine.id))
-            .filter(OrderLine.supplier_item_id == product_group_id)
+            .filter(OrderLine.supplier_item_id == supplier_item_id)
             .scalar()
         )
         if order_line_count > 0:
@@ -169,7 +169,7 @@ class RelationCheckService:
         # 需要予測チェック
         forecast_count = (
             self.db.query(func.count(ForecastCurrent.id))
-            .filter(ForecastCurrent.supplier_item_id == product_group_id)
+            .filter(ForecastCurrent.supplier_item_id == supplier_item_id)
             .scalar()
         )
         if forecast_count > 0:

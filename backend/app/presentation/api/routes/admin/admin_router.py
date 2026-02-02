@@ -269,7 +269,7 @@ def get_allocatable_lots(
             SELECT
                 vld.lot_id,
                 vld.lot_number,
-                vld.product_group_id,
+                vld.supplier_item_id,
                 p.maker_part_no AS product_code,
                 vld.warehouse_id,
                 vld.warehouse_code,
@@ -281,7 +281,7 @@ def get_allocatable_lots(
                 vld.updated_at as last_updated
             FROM
                 v_lot_details vld
-                INNER JOIN products p ON p.id = vld.product_group_id
+                INNER JOIN products p ON p.id = vld.supplier_item_id
             WHERE
                 vld.available_quantity > 0
                 AND vld.status = 'active'
@@ -302,7 +302,7 @@ def get_allocatable_lots(
             {
                 "lot_id": row.lot_id,
                 "lot_number": row.lot_number,
-                "product_group_id": row.product_group_id,
+                "supplier_item_id": row.supplier_item_id,
                 "product_code": row.product_code,
                 "warehouse_id": row.warehouse_id,
                 "warehouse_code": row.warehouse_code,
@@ -582,8 +582,8 @@ SELECT
     lr.id AS receipt_id,
     lm.id AS lot_master_id,
     lm.lot_number,
-    COALESCE(lr.supplier_item_id, lr.product_group_id) AS product_group_id,
-    COALESCE(lr.supplier_item_id, lr.product_group_id) AS supplier_item_id,
+    COALESCE(lr.supplier_item_id, lr.supplier_item_id) AS supplier_item_id,
+    COALESCE(lr.supplier_item_id, lr.supplier_item_id) AS supplier_item_id,
     si.maker_part_no AS product_code,
     si.maker_part_no,
     si.maker_part_no AS maker_part_code,
@@ -631,7 +631,7 @@ SELECT
 FROM
     lot_receipts lr
     JOIN lot_master lm ON lr.lot_master_id = lm.id
-    LEFT JOIN supplier_items si ON COALESCE(lr.supplier_item_id, lr.product_group_id) = si.id
+    LEFT JOIN supplier_items si ON COALESCE(lr.supplier_item_id, lr.supplier_item_id) = si.id
     LEFT JOIN warehouses w ON lr.warehouse_id = w.id
     LEFT JOIN suppliers s ON lm.supplier_id = s.id
     LEFT JOIN v_lot_allocations la ON lr.id = la.lot_id

@@ -13,7 +13,7 @@ class AllocationSuggestionBase(BaseModel):
     forecast_period: str = Field(..., description="対象期間 (YYYY-MM または YYYY-MM-DD)")
     customer_id: int = Field(..., description="得意先ID")
     delivery_place_id: int = Field(..., description="納入先ID")
-    supplier_item_id: int = Field(..., serialization_alias="product_group_id", description="製品ID")
+    supplier_item_id: int = Field(..., serialization_alias="supplier_item_id", description="製品ID")
 
     lot_id: int = Field(..., description="ロットID")
     quantity: Decimal = Field(..., description="引当数量")

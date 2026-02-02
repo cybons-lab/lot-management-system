@@ -21,7 +21,7 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     user = service_master_data["user"]
 
     # 0. Ensure ProductWarehouse exists
-    pw = ProductWarehouse(product_group_id=product1.id, warehouse_id=warehouse.id)
+    pw = ProductWarehouse(supplier_item_id=product1.id, warehouse_id=warehouse.id)
     db.merge(pw)
     db.flush()
 
@@ -46,7 +46,7 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     # 3. Create lots for assigned supplier
     lot_master1 = LotMaster(
         lot_number="LOT-ASSIGNED",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=assigned_supplier.id,
     )
     db.add(lot_master1)
@@ -54,7 +54,7 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
 
     lot1 = LotReceipt(
         lot_master_id=lot_master1.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=assigned_supplier.id,
         received_quantity=50,
@@ -67,7 +67,7 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     # 4. Create lots for unassigned supplier
     lot_master2 = LotMaster(
         lot_number="LOT-UNASSIGNED",
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         supplier_id=unassigned_supplier.id,
     )
     db.add(lot_master2)
@@ -75,7 +75,7 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
 
     lot2 = LotReceipt(
         lot_master_id=lot_master2.id,
-        product_group_id=product1.id,
+        supplier_item_id=product1.id,
         warehouse_id=warehouse.id,
         supplier_id=unassigned_supplier.id,
         received_quantity=30,
@@ -101,11 +101,11 @@ def test_get_inventory_items_primary_staff_only(db: Session, service_master_data
     print(f"DEBUG: All Items: {len(items_all)}")
     for i in items_all:
         print(
-            f"DEBUG: Item: pid={i.product_group_id}, wid={i.warehouse_id}, qty={i.total_quantity}, name={i.product_name}"
+            f"DEBUG: Item: pid={i.supplier_item_id}, wid={i.warehouse_id}, qty={i.total_quantity}, name={i.product_name}"
         )
 
     target_all = [
-        i for i in items_all if i.product_group_id == product1.id and i.warehouse_id == warehouse.id
+        i for i in items_all if i.supplier_item_id == product1.id and i.warehouse_id == warehouse.id
     ]
     assert len(target_all) == 1
     assert target_all[0].total_quantity == 80

@@ -98,7 +98,7 @@ def _query_lots_from_view(
         List of lot view results
     """
     query = db.query(VLotAvailableQty).filter(
-        VLotAvailableQty.product_group_id == supplier_item_id,
+        VLotAvailableQty.supplier_item_id == supplier_item_id,
         VLotAvailableQty.available_qty > 0,
     )
 
@@ -250,13 +250,13 @@ def _enrich_product_units(db: Session, candidates: list[CandidateLotItem]) -> No
         db: Database session
         candidates: List of candidate items to enrich
     """
-    product_group_ids = {c.supplier_item_id for c in candidates if c.supplier_item_id}
-    if not product_group_ids:
+    supplier_item_ids = {c.supplier_item_id for c in candidates if c.supplier_item_id}
+    if not supplier_item_ids:
         return
 
     from app.infrastructure.persistence.models import Product
 
-    products = db.query(Product).filter(Product.id.in_(product_group_ids)).all()
+    products = db.query(Product).filter(Product.id.in_(supplier_item_ids)).all()
     product_map = {p.id: p for p in products}
 
     for candidate in candidates:
@@ -324,16 +324,16 @@ def execute_candidate_lot_query(
             return candidates
 
         logger.info(
-            f"Context found - product_group_id={context.product_group_id}, "
+            f"Context found - supplier_item_id={context.supplier_item_id}, "
             f"delivery_place_id={context.delivery_place_id}, "
             f"order_line_id={order_line_id}"
         )
 
-        if context.product_group_id is None:
+        if context.supplier_item_id is None:
             return candidates
 
         # Query lots with fallback
-        results = _query_lots_with_fallback(db, context.product_group_id, strategy, limit)
+        results = _query_lots_with_fallback(db, context.supplier_item_id, strategy, limit)
 
         # Get delivery place name
         delivery_place_name = _get_delivery_place_name(db, context.delivery_place_id)

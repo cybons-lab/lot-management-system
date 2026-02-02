@@ -27,7 +27,7 @@ def test_create_order_success(db: Session, service_master_data):
         order_date=date.today(),
         lines=[
             OrderLineCreate(
-                product_group_id=product1.id,
+                supplier_item_id=product1.id,
                 order_quantity=100,
                 unit="BOX",
                 delivery_date=date.today() + timedelta(days=7),
@@ -42,7 +42,7 @@ def test_create_order_success(db: Session, service_master_data):
     # assert order.order_number == "ORD-SVC-001"
     assert order.customer_id == customer.id
     assert len(order.lines) == 1
-    assert order.lines[0].product_group_id == product1.id
+    assert order.lines[0].supplier_item_id == product1.id
     assert order.lines[0].order_quantity == 100
     assert order.lines[0].converted_quantity == 100  # EA -> EA (1:1)
 
@@ -77,7 +77,7 @@ def test_create_order_with_unit_conversion(db: Session, service_master_data):
         order_date=date.today(),
         lines=[
             OrderLineCreate(
-                product_group_id=product1.id,
+                supplier_item_id=product1.id,
                 order_quantity=20,
                 unit=product1.external_unit,  # PLT
                 delivery_date=date.today() + timedelta(days=7),
@@ -162,7 +162,7 @@ def test_cancel_order_success(db: Session, service_master_data):
 
     line = OrderLine(
         order_id=order.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         order_quantity=10,
         status="pending",
         delivery_date=date.today() + timedelta(days=7),
@@ -196,7 +196,7 @@ def test_cancel_order_shipped_error(db: Session, service_master_data):
 
     line = OrderLine(
         order_id=order.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         order_quantity=10,
         status="shipped",
         delivery_date=date.today() + timedelta(days=7),
@@ -224,7 +224,7 @@ def test_populate_additional_info(db: Session, service_master_data):
 
     line = OrderLine(
         order_id=order.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         order_quantity=10,
         delivery_place_id=delivery_place.id,
         delivery_date=date.today() + timedelta(days=7),

@@ -103,10 +103,10 @@ class OrderLineBase(BaseSchema):
 
     supplier_item_id: int | None = Field(
         None,
-        serialization_alias="product_group_id",
+        serialization_alias="supplier_item_id",
         gt=0,
         description="製品ID（OCR取込時はNULL可）",
-        validation_alias="product_group_id",
+        validation_alias="supplier_item_id",
     )
     delivery_date: date
     order_quantity: Decimal = Field(..., gt=0, decimal_places=3, description="受注数量")

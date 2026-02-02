@@ -28,7 +28,7 @@ class OcrImportLineResult(BaseModel):
     row_no: int = Field(..., description="行番号")
     customer_part_no: str = Field(..., description="先方品番")
     supplier_item_id: int | None = Field(
-        None, description="解決された製品ID (Phase1: renamed from product_group_id)"
+        None, description="解決された製品ID (Phase1: renamed from supplier_item_id)"
     )
     match_type: str = Field(..., description="マッチ種別（exact/prefix/not_found/multiple）")
     status: str = Field(..., description="処理状態（resolved/unresolved）")

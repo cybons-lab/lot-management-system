@@ -36,7 +36,7 @@ def generate_forecasts(
 
     Returns:
         Tuple of (products_with_forecast, forecast_totals)
-        where forecast_totals is a dict mapping product_group_id to total forecast quantity
+        where forecast_totals is a dict mapping supplier_item_id to total forecast quantity
     """
     # Split products: 70% with forecast, 30% without
     num_products = len(products)
@@ -82,7 +82,7 @@ def generate_forecasts(
                             fc = ForecastCurrent(
                                 customer_id=c.id,
                                 delivery_place_id=dp.id,
-                                product_group_id=p.id,
+                                supplier_item_id=p.id,
                                 forecast_date=current_date,
                                 forecast_quantity=Decimal(qty),
                                 unit="pcs",
@@ -106,7 +106,7 @@ def generate_forecasts(
                         fc = ForecastCurrent(
                             customer_id=c.id,
                             delivery_place_id=dp.id,
-                            product_group_id=p.id,
+                            supplier_item_id=p.id,
                             forecast_date=dekad_date,
                             forecast_quantity=Decimal(qty),
                             unit="pcs",
@@ -122,7 +122,7 @@ def generate_forecasts(
                     fc = ForecastCurrent(
                         customer_id=c.id,
                         delivery_place_id=dp.id,
-                        product_group_id=p.id,
+                        supplier_item_id=p.id,
                         forecast_date=next_month,  # Use 1st day of month (NOT NULL constraint)
                         forecast_quantity=Decimal(qty),
                         unit="pcs",
@@ -166,7 +166,7 @@ def generate_reservations(db: Session):
                 forecast_id=fc.id,
                 customer_id=fc.customer_id,
                 delivery_place_id=fc.delivery_place_id,
-                product_group_id=fc.supplier_item_id,
+                supplier_item_id=fc.supplier_item_id,
                 lot_id=lot_id,
                 quantity=fc.forecast_quantity,
                 allocation_type="soft",

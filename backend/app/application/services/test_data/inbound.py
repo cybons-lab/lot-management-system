@@ -86,7 +86,7 @@ def generate_inbound_plans(
 
             line = InboundPlanLine(
                 inbound_plan_id=plan.id,
-                product_group_id=lot.supplier_item_id,
+                supplier_item_id=lot.supplier_item_id,
                 planned_quantity=original_qty,
                 unit="pcs",
             )
@@ -160,7 +160,7 @@ def generate_inbound_plans(
         for p in selected_products:
             line = InboundPlanLine(
                 inbound_plan_id=plan.id,
-                product_group_id=p.id,
+                supplier_item_id=p.id,
                 planned_quantity=Decimal(str(random.randint(50, 500))),
                 unit="pcs",
             )
@@ -196,7 +196,7 @@ def generate_inbound_plans(
         for p in selected_products:
             qty = Decimal(str(random.randint(100, 500)))
             line = InboundPlanLine(
-                inbound_plan_id=plan.id, product_group_id=p.id, planned_quantity=qty, unit="pcs"
+                inbound_plan_id=plan.id, supplier_item_id=p.id, planned_quantity=qty, unit="pcs"
             )
             db.add(line)
             db.flush()

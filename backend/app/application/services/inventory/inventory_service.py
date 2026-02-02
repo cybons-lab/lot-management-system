@@ -48,9 +48,9 @@ providing product × warehouse summary information.
    理由: N×M の突合を高速化
    パフォーマンス:
    - N件の在庫サマリー × M件の引当内訳 → O(N×M) = 遅い
-   - 辞書化: {(product_group_id, warehouse_id): {soft, hard}} → O(1) ルックアップ
+   - 辞書化: {(supplier_item_id, warehouse_id): {soft, hard}} → O(1) ルックアップ
    実装:
-   - alloc_map: キー = (product_group_id, warehouse_id)、値 = {soft, hard}
+   - alloc_map: キー = (supplier_item_id, warehouse_id)、値 = {soft, hard}
    - ループ内で alloc_map.get(key) → O(1) で取得
    メリット:
    - 100件の在庫×100件の引当でも、200回のループで完了
@@ -97,7 +97,7 @@ providing product × warehouse summary information.
    → IN句でページング対象のみに絞る
    実装:
    - found_products: 最初のクエリで取得した製品IDリスト
-   - WHERE l.supplier_item_id IN :product_group_ids AND l.warehouse_id IN :warehouse_ids
+   - WHERE l.supplier_item_id IN :supplier_item_ids AND l.warehouse_id IN :warehouse_ids
    メリット:
    - 100件の在庫サマリーに対して、100件分の引当のみ取得
 

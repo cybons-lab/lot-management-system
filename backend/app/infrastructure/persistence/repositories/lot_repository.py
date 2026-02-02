@@ -252,7 +252,7 @@ class LotRepository:
 
         lot = LotReceipt(
             supplier_id=supplier.id if supplier else None,
-            product_group_id=product.id if product else None,
+            supplier_item_id=product.id if product else None,
             lot_master_id=0,  # This method seems legacy or incomplete, but for now matching schema
             warehouse_id=warehouse_id,
             received_date=receipt_date or date.today(),

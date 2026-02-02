@@ -1,7 +1,7 @@
 # backend/app/presentation/schemas/orders/order_group_schema.py
 """OrderGroup (受注グループ) Pydantic schemas.
 
-業務キー: customer_id × product_group_id × order_date
+業務キー: customer_id × supplier_item_id × order_date
 """
 
 from __future__ import annotations

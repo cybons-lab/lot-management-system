@@ -90,7 +90,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
     ) -> list[dict]:
         """Get all customer item mappings with optional filtering and enriched data.
 
-        Phase1: Filter by supplier_item_id instead of product_group_id.
+        Phase1: Filter by supplier_item_id instead of supplier_item_id.
         """
         from sqlalchemy import select
 

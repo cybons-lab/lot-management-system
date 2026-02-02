@@ -60,8 +60,8 @@ class CustomerItemDeliverySettingResponse(CustomerItemDeliverySettingBase):
 class ShipmentTextRequest(BaseSchema):
     """Request schema for getting shipment text."""
 
-    # This might still use customer_id/product_group_id logic or need update?
-    # Logic uses find_customer_part_no(customer_id, product_group_id)
+    # This might still use customer_id/supplier_item_id logic or need update?
+    # Logic uses find_customer_part_no(customer_id, supplier_item_id)
     # Keeping as is for now as it seems to be a different look-up case (from OrderLine context?)
     customer_id: int
     supplier_item_id: int
