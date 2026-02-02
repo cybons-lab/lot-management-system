@@ -31,11 +31,11 @@ def upgrade() -> None:
         """)
     )
 
-    # Create guest user if not exists
+    # Create guest user if not exists (mark as system user)
     conn.execute(
         sa.text("""
-            INSERT INTO users (username, email, display_name, is_active, created_at, updated_at)
-            VALUES ('guest', 'guest@example.com', 'ゲストユーザー', true, NOW(), NOW())
+            INSERT INTO users (username, email, display_name, is_active, is_system_user, created_at, updated_at)
+            VALUES ('guest', 'guest@example.com', 'ゲストユーザー', true, true, NOW(), NOW())
             ON CONFLICT (username) DO NOTHING
         """)
     )

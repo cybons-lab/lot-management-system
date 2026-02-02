@@ -201,6 +201,12 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("true"), comment="アクティブフラグ"
     )
+    is_system_user: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=text("false"),
+        comment="システムユーザーフラグ（guest/admin等、削除不可）",
+    )
     last_login_at: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True, comment="最終ログイン日時"
     )
