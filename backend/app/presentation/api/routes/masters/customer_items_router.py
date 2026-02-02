@@ -36,18 +36,20 @@ def list_customer_items(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     customer_id: int | None = Query(None, description="得意先IDでフィルタ"),
-    product_group_id: int | None = Query(None, description="製品IDでフィルタ"),
+    supplier_item_id: int | None = Query(None, description="仕入先品目IDでフィルタ"),
     supplier_id: int | None = Query(None, description="仕入先IDでフィルタ（supplier_items経由）"),
     include_inactive: bool = Query(False, description="無効なマッピングを含めるか"),
     db: Session = Depends(get_db),
 ):
     """得意先品番マッピング一覧取得.
 
+    Phase1: product_group_id → supplier_item_id に変更
+
     Args:
         skip: スキップ件数
         limit: 取得件数上限
         customer_id: 得意先IDでフィルタ（オプション）
-        product_group_id: 製品IDでフィルタ（オプション）
+        supplier_item_id: 仕入先品目IDでフィルタ（オプション）
         supplier_id: 仕入先IDでフィルタ（オプション、supplier_items経由）
         include_inactive: 無効なマッピングを含めるか
         db: データベースセッション
@@ -60,7 +62,7 @@ def list_customer_items(
         skip=skip,
         limit=limit,
         customer_id=customer_id,
-        product_group_id=product_group_id,
+        supplier_item_id=supplier_item_id,
         supplier_id=supplier_id,
         include_inactive=include_inactive,
     )

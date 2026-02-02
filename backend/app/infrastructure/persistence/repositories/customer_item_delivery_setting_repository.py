@@ -103,14 +103,16 @@ class CustomerItemDeliverySettingRepository:
         customer_id: int,
         product_group_id: int,
     ) -> str | None:
-        """Get customer_part_no from customer_items by customer_id and product_group_id.
+        """Get customer_part_no from customer_items by customer_id and supplier_item_id.
 
-        Note: Used by ShipmentTextRequest to convert product_group_id to customer_part_no.
+        Phase1: product_group_id renamed to supplier_item_id.
+        Note: Used by ShipmentTextRequest to convert supplier_item_id to customer_part_no.
         See find_matching_setting() for context.
         """
         stmt = select(CustomerItem.customer_part_no).where(
             CustomerItem.customer_id == customer_id,
-            CustomerItem.product_group_id == product_group_id,
+            CustomerItem.supplier_item_id
+            == product_group_id,  # Phase1: still using param name for compatibility
         )
         return cast(str | None, self.db.execute(stmt).scalar_one_or_none())
 

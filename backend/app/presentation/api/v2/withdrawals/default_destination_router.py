@@ -19,6 +19,7 @@ from app.infrastructure.persistence.models.masters_models import (
     DeliveryPlace,
 )
 from app.infrastructure.persistence.models.missing_mapping_model import MissingMappingEvent
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
 
 router = APIRouter(tags=["withdrawals"])
@@ -69,15 +70,20 @@ def get_default_destination(
     """
     製品IDからデフォルトの得意先・納入先を取得する.
 
-    1. customer_items テーブルから product_group_id でマッピングを検索
+    Phase1: product_group_id → supplier_item_id, supplier_id は supplier_item 経由で取得
+
+    1. customer_items テーブルから supplier_item_id でマッピングを検索
     2. 見つかれば customer_id を取得
     3. customer_item_delivery_settings の is_default=True レコードから delivery_place_id を取得
     4. マッピングが無い場合は mapping_found=False を返す
     """
-    # Step 1: Find CustomerItem by product_group_id
-    query = select(CustomerItem).where(CustomerItem.product_group_id == product_group_id)
+    # Step 1: Find CustomerItem by supplier_item_id
+    query = select(CustomerItem).where(CustomerItem.supplier_item_id == product_group_id)
     if supplier_id is not None:
-        query = query.where(CustomerItem.supplier_id == supplier_id)
+        # Phase1: supplier_id is in supplier_item, need to JOIN
+        query = query.join(CustomerItem.supplier_item).where(
+            SupplierItem.supplier_id == supplier_id
+        )
 
     customer_item = db.execute(query).scalars().first()
 

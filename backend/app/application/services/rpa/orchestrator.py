@@ -524,12 +524,15 @@ class MaterialDeliveryNoteOrchestrator:
         supplier_id = None
         source = "none"
 
-        # 1. CustomerItem
+        # 1. CustomerItem (Phase1: use supplier_item_id)
         if customer_id:
             customer_item = self.repo.find_customer_item(customer_id, customer_part_no)
             if customer_item:
-                product_group_id = customer_item.product_group_id
-                supplier_id = customer_item.supplier_id
+                product_group_id = customer_item.supplier_item_id
+                # Phase1: supplier_id via relationship
+                supplier_id = (
+                    customer_item.supplier_item.supplier_id if customer_item.supplier_item else None
+                )
                 source = "customer_item"
 
         # 2. Product fallback
