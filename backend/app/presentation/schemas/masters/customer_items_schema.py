@@ -15,14 +15,15 @@ from app.presentation.schemas.common.base import BaseSchema
 
 
 class CustomerItemBase(BaseSchema):
-    """Base schema for customer items."""
+    """Base schema for customer items.
+
+    Phase1 update: supplier_item_id is now required (NOT NULL in DB).
+    product_group_id is removed as customer_items now directly link to supplier_items.
+    """
 
     customer_id: int = Field(..., description="得意先ID")
     customer_part_no: str = Field(..., max_length=100, description="得意先品番（先方品番）")
-    product_group_id: int = Field(..., description="製品ID")
-    supplier_id: int | None = Field(None, description="仕入先ID")
-    supplier_item_id: int | None = Field(None, description="仕入先品目ID")
-    is_primary: bool = Field(False, description="主要得意先フラグ")
+    supplier_item_id: int = Field(..., description="仕入先品目ID (Phase1: required)")
     base_unit: str = Field(..., max_length=20, description="基本単位")
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")
@@ -43,10 +44,7 @@ class CustomerItemUpdate(BaseSchema):
     """Schema for updating a customer item mapping."""
 
     customer_part_no: str | None = Field(None, max_length=100, description="得意先品番")
-    product_group_id: int | None = Field(None, description="製品ID")
-    supplier_id: int | None = Field(None, description="仕入先ID")
     supplier_item_id: int | None = Field(None, description="仕入先品目ID")
-    is_primary: bool | None = Field(None, description="主要得意先フラグ")
     base_unit: str | None = Field(None, max_length=20, description="基本単位")
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")
@@ -54,15 +52,16 @@ class CustomerItemUpdate(BaseSchema):
 
 
 class CustomerItemResponse(BaseSchema):
-    """Schema for customer item response with enriched data."""
+    """Schema for customer item response with enriched data.
+
+    Phase1: supplier_item_id is required, product_group_id removed.
+    Enriched fields (maker_part_no, display_name) come from supplier_items.
+    """
 
     id: int = Field(..., description="得意先品番マッピングID")
     customer_id: int = Field(..., description="得意先ID")
     customer_part_no: str = Field(..., description="得意先品番（先方品番）")
-    product_group_id: int = Field(..., description="製品ID")
-    supplier_id: int | None = Field(None, description="仕入先ID")
-    supplier_item_id: int | None = Field(None, description="仕入先品目ID")
-    is_primary: bool = Field(..., description="主要得意先フラグ")
+    supplier_item_id: int = Field(..., description="仕入先品目ID (Phase1: required)")
     base_unit: str = Field(..., description="基本単位")
     pack_unit: str | None = Field(None, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")
@@ -70,8 +69,8 @@ class CustomerItemResponse(BaseSchema):
     # Enriched from relationships
     customer_code: str = Field(..., description="得意先コード")
     customer_name: str = Field(..., description="得意先名")
-    product_code: str = Field(..., description="製品コード(Maker Part Code)")
-    product_name: str = Field(..., description="製品名")
+    maker_part_no: str = Field(..., description="メーカー品番 (from supplier_items)")
+    display_name: str = Field(..., description="表示名 (from supplier_items)")
     supplier_code: str | None = Field(None, description="仕入先コード")
     supplier_name: str | None = Field(None, description="仕入先名")
     created_at: datetime
