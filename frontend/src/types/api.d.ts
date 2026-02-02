@@ -9738,10 +9738,10 @@ export interface components {
        */
       customer_part_no: string;
       /**
-       * Supplier Item Id
+       * Product Group Id
        * @description 仕入先品目ID (Phase1: required)
        */
-      supplier_item_id: number;
+      product_group_id: number;
       /**
        * Base Unit
        * @description 基本単位
@@ -10054,10 +10054,10 @@ export interface components {
        */
       customer_part_no?: string | null;
       /**
-       * Supplier Item Id
+       * Product Group Id
        * @description 仕入先品目ID
        */
-      supplier_item_id?: number | null;
+      product_group_id?: number | null;
       /**
        * Base Unit
        * @description 基本単位

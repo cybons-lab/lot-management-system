@@ -24938,9 +24938,9 @@
             "title": "Customer Part No",
             "description": "得意先品番（先方品番）"
           },
-          "supplier_item_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Supplier Item Id",
+            "title": "Product Group Id",
             "description": "仕入先品目ID (Phase1: required)"
           },
           "base_unit": {
@@ -24991,7 +24991,7 @@
         "required": [
           "customer_id",
           "customer_part_no",
-          "supplier_item_id",
+          "product_group_id",
           "base_unit"
         ],
         "title": "CustomerItemCreate",
@@ -25586,7 +25586,7 @@
             "title": "Customer Part No",
             "description": "得意先品番"
           },
-          "supplier_item_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer"
@@ -25595,7 +25595,7 @@
                 "type": "null"
               }
             ],
-            "title": "Supplier Item Id",
+            "title": "Product Group Id",
             "description": "仕入先品目ID"
           },
           "base_unit": {

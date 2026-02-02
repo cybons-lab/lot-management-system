@@ -24,7 +24,10 @@ class CustomerItemBase(BaseSchema):
     customer_id: int = Field(..., description="得意先ID")
     customer_part_no: str = Field(..., max_length=100, description="得意先品番（先方品番）")
     supplier_item_id: int = Field(
-        ..., serialization_alias="product_group_id", description="仕入先品目ID (Phase1: required)"
+        ...,
+        validation_alias="product_group_id",
+        serialization_alias="product_group_id",
+        description="仕入先品目ID (Phase1: required)",
     )
     base_unit: str = Field(..., max_length=20, description="基本単位")
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
@@ -47,7 +50,10 @@ class CustomerItemUpdate(BaseSchema):
 
     customer_part_no: str | None = Field(None, max_length=100, description="得意先品番")
     supplier_item_id: int | None = Field(
-        None, serialization_alias="product_group_id", description="仕入先品目ID"
+        None,
+        validation_alias="product_group_id",
+        serialization_alias="product_group_id",
+        description="仕入先品目ID",
     )
     base_unit: str | None = Field(None, max_length=20, description="基本単位")
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
