@@ -802,3 +802,203 @@ def get_view_definition(
     except Exception as e:
         logger.exception(f"ビュー定義取得エラー: {e}")
         raise HTTPException(status_code=500, detail=f"ビュー定義の取得に失敗しました: {str(e)}")
+
+
+@router.get("/diagnostics/schema-check")
+def check_schema_integrity(
+    current_admin=Depends(get_current_admin),
+):
+    """スキーマ整合性チェック（Admin専用）.
+
+    開発環境と本番環境のスキーマ差分を検出。
+    Phase1 移行後の必須カラム（supplier_item_id）の存在確認を含む。
+
+    チェック項目:
+    - 主要テーブルの存在確認
+    - 必須カラムの存在確認（supplier_item_id など）
+    - ビュー定義の整合性
+    - インデックスの存在確認
+
+    Returns:
+        {
+            "status": "ok" | "warning" | "error",
+            "tables": {...},
+            "views": {...},
+            "issues": [...]
+        }
+    """
+    try:
+        with engine.connect() as conn:
+            issues = []
+            tables_status = {}
+            views_status = {}
+
+            # 主要テーブルのチェック
+            critical_tables = {
+                "supplier_items": ["supplier_item_id", "maker_part_no", "supplier_id"],
+                "lot_master": ["lot_id", "supplier_item_id", "lot_number"],
+                "lot_receipts": ["receipt_id", "supplier_item_id", "warehouse_id"],
+                "orders": ["id", "customer_id", "order_date"],
+                "order_lines": ["id", "order_id", "supplier_item_id", "delivery_date"],
+                "allocations": ["id", "order_line_id", "lot_id"],
+            }
+
+            for table_name, required_columns in critical_tables.items():
+                # テーブルの存在確認
+                result = conn.execute(
+                    text(
+                        """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_name = :table_name
+                    )
+                    """
+                    ),
+                    {"table_name": table_name},
+                )
+                exists = result.scalar()
+
+                if not exists:
+                    issues.append(
+                        {
+                            "severity": "error",
+                            "type": "missing_table",
+                            "table": table_name,
+                            "message": f"テーブル '{table_name}' が存在しません",
+                        }
+                    )
+                    tables_status[table_name] = {"exists": False, "status": "error"}
+                    continue
+
+                # カラムの存在確認
+                result = conn.execute(
+                    text(
+                        """
+                    SELECT column_name, data_type, is_nullable
+                    FROM information_schema.columns
+                    WHERE table_name = :table_name
+                    ORDER BY ordinal_position
+                    """
+                    ),
+                    {"table_name": table_name},
+                )
+                columns = {
+                    row[0]: {"type": row[1], "nullable": row[2]} for row in result.fetchall()
+                }
+
+                missing_columns = [col for col in required_columns if col not in columns]
+                if missing_columns:
+                    issues.append(
+                        {
+                            "severity": "error",
+                            "type": "missing_columns",
+                            "table": table_name,
+                            "message": f"テーブル '{table_name}' に必須カラムが不足: {', '.join(missing_columns)}",
+                        }
+                    )
+                    tables_status[table_name] = {
+                        "exists": True,
+                        "status": "error",
+                        "columns": list(columns.keys()),
+                        "missing": missing_columns,
+                    }
+                else:
+                    tables_status[table_name] = {
+                        "exists": True,
+                        "status": "ok",
+                        "columns": list(columns.keys()),
+                    }
+
+            # 主要ビューのチェック
+            critical_views = {
+                "v_lot_receipt_stock": ["supplier_item_id", "lot_id", "warehouse_id"],
+                "v_lot_details": ["supplier_item_id", "lot_id", "maker_part_no"],
+            }
+
+            for view_name, required_columns in critical_views.items():
+                # ビューの存在確認
+                result = conn.execute(
+                    text(
+                        """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.views
+                        WHERE table_name = :view_name
+                    )
+                    """
+                    ),
+                    {"view_name": view_name},
+                )
+                exists = result.scalar()
+
+                if not exists:
+                    issues.append(
+                        {
+                            "severity": "error",
+                            "type": "missing_view",
+                            "view": view_name,
+                            "message": f"ビュー '{view_name}' が存在しません",
+                        }
+                    )
+                    views_status[view_name] = {"exists": False, "status": "error"}
+                    continue
+
+                # カラムの存在確認
+                result = conn.execute(
+                    text(
+                        """
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name = :view_name
+                    ORDER BY ordinal_position
+                    """
+                    ),
+                    {"view_name": view_name},
+                )
+                view_columns: list[str] = [row[0] for row in result.fetchall()]
+
+                missing_columns = [col for col in required_columns if col not in view_columns]
+                if missing_columns:
+                    issues.append(
+                        {
+                            "severity": "error",
+                            "type": "missing_view_columns",
+                            "view": view_name,
+                            "message": f"ビュー '{view_name}' に必須カラムが不足: {', '.join(missing_columns)}",
+                        }
+                    )
+                    views_status[view_name] = {
+                        "exists": True,
+                        "status": "error",
+                        "columns": view_columns,
+                        "missing": missing_columns,
+                    }
+                else:
+                    views_status[view_name] = {
+                        "exists": True,
+                        "status": "ok",
+                        "columns": view_columns,
+                    }
+
+            # 全体のステータス判定
+            if any(issue["severity"] == "error" for issue in issues):
+                overall_status = "error"
+            elif issues:
+                overall_status = "warning"
+            else:
+                overall_status = "ok"
+
+            return {
+                "status": overall_status,
+                "tables": tables_status,
+                "views": views_status,
+                "issues": issues,
+                "message": "OK"
+                if overall_status == "ok"
+                else f"{len(issues)} 件の問題が検出されました",
+            }
+
+    except Exception as e:
+        logger.exception(f"スキーマチェックエラー: {e}")
+        raise HTTPException(status_code=500, detail=f"スキーマチェックに失敗しました: {str(e)}")

@@ -14,3 +14,24 @@ export interface SettingConfig {
   description?: string;
   options?: { label: string; value: string }[]; // For select type
 }
+
+// Schema check types
+export interface SchemaCheckIssue {
+  severity: string;
+  type: string;
+  message: string;
+}
+
+export interface SchemaEntityStatus {
+  exists: boolean;
+  status: string;
+  columns?: string[];
+  missing?: string[];
+}
+
+export interface SchemaCheckResult {
+  status: string;
+  tables: Record<string, SchemaEntityStatus>;
+  views: Record<string, SchemaEntityStatus>;
+  issues: SchemaCheckIssue[];
+}
