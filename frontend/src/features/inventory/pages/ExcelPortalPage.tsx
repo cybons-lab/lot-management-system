@@ -119,7 +119,7 @@ export function ExcelPortalPage() {
   const handleWarehouseSelect = (warehouseId: number) => {
     if (!selected.customerItem) return;
     navigate(
-      `/inventory/excel-view/${selected.customerItem.product_group_id}/${warehouseId}/${selected.customerItemId}`,
+      `/inventory/excel-view/${selected.customerItem.supplier_item_id}/${warehouseId}/${selected.customerItemId}`,
     );
   };
 
