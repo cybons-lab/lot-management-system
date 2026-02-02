@@ -76,10 +76,9 @@ SELECT
     lr.id AS receipt_id,
     lm.id AS lot_master_id,
     lm.lot_number,
-    lr.product_group_id,
     lr.supplier_item_id,
-    p.maker_part_code AS product_code,
-    p.product_name,
+    si.maker_part_no AS product_code,
+    si.display_name AS product_name,
     lr.warehouse_id,
     w.warehouse_code,
     w.warehouse_name,
@@ -115,7 +114,7 @@ SELECT
     END AS days_to_expiry
 FROM lot_receipts lr
 JOIN lot_master lm ON lr.lot_master_id = lm.id
-LEFT JOIN product_groups p ON lr.product_group_id = p.id
+LEFT JOIN supplier_items si ON lr.supplier_item_id = si.id
 LEFT JOIN warehouses w ON lr.warehouse_id = w.id
 LEFT JOIN suppliers s ON lm.supplier_id = s.id
 LEFT JOIN (
@@ -148,9 +147,8 @@ SELECT
     lr.id AS receipt_id,
     lm.id AS lot_master_id,
     lm.lot_number,
-    lr.product_group_id,
     lr.supplier_item_id,
-    si.product_code,
+    si.maker_part_no AS product_code,
     si.display_name AS product_name,
     lr.warehouse_id,
     w.warehouse_code,
