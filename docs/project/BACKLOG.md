@@ -12,30 +12,98 @@
 
 ## 1. 優先度: 高 (即時対応)
 
-### 1-0. E2Eテスト残存問題・不安定性
+
+### ✅ 1-0. SmartRead横持ちCSVフォーマット検証の確認
+
+**優先度:** 高（最優先タスク）
+**作成:** 2026-02-02
+**カテゴリ:** RPA・データ処理
+
+**背景:**
+SmartReadでダウンロードする横持ちデータ（CSV）について、決まったフォーマットでないとエラーが出るのか、または縦持ち変換に必要なカラムさえあればエラーにならないのかを確認する必要がある。
+
+**確認項目:**
+1. 横持ちCSVの必須カラムの特定
+2. 任意カラムの存在可否
+3. カラム順序の柔軟性
+4. エラーハンドリングの現状確認
+
+**期待される結果:**
+- 縦持ち変換に必要なカラムが存在すれば、他のカラムの有無に関わらずエラーにならない仕様であることを確認
+- または、厳密なフォーマット要件があればドキュメント化
+
+**関連ファイル:**
+- `backend/app/application/services/smartread/`
+- `backend/app/domain/smartread/transform.py`
+
+---
+
+### 1-1. FastAPI + Vite テスト環境デプロイ実装
+
+**優先度:** 高（次優先タスク）
+**作成:** 2026-02-02
+**カテゴリ:** インフラ・デプロイ
+
+**背景:**
+新規追加されたドキュメント `docs/fastapi_vite_test_deploy_design.md` に基づき、テスト環境でのデプロイ運用を実装する。
+
+**タスク内容:**
+1. `C:\app\` ディレクトリ構成の作成
+2. `config.json` の作成
+3. `start_server.py` / `stop_server.py` の実装（PID管理）
+4. `start_server.bat` / `stop_server.bat` / `restart_server.bat` の作成
+5. ログ機構の実装 (`server_control.log`)
+6. zip デプロイ手順の確立
+7. 動作確認・運用マニュアル作成
+
+**期待される効果:**
+- テスト環境での再起動作業がダブルクリック1回で完結
+- 安全なプロセス管理（PID + ポートチェック）
+- シンプルな運用フロー
+
+**関連ドキュメント:**
+- `docs/fastapi_vite_test_deploy_design.md`
+
+---
+
+### 1-2. 開発環境の統一と改善 (Critical - DX改善)
+
+**優先度:** 高（次回PR時に対応）
+
+**現状の問題:**
+- `typegen`（OpenAPIスキーマからTypeScript型生成）と`ruff`（Pythonリンター）の実行環境が統一されていない
+- Docker内で実行すべきか、ローカルで実行すべきか曖昧
+- 環境変数（`VITE_BACKEND_ORIGIN` vs `BACKEND_ORIGIN`）の混乱
+- 開発中にDockerとローカルを行き来する非効率な作業フロー
+
+**対応方針:**
+1. **ツール実行環境の明確化:**
+   - `npm run typegen`: **ローカル実行を推奨**（`backend/openapi.json`をホストで共有）
+   - `ruff check/format`: **Docker内で実行**（`.git/hooks/pre-commit`で自動化済み）
+   - 実行場所を`package.json`/`README.md`に明記
+
+2. **OpenAPIスキーマ生成の自動化:**
+   - バックエンド起動時に`openapi.json`を自動生成するスクリプトを追加
+   - または、`make typegen`コマンドでワンステップで実行可能に
+
+3. **環境変数の整理:**
+   - ✅ 完了: `VITE_BACKEND_ORIGIN` → `BACKEND_ORIGIN`に変更済み
+   - Docker Composeの環境変数にコメントを追加して用途を明確化
+
+4. **ドキュメント整備:**
+   - `docs/development/SETUP.md`に開発環境セットアップ手順を追加
+   - 各ツールの実行環境（Docker/ローカル）を明記
+
+**期待される効果:**
+- 開発者が迷わずにツールを実行できる
+- CI/CDとローカル開発の一貫性向上
+- onboarding時間の短縮
+
+---
+
+### 1-4. E2Eテスト残存問題・不安定性
 
 **現状:** P0テストは **32 passed, 6 skipped** で安定稼働。並列実行 (workers=4) も正常に動作する。
-
-**解決済み（2026-02-01）:**
-
-1. ✅ **DBリセットの並列実行競合 (Critical)** - 完全解決
-   - 症状: `reset-database` エンドポイントが `500 OperationalError (LockNotAvailable)` で失敗する。
-   - 原因: アドバイザリロックの残留により、後続のリセット処理がロック取得待ちでタイムアウト。
-   - **対応内容**:
-     - アドバイザリロック (`pg_advisory_lock`) を廃止し、TRUNCATE自体のロックに依存する方式に変更。
-     - TRUNCATE は自動的に ACCESS EXCLUSIVE LOCK を取得するため、複数呼び出しは自然に直列化される。
-     - **globalSetup 導入**: DBリセットを全テスト開始前に1回だけ実行する方式に変更 (`e2e/global-setup.ts`)
-     - **並列実行再開**: workers=4 (CI: 1) で安定稼働、実行時間 2.6分 → 36.5秒に短縮 (7倍高速化)
-     - E2Eテストのエラーハンドリングを改善: エラーを握りつぶさず、失敗時に即座に例外をスロー。
-   - **参考**: ブランチ `fix/e2e-test-remaining-issues`、コミット d4d5f9b7
-
-2. ✅ **socket hang up (`e2e-04`)**:
-  - 原因: Playwrightのコネクション問題と、API設計（`/admin`配下の混同）。
-  - 対応: エンドポイントを`/api/dashboard/stats`に分離し、テストを直列実行(`test.describe.configure({ mode: 'serial' })`)に設定。
-
-3. ✅ **reset-database 500エラー**:
-  - 原因: リファクタリング時の実装漏れと、セッション管理の問題。
-  - 対応: エンドポイント復元と実装修正（依存関係削除）。
 
 **残存問題（2件 - 低優先度）:**
 
@@ -48,17 +116,8 @@
    - 症状: テストデータ生成APIのタイムアウトや失敗により、ユーザーが存在せずログインに失敗する。
    - 現状: globalSetup導入後は未発生。継続監視中。
 
-**解決済み（2026-02-01）:**
-- ✅ **socket hang up (`e2e-04`)**:
-  - 原因: Playwrightのコネクション問題と、API設計（`/admin`配下の混同）。
-  - 対応: エンドポイントを`/api/dashboard/stats`に分離し、テストを直列実行(`test.describe.configure({ mode: 'serial' })`)に設定。
-- ✅ **reset-database 500エラー**:
-  - 原因: リファクタリング時の実装漏れと、セッション管理の問題。
-  - 対応: エンドポイント復元と実装修正（依存関係削除）。
-
-**参考:**
-- ブランチ: `fix/e2e-permission-socket-hangup`
-- 最新検証: workers=1 で `e2e-01`, `e2e-04` pass確認済み
+**解決済みタスク:**
+- ✅ DBリセットの並列実行競合、socket hang up、reset-database 500エラー → [ARCHIVE.md](./ARCHIVE.md) に移動済み
 
 ---
 
@@ -421,6 +480,27 @@ async def start_pad_run_from_upload(
 **関連ファイル:**
 - `frontend/e2e/specs/p0/e2e-02-save-persistence.spec.ts` (L27, L159)
 - バックエンド: `app/presentation/api/routes/admin/*` (test-data生成エンドポイント)
+
+---
+
+### 2-14. SmartRead CSV変換ロジックの改善
+
+**優先度**: 中
+**作成**: 2026-02-02
+**カテゴリ**: RPA・データ処理
+
+**背景:**
+- `SmartReadCsvTransformer` による横持ち→縦持ち変換において、データの信頼性とエラー検知能力を向上させる。
+
+**タスク内容:**
+1. **縦持ちデータの重複チェック機能の実装**
+   - 変換後のデータ（`long_data`）内で、同一の材質・Lot No・数量等を持つレコードが重複して生成されていないかチェックするロジックの追加。
+2. **明細未生成時の警告機能の実装**
+   - 明細項目が1件も抽出されなかった場合、CSVフォーマットの不一致（列名の変更など）の可能性があるため、ユーザーに警告を出す仕組みの導入。
+
+**関連ファイル:**
+- `backend/app/application/services/smartread/csv_transformer.py`
+- `docs/smartread_csv_validation_report.md`
 
 ---
 
@@ -1315,6 +1395,31 @@ Excelビューのロット情報に「発注NO.」列があるが、常に `-` �
 ---
 
 
+### 10-9. 認証・認可システムの再設計
+
+**優先度**: Medium
+**作成**: 2026-02-02
+**カテゴリ**: セキュリティ・アクセス制御
+
+**背景:**
+現状、APIの認証要件が不統一で、ゲストユーザーがダッシュボードを開くと401エラーが大量に発生する。システム設定の「ページ表示制御」の意味も曖昧で、ゲストに対してON/OFFできる設定になっているが、実際にはAPIが401を返すため機能しない。
+
+**詳細ドキュメント:**
+[docs/project/authentication-and-authorization-redesign.md](./authentication-and-authorization-redesign.md)
+
+**提案する設計原則:**
+1. すべての業務APIは認証必須 (`get_current_user`)
+2. ロールベースでアクセス制御 (ゲスト < 一般ユーザー < 管理者)
+3. ゲスト権限はハードコーディング (システム設定では変更不可)
+4. システム設定の「ページ表示制御」は一般ユーザー向け
+
+**実装タスク:**
+- Phase 1: バックエンド認証強化（すべてのAPIに認証追加、ロールチェック実装）
+- Phase 2: フロントエンド権限管理（ゲスト権限のハードコーディング、AccessGuard更新）
+- Phase 3: エラーハンドリング改善（401/403エラー時の適切なUI表示）
+
+---
+
 ## 参考情報
 
 ### 統合元ファイル
@@ -1334,29 +1439,6 @@ Excelビューのロット情報に「発注NO.」列があるが、常に `-` �
 統合後のバックログファイルは `docs/project/BACKLOG.md` に配置されています。
 元のファイルは `docs/archive/backlog/` に保管されています。
 
-### 5-3. Playwright E2Eテスト DBリセット失敗 (500 Error)
-
-**優先度**: High
-**作成**: 2026-02-01
-**カテゴリ**: テスト環境・CI
-
-**背景・課題:**
-PlaywrightによるE2Eテスト実行時、`beforeAll` フックで呼び出される `/api/admin/reset-database` エンドポイントが `500 Internal Server Error` で失敗する。これにより後続のテストが全て失敗する。
-
-**症状:**
-- `curl` コマンドによる手動実行は **成功 (200 OK)** する。
-- Playwrightテストランナーからの実行時のみ **失敗 (500 Error)** する。
-- エラー内容は `psycopg2.errors.LockNotAvailable` であったが、対策後も500エラーが継続（詳細ログはテストランナーが出力）。
-
-**実施済みの対応:**
-1. **DBロック競合対策**: `truncate_all_tables` に `pg_terminate_backend` を使用した他セッション強制切断処理を追加（`backend/app/core/database.py`）。
-2. **テストユーザー自動作成**: DBリセット時に管理者だけでなく一般ユーザー(`user`)も作成するように修正（`backend/app/presentation/api/routes/admin/admin_router.py`）。
-3. **テストコード修正**: `e2e-04-permission.spec.ts` で `resetDatabase` と `generateTestData` を呼ぶように修正。
-
-**残課題:**
-- Playwright環境特有の接続処理などが原因で、依然としてリセット処理が失敗している。
-- テストランナーのDB接続設定、待機時間、ドライバの挙動などの調査が必要。
-
 ---
 
 ### 更新履歴
@@ -1365,3 +1447,4 @@ PlaywrightによるE2Eテスト実行時、`beforeAll` フックで呼び出さ�
 - 2026-01-26: クイックウィン4件対応 (1-4, 2-2, 2-4, 8-9)
 - 2026-01-26: Excelビュー機能タスク追加 (セクション10)、仕入先表示・forecast_period表示修正完了
 - 2026-02-01: ロットアーカイブ時の 401 Unauthorized エラーの修正、認証ロジックの統合を完了
+- 2026-02-02: E2Eテスト並列実行の安定化完了タスクをARCHIVE.mdに移動、認証・認可システム再設計提案を追加

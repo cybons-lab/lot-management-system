@@ -342,6 +342,29 @@ class Settings(BaseSettings):
         ),
     )
 
+    # デプロイ設定
+    DEPLOY_BASE_DIR: Path = Path(os.getenv("DEPLOY_BASE_DIR", "C:\\lot_management"))
+    RELEASES_DIR: Path = Field(default=Path("releases"))
+    UPLOAD_TEMP_DIR: Path = Field(default=Path("shared/uploads"))
+    CURRENT_PATH_FILE: Path = Field(default=Path("current.txt"))
+    DEPLOY_LOG_FILE: Path = Field(default=Path("logs/deploy.log"))
+    FRONTEND_DIST: Path = Field(
+        default=Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
+    )
+
+    @model_validator(mode="after")
+    def set_deploy_paths(self):
+        self.RELEASES_DIR = self.DEPLOY_BASE_DIR / "releases"
+        self.UPLOAD_TEMP_DIR = self.DEPLOY_BASE_DIR / "shared" / "uploads"
+        self.CURRENT_PATH_FILE = self.DEPLOY_BASE_DIR / "current.txt"
+        self.DEPLOY_LOG_FILE = self.DEPLOY_BASE_DIR / "logs" / "deploy.log"
+        # デプロイ環境では C:\app\current\frontend\dist を指すようにし、
+        # 開発環境ではデフォルト（frontend/dist）を維持する。
+        # DEPLOY_BASE_DIR が指定されている（デフォルト以外）場合に切り替える。
+        if os.getenv("DEPLOY_BASE_DIR"):
+            self.FRONTEND_DIST = self.DEPLOY_BASE_DIR / "current" / "frontend" / "dist"
+        return self
+
 
 # グローバル設定インスタンス
 settings = Settings()

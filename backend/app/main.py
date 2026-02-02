@@ -113,7 +113,6 @@
 
 import logging
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
@@ -288,7 +287,7 @@ register_all_routers(application)
 # ========================================
 # frontend/dist が存在する場合、静的ファイルを配信
 # 開発環境では Vite dev server を使用するため、この設定は無効
-FRONTEND_DIST = Path(__file__).parent.parent.parent / "frontend" / "dist"
+FRONTEND_DIST = settings.FRONTEND_DIST
 
 if FRONTEND_DIST.exists() and FRONTEND_DIST.is_dir():
     logger.info(f"📂 フロントエンド静的ファイルを配信: {FRONTEND_DIST}")

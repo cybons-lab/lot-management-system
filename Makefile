@@ -62,28 +62,34 @@ alembic-history: ## マイグレーション履歴を表示
 alembic-current: ## 現在のマイグレーションバージョンを表示
 	docker compose exec backend alembic current
 
+alembic-revision: ## 新規マイグレーションファイルを生成 (例: make alembic-revision MSG="message")
+	docker compose exec backend uv run alembic revision --autogenerate -m "$(MSG)"
+
 ##@ バックエンド
 
 backend-shell: ## バックエンドコンテナにシェルでログイン
 	docker compose exec backend bash
 
 backend-lint: ## バックエンドをLint
-	docker compose exec backend ruff check app/
+	docker compose exec backend uv run ruff check app/
 
 backend-lint-fix: ## バックエンドのLintを自動修正
-	docker compose exec backend ruff check app/ --fix
+	docker compose exec backend uv run ruff check app/ --fix
 
 backend-format: ## バックエンドをフォーマット
-	docker compose exec backend ruff format app/
+	docker compose exec backend uv run ruff format app/
+
+backend-typecheck: ## バックエンドの型チェック (mypy)
+	docker compose exec backend uv run mypy app/
 
 backend-test: ## バックエンドのテストを実行
-	docker compose exec backend pytest -v
+	docker compose exec backend uv run pytest -v
 
 backend-test-quick: ## バックエンドのテストを実行（詳細なし）
-	docker compose exec backend pytest -q
+	docker compose exec backend uv run pytest -q
 
 backend-test-coverage: ## バックエンドのテストをカバレッジ付きで実行
-	docker compose exec backend pytest --cov=app --cov-report=html
+	docker compose exec backend uv run pytest --cov=app --cov-report=html
 
 ##@ フロントエンド
 
@@ -133,11 +139,17 @@ format: backend-format frontend-format ## 全体をフォーマット
 
 format-check: frontend-format-check ## 全体のフォーマットをチェック
 
-typecheck: frontend-typecheck ## 全体の型チェック
+typecheck: backend-typecheck frontend-typecheck ## 全体の型チェック
 
 test: backend-test frontend-test ## 全体のテストを実行
 
 test-quick: backend-test-quick frontend-test ## 全体のテストを高速実行
+
+quality-check: lint-fix format typecheck test-quick ## 品質チェック（自動修正＋テスト）
+	@echo "すべての品質チェックが完了しました！"
+
+ci: lint format-check typecheck test ## CI実行（自動修正なし）
+	@echo "CI品質チェックが完了しました！"
 
 ##@ デプロイ
 
@@ -160,9 +172,3 @@ dev-setup: up db-init-sample ## 開発環境のセットアップ（起動＋サ
 	@echo "フロントエンド: http://localhost:5173"
 	@echo "バックエンドAPI: http://localhost:8000"
 	@echo "API Docs: http://localhost:8000/api/docs"
-
-quality-check: lint-fix format typecheck test-quick ## 品質チェック（自動修正＋テスト）
-	@echo "すべての品質チェックが完了しました！"
-
-ci: lint format-check typecheck test ## CI実行（自動修正なし）
-	@echo "CI品質チェックが完了しました！"

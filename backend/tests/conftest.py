@@ -8,11 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 
 # Set dummy DATABASE_URL if not set, to pass Pydantic validation during imports
-# MUST point to the test database so that any global engines created during import (like in app.core.database)
-# point to the correct DB and don't fail connection checks.
-os.environ.setdefault(
-    "DATABASE_URL", "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test"
-)
+# This will be overridden later with the actual test database URL
 os.environ.setdefault("ENABLE_DB_BROWSER", "true")
 
 from app.infrastructure.persistence.models.base_model import Base
@@ -91,6 +87,11 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
     "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
 )
+
+# CRITICAL: Force DATABASE_URL to be the same as test database URL
+# This ensures that the application (which uses settings.DATABASE_URL)
+# connects to the same database as the test fixtures.
+os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,

@@ -263,6 +263,9 @@ export function AdminPage() {
               <Link to="/admin/operation-logs">操作ログ（監査ログ）</Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
+              <Link to={ROUTES.ADMIN.DEPLOY}>システムデプロイ</Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
               <Link to={ROUTES.ADMIN.SYSTEM_SETTINGS}>システム設定</Link>
             </Button>
           </div>
