@@ -273,7 +273,16 @@ function NavItemSingle({ item, currentPath }: { item: NavItem; currentPath: stri
 
 function NavItems({ user, currentPath }: { currentPath: string; user: User | null }) {
   const { isFeatureVisible } = useSystemSettings();
+  const isGuest = user && isGuestUser(user.roles);
+
+  // ゲストユーザーは限定的なメニューのみ表示
+  const guestAllowedFeatures = new Set(["dashboard", "inventory"]);
+
   const visibleItems = navItems.filter((item) => {
+    // ゲストユーザーの場合、許可されたfeatureのみ表示
+    if (isGuest && item.feature && !guestAllowedFeatures.has(item.feature)) {
+      return false;
+    }
     if (item.requireAdmin && !user?.roles?.includes("admin")) return false;
     if (item.requireRoles && !item.requireRoles.some((role) => user?.roles?.includes(role))) {
       return false;
