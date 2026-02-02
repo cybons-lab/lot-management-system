@@ -12,7 +12,6 @@ import {
   Settings,
   Sparkles,
   TrendingUp,
-  PackagePlus,
   Database,
   Table,
   ClipboardList,
@@ -69,12 +68,12 @@ const navItems: NavItem[] = [
     icon: TrendingUp,
     feature: "forecasts",
   },
-  {
-    title: "入荷予定",
-    href: ROUTES.INBOUND_PLANS.LIST,
-    icon: PackagePlus,
-    feature: "inventory", // Group under inventory? or separate?
-  },
+  // {
+  //   title: "入荷予定",
+  //   href: ROUTES.INBOUND_PLANS.LIST,
+  //   icon: PackagePlus,
+  //   feature: "inventory", // Group under inventory? or separate?
+  // },
   {
     title: "在庫・ロット管理",
     href: ROUTES.INVENTORY.ROOT,
@@ -280,8 +279,11 @@ function NavItems({ user, currentPath }: { currentPath: string; user: User | nul
 
   const visibleItems = navItems.filter((item) => {
     // ゲストユーザーの場合、許可されたfeatureのみ表示
-    if (isGuest && item.feature && !guestAllowedFeatures.has(item.feature)) {
-      return false;
+    if (isGuest) {
+      // featureプロパティがない場合、またはfeatureプロパティがあっても許可リストにない場合は非表示
+      if (!item.feature || !guestAllowedFeatures.has(item.feature)) {
+        return false;
+      }
     }
     if (item.requireAdmin && !user?.roles?.includes("admin")) return false;
     if (item.requireRoles && !item.requireRoles.some((role) => user?.roles?.includes(role))) {
