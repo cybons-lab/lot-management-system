@@ -9,7 +9,7 @@ Updated: サロゲートキー（id）ベースに移行
 
 from datetime import date, datetime
 
-from pydantic import Field
+from pydantic import Field, computed_field
 
 from app.presentation.schemas.common.base import BaseSchema
 
@@ -26,7 +26,6 @@ class CustomerItemBase(BaseSchema):
     supplier_item_id: int = Field(
         ...,
         validation_alias="product_group_id",
-        serialization_alias="product_group_id",
         description="仕入先品目ID (Phase1: required)",
     )
     base_unit: str = Field(..., max_length=20, description="基本単位")
@@ -52,7 +51,6 @@ class CustomerItemUpdate(BaseSchema):
     supplier_item_id: int | None = Field(
         None,
         validation_alias="product_group_id",
-        serialization_alias="product_group_id",
         description="仕入先品目ID",
     )
     base_unit: str | None = Field(None, max_length=20, description="基本単位")
@@ -72,8 +70,16 @@ class CustomerItemResponse(BaseSchema):
     customer_id: int = Field(..., description="得意先ID")
     customer_part_no: str = Field(..., description="得意先品番（先方品番）")
     supplier_item_id: int = Field(
-        ..., serialization_alias="product_group_id", description="仕入先品目ID (Phase1: required)"
+        ...,
+        validation_alias="product_group_id",
+        description="仕入先品目ID (Phase1: required)",
     )
+
+    @property
+    @computed_field
+    def product_group_id(self) -> int:
+        return self.supplier_item_id
+
     base_unit: str = Field(..., description="基本単位")
     pack_unit: str | None = Field(None, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")

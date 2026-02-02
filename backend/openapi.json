@@ -13077,6 +13077,147 @@
         ]
       }
     },
+    "/api/admin/diagnostics/view-check": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Check View Definition",
+        "description": "ビュー定義を診断（Admin専用）.\n\nv_lot_receipt_stock ビューに supplier_item_id 列が存在するかチェック。\nPhase1 マイグレーション後の問題診断用。\n\nReturns:\n    {\n        \"view_name\": \"v_lot_receipt_stock\",\n        \"has_supplier_item_id\": true,\n        \"columns\": [\"lot_id\", \"supplier_item_id\", ...],\n        \"message\": \"OK\" or \"NG: supplier_item_id not found\"\n    }",
+        "operationId": "check_view_definition_api_admin_diagnostics_view_check_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "v_lot_receipt_stock",
+              "title": "View Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/diagnostics/view-fix": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Fix View Definition",
+        "description": "ビュー定義を修正（Admin専用）.\n\nv_lot_receipt_stock ビューを正しい定義で再作成。\nPhase1 マイグレーション後にビューが古い状態になっている問題を修正。\n\n本番環境でも実行可能（ビューの再作成はデータ削除を伴わない）。\n\nReturns:\n    {\n        \"success\": true,\n        \"message\": \"View recreated successfully\",\n        \"columns_before\": [...],\n        \"columns_after\": [...]\n    }",
+        "operationId": "fix_view_definition_api_admin_diagnostics_view_fix_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "v_lot_receipt_stock",
+              "title": "View Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/diagnostics/view-definition": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get View Definition",
+        "description": "ビュー定義の完全な情報を取得（Admin専用）.\n\nビューの定義SQL、列情報、関連テーブル情報を取得。\n開発環境と本番環境の差分確認に使用。\n\nReturns:\n    {\n        \"view_name\": \"v_lot_receipt_stock\",\n        \"definition\": \"SELECT ... FROM ...\",\n        \"columns\": [...],\n        \"related_tables\": {...}\n    }",
+        "operationId": "get_view_definition_api_admin_diagnostics_view_definition_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "v_lot_receipt_stock",
+              "title": "View Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/healthcheck/db-counts": {
       "get": {
         "tags": [
@@ -25435,9 +25576,9 @@
             "title": "Customer Part No",
             "description": "得意先品番（先方品番）"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id",
+            "title": "Supplier Item Id",
             "description": "仕入先品目ID (Phase1: required)"
           },
           "base_unit": {
@@ -25551,6 +25692,11 @@
             "type": "string",
             "format": "date",
             "title": "Valid To"
+          },
+          "product_group_id": {
+            "type": "integer",
+            "title": "Product Group Id",
+            "readOnly": true
           }
         },
         "type": "object",
@@ -25558,7 +25704,7 @@
           "id",
           "customer_id",
           "customer_part_no",
-          "product_group_id",
+          "supplier_item_id",
           "base_unit",
           "customer_code",
           "customer_name",
@@ -25566,7 +25712,8 @@
           "display_name",
           "created_at",
           "updated_at",
-          "valid_to"
+          "valid_to",
+          "product_group_id"
         ],
         "title": "CustomerItemResponse",
         "description": "Schema for customer item response with enriched data.\n\nPhase1: supplier_item_id is required, product_group_id removed.\nEnriched fields (maker_part_no, display_name) come from supplier_items."
@@ -28495,9 +28642,10 @@
       },
       "InventoryByProductResponse": {
         "properties": {
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id",
+            "description": "仕入先品目ID"
           },
           "product_name": {
             "type": "string",
@@ -28529,18 +28677,24 @@
           "warehouse_count": {
             "type": "integer",
             "title": "Warehouse Count"
+          },
+          "product_group_id": {
+            "type": "integer",
+            "title": "Product Group Id",
+            "readOnly": true
           }
         },
         "type": "object",
         "required": [
-          "product_group_id",
+          "supplier_item_id",
           "product_name",
           "product_code",
           "total_quantity",
           "allocated_quantity",
           "available_quantity",
           "lot_count",
-          "warehouse_count"
+          "warehouse_count",
+          "product_group_id"
         ],
         "title": "InventoryByProductResponse",
         "description": "Inventory aggregated by product (across all warehouses)."
@@ -28699,9 +28853,9 @@
             "type": "integer",
             "title": "Inventory Item Id"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -28841,16 +28995,22 @@
                 "type": "null"
               }
             ]
+          },
+          "product_group_id": {
+            "type": "integer",
+            "title": "Product Group Id",
+            "readOnly": true
           }
         },
         "type": "object",
         "required": [
           "inventory_item_id",
-          "product_group_id",
+          "supplier_item_id",
           "warehouse_id",
           "total_quantity",
           "allocated_quantity",
-          "available_quantity"
+          "available_quantity",
+          "product_group_id"
         ],
         "title": "InventoryItemResponse",
         "description": "API response model for inventory items (aggregated summary).\n\nThis schema represents a calculated summary of inventory from the\nlots table, aggregated by product and warehouse (or supplier × product × warehouse).\nIt does not map to a physical table."
@@ -29257,9 +29417,10 @@
             "title": "Lot Number",
             "default": ""
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id",
+            "description": "仕入先品目ID"
           },
           "warehouse_id": {
             "type": "integer",
@@ -29535,7 +29696,7 @@
         },
         "type": "object",
         "required": [
-          "product_group_id",
+          "supplier_item_id",
           "warehouse_id",
           "received_date",
           "unit"
@@ -29667,9 +29828,9 @@
             ],
             "title": "Lot Number"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -29999,16 +30160,22 @@
               }
             ],
             "title": "Mapping Status"
+          },
+          "product_group_id": {
+            "type": "integer",
+            "title": "Product Group Id",
+            "readOnly": true
           }
         },
         "type": "object",
         "required": [
           "created_at",
-          "product_group_id",
+          "supplier_item_id",
           "warehouse_id",
           "received_date",
           "unit",
-          "lot_id"
+          "lot_id",
+          "product_group_id"
         ],
         "title": "LotResponse",
         "description": "API response model for lots."

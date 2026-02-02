@@ -4879,6 +4879,101 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/admin/diagnostics/view-check": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Check View Definition
+     * @description ビュー定義を診断（Admin専用）.
+     *
+     *     v_lot_receipt_stock ビューに supplier_item_id 列が存在するかチェック。
+     *     Phase1 マイグレーション後の問題診断用。
+     *
+     *     Returns:
+     *         {
+     *             "view_name": "v_lot_receipt_stock",
+     *             "has_supplier_item_id": true,
+     *             "columns": ["lot_id", "supplier_item_id", ...],
+     *             "message": "OK" or "NG: supplier_item_id not found"
+     *         }
+     */
+    get: operations["check_view_definition_api_admin_diagnostics_view_check_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/diagnostics/view-fix": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Fix View Definition
+     * @description ビュー定義を修正（Admin専用）.
+     *
+     *     v_lot_receipt_stock ビューを正しい定義で再作成。
+     *     Phase1 マイグレーション後にビューが古い状態になっている問題を修正。
+     *
+     *     本番環境でも実行可能（ビューの再作成はデータ削除を伴わない）。
+     *
+     *     Returns:
+     *         {
+     *             "success": true,
+     *             "message": "View recreated successfully",
+     *             "columns_before": [...],
+     *             "columns_after": [...]
+     *         }
+     */
+    post: operations["fix_view_definition_api_admin_diagnostics_view_fix_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/diagnostics/view-definition": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get View Definition
+     * @description ビュー定義の完全な情報を取得（Admin専用）.
+     *
+     *     ビューの定義SQL、列情報、関連テーブル情報を取得。
+     *     開発環境と本番環境の差分確認に使用。
+     *
+     *     Returns:
+     *         {
+     *             "view_name": "v_lot_receipt_stock",
+     *             "definition": "SELECT ... FROM ...",
+     *             "columns": [...],
+     *             "related_tables": {...}
+     *         }
+     */
+    get: operations["get_view_definition_api_admin_diagnostics_view_definition_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/admin/healthcheck/db-counts": {
     parameters: {
       query?: never;
@@ -9968,10 +10063,10 @@ export interface components {
        */
       customer_part_no: string;
       /**
-       * Product Group Id
+       * Supplier Item Id
        * @description 仕入先品目ID (Phase1: required)
        */
-      product_group_id: number;
+      supplier_item_id: number;
       /**
        * Base Unit
        * @description 基本単位
@@ -10042,6 +10137,8 @@ export interface components {
        * Format: date
        */
       valid_to: string;
+      /** Product Group Id */
+      readonly product_group_id: number;
     };
     /**
      * CustomerItemUpdate
@@ -11247,8 +11344,11 @@ export interface components {
      * @description Inventory aggregated by product (across all warehouses).
      */
     InventoryByProductResponse: {
-      /** Product Group Id */
-      product_group_id: number;
+      /**
+       * Supplier Item Id
+       * @description 仕入先品目ID
+       */
+      supplier_item_id: number;
       /** Product Name */
       product_name: string;
       /** Product Code */
@@ -11263,6 +11363,8 @@ export interface components {
       lot_count: number;
       /** Warehouse Count */
       warehouse_count: number;
+      /** Product Group Id */
+      readonly product_group_id: number;
     };
     /**
      * InventoryBySupplierResponse
@@ -11346,8 +11448,8 @@ export interface components {
     InventoryItemResponse: {
       /** Inventory Item Id */
       inventory_item_id: number;
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Warehouse Id */
       warehouse_id: number;
       /** Total Quantity */
@@ -11390,6 +11492,8 @@ export interface components {
       /** Supplier Code */
       supplier_code?: string | null;
       suppliers_summary?: components["schemas"]["SuppliersSummary"] | null;
+      /** Product Group Id */
+      readonly product_group_id: number;
     };
     /**
      * InventoryListResponse
@@ -11596,8 +11700,11 @@ export interface components {
        * @default
        */
       lot_number: string;
-      /** Product Group Id */
-      product_group_id: number;
+      /**
+       * Supplier Item Id
+       * @description 仕入先品目ID
+       */
+      supplier_item_id: number;
       /** Warehouse Id */
       warehouse_id: number;
       /** Supplier Id */
@@ -11730,8 +11837,8 @@ export interface components {
       updated_at?: string | null;
       /** Lot Number */
       lot_number?: string | null;
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Warehouse Id */
       warehouse_id: number;
       /** Supplier Id */
@@ -11849,6 +11956,8 @@ export interface components {
       customer_part_no?: string | null;
       /** Mapping Status */
       mapping_status?: string | null;
+      /** Product Group Id */
+      readonly product_group_id: number;
     };
     /**
      * LotStatus
@@ -24893,6 +25002,99 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+    };
+  };
+  check_view_definition_api_admin_diagnostics_view_check_get: {
+    parameters: {
+      query?: {
+        view_name?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  fix_view_definition_api_admin_diagnostics_view_fix_post: {
+    parameters: {
+      query?: {
+        view_name?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_view_definition_api_admin_diagnostics_view_definition_get: {
+    parameters: {
+      query?: {
+        view_name?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
