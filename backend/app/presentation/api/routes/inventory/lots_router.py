@@ -253,7 +253,7 @@ def export_lots(
     lots = service.list_lots(
         skip=0,
         limit=10000,  # エクスポート用に十分な件数を取得
-        product_group_id=product_group_id,
+        supplier_item_id=product_group_id,
         product_code=product_code,
         supplier_code=supplier_code,
         warehouse_code=warehouse_code,
@@ -317,7 +317,7 @@ def list_lots(
     return service.list_lots(
         skip=skip,
         limit=limit,
-        product_group_id=product_group_id,
+        supplier_item_id=product_group_id,
         product_code=product_code,
         supplier_code=supplier_code,
         warehouse_code=warehouse_code,
