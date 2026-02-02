@@ -87,12 +87,12 @@ export function LotAllocationPanel({
     setCurrentLineContext({
       customerId: order?.customer_id ?? null,
       deliveryPlaceId: orderLine?.delivery_place_id ?? null,
-      productId: orderLine?.supplier_item_id ?? null,
+      productId: orderLine?.product_group_id ?? null,
     });
   }, [
     order?.customer_id,
     orderLine?.delivery_place_id,
-    orderLine?.supplier_item_id,
+    orderLine?.product_group_id,
     setCurrentLineContext,
   ]);
 

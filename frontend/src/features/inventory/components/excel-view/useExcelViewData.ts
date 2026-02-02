@@ -140,7 +140,7 @@ export function useExcelViewData(
   const { data: lots = [], isLoading: lotsLoading } = useLotsQuery(
     isEnabled
       ? {
-          supplier_item_id: productId,
+          product_group_id: productId,
           warehouse_id: warehouseId,
           status: "active",
           with_stock: true,
@@ -151,7 +151,7 @@ export function useExcelViewData(
   const { data: suggestionResponse, isLoading: suggestionsLoading } = useAllocationSuggestions(
     isEnabled && (!customerItemId || !!customerItem)
       ? {
-          supplier_item_id: productId,
+          product_group_id: productId,
           customer_id: customerItem?.customer_id,
         }
       : undefined,

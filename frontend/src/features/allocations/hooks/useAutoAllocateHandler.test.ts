@@ -30,10 +30,10 @@ describe("useAutoAllocateHandler", () => {
   const mockSetLineStatuses = vi.fn();
   const mockCandidateFetcher = vi.fn();
 
-  // Minimal mock lines - use unknown cast since we only need id, supplier_item_id for test
+  // Minimal mock lines - use unknown cast since we only need id, product_group_id for test
   const mockLines = [
-    { id: 101, supplier_item_id: 1, order_quantity: 10, allocated_quantity: 0 },
-    { id: 102, supplier_item_id: 2, order_quantity: 20, allocated_quantity: 5 },
+    { id: 101, product_group_id: 1, order_quantity: 10, allocated_quantity: 0 },
+    { id: 102, product_group_id: 2, order_quantity: 20, allocated_quantity: 5 },
   ] as unknown as Parameters<typeof useAutoAllocateHandler>[0]["allLines"];
 
   const mockCandidates = [

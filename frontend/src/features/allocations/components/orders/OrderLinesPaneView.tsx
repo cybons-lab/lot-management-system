@@ -125,7 +125,7 @@ export function OrderLinesPaneView({
 
                 <div className="mb-2">
                   <p className="text-sm font-semibold text-gray-900">
-                    {line.product_code || `製品ID: ${line.supplier_item_id}`}
+                    {line.product_code || `製品ID: ${line.product_group_id}`}
                   </p>
                   {line.product_name && (
                     <p className="mt-1 text-xs text-gray-600">{line.product_name}</p>

@@ -28,7 +28,7 @@ export function TerminologyTab() {
             <code>product_group_id</code> は歴史的な命名で、実際は「仕入先品目ID」を意味します
           </li>
           <li>
-            <code>supplier_item_id</code> と <code>product_group_id</code>{" "}
+            <code>product_group_id</code> と <code>product_group_id</code>{" "}
             は同じ意味（移行期の歴史的理由で2つの名前が存在）
           </li>
           <li>

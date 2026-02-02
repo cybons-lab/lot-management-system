@@ -91,7 +91,7 @@ export function WithdrawalFormFiltered({
         filteredLotsCount={filteredLots.length}
         filters={filters}
         onSupplierChange={(id) => updateFilter("supplier_id", id)}
-        onProductChange={(id) => updateFilter("supplier_item_id", id)}
+        onProductChange={(id) => updateFilter("product_group_id", id)}
       />
 
       {/* Lot selector */}

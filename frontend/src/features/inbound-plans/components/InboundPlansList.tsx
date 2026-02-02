@@ -52,7 +52,7 @@ export interface InboundPlan {
 
 export interface InboundPlansFilters {
   supplier_id: string;
-  supplier_item_id?: string;
+  product_group_id?: string;
   status: "" | "planned" | "partially_received" | "received" | "cancelled";
   date_from: string;
   date_to: string;
@@ -110,7 +110,7 @@ export function InboundPlansList({
   const handleResetFilters = () => {
     onFilterChange({
       supplier_id: "",
-      supplier_item_id: "",
+      product_group_id: "",
       status: "",
       date_from: "",
       date_to: "",

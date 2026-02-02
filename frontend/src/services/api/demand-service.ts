@@ -8,7 +8,7 @@ export interface DailyForecast {
 }
 
 export interface DemandForecast {
-  supplier_item_id: number;
+  product_group_id: number;
   warehouse_id?: number | null;
   generated_at: string;
   horizon_days: number;
@@ -17,7 +17,7 @@ export interface DemandForecast {
 }
 
 export interface DemandForecastParams {
-  supplier_item_id: number;
+  product_group_id: number;
   warehouse_id?: number;
   horizon_days?: number;
   method?: "moving_average_seasonal" | "ewma" | "moving_average";

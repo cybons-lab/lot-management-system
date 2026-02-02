@@ -87,7 +87,7 @@ export interface WithdrawalResponse {
   withdrawal_id: number;
   lot_id: number;
   lot_number: string;
-  supplier_item_id: number;
+  product_group_id: number;
   product_name: string;
   product_code: string;
   quantity: string; // Decimal as string
@@ -137,7 +137,7 @@ export interface WithdrawalListParams {
   withdrawal_type?: WithdrawalType;
   start_date?: string;
   end_date?: string;
-  supplier_item_id?: number;
+  product_group_id?: number;
   warehouse_id?: number;
   search?: string;
 }
@@ -162,8 +162,8 @@ export async function getWithdrawals(
   if (params?.withdrawal_type) searchParams.set("withdrawal_type", params.withdrawal_type);
   if (params?.start_date) searchParams.set("start_date", params.start_date);
   if (params?.end_date) searchParams.set("end_date", params.end_date);
-  if (params?.supplier_item_id !== undefined)
-    searchParams.set("supplier_item_id", String(params.supplier_item_id));
+  if (params?.product_group_id !== undefined)
+    searchParams.set("product_group_id", String(params.product_group_id));
   if (params?.warehouse_id !== undefined)
     searchParams.set("warehouse_id", String(params.warehouse_id));
   if (params?.search) searchParams.set("search", params.search);
@@ -205,7 +205,7 @@ export async function getCalendarSummary(params: {
   year: number;
   month: number;
   warehouse_id?: number;
-  supplier_item_id?: number;
+  product_group_id?: number;
   supplier_id?: number;
 }): Promise<DailyWithdrawalSummary[]> {
   const searchParams = new URLSearchParams();
@@ -213,8 +213,8 @@ export async function getCalendarSummary(params: {
   searchParams.set("month", String(params.month));
   if (params.warehouse_id !== undefined)
     searchParams.set("warehouse_id", String(params.warehouse_id));
-  if (params.supplier_item_id !== undefined)
-    searchParams.set("supplier_item_id", String(params.supplier_item_id));
+  if (params.product_group_id !== undefined)
+    searchParams.set("product_group_id", String(params.product_group_id));
   if (params.supplier_id !== undefined) searchParams.set("supplier_id", String(params.supplier_id));
 
   return http.get<DailyWithdrawalSummary[]>(
@@ -239,11 +239,11 @@ export interface DefaultDestinationResponse {
  * 製品IDからデフォルトの得意先・納入先を取得
  */
 export async function getDefaultDestination(params: {
-  supplier_item_id: number;
+  product_group_id: number;
   supplier_id?: number;
 }): Promise<DefaultDestinationResponse> {
   const searchParams = new URLSearchParams();
-  searchParams.set("supplier_item_id", String(params.supplier_item_id));
+  searchParams.set("product_group_id", String(params.product_group_id));
   if (params.supplier_id !== undefined) {
     searchParams.set("supplier_id", String(params.supplier_id));
   }

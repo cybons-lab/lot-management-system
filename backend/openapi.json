@@ -28048,9 +28048,9 @@
             ],
             "title": "Updated At"
           },
-          "supplier_item_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Supplier Item Id"
+            "title": "Product Group Id"
           },
           "planned_quantity": {
             "type": "string",
@@ -28080,7 +28080,7 @@
         "type": "object",
         "required": [
           "created_at",
-          "supplier_item_id",
+          "product_group_id",
           "planned_quantity",
           "unit",
           "inbound_plan_line_id",
@@ -28495,9 +28495,9 @@
       },
       "InventoryByProductResponse": {
         "properties": {
-          "supplier_item_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Supplier Item Id"
+            "title": "Product Group Id"
           },
           "product_name": {
             "type": "string",
@@ -28533,7 +28533,7 @@
         },
         "type": "object",
         "required": [
-          "supplier_item_id",
+          "product_group_id",
           "product_name",
           "product_code",
           "total_quantity",
@@ -28699,9 +28699,9 @@
             "type": "integer",
             "title": "Inventory Item Id"
           },
-          "supplier_item_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Supplier Item Id"
+            "title": "Product Group Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -28846,7 +28846,7 @@
         "type": "object",
         "required": [
           "inventory_item_id",
-          "supplier_item_id",
+          "product_group_id",
           "warehouse_id",
           "total_quantity",
           "allocated_quantity",
@@ -29667,9 +29667,9 @@
             ],
             "title": "Lot Number"
           },
-          "supplier_item_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Supplier Item Id"
+            "title": "Product Group Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -30004,7 +30004,7 @@
         "type": "object",
         "required": [
           "created_at",
-          "supplier_item_id",
+          "product_group_id",
           "warehouse_id",
           "received_date",
           "unit",

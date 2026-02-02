@@ -65,7 +65,7 @@ export function groupLotsByProduct(lots: LotUI[]): ProductGroup[] {
   const groupMap = new Map<string, ProductGroup>();
 
   for (const lot of lots) {
-    const productId = lot.supplier_item_id;
+    const productId = lot.product_group_id;
     const supplierCode = lot.supplier_code ?? "unknown";
     const key = `${productId}-${supplierCode}`;
 

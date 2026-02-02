@@ -200,11 +200,11 @@ export function LotDetailPage() {
         </TabsContent>
 
         <TabsContent value="intake_history" className="space-y-4">
-          <IntakeHistoryList productId={lot.supplier_item_id} warehouseId={lot.warehouse_id} />
+          <IntakeHistoryList productId={lot.product_group_id} warehouseId={lot.warehouse_id} />
         </TabsContent>
 
         <TabsContent value="withdrawal_history" className="space-y-4">
-          <WithdrawalHistoryList productId={lot.supplier_item_id} warehouseId={lot.warehouse_id} />
+          <WithdrawalHistoryList productId={lot.product_group_id} warehouseId={lot.warehouse_id} />
         </TabsContent>
       </Tabs>
     </div>

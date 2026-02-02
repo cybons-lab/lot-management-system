@@ -191,7 +191,7 @@ function AllocationOrderLineListCard({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-900">製品ID: {line.supplier_item_id}</p>
+          <p className="text-sm font-medium text-gray-900">製品ID: {line.product_group_id}</p>
           <p className="mt-1 text-xs text-gray-600">納入日: {line.delivery_date}</p>
           <div className="mt-2 flex items-center gap-4 text-xs">
             <div>

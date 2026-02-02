@@ -187,7 +187,7 @@ export type InventoryTab = "all" | "in_stock" | "no_stock";
  * アイテムビュー用フィルタ
  */
 export interface InventoryItemFilters {
-  supplier_item_id: string;
+  product_group_id: string;
   warehouse_id: string;
   supplier_id: string;
   tab: InventoryTab;
@@ -207,7 +207,7 @@ export const inventoryPageStateAtom = atomWithStorage<{
   {
     overviewMode: "items",
     filters: {
-      supplier_item_id: "",
+      product_group_id: "",
       warehouse_id: "",
       supplier_id: "",
       tab: "all",
@@ -229,7 +229,7 @@ export const inventoryPageQueryParamsAtom = atom((get) => {
   const { filters } = get(inventoryPageStateAtom);
 
   return {
-    supplier_item_id: filters.supplier_item_id ? Number(filters.supplier_item_id) : undefined,
+    product_group_id: filters.product_group_id ? Number(filters.product_group_id) : undefined,
     warehouse_id: filters.warehouse_id ? Number(filters.warehouse_id) : undefined,
     supplier_id: filters.supplier_id ? Number(filters.supplier_id) : undefined,
     tab: filters.tab,

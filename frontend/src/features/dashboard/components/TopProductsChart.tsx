@@ -53,8 +53,8 @@ export function TopProductsChart() {
       .slice(0, 10);
 
     return sorted.map((item) => ({
-      id: item.supplier_item_id,
-      name: item.product_name || `製品${item.supplier_item_id}`,
+      id: item.product_group_id,
+      name: item.product_name || `製品${item.product_group_id}`,
       quantity: Number(item.total_quantity ?? 0),
       code: item.product_code || "",
     }));
@@ -64,7 +64,7 @@ export function TopProductsChart() {
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload.length > 0) {
       const payload = data.activePayload[0].payload as ChartData;
-      navigate(`/inventory?supplier_item_id=${payload.id}`);
+      navigate(`/inventory?product_group_id=${payload.id}`);
     }
   };
 

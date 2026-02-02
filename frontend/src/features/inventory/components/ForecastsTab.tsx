@@ -9,7 +9,7 @@ interface ForecastsTabProps {
 }
 
 export function ForecastsTab({ productId }: ForecastsTabProps) {
-  const { data: forecast, isLoading, error } = useDemandForecast({ supplier_item_id: productId });
+  const { data: forecast, isLoading, error } = useDemandForecast({ product_group_id: productId });
 
   if (error) {
     return (

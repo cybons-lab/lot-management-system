@@ -11062,8 +11062,8 @@ export interface components {
       created_at: string;
       /** Updated At */
       updated_at?: string | null;
-      /** Supplier Item Id */
-      supplier_item_id: number;
+      /** Product Group Id */
+      product_group_id: number;
       /** Planned Quantity */
       planned_quantity: string;
       /** Unit */
@@ -11247,8 +11247,8 @@ export interface components {
      * @description Inventory aggregated by product (across all warehouses).
      */
     InventoryByProductResponse: {
-      /** Supplier Item Id */
-      supplier_item_id: number;
+      /** Product Group Id */
+      product_group_id: number;
       /** Product Name */
       product_name: string;
       /** Product Code */
@@ -11346,8 +11346,8 @@ export interface components {
     InventoryItemResponse: {
       /** Inventory Item Id */
       inventory_item_id: number;
-      /** Supplier Item Id */
-      supplier_item_id: number;
+      /** Product Group Id */
+      product_group_id: number;
       /** Warehouse Id */
       warehouse_id: number;
       /** Total Quantity */
@@ -11730,8 +11730,8 @@ export interface components {
       updated_at?: string | null;
       /** Lot Number */
       lot_number?: string | null;
-      /** Supplier Item Id */
-      supplier_item_id: number;
+      /** Product Group Id */
+      product_group_id: number;
       /** Warehouse Id */
       warehouse_id: number;
       /** Supplier Id */

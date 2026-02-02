@@ -12,7 +12,7 @@ const createLot = (overrides: Partial<LotUI>): LotUI => ({
   id: overrides.id ?? 1,
   lot_id: overrides.lot_id ?? overrides.id ?? 1,
   lot_number: overrides.lot_number ?? "LOT-001",
-  supplier_item_id: overrides.supplier_item_id ?? 1,
+  product_group_id: overrides.product_group_id ?? 1,
   warehouse_id: overrides.warehouse_id ?? 1,
   supplier_id: overrides.supplier_id ?? 1,
   received_date: overrides.received_date ?? "2024-01-01",
@@ -57,17 +57,17 @@ describe("inventory lot derived logic", () => {
 
   it("sorts lots with the same behavior as existing table settings", () => {
     const lots = [
-      createLot({ id: 1, supplier_item_id: 1 }),
-      createLot({ id: 2, supplier_item_id: 2 }),
+      createLot({ id: 1, product_group_id: 1 }),
+      createLot({ id: 2, product_group_id: 2 }),
     ];
     const tableSettings: LotTableSettings = {
-      sortColumn: "supplier_item_id",
+      sortColumn: "product_group_id",
       sortDirection: "desc",
     };
 
     const result = sortLots(lots, tableSettings);
 
-    expect(result.map((lot) => lot.supplier_item_id)).toEqual([2, 1]);
+    expect(result.map((lot) => lot.product_group_id)).toEqual([2, 1]);
   });
 
   it("calculates KPI totals based on filtered lots", () => {

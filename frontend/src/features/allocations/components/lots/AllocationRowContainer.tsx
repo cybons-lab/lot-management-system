@@ -45,7 +45,7 @@ export function AllocationRowContainer({
   const onActivate = () => setActiveLineId(line.id);
   const { data, isLoading, error } = useAllocationCandidates({
     order_line_id: line.id,
-    supplier_item_id: Number(line.supplier_item_id || 0),
+    product_group_id: Number(line.product_group_id || 0),
     strategy: "fefo",
     limit: 200,
   });

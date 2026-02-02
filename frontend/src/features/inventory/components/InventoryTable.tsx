@@ -27,7 +27,7 @@ interface InventoryTableProps {
 }
 
 const getItemKey = (item: InventoryItem) =>
-  `${item.supplier_id ?? "all"}-${item.supplier_item_id}-${item.warehouse_id}`;
+  `${item.supplier_id ?? "all"}-${item.product_group_id}-${item.warehouse_id}`;
 
 export function InventoryTable({
   data,
@@ -78,7 +78,7 @@ export function InventoryTable({
   const expandedRowIds = useMemo(
     () =>
       data
-        .filter((item) => isRowExpanded(item.supplier_item_id, item.warehouse_id))
+        .filter((item) => isRowExpanded(item.product_group_id, item.warehouse_id))
         .map(getItemKey),
     [data, isRowExpanded],
   );
@@ -90,20 +90,20 @@ export function InventoryTable({
       .filter((id) => !currentSet.has(id))
       .forEach((added) => {
         const item = data.find((i) => getItemKey(i) === added);
-        if (item) void fetchLotsForItem(item.supplier_item_id, item.warehouse_id);
+        if (item) void fetchLotsForItem(item.product_group_id, item.warehouse_id);
       });
     const expandKeys = new Set<string>();
     ids.forEach((id) => {
       const item = data.find((i) => getItemKey(i) === String(id));
-      if (item) expandKeys.add(`${item.supplier_item_id}-${item.warehouse_id}`);
+      if (item) expandKeys.add(`${item.product_group_id}-${item.warehouse_id}`);
     });
     setExpandedRows(expandKeys);
   };
 
   const renderExpandedRow = (item: InventoryItem) => (
     <InventoryLotList
-      lots={getLotsForItem(item.supplier_item_id, item.warehouse_id)}
-      isLoading={isLotsLoading(item.supplier_item_id, item.warehouse_id)}
+      lots={getLotsForItem(item.product_group_id, item.warehouse_id)}
+      isLoading={isLotsLoading(item.product_group_id, item.warehouse_id)}
       warehouseNameFallback={item.warehouse_name || item.warehouse_code}
       onEdit={handleEditLot}
       onUnlock={handleUnlockLot}
@@ -174,7 +174,7 @@ export function InventoryTable({
         open={isQuickIntakeOpen}
         onOpenChange={(open) => !open && closeDialog()}
         onSuccess={handleSuccess}
-        initialProductId={quickIntakeItem?.supplier_item_id}
+        initialProductId={quickIntakeItem?.product_group_id}
         initialWarehouseId={quickIntakeItem?.warehouse_id}
         initialSupplierId={quickIntakeItem?.supplier_id ?? filterSupplierId}
       />

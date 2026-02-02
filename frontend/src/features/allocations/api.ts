@@ -49,7 +49,7 @@
  * 5. getPlanningAllocationSummary のクエリパラメータ設計（L228-244）
  *    理由: RESTful設計に準拠したリソース検索
  *    設計:
- *    - customer_id, delivery_place_id, supplier_item_id を必須パラメータ
+ *    - customer_id, delivery_place_id, product_group_id を必須パラメータ
  *    - forecast_period をオプションパラメータ
  *    業務的意義:
  *    - 「この得意先・納入先・製品の組み合わせで、計画引当がどうなっているか？」
@@ -113,14 +113,14 @@ export type CandidateLotsResponse = {
  */
 export const getAllocationCandidates = async (params: {
   order_line_id: number;
-  supplier_item_id: number; // Added: required for v2 lot search
+  product_group_id: number; // Added: required for v2 lot search
   warehouse_id?: number;
   limit?: number;
   strategy?: "fefo" | "fifo" | "custom";
 }) => {
   // Call Inventory API v2
   const lots = await getAvailableLots({
-    supplier_item_id: params.supplier_item_id,
+    product_group_id: params.product_group_id,
     warehouse_id: params.warehouse_id,
   });
 
@@ -162,7 +162,7 @@ export type CandidateLotItem = {
   current_quantity: number;
   allocated_quantity: number | string;
   allocated_qty?: number;
-  supplier_item_id?: number | null;
+  product_group_id?: number | null;
   product_code?: string | null;
   delivery_place_id?: number | null;
   delivery_place_code?: string | null;
@@ -291,13 +291,13 @@ export interface PlanningAllocationSummary {
 export const getPlanningAllocationSummary = (params: {
   customer_id: number;
   delivery_place_id: number;
-  supplier_item_id: number;
+  product_group_id: number;
   forecast_period?: string;
 }) => {
   const searchParams = new URLSearchParams();
   searchParams.append("customer_id", params.customer_id.toString());
   searchParams.append("delivery_place_id", params.delivery_place_id.toString());
-  searchParams.append("supplier_item_id", params.supplier_item_id.toString());
+  searchParams.append("product_group_id", params.product_group_id.toString());
   if (params.forecast_period) {
     searchParams.append("forecast_period", params.forecast_period);
   }
@@ -309,7 +309,7 @@ export const getPlanningAllocationSummary = (params: {
 // ===== Bulk Auto-Allocate (グループ一括引当) =====
 
 export interface BulkAutoAllocateRequest {
-  supplier_item_id?: number | null;
+  product_group_id?: number | null;
   customer_id?: number | null;
   delivery_place_id?: number | null;
   order_type?: "FORECAST_LINKED" | "KANBAN" | "SPOT" | "ORDER" | null;
@@ -368,7 +368,7 @@ export type AllocationSuggestionRequest = {
     forecast_periods: string[];
     customer_ids?: number[];
     delivery_place_ids?: number[];
-    supplier_item_ids?: number[];
+    product_group_ids?: number[];
   };
   order_scope?: {
     order_line_id: number;
@@ -386,7 +386,7 @@ export type AllocationSuggestionResponse = {
   forecast_period: string;
   customer_id: number;
   delivery_place_id: number;
-  supplier_item_id: number;
+  product_group_id: number;
   lot_id: number;
   quantity: number;
   allocation_type: "soft" | "hard";
@@ -419,7 +419,7 @@ export const getAllocationSuggestions = (
     skip?: number;
     limit?: number;
     forecast_period?: string;
-    supplier_item_id?: number;
+    product_group_id?: number;
     customer_id?: number;
   } = {},
 ) => {
@@ -427,8 +427,8 @@ export const getAllocationSuggestions = (
   if (params.skip) searchParams.append("skip", params.skip.toString());
   if (params.limit) searchParams.append("limit", params.limit.toString());
   if (params.forecast_period) searchParams.append("forecast_period", params.forecast_period);
-  if (params.supplier_item_id)
-    searchParams.append("supplier_item_id", params.supplier_item_id.toString());
+  if (params.product_group_id)
+    searchParams.append("product_group_id", params.product_group_id.toString());
   if (params.customer_id) searchParams.append("customer_id", params.customer_id.toString());
 
   const queryString = searchParams.toString();
@@ -440,7 +440,7 @@ export const getAllocationSuggestions = (
 export interface AllocationSuggestionBatchUpdateItem {
   customer_id: number;
   delivery_place_id: number;
-  supplier_item_id: number;
+  product_group_id: number;
   lot_id: number;
   forecast_period: string;
   quantity: number;

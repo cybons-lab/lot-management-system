@@ -1,7 +1,7 @@
 /**
  * CustomerItemFormBasicSection
  * 得意先品番の基本情報セクション（フォーム用）
- * Phase1対応: supplier_item_id を必須に変更
+ * Phase1対応: product_group_id を必須に変更
  */
 
 import { AlertCircle } from "lucide-react";
@@ -44,7 +44,7 @@ export function CustomerItemFormBasicSection({
   isLoadingSupplierItems = false,
   onSupplierItemSelect,
 }: CustomerItemFormBasicSectionProps) {
-  // Phase1: supplier_item_id が未設定かチェック（警告表示用）
+  // Phase1: product_group_id が未設定かチェック（警告表示用）
   // Note: この機能は一時的に無効化（react-hook-formのAPIアクセスパターン変更のため）
   // const [isSupplierItemMissing, setIsSupplierItemMissing] = React.useState(false);
   const isSupplierItemMissing = false; // TODO: watch()を使用した実装に変更
@@ -102,13 +102,13 @@ export function CustomerItemFormBasicSection({
           </p>
         </div>
 
-        {/* メーカー品番選択 (Phase1: supplier_item_id) */}
+        {/* メーカー品番選択 (Phase1: product_group_id) */}
         <div>
-          <Label htmlFor="supplier_item_id" className="mb-2 block text-sm font-medium">
+          <Label htmlFor="product_group_id" className="mb-2 block text-sm font-medium">
             メーカー品番 <span className="text-red-500">*</span>
           </Label>
           <Controller
-            name="supplier_item_id"
+            name="product_group_id"
             control={control}
             render={({ field }) => (
               <SearchableSelect
@@ -125,8 +125,8 @@ export function CustomerItemFormBasicSection({
               />
             )}
           />
-          {errors.supplier_item_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.supplier_item_id.message}</p>
+          {errors.product_group_id && (
+            <p className="mt-1 text-sm text-red-600">{errors.product_group_id.message}</p>
           )}
           <p className="mt-1 text-xs text-amber-600">
             ⚠️ Phase1必須:

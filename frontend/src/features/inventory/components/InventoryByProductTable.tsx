@@ -99,7 +99,7 @@ export function InventoryByProductTable({
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            onViewDetail(row.supplier_item_id);
+            onViewDetail(row.product_group_id);
           }}
         >
           詳細
@@ -116,7 +116,7 @@ export function InventoryByProductTable({
     <DataTable
       data={data}
       columns={columns}
-      getRowId={(row) => row.supplier_item_id}
+      getRowId={(row) => row.product_group_id}
       onRowClick={handleRowClick}
       rowActions={renderRowActions}
       emptyMessage="データがありません"

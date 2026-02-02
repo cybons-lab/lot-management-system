@@ -12,7 +12,7 @@ export interface IntakeHistoryResponse {
   intake_id: number;
   lot_id: number;
   lot_number: string;
-  supplier_item_id: number;
+  product_group_id: number;
   product_name: string;
   product_code: string;
   supplier_id: number | null;
@@ -48,7 +48,7 @@ export interface IntakeHistoryListParams {
   limit?: number;
   supplier_id?: number;
   warehouse_id?: number;
-  supplier_item_id?: number;
+  product_group_id?: number;
   start_date?: string;
   end_date?: string;
   search?: string;
@@ -93,7 +93,7 @@ export async function getIntakeCalendarSummary(params: {
   year: number;
   month: number;
   warehouse_id?: number;
-  supplier_item_id?: number;
+  product_group_id?: number;
   supplier_id?: number;
 }): Promise<DailyIntakeSummary[]> {
   const searchParams = new URLSearchParams();
@@ -101,8 +101,8 @@ export async function getIntakeCalendarSummary(params: {
   searchParams.set("month", String(params.month));
   if (params.warehouse_id !== undefined)
     searchParams.set("warehouse_id", String(params.warehouse_id));
-  if (params.supplier_item_id !== undefined)
-    searchParams.set("supplier_item_id", String(params.supplier_item_id));
+  if (params.product_group_id !== undefined)
+    searchParams.set("product_group_id", String(params.product_group_id));
   if (params.supplier_id !== undefined) searchParams.set("supplier_id", String(params.supplier_id));
 
   return http.get<DailyIntakeSummary[]>(`${BASE_PATH}/calendar-summary?${searchParams.toString()}`);

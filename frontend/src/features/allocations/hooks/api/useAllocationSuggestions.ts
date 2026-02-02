@@ -23,14 +23,14 @@ import { getAllocationQueryKeys } from "@/services/api/query-keys";
  * Get allocation suggestions list
  */
 export const useAllocationSuggestions = (params?: {
-  supplier_item_id?: number;
+  product_group_id?: number;
   forecast_period?: string;
   customer_id?: number;
 }) => {
   return useQuery({
     queryKey: ["allocationSuggestions", params],
     queryFn: () => getAllocationSuggestions(params ?? {}),
-    enabled: !!params?.supplier_item_id,
+    enabled: !!params?.product_group_id,
   });
 };
 

@@ -26,7 +26,7 @@ const createMockOrderLine = (overrides: Partial<OrderLine> = {}): OrderLine =>
   ({
     id: 1,
     order_id: 100,
-    supplier_item_id: 10,
+    product_group_id: 10,
     order_quantity: "100",
     quantity: undefined,
     converted_quantity: undefined,

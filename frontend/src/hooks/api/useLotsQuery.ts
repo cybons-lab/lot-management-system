@@ -46,7 +46,7 @@ export const useLotsQuery = (params?: LotsQuery) =>
   useQuery<LotResponse[], Error, LotUI[]>({
     queryKey: ["lots", params],
     queryFn: () => getLots(params),
-    enabled: !!params?.supplier_item_id || !!params?.warehouse_id,
+    enabled: !!params?.product_group_id || !!params?.warehouse_id,
     staleTime: 30_000,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
@@ -55,7 +55,7 @@ export const useLotsQuery = (params?: LotsQuery) =>
         normalizeLot(
           item as unknown as Record<string, unknown> & {
             lot_id: number;
-            supplier_item_id: number;
+            product_group_id: number;
             warehouse_id: number;
           },
         ),

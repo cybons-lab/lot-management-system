@@ -112,7 +112,7 @@ export function IntakeHistoryTab() {
   }, [assignedSupplierIds, supplierId]);
 
   const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
-    supplier_item_id: productId || undefined,
+    product_group_id: productId || undefined,
     supplier_id: supplierId || undefined,
     warehouse_id: warehouseId || undefined,
     mode: "master",

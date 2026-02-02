@@ -62,7 +62,7 @@ const normalizeLots = (data: LotResponse[]) =>
     normalizeLot(
       item as unknown as Record<string, unknown> & {
         lot_id: number;
-        supplier_item_id: number;
+        product_group_id: number;
         warehouse_id: number;
       },
     ),

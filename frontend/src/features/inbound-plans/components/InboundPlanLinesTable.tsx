@@ -19,7 +19,7 @@ import { DataTable } from "@/shared/components/data/DataTable";
 
 interface InboundPlanLine {
   inbound_plan_line_id: number;
-  supplier_item_id: number;
+  product_group_id: number;
   product_name?: string;
   product_code?: string;
   planned_quantity: string;
@@ -50,7 +50,7 @@ export function InboundPlanLinesTable({ lines }: InboundPlanLinesTableProps) {
       {
         id: "product",
         header: "製品",
-        accessor: (row) => row.product_name || row.product_code || `ID: ${row.supplier_item_id}`,
+        accessor: (row) => row.product_name || row.product_code || `ID: ${row.product_group_id}`,
         width: 200,
         sortable: true,
       },
@@ -94,7 +94,7 @@ export function InboundPlanLinesTable({ lines }: InboundPlanLinesTableProps) {
         <DropdownMenuContent align="end">
           <DropdownMenuItem
             onClick={() =>
-              navigate(`${ROUTES.FORECASTS.LIST}?supplier_item_id=${line.supplier_item_id}`)
+              navigate(`${ROUTES.FORECASTS.LIST}?product_group_id=${line.product_group_id}`)
             }
           >
             <FileBarChart className="mr-2 h-4 w-4" />
@@ -103,7 +103,7 @@ export function InboundPlanLinesTable({ lines }: InboundPlanLinesTableProps) {
           {line.warehouse_id && (
             <DropdownMenuItem
               onClick={() =>
-                navigate(ROUTES.INVENTORY.ITEMS.DETAIL(line.supplier_item_id, line.warehouse_id!))
+                navigate(ROUTES.INVENTORY.ITEMS.DETAIL(line.product_group_id, line.warehouse_id!))
               }
             >
               <Package className="mr-2 h-4 w-4" />

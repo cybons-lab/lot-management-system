@@ -38,7 +38,7 @@ export function useIntakeCalendarSummary(params: {
   year: number;
   month: number;
   warehouse_id?: number;
-  supplier_item_id?: number;
+  product_group_id?: number;
   supplier_id?: number;
 }) {
   return useQuery({
