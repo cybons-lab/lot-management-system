@@ -103,9 +103,11 @@ def main() -> None:
     backend_dir = script_dir.parent
     baselines_dir = backend_dir / "alembic" / "baselines"
     views_dir = backend_dir / "sql" / "views"
+    sql_dir = backend_dir / "sql"
 
     schema_path = baselines_dir / "baseline_schema_20260119.sql"
     views_path = views_dir / "create_views.sql"
+    init_users_path = sql_dir / "init_system_users.sql"
 
     # Get database URL
     database_url = get_database_url()
@@ -127,8 +129,12 @@ def main() -> None:
     print("\nStep 2: Creating views...")
     apply_sql_file(database_url, views_path, "views")
 
+    # Initialize system users (guest, admin, testuser)
+    print("\nStep 3: Initializing system users...")
+    apply_sql_file(database_url, init_users_path, "system users")
+
     # Stamp alembic
-    print("\nStep 3: Stamping alembic version...")
+    print("\nStep 4: Stamping alembic version...")
     stamp_alembic_head()
 
     # Show result

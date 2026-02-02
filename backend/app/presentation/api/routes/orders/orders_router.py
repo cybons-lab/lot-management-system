@@ -152,7 +152,11 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
     ReservationStatus,
 )
 from app.presentation.api.deps import get_db, get_uow
-from app.presentation.api.routes.auth.auth_router import get_current_user, get_current_user_optional
+from app.presentation.api.routes.auth.auth_router import (
+    get_current_user,
+    require_role,
+    require_write_permission,
+)
 from app.presentation.schemas.orders.orders_schema import (
     OrderCreate,
     OrderLineResponse,
@@ -175,9 +179,9 @@ def list_orders(
     order_type: str | None = None,
     prioritize_assigned: bool = True,
     db: Session = Depends(get_db),
-    current_user: User | None = Depends(get_current_user_optional),
+    current_user: User = Depends(require_role(["user", "admin"])),
 ):
-    """受注一覧取得（読み取り専用）.
+    """受注一覧取得（一般ユーザー・管理者のみ）.
 
     Args:
         skip: スキップ件数（ページネーション用）
@@ -189,14 +193,17 @@ def list_orders(
         order_type: 受注種別フィルタ
         prioritize_assigned: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
         db: データベースセッション
-        current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）
+        current_user: 現在のログインユーザー（主担当仕入先取得に使用、認証必須）
 
     Returns:
         list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）
+
+    認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
     """
-    # Get assigned supplier IDs for sorting
+    # Get assigned supplier IDs for sorting (skip for guest users)
+    user_roles = [ur.role.role_code for ur in current_user.user_roles]
     assigned_supplier_ids: list[int] | None = None
-    if prioritize_assigned and current_user:
+    if prioritize_assigned and "guest" not in user_roles:
         assignment_service = UserSupplierAssignmentService(db)
         assigned_supplier_ids = assignment_service.get_assigned_supplier_ids(current_user.id)
 
@@ -214,18 +221,25 @@ def list_orders(
 
 
 @router.get("/{order_id}", response_model=OrderWithLinesResponse)
-def get_order(order_id: int, db: Session = Depends(get_db)):
-    """受注詳細取得（読み取り専用、明細含む）.
+def get_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["user", "admin"])),
+):
+    """受注詳細取得（一般ユーザー・管理者のみ、明細含む）.
 
     Args:
         order_id: 受注ID
         db: データベースセッション
+        current_user: 現在のログインユーザー（認証必須）
 
     Returns:
         OrderWithLinesResponse: 受注詳細情報（明細含む）
 
     Raises:
         HTTPException: 受注が存在しない場合（404）
+
+    認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
     """
     service = OrderService(db)
     return service.get_order_detail(order_id)
@@ -242,8 +256,9 @@ def list_order_lines(
     date_to: date | None = None,
     order_type: str | None = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["user", "admin"])),
 ):
-    """受注明細一覧取得（フラット表示用）.
+    """受注明細一覧取得（一般ユーザー・管理者のみ、フラット表示用）.
 
     Args:
         skip: スキップ件数
@@ -255,9 +270,12 @@ def list_order_lines(
         date_to: 納期終了日
         order_type: 受注種別フィルタ
         db: データベースセッション
+        current_user: 現在のログインユーザー（認証必須）
 
     Returns:
         list[OrderLineResponse]: 受注明細リスト
+
+    認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
     """
     service = OrderService(db)
     return service.get_order_lines(
@@ -273,18 +291,25 @@ def list_order_lines(
 
 
 @router.post("", response_model=OrderWithLinesResponse, status_code=201)
-def create_order(order: OrderCreate, uow: UnitOfWork = Depends(get_uow)):
-    """受注作成.
+def create_order(
+    order: OrderCreate,
+    uow: UnitOfWork = Depends(get_uow),
+    current_user: User = Depends(require_write_permission()),
+):
+    """受注作成（書き込み権限必要）.
 
     Args:
         order: 受注作成リクエストデータ
         uow: Unit of Work（トランザクション管理）
+        current_user: 現在のログインユーザー（認証必須、ゲスト不可）
 
     Returns:
         OrderWithLinesResponse: 作成された受注情報（明細含む）
 
     Raises:
         HTTPException: 受注作成に失敗した場合
+
+    認証: 一般ユーザー・管理者のみ（ゲストは読み取り専用）
     """
     assert uow.session is not None
     service = OrderService(uow.session)

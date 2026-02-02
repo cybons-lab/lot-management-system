@@ -184,15 +184,28 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
-    """ユーザー削除.
+    """ユーザー削除（システムユーザーは削除不可）.
 
     Args:
         user_id: ユーザーID
         db: データベースセッション
 
     Raises:
-        HTTPException: ユーザーが存在しない場合
+        HTTPException: ユーザーが存在しない場合、またはシステムユーザーの場合
     """
+    # Check if user is system user before deletion
+    from app.infrastructure.persistence.models.auth_models import User
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if user.is_system_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"システムユーザー（{user.username}）は削除できません",
+        )
+
     service = UserService(db)
     service.delete(user_id)
     return None

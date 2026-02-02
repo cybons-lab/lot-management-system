@@ -1,0 +1,85 @@
+"""バッチジョブ関連のPydanticスキーマ."""
+
+from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+
+class BatchJobBase(BaseModel):
+    """バッチジョブ基本スキーマ."""
+
+    job_name: str = Field(..., description="ジョブ名")
+    job_type: str = Field(
+        ...,
+        description="ジョブ種別（allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation）",
+    )
+    parameters: dict[str, Any] | None = Field(
+        None,
+        description="ジョブパラメータ（JSON）",
+        json_schema_extra={"additionalProperties": True},
+    )
+
+
+class BatchJobCreate(BatchJobBase):
+    """バッチジョブ作成スキーマ.
+
+    Inherits all fields from BatchJobBase without additional fields.
+    Exists for type distinction and API schema generation.
+    """
+
+    pass
+
+
+class BatchJobUpdate(BaseModel):
+    """バッチジョブ更新スキーマ."""
+
+    job_name: str | None = Field(None, description="ジョブ名")
+    job_type: str | None = Field(None, description="ジョブ種別")
+    parameters: dict[str, Any] | None = Field(
+        None,
+        description="ジョブパラメータ（JSON）",
+        json_schema_extra={"additionalProperties": True},
+    )
+    status: str | None = Field(None, description="ステータス")
+    result_message: str | None = Field(None, description="実行結果メッセージ")
+
+
+class BatchJobResponse(BatchJobBase):
+    """バッチジョブレスポンス."""
+
+    job_id: int = Field(..., validation_alias="id", serialization_alias="job_id")
+    status: str = Field(..., description="ステータス（pending/running/completed/failed）")
+    result_message: str | None = Field(None, description="実行結果メッセージ")
+    started_at: datetime | None = Field(None, description="開始日時")
+    completed_at: datetime | None = Field(None, description="完了日時")
+    created_at: datetime = Field(..., description="作成日時")
+
+    model_config = {"from_attributes": True}
+
+
+class BatchJobListResponse(BaseModel):
+    """バッチジョブ一覧レスポンス."""
+
+    jobs: list[BatchJobResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class BatchJobExecuteRequest(BaseModel):
+    """バッチジョブ実行リクエスト."""
+
+    parameters: dict[str, Any] | None = Field(
+        None,
+        description="実行時パラメータ（上書き）",
+        json_schema_extra={"additionalProperties": True},
+    )
+
+
+class BatchJobExecuteResponse(BaseModel):
+    """バッチジョブ実行レスポンス."""
+
+    job_id: int
+    status: str
+    message: str

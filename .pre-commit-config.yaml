@@ -38,13 +38,13 @@ repos:
         files: ^backend/
         pass_filenames: false
 
-  # OpenAPI Schema Sync - regenerate when backend schemas change
+  # OpenAPI Schema Sync - regenerate when backend schemas or routes change
   - repo: local
     hooks:
       - id: openapi-sync
         name: OpenAPI Schema Sync
-        entry: bash -c 'cd backend && uv sync --no-dev -q && PYTHONPATH=. uv run python scripts/export_openapi.py >/dev/null 2>&1 && cd ../frontend && npm run typegen >/dev/null 2>&1 && cd .. && git add backend/openapi.json frontend/src/types/api.d.ts && cd backend && uv sync -q'
+        entry: bash -c 'make typegen >/dev/null 2>&1 && git add backend/openapi.json frontend/src/types/api.d.ts'
         language: system
-        files: ^backend/app/presentation/schemas/.*\.py$
+        files: ^backend/app/(presentation/(schemas|api/routes)|schemas)/.*\.py$
         pass_filenames: false
 

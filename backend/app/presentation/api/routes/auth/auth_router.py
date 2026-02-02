@@ -95,6 +95,61 @@ def require_roles(allowed_roles: set[str]):
     return dependency
 
 
+def require_role(allowed_roles: list[str]):
+    """Require authenticated user to have one of the allowed roles.
+
+    This is the primary role checker for the auth redesign (方式A).
+    All users must be authenticated (including guests with guest tokens).
+
+    Args:
+        allowed_roles: List of allowed role codes (e.g., ["guest", "user", "admin"])
+
+    Returns:
+        Dependency function that returns authenticated User
+
+    Raises:
+        401: If user is not authenticated
+        403: If user's role is not in allowed_roles
+    """
+
+    def dependency(current_user: User = Depends(get_current_user)) -> User:
+        user_roles = [ur.role.role_code for ur in current_user.user_roles]
+        if not any(role in allowed_roles for role in user_roles):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"この操作には {', '.join(allowed_roles)} ロールが必要です",
+            )
+        return current_user
+
+    return dependency
+
+
+def require_write_permission():
+    """Require write permission (guest users are read-only).
+
+    This is a convenience wrapper around require_role for write operations.
+    Guest users are automatically excluded from write operations.
+
+    Returns:
+        Dependency function that returns authenticated User with write permission
+
+    Raises:
+        401: If user is not authenticated
+        403: If user has guest role
+    """
+
+    def dependency(current_user: User = Depends(get_current_user)) -> User:
+        user_roles = [ur.role.role_code for ur in current_user.user_roles]
+        if "guest" in user_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="ゲストユーザーは読み取り専用です",
+            )
+        return current_user
+
+    return dependency
+
+
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     """Simple login by User ID or Username."""
@@ -170,3 +225,67 @@ def get_login_users(db: Session = Depends(get_db)):
         }
         for user in users
     ]
+
+
+@router.post("/guest-login", response_model=TokenResponse)
+def guest_login(db: Session = Depends(get_db)):
+    """Auto-login as guest user (方式A implementation).
+
+    This endpoint provides automatic guest authentication to support
+    the new auth redesign where all users (including guests) are authenticated.
+
+    Finds the first active user with 'guest' role and issues a token.
+    Frontend calls this automatically on initialization if no token exists.
+
+    Returns:
+        TokenResponse with guest user token
+
+    Raises:
+        500: If no guest user exists in the system
+    """
+    # Find first active guest user
+    from app.infrastructure.persistence.models.auth_models import Role, UserRole
+
+    guest_user = (
+        db.query(User)
+        .join(User.user_roles)
+        .join(UserRole.role)
+        .filter(
+            User.is_active.is_(True),
+            Role.role_code == "guest",
+        )
+        .first()
+    )
+
+    if not guest_user:
+        raise HTTPException(
+            status_code=500,
+            detail="Guest user not found. Please create a user with 'guest' role.",
+        )
+
+    # Update last login
+    guest_user.last_login_at = datetime.now(UTC)
+    db.commit()
+
+    # Create Token
+    roles = [ur.role.role_code for ur in guest_user.user_roles]
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": str(guest_user.id), "username": guest_user.username, "roles": roles},
+        expires_delta=access_token_expires,
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": guest_user.id,
+            "username": guest_user.username,
+            "display_name": guest_user.display_name,
+            "roles": roles,
+            "assignments": [
+                {"supplier_id": a.supplier_id, "is_primary": a.is_primary}
+                for a in guest_user.supplier_assignments
+            ],
+        },
+    }

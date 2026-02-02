@@ -8,6 +8,7 @@ import {
   type RoleCode,
   type RoutePermissionResult,
 } from "@/features/auth/permissions";
+import { isGuestUser } from "@/features/auth/permissions/guest-permissions";
 
 interface AccessGuardProps {
   children: React.ReactNode;
@@ -96,12 +97,19 @@ export function AccessGuard({ children, roles, routeKey, fallbackPath }: AccessG
     allowedRoles.some((role) => currentRoles.includes(role));
 
   if (!isAllowed) {
-    // 未ログインでguestが許可されていない → ログインへ（returnTo付き）
-    if (!user && !allowedRoles?.includes("guest")) {
-      const returnTo = encodeURIComponent(`${location.pathname}${location.search}`);
-      return <Navigate to={`/login?returnTo=${returnTo}`} replace state={{ from: location }} />;
+    // 方式A: すべてのユーザーは認証済み（ゲスト含む）
+    // ゲストユーザーで権限不足 → 専用のforbiddenページへ（ゲスト向けメッセージ）
+    if (user && isGuestUser(user.roles)) {
+      return (
+        <Navigate
+          to={fallbackPath ?? "/forbidden"}
+          replace
+          state={{ from: location, isGuest: true }}
+        />
+      );
     }
-    // ログイン済みだが権限不足、または未定義ルート → forbiddenページ
+
+    // 認証済み一般ユーザー/管理者で権限不足、または未定義ルート → forbiddenページ
     return <Navigate to={fallbackPath ?? "/forbidden"} replace state={{ from: location }} />;
   }
 

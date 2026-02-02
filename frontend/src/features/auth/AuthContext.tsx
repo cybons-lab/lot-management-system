@@ -88,6 +88,8 @@ function useRestoreSession(
     // Restore session on initial mount only
     const initAuth = async () => {
       const storedToken = getAuthToken();
+      const isLoginPage = window.location.pathname === "/login";
+
       if (storedToken) {
         try {
           // http-client's beforeRequest hook automatically adds Authorization header
@@ -97,16 +99,50 @@ function useRestoreSession(
         } catch (error) {
           console.warn("Failed to restore session", error);
           clearAuthToken();
-          // Notify user that session could not be restored
-          toast.info("セッションの有効期限が切れました", {
-            description: "再度ログインしてください",
-          });
+          // Skip guest auto-login on login page
+          if (!isLoginPage) {
+            await performGuestAutoLogin(setToken, setUser);
+          }
+        }
+      } else {
+        // No stored token - perform guest auto-login (方式A)
+        // Skip on login page to allow manual login
+        if (!isLoginPage) {
+          await performGuestAutoLogin(setToken, setUser);
         }
       }
       setIsLoading(false);
     };
     initAuth();
   }, [setIsLoading, setToken, setUser]);
+}
+
+/**
+ * Perform automatic guest login (方式A implementation).
+ * This ensures all users (including guests) are authenticated.
+ */
+async function performGuestAutoLogin(
+  setToken: (token: string | null) => void,
+  setUser: (user: User | null) => void,
+) {
+  try {
+    const response = await httpPublic.post<{
+      access_token: string;
+      user: User;
+    }>("auth/guest-login", {});
+
+    setToken(response.access_token);
+    setUser(response.user);
+    setAuthToken(response.access_token);
+
+    console.info("Auto-logged in as guest user:", response.user.username);
+  } catch (error) {
+    console.error("Failed to auto-login as guest:", error);
+    // If guest login fails, user can still manually log in
+    toast.error("ゲストログインに失敗しました", {
+      description: "手動でログインしてください",
+    });
+  }
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

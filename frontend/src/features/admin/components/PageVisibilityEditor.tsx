@@ -18,32 +18,30 @@ interface VisibilityRowProps {
   label: string;
   isSub?: boolean;
   config: PageVisibilityConfig;
-  onToggle: (id: string, role: "guest" | "user", checked: boolean) => void;
+  onToggle: (id: string, role: "user", checked: boolean) => void;
   disabled: boolean;
 }
 
-type VisibilityEntry = { user: boolean; guest: boolean };
+type VisibilityEntry = { user: boolean };
 
 function normalizeVisibilityEntry(value: unknown): VisibilityEntry {
   if (typeof value === "boolean") {
-    return { user: value, guest: value };
+    return { user: value };
   }
 
   if (value && typeof value === "object") {
     const record = value as Record<string, unknown>;
     const user = typeof record.user === "boolean" ? record.user : true;
-    const guest = typeof record.guest === "boolean" ? record.guest : true;
-    return { user, guest };
+    return { user };
   }
 
-  return { user: true, guest: true };
+  return { user: true };
 }
 
 function VisibilityRow({ id, label, isSub, config, onToggle, disabled }: VisibilityRowProps) {
   const featureConf = normalizeVisibilityEntry(config[id]);
 
   let userParentDisabled = false;
-  let guestParentDisabled = false;
 
   if (isSub) {
     const parentId = id.split(":")[0];
@@ -51,7 +49,6 @@ function VisibilityRow({ id, label, isSub, config, onToggle, disabled }: Visibil
     // New Logic: If parent is FALSE, child is forced FALSE.
     // If parent is TRUE, child is configurable.
     userParentDisabled = !parentConf.user;
-    guestParentDisabled = !parentConf.guest;
   }
 
   return (
@@ -81,20 +78,6 @@ function VisibilityRow({ id, label, isSub, config, onToggle, disabled }: Visibil
           )}
         </div>
       </TableCell>
-      <TableCell className="text-center">
-        <div className="flex flex-col items-center gap-1">
-          <Switch
-            checked={featureConf.guest}
-            onCheckedChange={(checked) => onToggle(id, "guest", checked)}
-            disabled={disabled || guestParentDisabled}
-          />
-          {isSub && guestParentDisabled && (
-            <span className="text-[9px] text-slate-400 font-medium whitespace-nowrap">
-              親が無効
-            </span>
-          )}
-        </div>
-      </TableCell>
     </TableRow>
   );
 }
@@ -114,7 +97,7 @@ export function PageVisibilityEditor({ value, onChange, disabled }: PageVisibili
     }
   })();
 
-  const handleToggle = (featureKey: string, role: "guest" | "user", checked: boolean) => {
+  const handleToggle = (featureKey: string, role: "user", checked: boolean) => {
     const newConfig = { ...config };
     const current = normalizeVisibilityEntry(newConfig[featureKey]);
     newConfig[featureKey] = { ...current, [role]: checked };
@@ -123,12 +106,18 @@ export function PageVisibilityEditor({ value, onChange, disabled }: PageVisibili
 
   return (
     <div className="rounded-md border mt-2 overflow-hidden">
+      <div className="bg-amber-50 border-b border-amber-200 px-4 py-2">
+        <p className="text-xs text-amber-800">
+          <strong>注意:</strong>{" "}
+          ゲストユーザーの権限は固定されており、ここでは変更できません。ゲストは「ダッシュボード」「在庫一覧」「ロット一覧」のみ閲覧可能です（読み取り専用）。
+          管理者は常にすべての機能にアクセス可能です。
+        </p>
+      </div>
       <Table>
         <TableHeader className="bg-slate-100">
           <TableRow>
-            <TableHead className="w-[300px]">機能・ページ・タブ</TableHead>
-            <TableHead className="text-center w-[120px]">一般ユーザー</TableHead>
-            <TableHead className="text-center w-[120px]">ゲスト</TableHead>
+            <TableHead className="w-[400px]">機能・ページ・タブ</TableHead>
+            <TableHead className="text-center w-[150px]">一般ユーザー</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -23,9 +23,7 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
     ReservationStatus,
 )
 from app.presentation.api.deps import get_db
-from app.presentation.api.routes.auth.auth_router import (
-    get_current_user_optional,
-)
+from app.presentation.api.routes.auth.auth_router import require_role
 from app.presentation.schemas.admin.admin_schema import (
     DashboardStatsResponse,
 )
@@ -38,12 +36,14 @@ logger = logging.getLogger(__name__)
 @router.get("/stats", response_model=DashboardStatsResponse)
 def get_dashboard_stats(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user_optional),  # Allow anonymous access for dashboard
+    current_user=Depends(require_role(["guest", "user", "admin"])),
 ):
-    """ダッシュボード用の統計情報を返す.
+    """ダッシュボード用の統計情報を返す（ゲスト可）.
 
     在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock
     ビューは使用しない（v2.2 以降は廃止）。
+
+    認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
     """
     try:
         # lots テーブルから直接在庫を集計

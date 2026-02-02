@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
+import { isGuestUser } from "@/features/auth/permissions/guest-permissions";
 import { httpPublic } from "@/shared/api/http-client";
 
 // Minimal User Type for Selection (API returns id, not user_id)
@@ -53,9 +54,9 @@ export function LoginPage() {
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get("returnTo") || "/";
 
-  // Redirect if already logged in
+  // Redirect if already logged in (but not as guest)
   useEffect(() => {
-    if (user) {
+    if (user && !isGuestUser(user.roles)) {
       navigate(returnTo);
     }
   }, [user, navigate, returnTo]);

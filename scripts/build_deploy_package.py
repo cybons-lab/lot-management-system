@@ -394,15 +394,23 @@ def copy_docs(temp_dir: Path) -> bool:
     """ドキュメントをコピー."""
     print_step("ドキュメントをコピー中...")
 
-    dest_docs = temp_dir / "docs" / "ops"
-    dest_docs.mkdir(parents=True, exist_ok=True)
-
-    # 運用ドキュメントをコピー
+    # 運用ドキュメント
+    dest_ops = temp_dir / "docs" / "ops"
+    dest_ops.mkdir(parents=True, exist_ok=True)
     src_ops = DOCS_DIR / "operations"
     if src_ops.exists():
         for file in src_ops.glob("*.md"):
-            shutil.copy2(file, dest_docs / file.name)
-            print(f"  📄 {file.name}")
+            shutil.copy2(file, dest_ops / file.name)
+            print(f"  📄 ops/{file.name}")
+
+    # デプロイメントドキュメント（環境変数設定など）
+    dest_deployment = temp_dir / "docs" / "deployment"
+    dest_deployment.mkdir(parents=True, exist_ok=True)
+    src_deployment = DOCS_DIR / "deployment"
+    if src_deployment.exists():
+        for file in src_deployment.glob("*.md"):
+            shutil.copy2(file, dest_deployment / file.name)
+            print(f"  📄 deployment/{file.name}")
 
     print_success("ドキュメントのコピーが完了しました")
     return True
