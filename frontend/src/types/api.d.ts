@@ -4974,6 +4974,43 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/admin/diagnostics/schema-check": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Check Schema Integrity
+     * @description スキーマ整合性チェック（Admin専用）.
+     *
+     *     開発環境と本番環境のスキーマ差分を検出。
+     *     Phase1 移行後の必須カラム（supplier_item_id）の存在確認を含む。
+     *
+     *     チェック項目:
+     *     - 主要テーブルの存在確認
+     *     - 必須カラムの存在確認（supplier_item_id など）
+     *     - ビュー定義の整合性
+     *     - インデックスの存在確認
+     *
+     *     Returns:
+     *         {
+     *             "status": "ok" | "warning" | "error",
+     *             "tables": {...},
+     *             "views": {...},
+     *             "issues": [...]
+     *         }
+     */
+    get: operations["check_schema_integrity_api_admin_diagnostics_schema_check_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/admin/healthcheck/db-counts": {
     parameters: {
       query?: never;
@@ -18336,7 +18373,7 @@ export interface operations {
         /** @description 納入先ID */
         delivery_place_id: number;
         /** @description 製品ID */
-        supplier_item_id: number;
+        supplier_item_id?: number | null;
         /** @description 期間 (YYYY-MM)、省略時は全期間 */
         forecast_period?: string | null;
       };
@@ -18374,7 +18411,7 @@ export interface operations {
         /** @description 納入先ID */
         delivery_place_id: number;
         /** @description 製品ID */
-        supplier_item_id: number;
+        supplier_item_id?: number | null;
         /** @description 期間 (YYYY-MM) */
         forecast_period?: string | null;
       };
@@ -25087,6 +25124,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  check_schema_integrity_api_admin_diagnostics_schema_check_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
     };
