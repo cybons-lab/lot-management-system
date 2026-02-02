@@ -149,7 +149,7 @@ class WithdrawalService:
         if product_group_id is not None or warehouse_id is not None:
             query = query.join(Withdrawal.lot)
             if product_group_id is not None:
-                query = query.filter(LotReceipt.product_group_id == product_group_id)
+                query = query.filter(LotReceipt.supplier_item_id == product_group_id)
             if warehouse_id is not None:
                 query = query.filter(LotReceipt.warehouse_id == warehouse_id)
 
@@ -174,7 +174,7 @@ class WithdrawalService:
             query = query.join(LotReceipt, Withdrawal.lot_id == LotReceipt.id)
             query = query.join(LotMaster, LotReceipt.lot_master_id == LotMaster.id)
             # SupplierItem needed for part/name search
-            query = query.join(SupplierItem, LotReceipt.product_group_id == SupplierItem.id)
+            query = query.join(SupplierItem, LotReceipt.supplier_item_id == SupplierItem.id)
 
             query = query.filter(
                 or_(
@@ -405,7 +405,7 @@ class WithdrawalService:
             id=withdrawal.id,
             lot_id=withdrawal.lot_id or 0,
             lot_number=lot.lot_number or "" if lot else "",
-            product_group_id=lot.product_group_id if lot else 0,
+            supplier_item_id=lot.supplier_item_id or 0 if lot else 0,
             product_name=get_product_name(product),
             product_code=get_product_code(product),
             quantity=withdrawal.quantity or Decimal("0"),
@@ -596,7 +596,7 @@ class WithdrawalService:
         if warehouse_id:
             stmt = stmt.where(LotReceipt.warehouse_id == warehouse_id)
         if product_group_id:
-            stmt = stmt.where(LotReceipt.product_group_id == product_group_id)
+            stmt = stmt.where(LotReceipt.supplier_item_id == product_group_id)
         if supplier_id:
             stmt = stmt.where(LotReceipt.supplier_id == supplier_id)
 

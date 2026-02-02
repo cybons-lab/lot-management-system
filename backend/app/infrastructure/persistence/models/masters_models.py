@@ -473,7 +473,8 @@ class ProductMapping(SoftDeleteMixin, Base):
         ForeignKey("suppliers.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_group_id: Mapped[int] = mapped_column(
+    supplier_item_id: Mapped[int] = mapped_column(
+        "product_group_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
@@ -501,7 +502,7 @@ class ProductMapping(SoftDeleteMixin, Base):
         ),
         Index("idx_product_mappings_customer", "customer_id"),
         Index("idx_product_mappings_supplier", "supplier_id"),
-        Index("idx_product_mappings_product_group", "product_group_id"),
+        Index("idx_product_mappings_supplier_item", "product_group_id"),
         Index("idx_product_mappings_valid_to", "valid_to"),
     )
 

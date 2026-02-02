@@ -15,7 +15,7 @@ class ReplenishmentCalculator:
 
     def calculate(
         self,
-        product_group_id: int,
+        supplier_item_id: int,
         warehouse_id: int,
         supplier_id: int,
         as_of_date: date,
@@ -74,11 +74,11 @@ class ReplenishmentCalculator:
         arrival_date = order_date + timedelta(days=lead_time_days)
 
         # ID生成 (簡易)
-        rec_id = f"REC-{product_group_id}-{as_of_date.strftime('%Y%m%d')}"
+        rec_id = f"REC-{supplier_item_id}-{as_of_date.strftime('%Y%m%d')}"
 
         return ReplenishmentRecommendation(
             id=rec_id,
-            product_group_id=product_group_id,
+            supplier_item_id=supplier_item_id,
             warehouse_id=warehouse_id,
             supplier_id=supplier_id,
             recommended_order_qty=order_qty,

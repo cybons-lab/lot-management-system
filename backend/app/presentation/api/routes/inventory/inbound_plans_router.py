@@ -39,7 +39,7 @@ def list_inbound_plans(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=1000),
     supplier_id: int | None = None,
-    product_group_id: int | None = None,
+    supplier_item_id: int | None = None,
     status: str | None = None,
     prioritize_assigned: bool = True,
     current_user: User | None = Depends(get_current_user_optional),
@@ -51,7 +51,7 @@ def list_inbound_plans(
         skip: スキップ件数（ページネーション用）
         limit: 取得件数上限
         supplier_id: 仕入先IDでフィルタ
-        product_group_id: 商品IDでフィルタ
+        supplier_item_id: 商品IDでフィルタ
         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
         prioritize_assigned: 担当の仕入先を優先表示するかどうか（デフォルト: True）
         current_user: 現在のログインユーザー（担当仕入先取得に使用）
@@ -72,7 +72,7 @@ def list_inbound_plans(
         skip=skip,
         limit=limit,
         supplier_id=supplier_id,
-        product_group_id=product_group_id,
+        supplier_item_id=supplier_item_id,
         status=status,
         assigned_supplier_ids=assigned_supplier_ids,
     )

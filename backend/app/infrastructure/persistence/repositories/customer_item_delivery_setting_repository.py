@@ -101,7 +101,7 @@ class CustomerItemDeliverySettingRepository:
     def find_customer_part_no(
         self,
         customer_id: int,
-        product_group_id: int,
+        supplier_item_id: int,
     ) -> str | None:
         """Get customer_part_no from customer_items by customer_id and supplier_item_id.
 
@@ -111,8 +111,7 @@ class CustomerItemDeliverySettingRepository:
         """
         stmt = select(CustomerItem.customer_part_no).where(
             CustomerItem.customer_id == customer_id,
-            CustomerItem.supplier_item_id
-            == product_group_id,  # Phase1: still using param name for compatibility
+            CustomerItem.supplier_item_id == supplier_item_id,
         )
         return cast(str | None, self.db.execute(stmt).scalar_one_or_none())
 

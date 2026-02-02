@@ -29,7 +29,7 @@ router = APIRouter(prefix="/uom-conversions", tags=["masters"])
 def list_uom_conversions(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    product_group_id: int | None = Query(None),
+    supplier_item_id: int | None = Query(None),
     include_inactive: bool = Query(False),
     db: Session = Depends(get_db),
 ):
@@ -44,8 +44,8 @@ def list_uom_conversions(
         ProductUomConversion.valid_to,
     ).join(SupplierItem, ProductUomConversion.product_group_id == SupplierItem.id)
 
-    if product_group_id is not None:
-        query = query.where(ProductUomConversion.product_group_id == product_group_id)
+    if supplier_item_id is not None:
+        query = query.where(ProductUomConversion.product_group_id == supplier_item_id)
 
     if not include_inactive:
         query = query.where(ProductUomConversion.get_active_filter())
@@ -56,7 +56,7 @@ def list_uom_conversions(
     return [
         {
             "conversion_id": r.conversion_id,
-            "product_group_id": r.product_group_id,
+            "supplier_item_id": r.product_group_id,
             "external_unit": r.external_unit,
             "conversion_factor": float(r.factor),
             "remarks": None,
@@ -85,7 +85,7 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
     data = [
         {
             "conversion_id": r.conversion_id,
-            "product_group_id": r.product_group_id,
+            "supplier_item_id": r.product_group_id,
             "external_unit": r.external_unit,
             "conversion_factor": float(r.factor),
             "remarks": None,
@@ -114,12 +114,12 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
     service = UomConversionService(db)
 
     # Check if product exists
-    product = db.query(SupplierItem).filter(SupplierItem.id == data.product_group_id).first()
+    product = db.query(SupplierItem).filter(SupplierItem.id == data.supplier_item_id).first()
     if not product:
         raise HTTPException(status_code=400, detail="Product not found")
 
     # Check for duplicate
-    existing = service.get_by_key(data.product_group_id, data.external_unit)
+    existing = service.get_by_key(data.supplier_item_id, data.external_unit)
     if existing:
         raise HTTPException(
             status_code=400,
@@ -128,7 +128,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
 
     # Create new conversion
     new_conversion = ProductUomConversion(
-        product_group_id=data.product_group_id,
+        product_group_id=data.supplier_item_id,
         external_unit=data.external_unit,
         factor=data.factor,
     )
@@ -138,7 +138,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
 
     return {
         "conversion_id": new_conversion.conversion_id,
-        "product_group_id": new_conversion.product_group_id,
+        "supplier_item_id": new_conversion.product_group_id,
         "external_unit": new_conversion.external_unit,
         "conversion_factor": float(new_conversion.factor),
         "remarks": None,

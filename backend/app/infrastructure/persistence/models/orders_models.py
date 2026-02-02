@@ -268,12 +268,14 @@ class OrderLine(Base):
         nullable=True,
         comment="受注グループへの参照（得意先×製品×受注日）",
     )
-    product_group_id: Mapped[int | None] = mapped_column(
+    supplier_item_id: Mapped[int | None] = mapped_column(
+        "product_group_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=True,
-        comment="製品グループID（OCR取込時はNULL可、変換後に設定）",
+        comment="仕入先製品ID（OCR取込時はNULL可、変換後に設定）",
     )
+    product_group_id = supplier_item_id  # type: ignore # Alias for backward compatibility
 
     # OCR取込時の元データ
     customer_part_no: Mapped[str | None] = mapped_column(
@@ -339,7 +341,7 @@ class OrderLine(Base):
 
     __table_args__ = (
         Index("idx_order_lines_order", "order_id"),
-        Index("idx_order_lines_product_group", "product_group_id"),
+        Index("idx_order_lines_supplier_item", "product_group_id"),
         Index("idx_order_lines_date", "delivery_date"),
         Index("idx_order_lines_delivery_place", "delivery_place_id"),
         Index("idx_order_lines_status", "status"),
@@ -383,7 +385,8 @@ class OrderLine(Base):
     order_group: Mapped[OrderGroup | None] = relationship(
         "OrderGroup", back_populates="order_lines"
     )
-    product_group: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="order_lines")
+    supplier_item: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="order_lines")
+    product_group = supplier_item  # Alias
 
     # P3: Relationship to LotReservation for efficient loading (avoid N+1)
     lot_reservations: Mapped[list[LotReservation]] = relationship(

@@ -485,12 +485,12 @@ class RpaRepository:
 
     def find_active_lots(
         self,
-        product_group_id: int,
+        supplier_item_id: int,
         supplier_id: int | None = None,
     ) -> list[VLotDetails]:
         """有効なロット詳細を検索."""
         query = self.db.query(VLotDetails).filter(
-            VLotDetails.product_group_id == product_group_id,
+            VLotDetails.supplier_item_id == supplier_item_id,
             VLotDetails.status == "active",
             VLotDetails.available_quantity > 0,
         )

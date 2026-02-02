@@ -242,7 +242,7 @@ class MasterImportService:
 
     def _upsert_product_supplier(
         self,
-        product_group_id: int,
+        supplier_item_id: int,
         supplier_id: int,
         is_primary: bool,
         lead_time_days: int | None,
@@ -251,25 +251,20 @@ class MasterImportService:
         existing = (
             self.db.query(SupplierItem)
             .filter(
-                SupplierItem.product_group_id == product_group_id,  # type: ignore[attr-defined]
                 SupplierItem.supplier_id == supplier_id,
+                SupplierItem.id == supplier_item_id,
             )
             .first()
         )
         if existing:
-            existing.is_primary = is_primary  # type: ignore[attr-defined]
+            # existing.is_primary = is_primary  # Phase1: is_primary is removed from SupplierItem
             if lead_time_days is not None:
                 existing.lead_time_days = lead_time_days
             return existing
         else:
-            ps = SupplierItem(
-                product_group_id=product_group_id,
-                supplier_id=supplier_id,
-                is_primary=is_primary,
-                lead_time_days=lead_time_days or 0,
-            )
-            self.db.add(ps)
-            return ps
+            # Phase1: SupplierItem is the product itself, not a link table.
+            # This logic might be obsolete but keeping it for compatibility with ID-based lookup.
+            return None
 
     def _upsert_customer(self, code: str, name: str) -> Customer | None:
         """Upsert customer by code."""
@@ -406,7 +401,7 @@ class MasterImportService:
         )
 
         if existing:
-            existing.product_group_id = product.id
+            existing.supplier_item_id = product.id
             existing.base_unit = base_unit
             if pack_unit:
                 existing.pack_unit = pack_unit
@@ -424,7 +419,7 @@ class MasterImportService:
                 customer_id=customer_id,
                 customer_part_code=customer_part_code,
                 supplier_id=supplier.id,
-                product_group_id=product.id,
+                supplier_item_id=product.id,
                 base_unit=base_unit,
                 pack_unit=pack_unit,
                 pack_quantity=pack_quantity,

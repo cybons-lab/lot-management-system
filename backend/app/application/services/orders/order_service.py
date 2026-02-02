@@ -232,7 +232,7 @@ class OrderService:
             list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）
         """
         stmt = select(Order).options(  # type: ignore[assignment]
-            selectinload(Order.order_lines).selectinload(OrderLine.product_group)
+            selectinload(Order.order_lines).selectinload(OrderLine.supplier_item)
         )
 
         if customer_code:
@@ -258,7 +258,7 @@ class OrderService:
                 select(OrderLine.id)
                 .join(
                     SupplierItem,
-                    SupplierItem.id == OrderLine.product_group_id,
+                    SupplierItem.id == OrderLine.supplier_item_id,
                 )
                 .where(
                     OrderLine.order_id == Order.id,
@@ -312,7 +312,7 @@ class OrderService:
             .join(Order, OrderLine.order_id == Order.id)
             .options(
                 selectinload(OrderLine.order).selectinload(Order.customer),
-                selectinload(OrderLine.product_group),
+                selectinload(OrderLine.supplier_item),
             )
         )
 
@@ -322,7 +322,7 @@ class OrderService:
             )
 
         if product_code:
-            stmt = stmt.join(Product, OrderLine.product_group_id == Product.id).where(
+            stmt = stmt.join(Product, OrderLine.supplier_item_id == Product.id).where(
                 Product.maker_part_no == product_code
             )
 
@@ -367,7 +367,7 @@ class OrderService:
         stmt = (  # type: ignore[assignment]
             select(Order)
             .options(
-                selectinload(Order.order_lines).selectinload(OrderLine.product_group),
+                selectinload(Order.order_lines).selectinload(OrderLine.supplier_item),
                 selectinload(Order.customer),
             )
             .where(Order.id == order_id)
@@ -400,11 +400,11 @@ class OrderService:
 
         # Create order lines
         for line_data in order_data.lines:
-            # Validate product_group_id exists
-            product_stmt = select(Product).where(Product.id == line_data.product_group_id)
+            # Validate supplier_item_id exists
+            product_stmt = select(Product).where(Product.id == line_data.supplier_item_id)
             product = self.db.execute(product_stmt).scalar_one_or_none()
             if not product:
-                raise ProductNotFoundError(str(line_data.product_group_id))
+                raise ProductNotFoundError(str(line_data.supplier_item_id))
 
             # Calculate converted_quantity
             converted_qty = line_data.order_quantity
@@ -426,7 +426,7 @@ class OrderService:
             # Create order line (DDL v2.2 compliant)
             line = OrderLine(
                 order_id=order.id,
-                product_group_id=line_data.product_group_id,
+                supplier_item_id=line_data.supplier_item_id,
                 delivery_date=line_data.delivery_date,
                 order_quantity=line_data.order_quantity,
                 unit=line_data.unit,
