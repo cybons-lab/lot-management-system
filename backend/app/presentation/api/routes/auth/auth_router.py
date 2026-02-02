@@ -244,20 +244,18 @@ def guest_login(db: Session = Depends(get_db)):
         500: If no guest user exists in the system
     """
     # Find first active guest user
+    from app.infrastructure.persistence.models.auth_models import Role, UserRole
+
     guest_user = (
         db.query(User)
         .join(User.user_roles)
+        .join(UserRole.role)
         .filter(
             User.is_active.is_(True),
+            Role.role_code == "guest",
         )
         .first()
     )
-
-    # Check if user has guest role
-    if guest_user:
-        roles = [ur.role.role_code for ur in guest_user.user_roles]
-        if "guest" not in roles:
-            guest_user = None
 
     if not guest_user:
         raise HTTPException(
