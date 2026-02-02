@@ -835,12 +835,12 @@ def check_schema_integrity(
 
             # 主要テーブルのチェック
             critical_tables = {
-                "supplier_items": ["supplier_item_id", "maker_part_no", "supplier_id"],
-                "lot_master": ["lot_id", "supplier_item_id", "lot_number"],
-                "lot_receipts": ["receipt_id", "supplier_item_id", "warehouse_id"],
+                "supplier_items": ["id", "maker_part_no", "supplier_id"],
+                "lot_master": ["id", "supplier_item_id", "lot_number"],
+                "lot_receipts": ["id", "supplier_item_id", "warehouse_id"],
                 "orders": ["id", "customer_id", "order_date"],
                 "order_lines": ["id", "order_id", "supplier_item_id", "delivery_date"],
-                "allocations": ["id", "order_line_id", "lot_id"],
+                "allocation_suggestions": ["id", "order_line_id", "supplier_item_id"],
             }
 
             for table_name, required_columns in critical_tables.items():
@@ -912,8 +912,8 @@ def check_schema_integrity(
 
             # 主要ビューのチェック
             critical_views = {
-                "v_lot_receipt_stock": ["supplier_item_id", "lot_id", "warehouse_id"],
-                "v_lot_details": ["supplier_item_id", "lot_id", "maker_part_no"],
+                "v_lot_receipt_stock": ["supplier_item_id", "lot_master_id", "warehouse_id"],
+                "v_lot_details": ["supplier_item_id", "lot_master_id", "maker_part_no"],
             }
 
             for view_name, required_columns in critical_views.items():
