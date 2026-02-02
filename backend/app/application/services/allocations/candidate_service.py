@@ -56,7 +56,7 @@ class AllocationCandidateService:
     Usage:
         service = AllocationCandidateService(db)
         candidates = service.get_candidates(
-            product_group_id=123,
+            supplier_item_id=123,
             policy=AllocationPolicy.FEFO,
             lock_mode=LockMode.NONE,
         )
@@ -69,7 +69,7 @@ class AllocationCandidateService:
 
     def get_candidates(
         self,
-        product_group_id: int,
+        supplier_item_id: int,
         *,
         policy: AllocationPolicy,
         lock_mode: LockMode = LockMode.NONE,
@@ -110,7 +110,7 @@ class AllocationCandidateService:
         特殊なケースでは明示的にフラグを変更することで柔軟に対応。
 
         Args:
-            product_group_id: Product ID to filter by
+            supplier_item_id: Product ID to filter by
             policy: Sorting policy (FEFO or FIFO) - REQUIRED
             lock_mode: Database locking mode (default: NONE)
             warehouse_id: Optional warehouse filter
@@ -127,7 +127,7 @@ class AllocationCandidateService:
         logger.debug(
             "Finding allocation candidates",
             extra={
-                "product_group_id": product_group_id,
+                "supplier_item_id": supplier_item_id,
                 "policy": policy.value if hasattr(policy, "value") else str(policy),
                 "lock_mode": lock_mode.value if hasattr(lock_mode, "value") else str(lock_mode),
                 "warehouse_id": warehouse_id,
@@ -141,7 +141,7 @@ class AllocationCandidateService:
         )
 
         candidates = self._repo.find_allocation_candidates(
-            product_group_id=product_group_id,
+            supplier_item_id=supplier_item_id,
             policy=policy,
             lock_mode=lock_mode,
             warehouse_id=warehouse_id,
@@ -156,7 +156,7 @@ class AllocationCandidateService:
         logger.info(
             "Allocation candidates found",
             extra={
-                "product_group_id": product_group_id,
+                "supplier_item_id": supplier_item_id,
                 "policy": policy.value if hasattr(policy, "value") else str(policy),
                 "candidate_count": len(candidates),
                 "total_available_qty": sum(c.available_qty for c in candidates),
@@ -168,7 +168,7 @@ class AllocationCandidateService:
             logger.warning(
                 "No allocation candidates found - check filters",
                 extra={
-                    "product_group_id": product_group_id,
+                    "supplier_item_id": supplier_item_id,
                     "policy": policy.value if hasattr(policy, "value") else str(policy),
                     "warehouse_id": warehouse_id,
                     "exclude_expired": exclude_expired,
@@ -181,7 +181,7 @@ class AllocationCandidateService:
 
     def get_candidates_for_products(
         self,
-        product_group_ids: list[int],
+        supplier_item_ids: list[int],
         *,
         policy: AllocationPolicy,
         lock_mode: LockMode = LockMode.NONE,
@@ -197,7 +197,7 @@ class AllocationCandidateService:
         Convenience method for batch operations.
 
         Args:
-            product_group_ids: List of product IDs to fetch candidates for
+            supplier_item_ids: List of product IDs to fetch candidates for
             policy: Sorting policy (FEFO or FIFO) - REQUIRED
             lock_mode: Database locking mode (default: NONE)
             exclude_expired: Exclude lots past expiry date (default: True)
@@ -208,12 +208,12 @@ class AllocationCandidateService:
             min_available_qty: Minimum available quantity threshold (default: 0.0)
 
         Returns:
-            Dict mapping product_group_id to list of LotCandidate
+            Dict mapping supplier_item_id to list of LotCandidate
         """
         result: dict[int, list[LotCandidate]] = {}
-        for product_group_id in product_group_ids:
+        for supplier_item_id in supplier_item_ids:
             candidates = self.get_candidates(
-                product_group_id=product_group_id,
+                supplier_item_id=supplier_item_id,
                 policy=policy,
                 lock_mode=lock_mode,
                 exclude_expired=exclude_expired,
@@ -224,5 +224,5 @@ class AllocationCandidateService:
                 min_available_qty=min_available_qty,
             )
             if candidates:
-                result[product_group_id] = candidates
+                result[supplier_item_id] = candidates
         return result

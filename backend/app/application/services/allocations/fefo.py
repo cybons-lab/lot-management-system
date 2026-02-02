@@ -299,7 +299,7 @@ def calculate_line_allocations(
         # Prepare candidates with correct availability context
         service = AllocationCandidateService(db)
         candidates = service.get_candidates(
-            product_group_id=product_group_id,
+            supplier_item_id=product_group_id,
             policy=AllocationPolicy.FEFO,
             warehouse_id=warehouse_id,
             min_available_qty=0.001,  # Filter out 0 qty candidates

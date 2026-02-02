@@ -491,7 +491,7 @@ async def bulk_auto_allocate(
     try:
         result = actions.auto_reserve_bulk(
             db,
-            product_group_id=request.product_group_id,
+            supplier_item_id=request.product_group_id,
             customer_id=request.customer_id,
             delivery_place_id=request.delivery_place_id,
             order_type=request.order_type,

@@ -330,7 +330,7 @@ class LotService:
         # Delegate to SSOT
         candidate_service = AllocationCandidateService(self.db)
         return candidate_service.get_candidates(
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             policy=AllocationPolicy.FEFO,
             lock_mode=LockMode.NONE,
             warehouse_id=warehouse_id,

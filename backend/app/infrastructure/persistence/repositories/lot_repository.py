@@ -272,7 +272,7 @@ class LotRepository:
 
     def find_allocation_candidates(
         self,
-        product_group_id: int,
+        supplier_item_id: int,
         *,
         policy: AllocationPolicy,
         lock_mode: LockMode,
@@ -290,7 +290,7 @@ class LotRepository:
         All allocation-related candidate fetching should go through this method.
 
         Args:
-            product_group_id: Product ID to filter by
+            supplier_item_id: Product ID to filter by
             policy: Sorting policy (FEFO or FIFO)
             lock_mode: Database locking mode
             warehouse_id: Optional warehouse filter
@@ -307,7 +307,7 @@ class LotRepository:
         logger.debug(
             "Finding allocation candidates",
             extra={
-                "product_group_id": product_group_id,
+                "supplier_item_id": supplier_item_id,
                 "policy": str(policy),
                 "lock_mode": str(lock_mode),
                 "warehouse_id": warehouse_id,
@@ -325,7 +325,7 @@ class LotRepository:
         query = (
             self.db.query(LotReceipt)
             .filter(
-                LotReceipt.product_group_id == product_group_id,
+                LotReceipt.product_group_id == supplier_item_id,
                 LotReceipt.status == "active",
             )
             .options(joinedload(LotReceipt.product_group), joinedload(LotReceipt.warehouse))
@@ -455,7 +455,7 @@ class LotRepository:
         logger.debug(
             "Allocation candidates found",
             extra={
-                "product_group_id": product_group_id,
+                "supplier_item_id": supplier_item_id,
                 "total_lots_queried": len(lots),
                 "candidates_returned": len(candidates),
             },
