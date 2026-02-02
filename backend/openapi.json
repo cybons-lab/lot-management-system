@@ -24938,40 +24938,10 @@
             "title": "Customer Part No",
             "description": "得意先品番（先方品番）"
           },
-          "product_group_id": {
-            "type": "integer",
-            "title": "Product Group Id",
-            "description": "製品ID"
-          },
-          "supplier_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier Id",
-            "description": "仕入先ID"
-          },
           "supplier_item_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Supplier Item Id",
-            "description": "仕入先品目ID"
-          },
-          "is_primary": {
-            "type": "boolean",
-            "title": "Is Primary",
-            "description": "主要得意先フラグ",
-            "default": false
+            "description": "仕入先品目ID (Phase1: required)"
           },
           "base_unit": {
             "type": "string",
@@ -25021,7 +24991,7 @@
         "required": [
           "customer_id",
           "customer_part_no",
-          "product_group_id",
+          "supplier_item_id",
           "base_unit"
         ],
         "title": "CustomerItemCreate",
@@ -25465,39 +25435,10 @@
             "title": "Customer Part No",
             "description": "得意先品番（先方品番）"
           },
-          "product_group_id": {
-            "type": "integer",
-            "title": "Product Group Id",
-            "description": "製品ID"
-          },
-          "supplier_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier Id",
-            "description": "仕入先ID"
-          },
           "supplier_item_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Supplier Item Id",
-            "description": "仕入先品目ID"
-          },
-          "is_primary": {
-            "type": "boolean",
-            "title": "Is Primary",
-            "description": "主要得意先フラグ"
+            "description": "仕入先品目ID (Phase1: required)"
           },
           "base_unit": {
             "type": "string",
@@ -25550,15 +25491,15 @@
             "title": "Customer Name",
             "description": "得意先名"
           },
-          "product_code": {
+          "maker_part_no": {
             "type": "string",
-            "title": "Product Code",
-            "description": "製品コード(Maker Part Code)"
+            "title": "Maker Part No",
+            "description": "メーカー品番 (from supplier_items)"
           },
-          "product_name": {
+          "display_name": {
             "type": "string",
-            "title": "Product Name",
-            "description": "製品名"
+            "title": "Display Name",
+            "description": "表示名 (from supplier_items)"
           },
           "supplier_code": {
             "anyOf": [
@@ -25605,19 +25546,18 @@
           "id",
           "customer_id",
           "customer_part_no",
-          "product_group_id",
-          "is_primary",
+          "supplier_item_id",
           "base_unit",
           "customer_code",
           "customer_name",
-          "product_code",
-          "product_name",
+          "maker_part_no",
+          "display_name",
           "created_at",
           "updated_at",
           "valid_to"
         ],
         "title": "CustomerItemResponse",
-        "description": "Schema for customer item response with enriched data."
+        "description": "Schema for customer item response with enriched data.\n\nPhase1: supplier_item_id is required, product_group_id removed.\nEnriched fields (maker_part_no, display_name) come from supplier_items."
       },
       "CustomerItemUpdate": {
         "properties": {
@@ -25634,30 +25574,6 @@
             "title": "Customer Part No",
             "description": "得意先品番"
           },
-          "product_group_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Group Id",
-            "description": "製品ID"
-          },
-          "supplier_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier Id",
-            "description": "仕入先ID"
-          },
           "supplier_item_id": {
             "anyOf": [
               {
@@ -25669,18 +25585,6 @@
             ],
             "title": "Supplier Item Id",
             "description": "仕入先品目ID"
-          },
-          "is_primary": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Primary",
-            "description": "主要得意先フラグ"
           },
           "base_unit": {
             "anyOf": [

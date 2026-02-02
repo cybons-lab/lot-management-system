@@ -9734,26 +9734,10 @@ export interface components {
        */
       customer_part_no: string;
       /**
-       * Product Group Id
-       * @description 製品ID
-       */
-      product_group_id: number;
-      /**
-       * Supplier Id
-       * @description 仕入先ID
-       */
-      supplier_id?: number | null;
-      /**
        * Supplier Item Id
-       * @description 仕入先品目ID
+       * @description 仕入先品目ID (Phase1: required)
        */
-      supplier_item_id?: number | null;
-      /**
-       * Is Primary
-       * @description 主要得意先フラグ
-       * @default false
-       */
-      is_primary: boolean;
+      supplier_item_id: number;
       /**
        * Base Unit
        * @description 基本単位
@@ -9959,6 +9943,9 @@ export interface components {
     /**
      * CustomerItemResponse
      * @description Schema for customer item response with enriched data.
+     *
+     *     Phase1: supplier_item_id is required, product_group_id removed.
+     *     Enriched fields (maker_part_no, display_name) come from supplier_items.
      */
     CustomerItemResponse: {
       /**
@@ -9977,25 +9964,10 @@ export interface components {
        */
       customer_part_no: string;
       /**
-       * Product Group Id
-       * @description 製品ID
-       */
-      product_group_id: number;
-      /**
-       * Supplier Id
-       * @description 仕入先ID
-       */
-      supplier_id?: number | null;
-      /**
        * Supplier Item Id
-       * @description 仕入先品目ID
+       * @description 仕入先品目ID (Phase1: required)
        */
-      supplier_item_id?: number | null;
-      /**
-       * Is Primary
-       * @description 主要得意先フラグ
-       */
-      is_primary: boolean;
+      supplier_item_id: number;
       /**
        * Base Unit
        * @description 基本単位
@@ -10027,15 +9999,15 @@ export interface components {
        */
       customer_name: string;
       /**
-       * Product Code
-       * @description 製品コード(Maker Part Code)
+       * Maker Part No
+       * @description メーカー品番 (from supplier_items)
        */
-      product_code: string;
+      maker_part_no: string;
       /**
-       * Product Name
-       * @description 製品名
+       * Display Name
+       * @description 表示名 (from supplier_items)
        */
-      product_name: string;
+      display_name: string;
       /**
        * Supplier Code
        * @description 仕入先コード
@@ -10073,25 +10045,10 @@ export interface components {
        */
       customer_part_no?: string | null;
       /**
-       * Product Group Id
-       * @description 製品ID
-       */
-      product_group_id?: number | null;
-      /**
-       * Supplier Id
-       * @description 仕入先ID
-       */
-      supplier_id?: number | null;
-      /**
        * Supplier Item Id
        * @description 仕入先品目ID
        */
       supplier_item_id?: number | null;
-      /**
-       * Is Primary
-       * @description 主要得意先フラグ
-       */
-      is_primary?: boolean | null;
       /**
        * Base Unit
        * @description 基本単位
