@@ -8,14 +8,17 @@ Phase1実装: SKU駆動による在庫管理修正
 
 このマイグレーションは以下を実施します:
 1. supplier_items.maker_part_no の NULL/空文字チェック → NOT NULL 制約追加
-2. customer_items.supplier_item_id の NULL チェック → NOT NULL 制約追加
+2. customer_items.supplier_item_id の自動マッピング（product_group_id経由）
+3. customer_items.supplier_item_id の NOT NULL 制約追加
 
-前提条件（100%マッピング完了が必須）:
+自動マッピング機能:
+- supplier_item_id が NULL の customer_items を自動的にマッピング
+- product_group_id が一致する supplier_items を選択（is_primary 優先）
+- マッピング不可能なレコードがある場合はエラーで停止
+
+前提条件:
 - 全ての supplier_items に maker_part_no が設定されていること
-- 全ての customer_items に supplier_item_id が設定されていること
-
-実行前に必ずデータ監査を実施してください:
-  docker compose exec backend python -m app.scripts.phase1_audit
+- マッピング不可能な customer_items は事前に削除または修正しておくこと
 """
 
 from datetime import date
@@ -98,76 +101,84 @@ def upgrade():
     print("✅ supplier_items.maker_part_no is now NOT NULL\n")
 
     # ========================================================================
-    # Step 3: Check customer_items.supplier_item_id
+    # Step 3: Auto-map customer_items.supplier_item_id
     # ========================================================================
-    print("Step 3/4: Checking customer_items.supplier_item_id for NULL values...")
+    print("Step 3/4: Auto-mapping customer_items.supplier_item_id...")
 
+    # Check for unmapped records
     result = conn.execute(
         sa.text("""
-            SELECT
-                ci.id,
-                ci.customer_id,
-                ci.customer_part_no,
-                c.customer_name,
-                ci.supplier_item_id,
-                ci.valid_to
-            FROM customer_items ci
-            LEFT JOIN customers c ON ci.customer_id = c.id
-            WHERE ci.supplier_item_id IS NULL
+            SELECT COUNT(*)
+            FROM customer_items
+            WHERE supplier_item_id IS NULL
         """)
     )
-    rows = result.fetchall()
+    unmapped_count = result.scalar()
 
-    if rows:
-        # Separate active and inactive records
-        active_rows = []
-        inactive_rows = []
-        today = date.today()
-        for row in rows:
-            # row.valid_to is a Python date object, not a SQL expression
-            if row.valid_to is None or row.valid_to >= today:
-                active_rows.append(row)
-            else:
-                inactive_rows.append(row)
+    if unmapped_count > 0:
+        print(f"Found {unmapped_count} unmapped customer_items. Auto-mapping...")
 
-        error_details = []
+        # Auto-map based on product_group_id (prefer is_primary=true)
+        result = conn.execute(
+            sa.text("""
+                UPDATE customer_items ci
+                SET supplier_item_id = (
+                    SELECT si.id
+                    FROM supplier_items si
+                    WHERE si.product_group_id = ci.product_group_id
+                    ORDER BY si.is_primary DESC, si.id ASC
+                    LIMIT 1
+                )
+                WHERE ci.supplier_item_id IS NULL
+                  AND ci.product_group_id IS NOT NULL
+            """)
+        )
+        mapped_count = result.rowcount
+        print(f"✅ Auto-mapped {mapped_count} customer_items via product_group_id")
 
-        if active_rows:
-            error_details.append(f"\n⚠️  Active records without mapping: {len(active_rows)}")
-            for row in active_rows[:10]:
+        # Check if there are still unmapped records (no product_group_id match)
+        result = conn.execute(
+            sa.text("""
+                SELECT
+                    ci.id,
+                    ci.customer_id,
+                    ci.customer_part_no,
+                    c.customer_name,
+                    ci.product_group_id
+                FROM customer_items ci
+                LEFT JOIN customers c ON ci.customer_id = c.id
+                WHERE ci.supplier_item_id IS NULL
+            """)
+        )
+        still_unmapped = result.fetchall()
+
+        if still_unmapped:
+            error_details = [
+                f"\n⚠️  Could not auto-map {len(still_unmapped)} customer_items (no matching supplier_items):"
+            ]
+            for row in still_unmapped[:10]:
                 error_details.append(
                     f"  - ID: {row.id}, customer: {row.customer_name}, "
-                    f"customer_part_no: '{row.customer_part_no}'"
+                    f"customer_part_no: '{row.customer_part_no}', product_group_id: {row.product_group_id}"
                 )
-            if len(active_rows) > 10:
-                error_details.append(f"  ... and {len(active_rows) - 10} more active rows")
+            if len(still_unmapped) > 10:
+                error_details.append(f"  ... and {len(still_unmapped) - 10} more rows")
 
-        if inactive_rows:
-            error_details.append(f"\n⚠️  Inactive records without mapping: {len(inactive_rows)}")
-            error_details.append("  (These should also be fixed or permanently deleted)")
-
-        error_msg = (
-            f"\n{'=' * 80}\n"
-            f"❌ Phase1 Migration Error: Cannot proceed\n"
-            f"{'=' * 80}\n\n"
-            f"Found {len(rows)} customer_items without supplier_item_id mapping.\n"
-            + "\n".join(error_details)
-            + "\n\n"
-            f"Action Required:\n"
-            f"1. Complete all customer_items → supplier_items mappings\n"
-            f"2. Use the 得意先品番マスタ UI to set supplier_item_id for all active records\n"
-            f"3. For inactive records, either:\n"
-            f"   a) Set proper mapping, or\n"
-            f"   b) Permanently delete them (admin only)\n\n"
-            f"4. Use this SQL to find all unmapped records:\n"
-            f"   SELECT id, customer_id, customer_part_no, valid_to\n"
-            f"   FROM customer_items WHERE supplier_item_id IS NULL;\n\n"
-            f"5. Re-run migration after 100% mapping completion\n"
-            f"{'=' * 80}\n"
-        )
-        raise Exception(error_msg)
-
-    print("✅ All customer_items have supplier_item_id mapping\n")
+            error_msg = (
+                f"\n{'=' * 80}\n"
+                f"❌ Phase1 Migration Error: Cannot proceed\n"
+                f"{'=' * 80}\n\n"
+                f"Auto-mapped {mapped_count} records, but {len(still_unmapped)} records "
+                f"could not be mapped automatically.\n" + "\n".join(error_details) + "\n\n"
+                f"Action Required:\n"
+                f"1. Manually map these records via 得意先品番マスタ UI, or\n"
+                f"2. Delete these records if they are obsolete\n\n"
+                f"3. Re-run migration after fixing\n"
+                f"{'=' * 80}\n"
+            )
+            raise Exception(error_msg)
+    else:
+        print("✅ All customer_items already have supplier_item_id mapping\n")
 
     # ========================================================================
     # Step 4: Add NOT NULL constraint to supplier_item_id
