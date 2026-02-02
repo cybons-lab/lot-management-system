@@ -98,7 +98,7 @@ export function PlanningAllocationPanel({
       getPlanningAllocationSummary({
         customer_id: customerId,
         delivery_place_id: deliveryPlaceId,
-        supplier_item_id: productId,
+        product_group_id: productId,
       }),
     staleTime: 30000, // 30 seconds
   });

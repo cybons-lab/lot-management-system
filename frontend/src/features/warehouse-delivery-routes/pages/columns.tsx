@@ -45,7 +45,7 @@ export function createColumns(
       id: "product",
       header: "品番",
       cell: (row) =>
-        row.supplier_item_id ? (
+        row.product_group_id ? (
           <div className="flex flex-col">
             <span className="font-mono text-sm text-gray-900">{row.maker_part_code}</span>
             <span

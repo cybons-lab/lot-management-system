@@ -103,6 +103,7 @@ class OrderLineBase(BaseSchema):
 
     supplier_item_id: int | None = Field(
         None,
+        serialization_alias="product_group_id",
         gt=0,
         description="製品ID（OCR取込時はNULL可）",
         validation_alias="product_group_id",

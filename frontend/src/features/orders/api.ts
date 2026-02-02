@@ -82,7 +82,7 @@ export const getOrdersWithAllocations = (): Promise<unknown> =>
 export const getWarehouseAllocList = (): Promise<unknown> => http.get("warehouse-alloc/warehouses");
 
 /**
- * 引当候補ロット取得（supplier_item_id基準）
+ * 引当候補ロット取得（product_group_id基準）
  * @endpoint GET /allocation-candidates (was /allocations/candidate-lots - deprecated 2026-02-15)
  */
 export const getCandidateLots = (params: { order_line_id: number; limit?: number }) => {

@@ -98,7 +98,7 @@ export interface OrderLineUI extends Record<string, unknown> {
   order_id: number;
   customer_order_no?: string | null;
   order_code: string;
-  supplier_item_id: number;
+  product_group_id: number;
   product_name: string; // Join field (not in DDL)
   order_quantity: string; // DDL v2.2: DECIMAL(15,3) as string
   unit: string;
@@ -149,7 +149,7 @@ export interface LotUI extends Record<string, unknown> {
   lot_number: string | null;
   maker_part_no: string | null; // Phase 3
   customer_part_no: string | null; // Phase 3
-  supplier_item_id: number; // DDL v2.2
+  product_group_id: number; // DDL v2.2
   warehouse_id: number; // DDL v2.2
   supplier_id: number | null; // DDL v2.2
   received_date: string; // DDL v2.2
@@ -263,14 +263,14 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
  * LotResponse → LotUI
  */
 export function normalizeLot(
-  lot: Partial<LotResponse> & { lot_id: number; supplier_item_id: number; warehouse_id: number },
+  lot: Partial<LotResponse> & { lot_id: number; product_group_id: number; warehouse_id: number },
 ): LotUI {
   return {
     lot_id: lot.lot_id,
     lot_number: S(lot.lot_number),
     maker_part_no: lot.maker_part_no ?? null,
     customer_part_no: lot.customer_part_no ?? null,
-    supplier_item_id: lot.supplier_item_id,
+    product_group_id: lot.product_group_id,
     warehouse_id: lot.warehouse_id,
     supplier_id: lot.supplier_id ?? null,
     received_date: S(lot.received_date),
@@ -360,7 +360,7 @@ export function normalizeOrderLine(line: OrderLine): OrderLineUI {
     order_id: N(line.order_id),
     customer_order_no: (line as Record<string, unknown>).customer_order_no as string | null,
     order_code: formatOrderCode(line),
-    supplier_item_id: N(line.supplier_item_id),
+    product_group_id: N(line.product_group_id),
     product_name: S(line.product_name),
     order_quantity: String(line.order_quantity ?? "0"),
     unit: S(line.unit, "EA"),

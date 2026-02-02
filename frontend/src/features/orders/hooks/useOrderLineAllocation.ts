@@ -81,7 +81,7 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
       try {
         const res = await allocationsApi.getAllocationCandidates({
           order_line_id: orderLine.id,
-          supplier_item_id: Number(orderLine.supplier_item_id || 0),
+          product_group_id: Number(orderLine.product_group_id || 0),
         });
 
         // Check if orderLine hasn't changed during the request

@@ -18,13 +18,13 @@ const BASE_PATH = "masters/warehouse-delivery-routes";
 export async function lookupTransportLeadTime(params: {
   warehouse_id: number;
   delivery_place_id: number;
-  supplier_item_id?: number;
+  product_group_id?: number;
 }): Promise<TransportLeadTimeResponse> {
   const searchParams = new URLSearchParams();
   searchParams.set("warehouse_id", String(params.warehouse_id));
   searchParams.set("delivery_place_id", String(params.delivery_place_id));
-  if (params.supplier_item_id) {
-    searchParams.set("supplier_item_id", String(params.supplier_item_id));
+  if (params.product_group_id) {
+    searchParams.set("product_group_id", String(params.product_group_id));
   }
   return http.get<TransportLeadTimeResponse>(`${BASE_PATH}/lookup?${searchParams.toString()}`);
 }

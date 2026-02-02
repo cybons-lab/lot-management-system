@@ -22725,9 +22725,9 @@
             "title": "Delivery Place Id",
             "description": "納入先ID"
           },
-          "supplier_item_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Supplier Item Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "lot_id": {
@@ -22842,7 +22842,7 @@
           "forecast_period",
           "customer_id",
           "delivery_place_id",
-          "supplier_item_id",
+          "product_group_id",
           "lot_id",
           "quantity",
           "allocation_type",
@@ -32817,7 +32817,7 @@
       },
       "OrderLineResponse": {
         "properties": {
-          "supplier_item_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer",
@@ -32827,7 +32827,7 @@
                 "type": "null"
               }
             ],
-            "title": "Supplier Item Id",
+            "title": "Product Group Id",
             "description": "製品ID（OCR取込時はNULL可）"
           },
           "delivery_date": {
@@ -34096,10 +34096,10 @@
             "title": "Supplier Id",
             "description": "仕入先ID"
           },
-          "supplier_item_id": {
+          "product_group_id": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
-            "title": "Supplier Item Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "base_unit": {
@@ -34178,7 +34178,7 @@
           "customer_id",
           "customer_part_code",
           "supplier_id",
-          "supplier_item_id",
+          "product_group_id",
           "base_unit",
           "id",
           "created_at",
@@ -41278,9 +41278,9 @@
       },
       "UomConversionResponse": {
         "properties": {
-          "supplier_item_id": {
+          "product_group_id": {
             "type": "integer",
-            "title": "Supplier Item Id",
+            "title": "Product Group Id",
             "description": "製品ID"
           },
           "external_unit": {
@@ -41317,7 +41317,7 @@
         },
         "type": "object",
         "required": [
-          "supplier_item_id",
+          "product_group_id",
           "external_unit",
           "factor",
           "conversion_id",
@@ -41943,7 +41943,7 @@
             "title": "Delivery Place Id",
             "description": "納入先ID"
           },
-          "supplier_item_id": {
+          "product_group_id": {
             "anyOf": [
               {
                 "type": "integer",
@@ -41953,7 +41953,7 @@
                 "type": "null"
               }
             ],
-            "title": "Supplier Item Id",
+            "title": "Product Group Id",
             "description": "品番ID（NULLの場合は経路デフォルト）"
           },
           "transport_lead_time_days": {

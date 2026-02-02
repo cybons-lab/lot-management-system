@@ -8601,10 +8601,10 @@ export interface components {
        */
       delivery_place_id: number;
       /**
-       * Supplier Item Id
+       * Product Group Id
        * @description 製品ID
        */
-      supplier_item_id: number;
+      product_group_id: number;
       /**
        * Lot Id
        * @description ロットID
@@ -12969,10 +12969,10 @@ export interface components {
      */
     OrderLineResponse: {
       /**
-       * Supplier Item Id
+       * Product Group Id
        * @description 製品ID（OCR取込時はNULL可）
        */
-      supplier_item_id?: number | null;
+      product_group_id?: number | null;
       /**
        * Delivery Date
        * Format: date
@@ -13566,10 +13566,10 @@ export interface components {
        */
       supplier_id: number;
       /**
-       * Supplier Item Id
+       * Product Group Id
        * @description 製品ID
        */
-      supplier_item_id: number;
+      product_group_id: number;
       /**
        * Base Unit
        * @description 基本単位
@@ -16735,10 +16735,10 @@ export interface components {
      */
     UomConversionResponse: {
       /**
-       * Supplier Item Id
+       * Product Group Id
        * @description 製品ID
        */
-      supplier_item_id: number;
+      product_group_id: number;
       /**
        * External Unit
        * @description 外部単位
@@ -17100,10 +17100,10 @@ export interface components {
        */
       delivery_place_id: number;
       /**
-       * Supplier Item Id
+       * Product Group Id
        * @description 品番ID（NULLの場合は経路デフォルト）
        */
-      supplier_item_id?: number | null;
+      product_group_id?: number | null;
       /**
        * Transport Lead Time Days
        * @description 輸送リードタイム（日）

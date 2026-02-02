@@ -42,10 +42,10 @@ const getWarehouseKey = (source: WarehouseSource) =>
 
 export function useWarehouseData(productId: number) {
   const { data: inboundPlans, isLoading: isLoadingInbound } = useInboundPlans({
-    supplier_item_id: productId,
+    product_group_id: productId,
   });
   const { data: lots = [], isLoading: isLoadingLots } = useLotsQuery({
-    supplier_item_id: productId,
+    product_group_id: productId,
   });
 
   const isLoading = isLoadingInbound || isLoadingLots;
