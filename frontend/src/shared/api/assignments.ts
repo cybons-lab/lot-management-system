@@ -35,7 +35,7 @@ export async function getSupplierUsers(
 export async function createAssignment(
   data: UserSupplierAssignmentCreate,
 ): Promise<UserSupplierAssignmentResponse> {
-  return fetchApi.post<UserSupplierAssignmentResponse>("assignments/", data);
+  return fetchApi.post<UserSupplierAssignmentResponse>("assignments", data);
 }
 
 /**
