@@ -81,7 +81,7 @@ export const useCreateForecast = () => {
     onSuccess: (result, data) => {
       logInfo("Forecasts:Create", "フォーキャストを作成しました", {
         forecastId: result.id,
-        productGroupId: data.product_group_id,
+        productGroupId: data.supplier_item_id,
         customerId: data.customer_id,
       });
       queryClient.invalidateQueries({ queryKey: forecastKeys.list() });

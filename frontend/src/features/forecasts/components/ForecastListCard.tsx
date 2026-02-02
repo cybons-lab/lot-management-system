@@ -16,7 +16,7 @@ interface ForecastListCardProps {
 
 export const ForecastListCard = forwardRef<HTMLDivElement, ForecastListCardProps>(
   ({ group, onDelete, isDeleting, isOpen, isActive, isFocused, onToggle }, ref) => {
-    const groupKey = `${group.group_key.customer_id}-${group.group_key.delivery_place_id}-${group.group_key.product_group_id}`;
+    const groupKey = `${group.group_key.customer_id}-${group.group_key.delivery_place_id}-${group.group_key.supplier_item_id}`;
 
     return (
       <div ref={ref} data-group-key={groupKey} className="scroll-mt-24">

@@ -20,7 +20,7 @@ export function ReplenishmentTab({ productId, warehouseId }: ReplenishmentTabPro
     error,
   } = useReplenishmentRecommendation({
     warehouse_id: warehouseId,
-    product_group_ids: [productId],
+    supplier_item_ids: [productId],
   });
 
   if (isLoading) {

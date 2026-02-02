@@ -9,7 +9,7 @@ export function useReplenishmentRecommendation(params: RunReplenishmentParams) {
   return useQuery({
     queryKey: ["replenishment", "recommendation", params],
     queryFn: () => runReplenishment(params),
-    enabled: !!params.warehouse_id && (!!params.product_group_ids?.length || false),
+    enabled: !!params.warehouse_id && (!!params.supplier_item_ids?.length || false),
     staleTime: 0, // Always fresh for now as we re-calculate
   });
 }

@@ -22,7 +22,7 @@ import { logError, logInfo } from "@/services/error-logger";
 interface ForecastGroupKey {
   customer_id: number;
   delivery_place_id: number;
-  product_group_id: number;
+  supplier_item_id: number;
 }
 
 /**
@@ -48,7 +48,7 @@ function useInvalidateForecastQueries() {
           "planning-allocation-summary",
           groupKey.customer_id,
           groupKey.delivery_place_id,
-          groupKey.product_group_id,
+          groupKey.supplier_item_id,
         ],
       }),
     ]);
@@ -65,7 +65,7 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
   const autoAllocate = useMutation({
     mutationFn: () =>
       bulkAutoAllocate({
-        product_group_id: groupKey.product_group_id,
+        supplier_item_id: groupKey.supplier_item_id,
         customer_id: groupKey.customer_id,
         delivery_place_id: groupKey.delivery_place_id,
       }),
@@ -99,7 +99,7 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
       regenerateGroupSuggestions({
         customer_id: groupKey.customer_id,
         delivery_place_id: groupKey.delivery_place_id,
-        product_group_id: groupKey.product_group_id,
+        supplier_item_id: groupKey.supplier_item_id,
       }),
     onSuccess: (result) => {
       const allocated = result.stats.total_allocated_quantity;
@@ -132,7 +132,7 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
       clearGroupSuggestions({
         customer_id: groupKey.customer_id,
         delivery_place_id: groupKey.delivery_place_id,
-        product_group_id: groupKey.product_group_id,
+        supplier_item_id: groupKey.supplier_item_id,
       }),
     onSuccess: (result) => {
       logInfo("Forecasts:ClearSuggestions", "計画引当をクリアしました", { ...groupKey });
@@ -188,7 +188,7 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
       createForecast({
         customer_id: groupKey.customer_id,
         delivery_place_id: groupKey.delivery_place_id,
-        product_group_id: groupKey.product_group_id,
+        supplier_item_id: groupKey.supplier_item_id,
         forecast_date: data.dateKey,
         forecast_quantity: data.quantity,
         unit: unit,

@@ -13,7 +13,7 @@ export interface ConfirmedOrderLine {
   order_code: string;
   customer_id: number;
   customer_name: string;
-  product_group_id: number;
+  supplier_item_id: number;
   product_code: string;
   product_name: string;
   order_quantity: number;

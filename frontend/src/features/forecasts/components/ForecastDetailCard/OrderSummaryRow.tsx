@@ -88,7 +88,7 @@ function useOrderSummary(
   const targetLines =
     order.lines?.filter(
       (line) =>
-        line.product_group_id === targetProductGroupId &&
+        line.supplier_item_id === targetProductGroupId &&
         line.delivery_place_id === targetDeliveryPlaceId,
     ) || [];
 

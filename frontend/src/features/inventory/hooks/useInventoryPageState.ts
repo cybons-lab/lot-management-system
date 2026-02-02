@@ -47,7 +47,7 @@ export function useInventoryPageState() {
     setState((prev) => ({
       ...prev,
       filters: {
-        product_group_id: "",
+        supplier_item_id: "",
         warehouse_id: "",
         supplier_id: "",
         tab: "all",

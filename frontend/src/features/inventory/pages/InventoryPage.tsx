@@ -91,14 +91,14 @@ export function InventoryPage() {
 
   // Mutual filtering with auto-selection
   const { productOptions, supplierOptions, warehouseOptions } = useFilterOptions({
-    product_group_id: filters.product_group_id || undefined,
+    supplier_item_id: filters.supplier_item_id || undefined,
     supplier_id: filters.supplier_id || undefined,
     warehouse_id: filters.warehouse_id || undefined,
     tab: filters.tab,
     assigned_staff_only: filters.assigned_staff_only,
     mode: filters.candidate_mode,
     onAutoSelectSupplier: (id) => updateFilter("supplier_id", id),
-    onAutoSelectProduct: (id) => updateFilter("product_group_id", id),
+    onAutoSelectProduct: (id) => updateFilter("supplier_item_id", id),
   });
 
   useEffect(() => {
@@ -128,11 +128,11 @@ export function InventoryPage() {
 
   const filteredProductData = useMemo(() => {
     let data = productQuery.data || [];
-    if (filters.product_group_id) {
-      data = data.filter((row) => row.product_group_id === Number(filters.product_group_id));
+    if (filters.supplier_item_id) {
+      data = data.filter((row) => row.supplier_item_id === Number(filters.supplier_item_id));
     }
     return data;
-  }, [productQuery.data, filters.product_group_id]);
+  }, [productQuery.data, filters.supplier_item_id]);
 
   const showFilters = overviewMode !== "lots";
   const showTabFilters = overviewMode === "items";
@@ -382,8 +382,8 @@ export function InventoryPage() {
                     <Label className="mb-2 block text-sm font-medium text-slate-700">製品</Label>
                     <SearchableSelect
                       options={productOptions}
-                      value={filters.product_group_id}
-                      onChange={(value) => handleFilterChange("product_group_id", value)}
+                      value={filters.supplier_item_id}
+                      onChange={(value) => handleFilterChange("supplier_item_id", value)}
                       placeholder="製品を検索..."
                     />
                   </div>
@@ -476,7 +476,7 @@ export function InventoryPage() {
             <InventoryByProductTable
               data={filteredProductData}
               onViewDetail={(productId) => {
-                setFilters({ ...filters, product_group_id: String(productId) });
+                setFilters({ ...filters, supplier_item_id: String(productId) });
                 setOverviewMode("items");
               }}
             />
