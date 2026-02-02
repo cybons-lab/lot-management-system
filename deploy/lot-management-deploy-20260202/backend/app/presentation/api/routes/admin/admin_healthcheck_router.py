@@ -1,0 +1,104 @@
+# backend/app/api/routes/admin_healthcheck_router.py
+"""ヘルスチェックAPI - 各テーブルのデータ件数を確認."""
+
+from fastapi import APIRouter, Depends
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from app.infrastructure.persistence.models.forecast_models import Forecast
+from app.infrastructure.persistence.models.inventory_models import LotReceipt, StockMovement
+from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
+from app.infrastructure.persistence.models.masters_models import (
+    Customer,
+    Supplier,
+    Warehouse,
+)
+from app.infrastructure.persistence.models.orders_models import Order, OrderLine
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
+from app.presentation.api.deps import get_db
+
+
+router = APIRouter(prefix="/admin/healthcheck", tags=["admin"])
+
+
+@router.get("/db-counts")
+def get_db_counts(db: Session = Depends(get_db)):
+    """各テーブルのレコード件数を返す.
+
+    Returns:
+        dict: テーブル名をキー、件数を値とする辞書
+    """
+    counts: dict[str, int] = {}
+
+    # マスタテーブル
+    counts["customers"] = db.scalar(select(func.count()).select_from(Customer)) or 0
+    counts["supplier_items"] = db.scalar(select(func.count()).select_from(SupplierItem)) or 0
+    counts["warehouses"] = db.scalar(select(func.count()).select_from(Warehouse)) or 0
+    counts["suppliers"] = db.scalar(select(func.count()).select_from(Supplier)) or 0
+
+    # 需要予測テーブル
+    counts["forecasts"] = db.scalar(select(func.count()).select_from(Forecast)) or 0
+
+    # 在庫テーブル
+    counts["lots"] = db.scalar(select(func.count()).select_from(LotReceipt)) or 0
+    counts["stock_movements"] = db.scalar(select(func.count()).select_from(StockMovement)) or 0
+
+    # 受注テーブル
+    counts["orders"] = db.scalar(select(func.count()).select_from(Order)) or 0
+    counts["order_lines"] = db.scalar(select(func.count()).select_from(OrderLine)) or 0
+    counts["reservations"] = db.scalar(select(func.count()).select_from(LotReservation)) or 0
+
+    # VIEWは件数取得が難しい場合があるのでスキップ
+    # counts["lot_current_stock"] = ...
+
+    masters_total = (
+        counts["customers"] + counts["supplier_items"] + counts["warehouses"] + counts["suppliers"]
+    )
+    inventory_total = counts["lots"] + counts["stock_movements"]
+    orders_total = counts["orders"] + counts["order_lines"] + counts["reservations"]
+    forecasts_total = counts["forecasts"]
+
+    return {
+        "status": "ok",
+        "counts": counts,
+        "totals": {
+            "masters": masters_total,
+            "inventory": inventory_total,
+            "orders": orders_total,
+            "forecasts": forecasts_total,
+            "overall": masters_total + inventory_total + orders_total + forecasts_total,
+        },
+        "total": sum(counts.values()),
+    }
+
+
+@router.get("/masters")
+def get_masters_health(db: Session = Depends(get_db)):
+    """マスタテーブルのヘルスチェック.
+
+    Returns:
+        dict: 各マスタテーブルの件数とサンプルデータ（先頭5件のコード）
+    """
+    result = {}
+
+    # 得意先
+    customer_count = db.scalar(select(func.count()).select_from(Customer)) or 0
+    customer_codes = [c for (c,) in db.execute(select(Customer.customer_code).limit(5)).all()]
+    result["customers"] = {"count": customer_count, "sample_codes": customer_codes}
+
+    # 製品
+    product_count = db.scalar(select(func.count()).select_from(SupplierItem)) or 0
+    product_codes = [p for (p,) in db.execute(select(SupplierItem.maker_part_no).limit(5)).all()]
+    result["products"] = {"count": product_count, "sample_codes": product_codes}
+
+    # 倉庫
+    warehouse_count = db.scalar(select(func.count()).select_from(Warehouse)) or 0
+    warehouse_codes = [w for (w,) in db.execute(select(Warehouse.warehouse_code).limit(5)).all()]
+    result["warehouses"] = {"count": warehouse_count, "sample_codes": warehouse_codes}
+
+    # 仕入先
+    supplier_count = db.scalar(select(func.count()).select_from(Supplier)) or 0
+    supplier_codes = [s for (s,) in db.execute(select(Supplier.supplier_code).limit(5)).all()]
+    result["suppliers"] = {"count": supplier_count, "sample_codes": supplier_codes}
+
+    return result

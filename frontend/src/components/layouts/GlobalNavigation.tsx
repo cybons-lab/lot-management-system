@@ -36,6 +36,7 @@ import { type FeatureKey } from "@/constants/features";
 import { ROUTES } from "@/constants/routes";
 import { useSystemSettings } from "@/contexts/SystemSettingsContext";
 import { type User, useAuth } from "@/features/auth/AuthContext";
+import { isGuestUser } from "@/features/auth/permissions/guest-permissions";
 import { NotificationBell } from "@/features/notifications/components";
 import { cn } from "@/shared/libs/utils";
 
@@ -298,6 +299,8 @@ function NavItems({ user, currentPath }: { currentPath: string; user: User | nul
 }
 
 function UserMenu({ user, logout }: { user: User | null; logout: () => void }) {
+  const isGuest = user && isGuestUser(user.roles);
+
   return (
     <div className="flex items-center gap-3 border-l border-gray-200 pl-3">
       {user ? (
@@ -314,6 +317,10 @@ function UserMenu({ user, logout }: { user: User | null; logout: () => void }) {
                 <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-red-700 uppercase">
                   管理者
                 </span>
+              ) : user.roles?.includes("guest") ? (
+                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-gray-700 uppercase">
+                  ゲスト
+                </span>
               ) : (
                 <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-blue-700 uppercase">
                   一般
@@ -324,16 +331,25 @@ function UserMenu({ user, logout }: { user: User | null; logout: () => void }) {
               {user.display_name}
             </div>
           </div>
-          {/* ログアウトボタン */}
-          <button
-            onClick={() => {
-              logout();
-              window.location.href = "/login";
-            }}
-            className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
-          >
-            ログアウト
-          </button>
+          {/* ゲストはログインボタン、それ以外はログアウトボタン */}
+          {isGuest ? (
+            <Link
+              to="/login"
+              className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            >
+              ログイン
+            </Link>
+          ) : (
+            <button
+              onClick={() => {
+                logout();
+                window.location.href = "/login";
+              }}
+              className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            >
+              ログアウト
+            </button>
+          )}
         </>
       ) : (
         <Link

@@ -1,0 +1,141 @@
+from datetime import date
+from typing import cast
+
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from app.application.services.common.base_service import BaseService
+from app.infrastructure.persistence.models.masters_models import Warehouse
+from app.presentation.schemas.masters.masters_schema import (
+    BulkUpsertResponse,
+    BulkUpsertSummary,
+    WarehouseBulkRow,
+    WarehouseCreate,
+    WarehouseUpdate,
+)
+
+
+class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, int]):
+    """Service for managing warehouses.
+
+    Supports soft delete (valid_to based) and hard delete (admin only).
+    """
+
+    def __init__(self, db: Session):
+        super().__init__(db, Warehouse)
+
+    def get_by_code(self, code: str, *, raise_404: bool = True) -> Warehouse | None:
+        """Get warehouse by warehouse_code."""
+        warehouse = cast(
+            Warehouse | None,
+            self.db.query(Warehouse).filter(Warehouse.warehouse_code == code).first(),
+        )
+        if not warehouse and raise_404:
+            from fastapi import HTTPException, status
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="倉庫が見つかりません"
+            )
+        return warehouse
+
+    def update_by_code(self, code: str, payload: WarehouseUpdate) -> Warehouse:
+        """Update warehouse by warehouse_code."""
+        warehouse = self.get_by_code(code)
+        assert warehouse is not None  # raise_404=True ensures this
+        return self.update(warehouse.id, payload)
+
+    def delete_by_code(self, code: str, *, end_date: date | None = None) -> None:
+        """Soft delete warehouse by warehouse_code."""
+        warehouse = self.get_by_code(code)
+        assert warehouse is not None
+        self.delete(warehouse.id, end_date=end_date)
+
+    def hard_delete_by_code(self, code: str) -> None:
+        """Permanently delete warehouse by warehouse_code."""
+        warehouse = self.get_by_code(code)
+        assert warehouse is not None
+        self.hard_delete(warehouse.id)
+
+    def restore_by_code(self, code: str) -> Warehouse:
+        """Restore a soft-deleted warehouse by warehouse_code."""
+        warehouse = self.get_by_code(code)
+        assert warehouse is not None
+        return self.restore(warehouse.id)
+
+    def bulk_upsert(self, rows: list[WarehouseBulkRow]) -> BulkUpsertResponse:
+        """Bulk upsert warehouses by warehouse_code.
+
+        Args:
+            rows: List of warehouse rows to upsert
+
+        Returns:
+            BulkUpsertResponse with summary and errors
+        """
+        summary = {"total": 0, "created": 0, "updated": 0, "failed": 0}
+        errors = []
+
+        for row in rows:
+            try:
+                # Check if active warehouse exists by warehouse_code
+                existing = (
+                    self.db.query(Warehouse)
+                    .filter(Warehouse.warehouse_code == row.warehouse_code)
+                    .filter(Warehouse.valid_to > func.current_date())
+                    .first()
+                )
+
+                if existing:
+                    # UPDATE active record
+                    existing.warehouse_name = row.warehouse_name
+                    existing.warehouse_type = row.warehouse_type
+                    summary["updated"] += 1
+                else:
+                    # Check for soft-deleted record
+                    deleted = (
+                        self.db.query(Warehouse)
+                        .filter(Warehouse.warehouse_code == row.warehouse_code)
+                        .filter(Warehouse.valid_to <= func.current_date())
+                        .first()
+                    )
+                    if deleted:
+                        # Restore and update soft-deleted record
+                        deleted.warehouse_name = row.warehouse_name
+                        deleted.warehouse_type = row.warehouse_type
+                        deleted.valid_to = date(9999, 12, 31)
+                        summary["updated"] += 1
+                    else:
+                        # CREATE new record
+                        new_warehouse = Warehouse(**row.model_dump())
+                        self.db.add(new_warehouse)
+                        summary["created"] += 1
+
+                summary["total"] += 1
+
+            except Exception as e:
+                summary["failed"] += 1
+                errors.append(f"{row.warehouse_code}: {str(e)}")
+                self.db.rollback()
+                continue
+
+        # Commit all successful operations
+        if summary["created"] + summary["updated"] > 0:
+            try:
+                self.db.commit()
+            except Exception as e:
+                self.db.rollback()
+                errors.append(f"Commit failed: {str(e)}")
+                summary["failed"] = summary["total"]
+                summary["created"] = 0
+                summary["updated"] = 0
+
+        # Determine status
+        if summary["failed"] == 0:
+            status = "success"
+        elif summary["created"] + summary["updated"] > 0:
+            status = "partial"
+        else:
+            status = "failed"
+
+        return BulkUpsertResponse(
+            status=status, summary=BulkUpsertSummary(**summary), errors=errors
+        )

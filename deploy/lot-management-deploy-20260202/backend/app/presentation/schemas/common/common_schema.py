@@ -1,0 +1,38 @@
+"""Shared schema components."""
+
+from typing import TypeVar
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class ORMModel(BaseModel):
+    """Base model for ORM serialization."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PageQuery(BaseModel):
+    """Pagination and search parameters."""
+
+    page: int = Field(default=1, ge=1)
+    per_page: int = Field(default=50, ge=1, le=500)
+    q: str | None = None
+
+
+T = TypeVar("T")
+
+
+class Page[T](BaseModel):
+    """Generic paginated response."""
+
+    items: list[T]
+    total: int
+    page: int
+    per_page: int
+
+
+class ListResponse[T](BaseModel):
+    """Generic list response without pagination."""
+
+    items: list[T]
+    total: int = 0

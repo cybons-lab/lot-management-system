@@ -1,0 +1,118 @@
+[project]
+name = "lot-management-backend"
+version = "0.1.0"
+description = "Lot Management System Backend"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "alembic<2.0.0",
+    "anyio>=4.12.1",
+    "email-validator>=2.3.0",
+    "fastapi>=0.128.0",
+    "psycopg2-binary>=2.9.11",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.12.0",
+    "python-dateutil>=2.9.0.post0",
+    "python-multipart>=0.0.21",
+    "pyyaml>=6.0.3",
+    "sqlalchemy<3.0.0",
+    "uvicorn[standard]>=0.40.0",
+    "python-jose[cryptography]>=3.3.0",
+    "bcrypt>=5.0.0",
+    "faker>=40.1.2",
+    "python-json-logger>=2.0.7",
+    "structlog>=25.4.0",
+    "asgi-correlation-id>=4.3.4",
+    "pandas>=2.2.0,<3.0.0",
+    "openpyxl>=3.1.0",
+    "PyJWT>=2.8.0",
+    "httpx>=0.28.1",
+    "reportlab>=4.4.9",
+    "requests>=2.32.0",
+    "pycparser<3.0",
+    "certifi>=2025.11.12",
+    "cryptography<47.0.0",
+    "greenlet>=3.2.4",
+    "hypothesis<7.0.0",
+    "librt>=0.6.3",
+    "numpy<3.0.0",
+    "packaging>=25.0",
+    "pathspec>=0.12.1",
+    "pyasn1>=0.6.1",
+    "ruff<0.15.0",
+    "tzdata>=2025.2",
+    "websockets<16.0.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# E: pycodestyle errors
+# F: Pyflakes (unused imports F401, unused variables F841)
+# I: isort (import sorting I001)
+# D: pydocstyle (docstring conventions)
+# UP: pyupgrade (Python version upgrades)
+# B: flake8-bugbear (likely bugs and design problems)
+select = ["E", "F", "I", "D", "UP", "B"]
+
+ignore = [
+  "D203",  # one-blank-line-before-class (conflicts with D211)
+  "D212",  # multi-line-summary-first-line (conflicts with D213)
+  "D100",  # Missing docstring in public module
+  "D101",  # Missing docstring in public class
+  "D102",  # Missing docstring in public method
+  "D103",  # Missing docstring in public function
+  "D105",  # Missing docstring in magic method
+  "D107",  # Missing docstring in __init__
+  "D205",  # 1 blank line required between summary line and description
+  "B008",  # Do not perform function call in default argument
+  "B904",  # Within an except clause, raise without from
+  "E501",  # Line too long (we use ruff format for line length)
+  "E741",  # Ambiguous variable name
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+# Import sorting configuration
+force-single-line = false
+lines-after-imports = 2
+known-first-party = ["app"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]  # Relax all docstring rules in tests
+"alembic/**" = ["D", "F401"]  # Relax in migrations
+
+[tool.docformatter]
+recursive = true
+in-place = true
+wrap-summaries = 100
+wrap-descriptions = 100
+pre-summary-newline = true
+make-summary-multi-line = true
+blank = true
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "hypothesis>=6.150.2",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.14.13",
+    "mypy>=1.19.1",
+    "types-passlib>=1.7.7",
+    "types-python-jose>=3.3.4",
+    "types-pyyaml>=6.0.12.20250915",
+    "types-requests>=2.32.4.20260107",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+
+[[tool.mypy.overrides]]
+module = "reportlab.*"
+ignore_missing_imports = true

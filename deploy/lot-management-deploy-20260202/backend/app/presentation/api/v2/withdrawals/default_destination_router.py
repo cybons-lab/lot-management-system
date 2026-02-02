@@ -1,0 +1,170 @@
+"""
+Default Destination Router.
+
+GET /api/v2/withdrawals/default-destination
+Lookup customer and delivery place based on supplier_item_id from customer_items and
+customer_item_delivery_settings tables.
+"""
+
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
+from sqlalchemy import and_, select
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.infrastructure.persistence.models.masters_models import (
+    Customer,
+    CustomerItem,
+    CustomerItemDeliverySetting,
+    DeliveryPlace,
+)
+from app.infrastructure.persistence.models.missing_mapping_model import MissingMappingEvent
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
+
+
+router = APIRouter(tags=["withdrawals"])
+
+
+class DefaultDestinationResponse(BaseModel):
+    """Response model for default destination lookup."""
+
+    customer_id: int | None = None
+    customer_code: str | None = None
+    customer_name: str | None = None
+    delivery_place_id: int | None = None
+    delivery_place_code: str | None = None
+    delivery_place_name: str | None = None
+    mapping_found: bool = False
+    message: str | None = None
+
+
+def _record_missing_mapping_event(
+    db: Session,
+    *,
+    event_type: str,
+    supplier_item_id: int | None,
+    supplier_id: int | None,
+    customer_id: int | None,
+    context_json: dict[str, object] | None,
+) -> None:
+    event = MissingMappingEvent(
+        event_type=event_type,
+        supplier_item_id=supplier_item_id,
+        supplier_id=supplier_id,
+        customer_id=customer_id,
+        context_json=context_json,
+    )
+    db.add(event)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+
+
+@router.get("/default-destination", response_model=DefaultDestinationResponse)
+def get_default_destination(
+    supplier_item_id: int = Query(
+        ..., alias="supplier_item_id", description="仕入先品目ID (メーカー品番ID)"
+    ),
+    supplier_id: int | None = Query(None, description="仕入先ID (任意)"),
+    db: Session = Depends(get_db),
+) -> DefaultDestinationResponse:
+    """
+    仕入先品目IDからデフォルトの得意先・納入先を取得する.
+
+    Phase1: supplier_item_id → supplier_item_id, supplier_id は supplier_item 経由で取得
+
+    1. customer_items テーブルから supplier_item_id でマッピングを検索
+    2. 見つかれば customer_id を取得
+    3. customer_item_delivery_settings の is_default=True レコードから delivery_place_id を取得
+    4. マッピングが無い場合は mapping_found=False を返す
+    """
+    # Step 1: Find CustomerItem by supplier_item_id
+    query = select(CustomerItem).where(CustomerItem.supplier_item_id == supplier_item_id)
+    if supplier_id is not None:
+        # Phase1: supplier_id is in supplier_item, need to JOIN
+        query = query.join(CustomerItem.supplier_item).where(
+            SupplierItem.supplier_id == supplier_id
+        )
+
+    customer_item = db.execute(query).scalars().first()
+
+    if not customer_item:
+        _record_missing_mapping_event(
+            db,
+            event_type="customer_item_mapping_not_found",
+            supplier_item_id=supplier_item_id,
+            supplier_id=supplier_id,
+            customer_id=None,
+            context_json={"supplier_item_id": supplier_item_id, "supplier_id": supplier_id},
+        )
+        return DefaultDestinationResponse(
+            mapping_found=False,
+            message=f"supplier_item_id={supplier_item_id} のマッピングが見つかりません",
+        )
+
+    # Step 2: Get Customer info
+    customer = db.get(Customer, customer_item.customer_id)
+    if not customer:
+        _record_missing_mapping_event(
+            db,
+            event_type="customer_not_found",
+            supplier_item_id=supplier_item_id,
+            supplier_id=supplier_id,
+            customer_id=customer_item.customer_id,
+            context_json={
+                "supplier_item_id": supplier_item_id,
+                "supplier_id": supplier_id,
+                "customer_id": customer_item.customer_id,
+                "customer_part_no": customer_item.customer_part_no,
+            },
+        )
+        return DefaultDestinationResponse(
+            mapping_found=False,
+            message=f"customer_id={customer_item.customer_id} が見つかりません",
+        )
+
+    # Step 3: Find default delivery settings
+    delivery_query = select(CustomerItemDeliverySetting).where(
+        and_(
+            CustomerItemDeliverySetting.customer_item_id == customer_item.id,
+            CustomerItemDeliverySetting.is_default == True,  # noqa: E712
+        )
+    )
+    delivery_setting = db.execute(delivery_query).scalars().first()
+
+    delivery_place_id = None
+    delivery_place_code = None
+    delivery_place_name = None
+
+    if delivery_setting and delivery_setting.delivery_place_id:
+        delivery_place = db.get(DeliveryPlace, delivery_setting.delivery_place_id)
+        if delivery_place:
+            delivery_place_id = delivery_place.id
+            delivery_place_code = delivery_place.delivery_place_code
+            delivery_place_name = delivery_place.delivery_place_name
+    if delivery_place_id is None:
+        _record_missing_mapping_event(
+            db,
+            event_type="delivery_place_not_found",
+            supplier_item_id=supplier_item_id,
+            supplier_id=supplier_id,
+            customer_id=customer.id,
+            context_json={
+                "supplier_item_id": supplier_item_id,
+                "supplier_id": supplier_id,
+                "customer_id": customer.id,
+                "customer_part_no": customer_item.customer_part_no,
+            },
+        )
+
+    return DefaultDestinationResponse(
+        customer_id=customer.id,
+        customer_code=customer.customer_code,
+        customer_name=customer.customer_name,
+        delivery_place_id=delivery_place_id,
+        delivery_place_code=delivery_place_code,
+        delivery_place_name=delivery_place_name,
+        mapping_found=True,
+        message=None,
+    )

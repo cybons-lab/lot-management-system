@@ -1,0 +1,68 @@
+# configs/seed_profiles.yaml
+# テストデータ生成プロファイル設定
+
+# ベース共通設定
+_base:
+  order_line_items_per_order:
+    min: 1
+    max: 5  # 明細は最大5
+  destinations_max_per_order: 5  # 納品先は最大5（固定）
+  lot_split_max_per_line: 3  # ロット分割は最大3（9割は1本想定）
+  allocation:
+    fifo: true
+    allocated_ratio: 0.6  # 何らか引当済
+    partial_ratio: 0.25  # そのうち部分引当
+    shortage_ratio: 0.05  # 欠品
+  distribution:
+    product_popularity: zipf  # 需要偏り
+    warehouse_bias: light  # 倉庫偏り（軽）
+  case_mix:  # 多様性（任意・合計<=1.0目安）
+    only_other_warehouse: 0.08  # 他倉庫にしか在庫がない
+    expired_lot_present: 0.03  # 期限切れ混在
+    many_small_lots: 0.12  # 小割れ在庫多め（分割上限に掛かる）
+    single_big_lot: 0.12  # 1本で満額
+
+# 小規模プロファイル
+small:
+  inherits: _base
+  customers: 300
+  suppliers: 60
+  products: 1500
+  warehouses: 6  # UIで5〜10に再設定可
+  lots: 6000
+  orders: 4000
+
+# 中規模プロファイル
+medium:
+  inherits: _base
+  customers: 1200
+  suppliers: 120
+  products: 6000
+  warehouses: 8
+  lots: 45000
+  orders: 30000
+  distribution:
+    product_popularity: heavy_zipf
+    warehouse_bias: medium
+
+# 大規模寄りプロファイル（大規模までは行かない）
+large_near:
+  inherits: _base
+  customers: 3000
+  suppliers: 200
+  products: 12000
+  warehouses: 9
+  lots: 120000
+  orders: 80000
+  allocation:
+    allocated_ratio: 0.7
+    partial_ratio: 0.2
+    shortage_ratio: 0.1
+  distribution:
+    product_popularity: heavy_zipf
+    warehouse_bias: heavy
+  case_mix:
+    only_other_warehouse: 0.12
+    expired_lot_present: 0.05
+    many_small_lots: 0.18
+    single_big_lot: 0.15
