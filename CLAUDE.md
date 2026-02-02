@@ -189,12 +189,17 @@ cd backend && ruff check app/ --fix && ruff format app/
 - **File size:** < 300 lines per component (論理的なまとまりを優先し、意味のある塊であれば `eslint-disable` で抑制してよい。機械的な分割による過度な断片化は避けること)
 - **Sub-routing:** Use sub-routing for internal tabs/sections (e.g., `:tab` params) to ensure bookmarkability and enable hierarchical access control via `FEATURE_CONFIG`.
 
-**Commands:**
+**Commands (Docker統一):**
 ```bash
-cd frontend
-npm run typecheck
-npm run lint
-npm run format
+# Docker経由（推奨）
+make frontend-typecheck
+make frontend-lint
+make frontend-format
+
+# またはdocker compose直接
+docker compose exec -T frontend npm run typecheck
+docker compose exec -T frontend npm run lint
+docker compose exec -T frontend npm run format
 ```
 
 **Naming:**
@@ -207,43 +212,94 @@ npm run format
 
 ## Development Workflow
 
-### Docker Commands
+**CRITICAL: すべての開発コマンドはDocker経由で実行してください。Makefileを使用することで統一されたワークフローを実現します。**
+
+### クイックスタート
 
 ```bash
-# Start all services
-docker compose up
+# 開発環境のセットアップ（初回）
+make dev-setup
 
-# View logs
-docker compose logs -f backend
+# サービスの起動/停止
+make up          # すべてのサービスを起動
+make down        # すべてのサービスを停止
+make restart     # すべてのサービスを再起動
+make logs        # すべてのログを表示
 
-# Reset database
-docker compose down -v && docker compose up
+# 品質チェック（コミット前に実行）
+make quality-check   # Lint修正 + Format + Type check + Test
+```
 
-# Run backend commands
-docker compose exec backend pytest
+### バックエンド開発
+
+```bash
+# 品質チェック
+make backend-lint           # Lintチェック
+make backend-lint-fix       # Lint自動修正
+make backend-format         # コードフォーマット
+make backend-test           # テスト実行
+make backend-test-quick     # テスト高速実行
+
+# シェル接続
+make backend-shell
+
+# または docker compose 直接
 docker compose exec backend ruff check app/
+docker compose exec backend ruff format app/
+docker compose exec backend pytest -v
 ```
 
-### Frontend Commands
+### フロントエンド開発
 
 ```bash
-cd frontend
-npm run dev          # Start dev server
-npm run typecheck    # Type check
-npm run lint         # Lint
-npm run format       # Format
-npm run typegen      # Regenerate API types
+# 品質チェック
+make frontend-lint          # Lintチェック
+make frontend-lint-fix      # Lint自動修正
+make frontend-format        # コードフォーマット
+make frontend-typecheck     # 型チェック
+make frontend-typegen       # OpenAPI型定義を再生成
+make frontend-test          # テスト実行
+make frontend-build         # ビルド
+
+# シェル接続
+make frontend-shell
+
+# または docker compose 直接
+docker compose exec -T frontend npm run lint
+docker compose exec -T frontend npm run typecheck
+docker compose exec -T frontend npm run typegen:curl
 ```
 
-### Database
+### データベース操作
 
 ```bash
-# Reset with sample data
-curl -X POST http://localhost:8000/api/admin/reset-database
-curl -X POST http://localhost:8000/api/admin/init-sample-data
+# データベース管理
+make db-reset          # データベースをリセット
+make db-init-sample    # サンプルデータを投入
+make db-shell          # PostgreSQLシェルに接続
 
-# Migrations
-docker compose exec backend alembic upgrade head
+# マイグレーション
+make alembic-upgrade   # 最新バージョンにアップグレード
+make alembic-downgrade # 1つ前のバージョンに戻す
+make alembic-history   # マイグレーション履歴を表示
+make alembic-current   # 現在のバージョンを表示
+```
+
+### 全体の品質チェック
+
+```bash
+# すべての品質チェック（自動修正あり）
+make quality-check
+
+# CI相当のチェック（自動修正なし）
+make ci
+
+# 個別実行
+make lint            # 全体Lint
+make lint-fix        # 全体Lint自動修正
+make format          # 全体フォーマット
+make typecheck       # 全体型チェック
+make test            # 全体テスト
 ```
 
 ### Git Workflow
@@ -263,14 +319,15 @@ git checkout -b feature/xxx
 ### DO
 1. Follow naming conventions strictly
 2. Use absolute imports in backend
-3. Run quality checks before committing
-4. Update OpenAPI types after backend changes: `npm run typegen`
+3. **Run quality checks via Makefile before committing**: `make quality-check`
+4. **Update OpenAPI types after backend changes**: `make frontend-typegen` (Docker経由)
 5. Write tests for new features
 6. Document domain logic with docstrings
 7. Commit frequently with atomic changes (avoid large bulk commits). Commits do not require user confirmation.
 8. Create feature branches for new work (e.g., `feature/order-filters`).
 9. **Add comprehensive logging from the start** (see Logging Guidelines below)
 10. **Use sub-routing for all page tabs/sub-views** to ensure bookmarkability and support hierarchical access control.
+11. **Always use Docker-based commands** via Makefile or `docker compose exec` - avoid local npm/python execution
 
 ### DON'T
 1. Bypass service layer (routes → repositories directly)
