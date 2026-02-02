@@ -13,7 +13,7 @@ Phase1実装: SKU駆動による在庫管理修正
 
 自動マッピング機能:
 - supplier_item_id が NULL の customer_items を自動的にマッピング
-- product_group_id が一致する supplier_items を選択（is_primary 優先）
+- product_id が一致する supplier_items を選択（is_primary 優先）
 - マッピング不可能なレコードがある場合はエラーで停止
 
 前提条件:
@@ -118,25 +118,27 @@ def upgrade():
     if unmapped_count > 0:
         print(f"Found {unmapped_count} unmapped customer_items. Auto-mapping...")
 
-        # Auto-map based on product_group_id (prefer is_primary=true)
+        # Auto-map based on product_id (prefer is_primary=true)
+        # Note: At this point in migration history, the column is still named product_id
+        # (products_to_product_groups migration renames it later)
         result = conn.execute(
             sa.text("""
                 UPDATE customer_items ci
                 SET supplier_item_id = (
                     SELECT si.id
                     FROM supplier_items si
-                    WHERE si.product_group_id = ci.product_group_id
+                    WHERE si.product_id = ci.product_id
                     ORDER BY si.is_primary DESC, si.id ASC
                     LIMIT 1
                 )
                 WHERE ci.supplier_item_id IS NULL
-                  AND ci.product_group_id IS NOT NULL
+                  AND ci.product_id IS NOT NULL
             """)
         )
         mapped_count = result.rowcount
-        print(f"✅ Auto-mapped {mapped_count} customer_items via product_group_id")
+        print(f"✅ Auto-mapped {mapped_count} customer_items via product_id")
 
-        # Check if there are still unmapped records (no product_group_id match)
+        # Check if there are still unmapped records (no product_id match)
         result = conn.execute(
             sa.text("""
                 SELECT
@@ -144,7 +146,7 @@ def upgrade():
                     ci.customer_id,
                     ci.customer_part_no,
                     c.customer_name,
-                    ci.product_group_id
+                    ci.product_id
                 FROM customer_items ci
                 LEFT JOIN customers c ON ci.customer_id = c.id
                 WHERE ci.supplier_item_id IS NULL
@@ -159,7 +161,7 @@ def upgrade():
             for row in still_unmapped[:10]:
                 error_details.append(
                     f"  - ID: {row.id}, customer: {row.customer_name}, "
-                    f"customer_part_no: '{row.customer_part_no}', product_group_id: {row.product_group_id}"
+                    f"customer_part_no: '{row.customer_part_no}', product_id: {row.product_id}"
                 )
             if len(still_unmapped) > 10:
                 error_details.append(f"  ... and {len(still_unmapped) - 10} more rows")
