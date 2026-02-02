@@ -198,6 +198,7 @@ def _recreate_views_upgrade() -> None:
             lm.id AS lot_master_id,
             lm.lot_number,
             lr.product_group_id,
+            lr.supplier_item_id,
             p.maker_part_code AS product_code,
             p.product_name,
             lr.warehouse_id,
