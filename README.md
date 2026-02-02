@@ -113,6 +113,25 @@ make db-init-sample    # サンプルデータを投入
 make alembic-upgrade   # マイグレーション実行
 ```
 
+### デプロイパッケージのビルド
+
+```bash
+# 本番デプロイパッケージを作成（高速ビルド）
+make build
+
+# クリーンビルド（node_modules を再インストール）
+make build-clean
+
+# 出力: deploy/lot-management-deploy-YYYYMMDD.zip
+```
+
+**ビルドプロセス:**
+1. フロントエンドをビルド（Docker経由）
+2. バックエンドをコピー（Python依存関係を含む）
+3. `requirements.txt` を自動生成
+4. ドキュメントをコピー
+5. ZIPファイルにパッケージング
+
 ### その他のコマンド
 
 ```bash
