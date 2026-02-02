@@ -191,7 +191,8 @@ def confirm_reservation(
         raise AllocationNotFoundError(f"Reservation {reservation_id} not found")
 
     # Idempotent: return success if already confirmed
-    if str(reservation.status) == ReservationStatus.CONFIRMED.value:
+    current_status = getattr(reservation.status, "value", reservation.status)
+    if current_status == ReservationStatus.CONFIRMED.value:
         logger.debug(
             "Reservation already confirmed (idempotent)",
             extra={"reservation_id": reservation_id},

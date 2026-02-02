@@ -112,7 +112,6 @@ def _setup_customer_item(db: Session):
         customer_id=customer.id,
         customer_part_no="EXT-ITEM",
         supplier_item_id=product.id,
-        supplier_id=supplier.id,
         base_unit="EA",
     )
     db.add(item)

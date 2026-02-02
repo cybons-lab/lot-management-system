@@ -326,7 +326,7 @@ class RpaRepository:
                     "last_error_message": "Lock expired; task returned to pending.",
                     "updated_at": now,
                 },
-                synchronize_session=False,
+                synchronize_session="fetch",
             )
         )
 

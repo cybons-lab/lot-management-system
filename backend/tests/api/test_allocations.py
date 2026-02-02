@@ -93,8 +93,6 @@ def master_data(db: Session, supplier):
         customer_id=customer.id,
         customer_part_no="CUST-PART-001",
         supplier_item_id=product.id,
-        supplier_id=supplier.id,
-        is_primary=True,
         base_unit="EA",
     )
     db.add(customer_item)

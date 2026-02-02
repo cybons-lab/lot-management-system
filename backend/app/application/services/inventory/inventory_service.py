@@ -740,6 +740,7 @@ class InventoryService:
             assigned_staff_only=assigned_staff_only,
             current_user_id=current_user_id,
             effective_tab=effective_tab,
+            mode=mode,
         )
 
     def _get_filter_options_from_master(
@@ -831,6 +832,7 @@ class InventoryService:
         assigned_staff_only: bool = False,
         current_user_id: int | None = None,
         effective_tab: str = "all",
+        mode: str = "stock",
     ) -> InventoryFilterOptions:
         """Get filter options based on stock reality (active lots with remaining > 0)."""
         where_clauses = ["v.remaining_quantity > 0", "v.status = 'active'"]
@@ -880,7 +882,7 @@ class InventoryService:
 
         # Prepare master union query part if tab allows showing items with no stock
         master_union_part = ""
-        if tab != "in_stock":
+        if tab != "in_stock" and mode != "stock":
             m_clauses = []
             if supplier_id:
                 m_clauses.append("si.supplier_id = :supplier_id")
