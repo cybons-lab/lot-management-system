@@ -290,7 +290,7 @@ class OrderLineRepository:
         stmt = (
             select(OrderLine)
             .options(joinedload(OrderLine.order))
-            .options(joinedload(OrderLine.product_group))
+            .options(joinedload(OrderLine.supplier_item))
             .where(OrderLine.id == order_line_id)
         )
         return cast(OrderLine | None, self.db.execute(stmt).scalar_one_or_none())

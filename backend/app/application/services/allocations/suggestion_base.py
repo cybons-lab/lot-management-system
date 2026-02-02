@@ -84,7 +84,7 @@ class AllocationSuggestionBase:
             result.total_forecast += needed
 
             allocated_for_row: Decimal = Decimal("0")
-            lots = lots_by_product.get(f.product_group_id, [])
+            lots = lots_by_product.get(f.supplier_item_id, [])
 
             alloc_results = allocate_soft_for_forecast(needed, lots, temp_allocations)
 
@@ -94,7 +94,7 @@ class AllocationSuggestionBase:
                     forecast_id=f.id,
                     customer_id=f.customer_id,
                     delivery_place_id=f.delivery_place_id,
-                    product_group_id=f.product_group_id,
+                    product_group_id=f.supplier_item_id,
                     lot_id=res.lot_id,
                     quantity=res.quantity,
                     priority=res.priority,
@@ -114,7 +114,7 @@ class AllocationSuggestionBase:
             result.total_allocated += allocated_for_row
 
             # Aggregate stats
-            key = (f.customer_id, f.delivery_place_id, f.product_group_id, f.forecast_period)
+            key = (f.customer_id, f.delivery_place_id, f.supplier_item_id, f.forecast_period)
             if key not in result.stats_agg:
                 result.stats_agg[key] = {
                     "forecast_quantity": Decimal("0"),

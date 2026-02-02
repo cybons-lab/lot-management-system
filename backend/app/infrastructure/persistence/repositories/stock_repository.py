@@ -150,7 +150,7 @@ class StockRepository:
         """
         stmt: Select[tuple[LotReceipt]] = (
             select(LotReceipt)
-            .where(LotReceipt.product_group_id == product_group_id)
+            .where(LotReceipt.supplier_item_id == product_group_id)
             .where(LotReceipt.warehouse_id == warehouse_id)
             .where(LotReceipt.status == "active")  # DDL v2.2 compliant
             # v2.3: 検査合格または検査不要のロットのみ対象

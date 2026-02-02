@@ -226,7 +226,7 @@ def auto_reserve_line(
     # Use SSOT for candidate fetching with warehouse filter
     warehouse_id = getattr(line, "warehouse_id", None)
     candidates = _get_fefo_candidates_for_line(
-        db, line.product_group_id or 0, warehouse_id=warehouse_id, lock=True
+        db, line.supplier_item_id or 0, warehouse_id=warehouse_id, lock=True
     )
 
     logger.debug(
@@ -234,7 +234,7 @@ def auto_reserve_line(
         extra={
             "order_line_id": order_line_id,
             "candidate_count": len(candidates),
-            "supplier_item_id": line.product_group_id,
+            "supplier_item_id": line.supplier_item_id,
             "warehouse_id": warehouse_id,
         },
     )
@@ -314,7 +314,7 @@ def _auto_reserve_line_no_commit(
     # Use SSOT for candidate fetching with warehouse filter
     warehouse_id = getattr(line, "warehouse_id", None)
     candidates = _get_fefo_candidates_for_line(
-        db, line.product_group_id or 0, warehouse_id=warehouse_id, lock=True
+        db, line.supplier_item_id or 0, warehouse_id=warehouse_id, lock=True
     )
 
     created_reservations: list[LotReservation] = []
@@ -377,7 +377,7 @@ def auto_reserve_bulk(
     )
 
     if supplier_item_id is not None:
-        query = query.filter(OrderLine.product_group_id == supplier_item_id)
+        query = query.filter(OrderLine.supplier_item_id == supplier_item_id)
 
     if customer_id is not None:
         query = query.filter(Order.customer_id == customer_id)

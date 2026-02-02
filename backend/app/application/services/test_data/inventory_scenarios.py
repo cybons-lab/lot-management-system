@@ -242,7 +242,7 @@ def _get_or_create_lot_master(
     lot_number = f"TEST-INV-LOT-{scenario.key}"
     lot_master = (
         db.query(LotMaster)
-        .filter(LotMaster.lot_number == lot_number, LotMaster.product_group_id == product.id)
+        .filter(LotMaster.lot_number == lot_number, LotMaster.supplier_item_id == product.id)
         .first()
     )
     if lot_master:
@@ -286,7 +286,7 @@ def _upsert_lot_receipt(
     lot = (
         db.query(LotReceipt)
         .filter(
-            LotReceipt.product_group_id == product.id,
+            LotReceipt.supplier_item_id == product.id,
             LotReceipt.origin_reference == f"inventory-scenario-{scenario.key}",
         )
         .first()
@@ -313,7 +313,7 @@ def _upsert_lot_receipt(
         return lot
 
     lot.lot_master_id = lot_master.id
-    lot.product_group_id = product.id
+    lot.supplier_item_id = product.id
     lot.warehouse_id = warehouse.id
     lot.supplier_id = supplier.id
     lot.received_date = date.today()

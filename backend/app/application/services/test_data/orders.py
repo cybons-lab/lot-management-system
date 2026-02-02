@@ -128,10 +128,10 @@ def generate_orders(
                 customer_id=customer_id,
                 # product_group_id is nullable in OrderGroup? The model snippet didn't show it clearly but
                 # in loop L182 it was set. Let's assume OrderGroup can be per-order or per-product-order.
-                # In L175 existing code: og_key = (customer_id, fc.product_group_id, order.order_date)
+                # In L175 existing code: og_key = (customer_id, fc.supplier_item_id, order.order_date)
                 # This implies one OG per Product in the existing logic.
                 # If we want to group lines into one OG, we need to check if OG has product_group_id.
-                # Let's check existing usage: "product_group_id=fc.product_group_id" (L182).
+                # Let's check existing usage: "product_group_id=fc.supplier_item_id" (L182).
                 # This means OrderGroup is partitioned by Product.
                 # So we must create OGs inside the loop if we want to follow that pattern.
                 # BUT, usually an OrderGroup (Batch) contains multiple products.
@@ -148,7 +148,7 @@ def generate_orders(
         # Create OrderLines from forecasts
         for fc in fc_list:
             # Get product for unit info
-            product = next((p for p in products if p.id == fc.product_group_id), None)
+            product = next((p for p in products if p.id == fc.supplier_item_id), None)
             if not product:
                 continue
 
@@ -204,7 +204,7 @@ def generate_orders(
             # Create OrderLine
             ol = OrderLine(
                 order_id=order.id,
-                product_group_id=fc.product_group_id,
+                product_group_id=fc.supplier_item_id,
                 delivery_date=delivery_date,
                 order_quantity=qty,
                 unit=unit,
@@ -216,13 +216,13 @@ def generate_orders(
             # --- Order Group Logic ---
             if not is_forecast_linked:
                 # Need specific OrderGroup for this product/date
-                og_key = (customer_id, fc.product_group_id, order.order_date)
+                og_key = (customer_id, fc.supplier_item_id, order.order_date)
                 og_id = order_group_map.get(og_key)
 
                 if not og_id:
                     og = OrderGroup(
                         customer_id=customer_id,
-                        product_group_id=fc.product_group_id,
+                        product_group_id=fc.supplier_item_id,
                         order_date=order.order_date,
                         source_file_name=ocr_filename,  # Consistent filename for the order
                     )
@@ -242,7 +242,7 @@ def generate_orders(
 
             # If allocated, create LotReservation
             if status == "allocated":
-                lot_id = get_any_lot_id(db, fc.product_group_id, qty)
+                lot_id = get_any_lot_id(db, fc.supplier_item_id, qty)
                 if lot_id:
                     res = LotReservation(
                         lot_id=lot_id,

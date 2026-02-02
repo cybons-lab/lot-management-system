@@ -78,7 +78,7 @@ class OrderGroup(Base):
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
-    product_group: Mapped[SupplierItem] = relationship("SupplierItem")
+    supplier_item: Mapped[SupplierItem] = relationship("SupplierItem")
     order_lines: Mapped[list[OrderLine]] = relationship(
         "OrderLine",
         back_populates="order_group",

@@ -129,7 +129,7 @@ def _query_lots_with_fallback(
 
         # Query lots (filtering will happen in Python)
         lot_query = db.query(LotReceipt).filter(
-            LotReceipt.product_group_id == supplier_item_id,
+            LotReceipt.supplier_item_id == supplier_item_id,
         )
         if strategy == "fefo":
             lot_query = lot_query.order_by(
@@ -178,7 +178,7 @@ def _convert_to_candidate_item(
     return CandidateLotItem(
         lot_id=lot_id,
         lot_number="",  # Will be enriched later
-        supplier_item_id=lot_view.product_group_id,
+        supplier_item_id=lot_view.supplier_item_id,
         warehouse_id=lot_view.warehouse_id,
         received_date=received_date,
         expiry_date=lot_view.expiry_date,

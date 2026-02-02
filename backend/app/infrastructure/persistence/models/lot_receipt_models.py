@@ -262,9 +262,6 @@ class LotReceipt(Base):
 
     # Relationships
     lot_master: Mapped[LotMaster] = relationship("LotMaster", back_populates="receipts")
-    product_group: Mapped[SupplierItem] = relationship(
-        "SupplierItem", foreign_keys="[LotReceipt.product_group_id]"
-    )
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lot_receipts")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_receipts")
     supplier_item: Mapped[SupplierItem | None] = relationship(

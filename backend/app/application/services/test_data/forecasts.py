@@ -155,7 +155,7 @@ def generate_reservations(db: Session):
             forecast_period = fc.forecast_date.strftime("%Y-%m")
 
         # Find a suitable lot for this product
-        lot_id = get_any_lot_id(db, fc.product_group_id, fc.forecast_quantity)
+        lot_id = get_any_lot_id(db, fc.supplier_item_id, fc.forecast_quantity)
         if not lot_id:
             continue
 
@@ -166,7 +166,7 @@ def generate_reservations(db: Session):
                 forecast_id=fc.id,
                 customer_id=fc.customer_id,
                 delivery_place_id=fc.delivery_place_id,
-                product_group_id=fc.product_group_id,
+                product_group_id=fc.supplier_item_id,
                 lot_id=lot_id,
                 quantity=fc.forecast_quantity,
                 allocation_type="soft",

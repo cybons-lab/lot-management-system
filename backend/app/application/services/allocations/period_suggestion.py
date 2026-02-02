@@ -49,7 +49,7 @@ class PeriodAllocationSuggestionService(AllocationSuggestionBase):
             .all()
         )
 
-        product_ids = list({f.product_group_id for f in forecasts}) if forecasts else []
+        product_ids = list({f.supplier_item_id for f in forecasts}) if forecasts else []
         lots_by_product = self._fetch_available_lots(product_ids)
 
         # 3. Process forecasts using shared method

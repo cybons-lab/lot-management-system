@@ -50,7 +50,7 @@ class GroupAllocationSuggestionService(AllocationSuggestionBase):
         delete_query = self.db.query(AllocationSuggestion).filter(
             AllocationSuggestion.customer_id == customer_id,
             AllocationSuggestion.delivery_place_id == delivery_place_id,
-            AllocationSuggestion.product_group_id == supplier_item_id,
+            AllocationSuggestion.supplier_item_id == supplier_item_id,
         )
         if forecast_period:
             delete_query = delete_query.filter(
@@ -62,7 +62,7 @@ class GroupAllocationSuggestionService(AllocationSuggestionBase):
         forecast_query = self.db.query(ForecastCurrent).filter(
             ForecastCurrent.customer_id == customer_id,
             ForecastCurrent.delivery_place_id == delivery_place_id,
-            ForecastCurrent.product_group_id == supplier_item_id,
+            ForecastCurrent.supplier_item_id == supplier_item_id,
         )
         if forecast_period:
             forecast_query = forecast_query.filter(

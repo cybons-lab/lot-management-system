@@ -195,7 +195,7 @@ class ForecastCurrent(Base):
     delivery_place: Mapped[DeliveryPlace] = relationship(
         "DeliveryPlace", back_populates="forecast_current"
     )
-    product_group: Mapped[SupplierItem] = relationship(
+    supplier_item: Mapped[SupplierItem] = relationship(
         "SupplierItem", back_populates="forecast_current"
     )
 

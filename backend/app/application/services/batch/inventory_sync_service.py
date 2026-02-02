@@ -75,7 +75,7 @@ class InventorySyncService:
         local_totals = {}
 
         for row in result:
-            product_group_id = row.product_group_id
+            product_group_id = row.supplier_item_id
             total_qty = Decimal(str(row.total_quantity)) if row.total_quantity else Decimal("0")
             local_totals[product_group_id] = total_qty
 

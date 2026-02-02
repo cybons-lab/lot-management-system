@@ -200,8 +200,8 @@ def generate_lots(
 
     # DEBUG: Verify lot counts per product
     lot_counts = (
-        db.query(LotReceipt.product_group_id, func.count(LotReceipt.id).label("count"))
-        .group_by(LotReceipt.product_group_id)
+        db.query(LotReceipt.supplier_item_id, func.count(LotReceipt.id).label("count"))
+        .group_by(LotReceipt.supplier_item_id)
         .having(func.count(LotReceipt.id) > 3)
         .all()
     )
@@ -220,7 +220,7 @@ def get_any_lot_id(
     db: Session, product_group_id: int, required_qty: Decimal | None = None
 ) -> int | None:
     query = db.query(LotReceipt).filter(
-        LotReceipt.product_group_id == product_group_id, LotReceipt.status == "active"
+        LotReceipt.supplier_item_id == product_group_id, LotReceipt.status == "active"
     )
 
     if required_qty is not None:
@@ -235,7 +235,7 @@ def get_any_lot_id(
     if not lot and required_qty is not None:
         lot = (
             db.query(LotReceipt)
-            .filter(LotReceipt.product_group_id == product_group_id, LotReceipt.status == "active")
+            .filter(LotReceipt.supplier_item_id == product_group_id, LotReceipt.status == "active")
             .order_by(
                 (LotReceipt.received_quantity - LotReceipt.consumed_quantity).desc(),
                 LotReceipt.id.asc(),

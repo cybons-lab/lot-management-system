@@ -86,7 +86,7 @@ def generate_inbound_plans(
 
             line = InboundPlanLine(
                 inbound_plan_id=plan.id,
-                product_group_id=lot.product_group_id,
+                product_group_id=lot.supplier_item_id,
                 planned_quantity=original_qty,
                 unit="pcs",
             )

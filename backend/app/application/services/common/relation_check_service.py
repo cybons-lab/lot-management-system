@@ -151,7 +151,7 @@ class RelationCheckService:
         # ロットチェック
         lot_count = (
             self.db.query(func.count(LotReceipt.id))
-            .filter(LotReceipt.product_group_id == product_group_id)
+            .filter(LotReceipt.supplier_item_id == product_group_id)
             .scalar()
         )
         if lot_count > 0:
@@ -160,7 +160,7 @@ class RelationCheckService:
         # 受注明細チェック
         order_line_count = (
             self.db.query(func.count(OrderLine.id))
-            .filter(OrderLine.product_group_id == product_group_id)
+            .filter(OrderLine.supplier_item_id == product_group_id)
             .scalar()
         )
         if order_line_count > 0:
@@ -169,7 +169,7 @@ class RelationCheckService:
         # 需要予測チェック
         forecast_count = (
             self.db.query(func.count(ForecastCurrent.id))
-            .filter(ForecastCurrent.product_group_id == product_group_id)
+            .filter(ForecastCurrent.supplier_item_id == product_group_id)
             .scalar()
         )
         if forecast_count > 0:
@@ -259,13 +259,13 @@ class RelationCheckService:
 
             summary["lots"] = (
                 self.db.query(func.count(LotReceipt.id))
-                .filter(LotReceipt.product_group_id == entity_id)
+                .filter(LotReceipt.supplier_item_id == entity_id)
                 .scalar()
                 or 0
             )
             summary["order_lines"] = (
                 self.db.query(func.count(OrderLine.id))
-                .filter(OrderLine.product_group_id == entity_id)
+                .filter(OrderLine.supplier_item_id == entity_id)
                 .scalar()
                 or 0
             )

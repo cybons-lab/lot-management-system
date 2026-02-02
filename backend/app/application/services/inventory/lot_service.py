@@ -1098,7 +1098,7 @@ class LotService:
         db_lot = (
             self.db.query(LotReceipt)
             .options(
-                joinedload(LotReceipt.product_group),
+                joinedload(LotReceipt.supplier_item),
                 joinedload(LotReceipt.warehouse),
                 joinedload(LotReceipt.supplier),
             )
@@ -1109,7 +1109,7 @@ class LotService:
             raise LotNotFoundError(lot_id)
 
         # LotResponseの必須フィールドをリレーションから取得（削除済みマスタ対応）
-        product = db_lot.product_group
+        product = db_lot.supplier_item
         warehouse = db_lot.warehouse
         supplier = db_lot.supplier
 

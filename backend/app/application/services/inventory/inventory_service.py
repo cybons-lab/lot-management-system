@@ -97,7 +97,7 @@ providing product × warehouse summary information.
    → IN句でページング対象のみに絞る
    実装:
    - found_products: 最初のクエリで取得した製品IDリスト
-   - WHERE l.product_group_id IN :product_group_ids AND l.warehouse_id IN :warehouse_ids
+   - WHERE l.supplier_item_id IN :product_group_ids AND l.warehouse_id IN :warehouse_ids
    メリット:
    - 100件の在庫サマリーに対して、100件分の引当のみ取得
 
@@ -596,7 +596,7 @@ class InventoryService:
                 l.supplier_code,
                 SUM(l.remaining_quantity) as total_quantity,
                 COUNT(l.receipt_id) as lot_count,
-                COUNT(DISTINCT l.product_group_id) as product_count
+                COUNT(DISTINCT l.supplier_item_id) as product_count
             FROM v_lot_receipt_stock l
             WHERE l.remaining_quantity > 0 AND l.status = 'active' AND l.supplier_id IS NOT NULL
             GROUP BY l.supplier_id, l.supplier_name, l.supplier_code
@@ -630,7 +630,7 @@ class InventoryService:
                 l.warehouse_code,
                 SUM(l.remaining_quantity) as total_quantity,
                 COUNT(l.receipt_id) as lot_count,
-                COUNT(DISTINCT l.product_group_id) as product_count
+                COUNT(DISTINCT l.supplier_item_id) as product_count
             FROM v_lot_receipt_stock l
             WHERE l.remaining_quantity > 0 AND l.status = 'active'
             GROUP BY l.warehouse_id, l.warehouse_name, l.warehouse_code
@@ -866,14 +866,14 @@ class InventoryService:
         stock_base_cte = f"""
             WITH stock_base AS (
                 SELECT
-                    v.product_group_id,
+                    v.supplier_item_id,
                     v.supplier_id,
                     v.warehouse_id,
                     SUM(v.available_quantity) as available_quantity
                 FROM v_lot_receipt_stock v
                 {join_assignment}
                 WHERE {where_str}
-                GROUP BY v.product_group_id, v.supplier_id, v.warehouse_id
+                GROUP BY v.supplier_item_id, v.supplier_id, v.warehouse_id
                 {having_clause}
             )
         """
@@ -921,7 +921,7 @@ class InventoryService:
                     ELSE p.display_name
                 END AS name
             FROM stock_base sb
-            JOIN supplier_items p ON sb.product_group_id = p.id
+            JOIN supplier_items p ON sb.supplier_item_id = p.id
             LEFT JOIN customer_items ci ON p.id = ci.supplier_item_id AND ci.valid_to >= '9999-12-31'
             LEFT JOIN customers c ON ci.customer_id = c.id AND c.valid_to >= '9999-12-31'
             WHERE p.valid_to >= '9999-12-31'

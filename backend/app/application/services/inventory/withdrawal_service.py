@@ -135,7 +135,7 @@ class WithdrawalService:
             出庫履歴一覧
         """
         query = self.db.query(Withdrawal).options(
-            joinedload(Withdrawal.lot).joinedload(LotReceipt.product_group),
+            joinedload(Withdrawal.lot).joinedload(LotReceipt.supplier_item),
             joinedload(Withdrawal.customer),
             joinedload(Withdrawal.delivery_place),
             joinedload(Withdrawal.user),
@@ -164,7 +164,7 @@ class WithdrawalService:
             # LotとProductは結合必須
             if product_group_id is None and warehouse_id is None:  # 上ですでに結合していない場合
                 query = query.join(Withdrawal.lot)
-            query = query.join(LotReceipt.product_group)
+            query = query.join(LotReceipt.supplier_item)
 
             # CustomerとDeliveryPlaceは外部結合（存在しない場合もあるため）
             query = query.outerjoin(Withdrawal.customer)
@@ -225,7 +225,7 @@ class WithdrawalService:
         withdrawal = (
             self.db.query(Withdrawal)
             .options(
-                joinedload(Withdrawal.lot).joinedload(LotReceipt.product_group),
+                joinedload(Withdrawal.lot).joinedload(LotReceipt.supplier_item),
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),
@@ -368,7 +368,7 @@ class WithdrawalService:
         refreshed = (
             self.db.query(Withdrawal)
             .options(
-                joinedload(Withdrawal.lot).joinedload(LotReceipt.product_group),
+                joinedload(Withdrawal.lot).joinedload(LotReceipt.supplier_item),
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),
@@ -387,7 +387,7 @@ class WithdrawalService:
         """モデルをレスポンススキーマに変換."""
         withdrawal_type = WithdrawalType(withdrawal.withdrawal_type)
         lot = withdrawal.lot
-        product = lot.product_group if lot else None
+        product = lot.supplier_item if lot else None
 
         # 取消理由の変換
         cancel_reason = None
@@ -540,7 +540,7 @@ class WithdrawalService:
         refreshed = (
             self.db.query(Withdrawal)
             .options(
-                joinedload(Withdrawal.lot).joinedload(LotReceipt.product_group),
+                joinedload(Withdrawal.lot).joinedload(LotReceipt.supplier_item),
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),

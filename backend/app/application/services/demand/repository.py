@@ -38,7 +38,7 @@ class DemandRepository:
             .join(WithdrawalLine, Withdrawal.id == WithdrawalLine.withdrawal_id)
             .join(LotReceipt, WithdrawalLine.lot_receipt_id == LotReceipt.id)
             .where(
-                LotReceipt.product_group_id == product_group_id,
+                LotReceipt.supplier_item_id == product_group_id,
                 Withdrawal.ship_date >= start_date,
                 Withdrawal.ship_date <= end_date,
                 Withdrawal.withdrawal_type.in_(demand_types),

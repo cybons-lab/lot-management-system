@@ -101,7 +101,7 @@ class ForecastImportService:
                         and_(
                             ForecastCurrent.customer_id == customer_id,
                             ForecastCurrent.delivery_place_id == delivery_place_id,
-                            ForecastCurrent.product_group_id == product_group_id,
+                            ForecastCurrent.supplier_item_id == product_group_id,
                         )
                     )
                     .all()
@@ -112,7 +112,7 @@ class ForecastImportService:
                     history = ForecastHistory(
                         customer_id=existing_fc.customer_id,
                         delivery_place_id=existing_fc.delivery_place_id,
-                        product_group_id=existing_fc.product_group_id,
+                        product_group_id=existing_fc.supplier_item_id,
                         forecast_date=existing_fc.forecast_date,
                         forecast_quantity=existing_fc.forecast_quantity,
                         unit=existing_fc.unit,

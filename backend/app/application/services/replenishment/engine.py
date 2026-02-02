@@ -85,7 +85,7 @@ class ReplenishmentEngine:
 
             # 6. 計算
             # Product情報からロットサイズなどを取得したい場合はProductをjoinまたは取得
-            # ここでは ps.product_group を使う (eager loadされていれば)
+            # ここでは ps.supplier_item を使う (eager loadされていれば)
             # ロットサイズ等の制約は ProductMapping などにあるかもしれないが、
             # 現状の Product モデルにはないので、qty_scale 等を使用
             # D12: MOQ -> ロット丸め

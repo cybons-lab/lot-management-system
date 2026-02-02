@@ -185,22 +185,22 @@ class SupplierItem(SoftDeleteMixin, Base):
     forecast_current: Mapped[list[ForecastCurrent]] = relationship(
         "ForecastCurrent",
         foreign_keys="[ForecastCurrent.supplier_item_id]",
-        back_populates="product_group",
+        back_populates="supplier_item",
     )
     lot_masters: Mapped[list[LotMaster]] = relationship(
         "LotMaster",
         foreign_keys="[LotMaster.supplier_item_id]",
-        back_populates="product_group",
+        back_populates="supplier_item",
     )
     order_lines: Mapped[list[OrderLine]] = relationship(
         "OrderLine",
         foreign_keys="[OrderLine.supplier_item_id]",
-        back_populates="product_group",
+        back_populates="supplier_item",
     )
     inbound_plan_lines: Mapped[list[InboundPlanLine]] = relationship(
         "InboundPlanLine",
         foreign_keys="[InboundPlanLine.supplier_item_id]",
-        back_populates="product_group",
+        back_populates="supplier_item",
     )
 
     def __repr__(self) -> str:
