@@ -1,6 +1,9 @@
 # frontend/Dockerfile
 FROM node:20-slim
 
+# Install curl for OpenAPI type generation
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # 作業ディレクトリ
 WORKDIR /app
 
