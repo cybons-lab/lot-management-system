@@ -2478,7 +2478,7 @@
           "withdrawals"
         ],
         "summary": "Get Default Destination",
-        "description": "製品IDからデフォルトの得意先・納入先を取得する.\n\n1. customer_items テーブルから product_group_id でマッピングを検索\n2. 見つかれば customer_id を取得\n3. customer_item_delivery_settings の is_default=True レコードから delivery_place_id を取得\n4. マッピングが無い場合は mapping_found=False を返す",
+        "description": "製品IDからデフォルトの得意先・納入先を取得する.\n\nPhase1: product_group_id → supplier_item_id, supplier_id は supplier_item 経由で取得\n\n1. customer_items テーブルから supplier_item_id でマッピングを検索\n2. 見つかれば customer_id を取得\n3. customer_item_delivery_settings の is_default=True レコードから delivery_place_id を取得\n4. マッピングが無い場合は mapping_found=False を返す",
         "operationId": "get_default_destination_api_v2_withdrawals_default_destination_get",
         "parameters": [
           {
@@ -9293,7 +9293,7 @@
           "customer-items"
         ],
         "summary": "List Customer Items",
-        "description": "得意先品番マッピング一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ（オプション）\n    product_group_id: 製品IDでフィルタ（オプション）\n    supplier_id: 仕入先IDでフィルタ（オプション、supplier_items経由）\n    include_inactive: 無効なマッピングを含めるか\n    db: データベースセッション\n\nReturns:\n    得意先品番マッピングのリスト",
+        "description": "得意先品番マッピング一覧取得.\n\nPhase1: product_group_id → supplier_item_id に変更\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ（オプション）\n    supplier_item_id: 仕入先品目IDでフィルタ（オプション）\n    supplier_id: 仕入先IDでフィルタ（オプション、supplier_items経由）\n    include_inactive: 無効なマッピングを含めるか\n    db: データベースセッション\n\nReturns:\n    得意先品番マッピングのリスト",
         "operationId": "list_customer_items_api_masters_customer_items_get",
         "parameters": [
           {
@@ -9338,7 +9338,7 @@
             "description": "得意先IDでフィルタ"
           },
           {
-            "name": "product_group_id",
+            "name": "supplier_item_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -9350,10 +9350,10 @@
                   "type": "null"
                 }
               ],
-              "description": "製品IDでフィルタ",
-              "title": "Product Group Id"
+              "description": "仕入先品目IDでフィルタ",
+              "title": "Supplier Item Id"
             },
-            "description": "製品IDでフィルタ"
+            "description": "仕入先品目IDでフィルタ"
           },
           {
             "name": "supplier_id",
@@ -30982,7 +30982,7 @@
             "title": "Customer Part No",
             "description": "先方品番"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "anyOf": [
               {
                 "type": "integer"
@@ -30991,8 +30991,8 @@
                 "type": "null"
               }
             ],
-            "title": "Product Group Id",
-            "description": "解決された製品ID"
+            "title": "Supplier Item Id",
+            "description": "解決された製品ID (Phase1: renamed from product_group_id)"
           },
           "match_type": {
             "type": "string",

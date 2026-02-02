@@ -146,10 +146,13 @@ def get_customer_part_no_for_lot(
         if result:
             return result
 
-    # ルール(2): is_primary=True のデフォルト品番
-    stmt = select(CustomerItem.customer_part_no).where(
-        CustomerItem.supplier_item_id == lot.supplier_item_id,
-        CustomerItem.is_primary.is_(True),
+    # ルール(2): Phase1 - is_primaryは廃止。最初の1件を返す（created_at順）
+    # Phase1以降、customer_itemsは等価なので、特定のデフォルトは存在しない
+    stmt = (
+        select(CustomerItem.customer_part_no)
+        .where(CustomerItem.supplier_item_id == lot.supplier_item_id)
+        .order_by(CustomerItem.created_at)
+        .limit(1)
     )
     result = db.execute(stmt).scalar_one_or_none()
 

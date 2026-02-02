@@ -250,15 +250,12 @@ class Supplier(SoftDeleteMixin, Base):
         Index("idx_suppliers_valid_to", "valid_to"),
     )
 
-    # Relationships
+    # Relationships (Phase1: removed customer_items - now linked via supplier_items)
 
     lot_masters: Mapped[list[LotMaster]] = relationship("LotMaster", back_populates="supplier")
     lot_receipts: Mapped[list[LotReceipt]] = relationship("LotReceipt", back_populates="supplier")
     inbound_plans: Mapped[list[InboundPlan]] = relationship(
         "InboundPlan", back_populates="supplier"
-    )
-    customer_items: Mapped[list[CustomerItem]] = relationship(
-        "CustomerItem", back_populates="supplier"
     )
     user_assignments: Mapped[list[UserSupplierAssignment]] = relationship(
         "UserSupplierAssignment", back_populates="supplier", cascade="all, delete-orphan"
@@ -369,16 +366,18 @@ class CustomerItem(SoftDeleteMixin, Base):
 
     【責務境界】受注・出荷ドメイン
     - 得意先が使用する品番コードの変換
-    - 得意先・製品・仕入先の基本マッピング
+    - 得意先とsupplier_itemの直接マッピング（Phase1以降）
     - 参照: v_order_line_details, 出荷表生成処理
 
     DDL: customer_items
     Primary key: id (BIGSERIAL) - サロゲートキー
     Business key: UNIQUE(customer_id, customer_part_no)
-    Foreign keys: customer_id -> customers(id), product_group_id -> product_groups(id),
-                  supplier_id -> suppliers(id), supplier_item_id -> supplier_items(id)
+    Foreign keys: customer_id -> customers(id), supplier_item_id -> supplier_items(id)
     Supports soft delete via valid_to column.
-    See: docs/SCHEMA_GUIDE.md, docs/adr/ADR-003_customer_items_product_mappings.md
+
+    Phase1 cleanup:
+    - Removed: product_group_id, supplier_id, is_primary
+    - Now directly links to supplier_items via supplier_item_id (NOT NULL)
     """
 
     __tablename__ = "customer_items"
@@ -397,29 +396,12 @@ class CustomerItem(SoftDeleteMixin, Base):
         nullable=False,
         comment="得意先品番（先方品番）",
     )
-    product_group_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
-    supplier_id: Mapped[int | None] = mapped_column(
-        BigInteger,
-        ForeignKey("suppliers.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    # 仕入先品目への参照
-    supplier_item_id: Mapped[int | None] = mapped_column(
+    # Phase1: supplier_item_id is now NOT NULL (direct link to supplier_items)
+    supplier_item_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="SET NULL"),
-        nullable=True,
-        comment="仕入先品目ID",
-    )
-    # 主要得意先フラグ（1 supplier_item につき1つの is_primary=true）
-    is_primary: Mapped[bool] = mapped_column(
-        Boolean,
-        server_default=text("false"),
         nullable=False,
-        comment="主要得意先フラグ",
+        comment="仕入先品目ID (Phase1: required)",
     )
     base_unit: Mapped[str] = mapped_column(String(20), nullable=False)
     pack_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
@@ -439,31 +421,17 @@ class CustomerItem(SoftDeleteMixin, Base):
     __table_args__ = (
         # ビジネスキーの一意制約
         UniqueConstraint("customer_id", "customer_part_no", name="uq_customer_items_customer_part"),
-        # 1 supplier_item につき1つの is_primary=true を保証
-        Index(
-            "idx_customer_items_is_primary_unique",
-            "supplier_item_id",
-            unique=True,
-            postgresql_where=text("is_primary = true AND supplier_item_id IS NOT NULL"),
-        ),
-        Index("idx_customer_items_product_group", "product_group_id"),
-        Index("idx_customer_items_supplier", "supplier_id"),
+        # Phase1: Only supplier_item_id index remains (obsolete indexes removed)
         Index("idx_customer_items_supplier_item", "supplier_item_id"),
         Index("idx_customer_items_valid_to", "valid_to"),
     )
 
-    # Relationships
+    # Relationships (Phase1: simplified to only customer and supplier_item)
     customer: Mapped[Customer] = relationship("Customer", back_populates="customer_items")
-    supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="customer_items")
-    supplier_item: Mapped[SupplierItem | None] = relationship(
+    supplier_item: Mapped[SupplierItem] = relationship(
         "SupplierItem",
         foreign_keys="[CustomerItem.supplier_item_id]",
         back_populates="customer_items",
-    )
-    product_group: Mapped[SupplierItem] = relationship(
-        "SupplierItem",
-        foreign_keys="[CustomerItem.product_group_id]",
-        back_populates="customer_items_as_product_group",
     )
     delivery_settings: Mapped[list[CustomerItemDeliverySetting]] = relationship(
         "CustomerItemDeliverySetting",

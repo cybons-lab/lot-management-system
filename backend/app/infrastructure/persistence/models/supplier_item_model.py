@@ -169,15 +169,11 @@ class SupplierItem(SoftDeleteMixin, Base):
         "Supplier",
         back_populates="supplier_items",
     )
+    # Phase1: Only one customer_items relationship remains (via supplier_item_id)
     customer_items: Mapped[list[CustomerItem]] = relationship(
         "CustomerItem",
         foreign_keys="[CustomerItem.supplier_item_id]",
         back_populates="supplier_item",
-    )
-    customer_items_as_product_group: Mapped[list[CustomerItem]] = relationship(
-        "CustomerItem",
-        foreign_keys="[CustomerItem.product_group_id]",
-        back_populates="product_group",
     )
     lot_receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",

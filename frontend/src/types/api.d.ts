@@ -627,7 +627,9 @@ export interface paths {
      * Get Default Destination
      * @description 製品IDからデフォルトの得意先・納入先を取得する.
      *
-     *     1. customer_items テーブルから product_group_id でマッピングを検索
+     *     Phase1: product_group_id → supplier_item_id, supplier_id は supplier_item 経由で取得
+     *
+     *     1. customer_items テーブルから supplier_item_id でマッピングを検索
      *     2. 見つかれば customer_id を取得
      *     3. customer_item_delivery_settings の is_default=True レコードから delivery_place_id を取得
      *     4. マッピングが無い場合は mapping_found=False を返す
@@ -3467,11 +3469,13 @@ export interface paths {
      * List Customer Items
      * @description 得意先品番マッピング一覧取得.
      *
+     *     Phase1: product_group_id → supplier_item_id に変更
+     *
      *     Args:
      *         skip: スキップ件数
      *         limit: 取得件数上限
      *         customer_id: 得意先IDでフィルタ（オプション）
-     *         product_group_id: 製品IDでフィルタ（オプション）
+     *         supplier_item_id: 仕入先品目IDでフィルタ（オプション）
      *         supplier_id: 仕入先IDでフィルタ（オプション、supplier_items経由）
      *         include_inactive: 無効なマッピングを含めるか
      *         db: データベースセッション
@@ -12312,10 +12316,10 @@ export interface components {
        */
       customer_part_no: string;
       /**
-       * Product Group Id
-       * @description 解決された製品ID
+       * Supplier Item Id
+       * @description 解決された製品ID (Phase1: renamed from product_group_id)
        */
-      product_group_id?: number | null;
+      supplier_item_id?: number | null;
       /**
        * Match Type
        * @description マッチ種別（exact/prefix/not_found/multiple）
@@ -22467,8 +22471,8 @@ export interface operations {
         limit?: number;
         /** @description 得意先IDでフィルタ */
         customer_id?: number | null;
-        /** @description 製品IDでフィルタ */
-        product_group_id?: number | null;
+        /** @description 仕入先品目IDでフィルタ */
+        supplier_item_id?: number | null;
         /** @description 仕入先IDでフィルタ（supplier_items経由） */
         supplier_id?: number | null;
         /** @description 無効なマッピングを含めるか */

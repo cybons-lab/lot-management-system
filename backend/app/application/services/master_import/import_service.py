@@ -321,23 +321,17 @@ class MasterImportService:
         special_instructions: str | None,
     ) -> CustomerItem | None:
         """Upsert customer item."""
-        # Find product by maker_part_code
-        product = (
+        # Phase1: Find supplier_item by maker_part_code
+        supplier_item = (
             self.db.query(SupplierItem)
             .filter(SupplierItem.maker_part_no == maker_part_code)
             .first()
         )
-        if not product:
+        if not supplier_item:
             return None
 
-        # Find supplier if specified
-        supplier_id: int | None = None
-        if supplier_code:
-            supplier = (
-                self.db.query(Supplier).filter(Supplier.supplier_code == supplier_code).first()
-            )
-            if supplier:
-                supplier_id = supplier.id
+        # Phase1: supplier_id is removed from customer_items
+        # It's available via supplier_item.supplier_id if needed
 
         # Check for existing
         existing = (
@@ -350,8 +344,7 @@ class MasterImportService:
         )
 
         if existing:
-            existing.product_group_id = product.id
-            existing.supplier_id = supplier_id
+            existing.supplier_item_id = supplier_item.id
             if base_unit:
                 existing.base_unit = base_unit
             if pack_unit:
@@ -365,9 +358,8 @@ class MasterImportService:
             ci = CustomerItem(
                 customer_id=customer_id,
                 customer_part_no=customer_part_no,
-                product_group_id=product.id,
-                supplier_id=supplier_id,
-                base_unit=base_unit,
+                supplier_item_id=supplier_item.id,
+                base_unit=base_unit or "個",  # Phase1: base_unit is required
                 pack_unit=pack_unit,
                 pack_quantity=pack_quantity,
                 special_instructions=special_instructions,
