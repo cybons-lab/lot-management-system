@@ -81,7 +81,7 @@ const SETTING_CONFIGS: Record<string, SettingConfig> = {
   },
 };
 
-/* eslint-disable-next-line max-lines-per-function */
+/* eslint-disable max-lines, max-lines-per-function */
 export function SystemSettingsPage() {
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -90,6 +90,11 @@ export function SystemSettingsPage() {
     "idle",
   );
   const [isFixing, setIsFixing] = useState(false);
+  const [viewDetails, setViewDetails] = useState<{
+    columns: string[];
+    related_tables: Record<string, { exists: boolean; record_count?: number; columns?: string[] }>;
+  } | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   const fetchSettings = async () => {
     setIsLoading(true);
@@ -163,6 +168,27 @@ export function SystemSettingsPage() {
       console.error(e);
     } finally {
       setIsFixing(false);
+    }
+  };
+
+  const handleShowDetails = async () => {
+    try {
+      const result = await http.get<{
+        columns: Array<{ name: string }>;
+        related_tables: Record<
+          string,
+          { exists: boolean; record_count?: number; columns?: string[] }
+        >;
+      }>("admin/diagnostics/view-definition");
+
+      setViewDetails({
+        columns: result.columns.map((c) => c.name),
+        related_tables: result.related_tables,
+      });
+      setShowDetails(true);
+    } catch (e) {
+      toast.error("ビュー詳細の取得に失敗しました");
+      console.error(e);
     }
   };
 
@@ -275,7 +301,81 @@ export function SystemSettingsPage() {
                         <span>正常です</span>
                       </div>
                     )}
+                    <Button variant="ghost" size="sm" onClick={handleShowDetails}>
+                      詳細を表示
+                    </Button>
                   </div>
+
+                  {/* 詳細情報モーダル */}
+                  {showDetails && viewDetails && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl max-h-[80vh] overflow-auto">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-lg font-semibold">ビュー詳細情報</h3>
+                          <button
+                            onClick={() => setShowDetails(false)}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        {/* 列情報 */}
+                        <div className="mb-6">
+                          <h4 className="font-medium mb-2">
+                            ビュー列情報 ({viewDetails.columns.length}列)
+                          </h4>
+                          <div className="bg-gray-100 dark:bg-gray-900 rounded p-3 max-h-60 overflow-auto">
+                            <ul className="text-sm space-y-1 font-mono">
+                              {viewDetails.columns.map((col, idx) => (
+                                <li
+                                  key={idx}
+                                  className={
+                                    col === "supplier_item_id" ? "text-green-600 font-bold" : ""
+                                  }
+                                >
+                                  {idx + 1}. {col}
+                                  {col === "supplier_item_id" && " ✓ (重要)"}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+
+                        {/* 関連テーブル情報 */}
+                        <div>
+                          <h4 className="font-medium mb-2">関連テーブル情報</h4>
+                          <div className="space-y-3">
+                            {Object.entries(viewDetails.related_tables).map(([table, info]) => (
+                              <div key={table} className="bg-gray-100 dark:bg-gray-900 rounded p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="font-mono font-semibold">{table}</span>
+                                  {info.exists ? (
+                                    <span className="text-green-600 text-sm">
+                                      ✓ 存在 ({info.record_count} レコード)
+                                    </span>
+                                  ) : (
+                                    <span className="text-red-600 text-sm">✗ 存在しません</span>
+                                  )}
+                                </div>
+                                {info.exists && info.columns && (
+                                  <div className="text-xs text-gray-600 dark:text-gray-400 font-mono">
+                                    列: {info.columns.slice(0, 5).join(", ")}
+                                    {info.columns.length > 5 &&
+                                      ` ...他${info.columns.length - 5}列`}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mt-6 text-right">
+                          <Button onClick={() => setShowDetails(false)}>閉じる</Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

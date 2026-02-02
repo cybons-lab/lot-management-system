@@ -678,3 +678,127 @@ WHERE
     except Exception as e:
         logger.exception(f"ビュー修正エラー: {e}")
         raise HTTPException(status_code=500, detail=f"ビュー修正に失敗しました: {str(e)}")
+
+
+@router.get("/diagnostics/view-definition")
+def get_view_definition(
+    view_name: str = "v_lot_receipt_stock",
+    current_admin=Depends(get_current_admin),
+):
+    """ビュー定義の完全な情報を取得（Admin専用）.
+
+    ビューの定義SQL、列情報、関連テーブル情報を取得。
+    開発環境と本番環境の差分確認に使用。
+
+    Returns:
+        {
+            "view_name": "v_lot_receipt_stock",
+            "definition": "SELECT ... FROM ...",
+            "columns": [...],
+            "related_tables": {...}
+        }
+    """
+    try:
+        with engine.connect() as conn:
+            # ビュー定義を取得
+            result = conn.execute(
+                text("SELECT pg_get_viewdef(CAST(:view_name AS regclass), true)"),
+                {"view_name": view_name},
+            )
+            view_definition = result.scalar()
+
+            if not view_definition:
+                raise HTTPException(status_code=404, detail=f"View '{view_name}' not found")
+
+            # 列情報を取得
+            result = conn.execute(
+                text(
+                    """
+                SELECT
+                    column_name,
+                    data_type,
+                    character_maximum_length,
+                    numeric_precision,
+                    numeric_scale
+                FROM information_schema.columns
+                WHERE table_name = :view_name
+                ORDER BY ordinal_position
+                """
+                ),
+                {"view_name": view_name},
+            )
+            columns = [
+                {
+                    "name": row[0],
+                    "type": row[1],
+                    "char_length": row[2],
+                    "numeric_precision": row[3],
+                    "numeric_scale": row[4],
+                }
+                for row in result.fetchall()
+            ]
+
+            # 関連テーブルの情報を取得
+            related_tables = [
+                "lot_receipts",
+                "supplier_items",
+                "lot_master",
+                "warehouses",
+                "suppliers",
+            ]
+            table_info = {}
+
+            for table in related_tables:
+                result = conn.execute(
+                    text(
+                        """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_name = :table_name
+                    )
+                    """
+                    ),
+                    {"table_name": table},
+                )
+                exists = result.scalar()
+
+                if exists:
+                    # レコード数を取得
+                    result = conn.execute(text(f"SELECT COUNT(*) FROM {table}"))
+                    count = result.scalar()
+
+                    # 列情報を取得
+                    result = conn.execute(
+                        text(
+                            """
+                        SELECT column_name
+                        FROM information_schema.columns
+                        WHERE table_name = :table_name
+                        ORDER BY ordinal_position
+                        """
+                        ),
+                        {"table_name": table},
+                    )
+                    table_columns = [row[0] for row in result.fetchall()]
+
+                    table_info[table] = {
+                        "exists": True,
+                        "record_count": count,
+                        "columns": table_columns,
+                    }
+                else:
+                    table_info[table] = {"exists": False}
+
+            return {
+                "view_name": view_name,
+                "definition": view_definition,
+                "columns": columns,
+                "related_tables": table_info,
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"ビュー定義取得エラー: {e}")
+        raise HTTPException(status_code=500, detail=f"ビュー定義の取得に失敗しました: {str(e)}")
