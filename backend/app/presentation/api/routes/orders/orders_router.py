@@ -179,9 +179,9 @@ def list_orders(
     order_type: str | None = None,
     prioritize_assigned: bool = True,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(["guest", "user", "admin"])),
+    current_user: User = Depends(require_role(["user", "admin"])),
 ):
-    """受注一覧取得（ゲスト可・読み取り専用）.
+    """受注一覧取得（一般ユーザー・管理者のみ）.
 
     Args:
         skip: スキップ件数（ページネーション用）
@@ -224,9 +224,9 @@ def list_orders(
 def get_order(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(["guest", "user", "admin"])),
+    current_user: User = Depends(require_role(["user", "admin"])),
 ):
-    """受注詳細取得（ゲスト可・読み取り専用、明細含む）.
+    """受注詳細取得（一般ユーザー・管理者のみ、明細含む）.
 
     Args:
         order_id: 受注ID
@@ -256,9 +256,9 @@ def list_order_lines(
     date_to: date | None = None,
     order_type: str | None = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(["guest", "user", "admin"])),
+    current_user: User = Depends(require_role(["user", "admin"])),
 ):
-    """受注明細一覧取得（ゲスト可・フラット表示用）.
+    """受注明細一覧取得（一般ユーザー・管理者のみ、フラット表示用）.
 
     Args:
         skip: スキップ件数

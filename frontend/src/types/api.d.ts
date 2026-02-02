@@ -1003,7 +1003,7 @@ export interface paths {
     };
     /**
      * List Order Lines
-     * @description 受注明細一覧取得（ゲスト可・フラット表示用）.
+     * @description 受注明細一覧取得（一般ユーザー・管理者のみ、フラット表示用）.
      *
      *     Args:
      *         skip: スキップ件数
@@ -1074,7 +1074,7 @@ export interface paths {
     };
     /**
      * List Orders
-     * @description 受注一覧取得（ゲスト可・読み取り専用）.
+     * @description 受注一覧取得（一般ユーザー・管理者のみ）.
      *
      *     Args:
      *         skip: スキップ件数（ページネーション用）
@@ -1128,7 +1128,7 @@ export interface paths {
     };
     /**
      * Get Order
-     * @description 受注詳細取得（ゲスト可・読み取り専用、明細含む）.
+     * @description 受注詳細取得（一般ユーザー・管理者のみ、明細含む）.
      *
      *     Args:
      *         order_id: 受注ID
