@@ -3,6 +3,7 @@ import logging
 import shutil
 import zipfile
 from datetime import datetime
+from pathlib import PurePosixPath, PureWindowsPath
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -71,9 +72,17 @@ async def upload_bundle(
 
         # 3. ZIPの検証と展開
         with zipfile.ZipFile(zip_path, "r") as z:
-            # Zip Slip 対策
+            # Zip Slip 対策 (Windowsの絶対パスも拒否)
             for name in z.namelist():
-                if ".." in name or name.startswith("/") or name.startswith("\\"):
+                posix_path = PurePosixPath(name)
+                windows_path = PureWindowsPath(name)
+                if (
+                    ".." in posix_path.parts
+                    or ".." in windows_path.parts
+                    or posix_path.is_absolute()
+                    or windows_path.is_absolute()
+                    or windows_path.drive
+                ):
                     raise HTTPException(
                         status_code=400, detail=f"不正なファイルパスが含まれています: {name}"
                     )
@@ -129,6 +138,10 @@ async def upload_bundle(
             "requires_restart": manifest.requires_restart,
         }
 
+    except HTTPException:
+        if release_dir.exists():
+            shutil.rmtree(release_dir)
+        raise
     except Exception as e:
         logger.exception("デプロイ中にエラーが発生しました")
         if release_dir.exists():
