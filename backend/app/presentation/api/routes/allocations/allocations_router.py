@@ -187,7 +187,7 @@ def _map_fefo_preview(result) -> FefoPreviewResponse:
         lines.append(
             FefoLineAllocation(
                 order_line_id=line_plan.order_line_id,
-                product_group_id=line_plan.product_group_id or 0,  # Handle None safety
+                supplier_item_id=line_plan.product_group_id or 0,  # Handle None safety
                 order_quantity=line_plan.required_qty,  # Mapped from required_qty
                 already_allocated_quantity=line_plan.already_allocated_qty,
                 allocations=allocations,
@@ -308,7 +308,7 @@ def manual_allocate(
             lot_number=lot.lot_number or "" if lot else "",
             allocated_quantity=reservation.reserved_qty,
             available_quantity=available_qty,
-            product_group_id=lot.product_group_id if lot else 0,
+            supplier_item_id=lot.product_group_id if lot else 0,
             expiry_date=lot.expiry_date if lot else None,
             status="preview",
             message="Reservation created",
@@ -491,7 +491,7 @@ async def bulk_auto_allocate(
     try:
         result = actions.auto_reserve_bulk(
             db,
-            supplier_item_id=request.product_group_id,
+            supplier_item_id=request.supplier_item_id,
             customer_id=request.customer_id,
             delivery_place_id=request.delivery_place_id,
             order_type=request.order_type,

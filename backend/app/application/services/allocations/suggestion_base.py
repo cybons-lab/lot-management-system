@@ -148,7 +148,7 @@ def finalize_stats_and_gaps(
             AllocationStatsPerKey(
                 customer_id=customer_id,
                 delivery_place_id=delivery_place_id,
-                product_group_id=product_group_id,
+                supplier_item_id=product_group_id,
                 forecast_period=forecast_period,
                 forecast_quantity=data["forecast_quantity"],
                 allocated_quantity=data["allocated_quantity"],
@@ -160,7 +160,7 @@ def finalize_stats_and_gaps(
                 AllocationGap(
                     customer_id=customer_id,
                     delivery_place_id=delivery_place_id,
-                    product_group_id=product_group_id,
+                    supplier_item_id=product_group_id,
                     forecast_period=forecast_period,
                     shortage_quantity=data["shortage_quantity"],
                 )

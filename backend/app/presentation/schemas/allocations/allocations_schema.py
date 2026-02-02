@@ -40,7 +40,7 @@ class FefoLineAllocation(BaseSchema):
     """FEFO line allocation detail."""
 
     order_line_id: int
-    product_group_id: int
+    supplier_item_id: int
     order_quantity: Decimal = Field(..., decimal_places=3, description="受注数量")
     already_allocated_quantity: Decimal = Field(
         default=Decimal("0"), decimal_places=3, description="既存引当数量"
@@ -87,7 +87,7 @@ class ManualAllocationResponse(BaseSchema):
     lot_number: str
     allocated_quantity: Decimal = Field(..., decimal_places=3)
     available_quantity: Decimal = Field(..., decimal_places=3)
-    product_group_id: int
+    supplier_item_id: int
     expiry_date: date | None = None
     status: str = "preview"
     message: str | None = None
@@ -153,7 +153,7 @@ class AutoAllocateResponse(BaseSchema):
 class BulkAutoAllocateRequest(BaseSchema):
     """Bulk auto-allocate request for group-based FEFO allocation."""
 
-    product_group_id: int | None = Field(None, description="製品ID（指定時はその製品のみ対象）")
+    supplier_item_id: int | None = Field(None, description="製品ID（指定時はその製品のみ対象）")
     customer_id: int | None = Field(None, description="得意先ID（指定時はその得意先のみ対象）")
     delivery_place_id: int | None = Field(
         None, description="納入先ID（指定時はその納入先のみ対象）"
@@ -227,7 +227,7 @@ class CandidateLotItem(BaseSchema):
     current_quantity: Decimal = Field(..., decimal_places=3)
     allocated_quantity: Decimal = Field(..., decimal_places=3)
     available_quantity: Decimal = Field(..., decimal_places=3, description="引当可能数量")
-    product_group_id: int
+    supplier_item_id: int
     warehouse_id: int
     warehouse_code: str | None = None
     warehouse_name: str | None = None

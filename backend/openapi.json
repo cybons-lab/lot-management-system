@@ -1400,7 +1400,7 @@
             }
           },
           {
-            "name": "product_group_id",
+            "name": "supplier_item_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -1412,7 +1412,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Group Id"
+              "title": "Supplier Item Id"
             }
           }
         ],
@@ -1579,7 +1579,7 @@
             "description": "期間 (YYYY-MM)"
           },
           {
-            "name": "product_group_id",
+            "name": "supplier_item_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -1592,7 +1592,7 @@
                 }
               ],
               "description": "製品ID",
-              "title": "Product Group Id"
+              "title": "Supplier Item Id"
             },
             "description": "製品ID"
           },
@@ -1671,13 +1671,13 @@
             "description": "納入先ID"
           },
           {
-            "name": "product_group_id",
+            "name": "supplier_item_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
               "description": "製品ID",
-              "title": "Product Group Id"
+              "title": "Supplier Item Id"
             },
             "description": "製品ID"
           },
@@ -1756,13 +1756,13 @@
             "description": "納入先ID"
           },
           {
-            "name": "product_group_id",
+            "name": "supplier_item_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
               "description": "製品ID",
-              "title": "Product Group Id"
+              "title": "Supplier Item Id"
             },
             "description": "製品ID"
           },
@@ -1841,13 +1841,13 @@
             "description": "納入先ID"
           },
           {
-            "name": "product_group_id",
+            "name": "supplier_item_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "integer",
               "description": "製品ID",
-              "title": "Product Group Id"
+              "title": "Supplier Item Id"
             },
             "description": "製品ID"
           },
@@ -4084,7 +4084,7 @@
           "forecasts"
         ],
         "summary": "List Forecasts",
-        "description": "フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_group_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    グループ化されたフォーキャストリスト",
+        "description": "フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    supplier_item_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    グループ化されたフォーキャストリスト",
         "operationId": "list_forecasts_api_forecasts_get",
         "parameters": [
           {
@@ -4143,7 +4143,7 @@
             }
           },
           {
-            "name": "product_group_id",
+            "name": "supplier_item_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -4155,7 +4155,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Group Id"
+              "title": "Supplier Item Id"
             }
           }
         ],
@@ -4229,7 +4229,7 @@
           "forecasts"
         ],
         "summary": "Export Forecasts",
-        "description": "フォーキャストをExcelでエクスポート.\n\nグループ化されたフォーキャストを明細レベルに展開してExcelファイルとして出力します。\n\nArgs:\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_group_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: Excelファイル",
+        "description": "フォーキャストをExcelでエクスポート.\n\nグループ化されたフォーキャストを明細レベルに展開してExcelファイルとして出力します。\n\nArgs:\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    supplier_item_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: Excelファイル",
         "operationId": "export_forecasts_api_forecasts_export_download_get",
         "parameters": [
           {
@@ -4265,7 +4265,7 @@
             }
           },
           {
-            "name": "product_group_id",
+            "name": "supplier_item_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -4277,7 +4277,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Group Id"
+              "title": "Supplier Item Id"
             }
           }
         ],
@@ -4309,7 +4309,7 @@
           "forecasts"
         ],
         "summary": "List Forecast History",
-        "description": "フォーキャスト履歴取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_group_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    アーカイブ済みフォーキャストリスト",
+        "description": "フォーキャスト履歴取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    supplier_item_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    アーカイブ済みフォーキャストリスト",
         "operationId": "list_forecast_history_api_forecasts_history_get",
         "parameters": [
           {
@@ -4368,7 +4368,7 @@
             }
           },
           {
-            "name": "product_group_id",
+            "name": "supplier_item_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -4380,7 +4380,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Product Group Id"
+              "title": "Supplier Item Id"
             }
           }
         ],
@@ -22330,9 +22330,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "forecast_period": {
             "type": "string",
@@ -22362,7 +22362,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_group_id",
+          "supplier_item_id",
           "forecast_period",
           "shortage_quantity"
         ],
@@ -22480,9 +22480,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "forecast_period": {
             "type": "string",
@@ -22508,7 +22508,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_group_id",
+          "supplier_item_id",
           "forecast_period",
           "forecast_quantity",
           "allocated_quantity",
@@ -22579,9 +22579,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "lot_id": {
             "type": "integer",
@@ -22608,7 +22608,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_group_id",
+          "supplier_item_id",
           "lot_id",
           "forecast_period",
           "quantity"
@@ -22725,9 +22725,9 @@
             "title": "Delivery Place Id",
             "description": "納入先ID"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id",
+            "title": "Supplier Item Id",
             "description": "製品ID"
           },
           "lot_id": {
@@ -22842,7 +22842,7 @@
           "forecast_period",
           "customer_id",
           "delivery_place_id",
-          "product_group_id",
+          "supplier_item_id",
           "lot_id",
           "quantity",
           "allocation_type",
@@ -23354,7 +23354,7 @@
       },
       "BulkAutoAllocateRequest": {
         "properties": {
-          "product_group_id": {
+          "supplier_item_id": {
             "anyOf": [
               {
                 "type": "integer"
@@ -23363,7 +23363,7 @@
                 "type": "null"
               }
             ],
-            "title": "Product Group Id",
+            "title": "Supplier Item Id",
             "description": "製品ID（指定時はその製品のみ対象）"
           },
           "customer_id": {
@@ -23842,9 +23842,9 @@
             "title": "Available Quantity",
             "description": "引当可能数量"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -23975,7 +23975,7 @@
           "current_quantity",
           "allocated_quantity",
           "available_quantity",
-          "product_group_id",
+          "supplier_item_id",
           "warehouse_id"
         ],
         "title": "CandidateLotItem",
@@ -26533,9 +26533,9 @@
             "type": "integer",
             "title": "Order Line Id"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "order_quantity": {
             "type": "string",
@@ -26568,7 +26568,7 @@
         "type": "object",
         "required": [
           "order_line_id",
-          "product_group_id",
+          "supplier_item_id",
           "order_quantity"
         ],
         "title": "FefoLineAllocation",
@@ -26789,9 +26789,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "forecast_date": {
             "type": "string",
@@ -26837,7 +26837,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_group_id",
+          "supplier_item_id",
           "forecast_date",
           "forecast_quantity"
         ],
@@ -26854,9 +26854,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "customer_code": {
             "anyOf": [
@@ -26929,7 +26929,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_group_id"
+          "supplier_item_id"
         ],
         "title": "ForecastGroupKey",
         "description": "Group key for customer × delivery_place × product."
@@ -26983,9 +26983,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "forecast_date": {
             "type": "string",
@@ -27107,7 +27107,7 @@
         "required": [
           "customer_id",
           "delivery_place_id",
-          "product_group_id",
+          "supplier_item_id",
           "forecast_date",
           "forecast_quantity",
           "forecast_period",
@@ -27147,9 +27147,9 @@
             "type": "integer",
             "title": "Delivery Place Id"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "forecast_date": {
             "type": "string",
@@ -27257,7 +27257,7 @@
           "created_at",
           "customer_id",
           "delivery_place_id",
-          "product_group_id",
+          "supplier_item_id",
           "forecast_date",
           "forecast_quantity",
           "forecast_period",
@@ -30328,9 +30328,9 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Available Quantity"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "expiry_date": {
             "anyOf": [
@@ -30369,7 +30369,7 @@
           "lot_number",
           "allocated_quantity",
           "available_quantity",
-          "product_group_id"
+          "supplier_item_id"
         ],
         "title": "ManualAllocationResponse",
         "description": "Manual allocation response (v2.2.1)."

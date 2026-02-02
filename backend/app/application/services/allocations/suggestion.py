@@ -157,7 +157,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 AllocationGap(
                     customer_id=order_line.order.customer_id,
                     delivery_place_id=order_line.delivery_place_id,
-                    product_group_id=supplier_item_id or 0,
+                    supplier_item_id=supplier_item_id or 0,
                     forecast_period="PREVIEW",
                     shortage_quantity=shortage,
                 )
