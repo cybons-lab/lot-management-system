@@ -30,7 +30,7 @@ export function useOrderLineComputed(
     const lineId = typeof line?.id === "number" ? line.id : undefined;
     const orderId = typeof order?.id === "number" ? order.id : line?.order_id;
 
-    const productId = typeof line?.product_group_id === "number" ? line.product_group_id : null;
+    const productId = typeof line?.supplier_item_id === "number" ? line.supplier_item_id : null;
     const productCode = line?.product_code ?? null;
     const productName = line?.product_name ?? "";
     const status = line?.status ?? order?.status ?? "draft";

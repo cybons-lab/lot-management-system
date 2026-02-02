@@ -221,7 +221,7 @@ export function QuickLotIntakeDialog({
 
     await createLotMutation.mutateAsync({
       lot_number: lotNumber,
-      product_group_id: Number(productId),
+      supplier_item_id: Number(productId),
       warehouse_id: Number(warehouseId),
       supplier_id: supplierId ? Number(supplierId) : undefined,
       received_date: receivedDate,

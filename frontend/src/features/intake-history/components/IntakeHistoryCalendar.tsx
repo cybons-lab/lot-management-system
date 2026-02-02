@@ -243,7 +243,7 @@ export function IntakeHistoryCalendar({
     month: currentMonth.getMonth() + 1,
     supplier_id: supplierId,
     warehouse_id: warehouseId,
-    product_group_id: productId,
+    supplier_item_id: productId,
   });
 
   const days = useCalendarDays(currentMonth);

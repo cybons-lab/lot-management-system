@@ -89,7 +89,7 @@ export function ForecastDetailPage() {
             <div>
               <div className="text-sm font-medium text-gray-500">製品</div>
               <div className="text-lg">
-                {forecast.product_name ?? `ID: ${forecast.product_group_id}`}
+                {forecast.product_name ?? `ID: ${forecast.supplier_item_id}`}
                 {forecast.product_code && (
                   <span className="ml-2 text-sm text-gray-500">({forecast.product_code})</span>
                 )}

@@ -35,7 +35,7 @@ export interface FilterState {
   supplier_id: number;
   customer_id: number;
   delivery_place_id: number;
-  product_group_id: number;
+  supplier_item_id: number;
 }
 
 export interface WithdrawalFormData {
@@ -85,7 +85,7 @@ export function useWithdrawalFormState({
     supplier_id: initialSupplierId,
     customer_id: 0,
     delivery_place_id: 0,
-    product_group_id: 0,
+    supplier_item_id: 0,
   });
 
   // Form data state
@@ -110,14 +110,14 @@ export function useWithdrawalFormState({
         ...prev,
         lot_id: preselectedLot.lot_id,
       }));
-      if (preselectedLot.supplier_id != null || preselectedLot.product_group_id) {
+      if (preselectedLot.supplier_id != null || preselectedLot.supplier_item_id) {
         setFilters((prev) => ({
           ...prev,
           ...(preselectedLot.supplier_id != null
             ? { supplier_id: preselectedLot.supplier_id }
             : {}),
-          ...(preselectedLot.product_group_id
-            ? { product_group_id: preselectedLot.product_group_id }
+          ...(preselectedLot.supplier_item_id
+            ? { supplier_item_id: preselectedLot.supplier_item_id }
             : {}),
         }));
       }
@@ -190,17 +190,17 @@ export function useWithdrawalFormState({
 
   // Reset product filter when supplier changes if product is no longer available
   useEffect(() => {
-    if (filters.product_group_id && filters.supplier_id) {
+    if (filters.supplier_item_id && filters.supplier_id) {
       const productExists = lots.some(
         (lot) =>
           lot.supplier_id === filters.supplier_id &&
-          lot.product_group_id === filters.product_group_id,
+          lot.supplier_item_id === filters.supplier_item_id,
       );
       if (!productExists) {
-        setFilters((prev) => ({ ...prev, product_group_id: 0 }));
+        setFilters((prev) => ({ ...prev, supplier_item_id: 0 }));
       }
     }
-  }, [filters.supplier_id, filters.product_group_id, lots]);
+  }, [filters.supplier_id, filters.supplier_item_id, lots]);
 
   // Filtered lots
   const filteredLots = useMemo(() => {
@@ -209,8 +209,8 @@ export function useWithdrawalFormState({
     if (filters.supplier_id) {
       filtered = filtered.filter((lot) => lot.supplier_id === filters.supplier_id);
     }
-    if (filters.product_group_id) {
-      filtered = filtered.filter((lot) => lot.product_group_id === filters.product_group_id);
+    if (filters.supplier_item_id) {
+      filtered = filtered.filter((lot) => lot.supplier_item_id === filters.supplier_item_id);
     }
 
     return filtered;
@@ -228,7 +228,7 @@ export function useWithdrawalFormState({
       relevantLots = relevantLots.filter((lot) => lot.supplier_id === filters.supplier_id);
     }
 
-    const productIds = new Set(relevantLots.map((lot) => lot.product_group_id));
+    const productIds = new Set(relevantLots.map((lot) => lot.supplier_item_id));
     return products.filter((p) => productIds.has(p.id));
   }, [products, lots, filters.supplier_id, filters.customer_id, filters.delivery_place_id]);
 

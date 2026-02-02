@@ -17,7 +17,7 @@ export function ForecastSection({ productGroupId, customerId, fullWidth = false 
     queryKey: ["forecast", productGroupId, customerId],
     queryFn: () =>
       getForecasts({
-        product_group_id: productGroupId,
+        supplier_item_id: productGroupId,
         customer_id: customerId,
       }),
     enabled: isOpen && productGroupId != null && customerId != null,
@@ -77,7 +77,7 @@ export function ForecastSection({ productGroupId, customerId, fullWidth = false 
                       {Number(f.forecast_quantity).toLocaleString()} {f.unit ?? "EA"}
                     </div>
                     <div className="mt-1 text-[11px] text-gray-400">
-                      {f.product_name ?? `製品ID: ${f.product_group_id}`}
+                      {f.product_name ?? `製品ID: ${f.supplier_item_id}`}
                     </div>
                   </div>
                 ))}
@@ -98,7 +98,7 @@ export function ForecastSection({ productGroupId, customerId, fullWidth = false 
 
           <div className="flex flex-wrap gap-2 text-xs">
             <a
-              href={`/forecasts?product_group_id=${productGroupId}&customer_id=${customerId}`}
+              href={`/forecasts?supplier_item_id=${productGroupId}&customer_id=${customerId}`}
               className="inline-flex items-center gap-1 rounded bg-sky-600 px-3 py-1.5 text-white hover:bg-sky-700"
             >
               詳細を開く

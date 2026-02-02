@@ -63,7 +63,7 @@ vi.mock("@/shared/components/form", () => ({
 const mockData: InventoryItem[] = [
   {
     inventory_item_id: 1,
-    product_group_id: 1,
+    supplier_item_id: 1,
     warehouse_id: 1,
     product_code: "P001",
     product_name: "Test Product",

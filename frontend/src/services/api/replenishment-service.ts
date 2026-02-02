@@ -2,7 +2,7 @@ import { http } from "@/shared/api/http-client";
 
 export interface ReplenishmentRecommendation {
   id: string;
-  product_group_id: number;
+  supplier_item_id: number;
   warehouse_id: number;
   supplier_id: number;
 
@@ -44,7 +44,7 @@ export interface ReplenishmentRecommendation {
 
 export interface RunReplenishmentParams {
   warehouse_id: number;
-  product_group_ids?: number[];
+  supplier_item_ids?: number[];
   as_of_date?: string;
   method?: string;
 }
@@ -65,8 +65,8 @@ export async function runReplenishment(
   if (params.method) {
     searchParams.append("method", params.method);
   }
-  if (params.product_group_ids?.length) {
-    params.product_group_ids.forEach((id) => searchParams.append("product_group_ids", String(id)));
+  if (params.supplier_item_ids?.length) {
+    params.supplier_item_ids.forEach((id) => searchParams.append("supplier_item_ids", String(id)));
   }
 
   return http.post<ReplenishmentRecommendation[]>(`${BASE_PATH}/recommendations/run`, null, {
