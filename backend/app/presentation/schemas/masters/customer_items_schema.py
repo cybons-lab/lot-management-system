@@ -23,7 +23,9 @@ class CustomerItemBase(BaseSchema):
 
     customer_id: int = Field(..., description="得意先ID")
     customer_part_no: str = Field(..., max_length=100, description="得意先品番（先方品番）")
-    supplier_item_id: int = Field(..., description="仕入先品目ID (Phase1: required)")
+    supplier_item_id: int = Field(
+        ..., serialization_alias="product_group_id", description="仕入先品目ID (Phase1: required)"
+    )
     base_unit: str = Field(..., max_length=20, description="基本単位")
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")
@@ -44,7 +46,9 @@ class CustomerItemUpdate(BaseSchema):
     """Schema for updating a customer item mapping."""
 
     customer_part_no: str | None = Field(None, max_length=100, description="得意先品番")
-    supplier_item_id: int | None = Field(None, description="仕入先品目ID")
+    supplier_item_id: int | None = Field(
+        None, serialization_alias="product_group_id", description="仕入先品目ID"
+    )
     base_unit: str | None = Field(None, max_length=20, description="基本単位")
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")
@@ -61,7 +65,9 @@ class CustomerItemResponse(BaseSchema):
     id: int = Field(..., description="得意先品番マッピングID")
     customer_id: int = Field(..., description="得意先ID")
     customer_part_no: str = Field(..., description="得意先品番（先方品番）")
-    supplier_item_id: int = Field(..., description="仕入先品目ID (Phase1: required)")
+    supplier_item_id: int = Field(
+        ..., serialization_alias="product_group_id", description="仕入先品目ID (Phase1: required)"
+    )
     base_unit: str = Field(..., description="基本単位")
     pack_unit: str | None = Field(None, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")
