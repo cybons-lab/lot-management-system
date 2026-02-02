@@ -33,7 +33,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
 
 from app.infrastructure.persistence.models.base_model import Base
 
@@ -67,7 +67,7 @@ class LotMaster(Base):
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_group_id = supplier_item_id  # type: ignore # Alias for backward compatibility
+    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
     supplier_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("suppliers.id", ondelete="SET NULL"),
@@ -109,7 +109,7 @@ class LotMaster(Base):
 
     # Relationships
     supplier_item: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="lot_masters")
-    product_group = supplier_item  # Alias
+    product_group = synonym("supplier_item")  # Alias
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_masters")
     receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",

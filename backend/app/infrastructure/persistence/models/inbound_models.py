@@ -137,7 +137,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
 
 from .base_model import Base
 
@@ -229,7 +229,7 @@ class InboundPlanLine(Base):
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_group_id = supplier_item_id  # type: ignore # Alias for backward compatibility
+    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
     planned_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
@@ -251,7 +251,7 @@ class InboundPlanLine(Base):
     supplier_item: Mapped[SupplierItem] = relationship(
         "SupplierItem", back_populates="inbound_plan_lines"
     )
-    product_group = supplier_item  # Alias
+    product_group = synonym("supplier_item")  # Alias
     expected_lots: Mapped[list[ExpectedLot]] = relationship(
         "ExpectedLot", back_populates="inbound_plan_line", cascade="all, delete-orphan"
     )

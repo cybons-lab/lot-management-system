@@ -163,7 +163,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
 
 from .base_model import Base
 
@@ -275,7 +275,7 @@ class OrderLine(Base):
         nullable=True,
         comment="仕入先製品ID（OCR取込時はNULL可、変換後に設定）",
     )
-    product_group_id = supplier_item_id  # type: ignore # Alias for backward compatibility
+    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
 
     # OCR取込時の元データ
     customer_part_no: Mapped[str | None] = mapped_column(
@@ -386,7 +386,7 @@ class OrderLine(Base):
         "OrderGroup", back_populates="order_lines"
     )
     supplier_item: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="order_lines")
-    product_group = supplier_item  # Alias
+    product_group = synonym("supplier_item")  # Alias
 
     # P3: Relationship to LotReservation for efficient loading (avoid N+1)
     lot_reservations: Mapped[list[LotReservation]] = relationship(

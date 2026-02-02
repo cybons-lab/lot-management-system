@@ -161,7 +161,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
 
 from .base_model import Base
 from .lot_receipt_models import LotReceipt
@@ -333,7 +333,7 @@ class AllocationSuggestion(Base):
         ForeignKey("supplier_items.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_group_id = supplier_item_id  # type: ignore # Alias for backward compatibility
+    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
 
     # ロット側キー
     lot_id: Mapped[int] = mapped_column(
@@ -364,7 +364,7 @@ class AllocationSuggestion(Base):
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
     supplier_item: Mapped[SupplierItem] = relationship("SupplierItem")
-    product_group = supplier_item  # Alias
+    product_group = synonym("supplier_item")  # Alias
     lot: Mapped[LotReceipt] = relationship("LotReceipt")
     forecast: Mapped[ForecastCurrent | None] = relationship("ForecastCurrent")
 

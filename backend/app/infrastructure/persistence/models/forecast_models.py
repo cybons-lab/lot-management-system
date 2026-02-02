@@ -119,7 +119,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from sqlalchemy import BigInteger, Date, DateTime, ForeignKey, Index, Numeric, String, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
 
 from .base_model import Base
 
@@ -155,7 +155,7 @@ class ForecastCurrent(Base):
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_group_id = supplier_item_id  # type: ignore # Alias for backward compatibility
+    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -213,7 +213,7 @@ class ForecastHistory(Base):
     customer_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     delivery_place_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     supplier_item_id: Mapped[int] = mapped_column("product_group_id", BigInteger, nullable=False)
-    product_group_id = supplier_item_id  # type: ignore # Alias
+    product_group_id = synonym("supplier_item_id")  # type: ignore # Alias
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
