@@ -234,7 +234,7 @@ def auto_reserve_line(
         extra={
             "order_line_id": order_line_id,
             "candidate_count": len(candidates),
-            "product_group_id": line.product_group_id,
+            "supplier_item_id": line.product_group_id,
             "warehouse_id": warehouse_id,
         },
     )

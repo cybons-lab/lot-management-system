@@ -58,7 +58,7 @@ def _to_preview_response(service_result) -> FefoPreviewResponse:
         lines.append(
             FefoLineAllocation(  # type: ignore[call-arg]
                 order_line_id=line.order_line_id,
-                product_group_id=line.product_group_id,
+                supplier_item_id=line.product_group_id,
                 product_code=line.product_code,
                 order_quantity=line.required_qty,
                 already_allocated_quantity=line.already_allocated_qty,
@@ -130,7 +130,7 @@ async def manual_allocate(request: ManualAllocationRequest, db: Session = Depend
         lot_number=lot_number,
         allocated_quantity=reservation.reserved_qty,
         available_quantity=Decimal(available),
-        product_group_id=lot.product_group_id if lot else 0,
+        supplier_item_id=lot.product_group_id if lot else 0,
         expiry_date=lot.expiry_date if lot else None,
         status=res_status,
         message="manual reservation created",
@@ -191,7 +191,7 @@ async def list_allocations_by_order(order_id: int, db: Session = Depends(get_db)
                 lot_number=(lot.lot_number or "") if lot else "",
                 allocated_quantity=res.reserved_qty,
                 available_quantity=Decimal(available_quantity),
-                product_group_id=product_group_id or 0,
+                supplier_item_id=product_group_id or 0,
                 expiry_date=lot.expiry_date if lot else None,
                 status=res_status,
                 message="",

@@ -135,7 +135,7 @@ class FefoLotPlan:
 @dataclass
 class FefoLinePlan:
     order_line_id: int
-    product_group_id: int | None
+    supplier_item_id: int | None
     product_code: str
     warehouse_id: int | None
     warehouse_code: str | None
