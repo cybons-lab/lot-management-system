@@ -5057,6 +5057,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/deploy/upload": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload Bundle
+     * @description デプロイ用ZIPファイルをアップロードし、展開する.
+     */
+    post: operations["upload_bundle_api_deploy_upload_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/deploy/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Deploy Status
+     * @description 現在のデプロイステータスと履歴を取得する.
+     */
+    get: operations["get_deploy_status_api_deploy_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/admin/test-data/presets": {
     parameters: {
       query?: never;
@@ -9059,6 +9099,14 @@ export interface components {
        */
       file: string;
     };
+    /** Body_upload_bundle_api_deploy_upload_post */
+    Body_upload_bundle_api_deploy_upload_post: {
+      /**
+       * File
+       * Format: binary
+       */
+      file: string;
+    };
     /**
      * BulkAutoAllocateFailedLine
      * @description Failed line in bulk auto-allocate response.
@@ -10505,6 +10553,20 @@ export interface components {
       details?: {
         [key: string]: unknown;
       } | null;
+    };
+    /** DeployStatus */
+    DeployStatus: {
+      /** Current Release */
+      current_release?: string | null;
+      /** Last Deploy At */
+      last_deploy_at?: string | null;
+      /**
+       * History
+       * @default []
+       */
+      history: {
+        [key: string]: unknown;
+      }[];
     };
     /**
      * ExpectedLotCreate
@@ -25184,6 +25246,59 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+    };
+  };
+  upload_bundle_api_deploy_upload_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_bundle_api_deploy_upload_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_deploy_status_api_deploy_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeployStatus"];
         };
       };
     };
