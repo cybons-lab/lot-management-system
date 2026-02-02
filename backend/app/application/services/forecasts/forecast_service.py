@@ -204,7 +204,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         limit: int = 100,
         customer_id: int | None = None,
         delivery_place_id: int | None = None,
-        product_group_id: int | None = None,
+        supplier_item_id: int | None = None,
     ) -> ForecastListResponse:
         """Get current forecasts grouped by customer × delivery_place ×
         product.
@@ -222,8 +222,8 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             groups_query = groups_query.filter(
                 ForecastCurrent.delivery_place_id == delivery_place_id
             )
-        if product_group_id is not None:
-            groups_query = groups_query.filter(ForecastCurrent.product_group_id == product_group_id)
+        if supplier_item_id is not None:
+            groups_query = groups_query.filter(ForecastCurrent.product_group_id == supplier_item_id)
 
         # Sort for consistent pagination (essential for deterministic limit/offset)
         groups_query = groups_query.order_by(
@@ -509,7 +509,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         self,
         customer_id: int | None = None,
         delivery_place_id: int | None = None,
-        product_group_id: int | None = None,
+        supplier_item_id: int | None = None,
         skip: int = 0,
         limit: int = 100,
     ) -> list[ForecastHistoryResponse]:
@@ -520,8 +520,8 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             query = query.filter(ForecastHistory.customer_id == customer_id)
         if delivery_place_id is not None:
             query = query.filter(ForecastHistory.delivery_place_id == delivery_place_id)
-        if product_group_id is not None:
-            query = query.filter(ForecastHistory.product_group_id == product_group_id)
+        if supplier_item_id is not None:
+            query = query.filter(ForecastHistory.product_group_id == supplier_item_id)
 
         query = query.order_by(ForecastHistory.archived_at.desc())
         history = query.offset(skip).limit(limit).all()
