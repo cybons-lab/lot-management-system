@@ -1,10 +1,18 @@
-import { AlertTriangle, Settings2, Shield } from "lucide-react";
+import {
+  AlertTriangle,
+  Settings2,
+  Shield,
+  Database,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { SystemSettingItem } from "../components/SystemSettingItem";
 import type { SystemSetting, SettingConfig } from "../types";
 
+import { Button } from "@/components/ui/base/button";
 import { http } from "@/shared/api/http-client";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 
@@ -78,6 +86,10 @@ export function SystemSettingsPage() {
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState<string | null>(null);
+  const [viewCheckStatus, setViewCheckStatus] = useState<"idle" | "checking" | "ok" | "error">(
+    "idle",
+  );
+  const [isFixing, setIsFixing] = useState(false);
 
   const fetchSettings = async () => {
     setIsLoading(true);
@@ -111,6 +123,46 @@ export function SystemSettingsPage() {
       console.error(e);
     } finally {
       setIsSaving(null);
+    }
+  };
+
+  const handleCheckView = async () => {
+    setViewCheckStatus("checking");
+    try {
+      const result = await http.get<{ has_supplier_item_id: boolean; message: string }>(
+        "admin/diagnostics/view-check",
+      );
+      if (result.has_supplier_item_id) {
+        setViewCheckStatus("ok");
+        toast.success(result.message);
+      } else {
+        setViewCheckStatus("error");
+        toast.error(result.message);
+      }
+    } catch (e) {
+      setViewCheckStatus("error");
+      toast.error("ビューチェックに失敗しました");
+      console.error(e);
+    }
+  };
+
+  const handleFixView = async () => {
+    setIsFixing(true);
+    try {
+      const result = await http.post<{ success: boolean; message: string }>(
+        "admin/diagnostics/view-fix",
+      );
+      if (result.success) {
+        toast.success(result.message);
+        setViewCheckStatus("ok");
+      } else {
+        toast.error("ビュー修正に失敗しました");
+      }
+    } catch (e) {
+      toast.error("ビュー修正に失敗しました");
+      console.error(e);
+    } finally {
+      setIsFixing(false);
     }
   };
 
@@ -179,6 +231,54 @@ export function SystemSettingsPage() {
             {debugSettings.length === 0 && (
               <p className="text-muted-foreground text-sm">設定項目がありません</p>
             )}
+
+            {/* View Diagnostics */}
+            <div className="border-t pt-6">
+              <div className="flex items-start gap-3">
+                <Database className="h-5 w-5 text-blue-500 mt-0.5" />
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <h4 className="font-medium">ビュー定義診断（Phase1対応）</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      v_lot_receipt_stock ビューに supplier_item_id 列が存在するかチェックします。
+                      本番環境で在庫ページがエラーになる場合に使用してください。
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCheckView}
+                      disabled={viewCheckStatus === "checking"}
+                    >
+                      {viewCheckStatus === "checking" ? "チェック中..." : "ビューをチェック"}
+                    </Button>
+                    {viewCheckStatus === "error" && (
+                      <>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={handleFixView}
+                          disabled={isFixing}
+                        >
+                          {isFixing ? "修正中..." : "ビューを修正"}
+                        </Button>
+                        <div className="flex items-center gap-1 text-red-600 text-sm">
+                          <AlertCircle className="h-4 w-4" />
+                          <span>修正が必要です</span>
+                        </div>
+                      </>
+                    )}
+                    {viewCheckStatus === "ok" && (
+                      <div className="flex items-center gap-1 text-green-600 text-sm">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>正常です</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

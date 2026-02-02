@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.application.services.auth.user_service import UserService
 from app.application.services.system_config_service import SystemConfigService
 from app.core.config import settings
-from app.core.database import truncate_all_tables
+from app.core.database import engine, truncate_all_tables
 from app.infrastructure.persistence.models import (
     Customer,
     Role,
@@ -474,3 +474,207 @@ def _seed_system_config(db: Session) -> None:
         logger.info(f"システム設定 '{key}' を初期化しました")
 
     db.commit()
+
+
+@router.get("/diagnostics/view-check")
+def check_view_definition(
+    view_name: str = "v_lot_receipt_stock",
+    current_admin=Depends(get_current_admin),
+):
+    """ビュー定義を診断（Admin専用）.
+
+    v_lot_receipt_stock ビューに supplier_item_id 列が存在するかチェック。
+    Phase1 マイグレーション後の問題診断用。
+
+    Returns:
+        {
+            "view_name": "v_lot_receipt_stock",
+            "has_supplier_item_id": true,
+            "columns": ["lot_id", "supplier_item_id", ...],
+            "message": "OK" or "NG: supplier_item_id not found"
+        }
+    """
+    try:
+        with engine.connect() as conn:
+            # 列情報を取得
+            result = conn.execute(
+                text(
+                    """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :view_name
+                ORDER BY ordinal_position
+                """
+                ),
+                {"view_name": view_name},
+            )
+            columns = [row[0] for row in result.fetchall()]
+
+            has_supplier_item_id = "supplier_item_id" in columns
+
+            if has_supplier_item_id:
+                message = "OK: supplier_item_id column exists"
+            else:
+                message = "NG: supplier_item_id column NOT FOUND"
+
+            return {
+                "view_name": view_name,
+                "has_supplier_item_id": has_supplier_item_id,
+                "column_count": len(columns),
+                "columns": columns,
+                "message": message,
+            }
+
+    except Exception as e:
+        logger.exception(f"ビュー診断エラー: {e}")
+        raise HTTPException(status_code=500, detail=f"ビュー診断に失敗しました: {str(e)}")
+
+
+@router.post("/diagnostics/view-fix")
+def fix_view_definition(
+    view_name: str = "v_lot_receipt_stock",
+    current_admin=Depends(get_current_admin),
+):
+    """ビュー定義を修正（Admin専用）.
+
+    v_lot_receipt_stock ビューを正しい定義で再作成。
+    Phase1 マイグレーション後にビューが古い状態になっている問題を修正。
+
+    本番環境でも実行可能（ビューの再作成はデータ削除を伴わない）。
+
+    Returns:
+        {
+            "success": true,
+            "message": "View recreated successfully",
+            "columns_before": [...],
+            "columns_after": [...]
+        }
+    """
+    if view_name != "v_lot_receipt_stock":
+        raise HTTPException(
+            status_code=400,
+            detail="現在は v_lot_receipt_stock のみサポートしています",
+        )
+
+    try:
+        with engine.begin() as conn:
+            # 修正前の列情報を取得
+            result = conn.execute(
+                text(
+                    """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :view_name
+                ORDER BY ordinal_position
+                """
+                ),
+                {"view_name": view_name},
+            )
+            columns_before = [row[0] for row in result.fetchall()]
+
+            # ビューを再作成
+            conn.execute(text("DROP VIEW IF EXISTS v_lot_receipt_stock CASCADE"))
+
+            create_view_sql = """
+CREATE OR REPLACE VIEW v_lot_receipt_stock AS
+SELECT
+    lr.id AS lot_id,
+    lr.id AS receipt_id,
+    lm.id AS lot_master_id,
+    lm.lot_number,
+    COALESCE(lr.supplier_item_id, lr.product_group_id) AS product_group_id,
+    COALESCE(lr.supplier_item_id, lr.product_group_id) AS supplier_item_id,
+    si.maker_part_no AS product_code,
+    si.maker_part_no,
+    si.maker_part_no AS maker_part_code,
+    si.display_name AS product_name,
+    si.display_name,
+    lr.warehouse_id,
+    w.warehouse_code,
+    w.warehouse_name,
+    COALESCE(w.short_name, LEFT(w.warehouse_name, 10)) AS warehouse_short_name,
+    lm.supplier_id,
+    s.supplier_code,
+    s.supplier_name,
+    COALESCE(s.short_name, LEFT(s.supplier_name, 10)) AS supplier_short_name,
+    lr.received_date,
+    lr.expiry_date,
+    lr.unit,
+    lr.status,
+    lr.received_quantity,
+    lr.consumed_quantity,
+    (lr.received_quantity - lr.consumed_quantity) AS current_quantity,
+    GREATEST((lr.received_quantity - lr.consumed_quantity - lr.locked_quantity), 0) AS remaining_quantity,
+    COALESCE(la.allocated_quantity, 0) AS allocated_quantity,
+    COALESCE(la.allocated_quantity, 0) AS reserved_quantity,
+    COALESCE(lar.reserved_quantity_active, 0) AS reserved_quantity_active,
+    GREATEST((lr.received_quantity - lr.consumed_quantity - lr.locked_quantity - COALESCE(la.allocated_quantity, 0)), 0) AS available_quantity,
+    lr.locked_quantity,
+    lr.lock_reason,
+    lr.inspection_status,
+    lr.inspection_date,
+    lr.inspection_cert_number,
+    lr.shipping_date,
+    lr.cost_price,
+    lr.sales_price,
+    lr.tax_rate,
+    lr.temporary_lot_key,
+    lr.origin_type,
+    lr.origin_reference,
+    lr.receipt_key,
+    lr.created_at,
+    lr.updated_at,
+    CASE
+        WHEN lr.expiry_date IS NOT NULL THEN (lr.expiry_date - CURRENT_DATE)
+        ELSE NULL
+    END AS days_to_expiry
+FROM
+    lot_receipts lr
+    JOIN lot_master lm ON lr.lot_master_id = lm.id
+    LEFT JOIN supplier_items si ON COALESCE(lr.supplier_item_id, lr.product_group_id) = si.id
+    LEFT JOIN warehouses w ON lr.warehouse_id = w.id
+    LEFT JOIN suppliers s ON lm.supplier_id = s.id
+    LEFT JOIN v_lot_allocations la ON lr.id = la.lot_id
+    LEFT JOIN v_lot_active_reservations lar ON lr.id = lar.lot_id
+WHERE
+    lr.status = 'active'
+            """
+            conn.execute(text(create_view_sql))
+
+            # 修正後の列情報を取得
+            result = conn.execute(
+                text(
+                    """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :view_name
+                ORDER BY ordinal_position
+                """
+                ),
+                {"view_name": view_name},
+            )
+            columns_after = [row[0] for row in result.fetchall()]
+
+            has_supplier_item_id = "supplier_item_id" in columns_after
+
+            logger.info(
+                f"ビュー '{view_name}' を再作成しました",
+                extra={
+                    "columns_before_count": len(columns_before),
+                    "columns_after_count": len(columns_after),
+                    "has_supplier_item_id": has_supplier_item_id,
+                },
+            )
+
+            return {
+                "success": True,
+                "message": "View recreated successfully",
+                "view_name": view_name,
+                "has_supplier_item_id": has_supplier_item_id,
+                "columns_before": columns_before,
+                "columns_after": columns_after,
+            }
+
+    except Exception as e:
+        logger.exception(f"ビュー修正エラー: {e}")
+        raise HTTPException(status_code=500, detail=f"ビュー修正に失敗しました: {str(e)}")
