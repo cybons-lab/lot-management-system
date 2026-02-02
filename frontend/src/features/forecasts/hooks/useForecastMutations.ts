@@ -65,7 +65,7 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
   const autoAllocate = useMutation({
     mutationFn: () =>
       bulkAutoAllocate({
-        product_group_id: groupKey.supplier_item_id,
+        supplier_item_id: groupKey.supplier_item_id,
         customer_id: groupKey.customer_id,
         delivery_place_id: groupKey.delivery_place_id,
       }),

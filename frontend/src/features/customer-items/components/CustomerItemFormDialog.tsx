@@ -61,7 +61,7 @@ export function CustomerItemFormDialog({
       ? {
           customer_id: item.customer_id,
           customer_part_no: item.customer_part_no,
-          product_group_id: item.product_group_id ?? 0,
+          supplier_item_id: item.supplier_item_id ?? 0,
           base_unit: item.base_unit || "EA",
           pack_unit: item.pack_unit ?? null,
           pack_quantity: item.pack_quantity ?? null,
@@ -90,17 +90,17 @@ export function CustomerItemFormDialog({
     [supplierItems],
   );
 
-  // product_group_id選択ハンドラ
+  // supplier_item_id選択ハンドラ
   const handleSupplierItemSelect = (value: string) => {
     // 空文字列の場合は0を設定（未選択状態）
     if (!value || value === "") {
-      setValue("product_group_id", 0);
+      setValue("supplier_item_id", 0);
       return;
     }
 
     const selectedSupplierItem = supplierItems.find((si) => si.id === Number(value));
     if (selectedSupplierItem) {
-      setValue("product_group_id", selectedSupplierItem.id);
+      setValue("supplier_item_id", selectedSupplierItem.id);
     }
   };
 

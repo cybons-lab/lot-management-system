@@ -40,7 +40,7 @@ export const useOrdersForForecast = (params: {
         return (
           order.lines?.some(
             (line) =>
-              line.product_group_id === supplier_item_id &&
+              line.supplier_item_id === supplier_item_id &&
               line.delivery_place_id === delivery_place_id,
           ) ?? false
         );

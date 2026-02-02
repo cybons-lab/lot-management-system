@@ -78,7 +78,7 @@ describe("WithdrawalCancelDialog", () => {
     withdrawal_id: 1,
     lot_id: 101,
     lot_number: "LOT-001",
-    product_group_id: 201,
+    supplier_item_id: 201,
     product_name: "Test Product",
     product_code: "PROD-001",
     quantity: "10.00",

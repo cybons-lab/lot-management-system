@@ -38,7 +38,7 @@ export function useInventoryTableLogic() {
 
       try {
         const response = await getLots({
-          product_group_id: productId,
+          supplier_item_id: productId,
           warehouse_id: warehouseId,
           with_stock: false,
           // Show all lot statuses (active, depleted, expired, locked)
@@ -49,7 +49,7 @@ export function useInventoryTableLogic() {
             normalizeLot(
               item as unknown as Record<string, unknown> & {
                 lot_id: number;
-                product_group_id: number;
+                supplier_item_id: number;
                 warehouse_id: number;
               },
             ),

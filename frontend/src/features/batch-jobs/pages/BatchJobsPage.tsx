@@ -25,7 +25,7 @@ import { PageContainer, PageHeader } from "@/shared/components/layout";
 interface InventorySyncAlert {
   rule_id: number;
   rule_parameters: {
-    product_group_id: number;
+    supplier_item_id: number;
     local_qty: number;
     sap_qty: number;
     diff_amount: number;
@@ -116,10 +116,10 @@ export function BatchJobsPage() {
   const alertColumns = useMemo<Column<InventorySyncAlert>[]>(
     () => [
       {
-        id: "product_group_id",
+        id: "supplier_item_id",
         header: "商品ID",
-        accessor: (row) => row.rule_parameters.product_group_id,
-        cell: (row) => <span className="font-medium">{row.rule_parameters.product_group_id}</span>,
+        accessor: (row) => row.rule_parameters.supplier_item_id,
+        cell: (row) => <span className="font-medium">{row.rule_parameters.supplier_item_id}</span>,
         width: 100,
         sortable: true,
       },

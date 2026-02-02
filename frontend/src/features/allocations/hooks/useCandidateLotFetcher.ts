@@ -45,7 +45,7 @@ export function useCandidateLotFetcher(queryClient: QueryClient): CandidateLotFe
       const cache = queryClient.getQueryData<{ items?: unknown[] }>(
         allocationCandidatesKeys.list({
           order_line_id: lineId,
-          product_group_id: productId,
+          supplier_item_id: productId,
           strategy: ALLOCATION_CONSTANTS.QUERY_STRATEGY.FEFO,
           limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
         }),

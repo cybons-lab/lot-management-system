@@ -54,7 +54,7 @@ export function ExcelPortalPage() {
   const { data: inventoryData, isLoading: isLoadingInventory } = useInventoryItems(
     selected.customerItem
       ? {
-          product_group_id: selected.customerItem.product_group_id,
+          supplier_item_id: selected.customerItem.supplier_item_id,
           limit: 100,
         }
       : undefined,
@@ -77,8 +77,8 @@ export function ExcelPortalPage() {
     const processedItemIds = new Set<number>();
 
     customerItemsForSupplier.forEach((item) => {
-      // Phase1 Migration: supplier_item_id を優先、なければ product_group_id (互換性)
-      const groupId = item.supplier_item_id || item.product_group_id;
+      // Phase1 Migration: supplier_item_id を優先、なければ supplier_item_id (互換性)
+      const groupId = item.supplier_item_id || item.supplier_item_id;
       if (groupId === null || groupId === undefined) return;
 
       // アイテムIDの重複チェック

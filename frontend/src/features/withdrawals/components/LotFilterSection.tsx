@@ -19,7 +19,7 @@ interface LotFilterSectionProps {
   filteredLotsCount: number;
   filters: {
     supplier_id: number;
-    product_group_id: number;
+    supplier_item_id: number;
   };
   onSupplierChange: (supplierId: number) => void;
   onProductChange: (productId: number) => void;
@@ -76,7 +76,7 @@ export function LotFilterSection({
                 label: `${p.maker_part_no} - ${p.display_name}`,
               })),
             ]}
-            value={filters.product_group_id ? String(filters.product_group_id) : ""}
+            value={filters.supplier_item_id ? String(filters.supplier_item_id) : ""}
             onChange={(v) => onProductChange(v ? Number(v) : 0)}
             placeholder={isLoadingProducts ? "読み込み中..." : "商品を検索..."}
             disabled={isLoadingProducts}

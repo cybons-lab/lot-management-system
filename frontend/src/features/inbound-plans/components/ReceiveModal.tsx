@@ -33,7 +33,7 @@ export function ReceiveModal({ planId, lines, onClose, onSuccess }: ReceiveModal
   const [result, setResult] = useState<{
     success: boolean;
     message: string;
-    generatedLots?: Array<{ lot_number: string; product_group_id: number; quantity: number }>;
+    generatedLots?: Array<{ lot_number: string; supplier_item_id: number; quantity: number }>;
   } | null>(null);
 
   const receiveMutation = useReceiveInbound(planId);
@@ -113,7 +113,7 @@ export function ReceiveModal({ planId, lines, onClose, onSuccess }: ReceiveModal
                   {result.generatedLots.map((lot, index) => (
                     <li key={index}>
                       • ロット番号: <span className="font-mono">{lot.lot_number}</span> - 製品ID:{" "}
-                      {lot.product_group_id} - 数量: {lot.quantity}
+                      {lot.supplier_item_id} - 数量: {lot.quantity}
                     </li>
                   ))}
                 </ul>
@@ -159,7 +159,7 @@ export function ReceiveModal({ planId, lines, onClose, onSuccess }: ReceiveModal
                       <tr key={line.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm">{line.line_number}</td>
                         <td className="px-4 py-3 text-sm">
-                          {line.product_name || line.product_code || `ID: ${line.product_group_id}`}
+                          {line.product_name || line.product_code || `ID: ${line.supplier_item_id}`}
                         </td>
                         <td className="px-4 py-3 text-sm font-medium">{line.quantity}</td>
                         <td className="px-4 py-3">

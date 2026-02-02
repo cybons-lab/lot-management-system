@@ -5,7 +5,7 @@ import type { BulkUpsertResponse } from "@/shared/types/bulk-operations";
 
 export interface UomConversionResponse {
   conversion_id: number;
-  product_group_id?: number;
+  supplier_item_id?: number;
   product_code: string;
   product_name: string;
   external_unit: string;
@@ -15,7 +15,7 @@ export interface UomConversionResponse {
 }
 
 export interface UomConversionCreate {
-  product_group_id: number;
+  supplier_item_id: number;
   external_unit: string;
   factor: number;
 }

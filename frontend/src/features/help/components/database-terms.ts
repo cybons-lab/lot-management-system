@@ -33,7 +33,7 @@ export const DATABASE_TERMS = [
   {
     term: "仕入先品目ID",
     definition:
-      "supplier_items.id への参照。メーカー品番の実体を指す。歴史的に product_group_id という名前のカラムもあるが、同じ意味。",
+      "supplier_items.id への参照。メーカー品番の実体を指す。歴史的に supplier_item_id という名前のカラムもあるが、同じ意味。",
   },
   {
     term: "ロット",

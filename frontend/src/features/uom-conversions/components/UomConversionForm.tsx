@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/form";
 
 const schema = z.object({
-  product_group_id: z.coerce.number().min(1, "商品を選択してください"),
+  supplier_item_id: z.coerce.number().min(1, "商品を選択してください"),
   external_unit: z.string().min(1, "外部単位は必須です").max(20, "20文字以内"),
   factor: z.coerce.number().positive("正の数を入力してください"),
 });
@@ -56,7 +56,7 @@ export function UomConversionForm({
 }: UomConversionFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as Resolver<FormValues>,
-    defaultValues: { product_group_id: 0, external_unit: "", factor: 1 },
+    defaultValues: { supplier_item_id: 0, external_unit: "", factor: 1 },
   });
 
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>("all");
@@ -90,7 +90,7 @@ export function UomConversionForm({
 
         <FormField
           control={form.control}
-          name="product_group_id"
+          name="supplier_item_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel>商品</FormLabel>
