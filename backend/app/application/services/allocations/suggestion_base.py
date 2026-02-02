@@ -45,13 +45,13 @@ class AllocationSuggestionBase:
         self.db = db
         self._candidate_service = AllocationCandidateService(db)
 
-    def _fetch_available_lots(self, product_group_ids: list[int]) -> dict[int, list[LotCandidate]]:
+    def _fetch_available_lots(self, supplier_item_ids: list[int]) -> dict[int, list[LotCandidate]]:
         """Fetch available lots for given products, sorted by FEFO.
 
         v3.0: Delegates to AllocationCandidateService (SSOT).
         """
         return self._candidate_service.get_candidates_for_products(
-            product_group_ids=product_group_ids,
+            supplier_item_ids=supplier_item_ids,
             policy=AllocationPolicy.FEFO,
             lock_mode=LockMode.NONE,
             exclude_expired=True,

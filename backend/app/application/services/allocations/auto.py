@@ -145,7 +145,7 @@ logger = logging.getLogger(__name__)
 
 def _get_fefo_candidates_for_line(
     db: Session,
-    product_group_id: int,
+    supplier_item_id: int,
     warehouse_id: int | None = None,
     lock: bool = True,
 ) -> list[LotCandidate]:
@@ -153,7 +153,7 @@ def _get_fefo_candidates_for_line(
 
     Args:
         db: Database session
-        product_group_id: Product ID
+        supplier_item_id: Product ID
         warehouse_id: Optional warehouse ID to filter by
         lock: Whether to lock rows for update
 
@@ -162,7 +162,7 @@ def _get_fefo_candidates_for_line(
     """
     candidate_service = AllocationCandidateService(db)
     return candidate_service.get_candidates(
-        product_group_id=product_group_id,
+        supplier_item_id=supplier_item_id,
         policy=AllocationPolicy.FEFO,
         lock_mode=LockMode.FOR_UPDATE if lock else LockMode.NONE,
         warehouse_id=warehouse_id,
@@ -346,7 +346,7 @@ def _auto_reserve_line_no_commit(
 def auto_reserve_bulk(
     db: Session,
     *,
-    product_group_id: int | None = None,
+    supplier_item_id: int | None = None,
     customer_id: int | None = None,
     delivery_place_id: int | None = None,
     order_type: str | None = None,
@@ -357,8 +357,8 @@ def auto_reserve_bulk(
     フィルタリング条件を指定して対象を絞り込み可能。
 
     Args:
-        db: データベースセッション
-        product_group_id: 製品ID（指定時はその製品のみ対象）
+        db: Database session
+        supplier_item_id: 製品ID（指定時はその製品のみ対象）
         customer_id: 得意先ID（指定時はその得意先のみ対象）
         delivery_place_id: 納入先ID（指定時はその納入先のみ対象）
         order_type: 受注タイプ（FORECAST_LINKED, KANBAN, SPOT, ORDER）
@@ -376,8 +376,8 @@ def auto_reserve_bulk(
         )
     )
 
-    if product_group_id is not None:
-        query = query.filter(OrderLine.product_group_id == product_group_id)
+    if supplier_item_id is not None:
+        query = query.filter(OrderLine.product_group_id == supplier_item_id)
 
     if customer_id is not None:
         query = query.filter(Order.customer_id == customer_id)
@@ -394,7 +394,7 @@ def auto_reserve_bulk(
         "Starting bulk auto reserve",
         extra={
             "order_line_count": len(order_lines),
-            "product_group_id": product_group_id,
+            "supplier_item_id": supplier_item_id,
             "customer_id": customer_id,
             "delivery_place_id": delivery_place_id,
             "order_type": order_type,
