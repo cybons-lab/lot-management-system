@@ -160,7 +160,8 @@ def regenerate_suggestions_for_group(
 def clear_suggestions_for_group(
     customer_id: int = Query(..., description="得意先ID"),
     delivery_place_id: int = Query(..., description="納入先ID"),
-    supplier_item_id: int = Query(..., alias="supplier_item_id", description="製品ID"),
+    supplier_item_id: int | None = Query(None, description="製品ID"),
+    product_group_id: int | None = Query(None, include_in_schema=False),
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)、省略時は全期間"),
     db: Session = Depends(get_db),
 ) -> Any:
@@ -168,12 +169,17 @@ def clear_suggestions_for_group(
 
     「計画引当クリア」ボタン用。既存のSuggestionsを削除する。
     """
+    # 互換性対応
+    target_item_id = supplier_item_id or product_group_id
+    if target_item_id is None:
+        raise HTTPException(status_code=422, detail="Missing required parameter: supplier_item_id")
+
     from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion
 
     delete_query = db.query(AllocationSuggestion).filter(
         AllocationSuggestion.customer_id == customer_id,
         AllocationSuggestion.delivery_place_id == delivery_place_id,
-        AllocationSuggestion.supplier_item_id == supplier_item_id,
+        AllocationSuggestion.supplier_item_id == target_item_id,
     )
     if forecast_period:
         delete_query = delete_query.filter(AllocationSuggestion.forecast_period == forecast_period)
@@ -192,18 +198,24 @@ def clear_suggestions_for_group(
 def get_allocation_suggestions_by_group(
     customer_id: int = Query(..., description="得意先ID"),
     delivery_place_id: int = Query(..., description="納入先ID"),
-    supplier_item_id: int = Query(..., alias="supplier_item_id", description="製品ID"),
+    supplier_item_id: int | None = Query(None, description="製品ID"),
+    product_group_id: int | None = Query(None, include_in_schema=False),
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)"),
     db: Session = Depends(get_db),
 ) -> Any:
     """フォーキャストグループ別の計画引当サマリを取得."""
     from decimal import Decimal
 
+    # 互換性対応
+    target_item_id = supplier_item_id or product_group_id
+    if target_item_id is None:
+        raise HTTPException(status_code=422, detail="Missing required parameter: supplier_item_id")
+
     # Base query
     query = db.query(AllocationSuggestion).filter(
         AllocationSuggestion.customer_id == customer_id,
         AllocationSuggestion.delivery_place_id == delivery_place_id,
-        AllocationSuggestion.supplier_item_id == supplier_item_id,
+        AllocationSuggestion.supplier_item_id == target_item_id,
     )
 
     if forecast_period:
@@ -219,7 +231,7 @@ def get_allocation_suggestions_by_group(
     demand_query = db.query(func.sum(ForecastCurrent.forecast_quantity)).filter(
         ForecastCurrent.customer_id == customer_id,
         ForecastCurrent.delivery_place_id == delivery_place_id,
-        ForecastCurrent.supplier_item_id == supplier_item_id,
+        ForecastCurrent.supplier_item_id == target_item_id,
     )
     if forecast_period:
         demand_query = demand_query.filter(ForecastCurrent.forecast_period == forecast_period)
