@@ -149,11 +149,13 @@ class ForecastCurrent(Base):
         ForeignKey("delivery_places.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_group_id: Mapped[int] = mapped_column(
+    supplier_item_id: Mapped[int] = mapped_column(
+        "product_group_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
+    product_group_id = supplier_item_id  # type: ignore # Alias for backward compatibility
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -210,7 +212,8 @@ class ForecastHistory(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     customer_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     delivery_place_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    product_group_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    supplier_item_id: Mapped[int] = mapped_column("product_group_id", BigInteger, nullable=False)
+    product_group_id = supplier_item_id  # type: ignore # Alias
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)

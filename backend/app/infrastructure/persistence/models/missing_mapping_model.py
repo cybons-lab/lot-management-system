@@ -56,7 +56,8 @@ class MissingMappingEvent(Base):
         ForeignKey("customers.id", ondelete="SET NULL"),
         nullable=True,
     )
-    product_group_id: Mapped[int | None] = mapped_column(
+    supplier_item_id: Mapped[int | None] = mapped_column(
+        "product_group_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="SET NULL"),
         nullable=True,
@@ -116,8 +117,8 @@ class MissingMappingEvent(Base):
 
     # Relationships
     customer: Mapped[Customer | None] = relationship("Customer", foreign_keys=[customer_id])
-    product_group: Mapped[SupplierItem | None] = relationship(
-        "SupplierItem", foreign_keys=[product_group_id]
+    supplier_item: Mapped[SupplierItem | None] = relationship(
+        "SupplierItem", foreign_keys=[supplier_item_id]
     )
     supplier: Mapped[Supplier | None] = relationship("Supplier", foreign_keys=[supplier_id])
     created_by_user: Mapped[User | None] = relationship("User", foreign_keys=[created_by])
@@ -125,7 +126,7 @@ class MissingMappingEvent(Base):
 
     __table_args__ = (
         Index("idx_missing_mapping_events_customer", "customer_id"),
-        Index("idx_missing_mapping_events_product_group", "product_group_id"),
+        Index("idx_missing_mapping_events_supplier_item", "product_group_id"),
         Index("idx_missing_mapping_events_occurred", "occurred_at"),
         Index(
             "idx_missing_mapping_events_unresolved",

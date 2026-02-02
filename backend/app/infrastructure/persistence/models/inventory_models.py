@@ -327,11 +327,13 @@ class AllocationSuggestion(Base):
         ForeignKey("delivery_places.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_group_id: Mapped[int] = mapped_column(
+    supplier_item_id: Mapped[int] = mapped_column(
+        "product_group_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="CASCADE"),
         nullable=False,
     )
+    product_group_id = supplier_item_id  # type: ignore # Alias for backward compatibility
 
     # ロット側キー
     lot_id: Mapped[int] = mapped_column(
@@ -354,14 +356,15 @@ class AllocationSuggestion(Base):
     __table_args__ = (
         Index("idx_allocation_suggestions_period", "forecast_period"),
         Index("idx_allocation_suggestions_customer", "customer_id"),
-        Index("idx_allocation_suggestions_product_group", "product_group_id"),
+        Index("idx_allocation_suggestions_supplier_item", "product_group_id"),
         Index("idx_allocation_suggestions_lot", "lot_id"),
         Index("idx_allocation_suggestions_forecast", "forecast_id"),
     )
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
-    product_group: Mapped[SupplierItem] = relationship("SupplierItem")
+    supplier_item: Mapped[SupplierItem] = relationship("SupplierItem")
+    product_group = supplier_item  # Alias
     lot: Mapped[LotReceipt] = relationship("LotReceipt")
     forecast: Mapped[ForecastCurrent | None] = relationship("ForecastCurrent")
 

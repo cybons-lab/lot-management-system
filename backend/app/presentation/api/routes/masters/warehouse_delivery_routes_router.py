@@ -197,15 +197,15 @@ def create_route(
         )
 
     # Validate product if specified
-    if data.product_group_id is not None:
+    if data.supplier_item_id is not None:
         product = db.execute(
-            select(SupplierItem).where(SupplierItem.id == data.product_group_id)
+            select(SupplierItem).where(SupplierItem.id == data.supplier_item_id)
         ).scalar_one_or_none()
 
         if not product:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Product with id {data.product_group_id} not found",
+                detail=f"Product with id {data.supplier_item_id} not found",
             )
 
     # Check for duplicate
@@ -216,9 +216,9 @@ def create_route(
         )
     )
 
-    if data.product_group_id is not None:
+    if data.supplier_item_id is not None:
         existing_query = existing_query.where(
-            WarehouseDeliveryRoute.product_group_id == data.product_group_id
+            WarehouseDeliveryRoute.product_group_id == data.supplier_item_id
         )
     else:
         existing_query = existing_query.where(WarehouseDeliveryRoute.product_group_id.is_(None))
@@ -234,7 +234,7 @@ def create_route(
     route = WarehouseDeliveryRoute(
         warehouse_id=data.warehouse_id,
         delivery_place_id=data.delivery_place_id,
-        product_group_id=data.product_group_id,
+        product_group_id=data.supplier_item_id,
         transport_lead_time_days=data.transport_lead_time_days,
         is_active=data.is_active,
         notes=data.notes,

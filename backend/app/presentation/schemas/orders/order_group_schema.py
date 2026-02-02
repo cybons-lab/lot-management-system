@@ -17,7 +17,7 @@ class OrderGroupBase(BaseSchema):
     """Base order group schema."""
 
     customer_id: int = Field(..., gt=0, description="得意先ID")
-    product_group_id: int = Field(..., gt=0, description="製品ID")
+    supplier_item_id: int = Field(..., gt=0, description="製品ID")
     order_date: date = Field(..., description="受注日")
     source_file_name: str | None = Field(None, max_length=255, description="取り込み元ファイル名")
 

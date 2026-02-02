@@ -65,7 +65,7 @@ class InboundService:
         skip: int = 0,
         limit: int = 100,
         supplier_id: int | None = None,
-        product_group_id: int | None = None,
+        supplier_item_id: int | None = None,
         status: str | None = None,
         assigned_supplier_ids: list[int] | None = None,
     ) -> tuple[list[InboundPlan], int]:
@@ -75,7 +75,7 @@ class InboundService:
             skip: Number of records to skip (pagination)
             limit: Maximum number of records to return
             supplier_id: Filter by supplier ID
-            product_group_id: Filter by product ID
+            supplier_item_id: Filter by product ID
             status: Filter by status (planned/partially_received/received/cancelled)
             assigned_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
 
@@ -91,9 +91,9 @@ class InboundService:
         if supplier_id is not None:
             query = query.filter(InboundPlan.supplier_id == supplier_id)
 
-        if product_group_id is not None:
+        if supplier_item_id is not None:
             query = query.join(InboundPlan.lines).filter(
-                InboundPlanLine.product_group_id == product_group_id
+                InboundPlanLine.supplier_item_id == supplier_item_id
             )
 
         if status is not None:
@@ -101,7 +101,7 @@ class InboundService:
 
         # Distinct is needed if joining with lines to avoid duplicates
         # 【設計】linesとJOINすると重複行が発生 → distinct()で除外
-        if product_group_id is not None:
+        if supplier_item_id is not None:
             query = query.distinct()
 
         # Count total before applying pagination (using subquery without joinedload)
@@ -109,10 +109,10 @@ class InboundService:
         count_query = self.db.query(InboundPlan)
         if supplier_id is not None:
             count_query = count_query.filter(InboundPlan.supplier_id == supplier_id)
-        if product_group_id is not None:
+        if supplier_item_id is not None:
             count_query = (
                 count_query.join(InboundPlan.lines)
-                .filter(InboundPlanLine.product_group_id == product_group_id)
+                .filter(InboundPlanLine.supplier_item_id == supplier_item_id)
                 .distinct()
             )
         if status is not None:

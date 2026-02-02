@@ -184,22 +184,22 @@ class SupplierItem(SoftDeleteMixin, Base):
     # Additional relationships from removed ProductGroup model (via product_group_id)
     forecast_current: Mapped[list[ForecastCurrent]] = relationship(
         "ForecastCurrent",
-        foreign_keys="[ForecastCurrent.product_group_id]",
+        foreign_keys="[ForecastCurrent.supplier_item_id]",
         back_populates="product_group",
     )
     lot_masters: Mapped[list[LotMaster]] = relationship(
         "LotMaster",
-        foreign_keys="[LotMaster.product_group_id]",
+        foreign_keys="[LotMaster.supplier_item_id]",
         back_populates="product_group",
     )
     order_lines: Mapped[list[OrderLine]] = relationship(
         "OrderLine",
-        foreign_keys="[OrderLine.product_group_id]",
+        foreign_keys="[OrderLine.supplier_item_id]",
         back_populates="product_group",
     )
     inbound_plan_lines: Mapped[list[InboundPlanLine]] = relationship(
         "InboundPlanLine",
-        foreign_keys="[InboundPlanLine.product_group_id]",
+        foreign_keys="[InboundPlanLine.supplier_item_id]",
         back_populates="product_group",
     )
 

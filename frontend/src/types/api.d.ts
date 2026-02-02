@@ -625,7 +625,7 @@ export interface paths {
     };
     /**
      * Get Default Destination
-     * @description 製品IDからデフォルトの得意先・納入先を取得する.
+     * @description 仕入先品目IDからデフォルトの得意先・納入先を取得する.
      *
      *     Phase1: product_group_id → supplier_item_id, supplier_id は supplier_item 経由で取得
      *
@@ -1733,7 +1733,7 @@ export interface paths {
      *         skip: スキップ件数（ページネーション用）
      *         limit: 取得件数上限
      *         supplier_id: 仕入先IDでフィルタ
-     *         product_group_id: 商品IDでフィルタ
+     *         supplier_item_id: 商品IDでフィルタ
      *         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
      *         prioritize_assigned: 担当の仕入先を優先表示するかどうか（デフォルト: True）
      *         current_user: 現在のログインユーザー（担当仕入先取得に使用）
@@ -10344,8 +10344,8 @@ export interface components {
     };
     /** DemandForecast */
     DemandForecast: {
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Warehouse Id */
       warehouse_id: number | null;
       /**
@@ -11062,8 +11062,8 @@ export interface components {
       created_at: string;
       /** Updated At */
       updated_at?: string | null;
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Planned Quantity */
       planned_quantity: string;
       /** Unit */
@@ -11186,8 +11186,8 @@ export interface components {
       lot_id: number;
       /** Lot Number */
       lot_number: string;
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Product Name */
       product_name: string;
       /** Product Code */
@@ -12969,10 +12969,10 @@ export interface components {
      */
     OrderLineResponse: {
       /**
-       * Product Group Id
+       * Supplier Item Id
        * @description 製品ID（OCR取込時はNULL可）
        */
-      product_group_id?: number | null;
+      supplier_item_id?: number | null;
       /**
        * Delivery Date
        * Format: date
@@ -13467,10 +13467,10 @@ export interface components {
        */
       supplier_id: number;
       /**
-       * Product Group Id
+       * Supplier Item Id
        * @description 製品ID
        */
-      product_group_id: number;
+      supplier_item_id: number;
       /**
        * Base Unit
        * @description 基本単位
@@ -13566,10 +13566,10 @@ export interface components {
        */
       supplier_id: number;
       /**
-       * Product Group Id
+       * Supplier Item Id
        * @description 製品ID
        */
-      product_group_id: number;
+      supplier_item_id: number;
       /**
        * Base Unit
        * @description 基本単位
@@ -13625,8 +13625,8 @@ export interface components {
       customer_part_code?: string | null;
       /** Supplier Id */
       supplier_id?: number | null;
-      /** Product Group Id */
-      product_group_id?: number | null;
+      /** Supplier Item Id */
+      supplier_item_id?: number | null;
       /** Base Unit */
       base_unit?: string | null;
       /** Pack Unit */
@@ -13683,8 +13683,8 @@ export interface components {
     ReplenishmentRecommendation: {
       /** Id */
       id: string;
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Warehouse Id */
       warehouse_id: number;
       /** Supplier Id */
@@ -15031,8 +15031,8 @@ export interface components {
     ShipmentTextRequest: {
       /** Customer Id */
       customer_id: number;
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Delivery Place Id */
       delivery_place_id?: number | null;
       /** Jiku Code */
@@ -16714,10 +16714,10 @@ export interface components {
      */
     UomConversionCreate: {
       /**
-       * Product Group Id
+       * Supplier Item Id
        * @description 製品ID
        */
-      product_group_id: number;
+      supplier_item_id: number;
       /**
        * External Unit
        * @description 外部単位
@@ -16735,10 +16735,10 @@ export interface components {
      */
     UomConversionResponse: {
       /**
-       * Product Group Id
+       * Supplier Item Id
        * @description 製品ID
        */
-      product_group_id: number;
+      supplier_item_id: number;
       /**
        * External Unit
        * @description 外部単位
@@ -17063,10 +17063,10 @@ export interface components {
        */
       delivery_place_id: number;
       /**
-       * Product Group Id
+       * Supplier Item Id
        * @description 品番ID（NULLの場合は経路デフォルト）
        */
-      product_group_id?: number | null;
+      supplier_item_id?: number | null;
       /**
        * Transport Lead Time Days
        * @description 輸送リードタイム（日）
@@ -17100,10 +17100,10 @@ export interface components {
        */
       delivery_place_id: number;
       /**
-       * Product Group Id
+       * Supplier Item Id
        * @description 品番ID（NULLの場合は経路デフォルト）
        */
-      product_group_id?: number | null;
+      supplier_item_id?: number | null;
       /**
        * Transport Lead Time Days
        * @description 輸送リードタイム（日）
@@ -17343,8 +17343,8 @@ export interface components {
       lot_id: number;
       /** Lot Number */
       lot_number: string;
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Product Name */
       product_name: string;
       /** Product Code */
@@ -18055,7 +18055,7 @@ export interface operations {
         limit?: number;
         customer_id?: number | null;
         delivery_place_id?: number | null;
-        supplier_item_id?: number | null;
+        product_group_id?: number | null;
       };
       header?: never;
       path?: never;
@@ -18159,7 +18159,7 @@ export interface operations {
         /** @description 期間 (YYYY-MM) */
         forecast_period?: string | null;
         /** @description 製品ID */
-        supplier_item_id?: number | null;
+        product_group_id?: number | null;
         /** @description 得意先ID */
         customer_id?: number | null;
       };
@@ -18197,7 +18197,7 @@ export interface operations {
         /** @description 納入先ID */
         delivery_place_id: number;
         /** @description 製品ID */
-        supplier_item_id: number;
+        product_group_id: number;
         /** @description 期間 (YYYY-MM)、省略時は全期間 */
         forecast_period?: string | null;
       };
@@ -18235,7 +18235,7 @@ export interface operations {
         /** @description 納入先ID */
         delivery_place_id: number;
         /** @description 製品ID */
-        supplier_item_id: number;
+        product_group_id: number;
         /** @description 期間 (YYYY-MM)、省略時は全期間 */
         forecast_period?: string | null;
       };
@@ -18273,7 +18273,7 @@ export interface operations {
         /** @description 納入先ID */
         delivery_place_id: number;
         /** @description 製品ID */
-        supplier_item_id: number;
+        product_group_id: number;
         /** @description 期間 (YYYY-MM) */
         forecast_period?: string | null;
       };
@@ -18609,7 +18609,7 @@ export interface operations {
   get_default_destination_api_v2_withdrawals_default_destination_get: {
     parameters: {
       query: {
-        /** @description 製品ID */
+        /** @description 仕入先品目ID (メーカー品番ID) */
         product_group_id: number;
         /** @description 仕入先ID (任意) */
         supplier_id?: number | null;
@@ -20003,7 +20003,7 @@ export interface operations {
         skip?: number;
         limit?: number;
         supplier_id?: number | null;
-        product_group_id?: number | null;
+        supplier_item_id?: number | null;
         status?: string | null;
         prioritize_assigned?: boolean;
       };
@@ -21891,7 +21891,7 @@ export interface operations {
       query?: {
         skip?: number;
         limit?: number;
-        product_group_id?: number | null;
+        supplier_item_id?: number | null;
         include_inactive?: boolean;
       };
       header?: never;
@@ -23024,7 +23024,7 @@ export interface operations {
         /** @description Filter by supplier ID */
         supplier_id?: number | null;
         /** @description Filter by product ID */
-        product_group_id?: number | null;
+        supplier_item_id?: number | null;
         /** @description Filter by active status */
         is_active?: boolean | null;
       };
@@ -24997,7 +24997,7 @@ export interface operations {
         warehouse_id: number;
         as_of_date?: string | null;
         method?: string;
-        product_group_ids?: number[] | null;
+        supplier_item_ids?: number[] | null;
       };
       header?: never;
       path?: never;

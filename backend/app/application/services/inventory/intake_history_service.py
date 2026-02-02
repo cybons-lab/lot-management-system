@@ -193,7 +193,7 @@ class IntakeHistoryService:
             id=record.id,
             lot_id=record.lot_id,
             lot_number=lot.lot_number or "" if lot else "",
-            product_group_id=lot.product_group_id if lot else 0,
+            supplier_item_id=lot.supplier_item_id or 0 if lot else 0,
             product_name=get_product_name(product),
             product_code=get_product_code(product),
             supplier_id=lot.supplier_id if lot else None,

@@ -223,11 +223,13 @@ class InboundPlanLine(Base):
         ForeignKey("inbound_plans.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_group_id: Mapped[int] = mapped_column(
+    supplier_item_id: Mapped[int] = mapped_column(
+        "product_group_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
     )
+    product_group_id = supplier_item_id  # type: ignore # Alias for backward compatibility
     planned_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
@@ -242,13 +244,14 @@ class InboundPlanLine(Base):
 
     __table_args__ = (
         Index("idx_inbound_plan_lines_plan", "inbound_plan_id"),
-        Index("idx_inbound_plan_lines_product_group", "product_group_id"),
+        Index("idx_inbound_plan_lines_supplier_item", "product_group_id"),
     )
 
     inbound_plan: Mapped[InboundPlan] = relationship("InboundPlan", back_populates="lines")
-    product_group: Mapped[SupplierItem] = relationship(
+    supplier_item: Mapped[SupplierItem] = relationship(
         "SupplierItem", back_populates="inbound_plan_lines"
     )
+    product_group = supplier_item  # Alias
     expected_lots: Mapped[list[ExpectedLot]] = relationship(
         "ExpectedLot", back_populates="inbound_plan_line", cascade="all, delete-orphan"
     )

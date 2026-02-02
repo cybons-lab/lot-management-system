@@ -76,7 +76,7 @@ def list_product_mappings(
     limit: int = 100,
     customer_id: int | None = Query(None, description="Filter by customer ID"),
     supplier_id: int | None = Query(None, description="Filter by supplier ID"),
-    product_group_id: int | None = Query(None, description="Filter by product ID"),
+    supplier_item_id: int | None = Query(None, description="Filter by product ID"),
     is_active: bool | None = Query(None, description="Filter by active status"),
     db: Session = Depends(get_db),
 ):
@@ -87,8 +87,8 @@ def list_product_mappings(
         query = query.filter(ProductMapping.customer_id == customer_id)
     if supplier_id is not None:
         query = query.filter(ProductMapping.supplier_id == supplier_id)
-    if product_group_id is not None:
-        query = query.filter(ProductMapping.product_group_id == product_group_id)
+    if supplier_item_id is not None:
+        query = query.filter(ProductMapping.supplier_item_id == supplier_item_id)
     if is_active is True:
         from sqlalchemy import func
 
@@ -125,7 +125,7 @@ def create_product_mapping(data: ProductMappingCreate, db: Session = Depends(get
         raise HTTPException(status_code=400, detail="Supplier not found")
 
     # Check product exists
-    product = db.query(Product).filter(Product.id == data.product_group_id).first()
+    product = db.query(Product).filter(Product.id == data.supplier_item_id).first()
     if not product:
         raise HTTPException(status_code=400, detail="Product not found")
 
@@ -174,8 +174,8 @@ def update_product_mapping(
         if not supplier:
             raise HTTPException(status_code=400, detail="Supplier not found")
 
-    if "product_group_id" in update_data and update_data["product_group_id"]:
-        product = db.query(Product).filter(Product.id == update_data["product_group_id"]).first()
+    if "supplier_item_id" in update_data and update_data["supplier_item_id"]:
+        product = db.query(Product).filter(Product.id == update_data["supplier_item_id"]).first()
         if not product:
             raise HTTPException(status_code=400, detail="Product not found")
 

@@ -64,7 +64,7 @@ class ShipmentTextRequest(BaseSchema):
     # Logic uses find_customer_part_no(customer_id, product_group_id)
     # Keeping as is for now as it seems to be a different look-up case (from OrderLine context?)
     customer_id: int
-    product_group_id: int
+    supplier_item_id: int
     delivery_place_id: int | None = None
     jiku_code: str | None = None
 

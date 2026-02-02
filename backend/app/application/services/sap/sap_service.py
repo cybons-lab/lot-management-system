@@ -75,7 +75,7 @@ class SAPService:
                 "expected_date": date,
                 "lines": [
                     {
-                        "product_group_id": int,
+                        "supplier_item_id": int,
                         "quantity": Decimal,
                         "unit": str
                     }
@@ -106,7 +106,7 @@ class SAPService:
 
             for _ in range(num_lines):
                 # Random product (assume IDs 1-50 exist)
-                product_group_id = random.randint(1, 50)
+                supplier_item_id = random.randint(1, 50)
 
                 # Random quantity (10-500)
                 quantity = Decimal(str(random.randint(10, 500)))
@@ -115,7 +115,7 @@ class SAPService:
                 unit = random.choice(["KG", "PCS", "BOX", "CAN"])
 
                 lines.append(
-                    {"product_group_id": product_group_id, "quantity": quantity, "unit": unit}
+                    {"supplier_item_id": supplier_item_id, "quantity": quantity, "unit": unit}
                 )
 
             mock_orders.append(
@@ -193,7 +193,7 @@ class SAPService:
             for line_data in po["lines"]:
                 db_line = InboundPlanLine(
                     inbound_plan_id=db_plan.id,
-                    product_group_id=line_data["product_group_id"],
+                    supplier_item_id=line_data["supplier_item_id"],
                     planned_quantity=line_data["quantity"],
                     unit=line_data["unit"],
                 )
@@ -228,7 +228,7 @@ class SAPService:
                         InboundPlanLineResponse(
                             id=line.id,
                             inbound_plan_id=line.inbound_plan_id,
-                            product_group_id=line.product_group_id,
+                            supplier_item_id=line.supplier_item_id,
                             planned_quantity=line.planned_quantity,
                             unit=line.unit,
                             created_at=line.created_at,

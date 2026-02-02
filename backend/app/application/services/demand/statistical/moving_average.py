@@ -79,7 +79,7 @@ class MovingAverageEstimator(DemandEstimator):
             total_forecast += avg_daily
 
         return DemandForecast(
-            product_group_id=product_group_id,
+            supplier_item_id=product_group_id,
             warehouse_id=warehouse_id,
             as_of_date=as_of_date,
             horizon_days=horizon_days,
