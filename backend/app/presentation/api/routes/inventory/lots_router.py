@@ -144,7 +144,11 @@ from app.application.services.common.export_service import ExportService
 from app.application.services.inventory.lot_service import LotService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
-from app.presentation.api.routes.auth.auth_router import get_current_user, get_current_user_optional
+from app.presentation.api.routes.auth.auth_router import (
+    get_current_user,
+    require_role,
+    require_write_permission,
+)
 from app.presentation.schemas.inventory.inventory_schema import (
     LotArchiveRequest,
     LotCreate,
@@ -233,8 +237,9 @@ def export_lots(
     expiry_to: date | None = None,
     with_stock: bool = True,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["guest", "user", "admin"])),
 ) -> Response:
-    """ロット一覧をExcelファイルとしてエクスポート.
+    """ロット一覧をExcelファイルとしてエクスポート（ゲスト可）.
 
     Args:
         supplier_item_id: 製品ID（フィルタ）
@@ -245,9 +250,12 @@ def export_lots(
         expiry_to: 有効期限終了日（フィルタ）
         with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）
         db: データベースセッション
+        current_user: 現在のログインユーザー（認証必須）
 
     Returns:
         Response: Excelファイル（application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）
+
+    認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（エクスポートのみ）
     """
     service = LotService(db)
     lots = service.list_lots(
@@ -280,10 +288,10 @@ def list_lots(
     expiry_to: date | None = None,
     with_stock: bool = True,
     prioritize_assigned: bool = True,
-    current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["guest", "user", "admin"])),
 ):
-    """ロット一覧取得.
+    """ロット一覧取得（ゲスト可・読み取り専用）.
 
     v_lots_with_master ビューを使用してロット一覧を取得します。
     製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能で、
@@ -300,15 +308,18 @@ def list_lots(
         expiry_to: 有効期限終了日（フィルタ）
         with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）
         prioritize_assigned: 担当の仕入先を優先表示するかどうか（デフォルト: True）
-        current_user: 現在のログインユーザー（担当仕入先取得に使用、オプショナル）
         db: データベースセッション
+        current_user: 現在のログインユーザー（担当仕入先取得に使用、認証必須）
 
     Returns:
         list[LotResponse]: ロット情報のリスト
+
+    認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
     """
-    # 担当仕入先IDを取得
+    # 担当仕入先IDを取得（ゲストユーザーはスキップ）
+    user_roles = [ur.role.role_code for ur in current_user.user_roles]
     assigned_supplier_ids: list[int] | None = None
-    if prioritize_assigned and current_user:
+    if prioritize_assigned and "guest" not in user_roles:
         assignment_service = UserSupplierAssignmentService(db)
         assignments = assignment_service.get_user_suppliers(current_user.id)
         assigned_supplier_ids = [a.supplier_id for a in assignments]
@@ -329,40 +340,54 @@ def list_lots(
 
 
 @router.post("", response_model=LotResponse, status_code=201)
-def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
-    """ロット新規登録.
+def create_lot(
+    lot: LotCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_write_permission()),
+):
+    """ロット新規登録（書き込み権限必要）.
 
     ロットマスタへの登録と現在在庫テーブルの初期化を行います。
 
     Args:
         lot: ロット作成リクエストデータ
         db: データベースセッション
+        current_user: 現在のログインユーザー（認証必須、ゲスト不可）
 
     Returns:
         LotResponse: 作成されたロット情報
 
     Raises:
         HTTPException: ロット作成に失敗した場合
+
+    認証: 一般ユーザー・管理者のみ（ゲストは読み取り専用）
     """
     service = LotService(db)
     return service.create_lot(lot)
 
 
 @router.get("/{lot_id}", response_model=LotResponse)
-def get_lot(lot_id: int, db: Session = Depends(get_db)):
-    """ロット詳細取得.
+def get_lot(
+    lot_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["guest", "user", "admin"])),
+):
+    """ロット詳細取得（ゲスト可・読み取り専用）.
 
     指定されたIDのロット情報を取得します（v2.2: Lot モデルから直接取得）。
 
     Args:
         lot_id: ロットID
         db: データベースセッション
+        current_user: 現在のログインユーザー（認証必須）
 
     Returns:
         LotResponse: ロット詳細情報
 
     Raises:
         HTTPException: ロットが存在しない場合（404）
+
+    認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
     """
     # Use generic get_lot_details from service which handles VLotDetails join logic consistently
     service = LotService(db)
