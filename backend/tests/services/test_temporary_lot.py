@@ -69,7 +69,7 @@ class TestTemporaryLotRegistration:
         # Create lot without lot_number (empty string triggers temporary lot)
         lot_create = LotCreate(
             lot_number="",  # Empty triggers temporary lot
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",
@@ -110,7 +110,7 @@ class TestTemporaryLotRegistration:
         # Create lot with explicit lot_number
         lot_create = LotCreate(
             lot_number="NORMAL-LOT-001",
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",
@@ -138,7 +138,7 @@ class TestTemporaryLotRegistration:
         for i in range(3):
             lot_create = LotCreate(
                 lot_number="",  # Empty triggers temporary lot
-                product_group_id=product.id,
+                supplier_item_id=product.id,
                 warehouse_id=warehouse.id,
                 received_date=date.today(),
                 unit="PCS",
@@ -206,7 +206,7 @@ class TestTemporaryLotUpdate:
         service = LotService(db)
         lot_create = LotCreate(
             lot_number="",
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             warehouse_id=warehouse.id,
             received_date=date.today(),
             unit="PCS",

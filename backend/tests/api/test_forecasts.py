@@ -70,7 +70,7 @@ def test_bulk_import_forecasts_basic(db: Session, client: TestClient, sample_dat
             {
                 "customer_id": sample_data["customer"].id,
                 "delivery_place_id": sample_data["delivery_place"].id,
-                "product_group_id": sample_data["product"].id,
+                "supplier_item_id": sample_data["product"].id,
                 "forecast_date": str(date.today()),
                 "forecast_quantity": 100.0,
             }

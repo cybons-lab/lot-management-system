@@ -101,7 +101,13 @@ class ReservationDetail(BaseSchema):
 class OrderLineBase(BaseSchema):
     """Base order line schema (DDL: order_lines)."""
 
-    product_group_id: int | None = Field(None, gt=0, description="製品ID（OCR取込時はNULL可）")
+    supplier_item_id: int | None = Field(
+        None,
+        serialization_alias="supplier_item_id",
+        gt=0,
+        description="製品ID（OCR取込時はNULL可）",
+        validation_alias="supplier_item_id",
+    )
     delivery_date: date
     order_quantity: Decimal = Field(..., gt=0, decimal_places=3, description="受注数量")
     unit: str = Field(..., min_length=1, max_length=20)

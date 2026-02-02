@@ -25,14 +25,14 @@ logger = logging.getLogger(__name__)
 
 
 def build_candidate_lot_filter(
-    product_group_id: int | None = None,
+    supplier_item_id: int | None = None,
     warehouse_id: int | None = None,
     order_line_id: int | None = None,
 ) -> dict:
     """Build filter parameters for candidate lot query.
 
     Args:
-        product_group_id: Filter by product ID
+        supplier_item_id: Filter by product ID
         warehouse_id: Filter by warehouse ID
         order_line_id: Filter by order line ID (extracts product/warehouse from line)
 
@@ -40,7 +40,7 @@ def build_candidate_lot_filter(
         Dictionary with filter parameters
     """
     return {
-        "product_group_id": product_group_id,
+        "supplier_item_id": supplier_item_id,
         "warehouse_id": warehouse_id,
         "order_line_id": order_line_id,
     }
@@ -84,13 +84,13 @@ def _get_delivery_place_name(db: Session, delivery_place_id: int | None) -> str 
 
 
 def _query_lots_from_view(
-    db: Session, product_group_id: int, strategy: str, limit: int
+    db: Session, supplier_item_id: int, strategy: str, limit: int
 ) -> list[Any]:
     """Query lots from VLotAvailableQty view.
 
     Args:
         db: Database session
-        product_group_id: Product ID to filter
+        supplier_item_id: Product ID to filter
         strategy: Allocation strategy
         limit: Maximum results
 
@@ -98,7 +98,7 @@ def _query_lots_from_view(
         List of lot view results
     """
     query = db.query(VLotAvailableQty).filter(
-        VLotAvailableQty.product_group_id == product_group_id,
+        VLotAvailableQty.supplier_item_id == supplier_item_id,
         VLotAvailableQty.available_qty > 0,
     )
 
@@ -109,27 +109,27 @@ def _query_lots_from_view(
 
 
 def _query_lots_with_fallback(
-    db: Session, product_group_id: int, strategy: str, limit: int
+    db: Session, supplier_item_id: int, strategy: str, limit: int
 ) -> list[Any]:
     """Query lots with fallback to Lot model if view returns no results.
 
     Args:
         db: Database session
-        product_group_id: Product ID to filter
+        supplier_item_id: Product ID to filter
         strategy: Allocation strategy
         limit: Maximum results
 
     Returns:
         List of lot results (from view or model)
     """
-    results = _query_lots_from_view(db, product_group_id, strategy, limit)
+    results = _query_lots_from_view(db, supplier_item_id, strategy, limit)
 
     if not results:
         from app.infrastructure.persistence.models import LotReceipt
 
         # Query lots (filtering will happen in Python)
         lot_query = db.query(LotReceipt).filter(
-            LotReceipt.product_group_id == product_group_id,
+            LotReceipt.supplier_item_id == supplier_item_id,
         )
         if strategy == "fefo":
             lot_query = lot_query.order_by(
@@ -178,7 +178,7 @@ def _convert_to_candidate_item(
     return CandidateLotItem(
         lot_id=lot_id,
         lot_number="",  # Will be enriched later
-        product_group_id=lot_view.product_group_id,
+        supplier_item_id=lot_view.supplier_item_id,
         warehouse_id=lot_view.warehouse_id,
         received_date=received_date,
         expiry_date=lot_view.expiry_date,
@@ -250,18 +250,18 @@ def _enrich_product_units(db: Session, candidates: list[CandidateLotItem]) -> No
         db: Database session
         candidates: List of candidate items to enrich
     """
-    product_group_ids = {c.product_group_id for c in candidates if c.product_group_id}
-    if not product_group_ids:
+    supplier_item_ids = {c.supplier_item_id for c in candidates if c.supplier_item_id}
+    if not supplier_item_ids:
         return
 
     from app.infrastructure.persistence.models import Product
 
-    products = db.query(Product).filter(Product.id.in_(product_group_ids)).all()
+    products = db.query(Product).filter(Product.id.in_(supplier_item_ids)).all()
     product_map = {p.id: p for p in products}
 
     for candidate in candidates:
-        if candidate.product_group_id:
-            product = product_map.get(candidate.product_group_id)
+        if candidate.supplier_item_id:
+            product = product_map.get(candidate.supplier_item_id)
             if product:
                 candidate.internal_unit = product.internal_unit
                 candidate.external_unit = product.external_unit
@@ -288,7 +288,7 @@ def _enrich_candidate_details(db: Session, candidates: list[CandidateLotItem]) -
 
 def execute_candidate_lot_query(
     db: Session,
-    product_group_id: int | None = None,
+    supplier_item_id: int | None = None,
     warehouse_id: int | None = None,
     order_line_id: int | None = None,
     strategy: str = "fefo",
@@ -301,7 +301,7 @@ def execute_candidate_lot_query(
 
     Args:
         db: Database session
-        product_group_id: Filter by product ID (optional if order_line_id provided)
+        supplier_item_id: Filter by product ID (optional if order_line_id provided)
         warehouse_id: NOT USED for filtering (kept for API compatibility)
         order_line_id: Filter by order line ID (takes precedence)
         strategy: Allocation strategy (currently only "fefo" supported)
@@ -324,16 +324,16 @@ def execute_candidate_lot_query(
             return candidates
 
         logger.info(
-            f"Context found - product_group_id={context.product_group_id}, "
+            f"Context found - supplier_item_id={context.supplier_item_id}, "
             f"delivery_place_id={context.delivery_place_id}, "
             f"order_line_id={order_line_id}"
         )
 
-        if context.product_group_id is None:
+        if context.supplier_item_id is None:
             return candidates
 
         # Query lots with fallback
-        results = _query_lots_with_fallback(db, context.product_group_id, strategy, limit)
+        results = _query_lots_with_fallback(db, context.supplier_item_id, strategy, limit)
 
         # Get delivery place name
         delivery_place_name = _get_delivery_place_name(db, context.delivery_place_id)
@@ -350,10 +350,10 @@ def execute_candidate_lot_query(
 
     else:
         # Query without order line context
-        if product_group_id is None:
+        if supplier_item_id is None:
             return candidates
 
-        results = _query_lots_from_view(db, product_group_id, strategy, limit)
+        results = _query_lots_from_view(db, supplier_item_id, strategy, limit)
 
         # Convert to candidates (no delivery place info)
         candidates = [_convert_to_candidate_item(row) for row in results]

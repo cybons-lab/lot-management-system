@@ -22,7 +22,7 @@ export type AdhocOriginType = (typeof ADHOC_ORIGIN_TYPES)[number]["value"];
  */
 export const adhocLotCreateSchema = z.object({
   lot_number: z.string().min(1, "ロット番号を入力してください"),
-  product_group_id: z.string().min(1, "製品を選択してください"),
+  supplier_item_id: z.string().min(1, "製品を選択してください"),
   warehouse_id: z.string().min(1, "倉庫を選択してください"),
   supplier_code: z.string().optional(),
   current_quantity: z
@@ -46,7 +46,7 @@ export type AdhocLotFormData = z.infer<typeof adhocLotCreateSchema>;
  */
 export const ADHOC_LOT_FORM_DEFAULTS: AdhocLotFormData = {
   lot_number: "",
-  product_group_id: "",
+  supplier_item_id: "",
   warehouse_id: "",
   supplier_code: "none",
   current_quantity: "",

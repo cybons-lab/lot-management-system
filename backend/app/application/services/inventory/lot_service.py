@@ -233,7 +233,7 @@ class LotService:
         return LotResponse(
             id=lot_view.lot_id,
             lot_number=lot_view.lot_number,
-            product_group_id=lot_view.product_group_id,
+            supplier_item_id=lot_view.supplier_item_id or 0,
             product_code=lot_view.maker_part_no or "",
             product_name=lot_view.display_name,
             supplier_id=lot_view.supplier_id,
@@ -245,7 +245,6 @@ class LotService:
             # Explicit fields
             received_quantity=lot_view.received_quantity,
             remaining_quantity=lot_view.remaining_quantity or Decimal("0"),
-            # 互換性フィールド (Remaining)
             # 互換性フィールド (Remaining)
             current_quantity=lot_view.remaining_quantity or Decimal("0"),
             allocated_quantity=lot_view.allocated_quantity or Decimal("0"),
@@ -275,7 +274,6 @@ class LotService:
             # Phase 2 Mapping
             maker_part_no=lot_view.supplier_maker_part_no,
             customer_part_no=lot_view.customer_part_no,
-            supplier_item_id=lot_view.supplier_item_id,
             mapping_status=lot_view.mapping_status,
             created_at=lot_view.created_at,
             updated_at=lot_view.updated_at,
@@ -311,7 +309,7 @@ class LotService:
         )
         from app.domain.allocation_policy import AllocationPolicy, LockMode
 
-        # Resolve product_code to product_group_id
+        # Resolve product_code to supplier_item_id
         product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
         if not product:
             return []
@@ -330,7 +328,7 @@ class LotService:
         # Delegate to SSOT
         candidate_service = AllocationCandidateService(self.db)
         return candidate_service.get_candidates(
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             policy=AllocationPolicy.FEFO,
             lock_mode=LockMode.NONE,
             warehouse_id=warehouse_id,
@@ -398,7 +396,7 @@ class LotService:
         self,
         skip: int = 0,
         limit: int = 100,
-        product_group_id: int | None = None,
+        supplier_item_id: int | None = None,
         product_code: str | None = None,
         supplier_code: str | None = None,
         warehouse_id: int | None = None,
@@ -414,7 +412,7 @@ class LotService:
         Args:
             skip: スキップ件数
             limit: 取得件数
-            product_group_id: 製品ID
+            supplier_item_id: 製品ID
             product_code: 製品コード
             supplier_code: 仕入先コード
             warehouse_id: 倉庫ID
@@ -430,8 +428,8 @@ class LotService:
         """
         query = self.db.query(VLotDetails)
 
-        if product_group_id is not None:
-            query = query.filter(VLotDetails.product_group_id == product_group_id)
+        if supplier_item_id is not None:
+            query = query.filter(VLotDetails.supplier_item_id == supplier_item_id)
         elif product_code:
             query = query.filter(VLotDetails.maker_part_no == product_code)
 
@@ -490,7 +488,7 @@ class LotService:
             response = LotResponse(
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number or "",
-                product_group_id=lot_view.product_group_id,
+                supplier_item_id=lot_view.supplier_item_id or 0,
                 product_code=lot_view.maker_part_no or "",
                 product_name=lot_view.display_name,
                 supplier_id=lot_view.supplier_id,
@@ -519,7 +517,6 @@ class LotService:
                 # Phase 2 Mapping
                 maker_part_no=lot_view.supplier_maker_part_no,
                 customer_part_no=lot_view.customer_part_no,
-                supplier_item_id=lot_view.supplier_item_id,
                 mapping_status=lot_view.mapping_status,
             )
             responses.append(response)
@@ -532,7 +529,7 @@ class LotService:
         size: int = 100,
         sort_by: str = "expiry_date",
         sort_order: str = "asc",
-        product_group_id: int | None = None,
+        supplier_item_id: int | None = None,
         warehouse_id: int | None = None,
         supplier_code: str | None = None,
         expiry_from: date | None = None,
@@ -560,8 +557,8 @@ class LotService:
             )
 
         # Exact Filters
-        if product_group_id:
-            db_query = db_query.filter(VLotDetails.product_group_id == product_group_id)
+        if supplier_item_id:
+            db_query = db_query.filter(VLotDetails.supplier_item_id == supplier_item_id)
         if warehouse_id:
             db_query = db_query.filter(VLotDetails.warehouse_id == warehouse_id)
         if supplier_code:
@@ -618,7 +615,7 @@ class LotService:
             response = LotResponse(
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number,
-                product_group_id=lot_view.product_group_id,
+                supplier_item_id=lot_view.supplier_item_id or 0,
                 product_code=lot_view.maker_part_no or "",
                 product_name=lot_view.display_name,
                 supplier_id=lot_view.supplier_id,
@@ -652,7 +649,6 @@ class LotService:
                 # Phase 2 Mapping
                 maker_part_no=lot_view.supplier_maker_part_no,
                 customer_part_no=lot_view.customer_part_no,
-                supplier_item_id=lot_view.supplier_item_id,
                 mapping_status=lot_view.mapping_status,
             )
             responses.append(response)
@@ -666,12 +662,12 @@ class LotService:
         supplier_code is optional and lot number is auto-generated.
         """
         # Validation
-        if not lot_create.product_group_id:
-            raise LotValidationError("product_group_id は必須です")
+        if not lot_create.supplier_item_id:
+            raise LotValidationError("supplier_item_id は必須です")
 
-        product = self.db.query(Product).filter(Product.id == lot_create.product_group_id).first()
+        product = self.db.query(Product).filter(Product.id == lot_create.supplier_item_id).first()
         if not product:
-            raise LotProductNotFoundError(lot_create.product_group_id)
+            raise LotProductNotFoundError(lot_create.supplier_item_id)
 
         # Supplier validation: required only for ORDER origin type
         supplier = None
@@ -747,7 +743,7 @@ class LotService:
                 self.db.query(LotMaster)
                 .filter(
                     LotMaster.lot_number == lot_payload["lot_number"],
-                    LotMaster.product_group_id == lot_create.product_group_id,
+                    LotMaster.supplier_item_id == lot_create.supplier_item_id,  # type: ignore[attr-defined]
                     LotMaster.supplier_id == (supplier.id if supplier else None),
                 )
                 .first()
@@ -756,7 +752,7 @@ class LotService:
         if not lot_master:
             lot_master = LotMaster(
                 lot_number=lot_payload["lot_number"],
-                product_group_id=lot_create.product_group_id,
+                supplier_item_id=lot_create.supplier_item_id,
                 supplier_id=supplier.id if supplier else None,
             )
             self.db.add(lot_master)
@@ -1102,7 +1098,7 @@ class LotService:
         db_lot = (
             self.db.query(LotReceipt)
             .options(
-                joinedload(LotReceipt.product_group),
+                joinedload(LotReceipt.supplier_item),
                 joinedload(LotReceipt.warehouse),
                 joinedload(LotReceipt.supplier),
             )
@@ -1113,7 +1109,7 @@ class LotService:
             raise LotNotFoundError(lot_id)
 
         # LotResponseの必須フィールドをリレーションから取得（削除済みマスタ対応）
-        product = db_lot.product_group
+        product = db_lot.supplier_item
         warehouse = db_lot.warehouse
         supplier = db_lot.supplier
 
@@ -1159,7 +1155,7 @@ class LotService:
         return LotResponse(
             id=db_lot.id,
             lot_number=db_lot.lot_number or "",
-            product_group_id=db_lot.product_group_id,
+            supplier_item_id=db_lot.supplier_item_id or 0,
             warehouse_id=db_lot.warehouse_id,
             supplier_id=db_lot.supplier_id,
             supplier_code=supplier_code,
@@ -1197,7 +1193,6 @@ class LotService:
             warehouse_deleted=warehouse_deleted,
             supplier_deleted=supplier_deleted,
             # Phase 2 Mapping (entity based)
-            supplier_item_id=db_lot.supplier_item_id,
             maker_part_no=None,
             customer_part_no=None,
             mapping_status=None,

@@ -5,7 +5,7 @@ Phase 2-1: ロットが先方品番にマッピングされているか検証す
 
 検証ルール:
 1. lot_receipts.supplier_item_id が設定されているか
-2. customer_items に is_primary=True のマッピングが存在するか
+2. supplier_item_id に紐づく品目マスタが存在するか
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ def validate_lot_mapping(
                 raise UnmappedItemError(
                     lot_id=lot.id,
                     lot_number=lot.lot_number,
-                    product_code=lot.product_group.maker_part_no if lot.product_group else None,
+                    product_code=lot.supplier_item.maker_part_no if lot.supplier_item else None,
                     supplier_item_id=None,
                 )
             return False
@@ -122,7 +122,7 @@ def get_customer_part_no_for_lot(
 
     表示ルール（MASTER_ALIGNMENT_PLAN.md 3.在庫ページの表示方針）:
     1. 引当/出荷中で customer_id が指定されている場合: その得意先の品番
-    2. デフォルト: supplier_item_id に紐づく is_primary=True の先方品番
+    2. デフォルト: supplier_item_id に紐づく先方品番 (最初の一件)
     3. フォールバック: None（UIで「マッピング設定」への導線を表示）
 
     Args:
@@ -146,10 +146,13 @@ def get_customer_part_no_for_lot(
         if result:
             return result
 
-    # ルール(2): is_primary=True のデフォルト品番
-    stmt = select(CustomerItem.customer_part_no).where(
-        CustomerItem.supplier_item_id == lot.supplier_item_id,
-        CustomerItem.is_primary.is_(True),
+    # ルール(2): Phase1 - is_primaryは廃止。最初の1件を返す（created_at順）
+    # Phase1以降、customer_itemsは等価なので、特定のデフォルトは存在しない
+    stmt = (
+        select(CustomerItem.customer_part_no)
+        .where(CustomerItem.supplier_item_id == lot.supplier_item_id)
+        .order_by(CustomerItem.created_at)
+        .limit(1)
     )
     result = db.execute(stmt).scalar_one_or_none()
 

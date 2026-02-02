@@ -27,13 +27,13 @@ class UomConversionService(
         """Initialize service with database session."""
         super().__init__(db=db, model=ProductUomConversion)
 
-    def get_by_key(self, product_group_id: int, external_unit: str) -> ProductUomConversion | None:
+    def get_by_key(self, supplier_item_id: int, external_unit: str) -> ProductUomConversion | None:
         """Get UOM conversion by composite key."""
         return cast(
             ProductUomConversion | None,
             self.db.query(ProductUomConversion)
             .filter(
-                ProductUomConversion.product_group_id == product_group_id,
+                ProductUomConversion.supplier_item_id == supplier_item_id,
                 ProductUomConversion.external_unit == external_unit,
             )
             .first(),
@@ -149,7 +149,7 @@ class UomConversionService(
         return conversion
 
     def bulk_upsert(self, rows: list[UomConversionBulkRow]) -> BulkUpsertResponse:
-        """Bulk upsert UOM conversions by composite key (product_group_id,
+        """Bulk upsert UOM conversions by composite key (supplier_item_id,
         external_unit).
 
         Args:
@@ -178,12 +178,12 @@ class UomConversionService(
         for row in rows:
             try:
                 # Resolve IDs
-                product_group_id = product_map.get(row.product_code)
-                if not product_group_id:
+                supplier_item_id = product_map.get(row.product_code)
+                if not supplier_item_id:
                     raise ValueError(f"Product code not found: {row.product_code}")
 
                 # Check if UOM conversion exists by composite key
-                existing = self.get_by_key(product_group_id, row.external_unit)
+                existing = self.get_by_key(supplier_item_id, row.external_unit)
 
                 if existing:
                     # UPDATE
@@ -193,7 +193,7 @@ class UomConversionService(
                 else:
                     # CREATE
                     new_conversion = ProductUomConversion(
-                        product_group_id=product_group_id,
+                        supplier_item_id=supplier_item_id,
                         external_unit=row.external_unit,
                         factor=row.factor,
                     )

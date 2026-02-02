@@ -65,13 +65,13 @@ def test_multi_lot_soft_allocation(db: Session, master_data):
 
     # 1. Setup 2 Lots
     # Lot A: Expires earlier (should be picked first), Qty 60
-    lm_a = LotMaster(product_group_id=product.id, lot_number="LOT-A")
+    lm_a = LotMaster(supplier_item_id=product.id, lot_number="LOT-A")
     db.add(lm_a)
     db.flush()
 
     lot_a = LotReceipt(
         lot_master_id=lm_a.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("60.000"),
         unit="EA",
@@ -80,13 +80,13 @@ def test_multi_lot_soft_allocation(db: Session, master_data):
         origin_type="order",
     )
     # Lot B: Expires later, Qty 60
-    lm_b = LotMaster(product_group_id=product.id, lot_number="LOT-B")
+    lm_b = LotMaster(supplier_item_id=product.id, lot_number="LOT-B")
     db.add(lm_b)
     db.flush()
 
     lot_b = LotReceipt(
         lot_master_id=lm_b.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("60.000"),
         unit="EA",
@@ -101,7 +101,7 @@ def test_multi_lot_soft_allocation(db: Session, master_data):
     forecast = ForecastCurrent(
         customer_id=master_data["customer"].id,
         delivery_place_id=master_data["delivery_place"].id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         forecast_date=date.today() + timedelta(days=10),
         forecast_quantity=Decimal("100.000"),
         forecast_period="2025-12",

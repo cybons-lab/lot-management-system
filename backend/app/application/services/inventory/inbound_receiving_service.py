@@ -88,12 +88,12 @@ class InboundReceivingService:
 
                     # Get or Create LotMaster
                     lm = self._get_or_create_lot_master(
-                        lot_number, line.product_group_id, plan.supplier_id
+                        lot_number, line.supplier_item_id, plan.supplier_id
                     )
 
                     db_lot = LotReceipt(
                         lot_master_id=lm.id,
-                        product_group_id=line.product_group_id,
+                        supplier_item_id=line.supplier_item_id,
                         warehouse_id=default_warehouse_id,
                         supplier_id=plan.supplier_id,
                         expected_lot_id=expected_lot.id,
@@ -123,16 +123,16 @@ class InboundReceivingService:
                     created_lot_ids.append(db_lot.id)
             else:
                 # Create a single lot from plan line (no expected lots)
-                lot_number = self._generate_lot_number(plan.plan_number, line.product_group_id)
+                lot_number = self._generate_lot_number(plan.plan_number, line.supplier_item_id)
 
                 # Get or Create LotMaster
                 lm = self._get_or_create_lot_master(
-                    lot_number, line.product_group_id, plan.supplier_id
+                    lot_number, line.supplier_item_id, plan.supplier_id
                 )
 
                 db_lot = LotReceipt(
                     lot_master_id=lm.id,
-                    product_group_id=line.product_group_id,
+                    supplier_item_id=line.supplier_item_id,
                     warehouse_id=default_warehouse_id,
                     supplier_id=plan.supplier_id,
                     expected_lot_id=None,
@@ -173,31 +173,28 @@ class InboundReceivingService:
             created_lot_ids=created_lot_ids,
         )
 
-    def _generate_lot_number(self, plan_number: str, product_group_id: int) -> str:
+    def _generate_lot_number(self, plan_number: str, supplier_item_id: int) -> str:
         """Generate a unique lot number.
 
         Args:
             plan_number: Inbound plan number
-            product_group_id: Product ID
-
-        Returns:
-            Generated lot number
+            supplier_item_id: Product ID
         """
-        # Simple implementation: plan_number + product_group_id + sequence
+        # Simple implementation: plan_number + supplier_item_id + sequence
         # Count existing lots for this plan and product
         count = (
             self.db.query(func.count(LotReceipt.id))
             .join(LotMaster)
-            .filter(LotMaster.lot_number.like(f"{plan_number}-{product_group_id}-%"))
+            .filter(LotMaster.lot_number.like(f"{plan_number}-{supplier_item_id}-%"))
             .scalar()
         )
 
         sequence = count + 1 if count else 1
 
-        return f"{plan_number}-{product_group_id}-{sequence:03d}"
+        return f"{plan_number}-{supplier_item_id}-{sequence:03d}"
 
     def _get_or_create_lot_master(
-        self, lot_number: str | None, product_group_id: int, supplier_id: int
+        self, lot_number: str | None, supplier_item_id: int, supplier_id: int
     ) -> LotMaster:
         """Get existing LotMaster or create a new one.
 
@@ -209,7 +206,7 @@ class InboundReceivingService:
                 self.db.query(LotMaster)
                 .filter(
                     LotMaster.lot_number == lot_number,
-                    LotMaster.product_group_id == product_group_id,
+                    LotMaster.supplier_item_id == supplier_item_id,
                 )
                 .first()
             )
@@ -217,7 +214,7 @@ class InboundReceivingService:
         if not lm:
             lm = LotMaster(
                 lot_number=lot_number,
-                product_group_id=product_group_id,
+                supplier_item_id=supplier_item_id,
                 supplier_id=supplier_id,
             )
             self.db.add(lm)

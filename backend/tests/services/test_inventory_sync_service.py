@@ -57,7 +57,7 @@ def setup_inventory_sync_test_data(db_session: Session, supplier):
     # ProductWarehouseを作成
     pws = [
         ProductWarehouse(
-            product_group_id=p.id,
+            supplier_item_id=p.id,
             warehouse_id=wh.id,
             is_active=True,
         )
@@ -73,42 +73,42 @@ def setup_inventory_sync_test_data(db_session: Session, supplier):
 
     # 商品ごとにロットを作成
     # Product 1: 100個 (差異なし想定)
-    lm1 = LotMaster(product_group_id=products[0].id, supplier_id=supplier.id, lot_number="LOT001")
+    lm1 = LotMaster(supplier_item_id=products[0].id, supplier_id=supplier.id, lot_number="LOT001")
     db_session.add(lm1)
     db_session.flush()
 
     lot1 = LotReceipt(
         lot_master_id=lm1.id,
         supplier_id=supplier.id,
-        product_group_id=products[0].id,
+        supplier_item_id=products[0].id,
         warehouse_id=wh.id,
         received_quantity=Decimal("100"),
         received_date=datetime.now().date(),
         unit="EA",
     )
     # Product 2: 200個 (差異あり想定)
-    lm2 = LotMaster(product_group_id=products[1].id, supplier_id=supplier.id, lot_number="LOT002")
+    lm2 = LotMaster(supplier_item_id=products[1].id, supplier_id=supplier.id, lot_number="LOT002")
     db_session.add(lm2)
     db_session.flush()
 
     lot2 = LotReceipt(
         lot_master_id=lm2.id,
         supplier_id=supplier.id,
-        product_group_id=products[1].id,
+        supplier_item_id=products[1].id,
         warehouse_id=wh.id,
         received_quantity=Decimal("200"),
         received_date=datetime.now().date(),
         unit="EA",
     )
     # Product 3: 50個 (差異なし想定)
-    lm3 = LotMaster(product_group_id=products[2].id, supplier_id=supplier.id, lot_number="LOT003")
+    lm3 = LotMaster(supplier_item_id=products[2].id, supplier_id=supplier.id, lot_number="LOT003")
     db_session.add(lm3)
     db_session.flush()
 
     lot3 = LotReceipt(
         lot_master_id=lm3.id,
         supplier_id=supplier.id,
-        product_group_id=products[2].id,
+        supplier_item_id=products[2].id,
         warehouse_id=wh.id,
         received_quantity=Decimal("50"),
         received_date=datetime.now().date(),
@@ -205,7 +205,7 @@ def test_find_discrepancies_exceeds_tolerance(db_session: Session, setup_invento
 
     # 差異あり
     assert len(discrepancies) == 1
-    assert discrepancies[0]["product_group_id"] == products[0].id
+    assert discrepancies[0]["supplier_item_id"] == products[0].id
     assert discrepancies[0]["local_qty"] == 100.0
     assert discrepancies[0]["sap_qty"] == 105.0
     assert abs(discrepancies[0]["diff_pct"] - 4.76) < 0.01
@@ -220,14 +220,14 @@ def test_create_alerts(db_session: Session, setup_inventory_sync_test_data):
 
     discrepancies = [
         {
-            "product_group_id": products[0].id,
+            "supplier_item_id": products[0].id,
             "local_qty": 100.0,
             "sap_qty": 110.0,
             "diff_pct": 10.0,
             "diff_amount": 10.0,
         },
         {
-            "product_group_id": products[1].id,
+            "supplier_item_id": products[1].id,
             "local_qty": 200.0,
             "sap_qty": 180.0,
             "diff_pct": 10.0,
@@ -252,7 +252,7 @@ def test_create_alerts(db_session: Session, setup_inventory_sync_test_data):
     alert1 = db_alerts[0]
     assert alert1.rule_code == f"inv_sync_alert_{products[0].id}"
     assert alert1.is_active is True
-    assert alert1.rule_parameters["product_group_id"] == products[0].id
+    assert alert1.rule_parameters["supplier_item_id"] == products[0].id
     assert alert1.rule_parameters["local_qty"] == 100.0
     assert alert1.rule_parameters["sap_qty"] == 110.0
 
@@ -277,7 +277,7 @@ def test_create_alerts_deactivates_old_alerts(db_session: Session, setup_invento
 
     discrepancies = [
         {
-            "product_group_id": products[0].id,
+            "supplier_item_id": products[0].id,
             "local_qty": 100.0,
             "sap_qty": 110.0,
             "diff_pct": 10.0,
@@ -346,7 +346,7 @@ def test_check_inventory_totals_integration(
     # 差異詳細の確認
     assert len(result["details"]) == 1
     disc = result["details"][0]
-    assert disc["product_group_id"] == products[1].id
+    assert disc["supplier_item_id"] == products[1].id
     assert disc["local_qty"] == 200.0
     assert disc["sap_qty"] == 220.0
 

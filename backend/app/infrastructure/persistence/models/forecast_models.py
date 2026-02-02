@@ -28,7 +28,7 @@ tables.
 3. なぜ複合ユニーク制約が2つあるのか（L64-79）
    理由: 検索性能とデータ整合性の両立
    インデックス1（L65-70）:
-   - idx_forecast_current_unique: (customer_id, delivery_place_id, product_group_id)
+   - idx_forecast_current_unique: (customer_id, delivery_place_id, supplier_item_id)
    → 顧客×納品先×製品での検索を高速化（ユニーク制約なし）
    インデックス2（L71-78）:
    - ux_forecast_current_unique: + forecast_date, forecast_period
@@ -97,7 +97,7 @@ tables.
    - 検索頻度: 低い（分析時のみ）
    → インデックスは最小限に抑える
    インデックス選定:
-   - ix_forecast_history_key: (customer_id, delivery_place_id, product_group_id)
+   - ix_forecast_history_key: (customer_id, delivery_place_id, supplier_item_id)
    → 分析時の主要な検索軸
    → date や period はインデックス不要（全件スキャンで十分）
 
@@ -149,7 +149,7 @@ class ForecastCurrent(Base):
         ForeignKey("delivery_places.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    product_group_id: Mapped[int] = mapped_column(
+    supplier_item_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
@@ -176,13 +176,13 @@ class ForecastCurrent(Base):
             "idx_forecast_current_unique",
             "customer_id",
             "delivery_place_id",
-            "product_group_id",
+            "supplier_item_id",
         ),
         Index(
             "ux_forecast_current_unique",
             "customer_id",
             "delivery_place_id",
-            "product_group_id",
+            "supplier_item_id",
             "forecast_date",
             "forecast_period",
             unique=True,
@@ -193,7 +193,7 @@ class ForecastCurrent(Base):
     delivery_place: Mapped[DeliveryPlace] = relationship(
         "DeliveryPlace", back_populates="forecast_current"
     )
-    product_group: Mapped[SupplierItem] = relationship(
+    supplier_item: Mapped[SupplierItem] = relationship(
         "SupplierItem", back_populates="forecast_current"
     )
 
@@ -210,7 +210,7 @@ class ForecastHistory(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     customer_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     delivery_place_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    product_group_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    supplier_item_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -227,7 +227,7 @@ class ForecastHistory(Base):
             "ix_forecast_history_key",
             "customer_id",
             "delivery_place_id",
-            "product_group_id",
+            "supplier_item_id",
         ),
     )
 

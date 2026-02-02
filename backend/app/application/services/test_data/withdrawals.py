@@ -188,9 +188,10 @@ def _generate_withdrawals_from_patterns(
     # Group lots by product
     lots_by_product: dict[int, list[LotReceipt]] = {}
     for lot in lots:
-        if lot.product_group_id not in lots_by_product:
-            lots_by_product[lot.product_group_id] = []
-        lots_by_product[lot.product_group_id].append(lot)
+        if lot.supplier_item_id is not None:
+            if lot.supplier_item_id not in lots_by_product:
+                lots_by_product[lot.supplier_item_id] = []
+            lots_by_product[lot.supplier_item_id].append(lot)
 
     today = date.today()
     patterns = list(DEMAND_PATTERN_SCENARIOS.keys())

@@ -34,7 +34,7 @@ export function WarehouseInfoCard({ productId }: WarehouseInfoCardProps) {
             ))}
 
             <Button size="sm" variant="outline" className={styles.detailButton} asChild>
-              <Link to={`${ROUTES.INVENTORY.SUMMARY}?product_group_id=${productId}`}>
+              <Link to={`${ROUTES.INVENTORY.SUMMARY}?supplier_item_id=${productId}`}>
                 詳細を確認
               </Link>
             </Button>

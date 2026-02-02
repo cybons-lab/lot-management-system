@@ -30,17 +30,17 @@ r"""引当APIルーター.
    - サービス層: ビジネスロジック
    → 責務の明確な分離
 
-3. なぜ product_group_id or 0 としているのか（L54）
+3. なぜ supplier_item_id or 0 としているのか（L54）
    理由: Pydantic スキーマの型安全性
    問題:
-   - line_plan.product_group_id が None の可能性
-   - FefoLineAllocation.product_group_id: int（NonNullable）
+   - line_plan.supplier_item_id が None の可能性
+   - FefoLineAllocation.supplier_item_id: int（NonNullable）
    → None を渡すと Pydantic バリデーションエラー
    解決:
-   - product_group_id or 0: None の場合は 0 を返す
+   - supplier_item_id or 0: None の場合は 0 を返す
    → 型エラー回避
    業務的意義:
-   - product_group_id=0 は「製品未設定」を意味
+   - supplier_item_id=0 は「製品未設定」を意味
    → フロントエンドで警告表示
 
 4. manual_allocate() の drag-assign エンドポイント（L146）
@@ -187,7 +187,7 @@ def _map_fefo_preview(result) -> FefoPreviewResponse:
         lines.append(
             FefoLineAllocation(
                 order_line_id=line_plan.order_line_id,
-                product_group_id=line_plan.product_group_id or 0,  # Handle None safety
+                supplier_item_id=line_plan.supplier_item_id or 0,  # Handle None safety
                 order_quantity=line_plan.required_qty,  # Mapped from required_qty
                 already_allocated_quantity=line_plan.already_allocated_qty,
                 allocations=allocations,
@@ -308,7 +308,7 @@ def manual_allocate(
             lot_number=lot.lot_number or "" if lot else "",
             allocated_quantity=reservation.reserved_qty,
             available_quantity=available_qty,
-            product_group_id=lot.product_group_id if lot else 0,
+            supplier_item_id=lot.supplier_item_id or 0,
             expiry_date=lot.expiry_date if lot else None,
             status="preview",
             message="Reservation created",
@@ -491,7 +491,7 @@ async def bulk_auto_allocate(
     try:
         result = actions.auto_reserve_bulk(
             db,
-            product_group_id=request.product_group_id,
+            supplier_item_id=request.supplier_item_id,
             customer_id=request.customer_id,
             delivery_place_id=request.delivery_place_id,
             order_type=request.order_type,

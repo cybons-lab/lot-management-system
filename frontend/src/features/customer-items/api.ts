@@ -22,9 +22,8 @@ export interface CustomerItem {
   customer_code: string;
   customer_name: string;
   customer_part_no: string;
-  product_group_id: number;
+  supplier_item_id: number;
   supplier_id: number | null;
-  supplier_item_id: number | null;
   is_primary: boolean;
   maker_part_no: string | null;
   product_code: string;

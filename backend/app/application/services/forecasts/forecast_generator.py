@@ -103,7 +103,7 @@ def create_daily_forecasts(
                 ForecastCurrent(
                     customer_id=customer_id,
                     delivery_place_id=delivery_place_id,
-                    product_group_id=product.id,
+                    supplier_item_id=product.id,
                     forecast_date=current_date,
                     forecast_quantity=qty,
                     unit=product.base_unit or "PCS",
@@ -202,7 +202,7 @@ def create_jyun_forecasts_from_daily(
             ForecastCurrent(
                 customer_id=customer_id,
                 delivery_place_id=delivery_place_id,
-                product_group_id=product.id,
+                supplier_item_id=product.id,
                 forecast_date=forecast_date,
                 forecast_quantity=jyun_quantity.quantize(Decimal("1")),  # Round to integer
                 unit=product.base_unit or "PCS",
@@ -268,7 +268,7 @@ def create_monthly_forecasts_from_daily(
         ForecastCurrent(
             customer_id=customer_id,
             delivery_place_id=delivery_place_id,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             forecast_date=forecast_date,
             forecast_quantity=monthly_quantity.quantize(Decimal("1")),  # Round to integer
             unit=product.base_unit or "PCS",

@@ -52,7 +52,7 @@ export function AdhocLotCreatePage() {
       // API形式に変換
       const payload = {
         lot_number: data.lot_number,
-        product_group_id: data.product_group_id,
+        supplier_item_id: data.supplier_item_id,
         warehouse_id: data.warehouse_id,
         supplier_code: data.supplier_code,
         received_date: data.received_date,

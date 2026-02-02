@@ -40,22 +40,30 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         super().__init__(db=db, model=CustomerItem)
 
     def _enrich_item(self, item: CustomerItem) -> dict:
-        """Enrich customer item with related names."""
-        self.db.refresh(item, attribute_names=["customer", "product_group", "supplier"])
+        """Enrich customer item with related names.
+
+        Phase1: Get maker_part_no and display_name from supplier_items
+        instead of product_groups (which no longer exists).
+        supplier_item is required (NOT NULL) after Phase1 migration.
+        """
+        self.db.refresh(item, attribute_names=["customer", "supplier_item"])
+
+        # supplier_item is NOT NULL after Phase1, but mypy doesn't know that
+        if item.supplier_item is None:
+            raise ValueError(f"customer_item {item.id} has null supplier_item_id")
+
         return {
             "id": item.id,
             "customer_id": item.customer_id,
             "customer_code": item.customer.customer_code,
             "customer_name": item.customer.customer_name,
             "customer_part_no": item.customer_part_no,
-            "product_group_id": item.product_group_id,
-            "product_code": item.product_group.maker_part_no,
-            "product_name": item.product_group.display_name,
-            "supplier_id": item.supplier_id,
             "supplier_item_id": item.supplier_item_id,
-            "supplier_code": item.supplier.supplier_code if item.supplier else None,
-            "supplier_name": item.supplier.supplier_name if item.supplier else None,
-            "is_primary": item.is_primary,
+            "maker_part_no": item.supplier_item.maker_part_no,
+            "display_name": item.supplier_item.display_name,
+            "supplier_id": item.supplier_item.supplier.id,
+            "supplier_code": item.supplier_item.supplier.supplier_code,
+            "supplier_name": item.supplier_item.supplier.supplier_name,
             "base_unit": item.base_unit,
             "pack_unit": item.pack_unit,
             "pack_quantity": item.pack_quantity,
@@ -76,11 +84,14 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         skip: int = 0,
         limit: int = 100,
         customer_id: int | None = None,
-        product_group_id: int | None = None,
+        supplier_item_id: int | None = None,
         supplier_id: int | None = None,
         include_inactive: bool = False,
     ) -> list[dict]:
-        """Get all customer item mappings with optional filtering and enriched data."""
+        """Get all customer item mappings with optional filtering and enriched data.
+
+        Phase1: Filter by supplier_item_id instead of supplier_item_id.
+        """
         from sqlalchemy import select
 
         from app.infrastructure.persistence.models.masters_models import (
@@ -90,6 +101,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 
         # Build query with JOINs to get related names
+        # Phase1: Join via supplier_item_id
         query = (
             select(
                 CustomerItem,
@@ -97,25 +109,24 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 Customer.customer_name,
                 SupplierItem.display_name,
                 SupplierItem.maker_part_no,
+                Supplier.id.label("supplier_id"),
                 Supplier.supplier_code,
                 Supplier.supplier_name,
             )
             .join(Customer, CustomerItem.customer_id == Customer.id)
-            .join(SupplierItem, CustomerItem.product_group_id == SupplierItem.id)
-            .outerjoin(Supplier, CustomerItem.supplier_id == Supplier.id)
+            .join(SupplierItem, CustomerItem.supplier_item_id == SupplierItem.id)
+            .join(Supplier, SupplierItem.supplier_id == Supplier.id)
         )
 
         if customer_id is not None:
             query = query.filter(CustomerItem.customer_id == customer_id)
 
-        if product_group_id is not None:
-            query = query.filter(CustomerItem.product_group_id == product_group_id)
+        if supplier_item_id is not None:
+            query = query.filter(CustomerItem.supplier_item_id == supplier_item_id)
 
         if supplier_id is not None:
-            # Filter via supplier_item_id -> supplier_items.supplier_id
-            query = query.join(
-                SupplierItem, CustomerItem.supplier_item_id == SupplierItem.id
-            ).filter(SupplierItem.supplier_id == supplier_id)
+            # Filter via supplier_items.supplier_id
+            query = query.filter(SupplierItem.supplier_id == supplier_id)
 
         if not include_inactive:
             query = query.filter(CustomerItem.get_active_filter())
@@ -123,6 +134,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         results = self.db.execute(query.offset(skip).limit(limit)).all()
 
         # Convert to dict with enriched data
+        # Phase1: Return maker_part_no and display_name instead of product_code/product_name
         return [
             {
                 "id": r.CustomerItem.id,
@@ -130,14 +142,12 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 "customer_code": r.customer_code,
                 "customer_name": r.customer_name,
                 "customer_part_no": r.CustomerItem.customer_part_no,
-                "product_group_id": r.CustomerItem.product_group_id,
-                "product_code": r.maker_part_no,
-                "product_name": r.display_name,
-                "supplier_id": r.CustomerItem.supplier_id,
                 "supplier_item_id": r.CustomerItem.supplier_item_id,
+                "maker_part_no": r.maker_part_no,
+                "display_name": r.display_name,
+                "supplier_id": r.supplier_id,
                 "supplier_code": r.supplier_code,
                 "supplier_name": r.supplier_name,
-                "is_primary": r.CustomerItem.is_primary,
                 "base_unit": r.CustomerItem.base_unit,
                 "pack_unit": r.CustomerItem.pack_unit,
                 "pack_quantity": float(r.CustomerItem.pack_quantity)
@@ -346,7 +356,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         # 1. Collect all codes to resolve IDs efficiently
         customer_codes = {row.customer_code for row in rows}
         product_codes = {row.product_code for row in rows}
-        supplier_codes = {row.supplier_code for row in rows if row.supplier_code}
+        # Phase1: supplier_codes used for validation only (not stored in customer_items)
 
         # 2. Resolve IDs
         customers = (
@@ -356,21 +366,16 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         )
         customer_map = {code: id for code, id in customers}
 
-        products = (
+        # Phase1: product_code -> supplier_item_id
+        supplier_items = (
             self.db.query(SupplierItem.maker_part_no, SupplierItem.id)
             .filter(SupplierItem.maker_part_no.in_(product_codes))
             .all()
         )
-        product_map = {code: id for code, id in products}
+        supplier_item_map = {code: id for code, id in supplier_items}
 
-        supplier_map = {}
-        if supplier_codes:
-            suppliers = (
-                self.db.query(Supplier.supplier_code, Supplier.id)
-                .filter(Supplier.supplier_code.in_(supplier_codes))
-                .all()
-            )
-            supplier_map = {code: id for code, id in suppliers}
+        # Phase1: supplier_id is no longer stored in customer_items (available via supplier_item)
+        # We keep supplier_codes validation for data integrity but don't store it directly
 
         # 3. Process rows
         for row in rows:
@@ -380,14 +385,19 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 if not customer_id:
                     raise ValueError(f"Customer code not found: {row.customer_code}")
 
-                product_group_id = product_map.get(row.product_code)
-                if not product_group_id:
+                supplier_item_id = supplier_item_map.get(row.product_code)
+                if not supplier_item_id:
                     raise ValueError(f"Product code not found: {row.product_code}")
 
-                supplier_id = None
+                # Phase1: Validate supplier_code if provided (for data integrity)
+                # but we don't store it directly in customer_items
                 if row.supplier_code:
-                    supplier_id = supplier_map.get(row.supplier_code)
-                    if not supplier_id:
+                    supplier = (
+                        self.db.query(Supplier)
+                        .filter(Supplier.supplier_code == row.supplier_code)
+                        .first()
+                    )
+                    if not supplier:
                         raise ValueError(f"Supplier code not found: {row.supplier_code}")
 
                 # Check if customer item exists by composite key
@@ -395,8 +405,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
                 if existing:
                     # UPDATE
-                    existing.product_group_id = product_group_id
-                    existing.supplier_id = supplier_id
+                    existing.supplier_item_id = supplier_item_id
                     existing.base_unit = row.base_unit
                     existing.pack_unit = row.pack_unit
                     existing.pack_quantity = row.pack_quantity
@@ -408,8 +417,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                     new_item = CustomerItem(
                         customer_id=customer_id,
                         customer_part_no=row.customer_part_no,
-                        product_group_id=product_group_id,
-                        supplier_id=supplier_id,
+                        supplier_item_id=supplier_item_id,
                         base_unit=row.base_unit,
                         pack_unit=row.pack_unit,
                         pack_quantity=row.pack_quantity,

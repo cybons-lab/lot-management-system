@@ -48,7 +48,7 @@ def test_order_allocation_single_lot_fit(db: Session, supplier):
     # Lot A: Older (Expiry D+5), Small Qty (50)
     # Lot A
     lot_master_a = LotMaster(
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         lot_number="LOT-A-SMALL",
     )
     db.add(lot_master_a)
@@ -56,7 +56,7 @@ def test_order_allocation_single_lot_fit(db: Session, supplier):
 
     lot_a = LotReceipt(
         lot_master_id=lot_master_a.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("50"),
         expiry_date=today + timedelta(days=5),
@@ -70,7 +70,7 @@ def test_order_allocation_single_lot_fit(db: Session, supplier):
     # Lot B: Newer (Expiry D+10), Large Qty (100)
     # Lot B
     lot_master_b = LotMaster(
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         lot_number="LOT-B-LARGE",
     )
     db.add(lot_master_b)
@@ -78,7 +78,7 @@ def test_order_allocation_single_lot_fit(db: Session, supplier):
 
     lot_b = LotReceipt(
         lot_master_id=lot_master_b.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("100"),
         expiry_date=today + timedelta(days=10),
@@ -116,7 +116,7 @@ def test_order_allocation_single_lot_fit(db: Session, supplier):
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         delivery_place_id=delivery_place.id,
         delivery_date=today + timedelta(days=20),
         order_quantity=Decimal("80"),

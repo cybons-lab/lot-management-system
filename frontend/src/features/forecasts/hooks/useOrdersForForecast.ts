@@ -10,24 +10,24 @@ import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
 export const ordersForForecastKeys = {
   all: ["orders", "for-forecast"] as const,
-  byGroup: (params: { customer_id: number; delivery_place_id: number; product_group_id: number }) =>
+  byGroup: (params: { customer_id: number; delivery_place_id: number; supplier_item_id: number }) =>
     [...ordersForForecastKeys.all, params] as const,
 };
 
 /**
  * フォーキャストグループに関連する受注を取得
- * customer_id、delivery_place_id、product_group_id で受注をフィルタリング
+ * customer_id、delivery_place_id、supplier_item_id で受注をフィルタリング
  */
 export const useOrdersForForecast = (params: {
   customer_id: number;
   delivery_place_id: number;
-  product_group_id: number;
+  supplier_item_id: number;
   enabled?: boolean;
 }) => {
-  const { customer_id, delivery_place_id, product_group_id, enabled = true } = params;
+  const { customer_id, delivery_place_id, supplier_item_id, enabled = true } = params;
 
   return useQuery<OrderWithLinesResponse[]>({
-    queryKey: ordersForForecastKeys.byGroup({ customer_id, delivery_place_id, product_group_id }),
+    queryKey: ordersForForecastKeys.byGroup({ customer_id, delivery_place_id, supplier_item_id }),
     queryFn: async () => {
       const orders = await getOrders();
 
@@ -40,13 +40,13 @@ export const useOrdersForForecast = (params: {
         return (
           order.lines?.some(
             (line) =>
-              line.product_group_id === product_group_id &&
+              line.supplier_item_id === supplier_item_id &&
               line.delivery_place_id === delivery_place_id,
           ) ?? false
         );
       });
     },
-    enabled: enabled && customer_id > 0 && delivery_place_id > 0 && product_group_id > 0,
+    enabled: enabled && customer_id > 0 && delivery_place_id > 0 && supplier_item_id > 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     staleTime: 30_000, // 30秒

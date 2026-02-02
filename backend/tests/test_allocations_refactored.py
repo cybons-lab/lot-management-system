@@ -102,7 +102,7 @@ def setup_test_data(db_session, supplier):
     forecast = ForecastCurrent(
         customer_id=customer.id,
         delivery_place_id=delivery_place.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         forecast_date=today,
         forecast_quantity=100,
         forecast_period=today.strftime("%Y-%m"),
@@ -114,7 +114,7 @@ def setup_test_data(db_session, supplier):
     from app.infrastructure.persistence.models.lot_master_model import LotMaster
 
     lot_master = LotMaster(
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         supplier_id=supplier.id,
         lot_number="LOT-001",
     )
@@ -125,7 +125,7 @@ def setup_test_data(db_session, supplier):
     lot = LotReceipt(
         lot_master_id=lot_master.id,
         supplier_id=supplier.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         received_date=today - timedelta(days=7),
         expiry_date=today + timedelta(days=180),
         warehouse_id=warehouse.id,
@@ -144,7 +144,7 @@ def setup_test_data(db_session, supplier):
     # 受注明細 (with business keys)
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         delivery_date=today + timedelta(days=1),
         order_quantity=50.0,
         unit="EA",
@@ -161,7 +161,7 @@ def setup_test_data(db_session, supplier):
         "order_line_id": order_line.id,
         "customer_id": customer.id,
         "delivery_place_id": delivery_place.id,
-        "product_group_id": product.id,
+        "supplier_item_id": product.id,
         "warehouse_id": warehouse.id,
         "supplier_id": supplier.id,
     }

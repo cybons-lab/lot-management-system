@@ -12,7 +12,7 @@ models (ExpiryRule) have been removed.
    → ロット単位で在庫を管理する必要がある
    設計:
    - Lot: 物理的な在庫の単位（lot_number で識別）
-   - product_group_id: どの製品のロットか
+   - supplier_item_id: どの製品のロットか
    - warehouse_id: どの倉庫に保管されているか
    - expiry_date: 有効期限（FEFO管理の基準）
    メリット:
@@ -161,7 +161,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
 
 from .base_model import Base
 from .lot_receipt_models import LotReceipt
@@ -299,7 +299,7 @@ class AllocationSuggestion(Base):
 
     DDL: allocation_suggestions
     Primary key: id (BIGSERIAL)
-    Foreign keys: customer_id, delivery_place_id, product_group_id, lot_id
+    Foreign keys: customer_id, delivery_place_id, supplier_item_id, lot_id
     """
 
     __tablename__ = "allocation_suggestions"
@@ -327,11 +327,13 @@ class AllocationSuggestion(Base):
         ForeignKey("delivery_places.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_group_id: Mapped[int] = mapped_column(
+    supplier_item_id: Mapped[int] = mapped_column(
+        "supplier_item_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="CASCADE"),
         nullable=False,
     )
+    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
 
     # ロット側キー
     lot_id: Mapped[int] = mapped_column(
@@ -354,14 +356,15 @@ class AllocationSuggestion(Base):
     __table_args__ = (
         Index("idx_allocation_suggestions_period", "forecast_period"),
         Index("idx_allocation_suggestions_customer", "customer_id"),
-        Index("idx_allocation_suggestions_product_group", "product_group_id"),
+        Index("idx_allocation_suggestions_supplier_item", "supplier_item_id"),
         Index("idx_allocation_suggestions_lot", "lot_id"),
         Index("idx_allocation_suggestions_forecast", "forecast_id"),
     )
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
-    product_group: Mapped[SupplierItem] = relationship("SupplierItem")
+    supplier_item: Mapped[SupplierItem] = relationship("SupplierItem")
+    product_group = synonym("supplier_item")  # Alias
     lot: Mapped[LotReceipt] = relationship("LotReceipt")
     forecast: Mapped[ForecastCurrent | None] = relationship("ForecastCurrent")
 

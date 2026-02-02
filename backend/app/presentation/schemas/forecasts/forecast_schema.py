@@ -17,7 +17,7 @@ class ForecastBase(BaseSchema):
 
     customer_id: int
     delivery_place_id: int
-    product_group_id: int
+    supplier_item_id: int
     forecast_date: date
     forecast_quantity: Decimal
     unit: str | None = None
@@ -79,7 +79,7 @@ class ForecastGroupKey(BaseSchema):
 
     customer_id: int
     delivery_place_id: int
-    product_group_id: int
+    supplier_item_id: int
     customer_code: str | None = None
     customer_name: str | None = None
     delivery_place_code: str | None = None

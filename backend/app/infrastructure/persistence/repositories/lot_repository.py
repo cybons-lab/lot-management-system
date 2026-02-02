@@ -74,7 +74,7 @@ class LotRepository:
        理由: N+1問題の防止
        効果:
        - Lot と Product/Warehouse を1回のクエリで取得
-       → ループ内でlot.product_groupにアクセスしても追加クエリが発生しない
+       → ループ内でlot.supplier_itemにアクセスしても追加クエリが発生しない
        パフォーマンス:
        - 100ロット取得時: JOIN なし → 201クエリ（1 + 100 + 100）
        - 100ロット取得時: JOIN あり → 1クエリ
@@ -123,7 +123,7 @@ class LotRepository:
         logger.debug("Finding lot by ID", extra={"lot_id": lot_id})
         stmt: Select[tuple[LotReceipt]] = (
             select(LotReceipt)
-            .options(joinedload(LotReceipt.product_group), joinedload(LotReceipt.warehouse))
+            .options(joinedload(LotReceipt.supplier_item), joinedload(LotReceipt.warehouse))
             .where(LotReceipt.id == lot_id)
         )
         result = cast(LotReceipt | None, self.db.execute(stmt).scalar_one_or_none())
@@ -184,7 +184,7 @@ class LotRepository:
 
         # First, get all active lots for this product
         stmt: Select[tuple[LotReceipt]] = select(LotReceipt).where(
-            LotReceipt.product_group_id == product.id,
+            LotReceipt.supplier_item_id == product.id,
             LotReceipt.status == "active",
         )
 
@@ -252,7 +252,7 @@ class LotRepository:
 
         lot = LotReceipt(
             supplier_id=supplier.id if supplier else None,
-            product_group_id=product.id if product else None,
+            supplier_item_id=product.id if product else None,
             lot_master_id=0,  # This method seems legacy or incomplete, but for now matching schema
             warehouse_id=warehouse_id,
             received_date=receipt_date or date.today(),
@@ -272,7 +272,7 @@ class LotRepository:
 
     def find_allocation_candidates(
         self,
-        product_group_id: int,
+        supplier_item_id: int,
         *,
         policy: AllocationPolicy,
         lock_mode: LockMode,
@@ -290,7 +290,7 @@ class LotRepository:
         All allocation-related candidate fetching should go through this method.
 
         Args:
-            product_group_id: Product ID to filter by
+            supplier_item_id: Product ID to filter by
             policy: Sorting policy (FEFO or FIFO)
             lock_mode: Database locking mode
             warehouse_id: Optional warehouse filter
@@ -307,7 +307,7 @@ class LotRepository:
         logger.debug(
             "Finding allocation candidates",
             extra={
-                "product_group_id": product_group_id,
+                "supplier_item_id": supplier_item_id,
                 "policy": str(policy),
                 "lock_mode": str(lock_mode),
                 "warehouse_id": warehouse_id,
@@ -325,10 +325,10 @@ class LotRepository:
         query = (
             self.db.query(LotReceipt)
             .filter(
-                LotReceipt.product_group_id == product_group_id,
+                LotReceipt.supplier_item_id == supplier_item_id,
                 LotReceipt.status == "active",
             )
-            .options(joinedload(LotReceipt.product_group), joinedload(LotReceipt.warehouse))
+            .options(joinedload(LotReceipt.supplier_item), joinedload(LotReceipt.warehouse))
         )
 
         # Warehouse filter
@@ -444,7 +444,7 @@ class LotRepository:
                     lot_id=lot.id,
                     lot_code=lot.lot_number or "",
                     lot_number=lot.lot_number or "",
-                    product_code=lot.product_group.maker_part_no if lot.product_group else "",
+                    product_code=lot.supplier_item.maker_part_no if lot.supplier_item else "",
                     warehouse_code=lot.warehouse.warehouse_code if lot.warehouse else "",
                     available_qty=available,
                     expiry_date=lot.expiry_date,
@@ -455,7 +455,7 @@ class LotRepository:
         logger.debug(
             "Allocation candidates found",
             extra={
-                "product_group_id": product_group_id,
+                "supplier_item_id": supplier_item_id,
                 "total_lots_queried": len(lots),
                 "candidates_returned": len(candidates),
             },

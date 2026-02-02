@@ -276,7 +276,7 @@ export function InventoryRow({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onToggleRow(item.product_group_id, item.warehouse_id);
+              onToggleRow(item.supplier_item_id, item.warehouse_id);
             }}
             className="rounded p-1 hover:bg-gray-100"
           >
@@ -290,9 +290,9 @@ export function InventoryRow({
         <td className={styles.table.td} style={{ width: columnWidths?.product }}>
           <span
             className="block truncate"
-            title={item.product_name || item.product_code || `ID: ${item.product_group_id}`}
+            title={item.product_name || item.product_code || `ID: ${item.supplier_item_id}`}
           >
-            {item.product_name || item.product_code || `ID: ${item.product_group_id}`}
+            {item.product_name || item.product_code || `ID: ${item.supplier_item_id}`}
           </span>
         </td>
         <td className={styles.table.td} style={{ width: columnWidths?.warehouse }}>
@@ -325,7 +325,7 @@ export function InventoryRow({
           {fmt(item.available_quantity)}
         </td>
         <td className={styles.table.tdGray} style={{ width: columnWidths?.updated }}>
-          {new Date(item.last_updated).toLocaleString("ja-JP")}
+          {item.last_updated ? new Date(item.last_updated).toLocaleString("ja-JP") : "-"}
         </td>
         <td className={styles.table.tdRight} style={{ width: columnWidths?.actions }}>
           <Button
@@ -333,7 +333,7 @@ export function InventoryRow({
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              onViewDetail(item.product_group_id, item.warehouse_id);
+              onViewDetail(item.supplier_item_id, item.warehouse_id);
             }}
           >
             詳細

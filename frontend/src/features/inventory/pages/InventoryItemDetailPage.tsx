@@ -74,7 +74,7 @@ export function InventoryItemDetailPage() {
     isLoading: lotsLoading,
     refetch: refetchLots,
   } = useLotsQuery({
-    product_group_id: productIdNum,
+    supplier_item_id: productIdNum,
     warehouse_id: warehouseIdNum,
     status: showArchived ? undefined : "active", // アーカイブ表示時は全取得、それ以外はactiveのみ
     with_stock: !showArchived, // アーカイブ表示時は在庫0も含む
@@ -349,7 +349,7 @@ export function InventoryItemDetailPage() {
           <div>
             <div className={styles.detailGrid.label}>最終更新</div>
             <div className={styles.detailGrid.value}>
-              {new Date(item.last_updated).toLocaleString("ja-JP")}
+              {item.last_updated ? new Date(item.last_updated).toLocaleString("ja-JP") : "-"}
             </div>
           </div>
         </div>

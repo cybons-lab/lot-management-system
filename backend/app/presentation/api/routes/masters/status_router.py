@@ -25,12 +25,9 @@ def get_master_status(
     current_user: User = Depends(get_current_user),
 ):
     """Get master data status including unmapped counts."""
-    # 1. Unmapped Customer Items (No supplier assigned)
-    unmapped_customer_items_count = (
-        db.query(func.count(CustomerItem.customer_id))
-        .filter(CustomerItem.supplier_id.is_(None))
-        .scalar()
-    )
+    # Phase1: supplier_id removed from customer_items
+    # All customer_items now have supplier_item_id (NOT NULL), so unmapped count is always 0
+    unmapped_customer_items_count = 0
 
     # 2. Unmapped Products - no longer applicable as ProductGroup was removed
     # SupplierItem IS the product entity now
@@ -38,8 +35,7 @@ def get_master_status(
     unmapped_products_count = 0  # Placeholder - redefine business logic if needed
 
     # 3. Unmapped Customer Item Delivery Settings
-    # customer_items table LEFT JOIN customer_item_delivery_settings
-    # JOIN condition: customer_item_id (after migration)
+    # Phase1: Check customer_items without delivery settings
     unmapped_customer_item_delivery_settings_count = (
         db.query(func.count(CustomerItem.id))
         .outerjoin(
@@ -48,7 +44,6 @@ def get_master_status(
         )
         .filter(
             CustomerItemDeliverySetting.id.is_(None),
-            CustomerItem.supplier_id.isnot(None),
         )
         .scalar()
     )

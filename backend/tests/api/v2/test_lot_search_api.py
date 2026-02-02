@@ -9,7 +9,7 @@ def test_search_lots_basic(client: TestClient, setup_search_data):
     # Create extra lots for pagination test
     for i in range(5):
         payload = {
-            "product_group_id": product.id,
+            "supplier_item_id": product.id,
             "warehouse_id": warehouse.id,
             "lot_number": f"SEARCH-TEST-{i:03d}",
             "received_date": "2024-01-01",
@@ -40,12 +40,12 @@ def test_search_lots_basic(client: TestClient, setup_search_data):
     assert len(data["items"]) == 1  # 5th item
 
     # 3. Filter by Product
-    response = client.get(f"/api/v2/lot/search?product_group_id={product.id}")
+    response = client.get(f"/api/v2/lot/search?supplier_item_id={product.id}")
     data = response.json()
     assert data["total"] >= 5
 
     # 4. Filter by invalid product
-    response = client.get("/api/v2/lot/search?product_group_id=999999")
+    response = client.get("/api/v2/lot/search?supplier_item_id=999999")
     data = response.json()
     assert data["total"] == 0
 
@@ -57,7 +57,7 @@ def test_search_lots_with_phase1_fields(client: TestClient, setup_search_data):
 
     # Create lot with full details
     payload = {
-        "product_group_id": product.id,
+        "supplier_item_id": product.id,
         "warehouse_id": warehouse.id,
         "lot_number": "PHASE1-TEST-001",
         "received_date": "2024-02-01",

@@ -35,7 +35,7 @@ describe("useLotAllocation", () => {
       lines: [
         {
           id: 101,
-          product_group_id: 1,
+          supplier_item_id: 1,
           order_quantity: 10,
           allocated_quantity: 0,
         },

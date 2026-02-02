@@ -33,6 +33,7 @@ CREATE VIEW v_lot_current_stock AS
 SELECT
     lr.id AS lot_id,
     COALESCE(lr.supplier_item_id, lr.product_group_id) AS product_group_id,
+    COALESCE(lr.supplier_item_id, lr.product_group_id) AS supplier_item_id,
     lr.warehouse_id,
     lr.received_quantity - lr.consumed_quantity AS current_quantity,
     lr.updated_at AS last_updated
@@ -44,6 +45,7 @@ CREATE VIEW v_lot_available_qty AS
 SELECT
     lr.id AS lot_id,
     COALESCE(lr.supplier_item_id, lr.product_group_id) AS product_group_id,
+    COALESCE(lr.supplier_item_id, lr.product_group_id) AS supplier_item_id,
     lr.warehouse_id,
     GREATEST(
         lr.received_quantity - lr.consumed_quantity - lr.locked_quantity - COALESCE(la.allocated_quantity, 0),
@@ -60,12 +62,15 @@ WHERE lr.status = 'active'
 -- 5. v_lot_receipt_stock (Depends on v_lot_allocations, v_lot_active_reservations)
 CREATE VIEW v_lot_receipt_stock AS
 SELECT
+    lr.id AS lot_id,
     lr.id AS receipt_id,
     lm.id AS lot_master_id,
     lm.lot_number,
     COALESCE(lr.supplier_item_id, lr.product_group_id) AS product_group_id,
+    COALESCE(lr.supplier_item_id, lr.product_group_id) AS supplier_item_id,
     si.maker_part_no AS product_code,
     si.maker_part_no AS maker_part_no,
+    si.maker_part_no AS maker_part_code,
     si.display_name AS product_name,
     si.display_name AS display_name,
     lr.warehouse_id,
@@ -80,9 +85,11 @@ SELECT
     lr.expiry_date,
     lr.unit,
     lr.status,
-    lr.received_quantity AS initial_quantity,
-    lr.consumed_quantity AS withdrawn_quantity,
+    lr.received_quantity,
+    lr.consumed_quantity,
+    (lr.received_quantity - lr.consumed_quantity) AS current_quantity,
     GREATEST(lr.received_quantity - lr.consumed_quantity - lr.locked_quantity, 0) AS remaining_quantity,
+    COALESCE(la.allocated_quantity, 0) AS allocated_quantity,
     COALESCE(la.allocated_quantity, 0) AS reserved_quantity,
     COALESCE(lar.reserved_quantity_active, 0) AS reserved_quantity_active,
     GREATEST(
@@ -93,6 +100,15 @@ SELECT
     lr.locked_quantity,
     lr.lock_reason,
     lr.inspection_status,
+    lr.inspection_date,
+    lr.inspection_cert_number,
+    lr.shipping_date,
+    lr.cost_price,
+    lr.sales_price,
+    lr.tax_rate,
+    lr.temporary_lot_key,
+    lr.origin_type,
+    lr.origin_reference,
     lr.receipt_key,
     lr.created_at,
     lr.updated_at,
@@ -114,6 +130,7 @@ WHERE lr.status = 'active';
 CREATE VIEW v_inventory_summary AS
 SELECT
   pw.product_group_id,
+  pw.product_group_id AS supplier_item_id,
   pw.warehouse_id,
   COALESCE(agg.active_lot_count, 0) AS active_lot_count,
   COALESCE(agg.total_quantity, 0) AS total_quantity,
@@ -131,7 +148,8 @@ SELECT
 FROM product_warehouse pw
 LEFT JOIN (
   SELECT
-    v.product_group_id,
+    v.supplier_item_id AS supplier_item_id,
+    v.product_group_id AS product_group_id,
     v.warehouse_id,
     COUNT(*) AS active_lot_count,
     SUM(v.remaining_quantity) AS total_quantity,
@@ -140,8 +158,8 @@ LEFT JOIN (
     SUM(v.available_quantity) AS available_quantity,
     MAX(v.updated_at) AS last_updated
   FROM v_lot_receipt_stock v
-  GROUP BY v.product_group_id, v.warehouse_id
-) agg ON agg.product_group_id = pw.product_group_id AND agg.warehouse_id = pw.warehouse_id
+  GROUP BY v.supplier_item_id, v.product_group_id, v.warehouse_id
+) agg ON agg.supplier_item_id = pw.product_group_id AND agg.warehouse_id = pw.warehouse_id
 WHERE pw.is_active = true;
 
 -- 7. v_lot_details (Depends on v_lot_receipt_stock)
@@ -154,10 +172,21 @@ SELECT
     CASE
         WHEN v.product_group_id IS NULL THEN 'no_product_group'
         ELSE 'mapped'
-    END AS mapping_status
+    END AS mapping_status,
+    usa.user_id AS primary_user_id,
+    u.username AS primary_username,
+    u.display_name AS primary_user_display_name,
+    (si.valid_to < CURRENT_DATE) AS product_deleted,
+    (w.valid_to < CURRENT_DATE) AS warehouse_deleted,
+    (s.valid_to < CURRENT_DATE) AS supplier_deleted
 FROM v_lot_receipt_stock v
-LEFT JOIN supplier_items si ON v.product_group_id = si.id
-LEFT JOIN customer_items ci ON ci.supplier_item_id = v.product_group_id AND ci.is_primary = TRUE;
+LEFT JOIN supplier_items si ON v.supplier_item_id = si.id
+LEFT JOIN warehouses w ON v.warehouse_id = w.id
+LEFT JOIN lot_master lm ON v.lot_master_id = lm.id
+LEFT JOIN suppliers s ON lm.supplier_id = s.id
+LEFT JOIN customer_items ci ON ci.supplier_item_id = v.supplier_item_id
+LEFT JOIN user_supplier_assignments usa ON usa.supplier_id = s.id AND usa.is_primary = TRUE
+LEFT JOIN users u ON usa.user_id = u.id;
 
 -- 8. v_candidate_lots_by_order_line (Depends on v_lot_available_qty)
 -- Requires v_order_line_context and v_customer_daily_products (which should still exist or be recreated)
@@ -165,6 +194,7 @@ CREATE OR REPLACE VIEW v_candidate_lots_by_order_line AS
 SELECT
     c.order_line_id,
     l.lot_id,
+    l.supplier_item_id,
     l.product_group_id,
     l.warehouse_id,
     l.available_qty,

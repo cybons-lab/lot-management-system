@@ -14,7 +14,7 @@ export function useForecastData(
       getForecasts({
         customer_id: customerId ?? undefined,
         delivery_place_id: deliveryPlaceId ?? undefined,
-        product_group_id: productGroupId ?? undefined,
+        supplier_item_id: productGroupId ?? undefined,
         limit: 100, // 十分な数を取得
       }),
     enabled: !!customerId && !!productGroupId,

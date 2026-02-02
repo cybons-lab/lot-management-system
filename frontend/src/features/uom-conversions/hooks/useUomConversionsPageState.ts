@@ -87,8 +87,8 @@ export function useUomConversionsPageState() {
     const supplierId = Number(selectedSupplierId);
 
     return conversions.filter((c) => {
-      if (!c.product_group_id) return false;
-      const supplierIds = productSupplierMap.get(c.product_group_id);
+      if (!c.supplier_item_id) return false;
+      const supplierIds = productSupplierMap.get(c.supplier_item_id);
       return supplierIds?.includes(supplierId);
     });
   }, [conversions, selectedSupplierId, productSupplierMap]);

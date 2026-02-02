@@ -113,7 +113,7 @@ class WithdrawalService:
         withdrawal_type: str | None = None,
         start_date: date | None = None,
         end_date: date | None = None,
-        product_group_id: int | None = None,
+        supplier_item_id: int | None = None,
         warehouse_id: int | None = None,
         search_query: str | None = None,
     ) -> WithdrawalListResponse:
@@ -127,7 +127,7 @@ class WithdrawalService:
             withdrawal_type: 出庫タイプでフィルタ
             start_date: 開始日（出荷日）
             end_date: 終了日（出荷日）
-            product_group_id: 製品IDでフィルタ
+            supplier_item_id: 製品IDでフィルタ
             warehouse_id: 倉庫IDでフィルタ
             search_query: キーワード検索（ロット、製品、得意先、納入先、参照番号）
 
@@ -135,7 +135,7 @@ class WithdrawalService:
             出庫履歴一覧
         """
         query = self.db.query(Withdrawal).options(
-            joinedload(Withdrawal.lot).joinedload(LotReceipt.product_group),
+            joinedload(Withdrawal.lot).joinedload(LotReceipt.supplier_item),
             joinedload(Withdrawal.customer),
             joinedload(Withdrawal.delivery_place),
             joinedload(Withdrawal.user),
@@ -146,10 +146,10 @@ class WithdrawalService:
             query = query.filter(Withdrawal.lot_id == lot_id)
 
         # Lot結合が必要なフィルタ
-        if product_group_id is not None or warehouse_id is not None:
+        if supplier_item_id is not None or warehouse_id is not None:
             query = query.join(Withdrawal.lot)
-            if product_group_id is not None:
-                query = query.filter(LotReceipt.product_group_id == product_group_id)
+            if supplier_item_id is not None:
+                query = query.filter(LotReceipt.supplier_item_id == supplier_item_id)
             if warehouse_id is not None:
                 query = query.filter(LotReceipt.warehouse_id == warehouse_id)
 
@@ -162,9 +162,9 @@ class WithdrawalService:
             # フィルタリングのためにjoinが必要。
 
             # LotとProductは結合必須
-            if product_group_id is None and warehouse_id is None:  # 上ですでに結合していない場合
+            if supplier_item_id is None and warehouse_id is None:  # 上ですでに結合していない場合
                 query = query.join(Withdrawal.lot)
-            query = query.join(LotReceipt.product_group)
+            query = query.join(LotReceipt.supplier_item)
 
             # CustomerとDeliveryPlaceは外部結合（存在しない場合もあるため）
             query = query.outerjoin(Withdrawal.customer)
@@ -174,7 +174,7 @@ class WithdrawalService:
             query = query.join(LotReceipt, Withdrawal.lot_id == LotReceipt.id)
             query = query.join(LotMaster, LotReceipt.lot_master_id == LotMaster.id)
             # SupplierItem needed for part/name search
-            query = query.join(SupplierItem, LotReceipt.product_group_id == SupplierItem.id)
+            query = query.join(SupplierItem, LotReceipt.supplier_item_id == SupplierItem.id)
 
             query = query.filter(
                 or_(
@@ -225,7 +225,7 @@ class WithdrawalService:
         withdrawal = (
             self.db.query(Withdrawal)
             .options(
-                joinedload(Withdrawal.lot).joinedload(LotReceipt.product_group),
+                joinedload(Withdrawal.lot).joinedload(LotReceipt.supplier_item),
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),
@@ -368,7 +368,7 @@ class WithdrawalService:
         refreshed = (
             self.db.query(Withdrawal)
             .options(
-                joinedload(Withdrawal.lot).joinedload(LotReceipt.product_group),
+                joinedload(Withdrawal.lot).joinedload(LotReceipt.supplier_item),
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),
@@ -387,7 +387,7 @@ class WithdrawalService:
         """モデルをレスポンススキーマに変換."""
         withdrawal_type = WithdrawalType(withdrawal.withdrawal_type)
         lot = withdrawal.lot
-        product = lot.product_group if lot else None
+        product = lot.supplier_item if lot else None
 
         # 取消理由の変換
         cancel_reason = None
@@ -405,7 +405,7 @@ class WithdrawalService:
             id=withdrawal.id,
             lot_id=withdrawal.lot_id or 0,
             lot_number=lot.lot_number or "" if lot else "",
-            product_group_id=lot.product_group_id if lot else 0,
+            supplier_item_id=lot.supplier_item_id or 0 if lot else 0,
             product_name=get_product_name(product),
             product_code=get_product_code(product),
             quantity=withdrawal.quantity or Decimal("0"),
@@ -540,7 +540,7 @@ class WithdrawalService:
         refreshed = (
             self.db.query(Withdrawal)
             .options(
-                joinedload(Withdrawal.lot).joinedload(LotReceipt.product_group),
+                joinedload(Withdrawal.lot).joinedload(LotReceipt.supplier_item),
                 joinedload(Withdrawal.customer),
                 joinedload(Withdrawal.delivery_place),
                 joinedload(Withdrawal.user),
@@ -560,7 +560,7 @@ class WithdrawalService:
         year: int,
         month: int,
         warehouse_id: int | None = None,
-        product_group_id: int | None = None,
+        supplier_item_id: int | None = None,
         supplier_id: int | None = None,
     ) -> list[DailyWithdrawalSummary]:
         """月間の日別出庫集計を取得.
@@ -569,7 +569,7 @@ class WithdrawalService:
             year: 年
             month: 月
             warehouse_id: 倉庫IDフィルタ
-            product_group_id: 製品IDフィルタ
+            supplier_item_id: 製品IDフィルタ
             supplier_id: 仕入先IDフィルタ
 
         Returns:
@@ -595,8 +595,8 @@ class WithdrawalService:
 
         if warehouse_id:
             stmt = stmt.where(LotReceipt.warehouse_id == warehouse_id)
-        if product_group_id:
-            stmt = stmt.where(LotReceipt.product_group_id == product_group_id)
+        if supplier_item_id:
+            stmt = stmt.where(LotReceipt.supplier_item_id == supplier_item_id)
         if supplier_id:
             stmt = stmt.where(LotReceipt.supplier_id == supplier_id)
 

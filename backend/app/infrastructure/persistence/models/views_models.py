@@ -16,7 +16,7 @@ class VLotCurrentStock(Base):
     __table_args__ = {"info": {"is_view": True}}
 
     lot_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_group_id: Mapped[int] = mapped_column(Integer)
+    supplier_item_id: Mapped[int] = mapped_column(Integer)
     warehouse_id: Mapped[int] = mapped_column(Integer)
     current_quantity: Mapped[float] = mapped_column(Float)
     last_updated: Mapped[date | None] = mapped_column(Date)
@@ -33,7 +33,7 @@ class VCustomerDailyProduct(Base):
     __table_args__ = {"info": {"is_view": True}}
 
     customer_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_group_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    supplier_item_id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
 
 class VLotAvailableQty(Base):
@@ -49,7 +49,7 @@ class VLotAvailableQty(Base):
     __table_args__ = {"info": {"is_view": True}}
 
     lot_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_group_id: Mapped[int] = mapped_column(Integer)
+    supplier_item_id: Mapped[int] = mapped_column(Integer)
     warehouse_id: Mapped[int] = mapped_column(Integer)
     available_qty: Mapped[float] = mapped_column(Float)
     receipt_date: Mapped[date | None] = mapped_column(Date)
@@ -69,7 +69,7 @@ class VOrderLineContext(Base):
     order_line_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     order_id: Mapped[int] = mapped_column(Integer)
     customer_id: Mapped[int | None] = mapped_column(Integer)
-    product_group_id: Mapped[int | None] = mapped_column(Integer)
+    supplier_item_id: Mapped[int | None] = mapped_column(Integer)
     delivery_place_id: Mapped[int | None] = mapped_column(Integer)
     quantity: Mapped[float] = mapped_column(Float)
 
@@ -104,7 +104,7 @@ class VForecastOrderPair(Base):
 
     forecast_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     customer_id: Mapped[int] = mapped_column(Integer)
-    product_group_id: Mapped[int] = mapped_column(Integer)
+    supplier_item_id: Mapped[int] = mapped_column(Integer)
     order_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     delivery_place_id: Mapped[int | None] = mapped_column(Integer)
 
@@ -115,7 +115,7 @@ class VProductCodeToId(Base):
     __tablename__ = "v_product_code_to_id"
     __table_args__ = {"info": {"is_view": True}}
 
-    product_group_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    supplier_item_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_code: Mapped[str] = mapped_column(String)
     product_name: Mapped[str] = mapped_column(String)
 
@@ -132,7 +132,7 @@ class VCandidateLotsByOrderLine(Base):
     # 複合主キー（order_line_id + lot_id）
     order_line_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     lot_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_group_id: Mapped[int] = mapped_column(Integer)
+    supplier_item_id: Mapped[int] = mapped_column(Integer)
     warehouse_id: Mapped[int | None] = mapped_column(Integer)
     available_qty: Mapped[float] = mapped_column(Float)
     receipt_date: Mapped[date | None] = mapped_column(Date)
@@ -154,7 +154,7 @@ class VLotDetails(Base):
 
     lot_id: Mapped[int] = mapped_column("lot_id", BigInteger, primary_key=True)
     lot_number: Mapped[str | None] = mapped_column(String(100))
-    product_group_id: Mapped[int] = mapped_column(BigInteger)
+    supplier_item_id: Mapped[int] = mapped_column(BigInteger)
     product_code: Mapped[str] = mapped_column(String)  # New in Phase 2
     maker_part_no: Mapped[str] = mapped_column(String)  # Alias for backward compatibility
     maker_part_code: Mapped[str] = mapped_column(String)  # Alias for compatibility
@@ -188,8 +188,7 @@ class VLotDetails(Base):
     # 仮入庫識別キー（UUID）
     temporary_lot_key: Mapped[str | None] = mapped_column(String)
 
-    # Phase2: supplier_item_id と先方品番表示
-    supplier_item_id: Mapped[int | None] = mapped_column(BigInteger)
+    # Phase2: 先方品番表示
     supplier_maker_part_no: Mapped[str | None] = mapped_column(String)
     customer_part_no: Mapped[str | None] = mapped_column(String)
     primary_customer_id: Mapped[int | None] = mapped_column(BigInteger)
@@ -244,7 +243,7 @@ class VOrderLineDetails(Base):
 
     # 受注明細情報
     line_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_group_id: Mapped[int | None] = mapped_column(Integer)
+    supplier_item_id: Mapped[int | None] = mapped_column(Integer)
     delivery_date: Mapped[date | None] = mapped_column(Date)
     order_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     unit: Mapped[str | None] = mapped_column(String)
@@ -291,7 +290,7 @@ class VInventorySummary(Base):
     __tablename__ = "v_inventory_summary"
     __table_args__ = {"info": {"is_view": True}}
 
-    product_group_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    supplier_item_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     warehouse_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     active_lot_count: Mapped[int] = mapped_column(Integer, default=0)
     total_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))

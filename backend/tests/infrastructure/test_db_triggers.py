@@ -99,7 +99,7 @@ def test_lot_master_aggregation_trigger(db_session_triggers, apply_trigger):
     # 2. Create LotMaster
     lot_master = LotMaster(
         lot_number="LOT-TRIG-001",
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         supplier_id=supplier.id,
         total_quantity=0,  # Initial check (though default is 0)
     )
@@ -114,7 +114,7 @@ def test_lot_master_aggregation_trigger(db_session_triggers, apply_trigger):
     # 3. Add first LotReceipt (Qty 100)
     receipt1 = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 10),
         received_quantity=100,
@@ -131,7 +131,7 @@ def test_lot_master_aggregation_trigger(db_session_triggers, apply_trigger):
     # 4. Add second LotReceipt (Qty 50)
     receipt2 = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 15),
         expiry_date=date(2025, 12, 31),

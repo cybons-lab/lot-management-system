@@ -57,7 +57,9 @@ class ExpectedLotResponse(ExpectedLotBase, TimestampMixin):
 class InboundPlanLineBase(BaseSchema):
     """Shared fields for inbound plan line payloads."""
 
-    product_group_id: int
+    supplier_item_id: int = Field(
+        ..., validation_alias="supplier_item_id", serialization_alias="supplier_item_id"
+    )
     planned_quantity: Decimal
     unit: str
 

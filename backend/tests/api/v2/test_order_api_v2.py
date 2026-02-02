@@ -50,7 +50,7 @@ def setup_order_data(db_session, supplier):
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         delivery_place_id=delivery_place.id,
         delivery_date=date.today() + timedelta(days=5),
         order_quantity=Decimal("50.0"),
@@ -110,7 +110,7 @@ def test_create_order(client, setup_order_data):
         # But setup_order_data used it for Model. Let's stick to Schema.
         "lines": [
             {
-                "product_group_id": product.id,
+                "supplier_item_id": product.id,
                 "order_quantity": 20.0,
                 "unit": "EA",
                 "delivery_date": (date.today() + timedelta(days=10)).isoformat(),

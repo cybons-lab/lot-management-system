@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.application.services.auth.user_service import UserService
 from app.application.services.system_config_service import SystemConfigService
 from app.core.config import settings
-from app.core.database import truncate_all_tables
+from app.core.database import engine, truncate_all_tables
 from app.infrastructure.persistence.models import (
     Customer,
     Role,
@@ -269,7 +269,7 @@ def get_allocatable_lots(
             SELECT
                 vld.lot_id,
                 vld.lot_number,
-                vld.product_group_id,
+                vld.supplier_item_id,
                 p.maker_part_no AS product_code,
                 vld.warehouse_id,
                 vld.warehouse_code,
@@ -281,7 +281,7 @@ def get_allocatable_lots(
                 vld.updated_at as last_updated
             FROM
                 v_lot_details vld
-                INNER JOIN products p ON p.id = vld.product_group_id
+                INNER JOIN products p ON p.id = vld.supplier_item_id
             WHERE
                 vld.available_quantity > 0
                 AND vld.status = 'active'
@@ -302,7 +302,7 @@ def get_allocatable_lots(
             {
                 "lot_id": row.lot_id,
                 "lot_number": row.lot_number,
-                "product_group_id": row.product_group_id,
+                "supplier_item_id": row.supplier_item_id,
                 "product_code": row.product_code,
                 "warehouse_id": row.warehouse_id,
                 "warehouse_code": row.warehouse_code,
@@ -474,3 +474,531 @@ def _seed_system_config(db: Session) -> None:
         logger.info(f"システム設定 '{key}' を初期化しました")
 
     db.commit()
+
+
+@router.get("/diagnostics/view-check")
+def check_view_definition(
+    view_name: str = "v_lot_receipt_stock",
+    current_admin=Depends(get_current_admin),
+):
+    """ビュー定義を診断（Admin専用）.
+
+    v_lot_receipt_stock ビューに supplier_item_id 列が存在するかチェック。
+    Phase1 マイグレーション後の問題診断用。
+
+    Returns:
+        {
+            "view_name": "v_lot_receipt_stock",
+            "has_supplier_item_id": true,
+            "columns": ["lot_id", "supplier_item_id", ...],
+            "message": "OK" or "NG: supplier_item_id not found"
+        }
+    """
+    try:
+        with engine.connect() as conn:
+            # 列情報を取得
+            result = conn.execute(
+                text(
+                    """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :view_name
+                ORDER BY ordinal_position
+                """
+                ),
+                {"view_name": view_name},
+            )
+            columns = [row[0] for row in result.fetchall()]
+
+            has_supplier_item_id = "supplier_item_id" in columns
+
+            if has_supplier_item_id:
+                message = "OK: supplier_item_id column exists"
+            else:
+                message = "NG: supplier_item_id column NOT FOUND"
+
+            return {
+                "view_name": view_name,
+                "has_supplier_item_id": has_supplier_item_id,
+                "column_count": len(columns),
+                "columns": columns,
+                "message": message,
+            }
+
+    except Exception as e:
+        logger.exception(f"ビュー診断エラー: {e}")
+        raise HTTPException(status_code=500, detail=f"ビュー診断に失敗しました: {str(e)}")
+
+
+@router.post("/diagnostics/view-fix")
+def fix_view_definition(
+    view_name: str = "v_lot_receipt_stock",
+    current_admin=Depends(get_current_admin),
+):
+    """ビュー定義を修正（Admin専用）.
+
+    v_lot_receipt_stock ビューを正しい定義で再作成。
+    Phase1 マイグレーション後にビューが古い状態になっている問題を修正。
+
+    本番環境でも実行可能（ビューの再作成はデータ削除を伴わない）。
+
+    Returns:
+        {
+            "success": true,
+            "message": "View recreated successfully",
+            "columns_before": [...],
+            "columns_after": [...]
+        }
+    """
+    if view_name != "v_lot_receipt_stock":
+        raise HTTPException(
+            status_code=400,
+            detail="現在は v_lot_receipt_stock のみサポートしています",
+        )
+
+    try:
+        with engine.begin() as conn:
+            # 修正前の列情報を取得
+            result = conn.execute(
+                text(
+                    """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :view_name
+                ORDER BY ordinal_position
+                """
+                ),
+                {"view_name": view_name},
+            )
+            columns_before = [row[0] for row in result.fetchall()]
+
+            # ビューを再作成
+            conn.execute(text("DROP VIEW IF EXISTS v_lot_receipt_stock CASCADE"))
+
+            create_view_sql = """
+CREATE OR REPLACE VIEW v_lot_receipt_stock AS
+SELECT
+    lr.id AS lot_id,
+    lr.id AS receipt_id,
+    lm.id AS lot_master_id,
+    lm.lot_number,
+    COALESCE(lr.supplier_item_id, lr.supplier_item_id) AS supplier_item_id,
+    COALESCE(lr.supplier_item_id, lr.supplier_item_id) AS supplier_item_id,
+    si.maker_part_no AS product_code,
+    si.maker_part_no,
+    si.maker_part_no AS maker_part_code,
+    si.display_name AS product_name,
+    si.display_name,
+    lr.warehouse_id,
+    w.warehouse_code,
+    w.warehouse_name,
+    COALESCE(w.short_name, LEFT(w.warehouse_name, 10)) AS warehouse_short_name,
+    lm.supplier_id,
+    s.supplier_code,
+    s.supplier_name,
+    COALESCE(s.short_name, LEFT(s.supplier_name, 10)) AS supplier_short_name,
+    lr.received_date,
+    lr.expiry_date,
+    lr.unit,
+    lr.status,
+    lr.received_quantity,
+    lr.consumed_quantity,
+    (lr.received_quantity - lr.consumed_quantity) AS current_quantity,
+    GREATEST((lr.received_quantity - lr.consumed_quantity - lr.locked_quantity), 0) AS remaining_quantity,
+    COALESCE(la.allocated_quantity, 0) AS allocated_quantity,
+    COALESCE(la.allocated_quantity, 0) AS reserved_quantity,
+    COALESCE(lar.reserved_quantity_active, 0) AS reserved_quantity_active,
+    GREATEST((lr.received_quantity - lr.consumed_quantity - lr.locked_quantity - COALESCE(la.allocated_quantity, 0)), 0) AS available_quantity,
+    lr.locked_quantity,
+    lr.lock_reason,
+    lr.inspection_status,
+    lr.inspection_date,
+    lr.inspection_cert_number,
+    lr.shipping_date,
+    lr.cost_price,
+    lr.sales_price,
+    lr.tax_rate,
+    lr.temporary_lot_key,
+    lr.origin_type,
+    lr.origin_reference,
+    lr.receipt_key,
+    lr.created_at,
+    lr.updated_at,
+    CASE
+        WHEN lr.expiry_date IS NOT NULL THEN (lr.expiry_date - CURRENT_DATE)
+        ELSE NULL
+    END AS days_to_expiry
+FROM
+    lot_receipts lr
+    JOIN lot_master lm ON lr.lot_master_id = lm.id
+    LEFT JOIN supplier_items si ON COALESCE(lr.supplier_item_id, lr.supplier_item_id) = si.id
+    LEFT JOIN warehouses w ON lr.warehouse_id = w.id
+    LEFT JOIN suppliers s ON lm.supplier_id = s.id
+    LEFT JOIN v_lot_allocations la ON lr.id = la.lot_id
+    LEFT JOIN v_lot_active_reservations lar ON lr.id = lar.lot_id
+WHERE
+    lr.status = 'active'
+            """
+            conn.execute(text(create_view_sql))
+
+            # 修正後の列情報を取得
+            result = conn.execute(
+                text(
+                    """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :view_name
+                ORDER BY ordinal_position
+                """
+                ),
+                {"view_name": view_name},
+            )
+            columns_after = [row[0] for row in result.fetchall()]
+
+            has_supplier_item_id = "supplier_item_id" in columns_after
+
+            logger.info(
+                f"ビュー '{view_name}' を再作成しました",
+                extra={
+                    "columns_before_count": len(columns_before),
+                    "columns_after_count": len(columns_after),
+                    "has_supplier_item_id": has_supplier_item_id,
+                },
+            )
+
+            return {
+                "success": True,
+                "message": "View recreated successfully",
+                "view_name": view_name,
+                "has_supplier_item_id": has_supplier_item_id,
+                "columns_before": columns_before,
+                "columns_after": columns_after,
+            }
+
+    except Exception as e:
+        logger.exception(f"ビュー修正エラー: {e}")
+        raise HTTPException(status_code=500, detail=f"ビュー修正に失敗しました: {str(e)}")
+
+
+@router.get("/diagnostics/view-definition")
+def get_view_definition(
+    view_name: str = "v_lot_receipt_stock",
+    current_admin=Depends(get_current_admin),
+):
+    """ビュー定義の完全な情報を取得（Admin専用）.
+
+    ビューの定義SQL、列情報、関連テーブル情報を取得。
+    開発環境と本番環境の差分確認に使用。
+
+    Returns:
+        {
+            "view_name": "v_lot_receipt_stock",
+            "definition": "SELECT ... FROM ...",
+            "columns": [...],
+            "related_tables": {...}
+        }
+    """
+    try:
+        with engine.connect() as conn:
+            # ビュー定義を取得
+            result = conn.execute(
+                text("SELECT pg_get_viewdef(CAST(:view_name AS regclass), true)"),
+                {"view_name": view_name},
+            )
+            view_definition = result.scalar()
+
+            if not view_definition:
+                raise HTTPException(status_code=404, detail=f"View '{view_name}' not found")
+
+            # 列情報を取得
+            result = conn.execute(
+                text(
+                    """
+                SELECT
+                    column_name,
+                    data_type,
+                    character_maximum_length,
+                    numeric_precision,
+                    numeric_scale
+                FROM information_schema.columns
+                WHERE table_name = :view_name
+                ORDER BY ordinal_position
+                """
+                ),
+                {"view_name": view_name},
+            )
+            columns = [
+                {
+                    "name": row[0],
+                    "type": row[1],
+                    "char_length": row[2],
+                    "numeric_precision": row[3],
+                    "numeric_scale": row[4],
+                }
+                for row in result.fetchall()
+            ]
+
+            # 関連テーブルの情報を取得
+            related_tables = [
+                "lot_receipts",
+                "supplier_items",
+                "lot_master",
+                "warehouses",
+                "suppliers",
+            ]
+            table_info = {}
+
+            for table in related_tables:
+                result = conn.execute(
+                    text(
+                        """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_name = :table_name
+                    )
+                    """
+                    ),
+                    {"table_name": table},
+                )
+                exists = result.scalar()
+
+                if exists:
+                    # レコード数を取得
+                    result = conn.execute(text(f"SELECT COUNT(*) FROM {table}"))
+                    count = result.scalar()
+
+                    # 列情報を取得
+                    result = conn.execute(
+                        text(
+                            """
+                        SELECT column_name
+                        FROM information_schema.columns
+                        WHERE table_name = :table_name
+                        ORDER BY ordinal_position
+                        """
+                        ),
+                        {"table_name": table},
+                    )
+                    table_columns = [row[0] for row in result.fetchall()]
+
+                    table_info[table] = {
+                        "exists": True,
+                        "record_count": count,
+                        "columns": table_columns,
+                    }
+                else:
+                    table_info[table] = {"exists": False}
+
+            return {
+                "view_name": view_name,
+                "definition": view_definition,
+                "columns": columns,
+                "related_tables": table_info,
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"ビュー定義取得エラー: {e}")
+        raise HTTPException(status_code=500, detail=f"ビュー定義の取得に失敗しました: {str(e)}")
+
+
+@router.get("/diagnostics/schema-check")
+def check_schema_integrity(
+    current_admin=Depends(get_current_admin),
+):
+    """スキーマ整合性チェック（Admin専用）.
+
+    開発環境と本番環境のスキーマ差分を検出。
+    Phase1 移行後の必須カラム（supplier_item_id）の存在確認を含む。
+
+    チェック項目:
+    - 主要テーブルの存在確認
+    - 必須カラムの存在確認（supplier_item_id など）
+    - ビュー定義の整合性
+    - インデックスの存在確認
+
+    Returns:
+        {
+            "status": "ok" | "warning" | "error",
+            "tables": {...},
+            "views": {...},
+            "issues": [...]
+        }
+    """
+    try:
+        with engine.connect() as conn:
+            issues = []
+            tables_status = {}
+            views_status = {}
+
+            # 主要テーブルのチェック
+            critical_tables = {
+                "supplier_items": ["supplier_item_id", "maker_part_no", "supplier_id"],
+                "lot_master": ["lot_id", "supplier_item_id", "lot_number"],
+                "lot_receipts": ["receipt_id", "supplier_item_id", "warehouse_id"],
+                "orders": ["id", "customer_id", "order_date"],
+                "order_lines": ["id", "order_id", "supplier_item_id", "delivery_date"],
+                "allocations": ["id", "order_line_id", "lot_id"],
+            }
+
+            for table_name, required_columns in critical_tables.items():
+                # テーブルの存在確認
+                result = conn.execute(
+                    text(
+                        """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_name = :table_name
+                    )
+                    """
+                    ),
+                    {"table_name": table_name},
+                )
+                exists = result.scalar()
+
+                if not exists:
+                    issues.append(
+                        {
+                            "severity": "error",
+                            "type": "missing_table",
+                            "table": table_name,
+                            "message": f"テーブル '{table_name}' が存在しません",
+                        }
+                    )
+                    tables_status[table_name] = {"exists": False, "status": "error"}
+                    continue
+
+                # カラムの存在確認
+                result = conn.execute(
+                    text(
+                        """
+                    SELECT column_name, data_type, is_nullable
+                    FROM information_schema.columns
+                    WHERE table_name = :table_name
+                    ORDER BY ordinal_position
+                    """
+                    ),
+                    {"table_name": table_name},
+                )
+                columns = {
+                    row[0]: {"type": row[1], "nullable": row[2]} for row in result.fetchall()
+                }
+
+                missing_columns = [col for col in required_columns if col not in columns]
+                if missing_columns:
+                    issues.append(
+                        {
+                            "severity": "error",
+                            "type": "missing_columns",
+                            "table": table_name,
+                            "message": f"テーブル '{table_name}' に必須カラムが不足: {', '.join(missing_columns)}",
+                        }
+                    )
+                    tables_status[table_name] = {
+                        "exists": True,
+                        "status": "error",
+                        "columns": list(columns.keys()),
+                        "missing": missing_columns,
+                    }
+                else:
+                    tables_status[table_name] = {
+                        "exists": True,
+                        "status": "ok",
+                        "columns": list(columns.keys()),
+                    }
+
+            # 主要ビューのチェック
+            critical_views = {
+                "v_lot_receipt_stock": ["supplier_item_id", "lot_id", "warehouse_id"],
+                "v_lot_details": ["supplier_item_id", "lot_id", "maker_part_no"],
+            }
+
+            for view_name, required_columns in critical_views.items():
+                # ビューの存在確認
+                result = conn.execute(
+                    text(
+                        """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.views
+                        WHERE table_name = :view_name
+                    )
+                    """
+                    ),
+                    {"view_name": view_name},
+                )
+                exists = result.scalar()
+
+                if not exists:
+                    issues.append(
+                        {
+                            "severity": "error",
+                            "type": "missing_view",
+                            "view": view_name,
+                            "message": f"ビュー '{view_name}' が存在しません",
+                        }
+                    )
+                    views_status[view_name] = {"exists": False, "status": "error"}
+                    continue
+
+                # カラムの存在確認
+                result = conn.execute(
+                    text(
+                        """
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name = :view_name
+                    ORDER BY ordinal_position
+                    """
+                    ),
+                    {"view_name": view_name},
+                )
+                view_columns: list[str] = [row[0] for row in result.fetchall()]
+
+                missing_columns = [col for col in required_columns if col not in view_columns]
+                if missing_columns:
+                    issues.append(
+                        {
+                            "severity": "error",
+                            "type": "missing_view_columns",
+                            "view": view_name,
+                            "message": f"ビュー '{view_name}' に必須カラムが不足: {', '.join(missing_columns)}",
+                        }
+                    )
+                    views_status[view_name] = {
+                        "exists": True,
+                        "status": "error",
+                        "columns": view_columns,
+                        "missing": missing_columns,
+                    }
+                else:
+                    views_status[view_name] = {
+                        "exists": True,
+                        "status": "ok",
+                        "columns": view_columns,
+                    }
+
+            # 全体のステータス判定
+            if any(issue["severity"] == "error" for issue in issues):
+                overall_status = "error"
+            elif issues:
+                overall_status = "warning"
+            else:
+                overall_status = "ok"
+
+            return {
+                "status": overall_status,
+                "tables": tables_status,
+                "views": views_status,
+                "issues": issues,
+                "message": "OK"
+                if overall_status == "ok"
+                else f"{len(issues)} 件の問題が検出されました",
+            }
+
+    except Exception as e:
+        logger.exception(f"スキーマチェックエラー: {e}")
+        raise HTTPException(status_code=500, detail=f"スキーマチェックに失敗しました: {str(e)}")

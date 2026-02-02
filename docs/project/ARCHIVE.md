@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-02-02 完了タスク
+
+### 1-0. 開発環境の統一と改善 (Critical - DX改善) ✅ 対応済み
+**完了**: 2026-02-02
+**カテゴリ**: 開発環境・DX改善
+**対応内容**:
+- Docker統一開発環境の整備完了
+- Makefileの追加（すべての開発コマンドを統一管理）
+- `frontend/package.json` にDocker経由コマンドを追加（`docker:*` prefix）
+- README.md と CLAUDE.md をDocker前提に更新
+- すべてのローカル実行コマンドをDocker経由に統一
+
+**効果**:
+- ✅ ローカル環境の差異を排除（Node.js, Python不要）
+- ✅ 統一されたコマンド体系（Makefile）
+- ✅ CI/CDとの一貫性向上
+- ✅ 新規開発者のオンボーディング簡素化
+
+**ブランチ**: `feature/docker-unified-dev`
+
+---
+
 ## 2026-01-31 以前の完了タスク
 
 ### 1-3. CI/CDでtypecheckが無効化されていた ✅ 対応済み

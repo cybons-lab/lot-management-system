@@ -38,7 +38,7 @@ def setup_lot_data(db_session, supplier):
 
     # Create LotMaster
     lot_master = LotMaster(
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         supplier_id=supplier.id,
         lot_number="LOT-V2-001",
     )
@@ -48,7 +48,7 @@ def setup_lot_data(db_session, supplier):
     # Lot
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         received_quantity=Decimal("100.0"),
@@ -74,7 +74,7 @@ def test_get_available_lots(client, setup_lot_data):
     product = setup_lot_data["product"]
 
     response = client.get(
-        "/api/v2/lot/available", params={"product_group_id": product.id, "min_quantity": 0}
+        "/api/v2/lot/available", params={"supplier_item_id": product.id, "min_quantity": 0}
     )
 
     assert response.status_code == 200
@@ -94,7 +94,7 @@ def test_get_available_lots_insufficient_stock(client, setup_lot_data):
     product = setup_lot_data["product"]
 
     response = client.get(
-        "/api/v2/lot/available", params={"product_group_id": product.id, "min_quantity": 200}
+        "/api/v2/lot/available", params={"supplier_item_id": product.id, "min_quantity": 200}
     )
 
     assert response.status_code == 200
@@ -125,7 +125,7 @@ def test_create_lot_success(client: TestClient, setup_lot_data):
     supplier = setup_lot_data["supplier"]
 
     payload = {
-        "product_group_id": product.id,
+        "supplier_item_id": product.id,
         "warehouse_id": warehouse.id,
         "lot_number": "LOT-001",
         "supplier_code": supplier.supplier_code,
@@ -146,7 +146,7 @@ def test_create_lot_success(client: TestClient, setup_lot_data):
     assert response.status_code == 201
     data = response.json()
     assert data["lot_number"] == "LOT-001"
-    assert data["product_group_id"] == product.id
+    assert data["supplier_item_id"] == product.id
     assert float(data["sales_price"]) == 800.0
     assert float(data["tax_rate"]) == 0.10
     assert data["warehouse_id"] == warehouse.id
@@ -166,7 +166,7 @@ def test_create_lot_with_expiry(client: TestClient, setup_lot_data):
     expiry = (date.today() + timedelta(days=100)).isoformat()
     payload = {
         "lot_number": "NEW-LOT-EXP",
-        "product_group_id": product.id,
+        "supplier_item_id": product.id,
         "warehouse_id": warehouse.id,
         "received_date": date.today().isoformat(),
         "expiry_date": expiry,
@@ -191,7 +191,7 @@ def test_create_lot_invalid_ids(client: TestClient, setup_lot_data):
     # Invalid Product
     payload = {
         "lot_number": "INV-PROD",
-        "product_group_id": 99999,
+        "supplier_item_id": 99999,
         "warehouse_id": warehouse.id,
         "received_date": date.today().isoformat(),
         "current_quantity": 10,
@@ -203,7 +203,7 @@ def test_create_lot_invalid_ids(client: TestClient, setup_lot_data):
     assert response.status_code in [404, 400], f"Response: {response.text}"
 
     # Invalid Warehouse
-    payload["product_group_id"] = product.id
+    payload["supplier_item_id"] = product.id
     payload["warehouse_id"] = 99999
     response = client.post("/api/v2/lot/", json=payload)
     assert response.status_code in [404, 400], f"Response: {response.text}"
@@ -211,7 +211,7 @@ def test_create_lot_invalid_ids(client: TestClient, setup_lot_data):
 
 def test_create_lot_validation_error(client: TestClient, setup_lot_data):
     """Test Pydantic validation error (422)."""
-    # Missing required 'product_group_id'
+    # Missing required 'supplier_item_id'
     payload = {
         "lot_number": "MISSING-FIELDS",
         "warehouse_id": setup_lot_data["warehouse"].id,
@@ -232,7 +232,7 @@ def test_create_lot_duplicate(client: TestClient, setup_lot_data):
     # First creation
     payload = {
         "lot_number": "DUP-LOT",
-        "product_group_id": product.id,
+        "supplier_item_id": product.id,
         "warehouse_id": warehouse.id,
         "received_date": date.today().isoformat(),
         "current_quantity": 10,
@@ -271,7 +271,7 @@ def test_get_lot_by_id_success(client: TestClient, setup_lot_data):
 
     assert data["lot_id"] == lot.id
     assert data["lot_number"] == "LOT-V2-001"
-    assert data["product_group_id"] == product.id
+    assert data["supplier_item_id"] == product.id
     assert float(data["current_quantity"]) == 100.0
 
 

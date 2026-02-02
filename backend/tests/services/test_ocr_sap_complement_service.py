@@ -49,7 +49,7 @@ class TestOcrSapComplementService:
         customer_item = CustomerItem(
             customer_id=customer.id,
             customer_part_no="ABC-123",
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             base_unit="KG",
         )
         db_session.add(customer_item)
@@ -58,7 +58,7 @@ class TestOcrSapComplementService:
         customer_item_2 = CustomerItem(
             customer_id=customer.id,
             customer_part_no="XYZ-001-A",
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             base_unit="KG",
         )
         db_session.add(customer_item_2)
@@ -81,7 +81,7 @@ class TestOcrSapComplementService:
         )
 
         assert result.match_type == MatchType.EXACT
-        assert result.product_group_id == setup_test_data["product"].id
+        assert result.supplier_item_id == setup_test_data["product"].id
         assert result.customer_item is not None
         assert result.customer_item.customer_part_no == "ABC-123"
 
@@ -94,7 +94,7 @@ class TestOcrSapComplementService:
         )
 
         assert result.match_type == MatchType.PREFIX
-        assert result.product_group_id == setup_test_data["product"].id
+        assert result.supplier_item_id == setup_test_data["product"].id
         assert result.customer_item is not None
         assert result.customer_item.customer_part_no == "XYZ-001-A"
         assert "Prefix match" in (result.message or "")
@@ -108,7 +108,7 @@ class TestOcrSapComplementService:
         )
 
         assert result.match_type == MatchType.NOT_FOUND
-        assert result.product_group_id is None
+        assert result.supplier_item_id is None
         assert result.customer_item is None
 
     def test_invalid_customer_code(self, service, setup_test_data):
@@ -122,13 +122,13 @@ class TestOcrSapComplementService:
         assert result.match_type == MatchType.NOT_FOUND
         assert "Customer not found" in (result.message or "")
 
-    def test_resolve_product_group_id_shorthand(self, service, setup_test_data):
-        """Test resolve_product_group_id returns tuple."""
-        product_group_id, match_type, message = service.resolve_product_group_id(
+    def test_resolve_supplier_item_id_shorthand(self, service, setup_test_data):
+        """Test resolve_supplier_item_id returns tuple."""
+        supplier_item_id, match_type, message = service.resolve_supplier_item_id(
             customer_code="CUST001",
             jiku_code="J01",
             customer_part_no="ABC-123",
         )
 
-        assert product_group_id == setup_test_data["product"].id
+        assert supplier_item_id == setup_test_data["product"].id
         assert match_type == MatchType.EXACT

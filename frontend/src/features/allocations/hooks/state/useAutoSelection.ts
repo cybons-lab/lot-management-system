@@ -62,11 +62,11 @@ export function useAutoSelection(
       // DDL v2.2: prefer order_quantity, fallback to quantity
       const fallbackLine =
         lines.find((line) => {
-          const hasProduct = line.product_group_id || line.product_code;
+          const hasProduct = line.supplier_item_id || line.product_code;
           const qty = Number(line.order_quantity ?? line.quantity ?? 0);
           return hasProduct && qty > 0;
         }) ??
-        lines.find((line) => !!(line.product_group_id || line.product_code)) ??
+        lines.find((line) => !!(line.supplier_item_id || line.product_code)) ??
         lines[0];
 
       if (!fallbackLine || fallbackLine.id == null) return;

@@ -84,7 +84,7 @@ export function AddForecastDialog({ open, onOpenChange, onSuccess }: AddForecast
       await createMutation.mutateAsync({
         customer_id: Number(customerId),
         delivery_place_id: Number(deliveryPlaceId),
-        product_group_id: Number(productGroupId),
+        supplier_item_id: Number(productGroupId),
         forecast_date: forecastDate,
         forecast_quantity: Number(quantity),
         unit,

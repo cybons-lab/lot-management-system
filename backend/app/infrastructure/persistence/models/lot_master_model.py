@@ -5,7 +5,7 @@ B-Plan: Lot number consolidation master - allows multiple receipts per lot numbe
 Design rationale:
 1. なぜ lot_master を分離するのか
    - 同一ロット番号の小分け入荷を許可するため
-   - lot_number + product_group_id でユニーク、複数の lot_receipts が紐づく
+   - lot_number + supplier_item_id でユニーク、複数の lot_receipts が紐づく
 
 2. supplier_id の扱い
    - ユニーク制約には含めない（NULLになるケースがあるため）
@@ -48,7 +48,7 @@ class LotMaster(Base):
     """Lot number consolidation master.
 
     Allows multiple receipts (lot_receipts) to share the same lot number.
-    Unique constraint: (lot_number, product_group_id)
+    Unique constraint: (lot_number, supplier_item_id)
     """
 
     __tablename__ = "lot_master"
@@ -61,7 +61,7 @@ class LotMaster(Base):
         nullable=True,
         comment="ロット番号（仕入先発番、NULL許可）",
     )
-    product_group_id: Mapped[int] = mapped_column(
+    supplier_item_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,
@@ -106,7 +106,7 @@ class LotMaster(Base):
     )
 
     # Relationships
-    product_group: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="lot_masters")
+    supplier_item: Mapped[SupplierItem] = relationship("SupplierItem", back_populates="lot_masters")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_masters")
     receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",
@@ -115,15 +115,15 @@ class LotMaster(Base):
     )
 
     __table_args__ = (
-        # Partial unique index: unique on (lot_number, product_group_id) WHERE lot_number IS NOT NULL
+        # Partial unique index: unique on (lot_number, supplier_item_id) WHERE lot_number IS NOT NULL
         Index(
-            "idx_lot_master_number_product_group_unique",
+            "idx_lot_master_number_supplier_item_unique",
             "lot_number",
-            "product_group_id",
+            "supplier_item_id",
             unique=True,
             postgresql_where=text("lot_number IS NOT NULL"),
         ),
-        Index("idx_lot_master_product_group", "product_group_id"),
+        Index("idx_lot_master_supplier_item", "supplier_item_id"),
         Index("idx_lot_master_lot_number", "lot_number"),
         Index("idx_lot_master_supplier", "supplier_id"),
         {"comment": "ロット番号名寄せマスタ - 同一ロット番号の複数入荷を許可、NULL許可"},
@@ -132,7 +132,7 @@ class LotMaster(Base):
     def __repr__(self) -> str:
         return (
             f"<LotMaster(id={self.id}, lot_number={self.lot_number}, "
-            f"product_group_id={self.product_group_id})>"
+            f"supplier_item_id={self.supplier_item_id})>"
         )
 
     def update_aggregate_dates(self) -> None:

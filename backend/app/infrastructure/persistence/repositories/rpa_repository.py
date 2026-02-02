@@ -91,7 +91,7 @@ class RpaRepository:
        - SAP登録時: 在庫が存在するかを確認
        → active で current_quantity > 0 のロットのみ対象
        フィルタ条件:
-       - product_group_id: 必須（製品指定）
+       - supplier_item_id: 必須（製品指定）
        - supplier_id: オプション（仕入先指定）
        ソート順:
        - FEFO順（有効期限が近い順）
@@ -485,12 +485,12 @@ class RpaRepository:
 
     def find_active_lots(
         self,
-        product_group_id: int,
+        supplier_item_id: int,
         supplier_id: int | None = None,
     ) -> list[VLotDetails]:
         """有効なロット詳細を検索."""
         query = self.db.query(VLotDetails).filter(
-            VLotDetails.product_group_id == product_group_id,
+            VLotDetails.supplier_item_id == supplier_item_id,
             VLotDetails.status == "active",
             VLotDetails.available_quantity > 0,
         )

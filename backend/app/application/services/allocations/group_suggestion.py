@@ -32,7 +32,7 @@ class GroupAllocationSuggestionService(AllocationSuggestionBase):
         self,
         customer_id: int,
         delivery_place_id: int,
-        product_group_id: int,
+        supplier_item_id: int,
         forecast_period: str | None = None,
     ) -> AllocationSuggestionPreviewResponse:
         """Regenerate allocation suggestions for a specific forecast group.
@@ -40,7 +40,7 @@ class GroupAllocationSuggestionService(AllocationSuggestionBase):
         Args:
             customer_id: 得意先ID
             delivery_place_id: 納入先ID
-            product_group_id: 製品ID
+            supplier_item_id: 製品ID
             forecast_period: 期間 (YYYY-MM)、省略時は全期間
 
         Returns:
@@ -50,7 +50,7 @@ class GroupAllocationSuggestionService(AllocationSuggestionBase):
         delete_query = self.db.query(AllocationSuggestion).filter(
             AllocationSuggestion.customer_id == customer_id,
             AllocationSuggestion.delivery_place_id == delivery_place_id,
-            AllocationSuggestion.product_group_id == product_group_id,
+            AllocationSuggestion.supplier_item_id == supplier_item_id,
         )
         if forecast_period:
             delete_query = delete_query.filter(
@@ -62,7 +62,7 @@ class GroupAllocationSuggestionService(AllocationSuggestionBase):
         forecast_query = self.db.query(ForecastCurrent).filter(
             ForecastCurrent.customer_id == customer_id,
             ForecastCurrent.delivery_place_id == delivery_place_id,
-            ForecastCurrent.product_group_id == product_group_id,
+            ForecastCurrent.supplier_item_id == supplier_item_id,
         )
         if forecast_period:
             forecast_query = forecast_query.filter(
@@ -83,7 +83,7 @@ class GroupAllocationSuggestionService(AllocationSuggestionBase):
                 gaps=[],
             )
 
-        lots_by_product = self._fetch_available_lots([product_group_id])
+        lots_by_product = self._fetch_available_lots([supplier_item_id])
 
         # 3. Process forecasts using shared method
         result = self._process_forecasts(forecasts, lots_by_product, source="group_regenerate")

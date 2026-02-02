@@ -242,7 +242,7 @@ def _get_or_create_lot_master(
     lot_number = f"TEST-INV-LOT-{scenario.key}"
     lot_master = (
         db.query(LotMaster)
-        .filter(LotMaster.lot_number == lot_number, LotMaster.product_group_id == product.id)
+        .filter(LotMaster.lot_number == lot_number, LotMaster.supplier_item_id == product.id)
         .first()
     )
     if lot_master:
@@ -250,7 +250,7 @@ def _get_or_create_lot_master(
 
     lot_master = LotMaster(
         lot_number=lot_number,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         supplier_id=supplier.id,
         first_receipt_date=date.today(),
         latest_expiry_date=date.today() + timedelta(days=365),
@@ -264,14 +264,14 @@ def _ensure_product_warehouse(db: Session, product: Product, warehouse: Warehous
     exists = (
         db.query(ProductWarehouse)
         .filter(
-            ProductWarehouse.product_group_id == product.id,
+            ProductWarehouse.supplier_item_id == product.id,
             ProductWarehouse.warehouse_id == warehouse.id,
         )
         .first()
     )
     if not exists:
         db.add(
-            ProductWarehouse(product_group_id=product.id, warehouse_id=warehouse.id, is_active=True)
+            ProductWarehouse(supplier_item_id=product.id, warehouse_id=warehouse.id, is_active=True)
         )
 
 
@@ -286,7 +286,7 @@ def _upsert_lot_receipt(
     lot = (
         db.query(LotReceipt)
         .filter(
-            LotReceipt.product_group_id == product.id,
+            LotReceipt.supplier_item_id == product.id,
             LotReceipt.origin_reference == f"inventory-scenario-{scenario.key}",
         )
         .first()
@@ -294,7 +294,7 @@ def _upsert_lot_receipt(
     if not lot:
         lot = LotReceipt(
             lot_master_id=lot_master.id,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             warehouse_id=warehouse.id,
             supplier_id=supplier.id,
             received_date=date.today(),
@@ -313,7 +313,7 @@ def _upsert_lot_receipt(
         return lot
 
     lot.lot_master_id = lot_master.id
-    lot.product_group_id = product.id
+    lot.supplier_item_id = product.id
     lot.warehouse_id = warehouse.id
     lot.supplier_id = supplier.id
     lot.received_date = date.today()

@@ -12,14 +12,14 @@ class SeasonalEstimator(DemandEstimator):
 
     def estimate(
         self,
-        product_group_id: int,
+        supplier_item_id: int,
         warehouse_id: int | None,
         horizon_days: int,
         as_of_date: date,
     ) -> DemandForecast:
         # まずベース予測（移動平均など）を実行
         base_forecast = self.base_estimator.estimate(
-            product_group_id, warehouse_id, horizon_days, as_of_date
+            supplier_item_id, warehouse_id, horizon_days, as_of_date
         )
 
         # 季節係数を適用 (簡易実装: 月ごとの係数辞書を使用)

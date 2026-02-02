@@ -215,23 +215,23 @@ def build_frontend_with_docker(frontend_dir: Path, clean: bool = False) -> bool:
     if clean or not node_modules.exists():
         print("Docker: npm ci を実行中...")
         result = run_command(
-            ["docker", "compose", "run", "--rm", "frontend", "npm", "ci"],
+            ["docker", "compose", "run", "--rm", "--no-deps", "frontend", "npm", "ci"],
             cwd=PROJECT_ROOT,
         )
         if result.returncode != 0:
-            print(f"Docker npm ci に失敗: {result.stderr}")
+            print(f"Docker npm ci に失敗: {result.stderr or result.stdout}")
             return False
     else:
         print("Docker: npm ci をスキップ（既存の node_modules を使用）")
 
-    # npm run build を Docker 経由で実行
+    # npm run build を Docker 経由で実行（--no-deps で高速化）
     print("Docker: npm run build を実行中...")
     result = run_command(
-        ["docker", "compose", "run", "--rm", "frontend", "npm", "run", "build"],
+        ["docker", "compose", "run", "--rm", "--no-deps", "frontend", "npm", "run", "build"],
         cwd=PROJECT_ROOT,
     )
     if result.returncode != 0:
-        print(f"Docker npm run build に失敗: {result.stderr}")
+        print(f"Docker npm run build に失敗: {result.stderr or result.stdout}")
         return False
 
     return True

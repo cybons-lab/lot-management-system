@@ -30,7 +30,7 @@ export function InboundPlansTab(_props: InboundPlansTabProps) {
   // Filter plans that have lines for this product
   const relevantPlans =
     allPlans?.filter(() => {
-      // Note: We would need to fetch plan details to filter by product_group_id
+      // Note: We would need to fetch plan details to filter by supplier_item_id
       // For now, show all plans (to be improved with backend filtering)
       return true;
     }) || [];

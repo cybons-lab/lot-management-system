@@ -19,7 +19,7 @@ class EWMAEstimator(DemandEstimator):
 
     def estimate(
         self,
-        product_group_id: int,
+        supplier_item_id: int,
         warehouse_id: int | None,
         horizon_days: int,
         as_of_date: date,
@@ -30,7 +30,7 @@ class EWMAEstimator(DemandEstimator):
         end_date = as_of_date
 
         history = self.repository.get_demand_history(
-            product_group_id=product_group_id,
+            supplier_item_id=supplier_item_id,
             warehouse_id=warehouse_id,
             start_date=start_date,
             end_date=end_date,
@@ -83,7 +83,7 @@ class EWMAEstimator(DemandEstimator):
             total_forecast += ewma
 
         return DemandForecast(
-            product_group_id=product_group_id,
+            supplier_item_id=supplier_item_id,
             warehouse_id=warehouse_id,
             as_of_date=as_of_date,
             horizon_days=horizon_days,

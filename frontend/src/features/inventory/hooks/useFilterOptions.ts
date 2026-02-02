@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { getFilterOptions, type FilterOptions } from "@/features/inventory/api";
 
 interface UseFilterOptionsParams {
-  product_group_id?: string;
+  supplier_item_id?: string;
   supplier_id?: string;
   warehouse_id?: string;
   tab?: string;
@@ -18,7 +18,7 @@ interface UseFilterOptionsParams {
 }
 
 export function useFilterOptions({
-  product_group_id,
+  supplier_item_id,
   supplier_id,
   warehouse_id,
   tab,
@@ -30,7 +30,7 @@ export function useFilterOptions({
   const { data, isLoading } = useQuery<FilterOptions>({
     queryKey: [
       "filter-options",
-      product_group_id,
+      supplier_item_id,
       supplier_id,
       warehouse_id,
       tab,
@@ -39,7 +39,7 @@ export function useFilterOptions({
     ],
     queryFn: () =>
       getFilterOptions({
-        product_group_id: product_group_id ? Number(product_group_id) : undefined,
+        supplier_item_id: supplier_item_id ? Number(supplier_item_id) : undefined,
         supplier_id: supplier_id ? Number(supplier_id) : undefined,
         warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
         tab,
@@ -51,17 +51,17 @@ export function useFilterOptions({
 
   // 製品選択時、仕入先が1件なら自動選択
   useEffect(() => {
-    if (product_group_id && data?.suppliers.length === 1 && !supplier_id) {
+    if (supplier_item_id && data?.suppliers.length === 1 && !supplier_id) {
       onAutoSelectSupplier?.(String(data.suppliers[0].id));
     }
-  }, [product_group_id, data?.suppliers, supplier_id, onAutoSelectSupplier]);
+  }, [supplier_item_id, data?.suppliers, supplier_id, onAutoSelectSupplier]);
 
   // 仕入先選択時、製品が1件なら自動選択
   useEffect(() => {
-    if (supplier_id && data?.products.length === 1 && !product_group_id) {
+    if (supplier_id && data?.products.length === 1 && !supplier_item_id) {
       onAutoSelectProduct?.(String(data.products[0].id));
     }
-  }, [supplier_id, data?.products, product_group_id, onAutoSelectProduct]);
+  }, [supplier_id, data?.products, supplier_item_id, onAutoSelectProduct]);
 
   // フィルタ済みオプション生成
   const productOptions = (data?.products ?? []).map((p) => ({

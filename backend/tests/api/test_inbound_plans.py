@@ -63,7 +63,7 @@ def test_create_inbound_plan_success(db: Session, client: TestClient, sample_dat
         "status": "planned",
         "lines": [
             {
-                "product_group_id": sample_data["product"].id,
+                "supplier_item_id": sample_data["product"].id,
                 "warehouse_id": sample_data["warehouse"].id,
                 "expected_quantity": 100.0,
                 "unit": "EA",

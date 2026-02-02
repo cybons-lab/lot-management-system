@@ -49,7 +49,7 @@ def check_supplier_items_maker_part_no(session: Session) -> tuple[bool, int]:
 
     result = session.execute(
         text("""
-            SELECT id, supplier_id, product_group_id, maker_part_no
+            SELECT id, supplier_id, supplier_item_id, maker_part_no
             FROM supplier_items
             WHERE maker_part_no IS NULL OR maker_part_no = ''
         """)
@@ -65,14 +65,14 @@ def check_supplier_items_maker_part_no(session: Session) -> tuple[bool, int]:
     for i, row in enumerate(rows[:20], 1):
         print(
             f"  {i}. ID: {row.id}, supplier_id: {row.supplier_id}, "
-            f"product_group_id: {row.product_group_id}, maker_part_no: '{row.maker_part_no}'"
+            f"supplier_item_id: {row.supplier_item_id}, maker_part_no: '{row.maker_part_no}'"
         )
 
     if len(rows) > 20:
         print(f"  ... and {len(rows) - 20} more rows")
 
     print("\nSQL to find all affected rows:")
-    print("  SELECT id, supplier_id, product_group_id FROM supplier_items")
+    print("  SELECT id, supplier_id, supplier_item_id FROM supplier_items")
     print("  WHERE maker_part_no IS NULL OR maker_part_no = '';")
 
     return False, len(rows)

@@ -48,7 +48,7 @@ def fifo_inventory(db_session, supplier):
         # Create LotMaster first
         lot_master = LotMaster(
             lot_number=f"LOT{idx:03d}",
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             supplier_id=supplier.id,
         )
         db_session.add(lot_master)
@@ -57,7 +57,7 @@ def fifo_inventory(db_session, supplier):
         lot = LotReceipt(
             lot_master_id=lot_master.id,
             supplier_id=supplier.id,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             expiry_date=expiry,
             warehouse_id=warehouse.id,
             received_date=base_date,

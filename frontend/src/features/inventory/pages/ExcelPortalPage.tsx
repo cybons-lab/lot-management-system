@@ -54,7 +54,7 @@ export function ExcelPortalPage() {
   const { data: inventoryData, isLoading: isLoadingInventory } = useInventoryItems(
     selected.customerItem
       ? {
-          product_group_id: selected.customerItem.product_group_id,
+          supplier_item_id: selected.customerItem.supplier_item_id,
           limit: 100,
         }
       : undefined,
@@ -73,21 +73,29 @@ export function ExcelPortalPage() {
       { product: { id: number; code: string; name: string }; items: CustomerItem[] }
     >();
 
-    customerItemsForSupplier.forEach((item) => {
-      // Phase1: product_group_idがnullの場合はスキップ（Phase2で対応）
-      if (item.product_group_id === null) return;
+    // 重複チェック用（item.id ベース）
+    const processedItemIds = new Set<number>();
 
-      if (!groups.has(item.product_group_id)) {
-        groups.set(item.product_group_id, {
+    customerItemsForSupplier.forEach((item) => {
+      // Phase1 Migration: supplier_item_id を優先、なければ supplier_item_id (互換性)
+      const groupId = item.supplier_item_id || item.supplier_item_id;
+      if (groupId === null || groupId === undefined) return;
+
+      // アイテムIDの重複チェック
+      if (processedItemIds.has(item.id)) return;
+      processedItemIds.add(item.id);
+
+      if (!groups.has(groupId)) {
+        groups.set(groupId, {
           product: {
-            id: item.product_group_id,
+            id: groupId,
             code: item.product_code || "",
             name: item.product_name || "",
           },
           items: [],
         });
       }
-      groups.get(item.product_group_id)!.items.push(item);
+      groups.get(groupId)!.items.push(item);
     });
 
     return Array.from(groups.values());
@@ -119,7 +127,7 @@ export function ExcelPortalPage() {
   const handleWarehouseSelect = (warehouseId: number) => {
     if (!selected.customerItem) return;
     navigate(
-      `/inventory/excel-view/${selected.customerItem.product_group_id}/${warehouseId}/${selected.customerItemId}`,
+      `/inventory/excel-view/${selected.customerItem.supplier_item_id}/${warehouseId}/${selected.customerItemId}`,
     );
   };
 

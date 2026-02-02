@@ -28,15 +28,15 @@ def test_list_lots_filters_by_warehouse_code(db: Session, client: TestClient):
     db.flush()
 
     # Create LotMasters
-    lm1 = LotMaster(product_group_id=prod.id, supplier_id=sup.id, lot_number="L-001")
-    lm2 = LotMaster(product_group_id=prod.id, supplier_id=sup.id, lot_number="L-002")
+    lm1 = LotMaster(supplier_item_id=prod.id, supplier_id=sup.id, lot_number="L-001")
+    lm2 = LotMaster(supplier_item_id=prod.id, supplier_id=sup.id, lot_number="L-002")
     db.add_all([lm1, lm2])
     db.flush()
 
     # Create lots
     lot1 = LotReceipt(
         supplier_id=sup.id,
-        product_group_id=prod.id,
+        supplier_item_id=prod.id,
         lot_master_id=lm1.id,
         warehouse_id=wh1.id,
         received_date=date.today(),
@@ -45,7 +45,7 @@ def test_list_lots_filters_by_warehouse_code(db: Session, client: TestClient):
     )
     lot2 = LotReceipt(
         supplier_id=sup.id,
-        product_group_id=prod.id,
+        supplier_item_id=prod.id,
         lot_master_id=lm2.id,
         warehouse_id=wh2.id,
         received_date=date.today(),
@@ -60,7 +60,7 @@ def test_list_lots_filters_by_warehouse_code(db: Session, client: TestClient):
     assert r.status_code == 200
 
 
-def test_list_lots_filters_by_product_group_id(db: Session, client: TestClient):
+def test_list_lots_filters_by_supplier_item_id(db: Session, client: TestClient):
     """Test listing lots filtered by product ID."""
 
     wh = Warehouse(warehouse_code="W1", warehouse_name="Main", warehouse_type="internal")
@@ -78,8 +78,8 @@ def test_list_lots_filters_by_product_group_id(db: Session, client: TestClient):
     db.flush()
 
     # Create LotMasters
-    lm_a = LotMaster(product_group_id=product_a.id, supplier_id=sup.id, lot_number="L-A")
-    lm_b = LotMaster(product_group_id=product_b.id, supplier_id=sup.id, lot_number="L-B")
+    lm_a = LotMaster(supplier_item_id=product_a.id, supplier_id=sup.id, lot_number="L-A")
+    lm_b = LotMaster(supplier_item_id=product_b.id, supplier_id=sup.id, lot_number="L-B")
     db.add_all([lm_a, lm_b])
     db.flush()
 
@@ -89,7 +89,7 @@ def test_list_lots_filters_by_product_group_id(db: Session, client: TestClient):
         warehouse_id=wh.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=15),
-        product_group_id=product_a.id,
+        supplier_item_id=product_a.id,
         unit="EA",
     )
     lot_b = LotReceipt(
@@ -98,14 +98,14 @@ def test_list_lots_filters_by_product_group_id(db: Session, client: TestClient):
         warehouse_id=wh.id,
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=25),
-        product_group_id=product_b.id,
+        supplier_item_id=product_b.id,
         unit="EA",
     )
     db.add_all([lot_a, lot_b])
     db.commit()
 
     # Test product filter
-    r = client.get("/api/lots", params={"product_group_id": product_a.id, "with_stock": False})
+    r = client.get("/api/lots", params={"supplier_item_id": product_a.id, "with_stock": False})
     assert r.status_code == 200
     body = r.json()
     assert len(body) >= 1
@@ -128,16 +128,16 @@ def test_list_lots_filters_by_expiry_date(db: Session, client: TestClient):
     db.flush()
 
     # Create LotMasters
-    lm1 = LotMaster(product_group_id=prod.id, supplier_id=sup.id, lot_number="LOT-EXP-1")
-    lm2 = LotMaster(product_group_id=prod.id, supplier_id=sup.id, lot_number="LOT-EXP-2")
-    lm3 = LotMaster(product_group_id=prod.id, supplier_id=sup.id, lot_number="LOT-EXP-3")
+    lm1 = LotMaster(supplier_item_id=prod.id, supplier_id=sup.id, lot_number="LOT-EXP-1")
+    lm2 = LotMaster(supplier_item_id=prod.id, supplier_id=sup.id, lot_number="LOT-EXP-2")
+    lm3 = LotMaster(supplier_item_id=prod.id, supplier_id=sup.id, lot_number="LOT-EXP-3")
     db.add_all([lm1, lm2, lm3])
     db.flush()
 
     today = date.today()
     lot1 = LotReceipt(
         supplier_id=sup.id,
-        product_group_id=prod.id,
+        supplier_item_id=prod.id,
         lot_master_id=lm1.id,
         warehouse_id=wh.id,
         received_date=today,
@@ -146,7 +146,7 @@ def test_list_lots_filters_by_expiry_date(db: Session, client: TestClient):
     )
     lot2 = LotReceipt(
         supplier_id=sup.id,
-        product_group_id=prod.id,
+        supplier_item_id=prod.id,
         lot_master_id=lm2.id,
         warehouse_id=wh.id,
         received_date=today,
@@ -155,7 +155,7 @@ def test_list_lots_filters_by_expiry_date(db: Session, client: TestClient):
     )
     lot3 = LotReceipt(
         supplier_id=sup.id,
-        product_group_id=prod.id,
+        supplier_item_id=prod.id,
         lot_master_id=lm3.id,
         warehouse_id=wh.id,
         received_date=today,

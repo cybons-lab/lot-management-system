@@ -75,7 +75,7 @@ class LotReceipt(Base):
 
     DDL: lot_receipts
     Primary key: id (BIGSERIAL)
-    Foreign keys: product_group_id, warehouse_id, supplier_id, expected_lot_id, lot_master_id
+    Foreign keys: supplier_item_id, warehouse_id, supplier_id, expected_lot_id, lot_master_id
     """
 
     __tablename__ = "lot_receipts"
@@ -104,12 +104,6 @@ class LotReceipt(Base):
     def current_quantity_expr(cls):
         return cls.received_quantity - cls.consumed_quantity
 
-    product_group_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("supplier_items.id", ondelete="RESTRICT"),
-        nullable=False,
-        comment="仕入先品目ID（メーカー品番への参照）",
-    )
     warehouse_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("warehouses.id", ondelete="RESTRICT"),
@@ -226,7 +220,6 @@ class LotReceipt(Base):
         UniqueConstraint("temporary_lot_key", name="uq_lot_receipts_temporary_lot_key"),
         # Partial unique index for expected_lot_id (defined in migration)
         # idx_lot_receipts_number is removed (lot_number column dropped)
-        Index("idx_lot_receipts_product_group_warehouse", "product_group_id", "warehouse_id"),
         Index("idx_lot_receipts_status", "status"),
         Index("idx_lot_receipts_supplier", "supplier_id"),
         Index("idx_lot_receipts_warehouse", "warehouse_id"),
@@ -246,7 +239,7 @@ class LotReceipt(Base):
         # Renamed to FEFO allocation and added expiry_date
         Index(
             "idx_lot_receipts_fefo_allocation",
-            "product_group_id",
+            "supplier_item_id",
             "warehouse_id",
             "expiry_date",  # Added for FEFO
             "received_date",
@@ -262,9 +255,6 @@ class LotReceipt(Base):
 
     # Relationships
     lot_master: Mapped[LotMaster] = relationship("LotMaster", back_populates="receipts")
-    product_group: Mapped[SupplierItem] = relationship(
-        "SupplierItem", foreign_keys="[LotReceipt.product_group_id]"
-    )
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lot_receipts")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lot_receipts")
     supplier_item: Mapped[SupplierItem | None] = relationship(

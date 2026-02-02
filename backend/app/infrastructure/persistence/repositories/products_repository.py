@@ -64,7 +64,7 @@
 7. get() の設計（L41-43）
    理由: ID による単一製品の取得
    実装:
-   - session.get(Product, product_group_id)
+   - session.get(Product, supplier_item_id)
    → SQLAlchemy 2.0 の get() メソッド（主キー検索）
    メリット:
    - セッションキャッシュを活用（同一トランザクション内で2回目以降は高速）
@@ -140,9 +140,9 @@ class ProductRepository:
         items = cast(list[Product], self.session.execute(stmt).scalars().all())
         return items, total
 
-    def get(self, product_group_id: int) -> Product | None:
+    def get(self, supplier_item_id: int) -> Product | None:
         """Fetch a product by id."""
-        return cast(Product | None, self.session.get(Product, product_group_id))
+        return cast(Product | None, self.session.get(Product, supplier_item_id))
 
     def create(self, product: Product) -> Product:
         """Persist a new product."""

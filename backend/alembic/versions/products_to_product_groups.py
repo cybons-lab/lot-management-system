@@ -15,7 +15,35 @@ The 2-code system:
 product_groups is just for linking these together.
 """
 
+import sqlalchemy as sa
+
 from alembic import op
+
+
+def _constraint_exists(constraint_name: str, table_name: str) -> bool:
+    """Check if a constraint exists."""
+    conn = op.get_bind()
+    result = conn.execute(
+        sa.text("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.table_constraints
+                WHERE constraint_name = :constraint_name
+                  AND table_name = :table_name
+            )
+        """),
+        {"constraint_name": constraint_name, "table_name": table_name},
+    )
+    return result.scalar()
+
+
+def _rename_constraint_if_exists(table_name: str, old_name: str, new_name: str) -> None:
+    """Rename constraint if it exists, otherwise skip."""
+    if _constraint_exists(old_name, table_name):
+        op.execute(f"ALTER TABLE {table_name} RENAME CONSTRAINT {old_name} TO {new_name}")
+        print(f"✅ Renamed constraint: {old_name} → {new_name}")
+    else:
+        print(f"⏭️  Skipped (not found): {old_name}")
 
 
 def _recreate_views_upgrade() -> None:
@@ -170,6 +198,7 @@ def _recreate_views_upgrade() -> None:
             lm.id AS lot_master_id,
             lm.lot_number,
             lr.product_group_id,
+            lr.supplier_item_id,
             p.maker_part_code AS product_code,
             p.product_name,
             lr.warehouse_id,
@@ -573,9 +602,10 @@ def upgrade() -> None:
     )
 
     # supplier_items
-    op.execute(
-        "ALTER TABLE supplier_items RENAME CONSTRAINT supplier_items_product_id_fkey "
-        "TO supplier_items_product_group_id_fkey"
+    _rename_constraint_if_exists(
+        "supplier_items",
+        "supplier_items_product_id_fkey",
+        "supplier_items_product_group_id_fkey",
     )
 
     # warehouse_delivery_routes

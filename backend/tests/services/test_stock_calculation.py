@@ -42,7 +42,7 @@ def stock_test_data(db_session: Session, supplier):
 
     # Lot Master
     lm = LotMaster(
-        product_group_id=prod.id,
+        supplier_item_id=prod.id,
         lot_number="LOT-CALC-001",
     )
     db_session.add(lm)
@@ -51,7 +51,7 @@ def stock_test_data(db_session: Session, supplier):
     # Lot (Initial state: 100 qty, no locks)
     lot = LotReceipt(
         lot_master_id=lm.id,
-        product_group_id=prod.id,
+        supplier_item_id=prod.id,
         warehouse_id=wh.id,
         received_quantity=Decimal("100.0"),
         locked_quantity=Decimal("0.0"),

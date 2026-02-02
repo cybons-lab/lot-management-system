@@ -77,7 +77,7 @@ def master_data(db: Session, supplier):
 
     # Create LotMaster
     lot_master = LotMaster(
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         lot_number="LOT-001",
     )
     db.add(lot_master)
@@ -86,7 +86,7 @@ def master_data(db: Session, supplier):
     # Create lot with stock
     lot = LotReceipt(
         lot_master_id=lot_master.id,
-        product_group_id=product.id,
+        supplier_item_id=product.id,
         warehouse_id=warehouse.id,
         received_quantity=Decimal("100.000"),
         unit="EA",
@@ -128,7 +128,7 @@ def test_preview_allocation_suggestions_order_mode_success(
 
     order_line = OrderLine(
         order_id=order.id,
-        product_group_id=master_data["product"].id,
+        supplier_item_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
         order_quantity=Decimal("10.000"),
         unit="EA",
