@@ -71,6 +71,7 @@ class CustomerItemResponse(BaseSchema):
     customer_name: str = Field(..., description="得意先名")
     maker_part_no: str = Field(..., description="メーカー品番 (from supplier_items)")
     display_name: str = Field(..., description="表示名 (from supplier_items)")
+    supplier_id: int | None = Field(None, description="仕入先ID")
     supplier_code: str | None = Field(None, description="仕入先コード")
     supplier_name: str | None = Field(None, description="仕入先名")
     created_at: datetime

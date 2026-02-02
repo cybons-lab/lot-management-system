@@ -480,7 +480,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v2/inventory/{product_group_id}/{warehouse_id}": {
+  "/api/v2/inventory/{supplier_item_id}/{warehouse_id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -488,7 +488,7 @@ export interface paths {
       cookie?: never;
     };
     /** Get Inventory Item */
-    get: operations["get_inventory_item_api_v2_inventory__product_group_id___warehouse_id__get"];
+    get: operations["get_inventory_item_api_v2_inventory__supplier_item_id___warehouse_id__get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -10013,6 +10013,11 @@ export interface components {
        */
       display_name: string;
       /**
+       * Supplier Id
+       * @description 仕入先ID
+       */
+      supplier_id?: number | null;
+      /**
        * Supplier Code
        * @description 仕入先コード
        */
@@ -11242,8 +11247,8 @@ export interface components {
      * @description Inventory aggregated by product (across all warehouses).
      */
     InventoryByProductResponse: {
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Product Name */
       product_name: string;
       /** Product Code */
@@ -11341,8 +11346,8 @@ export interface components {
     InventoryItemResponse: {
       /** Inventory Item Id */
       inventory_item_id: number;
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Warehouse Id */
       warehouse_id: number;
       /** Total Quantity */
@@ -11366,11 +11371,8 @@ export interface components {
        * @default 0
        */
       active_lot_count: number;
-      /**
-       * Last Updated
-       * Format: date-time
-       */
-      last_updated: string;
+      /** Last Updated */
+      last_updated?: string | null;
       /** @default no_lots */
       inventory_state: components["schemas"]["InventoryState"];
       /** Product Name */
@@ -11728,8 +11730,8 @@ export interface components {
       updated_at?: string | null;
       /** Lot Number */
       lot_number?: string | null;
-      /** Product Group Id */
-      product_group_id: number;
+      /** Supplier Item Id */
+      supplier_item_id: number;
       /** Warehouse Id */
       warehouse_id: number;
       /** Supplier Id */
@@ -11845,8 +11847,6 @@ export interface components {
       supplier_maker_part_no?: string | null;
       /** Customer Part No */
       customer_part_no?: string | null;
-      /** Supplier Item Id */
-      supplier_item_id?: number | null;
       /** Mapping Status */
       mapping_status?: string | null;
     };
@@ -18411,12 +18411,12 @@ export interface operations {
       };
     };
   };
-  get_inventory_item_api_v2_inventory__product_group_id___warehouse_id__get: {
+  get_inventory_item_api_v2_inventory__supplier_item_id___warehouse_id__get: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        product_group_id: number;
+        supplier_item_id: number;
         warehouse_id: number;
       };
       cookie?: never;

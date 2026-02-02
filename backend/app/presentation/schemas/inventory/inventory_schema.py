@@ -65,7 +65,7 @@ class LotBase(BaseSchema):
     """Shared attributes for lot payloads."""
 
     lot_number: str | None = None
-    product_group_id: int
+    supplier_item_id: int = Field(..., validation_alias="product_group_id")
     warehouse_id: int
     supplier_id: int | None = None
     expected_lot_id: int | None = None
@@ -186,7 +186,7 @@ class LotResponse(LotBase, TimestampMixin):
     # Phase 2: Mapping fields
     maker_part_no: str | None = Field(None, serialization_alias="supplier_maker_part_no")
     customer_part_no: str | None = None
-    supplier_item_id: int | None = None
+    supplier_item_id: int = Field(..., validation_alias="product_group_id")
     mapping_status: str | None = None
 
 
@@ -298,7 +298,7 @@ class InventoryItemResponse(BaseSchema):
     """
 
     id: int = Field(serialization_alias="inventory_item_id")
-    product_group_id: int
+    supplier_item_id: int = Field(..., validation_alias="product_group_id")
     warehouse_id: int
     total_quantity: Decimal
     allocated_quantity: Decimal
@@ -306,7 +306,7 @@ class InventoryItemResponse(BaseSchema):
     soft_allocated_quantity: Decimal = Decimal("0")
     hard_allocated_quantity: Decimal = Decimal("0")
     active_lot_count: int = 0
-    last_updated: datetime
+    last_updated: datetime | None = None
     inventory_state: InventoryState = InventoryState.NO_LOTS
 
     # Joined fields from master tables
@@ -370,7 +370,7 @@ class InventoryByWarehouseResponse(BaseSchema):
 class InventoryByProductResponse(BaseSchema):
     """Inventory aggregated by product (across all warehouses)."""
 
-    product_group_id: int
+    supplier_item_id: int = Field(..., validation_alias="product_group_id")
     product_name: str
     product_code: str
     total_quantity: Decimal

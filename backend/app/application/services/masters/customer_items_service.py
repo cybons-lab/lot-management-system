@@ -61,6 +61,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "supplier_item_id": item.supplier_item_id,
             "maker_part_no": item.supplier_item.maker_part_no,
             "display_name": item.supplier_item.display_name,
+            "supplier_id": item.supplier_item.supplier.id,
             "supplier_code": item.supplier_item.supplier.supplier_code,
             "supplier_name": item.supplier_item.supplier.supplier_name,
             "base_unit": item.base_unit,
@@ -108,6 +109,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 Customer.customer_name,
                 SupplierItem.display_name,
                 SupplierItem.maker_part_no,
+                Supplier.id.label("supplier_id"),
                 Supplier.supplier_code,
                 Supplier.supplier_name,
             )
@@ -143,6 +145,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 "supplier_item_id": r.CustomerItem.supplier_item_id,
                 "maker_part_no": r.maker_part_no,
                 "display_name": r.display_name,
+                "supplier_id": r.supplier_id,
                 "supplier_code": r.supplier_code,
                 "supplier_name": r.supplier_name,
                 "base_unit": r.CustomerItem.base_unit,

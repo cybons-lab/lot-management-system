@@ -2198,21 +2198,21 @@
         }
       }
     },
-    "/api/v2/inventory/{product_group_id}/{warehouse_id}": {
+    "/api/v2/inventory/{supplier_item_id}/{warehouse_id}": {
       "get": {
         "tags": [
           "v2-inventory"
         ],
         "summary": "Get Inventory Item",
-        "operationId": "get_inventory_item_api_v2_inventory__product_group_id___warehouse_id__get",
+        "operationId": "get_inventory_item_api_v2_inventory__supplier_item_id___warehouse_id__get",
         "parameters": [
           {
-            "name": "product_group_id",
+            "name": "supplier_item_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Product Group Id"
+              "title": "Supplier Item Id"
             }
           },
           {
@@ -25501,6 +25501,18 @@
             "title": "Display Name",
             "description": "表示名 (from supplier_items)"
           },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id",
+            "description": "仕入先ID"
+          },
           "supplier_code": {
             "anyOf": [
               {
@@ -28483,9 +28495,9 @@
       },
       "InventoryByProductResponse": {
         "properties": {
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "product_name": {
             "type": "string",
@@ -28521,7 +28533,7 @@
         },
         "type": "object",
         "required": [
-          "product_group_id",
+          "supplier_item_id",
           "product_name",
           "product_code",
           "total_quantity",
@@ -28687,9 +28699,9 @@
             "type": "integer",
             "title": "Inventory Item Id"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -28728,8 +28740,15 @@
             "default": 0
           },
           "last_updated": {
-            "type": "string",
-            "format": "date-time",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Last Updated"
           },
           "inventory_state": {
@@ -28827,12 +28846,11 @@
         "type": "object",
         "required": [
           "inventory_item_id",
-          "product_group_id",
+          "supplier_item_id",
           "warehouse_id",
           "total_quantity",
           "allocated_quantity",
-          "available_quantity",
-          "last_updated"
+          "available_quantity"
         ],
         "title": "InventoryItemResponse",
         "description": "API response model for inventory items (aggregated summary).\n\nThis schema represents a calculated summary of inventory from the\nlots table, aggregated by product and warehouse (or supplier × product × warehouse).\nIt does not map to a physical table."
@@ -29649,9 +29667,9 @@
             ],
             "title": "Lot Number"
           },
-          "product_group_id": {
+          "supplier_item_id": {
             "type": "integer",
-            "title": "Product Group Id"
+            "title": "Supplier Item Id"
           },
           "warehouse_id": {
             "type": "integer",
@@ -29971,17 +29989,6 @@
             ],
             "title": "Customer Part No"
           },
-          "supplier_item_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Supplier Item Id"
-          },
           "mapping_status": {
             "anyOf": [
               {
@@ -29997,7 +30004,7 @@
         "type": "object",
         "required": [
           "created_at",
-          "product_group_id",
+          "supplier_item_id",
           "warehouse_id",
           "received_date",
           "unit",
