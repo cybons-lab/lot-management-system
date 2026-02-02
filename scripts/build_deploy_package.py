@@ -408,6 +408,31 @@ def copy_docs(temp_dir: Path) -> bool:
     return True
 
 
+def create_manifest(temp_dir: Path) -> bool:
+    """manifest.json を作成."""
+    print_step("manifest.json を作成中...")
+
+    import json
+    
+    # 本来は git バージョンなどを取得するのが望ましいが、簡易的に現在時刻を使用
+    manifest = {
+        "app_name": "lot-management",
+        "version": datetime.now().strftime("%Y.%m.%d-%H%M"),
+        "built_at": datetime.now().isoformat(),
+        "backend_changed": True,  # 常にTrue（簡易化）
+        "frontend_changed": True, # 常にTrue（簡易化）
+        "requires_restart": True, # 常にTrue（簡易化）
+        "notes": "make build による自動生成"
+    }
+
+    manifest_path = temp_dir / "manifest.json"
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+
+    print_success(f"manifest.json を作成しました: {manifest_path}")
+    return True
+
+
 def create_zip(temp_dir: Path, output_path: Path) -> bool:
     """ZIP ファイルを作成."""
     print_step("ZIP ファイルを作成中...")
@@ -491,7 +516,11 @@ def main() -> int:
         if not copy_docs(temp_dir):
             return 1
 
-        # 6. ZIP 作成
+        # 6. manifest.json 生成
+        if not create_manifest(temp_dir):
+            return 1
+
+        # 7. ZIP 作成
         if not create_zip(temp_dir, output_path):
             return 1
 

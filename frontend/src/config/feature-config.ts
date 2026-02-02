@@ -105,6 +105,7 @@ export const FEATURE_CONFIG: Record<string, FeatureDefinition> = {
   admin: {
     id: "admin",
     label: "システム管理",
+    subFeatures: [{ id: "deploy", label: "システムデプロイ" }],
   },
   db_browser: {
     id: "db_browser",
@@ -127,5 +128,9 @@ export const FEATURE_CONFIG: Record<string, FeatureDefinition> = {
   export: {
     id: "export",
     label: "エクスポート",
+  },
+  deploy: {
+    id: "deploy",
+    label: "システムデプロイ",
   },
 };

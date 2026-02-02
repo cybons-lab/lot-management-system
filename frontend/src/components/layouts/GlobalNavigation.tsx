@@ -142,6 +142,13 @@ const navItems: NavItem[] = [
     feature: "operation_logs",
   },
   {
+    title: "システムデプロイ",
+    href: ROUTES.ADMIN.DEPLOY,
+    icon: Settings,
+    requireAdmin: true,
+    feature: "deploy",
+  },
+  {
     title: "マスタ",
     href: "/masters",
     icon: Database,

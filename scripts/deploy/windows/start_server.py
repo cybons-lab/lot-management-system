@@ -1,121 +1,118 @@
 import json
 import os
-import subprocess
-import sys
 import socket
-import logging
-from datetime import datetime
+import subprocess
 from pathlib import Path
-from typing import TypedDict
+from datetime import datetime
+import psutil
 
 
-class Config(TypedDict):
-    backend_dir: str
-    venv_python: str
-    host: str
-    port: int
-    pid_file: str
-    log_dir: str
+def load_cfg():
+    # スクリプトと同じディレクトリにあるconfig.jsonを読む
+    cfg_path = Path(__file__).parent / "config.json"
+    with open(cfg_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
-def setup_logger(log_dir: str) -> logging.Logger:
-    """ロガーの設定"""
-    os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, "server_control.log")
-    
-    logger = logging.getLogger("ServerControl")
-    logger.setLevel(logging.INFO)
-    
-    # 既存のハンドラをクリア
-    if logger.handlers:
-        logger.handlers.clear()
-        
-    formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-    
-    file_handler = logging.FileHandler(log_file, encoding="utf-8")
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-    
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
-    
-    return logger
+def ts():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def log_line(cfg, msg: str):
+    Path(cfg["log_dir"]).mkdir(parents=True, exist_ok=True)
+    p = Path(cfg["log_dir"]) / "server_control.log"
+    # 追記モードで書き込み
+    with open(p, "a", encoding="utf-8") as f:
+        f.write(msg + "\n")
 
 
 def is_port_in_use(host: str, port: int) -> bool:
-    """ポートが使用中かチェック"""
+    # 0.0.0.0 はbind用なので、確認は localhost で見る
+    check_host = "127.0.0.1"
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.bind((host, port))
-            return False
-        except socket.error:
-            return True
+        s.settimeout(0.3)
+        return s.connect_ex((check_host, port)) == 0
 
 
-def start_server(config_path: str) -> None:
-    """サーバーを起動"""
-    # 1. Config読み込み
+def pid_alive(pid: int) -> bool:
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            config: Config = json.load(f)
-    except Exception as e:
-        print(f"Error loading config: {e}")
-        sys.exit(1)
+        p = psutil.Process(pid)
+        return p.is_running() and p.status() != psutil.STATUS_ZOMBIE
+    except psutil.Error:
+        return False
 
-    logger = setup_logger(config["log_dir"])
-    logger.info("Starting server...")
 
-    # 2. ポートチェック
-    if is_port_in_use(config["host"], config["port"]):
-        logger.error(f"Port {config['port']} is already in use. Check if the server is already running.")
-        sys.exit(1)
+def main():
+    cfg = load_cfg()
+    pid_file = Path(cfg["pid_file"])
 
-    # 3. コマンド準備
-    # Windows用: subprocess.CREATE_NEW_PROCESS_GROUP を使用してバックグラウンド実行
+    # 既にPIDファイルがあるなら生存確認（誤って二重起動しない）
+    if pid_file.exists():
+        try:
+            pid = int(pid_file.read_text(encoding="utf-8").strip())
+        except ValueError:
+            pid = -1
+
+        if pid > 0 and pid_alive(pid):
+            msg = f"[{ts()}] START: already running (pid={pid})"
+            print(msg)
+            log_line(cfg, msg)
+            return
+
+        # 死んでるPIDなら掃除
+        pid_file.unlink(missing_ok=True)
+
+    # ポート使用中なら起動しない（別プロセスが掴んでる可能性）
+    if is_port_in_use(cfg["host"], cfg["port"]):
+        msg = f"[{ts()}] START: port {cfg['port']} is already in use. abort."
+        print(msg)
+        log_line(cfg, msg)
+        return
+
+    backend_dir = cfg["backend_dir"]
+    python = cfg["venv_python"]
+
+    # current.txt がある場合、動的に最新リリースのパスに書き換える
+    current_txt = Path(cfg["pid_file"]).parent.parent / "current.txt"
+    if current_txt.exists():
+        release_path = Path(current_txt.read_text(encoding="utf-8").strip())
+        if release_path.exists():
+            backend_dir = str(release_path / "backend")
+            # 仮想環境のパスを再構築（config.jsonにある末尾のパーツを利用）
+            venv_rel = Path(cfg["venv_python"]).relative_to(cfg["backend_dir"])
+            python = str(release_path / "backend" / venv_rel)
+            print(f"[{ts()}] Dynamic path resolved from current.txt: {release_path}")
+
+    # 本番OSがWindowsであることを想定
     cmd = [
-        config["venv_python"],
-        "-m", "uvicorn",
+        python,
+        "-m",
+        "uvicorn",
         "app.main:app",
-        "--host", config["host"],
-        "--port", str(config["port"]),
-        "--log-level", "info"
+        "--host",
+        cfg["host"],
+        "--port",
+        str(cfg["port"]),
     ]
 
+    print(f"[{ts()}] Starting uvicorn in a new console...")
+    # 新しいコンソールで起動（ログはuvicorn側に流れる）
+    # Windows のみの定数
+    creationflags = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
+    
     try:
-        # 環境変数を適切に設定（backendディレクトリをPYTHONPATHに追加）
-        env = os.environ.copy()
-        env["PYTHONPATH"] = config["backend_dir"]
+        proc = subprocess.Popen(cmd, cwd=backend_dir, creationflags=creationflags)
         
-        process = subprocess.Popen(
-            cmd,
-            cwd=config["backend_dir"],
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
-        )
-        
-        # 4. PID保存
-        pid_file = Path(config["pid_file"])
-        pid_file.parent.mkdir(parents=True, exist_ok=True)
-        pid_file.write_text(str(process.pid))
-        
-        logger.info(f"Server started successfully (PID: {process.pid})")
-        
+        # PIDを書き込み
+        pid_file.write_text(str(proc.pid), encoding="utf-8")
+        msg = f"[{ts()}] START: launched pid={proc.pid} port={cfg['port']}"
+        print(msg)
+        log_line(cfg, msg)
     except Exception as e:
-        logger.error(f"Failed to start server: {e}")
-        sys.exit(1)
+        msg = f"[{ts()}] START: failed to launch: {e}"
+        print(msg)
+        log_line(cfg, msg)
 
 
 if __name__ == "__main__":
-    config_file = "config.json"
-    if not os.path.exists(config_file):
-        # 実行ディレクトリにない場合はスクリプトと同じディレクトリを探す
-        config_file = os.path.join(os.path.dirname(__file__), "config.json")
-        
-    if not os.path.exists(config_file):
-        print(f"Config file not found: {config_file}")
-        sys.exit(1)
-        
-    start_server(config_file)
+    main()

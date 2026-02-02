@@ -1,0 +1,8 @@
+{
+    "backend_dir": "C:\\lot_management\\current\\backend",
+    "venv_python": "C:\\lot_management\\current\\backend\\.venv312\\Scripts\\python.exe",
+    "host": "0.0.0.0",
+    "port": 8000,
+    "pid_file": "C:\\lot_management\\run\\uvicorn.pid",
+    "log_dir": "C:\\lot_management\\logs"
+}

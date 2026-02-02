@@ -8,6 +8,7 @@ from app.presentation.api.routes.admin.batch_jobs_router import router as batch_
 from app.presentation.api.routes.admin.bulk_export_router import router as bulk_export_router
 from app.presentation.api.routes.admin.business_rules_router import router as business_rules_router
 from app.presentation.api.routes.admin.demand_router import router as demand_router
+from app.presentation.api.routes.admin.deploy_router import router as deploy_router
 from app.presentation.api.routes.admin.health_router import router as health_router
 from app.presentation.api.routes.admin.master_import_router import router as master_import_router
 from app.presentation.api.routes.admin.operation_logs_router import router as operation_logs_router
@@ -23,6 +24,7 @@ __all__ = [
     "batch_jobs_router",
     "bulk_export_router",
     "business_rules_router",
+    "deploy_router",
     "health_router",
     "master_import_router",
     "operation_logs_router",

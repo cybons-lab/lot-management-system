@@ -1,102 +1,72 @@
 import json
-import os
-import subprocess
-import sys
-import logging
 from pathlib import Path
-from typing import TypedDict
+from datetime import datetime
+import psutil
 
 
-class Config(TypedDict):
-    backend_dir: str
-    venv_python: str
-    host: str
-    port: int
-    pid_file: str
-    log_dir: str
+def load_cfg():
+    cfg_path = Path(__file__).parent / "config.json"
+    with open(cfg_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
-def setup_logger(log_dir: str) -> logging.Logger:
-    """ロガーの設定"""
-    os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, "server_control.log")
-    
-    logger = logging.getLogger("ServerControl")
-    logger.setLevel(logging.INFO)
-    
-    if logger.handlers:
-        logger.handlers.clear()
-        
-    formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-    
-    file_handler = logging.FileHandler(log_file, encoding="utf-8")
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-    
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
-    
-    return logger
+def ts():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def stop_server(config_path: str) -> None:
-    """サーバーを停止"""
-    try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            config: Config = json.load(f)
-    except Exception as e:
-        print(f"Error loading config: {e}")
-        sys.exit(1)
+def log_line(cfg, msg: str):
+    Path(cfg["log_dir"]).mkdir(parents=True, exist_ok=True)
+    p = Path(cfg["log_dir"]) / "server_control.log"
+    with open(p, "a", encoding="utf-8") as f:
+        f.write(msg + "\n")
 
-    logger = setup_logger(config["log_dir"])
-    logger.info("Stopping server...")
 
-    pid_file = Path(config["pid_file"])
+def main():
+    cfg = load_cfg()
+    pid_file = Path(cfg["pid_file"])
+
     if not pid_file.exists():
-        logger.warning(f"PID file not found: {pid_file}. Server might not be running.")
+        msg = f"[{ts()}] STOP: pid_file not found (already stopped?)"
+        print(msg)
+        log_line(cfg, msg)
         return
 
     try:
-        pid = pid_file.read_text().strip()
-        if not pid:
-            logger.error("PID file is empty.")
-            pid_file.unlink()
-            return
+        pid = int(pid_file.read_text(encoding="utf-8").strip())
+    except ValueError:
+        msg = f"[{ts()}] STOP: pid_file invalid. remove it."
+        print(msg)
+        log_line(cfg, msg)
+        pid_file.unlink(missing_ok=True)
+        return
 
-        # Windows用: taskkill /F /T /PID を使用して子プロセス含めて強制終了
-        if os.name == "nt":
-            # /F: 強制終了, /T: 子プロセスも終了
-            cmd = ["taskkill", "/F", "/T", "/PID", pid]
-        else:
-            # POSIX用 (開発・テスト環境用)
-            cmd = ["kill", "-15", pid]
+    try:
+        p = psutil.Process(pid)
+        msg = f"[{ts()}] STOP: terminating pid={pid}"
+        print(msg)
+        log_line(cfg, msg)
 
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        
-        if result.returncode == 0:
-            logger.info(f"Server (PID: {pid}) stopped successfully.")
-        else:
-            if "プロセスが見つかりませんでした" in result.stderr or "not found" in result.stderr.lower():
-                 logger.info(f"Process {pid} already exited.")
-            else:
-                logger.error(f"Failed to kill process {pid}: {result.stderr}")
+        p.terminate()
+        try:
+            p.wait(timeout=10)
+        except psutil.TimeoutExpired:
+            msg = f"[{ts()}] STOP: force kill pid={pid}"
+            print(msg)
+            log_line(cfg, msg)
+            p.kill()
+            p.wait(timeout=5)
 
-        # PIDファイルを削除
-        pid_file.unlink()
-        
+    except psutil.NoSuchProcess:
+        msg = f"[{ts()}] STOP: pid={pid} not found (already dead)"
+        print(msg)
+        log_line(cfg, msg)
     except Exception as e:
-        logger.error(f"Error during server shutdown: {e}")
-        sys.exit(1)
+        msg = f"[{ts()}] STOP: error occurred: {e}"
+        print(msg)
+        log_line(cfg, msg)
+    finally:
+        pid_file.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
-    config_file = "config.json"
-    if not os.path.exists(config_file):
-        config_file = os.path.join(os.path.dirname(__file__), "config.json")
-        
-    if not os.path.exists(config_file):
-        print(f"Config file not found: {config_file}")
-        sys.exit(1)
-        
-    stop_server(config_file)
+    main()
