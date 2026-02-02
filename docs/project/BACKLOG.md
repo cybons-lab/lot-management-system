@@ -13,7 +13,7 @@
 ## 1. 優先度: 高 (即時対応)
 
 
-### 1-0. SmartRead横持ちCSVフォーマット検証の確認
+### ✅ 1-0. SmartRead横持ちCSVフォーマット検証の確認
 
 **優先度:** 高（最優先タスク）
 **作成:** 2026-02-02
@@ -480,6 +480,27 @@ async def start_pad_run_from_upload(
 **関連ファイル:**
 - `frontend/e2e/specs/p0/e2e-02-save-persistence.spec.ts` (L27, L159)
 - バックエンド: `app/presentation/api/routes/admin/*` (test-data生成エンドポイント)
+
+---
+
+### 2-14. SmartRead CSV変換ロジックの改善
+
+**優先度**: 中
+**作成**: 2026-02-02
+**カテゴリ**: RPA・データ処理
+
+**背景:**
+- `SmartReadCsvTransformer` による横持ち→縦持ち変換において、データの信頼性とエラー検知能力を向上させる。
+
+**タスク内容:**
+1. **縦持ちデータの重複チェック機能の実装**
+   - 変換後のデータ（`long_data`）内で、同一の材質・Lot No・数量等を持つレコードが重複して生成されていないかチェックするロジックの追加。
+2. **明細未生成時の警告機能の実装**
+   - 明細項目が1件も抽出されなかった場合、CSVフォーマットの不一致（列名の変更など）の可能性があるため、ユーザーに警告を出す仕組みの導入。
+
+**関連ファイル:**
+- `backend/app/application/services/smartread/csv_transformer.py`
+- `docs/smartread_csv_validation_report.md`
 
 ---
 
