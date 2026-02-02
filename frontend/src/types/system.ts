@@ -1,6 +1,5 @@
 export interface PageVisibilityConfig {
   [feature: string]: {
-    guest: boolean;
     user: boolean;
   };
 }

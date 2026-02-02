@@ -45,7 +45,8 @@ const SETTING_CONFIGS: Record<string, SettingConfig> = {
     label: "ページ表示制御",
     type: "json",
     category: "security",
-    description: "機能ごとの表示/非表示をロール別に制御します。",
+    description:
+      "一般ユーザーに対する機能ごとの表示/非表示を制御します。ゲストユーザーの権限は固定されており変更できません。管理者は常にすべての機能にアクセス可能です。",
   },
   // SQL Profiler
   sql_profiler_enabled: {
