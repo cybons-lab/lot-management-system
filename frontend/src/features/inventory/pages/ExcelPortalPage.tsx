@@ -73,21 +73,29 @@ export function ExcelPortalPage() {
       { product: { id: number; code: string; name: string }; items: CustomerItem[] }
     >();
 
-    customerItemsForSupplier.forEach((item) => {
-      // Phase1: product_group_idがnullの場合はスキップ（Phase2で対応）
-      if (item.product_group_id === null) return;
+    // 重複チェック用（item.id ベース）
+    const processedItemIds = new Set<number>();
 
-      if (!groups.has(item.product_group_id)) {
-        groups.set(item.product_group_id, {
+    customerItemsForSupplier.forEach((item) => {
+      // Phase1 Migration: supplier_item_id を優先、なければ product_group_id (互換性)
+      const groupId = item.supplier_item_id || item.product_group_id;
+      if (groupId === null || groupId === undefined) return;
+
+      // アイテムIDの重複チェック
+      if (processedItemIds.has(item.id)) return;
+      processedItemIds.add(item.id);
+
+      if (!groups.has(groupId)) {
+        groups.set(groupId, {
           product: {
-            id: item.product_group_id,
+            id: groupId,
             code: item.product_code || "",
             name: item.product_name || "",
           },
           items: [],
         });
       }
-      groups.get(item.product_group_id)!.items.push(item);
+      groups.get(groupId)!.items.push(item);
     });
 
     return Array.from(groups.values());
