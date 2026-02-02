@@ -12,7 +12,96 @@
 
 ## 1. 優先度: 高 (即時対応)
 
-### 1-0. E2Eテスト残存問題・不安定性
+
+### 1-0. SmartRead横持ちCSVフォーマット検証の確認
+
+**優先度:** 高（最優先タスク）
+**作成:** 2026-02-02
+**カテゴリ:** RPA・データ処理
+
+**背景:**
+SmartReadでダウンロードする横持ちデータ（CSV）について、決まったフォーマットでないとエラーが出るのか、または縦持ち変換に必要なカラムさえあればエラーにならないのかを確認する必要がある。
+
+**確認項目:**
+1. 横持ちCSVの必須カラムの特定
+2. 任意カラムの存在可否
+3. カラム順序の柔軟性
+4. エラーハンドリングの現状確認
+
+**期待される結果:**
+- 縦持ち変換に必要なカラムが存在すれば、他のカラムの有無に関わらずエラーにならない仕様であることを確認
+- または、厳密なフォーマット要件があればドキュメント化
+
+**関連ファイル:**
+- `backend/app/application/services/smartread/`
+- `backend/app/domain/smartread/transform.py`
+
+---
+
+### 1-1. FastAPI + Vite テスト環境デプロイ実装
+
+**優先度:** 高（次優先タスク）
+**作成:** 2026-02-02
+**カテゴリ:** インフラ・デプロイ
+
+**背景:**
+新規追加されたドキュメント `docs/fastapi_vite_test_deploy_design.md` に基づき、テスト環境でのデプロイ運用を実装する。
+
+**タスク内容:**
+1. `C:\app\` ディレクトリ構成の作成
+2. `config.json` の作成
+3. `start_server.py` / `stop_server.py` の実装（PID管理）
+4. `start_server.bat` / `stop_server.bat` / `restart_server.bat` の作成
+5. ログ機構の実装 (`server_control.log`)
+6. zip デプロイ手順の確立
+7. 動作確認・運用マニュアル作成
+
+**期待される効果:**
+- テスト環境での再起動作業がダブルクリック1回で完結
+- 安全なプロセス管理（PID + ポートチェック）
+- シンプルな運用フロー
+
+**関連ドキュメント:**
+- `docs/fastapi_vite_test_deploy_design.md`
+
+---
+
+### 1-2. 開発環境の統一と改善 (Critical - DX改善)
+
+**優先度:** 高（次回PR時に対応）
+
+**現状の問題:**
+- `typegen`（OpenAPIスキーマからTypeScript型生成）と`ruff`（Pythonリンター）の実行環境が統一されていない
+- Docker内で実行すべきか、ローカルで実行すべきか曖昧
+- 環境変数（`VITE_BACKEND_ORIGIN` vs `BACKEND_ORIGIN`）の混乱
+- 開発中にDockerとローカルを行き来する非効率な作業フロー
+
+**対応方針:**
+1. **ツール実行環境の明確化:**
+   - `npm run typegen`: **ローカル実行を推奨**（`backend/openapi.json`をホストで共有）
+   - `ruff check/format`: **Docker内で実行**（`.git/hooks/pre-commit`で自動化済み）
+   - 実行場所を`package.json`/`README.md`に明記
+
+2. **OpenAPIスキーマ生成の自動化:**
+   - バックエンド起動時に`openapi.json`を自動生成するスクリプトを追加
+   - または、`make typegen`コマンドでワンステップで実行可能に
+
+3. **環境変数の整理:**
+   - ✅ 完了: `VITE_BACKEND_ORIGIN` → `BACKEND_ORIGIN`に変更済み
+   - Docker Composeの環境変数にコメントを追加して用途を明確化
+
+4. **ドキュメント整備:**
+   - `docs/development/SETUP.md`に開発環境セットアップ手順を追加
+   - 各ツールの実行環境（Docker/ローカル）を明記
+
+**期待される効果:**
+- 開発者が迷わずにツールを実行できる
+- CI/CDとローカル開発の一貫性向上
+- onboarding時間の短縮
+
+---
+
+### 1-4. E2Eテスト残存問題・不安定性
 
 **現状:** P0テストは **32 passed, 6 skipped** で安定稼働。並列実行 (workers=4) も正常に動作する。
 
