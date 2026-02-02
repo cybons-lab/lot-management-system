@@ -652,7 +652,7 @@ export interface paths {
     };
     /**
      * Export Lots
-     * @description ロット一覧をExcelファイルとしてエクスポート.
+     * @description ロット一覧をExcelファイルとしてエクスポート（ゲスト可）.
      *
      *     Args:
      *         supplier_item_id: 製品ID（フィルタ）
@@ -663,9 +663,12 @@ export interface paths {
      *         expiry_to: 有効期限終了日（フィルタ）
      *         with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）
      *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（認証必須）
      *
      *     Returns:
      *         Response: Excelファイル（application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）
+     *
+     *     認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（エクスポートのみ）
      */
     get: operations["export_lots_api_lots_export_download_get"];
     put?: never;
@@ -685,7 +688,7 @@ export interface paths {
     };
     /**
      * List Lots
-     * @description ロット一覧取得.
+     * @description ロット一覧取得（ゲスト可・読み取り専用）.
      *
      *     v_lots_with_master ビューを使用してロット一覧を取得します。
      *     製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能で、
@@ -702,29 +705,34 @@ export interface paths {
      *         expiry_to: 有効期限終了日（フィルタ）
      *         with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）
      *         prioritize_assigned: 担当の仕入先を優先表示するかどうか（デフォルト: True）
-     *         current_user: 現在のログインユーザー（担当仕入先取得に使用、オプショナル）
      *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（担当仕入先取得に使用、認証必須）
      *
      *     Returns:
      *         list[LotResponse]: ロット情報のリスト
+     *
+     *     認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
      */
     get: operations["list_lots_api_lots_get"];
     put?: never;
     /**
      * Create Lot
-     * @description ロット新規登録.
+     * @description ロット新規登録（書き込み権限必要）.
      *
      *     ロットマスタへの登録と現在在庫テーブルの初期化を行います。
      *
      *     Args:
      *         lot: ロット作成リクエストデータ
      *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（認証必須、ゲスト不可）
      *
      *     Returns:
      *         LotResponse: 作成されたロット情報
      *
      *     Raises:
      *         HTTPException: ロット作成に失敗した場合
+     *
+     *     認証: 一般ユーザー・管理者のみ（ゲストは読み取り専用）
      */
     post: operations["create_lot_api_lots_post"];
     delete?: never;
@@ -742,19 +750,22 @@ export interface paths {
     };
     /**
      * Get Lot
-     * @description ロット詳細取得.
+     * @description ロット詳細取得（ゲスト可・読み取り専用）.
      *
      *     指定されたIDのロット情報を取得します（v2.2: Lot モデルから直接取得）。
      *
      *     Args:
      *         lot_id: ロットID
      *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（認証必須）
      *
      *     Returns:
      *         LotResponse: ロット詳細情報
      *
      *     Raises:
      *         HTTPException: ロットが存在しない場合（404）
+     *
+     *     認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
      */
     get: operations["get_lot_api_lots__lot_id__get"];
     /**
@@ -992,7 +1003,7 @@ export interface paths {
     };
     /**
      * List Order Lines
-     * @description 受注明細一覧取得（フラット表示用）.
+     * @description 受注明細一覧取得（ゲスト可・フラット表示用）.
      *
      *     Args:
      *         skip: スキップ件数
@@ -1004,9 +1015,12 @@ export interface paths {
      *         date_to: 納期終了日
      *         order_type: 受注種別フィルタ
      *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（認証必須）
      *
      *     Returns:
      *         list[OrderLineResponse]: 受注明細リスト
+     *
+     *     認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
      */
     get: operations["list_order_lines_api_orders_lines_get"];
     put?: never;
@@ -1060,7 +1074,7 @@ export interface paths {
     };
     /**
      * List Orders
-     * @description 受注一覧取得（読み取り専用）.
+     * @description 受注一覧取得（ゲスト可・読み取り専用）.
      *
      *     Args:
      *         skip: スキップ件数（ページネーション用）
@@ -1072,26 +1086,31 @@ export interface paths {
      *         order_type: 受注種別フィルタ
      *         prioritize_assigned: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
      *         db: データベースセッション
-     *         current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）
+     *         current_user: 現在のログインユーザー（主担当仕入先取得に使用、認証必須）
      *
      *     Returns:
      *         list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）
+     *
+     *     認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
      */
     get: operations["list_orders_api_orders_get"];
     put?: never;
     /**
      * Create Order
-     * @description 受注作成.
+     * @description 受注作成（書き込み権限必要）.
      *
      *     Args:
      *         order: 受注作成リクエストデータ
      *         uow: Unit of Work（トランザクション管理）
+     *         current_user: 現在のログインユーザー（認証必須、ゲスト不可）
      *
      *     Returns:
      *         OrderWithLinesResponse: 作成された受注情報（明細含む）
      *
      *     Raises:
      *         HTTPException: 受注作成に失敗した場合
+     *
+     *     認証: 一般ユーザー・管理者のみ（ゲストは読み取り専用）
      */
     post: operations["create_order_api_orders_post"];
     delete?: never;
@@ -1109,17 +1128,20 @@ export interface paths {
     };
     /**
      * Get Order
-     * @description 受注詳細取得（読み取り専用、明細含む）.
+     * @description 受注詳細取得（ゲスト可・読み取り専用、明細含む）.
      *
      *     Args:
      *         order_id: 受注ID
      *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（認証必須）
      *
      *     Returns:
      *         OrderWithLinesResponse: 受注詳細情報（明細含む）
      *
      *     Raises:
      *         HTTPException: 受注が存在しない場合（404）
+     *
+     *     認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
      */
     get: operations["get_order_api_orders__order_id__get"];
     put?: never;
@@ -1229,10 +1251,12 @@ export interface paths {
     };
     /**
      * Get Dashboard Stats
-     * @description ダッシュボード用の統計情報を返す.
+     * @description ダッシュボード用の統計情報を返す（ゲスト可）.
      *
      *     在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock
      *     ビューは使用しない（v2.2 以降は廃止）。
+     *
+     *     認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
      */
     get: operations["get_dashboard_stats_api_dashboard_stats_get"];
     put?: never;
@@ -4030,6 +4054,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/auth/guest-login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Guest Login
+     * @description Auto-login as guest user (方式A implementation).
+     *
+     *     This endpoint provides automatic guest authentication to support
+     *     the new auth redesign where all users (including guests) are authenticated.
+     *
+     *     Finds the first active user with 'guest' role and issues a token.
+     *     Frontend calls this automatically on initialization if no token exists.
+     *
+     *     Returns:
+     *         TokenResponse with guest user token
+     *
+     *     Raises:
+     *         500: If no guest user exists in the system
+     */
+    post: operations["guest_login_api_auth_guest_login_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/system/logs/client": {
     parameters: {
       query?: never;
@@ -4422,14 +4478,14 @@ export interface paths {
     post?: never;
     /**
      * Delete User
-     * @description ユーザー削除.
+     * @description ユーザー削除（システムユーザーは削除不可）.
      *
      *     Args:
      *         user_id: ユーザーID
      *         db: データベースセッション
      *
      *     Raises:
-     *         HTTPException: ユーザーが存在しない場合
+     *         HTTPException: ユーザーが存在しない場合、またはシステムユーザーの場合
      */
     delete: operations["delete_user_api_users__user_id__delete"];
     options?: never;
@@ -23653,6 +23709,26 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+    };
+  };
+  guest_login_api_auth_guest_login_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TokenResponse"];
         };
       };
     };
