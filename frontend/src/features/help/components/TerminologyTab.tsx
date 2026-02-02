@@ -25,11 +25,10 @@ export function TerminologyTab() {
         <h3>重要な命名規則</h3>
         <ul>
           <li>
-            <code>product_group_id</code> は歴史的な命名で、実際は「仕入先品目ID」を意味します
+            <code>supplier_item_id</code> は「仕入先品目ID」を意味します
           </li>
           <li>
-            <code>supplier_item_id</code> と <code>product_group_id</code>{" "}
-            は同じ意味（移行期の歴史的理由で2つの名前が存在）
+            <code>supplier_item_id</code> を統一名称として利用します
           </li>
           <li>
             <code>products</code> テーブルは業務識別子ではなく、グルーピング用の補助テーブルです

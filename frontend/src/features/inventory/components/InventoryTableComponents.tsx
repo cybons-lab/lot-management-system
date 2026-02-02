@@ -325,7 +325,7 @@ export function InventoryRow({
           {fmt(item.available_quantity)}
         </td>
         <td className={styles.table.tdGray} style={{ width: columnWidths?.updated }}>
-          {new Date(item.last_updated).toLocaleString("ja-JP")}
+          {item.last_updated ? new Date(item.last_updated).toLocaleString("ja-JP") : "-"}
         </td>
         <td className={styles.table.tdRight} style={{ width: columnWidths?.actions }}>
           <Button

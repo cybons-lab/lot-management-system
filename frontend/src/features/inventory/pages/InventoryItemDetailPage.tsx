@@ -349,7 +349,7 @@ export function InventoryItemDetailPage() {
           <div>
             <div className={styles.detailGrid.label}>最終更新</div>
             <div className={styles.detailGrid.value}>
-              {new Date(item.last_updated).toLocaleString("ja-JP")}
+              {item.last_updated ? new Date(item.last_updated).toLocaleString("ja-JP") : "-"}
             </div>
           </div>
         </div>

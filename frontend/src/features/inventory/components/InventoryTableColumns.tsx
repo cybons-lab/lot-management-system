@@ -170,7 +170,9 @@ export const inventoryColumns: Column<InventoryItem>[] = [
     header: "最終更新",
     accessor: (row) => row.last_updated,
     cell: (row) => (
-      <span className="text-gray-600">{new Date(row.last_updated).toLocaleString("ja-JP")}</span>
+      <span className="text-gray-600">
+        {row.last_updated ? new Date(row.last_updated).toLocaleString("ja-JP") : "-"}
+      </span>
     ),
     width: 180,
     sortable: true,
