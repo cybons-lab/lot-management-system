@@ -11,7 +11,7 @@ export const allocationCandidatesKeys = {
   all: ["allocationCandidates"] as const,
   list: (params: {
     order_line_id: number;
-    product_group_id: number;
+    supplier_item_id: number;
     strategy?: string;
     limit?: number;
   }) => [...allocationCandidatesKeys.all, params] as const,
@@ -22,14 +22,14 @@ export const allocationCandidatesKeys = {
  */
 export const useAllocationCandidates = (params: {
   order_line_id: number;
-  product_group_id: number;
+  supplier_item_id: number;
   strategy?: "fefo" | "fifo" | "custom";
   limit?: number;
 }) => {
   return useQuery({
     queryKey: allocationCandidatesKeys.list(params),
     queryFn: () => getAllocationCandidates(params),
-    enabled: params.order_line_id > 0 && params.product_group_id > 0,
+    enabled: params.order_line_id > 0 && params.supplier_item_id > 0,
     staleTime: 1000 * 60, // 1 minute (candidates change frequently)
   });
 };

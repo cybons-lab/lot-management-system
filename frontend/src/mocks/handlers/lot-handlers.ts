@@ -19,14 +19,14 @@ export const lotHandlers = [
    */
   http.get(`${API_BASE}/lots`, ({ request }) => {
     const url = new URL(request.url);
-    const productCode = url.searchParams.get("product_code"); // Note: API uses product_code but LotResponse has product_group_id
+    const productCode = url.searchParams.get("product_code"); // Note: API uses product_code but LotResponse has supplier_item_id
     // const supplierCode = url.searchParams.get("supplier_code");
     const hasStock = url.searchParams.get("has_stock");
 
     let filteredLots = [...lots];
 
     // フィルタリング
-    // DDL v2.2: LotResponse has product_group_id (number), not product_code (string)
+    // DDL v2.2: LotResponse has supplier_item_id (number), not product_code (string)
     // For mock data, we skip product_code filtering or use legacy field
     if (productCode && filteredLots[0] && "product_code" in filteredLots[0]) {
       filteredLots = filteredLots.filter(
