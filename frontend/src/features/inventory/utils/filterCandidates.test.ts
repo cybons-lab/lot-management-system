@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { getDependentFilterUpdates } from "@/features/inventory/utils/filterCandidates";
 
 const baseFilters = {
-  product_group_id: "1",
+  supplier_item_id: "1",
   supplier_id: "10",
   warehouse_id: "100",
 };
@@ -57,21 +57,21 @@ describe("getDependentFilterUpdates", () => {
   it("clears product when supplier change invalidates it", () => {
     const updates = getDependentFilterUpdates({
       lastTouched: "supplier",
-      filters: { ...baseFilters, product_group_id: "99", warehouse_id: "999" },
+      filters: { ...baseFilters, supplier_item_id: "99", warehouse_id: "999" },
       options: baseOptions,
     });
 
-    expect(updates).toEqual({ product_group_id: "", warehouse_id: "" });
+    expect(updates).toEqual({ supplier_item_id: "", warehouse_id: "" });
   });
 
   it("clears invalid dependent filters on warehouse change", () => {
     const updates = getDependentFilterUpdates({
       lastTouched: "warehouse",
-      filters: { product_group_id: "99", supplier_id: "98", warehouse_id: "100" },
+      filters: { supplier_item_id: "99", supplier_id: "98", warehouse_id: "100" },
       options: baseOptions,
     });
 
-    expect(updates).toEqual({ product_group_id: "", supplier_id: "" });
+    expect(updates).toEqual({ supplier_item_id: "", supplier_id: "" });
   });
 
   // R2 requirement tests: Clear ONLY invalid filters, regardless of lastTouched
@@ -89,7 +89,7 @@ describe("getDependentFilterUpdates", () => {
   it("clears only invalid filters regardless of lastTouched", () => {
     const updates = getDependentFilterUpdates({
       lastTouched: "product", // Touched product, but we check ALL fields
-      filters: { product_group_id: "1", supplier_id: "99", warehouse_id: "999" },
+      filters: { supplier_item_id: "1", supplier_id: "99", warehouse_id: "999" },
       options: baseOptions,
     });
 
@@ -112,11 +112,11 @@ describe("getDependentFilterUpdates", () => {
   it("clears all invalid filters at once", () => {
     const updates = getDependentFilterUpdates({
       lastTouched: null,
-      filters: { product_group_id: "99", supplier_id: "98", warehouse_id: "999" },
+      filters: { supplier_item_id: "99", supplier_id: "98", warehouse_id: "999" },
       options: baseOptions,
     });
 
     // All filters are invalid
-    expect(updates).toEqual({ product_group_id: "", supplier_id: "", warehouse_id: "" });
+    expect(updates).toEqual({ supplier_item_id: "", supplier_id: "", warehouse_id: "" });
   });
 });

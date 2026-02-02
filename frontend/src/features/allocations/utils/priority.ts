@@ -70,8 +70,8 @@ const hasMissingRequiredFields = (
   const safeLines = lines ?? [];
   if (safeLines.length === 0) return true;
   return safeLines.every((line) => {
-    // DDL v2.2: prefer product_group_id, fallback to product_code
-    const hasProduct = line.product_group_id || line.product_code;
+    // DDL v2.2: prefer supplier_item_id, fallback to product_code
+    const hasProduct = line.supplier_item_id || line.product_code;
     // DDL v2.2: prefer order_quantity, fallback to quantity
     const qty = Number(line.order_quantity ?? line.quantity ?? 0);
     return !hasProduct || qty === 0;
