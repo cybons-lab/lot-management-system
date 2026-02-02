@@ -4615,7 +4615,11 @@ export interface paths {
      */
     get: operations["get_all_assignments_api_assignments_get"];
     put?: never;
-    post?: never;
+    /**
+     * Create Assignment
+     * @description 担当割り当てを作成.
+     */
+    post: operations["create_assignment_api_assignments_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -4662,26 +4666,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/assignments/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Assignment
-     * @description 担当割り当てを作成.
-     */
-    post: operations["create_assignment_api_assignments__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/assignments/{assignment_id}": {
     parameters: {
       query?: never;
@@ -4706,7 +4690,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/notifications/": {
+  "/api/notifications": {
     parameters: {
       query?: never;
       header?: never;
@@ -4714,7 +4698,7 @@ export interface paths {
       cookie?: never;
     };
     /** Get Notifications */
-    get: operations["get_notifications_api_notifications__get"];
+    get: operations["get_notifications_api_notifications_get"];
     put?: never;
     /**
      * Create Notification
@@ -4723,7 +4707,7 @@ export interface paths {
      *     Note: 通常はシステム内部で作成されるが、
      *     テスト用やSmartReadテスト完了通知など、明示的に作成するケースもある。
      */
-    post: operations["create_notification_api_notifications__post"];
+    post: operations["create_notification_api_notifications_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -24560,6 +24544,39 @@ export interface operations {
       };
     };
   };
+  create_assignment_api_assignments_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserSupplierAssignmentCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_user_suppliers_api_assignments_user__user_id__suppliers_get: {
     parameters: {
       query?: never;
@@ -24609,39 +24626,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["UserSupplierAssignmentResponse"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_assignment_api_assignments__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UserSupplierAssignmentCreate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserSupplierAssignmentResponse"];
         };
       };
       /** @description Validation Error */
@@ -24723,7 +24707,7 @@ export interface operations {
       };
     };
   };
-  get_notifications_api_notifications__get: {
+  get_notifications_api_notifications_get: {
     parameters: {
       query?: {
         skip?: number;
@@ -24755,7 +24739,7 @@ export interface operations {
       };
     };
   };
-  create_notification_api_notifications__post: {
+  create_notification_api_notifications_post: {
     parameters: {
       query?: never;
       header?: never;

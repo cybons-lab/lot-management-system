@@ -40,6 +40,11 @@ db-reset: ## データベースをリセット（ボリューム削除 + 再起�
 	@echo "データベースをリセットしました。バックエンドが自動でマイグレーションを実行します。"
 
 db-init-sample: ## サンプルデータを投入
+	@echo "バックエンドの起動を待機中..."
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+		curl -s http://localhost:8000/api/health > /dev/null 2>&1 && break || sleep 2; \
+	done
+	@echo "サンプルデータを投入中..."
 	curl -X POST http://localhost:8000/api/admin/init-sample-data
 
 db-shell: ## PostgreSQLシェルに接続
@@ -101,7 +106,7 @@ frontend-typecheck: ## フロントエンドの型チェック
 	docker compose exec -T frontend npm run typecheck
 
 frontend-typegen: ## OpenAPI型定義を再生成
-	docker compose exec -T frontend npm run typegen:curl
+	docker compose exec -T frontend npm run typegen:docker
 
 frontend-build: ## フロントエンドをビルド
 	docker compose exec -T frontend npm run build
@@ -125,6 +130,8 @@ lint: backend-lint frontend-lint ## 全体をLint
 lint-fix: backend-lint-fix frontend-lint-fix ## 全体のLintを自動修正
 
 format: backend-format frontend-format ## 全体をフォーマット
+
+format-check: frontend-format-check ## 全体のフォーマットをチェック
 
 typecheck: frontend-typecheck ## 全体の型チェック
 
