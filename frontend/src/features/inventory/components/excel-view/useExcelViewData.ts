@@ -14,7 +14,7 @@ import { useAllocationSuggestions } from "@/features/allocations/hooks/api/useAl
 import { getCustomerItemById, type CustomerItem } from "@/features/customer-items/api";
 import { type Customer } from "@/features/customers/api";
 import { type DeliveryPlace } from "@/features/delivery-places/api";
-import { useInventoryItem } from "@/features/inventory/hooks";
+import { useInventoryItems } from "@/features/inventory/hooks";
 import { useLotsQuery } from "@/hooks/api";
 import { useMasterApi } from "@/shared/hooks/useMasterApi";
 import { type LotUI } from "@/shared/libs/normalize";
@@ -105,6 +105,14 @@ const mapLotBlock = (lot: LotUI, context: MapContext): LotBlockData => {
     destinations,
     totalShipment,
     totalStock: Number(lot.current_quantity),
+    // ステータス判定用フィールドを追加
+    status: lot.status,
+    inspectionStatus: lot.inspection_status,
+    receivedDate: lot.received_date,
+    expiryDate: lot.expiry_date,
+    // 倉庫情報を追加
+    warehouseName: lot.warehouse_name || "不明",
+    warehouseCode: lot.warehouse_code || "-",
   };
 };
 
@@ -119,12 +127,22 @@ interface UseExcelViewDataReturn {
 /* eslint-disable complexity */
 export function useExcelViewData(
   productId: number,
-  warehouseId: number,
   customerItemId?: number,
 ): UseExcelViewDataReturn {
-  const isEnabled = !isNaN(productId) && !isNaN(warehouseId);
+  const isEnabled = !isNaN(productId);
 
-  const { data: inventoryItem, isLoading: itemLoading } = useInventoryItem(productId, warehouseId);
+  // Fetch inventory items for this product across all warehouses
+  const { data: inventoryData, isLoading: itemLoading } = useInventoryItems(
+    isEnabled
+      ? {
+          supplier_item_id: productId,
+          limit: 100,
+        }
+      : undefined,
+  );
+
+  // Use the first inventory item for header data (all should have same product info)
+  const inventoryItem = inventoryData?.items?.[0];
 
   // Fetch customer item if customerItemId is provided
   const { data: customerItem, isLoading: customerItemLoading } = useQuery({
@@ -141,7 +159,6 @@ export function useExcelViewData(
     isEnabled
       ? {
           supplier_item_id: productId,
-          warehouse_id: warehouseId,
           status: "active",
           with_stock: true,
         }
@@ -188,8 +205,12 @@ export function useExcelViewData(
 
   const lotBlocks = useMemo(() => {
     if (!inventoryItem) return [];
+    // Filter out TMP lots (temporary lots that should not be displayed)
+    const filteredLots = lots.filter(
+      (lot) => !lot.lot_number || !lot.lot_number.startsWith("TMP-"),
+    );
     // Sort lots by received_date ascending (oldest first, newest last)
-    const sortedLots = [...lots].sort((a, b) => {
+    const sortedLots = [...filteredLots].sort((a, b) => {
       const dateA = a.received_date ? new Date(a.received_date).getTime() : 0;
       const dateB = b.received_date ? new Date(b.received_date).getTime() : 0;
       return dateA - dateB;
@@ -206,8 +227,8 @@ export function useExcelViewData(
       header: {
         supplierCode: inventoryItem.supplier_code || "-",
         supplierName: inventoryItem.supplier_name || "-",
-        warehouseCode: inventoryItem.warehouse_code || "-",
-        warehouseName: inventoryItem.warehouse_name || "-",
+        warehouseCode: "ALL",
+        warehouseName: "全倉庫",
         productCode: inventoryItem.product_code || "-",
         productName: inventoryItem.product_name || "-",
         unit: lotBlocks[0]?.lotInfo.unit || "g",

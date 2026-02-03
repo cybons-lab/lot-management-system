@@ -55,6 +55,14 @@ export interface LotBlockData {
   destinations: DestinationRowData[];
   totalStock: number;
   totalShipment: number;
+  // ステータス判定用の追加フィールド
+  status?: string;
+  inspectionStatus?: string;
+  receivedDate?: string | null;
+  expiryDate?: string | null;
+  // 倉庫情報（全倉庫統合表示のため）
+  warehouseName?: string;
+  warehouseCode?: string;
 }
 
 export interface ExcelViewData {

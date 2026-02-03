@@ -64,9 +64,8 @@ function LoadingOrError({ isLoading }: LoadingOrErrorProps) {
 
 /* eslint-disable max-lines-per-function */
 export function ExcelViewPage() {
-  const { productId, warehouseId, customerItemId } = useParams<{
+  const { productId, customerItemId } = useParams<{
     productId: string;
-    warehouseId: string;
     customerItemId?: string;
   }>();
   const navigate = useNavigate();
@@ -80,7 +79,6 @@ export function ExcelViewPage() {
 
   const { data, isLoading, supplierId } = useExcelViewData(
     Number(productId),
-    Number(warehouseId),
     customerItemId ? Number(customerItemId) : undefined,
   );
   const updateMutation = useUpdateAllocationSuggestionsBatch();
@@ -272,7 +270,6 @@ export function ExcelViewPage() {
         open={isLotIntakeDialogOpen}
         onOpenChange={setIsLotIntakeDialogOpen}
         initialProductId={Number(productId)}
-        initialWarehouseId={Number(warehouseId)}
         initialSupplierId={supplierId}
       />
     </PageContainer>

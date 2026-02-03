@@ -11,9 +11,18 @@ interface Props {
   lotId: number;
   isEditing?: boolean;
   onFieldChange?: (lotId: number, field: string, value: string) => void;
+  warehouseName?: string;
+  warehouseCode?: string;
 }
 
-export function LotInfoGroups({ lotInfo, lotId, isEditing, onFieldChange }: Props) {
+export function LotInfoGroups({
+  lotInfo,
+  lotId,
+  isEditing,
+  onFieldChange,
+  warehouseName,
+  warehouseCode,
+}: Props) {
   const handleChange = (field: string, value: string) => {
     if (onFieldChange) {
       onFieldChange(lotId, field, value);
@@ -23,7 +32,13 @@ export function LotInfoGroups({ lotInfo, lotId, isEditing, onFieldChange }: Prop
   return (
     <div className="flex border-r border-slate-300">
       <LabelColumn />
-      <ValueColumn lotInfo={lotInfo} isEditing={isEditing} onChange={handleChange} />
+      <ValueColumn
+        lotInfo={lotInfo}
+        isEditing={isEditing}
+        onChange={handleChange}
+        warehouseName={warehouseName}
+        warehouseCode={warehouseCode}
+      />
     </div>
   );
 }
@@ -33,6 +48,9 @@ function LabelColumn() {
     <div className="w-28 bg-slate-100 border-r border-slate-200 flex flex-col font-bold">
       <div className={`${hHeader} p-2 bg-slate-200/50 border-b border-slate-300 flex items-center`}>
         入荷情報
+      </div>
+      <div className={`${hRow} p-2 flex items-center border-b border-slate-100 whitespace-nowrap`}>
+        倉庫
       </div>
       <div className={`${hRow} p-2 flex items-center border-b border-slate-100 whitespace-nowrap`}>
         入荷日
@@ -51,14 +69,20 @@ function LabelColumn() {
   );
 }
 
+/* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
 function ValueColumn({
   lotInfo,
   isEditing,
   onChange,
+  warehouseName,
+  warehouseCode,
 }: {
   lotInfo: LotInfo;
   isEditing?: boolean;
   onChange: (field: string, value: string) => void;
+  warehouseName?: string;
+  warehouseCode?: string;
 }) {
   return (
     <div className="w-36 flex flex-col">
@@ -66,6 +90,12 @@ function ValueColumn({
         className={`${hHeader} border-b border-slate-300 bg-slate-50 font-bold flex items-center px-2 text-slate-400`}
       >
         VALUES
+      </div>
+      <div className={`${hRow} px-2 flex items-center border-b border-slate-100`}>
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-slate-700">{warehouseName || "-"}</span>
+          <span className="text-xs text-slate-400">({warehouseCode || "-"})</span>
+        </div>
       </div>
       <div className={`${hRow} px-1 py-1 flex items-center border-b border-slate-100`}>
         {isEditing ? (
