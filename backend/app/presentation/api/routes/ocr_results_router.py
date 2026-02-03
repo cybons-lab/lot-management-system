@@ -690,8 +690,13 @@ async def export_ocr_results(
 
         order_unit = sap_qty_unit if sap_qty_unit else row.get("order_unit")
 
-        # 出荷票テキスト（原則、DBに保存された値をそのまま出力）
-        shipping_slip_text = row.get("manual_shipping_slip_text") or row.get("shipping_slip_text")
+        # 出荷票テキスト: ユーザーが手動編集している場合は、空文字であってもそれを優先
+        if row.get("manual_shipping_slip_text_edited"):
+            shipping_slip_text = row.get("manual_shipping_slip_text")
+        else:
+            shipping_slip_text = row.get("manual_shipping_slip_text") or row.get(
+                "shipping_slip_text"
+            )
 
         # アイテムNo: 下6桁のみ出力
         item_no_raw = row.get("item_no")

@@ -22,10 +22,15 @@ export function useOcrRowInputs(viewMode: "current" | "completed", dataItems: Oc
         let next = { ...current, ...patch };
 
         // 納期が変更された場合、出荷日を再計算する
-        if ("deliveryDate" in patch && patch.deliveryDate) {
-          const newShippingDate = computeShippingDate(patch.deliveryDate, row.transport_lt_days);
-          if (newShippingDate) {
-            next = { ...next, shippingDate: newShippingDate };
+        if ("deliveryDate" in patch) {
+          if (patch.deliveryDate) {
+            const newShippingDate = computeShippingDate(patch.deliveryDate, row.transport_lt_days);
+            if (newShippingDate) {
+              next = { ...next, shippingDate: newShippingDate };
+            }
+          } else {
+            // 納期が空欄になった場合は、出荷日も連動してクリアする
+            next = { ...next, shippingDate: "" };
           }
         }
 
