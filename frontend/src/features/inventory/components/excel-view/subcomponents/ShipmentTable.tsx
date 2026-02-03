@@ -1,5 +1,7 @@
 import { type DestinationRowData } from "../types";
 
+import { Input } from "@/components/ui";
+
 const hHeader = "h-8";
 const hRow = "h-10";
 const hFooter = "h-10";
@@ -9,9 +11,17 @@ interface Props {
   totalShipment: number;
   lotId: number;
   localChanges?: Record<string, number>;
+  onCoaDateChange?: (lotId: number, dpId: number, date: string) => void;
 }
 
-export function ShipmentTable({ destinations, totalShipment, lotId, localChanges }: Props) {
+/* eslint-disable max-lines-per-function */
+export function ShipmentTable({
+  destinations,
+  totalShipment,
+  lotId,
+  localChanges,
+  onCoaDateChange,
+}: Props) {
   // Compute totals considering local changes
   const computedDestinations = destinations.map((dest) => {
     let rowTotal = dest.totalShipmentQty;
@@ -66,8 +76,14 @@ export function ShipmentTable({ destinations, totalShipment, lotId, localChanges
             >
               {dest.destination.deliveryPlaceName}
             </div>
-            <div className="w-16 p-2 flex items-center justify-center text-slate-400 text-[10px]">
-              {dest.coaIssueDate ? "済" : "-"}
+            <div className="w-16 px-1 py-1 flex items-center justify-center">
+              <Input
+                type="date"
+                value={dest.coaIssueDate || ""}
+                onChange={(e) => onCoaDateChange?.(lotId, dest.deliveryPlaceId, e.target.value)}
+                className="h-8 text-[10px] bg-transparent border-0 hover:bg-slate-50 focus:bg-blue-50 p-0 text-center"
+                placeholder="未設定"
+              />
             </div>
             <div className="w-20 p-2 flex items-center justify-end font-bold text-blue-600 pr-2 text-sm">
               {dest.totalShipmentQty || ""}

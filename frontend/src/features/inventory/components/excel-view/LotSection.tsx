@@ -51,6 +51,7 @@ interface Props {
   localChanges?: Record<string, number>;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
   onLotFieldChange?: (lotId: number, field: string, value: string) => void;
+  onCoaDateChange?: (lotId: number, dpId: number, date: string) => void;
   onAddColumn?: (date: Date) => void;
   onEdit?: (lotId: number) => void;
   onDelete?: (lotId: number) => void;
@@ -65,6 +66,7 @@ export function LotSection({
   localChanges,
   onQtyChange,
   onLotFieldChange,
+  onCoaDateChange,
   onAddColumn,
   onEdit,
   onDelete,
@@ -125,6 +127,7 @@ export function LotSection({
                 totalShipment={totalShipment}
                 lotId={lotId}
                 localChanges={localChanges}
+                onCoaDateChange={onCoaDateChange}
               />
 
               {/* 4. Current Stock (Big Vertical) */}
@@ -140,7 +143,6 @@ export function LotSection({
                 dateColumns={dateColumns}
                 destinations={destinations}
                 lotId={lotId}
-                isEditing={isEditing}
                 localChanges={localChanges}
                 onQtyChange={onQtyChange}
                 onAddColumn={onAddColumn}

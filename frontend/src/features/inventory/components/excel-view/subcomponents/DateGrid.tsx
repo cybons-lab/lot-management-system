@@ -36,7 +36,6 @@ interface Props {
   dateColumns: string[];
   destinations: DestinationRowData[];
   lotId: number;
-  isEditing?: boolean;
   localChanges?: Record<string, number>;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
   onAddColumn?: (date: Date) => void;
@@ -46,12 +45,11 @@ interface CellProps {
   date: string;
   lotId: number;
   dest: DestinationRowData;
-  isEditing?: boolean;
   localChanges?: Record<string, number>;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
 }
 
-function DateCell({ date, lotId, dest, isEditing, localChanges, onQtyChange }: CellProps) {
+function DateCell({ date, lotId, dest, localChanges, onQtyChange }: CellProps) {
   const [isHovered, setIsHovered] = useState(false);
   const changeKey = `${lotId}:${dest.deliveryPlaceId}:${date}`;
   const currentValue =
@@ -61,32 +59,28 @@ function DateCell({ date, lotId, dest, isEditing, localChanges, onQtyChange }: C
 
   const isChanged = localChanges && localChanges[changeKey] !== undefined;
 
+  // Always allow editing - セル全体をクリック可能に
   return (
     <div
-      className="w-16 p-0 flex items-center justify-center relative group"
+      className="w-16 p-0 flex items-center justify-center relative group h-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {isEditing ? (
-        <input
-          type="number"
-          className={`w-full h-full bg-transparent text-right pr-2 focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 focus:ring-inset outline-none transition-all font-medium border-0 rounded ${
-            isChanged ? "text-blue-600 font-bold bg-blue-50/30" : "text-slate-600"
-          }`}
-          value={currentValue || ""}
-          onChange={(e) =>
-            onQtyChange?.(lotId, dest.deliveryPlaceId, date, parseInt(e.target.value, 10) || 0)
-          }
-        />
-      ) : (
-        <div className="w-full text-right pr-2 text-sm font-medium text-slate-600">
-          {currentValue || ""}
-        </div>
-      )}
-      {/* Edit icon on hover in editing mode */}
-      {isEditing && isHovered && (
+      <input
+        type="number"
+        className={`w-full h-full bg-transparent text-right pr-2 py-2 hover:bg-slate-50 focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 focus:ring-inset outline-none transition-all font-medium border-0 rounded cursor-pointer ${
+          isChanged ? "text-blue-600 font-bold bg-blue-50/30" : "text-slate-600"
+        }`}
+        value={currentValue || ""}
+        onChange={(e) =>
+          onQtyChange?.(lotId, dest.deliveryPlaceId, date, parseInt(e.target.value, 10) || 0)
+        }
+        placeholder="-"
+      />
+      {/* Edit icon on hover */}
+      {isHovered && currentValue === 0 && (
         <div className="absolute right-1 top-1 pointer-events-none">
-          <Edit2 className="h-3 w-3 text-blue-500 opacity-50" />
+          <Edit2 className="h-3 w-3 text-slate-400 opacity-50" />
         </div>
       )}
     </div>
@@ -98,7 +92,6 @@ export function DateGrid({
   dateColumns,
   destinations,
   lotId,
-  isEditing,
   localChanges,
   onQtyChange,
   onAddColumn,
@@ -167,7 +160,6 @@ export function DateGrid({
                   date={date}
                   lotId={lotId}
                   dest={dest}
-                  isEditing={isEditing}
                   localChanges={localChanges}
                   onQtyChange={onQtyChange}
                 />

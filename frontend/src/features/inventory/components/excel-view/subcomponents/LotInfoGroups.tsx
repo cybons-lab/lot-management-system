@@ -205,8 +205,14 @@ function ValueColumn({
           </span>
         )}
       </div>
-      <div className={`${hRow} p-2 flex items-center border-b border-slate-100 text-xs font-mono`}>
-        {lotInfo.orderNo || "-"}
+      <div className={`${hRow} px-1 py-1 flex items-center border-b border-slate-100`}>
+        <Input
+          type="text"
+          value={lotInfo.orderNo || ""}
+          onChange={(e) => onChange("order_no", e.target.value)}
+          placeholder="-"
+          className="h-8 text-xs font-mono bg-transparent border-0 hover:bg-slate-50 focus:bg-blue-50"
+        />
       </div>
       <div className={`${hRow} px-1 py-1 flex items-center`}>
         {isFieldEditing("expiry_date") ? (

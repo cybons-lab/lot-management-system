@@ -106,6 +106,12 @@ export function ExcelViewPage() {
     }));
   }, []);
 
+  const handleCoaDateChange = useCallback((_lotId: number, _dpId: number, _date: string) => {
+    // TODO: Implement COA date change logic
+    // For now, just show a toast
+    toast.info("成績書の日付変更機能は今後実装予定です");
+  }, []);
+
   const validateLotFieldChanges = useCallback(() => {
     if (!data || Object.keys(lotFieldChanges).length === 0) return true;
 
@@ -271,6 +277,7 @@ export function ExcelViewPage() {
             localChanges={localChanges}
             onQtyChange={handleQtyChange}
             onLotFieldChange={handleLotFieldChange}
+            onCoaDateChange={handleCoaDateChange}
             onAddColumn={handleAddNewColumn}
             onEdit={handleEditLot}
             onDelete={handleDeleteLot}
