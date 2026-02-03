@@ -97,3 +97,62 @@ def test_import_with_auto_sync(client: TestClient, db):
     ).scalar_one_or_none()
     assert si is not None
     assert si.display_name == "Prod Import"
+
+
+def test_sync_shipping_masters(client: TestClient, db):
+    """マスタ同期エンドポイントのテスト."""
+    # 準備: 整形済みマスタデータ作成
+    curated = ShippingMasterCurated(
+        customer_code="C_SYNC",
+        customer_name="Sync Customer",
+        material_code="M_SYNC",
+        jiku_code="J_SYNC",
+        supplier_code="S_SYNC",
+        supplier_name="Sync Supplier",
+        maker_part_no="MPN_SYNC",
+        delivery_note_product_name="Sync Product",
+        delivery_place_code="DP_SYNC",
+        delivery_place_name="Sync Place",
+        warehouse_code="W_SYNC",
+        shipping_warehouse="Sync Warehouse",
+        has_order=True,
+    )
+    db.add(curated)
+    db.commit()
+
+    # 実行: create-only ポリシーで同期
+    response = client.post("/api/shipping-masters/sync?policy=create-only")
+
+    # 検証
+    if response.status_code != 200:
+        print(f"DEBUG: sync status={response.status_code}, text={response.text}")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert "processed_count" in data
+    assert "created_count" in data
+    assert "updated_count" in data
+    assert "skipped_count" in data
+    assert "errors" in data
+    assert "warnings" in data
+
+    # 処理件数が正しいか
+    assert data["processed_count"] == 1
+    assert data["created_count"] > 0  # 複数のマスタが作成される
+
+    # 実際にマスタが作成されているか確認
+    from sqlalchemy import select
+
+    from app.infrastructure.persistence.models.masters_models import Customer, Supplier
+
+    cust = db.execute(
+        select(Customer).where(Customer.customer_code == "C_SYNC")
+    ).scalar_one_or_none()
+    assert cust is not None
+    assert cust.customer_name == "Sync Customer"
+
+    supp = db.execute(
+        select(Supplier).where(Supplier.supplier_code == "S_SYNC")
+    ).scalar_one_or_none()
+    assert supp is not None
+    assert supp.supplier_name == "Sync Supplier"
