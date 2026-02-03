@@ -236,6 +236,11 @@ export function ExcelViewPage() {
     toast.info(`ロット ${lotId} のアーカイブ機能は今後実装予定です`);
   }, []);
 
+  const handleAddDestination = useCallback((lotId: number) => {
+    // TODO: Implement add destination functionality
+    toast.info(`ロット ${lotId} への納入先追加機能は今後実装予定です`);
+  }, []);
+
   if (isLoading || !data) return <LoadingOrError isLoading={isLoading} />;
 
   return (
@@ -279,6 +284,7 @@ export function ExcelViewPage() {
             onLotFieldChange={handleLotFieldChange}
             onCoaDateChange={handleCoaDateChange}
             onAddColumn={handleAddNewColumn}
+            onAddDestination={handleAddDestination}
             onEdit={handleEditLot}
             onDelete={handleDeleteLot}
             onArchive={handleArchiveLot}

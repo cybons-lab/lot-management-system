@@ -91,7 +91,6 @@ function ValueColumn({
   const [editingField, setEditingField] = useState<string | null>(null);
   const receivedDateInputRef = useRef<HTMLInputElement>(null);
   const lotNumberInputRef = useRef<HTMLInputElement>(null);
-  const inboundNoInputRef = useRef<HTMLInputElement>(null);
   const expiryDateInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-focus when entering edit mode
@@ -100,8 +99,6 @@ function ValueColumn({
       receivedDateInputRef.current.focus();
     } else if (editingField === "lot_number" && lotNumberInputRef.current) {
       lotNumberInputRef.current.focus();
-    } else if (editingField === "origin_reference" && inboundNoInputRef.current) {
-      inboundNoInputRef.current.focus();
     } else if (editingField === "expiry_date" && expiryDateInputRef.current) {
       expiryDateInputRef.current.focus();
     }
@@ -184,26 +181,13 @@ function ValueColumn({
         )}
       </div>
       <div className={`${hRow} px-1 py-1 flex items-center border-b border-slate-100`}>
-        {isFieldEditing("origin_reference") ? (
-          <Input
-            ref={inboundNoInputRef}
-            type="text"
-            value={lotInfo.inboundNo || ""}
-            onChange={(e) => onChange("origin_reference", e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={() => setEditingField(null)}
-            placeholder="-"
-            className="h-8 text-xs font-mono"
-          />
-        ) : (
-          <span
-            className="px-2 text-xs font-mono cursor-pointer hover:bg-slate-100 w-full rounded"
-            onDoubleClick={() => handleDoubleClick("origin_reference")}
-            title="ダブルクリックで編集"
-          >
-            {lotInfo.inboundNo || "-"}
-          </span>
-        )}
+        <Input
+          type="text"
+          value={lotInfo.inboundNo || ""}
+          onChange={(e) => onChange("origin_reference", e.target.value)}
+          placeholder="-"
+          className="h-8 text-xs font-mono bg-transparent border-0 hover:bg-slate-50 focus:bg-blue-50"
+        />
       </div>
       <div className={`${hRow} px-1 py-1 flex items-center border-b border-slate-100`}>
         <Input

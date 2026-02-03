@@ -53,6 +53,7 @@ interface Props {
   onLotFieldChange?: (lotId: number, field: string, value: string) => void;
   onCoaDateChange?: (lotId: number, dpId: number, date: string) => void;
   onAddColumn?: (date: Date) => void;
+  onAddDestination?: (lotId: number) => void;
   onEdit?: (lotId: number) => void;
   onDelete?: (lotId: number) => void;
   onArchive?: (lotId: number) => void;
@@ -68,6 +69,7 @@ export function LotSection({
   onLotFieldChange,
   onCoaDateChange,
   onAddColumn,
+  onAddDestination,
   onEdit,
   onDelete,
   onArchive,
@@ -128,6 +130,7 @@ export function LotSection({
                 lotId={lotId}
                 localChanges={localChanges}
                 onCoaDateChange={onCoaDateChange}
+                onAddDestination={() => onAddDestination?.(lotId)}
               />
 
               {/* 4. Current Stock (Big Vertical) */}
