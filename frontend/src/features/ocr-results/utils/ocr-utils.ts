@@ -1,7 +1,6 @@
 import { toast } from "sonner";
 
 import type { OcrResultItem, OcrResultEditPayload } from "../api";
-import type { RowInputState } from "../pages/OcrResultsTableCells";
 
 export const buildPayload = (input: RowInputState): OcrResultEditPayload => {
   const formatToIso = (d: string | null | undefined) => {
@@ -46,6 +45,147 @@ export const buildPayload = (input: RowInputState): OcrResultEditPayload => {
   });
 
   return payload as OcrResultEditPayload;
+};
+
+// ============================================
+// Shipping Slip Text Logic (Shared)
+// ============================================
+
+/**
+ * OCR結果行の入力状態を表す型
+ * 循環依存を避けるため、ocr-utils.ts で定義
+ */
+export type RowInputState = {
+  lotNo1: string;
+  quantity1: string;
+  lotNo2: string;
+  quantity2: string;
+  inboundNo1: string;
+  inboundNo2: string;
+  shippingDate: string;
+  shippingSlipText: string;
+  shippingSlipTextEdited: boolean;
+  jikuCode: string;
+  materialCode: string;
+  deliveryQuantity: string;
+  deliveryDate: string;
+  processStatus: string;
+  errorFlags: Record<string, boolean>;
+};
+
+const buildLotWithQuantity = (
+  lot: string | null | undefined,
+  qty: string | null | undefined,
+): string | null => {
+  if (!lot) return null;
+  if (qty) return `${lot}(${qty})`;
+  return lot;
+};
+
+const buildLotString = (input: {
+  lotNo1: string;
+  quantity1: string;
+  lotNo2: string;
+  quantity2: string;
+}): string => {
+  const lotEntries = [
+    buildLotWithQuantity(input.lotNo1, input.quantity1),
+    buildLotWithQuantity(input.lotNo2, input.quantity2),
+  ].filter(Boolean);
+  return lotEntries.join("/");
+};
+
+const formatDateToMMDD = (dateStr: string): string | null => {
+  if (!dateStr) return null;
+  const dateObj = new Date(dateStr);
+  if (Number.isNaN(dateObj.getTime())) return null;
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  return `${month}/${day}`;
+};
+
+const applyDateReplacements = (
+  template: string,
+  input: { shippingDate: string; deliveryDate: string },
+): string => {
+  let result = template;
+
+  // ユーザーが出荷日をクリアした場合は、計算値にフォールバックしない
+  // プレースホルダーを保持する（置換しない）
+  const shippingFormatted = input.shippingDate ? formatDateToMMDD(input.shippingDate) : "";
+  if (shippingFormatted) {
+    result = result.replace(/[▲]+[/][▲]+/, shippingFormatted);
+  }
+
+  const deliveryFormatted = input.deliveryDate ? formatDateToMMDD(input.deliveryDate) : "";
+  if (deliveryFormatted) {
+    result = result.replace(/[●]+[/][●]+/, deliveryFormatted);
+  }
+
+  return result;
+};
+
+export const computeShippingSlipText = (
+  template: string | null | undefined,
+  input: {
+    lotNo1: string;
+    quantity1: string;
+    lotNo2: string;
+    quantity2: string;
+    inboundNo1: string;
+    inboundNo2: string;
+    shippingDate: string;
+    deliveryDate: string;
+  },
+): string => {
+  if (!template) return "";
+
+  let result = template;
+  result = applyDateReplacements(result, input);
+
+  const hasInboundPlaceholder = result.includes("入庫番号");
+  const hasLotPlaceholder = result.includes("ロット");
+  const lotCombined = buildLotString(input);
+
+  if (hasInboundPlaceholder && !hasLotPlaceholder) {
+    const inbound1WithQty = buildLotWithQuantity(input.inboundNo1, input.quantity1);
+    const inbound2WithQty = buildLotWithQuantity(input.inboundNo2, input.quantity2);
+    const inboundCombined = [inbound1WithQty, inbound2WithQty].filter(Boolean).join("/");
+    if (inboundCombined) {
+      result = result.replace("入庫番号", inboundCombined);
+    }
+  } else if (hasInboundPlaceholder && hasLotPlaceholder) {
+    const inboundCombined = [input.inboundNo1, input.inboundNo2].filter(Boolean).join("/");
+    if (inboundCombined) {
+      result = result.replace("入庫番号", inboundCombined);
+    }
+    if (lotCombined) {
+      result = result.replace("ロット", lotCombined);
+    }
+  } else if (hasLotPlaceholder && !hasInboundPlaceholder) {
+    if (lotCombined) {
+      result = result.replace("ロット", lotCombined);
+    }
+  }
+
+  return result;
+};
+
+export const computeShippingDate = (
+  deliveryDate: string,
+  transportLtDays: number | null | undefined,
+): string | null => {
+  if (!deliveryDate || transportLtDays == null) return null;
+  const dateObj = new Date(deliveryDate);
+  if (Number.isNaN(dateObj.getTime())) return null;
+
+  // 納期 - 輸送LT (日)
+  dateObj.setDate(dateObj.getDate() - transportLtDays);
+
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
 export const executeExportCompletion = async (
