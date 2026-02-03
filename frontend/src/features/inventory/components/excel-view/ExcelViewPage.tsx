@@ -221,7 +221,17 @@ export function ExcelViewPage() {
             "response" in e &&
             (e.response as { status?: number })?.status === 409;
 
-          if (!is409) {
+          if (is409) {
+            console.debug("[ExcelView] Delivery setting already exists (409), continuing", {
+              customer_item_id: customerItem.id,
+              delivery_place_id: newDeliveryPlace.id,
+            });
+          } else {
+            console.error("[ExcelView] Master sync failed, continuing anyway", {
+              customer_item_id: customerItem.id,
+              delivery_place_id: newDeliveryPlace.id,
+              error: String(e).substring(0, 500),
+            });
             toast.warning("マスタ同期に失敗しましたが、引当レコードは作成されます");
           }
         }

@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 const hHeader = "h-8";
 const hRow = "h-10";
 const hFooter = "h-10";
+const MAX_VISIBLE_ROWS = 5; // Minimum number of rows to display (including empty rows)
 
 interface Props {
   destinations: DestinationRowData[];
@@ -30,7 +31,7 @@ export function ShipmentTable({
   onAddDestination,
 }: Props) {
   const defaultDate = dateColumns[0] || "2026-02"; // Fallback if no columns
-  const emptyRows = Math.max(0, 5 - destinations.length);
+  const emptyRows = Math.max(0, MAX_VISIBLE_ROWS - destinations.length);
   const hasEmptyRows = emptyRows > 0;
 
   const formatCoaDate = (value?: string) => {

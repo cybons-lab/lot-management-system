@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 const hHeader = "h-8";
 const hRow = "h-10";
 const hFooter = "h-10";
+const MAX_VISIBLE_ROWS = 5; // Minimum number of rows to display (including empty rows)
 
 /**
  * Format forecast_period for column header display (納期日).
@@ -166,8 +167,8 @@ export function DateGrid({ dateColumns, destinations, lotId, onQtyChange, onAddC
               <div className="w-10 bg-slate-50/10 border-l border-slate-200" />
             </div>
           ))}
-          {destinations.length < 5 &&
-            Array.from({ length: 5 - destinations.length }).map((_, i) => (
+          {destinations.length < MAX_VISIBLE_ROWS &&
+            Array.from({ length: MAX_VISIBLE_ROWS - destinations.length }).map((_, i) => (
               <div
                 key={i}
                 className={`${hRow} flex divide-x divide-slate-100 border-b border-slate-100`}
