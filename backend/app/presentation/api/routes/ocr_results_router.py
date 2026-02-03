@@ -8,13 +8,14 @@ import re
 from datetime import date, datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.application.services.calendar_service import CalendarService
 from app.application.services.common.export_service import ExportService
+from app.application.services.ocr.ocr_deletion_service import delete_ocr_results_service
 from app.application.services.sap.sap_reconciliation_service import SapReconciliationService
 from app.application.services.smartread.completion_service import SmartReadCompletionService
 from app.core.database import get_db
@@ -22,6 +23,10 @@ from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.smartread_models import OcrResultEdit, SmartReadLongData
 from app.presentation.api.routes.auth.auth_router import get_current_user
 from app.presentation.schemas.calendar.calendar_schemas import BusinessDayCalculationRequest
+from app.presentation.schemas.ocr_import_schema import (
+    SmartReadDeletionRequest,
+    SmartReadDeletionResponse,
+)
 from app.presentation.schemas.smartread_schema import SmartReadCompletionRequest
 
 
@@ -905,3 +910,45 @@ async def save_ocr_result_edit(
     db.refresh(edit)
 
     return OcrResultEditResponse.model_validate(edit)
+
+
+@router.delete("")
+def delete_ocr_results(
+    request: SmartReadDeletionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> SmartReadDeletionResponse:
+    """
+    エラーのあるOCR結果を削除する.
+
+    エラーフラグが1つでもtrueの項目のみ削除可能。
+    エラーのない項目は削除がブロックされる。
+
+    Args:
+        request: 削除対象IDリスト
+        db: データベースセッション
+        current_user: 認証済みユーザー（admin/user）
+
+    Returns:
+        SmartReadDeletionResponse: 削除結果
+
+    Raises:
+        HTTPException 400: すべての項目にエラーがない
+        HTTPException 404: 指定IDが存在しない
+        HTTPException 403: ゲストユーザー
+
+    """
+    # ゲストは削除不可
+    roles = [ur.role.role_code for ur in current_user.user_roles]
+    if "guest" in roles and len(roles) == 1:
+        raise HTTPException(status_code=403, detail="ゲストユーザーは削除できません")
+
+    result = delete_ocr_results_service(db, request.ids, current_user.id)
+
+    if result.deleted_count == 0 and result.skipped_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="選択された項目はすべてエラーがないため、削除できません。完了処理を使用してください。",
+        )
+
+    return result

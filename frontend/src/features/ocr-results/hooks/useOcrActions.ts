@@ -17,11 +17,13 @@ export function useOcrActions({
     () => ({
       handleManualComplete: statusOps.handleManualComplete,
       handleManualRestore: statusOps.handleManualRestore,
+      handleDelete: statusOps.handleDelete,
       handleExport: exportOps.handleExport,
       handleExportProcess: exportOps.handleExportProcess,
       setDownloadConfirmOpen: exportOps.setDownloadConfirmOpen,
       completeMutation: statusOps.completeMutation,
       restoreMutation: statusOps.restoreMutation,
+      deleteMutation: statusOps.deleteMutation,
       isExporting: exportOps.isExporting,
       downloadConfirmOpen: exportOps.downloadConfirmOpen,
       handleSapLinkage: rpaOps.handleSapLinkage,

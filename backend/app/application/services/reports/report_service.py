@@ -49,6 +49,7 @@ class ReportService:
             .filter(AllocationSuggestion.supplier_item_id == product_id)
             .filter(LotReceipt.warehouse_id == warehouse_id)
             .filter(AllocationSuggestion.forecast_period.like(f"{period_prefix}%"))
+            .filter(AllocationSuggestion.quantity > 0)
             .group_by(
                 AllocationSuggestion.delivery_place_id,
                 DeliveryPlace.delivery_place_name,

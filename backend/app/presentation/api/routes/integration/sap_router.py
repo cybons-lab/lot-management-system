@@ -371,6 +371,7 @@ async def fetch_materials(
         fetch_batch_id=result.fetch_batch_id,
         record_count=result.record_count,
         cached_count=result.cached_count,
+        deleted_count=result.deleted_count,
         error_message=result.error_message,
         duration_ms=result.duration_ms,
     )

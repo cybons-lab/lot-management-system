@@ -117,6 +117,7 @@ class SapMaterialFetchResponse(BaseModel):
     fetch_batch_id: str
     record_count: int
     cached_count: int
+    deleted_count: int
     error_message: str | None
     duration_ms: int
 

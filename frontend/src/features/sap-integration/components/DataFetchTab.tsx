@@ -84,8 +84,9 @@ export function DataFetchTab() {
     mutationFn: fetchMaterials,
     onSuccess: (result) => {
       if (result.success) {
+        const deletedInfo = result.deleted_count > 0 ? `、${result.deleted_count}件削除` : "";
         toast.success(
-          `データ取得完了: ${result.record_count}件取得、${result.cached_count}件キャッシュ (${result.duration_ms}ms)`,
+          `データ取得完了: ${result.record_count}件取得、${result.cached_count}件キャッシュ${deletedInfo} (${result.duration_ms}ms)`,
         );
         queryClient.invalidateQueries({ queryKey: ["sap-cache-paginated"] });
         setPage(1); // Reset to first page

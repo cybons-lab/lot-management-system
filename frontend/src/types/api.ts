@@ -15321,6 +15321,8 @@ export interface components {
       record_count: number;
       /** Cached Count */
       cached_count: number;
+      /** Deleted Count */
+      deleted_count: number;
       /** Error Message */
       error_message: string | null;
       /** Duration Ms */

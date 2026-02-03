@@ -8200,7 +8200,27 @@ export interface paths {
     get: operations["list_ocr_results_api_ocr_results_get"];
     put?: never;
     post?: never;
-    delete?: never;
+    /**
+     * Delete Ocr Results
+     * @description エラーのあるOCR結果を削除する.
+     *
+     *     エラーフラグが1つでもtrueの項目のみ削除可能。
+     *     エラーのない項目は削除がブロックされる。
+     *
+     *     Args:
+     *         request: 削除対象IDリスト
+     *         db: データベースセッション
+     *         current_user: 認証済みユーザー（admin/user）
+     *
+     *     Returns:
+     *         SmartReadDeletionResponse: 削除結果
+     *
+     *     Raises:
+     *         HTTPException 400: すべての項目にエラーがない
+     *         HTTPException 404: 指定IDが存在しない
+     *         HTTPException 403: ゲストユーザー
+     */
+    delete: operations["delete_ocr_results_api_ocr_results_delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -15320,6 +15340,8 @@ export interface components {
       record_count: number;
       /** Cached Count */
       cached_count: number;
+      /** Deleted Count */
+      deleted_count: number;
       /** Error Message */
       error_message: string | null;
       /** Duration Ms */
@@ -15969,6 +15991,43 @@ export interface components {
        * @description CSVファイル名
        */
       filename?: string | null;
+    };
+    /**
+     * SmartReadDeletionRequest
+     * @description OCR結果削除リクエスト.
+     */
+    SmartReadDeletionRequest: {
+      /**
+       * Ids
+       * @description 削除対象IDリスト（最大100件）
+       */
+      ids: number[];
+    };
+    /**
+     * SmartReadDeletionResponse
+     * @description OCR結果削除レスポンス.
+     */
+    SmartReadDeletionResponse: {
+      /**
+       * Deleted Count
+       * @description 削除件数
+       */
+      deleted_count: number;
+      /**
+       * Skipped Count
+       * @description スキップ件数
+       */
+      skipped_count: number;
+      /**
+       * Skipped Ids
+       * @description スキップされたIDリスト
+       */
+      skipped_ids?: number[];
+      /**
+       * Message
+       * @description 警告メッセージ
+       */
+      message?: string | null;
     };
     /**
      * SmartReadDiagnoseRequest
@@ -30385,6 +30444,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["OcrResultListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_ocr_results_api_ocr_results_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartReadDeletionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SmartReadDeletionResponse"];
         };
       };
       /** @description Validation Error */

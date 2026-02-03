@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { ocrResultsApi, type OcrResultItem } from "../api";
 
+// eslint-disable-next-line max-lines-per-function -- OCRステータス操作は論理的にまとまった単位
 export function useOcrStatusOperations({
   viewMode,
   selectedIds,
@@ -41,6 +42,42 @@ export function useOcrStatusOperations({
       queryClient.invalidateQueries({ queryKey: ["ocr-results"] });
     },
     onError: () => toast.error("復元処理に失敗しました"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (ids: number[]) => ocrResultsApi.delete({ ids }),
+    onSuccess: (data) => {
+      // キャッシュ無効化
+      queryClient.invalidateQueries({ queryKey: ["ocr-results"] });
+
+      // 成功トースト
+      toast.success(`${data.deleted_count}件のOCR結果を削除しました`);
+
+      // スキップ警告
+      if (data.skipped_count > 0 && data.message) {
+        toast.warning(data.message);
+      }
+
+      setSelectedIds([]);
+    },
+    onError: (error: unknown) => {
+      const err = error as {
+        response?: { status?: number; data?: { detail?: string } };
+        message?: string;
+      };
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail;
+
+      if (status === 400) {
+        toast.error(detail || "削除できない項目が含まれています");
+      } else if (status === 403) {
+        toast.error("削除する権限がありません");
+      } else if (status === 404) {
+        toast.error("指定されたOCR結果が見つかりません");
+      } else {
+        toast.error("OCR結果の削除に失敗しました");
+      }
+    },
   });
 
   const handleManualComplete = async () => {
@@ -83,10 +120,30 @@ export function useOcrStatusOperations({
     restoreMutation.mutate(selectedIds.map(Number));
   };
 
+  const handleDelete = () => {
+    if (selectedIds.length === 0) {
+      toast.error("削除する項目を選択してください");
+      return;
+    }
+    const selectedNumIds = selectedIds.map(Number);
+    const selectedItems = dataItems.filter((i) => selectedNumIds.includes(i.id));
+    const errorItems = selectedItems.filter((i) => i.has_error);
+
+    if (errorItems.length === 0) {
+      toast.error("削除できる項目がありません（エラーがある項目のみ削除可能）");
+      return;
+    }
+
+    const errorIds = errorItems.map((i) => i.id);
+    deleteMutation.mutate(errorIds);
+  };
+
   return {
     completeMutation,
     restoreMutation,
+    deleteMutation,
     handleManualComplete,
     handleManualRestore,
+    handleDelete,
   };
 }

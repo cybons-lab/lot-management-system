@@ -62,6 +62,7 @@ class SapMaterialFetchResult:
         fetch_batch_id: str,
         record_count: int = 0,
         cached_count: int = 0,
+        deleted_count: int = 0,
         error_message: str | None = None,
         duration_ms: int = 0,
     ):
@@ -69,6 +70,7 @@ class SapMaterialFetchResult:
         self.fetch_batch_id = fetch_batch_id
         self.record_count = record_count
         self.cached_count = cached_count
+        self.deleted_count = deleted_count
         self.error_message = error_message
         self.duration_ms = duration_ms
 
@@ -79,6 +81,7 @@ class SapMaterialFetchResult:
             "fetch_batch_id": self.fetch_batch_id,
             "record_count": self.record_count,
             "cached_count": self.cached_count,
+            "deleted_count": self.deleted_count,
             "error_message": self.error_message,
             "duration_ms": self.duration_ms,
         }
@@ -145,8 +148,9 @@ class SapMaterialService:
         zaiko: str = "X",
         limit: int | None = None,
         decrypted_passwd: str | None = None,
+        trigger: str = "manual",
     ) -> SapMaterialFetchResult:
-        """SAPからマテリアルデータを取得してキャッシュに保存.
+        """SAPからマテリアルデータを取得してキャッシュに保存（洗い替え）.
 
         Args:
             connection_id: 接続ID（Noneならデフォルト接続）
@@ -156,6 +160,7 @@ class SapMaterialService:
             zaiko: 在庫品フラグ（デフォルト: X）
             limit: 取得件数上限
             decrypted_passwd: 復号化されたパスワード（Noneならモック動作）
+            trigger: トリガー種別（"manual" or "auto"）
 
         Returns:
             取得結果
@@ -203,8 +208,22 @@ class SapMaterialService:
 
             # キャッシュに保存
             cached_count = 0
+            deleted_count = 0
             if df is not None and not df.empty:
-                cached_count = self._save_to_cache(connection.id, df, kunnr_f, fetch_batch_id)
+                try:
+                    cached_count = self._save_to_cache(connection.id, df, kunnr_f, fetch_batch_id)
+
+                    # 洗い替え: 新規保存できた場合のみ古いデータを削除
+                    if cached_count > 0:
+                        deleted_count = self._delete_old_cache(
+                            connection.id, kunnr_f, kunnr_t, fetch_batch_id
+                        )
+
+                    # 保存・削除を単一トランザクションで確定
+                    self.db.commit()
+                except Exception:
+                    self.db.rollback()
+                    raise
 
             duration_ms = int((time.time() - start_time) * 1000)
 
@@ -220,8 +239,8 @@ class SapMaterialService:
 
             logger.info(
                 f"[SapMaterialService] Fetch completed: "
-                f"batch={fetch_batch_id}, records={record_count}, "
-                f"cached={cached_count}, duration={duration_ms}ms"
+                f"trigger={trigger}, batch={fetch_batch_id}, records={record_count}, "
+                f"cached={cached_count}, deleted={deleted_count}, duration={duration_ms}ms"
             )
 
             return SapMaterialFetchResult(
@@ -229,6 +248,7 @@ class SapMaterialService:
                 fetch_batch_id=fetch_batch_id,
                 record_count=record_count,
                 cached_count=cached_count,
+                deleted_count=deleted_count,
                 duration_ms=duration_ms,
             )
 
@@ -483,7 +503,6 @@ class SapMaterialService:
             self.db.execute(stmt)
             cached_count += 1
 
-        self.db.commit()
         return cached_count
 
     def _log_fetch(
@@ -586,6 +605,56 @@ class SapMaterialService:
             stmt = stmt.where(SapMaterialCache.kunnr == kunnr)
 
         result = self.db.execute(stmt)
-        self.db.commit()
         # SQLAlchemy 2.0 の Result オブジェクトから rowcount を取得（DMLの場合）
         return getattr(result, "rowcount", 0) or 0
+
+    def _delete_old_cache(
+        self,
+        connection_id: int,
+        kunnr_f: str,
+        kunnr_t: str | None,
+        current_batch_id: str,
+    ) -> int:
+        """古いfetch_batch_idのキャッシュを削除（洗い替え）.
+
+        Args:
+            connection_id: 接続ID
+            kunnr_f: 得意先コードFrom
+            kunnr_t: 得意先コードTo（Noneならkunnr_fと同じ）
+            current_batch_id: 現在の取得バッチID（これ以外を削除）
+
+        Returns:
+            削除件数
+
+        """
+        from sqlalchemy import delete
+
+        # 得意先コードの範囲を決定
+        if not kunnr_t:
+            kunnr_t = kunnr_f
+
+        # 今回取得した得意先範囲の古いバッチIDを削除
+        stmt = (
+            delete(SapMaterialCache)
+            .where(SapMaterialCache.connection_id == connection_id)
+            .where(SapMaterialCache.kunnr >= kunnr_f)
+            .where(SapMaterialCache.kunnr <= kunnr_t)
+            .where(SapMaterialCache.fetch_batch_id != current_batch_id)
+        )
+
+        result = self.db.execute(stmt)
+        self.db.commit()
+
+        deleted_count = getattr(result, "rowcount", 0) or 0
+
+        logger.info(
+            "[SapMaterialService] Old cache deleted (wash-replacement)",
+            extra={
+                "connection_id": connection_id,
+                "kunnr_range": f"{kunnr_f}-{kunnr_t}",
+                "current_batch_id": current_batch_id,
+                "deleted_count": deleted_count,
+            },
+        )
+
+        return deleted_count
