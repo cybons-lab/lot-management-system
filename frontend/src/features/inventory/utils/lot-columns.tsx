@@ -4,7 +4,7 @@
  * ロット一覧テーブルのカラム定義
  */
 
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 
 import type { Column } from "@/shared/components/data/DataTable";
 import { LotStatusBadge } from "@/shared/components/data/StatusBadge";
@@ -30,11 +30,14 @@ function getDeliveryPlace(lot: LotUI): string {
 }
 
 /**
- * 日付をフォーマット
+ * 日付をフォーマット（タイムゾーン変換なし）
+ * YYYY-MM-DD形式の日付文字列を yyyy/MM/dd にフォーマット
  */
 function formatDate(date: string | null | undefined): string {
   if (!date || date === "-") return "-";
-  return format(new Date(date), "yyyy/MM/dd");
+  // タイムゾーンの影響を受けないよう、parseを使用
+  const parsed = parse(date, "yyyy-MM-dd", new Date());
+  return format(parsed, "yyyy/MM/dd");
 }
 
 /**

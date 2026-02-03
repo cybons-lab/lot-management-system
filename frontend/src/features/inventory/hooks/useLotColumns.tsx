@@ -1,6 +1,6 @@
 // テーブルカラム定義を一箇所にまとめるため分割しない
 /* eslint-disable max-lines-per-function */
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { Lock } from "lucide-react";
 import { useMemo } from "react";
 
@@ -56,7 +56,7 @@ export function useLotColumns({ viewMode, onEdit, onLock, onUnlock }: UseLotColu
         header: "入荷日",
         cell: (lot) =>
           lot.receipt_date && lot.receipt_date !== "-"
-            ? format(new Date(lot.receipt_date), "yyyy/MM/dd")
+            ? format(parse(lot.receipt_date, "yyyy-MM-dd", new Date()), "yyyy/MM/dd")
             : "-",
         sortable: true,
         width: "120px",
@@ -66,7 +66,7 @@ export function useLotColumns({ viewMode, onEdit, onLock, onUnlock }: UseLotColu
         header: "有効期限",
         cell: (lot) =>
           lot.expiry_date && lot.expiry_date !== "-"
-            ? format(new Date(lot.expiry_date), "yyyy/MM/dd")
+            ? format(parse(lot.expiry_date, "yyyy-MM-dd", new Date()), "yyyy/MM/dd")
             : "-",
         sortable: true,
         width: "120px",
