@@ -123,6 +123,7 @@ from sqlalchemy.orm import Session
 from app.application.services.auth.user_service import UserService
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.security import decode_access_token
 from app.infrastructure.persistence.models.auth_models import User
 
 
@@ -159,7 +160,7 @@ class AuthService:
             expire = datetime.now(UTC) + expires_delta
         else:
             expire = datetime.now(UTC) + timedelta(minutes=15)
-        to_encode.update({"exp": expire})
+        to_encode.update({"exp": expire, "typ": "access"})
         # Use PyJWT consistently
         encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
         return str(encoded_jwt)
@@ -176,7 +177,9 @@ class AuthService:
         )
         try:
             # Use PyJWT
-            payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+            payload = decode_access_token(token)
+            if not payload:
+                raise credentials_exception
 
             # Implementation alignment:
             # 1. Try "sub" as user ID (current standard in auth_router)
@@ -211,7 +214,9 @@ class AuthService:
 
         try:
             # Use PyJWT
-            payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+            payload = decode_access_token(token)
+            if not payload:
+                return None
 
             user_id = payload.get("sub")
             username = payload.get("username")

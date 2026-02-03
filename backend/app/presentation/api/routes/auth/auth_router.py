@@ -1,12 +1,17 @@
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.security import create_access_token, decode_access_token
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_access_token,
+    decode_refresh_token,
+)
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.schemas.auth.auth_schemas import AuthUserResponse, LoginRequest, TokenResponse
 
@@ -14,6 +19,25 @@ from app.presentation.schemas.auth.auth_schemas import AuthUserResponse, LoginRe
 router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
+
+REFRESH_TOKEN_COOKIE_NAME = "refresh_token"
+REFRESH_TOKEN_COOKIE_PATH = f"{settings.API_PREFIX}/auth"
+
+
+def set_refresh_cookie(response: Response, refresh_token: str) -> None:
+    response.set_cookie(
+        REFRESH_TOKEN_COOKIE_NAME,
+        refresh_token,
+        httponly=True,
+        secure=settings.ENVIRONMENT == "production",
+        samesite="lax",
+        max_age=settings.refresh_token_expire_minutes * 60,
+        path=REFRESH_TOKEN_COOKIE_PATH,
+    )
+
+
+def clear_refresh_cookie(response: Response) -> None:
+    response.delete_cookie(REFRESH_TOKEN_COOKIE_NAME, path=REFRESH_TOKEN_COOKIE_PATH)
 
 
 def get_current_user_optional(
@@ -151,7 +175,7 @@ def require_write_permission():
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(request: LoginRequest, db: Session = Depends(get_db)):
+def login(request: LoginRequest, response: Response, db: Session = Depends(get_db)):
     """Simple login by User ID or Username."""
     query = db.query(User).filter(User.is_active.is_(True))
     if request.user_id:
@@ -175,6 +199,10 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         data={"sub": str(user.id), "username": user.username, "roles": roles},
         expires_delta=access_token_expires,
     )
+    refresh_token = create_refresh_token(
+        data={"sub": str(user.id), "username": user.username, "roles": roles},
+    )
+    set_refresh_cookie(response, refresh_token)
 
     return {
         "access_token": access_token,
@@ -228,7 +256,7 @@ def get_login_users(db: Session = Depends(get_db)):
 
 
 @router.post("/guest-login", response_model=TokenResponse)
-def guest_login(db: Session = Depends(get_db)):
+def guest_login(response: Response, db: Session = Depends(get_db)):
     """Auto-login as guest user (方式A implementation).
 
     This endpoint provides automatic guest authentication to support
@@ -274,6 +302,10 @@ def guest_login(db: Session = Depends(get_db)):
         data={"sub": str(guest_user.id), "username": guest_user.username, "roles": roles},
         expires_delta=access_token_expires,
     )
+    refresh_token = create_refresh_token(
+        data={"sub": str(guest_user.id), "username": guest_user.username, "roles": roles},
+    )
+    set_refresh_cookie(response, refresh_token)
 
     return {
         "access_token": access_token,
@@ -289,3 +321,65 @@ def guest_login(db: Session = Depends(get_db)):
             ],
         },
     }
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_access_token(
+    response: Response,
+    refresh_token: str | None = Cookie(default=None, alias=REFRESH_TOKEN_COOKIE_NAME),
+    db: Session = Depends(get_db),
+):
+    """Refresh access token using refresh token cookie."""
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing"
+        )
+
+    payload = decode_refresh_token(refresh_token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
+
+    user_id = payload.get("sub")
+    if not user_id or not str(user_id).isdigit():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
+
+    user = db.query(User).filter(User.id == int(user_id), User.is_active.is_(True)).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+
+    roles = [ur.role.role_code for ur in user.user_roles]
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": str(user.id), "username": user.username, "roles": roles},
+        expires_delta=access_token_expires,
+    )
+    new_refresh_token = create_refresh_token(
+        data={"sub": str(user.id), "username": user.username, "roles": roles},
+    )
+    set_refresh_cookie(response, new_refresh_token)
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "display_name": user.display_name,
+            "roles": roles,
+            "assignments": [
+                {"supplier_id": a.supplier_id, "is_primary": a.is_primary}
+                for a in user.supplier_assignments
+            ],
+        },
+    }
+
+
+@router.post("/logout")
+def logout(response: Response):
+    """Clear refresh token cookie."""
+    clear_refresh_cookie(response)
+    return {"detail": "ok"}

@@ -94,7 +94,8 @@ function useRestoreSession(
         try {
           // http-client's beforeRequest hook automatically adds Authorization header
           const response = await httpAuth.get<User>("auth/me");
-          setToken(storedToken);
+          const refreshedToken = getAuthToken();
+          setToken(refreshedToken ?? storedToken);
           setUser(response);
         } catch (error) {
           console.warn("Failed to restore session", error);
@@ -160,6 +161,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthExpired(false);
     }
     clearAuthToken();
+    void httpPublic.post("auth/logout").catch(() => {
+      // Ignore network/logout errors
+    });
   }, []);
 
   const clearAuthError = useCallback(() => {

@@ -72,6 +72,7 @@ def check_env_loading():
     print(f"  SECRET_KEY: {mask_sensitive(settings.secret_key)}")
     print(f"  ALGORITHM: {settings.algorithm}")
     print(f"  ACCESS_TOKEN_EXPIRE_MINUTES: {settings.access_token_expire_minutes}")
+    print(f"  REFRESH_TOKEN_EXPIRE_MINUTES: {settings.refresh_token_expire_minutes}")
     if settings.secret_key == "dev-secret-key-change-in-production":
         print("  ⚠️  SECRET_KEYがデフォルト値のままです! 本番環境では必ず変更してください!")
     else:

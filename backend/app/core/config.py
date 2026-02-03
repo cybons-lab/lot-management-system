@@ -116,6 +116,12 @@ class Settings(BaseSettings):
         default=30,
         validation_alias=AliasChoices("ACCESS_TOKEN_EXPIRE_MINUTES", "access_token_expire_minutes"),
     )
+    refresh_token_expire_minutes: int = Field(
+        default=60 * 24 * 7,  # 7 days
+        validation_alias=AliasChoices(
+            "REFRESH_TOKEN_EXPIRE_MINUTES", "refresh_token_expire_minutes"
+        ),
+    )
 
     # アプリケーション基本設定
     APP_NAME: str = "ロット管理システム"

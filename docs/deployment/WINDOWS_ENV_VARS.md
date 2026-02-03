@@ -28,6 +28,13 @@ PostgreSQL 接続文字列
 [System.Environment]::SetEnvironmentVariable('ACCESS_TOKEN_EXPIRE_MINUTES', '1440', 'Machine')
 ```
 
+### REFRESH_TOKEN_EXPIRE_MINUTES
+リフレッシュトークンの有効期限（分）。デフォルト: 10080（7日）
+
+```powershell
+[System.Environment]::SetEnvironmentVariable('REFRESH_TOKEN_EXPIRE_MINUTES', '10080', 'Machine')
+```
+
 ### CORS_ORIGINS
 許可するCORSオリジン（JSON配列形式）
 
