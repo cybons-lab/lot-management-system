@@ -152,8 +152,13 @@ export function QuickLotIntakeDialog({
     mutationFn: createStockMovement,
     onSuccess: () => {
       toast.success("既存ロットに追加入庫しました");
+
+      // すべての関連キャッシュを無効化
       queryClient.invalidateQueries({ queryKey: ["lots"] });
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] });
       queryClient.invalidateQueries({ queryKey: intakeHistoryKeys.all });
+
       onSuccess?.();
       onOpenChange(false);
     },
@@ -166,8 +171,13 @@ export function QuickLotIntakeDialog({
     mutationFn: createLot,
     onSuccess: () => {
       toast.success("新規ロットを登録しました");
+
+      // すべての関連キャッシュを無効化
       queryClient.invalidateQueries({ queryKey: ["lots"] });
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] });
       queryClient.invalidateQueries({ queryKey: intakeHistoryKeys.all });
+
       onSuccess?.();
       onOpenChange(false);
     },
