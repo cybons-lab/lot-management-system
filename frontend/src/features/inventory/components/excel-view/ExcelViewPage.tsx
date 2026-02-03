@@ -11,6 +11,8 @@ import { useExcelViewData } from "./useExcelViewData";
 import { Button } from "@/components/ui/button";
 import { useUpdateAllocationSuggestionsBatch } from "@/features/allocations/hooks/api/useAllocationSuggestions";
 import { SupplierFilterSet } from "@/features/assignments/components";
+import { getCustomerItems, type CustomerItem } from "@/features/customer-items/api";
+import { createDeliverySetting } from "@/features/customer-items/delivery-settings/api";
 import type { DeliveryPlace } from "@/features/delivery-places/api";
 import { useDeliveryPlaces } from "@/features/delivery-places/hooks/useDeliveryPlaces";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
@@ -177,6 +179,34 @@ export function ExcelViewPage() {
       const dp = deliveryPlaces.find((d: { id: number }) => d.id === deliveryPlaceId);
 
       try {
+        // 1. マスタデータ（納入先別設定）への反映を試みる
+        // プロダクトに関連するすべての得意先品番を取得
+        const customerItems = await getCustomerItems({ supplier_item_id: Number(productId) });
+        const targetCI = (customerItems as CustomerItem[]).find(
+          (ci: CustomerItem) => ci.customer_id === dp?.customer_id,
+        );
+
+        if (targetCI) {
+          try {
+            await createDeliverySetting({
+              customer_item_id: targetCI.id,
+              delivery_place_id: deliveryPlaceId,
+              is_default: false,
+            });
+            // 既に存在する場合はエラー(409)になる可能性があるが、その場合は実質成功（追加済み）として扱う
+          } catch (e: unknown) {
+            if (
+              e instanceof Object &&
+              "response" in e &&
+              (e.response as { status?: number })?.status !== 409
+            ) {
+              console.error("Master sync failed:", e);
+              // マスタ同期に失敗しても引当レコードの作成は続行する
+            }
+          }
+        }
+
+        // 2. 引当レコード（提案）の作成
         await updateMutation.mutateAsync({
           updates: [
             {

@@ -11,7 +11,15 @@ import {
 
 import { type AllocationSuggestionResponse } from "@/features/allocations/api";
 import { useAllocationSuggestions } from "@/features/allocations/hooks/api/useAllocationSuggestions";
-import { getCustomerItemById, type CustomerItem } from "@/features/customer-items/api";
+import {
+  getCustomerItems,
+  getCustomerItemById,
+  type CustomerItem,
+} from "@/features/customer-items/api";
+import {
+  fetchDeliverySettings,
+  type CustomerItemDeliverySetting,
+} from "@/features/customer-items/delivery-settings/api";
 import { type Customer } from "@/features/customers/api";
 import { type DeliveryPlace } from "@/features/delivery-places/api";
 import { useInventoryItems } from "@/features/inventory/hooks";
@@ -24,6 +32,7 @@ interface MapContext {
   customerMap: Map<number, Customer>;
   suggestions: AllocationSuggestionResponse[];
   productCode: string;
+  mustShowDpIds: number[];
 }
 
 const getShipmentByDate = (
@@ -111,7 +120,8 @@ const getLotInfo = (lot: LotUI): LotInfo => ({
 const mapLotBlock = (lot: LotUI, context: MapContext): LotBlockData => {
   const lotId = lot.lot_id;
   const lotSuggestions = context.suggestions.filter((s) => s.lot_id === lotId);
-  const dpIds = Array.from(new Set(lotSuggestions.map((s) => s.delivery_place_id)));
+  const suggestionDpIds = lotSuggestions.map((s) => s.delivery_place_id);
+  const dpIds = Array.from(new Set([...suggestionDpIds, ...context.mustShowDpIds]));
   const destinations = dpIds.map((dpId) => mapDestinationRow(dpId, lotId, context));
   const totalShipment = destinations.reduce((sum, d) => sum + d.totalShipmentQty, 0);
   return {
@@ -202,6 +212,37 @@ export function useExcelViewData(
   }, [deliveryPlacesResponse]);
   const customerApi = useMasterApi<Customer>("masters/customers", "customers");
   const { data: customers = [] } = customerApi.useList();
+
+  // Fetch all customer items for this product to find registered destinations
+  const { data: allCustomerItems = [] } = useQuery({
+    queryKey: ["customer-items", { supplier_item_id: productId }],
+    queryFn: () => getCustomerItems({ supplier_item_id: productId }),
+    enabled: isEnabled,
+  });
+
+  // Fetch delivery settings for relevant customer items
+  const { data: allDeliverySettings = [] as CustomerItemDeliverySetting[] } = useQuery({
+    queryKey: [
+      "customer-item-delivery-settings",
+      "bulk",
+      allCustomerItems.map((ci: CustomerItem) => ci.id),
+    ],
+    queryFn: async () => {
+      // If we are filtering by one customer item, just fetch that
+      const targetItems = customerItemId
+        ? (allCustomerItems as CustomerItem[]).filter(
+            (ci: CustomerItem) => ci.id === customerItemId,
+          )
+        : (allCustomerItems as CustomerItem[]);
+
+      const results = await Promise.all(
+        targetItems.map((ci: CustomerItem) => fetchDeliverySettings(ci.id)),
+      );
+      return results.flat();
+    },
+    enabled: isEnabled && allCustomerItems.length > 0,
+  });
+
   const isLoading = itemLoading || lotsLoading || suggestionsLoading || customerItemLoading;
 
   const dateColumns = useMemo(() => {
@@ -216,13 +257,22 @@ export function useExcelViewData(
   const mapContext = useMemo(() => {
     const dpMap = new Map(deliveryPlaces.map((dp) => [dp.id, dp]));
     const customerMap = new Map(customers.map((c) => [c.id, c]));
+    const mustShowDpIds = Array.from(
+      new Set(
+        allDeliverySettings
+          .map((s: CustomerItemDeliverySetting) => s.delivery_place_id)
+          .filter((id): id is number => id !== null),
+      ),
+    );
+
     return {
       dpMap,
       customerMap,
       suggestions: suggestionResponse?.suggestions || [],
       productCode: inventoryItem?.product_code || "-",
+      mustShowDpIds,
     };
-  }, [deliveryPlaces, customers, suggestionResponse, inventoryItem]);
+  }, [deliveryPlaces, customers, suggestionResponse, inventoryItem, allDeliverySettings]);
 
   const lotBlocks = useMemo(() => {
     if (!inventoryItem) return [];
@@ -238,8 +288,12 @@ export function useExcelViewData(
 
   const data = useMemo<ExcelViewData | null>(() => {
     if (!inventoryItem) return null;
-    const uniqueDpIds = Array.from(new Set(mapContext.suggestions.map((s) => s.delivery_place_id)));
-    const involvedDestinations = uniqueDpIds.map((id) => getDestinationInfo(id, mapContext));
+    const uniqueDpIds = Array.from(
+      new Set(mapContext.suggestions.map((s: AllocationSuggestionResponse) => s.delivery_place_id)),
+    );
+    const involvedDestinations = uniqueDpIds.map((id: number) =>
+      getDestinationInfo(id, mapContext),
+    );
 
     return {
       header: {

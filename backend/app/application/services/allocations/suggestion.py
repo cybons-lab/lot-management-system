@@ -212,12 +212,25 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                     coa_date = up["coa_issue_date"]
 
             if items:
+                # manual_excelソースのレコードがあるか確認
+                manual_item = next((item for item in items if item.source == "manual_excel"), None)
+
                 if quantity <= 0 and coa_date is None:
-                    # 数量0かつCOA日付なしなら削除
-                    for item in items:
-                        self.db.delete(item)
+                    # 数量0かつCOA日付なしの場合
+                    if manual_item:
+                        # 手動レコードなら、あえて残す（マッピング保持のため）
+                        manual_item.quantity = Decimal(0)
+                        manual_item.coa_issue_date = None
+                        # 他の重複（自動作成分など）を削除
+                        for item in items:
+                            if item.id != manual_item.id:
+                                self.db.delete(item)
+                    else:
+                        # 全て削除
+                        for item in items:
+                            self.db.delete(item)
                 else:
-                    # それ以外は1つに統合して更新
+                    # 更新または統合
                     manual_item = next(
                         (item for item in items if item.source == "manual_excel"), None
                     )
