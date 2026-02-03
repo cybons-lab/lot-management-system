@@ -3,6 +3,7 @@ import { AlertCircle, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { type KeyboardEvent, createContext, useContext, useEffect, useRef, useState } from "react";
 
 import type { OcrResultItem } from "../api";
+import { computeShippingSlipText } from "../utils/ocr-utils";
 
 import { cn } from "@/shared/libs/utils";
 
@@ -70,65 +71,8 @@ export const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
 // Helpers
 // ============================================
 
-const formatDateToMMDD = (dateStr: string): string | null => {
-  const dateObj = new Date(dateStr);
-  if (Number.isNaN(dateObj.getTime())) return null;
-  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-  const day = String(dateObj.getDate()).padStart(2, "0");
-  return `${month}/${day}`;
-};
-
-const buildLotString = (input: RowInputState): string => {
-  const lotEntries = [
-    input.lotNo1 ? `${input.lotNo1}（${input.quantity1 || ""}）` : "",
-    input.lotNo2 ? `${input.lotNo2}（${input.quantity2 || ""}）` : "",
-  ].filter(Boolean);
-  return lotEntries.join("/");
-};
-
-const applyLotReplacement = (template: string, input: RowInputState): string => {
-  const lotString = buildLotString(input);
-  const normalized = template.replace(/(^|\/)ロット($|\/)/g, (_, p1, p2) => {
-    return `${p1}ロット番号(数量)${p2}`;
-  });
-  return normalized.replace(/ロット番号\s*[(（]数量[）)]/g, lotString);
-};
-
-const applyDateReplacements = (
-  template: string,
-  input: RowInputState,
-  row: OcrResultItem,
-): string => {
-  let result = template;
-
-  const shippingDate = input.shippingDate || row.calculated_shipping_date;
-  if (shippingDate) {
-    const formatted = formatDateToMMDD(shippingDate);
-    if (formatted) {
-      result = result.replace(/出荷▲\/▲/g, `出荷${formatted}`);
-    }
-  }
-
-  if (input.deliveryDate) {
-    const formatted = formatDateToMMDD(input.deliveryDate);
-    if (formatted) {
-      result = result.replace(/着日指定●\/●/g, `着日指定${formatted}`);
-    }
-  }
-
-  return result;
-};
-
-const buildShippingSlipText = (
-  template: string | null,
-  input: RowInputState,
-  row: OcrResultItem,
-): string => {
-  if (!template) return "";
-  let result = applyLotReplacement(template, input);
-  result = applyDateReplacements(result, input, row);
-  return result;
-};
+// ロジックは ocr-utils.ts の computeShippingSlipText に移行されました
+export { computeShippingSlipText as buildShippingSlipText };
 
 const isValidDateInput = (v: string): boolean => {
   if (!v) return true;
@@ -653,7 +597,7 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         onKeyDown={handleNavigate}
         onCompositionStart={() => setIsComposing(true)}
         onCompositionEnd={() => setIsComposing(false)}
-        title={isCalculated ? `自動計算（LT=${row.transport_lt_days}日）` : ""}
+        title={isCalculated ? `自動計算（LT = ${row.transport_lt_days} 日）` : ""}
         className={cn(
           "w-full rounded-md border bg-white px-2 py-0.5 text-sm shadow-sm outline-none transition focus:ring-2",
           hasDateError || hasError
@@ -705,7 +649,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
   const { activeCell, setActiveCell, editableFieldOrder, rowIds, isReadOnly, getRowById } =
     useOcrCellEditing();
   const input = getInputs(row);
-  const computedText = buildShippingSlipText(row.shipping_slip_text, input, row);
+  const computedText = computeShippingSlipText(row.shipping_slip_text, input, row);
   const displayText = input.shippingSlipTextEdited ? input.shippingSlipText : computedText;
   const fallbackText = displayText || "";
   const [draft, setDraft] = useState("");

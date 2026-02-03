@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { type OcrResultItem } from "../api";
 import { buildRowDefaults, type RowInputState } from "../pages/OcrResultsTableCells";
-import { buildPayload } from "../utils/ocr-utils";
+import { buildPayload, computeShippingSlipText, computeShippingDate } from "../utils/ocr-utils";
 
 import { useOcrEditPersistence } from "./useOcrEditPersistence";
 
@@ -19,7 +19,21 @@ export function useOcrRowInputs(viewMode: "current" | "completed", dataItems: Oc
       }
       setRowInputs((prev) => {
         const current = prev[row.id] ?? buildRowDefaults(row);
-        const next = { ...current, ...patch };
+        let next = { ...current, ...patch };
+
+        // 納期が変更された場合、出荷日を再計算する
+        if ("deliveryDate" in patch && patch.deliveryDate) {
+          const newShippingDate = computeShippingDate(patch.deliveryDate, row.transport_lt_days);
+          if (newShippingDate) {
+            next = { ...next, shippingDate: newShippingDate };
+          }
+        }
+
+        // 手動編集フラグが立っていない場合、依存フィールドの変更に合わせてテキストを再計算して保存対象に入れる
+        if (!next.shippingSlipTextEdited) {
+          next.shippingSlipText = computeShippingSlipText(row.shipping_slip_text, next, row);
+        }
+
         scheduleSave(row, next);
         return { ...prev, [row.id]: next };
       });
