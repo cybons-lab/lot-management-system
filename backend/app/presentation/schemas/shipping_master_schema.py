@@ -23,17 +23,16 @@ class ShippingMasterCuratedBase(BaseModel):
     maker_name: str | None = Field(default=None, max_length=100, description="メーカー名")
     supplier_code: str | None = Field(default=None, max_length=50, description="仕入先コード")
     supplier_name: str | None = Field(default=None, max_length=100, description="仕入先名称")
+    staff_name: str | None = Field(default=None, max_length=100, description="担当者名")
     delivery_place_code: str | None = Field(default=None, max_length=50, description="納入先コード")
     delivery_place_name: str | None = Field(default=None, max_length=200, description="納入先")
-    shipping_warehouse_code: str | None = Field(
-        default=None, max_length=50, description="出荷倉庫コード"
-    )
-    shipping_warehouse_name: str | None = Field(
-        default=None, max_length=100, description="出荷倉庫名"
-    )
+    delivery_place_abbr: str | None = Field(default=None, max_length=100, description="納入先略称")
+    shipping_warehouse: str | None = Field(default=None, max_length=100, description="出荷倉庫名")
     shipping_slip_text: str | None = Field(default=None, description="出荷票テキスト")
     transport_lt_days: int | None = Field(default=None, ge=0, description="輸送LT(営業日)")
-    has_order: bool = Field(default=False, description="発注の有無")
+    order_flag: str | None = Field(default=None, max_length=50, description="発注区分")
+    order_existence: str | None = Field(default=None, max_length=20, description="発注の有無")
+    has_order: bool = Field(default=False, description="アプリ発注対象フラグ")
     remarks: str | None = Field(default=None, description="備考")
 
 
@@ -59,12 +58,15 @@ class ShippingMasterCuratedUpdate(BaseModel):
     maker_name: str | None = None
     supplier_code: str | None = None
     supplier_name: str | None = None
+    staff_name: str | None = None
     delivery_place_code: str | None = None
     delivery_place_name: str | None = None
-    shipping_warehouse_code: str | None = None
-    shipping_warehouse_name: str | None = None
+    delivery_place_abbr: str | None = None
+    shipping_warehouse: str | None = None
     shipping_slip_text: str | None = None
     transport_lt_days: int | None = None
+    order_flag: str | None = None
+    order_existence: str | None = None
     has_order: bool | None = None
     remarks: str | None = None
     expected_updated_at: datetime | None = Field(

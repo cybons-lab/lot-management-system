@@ -103,6 +103,12 @@ export function createShippingMasterColumns(
       minWidth: 150,
     },
     {
+      id: "staff_name",
+      header: "担当者名",
+      accessor: (row) => row.staff_name || "-",
+      minWidth: 120,
+    },
+    {
       id: "delivery_place_code",
       header: "納入先コード",
       accessor: (row) => row.delivery_place_code || "-",
@@ -115,15 +121,15 @@ export function createShippingMasterColumns(
       minWidth: 150,
     },
     {
-      id: "shipping_warehouse_code",
-      header: "出荷倉庫コード",
-      accessor: (row) => row.shipping_warehouse_code || "-",
-      minWidth: 130,
+      id: "delivery_place_abbr",
+      header: "納入先略称",
+      accessor: (row) => row.delivery_place_abbr || "-",
+      minWidth: 120,
     },
     {
-      id: "shipping_warehouse_name",
-      header: "出荷倉庫名",
-      accessor: (row) => row.shipping_warehouse_name || "-",
+      id: "shipping_warehouse",
+      header: "出荷倉庫",
+      accessor: (row) => row.shipping_warehouse || "-",
       minWidth: 150,
     },
     {
@@ -138,15 +144,15 @@ export function createShippingMasterColumns(
     },
     {
       id: "transport_lt_days",
-      header: "輸送LT",
-      accessor: (row) => (row.transport_lt_days ? `${row.transport_lt_days}日` : "-"),
+      header: "輸送LT(日)",
+      accessor: (row) => row.transport_lt_days?.toString() || "-",
       minWidth: 100,
     },
     {
       id: "has_order",
-      header: "発注の有無",
+      header: "発注",
       accessor: (row) => (row.has_order ? "有" : "無"),
-      minWidth: 100,
+      minWidth: 80,
     },
     {
       id: "remarks",

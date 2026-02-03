@@ -152,6 +152,16 @@ async def export_shipping_masters(
     return ExportService.export_to_csv(data, "shipping_masters")
 
 
+@router.post("/sync")
+async def sync_shipping_masters(
+    policy: SyncPolicy = Query("create-only", description="同期ポリシー"),
+    service: ShippingMasterService = Depends(get_service),
+):
+    """出荷用マスタを他のマスタへ同期する."""
+    result = service.sync_to_masters(policy=policy)
+    return result
+
+
 @router.post("/import", response_model=ShippingMasterImportResponse)
 async def import_shipping_masters_file(
     file: Annotated[UploadFile, File(description="Excel file (.xlsx)")],

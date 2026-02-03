@@ -9,6 +9,10 @@ from typing import TYPE_CHECKING, Any, Literal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.infrastructure.persistence.models.assignments.assignment_models import (
+    UserSupplierAssignment,
+)
+from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
     CustomerItem,
@@ -32,6 +36,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 SyncPolicy = Literal["create-only", "upsert", "update-if-empty"]
+
+
+class SkipRow(Exception):
+    """同期対象の行をスキップするための例外."""
 
 
 @dataclass
@@ -84,6 +92,9 @@ class ShippingMasterSyncService:
             try:
                 with self.session.begin_nested():
                     self._sync_row(curated, policy, summary, id_cache)
+            except SkipRow as e:
+                summary.warnings.append(str(e))
+                summary.skipped_count += 1
             except Exception as e:
                 logger.exception(f"Sync error for curated_id {curated.id}")
                 summary.errors.append(f"ID {curated.id} ({curated.customer_code}): {e!s}")
@@ -131,6 +142,10 @@ class ShippingMasterSyncService:
 
         if warehouse_id and dp_id and si_id:
             self._sync_delivery_route(curated, warehouse_id, dp_id, si_id, policy, summary)
+
+        # 4. Staff Matching (UserSupplierAssignment)
+        if supplier_id and curated.staff_name:
+            self._sync_staff_assignment(curated, supplier_id, policy, summary)
 
     # -------------------- 各マスタ同期メソッド --------------------
 
@@ -237,19 +252,19 @@ class ShippingMasterSyncService:
     def _sync_warehouse(
         self, curated: ShippingMasterCurated, policy: SyncPolicy, summary: SyncSummary
     ) -> int | None:
-        if not curated.shipping_warehouse_code:
+        if not curated.warehouse_code:
             return None
 
-        stmt = select(Warehouse).where(Warehouse.warehouse_code == curated.shipping_warehouse_code)
+        stmt = select(Warehouse).where(Warehouse.warehouse_code == curated.warehouse_code)
         warehouse = self.session.execute(stmt).scalar_one_or_none()
 
         if not warehouse:
-            name = curated.shipping_warehouse_name or curated.shipping_warehouse_code
+            name = curated.shipping_warehouse or curated.warehouse_code
             warehouse = Warehouse(
-                warehouse_code=curated.shipping_warehouse_code,
+                warehouse_code=curated.warehouse_code,
                 warehouse_name=name,
                 display_name=name,
-                warehouse_type=None,  # DDLでNULL許容に変更
+                warehouse_type=None,
             )
             self.session.add(warehouse)
             self.session.flush()
@@ -257,9 +272,9 @@ class ShippingMasterSyncService:
             return warehouse.id
 
         data: dict[str, Any] = {}
-        if curated.shipping_warehouse_name:
-            data["warehouse_name"] = curated.shipping_warehouse_name
-            data["display_name"] = curated.shipping_warehouse_name
+        if curated.shipping_warehouse:
+            data["warehouse_name"] = curated.shipping_warehouse
+            data["display_name"] = curated.shipping_warehouse
 
         if self._apply_update(warehouse, data, policy):
             summary.updated_count += 1
@@ -291,17 +306,25 @@ class ShippingMasterSyncService:
                 jiku_code=curated.jiku_code,
                 delivery_place_code=curated.delivery_place_code,
                 delivery_place_name=name,
+                display_name=curated.delivery_place_abbr or name,
             )
             self.session.add(dp)
             self.session.flush()
             summary.created_count += 1
             return dp.id
+        if dp.customer_id != customer_id:
+            raise SkipRow(
+                "DeliveryPlace conflict: "
+                f"code={curated.delivery_place_code}, jiku={curated.jiku_code}, "
+                f"existing_customer_id={dp.customer_id}, target_customer_id={customer_id}"
+            )
 
-        data: dict[str, Any] = (
-            {"delivery_place_name": curated.delivery_place_name}
-            if curated.delivery_place_name
-            else {}
-        )
+        data: dict[str, Any] = {}
+        if curated.delivery_place_name:
+            data["delivery_place_name"] = curated.delivery_place_name
+        if curated.delivery_place_abbr:
+            data["display_name"] = curated.delivery_place_abbr
+
         if self._apply_update(dp, data, policy):
             summary.updated_count += 1
             self.session.flush()
@@ -337,17 +360,22 @@ class ShippingMasterSyncService:
                 maker_part_no=curated.maker_part_no,
                 display_name=curated.delivery_note_product_name,
                 base_unit="KG",  # デフォルト値
+                maker_code=curated.maker_code,
+                maker_name=curated.maker_name,
             )
             self.session.add(si)
             self.session.flush()
             summary.created_count += 1
             return si.id
 
-        data: dict[str, Any] = (
-            {"display_name": curated.delivery_note_product_name}
-            if curated.delivery_note_product_name
-            else {}
-        )
+        data: dict[str, Any] = {}
+        if curated.delivery_note_product_name:
+            data["display_name"] = curated.delivery_note_product_name
+        if curated.maker_code:
+            data["maker_code"] = curated.maker_code
+        if curated.maker_name:
+            data["maker_name"] = curated.maker_name
+
         if self._apply_update(si, data, policy):
             summary.updated_count += 1
             self.session.flush()
@@ -379,6 +407,9 @@ class ShippingMasterSyncService:
                 supplier_item_id=si_id,
                 base_unit="KG",
                 special_instructions=curated.remarks,
+                material_code=curated.material_code,
+                order_flag=curated.order_flag,
+                order_existence=curated.order_existence,
             )
             self.session.add(ci)
             self.session.flush()
@@ -388,6 +419,12 @@ class ShippingMasterSyncService:
         data: dict[str, Any] = {}
         if curated.remarks:
             data["special_instructions"] = curated.remarks
+        if curated.material_code:
+            data["material_code"] = curated.material_code
+        if curated.order_flag:
+            data["order_flag"] = curated.order_flag
+        if curated.order_existence:
+            data["order_existence"] = curated.order_existence
 
         if self._apply_update(ci, data, policy):
             summary.updated_count += 1
@@ -534,3 +571,45 @@ class ShippingMasterSyncService:
             if self._apply_update(mapping, data, policy):
                 summary.updated_count += 1
                 self.session.flush()
+
+    def _sync_staff_assignment(
+        self,
+        curated: ShippingMasterCurated,
+        supplier_id: int,
+        policy: SyncPolicy,
+        summary: SyncSummary,
+    ) -> None:
+        """担当者名からユーザーを検索し、仕入先担当者を割り当てる."""
+        if not curated.staff_name:
+            return
+
+        # 1. ユーザーを苗字で検索
+        # ※ 設計: display_name を苗字でLIKE検索
+        user_stmt = select(User).where(
+            User.display_name.like(f"%{curated.staff_name}%"), User.is_active
+        )
+        user = self.session.execute(user_stmt).scalar_one_or_none()
+
+        if not user:
+            # 警告を残すが、エラーにはしない
+            if f"User not found for staff_name: {curated.staff_name}" not in summary.warnings:
+                summary.warnings.append(f"User not found for staff_name: {curated.staff_name}")
+            return
+
+        # 2. 既存の割り当てを確認
+        assignment_stmt = select(UserSupplierAssignment).where(
+            UserSupplierAssignment.user_id == user.id,
+            UserSupplierAssignment.supplier_id == supplier_id,
+        )
+        assignment = self.session.execute(assignment_stmt).scalar_one_or_none()
+
+        if not assignment:
+            # 3. 割り当て作成
+            assignment = UserSupplierAssignment(
+                user_id=user.id,
+                supplier_id=supplier_id,
+                is_primary=False,  # 自動同期時は主担当にはしない方針
+            )
+            self.session.add(assignment)
+            summary.created_count += 1
+            self.session.flush()

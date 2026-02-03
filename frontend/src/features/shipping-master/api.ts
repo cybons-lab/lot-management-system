@@ -89,4 +89,21 @@ export const shippingMasterApi = {
     link.remove();
     window.URL.revokeObjectURL(url);
   },
+
+  /**
+   * 出荷用マスタ同期
+   */
+  sync: async (
+    policy: string,
+  ): Promise<{
+    processed_count: number;
+    created_count: number;
+    updated_count: number;
+    skipped_count: number;
+    errors: string[];
+    warnings: string[];
+  }> => {
+    const response = await httpClient.post(`shipping-masters/sync?policy=${policy}`, {});
+    return response.json();
+  },
 };

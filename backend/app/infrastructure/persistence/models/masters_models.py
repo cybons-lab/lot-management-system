@@ -338,6 +338,9 @@ class DeliveryPlace(SoftDeleteMixin, Base):
     jiku_code: Mapped[str] = mapped_column(String(50), nullable=False, server_default="")
     delivery_place_code: Mapped[str] = mapped_column(String(50), nullable=False)
     delivery_place_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(
+        String(200), nullable=True, comment="納入先略称（Excel同期用）"
+    )
     # B-Plan: short_name for compact display
     short_name: Mapped[str | None] = mapped_column(
         String(50), nullable=True, comment="短縮表示名（UI省スペース用）"
@@ -413,6 +416,15 @@ class CustomerItem(SoftDeleteMixin, Base):
         comment="仕入先品目ID (Phase1: required)",
     )
     base_unit: Mapped[str] = mapped_column(String(20), nullable=False)
+    material_code: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="材質コード（Excel 2列目）"
+    )
+    order_flag: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="発注区分（Excel 6列目）"
+    )
+    order_existence: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, comment="発注の有無（Excel 19列目）"
+    )
     pack_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
     pack_quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)
     special_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
