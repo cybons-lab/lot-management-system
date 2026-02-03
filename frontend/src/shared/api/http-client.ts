@@ -386,7 +386,7 @@ function createApiClient(authMode: AuthMode): KyInstance {
               const newToken = await refreshAccessToken();
               if (newToken) {
                 refreshOptions._retried = true;
-                return client(request.url, refreshOptions);
+                return client(request, refreshOptions);
               }
             }
           }
