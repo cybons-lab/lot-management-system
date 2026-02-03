@@ -11,6 +11,7 @@ import { useExcelViewData } from "./useExcelViewData";
 import { Button } from "@/components/ui/button";
 import { useUpdateAllocationSuggestionsBatch } from "@/features/allocations/hooks/api/useAllocationSuggestions";
 import { SupplierFilterSet } from "@/features/assignments/components";
+import type { DeliveryPlace } from "@/features/delivery-places/api";
 import { useDeliveryPlaces } from "@/features/delivery-places/hooks/useDeliveryPlaces";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { useDeleteLot } from "@/hooks/mutations";
@@ -52,11 +53,11 @@ export function ExcelViewPage() {
 
   const { data: deliveryPlacesResponse } = useDeliveryPlaces();
   const deliveryPlaces = useMemo(() => {
-    type MinimalDP = { id: number; customer_id: number };
+    // API response might be { items: T[] } or T[] (depending on how useMasterApi is used)
     const items =
-      (deliveryPlacesResponse as { items?: MinimalDP[] })?.items ||
-      (deliveryPlacesResponse as MinimalDP[]);
-    return Array.isArray(items) ? items : [];
+      (deliveryPlacesResponse as { items?: DeliveryPlace[] })?.items ||
+      (Array.isArray(deliveryPlacesResponse) ? deliveryPlacesResponse : []);
+    return items;
   }, [deliveryPlacesResponse]);
 
   const updateMutation = useUpdateAllocationSuggestionsBatch();

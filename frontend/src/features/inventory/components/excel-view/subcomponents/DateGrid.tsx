@@ -50,7 +50,28 @@ interface CellProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 function DateCell({ date, lotId, dest, currentValue, isConfirmed, onQtyChange }: CellProps) {
-  // Always allow editing - セル全体をクリック可能に
+  const [localValue, setLocalValue] = useState<string>(currentValue ? String(currentValue) : "");
+
+  // Update local value when currentValue changes (e.g., from other cells or successful save)
+  useState(() => {
+    if (currentValue !== Number(localValue)) {
+      setLocalValue(currentValue ? String(currentValue) : "");
+    }
+  });
+
+  const handleBlur = () => {
+    const val = parseInt(localValue, 10) || 0;
+    if (val !== currentValue) {
+      onQtyChange?.(lotId, dest.deliveryPlaceId, date, val);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    }
+  };
+
   return (
     <div className="w-16 p-0 flex items-center justify-center relative group h-full">
       <input
@@ -58,10 +79,10 @@ function DateCell({ date, lotId, dest, currentValue, isConfirmed, onQtyChange }:
         className={`w-full h-full bg-transparent text-right pr-2 py-2 hover:bg-slate-50 focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 focus:ring-inset outline-none transition-all font-medium border-0 rounded cursor-pointer ${
           isConfirmed ? "text-blue-600 font-bold bg-blue-50/30" : "text-slate-600"
         }`}
-        value={currentValue || ""}
-        onChange={(e) =>
-          onQtyChange?.(lotId, dest.deliveryPlaceId, date, parseInt(e.target.value, 10) || 0)
-        }
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
         placeholder="-"
       />
     </div>
