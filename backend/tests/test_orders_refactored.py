@@ -51,8 +51,8 @@ def client(db_session):
 
         yield TestUnitOfWork(db_session)
 
-    from app.application.services.auth.auth_service import AuthService
     from app.infrastructure.persistence.models.auth_models import User
+    from app.presentation.api.routes.auth.auth_router import get_current_user
 
     mock_user = User(
         id=1,
@@ -65,7 +65,7 @@ def client(db_session):
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_uow] = override_get_uow
-    app.dependency_overrides[AuthService.get_current_user] = lambda: mock_user
+    app.dependency_overrides[get_current_user] = lambda: mock_user
     yield TestClient(app)
     app.dependency_overrides.clear()
 

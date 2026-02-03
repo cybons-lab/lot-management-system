@@ -18,6 +18,8 @@ from app.infrastructure.persistence.models import (
 def priority_test_data(db_session):
     # 1. Setup User and Assignments
     # Create distinct user for this test
+    from app.infrastructure.persistence.models import Role, UserRole
+
     user = User(
         username="priority_tester",
         email="priority@example.com",
@@ -26,6 +28,17 @@ def priority_test_data(db_session):
         is_active=True,
     )
     db_session.add(user)
+    db_session.flush()
+
+    # Add user role
+    role = db_session.query(Role).filter(Role.role_code == "user").first()
+    if not role:
+        role = Role(role_code="user", role_name="一般ユーザー", description="一般ユーザー")
+        db_session.add(role)
+        db_session.flush()
+
+    user_role = UserRole(user_id=user.id, role_id=role.id)
+    db_session.add(user_role)
     db_session.flush()
 
     # 2. Setup Suppliers
