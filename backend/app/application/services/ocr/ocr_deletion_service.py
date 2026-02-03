@@ -1,6 +1,7 @@
 """OCR結果削除サービス."""
 
 from fastapi import HTTPException
+from sqlalchemy import bindparam, text
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
@@ -37,29 +38,34 @@ def delete_ocr_results_service(
     skipped_ids = []
 
     try:
-        for ocr_id in ids:
-            # 1. OCR結果を取得
-            ocr_result = db.query(SmartReadLongData).filter(SmartReadLongData.id == ocr_id).first()
-
-            if not ocr_result:
-                logger.warning(
-                    "OCR result not found for deletion",
-                    extra={"ocr_id": ocr_id, "user_id": user_id},
-                )
-                raise HTTPException(status_code=404, detail=f"OCR結果が見つかりません: ID={ocr_id}")
-
-            # 2. 編集データを取得してエラーフラグをチェック
-            edit = (
-                db.query(OcrResultEdit)
-                .filter(OcrResultEdit.smartread_long_data_id == ocr_id)
-                .first()
+        # 対象OCR結果をまとめて取得（存在チェック）
+        ocr_results = db.query(SmartReadLongData).filter(SmartReadLongData.id.in_(ids)).all()
+        ocr_result_map = {item.id: item for item in ocr_results}
+        missing_ids = [ocr_id for ocr_id in ids if ocr_id not in ocr_result_map]
+        if missing_ids:
+            raise HTTPException(
+                status_code=404,
+                detail=f"OCR結果が見つかりません: ID={missing_ids[0]}",
             )
 
-            has_error = False
-            if edit and edit.error_flags:
-                has_error = any(edit.error_flags.values())
+        # v_ocr_resultsのhas_errorで削除可否を判定
+        stmt = text("SELECT id, has_error FROM v_ocr_results WHERE id IN :ids").bindparams(
+            bindparam("ids", expanding=True)
+        )
+        has_error_rows = db.execute(stmt, {"ids": ids}).mappings().all()
+        has_error_map = {row["id"]: row["has_error"] for row in has_error_rows}
+        missing_in_view = [ocr_id for ocr_id in ids if ocr_id not in has_error_map]
+        if missing_in_view:
+            raise HTTPException(
+                status_code=404,
+                detail=f"OCR結果が見つかりません: ID={missing_in_view[0]}",
+            )
 
-            # 3. エラーがない場合はスキップ
+        for ocr_id in ids:
+            ocr_result = ocr_result_map[ocr_id]
+            has_error = bool(has_error_map.get(ocr_id))
+
+            # エラーがない場合はスキップ
             if not has_error:
                 logger.info(
                     "OCR result skipped (no error)",
@@ -73,7 +79,14 @@ def delete_ocr_results_service(
                 skipped_ids.append(ocr_id)
                 continue
 
-            # 4. 削除実行（カスケード）
+            # 編集データを取得して削除
+            edit = (
+                db.query(OcrResultEdit)
+                .filter(OcrResultEdit.smartread_long_data_id == ocr_id)
+                .first()
+            )
+
+            # 削除実行（カスケード）
             if edit:
                 db.delete(edit)
                 logger.info(

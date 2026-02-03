@@ -71,6 +71,7 @@ export interface SapMaterialFetchResponse {
   fetch_batch_id: string;
   record_count: number;
   cached_count: number;
+  deleted_count: number;
   error_message: string | null;
   duration_ms: number;
 }

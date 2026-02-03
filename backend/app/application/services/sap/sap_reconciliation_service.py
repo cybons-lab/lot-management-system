@@ -8,6 +8,7 @@ Phase 1: 手動トリガーで突合確認 + ログ出力
 
 from __future__ import annotations
 
+import base64
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
@@ -16,6 +17,8 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.application.services.sap.sap_cache_manager import SapCacheManager
+from app.application.services.sap.sap_material_service import SapMaterialService
 from app.infrastructure.persistence.models.sap_models import SapMaterialCache
 from app.infrastructure.persistence.models.shipping_master_models import (
     ShippingMasterCurated,
@@ -160,21 +163,90 @@ class SapReconciliationService:
         self.db = db
         self._sap_cache: dict[str, SapMaterialCache] | None = None
         self._sap_cache_kunnr: str | None = None
+        self.cache_manager = SapCacheManager(db)
+        self.material_service = SapMaterialService(db)
+
+    def _get_decrypted_password(self, connection_id: int | None) -> str | None:
+        """SAP接続パスワードを復号化."""
+        if connection_id:
+            connection = self.material_service.get_connection_by_id(connection_id)
+        else:
+            connection = self.material_service.get_default_connection()
+
+        if connection and connection.passwd_encrypted:
+            try:
+                return base64.b64decode(connection.passwd_encrypted).decode()
+            except Exception as exc:  # pragma: no cover - ログのみ
+                logger.warning(f"[SapReconciliationService] Password decrypt failed: {exc}")
+        return None
+
+    def _refresh_cache_if_stale(self, kunnr: str, connection_id: int | None = None) -> bool:
+        """キャッシュが古い場合にSAPから再取得."""
+        if not self.cache_manager.is_cache_stale(kunnr, connection_id):
+            return False
+
+        logger.info(
+            "[SapReconciliationService] SAP cache is stale, triggering auto-refresh",
+            extra={"kunnr": kunnr, "connection_id": connection_id, "trigger": "auto"},
+        )
+
+        try:
+            decrypted_passwd = self._get_decrypted_password(connection_id)
+            fetch_result = self.material_service.fetch_and_cache_materials(
+                connection_id=connection_id,
+                kunnr_f=kunnr,
+                kunnr_t=kunnr,
+                decrypted_passwd=decrypted_passwd,
+                trigger="auto",
+            )
+        except Exception as exc:  # pragma: no cover - フェイルセーフ
+            logger.warning(
+                "[SapReconciliationService] SAP cache auto-refresh failed, using stale cache",
+                extra={"kunnr": kunnr, "connection_id": connection_id, "error": str(exc)[:500]},
+            )
+            return False
+
+        if fetch_result.success:
+            logger.info(
+                "[SapReconciliationService] SAP cache auto-refresh completed",
+                extra={
+                    "kunnr": kunnr,
+                    "connection_id": connection_id,
+                    "record_count": fetch_result.record_count,
+                    "duration_ms": fetch_result.duration_ms,
+                },
+            )
+            return True
+
+        logger.warning(
+            "[SapReconciliationService] SAP cache auto-refresh failed, using stale cache",
+            extra={
+                "kunnr": kunnr,
+                "connection_id": connection_id,
+                "error_message": fetch_result.error_message,
+            },
+        )
+        return False
 
     def load_sap_cache(
         self,
         kunnr: str,
         connection_id: int | None = None,
+        auto_refresh: bool = True,
     ) -> int:
         """SAPキャッシュをメモリにロード.
 
         Args:
             kunnr: 得意先コード
             connection_id: 接続ID（Noneなら全接続）
+            auto_refresh: 古いキャッシュなら自動再取得
 
         Returns:
             ロードした件数
         """
+        if auto_refresh:
+            self._refresh_cache_if_stale(kunnr, connection_id)
+
         stmt = select(SapMaterialCache).where(SapMaterialCache.kunnr == kunnr)
 
         if connection_id:
@@ -435,7 +507,7 @@ class SapReconciliationService:
         """
         # SAPキャッシュをロード
         if self._sap_cache is None or self._sap_cache_kunnr != customer_code:
-            self.load_sap_cache(customer_code)
+            self.load_sap_cache(customer_code, auto_refresh=True)
 
         summary = ReconciliationSummary()
 
@@ -497,46 +569,13 @@ class SapReconciliationService:
         """
         from sqlalchemy import text
 
-        # SAPキャッシュをロード（なければ再取得を試みる）
-        cache_count = self.load_sap_cache(customer_code)
+        # SAPキャッシュをロード（古ければ自動再取得）
+        cache_count = self.load_sap_cache(customer_code, auto_refresh=True)
 
         if cache_count == 0:
             logger.warning(
-                "[SapReconciliationService] SAP cache is empty, attempting to fetch from SAP..."
+                "[SapReconciliationService] SAP cache is empty, using stale cache if available"
             )
-            # キャッシュがなければSAPから再取得を試みる
-            import base64
-
-            from app.application.services.sap.sap_material_service import (
-                SapMaterialService,
-            )
-
-            material_service = SapMaterialService(self.db)
-
-            # パスワードを復号化（設定されていれば本番モード）
-            connection = material_service.get_default_connection()
-            decrypted_passwd = None
-            if connection and connection.passwd_encrypted:
-                try:
-                    decrypted_passwd = base64.b64decode(connection.passwd_encrypted).decode()
-                except Exception as e:
-                    logger.warning(f"[SapReconciliationService] Password decrypt failed: {e}")
-
-            fetch_result = material_service.fetch_and_cache_materials(
-                kunnr_f=customer_code,
-                decrypted_passwd=decrypted_passwd,
-            )
-
-            if fetch_result.success:
-                cache_count = self.load_sap_cache(customer_code)
-                logger.info(
-                    f"[SapReconciliationService] Fetched and loaded {cache_count} SAP cache entries"
-                )
-            else:
-                logger.error(
-                    f"[SapReconciliationService] Failed to fetch SAP data: "
-                    f"{fetch_result.error_message}"
-                )
 
         # OCR結果を取得（v_ocr_resultsビューから）
         sql = """

@@ -210,12 +210,20 @@ class SapMaterialService:
             cached_count = 0
             deleted_count = 0
             if df is not None and not df.empty:
-                cached_count = self._save_to_cache(connection.id, df, kunnr_f, fetch_batch_id)
+                try:
+                    cached_count = self._save_to_cache(connection.id, df, kunnr_f, fetch_batch_id)
 
-                # 洗い替え: 古いfetch_batch_idのデータを削除
-                deleted_count = self._delete_old_cache(
-                    connection.id, kunnr_f, kunnr_t, fetch_batch_id
-                )
+                    # 洗い替え: 新規保存できた場合のみ古いデータを削除
+                    if cached_count > 0:
+                        deleted_count = self._delete_old_cache(
+                            connection.id, kunnr_f, kunnr_t, fetch_batch_id
+                        )
+
+                    # 保存・削除を単一トランザクションで確定
+                    self.db.commit()
+                except Exception:
+                    self.db.rollback()
+                    raise
 
             duration_ms = int((time.time() - start_time) * 1000)
 
@@ -495,7 +503,6 @@ class SapMaterialService:
             self.db.execute(stmt)
             cached_count += 1
 
-        self.db.commit()
         return cached_count
 
     def _log_fetch(
@@ -598,7 +605,6 @@ class SapMaterialService:
             stmt = stmt.where(SapMaterialCache.kunnr == kunnr)
 
         result = self.db.execute(stmt)
-        self.db.commit()
         # SQLAlchemy 2.0 の Result オブジェクトから rowcount を取得（DMLの場合）
         return getattr(result, "rowcount", 0) or 0
 
