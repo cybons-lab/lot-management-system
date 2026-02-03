@@ -205,12 +205,9 @@ export function useExcelViewData(
 
   const lotBlocks = useMemo(() => {
     if (!inventoryItem) return [];
-    // Filter out TMP lots (temporary lots that should not be displayed)
-    const filteredLots = lots.filter(
-      (lot) => !lot.lot_number || !lot.lot_number.startsWith("TMP-"),
-    );
+    // Keep temporary lots so users can assign a real lot number from this view.
     // Sort lots by received_date ascending (oldest first, newest last)
-    const sortedLots = [...filteredLots].sort((a, b) => {
+    const sortedLots = [...lots].sort((a, b) => {
       const dateA = a.received_date ? new Date(a.received_date).getTime() : 0;
       const dateB = b.received_date ? new Date(b.received_date).getTime() : 0;
       return dateA - dateB;

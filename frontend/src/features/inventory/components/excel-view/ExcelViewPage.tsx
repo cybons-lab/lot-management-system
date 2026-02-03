@@ -11,6 +11,7 @@ import { Button } from "@/components/ui";
 import { useUpdateAllocationSuggestionsBatch } from "@/features/allocations/hooks/api/useAllocationSuggestions";
 import { SupplierFilterSet } from "@/features/assignments/components";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
+import { useDeleteLot } from "@/hooks/mutations";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 
 interface ActionButtonsProps {
@@ -82,6 +83,11 @@ export function ExcelViewPage() {
     customerItemId ? Number(customerItemId) : undefined,
   );
   const updateMutation = useUpdateAllocationSuggestionsBatch();
+  const deleteLotMutation = useDeleteLot({
+    onSuccess: () => {
+      toast.success("ロットを削除しました");
+    },
+  });
 
   const handleQtyChange = useCallback(
     (lotId: number, dpId: number, date: string, value: number) => {
@@ -207,6 +213,23 @@ export function ExcelViewPage() {
     setIsEditing(true);
   };
 
+  const handleEditLot = useCallback((lotId: number) => {
+    // TODO: Open edit dialog for lot
+    toast.info(`ロット ${lotId} の編集機能は今後実装予定です`);
+  }, []);
+
+  const handleDeleteLot = useCallback(
+    async (lotId: number) => {
+      await deleteLotMutation.mutateAsync(lotId);
+    },
+    [deleteLotMutation],
+  );
+
+  const handleArchiveLot = useCallback((lotId: number) => {
+    // TODO: Implement archive functionality
+    toast.info(`ロット ${lotId} のアーカイブ機能は今後実装予定です`);
+  }, []);
+
   if (isLoading || !data) return <LoadingOrError isLoading={isLoading} />;
 
   return (
@@ -249,6 +272,9 @@ export function ExcelViewPage() {
             onQtyChange={handleQtyChange}
             onLotFieldChange={handleLotFieldChange}
             onAddColumn={handleAddNewColumn}
+            onEdit={handleEditLot}
+            onDelete={handleDeleteLot}
+            onArchive={handleArchiveLot}
           />
         ))}
       </div>

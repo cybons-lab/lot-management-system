@@ -1,6 +1,6 @@
 import { format, isValid, parseISO } from "date-fns";
 import { ja } from "date-fns/locale";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, Edit2 } from "lucide-react";
 import { useState } from "react";
 
 import { type DestinationRowData } from "../types";
@@ -52,6 +52,7 @@ interface CellProps {
 }
 
 function DateCell({ date, lotId, dest, isEditing, localChanges, onQtyChange }: CellProps) {
+  const [isHovered, setIsHovered] = useState(false);
   const changeKey = `${lotId}:${dest.deliveryPlaceId}:${date}`;
   const currentValue =
     localChanges && localChanges[changeKey] !== undefined
@@ -61,12 +62,16 @@ function DateCell({ date, lotId, dest, isEditing, localChanges, onQtyChange }: C
   const isChanged = localChanges && localChanges[changeKey] !== undefined;
 
   return (
-    <div className="w-16 p-0 flex items-center justify-center">
+    <div
+      className="w-16 p-0 flex items-center justify-center relative group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {isEditing ? (
         <input
           type="number"
-          className={`w-full h-full bg-transparent text-right pr-2 focus:bg-blue-50 outline-none transition-colors font-medium border-0 ${
-            isChanged ? "text-blue-600 font-bold" : "text-slate-600"
+          className={`w-full h-full bg-transparent text-right pr-2 focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 focus:ring-inset outline-none transition-all font-medium border-0 rounded ${
+            isChanged ? "text-blue-600 font-bold bg-blue-50/30" : "text-slate-600"
           }`}
           value={currentValue || ""}
           onChange={(e) =>
@@ -76,6 +81,12 @@ function DateCell({ date, lotId, dest, isEditing, localChanges, onQtyChange }: C
       ) : (
         <div className="w-full text-right pr-2 text-sm font-medium text-slate-600">
           {currentValue || ""}
+        </div>
+      )}
+      {/* Edit icon on hover in editing mode */}
+      {isEditing && isHovered && (
+        <div className="absolute right-1 top-1 pointer-events-none">
+          <Edit2 className="h-3 w-3 text-blue-500 opacity-50" />
         </div>
       )}
     </div>
@@ -108,7 +119,7 @@ export function DateGrid({
 
   return (
     <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 bg-slate-50/5">
-      <div className="min-w-max flex flex-col">
+      <div className="min-w-max flex flex-col h-full">
         {/* Header */}
         <div
           className={`${hHeader} flex border-b border-slate-300 font-bold bg-slate-50 divide-x divide-slate-200`}

@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 import { type LotInfo } from "../types";
 
 import { Input } from "@/components/ui";
@@ -84,6 +86,43 @@ function ValueColumn({
   warehouseName?: string;
   warehouseCode?: string;
 }) {
+  const isTmpLot = lotInfo.lotNo?.startsWith("TMP-");
+  const lotNoDisplay = isTmpLot ? "" : lotInfo.lotNo || "-";
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const receivedDateInputRef = useRef<HTMLInputElement>(null);
+  const lotNumberInputRef = useRef<HTMLInputElement>(null);
+  const inboundNoInputRef = useRef<HTMLInputElement>(null);
+  const expiryDateInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus when entering edit mode
+  useEffect(() => {
+    if (editingField === "received_date" && receivedDateInputRef.current) {
+      receivedDateInputRef.current.focus();
+    } else if (editingField === "lot_number" && lotNumberInputRef.current) {
+      lotNumberInputRef.current.focus();
+    } else if (editingField === "origin_reference" && inboundNoInputRef.current) {
+      inboundNoInputRef.current.focus();
+    } else if (editingField === "expiry_date" && expiryDateInputRef.current) {
+      expiryDateInputRef.current.focus();
+    }
+  }, [editingField]);
+
+  const handleDoubleClick = (field: string) => {
+    if (!isEditing) {
+      setEditingField(field);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setEditingField(null);
+    } else if (e.key === "Enter") {
+      setEditingField(null);
+    }
+  };
+
+  const isFieldEditing = (field: string) => isEditing || editingField === field;
+
   return (
     <div className="w-36 flex flex-col">
       <div
@@ -92,64 +131,102 @@ function ValueColumn({
         VALUES
       </div>
       <div className={`${hRow} px-2 flex items-center border-b border-slate-100`}>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-slate-700">{warehouseName || "-"}</span>
-          <span className="text-xs text-slate-400">({warehouseCode || "-"})</span>
+        <div className="flex flex-col min-w-0 leading-[1.1]">
+          <span className="text-[11px] font-medium text-slate-700 whitespace-normal break-all">
+            {warehouseName || "-"}
+          </span>
+          <span className="text-[10px] text-slate-400 whitespace-normal break-all">
+            {warehouseCode && warehouseCode !== "-" ? `(${warehouseCode})` : ""}
+          </span>
         </div>
       </div>
       <div className={`${hRow} px-1 py-1 flex items-center border-b border-slate-100`}>
-        {isEditing ? (
+        {isFieldEditing("received_date") ? (
           <Input
+            ref={receivedDateInputRef}
             type="date"
             value={lotInfo.inboundDate}
             onChange={(e) => onChange("received_date", e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={() => setEditingField(null)}
             className="h-8 text-sm"
           />
         ) : (
-          <span className="px-2 text-sm font-medium">{lotInfo.inboundDate}</span>
-        )}
-      </div>
-      <div className={`${hRow} px-1 py-1 flex items-center border-b border-slate-100`}>
-        {isEditing ? (
-          <Input
-            type="text"
-            value={lotInfo.lotNo || ""}
-            onChange={(e) => onChange("lot_number", e.target.value)}
-            placeholder="-"
-            className="h-8 text-sm font-mono"
-          />
-        ) : (
-          <span className="px-2 text-sm font-mono font-bold text-slate-700">
-            {lotInfo.lotNo || "-"}
+          <span
+            className="px-2 text-sm font-medium cursor-pointer hover:bg-slate-100 w-full rounded"
+            onDoubleClick={() => handleDoubleClick("received_date")}
+            title="ダブルクリックで編集"
+          >
+            {lotInfo.inboundDate}
           </span>
         )}
       </div>
       <div className={`${hRow} px-1 py-1 flex items-center border-b border-slate-100`}>
-        {isEditing ? (
+        {isFieldEditing("lot_number") ? (
           <Input
+            ref={lotNumberInputRef}
+            type="text"
+            value={isTmpLot ? "" : lotInfo.lotNo || ""}
+            onChange={(e) => onChange("lot_number", e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={() => setEditingField(null)}
+            placeholder=""
+            className="h-8 text-sm font-mono"
+          />
+        ) : (
+          <span
+            className="px-2 text-sm font-mono font-bold text-slate-700 cursor-pointer hover:bg-slate-100 w-full rounded"
+            onDoubleClick={() => handleDoubleClick("lot_number")}
+            title="ダブルクリックで編集"
+          >
+            {lotNoDisplay}
+          </span>
+        )}
+      </div>
+      <div className={`${hRow} px-1 py-1 flex items-center border-b border-slate-100`}>
+        {isFieldEditing("origin_reference") ? (
+          <Input
+            ref={inboundNoInputRef}
             type="text"
             value={lotInfo.inboundNo || ""}
             onChange={(e) => onChange("origin_reference", e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={() => setEditingField(null)}
             placeholder="-"
             className="h-8 text-xs font-mono"
           />
         ) : (
-          <span className="px-2 text-xs font-mono">{lotInfo.inboundNo || "-"}</span>
+          <span
+            className="px-2 text-xs font-mono cursor-pointer hover:bg-slate-100 w-full rounded"
+            onDoubleClick={() => handleDoubleClick("origin_reference")}
+            title="ダブルクリックで編集"
+          >
+            {lotInfo.inboundNo || "-"}
+          </span>
         )}
       </div>
       <div className={`${hRow} p-2 flex items-center border-b border-slate-100 text-xs font-mono`}>
         {lotInfo.orderNo || "-"}
       </div>
       <div className={`${hRow} px-1 py-1 flex items-center`}>
-        {isEditing ? (
+        {isFieldEditing("expiry_date") ? (
           <Input
+            ref={expiryDateInputRef}
             type="date"
             value={lotInfo.expiryDate !== "期限なし" ? lotInfo.expiryDate : ""}
             onChange={(e) => onChange("expiry_date", e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={() => setEditingField(null)}
             className="h-8 text-xs"
           />
         ) : (
-          <span className="px-2 text-xs text-slate-500">{lotInfo.expiryDate}</span>
+          <span
+            className="px-2 text-xs text-slate-500 cursor-pointer hover:bg-slate-100 w-full rounded"
+            onDoubleClick={() => handleDoubleClick("expiry_date")}
+            title="ダブルクリックで編集"
+          >
+            {lotInfo.expiryDate}
+          </span>
         )}
       </div>
       <div className="flex-1"></div>

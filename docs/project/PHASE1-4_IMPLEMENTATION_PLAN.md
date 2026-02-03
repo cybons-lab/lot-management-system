@@ -141,6 +141,13 @@ def downgrade():
 - アプリケーション側で必ず値を指定するため、DB側デフォルトは不要（移行後に削除推奨）
 - **CHECK 制約** で無効な値を DB レベルでブロック（Pydantic に加えて二重防御）
 
+**📝 TODO（将来のマイグレーション）:**
+- 全データ移行完了後、`server_default='immediate'` を削除するマイグレーションを作成
+  ```python
+  # 例: alembic revision -m "remove_display_strategy_default"
+  op.alter_column('notifications', 'display_strategy', server_default=None)
+  ```
+
 #### 1.2 モデル・スキーマ・サービスの更新
 
 **ファイル:**
@@ -185,7 +192,9 @@ useEffect(() => {
     return;
   }
 
-  // 新着通知を全て取得（ID降順なので、lastProcessedId より大きいものを抽出）
+  // 新着通知を全て取得
+  // ⚠️ API契約の前提: GET /api/notifications は id DESC または created_at DESC でソート済み
+  // → notifications[0] が最新、`id > lastProcessedId` で新着を検出可能
   const newNotifications = notifications.filter(
     (n) => n.id > lastProcessedIdRef.current!
   );
@@ -222,8 +231,10 @@ useEffect(() => {
       description: `他 ${toastTargets.length - MAX_TOAST} 件の通知があります`,
       action: {
         label: "確認",
+        // 通知ベルのドロップダウンを開く（NotificationBell コンポーネントの open 状態をトリガー）
+        // 実装案: グローバル状態（Jotai atom）または ref で制御
         onClick: () => {
-          // 通知センターを開く（実装は別途）
+          // TODO: NotificationBell の open 状態を true にするハンドラーを呼び出す
         },
       },
       duration: 5000,
@@ -392,6 +403,61 @@ def test_get_notifications_includes_display_strategy(client: TestClient, test_us
 - [ ] 既存の通知機能が正常動作する（破壊的変更なし）
 - [ ] すべてのテストがパスする
 - [ ] 品質チェック（Lint, Format, Typecheck）がパスする
+- [ ] `server_default='immediate'` を削除するマイグレーション計画を作成（TODO追加）
+
+---
+
+## 🚀 将来の改善案（Phase 1+α）
+
+Phase 1完了後、以下の改善を検討することでパフォーマンスとUXがさらに向上します:
+
+### 差分取得API（Polling 効率化）
+
+**現状の課題:**
+- 30秒ごとに `GET /api/notifications?limit=50` で全件取得
+- 新規通知が0件でも50件のデータを毎回転送（無駄なトラフィック）
+
+**改善案:**
+- `GET /api/notifications?since_id=123` のような差分取得APIを追加
+- クライアント側で `lastProcessedId` をクエリパラメータとして送信
+- サーバー側は `id > since_id` でフィルタリングして新規分のみ返却
+
+**効果:**
+- 新規通知がない場合は空配列 `[]` のみ返却（トラフィック削減）
+- 新規通知が1-2件の場合も最小限のデータ転送
+- レスポンスタイム短縮（DBクエリも効率化）
+
+**実装例:**
+```python
+# backend/app/presentation/api/routes/notifications_router.py
+
+@router.get("/delta")
+def get_notifications_delta(
+    since_id: int = Query(0, description="この ID より大きい通知を取得"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+):
+    """差分取得API（Polling 効率化）"""
+    notifications = db.query(Notification).filter(
+        Notification.user_id == current_user.id,
+        Notification.id > since_id,
+    ).order_by(Notification.id.desc()).limit(50).all()
+
+    return [NotificationResponse.from_orm(n) for n in notifications]
+```
+
+```typescript
+// frontend/src/features/notifications/hooks/useNotifications.ts
+
+const { data: deltaNotifications } = useQuery({
+  queryKey: ["notifications", "delta", lastProcessedId],
+  queryFn: () => getNotificationsDelta(lastProcessedId),
+  refetchInterval: 30000,
+  enabled: lastProcessedId !== null,
+});
+```
+
+**優先度:** 低（Phase 1完了後、通知量が増えてきたら検討）
 
 ---
 
@@ -834,3 +900,40 @@ make ci
 - **CLAUDE.md** - プロジェクト開発ガイドライン
 - **CHANGELOG.md** - 変更履歴
 - **docs/project/BACKLOG.md** - タスクバックログ
+
+---
+
+## 📝 計画改善履歴
+
+### 2026-02-03: レビューフィードバック反映（第2弾）
+
+ユーザーからの追加フィードバックを反映しました:
+
+1. **APIソート順の契約明文化** ✅
+   - Phase 1 の通知検出ロジックに、API が `id DESC` でソート済みであることを前提とするコメントを追加
+   - `id > lastProcessedId` が安全に動作する根拠を明示
+
+2. **「まとめトースト」の挙動固定** ✅
+   - `onClick` ハンドラーの実装方針を明記
+   - 通知ベルのドロップダウンを開く（グローバル状態またはrefで制御）と明示
+   - 「実装は別途」から具体的なTODOコメントに変更
+
+3. **`server_default` 除去計画の明文化** ✅
+   - マイグレーション運用方針に、将来の `server_default` 削除マイグレーション例を追加
+   - 完了条件チェックリストに「server_default削除計画の作成」を追加
+
+4. **将来の差分API提案** ✅
+   - Phase 1完了後の改善案として「差分取得API（Polling 効率化）」セクションを追加
+   - 実装例コード、効果、優先度を明記
+   - 通知量が増えてきた際の最適化手法として記録
+
+### 2026-02-03: レビューフィードバック反映（第1弾）
+
+当初のレビューで指摘された6つの改善点を反映:
+
+1. ✅ display_strategy の意味統一（通知センターは全履歴、戦略はトースト制御のみ）
+2. ✅ 複数通知検出ロジック実装（最大3件トースト + まとめトースト）
+3. ✅ ブラウザ通知の条件追加（persistent + タブ非アクティブのみ）
+4. ✅ DBマイグレーション運用方針記載（CHECK制約、server_defaultの扱い）
+5. ✅ テストケース拡充（無効値バリデーション含む）
+6. ✅ Phase 2スケジューラーのリスク警告（複数worker、ファイル排他、セキュリティ等）

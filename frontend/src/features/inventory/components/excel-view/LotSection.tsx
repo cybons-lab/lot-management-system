@@ -1,4 +1,5 @@
-import { Lock } from "lucide-react";
+import { Archive, Edit, Lock, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 import { BigStatColumn } from "./subcomponents/BigStatColumn";
 import { DateGrid } from "./subcomponents/DateGrid";
@@ -6,6 +7,14 @@ import { LotInfoGroups } from "./subcomponents/LotInfoGroups";
 import { ShipmentTable } from "./subcomponents/ShipmentTable";
 import { type LotBlockData } from "./types";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { getLotStatuses, type LotStatus } from "@/shared/utils/status";
 
 /**
@@ -43,8 +52,12 @@ interface Props {
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
   onLotFieldChange?: (lotId: number, field: string, value: string) => void;
   onAddColumn?: (date: Date) => void;
+  onEdit?: (lotId: number) => void;
+  onDelete?: (lotId: number) => void;
+  onArchive?: (lotId: number) => void;
 }
 
+/* eslint-disable max-lines-per-function */
 export function LotSection({
   lot,
   dateColumns,
@@ -53,9 +66,14 @@ export function LotSection({
   onQtyChange,
   onLotFieldChange,
   onAddColumn,
+  onEdit,
+  onDelete,
+  onArchive,
 }: Props) {
   const { lotId, lotInfo, destinations, totalStock, totalShipment, warehouseName, warehouseCode } =
     lot;
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
 
   // ステータスを判定
   const statuses = getLotStatuses({
@@ -70,61 +88,119 @@ export function LotSection({
   const showLockIcon = isUnusable(primaryStatus);
 
   return (
-    <div
-      className={`border border-slate-300 mt-6 text-xs shadow-sm rounded-md overflow-hidden min-w-max relative ${bgColor}`}
-    >
-      {/* ロックアイコンオーバーレイ（使用不可ロットのみ） */}
-      {showLockIcon && (
-        <div className="absolute top-2 right-2 z-10 opacity-30">
-          <Lock className="h-6 w-6 text-gray-600" />
-        </div>
-      )}
-      <div className="flex shrink-0">
-        {/* 1. Lot Information (Fixed) */}
-        <LotInfoGroups
-          lotInfo={lotInfo}
-          lotId={lotId}
-          isEditing={isEditing}
-          onFieldChange={onLotFieldChange}
-          warehouseName={warehouseName}
-          warehouseCode={warehouseCode}
-        />
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div
+            className={`border border-slate-300 mt-6 text-xs shadow-sm rounded-md overflow-hidden min-w-max relative ${bgColor}`}
+          >
+            {/* ロックアイコンオーバーレイ（使用不可ロットのみ） */}
+            {showLockIcon && (
+              <div className="absolute top-2 right-2 z-10 opacity-30">
+                <Lock className="h-6 w-6 text-gray-600" />
+              </div>
+            )}
+            <div className="flex shrink-0">
+              {/* 1. Lot Information (Fixed) */}
+              <LotInfoGroups
+                lotInfo={lotInfo}
+                lotId={lotId}
+                isEditing={isEditing}
+                onFieldChange={onLotFieldChange}
+                warehouseName={warehouseName}
+                warehouseCode={warehouseCode}
+              />
 
-        {/* 2. Inbound Qty (Big Vertical) */}
-        <BigStatColumn
-          label="入庫数"
-          value={lotInfo.inboundQty}
-          unit={lotInfo.unit}
-          variant="blue"
-        />
+              {/* 2. Inbound Qty (Big Vertical) */}
+              <BigStatColumn
+                label="入庫数"
+                value={lotInfo.inboundQty}
+                unit={lotInfo.unit}
+                variant="blue"
+              />
 
-        {/* 3. Destination and Shipment Total */}
-        <ShipmentTable
-          destinations={destinations}
-          totalShipment={totalShipment}
-          lotId={lotId}
-          localChanges={localChanges}
-        />
+              {/* 3. Destination and Shipment Total */}
+              <ShipmentTable
+                destinations={destinations}
+                totalShipment={totalShipment}
+                lotId={lotId}
+                localChanges={localChanges}
+              />
 
-        {/* 4. Current Stock (Big Vertical) */}
-        <BigStatColumn
-          label="現在の在庫"
-          value={totalStock}
-          unit={lotInfo.unit}
-          variant="emerald"
-        />
+              {/* 4. Current Stock (Big Vertical) */}
+              <BigStatColumn
+                label="現在の在庫"
+                value={totalStock}
+                unit={lotInfo.unit}
+                variant="emerald"
+              />
 
-        {/* 5. Date Columns (Scrollable Area) */}
-        <DateGrid
-          dateColumns={dateColumns}
-          destinations={destinations}
-          lotId={lotId}
-          isEditing={isEditing}
-          localChanges={localChanges}
-          onQtyChange={onQtyChange}
-          onAddColumn={onAddColumn}
-        />
-      </div>
-    </div>
+              {/* 5. Date Columns (Scrollable Area) */}
+              <DateGrid
+                dateColumns={dateColumns}
+                destinations={destinations}
+                lotId={lotId}
+                isEditing={isEditing}
+                localChanges={localChanges}
+                onQtyChange={onQtyChange}
+                onAddColumn={onAddColumn}
+              />
+            </div>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          {onEdit && (
+            <ContextMenuItem onClick={() => onEdit(lotId)}>
+              <Edit className="mr-2 h-4 w-4" />
+              編集
+            </ContextMenuItem>
+          )}
+          <ContextMenuSeparator />
+          {onArchive && (
+            <ContextMenuItem onClick={() => setArchiveDialogOpen(true)}>
+              <Archive className="mr-2 h-4 w-4" />
+              アーカイブ
+            </ContextMenuItem>
+          )}
+          {onDelete && (
+            <ContextMenuItem
+              className="text-red-600 focus:text-red-600 focus:bg-red-50"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              削除
+            </ContextMenuItem>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
+
+      {/* 削除確認ダイアログ */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={() => {
+          onDelete?.(lotId);
+          setDeleteDialogOpen(false);
+        }}
+        title="ロットを削除しますか？"
+        description={`ロット番号: ${lotInfo.lotNo} を削除します。この操作は取り消せません。`}
+        confirmLabel="削除"
+        variant="destructive"
+      />
+
+      {/* アーカイブ確認ダイアログ */}
+      <ConfirmDialog
+        open={archiveDialogOpen}
+        onOpenChange={setArchiveDialogOpen}
+        onConfirm={() => {
+          onArchive?.(lotId);
+          setArchiveDialogOpen(false);
+        }}
+        title="ロットをアーカイブしますか？"
+        description={`ロット番号: ${lotInfo.lotNo} をアーカイブします。アーカイブしたロットは後で復元できます。`}
+        confirmLabel="アーカイブ"
+        variant="default"
+      />
+    </>
   );
 }

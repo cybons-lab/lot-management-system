@@ -102,6 +102,7 @@ export function LotTable({
           if (primaryStatus === "expired") return "bg-red-50/70 hover:bg-red-100";
           if (primaryStatus === "rejected") return "bg-rose-50/70 hover:bg-rose-100";
           if (primaryStatus === "qc_hold") return "bg-amber-50/70 hover:bg-amber-100";
+          if (primaryStatus === "pending_receipt") return "bg-amber-100/80 hover:bg-amber-200";
           if (primaryStatus === "empty") return "bg-slate-50/70 hover:bg-slate-100";
           return "";
         }}
