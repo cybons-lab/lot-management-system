@@ -4,7 +4,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.application.services.common.export_service import ExportService
 from app.application.services.shipping_master import ShippingMasterService
+from app.application.services.shipping_master.shipping_master_sync_service import SyncPolicy
 from app.core.database import get_db
 from app.presentation.schemas.shipping_master_schema import (
     ShippingMasterCuratedCreate,
@@ -131,12 +133,40 @@ async def reset_shipping_masters(
     service: ShippingMasterService = Depends(get_service),
 ) -> None:
     """出荷用マスタデータを全削除（管理者専用）."""
-    service.delete_all()  # 全削除メソッドを呼び出す
+    service.delete_all()
+
+
+@router.get("/export/download")
+async def export_shipping_masters(
+    format: str = Query("xlsx", regex="^(csv|xlsx)$"),
+    service: ShippingMasterService = Depends(get_service),
+):
+    """出荷用マスタをエクスポート."""
+    items = service.get_export_data()
+    # Pydanticモデルから辞書に変換
+    data = [ShippingMasterCuratedResponse.model_validate(item).model_dump() for item in items]
+    column_map = service.get_export_column_map()
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "shipping_masters", column_map=column_map)
+    return ExportService.export_to_csv(data, "shipping_masters")
+
+
+@router.post("/sync")
+async def sync_shipping_masters(
+    policy: SyncPolicy = Query("create-only", description="同期ポリシー"),
+    service: ShippingMasterService = Depends(get_service),
+):
+    """出荷用マスタを他のマスタへ同期する."""
+    result = service.sync_to_masters(policy=policy)
+    return result
 
 
 @router.post("/import", response_model=ShippingMasterImportResponse)
 async def import_shipping_masters_file(
     file: Annotated[UploadFile, File(description="Excel file (.xlsx)")],
+    auto_sync: bool = Query(False, description="インポート後に自動同期を実行するか"),
+    sync_policy: SyncPolicy = Query("create-only", description="同期ポリシー"),
     service: ShippingMasterService = Depends(get_service),
 ) -> ShippingMasterImportResponse:
     """出荷用マスタをExcelファイルからインポート.
@@ -180,7 +210,9 @@ async def import_shipping_masters_file(
         imported_count, errors = service.import_raw_data(rows)
 
         # 整形済みデータを生成
-        curated_count, warnings = service.curate_from_raw()
+        curated_count, warnings = service.curate_from_raw(
+            auto_sync=auto_sync, sync_policy=sync_policy
+        )
 
         return ShippingMasterImportResponse(
             success=len(errors) == 0,

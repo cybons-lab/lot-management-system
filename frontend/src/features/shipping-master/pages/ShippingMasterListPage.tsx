@@ -3,13 +3,14 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Download, Trash2 } from "lucide-react";
+import { Plus, Download, Trash2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 import { shippingMasterApi } from "../api";
 import { ShippingMasterEditDialog } from "../components/ShippingMasterEditDialog";
 import { ShippingMasterFilters } from "../components/ShippingMasterFilters";
 import { ShippingMasterImportDialog } from "../components/ShippingMasterImportDialog";
+import { ShippingMasterSyncDialog } from "../components/ShippingMasterSyncDialog";
 import { ShippingMasterTable } from "../components/ShippingMasterTable";
 
 import { Button, Card, CardContent } from "@/components/ui";
@@ -24,6 +25,7 @@ export function ShippingMasterListPage() {
   const [materialCode, setMaterialCode] = useState("");
   const [jikuCode, setJikuCode] = useState("");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<
     components["schemas"]["ShippingMasterCuratedResponse"] | null
   >(null);
@@ -87,6 +89,15 @@ export function ShippingMasterListPage() {
     setSelectedItem(null);
   };
 
+  const handleExport = async () => {
+    try {
+      await shippingMasterApi.export();
+    } catch (err) {
+      console.error("Export failed:", err);
+      alert("エクスポートに失敗しました。");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title="出荷用マスタデータ" subtitle="OCR受注登録で使用する出荷ルールを管理" />
@@ -115,9 +126,13 @@ export function ShippingMasterListPage() {
               全削除
             </Button>
           )}
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" />
             Excelエクスポート
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setSyncDialogOpen(true)}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            マスタ同期
           </Button>
           <ShippingMasterImportDialog />
           <Button size="sm" onClick={handleCreateNew}>
@@ -146,6 +161,9 @@ export function ShippingMasterListPage() {
         onOpenChange={handleDialogClose}
         item={selectedItem}
       />
+
+      {/* マスタ同期ダイアログ */}
+      <ShippingMasterSyncDialog open={syncDialogOpen} onOpenChange={setSyncDialogOpen} />
     </div>
   );
 }

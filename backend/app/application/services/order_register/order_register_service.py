@@ -134,12 +134,8 @@ class OrderRegisterService:
             customer_name=shipping_master.customer_name if shipping_master else None,
             supplier_code=shipping_master.supplier_code if shipping_master else None,
             supplier_name=shipping_master.supplier_name if shipping_master else None,
-            shipping_warehouse_code=shipping_master.shipping_warehouse_code
-            if shipping_master
-            else None,
-            shipping_warehouse_name=shipping_master.shipping_warehouse_name
-            if shipping_master
-            else None,
+            shipping_warehouse_code=shipping_master.warehouse_code if shipping_master else None,
+            shipping_warehouse_name=shipping_master.shipping_warehouse if shipping_master else None,
             delivery_place_code=shipping_master.delivery_place_code if shipping_master else None,
             delivery_place_name=shipping_master.delivery_place_name if shipping_master else None,
             shipping_slip_text=self._format_shipping_slip_text(

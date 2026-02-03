@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from app.application.services.shipping_master.shipping_master_sync_service import (
+    ShippingMasterSyncService,
+    SyncPolicy,
+)
 from app.infrastructure.persistence.models.shipping_master_models import (
     ShippingMasterCurated,
     ShippingMasterRaw,
@@ -85,11 +89,18 @@ class ShippingMasterService:
 
     # ==================== Curated Data ====================
 
-    def curate_from_raw(self, batch_id: str | None = None) -> tuple[int, list[str]]:
+    def curate_from_raw(
+        self,
+        batch_id: str | None = None,
+        auto_sync: bool = False,
+        sync_policy: SyncPolicy = "create-only",
+    ) -> tuple[int, list[str]]:
         """生データから整形済みデータを生成.
 
         Args:
             batch_id: 特定バッチのみ処理する場合のID
+            auto_sync: 同時にマスタ同期を実行するか
+            sync_policy: 同期ポリシー
 
         Returns:
             (投入件数, 警告メッセージリスト)
@@ -101,6 +112,7 @@ class ShippingMasterService:
         raw_records = self.session.execute(stmt).scalars().all()
         warnings: list[str] = []
         count = 0
+        curated_ids: list[int] = []
 
         for raw in raw_records:
             if not raw.customer_code or not raw.material_code or not raw.jiku_code:
@@ -123,18 +135,22 @@ class ShippingMasterService:
                         maker_name=raw.maker_name,
                         supplier_code=raw.supplier_code,
                         supplier_name=None,
+                        staff_name=raw.staff_name,
                         delivery_place_code=raw.delivery_place_code,
                         delivery_place_name=raw.delivery_place_name,
-                        shipping_warehouse_code=raw.warehouse_code,
-                        shipping_warehouse_name=raw.shipping_warehouse,
+                        delivery_place_abbr=raw.delivery_place_abbr,
+                        shipping_warehouse=raw.shipping_warehouse,
                         shipping_slip_text=raw.shipping_slip_text,
                         transport_lt_days=raw.transport_lt_days,
+                        order_flag=raw.order_flag,
+                        order_existence=raw.order_existence,
                         has_order=raw.order_flag == "○" or raw.order_existence == "有",
                         remarks=raw.remarks,
                         has_duplicate_warning=False,
                     )
                     self.session.add(curated)
                     self.session.flush()
+                    curated_ids.append(curated.id)
                     count += 1
             except IntegrityError:
                 # begin_nested のおかげで、ここに来る時点でこの行の add 分だけがロールバックされている
@@ -143,7 +159,31 @@ class ShippingMasterService:
                 )
 
         self.session.commit()
+
+        if auto_sync and curated_ids:
+            sync_service = ShippingMasterSyncService(self.session)
+            summary = sync_service.sync_batch(curated_ids=curated_ids, policy=sync_policy)
+            for err in summary.errors:
+                warnings.append(f"同期エラー: {err}")
+            for warn in summary.warnings:
+                warnings.append(f"同期警告: {warn}")
+
         return count, warnings
+
+    def sync_to_masters(
+        self, curated_ids: list[int] | None = None, policy: SyncPolicy = "create-only"
+    ) -> dict[str, Any]:
+        """各種マスタへの同期を手動実行."""
+        sync_service = ShippingMasterSyncService(self.session)
+        summary = sync_service.sync_batch(curated_ids=curated_ids, policy=policy)
+        return {
+            "processed": summary.processed_count,
+            "created": summary.created_count,
+            "updated": summary.updated_count,
+            "skipped": summary.skipped_count,
+            "errors": summary.errors,
+            "warnings": summary.warnings,
+        }
 
     # ==================== CRUD ====================
 
@@ -213,12 +253,15 @@ class ShippingMasterService:
             maker_name=data.get("maker_name"),
             supplier_code=data.get("supplier_code"),
             supplier_name=data.get("supplier_name"),
+            staff_name=data.get("staff_name"),
             delivery_place_code=data.get("delivery_place_code"),
             delivery_place_name=data.get("delivery_place_name"),
-            shipping_warehouse_code=data.get("shipping_warehouse_code"),
-            shipping_warehouse_name=data.get("shipping_warehouse_name"),
+            delivery_place_abbr=data.get("delivery_place_abbr"),
+            shipping_warehouse=data.get("shipping_warehouse"),
             shipping_slip_text=data.get("shipping_slip_text"),
             transport_lt_days=data.get("transport_lt_days"),
+            order_flag=data.get("order_flag"),
+            order_existence=data.get("order_existence"),
             has_order=data.get("has_order", False),
             remarks=data.get("remarks"),
             has_duplicate_warning=False,
@@ -256,3 +299,36 @@ class ShippingMasterService:
         self.session.query(ShippingMasterCurated).delete()
         self.session.query(ShippingMasterRaw).delete()
         self.session.commit()
+
+    def get_export_data(self) -> list[ShippingMasterCurated]:
+        """エクスポート用データを取得."""
+        return self.list_curated(limit=10000)
+
+    @staticmethod
+    def get_export_column_map() -> dict[str, str]:
+        """エクスポート用カラムマッピングを取得."""
+        return {
+            "material_code": "材質コード",
+            "jiku_code": "次区",
+            "warehouse_code": "倉庫コード",
+            "delivery_note_product_name": "素材納品書記載製品名",
+            "customer_part_no": "先方品番",
+            "maker_part_no": "メーカー品番",
+            "order_flag": "発注",
+            "maker_code": "メーカー",
+            "maker_name": "メーカー名",
+            "supplier_code": "仕入先コード",
+            "staff_name": "担当者名",
+            "delivery_place_abbr": "納入先略称",
+            "delivery_place_code": "納入先コード",
+            "delivery_place_name": "納入先",
+            "shipping_warehouse": "出荷倉庫",
+            "shipping_slip_text": "出荷票テキスト",
+            "transport_lt_days": "輸送LT(営業日)",
+            "order_existence": "発注の有無",
+            "remarks": "備考",
+            "has_order": "アプリ発注対象フラグ",
+            "has_duplicate_warning": "重複警告",
+            "created_at": "作成日時",
+            "updated_at": "更新日時",
+        }

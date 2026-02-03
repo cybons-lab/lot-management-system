@@ -111,24 +111,40 @@ class ShippingMasterCurated(Base):
     jiku_code: Mapped[str] = mapped_column(String(50), nullable=False)  # 次区（出荷先区分）
 
     # 拡張キー
-    warehouse_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # warehouse_code は重複定義されていたため削除
 
     # 正規化された値（既存マスタへの参照なし、独立データ）
     customer_name: Mapped[str | None] = mapped_column(String(100), nullable=True)  # 得意先名
     delivery_note_product_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     customer_part_no: Mapped[str | None] = mapped_column(String(100), nullable=True)
     maker_part_no: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    order_flag: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="発注（Excel 6列目）"
+    )
     maker_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     maker_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     supplier_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     supplier_name: Mapped[str | None] = mapped_column(String(100), nullable=True)  # 仕入先名称
+    staff_name: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="担当者名（Excel 10列目）"
+    )
     delivery_place_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     delivery_place_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    shipping_warehouse_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    shipping_warehouse_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    delivery_place_abbr: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="納入先略称（Excel 12列目）"
+    )
+    warehouse_code: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="倉庫コード（Excel 15列目）"
+    )
+    shipping_warehouse: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="出荷倉庫名（Excel 16列目）"
+    )
     shipping_slip_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     transport_lt_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    has_order: Mapped[bool] = mapped_column(Boolean, default=False)  # 発注の有無（正規化）
+    order_existence: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, comment="発注の有無（Excel 19列目）"
+    )
+    has_order: Mapped[bool] = mapped_column(Boolean, default=False)  # アプリ制御フラグ
     remarks: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # 重複フラグ

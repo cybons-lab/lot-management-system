@@ -87,6 +87,12 @@ class SupplierItem(SoftDeleteMixin, Base):
         nullable=False,
         comment="基本単位（在庫単位、必須）",
     )
+    maker_code: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="メーカーコード（Excel 7列目）"
+    )
+    maker_name: Mapped[str | None] = mapped_column(
+        String(200), nullable=True, comment="メーカー名（Excel 8列目）"
+    )
     # Unit conversion fields
     internal_unit: Mapped[str | None] = mapped_column(
         String(20),

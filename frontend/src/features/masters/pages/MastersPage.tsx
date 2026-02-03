@@ -99,7 +99,7 @@ const masterSections: MasterSection[] = [
     description: "システム制御や単位換算などの設定",
     links: [
       {
-        title: "出荷制御マスタ",
+        title: "出荷用マスタデータ",
         description: "OCR変換ルールや出荷時の特殊制御を管理",
         href: ROUTES.MASTERS.SHIPPING_MASTERS,
         icon: Truck,

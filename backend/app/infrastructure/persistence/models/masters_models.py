@@ -182,7 +182,10 @@ class Warehouse(SoftDeleteMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     warehouse_code: Mapped[str] = mapped_column(String(50), nullable=False)
     warehouse_name: Mapped[str] = mapped_column(String(200), nullable=False)
-    warehouse_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(
+        String(200), nullable=True, comment="表示名（Excel同期用）"
+    )
+    warehouse_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
     default_transport_lead_time_days: Mapped[int | None] = mapped_column(
         Integer, nullable=True, comment="デフォルト輸送リードタイム（日）"
     )
@@ -203,7 +206,7 @@ class Warehouse(SoftDeleteMixin, Base):
     __table_args__ = (
         UniqueConstraint("warehouse_code", name="uq_warehouses_warehouse_code"),
         CheckConstraint(
-            "warehouse_type IN ('internal', 'external', 'supplier')",
+            "warehouse_type IS NULL OR warehouse_type IN ('internal', 'external', 'supplier')",
             name="chk_warehouse_type",
         ),
         Index("idx_warehouses_type", "warehouse_type"),
@@ -231,6 +234,9 @@ class Supplier(SoftDeleteMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     supplier_code: Mapped[str] = mapped_column(String(50), nullable=False)
     supplier_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(
+        String(200), nullable=True, comment="表示名（Excel同期用）"
+    )
     # B-Plan: short_name for compact display
     short_name: Mapped[str | None] = mapped_column(
         String(50), nullable=True, comment="短縮表示名（UI省スペース用）"
@@ -278,6 +284,9 @@ class Customer(SoftDeleteMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     customer_code: Mapped[str] = mapped_column(String(50), nullable=False)
     customer_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(
+        String(200), nullable=True, comment="表示名（Excel同期用）"
+    )
     address: Mapped[str | None] = mapped_column(String(500), nullable=True)
     contact_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -329,6 +338,9 @@ class DeliveryPlace(SoftDeleteMixin, Base):
     jiku_code: Mapped[str] = mapped_column(String(50), nullable=False, server_default="")
     delivery_place_code: Mapped[str] = mapped_column(String(50), nullable=False)
     delivery_place_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(
+        String(200), nullable=True, comment="納入先略称（Excel同期用）"
+    )
     # B-Plan: short_name for compact display
     short_name: Mapped[str | None] = mapped_column(
         String(50), nullable=True, comment="短縮表示名（UI省スペース用）"
@@ -349,7 +361,7 @@ class DeliveryPlace(SoftDeleteMixin, Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("delivery_place_code", name="uq_delivery_places_code"),
+        UniqueConstraint("jiku_code", "delivery_place_code", name="uq_delivery_places_jiku_code"),
         Index("idx_delivery_places_customer", "customer_id"),
         Index("idx_delivery_places_valid_to", "valid_to"),
     )
@@ -404,6 +416,15 @@ class CustomerItem(SoftDeleteMixin, Base):
         comment="仕入先品目ID (Phase1: required)",
     )
     base_unit: Mapped[str] = mapped_column(String(20), nullable=False)
+    material_code: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="材質コード（Excel 2列目）"
+    )
+    order_flag: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="発注区分（Excel 6列目）"
+    )
+    order_existence: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, comment="発注の有無（Excel 19列目）"
+    )
     pack_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
     pack_quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)
     special_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)

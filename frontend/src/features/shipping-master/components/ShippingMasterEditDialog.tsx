@@ -50,8 +50,7 @@ type FormData = {
   supplier_name: string;
   delivery_place_code: string;
   delivery_place_name: string;
-  shipping_warehouse_code: string;
-  shipping_warehouse_name: string;
+  shipping_warehouse: string;
   shipping_slip_text: string;
   transport_lt_days: string;
   has_order: boolean;
@@ -71,8 +70,7 @@ const FIELD_LABELS: Record<string, string> = {
   supplier_name: "仕入先名称",
   delivery_place_code: "納入先コード",
   delivery_place_name: "納入先名称",
-  shipping_warehouse_code: "出荷倉庫コード",
-  shipping_warehouse_name: "出荷倉庫名",
+  shipping_warehouse: "出荷倉庫",
   shipping_slip_text: "出荷票テキスト",
   transport_lt_days: "輸送LT",
   has_order: "発注の有無",
@@ -111,8 +109,7 @@ export function ShippingMasterEditDialog({
       supplier_name: "",
       delivery_place_code: "",
       delivery_place_name: "",
-      shipping_warehouse_code: "",
-      shipping_warehouse_name: "",
+      shipping_warehouse: "",
       shipping_slip_text: "",
       transport_lt_days: "",
       has_order: false,
@@ -137,8 +134,7 @@ export function ShippingMasterEditDialog({
         supplier_name: item.supplier_name || "",
         delivery_place_code: item.delivery_place_code || "",
         delivery_place_name: item.delivery_place_name || "",
-        shipping_warehouse_code: item.shipping_warehouse_code || "",
-        shipping_warehouse_name: item.shipping_warehouse_name || "",
+        shipping_warehouse: item.shipping_warehouse || "",
         shipping_slip_text: item.shipping_slip_text || "",
         transport_lt_days: item.transport_lt_days?.toString() || "",
         has_order: item.has_order || false,
@@ -224,8 +220,7 @@ export function ShippingMasterEditDialog({
         supplier_name: data.supplier_name || null,
         delivery_place_code: data.delivery_place_code || null,
         delivery_place_name: data.delivery_place_name || null,
-        shipping_warehouse_code: data.shipping_warehouse_code || null,
-        shipping_warehouse_name: data.shipping_warehouse_name || null,
+        shipping_warehouse: data.shipping_warehouse || null,
         shipping_slip_text: data.shipping_slip_text || null,
         transport_lt_days: data.transport_lt_days ? parseInt(data.transport_lt_days, 10) : null,
         has_order: data.has_order,
@@ -250,8 +245,7 @@ export function ShippingMasterEditDialog({
         supplier_name: data.supplier_name || null,
         delivery_place_code: data.delivery_place_code || null,
         delivery_place_name: data.delivery_place_name || null,
-        shipping_warehouse_code: data.shipping_warehouse_code || null,
-        shipping_warehouse_name: data.shipping_warehouse_name || null,
+        shipping_warehouse: data.shipping_warehouse || null,
         shipping_slip_text: data.shipping_slip_text || null,
         transport_lt_days: data.transport_lt_days ? parseInt(data.transport_lt_days, 10) : null,
         has_order: data.has_order,
@@ -369,12 +363,8 @@ export function ShippingMasterEditDialog({
                 <Input id="delivery_place_name" {...register("delivery_place_name")} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="shipping_warehouse_code">出荷倉庫コード</Label>
-                <Input id="shipping_warehouse_code" {...register("shipping_warehouse_code")} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="shipping_warehouse_name">出荷倉庫名</Label>
-                <Input id="shipping_warehouse_name" {...register("shipping_warehouse_name")} />
+                <Label htmlFor="shipping_warehouse">出荷倉庫</Label>
+                <Input id="shipping_warehouse" {...register("shipping_warehouse")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="transport_lt_days">輸送LT（営業日）</Label>
