@@ -52,6 +52,7 @@ export interface DestinationRowData {
 export interface LotBlockData {
   lotId: number;
   lotInfo: LotInfo;
+  lotNumber?: string | null;
   destinations: DestinationRowData[];
   totalStock: number;
   totalShipment: number;

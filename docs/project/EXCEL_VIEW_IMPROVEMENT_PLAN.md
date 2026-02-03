@@ -266,21 +266,23 @@ Excelビューは以下のように構造化されています：
 
 **タスク:**
 - **バックエンド変更:**
-  - `lots` テーブルに `archived_at` タイムスタンプ列を追加
-  - マイグレーション作成: `alembic revision --autogenerate -m "add_archived_at_to_lots"`
-  - `LotRepository.get_active_lots()` を更新してデフォルトでアーカイブ済みロットを除外
-  - 新メソッド追加: `LotRepository.get_archived_lots()`
-  - エンドポイント追加: `POST /api/lots/{lot_id}/archive`（archived_at を現在時刻に設定）
-  - エンドポイント追加: `POST /api/lots/{lot_id}/unarchive`（archived_at を null に設定）
+  - [ ] `lots` テーブルに `archived_at` タイムスタンプ列を追加
+  - [ ] マイグレーション作成: `alembic revision --autogenerate -m "add_archived_at_to_lots"`
+  - [ ] `LotRepository.get_active_lots()` を更新してデフォルトでアーカイブ済みロットを除外
+  - [ ] 新メソッド追加: `LotRepository.get_archived_lots()`
+  - [ ] エンドポイント追加: `POST /api/lots/{lot_id}/archive`（archived_at を現在時刻に設定）
+  - [ ] エンドポイント追加: `POST /api/lots/{lot_id}/unarchive`（archived_at を null に設定）
 
 - **フロントエンド変更:**
-  - `LotSection.tsx` のコンテキストメニューにアーカイブボタンを追加
-  - `ExcelViewPage.tsx` にタブスイッチャーを作成:
+  - [x] `LotSection.tsx` のコンテキストメニューにアーカイブボタンを追加
+  - [x] `LotSection.tsx` の右上にアーカイブ/削除アイコンを追加
+  - [x] 在庫が残っているロットはロット番号入力確認付きでアーカイブ
+  - [ ] `ExcelViewPage.tsx` にタブスイッチャーを作成:
     - 「アクティブロット」（デフォルト）- 非アーカイブロットを表示
     - 「アーカイブ」- アーカイブ済みロットを表示
-  - `useExcelViewData()` フックにフィルターを追加してタブに基づいてアーカイブ済み/アクティブを取得
-  - 「1ヶ月以上前のロットをアーカイブ」一括アクションボタンを追加
-  - 一括アーカイブの確認ダイアログを実装
+  - [ ] `useExcelViewData()` フックにフィルターを追加してタブに基づいてアーカイブ済み/アクティブを取得
+  - [ ] 「1ヶ月以上前のロットをアーカイブ」一括アクションボタンを追加
+  - [ ] 一括アーカイブの確認ダイアログを実装
 
 **重要ファイル:**
 - `backend/app/models/lot_models.py`

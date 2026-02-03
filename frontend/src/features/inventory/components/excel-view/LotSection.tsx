@@ -7,6 +7,7 @@ import { LotInfoGroups } from "./subcomponents/LotInfoGroups";
 import { ShipmentTable } from "./subcomponents/ShipmentTable";
 import { type LotBlockData } from "./types";
 
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   ContextMenu,
@@ -15,6 +16,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { LotArchiveDialog } from "@/features/inventory/components/LotArchiveDialog";
 import { getLotStatuses, type LotStatus } from "@/shared/utils/status";
 
 /**
@@ -55,7 +57,8 @@ interface Props {
   onAddDestination?: (lotId: number) => void;
   onEdit?: (lotId: number) => void;
   onDelete?: (lotId: number) => void;
-  onArchive?: (lotId: number) => void;
+  onArchive?: (lotId: number, lotNumber?: string) => Promise<void> | void;
+  isArchiving?: boolean;
 }
 
 /* eslint-disable max-lines-per-function */
@@ -71,6 +74,7 @@ export function LotSection({
   onEdit,
   onDelete,
   onArchive,
+  isArchiving = false,
 }: Props) {
   const { lotId, lotInfo, destinations, totalStock, totalShipment, warehouseName, warehouseCode } =
     lot;
@@ -88,6 +92,12 @@ export function LotSection({
   const primaryStatus = statuses[0];
   const bgColor = getStatusBgColor(primaryStatus);
   const showLockIcon = isUnusable(primaryStatus);
+  const canDelete = totalShipment === 0;
+  const archiveLotInfo = {
+    lot_number: lot.lotNumber ?? null,
+    current_quantity: lot.totalStock,
+    unit: lot.lotInfo.unit,
+  };
 
   return (
     <>
@@ -96,9 +106,38 @@ export function LotSection({
           <div
             className={`border border-slate-300 mt-6 text-xs shadow-sm rounded-md overflow-hidden min-w-max relative ${bgColor}`}
           >
+            <div className="absolute top-2 right-2 z-20 flex gap-1">
+              {onArchive && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-slate-600 hover:text-slate-900"
+                  onClick={() => setArchiveDialogOpen(true)}
+                  aria-label="ロットをアーカイブ"
+                  title="アーカイブ"
+                >
+                  <Archive className="h-4 w-4" />
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-slate-600 hover:text-slate-900"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  aria-label="ロットを削除"
+                  title={canDelete ? "削除" : "出荷数量があるため削除できません"}
+                  disabled={!canDelete}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
             {/* ロックアイコンオーバーレイ（使用不可ロットのみ） */}
             {showLockIcon && (
-              <div className="absolute top-2 right-2 z-10 opacity-30">
+              <div className="absolute top-2 right-16 z-10 opacity-30">
                 <Lock className="h-6 w-6 text-gray-600" />
               </div>
             )}
@@ -167,6 +206,7 @@ export function LotSection({
           {onDelete && (
             <ContextMenuItem
               className="text-red-600 focus:text-red-600 focus:bg-red-50"
+              disabled={!canDelete}
               onClick={() => setDeleteDialogOpen(true)}
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -191,17 +231,15 @@ export function LotSection({
       />
 
       {/* アーカイブ確認ダイアログ */}
-      <ConfirmDialog
+      <LotArchiveDialog
+        lot={archiveLotInfo}
         open={archiveDialogOpen}
         onOpenChange={setArchiveDialogOpen}
-        onConfirm={() => {
-          onArchive?.(lotId);
-          setArchiveDialogOpen(false);
+        onConfirm={async (lotNumber) => {
+          if (!onArchive) return;
+          await onArchive(lotId, lotNumber);
         }}
-        title="ロットをアーカイブしますか？"
-        description={`ロット番号: ${lotInfo.lotNo} をアーカイブします。アーカイブしたロットは後で復元できます。`}
-        confirmLabel="アーカイブ"
-        variant="default"
+        isSubmitting={isArchiving}
       />
     </>
   );

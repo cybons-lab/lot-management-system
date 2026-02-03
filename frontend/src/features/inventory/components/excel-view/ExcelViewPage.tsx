@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,8 +17,11 @@ import { createDeliverySetting } from "@/features/customer-items/delivery-settin
 import type { DeliveryPlace } from "@/features/delivery-places/api";
 import { useDeliveryPlaces } from "@/features/delivery-places/hooks/useDeliveryPlaces";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
+import { inventoryItemKeys } from "@/features/inventory/hooks";
 import { useDeleteLot } from "@/hooks/mutations";
+import { archiveLot } from "@/services/api/lot-service";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
+import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
 interface LoadingOrErrorProps {
   isLoading: boolean;
@@ -44,6 +48,7 @@ export function ExcelViewPage() {
     customerItemId?: string;
   }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedLotIdForAddDest, setSelectedLotIdForAddDest] = useState<number | null>(null);
   const [addedDates, setAddedDates] = useState<string[]>([]);
   const [isLotIntakeDialogOpen, setIsLotIntakeDialogOpen] = useState(false);
@@ -66,6 +71,22 @@ export function ExcelViewPage() {
   const deleteLotMutation = useDeleteLot({
     onSuccess: () => {
       toast.success("ロットを削除しました");
+    },
+  });
+  const archiveMutation = useMutation({
+    mutationFn: ({ id, lotNumber }: { id: number; lotNumber?: string }) =>
+      archiveLot(id, lotNumber),
+    onSuccess: () => {
+      toast.success("ロットをアーカイブしました");
+      queryClient.invalidateQueries({ queryKey: ["lots"] });
+      queryClient.invalidateQueries({ queryKey: inventoryItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] });
+    },
+    onError: (error: unknown) => {
+      void (async () => {
+        const message = await getUserFriendlyMessageAsync(error);
+        toast.error(`ロットのアーカイブに失敗しました: ${message}`);
+      })();
     },
   });
 
@@ -157,10 +178,12 @@ export function ExcelViewPage() {
     [deleteLotMutation],
   );
 
-  const handleArchiveLot = useCallback((lotId: number) => {
-    // TODO: Implement archive functionality
-    toast.info(`ロット ${lotId} のアーカイブ機能は今後実装予定です`);
-  }, []);
+  const handleArchiveLot = useCallback(
+    async (lotId: number, lotNumber?: string) => {
+      await archiveMutation.mutateAsync({ id: lotId, lotNumber });
+    },
+    [archiveMutation],
+  );
 
   const handleAddDestination = useCallback((lotId: number) => {
     setSelectedLotIdForAddDest(lotId);
@@ -292,6 +315,7 @@ export function ExcelViewPage() {
               onEdit={handleEditLot}
               onDelete={handleDeleteLot}
               onArchive={handleArchiveLot}
+              isArchiving={archiveMutation.isPending}
             />
           );
         })}

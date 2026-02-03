@@ -156,21 +156,39 @@
 
 ---
 
+### 9. アーカイブ機能（Phase 3）
+**完了日:** 2026-02-03
+
+**修正内容:**
+- Excel View のロットカード右上にアーカイブ/削除アイコンを追加
+- 在庫が残っているロットはロット番号入力確認付きでアーカイブ
+- 出荷数量がある場合は削除不可（ボタン無効化）
+- アーカイブ成功時に関連キャッシュを無効化して画面反映
+
+**修正ファイル:**
+- `frontend/src/features/inventory/components/excel-view/ExcelViewPage.tsx`
+- `frontend/src/features/inventory/components/excel-view/LotSection.tsx`
+- `frontend/src/features/inventory/components/excel-view/types.ts`
+- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts`
+- `frontend/src/features/inventory/components/LotArchiveDialog.tsx`
+
+---
+
 ## 📋 次のフェーズ
 
 ### **推奨: 残課題の解決とアーカイブ機能実装**
 
-1. **納入先追加の反映問題の解決**
+1. [ ] **納入先追加の反映問題の解決**
    - 納入先を追加した直後に画面に反映されない、あるいは追加に失敗するケースの調査と修正。
    - キャッシュの Invalidation（特にマスタデータ周り）の最適化。
 
-2. **ロット重複時のエラーハンドリング強化**
+2. [ ] **ロット重複時のエラーハンドリング強化**
    - ロット番号が既に存在する場合、保存時に適切なトースト通知とバリデーションを表示するように改善。
 
-3. **アーカイブ機能の実装 (Phase 3)**
+3. [x] **アーカイブ機能の実装 (Phase 3)**
    - 古いロットをアーカイブし、表示を整理する機能の実装。
 
-4. **フェーズ4: 出荷日とリードタイム管理**
+4. [ ] **フェーズ4: 出荷日とリードタイム管理**
    - 出荷予定日の設定・表示
    - リードタイム計算と警告表示
    - 遅延リスクのハイライト

@@ -127,6 +127,7 @@ const mapLotBlock = (lot: LotUI, context: MapContext): LotBlockData => {
   return {
     lotId,
     lotInfo: getLotInfo(lot),
+    lotNumber: lot.lot_number ?? null,
     destinations,
     totalShipment,
     totalStock: Number(lot.current_quantity),
