@@ -9026,9 +9026,7 @@ export interface components {
        */
       line: number;
       /** Extra */
-      extra?: {
-        [key: string]: unknown;
-      } | null;
+      extra?: Record<string, never> | null;
       /** Exception */
       exception?: string | null;
     };
@@ -9058,9 +9056,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
     };
     /**
@@ -9076,9 +9072,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
     };
     /**
@@ -9130,9 +9124,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
       /** Job Id */
       job_id: number;
@@ -9458,9 +9450,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: {
-        [key: string]: unknown;
-      };
+      rule_parameters: Record<string, never>;
       /**
        * Is Active
        * @description 有効フラグ
@@ -9502,9 +9492,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: {
-        [key: string]: unknown;
-      };
+      rule_parameters: Record<string, never>;
       /**
        * Is Active
        * @description 有効フラグ
@@ -9543,9 +9531,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: {
-        [key: string]: unknown;
-      } | null;
+      rule_parameters?: Record<string, never> | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -9674,9 +9660,7 @@ export interface components {
       /** Flow Url */
       flow_url: string;
       /** Json Payload */
-      json_payload?: {
-        [key: string]: unknown;
-      } | null;
+      json_payload?: Record<string, never> | null;
     };
     /**
      * CloudFlowJobCreate
@@ -10673,9 +10657,7 @@ export interface components {
       /** Daily Forecasts */
       daily_forecasts?: components["schemas"]["DailyForecast"][];
       /** Details */
-      details?: {
-        [key: string]: unknown;
-      } | null;
+      details?: Record<string, never> | null;
     };
     /** DeployStatus */
     DeployStatus: {
@@ -10687,9 +10669,7 @@ export interface components {
        * History
        * @default []
        */
-      history: {
-        [key: string]: unknown;
-      }[];
+      history: Record<string, never>[];
     };
     /**
      * ExpectedLotCreate
@@ -12337,16 +12317,12 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: {
-        [key: string]: unknown;
-      } | null;
+      old_values?: Record<string, never> | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: {
-        [key: string]: unknown;
-      } | null;
+      new_values?: Record<string, never> | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -12488,9 +12464,7 @@ export interface components {
        * Flow Response
        * @description Flow応答
        */
-      flow_response?: {
-        [key: string]: unknown;
-      } | null;
+      flow_response?: Record<string, never> | null;
     };
     /**
      * MaterialDeliverySimpleJobResponse
@@ -12847,9 +12821,7 @@ export interface components {
       /** Error Reason */
       error_reason?: string | null;
       /** Content */
-      content?: {
-        [key: string]: unknown;
-      };
+      content?: Record<string, never>;
       /**
        * Created At
        * Format: date-time
@@ -12971,9 +12943,7 @@ export interface components {
       /** Sap Maker Item */
       sap_maker_item?: string | null;
       /** Sap Raw Data */
-      sap_raw_data?: {
-        [key: string]: unknown;
-      } | null;
+      sap_raw_data?: Record<string, never> | null;
       /** Error Flags */
       error_flags?: {
         [key: string]: boolean;
@@ -13060,9 +13030,7 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: {
-        [key: string]: unknown;
-      } | null;
+      changes?: Record<string, never> | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -14012,9 +13980,7 @@ export interface components {
     /** PublicSystemSettings */
     PublicSystemSettings: {
       /** Page Visibility */
-      page_visibility: {
-        [key: string]: unknown;
-      } | null;
+      page_visibility: Record<string, never> | null;
       /** Maintenance Mode */
       maintenance_mode: boolean;
     };
@@ -14209,9 +14175,7 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: {
-        [key: string]: unknown;
-      } | null;
+      data?: Record<string, never> | null;
     };
     /**
      * RoleCreate
@@ -14312,9 +14276,7 @@ export interface components {
        * Items
        * @description 処理対象データリスト
        */
-      items: {
-        [key: string]: unknown;
-      }[];
+      items: Record<string, never>[];
     };
     /**
      * RpaOrderResultRequest
@@ -14955,9 +14917,7 @@ export interface components {
       /** Fetch Batch Id */
       fetch_batch_id?: string | null;
       /** Raw Data */
-      raw_data?: {
-        [key: string]: unknown;
-      } | null;
+      raw_data?: Record<string, never> | null;
     };
     /**
      * SapCacheListResponse
@@ -15096,9 +15056,7 @@ export interface components {
       /** Message */
       message: string;
       /** Details */
-      details?: {
-        [key: string]: unknown;
-      } | null;
+      details?: Record<string, never> | null;
       /** Duration Ms */
       duration_ms: number;
     };
@@ -15187,9 +15145,7 @@ export interface components {
       /** Rfc Name */
       rfc_name: string;
       /** Params */
-      params: {
-        [key: string]: unknown;
-      };
+      params: Record<string, never>;
       /** Status */
       status: string;
       /** Record Count */
@@ -15218,9 +15174,7 @@ export interface components {
       /** Kunnr */
       kunnr: string;
       /** Raw Data */
-      raw_data: {
-        [key: string]: unknown;
-      };
+      raw_data: Record<string, never>;
       /**
        * Fetched At
        * Format: date-time
@@ -15323,9 +15277,7 @@ export interface components {
       /** Sap Matched Zkdmat B */
       sap_matched_zkdmat_b: string | null;
       /** Sap Raw Data */
-      sap_raw_data: {
-        [key: string]: unknown;
-      } | null;
+      sap_raw_data: Record<string, never> | null;
       /** Master Match Type */
       master_match_type: string;
       /** Master Id */
@@ -15711,11 +15663,7 @@ export interface components {
       /** Filename */
       filename: string;
       /** Data */
-      data:
-        | {
-            [key: string]: unknown;
-          }[]
-        | null;
+      data: Record<string, never>[] | null;
       /** Error Message */
       error_message?: string | null;
     };
@@ -15873,16 +15821,12 @@ export interface components {
        * Wide Data
        * @description 横持ちデータ（OCR結果）
        */
-      wide_data: {
-        [key: string]: unknown;
-      }[];
+      wide_data: Record<string, never>[];
       /**
        * Long Data
        * @description 縦持ちデータ（変換後）
        */
-      long_data: {
-        [key: string]: unknown;
-      }[];
+      long_data: Record<string, never>[];
       /**
        * Errors
        * @description バリデーションエラー
@@ -15923,9 +15867,7 @@ export interface components {
       /** Error Message */
       error_message?: string | null;
       /** Response */
-      response?: {
-        [key: string]: unknown;
-      } | null;
+      response?: Record<string, never> | null;
     };
     /**
      * SmartReadExportRequest
@@ -15987,9 +15929,7 @@ export interface components {
       /** Row Index */
       row_index: number;
       /** Content */
-      content: {
-        [key: string]: unknown;
-      };
+      content: Record<string, never>;
       /** Status */
       status: string;
       /** Error Reason */
@@ -16325,16 +16265,12 @@ export interface components {
        * Wide Data
        * @description 横持ちデータ
        */
-      wide_data: {
-        [key: string]: unknown;
-      }[];
+      wide_data: Record<string, never>[];
       /**
        * Long Data
        * @description 縦持ちデータ
        */
-      long_data: {
-        [key: string]: unknown;
-      }[];
+      long_data: Record<string, never>[];
       /**
        * Filename
        * @description ファイル名
@@ -16438,9 +16374,7 @@ export interface components {
        * Wide Data
        * @description 横持ちデータ
        */
-      wide_data: {
-        [key: string]: unknown;
-      }[];
+      wide_data: Record<string, never>[];
       /**
        * Skip Empty
        * @description 空明細をスキップするか
@@ -16457,9 +16391,7 @@ export interface components {
        * Long Data
        * @description 縦持ちデータ
        */
-      long_data: {
-        [key: string]: unknown;
-      }[];
+      long_data: Record<string, never>[];
       /**
        * Errors
        * @description バリデーションエラー
@@ -16525,9 +16457,7 @@ export interface components {
        * Flow Response
        * @description Flow応答
        */
-      flow_response?: {
-        [key: string]: unknown;
-      } | null;
+      flow_response?: Record<string, never> | null;
     };
     /**
      * StockHistoryCreate
@@ -25100,9 +25030,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -25857,9 +25785,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -25888,9 +25814,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
     };
@@ -28020,9 +27944,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -28997,9 +28919,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          [key: string]: unknown;
-        }[];
+        "application/json": Record<string, never>[];
       };
     };
     responses: {
@@ -29035,9 +28955,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          [key: string]: unknown;
-        }[];
+        "application/json": Record<string, never>[];
       };
     };
     responses: {
@@ -30471,9 +30389,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          }[];
+          "application/json": Record<string, never>[];
         };
       };
     };
@@ -30496,9 +30412,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -30537,9 +30451,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -30571,9 +30483,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -30602,9 +30512,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
     };
@@ -30627,9 +30535,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -30658,9 +30564,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
     };
