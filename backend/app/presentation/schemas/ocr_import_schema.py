@@ -45,3 +45,20 @@ class OcrImportResponse(BaseModel):
     resolved_count: int = Field(..., description="解決済み件数")
     unresolved_count: int = Field(..., description="未解決件数")
     lines: list[OcrImportLineResult] = Field(..., description="明細処理結果")
+
+
+class SmartReadDeletionRequest(BaseModel):
+    """OCR結果削除リクエスト."""
+
+    ids: list[int] = Field(
+        ..., min_length=1, max_length=100, description="削除対象IDリスト（最大100件）"
+    )
+
+
+class SmartReadDeletionResponse(BaseModel):
+    """OCR結果削除レスポンス."""
+
+    deleted_count: int = Field(..., description="削除件数")
+    skipped_count: int = Field(..., description="スキップ件数")
+    skipped_ids: list[int] = Field(default_factory=list, description="スキップされたIDリスト")
+    message: str | None = Field(None, description="警告メッセージ")

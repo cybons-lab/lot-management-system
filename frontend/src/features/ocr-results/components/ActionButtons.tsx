@@ -1,4 +1,7 @@
-import { CheckCircle, Download, RefreshCw } from "lucide-react";
+import { CheckCircle, Download, RefreshCw, Trash2 } from "lucide-react";
+import { useState } from "react";
+
+import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 
 import { Button, RefreshButton } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
@@ -8,28 +11,49 @@ interface ActionButtonsProps {
   selectedIds: (string | number)[];
   handleManualComplete: () => void;
   handleManualRestore: () => void;
+  handleDelete: () => void;
   handleExport: () => void;
   isExporting: boolean;
   isLoading: boolean;
   completeMutationPending: boolean;
   restoreMutationPending: boolean;
+  deleteMutationPending: boolean;
   handleSapLinkage: () => void;
   isRpaStarting: boolean;
+  errorItemCount: number;
 }
 
+// eslint-disable-next-line max-lines-per-function, complexity -- ActionButtonsは論理的にまとまったボタンコレクション
 export function ActionButtons({
   viewMode,
   selectedIds,
   handleManualComplete,
   handleManualRestore,
+  handleDelete,
   handleExport,
   isExporting,
   isLoading,
   completeMutationPending,
   restoreMutationPending,
+  deleteMutationPending,
   handleSapLinkage,
   isRpaStarting,
+  errorItemCount,
 }: ActionButtonsProps) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handleDeleteClick = () => {
+    if (errorItemCount === 0) {
+      return;
+    }
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    handleDelete();
+    setDeleteDialogOpen(false);
+  };
+
   return (
     <div className="flex gap-2">
       {viewMode === "current" && selectedIds.length > 0 && (
@@ -55,6 +79,18 @@ export function ActionButtons({
         >
           <RefreshCw className={cn("mr-2 h-4 w-4", isRpaStarting && "animate-spin")} />
           SAP連携(RPA)
+        </Button>
+      )}
+
+      {viewMode === "current" && selectedIds.length > 0 && (
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={handleDeleteClick}
+          disabled={selectedIds.length === 0 || errorItemCount === 0 || deleteMutationPending}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          削除 ({errorItemCount})
         </Button>
       )}
 
@@ -85,6 +121,13 @@ export function ActionButtons({
           {isExporting ? "エクスポート中..." : "Excelエクスポート"}
         </Button>
       )}
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemCount={errorItemCount}
+      />
     </div>
   );
 }

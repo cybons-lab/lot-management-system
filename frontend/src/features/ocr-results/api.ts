@@ -135,6 +135,17 @@ export interface OcrResultEditResponse {
   updated_at: string;
 }
 
+export interface OcrDeletionRequest {
+  ids: number[];
+}
+
+export interface OcrDeletionResponse {
+  deleted_count: number;
+  skipped_count: number;
+  skipped_ids: number[];
+  message?: string;
+}
+
 export const ocrResultsApi = {
   /**
    * OCR結果一覧取得（v_ocr_resultsビューから）
@@ -233,6 +244,19 @@ export const ocrResultsApi = {
     const response = await httpAuth.get<OcrResultListResponse>(
       `ocr-results/completed?${searchParams.toString()}`,
     );
+    return response;
+  },
+
+  /**
+   * エラーのあるOCR結果を削除
+   *
+   * エラーフラグが1つでもtrueの項目のみ削除可能。
+   * エラーのない項目は自動的にスキップされる。
+   */
+  delete: async (request: OcrDeletionRequest): Promise<OcrDeletionResponse> => {
+    const response = await httpAuth.delete<OcrDeletionResponse>("ocr-results", {
+      json: request,
+    });
     return response;
   },
 };

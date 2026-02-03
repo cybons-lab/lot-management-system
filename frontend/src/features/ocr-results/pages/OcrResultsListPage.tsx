@@ -243,13 +243,20 @@ export function OcrResultsListPage() {
           selectedIds={state.selectedIds}
           handleManualComplete={actions.handleManualComplete}
           handleManualRestore={actions.handleManualRestore}
+          handleDelete={actions.handleDelete}
           handleExport={actions.handleExport}
           isExporting={actions.isExporting}
           isLoading={state.isLoading}
           completeMutationPending={actions.completeMutation.isPending}
           restoreMutationPending={actions.restoreMutation.isPending}
+          deleteMutationPending={actions.deleteMutation.isPending}
           handleSapLinkage={actions.handleSapLinkage}
           isRpaStarting={actions.isRpaStarting}
+          errorItemCount={
+            state.data?.items
+              .filter((i) => state.selectedIds.map(Number).includes(i.id))
+              .filter((i) => i.has_error).length || 0
+          }
         />
       </div>
 
