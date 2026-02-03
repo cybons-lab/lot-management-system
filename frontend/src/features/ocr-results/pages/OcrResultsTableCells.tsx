@@ -3,31 +3,13 @@ import { AlertCircle, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { type KeyboardEvent, createContext, useContext, useEffect, useRef, useState } from "react";
 
 import type { OcrResultItem } from "../api";
-import { computeShippingSlipText } from "../utils/ocr-utils";
+import { computeShippingSlipText, type RowInputState } from "../utils/ocr-utils";
 
 import { cn } from "@/shared/libs/utils";
 
 // ============================================
 // Types & Defaults
 // ============================================
-
-export type RowInputState = {
-  lotNo1: string;
-  quantity1: string;
-  lotNo2: string;
-  quantity2: string;
-  inboundNo1: string;
-  inboundNo2: string;
-  shippingDate: string;
-  shippingSlipText: string;
-  shippingSlipTextEdited: boolean;
-  jikuCode: string;
-  materialCode: string;
-  deliveryQuantity: string;
-  deliveryDate: string;
-  processStatus: string;
-  errorFlags: Record<string, boolean>;
-};
 
 const orEmpty = (v: string | null | undefined) => v || "";
 
@@ -70,9 +52,6 @@ export const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
 // ============================================
 // Helpers
 // ============================================
-
-// ロジックは ocr-utils.ts の computeShippingSlipText に移行されました
-export { computeShippingSlipText as buildShippingSlipText };
 
 const isValidDateInput = (v: string): boolean => {
   if (!v) return true;
@@ -649,7 +628,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
   const { activeCell, setActiveCell, editableFieldOrder, rowIds, isReadOnly, getRowById } =
     useOcrCellEditing();
   const input = getInputs(row);
-  const computedText = computeShippingSlipText(row.shipping_slip_text, input, row);
+  const computedText = computeShippingSlipText(row.shipping_slip_text, input);
   const displayText = input.shippingSlipTextEdited ? input.shippingSlipText : computedText;
   const fallbackText = displayText || "";
   const [draft, setDraft] = useState("");

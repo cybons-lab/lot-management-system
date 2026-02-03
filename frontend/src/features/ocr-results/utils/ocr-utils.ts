@@ -1,7 +1,6 @@
 import { toast } from "sonner";
 
 import type { OcrResultItem, OcrResultEditPayload } from "../api";
-import type { RowInputState } from "../pages/OcrResultsTableCells";
 
 export const buildPayload = (input: RowInputState): OcrResultEditPayload => {
   const formatToIso = (d: string | null | undefined) => {
@@ -52,6 +51,28 @@ export const buildPayload = (input: RowInputState): OcrResultEditPayload => {
 // Shipping Slip Text Logic (Shared)
 // ============================================
 
+/**
+ * OCR結果行の入力状態を表す型
+ * 循環依存を避けるため、ocr-utils.ts で定義
+ */
+export type RowInputState = {
+  lotNo1: string;
+  quantity1: string;
+  lotNo2: string;
+  quantity2: string;
+  inboundNo1: string;
+  inboundNo2: string;
+  shippingDate: string;
+  shippingSlipText: string;
+  shippingSlipTextEdited: boolean;
+  jikuCode: string;
+  materialCode: string;
+  deliveryQuantity: string;
+  deliveryDate: string;
+  processStatus: string;
+  errorFlags: Record<string, boolean>;
+};
+
 const buildLotWithQuantity = (
   lot: string | null | undefined,
   qty: string | null | undefined,
@@ -86,12 +107,12 @@ const formatDateToMMDD = (dateStr: string): string | null => {
 const applyDateReplacements = (
   template: string,
   input: { shippingDate: string; deliveryDate: string },
-  row: OcrResultItem,
 ): string => {
   let result = template;
 
-  const shippingDate = input.shippingDate || row.calculated_shipping_date;
-  const shippingFormatted = shippingDate ? formatDateToMMDD(shippingDate) : "";
+  // ユーザーが出荷日をクリアした場合は、計算値にフォールバックしない
+  // プレースホルダーを保持する（置換しない）
+  const shippingFormatted = input.shippingDate ? formatDateToMMDD(input.shippingDate) : "";
   if (shippingFormatted) {
     result = result.replace(/[▲]+[/][▲]+/, shippingFormatted);
   }
@@ -116,12 +137,11 @@ export const computeShippingSlipText = (
     shippingDate: string;
     deliveryDate: string;
   },
-  row: OcrResultItem,
 ): string => {
   if (!template) return "";
 
   let result = template;
-  result = applyDateReplacements(result, input, row);
+  result = applyDateReplacements(result, input);
 
   const hasInboundPlaceholder = result.includes("入庫番号");
   const hasLotPlaceholder = result.includes("ロット");

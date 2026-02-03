@@ -10,8 +10,8 @@ import {
   StatusLegend,
   getRowClassName,
   type EditableFieldKey,
-  type RowInputState,
 } from "../pages/OcrResultsTableCells";
+import { type RowInputState } from "../utils/ocr-utils";
 
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 
