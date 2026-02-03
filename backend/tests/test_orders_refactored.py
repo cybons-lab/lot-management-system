@@ -51,9 +51,10 @@ def client(db_session):
 
         yield TestUnitOfWork(db_session)
 
-    from app.infrastructure.persistence.models.auth_models import User
+    from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
     from app.presentation.api.routes.auth.auth_router import get_current_user
 
+    # Create user with role
     mock_user = User(
         id=1,
         username="test",
@@ -62,6 +63,18 @@ def client(db_session):
         display_name="Test",
         is_active=True,
     )
+
+    # Add user role to mock user
+    user_role = db_session.query(Role).filter(Role.role_code == "user").first()
+    if not user_role:
+        user_role = Role(role_code="user", role_name="一般ユーザー", description="一般ユーザー")
+        db_session.add(user_role)
+        db_session.flush()
+
+    # Create mock user_roles relationship
+    mock_user_role = UserRole(user_id=mock_user.id, role_id=user_role.id)
+    mock_user_role.role = user_role  # Set the relationship manually
+    mock_user.user_roles = [mock_user_role]
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_uow] = override_get_uow
