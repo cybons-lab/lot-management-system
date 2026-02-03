@@ -149,7 +149,7 @@ export function DateGrid({ dateColumns, destinations, lotId, onQtyChange, onAddC
           {destinations.map((dest, i) => (
             <div
               key={i}
-              className={`${hRow} flex divide-x divide-slate-100 hover:bg-slate-50 border-b border-slate-100 last:border-b-0`}
+              className={`${hRow} flex divide-x divide-slate-100 hover:bg-slate-50 border-b border-slate-100`}
             >
               {dateColumns.map((date) => (
                 <DateCell
@@ -170,7 +170,7 @@ export function DateGrid({ dateColumns, destinations, lotId, onQtyChange, onAddC
             Array.from({ length: 5 - destinations.length }).map((_, i) => (
               <div
                 key={i}
-                className={`${hRow} flex divide-x divide-slate-100 border-b border-slate-100 last:border-b-0`}
+                className={`${hRow} flex divide-x divide-slate-100 border-b border-slate-100`}
               >
                 {dateColumns.map((d) => (
                   <div key={d} className="w-16 bg-slate-50/5"></div>

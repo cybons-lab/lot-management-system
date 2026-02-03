@@ -101,7 +101,7 @@ export function ShipmentTable({
           </div>
         ))}
         {hasEmptyRows && (
-          <div className={`${hRow} flex items-center border-b border-slate-100 last:border-b-0`}>
+          <div className={`${hRow} flex items-center border-b border-slate-100`}>
             <div className="w-40 px-3 border-r border-slate-200 h-full flex items-center justify-between">
               <span className="text-[10px] text-slate-400">空行</span>
               <button
@@ -119,10 +119,7 @@ export function ShipmentTable({
         )}
         {hasEmptyRows &&
           Array.from({ length: emptyRows - 1 }).map((_, i) => (
-            <div
-              key={i}
-              className={`${hRow} flex items-center border-b border-slate-100 last:border-b-0`}
-            >
+            <div key={i} className={`${hRow} flex items-center border-b border-slate-100`}>
               <div className="w-40 border-r border-slate-200 h-full bg-slate-50/5"></div>
               <div className="w-24 border-r border-slate-200 h-full bg-slate-50/5"></div>
               <div className="w-16 h-full bg-slate-50/5"></div>
