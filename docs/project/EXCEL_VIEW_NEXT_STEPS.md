@@ -62,58 +62,108 @@
 
 ---
 
-## 📋 次のフェーズ
+### 4. ロットステータスの視覚的インジケーター強化（Phase 1.1）
+**完了日:** 2026-02-03
 
-### **推奨: Excel View フェーズ1 - 視覚的改善とステータス管理**
+**修正内容:**
+- StatusBadgeにamberバリアント追加
+- `pending_receipt`ステータスの色をwarning（黄色）からamber（琥珀色）に変更
+- ロックアイコンは既に実装済み（使用不可ロット用）
 
-詳細な計画は `docs/project/EXCEL_VIEW_IMPROVEMENT_PLAN.md` を参照してください。
-
-#### フェーズ1.1: ロットステータスの視覚的インジケーター強化
-
-**目標:** 未入荷・使用不可ロットを即座に認識可能にする
-
-**タスク:**
-1. 新しいロットステータスを追加: `PENDING_RECEIPT`（未入荷）
-   - 入荷日なしまたは未来日のロットを検出
-2. ステータスバッジスタイルを強化:
-   - `pending-receipt` バリアントを琥珀色/警告色で追加
-   - 使用不可ロット（Expired、Rejected、QC Hold、Pending Receipt）にロックアイコンを追加
-3. `LotSection.tsx` の背景色を更新:
-   - 未入荷には `bg-amber-100/80`（目立つ琥珀色）
-   - 既存ステータス色を濃くして視認性向上
-   - 使用不可ロットに控えめなロックアイコンオーバーレイを追加
-4. `LotTable.tsx` の行ハイライトを新ステータス色で更新
-
-**重要ファイル:**
+**修正ファイル:**
+- `frontend/src/shared/components/data/StatusBadge.tsx`
 - `frontend/src/shared/utils/status.ts`
-- `frontend/src/components/ui/status-badge.tsx` (or `frontend/src/shared/components/data/StatusBadge.tsx`)
-- `frontend/src/features/inventory/components/excel-view/LotSection.tsx`
-- `frontend/src/features/inventory/components/LotTable.tsx`
 
-**推定工数:** 1-2時間
+**コミット:** `feature/excel-view-urgent-fixes` ブランチ
 
 ---
 
-#### フェーズ1.2: 日付表示のタイムゾーン修正
+### 5. 日付表示のタイムゾーン修正（Phase 1.2）
+**完了日:** 2026-02-03
 
-**目標:** タイムゾーン処理による日付オフセット問題（1日ズレ）を修正
+**修正内容:**
+- `new Date(dateString)`をタイムゾーン安全な`parse(date, "yyyy-MM-dd", new Date())`に変更
+- date-fnsの`parse`と`format`を使用してローカルタイムゾーン問題を解決
+- ±1日のズレ問題を修正
 
-**タスク:**
-1. `DatePicker` コンポーネントの日付処理を調査
-2. 日付のシリアライズをタイムゾーン変換なしの `YYYY-MM-DD` 形式に更新
-3. バックエンドの日付解析を確認・修正（UTCに依存しない日付処理を保証）
-4. 日付のラウンドトリップをテスト: 入力 → 保存 → 表示
+**修正ファイル:**
+- `frontend/src/features/inventory/utils/lot-columns.tsx`
+- `frontend/src/features/inventory/components/InventoryTableComponents.tsx`
+- `frontend/src/features/inbound-plan/components/InboundPlanTable.tsx`
+- `frontend/src/features/inventory/hooks/useLotColumns.tsx`
 
-**重要ファイル:**
-- `frontend/src/components/ui/date-picker.tsx`
-- `backend/app/schemas/lot_schema.py`
-- `backend/app/repositories/lot_repository.py`
+**コミット:** `feature/excel-view-urgent-fixes` ブランチ
 
-**検証:**
-- 納期日 2026-03-15 でロット作成 → 2026-03-15 と表示されること（2026-03-14 や 2026-03-16 でないこと）を確認
-- 複数タイムゾーンで納期日を編集し、一貫性を確認
+---
 
-**推定工数:** 1-2時間
+### 6. 編集・削除操作（Phase 2）
+**完了日:** 2026-02-03
+
+**修正内容:**
+- LotSectionに右クリックコンテキストメニューを追加（編集・削除・アーカイブ）
+- ConfirmDialogコンポーネントを作成（削除・アーカイブ確認用）
+- LotInfoGroupsにダブルクリック編集機能を追加（入荷日、ロット番号、入庫No、消費期限）
+- DateGridセルに編集時の視覚的フィードバックを追加
+
+**修正ファイル:**
+- `frontend/src/features/inventory/components/excel-view/LotSection.tsx`
+- `frontend/src/features/inventory/components/excel-view/subcomponents/LotInfoGroups.tsx`
+- `frontend/src/features/inventory/components/excel-view/subcomponents/DateGrid.tsx`
+- `frontend/src/components/ui/confirm-dialog.tsx` (新規作成)
+
+**コミット:** `feature/excel-view-urgent-fixes` ブランチ
+
+---
+
+### 7. Excel View 常時編集モード化
+**完了日:** 2026-02-03
+
+**修正内容:**
+- DateGridセルを常時編集可能に変更（isEditing不要）
+- クリックエリアをセル全体に拡大（h-full, py-2）
+- 発注NO（order_no）を常時編集可能なInputに変更
+- 成績書の日付をカレンダー選択式に変更（月/日表示、date-fns使用）
+- 入庫No.と発注NO.の入力欄高さを統一（両方を常時編集可能に）
+- 納入先の空白行一番上に「+」ボタンを追加（納入先追加機能プレースホルダー）
+
+**修正ファイル:**
+- `frontend/src/features/inventory/components/excel-view/subcomponents/DateGrid.tsx`
+- `frontend/src/features/inventory/components/excel-view/subcomponents/LotInfoGroups.tsx`
+- `frontend/src/features/inventory/components/excel-view/subcomponents/ShipmentTable.tsx`
+- `frontend/src/features/inventory/components/excel-view/LotSection.tsx`
+- `frontend/src/features/inventory/components/excel-view/ExcelViewPage.tsx`
+
+**コミット:** `feature/excel-view-urgent-fixes` ブランチ
+
+---
+
+## 📋 次のフェーズ
+
+### **推奨: Excel View フェーズ3以降 - データ管理とワークフロー改善**
+
+詳細な計画は `docs/project/EXCEL_VIEW_IMPROVEMENT_PLAN.md` を参照してください。
+
+#### 次のタスク候補:
+
+1. **成績書日付の保存機能実装**
+   - 現在はプレースホルダー実装（toast表示のみ）
+   - バックエンドAPIを実装してCOA日付を保存
+   - `handleCoaDateChange`の実装を完成させる
+
+2. **納入先追加機能実装**
+   - 現在は「+」ボタンがプレースホルダー
+   - 納入先選択ダイアログを実装
+   - ロットに納入先を追加するAPI呼び出し
+
+3. **フェーズ3: アーカイブと履歴データ管理**
+   - アーカイブ機能の実装（現在はtoast表示のみ）
+   - アーカイブされたロットの復元機能
+   - アーカイブ済みロットの表示切り替え
+
+4. **フェーズ4: 出荷日とリードタイム管理**
+   - 出荷予定日の設定・表示
+   - リードタイム計算と警告表示
+   - 遅延リスクのハイライト
 
 ---
 
@@ -148,9 +198,10 @@
 - [x] 緊急修正: TMPロット非表示
 - [x] 緊急修正: ExcelPortal UI改善
 - [x] 緊急修正: 新規ロット追加後の画面更新問題
-- [ ] フェーズ1.1: ロットステータスの視覚的インジケーター強化
-- [ ] フェーズ1.2: 日付表示のタイムゾーン修正
-- [ ] フェーズ2: 編集・削除操作（右クリックメニュー）
+- [x] フェーズ1.1: ロットステータスの視覚的インジケーター強化
+- [x] フェーズ1.2: 日付表示のタイムゾーン修正
+- [x] フェーズ2: 編集・削除操作（右クリックメニュー）
+- [x] Excel View UI改善: 常時編集モード化
 - [ ] フェーズ3: アーカイブと履歴データ管理
 - [ ] フェーズ4: 出荷日とリードタイム管理
 - [ ] フェーズ5: 集計とレポート
