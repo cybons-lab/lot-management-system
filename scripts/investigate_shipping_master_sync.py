@@ -59,8 +59,8 @@ def investigate():
             if c.supplier_code and c.supplier_code not in suppliers:
                 missing["suppliers"].add(c.supplier_code)
             
-            if c.shipping_warehouse_code and c.shipping_warehouse_code not in warehouses:
-                missing["warehouses"].add(c.shipping_warehouse_code)
+            if c.warehouse_code and c.warehouse_code not in warehouses:
+                missing["warehouses"].add(c.warehouse_code)
             
             if c.delivery_place_code and (c.jiku_code, c.delivery_place_code) not in dps:
                 missing["delivery_places"].add((c.jiku_code, c.delivery_place_code))

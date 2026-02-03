@@ -584,9 +584,12 @@ class ShippingMasterSyncService:
             return
 
         # 1. ユーザーを苗字で検索
-        # ※ 設計: display_name を苗字でLIKE検索
-        user_stmt = select(User).where(
-            User.display_name.like(f"%{curated.staff_name}%"), User.is_active
+        # ※ 設計: display_name を苗字でLIKE検索（最初の1件のみ使用）
+        user_stmt = (
+            select(User)
+            .where(User.display_name.like(f"%{curated.staff_name}%"), User.is_active)
+            .order_by(User.id)
+            .limit(1)
         )
         user = self.session.execute(user_stmt).scalar_one_or_none()
 

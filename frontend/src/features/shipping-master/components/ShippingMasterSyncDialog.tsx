@@ -38,7 +38,7 @@ export const ShippingMasterSyncDialog: React.FC<ShippingMasterSyncDialogProps> =
     mutationFn: (syncPolicy: string) => shippingMasterApi.sync(syncPolicy),
     onSuccess: (data) => {
       alert(
-        `同期が完了しました。\n処理件数: ${data.processed}\n作成件数: ${data.created}\n更新件数: ${data.updated}\nスキップ: ${data.skipped}`,
+        `同期が完了しました。\n処理件数: ${data.processed_count}\n作成件数: ${data.created_count}\n更新件数: ${data.updated_count}\nスキップ: ${data.skipped_count}`,
       );
       queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
       onOpenChange(false);
