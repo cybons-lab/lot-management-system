@@ -24,8 +24,8 @@ def generate_monthly_report_samples(db: Session) -> None:
     period_prefix = f"{today.year:04d}-{today.month:02d}"
     days_in_month = calendar.monthrange(today.year, today.month)[1]
 
-    warehouse = db.query(Warehouse).order_by(Warehouse.id.asc()).first()
-    product = db.query(SupplierItem).order_by(SupplierItem.id.asc()).first()
+    warehouse = db.query(Warehouse).order_by(Warehouse.warehouse_code.asc()).first()
+    product = db.query(SupplierItem).order_by(SupplierItem.maker_part_no.asc()).first()
     delivery_places = db.query(DeliveryPlace).order_by(DeliveryPlace.id.asc()).limit(3).all()
 
     if not warehouse or not product or not delivery_places:
