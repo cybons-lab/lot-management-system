@@ -128,6 +128,13 @@ export const routePermissions: RoutePermission[] = [
     allowedRoles: ["admin", "user", "guest"],
   },
 
+  // レポート（閲覧）
+  {
+    routeKey: "REPORTS.MONTHLY",
+    path: "/reports/monthly",
+    allowedRoles: ["admin", "user", "guest"],
+  },
+
   // ========================================
   // user以上（操作が必要なページ）
   // ========================================
