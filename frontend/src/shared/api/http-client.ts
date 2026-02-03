@@ -23,7 +23,7 @@
 import ky, { type KyInstance, type Options, type HTTPError } from "ky";
 
 import { logError } from "@/services/error-logger";
-import { getAuthToken } from "@/shared/auth/token";
+import { getAuthToken, setAuthToken } from "@/shared/auth/token";
 import { createRequestId } from "@/shared/utils/request-id";
 import { AuthorizationError, createApiError, NetworkError } from "@/utils/errors/custom-errors";
 
@@ -168,6 +168,11 @@ function isLoginEndpoint(url: string | undefined): boolean {
   return url.includes("/auth/login") || url.includes("/auth/me");
 }
 
+function isRefreshExcludedEndpoint(url: string | undefined): boolean {
+  if (!url) return false;
+  return url.includes("/auth/login") || url.includes("/auth/refresh");
+}
+
 /**
  * Handle 401 Unauthorized errors
  */
@@ -309,10 +314,42 @@ function ensureAuthToken(): string {
   return token;
 }
 
+type RefreshAwareOptions = Options & { _retried?: boolean };
+
+let refreshPromise: Promise<string | null> | null = null;
+const refreshClient = ky.create({
+  prefixUrl: API_BASE_URL,
+  timeout: API_TIMEOUT,
+  credentials: "include",
+});
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+  refreshPromise = (async () => {
+    try {
+      const response = await refreshClient.post("auth/refresh");
+      const data = (await response.json()) as { access_token?: string };
+      if (!data?.access_token) {
+        return null;
+      }
+      setAuthToken(data.access_token);
+      return data.access_token;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
+}
+
 function createApiClient(authMode: AuthMode): KyInstance {
-  return ky.create({
+  const client = ky.create({
     prefixUrl: API_BASE_URL,
     timeout: API_TIMEOUT,
+    credentials: "include",
     retry: {
       limit: 2,
       methods: ["get", "put", "head", "delete", "options", "trace"], // POST除外: 冪等性
@@ -342,6 +379,19 @@ function createApiClient(authMode: AuthMode): KyInstance {
         },
       ],
       afterResponse: [
+        async (request, options, response) => {
+          if (authMode === "auth" && response.status === 401) {
+            const refreshOptions = options as RefreshAwareOptions;
+            if (!refreshOptions._retried && !isRefreshExcludedEndpoint(request.url)) {
+              const newToken = await refreshAccessToken();
+              if (newToken) {
+                refreshOptions._retried = true;
+                return client(request.url, refreshOptions);
+              }
+            }
+          }
+          return response;
+        },
         async (_request, _options, response) => {
           // Check for mock status header
           const isMock = response.headers.get("X-Mock-Status") === "true";
@@ -365,6 +415,7 @@ function createApiClient(authMode: AuthMode): KyInstance {
       ],
     },
   });
+  return client;
 }
 
 export const apiClientPublic: KyInstance = createApiClient("public");
