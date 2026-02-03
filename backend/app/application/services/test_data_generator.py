@@ -21,6 +21,7 @@ from .test_data.masters import (
     generate_warehouses,
 )
 from .test_data.orders import generate_orders
+from .test_data.reports import generate_monthly_report_samples
 from .test_data.rpa_material_delivery import generate_rpa_material_delivery_data
 from .test_data.sap import generate_sap_data
 from .test_data.shipping_master import generate_shipping_master_data
@@ -42,6 +43,7 @@ __all__ = [
     "generate_inventory_scenarios",
     "generate_forecasts",
     "generate_reservations",
+    "generate_monthly_report_samples",
     "generate_orders",
     "generate_all_test_data",
     "generate_withdrawals",
@@ -112,6 +114,9 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
         if progress_callback:
             progress_callback(50, "Generating Reservations...")
         generate_reservations(db)
+
+        # Step 3.5: Ensure monthly report sample data exists
+        generate_monthly_report_samples(db)
 
         # Step 4: Generate orders (diverse types + reservations)
         if progress_callback:

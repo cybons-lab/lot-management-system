@@ -68,6 +68,7 @@ from app.presentation.api.routes.orders import (
     order_lines_router,
     orders_router,
 )
+from app.presentation.api.routes.reports import reports_router
 from app.presentation.api.routes.rpa import (
     cloud_flow_router,
     layer_code_router,
@@ -111,6 +112,9 @@ def register_all_routers(app: FastAPI) -> None:
     # Forecast & Alert endpoints
     app.include_router(forecasts_router, prefix=prefix)
     app.include_router(alerts_router, prefix=prefix)
+
+    # Reports
+    app.include_router(reports_router, prefix=prefix)
 
     # Allocations
     app.include_router(
@@ -223,6 +227,8 @@ __all__ = [
     # Alerts (1)
     # Alerts (1)
     "alerts_router",
+    # Reports (1)
+    "reports_router",
     # Dashboard (1)
     "dashboard_router",
     # Admin (8)

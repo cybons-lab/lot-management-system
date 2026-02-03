@@ -139,6 +139,10 @@ export const ROUTES = {
     DB_BROWSER: "/debug/db",
   },
 
+  REPORTS: {
+    MONTHLY: "/reports/monthly",
+  },
+
   // SAP Integration
   SAP: {
     ROOT: "/sap",

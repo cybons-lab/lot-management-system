@@ -52,6 +52,7 @@ import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogs
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
+import { MonthlyReportPage } from "@/features/reports/components/MonthlyReportPage";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { RPAPage } from "@/features/rpa";
 import {
@@ -239,6 +240,14 @@ function MasterRoutes() {
   );
 }
 
+function ReportRoutes() {
+  return (
+    <Route element={<FeatureGuardLayout feature="reports" />}>
+      <Route path={ROUTES.REPORTS.MONTHLY} element={<MonthlyReportPage />} />
+    </Route>
+  );
+}
+
 /* eslint-disable-next-line max-lines-per-function */
 function AdminRoutes() {
   return (
@@ -406,6 +415,7 @@ export function MainRoutes() {
 
         {InventoryRoutes()}
         {MasterRoutes()}
+        {ReportRoutes()}
         {AdminRoutes()}
 
         {/* Calendar */}

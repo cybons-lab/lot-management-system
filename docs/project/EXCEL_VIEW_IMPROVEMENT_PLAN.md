@@ -380,23 +380,23 @@ Excelビューは以下のように構造化されています：
 
 **タスク:**
 - **バックエンド変更:**
-  - エンドポイント追加: `GET /api/reports/monthly-by-destination`
+  - [x] エンドポイント追加: `GET /api/reports/monthly-by-destination`
     - クエリパラメータ: `product_id`、`warehouse_id`、`year`、`month`
     - 戻り値: {destination_name、customer_name、total_quantity、lot_count} のリスト
-  - 新サービス作成: `ReportService.get_monthly_aggregation_by_destination()`
+  - [x] 新サービス作成: `ReportService.get_monthly_aggregation_by_destination()`
     - delivery_place_id でグループ化された allocation_suggestions をクエリ
-    - 月内の forecast_date でフィルター（1日から月末まで）
+    - 月内の forecast_period でフィルター（YYYY-MM/日付のプレフィックス）
     - 割付数量を合計
 
 - **フロントエンド変更:**
-  - 新ページ作成: `frontend/src/features/reports/components/MonthlyReportPage.tsx`
-  - GlobalNavigation.tsx にナビゲーション項目を追加:「月次レポート」（月次集計）
-  - UIコンポーネント:
+  - [x] 新ページ作成: `frontend/src/features/reports/components/MonthlyReportPage.tsx`
+  - [x] GlobalNavigation.tsx にナビゲーション項目を追加:「月次レポート」（月次集計）
+  - [x] UIコンポーネント:
     - 月ピッカー（年 + 月セレクター）
-    - 製品/倉庫セレクター（ExcelPortalから再利用）
+    - 製品/倉庫セレクター
     - 集計テーブル: 納入先 | 得意先 | 合計数量 | ロット数
     - Excelにエクスポートボタン（CSVダウンロード）
-  - MainRoutes.tsx にルートを追加: `/reports/monthly`
+  - [x] MainRoutes.tsx にルートを追加: `/reports/monthly`
 
 **重要ファイル:**
 - `backend/app/api/routes/report_router.py`（新規）

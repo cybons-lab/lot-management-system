@@ -43,6 +43,11 @@ export const FEATURE_CONFIG: Record<string, FeatureDefinition> = {
     id: "forecasts",
     label: "需要予測 (オリジナル)",
   },
+  reports: {
+    id: "reports",
+    label: "レポート",
+    subFeatures: [{ id: "monthly", label: "月次レポート" }],
+  },
   orders: {
     id: "orders",
     label: "受注管理",

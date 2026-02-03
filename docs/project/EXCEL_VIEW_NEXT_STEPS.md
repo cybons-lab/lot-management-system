@@ -174,6 +174,28 @@
 
 ---
 
+### 10. フェーズ5-1: 納入先別月次集計
+**完了日:** 2026-02-03
+
+**修正内容:**
+- 月次レポートAPIを追加（納入先別集計）
+- 月次レポートページを追加（年/月・製品・倉庫選択 + CSV出力）
+- テストデータ生成時にレポート用サンプル集計データを追加
+
+**修正ファイル:**
+- `backend/app/presentation/api/routes/reports/report_router.py`
+- `backend/app/application/services/reports/report_service.py`
+- `backend/app/application/services/test_data/reports.py`
+- `backend/app/application/services/test_data_generator.py`
+- `frontend/src/features/reports/components/MonthlyReportPage.tsx`
+- `frontend/src/features/reports/api.ts`
+- `frontend/src/MainRoutes.tsx`
+- `frontend/src/components/layouts/GlobalNavigation.tsx`
+- `frontend/src/constants/routes.ts`
+- `frontend/src/config/feature-config.ts`
+
+---
+
 ## 📋 次のフェーズ
 
 ### **推奨: 残課題の解決とアーカイブ機能実装**
@@ -236,6 +258,7 @@
 - [ ] 残課題: ロット重複時のエラーハンドリング
 - [ ] フェーズ3: アーカイブと履歴データ管理
 - [ ] フェーズ4: 出荷日とリードタイム管理
+- [x] フェーズ5-1: 納入先別月次集計
 - [ ] フェーズ5: 集計とレポート
 - [ ] フェーズ6: マスターデータ管理
 - [ ] フェーズ7: ショートカットと検索の強化
