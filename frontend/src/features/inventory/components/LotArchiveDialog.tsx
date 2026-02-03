@@ -28,7 +28,7 @@ interface LotArchiveDialogProps {
   isSubmitting: boolean;
 }
 
-function QuantityWarning({ lot }: { lot: LotUI }) {
+function QuantityWarning({ lot }: { lot: ArchiveLotInfo }) {
   return (
     <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 border border-yellow-200">
       <div className="flex items-start gap-2">

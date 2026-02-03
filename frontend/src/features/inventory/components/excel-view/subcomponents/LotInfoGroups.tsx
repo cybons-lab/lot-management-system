@@ -100,16 +100,11 @@ function ValueColumn({
 
   // Update local values when props change (sync from backend)
   useEffect(() => {
-    setLocalLotNo(isTmpLot ? "" : lotInfo.lotNo || "");
-  }, [lotInfo.lotNo, isTmpLot]);
-
-  useEffect(() => {
+    const isTmp = lotInfo.lotNo?.startsWith("TMP-");
+    setLocalLotNo(isTmp ? "" : lotInfo.lotNo || "");
     setLocalInboundNo(lotInfo.inboundNo || "");
-  }, [lotInfo.inboundNo]);
-
-  useEffect(() => {
     setLocalOrderNo(lotInfo.orderNo || "");
-  }, [lotInfo.orderNo]);
+  }, [lotInfo.lotNo, lotInfo.inboundNo, lotInfo.orderNo]);
 
   // Auto-focus when entering edit mode
   useEffect(() => {

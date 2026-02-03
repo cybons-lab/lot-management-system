@@ -1,21 +1,22 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, BarChart3, Plus } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { LotSection } from "./LotSection";
 import { ProductHeader } from "./ProductHeader";
-import { AddDestinationDialog } from "./subcomponents/AddDestinationDialog";
+import {
+  AddDestinationDialog,
+  type NewDestinationFormData,
+} from "./subcomponents/AddDestinationDialog";
 import { useExcelViewData } from "./useExcelViewData";
 
 import { Button } from "@/components/ui/button";
 import { useUpdateAllocationSuggestionsBatch } from "@/features/allocations/hooks/api/useAllocationSuggestions";
 import { SupplierFilterSet } from "@/features/assignments/components";
-import { getCustomerItems, type CustomerItem } from "@/features/customer-items/api";
 import { createDeliverySetting } from "@/features/customer-items/delivery-settings/api";
-import type { DeliveryPlace } from "@/features/delivery-places/api";
-import { useDeliveryPlaces } from "@/features/delivery-places/hooks/useDeliveryPlaces";
+import { createDeliveryPlace } from "@/features/delivery-places/api";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { inventoryItemKeys } from "@/features/inventory/hooks";
 import { useDeleteLot } from "@/hooks/mutations";
@@ -53,19 +54,10 @@ export function ExcelViewPage() {
   const [addedDates, setAddedDates] = useState<string[]>([]);
   const [isLotIntakeDialogOpen, setIsLotIntakeDialogOpen] = useState(false);
 
-  const { data, isLoading, supplierId } = useExcelViewData(
+  const { data, isLoading, supplierId, customerItem } = useExcelViewData(
     Number(productId),
     customerItemId ? Number(customerItemId) : undefined,
   );
-
-  const { data: deliveryPlacesResponse } = useDeliveryPlaces();
-  const deliveryPlaces = useMemo(() => {
-    // API response might be { items: T[] } or T[] (depending on how useMasterApi is used)
-    const items =
-      (deliveryPlacesResponse as { items?: DeliveryPlace[] })?.items ||
-      (Array.isArray(deliveryPlacesResponse) ? deliveryPlacesResponse : []);
-    return items;
-  }, [deliveryPlacesResponse]);
 
   const updateMutation = useUpdateAllocationSuggestionsBatch();
   const deleteLotMutation = useDeleteLot({
@@ -94,7 +86,10 @@ export function ExcelViewPage() {
     async (lotId: number, dpId: number, date: string, value: number) => {
       const lot = data?.lots.find((l) => l.lotId === lotId);
       const dest = lot?.destinations.find((d) => d.deliveryPlaceId === dpId);
-      if (!lot || !dest) return;
+
+      if (!lot || !dest) {
+        return;
+      }
 
       try {
         await updateMutation.mutateAsync({
@@ -190,58 +185,69 @@ export function ExcelViewPage() {
   }, []);
 
   const handleConfirmAddDestination = useCallback(
-    async (deliveryPlaceId: number) => {
-      if (!selectedLotIdForAddDest) return;
+    async (formData: NewDestinationFormData) => {
+      if (!selectedLotIdForAddDest || !customerItem || !data) {
+        toast.error("必要なデータが不足しています");
+        return;
+      }
 
       const firstDate = allDateColumns[0];
       if (!firstDate) {
+        toast.error("日付列がありません。先に日付列を追加してください。");
         setSelectedLotIdForAddDest(null);
         return;
       }
 
-      const dp = deliveryPlaces.find((d: { id: number }) => d.id === deliveryPlaceId);
-
       try {
-        // 1. マスタデータ（納入先別設定）への反映を試みる
-        // プロダクトに関連するすべての得意先品番を取得
-        const customerItems = await getCustomerItems({ supplier_item_id: Number(productId) });
-        const targetCI = (customerItems as CustomerItem[]).find(
-          (ci: CustomerItem) => ci.customer_id === dp?.customer_id,
-        );
+        // 1. 新しい納入先（delivery_place）を作成
+        const newDeliveryPlace = await createDeliveryPlace({
+          customer_id: customerItem.customer_id,
+          jiku_code: formData.jiku_code,
+          delivery_place_name: formData.delivery_place_name,
+          delivery_place_code: formData.delivery_place_code,
+        });
 
-        if (targetCI) {
-          try {
-            await createDeliverySetting({
-              customer_item_id: targetCI.id,
-              delivery_place_id: deliveryPlaceId,
-              is_default: false,
-            });
-            // 既に存在する場合はエラー(409)になる可能性があるが、その場合は実質成功（追加済み）として扱う
-          } catch (e: unknown) {
-            if (
-              e instanceof Object &&
-              "response" in e &&
-              (e.response as { status?: number })?.status !== 409
-            ) {
-              console.error("Master sync failed:", e);
-              // マスタ同期に失敗しても引当レコードの作成は続行する
-            }
+        // 2. 納入先別設定（delivery_setting）を作成
+        try {
+          await createDeliverySetting({
+            customer_item_id: customerItem.id,
+            delivery_place_id: newDeliveryPlace.id,
+            is_default: false,
+            jiku_code: formData.jiku_code,
+          });
+        } catch (e: unknown) {
+          const is409 =
+            e instanceof Object &&
+            "response" in e &&
+            (e.response as { status?: number })?.status === 409;
+
+          if (!is409) {
+            toast.warning("マスタ同期に失敗しましたが、引当レコードは作成されます");
           }
         }
 
-        // 2. 引当レコード（提案）の作成
+        // 3. 引当レコード（提案）の作成
         await updateMutation.mutateAsync({
           updates: [
             {
               lot_id: selectedLotIdForAddDest,
-              delivery_place_id: deliveryPlaceId,
+              delivery_place_id: newDeliveryPlace.id,
               supplier_item_id: Number(productId),
-              customer_id: dp?.customer_id || 0,
+              customer_id: customerItem.customer_id,
               forecast_period: firstDate,
               quantity: 0, // Initial quantity 0 to persist mapping
             },
           ],
         });
+
+        // 4. すべての関連キャッシュを無効化
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] }),
+          queryClient.invalidateQueries({ queryKey: ["customer-item-delivery-settings"] }),
+          queryClient.invalidateQueries({ queryKey: ["delivery-places"] }),
+          queryClient.invalidateQueries({ queryKey: ["inventoryItems"] }),
+        ]);
+
         toast.success("納入先を追加しました");
       } catch {
         toast.error("納入先の追加に失敗しました");
@@ -249,7 +255,15 @@ export function ExcelViewPage() {
 
       setSelectedLotIdForAddDest(null);
     },
-    [selectedLotIdForAddDest, allDateColumns, deliveryPlaces, productId, updateMutation],
+    [
+      selectedLotIdForAddDest,
+      allDateColumns,
+      customerItem,
+      productId,
+      updateMutation,
+      queryClient,
+      data,
+    ],
   );
 
   if (isLoading || !data) return <LoadingOrError isLoading={isLoading} />;
@@ -269,7 +283,15 @@ export function ExcelViewPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          {/* Action buttons removed for auto-save UI */}
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => navigate("/reports/monthly")}
+            title="月次レポートを表示"
+          >
+            <BarChart3 className="h-4 w-4" />
+            月次レポート
+          </Button>
           <Button className="gap-2" onClick={() => setIsLotIntakeDialogOpen(true)}>
             <Plus className="h-4 w-4" />
             新規ロット受入
@@ -277,18 +299,15 @@ export function ExcelViewPage() {
         </div>
       </div>
       {/* 納入先追加ダイアログ */}
-      <AddDestinationDialog
-        open={selectedLotIdForAddDest !== null}
-        onOpenChange={(open) => !open && setSelectedLotIdForAddDest(null)}
-        onConfirm={handleConfirmAddDestination}
-        existingDestinationIds={
-          selectedLotIdForAddDest
-            ? data?.lots
-                .find((lot) => lot.lotId === selectedLotIdForAddDest)
-                ?.destinations.map((d) => d.deliveryPlaceId)
-            : []
-        }
-      />
+      {customerItem && (
+        <AddDestinationDialog
+          open={selectedLotIdForAddDest !== null}
+          onOpenChange={(open) => !open && setSelectedLotIdForAddDest(null)}
+          onConfirm={handleConfirmAddDestination}
+          customerId={customerItem.customer_id}
+          customerName={customerItem.customer_name}
+        />
+      )}
 
       {/* 担当仕入先関連の警告 */}
       <SupplierFilterSet warningOnly warningClassName="mb-4" />

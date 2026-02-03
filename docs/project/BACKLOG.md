@@ -1420,6 +1420,31 @@ Excelビューのロット情報に「発注NO.」列があるが、常に `-` �
 
 ---
 
+### 10-10. Excelビュー納入先行の並び替え機能
+
+**優先度**: Low
+**作成**: 2026-02-03
+**カテゴリ**: UX改善
+
+**背景:**
+Excelビューの納入先行は現在API取得順で固定表示されている。実運用では特定の納入先を上位に配置したい要望がある。
+
+**要件:**
+1. 納入先行をドラッグ&ドロップで並び替え可能にする
+2. 並び順をローカルストレージまたはDBに保存
+3. ロット単位またはproduct_id単位で並び順を保存
+
+**実装案:**
+1. `dnd-kit` または `react-beautiful-dnd` を使用
+2. 並び順を `display_order` カラム（`allocation_suggestions`または専用テーブル）に保存
+3. フロントエンドでソート済みの順序でレンダリング
+
+**関連ファイル:**
+- `frontend/src/features/inventory/components/excel-view/subcomponents/ShipmentTable.tsx`
+- `frontend/src/features/inventory/components/excel-view/LotSection.tsx`
+
+---
+
 ## 参考情報
 
 ### 統合元ファイル

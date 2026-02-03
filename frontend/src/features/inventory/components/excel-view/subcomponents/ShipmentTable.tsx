@@ -56,7 +56,7 @@ export function ShipmentTable({
         {destinations.map((dest, i) => (
           <div
             key={i}
-            className={`${hRow} flex items-center hover:bg-slate-50 relative group border-b border-slate-100 last:border-b-0`}
+            className={`${hRow} flex items-center hover:bg-slate-50 relative group border-b border-slate-100`}
           >
             <div className="w-40 px-3 border-r border-slate-200 truncate h-full flex flex-col justify-center">
               <div className="font-medium text-slate-900 leading-tight">

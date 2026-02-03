@@ -1,7 +1,7 @@
 import { format, isValid, parseISO } from "date-fns";
 import { ja } from "date-fns/locale";
 import { CalendarPlus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { type DestinationRowData } from "../types";
 
@@ -52,12 +52,10 @@ interface CellProps extends React.HTMLAttributes<HTMLDivElement> {
 function DateCell({ date, lotId, dest, currentValue, isConfirmed, onQtyChange }: CellProps) {
   const [localValue, setLocalValue] = useState<string>(currentValue ? String(currentValue) : "");
 
-  // Update local value when currentValue changes (e.g., from other cells or successful save)
-  useState(() => {
-    if (currentValue !== Number(localValue)) {
-      setLocalValue(currentValue ? String(currentValue) : "");
-    }
-  });
+  // Update local value when currentValue changes (e.g., from server response after save)
+  useEffect(() => {
+    setLocalValue(currentValue ? String(currentValue) : "");
+  }, [currentValue]);
 
   const handleBlur = () => {
     const val = parseInt(localValue, 10) || 0;
