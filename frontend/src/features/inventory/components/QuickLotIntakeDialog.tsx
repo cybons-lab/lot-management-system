@@ -150,14 +150,16 @@ export function QuickLotIntakeDialog({
 
   const createMovementMutation = useMutation({
     mutationFn: createStockMovement,
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("既存ロットに追加入庫しました");
 
-      // すべての関連キャッシュを無効化
-      queryClient.invalidateQueries({ queryKey: ["lots"] });
-      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
-      queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] });
-      queryClient.invalidateQueries({ queryKey: intakeHistoryKeys.all });
+      // すべての関連キャッシュを無効化（awaitで確実に完了を待つ）
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["lots"] }),
+        queryClient.invalidateQueries({ queryKey: ["inventoryItems"] }),
+        queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] }),
+        queryClient.invalidateQueries({ queryKey: intakeHistoryKeys.all }),
+      ]);
 
       onSuccess?.();
       onOpenChange(false);
@@ -169,14 +171,16 @@ export function QuickLotIntakeDialog({
 
   const createLotMutation = useMutation({
     mutationFn: createLot,
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("新規ロットを登録しました");
 
-      // すべての関連キャッシュを無効化
-      queryClient.invalidateQueries({ queryKey: ["lots"] });
-      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
-      queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] });
-      queryClient.invalidateQueries({ queryKey: intakeHistoryKeys.all });
+      // すべての関連キャッシュを無効化（awaitで確実に完了を待つ）
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["lots"] }),
+        queryClient.invalidateQueries({ queryKey: ["inventoryItems"] }),
+        queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] }),
+        queryClient.invalidateQueries({ queryKey: intakeHistoryKeys.all }),
+      ]);
 
       onSuccess?.();
       onOpenChange(false);
