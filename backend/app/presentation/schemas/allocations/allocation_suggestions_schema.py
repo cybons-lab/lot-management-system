@@ -1,6 +1,6 @@
 """引当推奨関連のPydanticスキーマ."""
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -24,6 +24,7 @@ class AllocationSuggestionBase(BaseModel):
     order_line_id: int | None = Field(None, description="オーダー明細ID (Preview時など)")
     forecast_id: int | None = Field(None, description="予測ID (Forecast Link時)")
     priority: int = Field(0, description="引当優先順位 (1=High)")
+    coa_issue_date: date | None = Field(None, description="成績書発行日 (YYYY-MM-DD)")
 
 
 class AllocationSuggestionCreate(AllocationSuggestionBase):
@@ -139,6 +140,7 @@ class AllocationSuggestionBatchUpdateItem(BaseModel):
     lot_id: int
     forecast_period: str
     quantity: Decimal
+    coa_issue_date: str | None = None
 
 
 class AllocationSuggestionBatchUpdate(BaseModel):

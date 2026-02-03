@@ -1,49 +1,20 @@
-import { ArrowLeft, Edit3, Plus, Save, X } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { LotSection } from "./LotSection";
 import { ProductHeader } from "./ProductHeader";
+import { AddDestinationDialog } from "./subcomponents/AddDestinationDialog";
 import { useExcelViewData } from "./useExcelViewData";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import { useUpdateAllocationSuggestionsBatch } from "@/features/allocations/hooks/api/useAllocationSuggestions";
 import { SupplierFilterSet } from "@/features/assignments/components";
+import { useDeliveryPlaces } from "@/features/delivery-places/hooks/useDeliveryPlaces";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { useDeleteLot } from "@/hooks/mutations";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
-
-interface ActionButtonsProps {
-  isEditing: boolean;
-  isSaving: boolean;
-  onEdit: () => void;
-  onCancel: () => void;
-  onSave: () => void;
-}
-
-function ActionButtons({ isEditing, isSaving, onEdit, onCancel, onSave }: ActionButtonsProps) {
-  if (isEditing) {
-    return (
-      <>
-        <Button variant="outline" className="gap-2" onClick={onCancel}>
-          <X className="h-4 w-4" />
-          キャンセル
-        </Button>
-        <Button className="gap-2" onClick={onSave} disabled={isSaving}>
-          <Save className="h-4 w-4" />
-          {isSaving ? "保存中..." : "保存"}
-        </Button>
-      </>
-    );
-  }
-  return (
-    <Button variant="outline" className="gap-2" onClick={onEdit}>
-      <Edit3 className="h-4 w-4" />
-      編集
-    </Button>
-  );
-}
 
 interface LoadingOrErrorProps {
   isLoading: boolean;
@@ -70,11 +41,7 @@ export function ExcelViewPage() {
     customerItemId?: string;
   }>();
   const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
-  const [localChanges, setLocalChanges] = useState<Record<string, number>>({});
-  const [lotFieldChanges, setLotFieldChanges] = useState<Record<string, Record<string, string>>>(
-    {},
-  );
+  const [selectedLotIdForAddDest, setSelectedLotIdForAddDest] = useState<number | null>(null);
   const [addedDates, setAddedDates] = useState<string[]>([]);
   const [isLotIntakeDialogOpen, setIsLotIntakeDialogOpen] = useState(false);
 
@@ -82,6 +49,16 @@ export function ExcelViewPage() {
     Number(productId),
     customerItemId ? Number(customerItemId) : undefined,
   );
+
+  const { data: deliveryPlacesResponse } = useDeliveryPlaces();
+  const deliveryPlaces = useMemo(() => {
+    type MinimalDP = { id: number; customer_id: number };
+    const items =
+      (deliveryPlacesResponse as { items?: MinimalDP[] })?.items ||
+      (deliveryPlacesResponse as MinimalDP[]);
+    return Array.isArray(items) ? items : [];
+  }, [deliveryPlacesResponse]);
+
   const updateMutation = useUpdateAllocationSuggestionsBatch();
   const deleteLotMutation = useDeleteLot({
     onSuccess: () => {
@@ -90,123 +67,70 @@ export function ExcelViewPage() {
   });
 
   const handleQtyChange = useCallback(
-    (lotId: number, dpId: number, date: string, value: number) => {
-      setLocalChanges((prev) => ({ ...prev, [`${lotId}:${dpId}:${date}`]: value }));
+    async (lotId: number, dpId: number, date: string, value: number) => {
+      const lot = data?.lots.find((l) => l.lotId === lotId);
+      const dest = lot?.destinations.find((d) => d.deliveryPlaceId === dpId);
+      if (!lot || !dest) return;
+
+      try {
+        await updateMutation.mutateAsync({
+          updates: [
+            {
+              lot_id: lotId,
+              delivery_place_id: dpId,
+              supplier_item_id: Number(productId),
+              customer_id: dest.customerId,
+              forecast_period: date,
+              quantity: value,
+              coa_issue_date: dest.coaIssueDate || null,
+            },
+          ],
+        });
+        toast.success("数量を保存しました");
+      } catch {
+        toast.error("数量の保存に失敗しました");
+      }
     },
-    [],
+    [data, productId, updateMutation],
   );
 
-  const handleLotFieldChange = useCallback((lotId: number, field: string, value: string) => {
-    setLotFieldChanges((prev) => ({
-      ...prev,
-      [lotId]: {
-        ...prev[lotId],
-        [field]: value,
-      },
-    }));
-  }, []);
+  const handleCoaDateChange = useCallback(
+    async (lotId: number, dpId: number, date: string, coaDate: string | null) => {
+      const lot = data?.lots.find((l) => l.lotId === lotId);
+      const dest = lot?.destinations.find((d) => d.deliveryPlaceId === dpId);
+      if (!lot || !dest) return;
 
-  const handleCoaDateChange = useCallback((_lotId: number, _dpId: number, _date: string) => {
-    // TODO: Implement COA date change logic
-    // For now, just show a toast
-    toast.info("成績書の日付変更機能は今後実装予定です");
-  }, []);
-
-  const validateLotFieldChanges = useCallback(() => {
-    if (!data || Object.keys(lotFieldChanges).length === 0) return true;
-
-    // Build a map of (lot_number, received_date) combinations
-    const lotCombinations = new Map<string, number>();
-
-    // Add existing lots (not being edited)
-    data.lots.forEach((lot) => {
-      if (!lotFieldChanges[lot.lotId]) {
-        const lotNumber = lot.lotInfo.lotNo || "";
-        const receivedDate = lot.lotInfo.inboundDate;
-        const key = `${lotNumber}:${receivedDate}`;
-        lotCombinations.set(key, lot.lotId);
-      }
-    });
-
-    // Check edited lots for duplicates
-    for (const [lotIdStr, fields] of Object.entries(lotFieldChanges)) {
-      const lotId = Number(lotIdStr);
-      const lot = data.lots.find((l) => l.lotId === lotId);
-      if (!lot) continue;
-
-      // Get the new values (or keep existing if not changed)
-      const newLotNumber = fields.lot_number !== undefined ? fields.lot_number : lot.lotInfo.lotNo;
-      const newReceivedDate =
-        fields.received_date !== undefined ? fields.received_date : lot.lotInfo.inboundDate;
-
-      const key = `${newLotNumber || ""}:${newReceivedDate}`;
-      const existingLotId = lotCombinations.get(key);
-
-      if (existingLotId !== undefined && existingLotId !== lotId) {
-        toast.error(
-          `ロット番号「${newLotNumber || "(空欄)"}」と入荷日「${newReceivedDate}」の組み合わせは既に存在します`,
-        );
-        return false;
-      }
-
-      lotCombinations.set(key, lotId);
-    }
-
-    return true;
-  }, [data, lotFieldChanges]);
-
-  const handleSave = async () => {
-    const hasQuantityChanges = Object.keys(localChanges).length > 0;
-    const hasLotFieldChanges = Object.keys(lotFieldChanges).length > 0;
-
-    if (!hasQuantityChanges && !hasLotFieldChanges) {
-      setIsEditing(false);
-      return;
-    }
-
-    // Validate lot field changes for duplicates
-    if (!validateLotFieldChanges()) return;
-
-    try {
-      // Save lot field changes first
-      if (hasLotFieldChanges) {
-        const { updateLot } = await import("@/services/api/lot-service");
-        await Promise.all(
-          Object.entries(lotFieldChanges).map(async ([lotIdStr, fields]) => {
-            const lotId = Number(lotIdStr);
-            await updateLot(lotId, fields);
-          }),
-        );
-      }
-
-      // Then save quantity changes
-      if (hasQuantityChanges) {
-        const updates = Object.entries(localChanges).map(([key, quantity]) => {
-          const [lotId, dpId, forecastPeriod] = key.split(":");
-          const lot = data?.lots.find((l) => l.lotId === Number(lotId));
-          const dest = lot?.destinations.find((d) => d.deliveryPlaceId === Number(dpId));
-          return {
-            lot_id: Number(lotId),
-            delivery_place_id: Number(dpId),
-            supplier_item_id: Number(productId),
-            customer_id: dest?.customerId || 0,
-            forecast_period: forecastPeriod,
-            quantity,
-          };
+      try {
+        await updateMutation.mutateAsync({
+          updates: [
+            {
+              lot_id: lotId,
+              delivery_place_id: dpId,
+              supplier_item_id: Number(productId),
+              customer_id: dest.customerId,
+              forecast_period: date,
+              quantity: dest.shipmentQtyByDate[date] || 0,
+              coa_issue_date: coaDate,
+            },
+          ],
         });
-        await updateMutation.mutateAsync({ updates });
+        toast.success("成績書日付を保存しました");
+      } catch {
+        toast.error("成績書日付の保存に失敗しました");
       }
+    },
+    [data, productId, updateMutation],
+  );
 
-      toast.success("変更を保存しました");
-      setLocalChanges({});
-      setLotFieldChanges({});
-      setAddedDates([]);
-      setIsEditing(false);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "保存に失敗しました";
-      toast.error(errorMessage);
+  const handleLotFieldChange = useCallback(async (lotId: number, field: string, value: string) => {
+    const { updateLot } = await import("@/services/api/lot-service");
+    try {
+      await updateLot(lotId, { [field]: value });
+      toast.success("ロット情報を更新しました");
+    } catch {
+      toast.error("ロット情報の更新に失敗しました");
     }
-  };
+  }, []);
 
   const allDateColumns = useMemo(() => {
     const base = data?.dateColumns || [];
@@ -216,7 +140,6 @@ export function ExcelViewPage() {
   const handleAddNewColumn = (date: Date) => {
     const dateStr = date.toISOString().split("T")[0];
     setAddedDates((prev) => [...prev, dateStr]);
-    setIsEditing(true);
   };
 
   const handleEditLot = useCallback((lotId: number) => {
@@ -237,9 +160,43 @@ export function ExcelViewPage() {
   }, []);
 
   const handleAddDestination = useCallback((lotId: number) => {
-    // TODO: Implement add destination functionality
-    toast.info(`ロット ${lotId} への納入先追加機能は今後実装予定です`);
+    setSelectedLotIdForAddDest(lotId);
   }, []);
+
+  const handleConfirmAddDestination = useCallback(
+    async (deliveryPlaceId: number) => {
+      if (!selectedLotIdForAddDest) return;
+
+      const firstDate = allDateColumns[0];
+      if (!firstDate) {
+        setSelectedLotIdForAddDest(null);
+        return;
+      }
+
+      const dp = deliveryPlaces.find((d: { id: number }) => d.id === deliveryPlaceId);
+
+      try {
+        await updateMutation.mutateAsync({
+          updates: [
+            {
+              lot_id: selectedLotIdForAddDest,
+              delivery_place_id: deliveryPlaceId,
+              supplier_item_id: Number(productId),
+              customer_id: dp?.customer_id || 0,
+              forecast_period: firstDate,
+              quantity: 0, // Initial quantity 0 to persist mapping
+            },
+          ],
+        });
+        toast.success("納入先を追加しました");
+      } catch {
+        toast.error("納入先の追加に失敗しました");
+      }
+
+      setSelectedLotIdForAddDest(null);
+    },
+    [selectedLotIdForAddDest, allDateColumns, deliveryPlaces, productId, updateMutation],
+  );
 
   if (isLoading || !data) return <LoadingOrError isLoading={isLoading} />;
 
@@ -250,46 +207,63 @@ export function ExcelViewPage() {
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold text-slate-800">材料ロット管理（個別）</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">引当Excel表示</h1>
+            <p className="text-slate-500 text-sm">
+              {data.header.supplierName} - {data.header.productName}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <ActionButtons
-            isEditing={isEditing}
-            isSaving={updateMutation.isPending}
-            onEdit={() => setIsEditing(true)}
-            onCancel={() => {
-              setIsEditing(false);
-              setLocalChanges({});
-              setLotFieldChanges({});
-              setAddedDates([]);
-            }}
-            onSave={handleSave}
-          />
+        <div className="flex gap-2">
+          {/* Action buttons removed for auto-save UI */}
+          <Button className="gap-2" onClick={() => setIsLotIntakeDialogOpen(true)}>
+            <Plus className="h-4 w-4" />
+            新規ロット受入
+          </Button>
         </div>
       </div>
+      {/* 納入先追加ダイアログ */}
+      <AddDestinationDialog
+        open={selectedLotIdForAddDest !== null}
+        onOpenChange={(open) => !open && setSelectedLotIdForAddDest(null)}
+        onConfirm={handleConfirmAddDestination}
+        existingDestinationIds={
+          selectedLotIdForAddDest
+            ? data?.lots
+                .find((lot) => lot.lotId === selectedLotIdForAddDest)
+                ?.destinations.map((d) => d.deliveryPlaceId)
+            : []
+        }
+      />
 
       {/* 担当仕入先関連の警告 */}
       <SupplierFilterSet warningOnly warningClassName="mb-4" />
 
       <div className="space-y-4">
         <ProductHeader data={data.header} involvedDestinations={data.involvedDestinations} />
-        {data.lots.map((lot) => (
-          <LotSection
-            key={lot.lotId}
-            lot={lot}
-            dateColumns={allDateColumns}
-            isEditing={isEditing}
-            localChanges={localChanges}
-            onQtyChange={handleQtyChange}
-            onLotFieldChange={handleLotFieldChange}
-            onCoaDateChange={handleCoaDateChange}
-            onAddColumn={handleAddNewColumn}
-            onAddDestination={handleAddDestination}
-            onEdit={handleEditLot}
-            onDelete={handleDeleteLot}
-            onArchive={handleArchiveLot}
-          />
-        ))}
+        {data.lots.map((lot) => {
+          return (
+            <LotSection
+              key={lot.lotId}
+              lot={lot}
+              dateColumns={allDateColumns}
+              isEditing={true} // Always editable in auto-save mode
+              onQtyChange={handleQtyChange}
+              onLotFieldChange={handleLotFieldChange}
+              onCoaDateChange={(
+                lotId: number,
+                dpId: number,
+                date: string,
+                coaDate: string | null,
+              ) => handleCoaDateChange(lotId, dpId, date, coaDate)}
+              onAddColumn={handleAddNewColumn}
+              onAddDestination={handleAddDestination}
+              onEdit={handleEditLot}
+              onDelete={handleDeleteLot}
+              onArchive={handleArchiveLot}
+            />
+          );
+        })}
       </div>
 
       {/* New Lot Intake Button */}

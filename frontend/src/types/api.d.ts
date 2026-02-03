@@ -8772,6 +8772,8 @@ export interface components {
       forecast_period: string;
       /** Quantity */
       quantity: number | string;
+      /** Coa Issue Date */
+      coa_issue_date?: string | null;
     };
     /**
      * AllocationSuggestionListResponse
@@ -8870,6 +8872,11 @@ export interface components {
        * @default 0
        */
       priority: number;
+      /**
+       * Coa Issue Date
+       * @description 成績書発行日 (YYYY-MM-DD)
+       */
+      coa_issue_date?: string | null;
       /** Id */
       id: number;
       /**

@@ -48,10 +48,9 @@ interface Props {
   lot: LotBlockData;
   dateColumns: string[];
   isEditing?: boolean;
-  localChanges?: Record<string, number>;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
   onLotFieldChange?: (lotId: number, field: string, value: string) => void;
-  onCoaDateChange?: (lotId: number, dpId: number, date: string) => void;
+  onCoaDateChange?: (lotId: number, dpId: number, date: string, coaDate: string | null) => void;
   onAddColumn?: (date: Date) => void;
   onAddDestination?: (lotId: number) => void;
   onEdit?: (lotId: number) => void;
@@ -63,8 +62,7 @@ interface Props {
 export function LotSection({
   lot,
   dateColumns,
-  isEditing,
-  localChanges,
+  isEditing = true,
   onQtyChange,
   onLotFieldChange,
   onCoaDateChange,
@@ -126,9 +124,9 @@ export function LotSection({
               {/* 3. Destination and Shipment Total */}
               <ShipmentTable
                 destinations={destinations}
+                dateColumns={dateColumns}
                 totalShipment={totalShipment}
                 lotId={lotId}
-                localChanges={localChanges}
                 onCoaDateChange={onCoaDateChange}
                 onAddDestination={() => onAddDestination?.(lotId)}
               />
@@ -146,7 +144,6 @@ export function LotSection({
                 dateColumns={dateColumns}
                 destinations={destinations}
                 lotId={lotId}
-                localChanges={localChanges}
                 onQtyChange={onQtyChange}
                 onAddColumn={onAddColumn}
               />

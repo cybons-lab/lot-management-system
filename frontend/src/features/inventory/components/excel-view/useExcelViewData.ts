@@ -30,20 +30,29 @@ const getShipmentByDate = (
   lotId: number,
   dpId: number,
   suggestions: AllocationSuggestionResponse[],
-): { shipmentQtyByDate: Record<string, number>; totalShipmentQty: number } => {
+): {
+  shipmentQtyByDate: Record<string, number>;
+  coaIssueDateByDate: Record<string, string | null>;
+  totalShipmentQty: number;
+} => {
   const lotDestSuggestions = suggestions.filter(
     (s) => s.lot_id === lotId && s.delivery_place_id === dpId,
   );
   const shipmentQtyByDate: Record<string, number> = {};
+  const coaIssueDateByDate: Record<string, string | null> = {};
   let totalShipmentQty = 0;
   lotDestSuggestions.forEach((s) => {
     const qty = Number(s.quantity);
     if (s.forecast_period) {
       shipmentQtyByDate[s.forecast_period] = (shipmentQtyByDate[s.forecast_period] || 0) + qty;
+      // Note: coa_issue_date is technically per suggestion record.
+      // In Excel View, we have one row per (lot, destination) and one column per date.
+      coaIssueDateByDate[s.forecast_period] =
+        (s as AllocationSuggestionResponse).coa_issue_date ?? null;
     }
     totalShipmentQty += qty;
   });
-  return { shipmentQtyByDate, totalShipmentQty };
+  return { shipmentQtyByDate, coaIssueDateByDate, totalShipmentQty };
 };
 
 const getDestinationInfo = (dpId: number, context: MapContext): DestinationInfo => {
@@ -66,11 +75,19 @@ const mapDestinationRow = (
   dpId: number,
   lotId: number,
   context: MapContext,
-  coaIssueDate?: string | null,
 ): DestinationRowData => {
   const { suggestions, dpMap } = context;
-  const { shipmentQtyByDate, totalShipmentQty } = getShipmentByDate(lotId, dpId, suggestions);
+  const { shipmentQtyByDate, coaIssueDateByDate, totalShipmentQty } = getShipmentByDate(
+    lotId,
+    dpId,
+    suggestions,
+  );
   const dp = dpMap.get(dpId);
+
+  // Use the coa_issue_date from any of the suggestions for this (lot, dp)
+  // In the future, we might want this per date column, but the UI currently has one field per row.
+  const coaIssueDate = Object.values(coaIssueDateByDate)[0] ?? null;
+
   return {
     deliveryPlaceId: dpId,
     customerId: dp?.customer_id || 0,
@@ -95,9 +112,7 @@ const mapLotBlock = (lot: LotUI, context: MapContext): LotBlockData => {
   const lotId = lot.lot_id;
   const lotSuggestions = context.suggestions.filter((s) => s.lot_id === lotId);
   const dpIds = Array.from(new Set(lotSuggestions.map((s) => s.delivery_place_id)));
-  // Pass lot's inspection_date as COA issue date for each destination row
-  const coaIssueDate = lot.inspection_date;
-  const destinations = dpIds.map((dpId) => mapDestinationRow(dpId, lotId, context, coaIssueDate));
+  const destinations = dpIds.map((dpId) => mapDestinationRow(dpId, lotId, context));
   const totalShipment = destinations.reduce((sum, d) => sum + d.totalShipmentQty, 0);
   return {
     lotId,
@@ -178,7 +193,10 @@ export function useExcelViewData(
     "masters/delivery-places",
     "delivery-places",
   );
-  const { data: deliveryPlaces = [] } = deliveryPlaceApi.useList();
+  const { data: deliveryPlacesResponse } = deliveryPlaceApi.useList();
+  const deliveryPlaces = useMemo(() => {
+    return (deliveryPlacesResponse as { items?: DeliveryPlace[] })?.items || [];
+  }, [deliveryPlacesResponse]);
   const customerApi = useMasterApi<Customer>("masters/customers", "customers");
   const { data: customers = [] } = customerApi.useList();
   const isLoading = itemLoading || lotsLoading || suggestionsLoading || customerItemLoading;
