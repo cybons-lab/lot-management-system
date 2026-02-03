@@ -1517,6 +1517,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/reports/monthly-by-destination": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Monthly By Destination
+     * @description 納入先別の月次出荷数量を集計して返す.
+     */
+    get: operations["get_monthly_by_destination_api_reports_monthly_by_destination_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/allocations/preview": {
     parameters: {
       query?: never;
@@ -8772,6 +8792,8 @@ export interface components {
       forecast_period: string;
       /** Quantity */
       quantity: number | string;
+      /** Coa Issue Date */
+      coa_issue_date?: string | null;
     };
     /**
      * AllocationSuggestionListResponse
@@ -8870,6 +8892,11 @@ export interface components {
        * @default 0
        */
       priority: number;
+      /**
+       * Coa Issue Date
+       * @description 成績書発行日 (YYYY-MM-DD)
+       */
+      coa_issue_date?: string | null;
       /** Id */
       id: number;
       /**
@@ -12475,6 +12502,22 @@ export interface components {
        * Format: date
        */
       end_date: string;
+    };
+    /**
+     * MonthlyDestinationReportItem
+     * @description Monthly aggregation by destination.
+     */
+    MonthlyDestinationReportItem: {
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Destination Name */
+      destination_name: string;
+      /** Customer Name */
+      customer_name: string;
+      /** Total Quantity */
+      total_quantity: string;
+      /** Lot Count */
+      lot_count: number;
     };
     /**
      * MySuppliersResponse
@@ -19952,6 +19995,44 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AlertSummaryResponse"];
+        };
+      };
+    };
+  };
+  get_monthly_by_destination_api_reports_monthly_by_destination_get: {
+    parameters: {
+      query: {
+        /** @description 仕入先品目ID */
+        product_id: number;
+        /** @description 倉庫ID */
+        warehouse_id: number;
+        /** @description 対象年 */
+        year: number;
+        /** @description 対象月 */
+        month: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MonthlyDestinationReportItem"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

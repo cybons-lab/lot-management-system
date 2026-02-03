@@ -59,14 +59,10 @@ export const ROUTES = {
       DETAIL: (productId: number | string, warehouseId: number | string) =>
         `/inventory/items/${productId}/${warehouseId}`,
     },
-    EXCEL_VIEW: (
-      productId: number | string,
-      warehouseId: number | string,
-      customerItemId?: number | string,
-    ) =>
+    EXCEL_VIEW: (productId: number | string, customerItemId?: number | string) =>
       customerItemId
-        ? `/inventory/excel-view/${productId}/${warehouseId}/${customerItemId}`
-        : `/inventory/excel-view/${productId}/${warehouseId}`,
+        ? `/inventory/excel-view/${productId}/${customerItemId}`
+        : `/inventory/excel-view/${productId}`,
     EXCEL_PORTAL: "/inventory/excel-portal",
   },
 
@@ -141,6 +137,10 @@ export const ROUTES = {
 
   DEBUG: {
     DB_BROWSER: "/debug/db",
+  },
+
+  REPORTS: {
+    MONTHLY: "/reports/monthly",
   },
 
   // SAP Integration

@@ -93,6 +93,14 @@ yarn-error.log*
 reports/
 !docs/archive/reports/
 !docs/reports/
+!backend/app/application/services/reports/
+!backend/app/application/services/reports/**
+!backend/app/presentation/api/routes/reports/
+!backend/app/presentation/api/routes/reports/**
+!backend/app/presentation/schemas/reports/
+!backend/app/presentation/schemas/reports/**
+!frontend/src/features/reports/
+!frontend/src/features/reports/**
 diagnostics*.txt
 
 # ============================================

@@ -1,7 +1,7 @@
 import { format, isValid, parseISO } from "date-fns";
 import { ja } from "date-fns/locale";
 import { CalendarPlus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { type DestinationRowData } from "../types";
 
@@ -11,13 +11,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 const hHeader = "h-8";
 const hRow = "h-10";
 const hFooter = "h-10";
+const MAX_VISIBLE_ROWS = 5; // Minimum number of rows to display (including empty rows)
 
 /**
  * Format forecast_period for column header display (納期日).
  * Supports both YYYY-MM (monthly) and YYYY-MM-DD (daily) formats.
  * Always displays as MM/dd format.
  */
-function formatPeriodHeader(period: string): string {
+export function formatPeriodHeader(period: string): string {
   // Monthly format: "2026-02" → "02/01" (1st of the month)
   if (/^\d{4}-\d{2}$/.test(period)) {
     const month = period.substring(5, 7);
@@ -36,62 +37,59 @@ interface Props {
   dateColumns: string[];
   destinations: DestinationRowData[];
   lotId: number;
-  isEditing?: boolean;
-  localChanges?: Record<string, number>;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
   onAddColumn?: (date: Date) => void;
 }
 
-interface CellProps {
+interface CellProps extends React.HTMLAttributes<HTMLDivElement> {
   date: string;
+  currentValue: number;
   lotId: number;
   dest: DestinationRowData;
-  isEditing?: boolean;
-  localChanges?: Record<string, number>;
+  isConfirmed: boolean;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
 }
 
-function DateCell({ date, lotId, dest, isEditing, localChanges, onQtyChange }: CellProps) {
-  const changeKey = `${lotId}:${dest.deliveryPlaceId}:${date}`;
-  const currentValue =
-    localChanges && localChanges[changeKey] !== undefined
-      ? localChanges[changeKey]
-      : dest.shipmentQtyByDate[date] || 0;
+function DateCell({ date, lotId, dest, currentValue, isConfirmed, onQtyChange }: CellProps) {
+  const [localValue, setLocalValue] = useState<string>(currentValue ? String(currentValue) : "");
 
-  const isChanged = localChanges && localChanges[changeKey] !== undefined;
+  // Update local value when currentValue changes (e.g., from server response after save)
+  useEffect(() => {
+    setLocalValue(currentValue ? String(currentValue) : "");
+  }, [currentValue]);
+
+  const handleBlur = () => {
+    const val = parseInt(localValue, 10) || 0;
+    if (val !== currentValue) {
+      onQtyChange?.(lotId, dest.deliveryPlaceId, date, val);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    }
+  };
 
   return (
-    <div className="w-16 p-0 flex items-center justify-center">
-      {isEditing ? (
-        <input
-          type="number"
-          className={`w-full h-full bg-transparent text-right pr-2 focus:bg-blue-50 outline-none transition-colors font-medium border-0 ${
-            isChanged ? "text-blue-600 font-bold" : "text-slate-600"
-          }`}
-          value={currentValue || ""}
-          onChange={(e) =>
-            onQtyChange?.(lotId, dest.deliveryPlaceId, date, parseInt(e.target.value, 10) || 0)
-          }
-        />
-      ) : (
-        <div className="w-full text-right pr-2 text-sm font-medium text-slate-600">
-          {currentValue || ""}
-        </div>
-      )}
+    <div className="w-16 p-0 flex items-center justify-center relative group h-full">
+      <input
+        type="number"
+        className={`w-full h-full bg-transparent text-right pr-2 py-2 hover:bg-slate-50 focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 focus:ring-inset outline-none transition-all font-medium border-0 rounded cursor-pointer ${
+          isConfirmed ? "text-blue-600 font-bold bg-blue-50/30" : "text-slate-600"
+        }`}
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        placeholder="-"
+      />
     </div>
   );
 }
 
 /* eslint-disable max-lines-per-function */
-export function DateGrid({
-  dateColumns,
-  destinations,
-  lotId,
-  isEditing,
-  localChanges,
-  onQtyChange,
-  onAddColumn,
-}: Props) {
+export function DateGrid({ dateColumns, destinations, lotId, onQtyChange, onAddColumn }: Props) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const isDateDisabled = (date: Date) => {
@@ -108,7 +106,7 @@ export function DateGrid({
 
   return (
     <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 bg-slate-50/5">
-      <div className="min-w-max flex flex-col">
+      <div className="min-w-max flex flex-col h-full">
         {/* Header */}
         <div
           className={`${hHeader} flex border-b border-slate-300 font-bold bg-slate-50 divide-x divide-slate-200`}
@@ -122,14 +120,15 @@ export function DateGrid({
             </div>
           ))}
           {/* Add Column Button (Always Visible) */}
-          <div className="w-10 flex items-center justify-center bg-slate-50">
+          <div className="w-10 flex items-center justify-center bg-slate-100/50">
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
               <PopoverTrigger asChild>
                 <button
-                  className="w-full h-full flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                  className="w-full h-full flex flex-col items-center justify-center text-blue-400 hover:text-blue-700 hover:bg-blue-50 transition-all group"
                   title="列を追加"
                 >
-                  <CalendarPlus className="h-4 w-4" />
+                  <CalendarPlus className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                  <span className="text-[8px] scale-90 mt-0.5 font-bold">追加</span>
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -149,29 +148,35 @@ export function DateGrid({
         {/* Rows */}
         <div className="flex-1 flex flex-col divide-y divide-slate-100">
           {destinations.map((dest, i) => (
-            <div key={i} className={`${hRow} flex divide-x divide-slate-100 hover:bg-slate-50`}>
+            <div
+              key={i}
+              className={`${hRow} flex divide-x divide-slate-100 hover:bg-slate-50 border-b border-slate-100`}
+            >
               {dateColumns.map((date) => (
                 <DateCell
                   key={date}
                   date={date}
                   lotId={lotId}
                   dest={dest}
-                  isEditing={isEditing}
-                  localChanges={localChanges}
+                  currentValue={dest.shipmentQtyByDate[date] || 0}
+                  isConfirmed={false} // Placeholder
                   onQtyChange={onQtyChange}
                 />
               ))}
               {/* Spacer for add column button (prevent row misalignment) */}
-              <div className="w-10 bg-slate-50/30" />
+              <div className="w-10 bg-slate-50/10 border-l border-slate-200" />
             </div>
           ))}
-          {destinations.length < 5 &&
-            Array.from({ length: 5 - destinations.length }).map((_, i) => (
-              <div key={i} className={`${hRow} flex divide-x divide-slate-100`}>
+          {destinations.length < MAX_VISIBLE_ROWS &&
+            Array.from({ length: MAX_VISIBLE_ROWS - destinations.length }).map((_, i) => (
+              <div
+                key={i}
+                className={`${hRow} flex divide-x divide-slate-100 border-b border-slate-100`}
+              >
                 {dateColumns.map((d) => (
-                  <div key={d} className="w-16"></div>
+                  <div key={d} className="w-16 bg-slate-50/5"></div>
                 ))}
-                <div className="w-10"></div>
+                <div className="w-10 bg-slate-50/10 border-l border-slate-200"></div>
               </div>
             ))}
         </div>
@@ -181,14 +186,10 @@ export function DateGrid({
           className={`${hFooter} flex border-t border-slate-300 bg-slate-100 font-bold divide-x divide-slate-200`}
         >
           {dateColumns.map((date) => {
-            const dayTotal = destinations.reduce((sum, d) => {
-              const changeKey = `${lotId}:${d.deliveryPlaceId}:${date}`;
-              const val =
-                localChanges && localChanges[changeKey] !== undefined
-                  ? localChanges[changeKey]
-                  : d.shipmentQtyByDate[date] || 0;
-              return sum + val;
-            }, 0);
+            const dayTotal = destinations.reduce(
+              (sum, d) => sum + (d.shipmentQtyByDate[date] || 0),
+              0,
+            );
             return (
               <div
                 key={date}

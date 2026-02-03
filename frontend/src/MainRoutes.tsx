@@ -52,6 +52,7 @@ import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogs
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
+import { MonthlyReportPage } from "@/features/reports/components/MonthlyReportPage";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { RPAPage } from "@/features/rpa";
 import {
@@ -104,11 +105,8 @@ function InventoryRoutes() {
         <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
         <Route path="adhoc/new" element={<AdhocLotCreatePage />} />
 
-        <Route path="excel-view/:productId/:warehouseId" element={<ExcelViewPage />} />
-        <Route
-          path="excel-view/:productId/:warehouseId/:customerItemId"
-          element={<ExcelViewPage />}
-        />
+        <Route path="excel-view/:productId" element={<ExcelViewPage />} />
+        <Route path="excel-view/:productId/:customerItemId" element={<ExcelViewPage />} />
         <Route path="excel-portal" element={<ExcelPortalPage />} />
         <Route path="history" element={<StockHistoryPage />} />
         <Route path="withdrawals" element={<WithdrawalsListPage />} />
@@ -238,6 +236,14 @@ function MasterRoutes() {
           </AdminGuard>
         }
       />
+    </Route>
+  );
+}
+
+function ReportRoutes() {
+  return (
+    <Route element={<FeatureGuardLayout feature="reports" />}>
+      <Route path={ROUTES.REPORTS.MONTHLY} element={<MonthlyReportPage />} />
     </Route>
   );
 }
@@ -409,6 +415,7 @@ export function MainRoutes() {
 
         {InventoryRoutes()}
         {MasterRoutes()}
+        {ReportRoutes()}
         {AdminRoutes()}
 
         {/* Calendar */}

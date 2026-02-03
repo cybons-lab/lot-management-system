@@ -143,7 +143,7 @@ models (ExpiryRule) have been removed.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum as PyEnum
 from typing import TYPE_CHECKING
@@ -151,6 +151,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     BigInteger,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -345,6 +346,8 @@ class AllocationSuggestion(Base):
     # 種別 / 由来
     allocation_type: Mapped[str] = mapped_column(String(10), nullable=False)  # 'soft' or 'hard'
     source: Mapped[str] = mapped_column(String(32), nullable=False)  # 'forecast_import' etc
+
+    coa_issue_date: Mapped[date | None] = mapped_column(Date, nullable=True, comment="成績書発行日")
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()

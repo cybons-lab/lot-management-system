@@ -397,6 +397,7 @@ export type AllocationSuggestionResponse = {
   lot_number?: string;
   lot_expiry_date?: string;
   warehouse_name?: string;
+  coa_issue_date?: string | null;
 };
 
 export type AllocationSuggestionPreviewResponse = {
@@ -444,6 +445,7 @@ export interface AllocationSuggestionBatchUpdateItem {
   lot_id: number;
   forecast_period: string;
   quantity: number;
+  coa_issue_date?: string | null;
 }
 
 export const updateAllocationSuggestionsBatch = (data: {

@@ -12,18 +12,23 @@ import {
   Input,
   Label,
 } from "@/components/ui";
-import { type LotUI } from "@/shared/libs/normalize";
 import { parseDecimal } from "@/shared/utils/decimal";
 
+interface ArchiveLotInfo {
+  lot_number: string | null;
+  current_quantity: string | number;
+  unit: string;
+}
+
 interface LotArchiveDialogProps {
-  lot: LotUI;
+  lot: ArchiveLotInfo;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (lotNumber?: string) => Promise<void>;
   isSubmitting: boolean;
 }
 
-function QuantityWarning({ lot }: { lot: LotUI }) {
+function QuantityWarning({ lot }: { lot: ArchiveLotInfo }) {
   return (
     <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 border border-yellow-200">
       <div className="flex items-start gap-2">

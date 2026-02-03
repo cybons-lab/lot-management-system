@@ -8,7 +8,7 @@ For direct usage:
 - GroupAllocationSuggestionService: customer/product group operations
 """
 
-from datetime import UTC
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import cast
 
@@ -131,7 +131,6 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 source="order_preview",
                 lot=lot,
             )
-            from datetime import datetime
 
             s.id = 0
             s.created_at = datetime.now(UTC)
@@ -191,7 +190,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
         count = 0
         for up in updates:
             # 1. 既存の提案を検索
-            item = (
+            items = (
                 self.db.query(AllocationSuggestion)
                 .filter(
                     AllocationSuggestion.customer_id == up["customer_id"],
@@ -200,19 +199,52 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                     AllocationSuggestion.lot_id == up["lot_id"],
                     AllocationSuggestion.forecast_period == up["forecast_period"],
                 )
-                .first()
+                .order_by(AllocationSuggestion.updated_at.desc())
+                .all()
             )
 
             quantity = Decimal(str(up["quantity"]))
-
-            if item:
-                if quantity <= 0:
-                    self.db.delete(item)
+            coa_date = None
+            if up.get("coa_issue_date"):
+                if isinstance(up["coa_issue_date"], str):
+                    coa_date = date.fromisoformat(up["coa_issue_date"])
                 else:
-                    item.quantity = quantity
-                    item.source = "manual_excel"
-                count += 1
-            elif quantity > 0:
+                    coa_date = up["coa_issue_date"]
+
+            if items:
+                # manual_excelソースのレコードがあるか確認
+                manual_item = next((item for item in items if item.source == "manual_excel"), None)
+
+                if quantity <= 0 and coa_date is None:
+                    # 数量0かつCOA日付なしの場合
+                    if manual_item:
+                        # 手動レコードなら、あえて残す（マッピング保持のため）
+                        manual_item.quantity = Decimal(0)
+                        manual_item.coa_issue_date = None
+                        # 他の重複（自動作成分など）を削除
+                        for item in items:
+                            if item.id != manual_item.id:
+                                self.db.delete(item)
+                    else:
+                        # 全て削除
+                        for item in items:
+                            self.db.delete(item)
+                else:
+                    # 更新または統合
+                    manual_item = next(
+                        (item for item in items if item.source == "manual_excel"), None
+                    )
+                    target = manual_item or items[0]
+                    target.quantity = quantity
+                    target.coa_issue_date = coa_date
+                    target.source = "manual_excel"
+                    target.allocation_type = "soft"
+                    # 他の重複を削除
+                    for item in items:
+                        if item.id != target.id:
+                            self.db.delete(item)
+                count += len(items)
+            elif quantity > 0 or coa_date is not None:
                 # 対応するフォーキャストを取得（任意で紐付け）
                 forecast = (
                     self.db.query(ForecastCurrent)
@@ -232,6 +264,7 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                     lot_id=up["lot_id"],
                     forecast_period=up["forecast_period"],
                     quantity=quantity,
+                    coa_issue_date=coa_date,
                     forecast_id=forecast.id if forecast else None,
                     allocation_type="soft",
                     source="manual_excel",

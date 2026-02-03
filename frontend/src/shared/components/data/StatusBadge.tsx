@@ -8,6 +8,7 @@
  */
 
 import { type VariantProps, cva } from "class-variance-authority";
+import { Lock } from "lucide-react";
 
 import { cn } from "@/shared/libs/utils";
 
@@ -27,6 +28,7 @@ const statusBadgeVariants = cva(
         info: "bg-blue-100 text-blue-800 border border-blue-300",
         purple: "bg-purple-100 text-purple-800 border border-purple-300",
         gray: "bg-gray-100 text-gray-600 border border-gray-200",
+        amber: "bg-amber-100 text-amber-800 border border-amber-300",
       },
     },
     defaultVariants: {
@@ -62,33 +64,50 @@ export function StatusBadge({ children, variant, className, ...props }: StatusBa
 // ロット専用ステータスバッジ
 // ============================================
 
-export type LotStatus = "available" | "expired" | "rejected" | "qc_hold" | "empty";
+export type LotStatus =
+  | "available"
+  | "expired"
+  | "rejected"
+  | "qc_hold"
+  | "pending_receipt"
+  | "empty";
 
 interface LotStatusConfig {
   label: string;
   variant: VariantProps<typeof statusBadgeVariants>["variant"];
+  showLock?: boolean; // ロックアイコンを表示するか
 }
 
 const lotStatusConfig: Record<LotStatus, LotStatusConfig> = {
   available: {
     label: "在庫あり",
     variant: "success",
+    showLock: false,
   },
   expired: {
     label: "期限切れ",
     variant: "error",
+    showLock: true,
   },
   rejected: {
     label: "廃棄/NG",
     variant: "error",
+    showLock: true,
   },
   qc_hold: {
     label: "検査/保留",
     variant: "warning",
+    showLock: true,
+  },
+  pending_receipt: {
+    label: "未入荷",
+    variant: "amber",
+    showLock: true,
   },
   empty: {
     label: "在庫なし",
     variant: "gray",
+    showLock: false,
   },
 };
 
@@ -110,11 +129,15 @@ export function LotStatusBadge({ status, className }: LotStatusBadgeProps) {
   const config = lotStatusConfig[status as LotStatus] || {
     label: status,
     variant: "default" as const,
+    showLock: false,
   };
 
   return (
     <StatusBadge variant={config.variant} className={className}>
-      {config.label}
+      <span className="inline-flex items-center gap-1">
+        {config.showLock && <Lock className="h-3 w-3" />}
+        {config.label}
+      </span>
     </StatusBadge>
   );
 }

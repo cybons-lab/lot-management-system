@@ -11,10 +11,18 @@ import {
 
 import { type AllocationSuggestionResponse } from "@/features/allocations/api";
 import { useAllocationSuggestions } from "@/features/allocations/hooks/api/useAllocationSuggestions";
-import { getCustomerItemById, type CustomerItem } from "@/features/customer-items/api";
+import {
+  getCustomerItems,
+  getCustomerItemById,
+  type CustomerItem,
+} from "@/features/customer-items/api";
+import {
+  fetchDeliverySettings,
+  type CustomerItemDeliverySetting,
+} from "@/features/customer-items/delivery-settings/api";
 import { type Customer } from "@/features/customers/api";
 import { type DeliveryPlace } from "@/features/delivery-places/api";
-import { useInventoryItem } from "@/features/inventory/hooks";
+import { useInventoryItems } from "@/features/inventory/hooks";
 import { useLotsQuery } from "@/hooks/api";
 import { useMasterApi } from "@/shared/hooks/useMasterApi";
 import { type LotUI } from "@/shared/libs/normalize";
@@ -24,26 +32,36 @@ interface MapContext {
   customerMap: Map<number, Customer>;
   suggestions: AllocationSuggestionResponse[];
   productCode: string;
+  mustShowDpIds: number[];
 }
 
 const getShipmentByDate = (
   lotId: number,
   dpId: number,
   suggestions: AllocationSuggestionResponse[],
-): { shipmentQtyByDate: Record<string, number>; totalShipmentQty: number } => {
+): {
+  shipmentQtyByDate: Record<string, number>;
+  coaIssueDateByDate: Record<string, string | null>;
+  totalShipmentQty: number;
+} => {
   const lotDestSuggestions = suggestions.filter(
     (s) => s.lot_id === lotId && s.delivery_place_id === dpId,
   );
   const shipmentQtyByDate: Record<string, number> = {};
+  const coaIssueDateByDate: Record<string, string | null> = {};
   let totalShipmentQty = 0;
   lotDestSuggestions.forEach((s) => {
     const qty = Number(s.quantity);
     if (s.forecast_period) {
       shipmentQtyByDate[s.forecast_period] = (shipmentQtyByDate[s.forecast_period] || 0) + qty;
+      // Note: coa_issue_date is technically per suggestion record.
+      // In Excel View, we have one row per (lot, destination) and one column per date.
+      coaIssueDateByDate[s.forecast_period] =
+        (s as AllocationSuggestionResponse).coa_issue_date ?? null;
     }
     totalShipmentQty += qty;
   });
-  return { shipmentQtyByDate, totalShipmentQty };
+  return { shipmentQtyByDate, coaIssueDateByDate, totalShipmentQty };
 };
 
 const getDestinationInfo = (dpId: number, context: MapContext): DestinationInfo => {
@@ -66,11 +84,19 @@ const mapDestinationRow = (
   dpId: number,
   lotId: number,
   context: MapContext,
-  coaIssueDate?: string | null,
 ): DestinationRowData => {
   const { suggestions, dpMap } = context;
-  const { shipmentQtyByDate, totalShipmentQty } = getShipmentByDate(lotId, dpId, suggestions);
+  const { shipmentQtyByDate, coaIssueDateByDate, totalShipmentQty } = getShipmentByDate(
+    lotId,
+    dpId,
+    suggestions,
+  );
   const dp = dpMap.get(dpId);
+
+  // Use the coa_issue_date from any of the suggestions for this (lot, dp)
+  // In the future, we might want this per date column, but the UI currently has one field per row.
+  const coaIssueDate = Object.values(coaIssueDateByDate)[0] ?? null;
+
   return {
     deliveryPlaceId: dpId,
     customerId: dp?.customer_id || 0,
@@ -94,17 +120,25 @@ const getLotInfo = (lot: LotUI): LotInfo => ({
 const mapLotBlock = (lot: LotUI, context: MapContext): LotBlockData => {
   const lotId = lot.lot_id;
   const lotSuggestions = context.suggestions.filter((s) => s.lot_id === lotId);
-  const dpIds = Array.from(new Set(lotSuggestions.map((s) => s.delivery_place_id)));
-  // Pass lot's inspection_date as COA issue date for each destination row
-  const coaIssueDate = lot.inspection_date;
-  const destinations = dpIds.map((dpId) => mapDestinationRow(dpId, lotId, context, coaIssueDate));
+  const suggestionDpIds = lotSuggestions.map((s) => s.delivery_place_id);
+  const dpIds = Array.from(new Set([...suggestionDpIds, ...context.mustShowDpIds]));
+  const destinations = dpIds.map((dpId) => mapDestinationRow(dpId, lotId, context));
   const totalShipment = destinations.reduce((sum, d) => sum + d.totalShipmentQty, 0);
   return {
     lotId,
     lotInfo: getLotInfo(lot),
+    lotNumber: lot.lot_number ?? null,
     destinations,
     totalShipment,
     totalStock: Number(lot.current_quantity),
+    // ステータス判定用フィールドを追加
+    status: lot.status,
+    inspectionStatus: lot.inspection_status,
+    receivedDate: lot.received_date,
+    expiryDate: lot.expiry_date,
+    // 倉庫情報を追加
+    warehouseName: lot.warehouse_name || "不明",
+    warehouseCode: lot.warehouse_code || "-",
   };
 };
 
@@ -119,12 +153,22 @@ interface UseExcelViewDataReturn {
 /* eslint-disable complexity */
 export function useExcelViewData(
   productId: number,
-  warehouseId: number,
   customerItemId?: number,
 ): UseExcelViewDataReturn {
-  const isEnabled = !isNaN(productId) && !isNaN(warehouseId);
+  const isEnabled = !isNaN(productId);
 
-  const { data: inventoryItem, isLoading: itemLoading } = useInventoryItem(productId, warehouseId);
+  // Fetch inventory items for this product across all warehouses
+  const { data: inventoryData, isLoading: itemLoading } = useInventoryItems(
+    isEnabled
+      ? {
+          supplier_item_id: productId,
+          limit: 100,
+        }
+      : undefined,
+  );
+
+  // Use the first inventory item for header data (all should have same product info)
+  const inventoryItem = inventoryData?.items?.[0];
 
   // Fetch customer item if customerItemId is provided
   const { data: customerItem, isLoading: customerItemLoading } = useQuery({
@@ -141,7 +185,6 @@ export function useExcelViewData(
     isEnabled
       ? {
           supplier_item_id: productId,
-          warehouse_id: warehouseId,
           status: "active",
           with_stock: true,
         }
@@ -161,9 +204,46 @@ export function useExcelViewData(
     "masters/delivery-places",
     "delivery-places",
   );
-  const { data: deliveryPlaces = [] } = deliveryPlaceApi.useList();
+  const { data: deliveryPlacesResponse } = deliveryPlaceApi.useList();
+  const deliveryPlaces = useMemo(() => {
+    const items =
+      (deliveryPlacesResponse as { items?: DeliveryPlace[] })?.items ||
+      (Array.isArray(deliveryPlacesResponse) ? deliveryPlacesResponse : []);
+    return items;
+  }, [deliveryPlacesResponse]);
   const customerApi = useMasterApi<Customer>("masters/customers", "customers");
   const { data: customers = [] } = customerApi.useList();
+
+  // Fetch all customer items for this product to find registered destinations
+  const { data: allCustomerItems = [] } = useQuery({
+    queryKey: ["customer-items", { supplier_item_id: productId }],
+    queryFn: () => getCustomerItems({ supplier_item_id: productId }),
+    enabled: isEnabled,
+  });
+
+  // Fetch delivery settings for relevant customer items
+  const { data: allDeliverySettings = [] as CustomerItemDeliverySetting[] } = useQuery({
+    queryKey: [
+      "customer-item-delivery-settings",
+      "bulk",
+      allCustomerItems.map((ci: CustomerItem) => ci.id),
+    ],
+    queryFn: async () => {
+      // If we are filtering by one customer item, just fetch that
+      const targetItems = customerItemId
+        ? (allCustomerItems as CustomerItem[]).filter(
+            (ci: CustomerItem) => ci.id === customerItemId,
+          )
+        : (allCustomerItems as CustomerItem[]);
+
+      const results = await Promise.all(
+        targetItems.map((ci: CustomerItem) => fetchDeliverySettings(ci.id)),
+      );
+      return results.flat();
+    },
+    enabled: isEnabled && allCustomerItems.length > 0,
+  });
+
   const isLoading = itemLoading || lotsLoading || suggestionsLoading || customerItemLoading;
 
   const dateColumns = useMemo(() => {
@@ -178,18 +258,29 @@ export function useExcelViewData(
   const mapContext = useMemo(() => {
     const dpMap = new Map(deliveryPlaces.map((dp) => [dp.id, dp]));
     const customerMap = new Map(customers.map((c) => [c.id, c]));
+    const mustShowDpIds = Array.from(
+      new Set(
+        allDeliverySettings
+          .map((s: CustomerItemDeliverySetting) => s.delivery_place_id)
+          .filter((id): id is number => id !== null),
+      ),
+    );
+
     return {
       dpMap,
       customerMap,
       suggestions: suggestionResponse?.suggestions || [],
       productCode: inventoryItem?.product_code || "-",
+      mustShowDpIds,
     };
-  }, [deliveryPlaces, customers, suggestionResponse, inventoryItem]);
+  }, [deliveryPlaces, customers, suggestionResponse, inventoryItem, allDeliverySettings]);
 
   const lotBlocks = useMemo(() => {
     if (!inventoryItem) return [];
+    // Filter out TMP lots (temporary lots should not be displayed in Excel View)
+    const filteredLots = lots.filter((lot) => !lot.lot_number?.startsWith("TMP-"));
     // Sort lots by received_date ascending (oldest first, newest last)
-    const sortedLots = [...lots].sort((a, b) => {
+    const sortedLots = [...filteredLots].sort((a, b) => {
       const dateA = a.received_date ? new Date(a.received_date).getTime() : 0;
       const dateB = b.received_date ? new Date(b.received_date).getTime() : 0;
       return dateA - dateB;
@@ -199,15 +290,19 @@ export function useExcelViewData(
 
   const data = useMemo<ExcelViewData | null>(() => {
     if (!inventoryItem) return null;
-    const uniqueDpIds = Array.from(new Set(mapContext.suggestions.map((s) => s.delivery_place_id)));
-    const involvedDestinations = uniqueDpIds.map((id) => getDestinationInfo(id, mapContext));
+    const uniqueDpIds = Array.from(
+      new Set(mapContext.suggestions.map((s: AllocationSuggestionResponse) => s.delivery_place_id)),
+    );
+    const involvedDestinations = uniqueDpIds.map((id: number) =>
+      getDestinationInfo(id, mapContext),
+    );
 
     return {
       header: {
         supplierCode: inventoryItem.supplier_code || "-",
         supplierName: inventoryItem.supplier_name || "-",
-        warehouseCode: inventoryItem.warehouse_code || "-",
-        warehouseName: inventoryItem.warehouse_name || "-",
+        warehouseCode: "ALL",
+        warehouseName: "全倉庫",
         productCode: inventoryItem.product_code || "-",
         productName: inventoryItem.product_name || "-",
         unit: lotBlocks[0]?.lotInfo.unit || "g",

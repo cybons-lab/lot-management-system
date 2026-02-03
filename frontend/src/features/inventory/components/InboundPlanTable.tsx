@@ -2,7 +2,7 @@
  * InboundPlanTable - Simple table showing top 10 inbound plans.
  * Refactored to use DataTable component.
  */
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { useMemo } from "react";
 
 import type { Column } from "@/shared/components/data/DataTable";
@@ -62,7 +62,8 @@ export function InboundPlanTable({ plans }: InboundPlanTableProps) {
         id: "planned_arrival_date",
         header: "入荷予定日",
         accessor: (row) => row.planned_arrival_date,
-        cell: (row) => format(new Date(row.planned_arrival_date), "yyyy/MM/dd"),
+        cell: (row) =>
+          format(parse(row.planned_arrival_date, "yyyy-MM-dd", new Date()), "yyyy/MM/dd"),
         width: 120,
         sortable: true,
       },

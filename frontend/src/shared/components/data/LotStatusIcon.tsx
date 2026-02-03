@@ -5,7 +5,15 @@
  * ホバーで詳細をツールチップ表示
  */
 
-import { Package, PackageX, AlertCircle, Clock, Calendar, Archive } from "lucide-react";
+import {
+  Package,
+  PackageX,
+  AlertCircle,
+  Clock,
+  Calendar,
+  Archive,
+  PackageCheck,
+} from "lucide-react";
 
 import { cn } from "@/shared/libs/utils";
 import type { LotStatus } from "@/shared/utils/status";
@@ -34,6 +42,11 @@ const STATUS_CONFIG: Record<
     Icon: Clock,
     label: "検査/保留",
     color: "text-yellow-600",
+  },
+  pending_receipt: {
+    Icon: PackageCheck,
+    label: "未入荷",
+    color: "text-amber-600",
   },
   expired: {
     Icon: Calendar,

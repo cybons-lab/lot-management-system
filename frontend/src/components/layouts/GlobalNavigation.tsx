@@ -86,6 +86,12 @@ const navItems: NavItem[] = [
     icon: FileSpreadsheet,
   },
   {
+    title: "月次レポート",
+    href: ROUTES.REPORTS.MONTHLY,
+    icon: Table,
+    feature: "reports",
+  },
+  {
     title: "受注管理",
     href: ROUTES.ORDERS.LIST,
     icon: ShoppingCart,
