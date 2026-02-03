@@ -210,7 +210,19 @@
 3. [x] **アーカイブ機能の実装 (Phase 3)**
    - 古いロットをアーカイブし、表示を整理する機能の実装。
 
-4. [ ] **フェーズ4: 出荷日とリードタイム管理**
+4. [ ] **数量変更のデバウンス処理 (High Priority)**
+   - 現在の実装: フォーカスアウト時に即座に保存
+   - 課題: 複数セルを連続編集する際、1セルごとにAPIリクエストが発行される
+   - 改善案:
+     - 300ms程度のデバウンスを導入し、連続入力時のAPI呼び出しを削減
+     - または、一定時間内の変更をバッチ化して一度にAPI送信
+     - 保存状態のビジュアルフィードバック強化（保存中/保存済みインジケーター）
+   - 関連ファイル:
+     - `frontend/src/features/inventory/components/excel-view/ExcelViewPage.tsx` (handleQtyChange)
+     - `frontend/src/features/inventory/components/excel-view/subcomponents/DateGrid.tsx`
+   - 優先度: 高（ユーザー体験向上のため）
+
+5. [ ] **フェーズ4: 出荷日とリードタイム管理**
    - 出荷予定日の設定・表示
    - リードタイム計算と警告表示
    - 遅延リスクのハイライト
