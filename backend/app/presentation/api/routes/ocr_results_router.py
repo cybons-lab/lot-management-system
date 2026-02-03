@@ -257,19 +257,15 @@ def build_shipping_slip_text(
     if shipping_date:
         shipping_date_formatted = format_date_mmdd(shipping_date)
         if shipping_date_formatted:
-            result = re.sub(r"▲+/▲+", shipping_date_formatted, result)
-    else:
-        # 出荷日がない場合はプレースホルダーを削除
-        result = re.sub(r"▲+/▲+", "", result)
+            # count=1 で最初に見つかったものだけ置換
+            result = re.sub(r"▲+/▲+", shipping_date_formatted, result, count=1)
 
     # 納期 ●/●
     if delivery_date:
         delivery_date_formatted = format_date_mmdd(delivery_date)
         if delivery_date_formatted:
-            result = re.sub(r"●+/●+", delivery_date_formatted, result)
-    else:
-        # 納期がない場合はプレースホルダーを削除
-        result = re.sub(r"●+/●+", "", result)
+            # count=1 で最初に見つかったものだけ置換
+            result = re.sub(r"●+/●+", delivery_date_formatted, result, count=1)
 
     # 2. ロット・入庫番号の置換 (シナリオ分岐)
     # ロット情報の構築（数量がある場合のみカッコ付き）
@@ -294,50 +290,44 @@ def build_shipping_slip_text(
 
     # Case A: テンプレートに「入庫番号」のみがある場合（ロットプレースホルダーなし）
     if has_inbound_placeholder and not has_lot_placeholder:
-        # ロット番号が入力されていても、テンプレートに「ロット」がないので無視
         # 入庫番号のみを置換する（数量がある場合は入庫番号(数量)形式）
-        if inbound_no:
-            inbound_1_with_qty = build_lot_with_quantity(inbound_no, quantity_1)
-            inbound_2_with_qty = (
-                build_lot_with_quantity(inbound_no_2, quantity_2) if inbound_no_2 else None
-            )
+        inbound_1_with_qty = build_lot_with_quantity(inbound_no, quantity_1)
+        inbound_2_with_qty = (
+            build_lot_with_quantity(inbound_no_2, quantity_2) if inbound_no_2 else None
+        )
 
-            # 入庫番号部分の構築（複数入庫番号はスラッシュで区切り）
-            inbound_combined = None
-            if inbound_1_with_qty and inbound_2_with_qty:
-                inbound_combined = f"{inbound_1_with_qty}/{inbound_2_with_qty}"
-            elif inbound_1_with_qty:
-                inbound_combined = inbound_1_with_qty
-            elif inbound_2_with_qty:
-                inbound_combined = inbound_2_with_qty
+        # 入庫番号部分の構築（複数入庫番号はスラッシュで区切り）
+        inbound_combined = None
+        if inbound_1_with_qty and inbound_2_with_qty:
+            inbound_combined = f"{inbound_1_with_qty}/{inbound_2_with_qty}"
+        elif inbound_1_with_qty:
+            inbound_combined = inbound_1_with_qty
+        elif inbound_2_with_qty:
+            inbound_combined = inbound_2_with_qty
 
-            result = result.replace(
-                "入庫番号", inbound_combined if inbound_combined else inbound_no
-            )
-        else:
-            # 何もない場合はプレースホルダーを削除
-            result = result.replace("入庫番号", "")
+        if inbound_combined:
+            result = result.replace("入庫番号", inbound_combined, 1)
 
     # Case B: テンプレートに「入庫番号」と「ロット」がある場合
     elif has_inbound_placeholder and has_lot_placeholder:
         # 入庫番号 → 入庫番号（数量なし）
-        if inbound_no:
-            result = result.replace("入庫番号", inbound_no)
+        inbound_combined = None
+        if inbound_no and inbound_no_2:
+            inbound_combined = f"{inbound_no}/{inbound_no_2}"
         else:
-            result = result.replace("入庫番号", "")
+            inbound_combined = inbound_no or inbound_no_2
+
+        if inbound_combined:
+            result = result.replace("入庫番号", inbound_combined, 1)
 
         # ロット → ロット(数量)
         if lot_combined:
-            result = result.replace("ロット", lot_combined)
-        else:
-            result = result.replace("ロット", "")
+            result = result.replace("ロット", lot_combined, 1)
 
     # Case C: テンプレートに「ロット」のみがある場合（入庫番号プレースホルダーなし）
     elif has_lot_placeholder and not has_inbound_placeholder:
         if lot_combined:
-            result = result.replace("ロット", lot_combined)
-        else:
-            result = result.replace("ロット", "")
+            result = result.replace("ロット", lot_combined, 1)
 
     return result
 
@@ -660,13 +650,20 @@ async def export_ocr_results(
         inbound_no_1 = row.get("manual_inbound_no") or row.get("inbound_no")
         inbound_no_2 = row.get("manual_inbound_no_2")
 
-        # 出荷日: 手入力値をそのまま使用（自動計算は画面表示時のみ）
-        # Excelエクスポート用にYYYY/MM/DD形式の文字列に変換
-        shipping_date_raw = row.get("manual_shipping_date")
-        shipping_date = shipping_date_raw.strftime("%Y/%m/%d") if shipping_date_raw else None
+        # 出荷日: 1.手入力(またはフロント計算) 2.バックエンド計算 3.OCR生データ
+        shipping_date_raw = (
+            row.get("manual_shipping_date")
+            or row.get("calculated_shipping_date")
+            or row.get("shipping_date")
+        )
+        shipping_date = (
+            shipping_date_raw.strftime("%Y/%m/%d")
+            if isinstance(shipping_date_raw, date | datetime)
+            else None
+        )
 
-        # 納期: YYYY/MM/DD形式に統一
-        delivery_date_raw = row.get("delivery_date")
+        # 納期: 1.手入力 2.OCR生データ
+        delivery_date_raw = row.get("manual_delivery_date") or row.get("delivery_date")
         delivery_date = None
         if delivery_date_raw:
             if isinstance(delivery_date_raw, date | datetime):
@@ -693,23 +690,13 @@ async def export_ocr_results(
 
         order_unit = sap_qty_unit if sap_qty_unit else row.get("order_unit")
 
-        # 部分置換ロジック適用
-        # 出荷票テキスト（計算用・H列）
-        shipping_slip_text = (
-            row.get("manual_shipping_slip_text")
-            if row.get("manual_shipping_slip_text_edited")
-            else build_shipping_slip_text(
-                row.get("shipping_slip_text"),
-                inbound_no_1,
-                lot_no_1 or row.get("lot_no"),
-                quantity_1,
-                lot_no_2,
-                quantity_2,
-                shipping_date=shipping_date,
-                delivery_date=delivery_date,
-                inbound_no_2=inbound_no_2,
+        # 出荷票テキスト: ユーザーが手動編集している場合は、空文字であってもそれを優先
+        if row.get("manual_shipping_slip_text_edited"):
+            shipping_slip_text = row.get("manual_shipping_slip_text")
+        else:
+            shipping_slip_text = row.get("manual_shipping_slip_text") or row.get(
+                "shipping_slip_text"
             )
-        )
 
         # アイテムNo: 下6桁のみ出力
         item_no_raw = row.get("item_no")

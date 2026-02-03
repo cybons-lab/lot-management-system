@@ -3,8 +3,7 @@ import { useCallback, useRef } from "react";
 import { toast } from "sonner";
 
 import { ocrResultsApi, type OcrResultEditPayload, type OcrResultItem } from "../api";
-import { type RowInputState } from "../pages/OcrResultsTableCells";
-import { buildPayload } from "../utils/ocr-utils";
+import { buildPayload, type RowInputState } from "../utils/ocr-utils";
 
 export function useOcrEditPersistence() {
   const queryClient = useQueryClient();
