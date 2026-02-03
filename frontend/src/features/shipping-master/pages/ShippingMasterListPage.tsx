@@ -87,6 +87,15 @@ export function ShippingMasterListPage() {
     setSelectedItem(null);
   };
 
+  const handleExport = async () => {
+    try {
+      await shippingMasterApi.export();
+    } catch (err) {
+      console.error("Export failed:", err);
+      alert("エクスポートに失敗しました。");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title="出荷用マスタデータ" subtitle="OCR受注登録で使用する出荷ルールを管理" />
@@ -115,7 +124,7 @@ export function ShippingMasterListPage() {
               全削除
             </Button>
           )}
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" />
             Excelエクスポート
           </Button>

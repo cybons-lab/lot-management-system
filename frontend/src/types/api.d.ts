@@ -8124,6 +8124,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/shipping-masters/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Shipping Masters
+     * @description 出荷用マスタをエクスポート.
+     */
+    get: operations["export_shipping_masters_api_shipping_masters_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/shipping-masters/import": {
     parameters: {
       query?: never;
@@ -30183,9 +30203,45 @@ export interface operations {
       };
     };
   };
+  export_shipping_masters_api_shipping_masters_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   import_shipping_masters_file_api_shipping_masters_import_post: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description インポート後に自動同期を実行するか */
+        auto_sync?: boolean;
+        /** @description 同期ポリシー */
+        sync_policy?: "create-only" | "upsert" | "update-if-empty";
+      };
       header?: never;
       path?: never;
       cookie?: never;

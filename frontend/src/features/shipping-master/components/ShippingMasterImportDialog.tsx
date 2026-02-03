@@ -17,6 +17,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui";
+import {
+  Checkbox,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/form";
 import httpClient from "@/shared/api/http-client";
 
 interface ImportResponse {
@@ -31,6 +40,8 @@ export function ShippingMasterImportDialog() {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [autoSync, setAutoSync] = useState(false);
+  const [syncPolicy, setSyncPolicy] = useState<string>("create-only");
 
   const queryClient = useQueryClient();
 
@@ -39,9 +50,12 @@ export function ShippingMasterImportDialog() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await httpClient.post("shipping-masters/import", {
-        body: formData,
-      });
+      const response = await httpClient.post(
+        `shipping-masters/import?auto_sync=${autoSync}&sync_policy=${syncPolicy}`,
+        {
+          body: formData,
+        },
+      );
       return response.json<ImportResponse>();
     },
     onSuccess: (response) => {
@@ -108,6 +122,42 @@ export function ShippingMasterImportDialog() {
               <p className="text-muted-foreground">サイズ: {(file.size / 1024).toFixed(2)} KB</p>
             </div>
           )}
+
+          <div className="flex items-center space-x-2 py-2">
+            <Checkbox
+              id="autoSync"
+              checked={autoSync}
+              onCheckedChange={(checked) => setAutoSync(!!checked)}
+            />
+            <Label
+              htmlFor="autoSync"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              インポート後にマスターへ自動同期する
+            </Label>
+          </div>
+
+          {autoSync && (
+            <div className="space-y-2 py-2">
+              <Label htmlFor="syncPolicy" className="text-sm font-medium">
+                同期ポリシー
+              </Label>
+              <Select value={syncPolicy} onValueChange={setSyncPolicy}>
+                <SelectTrigger id="syncPolicy">
+                  <SelectValue placeholder="ポリシーを選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="create-only">新規作成のみ</SelectItem>
+                  <SelectItem value="update-if-empty">空項目のみ更新</SelectItem>
+                  <SelectItem value="upsert">既存データを上書き</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                ※既にマスターにデータがある場合の処理を選択します。
+              </p>
+            </div>
+          )}
+
           {error && <div className="text-sm text-destructive">{error}</div>}
         </div>
         <DialogFooter>

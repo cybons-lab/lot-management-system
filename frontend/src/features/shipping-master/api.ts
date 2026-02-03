@@ -72,4 +72,21 @@ export const shippingMasterApi = {
   delete: async (id: number): Promise<void> => {
     await httpClient.delete(`shipping-masters/${id}`);
   },
+
+  /**
+   * 出荷用マスタエクスポート
+   */
+  export: async (): Promise<void> => {
+    const filename = `shipping_masters_${new Date().toISOString().split("T")[0]}.xlsx`;
+    const response = await httpClient.get("shipping-masters/export/download?format=xlsx");
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };
