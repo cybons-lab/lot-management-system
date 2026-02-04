@@ -1,5 +1,6 @@
 """SmartRead OCR router - PDFインポートAPI."""
 
+import logging
 from datetime import date
 from typing import Annotated
 
@@ -55,6 +56,8 @@ from app.presentation.schemas.smartread_schema import (
 )
 
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/rpa/smartread", tags=["smartread"])
 
 
@@ -70,6 +73,7 @@ def get_configs(
     assert db is not None
     service = SmartReadService(db)
     configs = service.get_all_configs()
+    logger.debug("SmartRead configs listed", extra={"count": len(configs)})
     return [SmartReadConfigResponse.model_validate(c) for c in configs]
 
 
@@ -84,6 +88,7 @@ def get_config(
     service = SmartReadService(db)
     config = service.get_config(config_id)
     if not config:
+        logger.warning("SmartRead config not found", extra={"config_id": config_id})
         raise HTTPException(status_code=404, detail="設定が見つかりません")
     return SmartReadConfigResponse.model_validate(config)
 
@@ -98,6 +103,7 @@ def create_config(
 ) -> SmartReadConfigResponse:
     """設定を作成."""
     assert uow.session is not None
+    logger.info("Creating SmartRead config", extra={"name": request.name})
     service = SmartReadService(uow.session)
     config = service.create_config(
         endpoint=request.endpoint,
@@ -113,6 +119,7 @@ def create_config(
         is_active=request.is_active,
     )
     uow.session.commit()
+    logger.info("SmartRead config created", extra={"config_id": config.id, "name": config.name})
     return SmartReadConfigResponse.model_validate(config)
 
 
@@ -127,8 +134,13 @@ def update_config(
     assert uow.session is not None
     service = SmartReadService(uow.session)
     update_data = request.model_dump(exclude_unset=True)
+    logger.info(
+        "Updating SmartRead config",
+        extra={"config_id": config_id, "fields": list(update_data.keys())},
+    )
     config = service.update_config(config_id, **update_data)
     if not config:
+        logger.warning("SmartRead config not found for update", extra={"config_id": config_id})
         raise HTTPException(status_code=404, detail="設定が見つかりません")
     uow.session.commit()
     return SmartReadConfigResponse.model_validate(config)
@@ -142,10 +154,13 @@ def delete_config(
 ) -> None:
     """設定を削除."""
     assert uow.session is not None
+    logger.info("Deleting SmartRead config", extra={"config_id": config_id})
     service = SmartReadService(uow.session)
     if not service.delete_config(config_id):
+        logger.warning("SmartRead config not found for delete", extra={"config_id": config_id})
         raise HTTPException(status_code=404, detail="設定が見つかりません")
     uow.session.commit()
+    logger.info("SmartRead config deleted", extra={"config_id": config_id})
 
 
 # --- ファイル監視・一括処理 ---
@@ -160,7 +175,12 @@ def list_watch_dir_files(
     """監視フォルダ内のファイル一覧を取得."""
     assert db is not None
     service = SmartReadService(db)
-    return service.list_files_in_watch_dir(config_id)
+    files = service.list_files_in_watch_dir(config_id)
+    logger.debug(
+        "Watch dir files listed",
+        extra={"config_id": config_id, "file_count": len(files)},
+    )
+    return files
 
 
 @router.post("/configs/{config_id}/process", response_model=list[SmartReadAnalyzeResponse])
@@ -173,6 +193,10 @@ async def process_files(
     """監視フォルダ内の指定ファイルを処理 (バックグラウンド処理)."""
     from app.application.services.smartread.request_service import process_files_background
 
+    logger.info(
+        "Processing files in background",
+        extra={"config_id": config_id, "file_count": len(request.filenames)},
+    )
     # ファイルを処理（バックグラウンドで処理）
     background_tasks.add_task(process_files_background, config_id, request.filenames)
 
@@ -196,6 +220,10 @@ async def diagnose_watch_dir_file(
 ) -> SmartReadDiagnoseResponse:
     """SmartRead API送信を診断."""
     assert db is not None
+    logger.info(
+        "Diagnosing watch dir file",
+        extra={"config_id": config_id, "filename": request.filename},
+    )
     service = SmartReadService(db)
     result = await service.diagnose_watch_dir_file(config_id, request.filename)
     return SmartReadDiagnoseResponse(**result)
@@ -219,6 +247,10 @@ async def analyze_file(
     # ファイル読み込み
     file_content = await file.read()
     filename = file.filename or "unknown"
+    logger.info(
+        "Analyzing file via SmartRead API",
+        extra={"config_id": config_id, "filename": filename, "size_bytes": len(file_content)},
+    )
 
     service = SmartReadService(db)
     assert db is not None
@@ -250,6 +282,10 @@ async def analyze_file_simple(
     """
     file_content = await file.read()
     filename = file.filename or "unknown"
+    logger.info(
+        "Starting simple analyze in background",
+        extra={"config_id": config_id, "filename": filename, "size_bytes": len(file_content)},
+    )
 
     # バックグラウンドで処理を開始
     background_tasks.add_task(
@@ -338,6 +374,7 @@ def export_to_json(
 ) -> Response:
     """データをJSONでダウンロード."""
     assert db is not None
+    logger.info("Exporting data to JSON", extra={"filename": filename, "row_count": len(data)})
     service = SmartReadService(db)
     result = service.export_to_json(data, filename)
 
@@ -357,6 +394,7 @@ def export_to_csv(
 ) -> Response:
     """データをCSVでダウンロード."""
     assert db is not None
+    logger.info("Exporting data to CSV", extra={"filename": filename, "row_count": len(data)})
     service = SmartReadService(db)
     result = service.export_to_csv(data, filename)
 
@@ -381,6 +419,7 @@ async def get_tasks(
     service = SmartReadService(uow.session)
     tasks = await service.get_tasks(config_id)
     uow.session.commit()
+    logger.debug("Tasks listed", extra={"config_id": config_id, "count": len(tasks)})
     return SmartReadTaskListResponse(
         tasks=[
             SmartReadTaskResponse(
@@ -407,9 +446,14 @@ async def create_task_export(
     assert db is not None
     service = SmartReadService(db)
     export_type = request.export_type if request else "csv"
+    logger.info(
+        "Creating task export",
+        extra={"config_id": config_id, "task_id": task_id, "export_type": export_type},
+    )
     export = await service.create_export(config_id, task_id, export_type)
 
     if not export:
+        logger.error("Task export creation failed", extra={"task_id": task_id})
         raise HTTPException(status_code=500, detail="エクスポートの作成に失敗しました")
 
     return SmartReadExportResponse(
@@ -434,6 +478,10 @@ async def get_export_status(
     export = await service.get_export_status(config_id, task_id, export_id)
 
     if not export:
+        logger.warning(
+            "Export not found",
+            extra={"task_id": task_id, "export_id": export_id},
+        )
         raise HTTPException(status_code=404, detail="エクスポートが見つかりません")
 
     return SmartReadExportResponse(
@@ -462,6 +510,7 @@ async def get_export_csv(
 
     # skip_todayチェック
     if service.should_skip_today(task_id):
+        logger.warning("Task skipped today", extra={"task_id": task_id})
         raise HTTPException(
             status_code=403, detail="このタスクは今日スキップする設定になっています"
         )
@@ -474,11 +523,16 @@ async def get_export_csv(
         except ValueError:
             raise HTTPException(status_code=400, detail="無効な日付形式です (YYYY-MM-DD)")
 
+    logger.info(
+        "Fetching export CSV data",
+        extra={"config_id": config_id, "task_id": task_id, "export_id": export_id},
+    )
     result = await service.get_export_csv_data(
         config_id, task_id, export_id, save_to_db=save_to_db, task_date=parsed_task_date
     )
 
     if not result:
+        logger.warning("CSV data not found", extra={"task_id": task_id, "export_id": export_id})
         raise HTTPException(status_code=404, detail="CSVデータの取得に失敗しました")
 
     if save_to_db:
@@ -511,6 +565,7 @@ def transform_csv(
     """横持ちCSVを縦持ちに変換."""
     from app.application.services.smartread.csv_transformer import SmartReadCsvTransformer
 
+    logger.debug("Transforming CSV wide→long", extra={"row_count": len(request.wide_data)})
     transformer = SmartReadCsvTransformer()
     result = transformer.transform_to_long(request.wide_data, skip_empty=request.skip_empty)
 
@@ -541,6 +596,7 @@ def get_managed_tasks(
     from app.infrastructure.persistence.models.smartread_models import SmartReadTask
 
     assert db is not None
+    logger.debug("Listing managed tasks", extra={"config_id": config_id})
     stmt = (
         SmartReadTask.__table__.select()
         .where(SmartReadTask.config_id == config_id)
@@ -573,6 +629,10 @@ def update_skip_today(
 ) -> SmartReadTaskDetailResponse:
     """skip_todayフラグを更新."""
     assert uow.session is not None
+    logger.info(
+        "Updating skip_today flag",
+        extra={"task_id": task_id, "skip_today": request.skip_today},
+    )
     service = SmartReadService(uow.session)
     service.set_skip_today(task_id, request.skip_today)
     task = service.get_or_create_task(
@@ -602,14 +662,20 @@ async def sync_task_results(
 ):
     """タスクの結果をAPIから同期（ダウンロード & DB保存）."""
     assert uow.session is not None
+    logger.info(
+        "Syncing task results",
+        extra={"config_id": config_id, "task_id": task_id, "force": force},
+    )
     service = SmartReadService(uow.session)
 
     result = await service.sync_task_results(config_id, task_id, force=force)
     if not result:
+        logger.error("Task sync failed", extra={"task_id": task_id})
         raise HTTPException(status_code=500, detail="同期処理に失敗しました")
 
     # PENDING状態の場合は202を返す
     if result.get("state") == "PENDING":
+        logger.info("Task sync: PENDING state", extra={"task_id": task_id})
         return JSONResponse(
             status_code=202,
             content={
@@ -625,6 +691,7 @@ async def sync_task_results(
 
     # FAILED状態の場合は422を返す
     if result.get("state") == "FAILED":
+        logger.warning("Task sync: FAILED state", extra={"task_id": task_id})
         return JSONResponse(
             status_code=422,
             content={
@@ -640,6 +707,7 @@ async def sync_task_results(
 
     # EMPTY状態の場合は200で返す（データなし）
     if result.get("state") == "EMPTY":
+        logger.info("Task sync: EMPTY state", extra={"task_id": task_id})
         return JSONResponse(
             status_code=200,
             content={
@@ -681,6 +749,15 @@ async def save_long_data(
     from datetime import datetime
 
     assert uow.session is not None
+    logger.info(
+        "Saving long data from frontend",
+        extra={
+            "task_id": task_id,
+            "config_id": request.config_id,
+            "wide_count": len(request.wide_data),
+            "long_count": len(request.long_data),
+        },
+    )
     service = SmartReadService(uow.session)
 
     # task_dateをdate型に変換
@@ -709,6 +786,11 @@ async def save_long_data(
             message=f"{len(request.long_data)}件の縦持ちデータを保存しました",
         )
     except Exception as e:
+        logger.error(
+            "Failed to save long data",
+            extra={"task_id": task_id, "error": str(e)[:500]},
+            exc_info=True,
+        )
         uow.session.rollback()
         raise HTTPException(status_code=500, detail=f"保存に失敗しました: {str(e)}")
 
@@ -732,6 +814,7 @@ def reset_smartread_data(
     )
 
     assert uow.session is not None
+    logger.warning("Resetting SmartRead data", extra={"config_id": config_id})
 
     deleted_long = (
         uow.session.query(SmartReadLongData)
@@ -760,6 +843,17 @@ def reset_smartread_data(
     )
 
     uow.session.commit()
+    logger.warning(
+        "SmartRead data reset completed",
+        extra={
+            "config_id": config_id,
+            "deleted_long": deleted_long,
+            "deleted_wide": deleted_wide,
+            "deleted_requests": deleted_requests,
+            "deleted_tasks": deleted_tasks,
+            "deleted_exports": deleted_exports,
+        },
+    )
 
     return SmartReadResetResponse(
         success=True,
@@ -793,6 +887,10 @@ def get_requests(
     from app.infrastructure.persistence.models.smartread_models import SmartReadRequest
 
     assert db is not None
+    logger.debug(
+        "Listing SmartRead requests",
+        extra={"config_id": config_id, "state_filter": state, "limit": limit},
+    )
 
     stmt = (
         select(SmartReadRequest)
@@ -841,6 +939,10 @@ def get_long_data(
 ) -> SmartReadLongDataListResponse:
     """縦持ちデータ一覧を取得."""
     assert db is not None
+    logger.debug(
+        "Listing long data",
+        extra={"config_id": config_id, "task_id": task_id, "limit": limit},
+    )
     service = SmartReadService(db)
     long_data = service.get_long_data_list(config_id, task_id=task_id, limit=limit)
 
@@ -923,11 +1025,16 @@ def start_pad_run(
     from app.core.database import SessionLocal
 
     assert uow.session is not None
+    logger.info(
+        "Starting PAD run",
+        extra={"config_id": config_id, "file_count": len(request.filenames)},
+    )
     runner = SmartReadPadRunnerService(uow.session)
 
     # run_idを作成（DBに登録）
     run_id = runner.start_run(config_id, request.filenames)
     uow.session.commit()
+    logger.info("PAD run started", extra={"run_id": run_id})
 
     # バックグラウンドスレッドで実行
     # Note: daemon=True なのでプロセス終了時にスレッドも終了する
@@ -977,6 +1084,10 @@ def list_pad_runs(
     )
 
     assert db is not None
+    logger.debug(
+        "Listing PAD runs",
+        extra={"config_id": config_id, "status_filter": status_filter, "limit": limit},
+    )
     runner = SmartReadPadRunnerService(db)
     runs = runner.list_runs(config_id, limit=limit, status_filter=status_filter)
 
@@ -1022,9 +1133,14 @@ def get_pad_run_status(
     result = runner.get_run_status(run_id)
 
     if not result:
+        logger.warning("PAD run not found", extra={"run_id": run_id})
         raise HTTPException(status_code=404, detail="実行が見つかりません")
 
     if result["config_id"] != config_id:
+        logger.warning(
+            "PAD run config mismatch",
+            extra={"run_id": run_id, "expected_config_id": config_id},
+        )
         raise HTTPException(status_code=404, detail="実行が見つかりません")
 
     return SmartReadPadRunStatusResponse(
@@ -1075,21 +1191,32 @@ def retry_pad_run(
     assert uow.session is not None
     runner = SmartReadPadRunnerService(uow.session)
 
+    logger.info("Retrying PAD run", extra={"run_id": run_id, "config_id": config_id})
+
     # リトライ前のバリデーション
     current_status = runner.get_run_status(run_id)
     if not current_status:
+        logger.warning("PAD run not found for retry", extra={"run_id": run_id})
         raise HTTPException(status_code=404, detail="実行が見つかりません")
 
     if current_status["config_id"] != config_id:
         raise HTTPException(status_code=404, detail="実行が見つかりません")
 
     if current_status["status"] not in ("FAILED", "STALE"):
+        logger.warning(
+            "PAD run not retryable",
+            extra={"run_id": run_id, "status": current_status["status"]},
+        )
         raise HTTPException(
             status_code=400,
             detail=f"リトライできるのはFAILED/STALEステータスのみです（現在: {current_status['status']}）",
         )
 
     if not current_status["can_retry"]:
+        logger.warning(
+            "PAD run retry limit reached",
+            extra={"run_id": run_id, "retry_count": current_status["retry_count"]},
+        )
         raise HTTPException(
             status_code=400,
             detail=f"リトライ回数上限に達しています（{current_status['retry_count']}/{current_status['max_retries']}）",
@@ -1098,9 +1225,14 @@ def retry_pad_run(
     # 新しいrun_idを作成
     new_run_id = runner.retry_run(run_id)
     if not new_run_id:
+        logger.error("PAD run retry failed to start", extra={"run_id": run_id})
         raise HTTPException(status_code=500, detail="リトライの開始に失敗しました")
 
     uow.session.commit()
+    logger.info(
+        "PAD run retry started",
+        extra={"original_run_id": run_id, "new_run_id": new_run_id},
+    )
 
     # バックグラウンドスレッドで実行
     def run_in_background(new_run_id: str) -> None:
