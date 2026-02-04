@@ -1,5 +1,6 @@
 """受注登録結果 API ルーター."""
 
+import logging
 from datetime import datetime
 from typing import Annotated
 
@@ -20,6 +21,7 @@ from app.presentation.schemas.order_register_schema import (
 
 
 router = APIRouter(prefix="/order-register", tags=["Order Register"])
+logger = logging.getLogger(__name__)
 
 
 def get_service(db: Session = Depends(get_db)) -> OrderRegisterService:
@@ -36,6 +38,10 @@ async def list_order_register_rows(
     service: OrderRegisterService = Depends(get_service),
 ) -> OrderRegisterRowListResponse:
     """受注登録結果一覧を取得."""
+    logger.debug(
+        "Order register list requested",
+        extra={"task_date": task_date, "status": status, "limit": limit, "offset": offset},
+    )
     task_date_obj = datetime.fromisoformat(task_date).date() if task_date else None
 
     items = service.list_order_register_rows(
@@ -45,6 +51,10 @@ async def list_order_register_rows(
         offset=offset,
     )
     response_items = [OrderRegisterRowResponse.model_validate(item) for item in items]
+    logger.info(
+        "Order register list fetched",
+        extra={"count": len(items), "task_date": task_date},
+    )
     return OrderRegisterRowListResponse(items=response_items, total=len(items))
 
 
@@ -54,8 +64,10 @@ async def get_order_register_row(
     service: OrderRegisterService = Depends(get_service),
 ) -> OrderRegisterRowResponse:
     """受注登録結果を取得."""
+    logger.debug("Order register row requested", extra={"row_id": row_id})
     row = service.get_order_register_row(row_id)
     if not row:
+        logger.warning("Order register row not found", extra={"row_id": row_id})
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"受注登録結果 ID={row_id} が見つかりません",
@@ -69,8 +81,20 @@ async def generate_order_register_rows(
     service: OrderRegisterService = Depends(get_service),
 ) -> OrderRegisterGenerateResponse:
     """OCRデータから受注登録結果を生成."""
+    logger.info(
+        "Order register generation requested",
+        extra={"task_date": str(request.task_date)},
+    )
     generated_count, warnings = service.generate_from_ocr(request.task_date)
 
+    logger.info(
+        "Order register generation completed",
+        extra={
+            "task_date": str(request.task_date),
+            "generated_count": generated_count,
+            "warning_count": len(warnings),
+        },
+    )
     return OrderRegisterGenerateResponse(
         success=len(warnings) == 0,
         generated_count=generated_count,
@@ -85,6 +109,7 @@ async def update_lot_assignments(
     service: OrderRegisterService = Depends(get_service),
 ) -> OrderRegisterRowResponse:
     """ロット割当を更新."""
+    logger.info("Lot assignment update requested", extra={"row_id": row_id})
     updated = service.update_lot_assignments(
         row_id=row_id,
         lot_no_1=data.lot_no_1,
@@ -93,10 +118,12 @@ async def update_lot_assignments(
         quantity_2=data.quantity_2,
     )
     if not updated:
+        logger.warning("Order register row not found for lot update", extra={"row_id": row_id})
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"受注登録結果 ID={row_id} が見つかりません",
         )
+    logger.info("Lot assignment updated", extra={"row_id": row_id})
     return OrderRegisterRowResponse.model_validate(updated)
 
 
@@ -110,6 +137,10 @@ async def export_order_register_to_excel(
 
     ファイル名形式: 受注情報登録_yyyymmddhhMMss.xlsx
     """
+    logger.info(
+        "Order register Excel export requested",
+        extra={"task_date": task_date, "status": status},
+    )
     task_date_obj = datetime.fromisoformat(task_date).date() if task_date else None
 
     # データ取得（制限なし）
@@ -156,4 +187,8 @@ async def export_order_register_to_excel(
     }
 
     # Excel出力
+    logger.info(
+        "Order register Excel export completed",
+        extra={"count": len(response_items), "filename": filename},
+    )
     return ExportService.export_to_excel(response_items, filename=filename, column_map=column_map)

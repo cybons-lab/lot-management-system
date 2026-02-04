@@ -6,6 +6,7 @@ OCR縦持ちデータと出荷用マスタを結合して、
 
 from __future__ import annotations
 
+import logging
 from datetime import date
 from typing import TYPE_CHECKING, cast
 
@@ -23,6 +24,9 @@ if TYPE_CHECKING:
 
 from app.application.services.calendar_service import CalendarService
 from app.presentation.schemas.calendar.calendar_schemas import BusinessDayCalculationRequest
+
+
+logger = logging.getLogger(__name__)
 
 
 class OrderRegisterService:
@@ -44,6 +48,10 @@ class OrderRegisterService:
         Returns:
             (生成件数, 警告メッセージリスト)
         """
+        logger.info(
+            "Order registration from OCR started",
+            extra={"task_date": str(task_date)},
+        )
         # OCR縦持ちデータ取得
         stmt = (
             select(SmartReadLongData)
@@ -51,6 +59,10 @@ class OrderRegisterService:
             .where(SmartReadLongData.status == "PENDING")
         )
         long_data_list = list(self.session.execute(stmt).scalars().all())
+        logger.info(
+            "OCR long data fetched for order registration",
+            extra={"task_date": str(task_date), "record_count": len(long_data_list)},
+        )
 
         warnings: list[str] = []
         count = 0
@@ -77,6 +89,15 @@ class OrderRegisterService:
             )
 
             if not shipping_master:
+                logger.warning(
+                    "Shipping master not found for OCR row",
+                    extra={
+                        "row_index": long_data.row_index,
+                        "customer_code": customer_code,
+                        "material_code": material_code,
+                        "jiku_code": jiku_code,
+                    },
+                )
                 warnings.append(
                     f"行{long_data.row_index}: マスタデータが見つかりません "
                     f"({customer_code}/{material_code}/{jiku_code})"
@@ -86,6 +107,14 @@ class OrderRegisterService:
             count += 1
 
         self.session.flush()
+        logger.info(
+            "Order registration from OCR completed",
+            extra={
+                "task_date": str(task_date),
+                "generated_count": count,
+                "warning_count": len(warnings),
+            },
+        )
         return count, warnings
 
     def _get_shipping_master(
@@ -262,8 +291,21 @@ class OrderRegisterService:
         quantity_2: int | None,
     ) -> OrderRegisterRow | None:
         """ロット割当を更新."""
+        logger.info(
+            "Lot assignment update requested",
+            extra={
+                "row_id": row_id,
+                "lot_no_1": lot_no_1,
+                "quantity_1": quantity_1,
+                "lot_no_2": lot_no_2,
+                "quantity_2": quantity_2,
+            },
+        )
         row = self.get_order_register_row(row_id)
         if not row:
+            logger.warning(
+                "Order register row not found for lot assignment", extra={"row_id": row_id}
+            )
             return None
 
         row.lot_no_1 = lot_no_1

@@ -273,6 +273,10 @@ def export_lots(
 
     # Export rows - convert dataclass to dict
     rows_data = [row.__dict__ for row in [LotExportRow.from_lot(lot) for lot in lots]]
+    logger.info(
+        "Lots exported",
+        extra={"export_count": len(rows_data), "with_stock": with_stock},
+    )
     return ExportService.export_to_excel(rows_data, "lots")
 
 
@@ -316,6 +320,16 @@ def list_lots(
 
     認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
     """
+    logger.debug(
+        "Lots list requested",
+        extra={
+            "skip": skip,
+            "limit": limit,
+            "supplier_item_id": supplier_item_id,
+            "product_code": product_code,
+            "with_stock": with_stock,
+        },
+    )
     # 担当仕入先IDを取得（ゲストユーザーはスキップ）
     user_roles = [ur.role.role_code for ur in current_user.user_roles]
     assigned_supplier_ids: list[int] | None = None
@@ -362,8 +376,21 @@ def create_lot(
 
     認証: 一般ユーザー・管理者のみ（ゲストは読み取り専用）
     """
+    logger.info(
+        "Lot creation requested",
+        extra={
+            "lot_number": lot.lot_number,
+            "product_code": lot.product_code,
+            "user_id": current_user.id,
+        },
+    )
     service = LotService(db)
-    return service.create_lot(lot)
+    result = service.create_lot(lot)
+    logger.info(
+        "Lot created",
+        extra={"lot_id": result.id, "lot_number": result.lot_number, "user_id": current_user.id},
+    )
+    return result
 
 
 @router.get("/{lot_id}", response_model=LotResponse)
@@ -389,6 +416,7 @@ def get_lot(
 
     認証: ゲスト・一般ユーザー・管理者すべてアクセス可能（読み取り専用）
     """
+    logger.debug("Lot detail requested", extra={"lot_id": lot_id})
     # Use generic get_lot_details from service which handles VLotDetails join logic consistently
     service = LotService(db)
     return service.get_lot_details(lot_id)
@@ -409,6 +437,10 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
     Raises:
         HTTPException: ロットが存在しない場合（404）または更新に失敗した場合
     """
+    logger.info(
+        "Lot update requested",
+        extra={"lot_id": lot_id, "changed_fields": list(lot.model_dump(exclude_unset=True).keys())},
+    )
     service = LotService(db)
     return service.update_lot(lot_id, lot)
 
@@ -427,6 +459,10 @@ def delete_lot(
     Note:
         M-04 Fix: 認証チェックを追加。未認証ユーザーは401を返す。
     """
+    logger.warning(
+        "Lot deletion attempted (forbidden)",
+        extra={"lot_id": lot_id, "user_id": current_user.id},
+    )
     # lot_id, current_user は使用しないが、認証ログのために必要
     _ = lot_id, db, current_user
     from fastapi import HTTPException
@@ -456,6 +492,7 @@ def lock_lot(lot_id: int, lock_data: LotLock, db: Session = Depends(get_db)):
     Raises:
         HTTPException: ロットが存在しない場合（404）またはロックに失敗した場合
     """
+    logger.info("Lot lock requested", extra={"lot_id": lot_id, "reason": lock_data.reason})
     service = LotService(db)
     return service.lock_lot(lot_id, lock_data)
 
@@ -475,6 +512,7 @@ def unlock_lot(lot_id: int, unlock_data: LotLock | None = None, db: Session = De
     Raises:
         HTTPException: ロットが存在しない場合（404）またはロック解除に失敗した場合
     """
+    logger.info("Lot unlock requested", extra={"lot_id": lot_id})
     service = LotService(db)
     return service.unlock_lot(lot_id, unlock_data)
 
@@ -535,6 +573,7 @@ def list_lot_movements(lot_id: int, db: Session = Depends(get_db)):
     Raises:
         HTTPException: ロットが存在しない場合（404）
     """
+    logger.debug("Lot movements requested", extra={"lot_id": lot_id})
     service = LotService(db)
     return service.list_lot_movements(lot_id)
 
@@ -555,5 +594,13 @@ def create_stock_movement(movement: StockMovementCreate, db: Session = Depends(g
     Raises:
         HTTPException: 在庫変動記録に失敗した場合
     """
+    logger.info(
+        "Stock movement creation requested",
+        extra={
+            "lot_id": movement.lot_id,
+            "movement_type": movement.movement_type,
+            "quantity": str(movement.quantity),
+        },
+    )
     service = LotService(db)
     return service.create_stock_movement(movement)
