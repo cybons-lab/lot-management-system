@@ -98,8 +98,13 @@ export function AccessGuard({ children, roles, routeKey, fallbackPath }: AccessG
 
   if (!isAllowed) {
     // 方式A: すべてのユーザーは認証済み（ゲスト含む）
+    // 未ログイン（user が null）の場合はログイン画面へ
+    if (!user) {
+      return <Navigate to="/login" replace state={{ from: location }} />;
+    }
+
     // ゲストユーザーで権限不足 → 専用のforbiddenページへ（ゲスト向けメッセージ）
-    if (user && isGuestUser(user.roles)) {
+    if (isGuestUser(user.roles)) {
       return (
         <Navigate
           to={fallbackPath ?? "/forbidden"}

@@ -598,8 +598,8 @@ def create_stock_movement(movement: StockMovementCreate, db: Session = Depends(g
         "Stock movement creation requested",
         extra={
             "lot_id": movement.lot_id,
-            "movement_type": movement.movement_type,
-            "quantity": str(movement.quantity),
+            "movement_type": movement.transaction_type,
+            "quantity": str(movement.quantity_change),
         },
     )
     service = LotService(db)

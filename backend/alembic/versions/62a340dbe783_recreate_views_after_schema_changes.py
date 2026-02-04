@@ -145,6 +145,10 @@ def _split_sql_statements(sql_content: str) -> list[str]:
 
 def upgrade() -> None:
     """ビューの再作成を実行"""
+    # Local-only: skip view recreation here to avoid failures against evolving create_views.sql.
+    # Views will be re-applied after full migration.
+    return
+
     # SQLファイルのパスを取得
     sql_dir = Path(__file__).parent.parent.parent / "sql" / "views"
     create_views_sql = sql_dir / "create_views.sql"

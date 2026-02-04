@@ -26,6 +26,37 @@ REFRESH_TOKEN_COOKIE_NAME = "refresh_token"
 REFRESH_TOKEN_COOKIE_PATH = f"{settings.API_PREFIX}/auth"
 
 
+def _mask_ip(ip: str | None) -> str | None:
+    if not ip:
+        return None
+    if ":" in ip:
+        return ip.split(":")[0] + "::"
+    parts = ip.split(".")
+    if len(parts) == 4:
+        parts[-1] = "0"
+        return ".".join(parts)
+    return ip
+
+
+def _auth_log_ctx(
+    *,
+    username: str | None,
+    ip: str | None,
+    user_agent: str | None,
+) -> dict[str, str | None]:
+    if settings.ENVIRONMENT == "production":
+        return {
+            "username": None,
+            "ip": _mask_ip(ip),
+            "user_agent": None,
+        }
+    return {
+        "username": username,
+        "ip": ip,
+        "user_agent": user_agent[:200] if user_agent else None,
+    }
+
+
 def set_refresh_cookie(response: Response, refresh_token: str) -> None:
     response.set_cookie(
         REFRESH_TOKEN_COOKIE_NAME,
@@ -186,14 +217,17 @@ def login(
     """Simple login by User ID or Username."""
     client_ip = http_request.client.host if http_request.client else None
     user_agent = http_request.headers.get("user-agent")
+    log_ctx = _auth_log_ctx(
+        username=login_request.username,
+        ip=client_ip,
+        user_agent=user_agent,
+    )
 
     logger.debug(
         "Login attempt received",
         extra={
             "user_id": login_request.user_id,
-            "username": login_request.username,
-            "ip": client_ip,
-            "user_agent": user_agent[:200] if user_agent else None,
+            **log_ctx,
         },
     )
 
@@ -205,7 +239,7 @@ def login(
     else:
         logger.warning(
             "Login failed",
-            extra={"reason": "missing_credentials", "ip": client_ip},
+            extra={"reason": "missing_credentials", **log_ctx},
         )
         raise HTTPException(status_code=400, detail="user_id or username required")
 
@@ -214,9 +248,8 @@ def login(
             "Login failed",
             extra={
                 "user_id": login_request.user_id,
-                "username": login_request.username,
                 "reason": "user_not_found_or_inactive",
-                "ip": client_ip,
+                **log_ctx,
             },
         )
         raise HTTPException(status_code=401, detail="User not found or inactive")
@@ -241,9 +274,12 @@ def login(
         "User login successful",
         extra={
             "user_id": user.id,
-            "username": user.username,
             "roles": roles,
-            "ip": client_ip,
+            **_auth_log_ctx(
+                username=user.username,
+                ip=client_ip,
+                user_agent=user_agent,
+            ),
         },
     )
 
@@ -328,12 +364,20 @@ def guest_login(response: Response, http_request: Request, db: Session = Depends
         .first()
     )
 
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+    log_ctx = _auth_log_ctx(
+        username="guest",
+        ip=client_ip,
+        user_agent=user_agent,
+    )
+
     if not guest_user:
         logger.error(
             "Guest login failed",
             extra={
                 "reason": "guest_user_not_found",
-                "ip": http_request.client.host if http_request.client else None,
+                **log_ctx,
             },
         )
         raise HTTPException(
@@ -361,9 +405,12 @@ def guest_login(response: Response, http_request: Request, db: Session = Depends
         "Guest login successful",
         extra={
             "user_id": guest_user.id,
-            "username": guest_user.username,
             "roles": roles,
-            "ip": http_request.client.host if http_request.client else None,
+            **_auth_log_ctx(
+                username=guest_user.username,
+                ip=client_ip,
+                user_agent=user_agent,
+            ),
         },
     )
 
@@ -392,10 +439,12 @@ def refresh_access_token(
 ):
     """Refresh access token using refresh token cookie."""
     client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+    log_ctx = _auth_log_ctx(username=None, ip=client_ip, user_agent=user_agent)
     if not refresh_token:
         logger.warning(
             "Token refresh failed",
-            extra={"reason": "missing_refresh_token", "ip": client_ip},
+            extra={"reason": "missing_refresh_token", **log_ctx},
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing"
@@ -405,7 +454,7 @@ def refresh_access_token(
     if not payload:
         logger.warning(
             "Token refresh failed",
-            extra={"reason": "invalid_refresh_token", "ip": client_ip},
+            extra={"reason": "invalid_refresh_token", **log_ctx},
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
@@ -418,7 +467,7 @@ def refresh_access_token(
             extra={
                 "reason": "invalid_refresh_token_subject",
                 "subject": user_id,
-                "ip": client_ip,
+                **log_ctx,
             },
         )
         raise HTTPException(
@@ -429,7 +478,11 @@ def refresh_access_token(
     if not user:
         logger.warning(
             "Token refresh failed",
-            extra={"reason": "user_not_found_or_inactive", "user_id": user_id, "ip": client_ip},
+            extra={
+                "reason": "user_not_found_or_inactive",
+                "user_id": user_id,
+                **log_ctx,
+            },
         )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
@@ -448,9 +501,12 @@ def refresh_access_token(
         "Token refreshed",
         extra={
             "user_id": user.id,
-            "username": user.username,
             "roles": roles,
-            "ip": client_ip,
+            **_auth_log_ctx(
+                username=user.username,
+                ip=client_ip,
+                user_agent=user_agent,
+            ),
         },
     )
 
@@ -477,11 +533,17 @@ def logout(
     refresh_token: str | None = Cookie(default=None, alias=REFRESH_TOKEN_COOKIE_NAME),
 ):
     """Clear refresh token cookie."""
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
     logger.info(
         "User logout",
         extra={
             "has_refresh_token": bool(refresh_token),
-            "ip": http_request.client.host if http_request.client else None,
+            **_auth_log_ctx(
+                username=None,
+                ip=client_ip,
+                user_agent=user_agent,
+            ),
         },
     )
     clear_refresh_cookie(response)

@@ -109,13 +109,13 @@ class TestListFilesInWatchDir:
             endpoint="https://api.example.com",
             api_key="test-key",
             watch_dir=watch_dir,
-            input_exts=None,
+            input_exts="",
         )
         db_session.add(config)
         db_session.flush()
 
         files = watch_service.list_files_in_watch_dir(config.id)
-        assert len(files) == 4  # All files returned
+        assert files == sorted(["order1.pdf", "order2.pdf", "image.png", "readme.txt"])
 
 
 class TestMoveWatchFile:

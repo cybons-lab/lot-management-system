@@ -189,6 +189,6 @@ async def export_order_register_to_excel(
     # Excel出力
     logger.info(
         "Order register Excel export completed",
-        extra={"count": len(response_items), "filename": filename},
+        extra={"count": len(response_items), "file_name": filename},
     )
     return ExportService.export_to_excel(response_items, filename=filename, column_map=column_map)

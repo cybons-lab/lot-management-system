@@ -16,9 +16,9 @@ from app.infrastructure.persistence.models.masters_models import (
     Customer,
     DeliveryPlace,
     Supplier,
+    Warehouse,
 )
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
-from app.infrastructure.persistence.models.warehouse_model import Warehouse
 
 
 @pytest.fixture

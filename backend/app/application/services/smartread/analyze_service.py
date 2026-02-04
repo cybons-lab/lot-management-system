@@ -64,19 +64,19 @@ class SmartReadAnalyzeService(SmartReadBaseService):
 
         logger.info(
             "SmartRead analyze started",
-            extra={"config_id": config_id, "filename": filename},
+            extra={"config_id": config_id, "file_name": filename},
         )
         result: SmartReadResult = await client.analyze_file(file_content, filename)
 
         if result.success:
             logger.info(
                 "SmartRead analyze completed",
-                extra={"filename": filename, "data_count": len(result.data)},
+                extra={"file_name": filename, "data_count": len(result.data)},
             )
         else:
             logger.error(
                 "SmartRead analyze failed",
-                extra={"filename": filename, "error": result.error_message},
+                extra={"file_name": filename, "error": result.error_message},
             )
 
         return AnalyzeResult(

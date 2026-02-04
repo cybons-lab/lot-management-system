@@ -830,7 +830,7 @@ async def export_ocr_results(
     filename = f"ocr_results_{datetime.now().strftime('%Y%m%d%H%M%S')}"
     logger.info(
         "OCR results export completed",
-        extra={"format": format, "export_count": len(export_rows), "filename": filename},
+        extra={"format": format, "export_count": len(export_rows), "file_name": filename},
     )
     if format == "csv":
         return ExportService.export_to_csv(export_rows, filename=filename)

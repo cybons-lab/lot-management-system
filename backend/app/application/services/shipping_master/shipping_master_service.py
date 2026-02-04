@@ -183,6 +183,10 @@ class ShippingMasterService:
             "skipped_count": summary.skipped_count,
             "errors": summary.errors,
             "warnings": summary.warnings,
+            "processed": summary.processed_count,
+            "created": summary.created_count,
+            "updated": summary.updated_count,
+            "skipped": summary.skipped_count,
         }
 
     # ==================== CRUD ====================

@@ -66,7 +66,7 @@ type LotLike = {
  * 未入荷判定ヘルパー
  */
 function isPendingReceipt(receivedDate: string | null | undefined): boolean {
-  if (!receivedDate) return true;
+  if (!receivedDate) return false;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

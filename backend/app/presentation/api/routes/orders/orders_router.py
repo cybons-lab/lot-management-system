@@ -316,7 +316,7 @@ def create_order(
         "Creating order",
         extra={
             "customer_id": order.customer_id,
-            "line_count": len(order.order_lines) if order.order_lines else 0,
+            "line_count": len(order.lines) if order.lines else 0,
         },
     )
     service = OrderService(uow.session)

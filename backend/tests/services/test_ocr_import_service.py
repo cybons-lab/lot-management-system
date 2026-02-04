@@ -11,9 +11,9 @@ from app.infrastructure.persistence.models.masters_models import (
     CustomerItem,
     DeliveryPlace,
     Supplier,
-    SupplierItem,
 )
 from app.infrastructure.persistence.models.orders_models import Order, OrderLine
+from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
 from app.presentation.schemas.ocr_import_schema import (
     OcrImportLineRequest,
     OcrImportRequest,
@@ -38,7 +38,8 @@ def supplier_item(db: Session, supplier: Supplier) -> SupplierItem:
     item = SupplierItem(
         supplier_id=supplier.id,
         maker_part_no="MKR-001",
-        unit="KG",
+        display_name="Test Item",
+        base_unit="KG",
     )
     db.add(item)
     db.flush()
@@ -64,6 +65,7 @@ def customer_item(db: Session, customer: Customer, supplier_item: SupplierItem) 
         customer_id=customer.id,
         supplier_item_id=supplier_item.id,
         customer_part_no="CPART-001",
+        base_unit="KG",
     )
     db.add(ci)
     db.flush()

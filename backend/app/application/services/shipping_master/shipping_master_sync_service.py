@@ -112,7 +112,7 @@ class ShippingMasterSyncService:
             "Shipping master sync completed",
             extra={
                 "processed": summary.processed_count,
-                "created": summary.created_count,
+                "created_count": summary.created_count,
                 "updated": summary.updated_count,
                 "skipped": summary.skipped_count,
                 "errors_count": len(summary.errors),

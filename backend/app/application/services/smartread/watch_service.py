@@ -163,7 +163,7 @@ class SmartReadWatchService(SmartReadBaseService):
                     "[SmartRead] Watch dir file not found",
                     extra={
                         "config_id": config_id,
-                        "filename": filename,
+                        "file_name": filename,
                         "watch_dir": str(watch_dir),
                     },
                 )
@@ -215,7 +215,7 @@ class SmartReadWatchService(SmartReadBaseService):
                 except Exception:
                     logger.exception(
                         "[SmartRead] Failed to move watch dir file to Error",
-                        extra={"filename": filename, "watch_dir": str(watch_dir)},
+                        extra={"file_name": filename, "watch_dir": str(watch_dir)},
                     )
                 results.append(AnalyzeResult(False, filename, [], str(e)))
 

@@ -23,7 +23,7 @@ def smartread_config(db: Session) -> SmartReadConfig:
     """テスト用SmartRead設定を作成."""
     config = SmartReadConfig(
         name="test_config",
-        api_url="https://example.com/api",
+        endpoint="https://example.com/api",
         api_key="test_key",
     )
     db.add(config)

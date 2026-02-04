@@ -103,7 +103,7 @@ def create_config(
 ) -> SmartReadConfigResponse:
     """設定を作成."""
     assert uow.session is not None
-    logger.info("Creating SmartRead config", extra={"name": request.name})
+    logger.info("Creating SmartRead config", extra={"config_name": request.name})
     service = SmartReadService(uow.session)
     config = service.create_config(
         endpoint=request.endpoint,
@@ -119,7 +119,9 @@ def create_config(
         is_active=request.is_active,
     )
     uow.session.commit()
-    logger.info("SmartRead config created", extra={"config_id": config.id, "name": config.name})
+    logger.info(
+        "SmartRead config created", extra={"config_id": config.id, "config_name": config.name}
+    )
     return SmartReadConfigResponse.model_validate(config)
 
 
@@ -222,7 +224,7 @@ async def diagnose_watch_dir_file(
     assert db is not None
     logger.info(
         "Diagnosing watch dir file",
-        extra={"config_id": config_id, "filename": request.filename},
+        extra={"config_id": config_id, "file_name": request.filename},
     )
     service = SmartReadService(db)
     result = await service.diagnose_watch_dir_file(config_id, request.filename)
@@ -249,7 +251,7 @@ async def analyze_file(
     filename = file.filename or "unknown"
     logger.info(
         "Analyzing file via SmartRead API",
-        extra={"config_id": config_id, "filename": filename, "size_bytes": len(file_content)},
+        extra={"config_id": config_id, "file_name": filename, "size_bytes": len(file_content)},
     )
 
     service = SmartReadService(db)
@@ -284,7 +286,7 @@ async def analyze_file_simple(
     filename = file.filename or "unknown"
     logger.info(
         "Starting simple analyze in background",
-        extra={"config_id": config_id, "filename": filename, "size_bytes": len(file_content)},
+        extra={"config_id": config_id, "file_name": filename, "size_bytes": len(file_content)},
     )
 
     # バックグラウンドで処理を開始
@@ -374,7 +376,7 @@ def export_to_json(
 ) -> Response:
     """データをJSONでダウンロード."""
     assert db is not None
-    logger.info("Exporting data to JSON", extra={"filename": filename, "row_count": len(data)})
+    logger.info("Exporting data to JSON", extra={"file_name": filename, "row_count": len(data)})
     service = SmartReadService(db)
     result = service.export_to_json(data, filename)
 
@@ -394,7 +396,7 @@ def export_to_csv(
 ) -> Response:
     """データをCSVでダウンロード."""
     assert db is not None
-    logger.info("Exporting data to CSV", extra={"filename": filename, "row_count": len(data)})
+    logger.info("Exporting data to CSV", extra={"file_name": filename, "row_count": len(data)})
     service = SmartReadService(db)
     result = service.export_to_csv(data, filename)
 

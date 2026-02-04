@@ -189,7 +189,7 @@ class OcrImportService:
             delivery_date=line.delivery_date,
             order_quantity=line.quantity,
             unit="KG",  # デフォルト単位（後でマスタから取得に変更可能）
-            delivery_place_id=delivery_place.id if delivery_place else 1,  # 仮のデフォルト
+            delivery_place_id=delivery_place.id if delivery_place else None,
             status="pending",
             order_type="ORDER",
         )
