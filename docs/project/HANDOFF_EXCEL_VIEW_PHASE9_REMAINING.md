@@ -262,3 +262,146 @@ git log --oneline -5
 ---
 
 **次のチャットで一気に完了させましょう！Good luck! 🚀**
+
+---
+
+## 📝 実装進捗記録（2026-02-05）
+
+### ✅ 完了したタスク
+
+#### 1. Phase 9 永続化バグ修正（完了）
+
+**コミット**: `20d14692` - fix(allocations): Phase 9 comment/shipment date永続化処理を追加
+
+**修正内容**:
+- `backend/app/application/services/allocations/suggestion.py` の `update_manual_suggestions()` メソッドを修正
+- `comment` と `manual_shipment_date` フィールドの永続化処理を追加（Line 215-224, 259-260, 289-290）
+- 既存レコード更新時と新規作成時の両方に対応
+- 数量0でもコメントまたは手動出荷日がある場合はレコードを保持（Line 230-242）
+
+**検証結果**:
+- データベースで `comment` と `manual_shipment_date` カラムの存在を確認 ✅
+- バックエンドテスト: 552 passed, 1 xfailed ✅
+- フロントエンド型定義を再生成 ✅
+
+---
+
+#### 2. 罫線バグ修正（部分的完了、要追加修正）
+
+**コミット**:
+- `31d19431` - fix(excel-view): CSS Gridで罫線バグを修正
+- `e899d9bc` - fix(excel-view): DateGridに右ボーダーを追加
+
+**修正内容**:
+- `LotSection.tsx`: メインコンテナを `flex` から `grid` に変更（Line 177）
+  - `grid-cols-[auto_112px_320px_112px_1fr]` で各カラム幅を固定
+- `ShipmentTable.tsx`: `min-h-[272px]` を `h-full` に変更（Line 45）
+- `DateGrid.tsx`:
+  - `min-h-[272px]` を `h-full` に変更（Line 292）
+  - メインコンテナに `border-r border-slate-300` を追加（Line 292）
+
+**検証結果（ブラウザ確認）**:
+- ❌ **縦線がまだ最下部まで届いていない**（Footer行の右側が欠けている）
+- ✅ 手動出荷日の表示: OK
+- ⚠️ コメント三角形: 表示されているが角度が悪い（左45度回転が必要）
+
+---
+
+### 🔧 残修正タスク
+
+#### P1: 縦線バグの完全修正
+
+**現状**: CSS Gridに変更したが、まだ最下部（Footer行）の右端に縦線がない。
+
+**試したこと**:
+1. `LotSection.tsx` を `flex` から `grid` に変更
+2. `DateGrid.tsx` のメインコンテナに `border-r` を追加
+
+**推測される原因**:
+- Footer行の高さが親Gridの `min-h-[272px]` を超える場合、ボーダーが届かない可能性
+- またはDateGridの内部構造（`.min-w-max`）とスクロール領域の関係
+
+**次の修正アプローチ案**:
+1. **デバッグ方法**: ブラウザDevToolsで各要素の実際の高さを計測
+2. **修正案A**: Footer行にも明示的に `border-r` を追加
+3. **修正案B**: DateGridの外側コンテナで縦線を引く（擬似要素 `::after`）
+4. **修正案C**: Grid全体を `border-collapse` 相当の構造に変更
+
+**関連ファイル**:
+- `frontend/src/features/inventory/components/excel-view/LotSection.tsx:177`
+- `frontend/src/features/inventory/components/excel-view/subcomponents/DateGrid.tsx:292`
+
+---
+
+#### P2: コメント三角形の角度修正
+
+**現状**: 三角形が右上に表示されている（`border-t` + `border-r`）。
+
+**要求**: 左上に45度回転（右上 → 左上）
+
+**修正箇所**: `frontend/src/features/inventory/components/excel-view/subcomponents/DateGrid.tsx:172`
+
+**現在の実装**:
+```tsx
+// Line 172 - 右上の三角形（▲）
+<div
+  className="absolute top-0 right-0 w-0 h-0 border-t-[8px] border-r-[8px] border-t-red-500 border-r-transparent z-10 pointer-events-none"
+  title={comment}
+/>
+```
+
+**修正案**:
+```tsx
+// 左上の三角形（◄）に変更
+<div
+  className="absolute top-0 left-0 w-0 h-0 border-t-[8px] border-l-[8px] border-t-red-500 border-l-transparent z-10 pointer-events-none"
+  title={comment}
+/>
+```
+
+**変更内容**:
+- `right-0` → `left-0` （位置を左に移動）
+- `border-r-[8px]` → `border-l-[8px]` （右ボーダーを左ボーダーに変更）
+- `border-r-transparent` → `border-l-transparent` （透明部分も左に変更）
+
+**検証方法**: コメントが入力されているセルで三角形が左上に表示されることを確認。
+
+---
+
+### 🧪 品質チェック結果
+
+- **バックエンドテスト**: 552 passed, 1 xfailed ✅
+- **フロントエンドテスト**: 524 passed (49 test files) ✅
+- **Lint**: 0 errors ✅
+- **Type check**: 0 errors ✅
+
+---
+
+### 📦 コミット履歴
+
+```
+e899d9bc fix(excel-view): DateGridに右ボーダーを追加
+31d19431 fix(excel-view): CSS Gridで罫線バグを修正
+20d14692 fix(allocations): Phase 9 comment/shipment date永続化処理を追加
+```
+
+---
+
+### 💬 レビュー時の確認ポイント
+
+1. **Phase 9**: ブラウザでコメントと手動出荷日を入力→保存→再読み込みで反映されるか確認
+2. **縦線**: 納入先1-3件のロットで右端の縦線が最下部まで届いているか確認
+3. **コメント三角形**: 角度が左45度回転になっているか確認
+
+---
+
+### 🚧 次のセッションでの作業
+
+1. 縦線バグの完全修正（デバッグ → 修正 → 検証）
+2. コメント三角形の角度修正（調査 → 修正）
+3. ブラウザでの最終確認
+4. ドキュメント更新（完了タスクにチェック）
+
+---
+
+**Phase 9永続化は完了、UI微調整が残っています。レビュー時に実際の動作をご確認ください！**
