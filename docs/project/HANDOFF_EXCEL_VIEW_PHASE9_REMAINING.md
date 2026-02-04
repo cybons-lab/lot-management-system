@@ -309,27 +309,55 @@ git log --oneline -5
 
 ### 🔧 残修正タスク
 
-#### P1: 縦線バグの完全修正
+#### P1: 縦線バグの完全修正（最優先）
 
-**現状**: CSS Gridに変更したが、まだ最下部（Footer行）の右端に縦線がない。
+**現状**: 最下部の「合計」行で**すべての縦線が消えている**（右端だけでなく、納入先・検査書・各日付列の区切りすべて）。
 
 **試したこと**:
 1. `LotSection.tsx` を `flex` から `grid` に変更
 2. `DateGrid.tsx` のメインコンテナに `border-r` を追加
 
-**推測される原因**:
-- Footer行の高さが親Gridの `min-h-[272px]` を超える場合、ボーダーが届かない可能性
-- またはDateGridの内部構造（`.min-w-max`）とスクロール領域の関係
+**根本原因**:
+各コンポーネントのFooter行に `border-r` が指定されていないため、縦線が表示されない。
+HeaderとRows部分には `border-r` があるが、Footer部分では省略されている。
 
-**次の修正アプローチ案**:
-1. **デバッグ方法**: ブラウザDevToolsで各要素の実際の高さを計測
-2. **修正案A**: Footer行にも明示的に `border-r` を追加
-3. **修正案B**: DateGridの外側コンテナで縦線を引く（擬似要素 `::after`）
-4. **修正案C**: Grid全体を `border-collapse` 相当の構造に変更
+**修正箇所と具体的な修正内容**:
+
+1. **ShipmentTable.tsx (Line 135, 148)** ✅ OK
+   - Footer行の各セルに `border-r` がすでに指定されている
+   - 修正不要
+
+2. **BigStatColumn.tsx (Line 18)** ✅ OK
+   - 親コンテナに `border-r border-slate-300` がすでに指定されている
+   - 修正不要
+
+3. **DateGrid.tsx (Line 374)** ❌ 要修正
+   - Footer行に `divide-x` はあるが、**外側の右ボーダーがない**
+
+   **修正内容**:
+   ```tsx
+   // Before (Line 374)
+   <div className={`${hFooter} flex border-t border-slate-300 bg-slate-100 font-bold divide-x divide-slate-200`}>
+
+   // After
+   <div className={`${hFooter} flex border-t border-slate-300 bg-slate-100 font-bold divide-x divide-slate-200`}>
+   ```
+
+   **しかし**、DateGridの親コンテナ（Line 292）に `border-r border-slate-300` がすでに追加されているため、
+   これは機能するはずです。
+
+   **追加調査が必要**:
+   - ブラウザDevToolsで `DateGrid` の親コンテナの高さを確認
+   - Footer行が親コンテナの高さを超えている場合、`border-r` が届かない可能性
+
+**検証方法**:
+- 納入先が1-3件のロットで「合計」行のすべての縦線が表示されることを確認
+- 具体的には：納入先｜検査書｜合計｜現在の在庫｜各日付列 の区切り線がすべて揃うこと
 
 **関連ファイル**:
-- `frontend/src/features/inventory/components/excel-view/LotSection.tsx:177`
-- `frontend/src/features/inventory/components/excel-view/subcomponents/DateGrid.tsx:292`
+- `frontend/src/features/inventory/components/excel-view/subcomponents/ShipmentTable.tsx:148`
+- `frontend/src/features/inventory/components/excel-view/subcomponents/BigStatColumn.tsx` (要調査)
+- `frontend/src/features/inventory/components/excel-view/subcomponents/DateGrid.tsx:374`
 
 ---
 
