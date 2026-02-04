@@ -1,6 +1,7 @@
+import logging
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
@@ -17,11 +18,43 @@ from app.presentation.schemas.auth.auth_schemas import AuthUserResponse, LoginRe
 
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
 
 REFRESH_TOKEN_COOKIE_NAME = "refresh_token"
 REFRESH_TOKEN_COOKIE_PATH = f"{settings.API_PREFIX}/auth"
+
+
+def _mask_ip(ip: str | None) -> str | None:
+    if not ip:
+        return None
+    if ":" in ip:
+        return ip.split(":")[0] + "::"
+    parts = ip.split(".")
+    if len(parts) == 4:
+        parts[-1] = "0"
+        return ".".join(parts)
+    return ip
+
+
+def _auth_log_ctx(
+    *,
+    username: str | None,
+    ip: str | None,
+    user_agent: str | None,
+) -> dict[str, str | None]:
+    if settings.ENVIRONMENT == "production":
+        return {
+            "username": None,
+            "ip": _mask_ip(ip),
+            "user_agent": None,
+        }
+    return {
+        "username": username,
+        "ip": ip,
+        "user_agent": user_agent[:200] if user_agent else None,
+    }
 
 
 def set_refresh_cookie(response: Response, refresh_token: str) -> None:
@@ -175,17 +208,50 @@ def require_write_permission():
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(request: LoginRequest, response: Response, db: Session = Depends(get_db)):
+def login(
+    login_request: LoginRequest,
+    response: Response,
+    http_request: Request,
+    db: Session = Depends(get_db),
+):
     """Simple login by User ID or Username."""
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+    log_ctx = _auth_log_ctx(
+        username=login_request.username,
+        ip=client_ip,
+        user_agent=user_agent,
+    )
+
+    logger.debug(
+        "Login attempt received",
+        extra={
+            "user_id": login_request.user_id,
+            **log_ctx,
+        },
+    )
+
     query = db.query(User).filter(User.is_active.is_(True))
-    if request.user_id:
-        user = query.filter(User.id == request.user_id).first()
-    elif request.username:
-        user = query.filter(User.username == request.username).first()
+    if login_request.user_id:
+        user = query.filter(User.id == login_request.user_id).first()
+    elif login_request.username:
+        user = query.filter(User.username == login_request.username).first()
     else:
+        logger.warning(
+            "Login failed",
+            extra={"reason": "missing_credentials", **log_ctx},
+        )
         raise HTTPException(status_code=400, detail="user_id or username required")
 
     if not user:
+        logger.warning(
+            "Login failed",
+            extra={
+                "user_id": login_request.user_id,
+                "reason": "user_not_found_or_inactive",
+                **log_ctx,
+            },
+        )
         raise HTTPException(status_code=401, detail="User not found or inactive")
 
     # Update last login
@@ -203,6 +269,19 @@ def login(request: LoginRequest, response: Response, db: Session = Depends(get_d
         data={"sub": str(user.id), "username": user.username, "roles": roles},
     )
     set_refresh_cookie(response, refresh_token)
+
+    logger.info(
+        "User login successful",
+        extra={
+            "user_id": user.id,
+            "roles": roles,
+            **_auth_log_ctx(
+                username=user.username,
+                ip=client_ip,
+                user_agent=user_agent,
+            ),
+        },
+    )
 
     return {
         "access_token": access_token,
@@ -256,7 +335,7 @@ def get_login_users(db: Session = Depends(get_db)):
 
 
 @router.post("/guest-login", response_model=TokenResponse)
-def guest_login(response: Response, db: Session = Depends(get_db)):
+def guest_login(response: Response, http_request: Request, db: Session = Depends(get_db)):
     """Auto-login as guest user (方式A implementation).
 
     This endpoint provides automatic guest authentication to support
@@ -285,7 +364,22 @@ def guest_login(response: Response, db: Session = Depends(get_db)):
         .first()
     )
 
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+    log_ctx = _auth_log_ctx(
+        username="guest",
+        ip=client_ip,
+        user_agent=user_agent,
+    )
+
     if not guest_user:
+        logger.error(
+            "Guest login failed",
+            extra={
+                "reason": "guest_user_not_found",
+                **log_ctx,
+            },
+        )
         raise HTTPException(
             status_code=500,
             detail="Guest user not found. Please create a user with 'guest' role.",
@@ -307,6 +401,19 @@ def guest_login(response: Response, db: Session = Depends(get_db)):
     )
     set_refresh_cookie(response, refresh_token)
 
+    logger.info(
+        "Guest login successful",
+        extra={
+            "user_id": guest_user.id,
+            "roles": roles,
+            **_auth_log_ctx(
+                username=guest_user.username,
+                ip=client_ip,
+                user_agent=user_agent,
+            ),
+        },
+    )
+
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -326,29 +433,57 @@ def guest_login(response: Response, db: Session = Depends(get_db)):
 @router.post("/refresh", response_model=TokenResponse)
 def refresh_access_token(
     response: Response,
+    http_request: Request,
     refresh_token: str | None = Cookie(default=None, alias=REFRESH_TOKEN_COOKIE_NAME),
     db: Session = Depends(get_db),
 ):
     """Refresh access token using refresh token cookie."""
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+    log_ctx = _auth_log_ctx(username=None, ip=client_ip, user_agent=user_agent)
     if not refresh_token:
+        logger.warning(
+            "Token refresh failed",
+            extra={"reason": "missing_refresh_token", **log_ctx},
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing"
         )
 
     payload = decode_refresh_token(refresh_token)
     if not payload:
+        logger.warning(
+            "Token refresh failed",
+            extra={"reason": "invalid_refresh_token", **log_ctx},
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
 
     user_id = payload.get("sub")
     if not user_id or not str(user_id).isdigit():
+        logger.warning(
+            "Token refresh failed",
+            extra={
+                "reason": "invalid_refresh_token_subject",
+                "subject": user_id,
+                **log_ctx,
+            },
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
 
     user = db.query(User).filter(User.id == int(user_id), User.is_active.is_(True)).first()
     if not user:
+        logger.warning(
+            "Token refresh failed",
+            extra={
+                "reason": "user_not_found_or_inactive",
+                "user_id": user_id,
+                **log_ctx,
+            },
+        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     roles = [ur.role.role_code for ur in user.user_roles]
@@ -361,6 +496,19 @@ def refresh_access_token(
         data={"sub": str(user.id), "username": user.username, "roles": roles},
     )
     set_refresh_cookie(response, new_refresh_token)
+
+    logger.info(
+        "Token refreshed",
+        extra={
+            "user_id": user.id,
+            "roles": roles,
+            **_auth_log_ctx(
+                username=user.username,
+                ip=client_ip,
+                user_agent=user_agent,
+            ),
+        },
+    )
 
     return {
         "access_token": access_token,
@@ -379,7 +527,24 @@ def refresh_access_token(
 
 
 @router.post("/logout")
-def logout(response: Response):
+def logout(
+    response: Response,
+    http_request: Request,
+    refresh_token: str | None = Cookie(default=None, alias=REFRESH_TOKEN_COOKIE_NAME),
+):
     """Clear refresh token cookie."""
+    client_ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+    logger.info(
+        "User logout",
+        extra={
+            "has_refresh_token": bool(refresh_token),
+            **_auth_log_ctx(
+                username=None,
+                ip=client_ip,
+                user_agent=user_agent,
+            ),
+        },
+    )
     clear_refresh_cookie(response)
     return {"detail": "ok"}

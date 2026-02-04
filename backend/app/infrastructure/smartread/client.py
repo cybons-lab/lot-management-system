@@ -1066,6 +1066,6 @@ class SmartReadClient:
         except Exception:
             logger.exception(
                 "Unexpected error while submitting request",
-                extra={"task_id": task_id, "filename": filename},
+                extra={"task_id": task_id, "file_name": filename},
             )
             return None

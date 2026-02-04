@@ -33,10 +33,12 @@ def create_layer_code(
     db: Session = Depends(get_db),
 ):
     """層別コード作成."""
+    logger.info("Layer code creation requested", extra={"layer_code": request.layer_code})
     existing = (
         db.query(LayerCodeMapping).filter(LayerCodeMapping.layer_code == request.layer_code).first()
     )
     if existing:
+        logger.warning("Layer code already exists", extra={"layer_code": request.layer_code})
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Layer code '{request.layer_code}' already exists",
@@ -59,6 +61,7 @@ def update_layer_code(
     db: Session = Depends(get_db),
 ):
     """層別コード更新."""
+    logger.info("Layer code update requested", extra={"layer_code": layer_code})
     mapping = db.query(LayerCodeMapping).filter(LayerCodeMapping.layer_code == layer_code).first()
     if not mapping:
         raise HTTPException(
@@ -78,6 +81,7 @@ def delete_layer_code(
     db: Session = Depends(get_db),
 ):
     """層別コード削除."""
+    logger.warning("Layer code deletion requested", extra={"layer_code": layer_code})
     mapping = db.query(LayerCodeMapping).filter(LayerCodeMapping.layer_code == layer_code).first()
     if not mapping:
         raise HTTPException(

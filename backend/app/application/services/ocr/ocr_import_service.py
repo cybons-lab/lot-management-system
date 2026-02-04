@@ -43,6 +43,7 @@ PADからのCSVデータを受け取り、OCR受注として保存し、
    - 監査証跡（いつ、どのファイルから取り込んだか）
 """
 
+import logging
 from datetime import date
 
 from sqlalchemy.orm import Session
@@ -58,6 +59,9 @@ from app.presentation.schemas.ocr_import_schema import (
     OcrImportRequest,
     OcrImportResponse,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class OcrImportService:
@@ -81,6 +85,14 @@ class OcrImportService:
         Returns:
             OcrImportResponse: 取込結果
         """
+        logger.info(
+            "OCR import started",
+            extra={
+                "customer_code": request.customer_code,
+                "source_filename": request.source_filename,
+                "line_count": len(request.lines),
+            },
+        )
         # 1. 得意先を解決
         # 【設計】get_active_filter()でソフトデリート済みの得意先を除外
         customer = (
@@ -92,6 +104,10 @@ class OcrImportService:
             .first()
         )
         if not customer:
+            logger.error(
+                "OCR import failed: customer not found",
+                extra={"customer_code": request.customer_code},
+            )
             raise ValueError(f"Customer not found: {request.customer_code}")
 
         # 2. 受注ヘッダを作成
@@ -121,6 +137,15 @@ class OcrImportService:
 
         self.db.commit()
 
+        logger.info(
+            "OCR import completed",
+            extra={
+                "order_id": order.id,
+                "total_lines": len(request.lines),
+                "resolved_count": resolved_count,
+                "unresolved_count": unresolved_count,
+            },
+        )
         return OcrImportResponse(
             order_id=order.id,
             customer_code=request.customer_code,
@@ -164,7 +189,7 @@ class OcrImportService:
             delivery_date=line.delivery_date,
             order_quantity=line.quantity,
             unit="KG",  # デフォルト単位（後でマスタから取得に変更可能）
-            delivery_place_id=delivery_place.id if delivery_place else 1,  # 仮のデフォルト
+            delivery_place_id=delivery_place.id if delivery_place else None,
             status="pending",
             order_type="ORDER",
         )

@@ -4,6 +4,7 @@ v_ocr_resultsビューから直接データを取得し、
 SmartRead縦持ちデータと出荷用マスタをJOINした結果を返す。
 """
 
+import logging
 import re
 from datetime import date, datetime
 from typing import Annotated, Any
@@ -31,6 +32,7 @@ from app.presentation.schemas.smartread_schema import SmartReadCompletionRequest
 
 
 router = APIRouter(prefix="/ocr-results", tags=["OCR Results"])
+logger = logging.getLogger(__name__)
 
 
 class OcrResultItem(BaseModel):
@@ -348,6 +350,16 @@ async def list_ocr_results(
     _current_user: User = Depends(get_current_user),
 ) -> OcrResultListResponse:
     """OCR結果一覧を取得（v_ocr_resultsビューから）."""
+    logger.debug(
+        "OCR results list requested",
+        extra={
+            "task_date": task_date,
+            "status": status,
+            "has_error": has_error,
+            "limit": limit,
+            "offset": offset,
+        },
+    )
     # ビューからデータを取得
     query = "SELECT * FROM v_ocr_results WHERE 1=1"
     params: dict[str, Any] = {}
@@ -443,6 +455,10 @@ async def list_ocr_results(
                 # 日付フォーマットエラーや計算エラーは無視
                 pass
 
+    logger.info(
+        "OCR results fetched",
+        extra={"total": total, "returned_count": len(items), "task_date": task_date},
+    )
     return OcrResultListResponse(items=items, total=total)
 
 
@@ -455,6 +471,10 @@ async def list_completed_ocr_results(
     _current_user: User = Depends(get_current_user),
 ) -> OcrResultListResponse:
     """完了済み（アーカイブ）のOCR結果一覧を取得."""
+    logger.debug(
+        "Completed OCR results requested",
+        extra={"task_date": task_date, "limit": limit, "offset": offset},
+    )
     from sqlalchemy import func, select
 
     from app.infrastructure.persistence.models.smartread_models import (
@@ -558,8 +578,13 @@ async def complete_ocr_items(
     _current_user: User = Depends(get_current_user),
 ):
     """選択したOCR結果を完了（アーカイブ）にする."""
+    logger.info(
+        "OCR items completion requested",
+        extra={"ids": request.ids, "count": len(request.ids)},
+    )
     service = SmartReadCompletionService(db)
     service.mark_as_completed(request.ids)
+    logger.info("OCR items completed", extra={"count": len(request.ids)})
     return Response(status_code=204)
 
 
@@ -570,8 +595,13 @@ async def restore_ocr_items(
     _current_user: User = Depends(get_current_user),
 ):
     """完了済み（アーカイブ）アイテムを復元して未処理に戻す."""
+    logger.info(
+        "OCR items restore requested",
+        extra={"ids": request.ids, "count": len(request.ids)},
+    )
     service = SmartReadCompletionService(db)
     service.restore_items(request.ids)
+    logger.info("OCR items restored", extra={"count": len(request.ids)})
     return Response(status_code=204)
 
 
@@ -587,6 +617,16 @@ async def export_ocr_results(
     _current_user: User = Depends(get_current_user),
 ):
     """OCR結果をExcel/CSVでエクスポート."""
+    logger.info(
+        "OCR results export started",
+        extra={
+            "format": format,
+            "task_date": task_date,
+            "status": status,
+            "has_error": has_error,
+            "ids_count": len(ids) if ids else 0,
+        },
+    )
     query = "SELECT * FROM v_ocr_results WHERE 1=1"
     params: dict[str, Any] = {}
 
@@ -788,6 +828,10 @@ async def export_ocr_results(
     }
 
     filename = f"ocr_results_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    logger.info(
+        "OCR results export completed",
+        extra={"format": format, "export_count": len(export_rows), "file_name": filename},
+    )
     if format == "csv":
         return ExportService.export_to_csv(export_rows, filename=filename)
     return ExportService.export_to_excel(export_rows, filename=filename, column_map=column_map)
@@ -800,6 +844,7 @@ async def get_ocr_result(
     _current_user: User = Depends(get_current_user),
 ) -> OcrResultItem:
     """OCR結果詳細を取得."""
+    logger.debug("OCR result detail requested", extra={"item_id": item_id})
     query = "SELECT * FROM v_ocr_results WHERE id = :id"
     result = db.execute(text(query), {"id": item_id})
     row = result.mappings().first()
@@ -807,6 +852,7 @@ async def get_ocr_result(
     if not row:
         from fastapi import HTTPException, status
 
+        logger.warning("OCR result not found", extra={"item_id": item_id})
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"OCR結果 ID={item_id} が見つかりません",
@@ -844,6 +890,13 @@ async def save_ocr_result_edit(
     _current_user: User = Depends(get_current_user),
 ) -> OcrResultEditResponse:
     """OCR結果の手入力内容を保存."""
+    logger.info(
+        "OCR result edit requested",
+        extra={
+            "item_id": item_id,
+            "changed_fields": list(request.model_dump(exclude_unset=True).keys()),
+        },
+    )
     edit = (
         db.query(OcrResultEdit)
         .filter(OcrResultEdit.smartread_long_data_id == item_id)
@@ -906,9 +959,18 @@ async def save_ocr_result_edit(
         db.commit()
     except Exception as e:
         db.rollback()
+        logger.error(
+            "OCR result edit save failed",
+            extra={"item_id": item_id, "error": str(e)[:500]},
+            exc_info=True,
+        )
         raise e
     db.refresh(edit)
 
+    logger.info(
+        "OCR result edit saved",
+        extra={"item_id": item_id, "error_flags": edit.error_flags},
+    )
     return OcrResultEditResponse.model_validate(edit)
 
 
@@ -938,9 +1000,21 @@ def delete_ocr_results(
         HTTPException 403: ゲストユーザー
 
     """
+    logger.info(
+        "OCR results deletion requested",
+        extra={
+            "ids": request.ids,
+            "count": len(request.ids),
+            "user_id": current_user.id,
+        },
+    )
     # ゲストは削除不可
     roles = [ur.role.role_code for ur in current_user.user_roles]
     if "guest" in roles and len(roles) == 1:
+        logger.warning(
+            "OCR deletion denied (guest user)",
+            extra={"user_id": current_user.id},
+        )
         raise HTTPException(status_code=403, detail="ゲストユーザーは削除できません")
 
     result = delete_ocr_results_service(db, request.ids, current_user.id)

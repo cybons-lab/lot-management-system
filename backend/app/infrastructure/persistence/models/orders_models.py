@@ -268,11 +268,11 @@ class OrderLine(Base):
         nullable=True,
         comment="受注グループへの参照（得意先×製品×受注日）",
     )
-    supplier_item_id: Mapped[int] = mapped_column(
+    supplier_item_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
-        nullable=False,
-        comment="仕入先製品ID",
+        nullable=True,
+        comment="仕入先製品ID（取込直後は未解決の場合あり）",
     )
 
     # OCR取込時の元データ
@@ -294,10 +294,10 @@ class OrderLine(Base):
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
     )
-    delivery_place_id: Mapped[int] = mapped_column(
+    delivery_place_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("delivery_places.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
     )
 
     # 得意先側業務キー

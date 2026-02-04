@@ -5,6 +5,7 @@
 2. 前方一致フォールバック（1件のみヒット時に採用）
 """
 
+import logging
 from dataclasses import dataclass
 from enum import Enum
 
@@ -15,6 +16,9 @@ from app.infrastructure.persistence.models.masters_models import (
     CustomerItem,
     CustomerItemJikuMapping,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class MatchType(str, Enum):
@@ -64,13 +68,37 @@ class OcrSapComplementService:
         Returns:
             ComplementResult: 検索結果（マスタ、マッチ種別、製品ID）
         """
+        logger.debug(
+            "Complement search started",
+            extra={
+                "customer_code": customer_code,
+                "jiku_code": jiku_code,
+                "customer_part_no": customer_part_no,
+            },
+        )
         # Step 1: 完全一致検索
         result = self._find_exact_match(customer_code, jiku_code, customer_part_no)
         if result.match_type == MatchType.EXACT:
+            logger.debug(
+                "Complement exact match found",
+                extra={
+                    "customer_part_no": customer_part_no,
+                    "supplier_item_id": result.supplier_item_id,
+                },
+            )
             return result
 
         # Step 2: 前方一致フォールバック
-        return self._find_prefix_match(customer_code, jiku_code, customer_part_no)
+        result = self._find_prefix_match(customer_code, jiku_code, customer_part_no)
+        logger.debug(
+            "Complement search completed",
+            extra={
+                "customer_part_no": customer_part_no,
+                "match_type": result.match_type.value,
+                "supplier_item_id": result.supplier_item_id,
+            },
+        )
+        return result
 
     def _find_exact_match(
         self,

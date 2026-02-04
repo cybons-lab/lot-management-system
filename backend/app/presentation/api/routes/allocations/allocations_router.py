@@ -223,6 +223,7 @@ def preview_allocation(
     Raises:
         HTTPException: 受注が見つからない場合（404）またはバリデーションエラー（400）
     """
+    logger.info("Previewing FEFO allocation", extra={"order_id": request.order_id})
     try:
         result = fefo.preview_fefo_allocation(db, request.order_id)
         return _map_fefo_preview(result)
@@ -256,6 +257,7 @@ def commit_allocation(
     Raises:
         HTTPException: 受注が見つからない、在庫不足、または確定に失敗した場合
     """
+    logger.info("Committing FEFO allocation", extra={"order_id": request.order_id})
     try:
         result = actions.commit_fefo_reservation(db, request.order_id)
 
@@ -288,6 +290,14 @@ def manual_allocate(
     current_user: User = Depends(get_current_user),
 ) -> ManualAllocationResponse:
     """Manual allocation (Drag & Assign)."""
+    logger.info(
+        "Manual allocation (drag-assign)",
+        extra={
+            "order_line_id": request.order_line_id,
+            "lot_id": request.lot_id,
+            "quantity": str(request.allocated_quantity),
+        },
+    )
     try:
         reservation = actions.create_manual_reservation(
             db,
@@ -338,6 +348,10 @@ def confirm_allocation(
     current_user: User = Depends(get_current_user),
 ) -> HardAllocationConfirmResponse:
     """Confirm allocation (Soft to Hard)."""
+    logger.info(
+        "Confirming allocation",
+        extra={"allocation_id": allocation_id, "confirmed_by": request.confirmed_by},
+    )
     # Check for Mock usage
     if isinstance(get_sap_gateway(), MockSapGateway):
         response.headers["X-Mock-Status"] = "true"
@@ -420,6 +434,10 @@ def confirm_allocations_batch(
     current_user: User = Depends(get_current_user),
 ) -> HardAllocationBatchConfirmResponse:
     """Batch confirm allocations."""
+    logger.info(
+        "Batch confirming allocations",
+        extra={"count": len(request.allocation_ids), "confirmed_by": request.confirmed_by},
+    )
     # Check for Mock usage
     if isinstance(get_sap_gateway(), MockSapGateway):
         response.headers["X-Mock-Status"] = "true"
@@ -454,6 +472,7 @@ def cancel_allocation(
     current_user: User = Depends(get_current_user),
 ):
     """Cancel allocation."""
+    logger.info("Cancelling allocation", extra={"allocation_id": allocation_id})
     try:
         actions.release_reservation(db, allocation_id)
     except ValueError as e:
@@ -469,6 +488,7 @@ def bulk_cancel(
     current_user: User = Depends(get_current_user),
 ) -> BulkCancelResponse:
     """Bulk cancel allocations."""
+    logger.info("Bulk cancelling allocations", extra={"count": len(request.allocation_ids)})
     cancelled, failed = actions.bulk_release_reservations(db, request.allocation_ids)
 
     msg = f"Cancelled {len(cancelled)} allocations"
@@ -488,6 +508,15 @@ async def bulk_auto_allocate(
 
     Can filter by product, customer, delivery_place, and order_type.
     """
+    logger.info(
+        "Bulk auto-allocating",
+        extra={
+            "supplier_item_id": request.supplier_item_id,
+            "customer_id": request.customer_id,
+            "delivery_place_id": request.delivery_place_id,
+            "order_type": request.order_type,
+        },
+    )
     try:
         result = actions.auto_reserve_bulk(
             db,
@@ -544,6 +573,14 @@ def cancel_confirmed_allocation(
     Raises:
         HTTPException: 予約が見つからない（404）、不正な状態遷移（400）
     """
+    logger.info(
+        "Cancelling confirmed allocation",
+        extra={
+            "allocation_id": allocation_id,
+            "reason": request.reason,
+            "cancelled_by": request.cancelled_by,
+        },
+    )
     try:
         reservation = cancel.cancel_confirmed_reservation(
             db,

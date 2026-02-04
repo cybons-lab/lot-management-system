@@ -12,8 +12,10 @@ class AllocationSuggestionBase(BaseModel):
 
     forecast_period: str = Field(..., description="対象期間 (YYYY-MM または YYYY-MM-DD)")
     customer_id: int = Field(..., description="得意先ID")
-    delivery_place_id: int = Field(..., description="納入先ID")
-    supplier_item_id: int = Field(..., serialization_alias="supplier_item_id", description="製品ID")
+    delivery_place_id: int | None = Field(None, description="納入先ID")
+    supplier_item_id: int | None = Field(
+        None, serialization_alias="supplier_item_id", description="製品ID"
+    )
 
     lot_id: int = Field(..., description="ロットID")
     quantity: Decimal = Field(..., description="引当数量")
@@ -56,8 +58,8 @@ class AllocationStatsPerKey(BaseModel):
     """キーごとの集計結果."""
 
     customer_id: int
-    delivery_place_id: int
-    supplier_item_id: int
+    delivery_place_id: int | None
+    supplier_item_id: int | None
     forecast_period: str
 
     forecast_quantity: Decimal
@@ -69,8 +71,8 @@ class AllocationGap(BaseModel):
     """不足情報."""
 
     customer_id: int
-    delivery_place_id: int
-    supplier_item_id: int
+    delivery_place_id: int | None
+    supplier_item_id: int | None
     forecast_period: str
 
     shortage_quantity: Decimal
@@ -135,8 +137,8 @@ class AllocationSuggestionBatchUpdateItem(BaseModel):
     """一括更新用アイテム."""
 
     customer_id: int
-    delivery_place_id: int
-    supplier_item_id: int
+    delivery_place_id: int | None
+    supplier_item_id: int | None
     lot_id: int
     forecast_period: str
     quantity: Decimal

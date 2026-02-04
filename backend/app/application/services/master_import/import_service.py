@@ -50,6 +50,15 @@ class MasterImportService:
         results: list[ImportResultDetail] = []
         global_errors: list[str] = []
 
+        logger.info(
+            "Master import started",
+            extra={
+                "dry_run": request.dry_run,
+                "has_supply_data": request.supply_data is not None,
+                "has_customer_data": request.customer_data is not None,
+            },
+        )
+
         try:
             # Process supply-side first (products are needed for customer_items)
             if request.supply_data:
@@ -64,8 +73,10 @@ class MasterImportService:
             # Commit or rollback based on dry_run
             if request.dry_run:
                 self.db.rollback()
+                logger.info("Master import dry_run completed, changes rolled back")
             else:
                 self.db.commit()
+                logger.info("Master import committed")
 
         except Exception as e:
             self.db.rollback()
@@ -83,6 +94,16 @@ class MasterImportService:
         else:
             status = "success"
 
+        logger.info(
+            "Master import finished",
+            extra={
+                "status": status,
+                "total_created": sum(r.created for r in results),
+                "total_updated": sum(r.updated for r in results),
+                "total_failed": total_failed,
+                "tables": [r.table_name for r in results],
+            },
+        )
         return MasterImportResponse(
             status=status,
             dry_run=request.dry_run,

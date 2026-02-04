@@ -6,8 +6,8 @@ from app.main import app
 
 @pytest.mark.asyncio
 async def test_order_validation_error():
-    from app.application.services.auth.auth_service import AuthService
     from app.infrastructure.persistence.models.auth_models import User
+    from app.presentation.api.routes.auth.auth_router import get_current_user
 
     mock_user = User(
         id=1,
@@ -17,7 +17,7 @@ async def test_order_validation_error():
         display_name="Test",
         is_active=True,
     )
-    app.dependency_overrides[AuthService.get_current_user] = lambda: mock_user
+    app.dependency_overrides[get_current_user] = lambda: mock_user
 
     try:
         payload = {"customer_code": "C001", "lines": []}

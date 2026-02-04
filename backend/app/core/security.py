@@ -25,12 +25,16 @@
    → 現状は開発の利便性を優先
 """
 
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import jwt  # PyJWT
 
 from app.core.config import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 def _create_token(
@@ -47,6 +51,15 @@ def _create_token(
 
     to_encode.update({"exp": expire, "typ": token_type})
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    logger.debug(
+        "Token created",
+        extra={
+            "token_type": token_type,
+            "subject": data.get("sub"),
+            "username": data.get("username"),
+            "expires_at": expire.isoformat(),
+        },
+    )
     return str(encoded_jwt)
 
 
@@ -77,7 +90,17 @@ def _decode_token(token: str) -> dict[str, Any] | None:
             token, settings.secret_key, algorithms=[settings.algorithm]
         )
         return payload
-    except jwt.PyJWTError:
+    except jwt.ExpiredSignatureError as exc:
+        logger.warning(
+            "Token expired",
+            extra={"error": type(exc).__name__, "token_length": len(token)},
+        )
+        return None
+    except jwt.PyJWTError as exc:
+        logger.warning(
+            "Token decode failed",
+            extra={"error": type(exc).__name__, "token_length": len(token)},
+        )
         return None
 
 
@@ -88,6 +111,10 @@ def decode_access_token(token: str) -> dict[str, Any] | None:
         return None
     token_type = payload.get("typ")
     if token_type and token_type != "access":
+        logger.warning(
+            "Access token type mismatch",
+            extra={"found_type": token_type},
+        )
         return None
     return payload
 
@@ -98,5 +125,9 @@ def decode_refresh_token(token: str) -> dict[str, Any] | None:
     if not payload:
         return None
     if payload.get("typ") != "refresh":
+        logger.warning(
+            "Refresh token type mismatch",
+            extra={"found_type": payload.get("typ")},
+        )
         return None
     return payload

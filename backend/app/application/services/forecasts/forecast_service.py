@@ -417,6 +417,15 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
 
     def create_forecast(self, data: ForecastCreate) -> ForecastResponse:
         """Create a new forecast entry and automatically create provisional order."""
+        logger.info(
+            "Creating forecast",
+            extra={
+                "customer_id": data.customer_id,
+                "supplier_item_id": data.supplier_item_id,
+                "forecast_date": str(data.forecast_date),
+                "quantity": str(data.forecast_quantity),
+            },
+        )
         # Auto-generate forecast_period if not provided
         forecast_period = data.forecast_period
         if not forecast_period:
@@ -455,9 +464,18 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         )
 
         if not db_forecast:
+            logger.warning("Forecast not found for update", extra={"forecast_id": forecast_id})
             return None
 
         old_quantity = db_forecast.forecast_quantity
+        logger.info(
+            "Updating forecast",
+            extra={
+                "forecast_id": forecast_id,
+                "old_quantity": str(old_quantity),
+                "update_fields": list(data.model_dump(exclude_unset=True).keys()),
+            },
+        )
         forecast_period = db_forecast.forecast_period  # Capture before update
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
@@ -490,8 +508,17 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         )
 
         if not db_forecast:
+            logger.warning("Forecast not found for delete", extra={"forecast_id": forecast_id})
             return False
 
+        logger.info(
+            "Deleting forecast",
+            extra={
+                "forecast_id": forecast_id,
+                "customer_id": db_forecast.customer_id,
+                "supplier_item_id": db_forecast.supplier_item_id,
+            },
+        )
         forecast_period = db_forecast.forecast_period  # Capture before delete
 
         # Delete associated provisional order first
@@ -584,6 +611,10 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             self.db.query(OrderLine).filter(OrderLine.forecast_reference == forecast_ref).first()
         )
         if existing:
+            logger.debug(
+                "Provisional order already exists",
+                extra={"forecast_ref": forecast_ref},
+            )
             return  # Already exists, skip creation
 
         # Create order header (or reuse existing for the same customer and date)
@@ -622,6 +653,14 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         )
         self.db.add(order_line)
         self.db.flush()  # Ensure ID is generated
+        logger.info(
+            "Provisional order created",
+            extra={
+                "order_id": order.id,
+                "order_line_id": order_line.id,
+                "forecast_ref": forecast_ref,
+            },
+        )
 
         # Trigger auto-allocation
         from app.application.services.allocations.actions import auto_reserve_line

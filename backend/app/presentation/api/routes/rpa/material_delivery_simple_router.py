@@ -1,5 +1,7 @@
 """Material Delivery Simple (Step1/Step2) endpoints."""
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -15,6 +17,7 @@ from app.presentation.schemas.rpa_schema import (
 )
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/rpa/material-delivery-simple", tags=["rpa"])
 
 
@@ -67,6 +70,10 @@ def execute_step1(
     current_user: User | None = Depends(get_current_user_optional),
 ):
     """Step1実行."""
+    logger.info(
+        "Material delivery step1 execution requested",
+        extra={"start_date": str(request.start_date), "end_date": str(request.end_date)},
+    )
     service = MaterialDeliverySimpleService(db)
     try:
         job = service.execute_step(
@@ -75,8 +82,12 @@ def execute_step1(
             end_date=request.end_date,
             user=current_user,
         )
+        logger.info(
+            "Material delivery step1 completed", extra={"job_id": job.id, "status": job.status}
+        )
         return _job_to_response(job, step=1)
     except ValueError as exc:
+        logger.error("Material delivery step1 failed", extra={"error": str(exc)})
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 
@@ -87,6 +98,10 @@ def execute_step2(
     current_user: User | None = Depends(get_current_user_optional),
 ):
     """Step2実行."""
+    logger.info(
+        "Material delivery step2 execution requested",
+        extra={"start_date": str(request.start_date), "end_date": str(request.end_date)},
+    )
     service = MaterialDeliverySimpleService(db)
     try:
         job = service.execute_step(
@@ -95,6 +110,10 @@ def execute_step2(
             end_date=request.end_date,
             user=current_user,
         )
+        logger.info(
+            "Material delivery step2 completed", extra={"job_id": job.id, "status": job.status}
+        )
         return _job_to_response(job, step=2)
     except ValueError as exc:
+        logger.error("Material delivery step2 failed", extra={"error": str(exc)})
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))

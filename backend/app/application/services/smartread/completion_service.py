@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from sqlalchemy import select
@@ -12,6 +13,9 @@ from app.infrastructure.persistence.models.smartread_models import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 class SmartReadCompletionService:
     def __init__(self, db: Session):
         self.db = db
@@ -20,6 +24,8 @@ class SmartReadCompletionService:
         """Mark items as completed by moving them to history tables."""
         if not ids:
             return 0
+
+        logger.info("Completion started", extra={"ids_count": len(ids)})
 
         # Fetch active data
         active_items = self.db.scalars(
@@ -59,6 +65,7 @@ class SmartReadCompletionService:
             # if item.status == "ERROR": has_error = True
 
             if has_error:
+                logger.debug("Completion skipped (has error)", extra={"item_id": item.id})
                 continue
 
             # Create completed item
@@ -138,6 +145,9 @@ class SmartReadCompletionService:
             moved_count += 1
 
         self.db.commit()
+        logger.info(
+            "Completion finished", extra={"moved_count": moved_count, "total_requested": len(ids)}
+        )
         return moved_count
 
     def restore_items(self, ids: list[int]) -> int:
@@ -148,6 +158,8 @@ class SmartReadCompletionService:
         """
         if not ids:
             return 0
+
+        logger.info("Restore started", extra={"ids_count": len(ids)})
 
         # Fetch completed items
         completed_items = self.db.scalars(
@@ -223,4 +235,8 @@ class SmartReadCompletionService:
             restored_count += 1
 
         self.db.commit()
+        logger.info(
+            "Restore finished",
+            extra={"restored_count": restored_count, "total_requested": len(ids)},
+        )
         return restored_count

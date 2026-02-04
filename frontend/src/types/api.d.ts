@@ -8783,9 +8783,9 @@ export interface components {
       /** Customer Id */
       customer_id: number;
       /** Delivery Place Id */
-      delivery_place_id: number;
+      delivery_place_id: number | null;
       /** Supplier Item Id */
-      supplier_item_id: number;
+      supplier_item_id: number | null;
       /** Forecast Period */
       forecast_period: string;
       /** Shortage Quantity */
@@ -8841,9 +8841,9 @@ export interface components {
       /** Customer Id */
       customer_id: number;
       /** Delivery Place Id */
-      delivery_place_id: number;
+      delivery_place_id: number | null;
       /** Supplier Item Id */
-      supplier_item_id: number;
+      supplier_item_id: number | null;
       /** Forecast Period */
       forecast_period: string;
       /** Forecast Quantity */
@@ -8883,9 +8883,9 @@ export interface components {
       /** Customer Id */
       customer_id: number;
       /** Delivery Place Id */
-      delivery_place_id: number;
+      delivery_place_id: number | null;
       /** Supplier Item Id */
-      supplier_item_id: number;
+      supplier_item_id: number | null;
       /** Lot Id */
       lot_id: number;
       /** Forecast Period */
@@ -8949,12 +8949,12 @@ export interface components {
        * Delivery Place Id
        * @description 納入先ID
        */
-      delivery_place_id: number;
+      delivery_place_id?: number | null;
       /**
        * Supplier Item Id
        * @description 製品ID
        */
-      supplier_item_id: number;
+      supplier_item_id?: number | null;
       /**
        * Lot Id
        * @description ロットID
@@ -24025,7 +24025,9 @@ export interface operations {
       query?: never;
       header?: never;
       path?: never;
-      cookie?: never;
+      cookie?: {
+        refresh_token?: string | null;
+      };
     };
     requestBody?: never;
     responses: {
@@ -24036,6 +24038,15 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 from typing import Any
 
@@ -16,6 +17,7 @@ from app.presentation.api.routes.auth.auth_router import get_current_admin
 
 
 router = APIRouter(prefix="/debug/db", tags=["debug-db"])
+logger = logging.getLogger(__name__)
 
 MAX_LIMIT = 200
 DEFAULT_LIMIT = 50
@@ -79,6 +81,7 @@ def list_db_objects(
     db: Session = Depends(get_db),
     _current_admin=Depends(get_current_admin),
 ) -> list[dict[str, Any]]:
+    logger.info("Listing DB objects")
     _ensure_enabled(db)
     allowed_schemas = _get_allowed_schemas(db)
     rows = db.execute(
@@ -228,6 +231,10 @@ def get_object_rows(
     db: Session = Depends(get_db),
     _current_admin=Depends(get_current_admin),
 ) -> dict[str, Any]:
+    logger.info(
+        "Querying DB rows",
+        extra={"schema": schema, "table": name, "limit": limit, "offset": offset},
+    )
     _ensure_enabled(db)
     allowed_schemas = _get_allowed_schemas(db)
     _validate_schema(schema, allowed_schemas)

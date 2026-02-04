@@ -1,5 +1,7 @@
 """RPA router."""
 
+import logging
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -13,6 +15,7 @@ from app.presentation.schemas.rpa_schema import (
 )
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/rpa", tags=["rpa"])
 
 
@@ -36,11 +39,18 @@ def execute_material_delivery_document(
     Returns:
         実行結果
     """
+    user_name = current_user.username if current_user else "system"
+    logger.info(
+        "Material delivery document execution requested",
+        extra={
+            "start_date": str(request.start_date),
+            "end_date": str(request.end_date),
+            "user": user_name,
+        },
+    )
+
     lock_manager = get_lock_manager()
     service = RPAService(lock_manager, db)
-
-    # ログインユーザーがいる場合はそのユーザー名を使用
-    user_name = current_user.username if current_user else "system"
 
     result = service.execute_material_delivery_document(
         start_date=str(request.start_date),
@@ -52,9 +62,14 @@ def execute_material_delivery_document(
     if result["status"] == "locked":
         from fastapi import HTTPException
 
+        logger.warning("Material delivery document locked", extra={"user": user_name})
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=result["message"],
         )
 
+    logger.info(
+        "Material delivery document completed",
+        extra={"status": result["status"], "user": user_name},
+    )
     return MaterialDeliveryDocumentResponse(**result)

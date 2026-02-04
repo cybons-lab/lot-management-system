@@ -210,6 +210,10 @@ class AllocationCandidateService:
         Returns:
             Dict mapping supplier_item_id to list of LotCandidate
         """
+        logger.debug(
+            "Batch candidate fetch started",
+            extra={"product_count": len(supplier_item_ids), "policy": policy.value},
+        )
         result: dict[int, list[LotCandidate]] = {}
         for supplier_item_id in supplier_item_ids:
             candidates = self.get_candidates(
@@ -225,4 +229,11 @@ class AllocationCandidateService:
             )
             if candidates:
                 result[supplier_item_id] = candidates
+        logger.info(
+            "Batch candidate fetch completed",
+            extra={
+                "requested": len(supplier_item_ids),
+                "with_candidates": len(result),
+            },
+        )
         return result
