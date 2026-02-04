@@ -104,6 +104,9 @@ class LotBase(BaseSchema):
     sales_price: Decimal | None = None
     tax_rate: Decimal | None = None
 
+    # Phase 9: Remarks field
+    remarks: str | None = None
+
 
 class LotCreate(LotBase):
     """Payload for creating lots.
@@ -160,6 +163,9 @@ class LotUpdate(BaseSchema):
     cost_price: Decimal | None = None
     sales_price: Decimal | None = None
     tax_rate: Decimal | None = None
+
+    # Phase 9: Remarks field
+    remarks: str | None = None
 
 
 class LotResponse(LotBase, TimestampMixin):

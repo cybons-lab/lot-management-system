@@ -28,6 +28,10 @@ class AllocationSuggestionBase(BaseModel):
     priority: int = Field(0, description="引当優先順位 (1=High)")
     coa_issue_date: date | None = Field(None, description="成績書発行日 (YYYY-MM-DD)")
 
+    # Phase 9 fields
+    comment: str | None = Field(None, description="数量別コメント")
+    manual_shipment_date: date | None = Field(None, description="手動設定の出荷日")
+
 
 class AllocationSuggestionCreate(AllocationSuggestionBase):
     """引当推奨作成スキーマ.

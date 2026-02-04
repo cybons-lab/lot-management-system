@@ -349,6 +349,12 @@ class AllocationSuggestion(Base):
 
     coa_issue_date: Mapped[date | None] = mapped_column(Date, nullable=True, comment="成績書発行日")
 
+    # Phase 9 fields
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True, comment="数量別コメント")
+    manual_shipment_date: Mapped[date | None] = mapped_column(
+        Date, nullable=True, comment="手動設定の出荷日"
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )

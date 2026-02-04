@@ -9111,6 +9111,16 @@ export interface components {
        * @description 成績書発行日 (YYYY-MM-DD)
        */
       coa_issue_date?: string | null;
+      /**
+       * Comment
+       * @description 数量別コメント
+       */
+      comment?: string | null;
+      /**
+       * Manual Shipment Date
+       * @description 手動設定の出荷日
+       */
+      manual_shipment_date?: string | null;
       /** Id */
       id: number;
       /**
@@ -12173,6 +12183,8 @@ export interface components {
       sales_price?: number | string | null;
       /** Tax Rate */
       tax_rate?: number | string | null;
+      /** Remarks */
+      remarks?: string | null;
       /** Product Code */
       product_code?: string | null;
       /** Supplier Code */
@@ -12307,6 +12319,8 @@ export interface components {
       sales_price?: string | null;
       /** Tax Rate */
       tax_rate?: string | null;
+      /** Remarks */
+      remarks?: string | null;
       /** Lot Id */
       lot_id: number;
       /** Product Name */
@@ -12428,6 +12442,8 @@ export interface components {
       sales_price?: number | string | null;
       /** Tax Rate */
       tax_rate?: number | string | null;
+      /** Remarks */
+      remarks?: string | null;
     };
     /**
      * MakerCreateRequest

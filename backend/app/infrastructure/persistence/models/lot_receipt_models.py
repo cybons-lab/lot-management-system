@@ -200,6 +200,13 @@ class LotReceipt(Base):
         comment="仮入庫時の一意識別キー（UUID）",
     )
 
+    # Remarks field (Phase 9.1)
+    remarks: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="備考（ロットに関する付加情報）",
+    )
+
     # B-Plan: receipt_key for unique identification
     receipt_key: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
