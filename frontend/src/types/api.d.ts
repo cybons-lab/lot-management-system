@@ -8124,46 +8124,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/shipping-masters/export/download": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Export Shipping Masters
-     * @description 出荷用マスタをエクスポート.
-     */
-    get: operations["export_shipping_masters_api_shipping_masters_export_download_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/shipping-masters/sync": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Sync Shipping Masters
-     * @description 出荷用マスタを他のマスタへ同期する.
-     */
-    post: operations["sync_shipping_masters_api_shipping_masters_sync_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/shipping-masters/import": {
     parameters: {
       query?: never;
@@ -8200,27 +8160,7 @@ export interface paths {
     get: operations["list_ocr_results_api_ocr_results_get"];
     put?: never;
     post?: never;
-    /**
-     * Delete Ocr Results
-     * @description エラーのあるOCR結果を削除する.
-     *
-     *     エラーフラグが1つでもtrueの項目のみ削除可能。
-     *     エラーのない項目は削除がブロックされる。
-     *
-     *     Args:
-     *         request: 削除対象IDリスト
-     *         db: データベースセッション
-     *         current_user: 認証済みユーザー（admin/user）
-     *
-     *     Returns:
-     *         SmartReadDeletionResponse: 削除結果
-     *
-     *     Raises:
-     *         HTTPException 400: すべての項目にエラーがない
-     *         HTTPException 404: 指定IDが存在しない
-     *         HTTPException 403: ゲストユーザー
-     */
-    delete: operations["delete_ocr_results_api_ocr_results_delete"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -8783,9 +8723,9 @@ export interface components {
       /** Customer Id */
       customer_id: number;
       /** Delivery Place Id */
-      delivery_place_id: number | null;
+      delivery_place_id: number;
       /** Supplier Item Id */
-      supplier_item_id: number | null;
+      supplier_item_id: number;
       /** Forecast Period */
       forecast_period: string;
       /** Shortage Quantity */
@@ -8841,9 +8781,9 @@ export interface components {
       /** Customer Id */
       customer_id: number;
       /** Delivery Place Id */
-      delivery_place_id: number | null;
+      delivery_place_id: number;
       /** Supplier Item Id */
-      supplier_item_id: number | null;
+      supplier_item_id: number;
       /** Forecast Period */
       forecast_period: string;
       /** Forecast Quantity */
@@ -8883,9 +8823,9 @@ export interface components {
       /** Customer Id */
       customer_id: number;
       /** Delivery Place Id */
-      delivery_place_id: number | null;
+      delivery_place_id: number;
       /** Supplier Item Id */
-      supplier_item_id: number | null;
+      supplier_item_id: number;
       /** Lot Id */
       lot_id: number;
       /** Forecast Period */
@@ -8949,12 +8889,12 @@ export interface components {
        * Delivery Place Id
        * @description 納入先ID
        */
-      delivery_place_id?: number | null;
+      delivery_place_id: number;
       /**
        * Supplier Item Id
        * @description 製品ID
        */
-      supplier_item_id?: number | null;
+      supplier_item_id: number;
       /**
        * Lot Id
        * @description ロットID
@@ -15340,8 +15280,6 @@ export interface components {
       record_count: number;
       /** Cached Count */
       cached_count: number;
-      /** Deleted Count */
-      deleted_count: number;
       /** Error Message */
       error_message: string | null;
       /** Duration Ms */
@@ -15525,11 +15463,6 @@ export interface components {
        */
       supplier_name?: string | null;
       /**
-       * Staff Name
-       * @description 担当者名
-       */
-      staff_name?: string | null;
-      /**
        * Delivery Place Code
        * @description 納入先コード
        */
@@ -15540,15 +15473,15 @@ export interface components {
        */
       delivery_place_name?: string | null;
       /**
-       * Delivery Place Abbr
-       * @description 納入先略称
+       * Shipping Warehouse Code
+       * @description 出荷倉庫コード
        */
-      delivery_place_abbr?: string | null;
+      shipping_warehouse_code?: string | null;
       /**
-       * Shipping Warehouse
+       * Shipping Warehouse Name
        * @description 出荷倉庫名
        */
-      shipping_warehouse?: string | null;
+      shipping_warehouse_name?: string | null;
       /**
        * Shipping Slip Text
        * @description 出荷票テキスト
@@ -15560,18 +15493,8 @@ export interface components {
        */
       transport_lt_days?: number | null;
       /**
-       * Order Flag
-       * @description 発注区分
-       */
-      order_flag?: string | null;
-      /**
-       * Order Existence
-       * @description 発注の有無
-       */
-      order_existence?: string | null;
-      /**
        * Has Order
-       * @description アプリ発注対象フラグ
+       * @description 発注の有無
        * @default false
        */
       has_order: boolean;
@@ -15657,11 +15580,6 @@ export interface components {
        */
       supplier_name?: string | null;
       /**
-       * Staff Name
-       * @description 担当者名
-       */
-      staff_name?: string | null;
-      /**
        * Delivery Place Code
        * @description 納入先コード
        */
@@ -15672,15 +15590,15 @@ export interface components {
        */
       delivery_place_name?: string | null;
       /**
-       * Delivery Place Abbr
-       * @description 納入先略称
+       * Shipping Warehouse Code
+       * @description 出荷倉庫コード
        */
-      delivery_place_abbr?: string | null;
+      shipping_warehouse_code?: string | null;
       /**
-       * Shipping Warehouse
+       * Shipping Warehouse Name
        * @description 出荷倉庫名
        */
-      shipping_warehouse?: string | null;
+      shipping_warehouse_name?: string | null;
       /**
        * Shipping Slip Text
        * @description 出荷票テキスト
@@ -15692,18 +15610,8 @@ export interface components {
        */
       transport_lt_days?: number | null;
       /**
-       * Order Flag
-       * @description 発注区分
-       */
-      order_flag?: string | null;
-      /**
-       * Order Existence
-       * @description 発注の有無
-       */
-      order_existence?: string | null;
-      /**
        * Has Order
-       * @description アプリ発注対象フラグ
+       * @description 発注の有無
        * @default false
        */
       has_order: boolean;
@@ -15755,24 +15663,18 @@ export interface components {
       supplier_code?: string | null;
       /** Supplier Name */
       supplier_name?: string | null;
-      /** Staff Name */
-      staff_name?: string | null;
       /** Delivery Place Code */
       delivery_place_code?: string | null;
       /** Delivery Place Name */
       delivery_place_name?: string | null;
-      /** Delivery Place Abbr */
-      delivery_place_abbr?: string | null;
-      /** Shipping Warehouse */
-      shipping_warehouse?: string | null;
+      /** Shipping Warehouse Code */
+      shipping_warehouse_code?: string | null;
+      /** Shipping Warehouse Name */
+      shipping_warehouse_name?: string | null;
       /** Shipping Slip Text */
       shipping_slip_text?: string | null;
       /** Transport Lt Days */
       transport_lt_days?: number | null;
-      /** Order Flag */
-      order_flag?: string | null;
-      /** Order Existence */
-      order_existence?: string | null;
       /** Has Order */
       has_order?: boolean | null;
       /** Remarks */
@@ -15991,43 +15893,6 @@ export interface components {
        * @description CSVファイル名
        */
       filename?: string | null;
-    };
-    /**
-     * SmartReadDeletionRequest
-     * @description OCR結果削除リクエスト.
-     */
-    SmartReadDeletionRequest: {
-      /**
-       * Ids
-       * @description 削除対象IDリスト（最大100件）
-       */
-      ids: number[];
-    };
-    /**
-     * SmartReadDeletionResponse
-     * @description OCR結果削除レスポンス.
-     */
-    SmartReadDeletionResponse: {
-      /**
-       * Deleted Count
-       * @description 削除件数
-       */
-      deleted_count: number;
-      /**
-       * Skipped Count
-       * @description スキップ件数
-       */
-      skipped_count: number;
-      /**
-       * Skipped Ids
-       * @description スキップされたIDリスト
-       */
-      skipped_ids?: number[];
-      /**
-       * Message
-       * @description 警告メッセージ
-       */
-      message?: string | null;
     };
     /**
      * SmartReadDiagnoseRequest
@@ -24025,9 +23890,7 @@ export interface operations {
       query?: never;
       header?: never;
       path?: never;
-      cookie?: {
-        refresh_token?: string | null;
-      };
+      cookie?: never;
     };
     requestBody?: never;
     responses: {
@@ -24038,15 +23901,6 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
@@ -30329,77 +30183,9 @@ export interface operations {
       };
     };
   };
-  export_shipping_masters_api_shipping_masters_export_download_get: {
-    parameters: {
-      query?: {
-        format?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  sync_shipping_masters_api_shipping_masters_sync_post: {
-    parameters: {
-      query?: {
-        /** @description 同期ポリシー */
-        policy?: "create-only" | "upsert" | "update-if-empty";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
   import_shipping_masters_file_api_shipping_masters_import_post: {
     parameters: {
-      query?: {
-        /** @description インポート後に自動同期を実行するか */
-        auto_sync?: boolean;
-        /** @description 同期ポリシー */
-        sync_policy?: "create-only" | "upsert" | "update-if-empty";
-      };
+      query?: never;
       header?: never;
       path?: never;
       cookie?: never;
@@ -30455,39 +30241,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["OcrResultListResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_ocr_results_api_ocr_results_delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SmartReadDeletionRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SmartReadDeletionResponse"];
         };
       };
       /** @description Validation Error */
