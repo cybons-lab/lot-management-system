@@ -59,6 +59,12 @@ from app.presentation.api.routes.masters import (
     warehouse_delivery_routes_router,
     warehouses_router,
 )
+from app.presentation.api.routes.material_order_forecast_router import (
+    maker_router,
+)
+from app.presentation.api.routes.material_order_forecast_router import (
+    router as material_order_forecast_router,
+)
 from app.presentation.api.routes.notification_router import router as notification_router
 from app.presentation.api.routes.ocr import router as ocr_router
 from app.presentation.api.routes.ocr_results_router import router as ocr_results_router
@@ -111,6 +117,8 @@ def register_all_routers(app: FastAPI) -> None:
 
     # Forecast & Alert endpoints
     app.include_router(forecasts_router, prefix=prefix)
+    app.include_router(material_order_forecast_router)
+    app.include_router(maker_router)
     app.include_router(alerts_router, prefix=prefix)
 
     # Reports

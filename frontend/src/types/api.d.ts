@@ -1461,6 +1461,120 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/material-order-forecasts/import": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import Forecast Csv
+     * @description 材料発注フォーキャストCSVインポート.
+     *
+     *     Args:
+     *         file: CSV file (ヘッダーなし、1行目からデータ、60列)
+     *         target_month: 対象月（YYYY-MM、省略時はCSV A列から自動取得）
+     *         db: Database session
+     *         current_user: Current authenticated user
+     *
+     *     Returns:
+     *         ImportResponse: インポート結果 + 警告リスト
+     */
+    post: operations["import_forecast_csv_api_material_order_forecasts_import_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/material-order-forecasts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Forecasts
+     * @description フォーキャストデータ取得（フィルタリング付き）.
+     *
+     *     Args:
+     *         target_month: 対象月フィルタ
+     *         material_code: 材質コードフィルタ（部分一致）
+     *         maker_code: メーカーコードフィルタ
+     *         jiku_code: 次区コードフィルタ
+     *         limit: 取得件数
+     *         offset: オフセット
+     *         db: Database session
+     *         _current_user: Current authenticated user (unused)
+     *
+     *     Returns:
+     *         フォーキャストデータリスト
+     */
+    get: operations["get_forecasts_api_material_order_forecasts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/makers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Makers
+     * @description メーカーマスタ一覧取得.
+     */
+    get: operations["get_makers_api_makers_get"];
+    put?: never;
+    /**
+     * Create Maker
+     * @description メーカーマスタ新規作成.
+     */
+    post: operations["create_maker_api_makers_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/makers/{maker_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Maker
+     * @description メーカーマスタ詳細取得.
+     */
+    get: operations["get_maker_api_makers__maker_id__get"];
+    /**
+     * Update Maker
+     * @description メーカーマスタ更新.
+     */
+    put: operations["update_maker_api_makers__maker_id__put"];
+    post?: never;
+    /**
+     * Delete Maker
+     * @description メーカーマスタ削除（論理削除）.
+     */
+    delete: operations["delete_maker_api_makers__maker_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/alerts": {
     parameters: {
       query?: never;
@@ -9264,6 +9378,17 @@ export interface components {
        */
       file: string;
     };
+    /** Body_import_forecast_csv_api_material_order_forecasts_import_post */
+    Body_import_forecast_csv_api_material_order_forecasts_import_post: {
+      /**
+       * File
+       * Format: binary
+       * @description CSV file (ヘッダーなし)
+       */
+      file: string;
+      /** Target Month */
+      target_month?: string | null;
+    };
     /** Body_import_from_file_api_admin_master_import_upload_post */
     Body_import_from_file_api_admin_master_import_upload_post: {
       /**
@@ -12304,6 +12429,70 @@ export interface components {
       /** Tax Rate */
       tax_rate?: number | string | null;
     };
+    /**
+     * MakerCreateRequest
+     * @description Maker create request schema.
+     */
+    MakerCreateRequest: {
+      /** Maker Code */
+      maker_code: string;
+      /** Maker Name */
+      maker_name: string;
+      /** Display Name */
+      display_name?: string | null;
+      /** Short Name */
+      short_name?: string | null;
+      /** Notes */
+      notes?: string | null;
+    };
+    /**
+     * MakerResponse
+     * @description Maker response schema.
+     */
+    MakerResponse: {
+      /** Id */
+      id: number;
+      /**
+       * Maker Code
+       * @description メーカーコード
+       */
+      maker_code: string;
+      /**
+       * Maker Name
+       * @description メーカー名
+       */
+      maker_name: string;
+      /** Display Name */
+      display_name?: string | null;
+      /** Short Name */
+      short_name?: string | null;
+      /** Notes */
+      notes?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * MakerUpdateRequest
+     * @description Maker update request schema.
+     */
+    MakerUpdateRequest: {
+      /** Maker Name */
+      maker_name?: string | null;
+      /** Display Name */
+      display_name?: string | null;
+      /** Short Name */
+      short_name?: string | null;
+      /** Notes */
+      notes?: string | null;
+    };
     /** ManualAllocationItem */
     ManualAllocationItem: {
       /** Lot Id */
@@ -12602,6 +12791,110 @@ export interface components {
        * Format: date
        */
       end_date: string;
+    };
+    /**
+     * MaterialOrderForecastImportResponse
+     * @description Material Order Forecast import response.
+     */
+    MaterialOrderForecastImportResponse: {
+      /** Success */
+      success: boolean;
+      /** Imported Count */
+      imported_count: number;
+      /** Target Month */
+      target_month: string;
+      /** Snapshot At */
+      snapshot_at: string;
+      /** Warnings */
+      warnings?: string[];
+    };
+    /**
+     * MaterialOrderForecastListResponse
+     * @description Material Order Forecast list response.
+     */
+    MaterialOrderForecastListResponse: {
+      /** Total Count */
+      total_count: number;
+      /** Items */
+      items: components["schemas"]["MaterialOrderForecastResponse"][];
+    };
+    /**
+     * MaterialOrderForecastResponse
+     * @description Material Order Forecast response schema.
+     */
+    MaterialOrderForecastResponse: {
+      /** Id */
+      id: number;
+      /**
+       * Target Month
+       * @description 対象月（YYYY-MM）
+       */
+      target_month: string;
+      /** Customer Item Id */
+      customer_item_id?: number | null;
+      /** Warehouse Id */
+      warehouse_id?: number | null;
+      /** Maker Id */
+      maker_id?: number | null;
+      /** Material Code */
+      material_code?: string | null;
+      /** Unit */
+      unit?: string | null;
+      /** Warehouse Code */
+      warehouse_code?: string | null;
+      /** Jiku Code */
+      jiku_code: string;
+      /** Delivery Place */
+      delivery_place?: string | null;
+      /** Support Division */
+      support_division?: string | null;
+      /** Procurement Type */
+      procurement_type?: string | null;
+      /** Maker Code */
+      maker_code?: string | null;
+      /** Maker Name */
+      maker_name?: string | null;
+      /** Material Name */
+      material_name?: string | null;
+      /** Delivery Lot */
+      delivery_lot?: string | null;
+      /** Order Quantity */
+      order_quantity?: string | null;
+      /** Month Start Instruction */
+      month_start_instruction?: string | null;
+      /** Manager Name */
+      manager_name?: string | null;
+      /** Monthly Instruction Quantity */
+      monthly_instruction_quantity?: string | null;
+      /** Next Month Notice */
+      next_month_notice?: string | null;
+      /** Daily Quantities */
+      daily_quantities?: {
+        [key: string]: unknown;
+      } | null;
+      /** Period Quantities */
+      period_quantities?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Snapshot At
+       * Format: date-time
+       */
+      snapshot_at: string;
+      /** Imported By */
+      imported_by?: number | null;
+      /** Source File Name */
+      source_file_name?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
     };
     /**
      * MonthlyDestinationReportItem
@@ -20104,6 +20397,239 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ForecastBulkImportSummary"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  import_forecast_csv_api_material_order_forecasts_import_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_import_forecast_csv_api_material_order_forecasts_import_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialOrderForecastImportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_forecasts_api_material_order_forecasts_get: {
+    parameters: {
+      query?: {
+        /** @description 対象月（YYYY-MM） */
+        target_month?: string | null;
+        /** @description 材質コード（部分一致） */
+        material_code?: string | null;
+        /** @description メーカーコード */
+        maker_code?: string | null;
+        /** @description 次区コード */
+        jiku_code?: string | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialOrderForecastListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_makers_api_makers_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MakerResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_maker_api_makers_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MakerCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MakerResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_maker_api_makers__maker_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        maker_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MakerResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_maker_api_makers__maker_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        maker_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MakerUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MakerResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_maker_api_makers__maker_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        maker_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
