@@ -39,6 +39,7 @@ from .lot_reservations_model import (
     ReservationStateMachine,
     ReservationStatus,
 )
+from .maker_models import Maker
 from .masters_models import (
     Customer,
     CustomerItem,
@@ -51,6 +52,7 @@ from .masters_models import (
     Warehouse,
     WarehouseDeliveryRoute,
 )
+from .material_order_forecast_models import MaterialOrderForecast
 from .missing_mapping_model import MissingMappingEvent
 from .order_groups_models import OrderGroup
 from .orders_models import Order, OrderLine
@@ -95,6 +97,13 @@ from .withdrawal_models import Withdrawal, WithdrawalCancelReason, WithdrawalTyp
 # These should be removed once all code is updated to use SupplierItem directly
 Product = SupplierItem
 ProductGroup = SupplierItem
+
+# Export all models
+__all__ = [
+    # ... existing exports ...
+    "Maker",
+    "MaterialOrderForecast",
+]
 
 __all__ = [
     # Base

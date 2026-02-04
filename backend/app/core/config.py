@@ -124,8 +124,8 @@ class Settings(BaseSettings):
     )
 
     # アプリケーション基本設定
-    APP_NAME: str = "ロット管理システム"
-    APP_VERSION: str = "2.0.0"
+    APP_NAME: str = "Lot & Order Support System (Lossy)"
+    APP_VERSION: str = "2.5.0"
     ENVIRONMENT: str = Field(
         default="development",
         validation_alias=AliasChoices("ENVIRONMENT", "environment"),

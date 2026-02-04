@@ -35,6 +35,9 @@ export const ROUTES = {
     NEW: "/forecasts/new",
     EDIT: (id: number | string) => `/forecasts/${id}/edit`,
   },
+  MATERIAL_ORDER_FORECASTS: {
+    LIST: "/material-order-forecasts",
+  },
 
   // Inbound Plans - New (v2.2)
   INBOUND_PLANS: {
@@ -74,6 +77,7 @@ export const ROUTES = {
     SUPPLIER_PRODUCTS: "/supplier-products",
     CUSTOMER_ITEMS: "/customer-items",
     DELIVERY_PLACES: "/delivery-places",
+    MAKERS: "/masters/makers",
     SHIPPING_MASTERS: "/masters/shipping-masters",
     UOM_CONVERSIONS: "/masters/uom-conversions",
     SUPPLIER_ASSIGNMENTS: "/masters/supplier-assignments",
