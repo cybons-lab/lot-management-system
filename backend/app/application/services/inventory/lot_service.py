@@ -1197,3 +1197,139 @@ class LotService:
             customer_part_no=None,
             mapping_status=None,
         )
+
+    def split_lot_receipt(
+        self, lot_receipt_id: int, split_quantities: list[Decimal], user_id: int
+    ) -> list[int]:
+        """Split a lot receipt into multiple receipts (Phase 10.2).
+
+        Args:
+            lot_receipt_id: Original lot receipt ID
+            split_quantities: List of quantities for each split
+            user_id: User performing the split
+
+        Returns:
+            list[int]: List of new lot receipt IDs (including original)
+
+        Raises:
+            LotNotFoundError: If lot receipt not found
+            ValueError: If split quantities exceed original quantity
+        """
+        # Get original lot receipt
+        original_lot = self.repository.find_by_id(lot_receipt_id)
+        if not original_lot:
+            raise LotNotFoundError(lot_receipt_id)
+
+        # Validate total split quantity matches current quantity
+        total_split = sum(split_quantities)
+        if total_split != original_lot.current_quantity:
+            raise ValueError(
+                f"合計分割数量 {total_split} が現在の在庫数 {original_lot.current_quantity} と一致しません"
+            )
+
+        # Update original lot with first split quantity
+        original_lot.received_quantity = split_quantities[0]
+        self.db.add(original_lot)
+
+        # Create new lot receipts for remaining splits
+        new_lot_ids = [original_lot.id]
+
+        for quantity in split_quantities[1:]:
+            # Create new lot receipt with same attributes
+            new_lot = LotReceipt(
+                lot_master_id=original_lot.lot_master_id,
+                warehouse_id=original_lot.warehouse_id,
+                supplier_id=original_lot.supplier_id,
+                supplier_item_id=original_lot.supplier_item_id,
+                received_date=original_lot.received_date,
+                expiry_date=original_lot.expiry_date,
+                received_quantity=quantity,
+                consumed_quantity=Decimal("0"),
+                unit=original_lot.unit,
+                status=original_lot.status,
+                inspection_status=original_lot.inspection_status,
+                origin_type=original_lot.origin_type,
+                remarks=original_lot.remarks,
+            )
+            self.db.add(new_lot)
+            self.db.flush()
+            new_lot_ids.append(new_lot.id)
+
+        self.db.commit()
+
+        logger.info(
+            "Lot receipt split completed",
+            extra={
+                "original_lot_id": lot_receipt_id,
+                "new_lot_ids": new_lot_ids,
+                "split_count": len(split_quantities),
+            },
+        )
+
+        return new_lot_ids
+
+    def update_lot_receipt_quantity_with_reason(
+        self, lot_receipt_id: int, new_quantity: Decimal, reason: str, user_id: int
+    ) -> int:
+        """Update lot receipt quantity with mandatory reason (Phase 11).
+
+        Args:
+            lot_receipt_id: Lot receipt ID
+            new_quantity: New received quantity
+            reason: Reason for adjustment (mandatory)
+            user_id: User performing the adjustment
+
+        Returns:
+            int: Adjustment record ID
+
+        Raises:
+            LotNotFoundError: If lot receipt not found
+            ValueError: If reason is empty
+        """
+        from app.infrastructure.persistence.models.inventory_models import (
+            Adjustment,
+            AdjustmentType,
+        )
+
+        # Validate reason
+        if not reason or not reason.strip():
+            raise ValueError("調整理由は必須です")
+
+        # Get lot receipt
+        lot_receipt = self.repository.find_by_id(lot_receipt_id)
+        if not lot_receipt:
+            raise LotNotFoundError(lot_receipt_id)
+
+        # Calculate adjustment amount
+        old_quantity = lot_receipt.received_quantity
+        adjustment_amount = new_quantity - old_quantity
+
+        # Update lot receipt quantity
+        lot_receipt.received_quantity = new_quantity
+        self.db.add(lot_receipt)
+
+        # Create adjustment record
+        adjustment = Adjustment(
+            lot_id=lot_receipt_id,
+            adjustment_type=AdjustmentType.OTHER,
+            adjusted_quantity=adjustment_amount,
+            reason=reason.strip(),
+            adjusted_by=user_id,
+        )
+        self.db.add(adjustment)
+        self.db.flush()
+
+        self.db.commit()
+
+        logger.info(
+            "Lot receipt quantity updated with reason",
+            extra={
+                "lot_receipt_id": lot_receipt_id,
+                "old_quantity": float(old_quantity),
+                "new_quantity": float(new_quantity),
+                "adjustment_id": adjustment.id,
+                "reason": reason[:100],
+            },
+        )
+
+        return adjustment.id

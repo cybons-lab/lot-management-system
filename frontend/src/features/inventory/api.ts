@@ -328,3 +328,46 @@ export const getFilterOptions = (params?: {
     `v2/inventory/filter-options${queryString ? "?" + queryString : ""}`,
   );
 };
+
+// ===== Phase 10.2: Lot Split =====
+
+export interface LotSplitRequest {
+  splits: { quantity: number }[];
+}
+
+export interface LotSplitResponse {
+  original_lot_id: number;
+  new_lot_ids: number[];
+  message: string;
+}
+
+/**
+ * Split a lot receipt into multiple receipts (Phase 10.2)
+ * @endpoint POST /api/lots/{lot_id}/split
+ */
+export const splitLotReceipt = (lotId: number, request: LotSplitRequest) => {
+  return http.post<LotSplitResponse>(`lots/${lotId}/split`, request);
+};
+
+// ===== Phase 11: Lot Quantity Update with Reason =====
+
+export interface LotQuantityUpdateRequest {
+  new_quantity: number;
+  reason: string;
+}
+
+export interface LotQuantityUpdateResponse {
+  lot_receipt_id: number;
+  old_quantity: number;
+  new_quantity: number;
+  adjustment_id: number;
+  message: string;
+}
+
+/**
+ * Update lot receipt quantity with mandatory reason (Phase 11)
+ * @endpoint PUT /api/lots/{lot_id}/quantity
+ */
+export const updateLotQuantityWithReason = (lotId: number, request: LotQuantityUpdateRequest) => {
+  return http.put<LotQuantityUpdateResponse>(`lots/${lotId}/quantity`, request);
+};

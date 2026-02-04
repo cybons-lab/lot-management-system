@@ -1,4 +1,4 @@
-import { Archive, Edit, FileText, Lock, Trash2 } from "lucide-react";
+import { Archive, Edit, FileText, Lock, Split, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { BigStatColumn } from "./subcomponents/BigStatColumn";
@@ -68,6 +68,10 @@ interface Props {
     date: string,
     shipmentDate: string | null,
   ) => void;
+  // Phase 10.2: Lot split
+  onSplitLot?: (lotId: number) => void;
+  // Phase 11: Quantity update with reason
+  onUpdateQuantity?: (lotId: number) => void;
 }
 
 /* eslint-disable max-lines-per-function */
@@ -87,6 +91,8 @@ export function LotSection({
   isArchiving = false,
   onCommentChange,
   onManualShipmentDateChange,
+  onSplitLot,
+  onUpdateQuantity,
 }: Props) {
   const {
     lotId,
@@ -262,6 +268,18 @@ export function LotSection({
             <ContextMenuItem onClick={() => onEdit(lotId)}>
               <Edit className="mr-2 h-4 w-4" />
               編集
+            </ContextMenuItem>
+          )}
+          {onSplitLot && (
+            <ContextMenuItem onClick={() => onSplitLot(lotId)}>
+              <Split className="mr-2 h-4 w-4" />
+              ロット分割
+            </ContextMenuItem>
+          )}
+          {onUpdateQuantity && (
+            <ContextMenuItem onClick={() => onUpdateQuantity(lotId)}>
+              <FileText className="mr-2 h-4 w-4" />
+              入庫数調整
             </ContextMenuItem>
           )}
           <ContextMenuSeparator />

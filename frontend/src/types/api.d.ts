@@ -962,6 +962,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/lots/{lot_id}/split": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Split Lot Receipt
+     * @description ロット入庫を複数に分割（Phase 10.2）.
+     *
+     *     Args:
+     *         lot_id: 分割対象のロット入庫ID
+     *         request: 分割数量のリスト
+     *         db: データベースセッション
+     *         current_user: 現在のユーザー
+     *
+     *     Returns:
+     *         dict: 分割結果（元のロットIDと新規ロットIDのリスト）
+     *
+     *     Raises:
+     *         HTTPException: ロットが存在しない場合（404）、数量が不正な場合（400）
+     */
+    post: operations["split_lot_receipt_api_lots__lot_id__split_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/lots/{lot_id}/quantity": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Lot Receipt Quantity
+     * @description 入庫数を理由付きで更新（Phase 11）.
+     *
+     *     Args:
+     *         lot_id: ロット入庫ID
+     *         request: 新しい数量と理由
+     *         db: データベースセッション
+     *         current_user: 現在のユーザー
+     *
+     *     Returns:
+     *         dict: 更新結果（調整レコードIDを含む）
+     *
+     *     Raises:
+     *         HTTPException: ロットが存在しない場合（404）、理由が空の場合（400）
+     */
+    put: operations["update_lot_receipt_quantity_api_lots__lot_id__quantity_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/orders/confirmed-order-lines": {
     parameters: {
       query?: never;
@@ -12253,6 +12317,22 @@ export interface components {
      */
     LotOriginType: "order" | "forecast" | "sample" | "safety_stock" | "adhoc";
     /**
+     * LotReceiptQuantityUpdateRequest
+     * @description Request payload for updating lot receipt quantity with reason.
+     */
+    LotReceiptQuantityUpdateRequest: {
+      /**
+       * New Quantity
+       * @description 新しい入庫数量
+       */
+      new_quantity: number | string;
+      /**
+       * Reason
+       * @description 調整理由（必須）
+       */
+      reason: string;
+    };
+    /**
      * LotResponse
      * @description API response model for lots.
      */
@@ -12387,6 +12467,28 @@ export interface components {
       customer_part_no?: string | null;
       /** Mapping Status */
       mapping_status?: string | null;
+    };
+    /**
+     * LotSplitItem
+     * @description Individual split quantity.
+     */
+    LotSplitItem: {
+      /**
+       * Quantity
+       * @description 分割後の数量
+       */
+      quantity: number | string;
+    };
+    /**
+     * LotSplitRequest
+     * @description Request payload for splitting a lot receipt.
+     */
+    LotSplitRequest: {
+      /**
+       * Splits
+       * @description 分割する数量のリスト（最低2つ）
+       */
+      splits: components["schemas"]["LotSplitItem"][];
     };
     /**
      * LotStatus
@@ -19802,6 +19904,80 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["StockHistoryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  split_lot_receipt_api_lots__lot_id__split_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LotSplitRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_lot_receipt_quantity_api_lots__lot_id__quantity_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LotReceiptQuantityUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
