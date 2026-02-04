@@ -180,7 +180,8 @@ class AllocationSuggestionService(AllocationSuggestionBase):
         Args:
             updates: List of dicts with keys:
                 customer_id, delivery_place_id, supplier_item_id,
-                lot_id, forecast_period, quantity
+                lot_id, forecast_period, quantity, coa_issue_date (optional),
+                comment (optional, Phase 9.2), manual_shipment_date (optional, Phase 9.3)
 
         Returns:
             Number of records updated/created/deleted.
@@ -211,16 +212,34 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                 else:
                     coa_date = up["coa_issue_date"]
 
+            # Phase 9.2: Extract comment
+            comment = up.get("comment")
+
+            # Phase 9.3: Extract manual_shipment_date
+            manual_shipment_date = None
+            if up.get("manual_shipment_date"):
+                if isinstance(up["manual_shipment_date"], str):
+                    manual_shipment_date = date.fromisoformat(up["manual_shipment_date"])
+                else:
+                    manual_shipment_date = up["manual_shipment_date"]
+
             if items:
                 # manual_excelソースのレコードがあるか確認
                 manual_item = next((item for item in items if item.source == "manual_excel"), None)
 
-                if quantity <= 0 and coa_date is None:
-                    # 数量0かつCOA日付なしの場合
+                if (
+                    quantity <= 0
+                    and coa_date is None
+                    and comment is None
+                    and manual_shipment_date is None
+                ):
+                    # 数量0かつCOA日付・コメント・手動出荷日すべてなしの場合
                     if manual_item:
                         # 手動レコードなら、あえて残す（マッピング保持のため）
                         manual_item.quantity = Decimal(0)
                         manual_item.coa_issue_date = None
+                        manual_item.comment = None
+                        manual_item.manual_shipment_date = None
                         # 他の重複（自動作成分など）を削除
                         for item in items:
                             if item.id != manual_item.id:
@@ -237,6 +256,8 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                     target = manual_item or items[0]
                     target.quantity = quantity
                     target.coa_issue_date = coa_date
+                    target.comment = comment  # Phase 9.2
+                    target.manual_shipment_date = manual_shipment_date  # Phase 9.3
                     target.source = "manual_excel"
                     target.allocation_type = "soft"
                     # 他の重複を削除
@@ -265,6 +286,8 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                     forecast_period=up["forecast_period"],
                     quantity=quantity,
                     coa_issue_date=coa_date,
+                    comment=comment,  # Phase 9.2
+                    manual_shipment_date=manual_shipment_date,  # Phase 9.3
                     forecast_id=forecast.id if forecast else None,
                     allocation_type="soft",
                     source="manual_excel",
