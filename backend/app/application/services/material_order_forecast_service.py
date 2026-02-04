@@ -55,7 +55,7 @@ class MaterialOrderForecastService:
                 "warnings": ["メーカーコード 'XYZ' がマスタに見つかりません"]
             }
         """
-        logger.info("Starting CSV import", extra={"filename": filename, "user_id": user_id})
+        logger.info("Starting CSV import", extra={"source_file": filename, "user_id": user_id})
 
         try:
             # Step 1: CSV読み込み（ヘッダーなし）
@@ -87,8 +87,20 @@ class MaterialOrderForecastService:
 
             logger.info(f"Target month: {target_month}")
 
-            # Step 3: 数量列を数値化（L-Q列 + R-AX列 = 11-59）
-            qty_col_indices = list(range(11, 60))  # L列(11)〜AX列(59)
+            # Step 2.5: 次区コードの必須チェック（E列）
+            if len(df.columns) <= 4:
+                raise ValueError("CSV列数が不足しています（次区コード列が存在しません）")
+
+            jiku_series = df.iloc[:, 4].fillna("").astype(str).str.strip()
+            missing_jiku = jiku_series == ""
+            if missing_jiku.any():
+                row_numbers = (df.index[missing_jiku] + 1).tolist()
+                sample_rows = ", ".join(str(num) for num in row_numbers[:5])
+                raise ValueError(f"次区コードが空の行があります（行: {sample_rows}）")
+
+            # Step 3: 数量列を数値化（L-Q列のうちO列は除外 + R-AX列）
+            # O列（担当者名）は文字列なので数値化しない
+            qty_col_indices = [11, 12, 13, 15, 16] + list(range(17, 60))
             for col_idx in qty_col_indices:
                 if col_idx < len(df.columns):
                     df.iloc[:, col_idx] = pd.to_numeric(df.iloc[:, col_idx], errors="coerce")
@@ -168,6 +180,9 @@ class MaterialOrderForecastService:
             for ci in self.db.query(CustomerItem).filter(CustomerItem.valid_to >= date.today())
         }
         df["customer_item_id"] = df.iloc[:, 1].map(customer_item_map)  # B列（材質コード）
+        df["customer_item_id"] = df["customer_item_id"].where(
+            pd.notna(df["customer_item_id"]), None
+        )
 
         missing_material = df[df["customer_item_id"].isna()].iloc[:, 1].unique()
         if len(missing_material) > 0:
@@ -180,6 +195,7 @@ class MaterialOrderForecastService:
             m.maker_code: m.id for m in self.db.query(Maker).filter(Maker.valid_to >= date.today())
         }
         df["maker_id"] = df.iloc[:, 8].map(maker_map)  # I列（メーカーコード）
+        df["maker_id"] = df["maker_id"].where(pd.notna(df["maker_id"]), None)
 
         missing_makers = df[df["maker_id"].isna()].iloc[:, 8].unique()
         if len(missing_makers) > 0:
@@ -193,6 +209,7 @@ class MaterialOrderForecastService:
             for w in self.db.query(Warehouse).filter(Warehouse.valid_to >= date.today())
         }
         df["warehouse_id"] = df.iloc[:, 3].map(warehouse_map)  # D列（倉庫）
+        df["warehouse_id"] = df["warehouse_id"].where(pd.notna(df["warehouse_id"]), None)
 
         missing_warehouses = df[df["warehouse_id"].isna()].iloc[:, 3].unique()
         if len(missing_warehouses) > 0:
@@ -209,32 +226,42 @@ class MaterialOrderForecastService:
         """DataFrameをDBに保存."""
         imported_count = 0
 
+        # IDカラムのクレンジング用ヘルパー
+        def clean_id(val):
+            if pd.isna(val) or val == "":
+                return None
+            return int(val)
+
         for idx, row in df.iterrows():
             try:
                 # 既存レコードを削除（UPSERT）
+                material_code = str(row.iloc[1]) if pd.notna(row.iloc[1]) else None
+                jiku_code = str(row.iloc[4]).strip() if pd.notna(row.iloc[4]) else ""
+                maker_code = str(row.iloc[8]) if pd.notna(row.iloc[8]) else None
+
                 self.db.query(MaterialOrderForecast).filter(
                     MaterialOrderForecast.target_month == target_month,
-                    MaterialOrderForecast.material_code == row.iloc[1],
-                    MaterialOrderForecast.jiku_code == row.iloc[4],
-                    MaterialOrderForecast.maker_code == row.iloc[8],
+                    MaterialOrderForecast.material_code == material_code,
+                    MaterialOrderForecast.jiku_code == jiku_code,
+                    MaterialOrderForecast.maker_code == maker_code,
                 ).delete()
 
                 # 新規レコード作成
                 forecast = MaterialOrderForecast(
                     target_month=target_month,
                     # FK（LEFT JOIN結果）
-                    customer_item_id=row.get("customer_item_id"),
-                    warehouse_id=row.get("warehouse_id"),
-                    maker_id=row.get("maker_id"),
+                    customer_item_id=clean_id(row.get("customer_item_id")),
+                    warehouse_id=clean_id(row.get("warehouse_id")),
+                    maker_id=clean_id(row.get("maker_id")),
                     # CSV生データ
-                    material_code=row.iloc[1] or None,  # B列
+                    material_code=material_code,
                     unit=row.iloc[2] or None,  # C列
                     warehouse_code=row.iloc[3] or None,  # D列
-                    jiku_code=row.iloc[4] or "",  # E列（必須）
+                    jiku_code=jiku_code,  # E列（必須）
                     delivery_place=row.iloc[5] or None,  # F列
                     support_division=row.iloc[6] or None,  # G列
                     procurement_type=row.iloc[7] or None,  # H列
-                    maker_code=row.iloc[8] or None,  # I列
+                    maker_code=maker_code,  # I列
                     maker_name=row.iloc[9] or None,  # J列
                     material_name=row.iloc[10] or None,  # K列
                     # 数量データ

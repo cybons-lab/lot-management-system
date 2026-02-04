@@ -104,6 +104,12 @@ const navItems: NavItem[] = [
     feature: "ocr",
   },
   {
+    title: "材料発注フォーキャスト",
+    href: ROUTES.MATERIAL_ORDER_FORECASTS.LIST,
+    icon: TrendingUp,
+    feature: "material_order_forecasts",
+  },
+  {
     title: "RPA",
     href: ROUTES.RPA.ROOT,
     icon: Settings,
@@ -410,11 +416,9 @@ export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-base font-bold tracking-tight text-gray-900">
-                ロット管理システム
-              </h1>
+              <h1 className="text-base font-bold tracking-tight text-gray-900">Lossy</h1>
               <p className="text-[10px] font-medium tracking-wider text-gray-500 uppercase">
-                Smart Inventory Manager
+                Lot & Order Support System
               </p>
             </div>
           </div>

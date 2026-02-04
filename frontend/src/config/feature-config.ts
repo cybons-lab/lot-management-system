@@ -43,6 +43,10 @@ export const FEATURE_CONFIG: Record<string, FeatureDefinition> = {
     id: "forecasts",
     label: "需要予測 (オリジナル)",
   },
+  material_order_forecasts: {
+    id: "material_order_forecasts",
+    label: "材料発注フォーキャスト",
+  },
   reports: {
     id: "reports",
     label: "レポート",
@@ -74,6 +78,7 @@ export const FEATURE_CONFIG: Record<string, FeatureDefinition> = {
       { id: "supplier-assignments", label: "担当仕入先割当" },
       { id: "bulk-load", label: "一括登録" },
       { id: "delivery-places", label: "納品先マスタ" },
+      { id: "makers", label: "メーカーマスタ" },
       { id: "warehouse-delivery-routes", label: "倉庫配送ルートマスタ" },
     ],
   },

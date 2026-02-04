@@ -79,6 +79,13 @@ const masterSections: MasterSection[] = [
         color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
       },
       {
+        title: "メーカーマスタ",
+        description: "製品の製造元（層別コード統合）を管理",
+        href: ROUTES.MASTERS.MAKERS,
+        icon: Building2,
+        color: "bg-orange-50 text-orange-600 hover:bg-orange-100",
+      },
+      {
         title: "倉庫マスタ",
         description: "自社倉庫の基本情報を管理",
         href: ROUTES.MASTERS.WAREHOUSES,

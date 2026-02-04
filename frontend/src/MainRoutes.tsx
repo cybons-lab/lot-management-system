@@ -45,8 +45,10 @@ import { InventoryPage } from "@/features/inventory/pages/InventoryPage";
 import { LotDetailPage } from "@/features/inventory/pages/LotDetailPage";
 import { MovesPage } from "@/features/inventory/pages/MovesPage";
 import { StockHistoryPage } from "@/features/inventory/pages/StockHistoryPage";
+import MakersPage from "@/features/makers/pages/MakersPage";
 import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPage";
 import { MastersPage } from "@/features/masters/pages/MastersPage";
+import MaterialOrderForecastsPage from "@/features/material-order-forecasts/pages/MaterialOrderForecastsPage";
 import { OcrResultsListPage } from "@/features/ocr-results/pages/OcrResultsListPage";
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
@@ -206,6 +208,14 @@ function MasterRoutes() {
         element={
           <FeatureGuard feature="masters:delivery-places">
             <DeliveryPlacesListPage />
+          </FeatureGuard>
+        }
+      />
+      <Route
+        path={ROUTES.MASTERS.MAKERS}
+        element={
+          <FeatureGuard feature="masters:makers">
+            <MakersPage />
           </FeatureGuard>
         }
       />
@@ -395,6 +405,14 @@ export function MainRoutes() {
           <Route path="/forecasts/:id" element={<ForecastDetailPage />} />
           <Route path="/forecasts/:forecastId/edit" element={<ForecastEditPage />} />
           <Route path={ROUTES.FORECASTS.IMPORT} element={<ForecastImportPage />} />
+        </Route>
+
+        {/* Material Order Forecasts */}
+        <Route element={<FeatureGuardLayout feature="material_order_forecasts" />}>
+          <Route
+            path={ROUTES.MATERIAL_ORDER_FORECASTS.LIST}
+            element={<MaterialOrderForecastsPage />}
+          />
         </Route>
 
         {/* Legacy forecast routes - Redirect to new structure */}

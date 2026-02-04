@@ -100,6 +100,11 @@ export const routePermissions: RoutePermission[] = [
     path: "/masters/shipping-masters",
     allowedRoles: ["admin", "user", "guest"],
   },
+  {
+    routeKey: "MASTERS.MAKERS",
+    path: "/masters/makers",
+    allowedRoles: ["admin", "user", "guest"],
+  },
 
   // レガシーリダイレクト用 / ユーティリティ
   {
@@ -176,6 +181,11 @@ export const routePermissions: RoutePermission[] = [
     allowedRoles: ["admin", "user"],
   },
   { routeKey: "FORECASTS.IMPORT", path: "/forecasts/import", allowedRoles: ["admin", "user"] },
+  {
+    routeKey: "MATERIAL_ORDER_FORECASTS.LIST",
+    path: "/material-order-forecasts",
+    allowedRoles: ["admin", "user"],
+  },
 
   // 入荷予定操作
   { routeKey: "INBOUND_PLANS.NEW", path: "/inbound-plans/new", allowedRoles: ["admin", "user"] },
@@ -433,6 +443,7 @@ export const operationPermissions: OperationPermission[] = [
   { operationKey: "master:create", allowedRoles: ["admin", "user"] },
   { operationKey: "master:update", allowedRoles: ["admin", "user"] },
   { operationKey: "master:delete", allowedRoles: ["admin"] },
+  { operationKey: "makers:view", allowedRoles: ["admin", "user", "guest"] },
   {
     operationKey: "master:hardDelete",
     allowedRoles: ["admin"],
