@@ -59,6 +59,8 @@ interface Props {
   onDelete?: (lotId: number) => void;
   onArchive?: (lotId: number, lotNumber?: string) => Promise<void> | void;
   isArchiving?: boolean;
+  // Phase 9.2: Cell-level comments
+  onCommentChange?: (lotId: number, dpId: number, date: string, comment: string | null) => void;
 }
 
 /* eslint-disable max-lines-per-function */
@@ -76,6 +78,7 @@ export function LotSection({
   onDelete,
   onArchive,
   isArchiving = false,
+  onCommentChange,
 }: Props) {
   const {
     lotId,
@@ -207,6 +210,7 @@ export function LotSection({
                 lotId={lotId}
                 onQtyChange={onQtyChange}
                 onAddColumn={onAddColumn}
+                onCommentChange={onCommentChange}
               />
             </div>
 

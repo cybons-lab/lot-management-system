@@ -42,6 +42,7 @@ const getShipmentByDate = (
 ): {
   shipmentQtyByDate: Record<string, number>;
   coaIssueDateByDate: Record<string, string | null>;
+  commentByDate: Record<string, string>;
   totalShipmentQty: number;
 } => {
   const lotDestSuggestions = suggestions.filter(
@@ -49,6 +50,7 @@ const getShipmentByDate = (
   );
   const shipmentQtyByDate: Record<string, number> = {};
   const coaIssueDateByDate: Record<string, string | null> = {};
+  const commentByDate: Record<string, string> = {};
   let totalShipmentQty = 0;
   lotDestSuggestions.forEach((s) => {
     const qty = Number(s.quantity);
@@ -58,10 +60,14 @@ const getShipmentByDate = (
       // In Excel View, we have one row per (lot, destination) and one column per date.
       coaIssueDateByDate[s.forecast_period] =
         (s as AllocationSuggestionResponse).coa_issue_date ?? null;
+      // Phase 9.2: Map comments by date
+      if ((s as AllocationSuggestionResponse).comment) {
+        commentByDate[s.forecast_period] = (s as AllocationSuggestionResponse).comment || "";
+      }
     }
     totalShipmentQty += qty;
   });
-  return { shipmentQtyByDate, coaIssueDateByDate, totalShipmentQty };
+  return { shipmentQtyByDate, coaIssueDateByDate, commentByDate, totalShipmentQty };
 };
 
 const getDestinationInfo = (dpId: number, context: MapContext): DestinationInfo => {
@@ -86,11 +92,8 @@ const mapDestinationRow = (
   context: MapContext,
 ): DestinationRowData => {
   const { suggestions, dpMap } = context;
-  const { shipmentQtyByDate, coaIssueDateByDate, totalShipmentQty } = getShipmentByDate(
-    lotId,
-    dpId,
-    suggestions,
-  );
+  const { shipmentQtyByDate, coaIssueDateByDate, commentByDate, totalShipmentQty } =
+    getShipmentByDate(lotId, dpId, suggestions);
   const dp = dpMap.get(dpId);
 
   // Use the coa_issue_date from any of the suggestions for this (lot, dp)
@@ -104,6 +107,8 @@ const mapDestinationRow = (
     shipmentQtyByDate,
     totalShipmentQty,
     coaIssueDate: coaIssueDate ?? undefined,
+    // Phase 9.2: Map comments by date
+    commentByDate: Object.keys(commentByDate).length > 0 ? commentByDate : undefined,
   };
 };
 

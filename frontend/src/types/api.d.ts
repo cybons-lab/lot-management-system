@@ -9008,6 +9008,8 @@ export interface components {
       quantity: number | string;
       /** Coa Issue Date */
       coa_issue_date?: string | null;
+      /** Comment */
+      comment?: string | null;
     };
     /**
      * AllocationSuggestionListResponse

@@ -147,6 +147,8 @@ class AllocationSuggestionBatchUpdateItem(BaseModel):
     forecast_period: str
     quantity: Decimal
     coa_issue_date: str | None = None
+    # Phase 9.2: Cell-level comment
+    comment: str | None = None
 
 
 class AllocationSuggestionBatchUpdate(BaseModel):
