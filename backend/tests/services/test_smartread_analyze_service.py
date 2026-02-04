@@ -162,3 +162,24 @@ class TestAnalyzeFile:
             api_key="sk-test-key",
             template_ids=None,
         )
+
+    @pytest.mark.asyncio
+    async def test_analyze_file_unexpected_exception(
+        self,
+        analyze_service: SmartReadAnalyzeService,
+        smartread_config: SmartReadConfig,
+    ) -> None:
+        with patch(
+            "app.application.services.smartread.analyze_service.SmartReadClient"
+        ) as mock_client_cls:
+            mock_instance = AsyncMock()
+            mock_instance.analyze_file = AsyncMock(side_effect=Exception("Connection error"))
+            mock_client_cls.return_value = mock_instance
+
+            # Currently, the service does not catch exceptions, so it will bubble up
+            with pytest.raises(Exception, match="Connection error"):
+                await analyze_service.analyze_file(
+                    config_id=smartread_config.id,
+                    file_content=b"pdf",
+                    filename="test.pdf",
+                )
