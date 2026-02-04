@@ -217,11 +217,13 @@ export function ExcelViewPage() {
           ],
         });
         toast.success("コメントを保存しました");
+        // Invalidate queries to reflect the change
+        queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] });
       } catch {
         toast.error("コメントの保存に失敗しました");
       }
     },
-    [data, productId, updateMutation],
+    [data, productId, updateMutation, queryClient],
   );
 
   const allDateColumns = useMemo(() => {
