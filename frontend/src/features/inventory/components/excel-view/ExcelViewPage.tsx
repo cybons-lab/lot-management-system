@@ -217,8 +217,11 @@ export function ExcelViewPage() {
           ],
         });
         toast.success("コメントを保存しました");
-        // Invalidate queries to reflect the change
-        queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] });
+        // Invalidate all allocationSuggestions queries (including those with params)
+        await queryClient.invalidateQueries({
+          queryKey: ["allocationSuggestions"],
+          refetchType: "all",
+        });
       } catch {
         toast.error("コメントの保存に失敗しました");
       }
