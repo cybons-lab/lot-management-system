@@ -10303,6 +10303,11 @@ export interface components {
        */
       is_default: boolean;
       /**
+       * Notes
+       * @description Excel View ページ全体のメモ
+       */
+      notes?: string | null;
+      /**
        * Valid From
        * @description 有効開始日
        */
@@ -10355,6 +10360,11 @@ export interface components {
        */
       is_default: boolean;
       /**
+       * Notes
+       * @description Excel View ページ全体のメモ
+       */
+      notes?: string | null;
+      /**
        * Valid From
        * @description 有効開始日
        */
@@ -10400,6 +10410,8 @@ export interface components {
       valid_from?: string | null;
       /** Valid To */
       valid_to?: string | null;
+      /** Notes */
+      notes?: string | null;
     };
     /**
      * CustomerItemImportRow
