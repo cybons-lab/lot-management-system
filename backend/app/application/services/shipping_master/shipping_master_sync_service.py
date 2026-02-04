@@ -75,6 +75,13 @@ class ShippingMasterSyncService:
             SyncSummary: 実行結果のサマリ
         """
         summary = SyncSummary()
+        logger.info(
+            "Shipping master sync started",
+            extra={
+                "curated_ids_count": len(curated_ids) if curated_ids else "all",
+                "policy": policy,
+            },
+        )
 
         # 1. 同期対象の取得
         stmt = select(ShippingMasterCurated)
@@ -101,6 +108,16 @@ class ShippingMasterSyncService:
                 summary.skipped_count += 1
 
         self.session.commit()
+        logger.info(
+            "Shipping master sync completed",
+            extra={
+                "processed": summary.processed_count,
+                "created": summary.created_count,
+                "updated": summary.updated_count,
+                "skipped": summary.skipped_count,
+                "errors_count": len(summary.errors),
+            },
+        )
         return summary
 
     def _sync_row(

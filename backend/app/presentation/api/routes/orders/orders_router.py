@@ -312,6 +312,13 @@ def create_order(
     認証: 一般ユーザー・管理者のみ（ゲストは読み取り専用）
     """
     assert uow.session is not None
+    logger.info(
+        "Creating order",
+        extra={
+            "customer_id": order.customer_id,
+            "line_count": len(order.order_lines) if order.order_lines else 0,
+        },
+    )
     service = OrderService(uow.session)
     return service.create_order(order)
 
@@ -320,6 +327,7 @@ def create_order(
 def cancel_order(order_id: int, uow: UnitOfWork = Depends(get_uow)):
     """受注キャンセル."""
     assert uow.session is not None
+    logger.info("Cancelling order", extra={"order_id": order_id})
     service = OrderService(uow.session)
     service.cancel_order(order_id)
     return None
@@ -460,6 +468,10 @@ def acquire_lock(
     db: Session = Depends(get_db),
 ):
     """受注の編集ロックを取得."""
+    logger.info(
+        "Acquiring order lock",
+        extra={"order_id": order_id, "user_id": current_user.id},
+    )
     service = OrderService(db)
     result = service.acquire_lock(order_id, current_user.id)
     db.commit()
@@ -473,6 +485,10 @@ def release_lock(
     db: Session = Depends(get_db),
 ):
     """受注の編集ロックを解放."""
+    logger.info(
+        "Releasing order lock",
+        extra={"order_id": order_id, "user_id": current_user.id},
+    )
     service = OrderService(db)
     result = service.release_lock(order_id, current_user.id)
     db.commit()
