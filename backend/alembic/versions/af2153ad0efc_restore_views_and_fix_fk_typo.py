@@ -6,8 +6,6 @@ Create Date: 2026-01-30 16:06:17.211835
 
 """
 
-import sqlalchemy as sa
-
 from alembic import op
 
 
@@ -20,10 +18,12 @@ depends_on = None
 
 def upgrade() -> None:
     """
-    1. Fix foreign key typo for lot_receipts (from lot_receipt)
-    2. Create/update database views
+    Fix foreign key typo for lot_receipts (from lot_receipt)
+
+    Note: View recreation removed to avoid premature creation with incomplete schema.
+    Views will be recreated at the end of the migration chain.
     """
-    # 1. Fix FK typo
+    # Fix FK typo
     op.execute(
         "ALTER TABLE lot_receipts DROP CONSTRAINT IF EXISTS lot_receipt_product_group_id_fkey"
     )
@@ -31,24 +31,6 @@ def upgrade() -> None:
         "ALTER TABLE lot_receipts ADD CONSTRAINT lot_receipts_product_group_id_fkey "
         "FOREIGN KEY (product_group_id) REFERENCES supplier_items(id) ON DELETE RESTRICT"
     )
-
-    # 2. Database Views (Read from sql/views/create_views.sql)
-    import os
-
-    sql_path = os.path.join(
-        os.path.dirname(__file__), "..", "..", "sql", "views", "create_views.sql"
-    )
-    if os.path.exists(sql_path):
-        with open(sql_path, encoding="utf-8") as f:
-            view_sql = f.read()
-
-        # Split by semicolon and execute each statement
-        for statement in view_sql.split(";"):
-            if statement.strip():
-                op.execute(sa.text(statement))
-    else:
-        # Fallback (optional, but good for safety if file is missing in some environments)
-        pass
 
 
 def downgrade() -> None:
