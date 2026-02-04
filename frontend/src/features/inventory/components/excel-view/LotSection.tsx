@@ -61,6 +61,13 @@ interface Props {
   isArchiving?: boolean;
   // Phase 9.2: Cell-level comments
   onCommentChange?: (lotId: number, dpId: number, date: string, comment: string | null) => void;
+  // Phase 9.3: Manual shipment date
+  onManualShipmentDateChange?: (
+    lotId: number,
+    dpId: number,
+    date: string,
+    shipmentDate: string | null,
+  ) => void;
 }
 
 /* eslint-disable max-lines-per-function */
@@ -79,6 +86,7 @@ export function LotSection({
   onArchive,
   isArchiving = false,
   onCommentChange,
+  onManualShipmentDateChange,
 }: Props) {
   const {
     lotId,
@@ -211,6 +219,7 @@ export function LotSection({
                 onQtyChange={onQtyChange}
                 onAddColumn={onAddColumn}
                 onCommentChange={onCommentChange}
+                onManualShipmentDateChange={onManualShipmentDateChange}
               />
             </div>
 

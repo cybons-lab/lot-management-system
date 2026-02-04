@@ -43,6 +43,7 @@ const getShipmentByDate = (
   shipmentQtyByDate: Record<string, number>;
   coaIssueDateByDate: Record<string, string | null>;
   commentByDate: Record<string, string>;
+  manualShipmentDateByDate: Record<string, string>;
   totalShipmentQty: number;
 } => {
   const lotDestSuggestions = suggestions.filter(
@@ -51,6 +52,7 @@ const getShipmentByDate = (
   const shipmentQtyByDate: Record<string, number> = {};
   const coaIssueDateByDate: Record<string, string | null> = {};
   const commentByDate: Record<string, string> = {};
+  const manualShipmentDateByDate: Record<string, string> = {};
   let totalShipmentQty = 0;
   lotDestSuggestions.forEach((s) => {
     const qty = Number(s.quantity);
@@ -64,10 +66,21 @@ const getShipmentByDate = (
       if ((s as AllocationSuggestionResponse).comment) {
         commentByDate[s.forecast_period] = (s as AllocationSuggestionResponse).comment || "";
       }
+      // Phase 9.3: Map manual shipment dates by date
+      if ((s as AllocationSuggestionResponse).manual_shipment_date) {
+        manualShipmentDateByDate[s.forecast_period] =
+          (s as AllocationSuggestionResponse).manual_shipment_date || "";
+      }
     }
     totalShipmentQty += qty;
   });
-  return { shipmentQtyByDate, coaIssueDateByDate, commentByDate, totalShipmentQty };
+  return {
+    shipmentQtyByDate,
+    coaIssueDateByDate,
+    commentByDate,
+    manualShipmentDateByDate,
+    totalShipmentQty,
+  };
 };
 
 const getDestinationInfo = (dpId: number, context: MapContext): DestinationInfo => {
@@ -92,8 +105,13 @@ const mapDestinationRow = (
   context: MapContext,
 ): DestinationRowData => {
   const { suggestions, dpMap } = context;
-  const { shipmentQtyByDate, coaIssueDateByDate, commentByDate, totalShipmentQty } =
-    getShipmentByDate(lotId, dpId, suggestions);
+  const {
+    shipmentQtyByDate,
+    coaIssueDateByDate,
+    commentByDate,
+    manualShipmentDateByDate,
+    totalShipmentQty,
+  } = getShipmentByDate(lotId, dpId, suggestions);
   const dp = dpMap.get(dpId);
 
   // Use the coa_issue_date from any of the suggestions for this (lot, dp)
@@ -109,6 +127,9 @@ const mapDestinationRow = (
     coaIssueDate: coaIssueDate ?? undefined,
     // Phase 9.2: Map comments by date
     commentByDate: Object.keys(commentByDate).length > 0 ? commentByDate : undefined,
+    // Phase 9.3: Map manual shipment dates by date
+    manualShipmentDateByDate:
+      Object.keys(manualShipmentDateByDate).length > 0 ? manualShipmentDateByDate : undefined,
   };
 };
 

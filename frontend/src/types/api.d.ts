@@ -9010,6 +9010,8 @@ export interface components {
       coa_issue_date?: string | null;
       /** Comment */
       comment?: string | null;
+      /** Manual Shipment Date */
+      manual_shipment_date?: string | null;
     };
     /**
      * AllocationSuggestionListResponse

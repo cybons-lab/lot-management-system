@@ -149,6 +149,8 @@ class AllocationSuggestionBatchUpdateItem(BaseModel):
     coa_issue_date: str | None = None
     # Phase 9.2: Cell-level comment
     comment: str | None = None
+    # Phase 9.3: Manual shipment date
+    manual_shipment_date: str | None = None
 
 
 class AllocationSuggestionBatchUpdate(BaseModel):

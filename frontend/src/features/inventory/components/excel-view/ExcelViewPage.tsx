@@ -229,6 +229,42 @@ export function ExcelViewPage() {
     [data, productId, updateMutation, queryClient],
   );
 
+  // Phase 9.3: Manual shipment date handler
+  const handleManualShipmentDateChange = useCallback(
+    async (lotId: number, dpId: number, date: string, shipmentDate: string | null) => {
+      const lot = data?.lots.find((l) => l.lotId === lotId);
+      const dest = lot?.destinations.find((d) => d.deliveryPlaceId === dpId);
+      if (!lot || !dest) return;
+
+      try {
+        await updateMutation.mutateAsync({
+          updates: [
+            {
+              lot_id: lotId,
+              delivery_place_id: dpId,
+              supplier_item_id: Number(productId),
+              customer_id: dest.customerId,
+              forecast_period: date,
+              quantity: dest.shipmentQtyByDate[date] || 0,
+              coa_issue_date: dest.coaIssueDate || null,
+              comment: dest.commentByDate?.[date] || null,
+              manual_shipment_date: shipmentDate,
+            },
+          ],
+        });
+        toast.success("出荷日を保存しました");
+        // Invalidate all allocationSuggestions queries (including those with params)
+        await queryClient.invalidateQueries({
+          queryKey: ["allocationSuggestions"],
+          refetchType: "all",
+        });
+      } catch {
+        toast.error("出荷日の保存に失敗しました");
+      }
+    },
+    [data, productId, updateMutation, queryClient],
+  );
+
   const allDateColumns = useMemo(() => {
     const base = data?.dateColumns || [];
     return Array.from(new Set([...base, ...addedDates])).sort();
@@ -461,6 +497,7 @@ export function ExcelViewPage() {
               onArchive={handleArchiveLot}
               isArchiving={archiveMutation.isPending}
               onCommentChange={handleCommentChange}
+              onManualShipmentDateChange={handleManualShipmentDateChange}
             />
           );
         })}

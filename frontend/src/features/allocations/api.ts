@@ -452,6 +452,8 @@ export interface AllocationSuggestionBatchUpdateItem {
   coa_issue_date?: string | null;
   // Phase 9.2: Cell-level comment
   comment?: string | null;
+  // Phase 9.3: Manual shipment date
+  manual_shipment_date?: string | null;
 }
 
 export const updateAllocationSuggestionsBatch = (data: {
