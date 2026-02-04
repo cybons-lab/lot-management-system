@@ -42,7 +42,7 @@ export function ShipmentTable({
   };
 
   return (
-    <div className="flex flex-col border-r border-slate-300 bg-white min-h-[272px]">
+    <div className="flex flex-col border-r border-slate-300 bg-white h-full">
       {/* Header */}
       <div
         className={`${hHeader} flex items-center bg-slate-50 border-b border-slate-300 font-bold text-[10px] text-slate-500 uppercase tracking-wider`}

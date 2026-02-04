@@ -174,7 +174,7 @@ export function LotSection({
                 <FileText className="h-5 w-5 text-blue-600" />
               </div>
             )}
-            <div className="flex shrink-0 min-h-[272px]">
+            <div className="grid grid-cols-[auto_112px_320px_112px_1fr] min-h-[272px]">
               {/* 1. Lot Information (Fixed) */}
               <LotInfoGroups
                 lotInfo={lotInfo}
