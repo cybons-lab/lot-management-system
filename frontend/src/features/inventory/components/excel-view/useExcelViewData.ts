@@ -139,6 +139,8 @@ const mapLotBlock = (lot: LotUI, context: MapContext): LotBlockData => {
     // 倉庫情報を追加
     warehouseName: lot.warehouse_name || "不明",
     warehouseCode: lot.warehouse_code || "-",
+    // Phase 9: Remarks field
+    remarks: lot.remarks ?? null,
   };
 };
 

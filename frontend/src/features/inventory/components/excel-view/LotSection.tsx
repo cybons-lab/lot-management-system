@@ -1,5 +1,5 @@
-import { Archive, Edit, Lock, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Archive, Edit, FileText, Lock, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { BigStatColumn } from "./subcomponents/BigStatColumn";
 import { DateGrid } from "./subcomponents/DateGrid";
@@ -62,6 +62,7 @@ interface Props {
 }
 
 /* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
 export function LotSection({
   lot,
   dateColumns,
@@ -76,10 +77,25 @@ export function LotSection({
   onArchive,
   isArchiving = false,
 }: Props) {
-  const { lotId, lotInfo, destinations, totalStock, totalShipment, warehouseName, warehouseCode } =
-    lot;
+  const {
+    lotId,
+    lotInfo,
+    destinations,
+    totalStock,
+    totalShipment,
+    warehouseName,
+    warehouseCode,
+    remarks,
+  } = lot;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [remarksExpanded, setRemarksExpanded] = useState(false);
+  const [localRemarks, setLocalRemarks] = useState(remarks || "");
+
+  // Sync local remarks with prop changes
+  useEffect(() => {
+    setLocalRemarks(remarks || "");
+  }, [remarks]);
 
   // ステータスを判定
   const statuses = getLotStatuses({
@@ -141,6 +157,12 @@ export function LotSection({
                 <Lock className="h-6 w-6 text-gray-600" />
               </div>
             )}
+            {/* 備考アイコン（備考が存在する場合のみ） */}
+            {remarks && (
+              <div className="absolute top-2 left-2 z-10">
+                <FileText className="h-5 w-5 text-blue-600" />
+              </div>
+            )}
             <div className="flex shrink-0">
               {/* 1. Lot Information (Fixed) */}
               <LotInfoGroups
@@ -186,6 +208,39 @@ export function LotSection({
                 onQtyChange={onQtyChange}
                 onAddColumn={onAddColumn}
               />
+            </div>
+
+            {/* Phase 9.1: 備考セクション（折りたたみ可能） */}
+            <div className="border-t border-slate-300">
+              <button
+                type="button"
+                className="w-full px-4 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-between"
+                onClick={() => setRemarksExpanded(!remarksExpanded)}
+              >
+                <span className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  備考
+                  {remarks && <span className="text-xs text-blue-600">(入力あり)</span>}
+                </span>
+                <span className="text-slate-400">{remarksExpanded ? "▲" : "▼"}</span>
+              </button>
+              {remarksExpanded && (
+                <div className="px-4 py-3 bg-slate-50/50">
+                  <textarea
+                    className="w-full min-h-[80px] px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                    placeholder="ロットに関する備考を入力..."
+                    value={localRemarks}
+                    onBlur={(e) => {
+                      if (onLotFieldChange) {
+                        onLotFieldChange(lotId, "remarks", e.target.value);
+                      }
+                    }}
+                    onChange={(e) => {
+                      setLocalRemarks(e.target.value);
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </ContextMenuTrigger>

@@ -47,6 +47,9 @@ export interface DestinationRowData {
   shipmentQtyByDate: Record<string, number>; // date string -> quantity
   coaIssueDate?: string;
   totalShipmentQty: number;
+  // Phase 9: Cell-level comments and manual shipment dates
+  commentByDate?: Record<string, string>; // date string -> comment
+  manualShipmentDateByDate?: Record<string, string>; // date string -> manual shipment date
 }
 
 export interface LotBlockData {
@@ -64,6 +67,8 @@ export interface LotBlockData {
   // 倉庫情報（全倉庫統合表示のため）
   warehouseName?: string;
   warehouseCode?: string;
+  // Phase 9: Remarks field
+  remarks?: string | null;
 }
 
 export interface ExcelViewData {
