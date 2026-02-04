@@ -43,6 +43,7 @@ class SmartReadAnalyzeService(SmartReadBaseService):
         """
         config = self.get_config(config_id)
         if not config:
+            logger.warning("SmartRead config not found", extra={"config_id": config_id})
             return AnalyzeResult(
                 success=False,
                 filename=filename,
@@ -61,7 +62,22 @@ class SmartReadAnalyzeService(SmartReadBaseService):
             template_ids=template_ids,
         )
 
+        logger.info(
+            "SmartRead analyze started",
+            extra={"config_id": config_id, "filename": filename},
+        )
         result: SmartReadResult = await client.analyze_file(file_content, filename)
+
+        if result.success:
+            logger.info(
+                "SmartRead analyze completed",
+                extra={"filename": filename, "data_count": len(result.data)},
+            )
+        else:
+            logger.error(
+                "SmartRead analyze failed",
+                extra={"filename": filename, "error": result.error_message},
+            )
 
         return AnalyzeResult(
             success=result.success,

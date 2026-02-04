@@ -1,5 +1,7 @@
 """Cloud Flow router - ジョブキュー管理API."""
 
+import logging
+
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -21,6 +23,7 @@ from app.presentation.schemas.cloud_flow_schema import (
 )
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/rpa/cloud-flow", tags=["cloud-flow"])
 
 
@@ -50,6 +53,10 @@ async def execute_generic_flow(
     """汎用Cloud Flow実行."""
     from app.application.services.rpa import call_power_automate_flow
 
+    logger.info(
+        "Generic Cloud Flow execution requested",
+        extra={"user_id": current_user.id, "flow_url": request.flow_url[:50] + "..."},
+    )
     return await call_power_automate_flow(
         flow_url=request.flow_url,
         json_payload=request.json_payload or {},
@@ -68,6 +75,15 @@ def create_job(
     ゲストユーザーは実行不可。
     他ユーザーが実行中の場合は待機状態で追加。
     """
+    logger.info(
+        "Cloud Flow job creation requested",
+        extra={
+            "job_type": request.job_type,
+            "start_date": str(request.start_date),
+            "end_date": str(request.end_date),
+            "user_id": current_user.id,
+        },
+    )
     service = CloudFlowService(db, background_tasks=background_tasks)
     job = service.create_job(
         job_type=request.job_type,
@@ -78,6 +94,7 @@ def create_job(
 
     # 待ち順番を計算
     queue_status = service.get_queue_status(request.job_type, current_user.id)
+    logger.info("Cloud Flow job created", extra={"job_id": job.id, "job_status": job.status})
     return _job_to_response(job, queue_status["your_position"])
 
 
@@ -157,6 +174,7 @@ def update_config(
     _current_user: User = Depends(get_current_admin),
 ) -> CloudFlowConfigResponse:
     """設定を登録/更新."""
+    logger.info("Cloud Flow config updated", extra={"config_key": config_key})
     service = CloudFlowService(db)
     config = service.set_config(config_key, request.config_value, request.description)
     return CloudFlowConfigResponse.model_validate(config)
