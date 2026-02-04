@@ -325,7 +325,10 @@
       - バックエンドの永続化処理要調査（batch update endpoint）
       - キャッシュ無効化は正しく実装済み（`refetchType: "all"`）
 - [ ] **フェーズ10: UI修正 & ロット分割**
-    - [ ] 納入先5件以下の罫線バグ修正
+    - [ ] **納入先5件以下の罫線バグ修正（未完了 - 線が揃っていない）**
+      - 現状: min-h-[272px]を追加したが、依然として右端の縦線が揃わない
+      - 調査必要: ShipmentTable, DateGrid, BigStatColumn の高さ調整
+      - 関連ファイル: LotSection.tsx, ShipmentTable.tsx, DateGrid.tsx
     - [ ] ロット分割（分納）API & ダイアログ実装
 - [ ] **フェーズ11: 理由付き在庫調整**
     - [ ] 入庫数編集時の理由入力ダイアログ実装

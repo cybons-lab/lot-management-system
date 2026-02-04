@@ -289,7 +289,7 @@ export function DateGrid({
   };
 
   return (
-    <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 bg-slate-50/5">
+    <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 bg-slate-50/5 min-h-[272px]">
       <div className="min-w-max flex flex-col h-full">
         {/* Header */}
         <div
