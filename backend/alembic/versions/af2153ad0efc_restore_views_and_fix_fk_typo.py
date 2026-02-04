@@ -32,10 +32,6 @@ def upgrade() -> None:
         "FOREIGN KEY (product_group_id) REFERENCES supplier_items(id) ON DELETE RESTRICT"
     )
 
-    # Local-only: skip view recreation here to avoid failures against evolving create_views.sql.
-    # Views will be re-applied after full migration.
-    return
-
     # 2. Database Views (Read from sql/views/create_views.sql)
     import os
 
