@@ -76,4 +76,7 @@ export interface ExcelViewData {
   involvedDestinations: DestinationInfo[];
   dateColumns: string[]; // ISO date strings
   lots: LotBlockData[];
+  // Phase 9: Page-level notes
+  pageNotes?: string | null;
+  deliverySettingId?: number | null; // For saving page notes
 }

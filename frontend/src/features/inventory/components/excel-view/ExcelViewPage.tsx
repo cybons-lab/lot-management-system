@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, BarChart3, Plus } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { ArrowLeft, BarChart3, Plus, StickyNote } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -15,7 +15,10 @@ import { useExcelViewData } from "./useExcelViewData";
 import { Button } from "@/components/ui/button";
 import { useUpdateAllocationSuggestionsBatch } from "@/features/allocations/hooks/api/useAllocationSuggestions";
 import { SupplierFilterSet } from "@/features/assignments/components";
-import { createDeliverySetting } from "@/features/customer-items/delivery-settings/api";
+import {
+  createDeliverySetting,
+  updateDeliverySetting,
+} from "@/features/customer-items/delivery-settings/api";
 import { createDeliveryPlace } from "@/features/delivery-places/api";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { inventoryItemKeys } from "@/features/inventory/hooks";
@@ -43,6 +46,8 @@ function LoadingOrError({ isLoading }: LoadingOrErrorProps) {
 }
 
 /* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
+/* eslint-disable max-lines */
 export function ExcelViewPage() {
   const { productId, customerItemId } = useParams<{
     productId: string;
@@ -53,11 +58,25 @@ export function ExcelViewPage() {
   const [selectedLotIdForAddDest, setSelectedLotIdForAddDest] = useState<number | null>(null);
   const [addedDates, setAddedDates] = useState<string[]>([]);
   const [isLotIntakeDialogOpen, setIsLotIntakeDialogOpen] = useState(false);
+  // Phase 9: Page-level notes state
+  const [pageNotesExpanded, setPageNotesExpanded] = useState(false);
+  const [localPageNotes, setLocalPageNotes] = useState("");
 
   const { data, isLoading, supplierId, customerItem } = useExcelViewData(
     Number(productId),
     customerItemId ? Number(customerItemId) : undefined,
   );
+
+  // Phase 9: Sync local page notes with data
+  useEffect(() => {
+    if (data?.pageNotes !== undefined) {
+      setLocalPageNotes(data.pageNotes || "");
+      // Expand if notes exist
+      if (data.pageNotes) {
+        setPageNotesExpanded(true);
+      }
+    }
+  }, [data?.pageNotes]);
 
   const updateMutation = useUpdateAllocationSuggestionsBatch();
   const deleteLotMutation = useDeleteLot({
@@ -150,6 +169,30 @@ export function ExcelViewPage() {
       toast.error("ロット情報の更新に失敗しました");
     }
   }, []);
+
+  // Phase 9: Page notes save handler
+  const handlePageNotesBlur = useCallback(async () => {
+    if (!data?.deliverySettingId) {
+      toast.error("納入先設定IDが見つかりません");
+      return;
+    }
+
+    const currentNotes = data.pageNotes || "";
+    if (localPageNotes === currentNotes) {
+      return; // No change
+    }
+
+    try {
+      await updateDeliverySetting(data.deliverySettingId, {
+        notes: localPageNotes || null,
+      });
+      toast.success("ページメモを保存しました");
+      // Invalidate queries to reflect the change
+      queryClient.invalidateQueries({ queryKey: ["customer-item-delivery-settings"] });
+    } catch {
+      toast.error("ページメモの保存に失敗しました");
+    }
+  }, [data?.deliverySettingId, data?.pageNotes, localPageNotes, queryClient]);
 
   const allDateColumns = useMemo(() => {
     const base = data?.dateColumns || [];
@@ -324,6 +367,43 @@ export function ExcelViewPage() {
 
       <div className="space-y-4">
         <ProductHeader data={data.header} involvedDestinations={data.involvedDestinations} />
+
+        {/* Phase 9: Page-level notes */}
+        {customerItemId && (
+          <div className="border border-blue-200 rounded-lg bg-blue-50/30 overflow-hidden">
+            <button
+              type="button"
+              className="w-full px-4 py-3 flex items-center gap-2 text-left hover:bg-blue-50/50 transition-colors"
+              onClick={() => setPageNotesExpanded(!pageNotesExpanded)}
+            >
+              <StickyNote className="h-4 w-4 text-blue-600" />
+              <span className="font-medium text-slate-700">ページ全体のメモ</span>
+              {data.pageNotes && (
+                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
+                  入力あり
+                </span>
+              )}
+              <span className="ml-auto text-slate-400 text-sm">
+                {pageNotesExpanded ? "▲" : "▼"}
+              </span>
+            </button>
+            {pageNotesExpanded && (
+              <div className="px-4 pb-4">
+                <textarea
+                  className="w-full min-h-[100px] p-3 border border-blue-200 rounded bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="このページ全体に関するメモを入力..."
+                  value={localPageNotes}
+                  onChange={(e) => setLocalPageNotes(e.target.value)}
+                  onBlur={handlePageNotesBlur}
+                />
+                <p className="mt-2 text-xs text-slate-500">
+                  メーカー品番 × 先方品番 × 納入先に紐付くメモです
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {data.lots.map((lot) => {
           return (
             <LotSection

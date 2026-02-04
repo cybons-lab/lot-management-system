@@ -89,6 +89,8 @@ type LotResponse = components["schemas"]["LotResponse"] & {
   // Phase 3 Fields
   maker_part_no?: string | null;
   customer_part_no?: string | null;
+  // Phase 9 Fields
+  remarks?: string | null;
 };
 type ProductResponse = components["schemas"]["SupplierItemResponse"];
 
@@ -190,6 +192,9 @@ export interface LotUI extends Record<string, unknown> {
   product_deleted?: boolean;
   warehouse_deleted?: boolean;
   supplier_deleted?: boolean;
+
+  // Phase 9: Remarks field
+  remarks?: string | null;
 
   // Legacy fields (deprecated, for backward compatibility)
   product_code?: string | null;
@@ -314,6 +319,9 @@ export function normalizeLot(
     cost_price: lot.cost_price != null ? String(lot.cost_price) : null,
     sales_price: lot.sales_price != null ? String(lot.sales_price) : null,
     tax_rate: lot.tax_rate != null ? String(lot.tax_rate) : null,
+
+    // Phase 9: Remarks field
+    remarks: lot.remarks ?? null,
 
     // Legacy fields (for backward compatibility)
     id: lot.lot_id,

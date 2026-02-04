@@ -299,6 +299,12 @@ export function useExcelViewData(
       getDestinationInfo(id, mapContext),
     );
 
+    // Phase 9: Get page-level notes from delivery settings
+    // Use the first delivery setting as the page-level notes source
+    const primaryDeliverySetting = allDeliverySettings.find(
+      (s: CustomerItemDeliverySetting) => s.customer_item_id === customerItemId,
+    );
+
     return {
       header: {
         supplierCode: inventoryItem.supplier_code || "-",
@@ -318,8 +324,19 @@ export function useExcelViewData(
       involvedDestinations,
       dateColumns,
       lots: lotBlocks,
+      // Phase 9: Page-level notes
+      pageNotes: primaryDeliverySetting?.notes ?? null,
+      deliverySettingId: primaryDeliverySetting?.id ?? null,
     };
-  }, [inventoryItem, dateColumns, lotBlocks, mapContext, customerItem]);
+  }, [
+    inventoryItem,
+    dateColumns,
+    lotBlocks,
+    mapContext,
+    customerItem,
+    allDeliverySettings,
+    customerItemId,
+  ]);
 
   return {
     data,
