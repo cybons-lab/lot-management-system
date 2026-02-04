@@ -547,6 +547,54 @@ async def start_pad_run_from_upload(
 
 ## 4. アーキテクチャ/品質改善
 
+### 4-0. Alembicマイグレーション: ビュー再生成の自動化
+
+**優先度**: 低
+**作成**: 2026-02-04
+**カテゴリ**: インフラ・DB・開発体験
+
+**背景:**
+- 現在、データベースビューは最後のマイグレーション (`62a340dbe783_recreate_views_after_schema_changes.py`) で `create_views.sql` を実行して再生成される
+- 新しいマイグレーションを追加する度に、以下の手動作業が必要になる：
+  1. 既存の最後のマイグレーションから `create_views.sql` 実行処理を削除
+  2. 新しいマイグレーションの最後に `create_views.sql` 実行処理を追加
+- この手動作業は忘れやすく、ビューの整合性問題を引き起こす可能性がある
+
+**課題:**
+- 中間マイグレーションでビューを再生成すると、スキーマが不完全な状態でエラーが発生する
+- かといって手動で毎回移動させるのは煩雑でエラーが起きやすい
+
+**提案される解決策:**
+
+**Option 1: Alembic hooks を使用した自動化**
+- `alembic/env.py` で `after_upgrade` hook を使用
+- `alembic upgrade head` 実行後に自動的に `create_views.sql` を実行
+- メリット: 各マイグレーションファイルに記述不要、完全自動化
+- デメリット: downgrade時の対応が複雑
+
+**Option 2: 専用のビュー管理スクリプト**
+- `scripts/recreate_views.py` のような独立したスクリプトを作成
+- マイグレーション後に手動で実行: `make db-recreate-views`
+- メリット: シンプル、明示的、downgradeの影響を受けない
+- デメリット: 実行を忘れる可能性がある
+
+**Option 3: 最終マイグレーションのマーカー**
+- 特殊な命名規則（例: `zz_final_views.py`）で最終マイグレーションを識別
+- 新規マイグレーション作成時に自動リネーム
+- メリット: ファイル名で意図が明確
+- デメリット: 自動化には追加ツールが必要
+
+**推奨アプローチ:** Option 1 (Alembic hooks)
+- 最も自動化されており、人的エラーを排除できる
+- `alembic/env.py` の `run_migrations_online()` に数行追加するだけで実装可能
+
+**関連ファイル:**
+- `backend/alembic/env.py`
+- `backend/alembic/versions/62a340dbe783_recreate_views_after_schema_changes.py`
+- `backend/sql/views/create_views.sql`
+
+---
+
 ### 4-1. useQuery のエラー処理追加（Phase 2）
 
 - `AllocationDialog.tsx`, `ForecastsTab.tsx`, `InboundPlansTab.tsx`, `WithdrawalCalendar.tsx` など。
