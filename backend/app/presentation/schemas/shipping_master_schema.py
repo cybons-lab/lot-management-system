@@ -49,6 +49,7 @@ class ShippingMasterCuratedCreate(ShippingMasterCuratedBase):
 class ShippingMasterCuratedUpdate(BaseModel):
     """出荷用マスタ更新リクエスト."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     warehouse_code: str | None = None
     customer_name: str | None = None
     delivery_note_product_name: str | None = None
@@ -69,9 +70,6 @@ class ShippingMasterCuratedUpdate(BaseModel):
     order_existence: str | None = None
     has_order: bool | None = None
     remarks: str | None = None
-    expected_updated_at: datetime | None = Field(
-        default=None, description="楽観的ロック用の期待される更新日時"
-    )
 
 
 class ShippingMasterCuratedResponse(ShippingMasterCuratedBase):
@@ -82,6 +80,7 @@ class ShippingMasterCuratedResponse(ShippingMasterCuratedBase):
     has_duplicate_warning: bool = False
     created_at: datetime
     updated_at: datetime
+    version: int
 
     model_config = {"from_attributes": True}
 

@@ -72,8 +72,9 @@ export function useUpdateAssignment() {
 export function useDeleteAssignment() {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, number>({
-    mutationFn: assignmentsApi.deleteAssignment,
+  return useMutation<void, Error, { assignmentId: number; version: number }>({
+    mutationFn: ({ assignmentId, version }) =>
+      assignmentsApi.deleteAssignment(assignmentId, version),
     onSuccess: () => {
       // 全ての担当割り当てキャッシュを無効化
       queryClient.invalidateQueries({ queryKey: ["assignments"] });

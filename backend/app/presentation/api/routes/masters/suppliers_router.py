@@ -156,6 +156,7 @@ def update_supplier(
 def delete_supplier(
     supplier_code: str,
     end_date: date | None = Query(None, description="End date for soft delete. Defaults to today."),
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
 ):
     """Soft delete supplier (set valid_to to end_date or today).
@@ -164,13 +165,14 @@ def delete_supplier(
     The supplier data is preserved for historical reference.
     """
     service = SupplierService(db)
-    service.delete_by_code(supplier_code, end_date=end_date)
+    service.delete_by_code(supplier_code, end_date=end_date, expected_version=version)
     return None
 
 
 @router.delete("/{supplier_code}/permanent", status_code=204)
 def permanent_delete_supplier(
     supplier_code: str,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
@@ -183,7 +185,7 @@ def permanent_delete_supplier(
     Will fail if the supplier is referenced by other records.
     """
     service = SupplierService(db)
-    service.hard_delete_by_code(supplier_code)
+    service.hard_delete_by_code(supplier_code, expected_version=version)
     return None
 
 

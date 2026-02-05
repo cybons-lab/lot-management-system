@@ -78,6 +78,7 @@ class OcrResultItem(BaseModel):
     manual_jiku_code: str | None = None
     manual_material_code: str | None = None
     manual_updated_at: datetime | None = None
+    manual_version: int = 0
 
     # マスタ由来
     master_id: int | None = None
@@ -178,6 +179,7 @@ class OcrResultsExportRow(BaseModel):
 class OcrResultEditRequest(BaseModel):
     """OCR結果手入力の更新リクエスト."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     lot_no_1: str | None = None
     quantity_1: str | None = None
     lot_no_2: str | None = None
@@ -200,6 +202,7 @@ class OcrResultEditResponse(BaseModel):
 
     id: int
     smartread_long_data_id: int
+    version: int
     lot_no_1: str | None = None
     quantity_1: str | None = None
     lot_no_2: str | None = None
@@ -903,11 +906,36 @@ async def save_ocr_result_edit(
         .one_or_none()
     )
 
-    if edit is None:
-        edit = OcrResultEdit(smartread_long_data_id=item_id)
-        db.add(edit)
-
     update_data = request.model_dump(exclude_unset=True)
+    expected_version = update_data.pop("version")
+
+    if edit is None:
+        if expected_version != 0:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error": "OPTIMISTIC_LOCK_CONFLICT",
+                    "current_version": 0,
+                    "expected_version": expected_version,
+                    "message": "Data was modified by another user",
+                },
+            )
+        edit = OcrResultEdit(smartread_long_data_id=item_id)
+        edit.version = 1
+        db.add(edit)
+    else:
+        if edit.version != expected_version:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error": "OPTIMISTIC_LOCK_CONFLICT",
+                    "current_version": edit.version,
+                    "expected_version": expected_version,
+                    "message": "Data was modified by another user",
+                },
+            )
+        edit.version = edit.version + 1
+
     for key, value in update_data.items():
         setattr(edit, key, value)
 
@@ -954,6 +982,10 @@ async def save_ocr_result_edit(
             "jiku_format_error": jiku_error,
             "date_format_error": date_error,
         }
+        # SmartReadタスクのデータバージョンを更新
+        from app.application.services.smartread import SmartReadService
+
+        SmartReadService(db).bump_data_version(long_data.task_id)
 
     try:
         db.commit()

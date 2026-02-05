@@ -6,6 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    update_with_version,
+)
 from app.application.services.masters.product_mappings_service import (
     ProductMappingsService,
 )
@@ -161,7 +165,7 @@ def update_product_mapping(
     if not mapping:
         raise HTTPException(status_code=404, detail="Product mapping not found")
 
-    update_data = data.model_dump(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True, exclude={"version"})
 
     # Validate foreign keys if being updated
     if "customer_id" in update_data and update_data["customer_id"]:
@@ -179,21 +183,29 @@ def update_product_mapping(
         if not product:
             raise HTTPException(status_code=400, detail="Product not found")
 
-    for field, value in update_data.items():
-        setattr(mapping, field, value)
-
-    db.commit()
-    db.refresh(mapping)
-    return mapping
+    updated = update_with_version(
+        db,
+        ProductMapping,
+        filters=[ProductMapping.id == mapping_id],
+        update_values=update_data,
+        expected_version=data.version,
+        not_found_detail="Product mapping not found",
+    )
+    return updated
 
 
 @router.delete("/{mapping_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_product_mapping(mapping_id: int, db: Session = Depends(get_db)):
+def delete_product_mapping(
+    mapping_id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
+    db: Session = Depends(get_db),
+):
     """Delete a product mapping."""
-    mapping = db.query(ProductMapping).filter(ProductMapping.id == mapping_id).first()
-    if not mapping:
-        raise HTTPException(status_code=404, detail="Product mapping not found")
-
-    db.delete(mapping)
-    db.commit()
+    hard_delete_with_version(
+        db,
+        ProductMapping,
+        filters=[ProductMapping.id == mapping_id],
+        expected_version=version,
+        not_found_detail="Product mapping not found",
+    )
     return None

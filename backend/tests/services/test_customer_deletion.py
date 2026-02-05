@@ -99,10 +99,14 @@ class TestCustomerServiceHardDelete:
         db_session.add(order)
         db_session.commit()
 
+        # Get customer version for deletion
+        db_session.refresh(customer)
+        customer_version = customer.version
+
         # Attempt hard delete
         service = CustomerService(db_session)
         with pytest.raises(HTTPException) as exc_info:
-            service.hard_delete_by_code("DEL001")
+            service.hard_delete_by_code("DEL001", expected_version=customer_version)
 
         assert exc_info.value.status_code == 409
         assert "関連データが存在するため削除できません" in exc_info.value.detail
@@ -124,9 +128,13 @@ class TestCustomerServiceHardDelete:
         db_session.add(customer)
         db_session.commit()
 
+        # Get customer version for deletion
+        db_session.refresh(customer)
+        customer_version = customer.version
+
         # Hard delete should succeed
         service = CustomerService(db_session)
-        service.hard_delete_by_code("DEL002")
+        service.hard_delete_by_code("DEL002", expected_version=customer_version)
 
         # Verify deleted
         assert db_session.query(Customer).filter(Customer.customer_code == "DEL002").first() is None
@@ -192,9 +200,13 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         db_session.add(order_line)
         db_session.commit()
 
+        # Get customer version for deletion
+        db_session.refresh(customer)
+        customer_version = customer.version
+
         # Soft delete customer
         service = CustomerService(db_session)
-        service.delete_by_code("SOFT001")
+        service.delete_by_code("SOFT001", expected_version=customer_version)
 
         # Verify order line is cancelled
         db_session.refresh(order_line)
@@ -311,9 +323,13 @@ class TestCustomerServiceSoftDeleteOrderTransition:
         db_session.add(reservation)
         db_session.commit()
 
+        # Get customer version for deletion
+        db_session.refresh(customer)
+        customer_version = customer.version
+
         # Soft delete customer
         service = CustomerService(db_session)
-        service.delete_by_code("SOFT002")
+        service.delete_by_code("SOFT002", expected_version=customer_version)
 
         # Verify order line is on_hold
         db_session.refresh(order_line)

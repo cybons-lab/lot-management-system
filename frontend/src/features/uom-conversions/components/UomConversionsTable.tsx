@@ -24,7 +24,7 @@ interface TableProps {
   editValue: string;
   setEditValue: (v: string) => void;
   isUpdating: boolean;
-  handleSaveEdit: (id: number) => void;
+  handleSaveEdit: (conversion: UomConversionResponse) => void;
   handleCancelEdit: () => void;
   handleStartEdit: (c: UomConversionResponse) => void;
   handleSoftDelete: (c: UomConversionResponse) => void;
@@ -116,7 +116,7 @@ export function UomConversionsTable({
                   variant="ghost"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleSaveEdit(row.conversion_id);
+                    handleSaveEdit(row);
                   }}
                   disabled={isUpdating}
                   className="h-8 w-8 p-0"

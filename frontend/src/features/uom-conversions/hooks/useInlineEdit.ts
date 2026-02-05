@@ -24,14 +24,14 @@ export function useInlineEdit() {
     setEditValue("");
   };
 
-  const handleSaveEdit = (conversionId: number) => {
+  const handleSaveEdit = (conversion: UomConversionResponse) => {
     const factor = parseFloat(editValue);
     if (isNaN(factor) || factor <= 0) {
       toast.error("換算係数は正の数値を入力してください");
       return;
     }
     updateConversion(
-      { id: conversionId, data: { factor } },
+      { id: conversion.conversion_id, data: { factor, version: conversion.version } },
       {
         onSuccess: () => {
           toast.success("換算係数を更新しました");

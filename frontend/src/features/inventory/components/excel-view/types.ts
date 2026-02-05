@@ -80,4 +80,5 @@ export interface ExcelViewData {
   // Phase 9: Page-level notes
   pageNotes?: string | null;
   deliverySettingId?: number | null; // For saving page notes
+  deliverySettingVersion?: number | null; // For optimistic locking
 }

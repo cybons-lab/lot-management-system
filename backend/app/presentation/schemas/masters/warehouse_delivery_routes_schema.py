@@ -41,6 +41,7 @@ class WarehouseDeliveryRouteCreate(WarehouseDeliveryRouteBase):
 class WarehouseDeliveryRouteUpdate(BaseModel):
     """Update warehouse delivery route request."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     transport_lead_time_days: int | None = Field(None, ge=0, description="輸送リードタイム（日）")
     is_active: bool | None = Field(None, description="有効フラグ")
     notes: str | None = Field(None, max_length=1000, description="備考")
@@ -54,6 +55,7 @@ class WarehouseDeliveryRouteResponse(WarehouseDeliveryRouteBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    version: int
 
     # Denormalized fields for display
     warehouse_code: str | None = None

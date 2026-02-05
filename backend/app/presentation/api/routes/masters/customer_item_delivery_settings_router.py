@@ -78,11 +78,12 @@ def update_setting(
 )
 def delete_setting(
     setting_id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
 ) -> None:
     """Delete a delivery setting."""
     service = CustomerItemDeliverySettingService(db)
-    if not service.delete(setting_id):
+    if not service.delete(setting_id, expected_version=version):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Setting with id {setting_id} not found",

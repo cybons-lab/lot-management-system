@@ -391,6 +391,7 @@ export function useExcelViewData(
       // Phase 9: Page-level notes
       pageNotes: primaryDeliverySetting?.notes ?? null,
       deliverySettingId: primaryDeliverySetting?.id ?? null,
+      deliverySettingVersion: primaryDeliverySetting?.version ?? null,
     };
   }, [
     inventoryItem,

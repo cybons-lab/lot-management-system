@@ -19,6 +19,10 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+
+if TYPE_CHECKING:
+    from app.infrastructure.persistence.models.masters_models import ProductUomConversion
+
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -167,6 +171,9 @@ class SupplierItem(SoftDeleteMixin, Base):
         default=utcnow,
         onupdate=utcnow,
     )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
+    )
 
     __table_args__ = (
         # Business key: supplier_id + maker_part_no でユニーク
@@ -194,6 +201,11 @@ class SupplierItem(SoftDeleteMixin, Base):
     lot_receipts: Mapped[list[LotReceipt]] = relationship(
         "LotReceipt",
         foreign_keys="[LotReceipt.supplier_item_id]",
+        back_populates="supplier_item",
+    )
+    uom_conversions: Mapped[list[ProductUomConversion]] = relationship(  # noqa: F821  # type: ignore[name-defined]
+        "ProductUomConversion",
+        foreign_keys="[ProductUomConversion.supplier_item_id]",
         back_populates="supplier_item",
     )
 

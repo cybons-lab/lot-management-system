@@ -194,6 +194,7 @@ def update_customer_item(
 def delete_customer_item(
     id: int,
     end_date: date | None = Query(None),
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
 ):
     """得意先品番マッピング削除.
@@ -201,13 +202,14 @@ def delete_customer_item(
     Args:
         id: 得意先品番マッピングID
         end_date: 無効化日（指定がない場合は即時）
+        version: Version for optimistic lock check
         db: データベースセッション
 
     Raises:
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    deleted = service.delete_by_id(id, end_date)
+    deleted = service.delete_by_id(id, end_date, expected_version=version)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -219,6 +221,7 @@ def delete_customer_item(
 @router.delete("/{id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
 def permanent_delete_customer_item(
     id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
@@ -226,6 +229,7 @@ def permanent_delete_customer_item(
 
     Args:
         id: 得意先品番マッピングID
+        version: Version for optimistic lock check
         current_user: 認証済み管理者ユーザー
         db: データベースセッション
 
@@ -233,7 +237,7 @@ def permanent_delete_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    deleted = service.permanent_delete_by_id(id)
+    deleted = service.permanent_delete_by_id(id, expected_version=version)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

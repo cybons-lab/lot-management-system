@@ -4,6 +4,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    update_with_version,
+)
 from app.infrastructure.persistence.models.assignments.assignment_models import (
     UserSupplierAssignment,
 )
@@ -90,9 +94,25 @@ class UserSupplierAssignmentService(
     def update_assignment(
         self, assignment_id: int, data: UserSupplierAssignmentUpdate
     ) -> UserSupplierAssignment:
-        """Update an existing assignment."""
-        return self.update(assignment_id, data)
+        """Update an existing assignment with optimistic lock."""
+        update_data = data.model_dump(exclude_unset=True, exclude={"version"})
+        updated = update_with_version(
+            self.db,
+            UserSupplierAssignment,
+            filters=[UserSupplierAssignment.id == assignment_id],
+            update_values=update_data,
+            expected_version=data.version,
+            not_found_detail="Assignment not found",
+        )
+        assert isinstance(updated, UserSupplierAssignment)
+        return updated
 
-    def delete_assignment(self, assignment_id: int) -> None:
-        """Delete an assignment."""
-        self.delete(assignment_id)
+    def delete_assignment(self, assignment_id: int, expected_version: int) -> None:
+        """Delete an assignment with optimistic lock."""
+        hard_delete_with_version(
+            self.db,
+            UserSupplierAssignment,
+            filters=[UserSupplierAssignment.id == assignment_id],
+            expected_version=expected_version,
+            not_found_detail="Assignment not found",
+        )

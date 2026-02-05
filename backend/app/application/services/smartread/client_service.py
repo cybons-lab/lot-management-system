@@ -14,6 +14,7 @@ from app.application.services.smartread.base import SmartReadBaseService
 from app.infrastructure.persistence.models import SmartReadConfig
 from app.infrastructure.persistence.models.smartread_models import (
     SmartReadLongData,
+    SmartReadTask,
     SmartReadWideData,
 )
 from app.infrastructure.smartread.client import SmartReadClient
@@ -143,12 +144,15 @@ class SmartReadClientService(SmartReadBaseService):
                 )
                 stmt_long = select(SmartReadLongData).where(SmartReadLongData.task_id == task_id)
                 existing_long = self.session.execute(stmt_long).scalars().all()
+                stmt_task = select(SmartReadTask).where(SmartReadTask.task_id == task_id)
+                task = self.session.execute(stmt_task).scalar_one_or_none()
 
                 return {
                     "wide_data": [w.content for w in existing_wide],
                     "long_data": [l.content for l in existing_long],
                     "errors": [],
                     "filename": existing_wide[0].filename if existing_wide else None,
+                    "data_version": task.data_version if task else None,
                     "from_cache": True,
                 }
 

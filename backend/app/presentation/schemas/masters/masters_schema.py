@@ -47,6 +47,7 @@ class WarehouseCreate(WarehouseBase):
 class WarehouseUpdate(BaseSchema):
     """Update warehouse request."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     warehouse_code: str | None = Field(None, min_length=1, max_length=50)
     warehouse_name: str | None = Field(None, min_length=1, max_length=200)
     warehouse_type: str | None = Field(
@@ -65,6 +66,7 @@ class WarehouseResponse(WarehouseBase):
     created_at: datetime
     updated_at: datetime
     valid_to: date
+    version: int
 
 
 class WarehouseBulkRow(WarehouseBase):
@@ -107,6 +109,7 @@ class SupplierCreate(SupplierBase):
 class SupplierUpdate(BaseSchema):
     """Update supplier request."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     supplier_code: str | None = Field(None, min_length=1, max_length=50)
     supplier_name: str | None = Field(None, min_length=1, max_length=200)
     short_name: str | None = Field(None, max_length=50, description="短縮表示名")
@@ -119,6 +122,7 @@ class SupplierResponse(SupplierBase):
     created_at: datetime
     updated_at: datetime
     valid_to: date
+    version: int
 
 
 class SupplierBulkRow(SupplierBase):
@@ -165,6 +169,7 @@ class CustomerCreate(CustomerBase):
 class CustomerUpdate(BaseSchema):
     """Update customer request."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     customer_code: str | None = Field(None, min_length=1, max_length=50)
     customer_name: str | None = Field(None, min_length=1, max_length=200)
     short_name: str | None = Field(None, max_length=50, description="短縮表示名")
@@ -181,6 +186,7 @@ class CustomerResponse(CustomerBase):
     created_at: datetime
     updated_at: datetime
     valid_to: date
+    version: int
 
 
 class CustomerBulkRow(CustomerBase):
@@ -225,6 +231,7 @@ class DeliveryPlaceCreate(DeliveryPlaceBase):
 class DeliveryPlaceUpdate(BaseSchema):
     """Update delivery place request."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     delivery_place_code: str | None = Field(None, min_length=1, max_length=50)
     jiku_code: str | None = Field(None, max_length=50)
     delivery_place_name: str | None = Field(None, min_length=1, max_length=200)
@@ -239,6 +246,7 @@ class DeliveryPlaceResponse(DeliveryPlaceBase):
     created_at: datetime
     updated_at: datetime
     valid_to: date
+    version: int
 
 
 # ============================================================
@@ -275,6 +283,7 @@ class ProductMappingCreate(ProductMappingBase):
 class ProductMappingUpdate(BaseSchema):
     """Update product mapping request."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     customer_id: int | None = Field(None, gt=0)
     customer_part_code: str | None = Field(None, min_length=1, max_length=100)
     supplier_id: int | None = Field(None, gt=0)
@@ -293,6 +302,7 @@ class ProductMappingResponse(ProductMappingBase):
     created_at: datetime
     updated_at: datetime
     valid_to: date
+    version: int
 
 
 # ============================================================
@@ -370,6 +380,7 @@ class SupplierItemCreate(SupplierItemBase):
 class SupplierItemUpdate(BaseSchema):
     """Update supplier item request."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     maker_part_no: str | None = Field(None, min_length=1, max_length=100)
     is_primary: bool | None = None
     lead_time_days: int | None = Field(None, ge=0)
@@ -390,6 +401,7 @@ class SupplierItemResponse(SupplierItemBase):
     created_at: datetime
     updated_at: datetime
     valid_to: date
+    version: int
 
 
 # Backward compatibility aliases

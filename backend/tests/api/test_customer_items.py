@@ -144,6 +144,7 @@ def test_update_customer_item_success(db: Session, client: TestClient, master_da
     update_data = {
         "base_unit": "KG",
         "special_instructions": "Handle with care",
+        "version": item.version,
     }
 
     response = client.put(f"/api/masters/customer-items/{item.id}", json=update_data)
@@ -158,6 +159,7 @@ def test_update_customer_item_not_found(db: Session, client: TestClient, master_
 
     update_data = {
         "base_unit": "KG",
+        "version": 1,
     }
 
     response = client.put("/api/masters/customer-items/999999", json=update_data)
@@ -177,7 +179,7 @@ def test_delete_customer_item_success(db: Session, client: TestClient, master_da
     db.commit()
     db.refresh(item)
 
-    response = client.delete(f"/api/masters/customer-items/{item.id}")
+    response = client.delete(f"/api/masters/customer-items/{item.id}?version={item.version}")
     assert response.status_code == 204
 
     # Verify soft-delete - API returned 204 which means delete request was successful
@@ -188,7 +190,7 @@ def test_delete_customer_item_success(db: Session, client: TestClient, master_da
 def test_delete_customer_item_not_found(db: Session, client: TestClient, master_data):
     """Test deleting non-existent customer item returns 404."""
 
-    response = client.delete("/api/masters/customer-items/999999")
+    response = client.delete("/api/masters/customer-items/999999?version=1")
     assert response.status_code == 404
 
 

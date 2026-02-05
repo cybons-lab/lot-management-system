@@ -25,8 +25,8 @@ export async function updateSupplier(code: string, data: SupplierUpdate): Promis
   return http.put<Supplier>(`${BASE_PATH}/${code}`, data);
 }
 
-export async function deleteSupplier(code: string): Promise<void> {
-  return http.delete(`${BASE_PATH}/${code}`);
+export async function deleteSupplier(code: string, version: number): Promise<void> {
+  return http.delete(`${BASE_PATH}/${code}?version=${version}`);
 }
 
 // ============================================

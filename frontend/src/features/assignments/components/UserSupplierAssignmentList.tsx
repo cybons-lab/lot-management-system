@@ -41,9 +41,9 @@ export function UserSupplierAssignmentList({ userId }: UserSupplierAssignmentLis
     return [...assignments].sort((a, b) => a.supplier_code.localeCompare(b.supplier_code));
   }, [assignments]);
 
-  const handleDelete = async (assignmentId: number) => {
+  const handleDelete = async (assignmentId: number, version: number) => {
     try {
-      await deleteAssignment(assignmentId);
+      await deleteAssignment({ id: assignmentId, version });
       toast.success("担当を解除しました");
       refetch();
     } catch {
@@ -96,7 +96,7 @@ export function UserSupplierAssignmentList({ userId }: UserSupplierAssignmentLis
                 <AlertDialogCancel>キャンセル</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-red-600 hover:bg-red-700"
-                  onClick={() => handleDelete(assignment.id)}
+                  onClick={() => handleDelete(assignment.id, assignment.version)}
                 >
                   解除
                 </AlertDialogAction>

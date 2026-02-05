@@ -8,7 +8,18 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from sqlalchemy import BigInteger, Date, DateTime, Index, String, Text, UniqueConstraint, func, text
+from sqlalchemy import (
+    BigInteger,
+    Date,
+    DateTime,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base_model import Base
@@ -44,6 +55,9 @@ class Maker(SoftDeleteMixin, Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
     )
 
     __table_args__ = (

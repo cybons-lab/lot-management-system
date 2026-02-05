@@ -160,9 +160,15 @@ export function useDeliveryPlacesPageState() {
   );
 
   const handleUpdate = useCallback(
-    (data: DeliveryPlaceUpdate) => {
+    (data: Omit<DeliveryPlaceUpdate, "version">) => {
       if (!dialogState.editingItem) return;
-      update({ id: dialogState.editingItem.id, data }, { onSuccess: closeEditDialog });
+      update(
+        {
+          id: dialogState.editingItem.id,
+          data: { ...data, version: dialogState.editingItem.version },
+        },
+        { onSuccess: closeEditDialog },
+      );
     },
     [dialogState.editingItem, update, closeEditDialog],
   );
@@ -171,7 +177,11 @@ export function useDeliveryPlacesPageState() {
     (endDate: string | null) => {
       if (!dialogState.deletingItem) return;
       softDelete(
-        { id: dialogState.deletingItem.id, endDate: endDate || undefined },
+        {
+          id: dialogState.deletingItem.id,
+          version: dialogState.deletingItem.version,
+          endDate: endDate || undefined,
+        },
         { onSuccess: closeDeleteDialog },
       );
     },
@@ -180,7 +190,10 @@ export function useDeliveryPlacesPageState() {
 
   const handlePermanentDelete = useCallback(() => {
     if (!dialogState.deletingItem) return;
-    permanentDelete(dialogState.deletingItem.id, { onSuccess: closeDeleteDialog });
+    permanentDelete(
+      { id: dialogState.deletingItem.id, version: dialogState.deletingItem.version },
+      { onSuccess: closeDeleteDialog },
+    );
   }, [dialogState.deletingItem, permanentDelete, closeDeleteDialog]);
 
   const handleRestore = useCallback(() => {

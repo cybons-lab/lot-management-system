@@ -1637,3 +1637,72 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 - **関連ドキュメント**: [supplier-filter-set-implementation-plan.md](file:///Users/kazuya/dev/projects/lot-management-system/docs/project/supplier-filter-set-implementation-plan.md)
 
 ---
+
+---
+
+## 4. 優先度: 低（将来対応・技術的負債）
+
+### 4-X. 楽観的ロックの残りテーブル対応
+
+**優先度:** 低（実際に競合が発生してから対応）
+**作成:** 2026-02-05
+**カテゴリ:** 排他制御・データ整合性
+**工数:** 1-2日
+
+**背景:**
+Phase 4で SmartRead/OCR系と主要マスタ系に楽観的ロック (`version` カラム) を導入済み。残りの低頻度更新テーブルは、実際に競合が発生した際に追加対応する。
+
+**実装済み (18テーブル):**
+- SmartRead/OCR系: `smartread_tasks`, `smartread_wide_data`, `smartread_long_data`, `ocr_result_edits`
+- マスタ系: `warehouses`, `suppliers`, `customers`, `delivery_places`, `makers`, `supplier_items`, `customer_items`, `product_mappings`, `product_uom_conversions`, `customer_item_jiku_mappings`, `customer_item_delivery_settings`, `warehouse_delivery_routes`, `shipping_master_raw`, `shipping_master_curated`
+- 割当系: `user_supplier_assignments`
+
+**未対応テーブルの選定基準:**
+以下の条件を**すべて満たす**テーブルを対象に、実際に競合が発生したら `version` を追加:
+
+1. **更新頻度:** 低頻度（週1回未満）だが、将来的に複数ユーザーが編集する可能性がある
+2. **データ重要度:** 上書きされると業務に影響がある
+3. **現状の制御:** 楽観ロックも悲観ロックもない
+
+**未対応テーブル候補（優先順位順）:**
+
+#### Phase 3候補 (管理画面の同時編集対策)
+以下は管理画面で編集されるが、現状は単一管理者のみのため優先度低:
+- `product_warehouse` - 製品倉庫マッピング
+- `layer_code_mappings` - 層別コードマッピング（makersに統合予定？）
+- `users`, `roles`, `user_roles` - ユーザー・権限管理
+- `system_configs` - システム設定
+- `holiday_calendars`, `company_calendars`, `original_delivery_calendars` - カレンダー設定
+- `missing_mapping_events` - マッピング欠損イベント
+- `sap_connections` - SAP接続設定
+- `business_rules` - ビジネスルール
+
+#### Phase 4候補 (予測/入荷系)
+バッチ処理が主だが、手動編集もあり得る:
+- `inbound_plans`, `inbound_plan_lines` - 入荷予定
+- `expected_lots` - 予定ロット
+
+#### Phase 5候補 (引当系 - 検討)
+現在は悲観ロック (`FOR UPDATE`) で保護されているため、楽観ロックは不要の可能性:
+- `withdrawals`, `withdrawal_lines` - 出庫
+
+#### 対象外（追記のみ、またはバッチ専用）
+以下は楽観ロック不要:
+- 追記のみ: `stock_history`, `allocation_traces`, `lot_reservation_history`, `forecast_history`, `rpa_run_events`, `rpa_run_item_attempts`, `rpa_run_fetches`, `sap_fetch_logs`, `system_client_logs`, `operation_logs`, `master_change_logs`, `server_logs`, `seed_snapshots`
+- バッチ専用: `forecast_current`, `material_order_forecasts`, `sap_material_cache`, `allocation_suggestions`
+- 低頻度: `notifications` (既読更新のみ)
+
+**実装時の作業:**
+1. マイグレーションで `version` カラム追加
+2. モデルに `version` フィールド追加
+3. 更新/削除APIで `optimistic_lock.py` ヘルパー使用
+4. フロントエンドで `version` を保持・送信
+5. 409エラーハンドリング追加
+
+**関連ドキュメント:**
+- `docs/project/CONCURRENCY_CONTROL_AUDIT.md` - 全テーブル調査結果
+- `backend/app/application/services/common/optimistic_lock.py` - ヘルパー関数
+
+**元:** Phase 4実装完了後の残課題 (2026-02-05)
+
+---

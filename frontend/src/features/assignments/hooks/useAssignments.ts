@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 import { toast } from "sonner";
 
 import {
@@ -37,6 +38,8 @@ export function useSupplierAssignments(supplierId: number) {
 
 export function useAssignmentMutations() {
   const queryClient = useQueryClient();
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
 
   const createMutation = useMutation({
     mutationFn: createAssignment,
@@ -62,19 +65,31 @@ export function useAssignmentMutations() {
       toast.success("担当割り当てを更新しました");
     },
     onError: async (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: assignmentKeys.all });
+        queryClient.invalidateQueries({ queryKey: ["user-suppliers"] });
+        return;
+      }
       const message = await getUserFriendlyMessageAsync(error);
       toast.error(`担当割り当ての更新に失敗しました: ${message}`);
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: deleteAssignment,
+    mutationFn: ({ id, version }: { id: number; version: number }) => deleteAssignment(id, version),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assignmentKeys.all });
       queryClient.invalidateQueries({ queryKey: ["user-suppliers"] });
       toast.success("担当割り当てを削除しました");
     },
     onError: async (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: assignmentKeys.all });
+        queryClient.invalidateQueries({ queryKey: ["user-suppliers"] });
+        return;
+      }
       const message = await getUserFriendlyMessageAsync(error);
       toast.error(`担当割り当ての削除に失敗しました: ${message}`);
     },

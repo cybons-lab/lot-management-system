@@ -46,6 +46,7 @@ export interface OcrResultItem {
   manual_material_code: string | null;
   manual_delivery_quantity: string | null;
   manual_updated_at: string | null;
+  manual_version: number;
 
   // マスタ由来
   master_id: number | null;
@@ -98,6 +99,7 @@ interface OcrResultListResponse {
 }
 
 export interface OcrResultEditPayload {
+  version: number;
   lot_no_1?: string | null;
   quantity_1?: string | null;
   lot_no_2?: string | null;
@@ -118,6 +120,7 @@ export interface OcrResultEditPayload {
 export interface OcrResultEditResponse {
   id: number;
   smartread_long_data_id: number;
+  version: number;
   lot_no_1: string | null;
   quantity_1: string | null;
   lot_no_2: string | null;

@@ -39,6 +39,7 @@ def list_uom_conversions(
         ProductUomConversion.supplier_item_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
+        ProductUomConversion.version,
         SupplierItem.maker_part_no,
         SupplierItem.display_name,
         ProductUomConversion.valid_to,
@@ -63,9 +64,33 @@ def list_uom_conversions(
             "product_code": r.maker_part_no,
             "product_name": r.display_name,
             "valid_to": r.valid_to,
+            "version": r.version,
         }
         for r in results
     ]
+
+
+@router.get("/{conversion_id}")
+def get_uom_conversion(conversion_id: int, db: Session = Depends(get_db)):
+    """Get a single UOM conversion by ID."""
+    service = UomConversionService(db)
+    conversion = service.get_by_id(conversion_id)
+    if not conversion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"UOM conversion with ID {conversion_id} not found",
+        )
+    return {
+        "conversion_id": conversion.conversion_id,
+        "supplier_item_id": conversion.supplier_item_id,
+        "external_unit": conversion.external_unit,
+        "conversion_factor": float(conversion.factor),
+        "remarks": None,
+        "product_code": conversion.supplier_item.maker_part_no,
+        "product_name": conversion.supplier_item.display_name,
+        "valid_to": conversion.valid_to,
+        "version": conversion.version,
+    }
 
 
 @router.get("/export/download")
@@ -145,6 +170,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
         "product_code": product.maker_part_no,
         "product_name": product.display_name,
         "valid_to": new_conversion.valid_to,
+        "version": new_conversion.version,
     }
 
 
@@ -188,6 +214,7 @@ def update_uom_conversion(
 def delete_uom_conversion(
     conversion_id: int,
     end_date: date | None = Query(None),
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
 ):
     """Delete a UOM conversion by ID.
@@ -195,16 +222,18 @@ def delete_uom_conversion(
     Args:
         conversion_id: ID of the conversion to delete
         end_date: Optional end date for validity
+        version: Version for optimistic lock check
         db: Database session
     """
     service = UomConversionService(db)
-    service.delete_by_id(conversion_id, end_date)
+    service.delete_by_id(conversion_id, end_date, expected_version=version)
     return None
 
 
 @router.delete("/{conversion_id}/permanent", status_code=204)
 def permanent_delete_uom_conversion(
     conversion_id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
@@ -213,10 +242,11 @@ def permanent_delete_uom_conversion(
     Args:
         conversion_id: ID of the conversion to delete
         current_user: Authenticated admin user
+        version: Version for optimistic lock check
         db: Database session
     """
     service = UomConversionService(db)
-    service.permanent_delete_by_id(conversion_id)
+    service.permanent_delete_by_id(conversion_id, expected_version=version)
     return None
 
 

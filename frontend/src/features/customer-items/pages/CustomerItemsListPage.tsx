@@ -6,11 +6,12 @@
  *
  * Updated: サロゲートキー（id）ベースに移行
  */
+import { HTTPError } from "ky";
 import { Package, Plus, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import type { CustomerItem, UpdateCustomerItemRequest } from "../api";
+import type { CreateCustomerItemRequest, CustomerItem, UpdateCustomerItemRequest } from "../api";
 import { CustomerItemBulkImportDialog } from "../components/CustomerItemBulkImportDialog";
 import { CustomerItemDetailDialog } from "../components/CustomerItemDetailDialog";
 import { CustomerItemExportButton } from "../components/CustomerItemExportButton";
@@ -105,12 +106,13 @@ export function CustomerItemsListPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdate = (data: UpdateCustomerItemRequest) => {
+  const handleUpdate = (data: CreateCustomerItemRequest) => {
     if (!editingItem) return;
+    const updateData: UpdateCustomerItemRequest = { ...data, version: editingItem.version };
     updateCustomerItem(
       {
         id: editingItem.id,
-        data,
+        data: updateData,
       },
       {
         onSuccess: () => {
@@ -119,6 +121,8 @@ export function CustomerItemsListPage() {
           toast.success("得意先品番マッピングを更新しました");
         },
         onError: (error) => {
+          const isConflict = error instanceof HTTPError && error.response?.status === 409;
+          if (isConflict) return;
           toast.error(`更新に失敗しました: ${error.message}`);
         },
       },
@@ -127,13 +131,13 @@ export function CustomerItemsListPage() {
 
   const executeSoftDelete = (endDate: string | null) => {
     if (!deletingItem) return;
-    handleSoftDelete(deletingItem.id, endDate || undefined);
+    handleSoftDelete(deletingItem.id, deletingItem.version, endDate || undefined);
     closeDeleteDialog();
   };
 
   const executePermanentDelete = () => {
     if (!deletingItem) return;
-    handlePermanentDelete(deletingItem.id);
+    handlePermanentDelete(deletingItem.id, deletingItem.version);
     closeDeleteDialog();
   };
 
@@ -175,16 +179,20 @@ export function CustomerItemsListPage() {
 
   // 管理者: 一括物理削除
   const executeBulkPermanentDelete = async () => {
-    const ids = Array.from(selectedIds).map((id) => ({ id: Number(id) }));
-    await handleBulkPermanentDelete(ids);
+    const items = filteredItems
+      .filter((item) => selectedIds.has(getItemKey(item)))
+      .map((item) => ({ id: item.id, version: item.version }));
+    await handleBulkPermanentDelete(items);
     setSelectedIds(new Set());
     setIsBulkDeleteDialogOpen(false);
   };
 
   // 非管理者: 一括論理削除
   const executeBulkSoftDelete = async (endDate: string | null) => {
-    const ids = Array.from(selectedIds).map((id) => ({ id: Number(id) }));
-    await handleBulkSoftDelete(ids, endDate ?? undefined);
+    const items = filteredItems
+      .filter((item) => selectedIds.has(getItemKey(item)))
+      .map((item) => ({ id: item.id, version: item.version }));
+    await handleBulkSoftDelete(items, endDate ?? undefined);
     setSelectedIds(new Set());
     setIsBulkDeleteDialogOpen(false);
   };

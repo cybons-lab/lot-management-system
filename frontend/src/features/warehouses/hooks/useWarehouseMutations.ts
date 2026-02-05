@@ -2,6 +2,7 @@
  * useWarehouseMutations - 倉庫のCRUD + Bulk Mutations
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 import { toast } from "sonner";
 
 import {
@@ -30,6 +31,8 @@ export function useCreateWarehouse() {
 
 export function useUpdateWarehouse() {
   const queryClient = useQueryClient();
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
   return useMutation({
     mutationFn: ({ warehouseCode, data }: { warehouseCode: string; data: WarehouseUpdate }) =>
       updateWarehouse(warehouseCode, data),
@@ -37,16 +40,31 @@ export function useUpdateWarehouse() {
       queryClient.invalidateQueries({ queryKey: warehousesQueryKey });
       toast.success("倉庫を更新しました");
     },
+    onError: (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: warehousesQueryKey });
+      }
+    },
   });
 }
 
 export function useDeleteWarehouse() {
   const queryClient = useQueryClient();
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
   return useMutation({
-    mutationFn: (warehouseCode: string) => deleteWarehouse(warehouseCode),
+    mutationFn: ({ warehouseCode, version }: { warehouseCode: string; version: number }) =>
+      deleteWarehouse(warehouseCode, version),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: warehousesQueryKey });
       toast.success("倉庫を削除しました");
+    },
+    onError: (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: warehousesQueryKey });
+      }
     },
   });
 }

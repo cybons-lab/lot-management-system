@@ -18,6 +18,7 @@ import { http } from "@/shared/api/http-client";
  */
 export interface CustomerItem {
   id: number;
+  version: number;
   customer_id: number;
   customer_code: string;
   customer_name: string;
@@ -61,6 +62,7 @@ export interface UpdateCustomerItemRequest {
   pack_unit?: string | null;
   pack_quantity?: number | null;
   special_instructions?: string | null;
+  version: number;
 }
 
 export interface CustomerItemsListParams {
@@ -138,9 +140,10 @@ export const updateCustomerItem = (id: number, data: UpdateCustomerItemRequest) 
  * Delete customer item by ID (Soft delete)
  * @endpoint DELETE /customer-items/{id}
  */
-export const deleteCustomerItem = (id: number, endDate?: string) => {
+export const deleteCustomerItem = (id: number, version: number, endDate?: string) => {
   const searchParams = new URLSearchParams();
   if (endDate) searchParams.append("end_date", endDate);
+  searchParams.append("version", String(version));
   const queryString = searchParams.toString();
   return http.delete(`masters/customer-items/${id}${queryString ? "?" + queryString : ""}`);
 };
@@ -149,8 +152,8 @@ export const deleteCustomerItem = (id: number, endDate?: string) => {
  * Permanently delete customer item by ID
  * @endpoint DELETE /customer-items/{id}/permanent
  */
-export const permanentDeleteCustomerItem = (id: number) => {
-  return http.delete(`masters/customer-items/${id}/permanent`);
+export const permanentDeleteCustomerItem = (id: number, version: number) => {
+  return http.delete(`masters/customer-items/${id}/permanent?version=${version}`);
 };
 
 /**

@@ -5,9 +5,15 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, 
 from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    update_with_version,
+)
 from app.application.services.shipping_master import ShippingMasterService
 from app.application.services.shipping_master.shipping_master_sync_service import SyncPolicy
 from app.core.database import get_db
+from app.core.time_utils import utcnow
+from app.infrastructure.persistence.models.shipping_master_models import ShippingMasterCurated
 from app.presentation.schemas.shipping_master_schema import (
     ShippingMasterCuratedCreate,
     ShippingMasterCuratedListResponse,
@@ -86,46 +92,33 @@ async def update_shipping_master(
     service: ShippingMasterService = Depends(get_service),
 ) -> ShippingMasterCuratedResponse:
     """出荷用マスタを更新（楽観的ロック対応）."""
-    # 楽観的ロックチェック
-    if data.expected_updated_at:
-        current = service.get_curated_by_id(master_id)
-        if not current:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"出荷用マスタ ID={master_id} が見つかりません",
-            )
-
-        # updated_atの比較（ミリ秒単位で比較）
-        if current.updated_at.replace(microsecond=0) != data.expected_updated_at.replace(
-            microsecond=0
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="このデータは他のユーザーによって更新されています。ページを再読み込みして最新のデータを取得してください。",
-            )
-
-    update_dict = data.model_dump(exclude_unset=True, exclude={"expected_updated_at"})
-    updated = service.update_curated(master_id, update_dict)
-    if not updated:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"出荷用マスタ ID={master_id} が見つかりません",
-        )
+    update_dict = data.model_dump(exclude_unset=True, exclude={"version"})
+    update_dict["updated_at"] = utcnow()
+    updated = update_with_version(
+        service.session,
+        ShippingMasterCurated,
+        filters=[ShippingMasterCurated.id == master_id],
+        update_values=update_dict,
+        expected_version=data.version,
+        not_found_detail=f"出荷用マスタ ID={master_id} が見つかりません",
+    )
     return ShippingMasterCuratedResponse.model_validate(updated)
 
 
 @router.delete("/{master_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_shipping_master(
     master_id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     service: ShippingMasterService = Depends(get_service),
 ) -> None:
     """出荷用マスタを削除."""
-    deleted = service.delete_curated(master_id)
-    if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"出荷用マスタ ID={master_id} が見つかりません",
-        )
+    hard_delete_with_version(
+        service.session,
+        ShippingMasterCurated,
+        filters=[ShippingMasterCurated.id == master_id],
+        expected_version=version,
+        not_found_detail=f"出荷用マスタ ID={master_id} が見つかりません",
+    )
 
 
 @router.delete("/admin/reset", status_code=status.HTTP_204_NO_CONTENT)

@@ -11,6 +11,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     UniqueConstraint,
     func,
     text,
@@ -65,6 +66,9 @@ class UserSupplierAssignment(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
     )
 
     __table_args__ = (

@@ -104,6 +104,7 @@ export interface SmartReadLongData {
   status: string;
   error_reason: string | null;
   created_at: string;
+  version: number;
 }
 
 export interface SmartReadLongDataListResponse {
@@ -123,6 +124,7 @@ export interface SmartReadResetResponse {
 export interface SmartReadCsvDataResponse {
   wide_data: Record<string, unknown>[];
   long_data: Record<string, unknown>[];
+  data_version: number | null;
   errors: SmartReadValidationError[];
   filename: string | null;
 }
@@ -142,6 +144,7 @@ export interface SmartReadTaskDetail {
   synced_at: string | null;
   skip_today: boolean;
   created_at: string;
+  data_version: number;
 }
 
 export interface SmartReadRequest {
@@ -167,6 +170,7 @@ export interface SmartReadSaveLongDataRequest {
   config_id: number;
   task_id: string;
   task_date: string;
+  data_version: number;
   wide_data: Record<string, unknown>[];
   long_data: Record<string, unknown>[];
   filename: string | null;
@@ -177,6 +181,7 @@ export interface SmartReadSaveLongDataResponse {
   saved_wide_count: number;
   saved_long_count: number;
   message: string;
+  data_version: number;
 }
 
 export interface SmartReadPadRunStartRequest {

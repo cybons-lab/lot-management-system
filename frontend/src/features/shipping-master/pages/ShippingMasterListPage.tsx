@@ -3,6 +3,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 import { Plus, Download, Trash2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
@@ -54,11 +55,18 @@ export function ShippingMasterListPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await shippingMasterApi.delete(id);
+    mutationFn: async ({ id, version }: { id: number; version: number }) => {
+      await shippingMasterApi.delete(id, version);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
+    },
+    onError: (error: Error) => {
+      const isConflict = error instanceof HTTPError && error.response?.status === 409;
+      if (isConflict) {
+        alert("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
+      }
     },
   });
 
@@ -75,7 +83,7 @@ export function ShippingMasterListPage() {
 
   const handleDelete = (row: components["schemas"]["ShippingMasterCuratedResponse"]) => {
     if (window.confirm(`出荷用マスタデータ (ID: ${row.id}) を削除します。よろしいですか？`)) {
-      deleteMutation.mutate(row.id);
+      deleteMutation.mutate({ id: row.id, version: row.version });
     }
   };
 

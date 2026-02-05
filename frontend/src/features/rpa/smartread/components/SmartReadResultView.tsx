@@ -282,12 +282,14 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     longData,
     transformErrors,
     filename,
+    dataVersion,
     isInitialLoading,
     loadError,
     setWideData,
     setLongData,
     setTransformErrors,
     setFilename,
+    setDataVersion,
   } = useResultDataLoader({ configId, taskId });
 
   const syncMutation = useSyncTaskResults();
@@ -320,6 +322,7 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     setLongData(result.long_data as AnyRecord[]);
     setTransformErrors(result.errors);
     setFilename(result.filename);
+    setDataVersion(result.data_version ?? null);
 
     // 横持ちがあれば横持ちタブ、縦持ちがあれば縦持ちタブに切り替え
     if (result.long_data.length > 0) {
@@ -327,7 +330,16 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     } else if (result.wide_data.length > 0) {
       setActiveTab("wide");
     }
-  }, [configId, setFilename, setLongData, setTransformErrors, setWideData, syncMutation, taskId]);
+  }, [
+    configId,
+    setDataVersion,
+    setFilename,
+    setLongData,
+    setTransformErrors,
+    setWideData,
+    syncMutation,
+    taskId,
+  ]);
 
   useEffect(() => {
     hasAutoSynced.current = false;
@@ -384,6 +396,7 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
       setLongData(result.long_data as AnyRecord[]);
       setTransformErrors(result.errors);
       setFilename(result.filename);
+      setDataVersion(result.data_version ?? null);
       if (result.wide_data.length > 0) {
         setActiveTab("wide");
       }
@@ -400,6 +413,7 @@ export function SmartReadResultView({ configId, taskId }: SmartReadResultViewPro
     taskId,
     wideData,
     filename,
+    dataVersion,
     onSuccess: (long, errors) => {
       setLongData(long);
       setTransformErrors(errors);

@@ -4,6 +4,7 @@
 
 export interface SupplierAssignment {
   id: number;
+  version: number;
   supplier_id: number;
   supplier_code: string;
   supplier_name: string;

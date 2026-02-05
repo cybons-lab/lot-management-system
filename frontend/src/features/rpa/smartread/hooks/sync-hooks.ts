@@ -24,6 +24,7 @@ interface SyncResult {
   long_data: Array<Record<string, any>>;
   errors: Array<any>;
   filename: string | null;
+  data_version?: number | null;
   source: "cache" | "server";
   state: "SUCCESS" | "PENDING" | "FAILED" | "EMPTY";
   message?: string;
@@ -53,6 +54,7 @@ async function checkIdbCache(
         long_data: cached.long_data,
         errors: cached.errors,
         filename: cached.filename,
+        data_version: cached.data_version ?? null,
         source: "cache" as const,
       };
     }
@@ -71,6 +73,7 @@ async function cacheToIdb(
     errors: unknown[];
     filename: string | null;
     task_date?: string;
+    data_version?: number | null;
   },
 ) {
   if (res.wide_data.length === 0) return;
@@ -85,6 +88,7 @@ async function cacheToIdb(
       errors: res.errors as Array<any>,
       filename: res.filename,
       task_date: res.task_date,
+      data_version: res.data_version ?? undefined,
       saved_to_db: true,
     });
   } catch {
@@ -181,6 +185,7 @@ export function useSyncTaskResults() {
               long_data: [],
               errors: [],
               filename: null,
+              data_version: null,
               source: "server" as const,
               state: "PENDING" as const,
               message: body.message || "OCR処理中です...",
@@ -195,6 +200,7 @@ export function useSyncTaskResults() {
               long_data: [],
               errors: body.errors || [],
               filename: null,
+              data_version: null,
               source: "server" as const,
               state: "FAILED" as const,
               message: body.message || "処理に失敗しました",
@@ -208,6 +214,7 @@ export function useSyncTaskResults() {
               long_data: [],
               errors: [],
               filename: null,
+              data_version: body.data_version ?? null,
               source: "server" as const,
               state: "EMPTY" as const,
               message: body.message || "データがありません",

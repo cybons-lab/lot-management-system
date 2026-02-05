@@ -2855,6 +2855,7 @@ export interface paths {
      *     Args:
      *         delivery_place_id: 納入先ID
      *         end_date: 有効終了日（省略時は昨日）
+     *         version: Version for optimistic lock check
      *         db: データベースセッション
      *
      *     Returns:
@@ -2887,6 +2888,7 @@ export interface paths {
      *
      *     Args:
      *         delivery_place_id: 納入先ID
+     *         version: Version for optimistic lock check
      *         current_user: 認証済み管理者ユーザー
      *         db: データベースセッション
      *
@@ -3268,6 +3270,7 @@ export interface paths {
      *     Args:
      *         id: 仕入先品目ID
      *         end_date: 終了日（省略時は今日の日付）
+     *         version: Version for optimistic lock check
      *         db: データベースセッション
      *
      *     Returns:
@@ -3298,6 +3301,7 @@ export interface paths {
      *
      *     Args:
      *         id: 仕入先品目ID
+     *         version: Version for optimistic lock check
      *         current_user: 認証済み管理者ユーザー
      *         db: データベースセッション
      *
@@ -3374,6 +3378,48 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/uom-conversions/{conversion_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Uom Conversion
+     * @description Get a single UOM conversion by ID.
+     */
+    get: operations["get_uom_conversion_api_masters_uom_conversions__conversion_id__get"];
+    /**
+     * Update Uom Conversion
+     * @description Update a UOM conversion by ID.
+     *
+     *     Args:
+     *         conversion_id: ID of the conversion to update
+     *         data: Update data (factor)
+     *         db: Database session
+     *
+     *     Returns:
+     *         Updated UOM conversion
+     */
+    put: operations["update_uom_conversion_api_masters_uom_conversions__conversion_id__put"];
+    post?: never;
+    /**
+     * Delete Uom Conversion
+     * @description Delete a UOM conversion by ID.
+     *
+     *     Args:
+     *         conversion_id: ID of the conversion to delete
+     *         end_date: Optional end date for validity
+     *         version: Version for optimistic lock check
+     *         db: Database session
+     */
+    delete: operations["delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/uom-conversions/export/download": {
     parameters: {
       query?: never;
@@ -3420,43 +3466,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/masters/uom-conversions/{conversion_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update Uom Conversion
-     * @description Update a UOM conversion by ID.
-     *
-     *     Args:
-     *         conversion_id: ID of the conversion to update
-     *         data: Update data (factor)
-     *         db: Database session
-     *
-     *     Returns:
-     *         Updated UOM conversion
-     */
-    put: operations["update_uom_conversion_api_masters_uom_conversions__conversion_id__put"];
-    post?: never;
-    /**
-     * Delete Uom Conversion
-     * @description Delete a UOM conversion by ID.
-     *
-     *     Args:
-     *         conversion_id: ID of the conversion to delete
-     *         end_date: Optional end date for validity
-     *         db: Database session
-     */
-    delete: operations["delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/masters/uom-conversions/{conversion_id}/permanent": {
     parameters: {
       query?: never;
@@ -3474,6 +3483,7 @@ export interface paths {
      *     Args:
      *         conversion_id: ID of the conversion to delete
      *         current_user: Authenticated admin user
+     *         version: Version for optimistic lock check
      *         db: Database session
      */
     delete: operations["permanent_delete_uom_conversion_api_masters_uom_conversions__conversion_id__permanent_delete"];
@@ -3861,6 +3871,7 @@ export interface paths {
      *     Args:
      *         id: 得意先品番マッピングID
      *         end_date: 無効化日（指定がない場合は即時）
+     *         version: Version for optimistic lock check
      *         db: データベースセッション
      *
      *     Raises:
@@ -3888,6 +3899,7 @@ export interface paths {
      *
      *     Args:
      *         id: 得意先品番マッピングID
+     *         version: Version for optimistic lock check
      *         current_user: 認証済み管理者ユーザー
      *         db: データベースセッション
      *
@@ -10539,12 +10551,19 @@ export interface components {
       updated_at: string;
       /** Delivery Place Name */
       delivery_place_name?: string | null;
+      /** Version */
+      version: number;
     };
     /**
      * CustomerItemDeliverySettingUpdate
      * @description Schema for updating a CustomerItemDeliverySetting.
      */
     CustomerItemDeliverySettingUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /** Delivery Place Id */
       delivery_place_id?: number | null;
       /** Jiku Code */
@@ -10703,12 +10722,19 @@ export interface components {
        * Format: date
        */
       valid_to: string;
+      /** Version */
+      version: number;
     };
     /**
      * CustomerItemUpdate
      * @description Schema for updating a customer item mapping.
      */
     CustomerItemUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /**
        * Customer Part No
        * @description 得意先品番
@@ -10779,12 +10805,19 @@ export interface components {
        * Format: date
        */
       valid_to: string;
+      /** Version */
+      version: number;
     };
     /**
      * CustomerUpdate
      * @description Update customer request.
      */
     CustomerUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /** Customer Code */
       customer_code?: string | null;
       /** Customer Name */
@@ -10983,12 +11016,19 @@ export interface components {
        * Format: date
        */
       valid_to: string;
+      /** Version */
+      version: number;
     };
     /**
      * DeliveryPlaceUpdate
      * @description Update delivery place request.
      */
     DeliveryPlaceUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /** Delivery Place Code */
       delivery_place_code?: string | null;
       /** Jiku Code */
@@ -12705,12 +12745,19 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /** Version */
+      version: number;
     };
     /**
      * MakerUpdateRequest
      * @description Maker update request schema.
      */
     MakerUpdateRequest: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /** Maker Name */
       maker_name?: string | null;
       /** Display Name */
@@ -13333,6 +13380,11 @@ export interface components {
      * @description OCR結果手入力の更新リクエスト.
      */
     OcrResultEditRequest: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /** Lot No 1 */
       lot_no_1?: string | null;
       /** Quantity 1 */
@@ -13375,6 +13427,8 @@ export interface components {
       id: number;
       /** Smartread Long Data Id */
       smartread_long_data_id: number;
+      /** Version */
+      version: number;
       /** Lot No 1 */
       lot_no_1?: string | null;
       /** Quantity 1 */
@@ -13496,6 +13550,11 @@ export interface components {
       manual_material_code?: string | null;
       /** Manual Updated At */
       manual_updated_at?: string | null;
+      /**
+       * Manual Version
+       * @default 0
+       */
+      manual_version: number;
       /** Master Id */
       master_id?: number | null;
       /** Customer Name */
@@ -14543,12 +14602,19 @@ export interface components {
        * Format: date
        */
       valid_to: string;
+      /** Version */
+      version: number;
     };
     /**
      * ProductMappingUpdate
      * @description Update product mapping request.
      */
     ProductMappingUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /** Customer Id */
       customer_id?: number | null;
       /** Customer Part Code */
@@ -16262,12 +16328,19 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /** Version */
+      version: number;
     };
     /**
      * ShippingMasterCuratedUpdate
      * @description 出荷用マスタ更新リクエスト.
      */
     ShippingMasterCuratedUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /** Warehouse Code */
       warehouse_code?: string | null;
       /** Customer Name */
@@ -16308,11 +16381,6 @@ export interface components {
       has_order?: boolean | null;
       /** Remarks */
       remarks?: string | null;
-      /**
-       * Expected Updated At
-       * @description 楽観的ロック用の期待される更新日時
-       */
-      expected_updated_at?: string | null;
     };
     /**
      * ShippingMasterImportResponse
@@ -16513,6 +16581,11 @@ export interface components {
         [key: string]: unknown;
       }[];
       /**
+       * Data Version
+       * @description タスクデータのバージョン（楽観的ロック用）
+       */
+      data_version?: number | null;
+      /**
        * Errors
        * @description バリデーションエラー
        */
@@ -16662,6 +16735,8 @@ export interface components {
       error_reason: string | null;
       /** Created At */
       created_at: string;
+      /** Version */
+      version: number;
     };
     /**
      * SmartReadPadRunListItem
@@ -16988,6 +17063,11 @@ export interface components {
        */
       task_date: string;
       /**
+       * Data Version
+       * @description タスクデータのバージョン（楽観的ロック用）
+       */
+      data_version: number;
+      /**
        * Wide Data
        * @description 横持ちデータ
        */
@@ -17032,6 +17112,11 @@ export interface components {
        * @description メッセージ
        */
       message: string;
+      /**
+       * Data Version
+       * @description 更新後のタスクデータバージョン
+       */
+      data_version: number;
     };
     /**
      * SmartReadSkipTodayRequest
@@ -17067,6 +17152,8 @@ export interface components {
       skip_today: boolean;
       /** Created At */
       created_at: string;
+      /** Data Version */
+      data_version: number;
     };
     /**
      * SmartReadTaskListResponse
@@ -17458,12 +17545,19 @@ export interface components {
        * Format: date
        */
       valid_to: string;
+      /** Version */
+      version: number;
     };
     /**
      * SupplierItemUpdate
      * @description Payload to partially update a supplier item.
      */
     SupplierItemUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /**
        * Maker Part No
        * @description メーカー品番
@@ -17556,12 +17650,19 @@ export interface components {
        * Format: date
        */
       valid_to: string;
+      /** Version */
+      version: number;
     };
     /**
      * SupplierUpdate
      * @description Update supplier request.
      */
     SupplierUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /** Supplier Code */
       supplier_code?: string | null;
       /** Supplier Name */
@@ -17811,12 +17912,19 @@ export interface components {
        * Format: date
        */
       valid_to: string;
+      /** Version */
+      version: number;
     };
     /**
      * UomConversionUpdate
      * @description Schema for updating a UOM conversion.
      */
     UomConversionUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /**
        * Factor
        * @description 換算係数
@@ -17926,6 +18034,8 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /** Version */
+      version: number;
       /** Username */
       username?: string | null;
       /** User Display Name */
@@ -17940,6 +18050,8 @@ export interface components {
      * @description Schema for updating a user-supplier assignment.
      */
     UserSupplierAssignmentUpdate: {
+      /** Version */
+      version: number;
       /** Is Primary */
       is_primary?: boolean | null;
     };
@@ -18177,6 +18289,8 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /** Version */
+      version: number;
       /** Warehouse Code */
       warehouse_code?: string | null;
       /** Warehouse Name */
@@ -18195,6 +18309,11 @@ export interface components {
      * @description Update warehouse delivery route request.
      */
     WarehouseDeliveryRouteUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /**
        * Transport Lead Time Days
        * @description 輸送リードタイム（日）
@@ -18252,12 +18371,19 @@ export interface components {
        * Format: date
        */
       valid_to: string;
+      /** Version */
+      version: number;
     };
     /**
      * WarehouseUpdate
      * @description Update warehouse request.
      */
     WarehouseUpdate: {
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       */
+      version: number;
       /** Warehouse Code */
       warehouse_code?: string | null;
       /** Warehouse Name */
@@ -21004,7 +21130,10 @@ export interface operations {
   };
   delete_maker_api_makers__maker_id__delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         maker_id: number;
@@ -22324,9 +22453,11 @@ export interface operations {
   };
   delete_customer_api_masters_customers__customer_code__delete: {
     parameters: {
-      query?: {
+      query: {
         /** @description End date for soft delete */
         end_date?: string | null;
+        /** @description 楽観的ロック用バージョン */
+        version: number;
       };
       header?: never;
       path: {
@@ -22356,7 +22487,10 @@ export interface operations {
   };
   permanent_delete_customer_api_masters_customers__customer_code__permanent_delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         customer_code: string;
@@ -22647,9 +22781,11 @@ export interface operations {
   };
   delete_delivery_place_api_masters_delivery_places__delivery_place_id__delete: {
     parameters: {
-      query?: {
+      query: {
         /** @description Valid until date (defaults to yesterday) */
         end_date?: string | null;
+        /** @description 楽観的ロック用バージョン */
+        version: number;
       };
       header?: never;
       path: {
@@ -22679,7 +22815,10 @@ export interface operations {
   };
   permanent_delete_delivery_place_api_masters_delivery_places__delivery_place_id__permanent_delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         delivery_place_id: number;
@@ -22935,9 +23074,11 @@ export interface operations {
   };
   delete_supplier_api_masters_suppliers__supplier_code__delete: {
     parameters: {
-      query?: {
+      query: {
         /** @description End date for soft delete. Defaults to today. */
         end_date?: string | null;
+        /** @description 楽観的ロック用バージョン */
+        version: number;
       };
       header?: never;
       path: {
@@ -22967,7 +23108,10 @@ export interface operations {
   };
   permanent_delete_supplier_api_masters_suppliers__supplier_code__permanent_delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         supplier_code: string;
@@ -23224,8 +23368,10 @@ export interface operations {
   };
   delete_supplier_item_api_masters_supplier_items__id__delete: {
     parameters: {
-      query?: {
+      query: {
         end_date?: string | null;
+        /** @description 楽観的ロック用バージョン */
+        version: number;
       };
       header?: never;
       path: {
@@ -23255,7 +23401,10 @@ export interface operations {
   };
   permanent_delete_supplier_item_api_masters_supplier_items__id__permanent_delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         id: number;
@@ -23380,6 +23529,105 @@ export interface operations {
       };
     };
   };
+  get_uom_conversion_api_masters_uom_conversions__conversion_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversion_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_uom_conversion_api_masters_uom_conversions__conversion_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversion_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UomConversionUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UomConversionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete: {
+    parameters: {
+      query: {
+        end_date?: string | null;
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
+      header?: never;
+      path: {
+        conversion_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   export_uom_conversions_api_masters_uom_conversions_export_download_get: {
     parameters: {
       query?: {
@@ -23444,75 +23692,12 @@ export interface operations {
       };
     };
   };
-  update_uom_conversion_api_masters_uom_conversions__conversion_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        conversion_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UomConversionUpdate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UomConversionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete: {
-    parameters: {
-      query?: {
-        end_date?: string | null;
-      };
-      header?: never;
-      path: {
-        conversion_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
   permanent_delete_uom_conversion_api_masters_uom_conversions__conversion_id__permanent_delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         conversion_id: number;
@@ -23768,9 +23953,11 @@ export interface operations {
   };
   delete_warehouse_api_masters_warehouses__warehouse_code__delete: {
     parameters: {
-      query?: {
+      query: {
         /** @description End date for soft delete */
         end_date?: string | null;
+        /** @description 楽観的ロック用バージョン */
+        version: number;
       };
       header?: never;
       path: {
@@ -23800,7 +23987,10 @@ export interface operations {
   };
   permanent_delete_warehouse_api_masters_warehouses__warehouse_code__permanent_delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         warehouse_code: string;
@@ -24094,8 +24284,10 @@ export interface operations {
   };
   delete_customer_item_api_masters_customer_items__id__delete: {
     parameters: {
-      query?: {
+      query: {
         end_date?: string | null;
+        /** @description 楽観的ロック用バージョン */
+        version: number;
       };
       header?: never;
       path: {
@@ -24125,7 +24317,10 @@ export interface operations {
   };
   permanent_delete_customer_item_api_masters_customer_items__id__permanent_delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         id: number;
@@ -24318,7 +24513,10 @@ export interface operations {
   };
   delete_setting_api_masters_customer_item_delivery_settings__setting_id__delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         setting_id: number;
@@ -24582,7 +24780,10 @@ export interface operations {
   };
   delete_product_mapping_api_masters_product_mappings__mapping_id__delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         mapping_id: number;
@@ -24784,7 +24985,10 @@ export interface operations {
   };
   delete_route_api_masters_warehouse_delivery_routes__route_id__delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         route_id: number;
@@ -26146,7 +26350,10 @@ export interface operations {
   };
   delete_assignment_api_assignments__assignment_id__delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         assignment_id: number;
@@ -31199,7 +31406,10 @@ export interface operations {
   };
   delete_shipping_master_api_shipping_masters__master_id__delete: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 楽観的ロック用バージョン */
+        version: number;
+      };
       header?: never;
       path: {
         master_id: number;

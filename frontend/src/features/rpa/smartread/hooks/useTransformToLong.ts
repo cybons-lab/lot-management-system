@@ -18,6 +18,7 @@ interface UseTransformToLongParams {
   taskId: string;
   wideData: Record<string, unknown>[];
   filename: string | null;
+  dataVersion: number | null;
   onSuccess: (longData: Record<string, unknown>[], errors: SmartReadValidationError[]) => void;
 }
 
@@ -28,6 +29,7 @@ interface TransformData {
   longData: Record<string, unknown>[];
   errors: SmartReadValidationError[];
   filename: string | null;
+  dataVersion: number | null;
 }
 
 async function cacheToIDB(data: TransformData): Promise<string | null> {
@@ -42,6 +44,7 @@ async function cacheToIDB(data: TransformData): Promise<string | null> {
       long_data: data.longData,
       errors: data.errors,
       filename: data.filename,
+      data_version: data.dataVersion ?? 1,
       saved_to_db: false,
     });
     console.info(`[useTransformToLong] Cached transform result to IDB`);
@@ -59,6 +62,7 @@ async function saveToDatabase(data: Omit<TransformData, "errors">): Promise<void
     config_id: data.configId,
     task_id: data.taskId,
     task_date: today,
+    data_version: data.dataVersion ?? 1,
     wide_data: data.wideData,
     long_data: data.longData,
     filename: data.filename,
@@ -83,6 +87,7 @@ export function useTransformToLong({
   taskId,
   wideData,
   filename,
+  dataVersion,
   onSuccess,
 }: UseTransformToLongParams) {
   const [isTransforming, setIsTransforming] = useState(false);
@@ -117,6 +122,7 @@ export function useTransformToLong({
         longData: result.long_data,
         errors: result.errors,
         filename,
+        dataVersion,
       });
 
       // DBに保存
@@ -127,6 +133,7 @@ export function useTransformToLong({
           wideData,
           longData: result.long_data,
           filename,
+          dataVersion,
         });
         if (cacheId) {
           const { exportCache } = await import("../db/export-cache");

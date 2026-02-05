@@ -50,12 +50,13 @@ export function WarehouseDetailDialog({
 
   const handleUpdate = useCallback(
     (data: { warehouse_code: string; warehouse_name: string; warehouse_type: string }) => {
-      if (!warehouseCode) return;
+      if (!warehouseCode || !warehouse) return;
 
       const updateData: WarehouseUpdate = {
         warehouse_code: data.warehouse_code,
         warehouse_name: data.warehouse_name,
         warehouse_type: data.warehouse_type,
+        version: warehouse.version,
       };
       updateWarehouse(
         { id: warehouseCode, data: updateData },
@@ -66,12 +67,12 @@ export function WarehouseDetailDialog({
         },
       );
     },
-    [warehouseCode, updateWarehouse],
+    [warehouseCode, updateWarehouse, warehouse],
   );
 
   const handleConfirmDelete = useCallback(
     (endDate?: string | null) => {
-      if (!warehouseCode) return;
+      if (!warehouseCode || !warehouse) return;
 
       const onSuccess = () => {
         setIsDeleteDialogOpen(false);
@@ -79,12 +80,15 @@ export function WarehouseDetailDialog({
       };
 
       if (deleteType === "soft") {
-        softDelete({ id: warehouseCode, endDate: endDate || undefined }, { onSuccess });
+        softDelete(
+          { id: warehouseCode, version: warehouse.version, endDate: endDate || undefined },
+          { onSuccess },
+        );
       } else {
-        permanentDelete(warehouseCode, { onSuccess });
+        permanentDelete({ id: warehouseCode, version: warehouse.version }, { onSuccess });
       }
     },
-    [warehouseCode, deleteType, softDelete, permanentDelete, handleClose],
+    [warehouse, warehouseCode, deleteType, softDelete, permanentDelete, handleClose],
   );
 
   if (!warehouseCode && !open) return null;

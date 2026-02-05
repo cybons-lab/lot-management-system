@@ -2,6 +2,7 @@
  * Supplier Mutation Hooks
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 import { toast } from "sonner";
 
 import type { SupplierCreate, SupplierUpdate } from "../api";
@@ -25,6 +26,8 @@ export function useCreateSupplier() {
 
 export function useUpdateSupplier() {
   const queryClient = useQueryClient();
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
   return useMutation({
     mutationFn: ({ supplierCode, data }: { supplierCode: string; data: SupplierUpdate }) =>
       updateSupplier(supplierCode, data),
@@ -32,17 +35,32 @@ export function useUpdateSupplier() {
       queryClient.invalidateQueries({ queryKey: suppliersQueryKey });
       toast.success("仕入先を更新しました");
     },
+    onError: (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: suppliersQueryKey });
+      }
+    },
     // onError is handled by global MutationCache
   });
 }
 
 export function useDeleteSupplier() {
   const queryClient = useQueryClient();
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
   return useMutation({
-    mutationFn: (supplierCode: string) => deleteSupplier(supplierCode),
+    mutationFn: ({ supplierCode, version }: { supplierCode: string; version: number }) =>
+      deleteSupplier(supplierCode, version),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: suppliersQueryKey });
       toast.success("仕入先を削除しました");
+    },
+    onError: (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: suppliersQueryKey });
+      }
     },
     // onError is handled by global MutationCache
   });

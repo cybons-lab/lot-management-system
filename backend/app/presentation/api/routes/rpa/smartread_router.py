@@ -618,6 +618,7 @@ def get_managed_tasks(
             synced_at=t.synced_at.isoformat() if t.synced_at else None,
             skip_today=t.skip_today,
             created_at=t.created_at.isoformat(),
+            data_version=t.data_version,
         )
         for t in tasks
     ]
@@ -652,6 +653,7 @@ def update_skip_today(
         synced_at=task.synced_at.isoformat() if task.synced_at else None,
         skip_today=task.skip_today,
         created_at=task.created_at.isoformat(),
+        data_version=task.data_version,
     )
 
 
@@ -687,6 +689,7 @@ async def sync_task_results(
                 "requests_status": result.get("requests_status"),
                 "wide_data": [],
                 "long_data": [],
+                "data_version": None,
                 "errors": [],
                 "filename": None,
             },
@@ -703,6 +706,7 @@ async def sync_task_results(
                 "requests_status": result.get("requests_status"),
                 "wide_data": [],
                 "long_data": [],
+                "data_version": None,
                 "errors": [],
                 "filename": None,
             },
@@ -718,6 +722,7 @@ async def sync_task_results(
                 "message": result.get("message", "データがありません"),
                 "wide_data": [],
                 "long_data": [],
+                "data_version": result.get("data_version"),
                 "errors": [],
                 "filename": result.get("filename"),
             },
@@ -728,6 +733,7 @@ async def sync_task_results(
     return SmartReadCsvDataResponse(
         wide_data=result["wide_data"],
         long_data=result["long_data"],
+        data_version=result.get("data_version"),
         errors=[
             SmartReadValidationError(
                 row=e.row,
@@ -771,6 +777,33 @@ async def save_long_data(
 
     # 横持ち・縦持ちデータをDBに保存
     try:
+        # タスク作成/取得（バージョン確認用）
+        _ = service.get_or_create_task(
+            config_id=request.config_id,
+            task_id=task_id,
+            task_date=task_date,
+        )
+
+        new_version = service.bump_data_version(task_id, expected_version=request.data_version)
+        if new_version is None:
+            from sqlalchemy import select
+
+            from app.infrastructure.persistence.models.smartread_models import SmartReadTask
+
+            uow.session.rollback()
+            current_version = uow.session.execute(
+                select(SmartReadTask.data_version).where(SmartReadTask.task_id == task_id)
+            ).scalar_one_or_none()
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error": "OPTIMISTIC_LOCK_CONFLICT",
+                    "current_version": current_version,
+                    "expected_version": request.data_version,
+                    "message": "Data was modified by another user",
+                },
+            )
+
         service._save_wide_and_long_data(
             config_id=request.config_id,
             task_id=task_id,
@@ -787,6 +820,7 @@ async def save_long_data(
             saved_wide_count=len(request.wide_data),
             saved_long_count=len(request.long_data),
             message=f"{len(request.long_data)}件の縦持ちデータを保存しました",
+            data_version=new_version,
         )
     except Exception as e:
         logger.error(
@@ -962,6 +996,7 @@ def get_long_data(
                 status=d.status,
                 error_reason=d.error_reason,
                 created_at=d.created_at.isoformat(),
+                version=d.version,
             )
             for d in long_data
         ],

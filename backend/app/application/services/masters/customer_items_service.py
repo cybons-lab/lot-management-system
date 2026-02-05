@@ -12,6 +12,11 @@ from typing import cast
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    soft_delete_with_version,
+    update_with_version,
+)
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.masters_models import CustomerItem
 from app.presentation.schemas.masters.customer_items_schema import (
@@ -72,6 +77,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "created_at": item.created_at,
             "updated_at": item.updated_at,
             "valid_to": item.valid_to,
+            "version": item.version,
         }
 
     def create(self, item: CustomerItemCreate) -> dict:  # type: ignore[override]
@@ -162,6 +168,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 if r.CustomerItem.updated_at
                 else None,
                 "valid_to": r.CustomerItem.valid_to,
+                "version": r.CustomerItem.version,
             }
             for r in results
         ]
@@ -218,38 +225,40 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                     detail=f"得意先品番 '{item.customer_part_no}' は既に存在します。",
                 )
 
-        for key, value in item.model_dump(exclude_unset=True).items():
-            setattr(db_item, key, value)
-
-        db_item.updated_at = utcnow()
-        self.db.commit()
-        self.db.refresh(db_item)
-        return self._enrich_item(db_item)
-
-    def delete_by_id(self, item_id: int, end_date: date | None = None) -> bool:
-        """Soft delete a customer item mapping by ID."""
-        db_item = cast(
-            CustomerItem | None,
-            self.db.query(CustomerItem).filter(CustomerItem.id == item_id).first(),
+        update_data = item.model_dump(exclude_unset=True, exclude={"version"})
+        update_data["updated_at"] = utcnow()
+        updated = update_with_version(
+            self.db,
+            CustomerItem,
+            filters=[CustomerItem.id == item_id],
+            update_values=update_data,
+            expected_version=item.version,
+            not_found_detail="Customer item mapping not found",
         )
-        if not db_item:
-            return False
+        assert isinstance(updated, CustomerItem)
+        return self._enrich_item(updated)
 
-        db_item.soft_delete(end_date)
-        self.db.commit()
+    def delete_by_id(self, item_id: int, end_date: date | None, expected_version: int) -> bool:
+        """Soft delete a customer item mapping by ID with optimistic lock."""
+        soft_delete_with_version(
+            self.db,
+            CustomerItem,
+            filters=[CustomerItem.id == item_id],
+            expected_version=expected_version,
+            end_date=end_date,
+            not_found_detail="Customer item mapping not found",
+        )
         return True
 
-    def permanent_delete_by_id(self, item_id: int) -> bool:
-        """Permanently delete a customer item mapping by ID."""
-        db_item = cast(
-            CustomerItem | None,
-            self.db.query(CustomerItem).filter(CustomerItem.id == item_id).first(),
+    def permanent_delete_by_id(self, item_id: int, expected_version: int) -> bool:
+        """Permanently delete a customer item mapping by ID with optimistic lock."""
+        hard_delete_with_version(
+            self.db,
+            CustomerItem,
+            filters=[CustomerItem.id == item_id],
+            expected_version=expected_version,
+            not_found_detail="Customer item mapping not found",
         )
-        if not db_item:
-            return False
-
-        self.db.delete(db_item)
-        self.db.commit()
         return True
 
     def restore_by_id(self, item_id: int) -> dict | None:

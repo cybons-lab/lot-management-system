@@ -2,6 +2,7 @@ import { http } from "@/shared/api/http-client";
 
 export interface SupplierProduct {
   id: number;
+  version: number;
   supplier_id: number;
   maker_part_no: string;
   display_name: string;
@@ -30,6 +31,7 @@ export interface SupplierProductUpdate {
   base_unit?: string;
   lead_time_days?: number | null;
   notes?: string | null;
+  version: number;
 }
 
 const BASE_PATH = "masters/supplier-items";
@@ -54,8 +56,8 @@ export async function updateSupplierProduct(
   return http.put<SupplierProduct>(`${BASE_PATH}/${id}`, data);
 }
 
-export async function deleteSupplierProduct(id: number): Promise<void> {
-  return http.deleteVoid(`${BASE_PATH}/${id}`);
+export async function deleteSupplierProduct(id: number, version: number): Promise<void> {
+  return http.deleteVoid(`${BASE_PATH}/${id}?version=${version}`);
 }
 
 // Alias for convenience

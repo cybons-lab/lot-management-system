@@ -42,6 +42,12 @@ class SmartReadExportService(SmartReadBaseService):
 
         def get_config(self, config_id: int) -> SmartReadConfig | None: ...
 
+        def get_or_create_task(self, config_id: int, task_id: str, task_date: date) -> Any: ...
+
+        def bump_data_version(
+            self, task_id: str, expected_version: int | None = None
+        ) -> int | None: ...
+
     def export_to_json(
         self,
         data: list[dict[str, Any]],
@@ -337,10 +343,18 @@ class SmartReadExportService(SmartReadBaseService):
                 },
             )
 
+        data_version = None
+
         # DBに保存
         if save_to_db and wide_data:
             if task_date is None:
                 task_date = date.today()
+
+            self.get_or_create_task(
+                config_id=config_id,
+                task_id=task_id,
+                task_date=task_date,
+            )
 
             self._save_wide_and_long_data(
                 config_id=config_id,
@@ -351,6 +365,7 @@ class SmartReadExportService(SmartReadBaseService):
                 long_data=result.long_data,
                 filename=csv_filename,
             )
+            data_version = self.bump_data_version(task_id)
 
         # export_dirが設定されている場合、縦持ちデータをCSV出力
         config = self.get_config(config_id)
@@ -388,6 +403,7 @@ class SmartReadExportService(SmartReadBaseService):
             "long_data": result.long_data,
             "errors": result.errors,
             "filename": csv_filename,
+            "data_version": data_version,
         }
 
     def _calculate_row_fingerprint(self, row_data: dict[str, Any]) -> str:

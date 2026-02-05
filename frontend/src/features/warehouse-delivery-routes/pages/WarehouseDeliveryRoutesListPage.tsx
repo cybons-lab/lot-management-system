@@ -162,6 +162,7 @@ export function WarehouseDeliveryRoutesListPage() {
             transport_lead_time_days: data.transport_lead_time_days,
             is_active: data.is_active,
             notes: data.notes,
+            version: editingRoute.version,
           },
         },
         { onSuccess: () => setEditingRoute(null) },
@@ -172,7 +173,10 @@ export function WarehouseDeliveryRoutesListPage() {
 
   const handleDelete = useCallback(() => {
     if (!deletingRoute) return;
-    deleteRoute(deletingRoute.id, { onSuccess: () => setDeletingRoute(null) });
+    deleteRoute(
+      { id: deletingRoute.id, version: deletingRoute.version },
+      { onSuccess: () => setDeletingRoute(null) },
+    );
   }, [deleteRoute, deletingRoute]);
 
   if (isError) {

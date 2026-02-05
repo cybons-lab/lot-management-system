@@ -6,6 +6,11 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    soft_delete_with_version,
+    update_with_version,
+)
 from app.application.services.common.relation_check_service import (
     RelationCheckService,
 )
@@ -113,14 +118,28 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
                     detail=f"得意先コード '{payload.customer_code}' は既に存在します。",
                 )
 
-        updated_customer = self.update(customer.id, payload)
+        update_data = payload.model_dump(exclude_unset=True, exclude={"version"})
+        updated_customer = update_with_version(
+            self.db,
+            Customer,
+            filters=[Customer.id == customer.id],
+            update_values=update_data,
+            expected_version=payload.version,
+            not_found_detail="得意先が見つかりません",
+        )
+        assert isinstance(updated_customer, Customer)
         self._log_operation(
             user_id, "update", customer.id, payload.model_dump(exclude_unset=True, mode="json")
         )
         return updated_customer
 
     def delete_by_code(
-        self, code: str, *, end_date: date | None = None, user_id: int | None = None
+        self,
+        code: str,
+        *,
+        end_date: date | None = None,
+        expected_version: int,
+        user_id: int | None = None,
     ) -> None:
         """Soft delete customer by customer_code."""
         customer = self.get_by_code(code)
@@ -130,7 +149,14 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
         self._transition_customer_orders(customer.id)
 
         # Perform soft delete
-        self.delete(customer.id, end_date=end_date)
+        soft_delete_with_version(
+            self.db,
+            Customer,
+            filters=[Customer.id == customer.id],
+            expected_version=expected_version,
+            end_date=end_date,
+            not_found_detail="得意先が見つかりません",
+        )
 
         self._log_operation(
             user_id,
@@ -188,12 +214,16 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
                 order.status = "part_allocated"  # 混在状態
                 order.cancel_reason = "Related customer deleted (Partial)"
 
-    def hard_delete_by_code(self, code: str, *, user_id: int | None = None) -> None:
+    def hard_delete_by_code(
+        self, code: str, *, expected_version: int, user_id: int | None = None
+    ) -> None:
         """Permanently delete customer by customer_code.
 
         Only allowed if customer has no related data (orders, withdrawals, etc.).
 
         Args:
+            expected_version: Expected version for optimistic lock check
+            expected_version: Expected version for optimistic lock check
             code: Customer code
             user_id: User performing the action
 
@@ -214,7 +244,14 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
             )
 
         customer_id = customer.id
-        self.hard_delete(customer.id)
+        hard_delete_with_version(
+            self.db,
+            Customer,
+            filters=[Customer.id == customer.id],
+            expected_version=expected_version,
+            not_found_detail="得意先が見つかりません",
+            conflict_detail="この得意先は他のデータから参照されているため削除できません",
+        )
 
         self._log_operation(user_id, "delete", customer_id, {"type": "hard"})
 

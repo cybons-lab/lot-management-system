@@ -51,6 +51,7 @@ class SupplierItemCreate(SupplierItemBase):
 class SupplierItemUpdate(BaseModel):
     """Payload to partially update a supplier item."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     maker_part_no: str | None = Field(None, max_length=100, description="メーカー品番")
     display_name: str | None = Field(None, max_length=200, description="製品名")
     base_unit: str | None = Field(None, max_length=20, description="基本単位")
@@ -88,6 +89,7 @@ class SupplierItemResponse(ORMModel):
     created_at: datetime
     updated_at: datetime
     valid_to: date
+    version: int
 
 
 class SupplierItemListItem(BaseModel):
@@ -110,6 +112,7 @@ class SupplierItemListItem(BaseModel):
     supplier_code: str | None = None
     supplier_name: str | None = None
     valid_to: date
+    version: int
 
 
 # Backward compatibility aliases
