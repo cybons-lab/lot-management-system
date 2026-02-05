@@ -28,6 +28,7 @@ import {
   Network,
   Users,
   Bell,
+  Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -76,6 +77,12 @@ const businessNavItems: NavItem[] = [
     feature: "inventory",
   },
   {
+    title: "ロット管理（Excelビュー）",
+    href: ROUTES.INVENTORY.EXCEL_PORTAL,
+    icon: FileSpreadsheet,
+    feature: "excel_view",
+  },
+  {
     title: "受注管理",
     href: ROUTES.OCR_RESULTS.LIST, // OCR結果を受注管理として統合
     icon: ShoppingCart,
@@ -113,7 +120,7 @@ const automationNavItems: NavItem[] = [
   {
     title: "RPA",
     href: ROUTES.RPA.ROOT,
-    icon: Settings,
+    icon: Zap,
     feature: "rpa",
   },
   {
@@ -129,9 +136,16 @@ const automationNavItems: NavItem[] = [
 // システム管理メニュー（Admin専用）
 const adminNavItems: NavItem[] = [
   {
+    title: "管理",
+    href: ROUTES.ADMIN.INDEX,
+    icon: Settings,
+    requireAdmin: true,
+    feature: "admin",
+  },
+  {
     title: "システム設定",
     href: ROUTES.ADMIN.SYSTEM_SETTINGS,
-    icon: Settings,
+    icon: Settings2,
     requireAdmin: true,
     feature: "system_settings",
   },
@@ -205,12 +219,6 @@ const otherNavItems: NavItem[] = [
     href: ROUTES.ORDERS.LIST,
     icon: ShoppingCart,
     feature: "orders",
-  },
-  {
-    title: "ロット管理（Excelビュー）",
-    href: ROUTES.INVENTORY.EXCEL_PORTAL,
-    icon: FileSpreadsheet,
-    feature: "excel_view",
   },
   {
     title: "月次レポート",
