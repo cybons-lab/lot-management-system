@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Schema consistency checker: Compares DDL with SQLAlchemy models.
+DEPRECATED: This script is no longer maintained.
 
-This script:
-1. Parses DDL (PostgreSQL) to extract table and column definitions
-2. Parses model files directly (without importing) to extract definitions
-3. Generates a comprehensive diff report
-4. Identifies high-priority issues (P0/P1/P2)
+The single source of truth is the actual PostgreSQL database, not a DDL file.
+Use direct database inspection instead:
+  docker compose exec db-postgres pg_dump -U admin -d lot_management --schema-only
+
+Original purpose: Compare DDL with SQLAlchemy models.
 """
 
 import re
@@ -354,12 +354,15 @@ def main():
 
     # Paths
     repo_root = Path(__file__).parent.parent
-    # Use the v2.2_id DDL which uses 'id' for primary keys (matches models)
+    # DEPRECATED: DDL file no longer exists. Use actual database schema instead.
     ddl_path = repo_root / "docs" / "schema" / "base" / "lot_management_ddl_v2_2_id.sql"
-    models_dir = repo_root / "backend" / "app" / "models"
+    models_dir = repo_root / "backend" / "app" / "infrastructure" / "persistence" / "models"
 
     if not ddl_path.exists():
         print(f"Error: DDL file not found at {ddl_path}")
+        print("DEPRECATED: This tool requires a DDL file that no longer exists.")
+        print("Use actual database inspection instead:")
+        print("  docker compose exec db-postgres pg_dump -U admin -d lot_management --schema-only")
         return 1
 
     if not models_dir.exists():

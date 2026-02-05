@@ -1,8 +1,9 @@
-"""Master data models matching the DDL v2.2 schema
-(lot_management_ddl_v2_2_id.sql).
+"""Master data models matching the actual database schema.
 
-All models strictly follow the actual PostgreSQL tables as the single source of truth. Legacy
-columns (address, created_by, deleted_at, etc.) have been removed.
+All models strictly follow the actual PostgreSQL tables as the single source of truth.
+Schema can be verified with: docker compose exec db-postgres pg_dump -U admin -d lot_management --schema-only
+
+Legacy columns (address, created_by, deleted_at, etc.) have been removed.
 
 Soft Delete Support:
     Master models support soft delete via the `valid_to` column.
