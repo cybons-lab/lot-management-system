@@ -5,13 +5,15 @@ Revises: phase1_complete_migration, b2cabaab67f5
 Create Date: 2026-02-02 16:25:22.630386
 
 """
-from alembic import op
+
 import sqlalchemy as sa
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = '7556ff2f06c0'
-down_revision = ('phase1_complete_migration', 'b2cabaab67f5')
+revision = "7556ff2f06c0"
+down_revision = ("phase1_complete_migration", "b2cabaab67f5")
 branch_labels = None
 depends_on = None
 

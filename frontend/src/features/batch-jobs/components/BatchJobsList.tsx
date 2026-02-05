@@ -1,4 +1,4 @@
-import type { ReactMouseEvent } from "react";
+import type { MouseEvent } from "react";
 
 import type { BatchJob, BatchJobListResponse } from "../api";
 import * as styles from "../pages/BatchJobsPage.styles";
@@ -60,7 +60,7 @@ export function BatchJobsList({
       <Button
         variant="outline"
         size="sm"
-        onClick={(e: ReactMouseEvent) => {
+        onClick={(e: MouseEvent) => {
           e.stopPropagation();
           onExecute(job.job_id);
         }}
@@ -71,7 +71,7 @@ export function BatchJobsList({
       <Button
         variant="destructive"
         size="sm"
-        onClick={(e: ReactMouseEvent) => {
+        onClick={(e: MouseEvent) => {
           e.stopPropagation();
           onDelete(job.job_id);
         }}

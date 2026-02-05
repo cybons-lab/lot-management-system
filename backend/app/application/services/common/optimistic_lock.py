@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Sequence
 from datetime import date, timedelta
-from typing import Any, Protocol, TypeVar, cast, runtime_checkable
+from typing import Any, Protocol, cast, runtime_checkable
 
 from fastapi import HTTPException, status
 from sqlalchemy import CursorResult, Result, delete, update
@@ -20,8 +20,6 @@ class VersionedModel(Protocol):
 
     version: Any
 
-
-T = TypeVar("T", bound=VersionedModel)
 
 DEFAULT_CONFLICT_MESSAGE = "他のユーザーが更新しました。最新データを取得してください。"
 
@@ -41,7 +39,7 @@ def _ensure_filters(filters: Sequence) -> Sequence:
     return filters
 
 
-def update_with_version(
+def update_with_version[T: VersionedModel](
     db: Session,
     model: type[T],
     *,
@@ -93,7 +91,7 @@ def update_with_version(
     return updated
 
 
-def soft_delete_with_version(
+def soft_delete_with_version[T: VersionedModel](
     db: Session,
     model: type[T],
     *,
@@ -140,7 +138,7 @@ def soft_delete_with_version(
     db.commit()
 
 
-def hard_delete_with_version(
+def hard_delete_with_version[T: VersionedModel](
     db: Session,
     model: type[T],
     *,

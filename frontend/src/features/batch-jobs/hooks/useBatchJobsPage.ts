@@ -7,7 +7,7 @@ import {
   useDeleteBatchJob,
   useInventorySyncAlerts,
   useExecuteInventorySync,
-} from "./useBatchJobs"; // Assuming they are there or in index
+} from "./useBatchJobsHooks";
 
 export function useBatchJobsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");

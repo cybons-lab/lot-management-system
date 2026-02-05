@@ -9,7 +9,6 @@ import {
   getExpandedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-// @ts-expect-error - type resolution issue with @tanstack/react-virtual in monorepo
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { VirtualItem } from "@tanstack/virtual-core";
 import {
