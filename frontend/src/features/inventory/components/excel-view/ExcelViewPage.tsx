@@ -20,7 +20,12 @@ import {
   updateDeliverySetting,
 } from "@/features/customer-items/delivery-settings/api";
 import { createDeliveryPlace } from "@/features/delivery-places/api";
-import { smartSplitLot, type AllocationTransfer } from "@/features/inventory/api";
+import {
+  smartSplitLot,
+  updateLotQuantityWithReason,
+  type AllocationTransfer,
+} from "@/features/inventory/api";
+import { LotQuantityUpdateDialog } from "@/features/inventory/components/LotQuantityUpdateDialog";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
 import { SmartLotSplitDialog } from "@/features/inventory/components/SmartLotSplitDialog";
 import { inventoryItemKeys } from "@/features/inventory/hooks";
@@ -66,6 +71,13 @@ export function ExcelViewPage() {
   // Phase 10.3: Smart split dialog state
   const [smartSplitDialogOpen, setSmartSplitDialogOpen] = useState(false);
   const [selectedLotForSmartSplit, setSelectedLotForSmartSplit] = useState<{
+    lotId: number;
+    lotNumber: string;
+    currentQuantity: number;
+  } | null>(null);
+  // Phase 11: Quantity update dialog state
+  const [quantityUpdateDialogOpen, setQuantityUpdateDialogOpen] = useState(false);
+  const [selectedLotForQuantityUpdate, setSelectedLotForQuantityUpdate] = useState<{
     lotId: number;
     lotNumber: string;
     currentQuantity: number;
@@ -127,6 +139,31 @@ export function ExcelViewPage() {
       void (async () => {
         const message = await getUserFriendlyMessageAsync(error);
         toast.error(`ロット分割に失敗しました: ${message}`);
+      })();
+    },
+  });
+
+  // Phase 11: Quantity update mutation
+  const quantityUpdateMutation = useMutation({
+    mutationFn: ({
+      lotId,
+      newQuantity,
+      reason,
+    }: {
+      lotId: number;
+      newQuantity: number;
+      reason: string;
+    }) => updateLotQuantityWithReason(lotId, { new_quantity: newQuantity, reason }),
+    onSuccess: () => {
+      toast.success("入庫数を更新しました");
+      queryClient.invalidateQueries({ queryKey: ["lots"] });
+      queryClient.invalidateQueries({ queryKey: inventoryItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] });
+    },
+    onError: (error: unknown) => {
+      void (async () => {
+        const message = await getUserFriendlyMessageAsync(error);
+        toast.error(`入庫数の更新に失敗しました: ${message}`);
       })();
     },
   });
@@ -340,6 +377,22 @@ export function ExcelViewPage() {
     [data],
   );
 
+  // Phase 11: Quantity update handler
+  const handleUpdateQuantity = useCallback(
+    (lotId: number) => {
+      const lot = data?.lots.find((l) => l.lotId === lotId);
+      if (!lot) return;
+
+      setSelectedLotForQuantityUpdate({
+        lotId,
+        lotNumber: lot.lotNumber || `ロット${lotId}`,
+        currentQuantity: lot.totalStock,
+      });
+      setQuantityUpdateDialogOpen(true);
+    },
+    [data],
+  );
+
   const handleAddDestination = useCallback((lotId: number) => {
     setSelectedLotIdForAddDest(lotId);
   }, []);
@@ -545,6 +598,7 @@ export function ExcelViewPage() {
               onCommentChange={handleCommentChange}
               onManualShipmentDateChange={handleManualShipmentDateChange}
               onSplitLot={handleSmartSplitLot}
+              onUpdateQuantity={handleUpdateQuantity}
             />
           );
         })}
@@ -628,6 +682,26 @@ export function ExcelViewPage() {
             setSelectedLotForSmartSplit(null);
           }}
           isLoading={smartSplitMutation.isPending}
+        />
+      )}
+
+      {/* Phase 11: Quantity Update Dialog */}
+      {selectedLotForQuantityUpdate && (
+        <LotQuantityUpdateDialog
+          open={quantityUpdateDialogOpen}
+          onOpenChange={setQuantityUpdateDialogOpen}
+          lotNumber={selectedLotForQuantityUpdate.lotNumber}
+          currentQuantity={selectedLotForQuantityUpdate.currentQuantity}
+          onConfirm={async (newQuantity: number, reason: string) => {
+            await quantityUpdateMutation.mutateAsync({
+              lotId: selectedLotForQuantityUpdate.lotId,
+              newQuantity,
+              reason,
+            });
+            setQuantityUpdateDialogOpen(false);
+            setSelectedLotForQuantityUpdate(null);
+          }}
+          isLoading={quantityUpdateMutation.isPending}
         />
       )}
     </PageContainer>
