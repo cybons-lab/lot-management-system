@@ -3378,6 +3378,48 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/uom-conversions/{conversion_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Uom Conversion
+     * @description Get a single UOM conversion by ID.
+     */
+    get: operations["get_uom_conversion_api_masters_uom_conversions__conversion_id__get"];
+    /**
+     * Update Uom Conversion
+     * @description Update a UOM conversion by ID.
+     *
+     *     Args:
+     *         conversion_id: ID of the conversion to update
+     *         data: Update data (factor)
+     *         db: Database session
+     *
+     *     Returns:
+     *         Updated UOM conversion
+     */
+    put: operations["update_uom_conversion_api_masters_uom_conversions__conversion_id__put"];
+    post?: never;
+    /**
+     * Delete Uom Conversion
+     * @description Delete a UOM conversion by ID.
+     *
+     *     Args:
+     *         conversion_id: ID of the conversion to delete
+     *         end_date: Optional end date for validity
+     *         version: Version for optimistic lock check
+     *         db: Database session
+     */
+    delete: operations["delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/uom-conversions/export/download": {
     parameters: {
       query?: never;
@@ -3419,44 +3461,6 @@ export interface paths {
      */
     post: operations["bulk_upsert_uom_conversions_api_masters_uom_conversions_bulk_upsert_post"];
     delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/masters/uom-conversions/{conversion_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update Uom Conversion
-     * @description Update a UOM conversion by ID.
-     *
-     *     Args:
-     *         conversion_id: ID of the conversion to update
-     *         data: Update data (factor)
-     *         db: Database session
-     *
-     *     Returns:
-     *         Updated UOM conversion
-     */
-    put: operations["update_uom_conversion_api_masters_uom_conversions__conversion_id__put"];
-    post?: never;
-    /**
-     * Delete Uom Conversion
-     * @description Delete a UOM conversion by ID.
-     *
-     *     Args:
-     *         conversion_id: ID of the conversion to delete
-     *         end_date: Optional end date for validity
-     *         version: Version for optimistic lock check
-     *         db: Database session
-     */
-    delete: operations["delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -23525,13 +23529,13 @@ export interface operations {
       };
     };
   };
-  export_uom_conversions_api_masters_uom_conversions_export_download_get: {
+  get_uom_conversion_api_masters_uom_conversions__conversion_id__get: {
     parameters: {
-      query?: {
-        format?: string;
-      };
+      query?: never;
       header?: never;
-      path?: never;
+      path: {
+        conversion_id: number;
+      };
       cookie?: never;
     };
     requestBody?: never;
@@ -23543,39 +23547,6 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  bulk_upsert_uom_conversions_api_masters_uom_conversions_bulk_upsert_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UomConversionBulkUpsertRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BulkUpsertResponse"];
         };
       };
       /** @description Validation Error */
@@ -23645,6 +23616,70 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_uom_conversions_api_masters_uom_conversions_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bulk_upsert_uom_conversions_api_masters_uom_conversions_bulk_upsert_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UomConversionBulkUpsertRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkUpsertResponse"];
+        };
       };
       /** @description Validation Error */
       422: {

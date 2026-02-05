@@ -235,6 +235,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             expected_version=item.version,
             not_found_detail="Customer item mapping not found",
         )
+        assert isinstance(updated, CustomerItem)
         return self._enrich_item(updated)
 
     def delete_by_id(self, item_id: int, end_date: date | None, expected_version: int) -> bool:

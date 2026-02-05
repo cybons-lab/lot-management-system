@@ -46,9 +46,12 @@ class UomConversionService(
 
     def get_by_id(self, conversion_id: int) -> ProductUomConversion | None:  # type: ignore[override]
         """Get UOM conversion by ID."""
+        from sqlalchemy.orm import joinedload
+
         return cast(
             ProductUomConversion | None,
             self.db.query(ProductUomConversion)
+            .options(joinedload(ProductUomConversion.supplier_item))
             .filter(ProductUomConversion.conversion_id == conversion_id)
             .first(),
         )
@@ -85,6 +88,7 @@ class UomConversionService(
             expected_version=data.version,
             not_found_detail=f"UOM conversion with ID {conversion_id} not found",
         )
+        assert isinstance(updated, ProductUomConversion)
         return updated
 
     def delete_by_id(

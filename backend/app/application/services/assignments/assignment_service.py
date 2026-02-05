@@ -104,6 +104,7 @@ class UserSupplierAssignmentService(
             expected_version=data.version,
             not_found_detail="Assignment not found",
         )
+        assert isinstance(updated, UserSupplierAssignment)
         return updated
 
     def delete_assignment(self, assignment_id: int, expected_version: int) -> None:

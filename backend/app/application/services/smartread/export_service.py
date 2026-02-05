@@ -42,6 +42,12 @@ class SmartReadExportService(SmartReadBaseService):
 
         def get_config(self, config_id: int) -> SmartReadConfig | None: ...
 
+        def get_or_create_task(self, config_id: int, task_id: str, task_date: date) -> Any: ...
+
+        def bump_data_version(
+            self, task_id: str, expected_version: int | None = None
+        ) -> int | None: ...
+
     def export_to_json(
         self,
         data: list[dict[str, Any]],

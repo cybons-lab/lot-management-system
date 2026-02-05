@@ -134,7 +134,9 @@ def test_update_warehouse_success(db: Session, client: TestClient):
 
 def test_update_warehouse_not_found(db: Session, client: TestClient):
     """Test updating non-existent warehouse returns 404."""
-    response = client.put("/api/masters/warehouses/NONEXISTENT-UPD", json={"warehouse_name": "New"})
+    response = client.put(
+        "/api/masters/warehouses/NONEXISTENT-UPD", json={"warehouse_name": "New", "version": 1}
+    )
     assert response.status_code == 404
 
 
@@ -240,7 +242,7 @@ def test_delete_warehouse_success(db: Session, client: TestClient):
 
 def test_delete_warehouse_not_found(db: Session, client: TestClient):
     """Test deleting non-existent warehouse returns 404."""
-    response = client.delete("/api/masters/warehouses/NONEXISTENT-DEL")
+    response = client.delete("/api/masters/warehouses/NONEXISTENT-DEL?version=1")
     assert response.status_code == 404
 
 

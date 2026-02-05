@@ -127,7 +127,9 @@ def test_update_supplier_success(db: Session, client: TestClient):
 
 def test_update_supplier_not_found(db: Session, client: TestClient):
     """Test updating non-existent supplier returns 404."""
-    response = client.put("/api/masters/suppliers/NONEXISTENT-UPD", json={"supplier_name": "New"})
+    response = client.put(
+        "/api/masters/suppliers/NONEXISTENT-UPD", json={"supplier_name": "New", "version": 1}
+    )
     assert response.status_code == 404
 
 
@@ -223,7 +225,7 @@ def test_delete_supplier_success(db: Session, client: TestClient):
 
 def test_delete_supplier_not_found(db: Session, client: TestClient):
     """Test deleting non-existent supplier returns 404."""
-    response = client.delete("/api/masters/suppliers/NONEXISTENT-DEL")
+    response = client.delete("/api/masters/suppliers/NONEXISTENT-DEL?version=1")
     assert response.status_code == 404
 
 

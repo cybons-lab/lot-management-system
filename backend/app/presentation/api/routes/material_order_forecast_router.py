@@ -207,6 +207,7 @@ def update_maker(
         expected_version=request.version,
         not_found_detail="メーカーが見つかりません",
     )
+    assert isinstance(updated, Maker)
 
     logger.info(f"Maker updated: {updated.maker_code}")
     return MakerResponse.model_validate(updated)

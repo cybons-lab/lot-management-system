@@ -1,6 +1,7 @@
 from datetime import date
 from typing import cast
 
+from fastapi import HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -47,6 +48,16 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
         """Update warehouse by warehouse_code with optimistic lock."""
         warehouse = self.get_by_code(code)
         assert warehouse is not None
+
+        # warehouse_codeが変更される場合は重複チェック
+        if payload.warehouse_code and payload.warehouse_code != warehouse.warehouse_code:
+            existing = self.get_by_code(payload.warehouse_code, raise_404=False)
+            if existing and existing.id != warehouse.id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"倉庫コード '{payload.warehouse_code}' は既に存在します。",
+                )
+
         update_data = payload.model_dump(exclude_unset=True, exclude={"version"})
         updated = update_with_version(
             self.db,
@@ -56,6 +67,7 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
             expected_version=payload.version,
             not_found_detail="倉庫が見つかりません",
         )
+        assert isinstance(updated, Warehouse)
         return updated
 
     def delete_by_code(

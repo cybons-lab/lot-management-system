@@ -70,6 +70,29 @@ def list_uom_conversions(
     ]
 
 
+@router.get("/{conversion_id}")
+def get_uom_conversion(conversion_id: int, db: Session = Depends(get_db)):
+    """Get a single UOM conversion by ID."""
+    service = UomConversionService(db)
+    conversion = service.get_by_id(conversion_id)
+    if not conversion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"UOM conversion with ID {conversion_id} not found",
+        )
+    return {
+        "conversion_id": conversion.conversion_id,
+        "supplier_item_id": conversion.supplier_item_id,
+        "external_unit": conversion.external_unit,
+        "conversion_factor": float(conversion.factor),
+        "remarks": None,
+        "product_code": conversion.supplier_item.maker_part_no,
+        "product_name": conversion.supplier_item.display_name,
+        "valid_to": conversion.valid_to,
+        "version": conversion.version,
+    }
+
+
 @router.get("/export/download")
 def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
     """Export UOM conversions."""

@@ -286,6 +286,7 @@ def create_supplier_item(data: SupplierItemCreate, db: Session = Depends(get_db)
         "created_at": si.created_at,
         "updated_at": si.updated_at,
         "valid_to": si.valid_to,
+        "version": si.version,
     }
 
 
@@ -359,6 +360,7 @@ def update_supplier_item(
         expected_version=data.version,
         not_found_detail="Supplier item not found",
     )
+    assert isinstance(updated, SupplierItem)
 
     return {
         "id": updated.id,
@@ -487,4 +489,5 @@ def restore_supplier_item(id: int, db: Session = Depends(get_db)):
         "created_at": si.created_at,
         "updated_at": si.updated_at,
         "valid_to": si.valid_to,
+        "version": si.version,
     }

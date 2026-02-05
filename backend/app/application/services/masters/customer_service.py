@@ -127,6 +127,7 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
             expected_version=payload.version,
             not_found_detail="得意先が見つかりません",
         )
+        assert isinstance(updated_customer, Customer)
         self._log_operation(
             user_id, "update", customer.id, payload.model_dump(exclude_unset=True, mode="json")
         )

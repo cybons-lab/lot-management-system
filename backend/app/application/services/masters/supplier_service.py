@@ -94,6 +94,7 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, int]
             expected_version=payload.version,
             not_found_detail="仕入先が見つかりません",
         )
+        assert isinstance(updated, Supplier)
         return updated
 
     def delete_by_code(

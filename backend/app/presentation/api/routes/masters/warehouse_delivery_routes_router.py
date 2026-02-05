@@ -289,6 +289,9 @@ def update_route(
         expected_version=data.version,
         not_found_detail=f"Route with id {route_id} not found",
     )
+    # update_with_version returns T (WarehouseDeliveryRoute in this case)
+    # but mypy needs explicit type assertion
+    assert isinstance(updated, WarehouseDeliveryRoute)
 
     return _build_response(updated)
 

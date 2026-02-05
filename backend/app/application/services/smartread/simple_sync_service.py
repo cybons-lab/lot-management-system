@@ -48,6 +48,12 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             filename: str,
         ) -> None: ...
 
+        def get_or_create_task(self, config_id: int, task_id: str, task_date: date) -> Any: ...
+
+        def bump_data_version(
+            self, task_id: str, expected_version: int | None = None
+        ) -> int | None: ...
+
     def _create_session(self, api_key: str) -> requests.Session:
         """認証済みセッションを作成."""
         s = requests.Session()

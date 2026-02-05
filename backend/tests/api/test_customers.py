@@ -140,9 +140,11 @@ def test_update_customer_success(db: Session, client: TestClient, superuser_toke
     )
     db.add(c)
     db.commit()
+    db.refresh(c)
 
     update_data = {
         "customer_name": "New Name",
+        "version": c.version,
     }
 
     response = client.put(
@@ -157,7 +159,7 @@ def test_update_customer_success(db: Session, client: TestClient, superuser_toke
 def test_update_customer_not_found(db: Session, client: TestClient, superuser_token_headers):
     """Test updating a non-existent customer."""
 
-    update_data = {"customer_name": "New Name"}
+    update_data = {"customer_name": "New Name", "version": 1}
     response = client.put(
         "/api/masters/customers/NON-EXISTENT", json=update_data, headers=superuser_token_headers
     )
@@ -175,10 +177,12 @@ def test_update_customer_code_change_success(
     )
     db.add(c)
     db.commit()
+    db.refresh(c)
 
     update_data = {
         "customer_code": "NEW-CODE-001",
         "customer_name": "Updated Name",
+        "version": c.version,
     }
 
     response = client.put(
@@ -208,9 +212,11 @@ def test_update_customer_code_change_duplicate_returns_409(
     c2 = Customer(customer_code="TO-CHANGE", customer_name="Customer 2")
     db.add_all([c1, c2])
     db.commit()
+    db.refresh(c2)
 
     update_data = {
         "customer_code": "EXISTING-CODE",  # Duplicate
+        "version": c2.version,
     }
 
     response = client.put(
@@ -227,8 +233,9 @@ def test_update_customer_code_change_non_admin_forbidden(
     c = Customer(customer_code="ADMIN-ONLY", customer_name="Test Customer")
     db.add(c)
     db.commit()
+    db.refresh(c)
 
-    update_data = {"customer_code": "NEW-CODE"}
+    update_data = {"customer_code": "NEW-CODE", "version": c.version}
 
     response = client.put(
         "/api/masters/customers/ADMIN-ONLY", json=update_data, headers=normal_user_token_headers
@@ -252,8 +259,11 @@ def test_delete_customer_success(db: Session, client: TestClient, superuser_toke
     )
     db.add(c)
     db.commit()
+    db.refresh(c)
 
-    response = client.delete("/api/masters/customers/DELETE-001", headers=superuser_token_headers)
+    response = client.delete(
+        f"/api/masters/customers/DELETE-001?version={c.version}", headers=superuser_token_headers
+    )
     assert response.status_code == 204
 
     # Verify soft deletion: customer still exists when fetched by code
@@ -277,5 +287,7 @@ def test_delete_customer_success(db: Session, client: TestClient, superuser_toke
 
 def test_delete_customer_not_found(db: Session, client: TestClient, superuser_token_headers):
     """Test deleting a non-existent customer."""
-    response = client.delete("/api/masters/customers/NON-EXISTENT", headers=superuser_token_headers)
+    response = client.delete(
+        "/api/masters/customers/NON-EXISTENT?version=1", headers=superuser_token_headers
+    )
     assert response.status_code == 404

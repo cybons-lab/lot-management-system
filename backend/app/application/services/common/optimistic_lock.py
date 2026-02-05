@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Sequence
 from datetime import date, timedelta
+from typing import Any, TypeVar
 
 from fastapi import HTTPException, status
 from sqlalchemy import delete, update
@@ -13,6 +14,8 @@ from sqlalchemy.orm import Session
 
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
 
 DEFAULT_CONFLICT_MESSAGE = "他のユーザーが更新しました。最新データを取得してください。"
 
@@ -32,26 +35,26 @@ def _ensure_filters(filters: Sequence) -> Sequence:
     return filters
 
 
-def update_with_version(
+def update_with_version(  # noqa: UP047
     db: Session,
-    model: type,
+    model: type[T],
     *,
     filters: Sequence,
     update_values: dict,
     expected_version: int,
     not_found_detail: str,
-) -> object:
+) -> T:
     """Update a row with optimistic lock check (UPDATE ... WHERE version=expected)."""
     _ensure_filters(filters)
 
     stmt = (
         update(model)
-        .where(*filters, model.version == expected_version)
-        .values(**update_values, version=model.version + 1)
+        .where(*filters, model.version == expected_version)  # type: ignore[attr-defined]
+        .values(**update_values, version=model.version + 1)  # type: ignore[attr-defined]
     )
     result = db.execute(stmt)
 
-    if result.rowcount == 0:
+    if result.rowcount == 0:  # type: ignore[attr-defined]
         current = db.query(model).filter(*filters).first()
         if current is None:
             logger.warning(
@@ -64,21 +67,24 @@ def update_with_version(
             extra={
                 "model": model.__name__,
                 "expected_version": expected_version,
-                "current_version": current.version,
+                "current_version": current.version,  # type: ignore[attr-defined]
             },
         )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=_build_conflict_detail(expected_version, current.version),
+            detail=_build_conflict_detail(expected_version, current.version),  # type: ignore[attr-defined]
         )
 
     db.commit()
-    return db.query(model).filter(*filters).first()
+    updated = db.query(model).filter(*filters).first()
+    if updated is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_detail)
+    return updated
 
 
 def soft_delete_with_version(
     db: Session,
-    model: type,
+    model: type[Any],
     *,
     filters: Sequence,
     expected_version: int,
@@ -92,12 +98,12 @@ def soft_delete_with_version(
 
     stmt = (
         update(model)
-        .where(*filters, model.version == expected_version)
-        .values(valid_to=delete_date, version=model.version + 1)
+        .where(*filters, model.version == expected_version)  # type: ignore[attr-defined]
+        .values(valid_to=delete_date, version=model.version + 1)  # type: ignore[attr-defined]
     )
     result = db.execute(stmt)
 
-    if result.rowcount == 0:
+    if result.rowcount == 0:  # type: ignore[attr-defined]
         current = db.query(model).filter(*filters).first()
         if current is None:
             logger.warning(
@@ -110,12 +116,12 @@ def soft_delete_with_version(
             extra={
                 "model": model.__name__,
                 "expected_version": expected_version,
-                "current_version": current.version,
+                "current_version": current.version,  # type: ignore[attr-defined]
             },
         )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=_build_conflict_detail(expected_version, current.version),
+            detail=_build_conflict_detail(expected_version, current.version),  # type: ignore[attr-defined]
         )
 
     db.commit()
@@ -123,7 +129,7 @@ def soft_delete_with_version(
 
 def hard_delete_with_version(
     db: Session,
-    model: type,
+    model: type[Any],
     *,
     filters: Sequence,
     expected_version: int,
@@ -133,11 +139,11 @@ def hard_delete_with_version(
     """Hard delete a row with optimistic lock check."""
     _ensure_filters(filters)
 
-    stmt = delete(model).where(*filters, model.version == expected_version)
+    stmt = delete(model).where(*filters, model.version == expected_version)  # type: ignore[attr-defined]
 
     try:
         result = db.execute(stmt)
-        if result.rowcount == 0:
+        if result.rowcount == 0:  # type: ignore[attr-defined]
             current = db.query(model).filter(*filters).first()
             if current is None:
                 logger.warning(
@@ -150,12 +156,12 @@ def hard_delete_with_version(
                 extra={
                     "model": model.__name__,
                     "expected_version": expected_version,
-                    "current_version": current.version,
+                    "current_version": current.version,  # type: ignore[attr-defined]
                 },
             )
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=_build_conflict_detail(expected_version, current.version),
+                detail=_build_conflict_detail(expected_version, current.version),  # type: ignore[attr-defined]
             )
 
         db.commit()

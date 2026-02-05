@@ -582,6 +582,11 @@ class ProductUomConversion(SoftDeleteMixin, Base):
         Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
     )
 
+    # Relationships
+    supplier_item: Mapped[SupplierItem] = relationship(
+        "SupplierItem", back_populates="uom_conversions"
+    )
+
     __table_args__ = (
         UniqueConstraint(
             "supplier_item_id", "external_unit", name="uq_uom_conversions_supplier_item_unit"
