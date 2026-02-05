@@ -143,7 +143,7 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 IDType = TypeVar("IDType", int, str)
 
 
-class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]):  # noqa: UP046
+class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]):  # noqa: UP046 - Python 3.11互換のためPEP 695構文は未採用
     """Generic base service with common CRUD operations.
 
     This class provides:

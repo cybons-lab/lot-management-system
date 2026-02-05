@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy import select
@@ -284,7 +284,7 @@ class ShippingMasterService:
             if hasattr(curated, key) and key not in ("id", "created_at"):
                 setattr(curated, key, value)
 
-        curated.updated_at = datetime.now()  # noqa: DTZ005
+        curated.updated_at = datetime.now(UTC)
         self.session.flush()
         return curated
 

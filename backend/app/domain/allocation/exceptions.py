@@ -136,8 +136,19 @@
 # Re-export consolidated InsufficientStockError for backward compatibility
 from app.domain.errors import (
     DomainError,
-    InsufficientStockError,  # noqa: F401
+    InsufficientStockError,
 )
+
+
+__all__ = [
+    "DomainError",
+    "InsufficientStockError",
+    "ValidationError",
+    "NotFoundError",
+    "ConflictError",
+    "InvalidTransitionError",
+    "AlreadyAllocatedError",
+]
 
 
 class ValidationError(DomainError):

@@ -113,6 +113,7 @@
 
 import logging
 from contextlib import asynccontextmanager
+from importlib import import_module
 from typing import Any, cast
 
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -130,14 +131,15 @@ from app.core.database import init_db
 from app.core.log_broadcaster import setup_log_broadcasting
 from app.core.logging import setup_logging
 from app.domain.errors import DomainError
-
-# ドメインイベントハンドラを登録（インポート時に自動登録）
-from app.domain.events import handlers as _event_handlers  # noqa: F401
 from app.infrastructure.monitoring.sql_profiler import SQLProfilerMiddleware, register_sql_profiler
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.metrics import MetricsMiddleware
 from app.presentation.api.middleware.maintenance_middleware import MaintenanceMiddleware
 from app.presentation.api.routes import register_all_routers
+
+
+# ドメインイベントハンドラを登録（インポート時に自動登録）
+import_module("app.domain.events.handlers")
 
 
 logger = logging.getLogger(__name__)

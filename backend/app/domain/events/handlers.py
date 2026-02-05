@@ -7,7 +7,7 @@
 
 Usage:
     # main.py などで
-    import app.domain.events.handlers  # noqa: F401
+    import app.domain.events.handlers
 
 【設計意図】イベントハンドラーの設計判断:
 
@@ -30,7 +30,7 @@ Usage:
    使用例:
    ```python
    # main.py
-   import app.domain.events.handlers  # noqa: F401
+   import app.domain.events.handlers
    # この時点で log_stock_change() 等が登録される
    ```
    メリット:
