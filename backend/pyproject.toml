@@ -107,6 +107,7 @@ dev = [
     "types-python-jose>=3.3.4",
     "types-pyyaml>=6.0.12.20250915",
     "types-requests>=2.32.4.20260107",
+    "poethepoet>=0.31.1",
 ]
 
 [tool.mypy]
@@ -116,3 +117,131 @@ plugins = ["sqlalchemy.ext.mypy.plugin"]
 [[tool.mypy.overrides]]
 module = "reportlab.*"
 ignore_missing_imports = true
+
+# ==============================================================================
+# Poe the Poet - Task Runner (Cross-platform alternative to Makefile)
+# ==============================================================================
+# Usage:
+#   poe <task>              # Run in local environment (requires Python deps)
+#   poe docker:<task>       # Run in Docker container (recommended)
+#
+# Examples:
+#   poe docker:lint         # Run linter in Docker
+#   poe docker:test         # Run tests in Docker
+#   poe docker:db-shell     # Connect to dev database
+#   poe docker:db-test      # Connect to test database
+# ==============================================================================
+
+[tool.poe.tasks]
+# ------------------------------------------------------------------------------
+# Linting & Formatting (Docker推奨)
+# ------------------------------------------------------------------------------
+lint = "ruff check app/"
+"lint:fix" = "ruff check app/ --fix"
+format = "ruff format app/"
+typecheck = "mypy app/"
+
+# ------------------------------------------------------------------------------
+# Testing (Docker推奨)
+# ------------------------------------------------------------------------------
+test = "pytest -v"
+"test:quick" = "pytest -q"
+"test:integration" = "pytest tests/integration -v"
+"test:unit" = "pytest tests/unit -v"
+"test:coverage" = "pytest --cov=app --cov-report=html"
+
+# ------------------------------------------------------------------------------
+# Database Operations (Docker必須)
+# ------------------------------------------------------------------------------
+[tool.poe.tasks.db-shell]
+shell = """
+PGPASSWORD=${DB_PASSWORD} psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -p ${DB_PORT}
+"""
+help = "Connect to development database (requires env vars)"
+env = { DB_HOST = "localhost", DB_PORT = "15432", DB_USER = "lot_user", DB_PASSWORD = "lot_password", DB_NAME = "lot_management" }
+
+[tool.poe.tasks.db-test]
+shell = """
+PGPASSWORD=${DB_PASSWORD} psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -p ${DB_PORT}
+"""
+help = "Connect to test database (requires env vars)"
+env = { DB_HOST = "localhost", DB_PORT = "15433", DB_USER = "lot_user_test", DB_PASSWORD = "lot_password_test", DB_NAME = "lot_management_test" }
+
+# ------------------------------------------------------------------------------
+# Alembic Migrations (Docker推奨)
+# ------------------------------------------------------------------------------
+"alembic:upgrade" = "alembic upgrade head"
+"alembic:downgrade" = "alembic downgrade -1"
+"alembic:history" = "alembic history"
+"alembic:current" = "alembic current"
+"alembic:revision" = { shell = "alembic revision --autogenerate -m \"${message}\"", help = "Create new migration (usage: poe alembic:revision message='description')" }
+
+# ------------------------------------------------------------------------------
+# Docker Commands (クロスプラットフォーム対応)
+# ------------------------------------------------------------------------------
+[tool.poe.tasks."docker:lint"]
+cmd = "docker compose exec -T backend ruff check app/"
+help = "Run linter in Docker container"
+
+[tool.poe.tasks."docker:lint:fix"]
+cmd = "docker compose exec -T backend ruff check app/ --fix"
+help = "Run linter with auto-fix in Docker"
+
+[tool.poe.tasks."docker:format"]
+cmd = "docker compose exec -T backend ruff format app/"
+help = "Format code in Docker container"
+
+[tool.poe.tasks."docker:typecheck"]
+cmd = "docker compose exec -T backend mypy app/"
+help = "Run type checker in Docker"
+
+[tool.poe.tasks."docker:test"]
+cmd = "docker compose exec -T backend pytest -v"
+help = "Run tests in Docker container"
+
+[tool.poe.tasks."docker:test:quick"]
+cmd = "docker compose exec -T backend pytest -q"
+help = "Run tests quickly in Docker"
+
+[tool.poe.tasks."docker:test:integration"]
+cmd = "docker compose exec -T backend pytest tests/integration -v"
+help = "Run integration tests in Docker"
+
+[tool.poe.tasks."docker:shell"]
+cmd = "docker compose exec backend bash"
+help = "Open bash shell in backend container"
+
+[tool.poe.tasks."docker:db-shell"]
+cmd = "docker compose exec db-postgres psql -U lot_user -d lot_management"
+help = "Connect to development database (Docker)"
+
+[tool.poe.tasks."docker:db-test"]
+cmd = "docker compose exec db-postgres-test psql -U lot_user_test -d lot_management_test"
+help = "Connect to test database (Docker)"
+
+[tool.poe.tasks."docker:alembic:upgrade"]
+cmd = "docker compose exec -T backend alembic upgrade head"
+help = "Run migrations in Docker"
+
+[tool.poe.tasks."docker:alembic:downgrade"]
+cmd = "docker compose exec -T backend alembic downgrade -1"
+help = "Rollback last migration in Docker"
+
+# ------------------------------------------------------------------------------
+# Composite Tasks (複数タスクの連続実行)
+# ------------------------------------------------------------------------------
+[tool.poe.tasks.quality]
+sequence = ["lint:fix", "format", "typecheck", "test:quick"]
+help = "Run all quality checks (local)"
+
+[tool.poe.tasks."docker:quality"]
+sequence = ["docker:lint:fix", "docker:format", "docker:typecheck", "docker:test:quick"]
+help = "Run all quality checks (Docker)"
+
+[tool.poe.tasks.ci]
+sequence = ["lint", "format", "typecheck", "test"]
+help = "Run CI checks (no auto-fix)"
+
+[tool.poe.tasks."docker:ci"]
+sequence = ["docker:lint", "docker:format", "docker:typecheck", "docker:test"]
+help = "Run CI checks in Docker (no auto-fix)"

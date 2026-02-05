@@ -80,6 +80,13 @@ export default defineConfig({
     /* P0 Smoke Tests - Run on every PR */
     {
       name: "smoke",
+      testDir: "./e2e/specs/smoke",
+      use: { ...devices["Desktop Chrome"] },
+    },
+
+    /* P0 Critical Tests - Essential flows */
+    {
+      name: "p0",
       testDir: "./e2e/specs/p0",
       use: { ...devices["Desktop Chrome"] },
     },

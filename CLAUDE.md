@@ -212,95 +212,130 @@ docker compose exec -T frontend npm run format
 
 ## Development Workflow
 
-**CRITICAL: すべての開発コマンドはDocker経由で実行してください。Makefileを使用することで統一されたワークフローを実現します。**
+**CRITICAL: すべての開発コマンドはDocker経由で実行してください。npm scriptsを使用することでクロスプラットフォーム（Windows/Mac/Linux）で統一されたワークフローを実現します。**
+
+📚 **詳細ガイド:** [Poe Migration Guide](docs/project/POE_MIGRATION_GUIDE.md)
 
 ### クイックスタート
 
 ```bash
 # 開発環境のセットアップ（初回）
-make dev-setup
+npm run dev:setup
 
 # サービスの起動/停止
-make up          # すべてのサービスを起動
-make down        # すべてのサービスを停止
-make restart     # すべてのサービスを再起動
-make logs        # すべてのログを表示
+npm run up          # すべてのサービスを起動
+npm run down        # すべてのサービスを停止
+npm run restart     # すべてのサービスを再起動
+npm run logs        # すべてのログを表示
 
 # 品質チェック（コミット前に実行）
-make quality-check   # Lint修正 + Format + Type check + Test
+npm run quality        # Lint修正 + Format + Type check + Test (5分)
+npm run quality:full   # 上記 + Smoke E2E (10分)
+npm run test:smoke     # スモークテストのみ (30秒)
 ```
 
 ### バックエンド開発
 
 ```bash
-# 品質チェック
-make backend-lint           # Lintチェック
-make backend-lint-fix       # Lint自動修正
-make backend-format         # コードフォーマット
-make backend-test           # テスト実行
-make backend-test-quick     # テスト高速実行
+# 品質チェック（一括）
+npm run be:quality          # Lint修正 + Format + Type check + Test
+
+# 個別実行
+npm run be:lint             # Lintチェック
+npm run be:lint:fix         # Lint自動修正
+npm run be:format           # コードフォーマット
+npm run be:typecheck        # 型チェック
+npm run be:test             # テスト実行
+npm run be:test:quick       # テスト高速実行
+npm run be:test:integration # 統合テスト
 
 # シェル接続
-make backend-shell
+npm run be:shell
 
-# または docker compose 直接
-docker compose exec backend ruff check app/
-docker compose exec backend ruff format app/
-docker compose exec backend pytest -v
+# または poe (backend/ 内で実行)
+cd backend
+poe docker:lint
+poe docker:test
+poe docker:quality
 ```
 
 ### フロントエンド開発
 
 ```bash
-# 品質チェック
-make frontend-lint          # Lintチェック
-make frontend-lint-fix      # Lint自動修正
-make frontend-format        # コードフォーマット
-make frontend-typecheck     # 型チェック
-make frontend-typegen       # OpenAPI型定義を再生成
-make frontend-test          # テスト実行
-make frontend-build         # ビルド
+# 品質チェック（一括）
+npm run fe:quality          # Lint修正 + Format + Type check + Test
+
+# 個別実行
+npm run fe:lint             # Lintチェック
+npm run fe:lint:fix         # Lint自動修正
+npm run fe:format           # コードフォーマット
+npm run fe:typecheck        # 型チェック
+npm run fe:typegen          # OpenAPI型定義を再生成 ✨自動でバックエンド取得
+npm run fe:test             # テスト実行
+npm run fe:test:e2e:smoke   # E2Eスモークテスト
 
 # シェル接続
-make frontend-shell
-
-# または docker compose 直接
-docker compose exec -T frontend npm run lint
-docker compose exec -T frontend npm run typecheck
-docker compose exec -T frontend npm run typegen:curl
+npm run fe:shell
 ```
 
 ### データベース操作
 
 ```bash
 # データベース管理
-make db-reset          # データベースをリセット
-make db-init-sample    # サンプルデータを投入
-make db-shell          # PostgreSQLシェルに接続
+npm run db:reset        # データベースをリセット
+npm run db:init         # サンプルデータを投入
+npm run db:shell        # 開発DBに接続 ✨一発接続
+npm run db:shell:test   # テストDBに接続 ✨NEW
+npm run db:info         # DB接続情報を表示 ✨NEW
 
 # マイグレーション
-make alembic-upgrade   # 最新バージョンにアップグレード
-make alembic-downgrade # 1つ前のバージョンに戻す
-make alembic-history   # マイグレーション履歴を表示
-make alembic-current   # 現在のバージョンを表示
+npm run alembic:upgrade   # 最新バージョンにアップグレード
+npm run alembic:downgrade # 1つ前のバージョンに戻す
+npm run alembic:history   # マイグレーション履歴を表示
+npm run alembic:current   # 現在のバージョンを表示
 ```
 
 ### 全体の品質チェック
 
 ```bash
 # すべての品質チェック（自動修正あり）
-make quality-check
+npm run quality        # Lint修正 + Format + Type check + Test (5分)
+npm run quality:full   # 上記 + Smoke E2E (10分)
 
 # CI相当のチェック（自動修正なし）
-make ci
+npm run ci             # 標準CI
+npm run ci:smoke       # CI + Smoke（最速）
 
 # 個別実行
-make lint            # 全体Lint
-make lint-fix        # 全体Lint自動修正
-make format          # 全体フォーマット
-make typecheck       # 全体型チェック
-make test            # 全体テスト
+npm run lint           # 全体Lint
+npm run lint:fix       # 全体Lint自動修正
+npm run format         # 全体フォーマット
+npm run typecheck      # 全体型チェック
+npm run test           # 全体テスト
+npm run test:smoke     # スモークテスト (30秒)
 ```
+
+### テスト実行
+
+```bash
+# スモークテスト（最速 - 30秒）
+npm run test:smoke          # ページが開くかだけをチェック
+
+# クリティカルパステスト（10分）
+npm run fe:test:e2e         # P0の重要フローをテスト
+
+# 全体テスト
+npm run test                # Unit + Integration
+npm run be:test             # バックエンドのみ
+npm run fe:test             # フロントエンドのみ
+```
+
+**推奨ワークフロー:**
+1. **コミット前**: `npm run quality` (5分)
+2. **PR作成時**: `npm run quality:full` (10分)
+3. **リリース前**: `npm run ci` + E2E全体 (30分)
+
+詳細: [docs/project/TESTING_QUICKSTART.md](docs/project/TESTING_QUICKSTART.md)
 
 ### Git Workflow
 
@@ -319,8 +354,8 @@ git checkout -b feature/xxx
 ### DO
 1. Follow naming conventions strictly
 2. Use absolute imports in backend
-3. **Run quality checks via Makefile before committing**: `make quality-check`
-4. **Update OpenAPI types after backend changes**: `make frontend-typegen` (Docker経由)
+3. **Run quality checks before committing**: `npm run quality`
+4. **Update OpenAPI types after backend changes**: `npm run fe:typegen` (自動でDocker経由)
 5. Write tests for new features
 6. Document domain logic with docstrings
 7. Commit frequently with atomic changes (avoid large bulk commits). Commits do not require user confirmation.

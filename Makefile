@@ -123,11 +123,14 @@ frontend-test: ## フロントエンドのテストを実行
 frontend-test-ui: ## フロントエンドのテストをUIモードで実行
 	docker compose exec frontend npm run test:ui
 
-frontend-test-e2e: ## E2Eテストを実行
+frontend-test-e2e: ## E2Eテストを実行（全て）
 	docker compose exec -T frontend npm run test:e2e
 
-frontend-test-e2e-smoke: ## スモークE2Eテストを実行
+frontend-test-e2e-smoke: ## スモークE2Eテストを実行（30秒）
 	docker compose exec -T frontend npm run test:e2e:smoke
+
+frontend-test-e2e-p0: ## P0 E2Eテストを実行（クリティカルパス）
+	docker compose exec -T frontend npx playwright test --project=p0
 
 ##@ 品質チェック（全体）
 
@@ -145,11 +148,23 @@ test: backend-test frontend-test ## 全体のテストを実行
 
 test-quick: backend-test-quick frontend-test ## 全体のテストを高速実行
 
+test-smoke: frontend-test-e2e-smoke ## スモークテストを実行（最速）
+	@echo "スモークテストが完了しました！"
+
+test-critical: frontend-test-e2e-p0 ## クリティカルパステストを実行
+	@echo "クリティカルパステストが完了しました！"
+
 quality-check: lint-fix format typecheck test-quick ## 品質チェック（自動修正＋テスト）
 	@echo "すべての品質チェックが完了しました！"
 
+quality-check-full: lint-fix format typecheck test test-smoke ## 完全品質チェック（E2E含む）
+	@echo "完全品質チェックが完了しました！"
+
 ci: lint format-check typecheck test ## CI実行（自動修正なし）
 	@echo "CI品質チェックが完了しました！"
+
+ci-smoke: lint format-check typecheck test-quick test-smoke ## CI Smoke（最速）
+	@echo "CI Smokeチェックが完了しました！"
 
 ##@ デプロイ
 
