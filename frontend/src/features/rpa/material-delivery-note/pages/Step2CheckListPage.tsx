@@ -3,7 +3,7 @@
  * 素材納品書発行 Step2 - 確認画面
  */
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 論理的な画面単位を維持 */
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";

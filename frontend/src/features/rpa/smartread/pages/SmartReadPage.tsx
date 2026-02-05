@@ -28,7 +28,7 @@ import { createNotification } from "@/features/notifications/api";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-/* eslint-disable-next-line max-lines-per-function */
+/* eslint-disable-next-line max-lines-per-function -- 論理的な画面単位を維持 */
 export function SmartReadPage() {
   const [selectedConfigId, setSelectedConfigId] = useState<number | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);

@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 論理的な画面単位を維持 */
 import { Loader2, RefreshCw } from "lucide-react";
 
 import { SmartReadUploadPanel } from "./SmartReadUploadPanel";

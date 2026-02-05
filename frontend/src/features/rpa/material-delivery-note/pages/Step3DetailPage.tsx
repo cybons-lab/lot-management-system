@@ -1,5 +1,5 @@
-/* eslint-disable complexity */
-/* eslint-disable max-lines-per-function */
+/* eslint-disable complexity -- 論理的な画面単位を維持 */
+/* eslint-disable max-lines-per-function -- 論理的な画面単位を維持 */
 /**
  * Step3DetailPage - Step3専用ページ
  *

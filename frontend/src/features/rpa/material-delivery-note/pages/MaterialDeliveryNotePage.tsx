@@ -2,7 +2,7 @@
  * MaterialDeliveryNotePage
  * 素材納品書発行のメニューページ - Step1/Step2/履歴へのナビゲーション
  */
-/* eslint-disable max-lines-per-function, complexity, react-hooks/exhaustive-deps */
+/* eslint-disable max-lines-per-function, complexity, react-hooks/exhaustive-deps -- 論理的な画面単位を維持 */
 
 import { CheckSquare, Download, FileText, History, ListTree, Play, Settings } from "lucide-react";
 import { useMemo } from "react";

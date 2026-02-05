@@ -3,7 +3,7 @@
  * 素材納品書発行 履歴一覧
  */
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 論理的な画面単位を維持 */
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Eye, Loader2 } from "lucide-react";

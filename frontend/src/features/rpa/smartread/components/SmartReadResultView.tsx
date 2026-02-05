@@ -1,5 +1,5 @@
-/* eslint-disable max-lines */
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines -- 論理的な画面単位を維持 */
+/* eslint-disable max-lines-per-function -- 論理的な画面単位を維持 */
 
 import { Download, AlertCircle, RefreshCw, Database, Repeat, Save } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -38,7 +38,7 @@ interface SmartReadResultViewProps {
 type AnyRecord = Record<string, unknown>;
 
 // ヘッダー表示用コンポーネント
-// eslint-disable-next-line complexity
+// eslint-disable-next-line complexity -- 論理的な画面単位を維持
 function ResultHeader({
   isLoading,
   wideCount,

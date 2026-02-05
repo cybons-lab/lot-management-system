@@ -5,7 +5,7 @@
  * SmartReadPadRunStatusListと同様のUIパターンを採用。
  */
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 論理的な画面単位を維持 */
 import { AlertTriangle, CheckCircle2, Circle, Loader2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";

@@ -185,7 +185,7 @@ async function parseHttpError(error: unknown): Promise<{ status: number; body: u
 // Hooks
 // ============================================
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 論理的な画面単位を維持 */
 /**
  * タスクの結果を強制的に同期
  */

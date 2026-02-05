@@ -3,7 +3,7 @@
  * Power Automateフローを呼び出して進度実績をダウンロード
  */
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 論理的な画面単位を維持 */
 import { AlertCircle, Clock, Download, Play, User } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";

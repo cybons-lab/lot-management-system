@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function, complexity, max-lines */
+/* eslint-disable max-lines-per-function, complexity, max-lines -- 論理的な画面単位を維持 */
 /**
  * SmartReadSettingsModal
  * SmartRead設定管理モーダル
