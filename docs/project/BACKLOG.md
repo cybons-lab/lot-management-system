@@ -1,6 +1,6 @@
 # タスクバックログ (統合版)
 
-**最終更新:** 2026-02-05
+**最終更新:** 2026-02-06
 
 ---
 
@@ -11,6 +11,50 @@
 ---
 
 ## 1. 優先度: 高 (即時対応)
+
+### 1-A. 全設定ファイルの包括的レビュー（業務システム堅牢性強化）
+
+**優先度:** 高
+**作成:** 2026-02-06
+**カテゴリ:** コード品質・堅牢性
+**工数:** 2-3日
+
+**背景:**
+業務システムとして堅牢性が重要。現在の設定ファイル（ESLint, TypeScript, Ruff, Mypy等）が本番運用に耐えうるレベルか包括的にレビューする必要がある。
+
+**レビュー対象:**
+1. **フロントエンド**
+   - `frontend/eslint.config.js` - 現在116ファイルがTemporary overrides（要削減）
+   - `frontend/tsconfig.json` - strict mode設定の確認
+   - `frontend/vite.config.ts` - ビルド最適化設定
+   - `frontend/.prettierrc` - コードフォーマット統一
+
+2. **バックエンド**
+   - `backend/pyproject.toml` (Ruff設定) - Lintルールの厳格性
+   - `backend/mypy.ini` - 型チェックの厳格性
+   - `backend/pytest.ini` - テストカバレッジ目標
+   - `backend/alembic.ini` - マイグレーション設定
+
+3. **CI/CD**
+   - `.github/workflows/*.yml` - CI設定の網羅性
+   - `.pre-commit-config.yaml` - コミット前チェック
+   - `docker-compose.yml` - 本番環境との差異
+
+**実施内容:**
+1. 各設定ファイルの現状調査
+2. 業界ベストプラクティスとの比較
+3. 堅牢性を高めるための推奨変更案作成
+4. 段階的な改善ロードマップ策定
+
+**期待される成果:**
+- 型安全性の向上
+- バグの早期発見
+- コード品質の標準化
+- メンテナンス性の向上
+
+**関連タスク:**
+- `docs/project/SUPPRESSION_RESOLUTION_ROUND3.md` - 警告抑制の解消
+- ESLint Temporary overrides削減（116 → 60ファイル以下、2026-Q1目標）
 
 ### 1-0. Phase 4-A: SmartReadデータの楽観的ロック導入
 
