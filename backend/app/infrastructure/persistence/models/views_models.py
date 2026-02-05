@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, Numeric, String
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base_model import Base
@@ -203,6 +203,7 @@ class VLotDetails(Base):
     cost_price: Mapped[Decimal | None] = mapped_column(Numeric(15, 3))
     sales_price: Mapped[Decimal | None] = mapped_column(Numeric(15, 3))
     tax_rate: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    remarks: Mapped[str | None] = mapped_column(Text)
 
     # 担当者情報
     primary_user_id: Mapped[int | None] = mapped_column(Integer)

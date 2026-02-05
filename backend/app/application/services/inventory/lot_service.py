@@ -269,6 +269,7 @@ class LotService:
             cost_price=lot_view.cost_price,
             sales_price=lot_view.sales_price,
             tax_rate=lot_view.tax_rate,
+            remarks=lot_view.remarks,
             product_deleted=lot_view.product_deleted,
             warehouse_deleted=lot_view.warehouse_deleted,
             supplier_deleted=lot_view.supplier_deleted,
@@ -509,6 +510,7 @@ class LotService:
                 unit=lot_view.unit,
                 received_date=lot_view.received_date,
                 expiry_date=lot_view.expiry_date,
+                remarks=lot_view.remarks,
                 status=LotStatus(lot_view.status) if lot_view.status else LotStatus.ACTIVE,
                 created_at=lot_view.created_at,
                 updated_at=lot_view.updated_at,
@@ -634,6 +636,7 @@ class LotService:
                 unit=lot_view.unit,
                 received_date=lot_view.received_date,
                 expiry_date=lot_view.expiry_date,
+                remarks=lot_view.remarks,
                 status=LotStatus(lot_view.status) if lot_view.status else LotStatus.ACTIVE,
                 created_at=lot_view.created_at,
                 updated_at=lot_view.updated_at,
@@ -1184,6 +1187,7 @@ class LotService:
             cost_price=db_lot.cost_price,
             sales_price=db_lot.sales_price,
             tax_rate=db_lot.tax_rate,
+            remarks=db_lot.remarks,
             product_name=product_name,
             product_code=product_code,
             warehouse_name=warehouse_name,
@@ -1220,6 +1224,8 @@ class LotService:
         original_lot = self.repository.find_by_id(lot_receipt_id)
         if not original_lot:
             raise LotNotFoundError(lot_receipt_id)
+        if original_lot.consumed_quantity > Decimal("0"):
+            raise ValueError("消費済み数量があるロットは分割できません")
 
         # Validate total split quantity matches current quantity
         total_split = sum(split_quantities)
@@ -1304,6 +1310,8 @@ class LotService:
         lot_receipt = self.repository.find_by_id(lot_receipt_id)
         if not lot_receipt:
             raise LotNotFoundError(lot_receipt_id)
+        if new_quantity < lot_receipt.consumed_quantity:
+            raise ValueError("消費済み数量を下回る入庫数には変更できません")
 
         # Calculate adjustment amount
         old_quantity = lot_receipt.received_quantity
@@ -1419,6 +1427,8 @@ class LotService:
         original_lot = self.repository.find_by_id(lot_receipt_id)
         if not original_lot:
             raise LotNotFoundError(lot_receipt_id)
+        if original_lot.consumed_quantity > Decimal("0"):
+            raise ValueError("消費済み数量があるロットは分割できません")
 
         logger.info(
             "Smart split started",
@@ -1432,19 +1442,56 @@ class LotService:
         )
 
         try:
-            # Group transfers by target lot index
-            transfers_by_target: dict[int, list[dict]] = {}
-            for transfer in allocation_transfers:
-                target_idx = transfer["target_lot_index"]
-                if target_idx not in transfers_by_target:
-                    transfers_by_target[target_idx] = []
-                transfers_by_target[target_idx].append(transfer)
+            if not allocation_transfers:
+                raise ValueError("割り当てがないためスマート分割できません")
 
-            # Calculate quantity for each split based on allocations
+            # Validate transfers and calculate split quantities from DB
+            transfers_by_target: dict[int, list[dict]] = {}
+            allocations_by_key: dict[tuple[int, str, int], list[AllocationSuggestion]] = {}
+            seen_keys: set[tuple[int, str, int]] = set()
+
             split_quantities: list[Decimal] = [Decimal("0")] * split_count
-            for target_idx, transfers in transfers_by_target.items():
-                for transfer in transfers:
-                    split_quantities[target_idx] += Decimal(str(transfer["quantity"]))
+            for transfer in allocation_transfers:
+                target_idx = transfer.get("target_lot_index")
+                if target_idx is None or target_idx < 0 or target_idx >= split_count:
+                    raise ValueError("割り当て先ロットの指定が不正です")
+                if transfer.get("lot_id") != lot_receipt_id:
+                    raise ValueError("ロットIDが一致しません")
+
+                requested_qty = Decimal(str(transfer.get("quantity", "0")))
+                if requested_qty <= 0:
+                    raise ValueError("数量は0より大きい値を指定してください")
+
+                transfers_by_target.setdefault(target_idx, []).append(transfer)
+
+                key = (
+                    transfer["delivery_place_id"],
+                    transfer["forecast_period"],
+                    transfer["customer_id"],
+                )
+                if key in seen_keys:
+                    raise ValueError("同一の納品予定が複数回指定されています")
+                seen_keys.add(key)
+
+                matching_allocs = (
+                    self.db.query(AllocationSuggestion)
+                    .filter(
+                        AllocationSuggestion.lot_id == lot_receipt_id,
+                        AllocationSuggestion.delivery_place_id == transfer["delivery_place_id"],
+                        AllocationSuggestion.forecast_period == transfer["forecast_period"],
+                        AllocationSuggestion.customer_id == transfer["customer_id"],
+                    )
+                    .all()
+                )
+                if not matching_allocs:
+                    raise ValueError("指定された納品予定が見つかりません")
+
+                actual_qty = sum((alloc.quantity for alloc in matching_allocs), Decimal("0"))
+                if requested_qty != actual_qty:
+                    raise ValueError("指定された数量が実際の割当数量と一致しません")
+
+                split_quantities[target_idx] += actual_qty
+                allocations_by_key[key] = matching_allocs
 
             # Validate total doesn't exceed current quantity
             total_allocated = sum(split_quantities)
@@ -1508,21 +1555,14 @@ class LotService:
                 target_lot_id = new_lot_ids[target_idx]
 
                 for transfer in transfers:
-                    # Find existing allocation
-                    existing_alloc = (
-                        self.db.query(AllocationSuggestion)
-                        .filter(
-                            AllocationSuggestion.lot_id == lot_receipt_id,
-                            AllocationSuggestion.delivery_place_id == transfer["delivery_place_id"],
-                            AllocationSuggestion.forecast_period == transfer["forecast_period"],
-                        )
-                        .first()
+                    key = (
+                        transfer["delivery_place_id"],
+                        transfer["forecast_period"],
+                        transfer["customer_id"],
                     )
-
-                    if existing_alloc:
-                        # Update to point to new lot
-                        existing_alloc.lot_id = target_lot_id
-                        self.db.add(existing_alloc)
+                    for alloc in allocations_by_key.get(key, []):
+                        alloc.lot_id = target_lot_id
+                        self.db.add(alloc)
                         transferred_count += 1
 
             self.db.commit()

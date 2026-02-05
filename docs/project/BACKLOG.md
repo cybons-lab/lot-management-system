@@ -1324,191 +1324,120 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 
 ## 10. Excelビュー機能 (材料ロット管理/個別)
 
-### 10-1. 成績書（COA）の納入先別管理
-
-**優先度**: Medium
-**作成**: 2026-01-26
-**状態**: 設計検討中
-
-**背景:**
-実際のExcel運用では、**検査成績書は納入先ごとに発行日が異なる**。
-例：同じロットでも DN北海道 → 2025/10/24、DN岩手 → 2025/10/24（同日の場合もある）
-
-**現状の問題:**
-- `LotReceipt.inspection_date` はロット単位の情報
-- 実運用では納入先×ロットの組み合わせで成績書を管理
-
-**対応案:**
-1. `AllocationSuggestion` に `coa_issue_date` カラムを追加
-2. または出荷レコードに成績書発行日を持たせる
-3. フロントエンドで納入先行ごとに日付を表示
-
-**関連ファイル:**
-- `backend/app/infrastructure/persistence/models/inventory_models.py` (AllocationSuggestion)
-- `frontend/src/features/inventory/components/excel-view/subcomponents/ShipmentTable.tsx`
-
----
-
-### 10-2. 収容数・保証期間フィールドの実装
+### 10-1. 収容数・保証期間フィールドの実装
 
 **優先度**: Low
-**作成**: 2026-01-26
+**状態**: 未対応
 
-**背景:**
-Excelビューヘッダーに「収容数」「保証期間」列があるが、バックエンドに対応フィールドがない。
+**内容**:
+- ヘッダーの「収容数」「保証期間」が常に `-` 表示
+- `Product` に `capacity` / `warranty_period_days` を追加し、APIレスポンスに含める
 
-**UIでの表示状態:**
-- 収容数: 常に `-` 表示
-- 保証期間: 常に `-` 表示
-
-**対応案:**
-1. `Product` テーブルに以下のカラムを追加:
-   - `capacity` (収容数): パッケージあたりの収容量
-   - `warranty_period_days` (保証期間日数): 製品の保証期間
-2. InventoryItem API レスポンスにこれらのフィールドを含める
-
-**関連ファイル:**
+**関連ファイル**:
 - `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts:177-178`
 - `backend/app/presentation/schemas/inventory/inventory_schema.py`
 
 ---
 
-### 10-3. 先方品番（customerPartNo）の表示
+### 10-2. 先方品番（customerPartNo）の表示
 
 **優先度**: Medium
-**作成**: 2026-01-26
+**状態**: 未対応
 
-**背景:**
-Excelビューの得意先情報に「先方品番」を表示する欄があるが、現在は常に `-` 表示。
-先方品番マスタ（`customer_items`）には顧客-製品のマッピングが存在する。
+**内容**:
+- 得意先情報の「先方品番」が常に `-`
+- `customer_items` を参照して表示できるようにする
 
-**対応案:**
-1. `AllocationSuggestion` レスポンスに `customer_part_no` を含める
-2. または、フロントエンドで `customer_id` + `product_id` から `customer_items` をルックアップ
-3. `useExcelViewData.ts` の `getDestinationInfo()` でAPIから取得した値を使用
-
-**関連ファイル:**
-- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts:56`
-- `backend/app/presentation/api/v2/forecast/router.py` (AllocationSuggestion API)
+**関連ファイル**:
+- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts`
+- `backend/app/presentation/api/v2/forecast/router.py`
 
 ---
 
-### 10-4. 発注NO.の表示
+### 10-3. 発注NO.の表示
 
 **優先度**: Low
-**作成**: 2026-01-26
+**状態**: 未対応
 
-**背景:**
-Excelビューのロット情報に「発注NO.」列があるが、常に `-` 表示。
-ロットが発注（Purchase Order）に紐づいている場合、その発注番号を表示すべき。
+**内容**:
+- ロット情報の「発注NO.」が常に `-`
+- 要件確認後に `purchase_order_number` 等のフィールドを検討
 
-**現状:**
-- `LotReceipt.origin_reference` に参照情報があるが、発注番号とは別概念
-- 発注管理機能自体が未実装の可能性
-
-**対応案:**
-1. 発注管理機能の実装状況を確認
-2. `LotReceipt` に `purchase_order_id` / `purchase_order_number` を追加
-3. またはビジネス要件を再確認（発注NOが必要かどうか）
-
-**関連ファイル:**
-- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts:84`
+**関連ファイル**:
+- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts`
 
 ---
 
-
-### 10-7. 日付列の仕様整理（予測 vs 実績）
+### 10-4. 日付列の仕様整理（予測 vs 実績）
 
 **優先度**: High
-**作成**: 2026-01-26
-**状態**: 設計検討中
+**状態**: 要件確認
 
-**背景:**
-実際の運用では、日付列は**予測（フォーキャスト）と実績の両方**を扱う：
-- 未来日付 = 仮引当/予定（現在の `AllocationSuggestion` で対応）
-- 過去日付 = 確定/実績（出荷済みデータ）
-- 日付が過ぎたら自動的に確定扱い
-
-**確認事項:**
-1. 日付が過ぎた行をどのように扱うか（自動確定？手動確定？）
-2. 実績データのソース（出荷履歴？引当確定？）
-3. 予測と実績の表示上の区別（色分け等）
+**内容**:
+- 予測（フォーキャスト）と実績（出荷確定）の扱い方針を決定
+- 日付が過ぎた列の扱い（自動確定/手動確定）の整理
 
 ---
 
-### 10-8. 同一ロット・入荷日別の行表示
+### 10-5. 同一ロット番号・入荷日別の行表示確認
 
 **優先度**: Medium
-**作成**: 2026-01-26
-**状態**: 設計確認済み ✅
+**状態**: 要確認
 
-**背景:**
-実運用では**同じロット番号でも入荷日が違えば別行として扱う**。
-例：ロット `CE880104` → 入荷日 `2025/11/12` と `2025/11/19` は別行
-
-**確認結果（2026-01-26）:**
-- `LotReceipt` のユニーク制約は `receipt_key`（UUID）のみ
-- `lot_number` にはユニーク制約がない
-- **同じロット番号で異なる `received_date` の複数レコード作成が可能** ✅
-
-**残タスク:**
-1. 「既存ロットに追加入庫」UIの用途を再検討（ほぼ使わないとのこと）
-2. Excelビューで同一ロット番号・別入荷日を正しく表示できるか確認
-
-**関連ファイル:**
-- `backend/app/infrastructure/persistence/models/lot_receipt_models.py`
-- `backend/app/infrastructure/persistence/models/lot_master_model.py`
+**内容**:
+- 同一ロット番号でも入荷日違いで別行表示されることのUI確認
 
 ---
 
-
-### 10-9. 認証・認可システムの再設計
+### 10-6. 納入先5件以下の罫線バグ
 
 **優先度**: Medium
-**作成**: 2026-02-02
-**カテゴリ**: セキュリティ・アクセス制御
+**状態**: 未対応
 
-**背景:**
-現状、APIの認証要件が不統一で、ゲストユーザーがダッシュボードを開くと401エラーが大量に発生する。システム設定の「ページ表示制御」の意味も曖昧で、ゲストに対してON/OFFできる設定になっているが、実際にはAPIが401を返すため機能しない。
-
-**詳細ドキュメント:**
-[docs/project/authentication-and-authorization-redesign.md](./authentication-and-authorization-redesign.md)
-
-**提案する設計原則:**
-1. すべての業務APIは認証必須 (`get_current_user`)
-2. ロールベースでアクセス制御 (ゲスト < 一般ユーザー < 管理者)
-3. ゲスト権限はハードコーディング (システム設定では変更不可)
-4. システム設定の「ページ表示制御」は一般ユーザー向け
-
-**実装タスク:**
-- Phase 1: バックエンド認証強化（すべてのAPIに認証追加、ロールチェック実装）
-- Phase 2: フロントエンド権限管理（ゲスト権限のハードコーディング、AccessGuard更新）
-- Phase 3: エラーハンドリング改善（401/403エラー時の適切なUI表示）
+**内容**:
+- ShipmentTable / DateGrid の縦線が揃わない
+- CSS Grid化などで解消方針
 
 ---
 
-### 10-10. Excelビュー納入先行の並び替え機能
+### 10-7. 納入先追加の反映遅延
+
+**優先度**: Medium
+**状態**: 要確認
+
+**内容**:
+- 納入先追加後に画面反映が遅れるケースがあるか再確認
+
+---
+
+### 10-8. コメント・手動出荷日の保存反映確認
+
+**優先度**: Medium
+**状態**: 要確認
+
+**内容**:
+- 保存 → 再読み込みで反映されるかの確認
+
+---
+
+### 10-9. ロット重複時のエラーハンドリング
+
+**優先度**: Medium
+**状態**: 未対応
+
+**内容**:
+- 既存ロット番号保存時のトースト/バリデーション表示改善
+
+---
+
+### 10-10. 納入先行の並び替え機能
 
 **優先度**: Low
-**作成**: 2026-02-03
-**カテゴリ**: UX改善
+**状態**: 未対応
 
-**背景:**
-Excelビューの納入先行は現在API取得順で固定表示されている。実運用では特定の納入先を上位に配置したい要望がある。
+**内容**:
+- ドラッグ&ドロップ並び替え + 保存（local/DB）
 
-**要件:**
-1. 納入先行をドラッグ&ドロップで並び替え可能にする
-2. 並び順をローカルストレージまたはDBに保存
-3. ロット単位またはproduct_id単位で並び順を保存
-
-**実装案:**
-1. `dnd-kit` または `react-beautiful-dnd` を使用
-2. 並び順を `display_order` カラム（`allocation_suggestions`または専用テーブル）に保存
-3. フロントエンドでソート済みの順序でレンダリング
-
-**関連ファイル:**
-- `frontend/src/features/inventory/components/excel-view/subcomponents/ShipmentTable.tsx`
-- `frontend/src/features/inventory/components/excel-view/LotSection.tsx`
 
 ---
 

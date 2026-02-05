@@ -169,7 +169,8 @@ function DateCell({
             {/* Red triangle indicator for comments */}
             {comment && (
               <div
-                className="absolute top-0 left-0 w-0 h-0 border-t-[8px] border-l-[8px] border-t-red-500 border-l-transparent z-10 pointer-events-none"
+                className="absolute top-0 right-0 h-2 w-2 bg-red-500 z-10 pointer-events-none"
+                style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
                 title={comment}
               />
             )}

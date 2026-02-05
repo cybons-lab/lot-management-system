@@ -16,6 +16,33 @@ Excel View機能のPhase 1からPhase 11までのすべての実装について�
 
 ---
 
+## ✅ レビュー対応反映（2026-02-05）
+
+以下の修正を実装済みです（テスト未実行）。
+
+- Phase 9: `update_manual_suggestions()` に開始/完了/失敗ログと `rollback()` を追加（`backend/app/application/services/allocations/suggestion.py`）
+- Phase 10.2: 消費済みロットの分割を禁止（`backend/app/application/services/inventory/lot_service.py`）
+- Phase 10.3: `target_lot_index` の範囲/数量/重複/lot_id 検証を追加し、分割数量はDB上の割当数量から計算（`backend/app/application/services/inventory/lot_service.py`）
+- Phase 10.3: 消費済みロットのスマート分割を禁止（`backend/app/application/services/inventory/lot_service.py`）
+- Phase 10.3/11: ルーターで `HTTPException` を握りつぶさないよう修正（`backend/app/presentation/api/routes/inventory/lots_router.py`）
+- Phase 11: `new_quantity < consumed_quantity` を禁止（`backend/app/application/services/inventory/lot_service.py`）
+- Frontend: `split_count` を `splitTargets.length` で計算し、割当ゼロのスマート分割をブロック（`frontend/src/features/inventory/components/excel-view/ExcelViewPage.tsx`）
+
+### 🧪 テスト結果（未実行）
+- バックエンドテスト: 未実行（依頼により後続で実施予定）
+- フロントエンドテスト: 未実行（依頼により後続で実施予定）
+- TypeScript型チェック: 未実行（依頼により後続で実施予定）
+- ESLint: 未実行（依頼により後続で実施予定）
+
+### 🔍 再レビュー項目（要確認）
+- Phase 10.3: 割当数量の一致検証によるエラー時のUX確認（ユーザー向けメッセージ表示）
+- Phase 10.2/10.3: 消費済みロット分割禁止の業務要件適合性
+- Phase 11: `new_quantity < consumed_quantity` バリデーションの業務要件適合性
+- Phase 9: 追加ログの出力内容/レベルが運用基準に合致するか
+- Phase 10.3: `allocation_transfers` に同一キーが重複した場合のハンドリングの期待挙動
+
+---
+
 ## 🎯 各フェーズの概要
 
 ### Phase 1-4: Excel View基盤構築

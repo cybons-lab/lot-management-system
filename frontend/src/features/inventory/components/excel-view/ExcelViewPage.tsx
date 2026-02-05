@@ -124,9 +124,17 @@ export function ExcelViewPage() {
 
   // Phase 10.3: Smart split mutation
   const smartSplitMutation = useMutation({
-    mutationFn: ({ lotId, transfers }: { lotId: number; transfers: AllocationTransfer[] }) =>
+    mutationFn: ({
+      lotId,
+      transfers,
+      splitCount,
+    }: {
+      lotId: number;
+      transfers: AllocationTransfer[];
+      splitCount: number;
+    }) =>
       smartSplitLot(lotId, {
-        split_count: Math.max(...transfers.map((t) => t.target_lot_index)) + 1,
+        split_count: splitCount,
         allocation_transfers: transfers,
       }),
     onSuccess: (result) => {
@@ -649,6 +657,7 @@ export function ExcelViewPage() {
           onConfirm={async (splitTargets) => {
             // Build allocation transfers
             const transfers: AllocationTransfer[] = [];
+            const splitCount = splitTargets.length;
 
             splitTargets.forEach((target) => {
               target.allocations.forEach((alloc) => {
@@ -673,9 +682,15 @@ export function ExcelViewPage() {
               });
             });
 
+            if (transfers.length === 0) {
+              toast.error("割り当てがないためスマート分割できません");
+              return;
+            }
+
             await smartSplitMutation.mutateAsync({
               lotId: selectedLotForSmartSplit.lotId,
               transfers,
+              splitCount,
             });
 
             setSmartSplitDialogOpen(false);

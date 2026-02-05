@@ -651,6 +651,8 @@ def split_lot_receipt(
     except ValueError as e:
         logger.error("Lot split validation error", extra={"lot_id": lot_id, "error": str(e)})
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
     except Exception:
         logger.exception("Lot split failed", extra={"lot_id": lot_id})
         raise HTTPException(status_code=500, detail="ロット分割に失敗しました")
@@ -709,6 +711,8 @@ def update_lot_receipt_quantity(
             "Lot quantity update validation error", extra={"lot_id": lot_id, "error": str(e)}
         )
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
     except Exception:
         logger.exception("Lot quantity update failed", extra={"lot_id": lot_id})
         raise HTTPException(status_code=500, detail="入庫数の更新に失敗しました")
@@ -765,6 +769,8 @@ def smart_split_lot_with_allocations(
     except ValueError as e:
         logger.error("Smart split validation error", extra={"lot_id": lot_id, "error": str(e)})
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
     except Exception:
         logger.exception("Smart split failed", extra={"lot_id": lot_id})
         raise HTTPException(status_code=500, detail="スマート分割に失敗しました")

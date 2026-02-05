@@ -190,7 +190,10 @@ export function LotSection({
             {/* 備考アイコン（備考が存在する場合のみ） */}
             {remarks && (
               <div className="absolute top-2 left-2 z-10">
-                <FileText className="h-5 w-5 text-blue-600" />
+                <div className="relative">
+                  <FileText className="h-5 w-5 text-amber-600" />
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-white" />
+                </div>
               </div>
             )}
             <div className="grid grid-cols-[auto_112px_320px_112px_1fr] min-h-[272px]">
@@ -250,9 +253,15 @@ export function LotSection({
                 onClick={() => setRemarksExpanded(!remarksExpanded)}
               >
                 <span className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
+                  <FileText
+                    className={`h-4 w-4 ${remarks ? "text-amber-600" : "text-slate-500"}`}
+                  />
                   備考
-                  {remarks && <span className="text-xs text-blue-600">(入力あり)</span>}
+                  {remarks && (
+                    <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded">
+                      あり
+                    </span>
+                  )}
                 </span>
                 <span className="text-slate-400">{remarksExpanded ? "▲" : "▼"}</span>
               </button>

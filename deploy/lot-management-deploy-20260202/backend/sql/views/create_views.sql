@@ -326,6 +326,7 @@ SELECT
     lr.cost_price,
     lr.sales_price,
     lr.tax_rate,
+    lr.remarks,
 
     usa_primary.user_id AS primary_user_id,
     u_primary.username AS primary_username,
