@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -89,15 +89,33 @@ describe("InventoryTable", () => {
     );
 
     // Initial widths should be applied to headers
-    const headers = screen.getAllByRole("columnheader");
-    // 11 columns: expander, product, supplier, warehouse, lots, total, soft, hard, available, updated, actions
-    expect(headers).toHaveLength(11);
+    // We only want headers from the thead to avoid picking up toolbar buttons
+    const thead = container.querySelector("thead");
+    if (!thead) throw new Error("thead not found");
 
-    // Check product header width (default 200)
-    // We need to match the exact text or use index.
-    // "製品" is the 2nd header (index 1)
-    expect(headers[1]).toHaveTextContent("製品");
-    expect(headers[1]).toHaveStyle({ width: "250px" });
+    // Sortable columns get "button" role, non-sortable get "columnheader" role
+    const buttonHeaders = within(thead as HTMLElement).queryAllByRole("button");
+    const columnHeaders = within(thead as HTMLElement).queryAllByRole("columnheader");
+    const allHeaders = [...columnHeaders, ...buttonHeaders];
+
+    // 11 columns in total:
+    // 1. Expander (DataTable column, columnheader)
+    // 2. Product (inventoryColumns[0], button)
+    // 3. Supplier (inventoryColumns[1], button)
+    // 4. Warehouse (inventoryColumns[2], button)
+    // 5. Lots (inventoryColumns[3], button)
+    // 6. Total (inventoryColumns[4], button)
+    // 7. Soft (inventoryColumns[5], button)
+    // 8. Hard (inventoryColumns[6], button)
+    // 9. Available (inventoryColumns[7], button)
+    // 10. Updated (inventoryColumns[8], button)
+    // 11. Actions (DataTable rowActions column, columnheader)
+    expect(allHeaders).toHaveLength(11);
+
+    // Find "製品" header specifically
+    const productHeader = allHeaders.find((h) => h.textContent?.includes("製品"));
+    expect(productHeader).toBeDefined();
+    expect(productHeader as HTMLElement).toHaveStyle({ width: "250px" });
 
     // Check for resize handles
     const resizers = container.querySelectorAll(".cursor-col-resize");

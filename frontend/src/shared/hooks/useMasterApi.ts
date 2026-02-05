@@ -44,14 +44,14 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
       enabled: !!id,
     });
 
-  const { useCreate, useUpdate, useRestore } = createBasicMutations<T, TCreate, TUpdate>({
+  const { useCreate, useUpdate, useRestore } = useBasicMutations<T, TCreate, TUpdate>({
     resourcePath,
     queryKey,
     queryClient,
     handleConflict,
   });
 
-  const { useDelete, useSoftDelete, usePermanentDelete } = createDeleteMutations({
+  const { useDelete, useSoftDelete, usePermanentDelete } = useDeleteMutations({
     resourcePath,
     queryKey,
     queryClient,
@@ -75,7 +75,7 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
 const isConflictError = (error: unknown): boolean =>
   error instanceof HTTPError && error.response?.status === 409;
 
-function createBasicMutations<T, TCreate, TUpdate>({
+function useBasicMutations<T, TCreate, TUpdate>({
   resourcePath,
   queryKey,
   queryClient,
@@ -110,7 +110,7 @@ function createBasicMutations<T, TCreate, TUpdate>({
   return { useCreate, useUpdate, useRestore };
 }
 
-function createDeleteMutations({
+function useDeleteMutations({
   resourcePath,
   queryKey,
   queryClient,

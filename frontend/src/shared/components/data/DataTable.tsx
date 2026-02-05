@@ -127,6 +127,15 @@ interface UseDataTableColumnsProps<T> {
   rowActions?: (row: T) => React.ReactNode;
 }
 
+const isInteractiveTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(
+    target.closest(
+      "button, a, input, select, textarea, [role='button'], [role='link'], [role='menuitem'], [role='checkbox'], [role='switch']",
+    ),
+  );
+};
+
 function useDataTableColumns<T>({
   columns,
   selectable,
@@ -632,7 +641,12 @@ export function DataTable<T = never>({
                       )}
                       onClick={() => onRowClick?.(row.original)}
                       onKeyDown={(e) => {
-                        if (onRowClick && (e.key === "Enter" || e.key === " ")) {
+                        if (
+                          onRowClick &&
+                          (e.key === "Enter" || e.key === " ") &&
+                          !e.defaultPrevented &&
+                          !isInteractiveTarget(e.target)
+                        ) {
                           e.preventDefault();
                           onRowClick(row.original);
                         }
@@ -736,7 +750,12 @@ export function DataTable<T = never>({
                       )}
                       onClick={() => onRowClick?.(row.original)}
                       onKeyDown={(e) => {
-                        if (onRowClick && (e.key === "Enter" || e.key === " ")) {
+                        if (
+                          onRowClick &&
+                          (e.key === "Enter" || e.key === " ") &&
+                          !e.defaultPrevented &&
+                          !isInteractiveTarget(e.target)
+                        ) {
                           e.preventDefault();
                           onRowClick(row.original);
                         }
