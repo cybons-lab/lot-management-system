@@ -196,6 +196,46 @@
 
 ---
 
+### 11. Phase 9: 3階層メモ機能実装（2026-02-05）
+**完了日:** 2026-02-05
+
+**修正内容:**
+- **Phase 9.1:** ロット備考（remarks）をLotSectionに実装
+  - 折りたたみ可能なテキストエリア（onBlur自動保存）
+  - `lot_receipts.remarks`フィールド追加（マイグレーション済み）
+- **Phase 9.2:** 数量別コメント（comment）をDateGridセルに実装
+  - 右クリックメニューから「コメントを追加/編集」
+  - 赤い三角形インジケーターとツールチップ表示
+  - `allocation_suggestions.comment`フィールド追加
+- **Phase 9.3:** 手動出荷日（manual_shipment_date）をDateGridセルに実装
+  - 右クリックメニューから「出荷日を設定/編集」
+  - 数量の下に薄いグレーで「出荷: MM/dd」表示
+  - `allocation_suggestions.manual_shipment_date`フィールド追加
+- ページレベルメモ（customer_item_delivery_settings.notes）を実装
+  - ExcelViewPage上部に折りたたみ可能なメモ欄を追加
+  - メーカー品番 × 先方品番 × 納入先に紐付く
+
+**Known Issues:**
+- Phase 9.2と9.3で保存時に200 OKが返るが画面に反映されない
+- バックエンドのbatch update endpointで永続化処理が未実装の可能性
+- フロントエンド側のキャッシュ無効化は正しく実装済み
+
+**修正ファイル:**
+- `backend/app/presentation/schemas/allocations/allocation_suggestions_schema.py`
+- `backend/app/presentation/schemas/masters/customer_item_delivery_setting_schema.py`
+- `frontend/src/features/allocations/api.ts`
+- `frontend/src/features/inventory/components/excel-view/ExcelViewPage.tsx`
+- `frontend/src/features/inventory/components/excel-view/LotSection.tsx`
+- `frontend/src/features/inventory/components/excel-view/subcomponents/DateGrid.tsx`
+- `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts`
+- `frontend/src/features/inventory/components/excel-view/types.ts`
+- `frontend/src/features/customer-items/delivery-settings/api.ts`
+- `frontend/src/shared/libs/normalize.ts`
+
+**コミット:** `feature/excel-view-phase9-11` ブランチ
+
+---
+
 ## 📋 次のフェーズ
 
 ### **推奨: 残課題の解決とアーカイブ機能実装**
@@ -275,3 +315,20 @@
 - [ ] フェーズ6: マスターデータ管理
 - [ ] フェーズ7: ショートカットと検索の強化
 - [ ] フェーズ8: 単位管理の検討（保留）
+- [x] **フェーズ9: 追加機能（ロット備考、数量別コメント、手動出荷日）**
+    - [x] DBマイグレーション（lot_receipts.remarks, allocation_suggestions.comment/manual_shipment_date）
+    - [x] `LotSection` への備考エリア追加
+    - [x] `DateGrid` への数量別コメント（右クリック+赤▲）実装
+    - [x] 手動出荷日のガード下表示実装
+    - [ ] **残課題: コメントと出荷日の表示反映問題**
+      - 保存時に200 OKが返るが画面に反映されない
+      - バックエンドの永続化処理要調査（batch update endpoint）
+      - キャッシュ無効化は正しく実装済み（`refetchType: "all"`）
+- [ ] **フェーズ10: UI修正 & ロット分割**
+    - [ ] **納入先5件以下の罫線バグ修正（未完了 - 線が揃っていない）**
+      - 現状: min-h-[272px]を追加したが、依然として右端の縦線が揃わない
+      - 調査必要: ShipmentTable, DateGrid, BigStatColumn の高さ調整
+      - 関連ファイル: LotSection.tsx, ShipmentTable.tsx, DateGrid.tsx
+    - [ ] ロット分割（分納）API & ダイアログ実装
+- [ ] **フェーズ11: 理由付き在庫調整**
+    - [ ] 入庫数編集時の理由入力ダイアログ実装

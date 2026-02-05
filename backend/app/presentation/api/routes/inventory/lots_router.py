@@ -135,7 +135,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -149,6 +149,9 @@ from app.presentation.api.routes.auth.auth_router import (
     require_role,
     require_write_permission,
 )
+from app.presentation.schemas.inventory.adjustment_reason_schema import (
+    LotReceiptQuantityUpdateRequest,
+)
 from app.presentation.schemas.inventory.inventory_schema import (
     LotArchiveRequest,
     LotCreate,
@@ -158,6 +161,8 @@ from app.presentation.schemas.inventory.inventory_schema import (
     StockMovementCreate,
     StockMovementResponse,
 )
+from app.presentation.schemas.inventory.lot_split_schema import LotSplitRequest
+from app.presentation.schemas.inventory.smart_split_schema import SmartSplitRequest
 
 
 router = APIRouter(prefix="/lots", tags=["lots"])
@@ -604,3 +609,168 @@ def create_stock_movement(movement: StockMovementCreate, db: Session = Depends(g
     )
     service = LotService(db)
     return service.create_stock_movement(movement)
+
+
+# ===== Phase 10.2: Lot Split =====
+@router.post("/{lot_id}/split", response_model=dict)
+def split_lot_receipt(
+    lot_id: int,
+    request: LotSplitRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """ロット入庫を複数に分割（Phase 10.2）.
+
+    Args:
+        lot_id: 分割対象のロット入庫ID
+        request: 分割数量のリスト
+        db: データベースセッション
+        current_user: 現在のユーザー
+
+    Returns:
+        dict: 分割結果（元のロットIDと新規ロットIDのリスト）
+
+    Raises:
+        HTTPException: ロットが存在しない場合（404）、数量が不正な場合（400）
+    """
+    logger.info(
+        "Lot split requested",
+        extra={"lot_id": lot_id, "split_count": len(request.splits), "user_id": current_user.id},
+    )
+
+    service = LotService(db)
+    try:
+        split_quantities = [split.quantity for split in request.splits]
+        new_lot_ids = service.split_lot_receipt(lot_id, split_quantities, current_user.id)
+
+        return {
+            "original_lot_id": lot_id,
+            "new_lot_ids": new_lot_ids,
+            "message": f"ロットを{len(new_lot_ids)}件に分割しました",
+        }
+    except ValueError as e:
+        logger.error("Lot split validation error", extra={"lot_id": lot_id, "error": str(e)})
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Lot split failed", extra={"lot_id": lot_id})
+        raise HTTPException(status_code=500, detail="ロット分割に失敗しました")
+
+
+# ===== Phase 11: Quantity Update with Reason =====
+@router.put("/{lot_id}/quantity", response_model=dict)
+def update_lot_receipt_quantity(
+    lot_id: int,
+    request: LotReceiptQuantityUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """入庫数を理由付きで更新（Phase 11）.
+
+    Args:
+        lot_id: ロット入庫ID
+        request: 新しい数量と理由
+        db: データベースセッション
+        current_user: 現在のユーザー
+
+    Returns:
+        dict: 更新結果（調整レコードIDを含む）
+
+    Raises:
+        HTTPException: ロットが存在しない場合（404）、理由が空の場合（400）
+    """
+    logger.info(
+        "Lot quantity update with reason requested",
+        extra={
+            "lot_id": lot_id,
+            "new_quantity": float(request.new_quantity),
+            "user_id": current_user.id,
+        },
+    )
+
+    service = LotService(db)
+    try:
+        # Get current quantity before update
+        lot = service.get_lot(lot_id)
+        old_quantity = lot.received_quantity
+
+        adjustment_id = service.update_lot_receipt_quantity_with_reason(
+            lot_id, request.new_quantity, request.reason, current_user.id
+        )
+
+        return {
+            "lot_receipt_id": lot_id,
+            "old_quantity": old_quantity,
+            "new_quantity": request.new_quantity,
+            "adjustment_id": adjustment_id,
+            "message": "入庫数を更新しました",
+        }
+    except ValueError as e:
+        logger.error(
+            "Lot quantity update validation error", extra={"lot_id": lot_id, "error": str(e)}
+        )
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Lot quantity update failed", extra={"lot_id": lot_id})
+        raise HTTPException(status_code=500, detail="入庫数の更新に失敗しました")
+
+
+# ===== Phase 10.3: Smart Split with Allocation Transfer =====
+@router.post("/{lot_id}/smart-split", response_model=dict)
+def smart_split_lot_with_allocations(
+    lot_id: int,
+    request: SmartSplitRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """ロットをスマート分割し、割り当てを移動（Phase 10.3）.
+
+    Args:
+        lot_id: 分割対象のロットID
+        request: 分割数と割り当て移動指示
+        db: データベースセッション
+        current_user: 現在のユーザー
+
+    Returns:
+        dict: 分割結果（ロットID、数量、移動した割り当て数）
+
+    Raises:
+        HTTPException: ロットが存在しない場合（404）、検証失敗（400）
+    """
+    logger.info(
+        "Smart lot split requested",
+        extra={
+            "lot_id": lot_id,
+            "split_count": request.split_count,
+            "transfers": len(request.allocation_transfers),
+            "user_id": current_user.id,
+        },
+    )
+
+    service = LotService(db)
+    try:
+        # Convert Pydantic models to dicts
+        transfers = [t.model_dump() for t in request.allocation_transfers]
+
+        new_lot_ids, split_quantities, transferred_count = service.smart_split_lot_with_allocations(
+            lot_id, request.split_count, transfers, current_user.id
+        )
+
+        return {
+            "original_lot_id": lot_id,
+            "new_lot_ids": new_lot_ids,
+            "split_quantities": [float(q) for q in split_quantities],
+            "transferred_allocations": transferred_count,
+            "message": f"ロットを{len(new_lot_ids)}件に分割し、{transferred_count}件の割り当てを移動しました",
+        }
+    except ValueError as e:
+        logger.error("Smart split validation error", extra={"lot_id": lot_id, "error": str(e)})
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Smart split failed", extra={"lot_id": lot_id})
+        raise HTTPException(status_code=500, detail="スマート分割に失敗しました")

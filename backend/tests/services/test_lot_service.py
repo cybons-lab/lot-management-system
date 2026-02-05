@@ -413,7 +413,12 @@ class TestCreateLot:
         assert lot_master.supplier_id is None
 
     def test_create_lot_reuses_existing_lot_master(self, db_session: Session, lot_master_data):
-        """同一ロット番号・製品・仕入先の場合、既存LotMasterを再利用するテスト"""
+        """同一ロット番号・製品・仕入先の場合、既存LotMasterを再利用するテスト
+
+        Phase 10制約: 同一ロット番号・同一入荷日は重複不可のため、
+        2回目の作成では異なる入荷日を使用する。
+        """
+        from datetime import timedelta
         from decimal import Decimal
 
         from app.presentation.schemas.inventory.inventory_schema import LotCreate, LotOriginType
@@ -436,11 +441,12 @@ class TestCreateLot:
         master_count_after_first = db_session.query(LotMaster).count()
 
         # 同じロット番号で2番目のロット作成（小分け入荷のシナリオ）
+        # Phase 10制約: 異なる入荷日を使用
         lot_create2 = LotCreate(
             lot_number="SHARED-MASTER",
             supplier_item_id=data["product"].id,
             warehouse_id=data["warehouse"].id,
-            received_date=date.today(),
+            received_date=date.today() + timedelta(days=1),
             received_quantity=Decimal("50"),
             unit="EA",
             origin_type=LotOriginType.ADHOC,

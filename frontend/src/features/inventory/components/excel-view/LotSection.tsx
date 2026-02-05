@@ -1,5 +1,5 @@
-import { Archive, Edit, Lock, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Archive, Edit, FileText, Lock, Split, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { BigStatColumn } from "./subcomponents/BigStatColumn";
 import { DateGrid } from "./subcomponents/DateGrid";
@@ -59,9 +59,25 @@ interface Props {
   onDelete?: (lotId: number) => void;
   onArchive?: (lotId: number, lotNumber?: string) => Promise<void> | void;
   isArchiving?: boolean;
+  // Phase 9.2: Cell-level comments
+  onCommentChange?: (lotId: number, dpId: number, date: string, comment: string | null) => void;
+  // Phase 9.3: Manual shipment date
+  onManualShipmentDateChange?: (
+    lotId: number,
+    dpId: number,
+    date: string,
+    shipmentDate: string | null,
+  ) => void;
+  // Phase 10.2: Lot split
+  onSplitLot?: (lotId: number) => void;
+  // Phase 11: Quantity update with reason
+  onUpdateQuantity?: (lotId: number) => void;
+  // Phase 10.10: Destination row ordering
+  onReorderDestination?: (fromId: number, toId: number) => void;
 }
 
 /* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
 export function LotSection({
   lot,
   dateColumns,
@@ -75,11 +91,31 @@ export function LotSection({
   onDelete,
   onArchive,
   isArchiving = false,
+  onCommentChange,
+  onManualShipmentDateChange,
+  onSplitLot,
+  onUpdateQuantity,
+  onReorderDestination,
 }: Props) {
-  const { lotId, lotInfo, destinations, totalStock, totalShipment, warehouseName, warehouseCode } =
-    lot;
+  const {
+    lotId,
+    lotInfo,
+    destinations,
+    totalStock,
+    totalShipment,
+    warehouseName,
+    warehouseCode,
+    remarks,
+  } = lot;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [remarksExpanded, setRemarksExpanded] = useState(false);
+  const [localRemarks, setLocalRemarks] = useState(remarks || "");
+
+  // Sync local remarks with prop changes
+  useEffect(() => {
+    setLocalRemarks(remarks || "");
+  }, [remarks]);
 
   // ステータスを判定
   const statuses = getLotStatuses({
@@ -107,6 +143,19 @@ export function LotSection({
             className={`border border-slate-300 mt-6 text-xs shadow-sm rounded-md overflow-hidden min-w-max relative ${bgColor}`}
           >
             <div className="absolute top-2 right-2 z-20 flex gap-1">
+              {onSplitLot && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-slate-600 hover:text-slate-900"
+                  onClick={() => onSplitLot(lotId)}
+                  aria-label="ロットを分割"
+                  title="分割"
+                >
+                  <Split className="h-4 w-4" />
+                </Button>
+              )}
               {onArchive && (
                 <Button
                   type="button"
@@ -141,7 +190,16 @@ export function LotSection({
                 <Lock className="h-6 w-6 text-gray-600" />
               </div>
             )}
-            <div className="flex shrink-0">
+            {/* 備考アイコン（備考が存在する場合のみ） */}
+            {remarks && (
+              <div className="absolute top-2 left-2 z-10">
+                <div className="relative">
+                  <FileText className="h-5 w-5 text-amber-600" />
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-white" />
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-[auto_112px_320px_112px_1fr] min-h-[272px]">
               {/* 1. Lot Information (Fixed) */}
               <LotInfoGroups
                 lotInfo={lotInfo}
@@ -168,6 +226,7 @@ export function LotSection({
                 lotId={lotId}
                 onCoaDateChange={onCoaDateChange}
                 onAddDestination={() => onAddDestination?.(lotId)}
+                onReorderDestination={onReorderDestination}
               />
 
               {/* 4. Current Stock (Big Vertical) */}
@@ -185,7 +244,48 @@ export function LotSection({
                 lotId={lotId}
                 onQtyChange={onQtyChange}
                 onAddColumn={onAddColumn}
+                onCommentChange={onCommentChange}
+                onManualShipmentDateChange={onManualShipmentDateChange}
               />
+            </div>
+
+            {/* Phase 9.1: 備考セクション（折りたたみ可能） */}
+            <div className="border-t border-slate-300">
+              <button
+                type="button"
+                className="w-full px-4 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-between"
+                onClick={() => setRemarksExpanded(!remarksExpanded)}
+              >
+                <span className="flex items-center gap-2">
+                  <FileText
+                    className={`h-4 w-4 ${remarks ? "text-amber-600" : "text-slate-500"}`}
+                  />
+                  備考
+                  {remarks && (
+                    <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded">
+                      あり
+                    </span>
+                  )}
+                </span>
+                <span className="text-slate-400">{remarksExpanded ? "▲" : "▼"}</span>
+              </button>
+              {remarksExpanded && (
+                <div className="px-4 py-3 bg-slate-50/50">
+                  <textarea
+                    className="w-full min-h-[80px] px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                    placeholder="ロットに関する備考を入力..."
+                    value={localRemarks}
+                    onBlur={(e) => {
+                      if (onLotFieldChange) {
+                        onLotFieldChange(lotId, "remarks", e.target.value);
+                      }
+                    }}
+                    onChange={(e) => {
+                      setLocalRemarks(e.target.value);
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </ContextMenuTrigger>
@@ -194,6 +294,18 @@ export function LotSection({
             <ContextMenuItem onClick={() => onEdit(lotId)}>
               <Edit className="mr-2 h-4 w-4" />
               編集
+            </ContextMenuItem>
+          )}
+          {onSplitLot && (
+            <ContextMenuItem onClick={() => onSplitLot(lotId)}>
+              <Split className="mr-2 h-4 w-4" />
+              ロット分割
+            </ContextMenuItem>
+          )}
+          {onUpdateQuantity && (
+            <ContextMenuItem onClick={() => onUpdateQuantity(lotId)}>
+              <FileText className="mr-2 h-4 w-4" />
+              入庫数調整
             </ContextMenuItem>
           )}
           <ContextMenuSeparator />

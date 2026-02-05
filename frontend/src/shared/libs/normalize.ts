@@ -79,6 +79,7 @@ type LotResponse = components["schemas"]["LotResponse"] & {
   delivery_place_id?: number | null;
   delivery_place_code?: string | null;
   delivery_place_name?: string | null;
+  order_no?: string | null;
   // Phase 1 Fields (Manual extension until OpenAPI update)
   origin_type?: string | null;
   origin_reference?: string | null;
@@ -89,6 +90,8 @@ type LotResponse = components["schemas"]["LotResponse"] & {
   // Phase 3 Fields
   maker_part_no?: string | null;
   customer_part_no?: string | null;
+  // Phase 9 Fields
+  remarks?: string | null;
 };
 type ProductResponse = components["schemas"]["SupplierItemResponse"];
 
@@ -149,6 +152,7 @@ export interface LotUI extends Record<string, unknown> {
   id: number; // Required for UI operations
   lot_id: number; // DDL v2.2
   lot_number: string | null;
+  order_no: string | null;
   maker_part_no: string | null; // Phase 3
   customer_part_no: string | null; // Phase 3
   supplier_item_id: number; // Phase 1: Renamed from product_group_id
@@ -190,6 +194,9 @@ export interface LotUI extends Record<string, unknown> {
   product_deleted?: boolean;
   warehouse_deleted?: boolean;
   supplier_deleted?: boolean;
+
+  // Phase 9: Remarks field
+  remarks?: string | null;
 
   // Legacy fields (deprecated, for backward compatibility)
   product_code?: string | null;
@@ -270,6 +277,7 @@ export function normalizeLot(
   return {
     lot_id: lot.lot_id,
     lot_number: S(lot.lot_number),
+    order_no: S((lot as Record<string, unknown>).order_no as string, ""),
     maker_part_no: lot.maker_part_no ?? null,
     customer_part_no: lot.customer_part_no ?? null,
     supplier_item_id: lot.supplier_item_id, // Phase 1: Renamed from product_group_id
@@ -314,6 +322,9 @@ export function normalizeLot(
     cost_price: lot.cost_price != null ? String(lot.cost_price) : null,
     sales_price: lot.sales_price != null ? String(lot.sales_price) : null,
     tax_rate: lot.tax_rate != null ? String(lot.tax_rate) : null,
+
+    // Phase 9: Remarks field
+    remarks: lot.remarks ?? null,
 
     // Legacy fields (for backward compatibility)
     id: lot.lot_id,

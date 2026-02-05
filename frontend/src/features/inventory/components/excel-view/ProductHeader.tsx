@@ -24,6 +24,10 @@ function DestinationCard({ dest }: { dest: DestinationInfo }) {
           <span className="text-slate-400">納入先コード:</span>
           <span className="text-slate-500">{dest.deliveryPlaceCode}</span>
         </div>
+        <div className="flex justify-between">
+          <span className="text-slate-400">先方品番:</span>
+          <span className="text-slate-500">{dest.customerPartNo}</span>
+        </div>
       </div>
     </div>
   );
@@ -123,8 +127,8 @@ export function ProductHeader({ data, involvedDestinations }: Props) {
           <div className="p-2 bg-white border-t border-slate-200">
             {involvedDestinations.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                {involvedDestinations.map((dest, idx) => (
-                  <DestinationCard key={idx} dest={dest} />
+                {involvedDestinations.map((dest) => (
+                  <DestinationCard key={dest.deliveryPlaceId} dest={dest} />
                 ))}
               </div>
             ) : (

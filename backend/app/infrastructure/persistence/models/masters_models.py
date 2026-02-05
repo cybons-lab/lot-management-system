@@ -654,6 +654,10 @@ class CustomerItemDeliverySetting(Base):
     is_default: Mapped[bool] = mapped_column(
         Boolean, server_default="FALSE", nullable=False, comment="デフォルト設定フラグ"
     )
+    # Page-level notes for Excel View (メーカー品番 × 先方品番 × 納入先の組み合わせ)
+    notes: Mapped[str | None] = mapped_column(
+        Text, nullable=True, comment="Excel View ページ全体のメモ"
+    )
     valid_from: Mapped[date | None] = mapped_column(Date, nullable=True, comment="有効開始日")
     valid_to: Mapped[date | None] = mapped_column(Date, nullable=True, comment="有効終了日")
     created_at: Mapped[datetime] = mapped_column(

@@ -231,13 +231,13 @@ class InventoryService:
         if use_supplier_grouping:
             # Supplier × Product × Warehouse grouping (supplier-centric view)
             group_by_cols = "v.supplier_id, v.supplier_item_id, v.warehouse_id"
-            group_by_full = f"{group_by_cols}, v.display_name, v.product_code, v.warehouse_name, v.warehouse_code, v.supplier_name, v.supplier_code"
+            group_by_full = f"{group_by_cols}, v.display_name, v.product_code, v.capacity, v.warranty_period_days, v.warehouse_name, v.warehouse_code, v.supplier_name, v.supplier_code"
             select_supplier = ", v.supplier_id, v.supplier_name, v.supplier_code"
             order_by = "v.supplier_id, v.supplier_item_id, v.warehouse_id"
         else:
             # Product × Warehouse grouping (default, aggregates across suppliers)
             group_by_cols = "v.supplier_item_id, v.warehouse_id"
-            group_by_full = f"{group_by_cols}, v.display_name, v.product_code, v.warehouse_name, v.warehouse_code"
+            group_by_full = f"{group_by_cols}, v.display_name, v.product_code, v.capacity, v.warranty_period_days, v.warehouse_name, v.warehouse_code"
             select_supplier = ""
             order_by = "v.supplier_item_id, v.warehouse_id"
 
@@ -265,6 +265,8 @@ class InventoryService:
                 MAX(v.updated_at) as last_updated,
                 v.display_name,
                 v.product_code,
+                v.capacity,
+                v.warranty_period_days,
                 v.warehouse_name,
                 v.warehouse_code
                 {select_supplier}
@@ -397,6 +399,8 @@ class InventoryService:
                         last_updated=row.last_updated,
                         product_name=row.display_name,
                         product_code=row.product_code,
+                        capacity=getattr(row, "capacity", None),
+                        warranty_period_days=getattr(row, "warranty_period_days", None),
                         warehouse_name=row.warehouse_name,
                         warehouse_code=row.warehouse_code,
                         # Supplier fields (present when group_by='supplier_product_warehouse')
@@ -432,6 +436,8 @@ class InventoryService:
                 v.last_updated,
                 p.display_name,
                 p.maker_part_no AS product_code,
+                p.capacity,
+                p.warranty_period_days,
                 w.warehouse_name,
                 w.warehouse_code
             FROM v_inventory_summary v
@@ -470,6 +476,8 @@ class InventoryService:
                     p.id AS supplier_item_id,
                     p.display_name,
                     p.maker_part_no AS product_code,
+                    p.capacity,
+                    p.warranty_period_days,
                     p.supplier_id,
                     w.id AS warehouse_id,
                     w.warehouse_name,
@@ -506,6 +514,8 @@ class InventoryService:
                 last_updated=None,
                 product_name=master_row.display_name,
                 product_code=master_row.product_code,
+                capacity=master_row.capacity,
+                warranty_period_days=master_row.warranty_period_days,
                 warehouse_name=master_row.warehouse_name,
                 warehouse_code=master_row.warehouse_code,
                 supplier_id=master_row.supplier_id,
@@ -576,6 +586,8 @@ class InventoryService:
             last_updated=row.last_updated,
             product_name=row.display_name,
             product_code=row.product_code,
+            capacity=row.capacity,
+            warranty_period_days=row.warranty_period_days,
             warehouse_name=row.warehouse_name,
             warehouse_code=row.warehouse_code,
             supplier_id=supplier_row.supplier_id if supplier_row else None,

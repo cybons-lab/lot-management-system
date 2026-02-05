@@ -126,10 +126,20 @@ class SupplierItem(SoftDeleteMixin, Base):
         nullable=True,
         comment="正味重量",
     )
+    capacity: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 3),
+        nullable=True,
+        comment="収容数",
+    )
     weight_unit: Mapped[str | None] = mapped_column(
         String(20),
         nullable=True,
         comment="重量単位",
+    )
+    warranty_period_days: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+        comment="保証期間（日）",
     )
     lead_time_days: Mapped[int | None] = mapped_column(
         Integer,

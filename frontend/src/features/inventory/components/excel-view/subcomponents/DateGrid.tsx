@@ -1,11 +1,26 @@
 import { format, isValid, parseISO } from "date-fns";
 import { ja } from "date-fns/locale";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, MessageSquare, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { type DestinationRowData } from "../types";
 
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const hHeader = "h-8";
@@ -39,6 +54,15 @@ interface Props {
   lotId: number;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
   onAddColumn?: (date: Date) => void;
+  // Phase 9.2: Cell-level comments
+  onCommentChange?: (lotId: number, dpId: number, date: string, comment: string | null) => void;
+  // Phase 9.3: Manual shipment date
+  onManualShipmentDateChange?: (
+    lotId: number,
+    dpId: number,
+    date: string,
+    shipmentDate: string | null,
+  ) => void;
 }
 
 interface CellProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -48,15 +72,49 @@ interface CellProps extends React.HTMLAttributes<HTMLDivElement> {
   dest: DestinationRowData;
   isConfirmed: boolean;
   onQtyChange?: (lotId: number, dpId: number, date: string, value: number) => void;
+  // Phase 9.2: Cell-level comments
+  comment?: string | null;
+  onCommentChange?: (lotId: number, dpId: number, date: string, comment: string | null) => void;
+  // Phase 9.3: Manual shipment date
+  manualShipmentDate?: string | null;
+  onManualShipmentDateChange?: (
+    lotId: number,
+    dpId: number,
+    date: string,
+    shipmentDate: string | null,
+  ) => void;
 }
 
-function DateCell({ date, lotId, dest, currentValue, isConfirmed, onQtyChange }: CellProps) {
+/* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
+function DateCell({
+  date,
+  lotId,
+  dest,
+  currentValue,
+  isConfirmed,
+  onQtyChange,
+  comment,
+  onCommentChange,
+  manualShipmentDate,
+  onManualShipmentDateChange,
+}: CellProps) {
   const [localValue, setLocalValue] = useState<string>(currentValue ? String(currentValue) : "");
+  // Phase 9.2: Comment dialog state
+  const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
+  const [localComment, setLocalComment] = useState(comment || "");
+  // Phase 9.3: Shipment date dialog state
+  const [isShipmentDateDialogOpen, setIsShipmentDateDialogOpen] = useState(false);
 
   // Update local value when currentValue changes (e.g., from server response after save)
   useEffect(() => {
     setLocalValue(currentValue ? String(currentValue) : "");
   }, [currentValue]);
+
+  // Update local comment when comment prop changes
+  useEffect(() => {
+    setLocalComment(comment || "");
+  }, [comment]);
 
   const handleBlur = () => {
     const val = parseInt(localValue, 10) || 0;
@@ -71,25 +129,152 @@ function DateCell({ date, lotId, dest, currentValue, isConfirmed, onQtyChange }:
     }
   };
 
+  const handleSaveComment = () => {
+    onCommentChange?.(lotId, dest.deliveryPlaceId, date, localComment || null);
+    setIsCommentDialogOpen(false);
+  };
+
+  const handleDeleteComment = () => {
+    setLocalComment("");
+    onCommentChange?.(lotId, dest.deliveryPlaceId, date, null);
+    setIsCommentDialogOpen(false);
+  };
+
+  const handleShipmentDateSelect = (selectedDate: Date | undefined) => {
+    const shipmentDateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
+    onManualShipmentDateChange?.(lotId, dest.deliveryPlaceId, date, shipmentDateStr);
+    setIsShipmentDateDialogOpen(false);
+  };
+
+  const handleDeleteShipmentDate = () => {
+    onManualShipmentDateChange?.(lotId, dest.deliveryPlaceId, date, null);
+    setIsShipmentDateDialogOpen(false);
+  };
+
+  const formatShipmentDate = (dateStr?: string | null) => {
+    if (!dateStr) return "";
+    const parsed = parseISO(dateStr);
+    if (!isValid(parsed)) return "";
+    return format(parsed, "MM/dd");
+  };
+
   return (
-    <div className="w-16 p-0 flex items-center justify-center relative group h-full">
-      <input
-        type="number"
-        className={`w-full h-full bg-transparent text-right pr-2 py-2 hover:bg-slate-50 focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 focus:ring-inset outline-none transition-all font-medium border-0 rounded cursor-pointer ${
-          isConfirmed ? "text-blue-600 font-bold bg-blue-50/30" : "text-slate-600"
-        }`}
-        value={localValue}
-        onChange={(e) => setLocalValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        placeholder="-"
-      />
-    </div>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div
+            className="w-16 p-0 flex flex-col items-center justify-center relative group h-full"
+            title={comment || undefined}
+          >
+            {/* Red triangle indicator for comments */}
+            {comment && (
+              <div
+                className="absolute top-0 right-0 h-2 w-2 bg-red-500 z-10 pointer-events-none"
+                style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
+                title={comment}
+              />
+            )}
+            <input
+              type="number"
+              className={`w-full ${manualShipmentDate ? "h-6" : "h-full"} bg-transparent text-right pr-2 ${manualShipmentDate ? "pt-1" : "py-2"} hover:bg-slate-50 focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 focus:ring-inset outline-none transition-all font-medium border-0 rounded cursor-pointer ${
+                isConfirmed ? "text-blue-600 font-bold bg-blue-50/30" : "text-slate-600"
+              }`}
+              value={localValue}
+              onChange={(e) => setLocalValue(e.target.value)}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+              placeholder="-"
+            />
+            {/* Phase 9.3: Manual shipment date display (only when set) */}
+            {manualShipmentDate && (
+              <div className="w-full text-right pr-2 pb-1 text-[9px] text-slate-400 leading-none">
+                出荷: {formatShipmentDate(manualShipmentDate)}
+              </div>
+            )}
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={() => setIsCommentDialogOpen(true)}>
+            <MessageSquare className="mr-2 h-4 w-4" />
+            {comment ? "コメントを編集" : "コメントを追加"}
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => setIsShipmentDateDialogOpen(true)}>
+            <Truck className="mr-2 h-4 w-4" />
+            {manualShipmentDate ? "出荷日を編集" : "出荷日を設定"}
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+
+      {/* Comment Edit Dialog */}
+      <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>コメント編集</DialogTitle>
+            <DialogDescription>
+              {formatPeriodHeader(date)} の数量にコメントを追加できます
+            </DialogDescription>
+          </DialogHeader>
+          <textarea
+            className="w-full min-h-[100px] p-3 border border-slate-300 rounded bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={localComment}
+            onChange={(e) => setLocalComment(e.target.value)}
+            placeholder="コメントを入力..."
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCommentDialogOpen(false)}>
+              キャンセル
+            </Button>
+            {comment && (
+              <Button variant="destructive" onClick={handleDeleteComment}>
+                削除
+              </Button>
+            )}
+            <Button onClick={handleSaveComment}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Phase 9.3: Shipment Date Edit Dialog */}
+      <Dialog open={isShipmentDateDialogOpen} onOpenChange={setIsShipmentDateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>出荷日設定</DialogTitle>
+            <DialogDescription>{formatPeriodHeader(date)} の出荷日を設定できます</DialogDescription>
+          </DialogHeader>
+          <Calendar
+            mode="single"
+            selected={manualShipmentDate ? parseISO(manualShipmentDate) : undefined}
+            onSelect={handleShipmentDateSelect}
+            locale={ja}
+            initialFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsShipmentDateDialogOpen(false)}>
+              キャンセル
+            </Button>
+            {manualShipmentDate && (
+              <Button variant="destructive" onClick={handleDeleteShipmentDate}>
+                削除
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
 /* eslint-disable max-lines-per-function */
-export function DateGrid({ dateColumns, destinations, lotId, onQtyChange, onAddColumn }: Props) {
+
+export function DateGrid({
+  dateColumns,
+  destinations,
+  lotId,
+  onQtyChange,
+  onAddColumn,
+  onCommentChange,
+  onManualShipmentDateChange,
+}: Props) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const isDateDisabled = (date: Date) => {
@@ -105,7 +290,7 @@ export function DateGrid({ dateColumns, destinations, lotId, onQtyChange, onAddC
   };
 
   return (
-    <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 bg-slate-50/5">
+    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 bg-slate-50/5 h-full border-r border-slate-300">
       <div className="min-w-max flex flex-col h-full">
         {/* Header */}
         <div
@@ -146,10 +331,10 @@ export function DateGrid({ dateColumns, destinations, lotId, onQtyChange, onAddC
         </div>
 
         {/* Rows */}
-        <div className="flex-1 flex flex-col divide-y divide-slate-100">
-          {destinations.map((dest, i) => (
+        <div className="flex-1 flex flex-col">
+          {destinations.map((dest) => (
             <div
-              key={i}
+              key={dest.deliveryPlaceId}
               className={`${hRow} flex divide-x divide-slate-100 hover:bg-slate-50 border-b border-slate-100`}
             >
               {dateColumns.map((date) => (
@@ -161,10 +346,14 @@ export function DateGrid({ dateColumns, destinations, lotId, onQtyChange, onAddC
                   currentValue={dest.shipmentQtyByDate[date] || 0}
                   isConfirmed={false} // Placeholder
                   onQtyChange={onQtyChange}
+                  comment={dest.commentByDate?.[date]}
+                  onCommentChange={onCommentChange}
+                  manualShipmentDate={dest.manualShipmentDateByDate?.[date]}
+                  onManualShipmentDateChange={onManualShipmentDateChange}
                 />
               ))}
               {/* Spacer for add column button (prevent row misalignment) */}
-              <div className="w-10 bg-slate-50/10 border-l border-slate-200" />
+              <div className="w-10 bg-slate-50/10" />
             </div>
           ))}
           {destinations.length < MAX_VISIBLE_ROWS &&
@@ -176,7 +365,7 @@ export function DateGrid({ dateColumns, destinations, lotId, onQtyChange, onAddC
                 {dateColumns.map((d) => (
                   <div key={d} className="w-16 bg-slate-50/5"></div>
                 ))}
-                <div className="w-10 bg-slate-50/10 border-l border-slate-200"></div>
+                <div className="w-10 bg-slate-50/10"></div>
               </div>
             ))}
         </div>

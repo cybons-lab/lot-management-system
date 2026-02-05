@@ -95,6 +95,12 @@ class LotReceipt(Base):
         """Get lot number from lot_master (read-only accessor)."""
         return self.lot_master.lot_number if self.lot_master else None
 
+    order_no: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        comment="発注NO（手入力）",
+    )
+
     @hybrid_property
     def current_quantity(self) -> Decimal:
         """Get current remaining quantity (received - consumed)."""
@@ -200,6 +206,13 @@ class LotReceipt(Base):
         comment="仮入庫時の一意識別キー（UUID）",
     )
 
+    # Remarks field (Phase 9.1)
+    remarks: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="備考（ロットに関する付加情報）",
+    )
+
     # B-Plan: receipt_key for unique identification
     receipt_key: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
@@ -230,6 +243,11 @@ class LotReceipt(Base):
             "idx_lot_receipts_expiry_date",
             "expiry_date",
             postgresql_where=text("expiry_date IS NOT NULL"),
+        ),
+        UniqueConstraint(
+            "lot_master_id",
+            "received_date",
+            name="uq_lot_receipts_lot_master_received_date",
         ),
         Index(
             "idx_lot_receipts_temporary_lot_key",

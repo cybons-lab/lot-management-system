@@ -164,6 +164,8 @@ SELECT
     p.maker_part_no AS maker_part_no, -- Alias for backward compatibility
     p.display_name AS product_name,
     p.display_name AS display_name,
+    p.capacity,
+    p.warranty_period_days,
     lr.warehouse_id,
     w.warehouse_code,
     w.warehouse_name,
@@ -304,6 +306,7 @@ SELECT
     lr.temporary_lot_key,
     lr.receipt_key,
     lr.lot_master_id,
+    lr.order_no,
 
     -- Phase2: supplier_item_id と先方品番表示
     si.maker_part_no AS supplier_maker_part_no,
@@ -326,6 +329,7 @@ SELECT
     lr.cost_price,
     lr.sales_price,
     lr.tax_rate,
+    lr.remarks,
 
     usa_primary.user_id AS primary_user_id,
     u_primary.username AS primary_username,

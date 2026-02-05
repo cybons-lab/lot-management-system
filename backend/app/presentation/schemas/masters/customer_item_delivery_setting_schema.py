@@ -19,6 +19,7 @@ class CustomerItemDeliverySettingBase(BaseSchema):
     packing_note: str | None = Field(default=None, description="梱包・注意書き")
     lead_time_days: int | None = Field(default=None, description="リードタイム（日）")
     is_default: bool = Field(default=False, description="デフォルト設定フラグ")
+    notes: str | None = Field(default=None, description="Excel View ページ全体のメモ")
     valid_from: date | None = Field(default=None, description="有効開始日")
     valid_to: date | None = Field(default=None, description="有効終了日")
 
@@ -41,6 +42,7 @@ class CustomerItemDeliverySettingUpdate(BaseSchema):
     is_default: bool | None = None
     valid_from: date | None = None
     valid_to: date | None = None
+    notes: str | None = None
 
 
 class CustomerItemDeliverySettingResponse(CustomerItemDeliverySettingBase):

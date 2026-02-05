@@ -26,6 +26,7 @@ def test_list_lots_maps_computed_fields():
     mock_lot_view.warehouse_id = 30
     mock_lot_view.warehouse_code = "WH-001"
     mock_lot_view.warehouse_name = "Test Warehouse"
+    mock_lot_view.remarks = "test remarks"
 
     # Additional Phase 2 fields required for LotResponse
     mock_lot_view.customer_part_no = "CUST-001"
@@ -54,6 +55,7 @@ def test_list_lots_maps_computed_fields():
     mock_lot_view.updated_at = datetime(2025, 1, 1, 10, 0, 0)
     mock_lot_view.status = "active"
     mock_lot_view.origin_type = "order"
+    mock_lot_view.order_no = "ORD-001"
 
     # 2. DBクエリのMock
     service = LotService(db_session)

@@ -54,6 +54,8 @@ export type InventoryItem =
     // Aggregated suppliers (for product_warehouse grouping with multiple suppliers)
     suppliers_summary?: SuppliersSummary;
     is_assigned_supplier?: boolean;
+    capacity?: string | null;
+    warranty_period_days?: number | null;
   };
 
 export type InventoryListResponse = {
@@ -327,4 +329,82 @@ export const getFilterOptions = (params?: {
   return http.get<FilterOptions>(
     `v2/inventory/filter-options${queryString ? "?" + queryString : ""}`,
   );
+};
+
+// ===== Phase 10.2: Lot Split =====
+
+export interface LotSplitRequest {
+  splits: { quantity: number }[];
+}
+
+export interface LotSplitResponse {
+  original_lot_id: number;
+  new_lot_ids: number[];
+  message: string;
+}
+
+/**
+ * Split a lot receipt into multiple receipts (Phase 10.2)
+ * @endpoint POST /api/lots/{lot_id}/split
+ */
+export const splitLotReceipt = (lotId: number, request: LotSplitRequest) => {
+  return http.post<LotSplitResponse>(`lots/${lotId}/split`, request);
+};
+
+// ===== Phase 11: Lot Quantity Update with Reason =====
+
+export interface LotQuantityUpdateRequest {
+  new_quantity: number;
+  reason: string;
+}
+
+export interface LotQuantityUpdateResponse {
+  lot_receipt_id: number;
+  old_quantity: number;
+  new_quantity: number;
+  adjustment_id: number;
+  message: string;
+}
+
+/**
+ * Update lot receipt quantity with mandatory reason (Phase 11)
+ * @endpoint PUT /api/lots/{lot_id}/quantity
+ */
+export const updateLotQuantityWithReason = (lotId: number, request: LotQuantityUpdateRequest) => {
+  return http.put<LotQuantityUpdateResponse>(`lots/${lotId}/quantity`, request);
+};
+
+// ===== Phase 10.3: Smart Split with Allocation Transfer =====
+
+export interface AllocationTransfer {
+  lot_id: number;
+  delivery_place_id: number;
+  customer_id: number;
+  forecast_period: string;
+  quantity: number;
+  target_lot_index: number;
+  coa_issue_date?: string | null;
+  comment?: string | null;
+  manual_shipment_date?: string | null;
+}
+
+export interface SmartSplitRequest {
+  split_count: number;
+  allocation_transfers: AllocationTransfer[];
+}
+
+export interface SmartSplitResponse {
+  original_lot_id: number;
+  new_lot_ids: number[];
+  split_quantities: number[];
+  transferred_allocations: number;
+  message: string;
+}
+
+/**
+ * Smart split lot with allocation transfer (Phase 10.3)
+ * @endpoint POST /api/lots/{lot_id}/smart-split
+ */
+export const smartSplitLot = (lotId: number, request: SmartSplitRequest) => {
+  return http.post<SmartSplitResponse>(`lots/${lotId}/smart-split`, request);
 };

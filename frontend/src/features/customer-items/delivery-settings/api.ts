@@ -17,6 +17,7 @@ export interface CustomerItemDeliverySetting {
   packing_note: string | null;
   lead_time_days: number | null;
   is_default: boolean;
+  notes: string | null; // Phase 9: Page-level notes
   valid_from: string | null;
   valid_to: string | null;
   created_at: string;
@@ -43,6 +44,7 @@ export interface UpdateDeliverySettingRequest {
   packing_note?: string | null;
   lead_time_days?: number | null;
   is_default?: boolean;
+  notes?: string | null; // Phase 9: Page-level notes
   valid_from?: string | null;
   valid_to?: string | null;
 }
