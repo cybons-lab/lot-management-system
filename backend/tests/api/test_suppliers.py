@@ -114,7 +114,11 @@ def test_update_supplier_success(db: Session, client: TestClient):
     db.add(s)
     db.commit()
 
-    update_data = {"supplier_name": "Updated Name"}
+    # Get current version
+    get_response = client.get("/api/masters/suppliers/UPD-001")
+    current = get_response.json()
+    
+    update_data = {"supplier_name": "Updated Name", "version": current["version"]}
     response = client.put("/api/masters/suppliers/UPD-001", json=update_data)
     assert response.status_code == 200
     data = response.json()
@@ -134,10 +138,17 @@ def test_update_supplier_code_change_success(db: Session, client: TestClient):
     db.add(s)
     db.commit()
 
+    # Get current version
+    get_response = client.get("/api/masters/suppliers/OLD-SUP-CODE")
+    current = get_response.json()
+    
     update_data = {
         "supplier_code": "NEW-SUP-CODE",
         "supplier_name": "Updated Supplier",
-    }
+
+        "version": current["version"],
+
+        }
 
     response = client.put("/api/masters/suppliers/OLD-SUP-CODE", json=update_data)
     assert response.status_code == 200
@@ -163,9 +174,14 @@ def test_update_supplier_code_change_duplicate_returns_409(db: Session, client: 
     db.add_all([s1, s2])
     db.commit()
 
+    # Get current version
+    get_response = client.get("/api/masters/suppliers/EXISTING-SUP")
+    current = get_response.json()
+    
     update_data = {
-        "supplier_code": "EXISTING-SUP",  # Duplicate
-    }
+        "supplier_code": "EXISTING-SUP",  # Duplicate,
+  "version": current["version"],
+  }
 
     response = client.put("/api/masters/suppliers/TO-CHANGE-SUP", json=update_data)
     assert response.status_code == 409
@@ -185,7 +201,11 @@ def test_delete_supplier_success(db: Session, client: TestClient):
     db.add(s)
     db.commit()
 
-    response = client.delete("/api/masters/suppliers/DEL-001")
+    # Get current version
+    get_response = client.get("/api/masters/suppliers/DEL-001")
+    current = get_response.json()
+    
+    response = client.delete(f"/api/masters/suppliers/DEL-001?version={current['version']}")
     assert response.status_code == 204
 
     # Verify soft deletion: record still exists in DB

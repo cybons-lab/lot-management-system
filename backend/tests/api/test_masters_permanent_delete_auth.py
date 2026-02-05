@@ -208,6 +208,13 @@ def test_permanent_delete_requires_admin(
 ):
     path, finder = permanent_delete_case(db)
 
+    # Extract version from entity
+    entity_path = path.replace("/permanent", "")
+    get_response = client.get(entity_path, headers=normal_user_token_headers)
+    if get_response.status_code == 200:
+        current = get_response.json()
+        path = f"{path}?version={current['version']}"
+    
     response = client.delete(path, headers=normal_user_token_headers)
 
     assert response.status_code == 403
@@ -222,6 +229,13 @@ def test_permanent_delete_allows_admin(
 ):
     path, finder = permanent_delete_case(db)
 
+    # Extract version from entity
+    entity_path = path.replace("/permanent", "")
+    get_response = client.get(entity_path, headers=superuser_token_headers)
+    if get_response.status_code == 200:
+        current = get_response.json()
+        path = f"{path}?version={current['version']}"
+    
     response = client.delete(path, headers=superuser_token_headers)
 
     assert response.status_code == 204

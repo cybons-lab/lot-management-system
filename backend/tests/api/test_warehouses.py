@@ -121,7 +121,11 @@ def test_update_warehouse_success(db: Session, client: TestClient):
     db.add(w)
     db.flush()
 
-    update_data = {"warehouse_name": "Updated Name"}
+    # Get current version
+    get_response = client.get("/api/masters/warehouses/UPD-001")
+    current = get_response.json()
+    
+    update_data = {"warehouse_name": "Updated Name", "version": current["version"]}
     response = client.put("/api/masters/warehouses/UPD-001", json=update_data)
     assert response.status_code == 200
     data = response.json()
@@ -145,10 +149,15 @@ def test_update_warehouse_code_change_success(db: Session, client: TestClient):
     db.add(w)
     db.flush()
 
+    # Get current version
+    get_response = client.get("/api/masters/warehouses/OLD-WH-CODE")
+    current = get_response.json()
+    
     update_data = {
         "warehouse_code": "NEW-WH-CODE",
         "warehouse_name": "Updated Warehouse",
         "warehouse_type": "external",
+        "version": current["version"],
     }
 
     response = client.put("/api/masters/warehouses/OLD-WH-CODE", json=update_data)
@@ -180,8 +189,13 @@ def test_update_warehouse_code_change_duplicate_returns_409(db: Session, client:
     db.add_all([w1, w2])
     db.flush()
 
+    # Get current version
+    get_response = client.get("/api/masters/warehouses/TO-CHANGE-WH")
+    current = get_response.json()
+    
     update_data = {
         "warehouse_code": "EXISTING-WH",  # Duplicate
+        "version": current["version"],
     }
 
     response = client.put("/api/masters/warehouses/TO-CHANGE-WH", json=update_data)
@@ -202,7 +216,11 @@ def test_delete_warehouse_success(db: Session, client: TestClient):
     db.add(w)
     db.flush()
 
-    response = client.delete("/api/masters/warehouses/DEL-001")
+    # Get current version
+    get_response = client.get("/api/masters/warehouses/DEL-001")
+    current = get_response.json()
+    
+    response = client.delete(f"/api/masters/warehouses/DEL-001?version={current['version']}")
     assert response.status_code == 204
 
     # Verify soft deletion: record still exists in DB

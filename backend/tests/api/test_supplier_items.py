@@ -136,6 +136,11 @@ def test_update_supplier_item_success(db: Session, client: TestClient, test_supp
     db.flush()
 
     update_data = {"display_name": "Updated Name"}
+    # Get current version
+    get_response = client.get(f"/api/masters/supplier-items/{p.id}")
+    current = get_response.json()
+    update_data["version"] = current["version"]
+    
     response = client.put(f"/api/masters/supplier-items/{p.id}", json=update_data)
     assert response.status_code == 200
     data = response.json()
@@ -157,7 +162,11 @@ def test_delete_supplier_item_success(db: Session, client: TestClient, test_supp
     db.add(p)
     db.flush()
 
-    response = client.delete(f"/api/masters/supplier-items/{p.id}")
+    # Get current version
+    get_response = client.get(f"/api/masters/supplier-items/{p.id}")
+    current = get_response.json()
+    
+    response = client.delete(f"/api/masters/supplier-items/{p.id}?version={current['version']}")
     assert response.status_code == 204
 
     # Verify soft deletion
