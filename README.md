@@ -61,18 +61,31 @@ make dev-setup   # 起動 + サンプルデータ投入
 
 ```bash
 # 全体の品質チェック（コミット前に推奨）
-make quality-check   # Lint修正 + Format + Type check + Test
+make quality-check        # Lint修正 + Format + Type check + Test (5分)
+make quality-check-full   # 上記 + Smoke E2E (10分)
+
+# テスト実行
+make test-smoke          # スモークテスト（30秒）- 最速
+make test-critical       # クリティカルパステスト（10分）
+make test                # Unit + Integration
 
 # CI相当のチェック（自動修正なし）
-make ci
+make ci                  # 標準CI
+make ci-smoke            # CI + Smoke（最速）
 
 # 個別実行
 make lint            # 全体Lint
 make lint-fix        # 全体Lint自動修正
 make format          # 全体フォーマット
 make typecheck       # 全体型チェック
-make test            # 全体テスト
 ```
+
+**推奨ワークフロー:**
+- **毎回のコミット前**: `make quality-check` (5分)
+- **PR作成時**: `make quality-check-full` (10分)
+- **リリース前**: `make ci` + E2E全体 (30分)
+
+詳細: [Testing Quick Start Guide](docs/project/TESTING_QUICKSTART.md)
 
 ### Backend (Python)
 

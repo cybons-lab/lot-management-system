@@ -796,10 +796,15 @@ def get_product_name(product: Optional[HasProductName], default: str = "") -> st
 
 ## 5. テスト・自動化
 
+**📚 参考資料:**
+- [Testing Strategy](./TESTING_STRATEGY.md) - 詳細なテスト戦略とテストピラミッド
+- [Testing Quick Start Guide](./TESTING_QUICKSTART.md) - 今すぐ使えるテスト実行ガイド
+
 ### 5-1. 統合テスト・E2Eテストの拡充
 
 **優先度**: High
 **作成**: 2026-01-30
+**更新**: 2026-02-05（SmartRead/Excel View/マスタ周りのスモークテスト追加完了）
 **カテゴリ**: 品質保証・回帰テスト
 
 **背景:**
@@ -831,11 +836,22 @@ def get_product_name(product: Optional[HasProductName], default: str = "") -> st
   - パフォーマンステスト
 
 #### 5-1-2. E2Eテスト基盤の構築
+- [x] E2Eテストフレームワークの選定・導入（Playwright）
+- [x] **スモークテスト追加完了（2026-02-05）**
+  - `frontend/e2e/specs/smoke/smartread-smoke.spec.ts` - SmartReadページ表示確認
+  - `frontend/e2e/specs/smoke/excel-view-smoke.spec.ts` - Excel Viewページ表示確認
+  - `frontend/e2e/specs/smoke/masters-smoke.spec.ts` - マスタページ表示確認
+  - 実行コマンド: `make test-smoke` (30秒)
+- [x] **バックエンド統合テスト追加**
+  - `backend/tests/integration/test_smartread_integration.py` - SmartRead OCR → 注文生成フロー
 - [ ] [P0] E2Eテストの永続化検証失敗の調査と修正
     - 状況: `e2e-02` テストで保存API自体がフロントエンドから送信されていない現象を確認。
     - 原因調査レポート: [e2e_persistence_failure_report.md](../investigation/e2e_persistence_failure_report.md)
     - [x] 並列実行時のDBリセット干渉 (`e2e-04`) は修正済み。
-- [ ] E2Eテストフレームワークの選定・導入（Playwright推奨）
+- [ ] **クリティカルパステストの追加（TODO）**
+  - SmartRead: OCR画像アップロード → 注文生成の完全フロー
+  - マスタCRUD: 商品マスタ作成 → 在庫登録での使用
+  - Excel View: フィルタ/ソート → セル編集 → 保存
 - [ ] 主要ユーザーフロー
   - ログイン → ダッシュボード → マスタ画面遷移
   - ロット新規登録 → 在庫確認

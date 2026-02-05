@@ -227,7 +227,9 @@ make restart     # すべてのサービスを再起動
 make logs        # すべてのログを表示
 
 # 品質チェック（コミット前に実行）
-make quality-check   # Lint修正 + Format + Type check + Test
+make quality-check        # Lint修正 + Format + Type check + Test (5分)
+make quality-check-full   # 上記 + Smoke E2E (10分)
+make test-smoke           # スモークテストのみ (30秒)
 ```
 
 ### バックエンド開発
@@ -301,6 +303,27 @@ make format          # 全体フォーマット
 make typecheck       # 全体型チェック
 make test            # 全体テスト
 ```
+
+### テスト実行
+
+```bash
+# スモークテスト（最速 - 30秒）
+make test-smoke          # ページが開くかだけをチェック
+
+# クリティカルパステスト（10分）
+make test-critical       # P0の重要フローをテスト
+
+# 全体テスト
+make test                # Unit + Integration
+make frontend-test-e2e   # E2E全体（30分）
+```
+
+**推奨ワークフロー:**
+1. **コミット前**: `make quality-check` (5分)
+2. **PR作成時**: `make quality-check-full` (10分)
+3. **リリース前**: `make ci` + E2E全体 (30分)
+
+詳細: [docs/project/TESTING_QUICKSTART.md](docs/project/TESTING_QUICKSTART.md)
 
 ### Git Workflow
 
