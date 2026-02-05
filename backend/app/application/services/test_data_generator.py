@@ -7,19 +7,37 @@ import logging
 
 from sqlalchemy.orm import Session
 
+from .test_data.adjustments import generate_adjustments
+from .test_data.audit_logs import (
+    generate_batch_jobs,
+    generate_business_rules,
+    generate_lot_reservation_history,
+    generate_master_change_logs,
+    generate_operation_logs,
+)
 from .test_data.calendar_wrapper import TestDataCalendar
 from .test_data.calendars import generate_calendars
-from .test_data.forecasts import generate_forecasts, generate_reservations
+from .test_data.cloud_flow import generate_cloud_flow_data
+from .test_data.forecasts import (
+    generate_forecast_history,
+    generate_forecasts,
+    generate_reservations,
+)
 from .test_data.inbound import generate_inbound_plans
 from .test_data.inventory import generate_lots
 from .test_data.inventory_scenarios import generate_inventory_scenarios
 from .test_data.masters import (
     generate_customer_items,
     generate_customers_and_delivery_places,
+    generate_makers,
     generate_products,
     generate_suppliers,
+    generate_warehouse_delivery_routes,
     generate_warehouses,
 )
+from .test_data.material_order_forecasts import generate_material_order_forecasts
+from .test_data.missing_mappings import generate_missing_mapping_events
+from .test_data.notifications import generate_notifications
 from .test_data.orders import generate_orders
 from .test_data.reports import generate_monthly_report_samples
 from .test_data.rpa_material_delivery import generate_rpa_material_delivery_data
@@ -27,6 +45,7 @@ from .test_data.sap import generate_sap_data
 from .test_data.shipping_master import generate_shipping_master_data
 from .test_data.smartread import generate_smartread_data
 from .test_data.system_config import generate_system_config
+from .test_data.user_assignments import generate_user_supplier_assignments
 from .test_data.utils import clear_data
 from .test_data.withdrawals import generate_withdrawals
 
@@ -53,6 +72,7 @@ __all__ = [
     "generate_rpa_material_delivery_data",
     "generate_sap_data",
     "generate_system_config",
+    "generate_material_order_forecasts",
 ]
 
 logger = logging.getLogger(__name__)
@@ -82,13 +102,20 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
         calendar = TestDataCalendar(db)
 
         if progress_callback:
-            progress_callback(15, "Generating Masters (Warehouses, Suppliers, Customers, Items)...")
+            progress_callback(
+                15, "Generating Masters (Makers, Warehouses, Suppliers, Customers, Items)..."
+            )
+        generate_makers(db, options)
         warehouses = generate_warehouses(db, options)
         suppliers = generate_suppliers(db, options)
         customers, delivery_places = generate_customers_and_delivery_places(db, options)
         products = generate_products(db, suppliers, options)
 
         generate_customer_items(db, customers, products, suppliers, delivery_places, options)
+        generate_warehouse_delivery_routes(db, warehouses, delivery_places)
+
+        # Generate user-supplier assignments (requires users to exist from migrations/seed)
+        generate_user_supplier_assignments(db)
 
         # Step 1: Generate forecasts and get totals
         if progress_callback:
@@ -96,6 +123,9 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
         products_with_forecast, forecast_totals = generate_forecasts(
             db, customers, products, delivery_places
         )
+
+        # Generate forecast history (audit trail)
+        generate_forecast_history(db)
 
         # Step 2: Generate lots based on forecast totals
         if progress_callback:
@@ -105,7 +135,10 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
         # Step 2.5: Generate inventory scenarios for UI/testing
         generate_inventory_scenarios(db)
 
-        # Step 2.6: Generate RPA Material Delivery Note data
+        # Step 2.6: Generate inventory adjustments
+        generate_adjustments(db)
+
+        # Step 2.7: Generate RPA Material Delivery Note data
         if progress_callback:
             progress_callback(45, "Generating RPA Material Delivery Note data...")
         generate_rpa_material_delivery_data(db)
@@ -152,8 +185,25 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
 
         # Step 10: Initialize system configuration
         if progress_callback:
-            progress_callback(99, "Initializing System Configuration...")
+            progress_callback(97, "Initializing System Configuration...")
         generate_system_config(db)
+
+        # Step 11: Generate Material Order Forecasts (CSV import test data)
+        if progress_callback:
+            progress_callback(95, "Generating Material Order Forecasts...")
+        generate_material_order_forecasts(db)
+
+        # Step 12: Generate P1 tables (audit, notifications, etc.)
+        if progress_callback:
+            progress_callback(97, "Generating Notifications and Audit Logs...")
+        generate_notifications(db)
+        generate_missing_mapping_events(db)
+        generate_lot_reservation_history(db)
+        generate_operation_logs(db)
+        generate_master_change_logs(db)
+        generate_business_rules(db)
+        generate_batch_jobs(db)
+        generate_cloud_flow_data(db)
 
         db.commit()
 

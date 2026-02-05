@@ -1,10 +1,13 @@
 import random
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
+from app.infrastructure.persistence.models.forecast_models import (
+    ForecastCurrent,
+    ForecastHistory,
+)
 from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
@@ -184,5 +187,79 @@ def generate_reservations(db: Session):
                 status=ReservationStatus.ACTIVE.value,
             )
             db.add(res_v2)
+
+    db.commit()
+
+
+def generate_forecast_history(db: Session) -> None:
+    """Generate ForecastHistory (予測履歴) test data.
+
+    Creates revision history for forecasts to test audit trail functionality.
+    """
+    # Get recent forecasts (last 30 days)
+    forecasts = db.query(ForecastCurrent).limit(50).all()
+
+    if not forecasts:
+        return
+
+    # Generate history for 30% of forecasts (multiple revisions)
+    num_with_history = int(len(forecasts) * 0.3)
+    selected_forecasts = random.sample(forecasts, min(num_with_history, len(forecasts)))
+
+    for fc in selected_forecasts:
+        # Create 2-5 historical revisions
+        num_revisions = random.randint(2, 5)
+
+        base_date = datetime.now(UTC) - timedelta(days=30)
+        current_quantity = fc.forecast_quantity
+
+        for rev_num in range(num_revisions):
+            # Historical quantity (varies from current)
+            if rev_num == 0:
+                # First revision: 50-150% of current
+                old_quantity = Decimal(int(float(current_quantity) * random.uniform(0.5, 1.5)))
+            else:
+                # Subsequent revisions: ±20% variance
+                old_quantity = Decimal(int(float(current_quantity) * random.uniform(0.8, 1.2)))
+
+            # Changed timestamp: spread across 30 days
+            changed_at = base_date + timedelta(days=rev_num * (30 // num_revisions))
+
+            history = ForecastHistory(
+                customer_id=fc.customer_id,
+                delivery_place_id=fc.delivery_place_id,
+                supplier_item_id=fc.supplier_item_id,
+                forecast_date=fc.forecast_date,
+                forecast_quantity=old_quantity,
+                unit=fc.unit,
+                forecast_period=fc.forecast_period,
+                changed_at=changed_at,
+                change_reason=random.choice(
+                    ["数量変更", "納期調整", "需要予測更新", "発注調整", "その他"]
+                ),
+            )
+            db.add(history)
+
+    # Edge case: Forecast with 10+ revisions (rapid changes)
+    if forecasts:
+        volatile_forecast = forecasts[0]
+        base_date = datetime.now(UTC) - timedelta(days=7)
+
+        for i in range(12):
+            old_quantity = Decimal(random.randint(50, 500))
+            changed_at = base_date + timedelta(hours=i * 12)
+
+            history = ForecastHistory(
+                customer_id=volatile_forecast.customer_id,
+                delivery_place_id=volatile_forecast.delivery_place_id,
+                supplier_item_id=volatile_forecast.supplier_item_id,
+                forecast_date=volatile_forecast.forecast_date,
+                forecast_quantity=old_quantity,
+                unit=volatile_forecast.unit,
+                forecast_period=volatile_forecast.forecast_period,
+                changed_at=changed_at,
+                change_reason="頻繁な変更 (Edge case)",
+            )
+            db.add(history)
 
     db.commit()
