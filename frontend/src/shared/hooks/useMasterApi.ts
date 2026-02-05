@@ -22,6 +22,7 @@ import { useAuthAwareQuery } from "@/shared/hooks/useAuthenticatedQuery";
  * - usePermanentDelete() - Physical delete (admin only)
  * - useRestore() - Restore soft-deleted item
  */
+// eslint-disable-next-line max-lines-per-function
 export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
   resourcePath: string,
   queryKey: string,

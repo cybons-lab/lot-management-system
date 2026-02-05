@@ -1,8 +1,3 @@
-/app/app/presentation/api/routes/shipping_master_router.py:141: FastAPIDeprecationWarning: `regex` has been deprecated, please use `pattern` instead
-  format: str = Query("xlsx", regex="^(csv|xlsx)$"),
-{"event": "Logging system initialized", "level": "info", "timestamp": "2026-02-05T09:05:10.277890Z", "logger": "app.core.logging", "environment": "development"}
-/venv/lib/python3.13/site-packages/fastapi/openapi/utils.py:251: UserWarning: Duplicate Operation ID list_order_lines_api_orders_lines_get for function list_order_lines at /app/app/presentation/api/routes/orders/orders_router.py
-  warnings.warn(message, stacklevel=1)
 {
   "openapi": "3.1.0",
   "info": {

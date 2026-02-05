@@ -11,6 +11,7 @@ import {
 
 import { useOcrEditPersistence } from "./useOcrEditPersistence";
 
+// eslint-disable-next-line max-lines-per-function
 export function useOcrRowInputs(viewMode: "current" | "completed", dataItems: OcrResultItem[]) {
   const [rowInputs, setRowInputs] = useState<Record<number, RowInputState>>({});
   const { saveEditMutation, scheduleSave, saveTimersRef, refreshMasterRef } =

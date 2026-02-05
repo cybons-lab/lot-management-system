@@ -67,7 +67,7 @@ export function WarehouseDetailDialog({
         },
       );
     },
-    [warehouseCode, updateWarehouse],
+    [warehouseCode, updateWarehouse, warehouse],
   );
 
   const handleConfirmDelete = useCallback(
