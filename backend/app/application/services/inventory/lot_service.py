@@ -1333,3 +1333,129 @@ class LotService:
         )
 
         return adjustment.id
+
+    def smart_split_lot_with_allocations(
+        self,
+        lot_receipt_id: int,
+        split_count: int,
+        allocation_transfers: list[dict],
+        user_id: int,
+    ) -> tuple[list[int], list[Decimal], int]:
+        """Smart split lot with allocation transfer (Phase 10.3).
+
+        Args:
+            lot_receipt_id: Original lot receipt ID
+            split_count: Number of splits (including original)
+            allocation_transfers: List of allocation transfer instructions
+            user_id: User performing the split
+
+        Returns:
+            tuple[list[int], list[Decimal], int]: (new_lot_ids, split_quantities, transferred_count)
+
+        Raises:
+            LotNotFoundError: If lot receipt not found
+            ValueError: If validation fails
+        """
+        from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion
+
+        # Get original lot receipt
+        original_lot = self.repository.find_by_id(lot_receipt_id)
+        if not original_lot:
+            raise LotNotFoundError(lot_receipt_id)
+
+        # Group transfers by target lot index
+        transfers_by_target: dict[int, list[dict]] = {}
+        for transfer in allocation_transfers:
+            target_idx = transfer["target_lot_index"]
+            if target_idx not in transfers_by_target:
+                transfers_by_target[target_idx] = []
+            transfers_by_target[target_idx].append(transfer)
+
+        # Calculate quantity for each split based on allocations
+        split_quantities: list[Decimal] = [Decimal("0")] * split_count
+        for target_idx, transfers in transfers_by_target.items():
+            for transfer in transfers:
+                split_quantities[target_idx] += Decimal(str(transfer["quantity"]))
+
+        # Validate total doesn't exceed current quantity
+        total_allocated = sum(split_quantities)
+        if total_allocated > original_lot.current_quantity:
+            raise ValueError(
+                f"割り当て合計 {total_allocated} が現在の在庫数 {original_lot.current_quantity} を超えています"
+            )
+
+        # Add remaining quantity to original lot (index 0)
+        remaining = original_lot.current_quantity - total_allocated
+        split_quantities[0] += remaining
+
+        # Validate no zero quantities
+        if any(qty == 0 for qty in split_quantities):
+            raise ValueError("すべての分割ロットに数量を割り当ててください")
+
+        # Update original lot with first split quantity
+        original_lot.received_quantity = split_quantities[0]
+        self.db.add(original_lot)
+
+        # Create new lot receipts for remaining splits
+        new_lot_ids = [original_lot.id]
+
+        for i in range(1, split_count):
+            new_lot = LotReceipt(
+                lot_master_id=original_lot.lot_master_id,
+                warehouse_id=original_lot.warehouse_id,
+                supplier_id=original_lot.supplier_id,
+                supplier_item_id=original_lot.supplier_item_id,
+                received_date=original_lot.received_date,
+                expiry_date=original_lot.expiry_date,
+                received_quantity=split_quantities[i],
+                consumed_quantity=Decimal("0"),
+                unit=original_lot.unit,
+                status=original_lot.status,
+                inspection_status=original_lot.inspection_status,
+                origin_type=original_lot.origin_type,
+                remarks=original_lot.remarks,
+            )
+            self.db.add(new_lot)
+            self.db.flush()
+            new_lot_ids.append(new_lot.id)
+
+        # Transfer allocations to new lots
+        transferred_count = 0
+        for target_idx, transfers in transfers_by_target.items():
+            if target_idx == 0:
+                # No need to transfer, already on original lot
+                continue
+
+            target_lot_id = new_lot_ids[target_idx]
+
+            for transfer in transfers:
+                # Find existing allocation
+                existing_alloc = (
+                    self.db.query(AllocationSuggestion)
+                    .filter(
+                        AllocationSuggestion.lot_id == lot_receipt_id,
+                        AllocationSuggestion.delivery_place_id == transfer["delivery_place_id"],
+                        AllocationSuggestion.forecast_period == transfer["forecast_period"],
+                    )
+                    .first()
+                )
+
+                if existing_alloc:
+                    # Update to point to new lot
+                    existing_alloc.lot_id = target_lot_id
+                    self.db.add(existing_alloc)
+                    transferred_count += 1
+
+        self.db.commit()
+
+        logger.info(
+            "Smart lot split completed",
+            extra={
+                "original_lot_id": lot_receipt_id,
+                "new_lot_ids": new_lot_ids,
+                "split_count": split_count,
+                "transferred_allocations": transferred_count,
+            },
+        )
+
+        return new_lot_ids, split_quantities, transferred_count

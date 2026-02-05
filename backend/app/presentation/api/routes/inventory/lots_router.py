@@ -162,6 +162,7 @@ from app.presentation.schemas.inventory.inventory_schema import (
     StockMovementResponse,
 )
 from app.presentation.schemas.inventory.lot_split_schema import LotSplitRequest
+from app.presentation.schemas.inventory.smart_split_schema import SmartSplitRequest
 
 
 router = APIRouter(prefix="/lots", tags=["lots"])
@@ -711,3 +712,59 @@ def update_lot_receipt_quantity(
     except Exception:
         logger.exception("Lot quantity update failed", extra={"lot_id": lot_id})
         raise HTTPException(status_code=500, detail="入庫数の更新に失敗しました")
+
+
+# ===== Phase 10.3: Smart Split with Allocation Transfer =====
+@router.post("/{lot_id}/smart-split", response_model=dict)
+def smart_split_lot_with_allocations(
+    lot_id: int,
+    request: SmartSplitRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """ロットをスマート分割し、割り当てを移動（Phase 10.3）.
+
+    Args:
+        lot_id: 分割対象のロットID
+        request: 分割数と割り当て移動指示
+        db: データベースセッション
+        current_user: 現在のユーザー
+
+    Returns:
+        dict: 分割結果（ロットID、数量、移動した割り当て数）
+
+    Raises:
+        HTTPException: ロットが存在しない場合（404）、検証失敗（400）
+    """
+    logger.info(
+        "Smart lot split requested",
+        extra={
+            "lot_id": lot_id,
+            "split_count": request.split_count,
+            "transfers": len(request.allocation_transfers),
+            "user_id": current_user.id,
+        },
+    )
+
+    service = LotService(db)
+    try:
+        # Convert Pydantic models to dicts
+        transfers = [t.model_dump() for t in request.allocation_transfers]
+
+        new_lot_ids, split_quantities, transferred_count = service.smart_split_lot_with_allocations(
+            lot_id, request.split_count, transfers, current_user.id
+        )
+
+        return {
+            "original_lot_id": lot_id,
+            "new_lot_ids": new_lot_ids,
+            "split_quantities": [float(q) for q in split_quantities],
+            "transferred_allocations": transferred_count,
+            "message": f"ロットを{len(new_lot_ids)}件に分割し、{transferred_count}件の割り当てを移動しました",
+        }
+    except ValueError as e:
+        logger.error("Smart split validation error", extra={"lot_id": lot_id, "error": str(e)})
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception("Smart split failed", extra={"lot_id": lot_id})
+        raise HTTPException(status_code=500, detail="スマート分割に失敗しました")

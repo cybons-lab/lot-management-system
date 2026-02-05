@@ -140,6 +140,19 @@ export function LotSection({
             className={`border border-slate-300 mt-6 text-xs shadow-sm rounded-md overflow-hidden min-w-max relative ${bgColor}`}
           >
             <div className="absolute top-2 right-2 z-20 flex gap-1">
+              {onSplitLot && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-slate-600 hover:text-slate-900"
+                  onClick={() => onSplitLot(lotId)}
+                  aria-label="ロットを分割"
+                  title="分割"
+                >
+                  <Split className="h-4 w-4" />
+                </Button>
+              )}
               {onArchive && (
                 <Button
                   type="button"

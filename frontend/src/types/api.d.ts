@@ -1026,6 +1026,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/lots/{lot_id}/smart-split": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Smart Split Lot With Allocations
+     * @description ロットをスマート分割し、割り当てを移動（Phase 10.3）.
+     *
+     *     Args:
+     *         lot_id: 分割対象のロットID
+     *         request: 分割数と割り当て移動指示
+     *         db: データベースセッション
+     *         current_user: 現在のユーザー
+     *
+     *     Returns:
+     *         dict: 分割結果（ロットID、数量、移動した割り当て数）
+     *
+     *     Raises:
+     *         HTTPException: ロットが存在しない場合（404）、検証失敗（400）
+     */
+    post: operations["smart_split_lot_with_allocations_api_lots__lot_id__smart_split_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/orders/confirmed-order-lines": {
     parameters: {
       query?: never;
@@ -9218,6 +9250,57 @@ export interface components {
       warehouse_name?: string | null;
     };
     /**
+     * AllocationTransfer
+     * @description Single allocation transfer instruction.
+     */
+    AllocationTransfer: {
+      /**
+       * Lot Id
+       * @description ソースロットID
+       */
+      lot_id: number;
+      /**
+       * Delivery Place Id
+       * @description 納入先ID
+       */
+      delivery_place_id: number;
+      /**
+       * Customer Id
+       * @description 顧客ID
+       */
+      customer_id: number;
+      /**
+       * Forecast Period
+       * @description 予測期間（YYYY-MM-DD）
+       */
+      forecast_period: string;
+      /**
+       * Quantity
+       * @description 数量
+       */
+      quantity: number | string;
+      /**
+       * Target Lot Index
+       * @description 移動先ロットインデックス（0=元, 1=新規1, ...）
+       */
+      target_lot_index: number;
+      /**
+       * Coa Issue Date
+       * @description COA発行日
+       */
+      coa_issue_date?: string | null;
+      /**
+       * Comment
+       * @description コメント
+       */
+      comment?: string | null;
+      /**
+       * Manual Shipment Date
+       * @description 手動出荷日
+       */
+      manual_shipment_date?: string | null;
+    };
+    /**
      * AuthUserResponse
      * @description User response schema.
      */
@@ -17043,6 +17126,22 @@ export interface components {
       value?: string | null;
     };
     /**
+     * SmartSplitRequest
+     * @description Request payload for smart lot split with allocation transfer.
+     */
+    SmartSplitRequest: {
+      /**
+       * Split Count
+       * @description 分割数（2-10）
+       */
+      split_count: number;
+      /**
+       * Allocation Transfers
+       * @description 割り当て移動指示のリスト
+       */
+      allocation_transfers: components["schemas"]["AllocationTransfer"][];
+    };
+    /**
      * Step2ExecuteRequest
      * @description Step2 execution request schema.
      */
@@ -19966,6 +20065,43 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["LotReceiptQuantityUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  smart_split_lot_with_allocations_api_lots__lot_id__smart_split_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SmartSplitRequest"];
       };
     };
     responses: {

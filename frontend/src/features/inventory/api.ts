@@ -371,3 +371,38 @@ export interface LotQuantityUpdateResponse {
 export const updateLotQuantityWithReason = (lotId: number, request: LotQuantityUpdateRequest) => {
   return http.put<LotQuantityUpdateResponse>(`lots/${lotId}/quantity`, request);
 };
+
+// ===== Phase 10.3: Smart Split with Allocation Transfer =====
+
+export interface AllocationTransfer {
+  lot_id: number;
+  delivery_place_id: number;
+  customer_id: number;
+  forecast_period: string;
+  quantity: number;
+  target_lot_index: number;
+  coa_issue_date?: string | null;
+  comment?: string | null;
+  manual_shipment_date?: string | null;
+}
+
+export interface SmartSplitRequest {
+  split_count: number;
+  allocation_transfers: AllocationTransfer[];
+}
+
+export interface SmartSplitResponse {
+  original_lot_id: number;
+  new_lot_ids: number[];
+  split_quantities: number[];
+  transferred_allocations: number;
+  message: string;
+}
+
+/**
+ * Smart split lot with allocation transfer (Phase 10.3)
+ * @endpoint POST /api/lots/{lot_id}/smart-split
+ */
+export const smartSplitLot = (lotId: number, request: SmartSplitRequest) => {
+  return http.post<SmartSplitResponse>(`lots/${lotId}/smart-split`, request);
+};
