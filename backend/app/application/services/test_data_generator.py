@@ -8,8 +8,16 @@ import logging
 from sqlalchemy.orm import Session
 
 from .test_data.adjustments import generate_adjustments
+from .test_data.audit_logs import (
+    generate_batch_jobs,
+    generate_business_rules,
+    generate_lot_reservation_history,
+    generate_master_change_logs,
+    generate_operation_logs,
+)
 from .test_data.calendar_wrapper import TestDataCalendar
 from .test_data.calendars import generate_calendars
+from .test_data.cloud_flow import generate_cloud_flow_data
 from .test_data.forecasts import (
     generate_forecast_history,
     generate_forecasts,
@@ -28,6 +36,8 @@ from .test_data.masters import (
     generate_warehouses,
 )
 from .test_data.material_order_forecasts import generate_material_order_forecasts
+from .test_data.missing_mappings import generate_missing_mapping_events
+from .test_data.notifications import generate_notifications
 from .test_data.orders import generate_orders
 from .test_data.reports import generate_monthly_report_samples
 from .test_data.rpa_material_delivery import generate_rpa_material_delivery_data
@@ -180,8 +190,20 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
 
         # Step 11: Generate Material Order Forecasts (CSV import test data)
         if progress_callback:
-            progress_callback(99, "Generating Material Order Forecasts...")
+            progress_callback(95, "Generating Material Order Forecasts...")
         generate_material_order_forecasts(db)
+
+        # Step 12: Generate P1 tables (audit, notifications, etc.)
+        if progress_callback:
+            progress_callback(97, "Generating Notifications and Audit Logs...")
+        generate_notifications(db)
+        generate_missing_mapping_events(db)
+        generate_lot_reservation_history(db)
+        generate_operation_logs(db)
+        generate_master_change_logs(db)
+        generate_business_rules(db)
+        generate_batch_jobs(db)
+        generate_cloud_flow_data(db)
 
         db.commit()
 
