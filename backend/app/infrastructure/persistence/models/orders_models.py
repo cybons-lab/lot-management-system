@@ -3,7 +3,7 @@ r"""Order management models aligned with actual database schema.
 All models strictly follow the actual PostgreSQL tables as the single source of truth.
 Schema can be verified with: docker compose exec db-postgres pg_dump -U admin -d lot_management --schema-only
 
-Updated 2025-12-08: Added business key columns for order management:
+Business key columns:
 - order_group_id: References order_groups for logical grouping
 - customer_order_no: Customer's 6-digit order number (business key)
 - sap_order_item_no: SAP order item number (business key with sap_order_no)
