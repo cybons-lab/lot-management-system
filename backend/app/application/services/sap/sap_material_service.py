@@ -109,8 +109,8 @@ class SapMaterialService:
         """
         # デフォルト接続を検索
         stmt = select(SapConnection).where(
-            SapConnection.is_active == True,  # noqa: E712
-            SapConnection.is_default == True,  # noqa: E712
+            SapConnection.is_active.is_(True),
+            SapConnection.is_default.is_(True),
         )
         conn = self.db.execute(stmt).scalar_one_or_none()
 
@@ -120,9 +120,7 @@ class SapMaterialService:
         # デフォルトがなければアクティブな最初の接続
         stmt = (
             select(SapConnection)
-            .where(
-                SapConnection.is_active == True  # noqa: E712
-            )
+            .where(SapConnection.is_active.is_(True))
             .order_by(SapConnection.id)
         )
         return self.db.execute(stmt).scalar_one_or_none()

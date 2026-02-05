@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-データベーステーブル・ビュー完全ダンプスクリプト
+"""データベーステーブル・ビュー完全ダンプスクリプト.
 
 Usage:
     # Dockerコンテナ内から実行（開発環境）
@@ -21,16 +20,19 @@ import os
 import sys
 from pathlib import Path
 
+
 try:
     import psycopg2
-    from psycopg2 import sql
 except ImportError:
-    print("ERROR: psycopg2 is not installed. Install it with: pip install psycopg2-binary", file=sys.stderr)
+    print(
+        "ERROR: psycopg2 is not installed. Install it with: pip install psycopg2-binary",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 
 def get_db_config_from_env_or_args():
-    """環境変数またはコマンドライン引数からDB接続設定を取得
+    """環境変数またはコマンドライン引数からDB接続設定を取得。.
 
     優先順位:
     1. DATABASE_URL 環境変数（Docker環境）
@@ -41,6 +43,7 @@ def get_db_config_from_env_or_args():
     if database_url:
         # postgresql://user:pass@host:port/dbname から抽出
         import re
+
         match = re.match(r"postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)", database_url)
         if match:
             user, password, host, port, database = match.groups()
@@ -55,10 +58,16 @@ def get_db_config_from_env_or_args():
     # コマンドライン引数から取得
     parser = argparse.ArgumentParser(description="Dump view definition from PostgreSQL")
     parser.add_argument("--host", default=os.getenv("DB_HOST", "localhost"), help="Database host")
-    parser.add_argument("--port", type=int, default=int(os.getenv("DB_PORT", "5432")), help="Database port")
+    parser.add_argument(
+        "--port", type=int, default=int(os.getenv("DB_PORT", "5432")), help="Database port"
+    )
     parser.add_argument("--user", default=os.getenv("DB_USER", "postgres"), help="Database user")
-    parser.add_argument("--password", default=os.getenv("DB_PASSWORD", "postgres"), help="Database password")
-    parser.add_argument("--database", default=os.getenv("DB_NAME", "lot_management"), help="Database name")
+    parser.add_argument(
+        "--password", default=os.getenv("DB_PASSWORD", "postgres"), help="Database password"
+    )
+    parser.add_argument(
+        "--database", default=os.getenv("DB_NAME", "lot_management"), help="Database name"
+    )
     args = parser.parse_args()
 
     return {
@@ -71,7 +80,7 @@ def get_db_config_from_env_or_args():
 
 
 def dump_table_schema(cur, table_name: str) -> str:
-    """テーブルのCREATE TABLE文を生成"""
+    """テーブルのCREATE TABLE文を生成。."""
     cur.execute(
         """
         SELECT
@@ -119,9 +128,9 @@ def dump_table_schema(cur, table_name: str) -> str:
 
 
 def dump_table_data(cur, table_name: str, limit: int = 10) -> str:
-    """テーブルのサンプルデータをINSERT文として生成"""
+    """テーブルのサンプルデータをINSERT文として生成。."""
     cur.execute(
-        f"""
+        """
         SELECT column_name
         FROM information_schema.columns
         WHERE table_name = %s
@@ -153,14 +162,17 @@ def dump_table_data(cur, table_name: str, limit: int = 10) -> str:
             else:
                 values.append(str(val))
 
-        insert_sql += f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({', '.join(values)});\n"
+        insert_sql += (
+            f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({', '.join(values)});\n"
+        )
 
     return insert_sql + "\n"
 
 
-def dump_view_definition(config: dict, view_name: str = "v_lot_receipt_stock") -> tuple[str, list[tuple]]:
-    """
-    指定したビューの定義と列情報を取得
+def dump_view_definition(
+    config: dict, view_name: str = "v_lot_receipt_stock"
+) -> tuple[str, list[tuple]]:
+    """指定したビューの定義と列情報を取得。.
 
     Args:
         config: DB接続設定
@@ -212,7 +224,7 @@ def dump_view_definition(config: dict, view_name: str = "v_lot_receipt_stock") -
 
 
 def dump_all_related_tables(config: dict) -> dict:
-    """v_lot_receipt_stock に関連する全テーブルのスキーマとデータをダンプ"""
+    """v_lot_receipt_stock に関連する全テーブルのスキーマとデータをダンプ。."""
     related_tables = [
         "lots",
         "supplier_items",
@@ -331,7 +343,9 @@ def main():
                 type_info += f"({char_len})"
             elif num_prec:
                 type_info += f"({num_prec},{num_scale})"
-            marker = "✓" if col_name in ["supplier_item_id", "product_code", "maker_part_code"] else " "
+            marker = (
+                "✓" if col_name in ["supplier_item_id", "product_code", "maker_part_code"] else " "
+            )
             print(f"  [{marker}] {col_name:<30} {type_info}")
 
         # supplier_item_id の存在チェック

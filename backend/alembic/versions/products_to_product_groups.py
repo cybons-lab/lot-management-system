@@ -34,7 +34,7 @@ def _constraint_exists(constraint_name: str, table_name: str) -> bool:
         """),
         {"constraint_name": constraint_name, "table_name": table_name},
     )
-    return result.scalar()
+    return bool(result.scalar())
 
 
 def _rename_constraint_if_exists(table_name: str, old_name: str, new_name: str) -> None:

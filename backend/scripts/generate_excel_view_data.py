@@ -113,14 +113,14 @@ def generate_excel_view_data(db: Session):
     pw = (
         db.query(ProductWarehouse)
         .filter(
-            ProductWarehouse.product_group_id == product.id,
+            ProductWarehouse.supplier_item_id == product.id,
             ProductWarehouse.warehouse_id == warehouse.id,
         )
         .first()
     )
     if not pw:
         db.add(
-            ProductWarehouse(product_group_id=product.id, warehouse_id=warehouse.id, is_active=True)
+            ProductWarehouse(supplier_item_id=product.id, warehouse_id=warehouse.id, is_active=True)
         )
 
     # 4. Create Lots and Receipts
@@ -133,7 +133,7 @@ def generate_excel_view_data(db: Session):
     if not lot1_master:
         lot1_master = LotMaster(
             lot_number=lot1_no,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             supplier_id=supplier.id,
             first_receipt_date=today - timedelta(days=30),
             latest_expiry_date=today + timedelta(days=365),
@@ -145,7 +145,7 @@ def generate_excel_view_data(db: Session):
     if not lot1_receipt:
         lot1_receipt = LotReceipt(
             lot_master_id=lot1_master.id,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             warehouse_id=warehouse.id,
             supplier_id=supplier.id,
             received_date=today - timedelta(days=30),
@@ -166,7 +166,7 @@ def generate_excel_view_data(db: Session):
     if not lot2_master:
         lot2_master = LotMaster(
             lot_number=lot2_no,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             supplier_id=supplier.id,
             first_receipt_date=today - timedelta(days=10),
             latest_expiry_date=today + timedelta(days=400),
@@ -178,7 +178,7 @@ def generate_excel_view_data(db: Session):
     if not lot2_receipt:
         lot2_receipt = LotReceipt(
             lot_master_id=lot2_master.id,
-            product_group_id=product.id,
+            supplier_item_id=product.id,
             warehouse_id=warehouse.id,
             supplier_id=supplier.id,
             received_date=today - timedelta(days=10),

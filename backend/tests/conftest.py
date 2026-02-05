@@ -233,7 +233,7 @@ def client(db) -> Generator[TestClient]:
         db.flush()
 
         # Assign admin role
-        user_role = UserRole(user_id=user.id, role_id=admin_role.id)
+        user_role = UserRole(user=user, role=admin_role)
         db.add(user_role)
         db.flush()
 
@@ -426,7 +426,7 @@ def master_data(db, supplier):
     db.flush()
 
     # Assign user role
-    db.add(UserRole(user_id=user.id, role_id=user_role.id))
+    db.add(UserRole(user=user, role=user_role))
     db.flush()
 
     return {
@@ -474,7 +474,7 @@ def normal_user(db):
     db.flush()
 
     # Assign role
-    db.add(UserRole(user_id=user.id, role_id=user_role.id))
+    db.add(UserRole(user=user, role=user_role))
     db.flush()
 
     db.refresh(user)
@@ -505,7 +505,7 @@ def superuser(db):
     db.flush()
 
     # Assign admin role
-    db.add(UserRole(user_id=user.id, role_id=admin_role.id))
+    db.add(UserRole(user=user, role=admin_role))
 
     db.commit()
     db.refresh(user)

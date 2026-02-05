@@ -77,7 +77,7 @@ class MaterialOrderForecastService:
                 pass
             else:
                 # CSV A列から取得
-                target_month_raw = df.iloc[0, 0]  # A列の先頭行
+                target_month_raw = str(df.iloc[0, 0])  # A列の先頭行
                 if len(target_month_raw) == 6 and target_month_raw.isdigit():
                     target_month = f"{target_month_raw[:4]}-{target_month_raw[4:6]}"
                 else:
@@ -91,10 +91,13 @@ class MaterialOrderForecastService:
             if len(df.columns) <= 4:
                 raise ValueError("CSV列数が不足しています（次区コード列が存在しません）")
 
+            # Pandas index 4 is Column E
             jiku_series = df.iloc[:, 4].fillna("").astype(str).str.strip()
             missing_jiku = jiku_series == ""
             if missing_jiku.any():
-                row_numbers = (df.index[missing_jiku] + 1).tolist()
+                # Convert boolean series to index and find where true
+                row_indices = df.index[missing_jiku].tolist()
+                row_numbers = [int(idx) + 1 for idx in row_indices]
                 sample_rows = ", ".join(str(num) for num in row_numbers[:5])
                 raise ValueError(f"次区コードが空の行があります（行: {sample_rows}）")
 
@@ -166,8 +169,8 @@ class MaterialOrderForecastService:
                             pass
             period_quantities_list.append(json.dumps(period) if period else None)
 
-        df["daily_quantities_json"] = daily_quantities_list
-        df["period_quantities_json"] = period_quantities_list
+        df["daily_quantities_json"] = pd.Series(daily_quantities_list, dtype=object)
+        df["period_quantities_json"] = pd.Series(period_quantities_list, dtype=object)
 
         return df
 
@@ -181,9 +184,6 @@ class MaterialOrderForecastService:
             for ci in self.db.query(CustomerItem).filter(CustomerItem.valid_to >= date.today())
         }
         df["customer_item_id"] = df.iloc[:, 1].map(customer_item_map)  # B列（材質コード）
-        df["customer_item_id"] = df["customer_item_id"].where(
-            pd.notna(df["customer_item_id"]), None
-        )
 
         missing_material = df[df["customer_item_id"].isna()].iloc[:, 1].unique()
         if len(missing_material) > 0:
@@ -196,7 +196,6 @@ class MaterialOrderForecastService:
             m.maker_code: m.id for m in self.db.query(Maker).filter(Maker.valid_to >= date.today())
         }
         df["maker_id"] = df.iloc[:, 8].map(maker_map)  # I列（メーカーコード）
-        df["maker_id"] = df["maker_id"].where(pd.notna(df["maker_id"]), None)
 
         missing_makers = df[df["maker_id"].isna()].iloc[:, 8].unique()
         if len(missing_makers) > 0:
@@ -210,7 +209,6 @@ class MaterialOrderForecastService:
             for w in self.db.query(Warehouse).filter(Warehouse.valid_to >= date.today())
         }
         df["warehouse_id"] = df.iloc[:, 3].map(warehouse_map)  # D列（倉庫）
-        df["warehouse_id"] = df["warehouse_id"].where(pd.notna(df["warehouse_id"]), None)
 
         missing_warehouses = df[df["warehouse_id"].isna()].iloc[:, 3].unique()
         if len(missing_warehouses) > 0:

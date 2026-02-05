@@ -5,13 +5,15 @@ Revises: 7556ff2f06c0
 Create Date: 2026-02-02 16:25:31.531212
 
 """
-from alembic import op
+
 import sqlalchemy as sa
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = 'fe5ee626e71c'
-down_revision = '7556ff2f06c0'
+revision = "fe5ee626e71c"
+down_revision = "7556ff2f06c0"
 branch_labels = None
 depends_on = None
 
@@ -23,29 +25,37 @@ def upgrade() -> None:
         op.execute(f"CREATE VIEW {name} AS {sql}")
 
     # 1. Recreate all views with expected columns for SQLAlchemy models
-    
+
     # v_lot_allocations
-    create_view("v_lot_allocations", """
+    create_view(
+        "v_lot_allocations",
+        """
         SELECT
             lot_id,
             SUM(reserved_qty) as allocated_quantity
         FROM lot_reservations
         WHERE status = 'confirmed'
         GROUP BY lot_id
-    """)
+    """,
+    )
 
     # v_lot_active_reservations
-    create_view("v_lot_active_reservations", """
+    create_view(
+        "v_lot_active_reservations",
+        """
         SELECT
             lot_id,
             SUM(reserved_qty) as reserved_quantity_active
         FROM lot_reservations
         WHERE status = 'active'
         GROUP BY lot_id
-    """)
+    """,
+    )
 
     # v_lot_current_stock
-    create_view("v_lot_current_stock", """
+    create_view(
+        "v_lot_current_stock",
+        """
         SELECT
             lr.id AS lot_id,
             lr.supplier_item_id,
@@ -54,19 +64,25 @@ def upgrade() -> None:
             lr.updated_at AS last_updated
         FROM lot_receipts lr
         WHERE lr.received_quantity > 0
-    """)
+    """,
+    )
 
     # v_customer_daily_products
-    create_view("v_customer_daily_products", """
+    create_view(
+        "v_customer_daily_products",
+        """
         SELECT DISTINCT
             f.customer_id,
             f.supplier_item_id
         FROM forecast_current f
         WHERE f.forecast_period IS NOT NULL
-    """)
+    """,
+    )
 
     # v_order_line_context
-    create_view("v_order_line_context", """
+    create_view(
+        "v_order_line_context",
+        """
         SELECT
             ol.id AS order_line_id,
             o.id AS order_id,
@@ -76,10 +92,13 @@ def upgrade() -> None:
             ol.order_quantity AS quantity
         FROM order_lines ol
         JOIN orders o ON o.id = ol.order_id
-    """)
+    """,
+    )
 
     # v_product_code_to_id
-    create_view("v_product_code_to_id", """
+    create_view(
+        "v_product_code_to_id",
+        """
         SELECT
             p.maker_part_no AS product_code,
             p.maker_part_no AS maker_part_code,
@@ -89,10 +108,13 @@ def upgrade() -> None:
             COALESCE(p.display_name, '[削除済み製品]') AS display_name,
             CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS is_deleted
         FROM supplier_items p
-    """)
+    """,
+    )
 
     # v_lot_available_qty
-    create_view("v_lot_available_qty", """
+    create_view(
+        "v_lot_available_qty",
+        """
         SELECT 
             lr.id AS lot_id,
             lr.supplier_item_id,
@@ -120,10 +142,13 @@ def upgrade() -> None:
             lr.status = 'active'
             AND (lr.expiry_date IS NULL OR lr.expiry_date >= CURRENT_DATE)
             AND (lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity) > 0
-    """)
+    """,
+    )
 
     # v_lot_receipt_stock
-    create_view("v_lot_receipt_stock", """
+    create_view(
+        "v_lot_receipt_stock",
+        """
         SELECT
             lr.id AS receipt_id,
             lm.id AS lot_master_id,
@@ -184,10 +209,13 @@ def upgrade() -> None:
         LEFT JOIN v_lot_allocations la ON lr.id = la.lot_id
         LEFT JOIN v_lot_active_reservations lar ON lr.id = lar.lot_id
         WHERE lr.status = 'active'
-    """)
+    """,
+    )
 
     # v_inventory_summary
-    create_view("v_inventory_summary", """
+    create_view(
+        "v_inventory_summary",
+        """
         SELECT
           pw.supplier_item_id,
           pw.warehouse_id,
@@ -226,10 +254,13 @@ def upgrade() -> None:
           GROUP BY lrs.supplier_item_id, lrs.warehouse_id
         ) agg ON agg.supplier_item_id = pw.supplier_item_id AND agg.warehouse_id = pw.warehouse_id
         WHERE pw.is_active = true
-    """)
+    """,
+    )
 
     # v_lot_details
-    create_view("v_lot_details", """
+    create_view(
+        "v_lot_details",
+        """
         SELECT
             lr.id AS lot_id,
             lm.lot_number,
@@ -315,10 +346,13 @@ def upgrade() -> None:
             AND usa_primary.is_primary = TRUE
         LEFT JOIN users u_primary
             ON u_primary.id = usa_primary.user_id
-    """)
+    """,
+    )
 
     # v_order_line_details
-    create_view("v_order_line_details", """
+    create_view(
+        "v_order_line_details",
+        """
         SELECT
             o.id AS order_id,
             o.order_date,
@@ -363,7 +397,8 @@ def upgrade() -> None:
             WHERE source_type = 'ORDER' AND status IN ('active', 'confirmed')
             GROUP BY source_id
         ) res_sum ON res_sum.source_id = ol.id
-    """)
+    """,
+    )
 
 
 def downgrade() -> None:

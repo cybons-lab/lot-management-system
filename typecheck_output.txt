@@ -1,0 +1,4 @@
+
+> lot-management-frontend@2.5.0 typecheck
+> tsc -p tsconfig.json --noEmit
+

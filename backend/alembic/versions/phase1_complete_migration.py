@@ -21,13 +21,16 @@ Create Date: 2026-02-02
 """
 
 import sqlalchemy as sa
+
 from alembic import op
+
 
 # revision identifiers, used by Alembic.
 revision = "phase1_complete_migration"
 down_revision = "af2153ad0efc"
 branch_labels = None
 depends_on = None
+
 
 def upgrade() -> None:
     # 1. Data Migration: Copy values from product_group_id to supplier_item_id where NULL
@@ -38,20 +41,30 @@ def upgrade() -> None:
         "inbound_plan_lines",
         "lot_master",
     ]
-    
+
     for table in tables_to_migrate:
         # Check if supplier_item_id already exists (to avoid errors on retry)
         conn = op.get_bind()
-        res = conn.execute(sa.text(f"""
+        res = conn.execute(
+            sa.text(f"""
             SELECT EXISTS (
                 SELECT 1 FROM information_schema.columns 
                 WHERE table_name = '{table}' AND column_name = 'supplier_item_id'
             )
-        """))
+        """)
+        )
         exists = res.scalar()
-        
+
         if not exists:
-            op.add_column(table, sa.Column("supplier_item_id", sa.BigInteger(), sa.ForeignKey("supplier_items.id", ondelete="RESTRICT"), nullable=True))
+            op.add_column(
+                table,
+                sa.Column(
+                    "supplier_item_id",
+                    sa.BigInteger(),
+                    sa.ForeignKey("supplier_items.id", ondelete="RESTRICT"),
+                    nullable=True,
+                ),
+            )
             print(f"✅ Added column supplier_item_id to {table}")
 
         # Migrate data: Copy values from product_group_id to supplier_item_id
@@ -73,7 +86,7 @@ def upgrade() -> None:
         ("missing_mapping_events", "product_group_id", "supplier_item_id"),
         ("allocation_suggestions", "product_group_id", "supplier_item_id"),
     ]
-    
+
     for table, old_col, new_col in tables_to_rename:
         op.alter_column(table, old_col, new_column_name=new_col)
 
@@ -81,7 +94,7 @@ def upgrade() -> None:
     # We also need to drop associated foreign keys and indexes.
     # PostgreSQL handles many of these automatically if we drop the column,
     # but for safety and consistency we'll be explicit or use CASCADE.
-    
+
     for table in tables_to_migrate:
         # Check and drop FK first (names might vary, but usually they were renamed in previous migrations)
         # Trying to drop by pattern or just use CASCADE on column drop.
@@ -90,36 +103,45 @@ def upgrade() -> None:
     # 5. Recreate Views to use ONLY supplier_item_id (and remove product_group_id aliases)
     _recreate_views()
 
+
 def _recreate_views():
     """Recreate all views with updated column names."""
-    
+
     # helper for view replacement
     def create_view(name, sql):
         op.execute(f"DROP VIEW IF EXISTS {name} CASCADE")
         op.execute(f"CREATE VIEW {name} AS {sql}")
 
     # v_lot_allocations
-    create_view("v_lot_allocations", """
+    create_view(
+        "v_lot_allocations",
+        """
         SELECT
             lot_id,
             SUM(reserved_qty) as allocated_quantity
         FROM lot_reservations
         WHERE status = 'confirmed'
         GROUP BY lot_id
-    """)
+    """,
+    )
 
     # v_lot_active_reservations
-    create_view("v_lot_active_reservations", """
+    create_view(
+        "v_lot_active_reservations",
+        """
         SELECT
             lot_id,
             SUM(reserved_qty) as reserved_quantity_active
         FROM lot_reservations
         WHERE status = 'active'
         GROUP BY lot_id
-    """)
+    """,
+    )
 
     # v_lot_current_stock
-    create_view("v_lot_current_stock", """
+    create_view(
+        "v_lot_current_stock",
+        """
         SELECT
             lr.id AS lot_id,
             lr.supplier_item_id,
@@ -128,19 +150,25 @@ def _recreate_views():
             lr.updated_at AS last_updated
         FROM lot_receipts lr
         WHERE lr.received_quantity > 0
-    """)
+    """,
+    )
 
     # v_customer_daily_products
-    create_view("v_customer_daily_products", """
+    create_view(
+        "v_customer_daily_products",
+        """
         SELECT DISTINCT
             f.customer_id,
             f.supplier_item_id
         FROM forecast_current f
         WHERE f.forecast_period IS NOT NULL
-    """)
+    """,
+    )
 
     # v_order_line_context
-    create_view("v_order_line_context", """
+    create_view(
+        "v_order_line_context",
+        """
         SELECT
             ol.id AS order_line_id,
             o.id AS order_id,
@@ -150,30 +178,39 @@ def _recreate_views():
             ol.order_quantity AS quantity
         FROM order_lines ol
         JOIN orders o ON o.id = ol.order_id
-    """)
+    """,
+    )
 
     # v_customer_code_to_id
-    create_view("v_customer_code_to_id", """
+    create_view(
+        "v_customer_code_to_id",
+        """
         SELECT
             c.customer_code,
             c.id AS customer_id,
             COALESCE(c.customer_name, '[削除済み得意先]') AS customer_name,
             CASE WHEN c.valid_to IS NOT NULL AND c.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS is_deleted
         FROM customers c
-    """)
+    """,
+    )
 
     # v_delivery_place_code_to_id
-    create_view("v_delivery_place_code_to_id", """
+    create_view(
+        "v_delivery_place_code_to_id",
+        """
         SELECT
             d.delivery_place_code,
             d.id AS delivery_place_id,
             COALESCE(d.delivery_place_name, '[削除済み納入先]') AS delivery_place_name,
             CASE WHEN d.valid_to IS NOT NULL AND d.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS is_deleted
         FROM delivery_places d
-    """)
+    """,
+    )
 
     # v_product_code_to_id
-    create_view("v_product_code_to_id", """
+    create_view(
+        "v_product_code_to_id",
+        """
         SELECT
             p.maker_part_no AS product_code,
             p.maker_part_no AS maker_part_code,
@@ -183,10 +220,13 @@ def _recreate_views():
             COALESCE(p.display_name, '[削除済み製品]') AS display_name,
             CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS is_deleted
         FROM supplier_items p
-    """)
+    """,
+    )
 
     # v_forecast_order_pairs
-    create_view("v_forecast_order_pairs", """
+    create_view(
+        "v_forecast_order_pairs",
+        """
         SELECT DISTINCT
             f.id AS forecast_id,
             f.customer_id,
@@ -197,10 +237,13 @@ def _recreate_views():
         JOIN orders o ON o.customer_id = f.customer_id
         JOIN order_lines ol ON ol.order_id = o.id
             AND ol.supplier_item_id = f.supplier_item_id
-    """)
+    """,
+    )
 
     # v_lot_available_qty
-    create_view("v_lot_available_qty", """
+    create_view(
+        "v_lot_available_qty",
+        """
         SELECT 
             lr.id AS lot_id,
             lr.supplier_item_id,
@@ -228,10 +271,13 @@ def _recreate_views():
             lr.status = 'active'
             AND (lr.expiry_date IS NULL OR lr.expiry_date >= CURRENT_DATE)
             AND (lr.received_quantity - COALESCE(wl_sum.total_withdrawn, 0) - COALESCE(la.allocated_quantity, 0) - lr.locked_quantity) > 0
-    """)
+    """,
+    )
 
     # v_lot_receipt_stock
-    create_view("v_lot_receipt_stock", """
+    create_view(
+        "v_lot_receipt_stock",
+        """
         SELECT
             lr.id AS receipt_id,
             lm.id AS lot_master_id,
@@ -292,10 +338,13 @@ def _recreate_views():
         LEFT JOIN v_lot_allocations la ON lr.id = la.lot_id
         LEFT JOIN v_lot_active_reservations lar ON lr.id = lar.lot_id
         WHERE lr.status = 'active'
-    """)
+    """,
+    )
 
     # v_inventory_summary
-    create_view("v_inventory_summary", """
+    create_view(
+        "v_inventory_summary",
+        """
         SELECT
           pw.supplier_item_id,
           pw.warehouse_id,
@@ -334,10 +383,13 @@ def _recreate_views():
           GROUP BY lrs.supplier_item_id, lrs.warehouse_id
         ) agg ON agg.supplier_item_id = pw.supplier_item_id AND agg.warehouse_id = pw.warehouse_id
         WHERE pw.is_active = true
-    """)
+    """,
+    )
 
     # v_lot_details
-    create_view("v_lot_details", """
+    create_view(
+        "v_lot_details",
+        """
         SELECT
             lr.id AS lot_id,
             lm.lot_number,
@@ -423,10 +475,13 @@ def _recreate_views():
             AND usa_primary.is_primary = TRUE
         LEFT JOIN users u_primary
             ON u_primary.id = usa_primary.user_id
-    """)
+    """,
+    )
 
     # v_order_line_details
-    create_view("v_order_line_details", """
+    create_view(
+        "v_order_line_details",
+        """
         SELECT
             o.id AS order_id,
             o.order_date,
@@ -471,7 +526,9 @@ def _recreate_views():
             WHERE source_type = 'ORDER' AND status IN ('active', 'confirmed')
             GROUP BY source_id
         ) res_sum ON res_sum.source_id = ol.id
-    """)
+    """,
+    )
+
 
 def downgrade() -> None:
     # Downgrade is complex due to column removal.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-本番環境用: ビュー定義チェック & 修正スクリプト
+本番環境用: ビュー定義チェック & 修正スクリプト.
 
 Usage:
     # 本番環境から実行（Windows）
@@ -19,20 +19,21 @@ Usage:
 """
 
 import argparse
-import os
 import sys
-from pathlib import Path
+
 
 try:
     import psycopg2
-    from psycopg2 import sql
 except ImportError:
-    print("ERROR: psycopg2 is not installed. Install it with: pip install psycopg2-binary", file=sys.stderr)
+    print(
+        "ERROR: psycopg2 is not installed. Install it with: pip install psycopg2-binary",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 
 def get_db_config():
-    """コマンドライン引数からDB接続設定を取得"""
+    """コマンドライン引数からDB接続設定を取得."""
     parser = argparse.ArgumentParser(description="Check and fix v_lot_receipt_stock view")
     parser.add_argument("--host", required=True, help="Database host (e.g., localhost)")
     parser.add_argument("--port", type=int, default=5432, help="Database port")
@@ -53,7 +54,7 @@ def get_db_config():
 
 
 def get_correct_view_sql() -> str:
-    """正しいビュー定義SQLを返す
+    """正しいビュー定義SQLを返す。.
 
     これは開発環境で確認された正しい定義です。
     """
@@ -126,7 +127,7 @@ WHERE
 
 
 def check_view_has_column(config: dict, view_name: str, column_name: str) -> bool:
-    """ビューに指定した列が存在するかチェック"""
+    """ビューに指定した列が存在するかチェック。."""
     conn = None
     try:
         conn = psycopg2.connect(**config)
@@ -150,7 +151,7 @@ def check_view_has_column(config: dict, view_name: str, column_name: str) -> boo
 
 
 def get_view_columns(config: dict, view_name: str) -> list[str]:
-    """ビューの全列名を取得"""
+    """ビューの全列名を取得。."""
     conn = None
     try:
         conn = psycopg2.connect(**config)
@@ -173,7 +174,7 @@ def get_view_columns(config: dict, view_name: str) -> list[str]:
 
 
 def fix_view(config: dict) -> bool:
-    """ビューを正しい定義で再作成"""
+    """ビューを正しい定義で再作成。."""
     conn = None
     try:
         conn = psycopg2.connect(**config)

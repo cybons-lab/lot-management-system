@@ -104,7 +104,7 @@ def lookup_lead_time(
                     WarehouseDeliveryRoute.warehouse_id == warehouse_id,
                     WarehouseDeliveryRoute.delivery_place_id == delivery_place_id,
                     WarehouseDeliveryRoute.supplier_item_id == supplier_item_id,
-                    WarehouseDeliveryRoute.is_active == True,  # noqa: E712
+                    WarehouseDeliveryRoute.is_active.is_(True),
                 )
             )
         ).scalar_one_or_none()
@@ -122,7 +122,7 @@ def lookup_lead_time(
                 WarehouseDeliveryRoute.warehouse_id == warehouse_id,
                 WarehouseDeliveryRoute.delivery_place_id == delivery_place_id,
                 WarehouseDeliveryRoute.supplier_item_id.is_(None),
-                WarehouseDeliveryRoute.is_active == True,  # noqa: E712
+                WarehouseDeliveryRoute.is_active.is_(True),
             )
         )
     ).scalar_one_or_none()

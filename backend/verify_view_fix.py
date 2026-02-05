@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-ビュー修正検証スクリプト
+"""ビュー修正検証スクリプト.
 
 Usage:
     # Dockerコンテナ内から実行（開発環境）
@@ -19,22 +18,31 @@ import argparse
 import os
 import sys
 
+
 try:
     import psycopg2
-    from psycopg2 import sql
 except ImportError:
-    print("ERROR: psycopg2 is not installed. Install it with: pip install psycopg2-binary", file=sys.stderr)
+    print(
+        "ERROR: psycopg2 is not installed. Install it with: pip install psycopg2-binary",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 
 def get_db_config_from_args():
-    """コマンドライン引数からDB接続設定を取得"""
+    """コマンドライン引数からDB接続設定を取得."""
     parser = argparse.ArgumentParser(description="Verify view fix for v_lot_receipt_stock")
     parser.add_argument("--host", default=os.getenv("DB_HOST", "localhost"), help="Database host")
-    parser.add_argument("--port", type=int, default=int(os.getenv("DB_PORT", "5432")), help="Database port")
+    parser.add_argument(
+        "--port", type=int, default=int(os.getenv("DB_PORT", "5432")), help="Database port"
+    )
     parser.add_argument("--user", default=os.getenv("DB_USER", "postgres"), help="Database user")
-    parser.add_argument("--password", default=os.getenv("DB_PASSWORD", "postgres"), help="Database password")
-    parser.add_argument("--database", default=os.getenv("DB_NAME", "lot_management"), help="Database name")
+    parser.add_argument(
+        "--password", default=os.getenv("DB_PASSWORD", "postgres"), help="Database password"
+    )
+    parser.add_argument(
+        "--database", default=os.getenv("DB_NAME", "lot_management"), help="Database name"
+    )
     args = parser.parse_args()
 
     return {
@@ -47,8 +55,7 @@ def get_db_config_from_args():
 
 
 def verify_view(config: dict) -> bool:
-    """
-    v_lot_receipt_stock ビューを検証
+    """v_lot_receipt_stock ビューを検証.
 
     Returns:
         True if all checks pass, False otherwise
@@ -163,7 +170,9 @@ def verify_view(config: dict) -> bool:
             if results:
                 print("   Sample groups:")
                 for row in results[:3]:
-                    print(f"     supplier_item_id={row[0]}, supplier_id={row[1]}, warehouse_id={row[2]}, count={row[3]}")
+                    print(
+                        f"     supplier_item_id={row[0]}, supplier_id={row[1]}, warehouse_id={row[2]}, count={row[3]}"
+                    )
         except Exception as e:
             print(f"❌ FAIL: GROUP BY query failed: {e}")
             all_passed = False

@@ -37,7 +37,7 @@ def priority_test_data(db_session):
         db_session.add(role)
         db_session.flush()
 
-    user_role = UserRole(user_id=user.id, role_id=role.id)
+    user_role = UserRole(user=user, role=role)
     db_session.add(user_role)
     db_session.flush()
 

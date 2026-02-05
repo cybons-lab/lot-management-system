@@ -197,13 +197,13 @@ export function DeleteDialog({
       <AlertDialogContent data-testid="delete-dialog" onInteractOutside={(e) => e.preventDefault()}>
         <AlertDialogHeader>
           <AlertDialogTitle className={`flex items-center gap-2 ${alertStyles.titleColor}`}>
-            <Icon className="h-5 w-5" />
+            <Icon className="h-5 w-5" aria-hidden="true" />
             {dialogTitle}
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
             <span className="block">{dialogDescription}</span>
             {!isSoft && (
-              <span className="block font-semibold text-red-600">
+              <span className="block font-semibold text-red-600" role="alert">
                 ⚠️ この操作は取り消せません。データベースから完全に削除されます。
               </span>
             )}
@@ -218,7 +218,7 @@ export function DeleteDialog({
         <div className="space-y-4 py-4">
           {/* 一括削除時の件数表示 */}
           {bulk && (
-            <div className={`rounded-lg p-3 ${alertStyles.bgColor}`}>
+            <div className={`rounded-lg p-3 ${alertStyles.bgColor}`} role="status">
               <p className={`text-sm font-medium ${alertStyles.textColor}`}>
                 {isSoft ? "無効化" : "削除"}対象:{" "}
                 <span className="text-lg font-bold">{selectedCount}</span> 件
@@ -230,7 +230,7 @@ export function DeleteDialog({
           {isSoft && (
             <div className="space-y-2">
               <Label htmlFor="delete-end-date" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+                <Calendar className="h-4 w-4" aria-hidden="true" />
                 {bulk ? "無効化日（終了日）" : "有効終了日（任意）"}
               </Label>
               <Input
@@ -241,8 +241,9 @@ export function DeleteDialog({
                 min={today}
                 className={`${alertStyles.borderColor} focus:border-amber-500`}
                 data-testid="delete-dialog-date-input"
+                aria-describedby="delete-date-description"
               />
-              <p className="text-xs text-slate-500">
+              <p id="delete-date-description" className="text-xs text-slate-500">
                 {bulk
                   ? "この日付以降、対象データは無効として扱われます"
                   : "指定しない場合は、本日をもって無効になります。将来の日付を指定すると、その日まで有効なままになります。"}
@@ -253,12 +254,13 @@ export function DeleteDialog({
           {/* 物理削除: 確認フレーズ入力 */}
           {!isSoft && (
             <div className="space-y-2">
-              <Label htmlFor="delete-confirm-phrase">
+              <Label htmlFor="delete-confirm-phrase" id="delete-confirm-label">
                 確認のため「<span className="font-bold">{confirmationPhrase}</span>
                 」と入力してください
               </Label>
               <Input
                 id="delete-confirm-phrase"
+                aria-labelledby="delete-confirm-label"
                 value={confirmInput}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setConfirmInput(e.target.value)
