@@ -16,8 +16,8 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.domain.models.customer import Customer
-from app.infrastructure.database.session import get_db
+from app.core.database import get_db
+from app.infrastructure.persistence.models.masters_models import Customer
 from app.main import app
 
 

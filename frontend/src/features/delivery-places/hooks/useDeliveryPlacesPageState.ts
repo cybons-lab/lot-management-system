@@ -96,10 +96,8 @@ export function useDeliveryPlacesPageState() {
   const sortedData = useMemo(() => {
     const sorted = [...filteredData];
     sorted.sort((a, b) => {
-      // @ts-expect-error: sorting logic works with index access for basic properties
-      const aVal = a[sort.column];
-      // @ts-expect-error: sorting logic works with index access for basic properties
-      const bVal = b[sort.column];
+      const aVal = a[sort.column as keyof DeliveryPlaceWithValidTo];
+      const bVal = b[sort.column as keyof DeliveryPlaceWithValidTo];
       if (aVal === undefined || bVal === undefined) return 0;
       const cmp = String(aVal).localeCompare(String(bVal), "ja");
       return sort.direction === "asc" ? cmp : -cmp;
