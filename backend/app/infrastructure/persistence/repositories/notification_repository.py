@@ -16,6 +16,7 @@ class NotificationRepository:
             message=notification.message,
             type=notification.type,
             link=notification.link,
+            display_strategy=notification.display_strategy,
             is_read=False,
         )
         self.db.add(db_notification)
@@ -27,7 +28,7 @@ class NotificationRepository:
         return (
             self.db.query(Notification)
             .filter(Notification.user_id == user_id)
-            .order_by(desc(Notification.created_at))
+            .order_by(desc(Notification.created_at), desc(Notification.id))
             .offset(skip)
             .limit(limit)
             .all()

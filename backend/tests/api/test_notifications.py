@@ -9,13 +9,19 @@ from app.infrastructure.persistence.models.notification_model import Notificatio
 
 @pytest.fixture
 def create_test_notification(db: Session, normal_user: User):
-    def _create(title: str, is_read: bool = False, type: str = "info"):
+    def _create(
+        title: str,
+        is_read: bool = False,
+        type: str = "info",
+        display_strategy: str = "immediate",
+    ):
         n = Notification(
             user_id=normal_user.id,
             title=title,
             message="Message",
             type=type,
             is_read=is_read,
+            display_strategy=display_strategy,
         )
         db.add(n)
         db.flush()
@@ -105,3 +111,77 @@ def test_mark_all_as_read(
     notifications = r.json()
     for n in notifications:
         assert n["is_read"] is True
+
+
+def test_create_notification_with_display_strategy(
+    client: TestClient, superuser_token_headers: dict[str, str], normal_user: User
+) -> None:
+    """display_strategy を指定して通知を作成できる"""
+    response = client.post(
+        f"{settings.API_PREFIX}/notifications",
+        json={
+            "user_id": normal_user.id,
+            "title": "Test Notification",
+            "message": "Test message",
+            "type": "info",
+            "display_strategy": "deferred",
+        },
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["display_strategy"] == "deferred"
+
+
+def test_notification_default_display_strategy(
+    client: TestClient, superuser_token_headers: dict[str, str], normal_user: User
+) -> None:
+    """display_strategy を省略した場合、immediate がデフォルト"""
+    response = client.post(
+        f"{settings.API_PREFIX}/notifications",
+        json={
+            "user_id": normal_user.id,
+            "title": "Test Notification",
+            "message": "Test message",
+            "type": "info",
+            # display_strategy 省略
+        },
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["display_strategy"] == "immediate"
+
+
+def test_invalid_display_strategy_rejected(
+    client: TestClient, superuser_token_headers: dict[str, str], normal_user: User
+) -> None:
+    """無効な display_strategy は 422 エラー"""
+    response = client.post(
+        f"{settings.API_PREFIX}/notifications",
+        json={
+            "user_id": normal_user.id,
+            "title": "Test Notification",
+            "message": "Test message",
+            "type": "info",
+            "display_strategy": "invalid_value",  # 無効値
+        },
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 422  # Pydantic validation error
+
+
+def test_get_notifications_includes_display_strategy(
+    client: TestClient, normal_user_token_headers: dict[str, str], create_test_notification
+) -> None:
+    """一覧取得時に display_strategy が含まれる"""
+    # 通知を作成
+    create_test_notification("Test", display_strategy="persistent")
+
+    # 一覧取得
+    response = client.get(f"{settings.API_PREFIX}/notifications", headers=normal_user_token_headers)
+    assert response.status_code == 200
+    notifications = response.json()
+    assert len(notifications) > 0
+    assert "display_strategy" in notifications[0]
+    assert notifications[0]["display_strategy"] in ["immediate", "deferred", "persistent"]

@@ -13164,6 +13164,12 @@ export interface components {
       type: string;
       /** Link */
       link?: string | null;
+      /**
+       * Display Strategy
+       * @default immediate
+       * @enum {string}
+       */
+      display_strategy: "immediate" | "deferred" | "persistent";
       /** User Id */
       user_id: number;
     };
@@ -13180,6 +13186,11 @@ export interface components {
       type: string;
       /** Link */
       link?: string | null;
+      /**
+       * Display Strategy
+       * @enum {string}
+       */
+      display_strategy: "immediate" | "deferred" | "persistent";
       /** Id */
       id: number;
       /** User Id */

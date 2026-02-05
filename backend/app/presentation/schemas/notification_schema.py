@@ -1,6 +1,10 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel
+
+
+DisplayStrategy = Literal["immediate", "deferred", "persistent"]
 
 
 class NotificationBase(BaseModel):
@@ -8,6 +12,7 @@ class NotificationBase(BaseModel):
     message: str
     type: str = "info"
     link: str | None = None
+    display_strategy: DisplayStrategy = "immediate"
 
 
 class NotificationCreate(NotificationBase):
@@ -22,6 +27,7 @@ class NotificationResponse(NotificationBase):
     id: int
     user_id: int
     is_read: bool
+    display_strategy: DisplayStrategy
     created_at: datetime
 
     class Config:

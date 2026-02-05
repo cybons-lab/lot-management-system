@@ -438,6 +438,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                             message=f"ファイルの処理が完了しました: {filename}",
                             type="success",
                             link=f"/rpa/smartread/tasks/{task_id}/results",
+                            display_strategy="deferred",  # 成功通知は後で確認でも良い
                         )
                     )
                 except Exception as e:
