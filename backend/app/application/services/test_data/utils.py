@@ -17,6 +17,7 @@ def clear_data(db: Session):
     db.execute(text("SET session_replication_role = 'replica';"))
 
     tables = [
+        "user_supplier_assignments",
         "rpa_run_items",
         "rpa_runs",
         "original_delivery_calendars",
@@ -24,6 +25,7 @@ def clear_data(db: Session):
         "holiday_calendars",
         "lot_reservation_history",
         "lot_reservations",
+        "adjustments",
         "withdrawals",
         "expected_lots",
         "inbound_plan_lines",
@@ -47,6 +49,7 @@ def clear_data(db: Session):
         "suppliers",
         "warehouse_delivery_routes",
         "warehouses",
+        "makers",
         # SmartRead tables
         "smartread_long_data",
         "smartread_wide_data",
