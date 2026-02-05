@@ -122,9 +122,9 @@ const moveDestinationId = (order: number[], fromId: number, toId: number): numbe
   return next;
 };
 
-/* eslint-disable max-lines-per-function */
-/* eslint-disable complexity */
-/* eslint-disable max-lines */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
+/* eslint-disable complexity -- 業務分岐を明示的に維持するため */
+/* eslint-disable max-lines -- 画面全体の構成を分割せず把握できるようにするため */
 export function ExcelViewPage() {
   const { productId, customerItemId } = useParams<{
     productId: string;

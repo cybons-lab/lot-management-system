@@ -9,7 +9,7 @@ import { Button } from "@/components/ui";
 import type { Column } from "@/shared/components/data/DataTable";
 import { formatDate } from "@/shared/utils/date";
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 export function createColumns(
   onEdit: (row: WarehouseDeliveryRoute) => void,
   onDelete: (row: WarehouseDeliveryRoute) => void,

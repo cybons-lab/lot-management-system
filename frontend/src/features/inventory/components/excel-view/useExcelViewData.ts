@@ -86,7 +86,7 @@ const getShipmentByDate = (
 };
 
 // Multiple || operators increase complexity, but this is a simple data mapping function
-// eslint-disable-next-line complexity
+// eslint-disable-next-line complexity -- 業務分岐を明示的に維持するため
 const getDestinationInfo = (dpId: number, context: MapContext): DestinationInfo => {
   const { dpMap, customerMap, customerPartNoMap, productCode } = context;
   const dp = dpMap.get(dpId);
@@ -180,8 +180,8 @@ interface UseExcelViewDataReturn {
   customerItem: CustomerItem | undefined;
 }
 
-/* eslint-disable max-lines-per-function */
-/* eslint-disable complexity */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
+/* eslint-disable complexity -- 業務分岐を明示的に維持するため */
 export function useExcelViewData(
   productId: number,
   customerItemId?: number,

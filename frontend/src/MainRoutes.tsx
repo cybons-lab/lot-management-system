@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines -- 画面全体の構成を分割せず把握できるようにするため */
 import { Navigate, Route, Routes, Outlet } from "react-router-dom";
 
 import { AccessGuard } from "@/components/auth/AccessGuard";
@@ -127,7 +127,7 @@ function InventoryRoutes() {
   );
 }
 
-/* eslint-disable-next-line max-lines-per-function */
+/* eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 function MasterRoutes() {
   return (
     <Route element={<FeatureGuardLayout feature="masters" />}>
@@ -260,7 +260,7 @@ function ReportRoutes() {
   );
 }
 
-/* eslint-disable-next-line max-lines-per-function */
+/* eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 function AdminRoutes() {
   return (
     <>
@@ -391,7 +391,7 @@ function AdminRoutes() {
   );
 }
 
-/* eslint-disable-next-line max-lines-per-function */
+/* eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 export function MainRoutes() {
   return (
     <Routes>

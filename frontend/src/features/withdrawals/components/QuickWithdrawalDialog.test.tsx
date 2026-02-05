@@ -30,7 +30,7 @@ vi.mock("@/hooks/api/useMastersQuery", () => ({
 }));
 
 // Mock UI Components to bypass alias resolution issues and complex DOM structures
-/* eslint-disable @typescript-eslint/no-require-imports, jsx-a11y/label-has-associated-control, jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus */
+/* eslint-disable @typescript-eslint/no-require-imports, jsx-a11y/label-has-associated-control, jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus -- 行クリック操作をUI仕様として優先するため */
 vi.mock("@/components/ui", () => {
   const React = require("react");
   return {

@@ -29,7 +29,7 @@ export interface SupplierFormProps {
   isSubmitting?: boolean;
 }
 
-// eslint-disable-next-line complexity
+// eslint-disable-next-line complexity -- 業務分岐を明示的に維持するため
 export function SupplierForm({
   supplier,
   onSubmit,

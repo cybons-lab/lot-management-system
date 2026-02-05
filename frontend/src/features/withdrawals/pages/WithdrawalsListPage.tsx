@@ -28,7 +28,7 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 const PAGE_SIZE = 20;
 
-// eslint-disable-next-line max-lines-per-function, complexity
+// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
 export function WithdrawalsListPage() {
   const navigate = useNavigate();
 

@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines -- 画面全体の構成を分割せず把握できるようにするため */
 /**
  * GlobalNavigation.tsx
  *

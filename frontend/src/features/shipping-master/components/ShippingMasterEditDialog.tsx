@@ -2,7 +2,7 @@
  * 出荷用マスタ 編集・新規作成ダイアログ
  */
 
-/* eslint-disable max-lines-per-function, complexity, max-lines */
+/* eslint-disable max-lines-per-function, complexity, max-lines -- 関連する画面ロジックを1箇所で管理するため */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { HTTPError } from "ky";
 import { useEffect, useMemo, useState } from "react";

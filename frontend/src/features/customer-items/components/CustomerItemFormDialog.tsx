@@ -33,8 +33,8 @@ interface CustomerItemFormDialogProps {
   mode: "create" | "edit";
 }
 
-/* eslint-disable max-lines-per-function */
-/* eslint-disable complexity */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
+/* eslint-disable complexity -- 業務分岐を明示的に維持するため */
 export function CustomerItemFormDialog({
   open,
   onOpenChange,

@@ -17,7 +17,7 @@ interface DatePickerWithRangeProps {
   setDate: (date?: DateRange) => void;
 }
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 export function DatePickerWithRange({ className, date, setDate }: DatePickerWithRangeProps) {
   // Local state for time inputs
   // Initialize from props if available

@@ -2,7 +2,7 @@
  * UOM Conversion CSV Utilities
  */
 // CSVパース処理で複数のバリデーション分岐があるため抑制
-/* eslint-disable complexity */
+/* eslint-disable complexity -- 業務分岐を明示的に維持するため */
 import type { UomConversionBulkRow } from "../types/bulk-operation";
 
 export const CSV_HEADERS = ["product_code", "external_unit", "factor"] as const;

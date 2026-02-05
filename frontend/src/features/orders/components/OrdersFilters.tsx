@@ -20,7 +20,7 @@ interface OrdersFiltersProps {
 /**
  * 受注管理画面のフィルターUI（FilterContainer使用版）
  */
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function OrdersFilters({ filters, filterEnabled, onToggleFilter }: OrdersFiltersProps) {
   return (
     <SimpleFilterContainer

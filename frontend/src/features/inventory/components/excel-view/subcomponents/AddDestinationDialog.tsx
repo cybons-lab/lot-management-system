@@ -26,7 +26,7 @@ export interface NewDestinationFormData {
   delivery_place_code: string;
 }
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 export function AddDestinationDialog({ open, onOpenChange, onConfirm, customerName }: Props) {
   const [formData, setFormData] = useState<NewDestinationFormData>({
     jiku_code: "",

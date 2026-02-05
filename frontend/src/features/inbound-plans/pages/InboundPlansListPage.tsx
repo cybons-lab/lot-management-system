@@ -22,7 +22,7 @@ import { useSupplierFilter } from "@/features/assignments/hooks";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-// eslint-disable-next-line max-lines-per-function, complexity
+// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
 export function InboundPlansListPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

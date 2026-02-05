@@ -26,7 +26,7 @@ const warehouseTypeLabels: Record<string, string> = {
   supplier: "仕入先",
 };
 
-// eslint-disable-next-line max-lines-per-function, complexity
+// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
 export function WarehouseDetailDialog({
   warehouseCode,
   open,

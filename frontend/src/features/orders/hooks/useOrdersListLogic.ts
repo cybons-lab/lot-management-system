@@ -15,7 +15,7 @@ type ViewMode = "delivery" | "flat" | "order";
 /**
  * 検索フィルター適用
  */
-// eslint-disable-next-line complexity
+// eslint-disable-next-line complexity -- 業務分岐を明示的に維持するため
 function applySearchFilter(line: OrderLineRow, searchTerm: string): boolean {
   const searchLower = searchTerm.toLowerCase();
   const orderCode = formatOrderCode(line);

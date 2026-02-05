@@ -85,7 +85,7 @@ export interface DeleteDialogProps {
 // Component
 // ========================================
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため */
 export function DeleteDialog({
   open,
   onOpenChange,
@@ -113,7 +113,7 @@ export function DeleteDialog({
       setEndDate(today);
       setConfirmInput("");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
   }, [open]);
 
   // ========================================

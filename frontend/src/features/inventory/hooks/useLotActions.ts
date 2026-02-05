@@ -14,7 +14,7 @@ interface LotActionsOptions {
   onLotsChanged?: () => void;
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function useLotActions(options?: LotActionsOptions) {
   const editDialog = useDialog();
   const lockDialog = useDialog();

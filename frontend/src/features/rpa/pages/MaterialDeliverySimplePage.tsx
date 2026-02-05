@@ -24,7 +24,7 @@ import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 const STEP1_CONFIG_KEY = "MATERIAL_DELIVERY_STEP1_URL";
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function MaterialDeliverySimplePage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");

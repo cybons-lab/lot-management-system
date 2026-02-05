@@ -18,7 +18,7 @@ import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallb
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-// eslint-disable-next-line max-lines-per-function, complexity
+// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
 export function DeliveryPlacesListPage() {
   const {
     deliveryPlaces,

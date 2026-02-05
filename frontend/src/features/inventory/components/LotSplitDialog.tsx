@@ -43,7 +43,7 @@ interface LotSplitDialogProps {
   isLoading?: boolean;
 }
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 export function LotSplitDialog({
   open,
   onOpenChange,

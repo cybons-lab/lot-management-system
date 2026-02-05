@@ -58,7 +58,7 @@ export interface WarehouseDeliveryRouteFormProps {
   isSubmitting?: boolean;
 }
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため */
 export function WarehouseDeliveryRouteForm({
   route,
   warehouses,

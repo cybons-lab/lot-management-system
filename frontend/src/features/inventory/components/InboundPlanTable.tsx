@@ -22,7 +22,7 @@ interface InboundPlanTableProps {
   plans: InboundPlan[];
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function InboundPlanTable({ plans }: InboundPlanTableProps) {
   // 列定義
   const columns = useMemo<Column<InboundPlan>[]>(

@@ -37,7 +37,7 @@ const isInactive = (validTo?: string) => {
 /** CustomerItem用の一意キー生成 (サロゲートキーID使用) */
 const getItemKey = (item: CustomerItem) => item.id.toString();
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function CustomerItemsTable({
   items,
   isLoading,
@@ -53,7 +53,7 @@ export function CustomerItemsTable({
 }: CustomerItemsTableProps) {
   // 列定義
   const columns = useMemo<Column<CustomerItem>[]>(
-    // eslint-disable-next-line max-lines-per-function
+    // eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
     () => [
       {
         id: "customer",
@@ -239,7 +239,7 @@ export function CustomerItemsTable({
   };
 
   // 選択状態変更ハンドラー
-  // eslint-disable-next-line complexity
+  // eslint-disable-next-line complexity -- 業務分岐を明示的に維持するため
   const handleSelectionChange = (ids: (string | number)[]) => {
     if (!onToggleSelect || !onToggleSelectAll) return;
 

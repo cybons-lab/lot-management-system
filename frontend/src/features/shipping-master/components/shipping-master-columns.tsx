@@ -15,7 +15,7 @@ interface ShippingMasterColumnsOptions {
   onDelete?: (row: ShippingMasterCurated) => void;
 }
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 export function createShippingMasterColumns(
   options?: ShippingMasterColumnsOptions,
 ): Column<ShippingMasterCurated>[] {

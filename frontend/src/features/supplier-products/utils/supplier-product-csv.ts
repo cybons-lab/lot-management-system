@@ -14,7 +14,7 @@ import type { SupplierProductBulkRow } from "../types/bulk-operation";
  * @param csvText - CSV file content as string
  * @returns Parsed rows and errors
  */
-/* eslint-disable complexity */
+/* eslint-disable complexity -- 業務分岐を明示的に維持するため */
 export function parseSupplierProductCsv(csvText: string): {
   rows: SupplierProductBulkRow[];
   errors: string[];

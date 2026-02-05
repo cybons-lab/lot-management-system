@@ -2,7 +2,7 @@
  * QuickWithdrawalDialog
  * 在庫アイテム詳細画面からの簡易出庫ダイアログ
  */
-/* eslint-disable max-lines-per-function, complexity, max-lines */
+/* eslint-disable max-lines-per-function, complexity, max-lines -- 関連する画面ロジックを1箇所で管理するため */
 import { Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
@@ -228,7 +228,7 @@ export function QuickWithdrawalDialog({
     return () => {
       abortController.abort();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
   }, [formState.customer_id]);
 
   // フィールド更新

@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines -- 画面全体の構成を分割せず把握できるようにするため */
 import {
   type ColumnDef,
   type ExpandedState,
@@ -159,7 +159,7 @@ function useDataTableColumns<T>({
           />
         ),
         cell: ({ row }) => (
-          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 行クリック操作をUI仕様として優先するため
           <div onClick={(e) => e.stopPropagation()}>
             <Checkbox
               checked={row.getIsSelected()}
@@ -244,7 +244,7 @@ function useDataTableColumns<T>({
         id: "__actions",
         header: "アクション",
         cell: ({ row }) => (
-          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 行クリック操作をUI仕様として優先するため
           <div onClick={(e) => e.stopPropagation()}>{rowActions(row.original)}</div>
         ),
         size: 180,
@@ -583,7 +583,7 @@ export function DataTable<T = never>({
                         )}
                       </div>
                       {header.column.getCanResize() && (
-                        // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+                        // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 行クリック操作をUI仕様として優先するため
                         <div
                           onMouseDown={header.getResizeHandler()}
                           onTouchStart={header.getResizeHandler()}

@@ -5,7 +5,7 @@ interface LotEditFieldsProps {
   initialData: LotUI;
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function LotEditFields({ initialData }: LotEditFieldsProps) {
   return (
     <div className="grid grid-cols-2 gap-4">

@@ -35,7 +35,7 @@ interface SupplierAssignmentEditDialogProps {
 }
 
 // ダイアログのUIと操作ロジックを一箇所にまとめるため分割しない
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function SupplierAssignmentEditDialog({
   group,
   open,

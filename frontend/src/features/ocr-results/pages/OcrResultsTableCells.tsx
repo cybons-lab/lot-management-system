@@ -1,4 +1,4 @@
-/* eslint-disable max-lines, max-lines-per-function, complexity, max-params */
+/* eslint-disable max-lines, max-lines-per-function, complexity, max-params -- 関連する画面ロジックを1箇所で管理するため */
 import { AlertCircle, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { type KeyboardEvent, createContext, useContext, useEffect, useRef, useState } from "react";
 
@@ -310,7 +310,7 @@ export function EditableTextCell({
         inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
   }, [isActive]);
 
   const isDisabled = row.status === "processing" || isReadOnly;
@@ -492,7 +492,7 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
   }, [isActive]);
 
   const isDisabled = row.status === "processing" || isReadOnly;
@@ -666,7 +666,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
         inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
   }, [isActive]);
 
   const handleNavigate = (event: KeyboardEvent<HTMLTextAreaElement>) => {

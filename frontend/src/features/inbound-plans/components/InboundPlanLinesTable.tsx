@@ -33,7 +33,7 @@ interface InboundPlanLinesTableProps {
   lines: InboundPlanLine[];
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function InboundPlanLinesTable({ lines }: InboundPlanLinesTableProps) {
   const navigate = useNavigate();
 

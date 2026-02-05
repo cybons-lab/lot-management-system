@@ -17,7 +17,7 @@ import { getLotStatuses } from "@/shared/utils/status";
 
 type LotData = NonNullable<ReturnType<typeof useLot>["data"]>;
 
-/* eslint-disable complexity */
+/* eslint-disable complexity -- 業務分岐を明示的に維持するため */
 function LotBasicInfo({ lot }: { lot: LotData }) {
   const statuses = getLotStatuses(lot);
 

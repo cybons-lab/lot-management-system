@@ -30,7 +30,7 @@ interface AllocationDialogProps {
   onSuccess?: () => void;
 }
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 export function AllocationDialog({ line, onClose, onSuccess }: AllocationDialogProps) {
   // 親受注の情報を取得（LotAllocationPanel に必要）
   const {

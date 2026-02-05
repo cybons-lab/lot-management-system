@@ -11,7 +11,7 @@ interface ReplenishmentTabProps {
   warehouseId: number;
 }
 
-// eslint-disable-next-line max-lines-per-function, complexity
+// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
 export function ReplenishmentTab({ productId, warehouseId }: ReplenishmentTabProps) {
   // 単一製品・倉庫での計算実行
   const {

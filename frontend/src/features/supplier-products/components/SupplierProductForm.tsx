@@ -1,7 +1,7 @@
 /**
  * SupplierProductForm - 仕入先商品登録・編集フォーム
  */
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";

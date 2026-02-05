@@ -27,7 +27,7 @@ interface UserDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// eslint-disable-next-line max-lines-per-function, complexity
+// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
 export function UserDetailDialog({ userId, open, onOpenChange }: UserDetailDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingRoles, setIsEditingRoles] = useState(false);

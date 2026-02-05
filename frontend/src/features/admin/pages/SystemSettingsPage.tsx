@@ -82,7 +82,7 @@ const SETTING_CONFIGS: Record<string, SettingConfig> = {
   },
 };
 
-/* eslint-disable max-lines, max-lines-per-function, complexity */
+/* eslint-disable max-lines, max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため */
 export function SystemSettingsPage() {
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [isLoading, setIsLoading] = useState(true);

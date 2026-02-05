@@ -20,7 +20,7 @@ import httpClient from "@/shared/api/http-client";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { type components } from "@/types/api";
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 export function ShippingMasterListPage() {
   const [customerCode, setCustomerCode] = useState("");
   const [materialCode, setMaterialCode] = useState("");

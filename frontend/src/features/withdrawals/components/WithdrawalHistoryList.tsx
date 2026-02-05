@@ -14,7 +14,7 @@ interface WithdrawalHistoryListProps {
   warehouseId: number;
 }
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHistoryListProps) {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["withdrawals", "list", { productId, warehouseId }],

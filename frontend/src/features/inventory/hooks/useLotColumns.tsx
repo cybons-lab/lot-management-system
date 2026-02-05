@@ -1,5 +1,5 @@
 // テーブルカラム定義を一箇所にまとめるため分割しない
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 import { format, parse } from "date-fns";
 import { Lock } from "lucide-react";
 import { useMemo } from "react";

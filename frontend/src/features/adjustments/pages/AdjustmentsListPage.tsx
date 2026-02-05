@@ -65,7 +65,7 @@ export function AdjustmentsListPage() {
 
   useEffect(() => {
     table.setPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
   }, [filters, searchQuery]);
 
   const handleCreateNew = () => {
