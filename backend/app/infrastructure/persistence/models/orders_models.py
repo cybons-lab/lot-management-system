@@ -1,7 +1,7 @@
-r"""Order management models aligned with DDL v2.2
-(lot_management_ddl_v2_2_id.sql).
+r"""Order management models aligned with actual database schema.
 
-All models strictly follow the DDL as the single source of truth.
+All models strictly follow the actual PostgreSQL tables as the single source of truth.
+Schema can be verified with: docker compose exec db-postgres pg_dump -U admin -d lot_management --schema-only
 
 Updated 2025-12-08: Added business key columns for order management:
 - order_group_id: References order_groups for logical grouping
@@ -178,9 +178,11 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
 class Order(Base):
     """Order headers (受注ヘッダ).
 
-    DDL: orders
+    Table: orders
     Primary key: id (BIGSERIAL)
-    Foreign keys: customer_id -> customers(id), delivery_place_id -> delivery_places(id)
+    Foreign keys:
+        - customer_id -> customers(id) ON DELETE RESTRICT
+        - locked_by_user_id -> users(id) ON DELETE SET NULL
     """
 
     __tablename__ = "orders"
@@ -249,9 +251,15 @@ class Order(Base):
 class OrderLine(Base):
     """Order detail lines (受注明細).
 
-    DDL: order_lines
+    Table: order_lines
     Primary key: id (BIGSERIAL)
-    Foreign keys: order_id -> orders(id), supplier_item_id -> product_groups(id)
+    Foreign keys:
+        - order_id -> orders(id) ON DELETE CASCADE
+        - order_group_id -> order_groups(id) ON DELETE SET NULL
+        - supplier_item_id -> supplier_items(id) ON DELETE RESTRICT
+        - delivery_place_id -> delivery_places(id) ON DELETE RESTRICT
+    Unique constraints:
+        - (order_group_id, customer_order_no)
     """
 
     __tablename__ = "order_lines"

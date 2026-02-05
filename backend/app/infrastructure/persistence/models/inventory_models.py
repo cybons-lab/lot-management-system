@@ -1,6 +1,6 @@
 """Inventory and stock management models (DDL v2.2).
 
-All models strictly follow the DDL as the single source of truth. Legacy
+All models strictly follow the actual PostgreSQL tables as the single source of truth. Legacy
 models (ExpiryRule) have been removed.
 
 【設計意図】在庫モデルの設計判断:

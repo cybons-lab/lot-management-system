@@ -1,7 +1,7 @@
 """Authentication and authorization models (ユーザー・ロール管理).
 
 DDL: users, roles, user_roles
-All models strictly follow the DDL v2.2 (lot_management_ddl_v2_2_id.sql).
+All models strictly follow the actual database schema.
 
 【設計意図】認証・認可モデルの設計判断:
 

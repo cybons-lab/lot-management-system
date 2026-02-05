@@ -99,7 +99,7 @@
    ```
 
 7. customer_code フィルタの JOIN（L119-121）
-   理由: DDL v2.2 で Order テーブルに customer_code カラムがない
+   理由: Order テーブルに customer_code カラムがない（正規化されている）
    設計:
    - Order → Customer の外部キー（customer_id）のみ存在
    → customer_code でフィルタするには Customer テーブルを JOIN

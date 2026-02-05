@@ -1,7 +1,7 @@
 """System configuration model (システム設定).
 
 DDL: system_configs
-All models strictly follow the DDL v2.2 (lot_management_ddl_v2_2_id.sql).
+All models strictly follow the actual database schema.
 """
 
 from __future__ import annotations

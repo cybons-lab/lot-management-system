@@ -1,6 +1,6 @@
 """Logging and integration models (DDL v2.2).
 
-All models strictly follow the DDL as the single source of truth. Legacy
+All models strictly follow the actual PostgreSQL tables as the single source of truth. Legacy
 models (InboundSubmission/OcrSubmission, SapSyncLog) have been removed.
 """
 
