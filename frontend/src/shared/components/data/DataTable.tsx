@@ -120,6 +120,135 @@ interface DataTableProps<T> {
 // メインコンポーネント
 // ============================================
 
+interface UseDataTableColumnsProps<T> {
+  columns: Column<T>[];
+  selectable: boolean;
+  expandable: boolean;
+  rowActions?: (row: T) => React.ReactNode;
+}
+
+function useDataTableColumns<T>({
+  columns,
+  selectable,
+  expandable,
+  rowActions,
+}: UseDataTableColumnsProps<T>) {
+  return useMemo<ColumnDef<T>[]>(() => {
+    const defs: ColumnDef<T>[] = [];
+
+    // 選択列
+    if (selectable) {
+      defs.push({
+        id: "__select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllRowsSelected()}
+            indeterminate={table.getIsSomeRowsSelected()}
+            onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+            aria-label="すべて選択"
+            data-testid="select-all-checkbox"
+          />
+        ),
+        cell: ({ row }) => (
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+          <div onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              disabled={!row.getCanSelect()}
+              aria-label="行を選択"
+              data-testid="select-row-checkbox"
+            />
+          </div>
+        ),
+        size: 48,
+        enableResizing: false,
+        enableHiding: false,
+        meta: { sticky: "left" },
+      });
+    }
+
+    // 展開列
+    if (expandable) {
+      defs.push({
+        id: "__expander",
+        header: () => null,
+        cell: ({ row }) => {
+          return row.getCanExpand() ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                row.toggleExpanded();
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-slate-100"
+              aria-label={row.getIsExpanded() ? "折りたたむ" : "展開する"}
+              aria-expanded={row.getIsExpanded()}
+            >
+              {row.getIsExpanded() ? (
+                <ChevronDown className="h-4 w-4 text-slate-600" aria-hidden="true" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-slate-600" aria-hidden="true" />
+              )}
+            </button>
+          ) : null;
+        },
+        size: 40,
+        enableResizing: false,
+        enableHiding: false,
+        meta: { sticky: "left" },
+      });
+    }
+
+    // データ列
+    const parseWidth = (width: string | number | undefined): number | undefined => {
+      if (width === undefined) return undefined;
+      if (typeof width === "number") return width;
+      const match = String(width).match(/^(\d+)/);
+      return match ? Number.parseInt(match[1], 10) : 150;
+    };
+
+    columns.forEach((col) => {
+      defs.push({
+        id: col.id,
+        header: col.header as string | ((props: unknown) => React.ReactNode),
+        ...(col.accessor ? { accessorFn: (row) => col.accessor!(row) } : {}),
+        cell: (info) => {
+          if (col.cell) return col.cell(info.row.original);
+          return info.getValue() as React.ReactNode;
+        },
+        size: parseWidth(col.width),
+        minSize: col.minWidth ? parseWidth(col.minWidth) : undefined,
+        enableSorting: col.sortable,
+        enableHiding: col.enableHiding ?? true,
+        meta: {
+          align: col.align,
+          className: col.className,
+          sticky: col.sticky,
+        },
+      });
+    });
+
+    // アクション列
+    if (rowActions) {
+      defs.push({
+        id: "__actions",
+        header: "アクション",
+        cell: ({ row }) => (
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+          <div onClick={(e) => e.stopPropagation()}>{rowActions(row.original)}</div>
+        ),
+        size: 180,
+        enableResizing: false,
+        enableHiding: false,
+        meta: { align: "right" },
+      });
+    }
+
+    return defs;
+  }, [columns, selectable, expandable, rowActions]);
+}
+
 export function DataTable<T = never>({
   data,
   columns,
@@ -151,129 +280,12 @@ export function DataTable<T = never>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
 
   // TanStack Table用のカラム定義変換
-  const tableColumns = useMemo<ColumnDef<T>[]>(() => {
-    const defs: ColumnDef<T>[] = [];
-
-    // 選択列
-    if (selectable) {
-      defs.push({
-        id: "__select",
-        header: ({ table }) => (
-          <Checkbox
-            checked={table.getIsAllRowsSelected()}
-            indeterminate={table.getIsSomeRowsSelected()}
-            onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
-            aria-label="すべて選択"
-            data-testid="select-all-checkbox"
-          />
-        ),
-        cell: ({ row }) => (
-          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
-          <div onClick={(e) => e.stopPropagation()}>
-            <Checkbox
-              checked={row.getIsSelected()}
-              onCheckedChange={(value) => row.toggleSelected(!!value)}
-              disabled={!row.getCanSelect()}
-              aria-label="行を選択"
-              data-testid="select-row-checkbox"
-            />
-          </div>
-        ),
-        size: 48, // w-12 equivalent
-        enableResizing: false,
-        enableHiding: false,
-        meta: {
-          sticky: "left", // Default sticky for selection
-        },
-      });
-    }
-
-    // 展開列
-    if (expandable) {
-      defs.push({
-        id: "__expander",
-        header: () => null,
-        cell: ({ row }) => {
-          return row.getCanExpand() ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                row.toggleExpanded();
-              }}
-              className="flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-slate-100"
-              aria-label={row.getIsExpanded() ? "折りたたむ" : "展開する"}
-            >
-              {row.getIsExpanded() ? (
-                <ChevronDown className="h-4 w-4 text-slate-600" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-slate-600" />
-              )}
-            </button>
-          ) : null;
-        },
-        size: 40,
-        enableResizing: false,
-        enableHiding: false,
-        meta: {
-          sticky: "left", // Default sticky for expander
-        },
-      });
-    }
-
-    // データ列
-    // 幅の解析 (例: "200px" -> 200)
-    const parseWidth = (width: string | number | undefined): number | undefined => {
-      if (width === undefined) return undefined;
-      if (typeof width === "number") return width;
-      const match = String(width).match(/^(\d+)/);
-      return match ? Number.parseInt(match[1], 10) : 150; // デフォルト150px
-    };
-
-    columns.forEach((col) => {
-      defs.push({
-        id: col.id,
-        header: col.header as string | ((props: unknown) => React.ReactNode), // Relaxed for TanStack
-        // accessorの互換性
-        ...(col.accessor ? { accessorFn: (row) => col.accessor!(row) } : {}),
-        cell: (info) => {
-          if (col.cell) {
-            return col.cell(info.row.original);
-          }
-          return info.getValue() as React.ReactNode;
-        },
-        size: parseWidth(col.width),
-        minSize: col.minWidth ? parseWidth(col.minWidth) : undefined,
-        enableSorting: col.sortable,
-        enableHiding: col.enableHiding ?? true,
-        meta: {
-          align: col.align,
-          className: col.className,
-          sticky: col.sticky,
-        },
-      });
-    });
-
-    // アクション列
-    if (rowActions) {
-      defs.push({
-        id: "__actions",
-        header: "アクション",
-        cell: ({ row }) => (
-          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
-          <div onClick={(e) => e.stopPropagation()}>{rowActions(row.original)}</div>
-        ),
-        size: 180, // Enough for 2 buttons side by side
-        enableResizing: false,
-        enableHiding: false,
-        meta: {
-          align: "right",
-        },
-      });
-    }
-
-    return defs;
-  }, [columns, selectable, expandable, rowActions]);
+  const tableColumns = useDataTableColumns({
+    columns,
+    selectable,
+    expandable,
+    rowActions,
+  });
 
   // ソート状態の変換
   const sorting = useMemo<SortingState>(() => {
@@ -361,11 +373,11 @@ export function DataTable<T = never>({
 
   // Sort Icon Helper
   const SortIcon = ({ isSorted }: { isSorted: false | "asc" | "desc" }) => {
-    if (!isSorted) return <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />;
+    if (!isSorted) return <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" aria-hidden="true" />;
     return isSorted === "asc" ? (
-      <ArrowUp className="ml-1 h-4 w-4" />
+      <ArrowUp className="ml-1 h-4 w-4" aria-hidden="true" />
     ) : (
-      <ArrowDown className="ml-1 h-4 w-4" />
+      <ArrowDown className="ml-1 h-4 w-4" aria-hidden="true" />
     );
   };
 
@@ -392,7 +404,11 @@ export function DataTable<T = never>({
   // ローディング表示
   if (isLoading) {
     return (
-      <div className={cn("relative flex flex-col gap-2", className)}>
+      <div
+        className={cn("relative flex flex-col gap-2", className)}
+        role="status"
+        aria-live="polite"
+      >
         <div className="flex items-center justify-end">
           <Skeleton className="h-8 w-24 rounded-md" />
         </div>
@@ -427,7 +443,7 @@ export function DataTable<T = never>({
   // 空データ表示
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-12" role="status">
         <p className="text-sm text-gray-500">{emptyMessage}</p>
       </div>
     );
@@ -449,8 +465,9 @@ export function DataTable<T = never>({
               variant="outline"
               size="sm"
               className="ml-auto h-8 hover:bg-slate-50 bg-gray-50"
+              aria-label="列の表示設定"
             >
-              <Settings2 className="h-4 w-4 lg:mr-2" />
+              <Settings2 className="h-4 w-4 lg:mr-2" aria-hidden="true" />
               <span className="hidden lg:inline">表示列</span>
             </Button>
           </DropdownMenuTrigger>
@@ -508,6 +525,17 @@ export function DataTable<T = never>({
                   return (
                     <th
                       key={header.id}
+                      role={header.column.getCanSort() ? "button" : "columnheader"}
+                      tabIndex={header.column.getCanSort() ? 0 : undefined}
+                      aria-sort={
+                        header.column.getIsSorted() === "asc"
+                          ? "ascending"
+                          : header.column.getIsSorted() === "desc"
+                            ? "descending"
+                            : header.column.getCanSort()
+                              ? "none"
+                              : undefined
+                      }
                       className={cn(
                         "relative bg-gray-50 text-left text-sm font-semibold text-slate-600 border-r border-slate-200/50 last:border-r-0",
                         dense ? "px-2 py-1.5" : "px-6 py-4",
@@ -516,6 +544,8 @@ export function DataTable<T = never>({
                         meta?.align === "right" && "text-right",
                         header.column.getCanSort() &&
                           "cursor-pointer transition-colors select-none hover:bg-slate-100/70",
+                        header.column.getCanSort() &&
+                          "focus-visible:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
                         isSticky && "sticky z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]",
                         meta?.className,
                       )}
@@ -524,6 +554,12 @@ export function DataTable<T = never>({
                         left: isSticky ? `${startOffset}px` : undefined,
                       }}
                       onClick={header.column.getToggleSortingHandler()}
+                      onKeyDown={(e) => {
+                        if (header.column.getCanSort() && (e.key === "Enter" || e.key === " ")) {
+                          e.preventDefault();
+                          header.column.toggleSorting();
+                        }
+                      }}
                     >
                       <div
                         className={cn(
@@ -577,6 +613,9 @@ export function DataTable<T = never>({
                     <tr
                       data-index={virtualItem.index}
                       ref={rowVirtualizer.measureElement}
+                      role="row"
+                      tabIndex={onRowClick ? 0 : undefined}
+                      aria-selected={row.getIsSelected()}
                       className={cn(
                         "relative transition-all duration-150 border-b border-slate-300",
                         "group",
@@ -586,11 +625,18 @@ export function DataTable<T = never>({
                             ? "bg-slate-50/50"
                             : "bg-[hsl(var(--surface-2))]",
                         (onRowClick || renderHoverActions) && "hover:bg-slate-100/60",
-                        onRowClick && "cursor-pointer",
+                        onRowClick &&
+                          "cursor-pointer focus-visible:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500",
                         row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/70",
                         customClassName,
                       )}
                       onClick={() => onRowClick?.(row.original)}
+                      onKeyDown={(e) => {
+                        if (onRowClick && (e.key === "Enter" || e.key === " ")) {
+                          e.preventDefault();
+                          onRowClick(row.original);
+                        }
+                      }}
                     >
                       {row.getVisibleCells().map((cell) => {
                         const meta = cell.column.columnDef.meta as
@@ -671,6 +717,9 @@ export function DataTable<T = never>({
                 return (
                   <React.Fragment key={row.id}>
                     <tr
+                      role="row"
+                      tabIndex={onRowClick ? 0 : undefined}
+                      aria-selected={row.getIsSelected()}
                       className={cn(
                         "relative transition-all duration-150 border-b border-slate-300",
                         "group",
@@ -680,11 +729,18 @@ export function DataTable<T = never>({
                             ? "bg-slate-50/50"
                             : "bg-[hsl(var(--surface-2))]",
                         (onRowClick || renderHoverActions) && "hover:bg-slate-100/60",
-                        onRowClick && "cursor-pointer",
+                        onRowClick &&
+                          "cursor-pointer focus-visible:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500",
                         row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/70",
                         customClassName,
                       )}
                       onClick={() => onRowClick?.(row.original)}
+                      onKeyDown={(e) => {
+                        if (onRowClick && (e.key === "Enter" || e.key === " ")) {
+                          e.preventDefault();
+                          onRowClick(row.original);
+                        }
+                      }}
                     >
                       {row.getVisibleCells().map((cell) => {
                         const meta = cell.column.columnDef.meta as
