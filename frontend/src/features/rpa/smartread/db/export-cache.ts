@@ -4,29 +4,29 @@
  * IndexedDB-based caching for export results to reduce server load
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { openDB, type IDBPDatabase } from "idb";
+import { openDB, type IDBPDatabase, type IDBPCursorWithValue } from "idb";
 
 import { logger } from "../utils/logger";
 
 const DB_NAME = "smartread-export-cache";
 const DB_VERSION = 3;
 const STORE_NAME = "exports";
+type SmartReadRow = Record<string, unknown>;
+type TransformError = {
+  row: number;
+  field: string;
+  message: string;
+  value: string | null;
+};
 
 export interface CachedExport {
   id: string; // {config_id}_{task_id}_{export_id}
   config_id: number;
   task_id: string;
   export_id: string;
-  wide_data: Array<Record<string, any>>;
-  long_data: Array<Record<string, any>>;
-  errors: Array<{
-    row: number;
-    field: string;
-    message: string;
-    value: string | null;
-  }>;
+  wide_data: SmartReadRow[];
+  long_data: SmartReadRow[];
+  errors: TransformError[];
   filename: string | null;
   task_date?: string;
   data_version?: number;
@@ -51,8 +51,10 @@ class ExportCacheService {
           }
           if (oldVersion < 2) {
             const store = transaction.objectStore(STORE_NAME);
-            store.openCursor().then(function updateCursor(cursor: any): any {
-              if (!cursor) return;
+            store.openCursor().then(function updateCursor(
+              cursor: IDBPCursorWithValue | null,
+            ): Promise<void> {
+              if (!cursor) return Promise.resolve();
               const value = cursor.value as CachedExport;
               if (value.saved_to_db === undefined) {
                 value.saved_to_db = false;
@@ -63,8 +65,10 @@ class ExportCacheService {
           }
           if (oldVersion < 3) {
             const store = transaction.objectStore(STORE_NAME);
-            store.openCursor().then(function updateCursor(cursor: any): any {
-              if (!cursor) return;
+            store.openCursor().then(function updateCursor(
+              cursor: IDBPCursorWithValue | null,
+            ): Promise<void> {
+              if (!cursor) return Promise.resolve();
               const value = cursor.value as CachedExport;
               if (value.data_version === undefined) {
                 value.data_version = 1;
@@ -143,9 +147,9 @@ class ExportCacheService {
     config_id: number;
     task_id: string;
     export_id: string;
-    wide_data: Array<Record<string, any>>;
-    long_data: Array<Record<string, any>>;
-    errors: Array<any>;
+    wide_data: SmartReadRow[];
+    long_data: SmartReadRow[];
+    errors: TransformError[];
     filename: string | null;
     task_date?: string;
     data_version?: number;

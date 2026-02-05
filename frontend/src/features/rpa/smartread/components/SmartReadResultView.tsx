@@ -35,8 +35,7 @@ interface SmartReadResultViewProps {
   taskId: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyRecord = Record<string, any>;
+type AnyRecord = Record<string, unknown>;
 
 // ヘッダー表示用コンポーネント
 // eslint-disable-next-line complexity
