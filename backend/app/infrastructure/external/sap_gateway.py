@@ -58,7 +58,7 @@ Design:
    # テストコード
    set_sap_gateway(FailingSapGateway())
    result = sap_service.register_allocation(reservation)
-   assert result.success == False
+   assert not result.success
    assert result.error_message == "SAP system unavailable (mock failure)"
    ```
 

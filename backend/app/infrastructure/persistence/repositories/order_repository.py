@@ -79,17 +79,7 @@
        order.order_no  # 型チェック OK
    ```
 
-6. find_by_order_no() の必要性（L78-88）
-   理由: 業務キーでの検索
-   業務背景:
-   - 受注番号: 得意先から提供される業務的な識別子
-   - 例: 営業担当者「受注番号 ORD-2024-001 を確認したい」
-   → ID（システム内部の番号）では検索できない
-   → order_no で検索する必要がある
-   パフォーマンス:
-   - order_no にインデックスが必要（UNIQUE制約で自動作成）
-
-7. find_all() のフィルタリング設計（L90-129）
+6. find_all() のフィルタリング設計（L90-129）
    理由: 柔軟な検索条件の提供
    フィルタ:
    - status: 「open」「allocated」等でフィルタ
@@ -108,8 +98,8 @@
    LIMIT 100;
    ```
 
-8. customer_code フィルタの JOIN（L119-121）
-   理由: DDL v2.2 で Order テーブルに customer_code カラムがない
+7. customer_code フィルタの JOIN（L119-121）
+   理由: Order テーブルに customer_code カラムがない（正規化されている）
    設計:
    - Order → Customer の外部キー（customer_id）のみ存在
    → customer_code でフィルタするには Customer テーブルを JOIN
@@ -121,7 +111,7 @@
    WHERE customers.customer_code = 'A';
    ```
 
-9. OrderLineRepository の find_by_customer_order_key（L223-241）
+8. OrderLineRepository の find_by_customer_order_key（L223-241）
    理由: 得意先側の業務キーで検索
    業務背景:
    - OCR取り込み時: 得意先の注文書には「受注グループID + 得意先6桁番号」
@@ -132,7 +122,7 @@
    - OCR取り込み時の重複チェック
    - 既存データ更新時の検索
 
-10. find_by_sap_order_key の設計（L243-261）
+9. find_by_sap_order_key の設計（L243-261）
     理由: SAP連携時の業務キー検索
     業務背景:
     - SAP登録後: SAP受注番号 + SAP明細番号が付与される
@@ -178,18 +168,6 @@ class OrderRepository:
 
         return cast(Order | None, self.db.execute(stmt).scalar_one_or_none())
 
-    def find_by_order_no(self, order_no: str) -> Order | None:
-        """受注番号で受注を取得.
-
-        Args:
-            order_no: 受注番号
-
-        Returns:
-            受注エンティティ（存在しない場合はNone）
-        """
-        stmt = select(Order).where(Order.order_no == order_no)  # type: ignore[attr-defined]
-        return cast(Order | None, self.db.execute(stmt).scalar_one_or_none())
-
     def find_all(
         self,
         skip: int = 0,
@@ -230,27 +208,6 @@ class OrderRepository:
         stmt = stmt.order_by(Order.order_date.desc()).offset(skip).limit(limit)
 
         return list(self.db.execute(stmt).scalars().all())
-
-    def create(
-        self, order_no: str, customer_code: str, order_date: date, status: str = "open"
-    ) -> Order:
-        """受注を作成.
-
-        Args:
-            order_no: 受注番号
-            customer_code: 得意先コード
-            order_date: 受注日
-            status: ステータス
-
-        Returns:
-            作成された受注エンティティ
-        """
-        order = Order(
-            order_no=order_no, customer_code=customer_code, order_date=order_date, status=status
-        )
-        self.db.add(order)
-        # NOTE: commitはservice層で行う
-        return order
 
     def update_status(self, order: Order, new_status: str) -> None:
         """受注ステータスを更新.
@@ -362,40 +319,6 @@ class OrderLineRepository:
             OrderLine.sap_order_item_no == sap_order_item_no,
         )
         return cast(OrderLine | None, self.db.execute(stmt).scalar_one_or_none())
-
-    def create(
-        self,
-        order_id: int,
-        line_no: int,
-        product_code: str,
-        quantity: float,
-        unit: str,
-        due_date: date | None = None,
-    ) -> OrderLine:
-        """受注明細を作成.
-
-        Args:
-            order_id: 受注ID
-            line_no: 明細行番号
-            product_code: 製品コード
-            quantity: 数量
-            unit: 単位
-            due_date: 納期
-
-        Returns:
-            作成された受注明細エンティティ
-        """
-        order_line = OrderLine(
-            order_id=order_id,
-            line_no=line_no,
-            product_code=product_code,
-            quantity=quantity,
-            unit=unit,
-            due_date=due_date,
-        )
-        self.db.add(order_line)
-        # NOTE: commitはservice層で行う
-        return order_line
 
     def update_status(self, order_line: OrderLine, new_status: str) -> None:
         """受注明細ステータスを更新.
