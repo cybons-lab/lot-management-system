@@ -103,7 +103,8 @@ class MaterialOrderForecastService:
             qty_col_indices = [11, 12, 13, 15, 16] + list(range(17, 60))
             for col_idx in qty_col_indices:
                 if col_idx < len(df.columns):
-                    df.iloc[:, col_idx] = pd.to_numeric(df.iloc[:, col_idx], errors="coerce")
+                    col_name = df.columns[col_idx]
+                    df[col_name] = pd.to_numeric(df[col_name], errors="coerce")
 
             # Step 4: 日別・期間別数量をJSON化
             df = self._create_quantity_json(df)

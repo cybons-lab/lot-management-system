@@ -23,7 +23,7 @@ dependencies = [
     "python-json-logger>=2.0.7",
     "structlog>=25.4.0",
     "asgi-correlation-id>=4.3.4",
-    "pandas>=2.2.0,<3.0.0",
+    "pandas>=3.0.0",
     "openpyxl>=3.1.0",
     "PyJWT>=2.8.0",
     "httpx>=0.28.1",
@@ -41,7 +41,7 @@ dependencies = [
     "pyasn1>=0.6.1",
     "ruff<0.15.0",
     "tzdata>=2025.2",
-    "websockets<16.0.0",
+    "websockets>=16.0.0",
 ]
 
 [tool.ruff]
