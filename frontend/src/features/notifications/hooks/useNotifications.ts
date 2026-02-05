@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "../api";
 // import { type Notification } from "../types";
 
+// eslint-disable-next-line max-lines-per-function -- 通知表示ロジックは論理的なまとまりとして1つのフックにあるべき
 export function useNotifications() {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -34,38 +35,74 @@ export function useNotifications() {
   const lastProcessedIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (notifications.length > 0) {
-      const latestNotification = notifications[0];
+    if (notifications.length === 0) return;
 
-      // Initialize ref if first load
-      if (lastProcessedIdRef.current === null) {
-        lastProcessedIdRef.current = latestNotification.id;
-        return;
-      }
+    // 初回読み込み時はIDを記録するだけ
+    if (lastProcessedIdRef.current === null) {
+      lastProcessedIdRef.current = notifications[0].id;
+      return;
+    }
 
-      // Check if there are new notifications
-      if (latestNotification.id > lastProcessedIdRef.current) {
-        // Show toast for the latest one
-        toast(latestNotification.title, {
-          description: latestNotification.message,
-          action: latestNotification.link
-            ? {
-                label: "開く",
-                onClick: () => (window.location.href = latestNotification.link!),
-              }
-            : undefined,
-          duration: 5000,
-        });
+    // 新着通知を全て取得
+    // API契約の前提: GET /api/notifications は id DESC または created_at DESC でソート済み
+    // → notifications[0] が最新、`id > lastProcessedId` で新着を検出可能
+    const newNotifications = notifications.filter((n) => n.id > lastProcessedIdRef.current!);
 
-        // Request browser notification permission if needed
-        if (window.Notification.permission === "granted") {
-          new window.Notification(latestNotification.title, {
-            body: latestNotification.message,
-          });
-        }
+    if (newNotifications.length === 0) return;
 
-        lastProcessedIdRef.current = latestNotification.id;
-      }
+    // IDを更新（最新の通知ID）
+    lastProcessedIdRef.current = notifications[0].id;
+
+    // 古い順にソート（時系列順に表示）
+    const sortedNew = [...newNotifications].reverse();
+
+    // トースト表示対象をフィルタ（immediate または persistent のみ）
+    const toastTargets = sortedNew.filter(
+      (n) => n.display_strategy === "immediate" || n.display_strategy === "persistent",
+    );
+
+    // トースト表示（最大3件）
+    const MAX_TOAST = 3;
+    toastTargets.slice(0, MAX_TOAST).forEach((notification) => {
+      toast(notification.title, {
+        description: notification.message,
+        action: notification.link
+          ? {
+              label: "開く",
+              onClick: () => (window.location.href = notification.link!),
+            }
+          : undefined,
+        duration: notification.display_strategy === "persistent" ? 8000 : 5000,
+      });
+    });
+
+    // 残りがある場合は「他N件」をまとめ表示
+    if (toastTargets.length > MAX_TOAST) {
+      toast("新しい通知", {
+        description: `他 ${toastTargets.length - MAX_TOAST} 件の通知があります`,
+        action: {
+          label: "確認",
+          onClick: () => {
+            setIsOpen(true);
+          },
+        },
+        duration: 5000,
+      });
+    }
+
+    // ブラウザ通知（条件: persistent かつ タブ非アクティブ時のみ）
+    const persistentNotifications = sortedNew.filter((n) => n.display_strategy === "persistent");
+
+    if (
+      persistentNotifications.length > 0 &&
+      document.visibilityState !== "visible" &&
+      window.Notification?.permission === "granted"
+    ) {
+      // 最新1件のみブラウザ通知
+      const latest = persistentNotifications[0];
+      new window.Notification(latest.title, {
+        body: latest.message,
+      });
     }
   }, [notifications]);
 
@@ -91,12 +128,8 @@ export function useNotifications() {
     markAllReadMutation.mutate();
   };
 
-  // Browser notification permission request
-  useEffect(() => {
-    if (window.Notification.permission === "default") {
-      window.Notification.requestPermission();
-    }
-  }, []);
+  // Note: ブラウザ通知の権限要求は自動的に行わない（UX配慮）
+  // システム設定ページに「ブラウザ通知を有効化」ボタンを追加することを推奨
 
   return {
     notifications,

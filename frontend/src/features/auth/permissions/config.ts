@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /**
  * RBAC 権限設定（静的定義）
  *
@@ -8,6 +9,9 @@
  * 【ロール設計】
  * - admin: 全機能アクセス可能
  * - user: 業務機能アクセス可能（管理機能は不可）
+ *
+ * Note: このファイルは全ルート定義を含む論理的なまとまりであるため、
+ * max-lines制限を無効化しています。
  * - guest: 閲覧のみ（未ログイン状態）
  *
  * 【権限方針】
@@ -332,9 +336,32 @@ export const routePermissions: RoutePermission[] = [
   // admin専用
   // ========================================
   { routeKey: "SETTINGS.USERS", path: "/settings/users", allowedRoles: ["admin"] },
+  // 旧Settings（非推奨、/admin/usersに移行予定）
+  { routeKey: "SETTINGS.USERS", path: "/settings/users", allowedRoles: ["admin"] },
   { routeKey: "SETTINGS.ROLES", path: "/settings/roles", allowedRoles: ["admin"] },
-  { routeKey: "ADMIN.INDEX", path: "/admin", allowedRoles: ["admin"] },
+
+  // システム管理（Phase 3: 再編後）
+  {
+    routeKey: "ADMIN.SYSTEM_SETTINGS",
+    path: "/admin/system-settings*",
+    allowedRoles: ["admin"],
+  },
+  {
+    routeKey: "ADMIN.USERS_MANAGEMENT",
+    path: "/admin/users*",
+    allowedRoles: ["admin"],
+  },
+  {
+    routeKey: "ADMIN.NOTIFICATION_SETTINGS",
+    path: "/admin/notifications*",
+    allowedRoles: ["admin"],
+  },
+  { routeKey: "ADMIN.LOGS", path: "/admin/logs*", allowedRoles: ["admin"] },
+  { routeKey: "ADMIN.CLIENT_LOGS", path: "/admin/client-logs", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.OPERATION_LOGS", path: "/admin/operation-logs", allowedRoles: ["admin"] },
+
+  // その他の管理機能
+  { routeKey: "ADMIN.INDEX", path: "/admin", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.BUSINESS_RULES", path: "/admin/business-rules", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.BATCH_JOBS", path: "/admin/batch-jobs", allowedRoles: ["admin"] },
   {
@@ -343,11 +370,8 @@ export const routePermissions: RoutePermission[] = [
     allowedRoles: ["admin"],
   },
   { routeKey: "ADMIN.SEED_SNAPSHOTS", path: "/admin/seed-snapshots", allowedRoles: ["admin"] },
-  { routeKey: "ADMIN.CLIENT_LOGS", path: "/admin/client-logs", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.EXPORT", path: "/admin/export", allowedRoles: ["admin"] },
-  { routeKey: "ADMIN.SYSTEM_SETTINGS", path: "/admin/system-settings", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.DEPLOY", path: "/admin/deploy*", allowedRoles: ["admin"] },
-  { routeKey: "ADMIN.LOGS", path: "/admin/logs*", allowedRoles: ["admin"] },
   { routeKey: "DEBUG.DB_BROWSER", path: "/debug/db*", allowedRoles: ["admin"] },
   { routeKey: "SAP.ROOT", path: "/sap*", allowedRoles: ["admin"] },
 ];

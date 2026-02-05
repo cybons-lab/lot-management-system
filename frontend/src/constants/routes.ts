@@ -104,6 +104,8 @@ export const ROUTES = {
     SEED_SNAPSHOTS: "/admin/seed-snapshots",
     SYSTEM_LOGS: "/admin/logs",
     SYSTEM_SETTINGS: "/admin/system-settings",
+    USERS_MANAGEMENT: "/admin/users",
+    NOTIFICATION_SETTINGS: "/admin/notifications",
     DEPLOY: "/admin/deploy",
   },
 

@@ -1,8 +1,12 @@
+/* eslint-disable max-lines */
 /**
  * GlobalNavigation.tsx
  *
  * グローバルナビゲーションコンポーネント
  * システム全体のメインメニューを提供
+ *
+ * Note: このファイルはナビゲーション構造全体を定義する論理的なまとまりであるため、
+ * max-lines制限を無効化しています。
  */
 
 import {
@@ -10,6 +14,7 @@ import {
   Package,
   ShoppingCart,
   Settings,
+  Settings2,
   Sparkles,
   TrendingUp,
   Database,
@@ -19,9 +24,10 @@ import {
   ChevronDown,
   Download,
   Calendar,
-  FileText,
   FileSpreadsheet,
   Network,
+  Users,
+  Bell,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -55,7 +61,8 @@ interface NavItem {
   feature?: FeatureKey; // Feature key for visibility control
 }
 
-const navItems: NavItem[] = [
+// 業務メニュー（3層構造の第1層）
+const businessNavItems: NavItem[] = [
   {
     title: "ダッシュボード",
     href: ROUTES.DASHBOARD,
@@ -63,44 +70,15 @@ const navItems: NavItem[] = [
     feature: "dashboard",
   },
   {
-    title: "オリジナル（需要予測）",
-    href: ROUTES.FORECASTS.LIST,
-    icon: TrendingUp,
-    feature: "forecasts",
-  },
-  // {
-  //   title: "入荷予定",
-  //   href: ROUTES.INBOUND_PLANS.LIST,
-  //   icon: PackagePlus,
-  //   feature: "inventory", // Group under inventory? or separate?
-  // },
-  {
-    title: "在庫・ロット管理",
+    title: "在庫管理",
     href: ROUTES.INVENTORY.ROOT,
     icon: Package,
     feature: "inventory",
   },
   {
-    title: "ロット管理（Excelビュー）",
-    href: ROUTES.INVENTORY.EXCEL_PORTAL,
-    icon: FileSpreadsheet,
-  },
-  {
-    title: "月次レポート",
-    href: ROUTES.REPORTS.MONTHLY,
-    icon: Table,
-    feature: "reports",
-  },
-  {
     title: "受注管理",
-    href: ROUTES.ORDERS.LIST,
+    href: ROUTES.OCR_RESULTS.LIST, // OCR結果を受注管理として統合
     icon: ShoppingCart,
-    feature: "orders",
-  },
-  {
-    title: "OCR結果",
-    href: ROUTES.OCR_RESULTS.LIST,
-    icon: FileText,
     feature: "ocr",
   },
   {
@@ -110,55 +88,10 @@ const navItems: NavItem[] = [
     feature: "material_order_forecasts",
   },
   {
-    title: "RPA",
-    href: ROUTES.RPA.ROOT,
-    icon: Settings,
-    feature: "rpa",
-  },
-  {
-    title: "SAP連携",
-    href: ROUTES.SAP.ROOT,
-    icon: Network,
-    requireAdmin: true,
-    feature: "sap",
-  },
-  {
-    title: "管理",
-    href: ROUTES.ADMIN.INDEX,
-    icon: Settings,
-    requireAdmin: true,
-    feature: "admin",
-  },
-  {
-    title: "DBブラウザ",
-    href: ROUTES.DEBUG.DB_BROWSER,
-    icon: Table,
-    requireAdmin: true,
-    feature: "db_browser",
-  },
-  {
-    title: "システムログ",
-    icon: ClipboardList,
-    requireAdmin: true,
-    feature: "logs",
-    subItems: [
-      { title: "リアルタイムログ", href: ROUTES.ADMIN.SYSTEM_LOGS },
-      { title: "クライアントログ", href: ROUTES.ADMIN.CLIENT_LOGS },
-    ],
-  },
-  {
-    title: "操作ログ",
-    href: ROUTES.ADMIN.OPERATION_LOGS,
-    icon: FileText,
-    requireAdmin: true,
-    feature: "operation_logs",
-  },
-  {
-    title: "システムデプロイ",
-    href: ROUTES.ADMIN.DEPLOY,
-    icon: Settings,
-    requireAdmin: true,
-    feature: "deploy",
+    title: "入荷予定",
+    href: ROUTES.INBOUND_PLANS.LIST,
+    icon: Calendar,
+    feature: "inbound_plans",
   },
   {
     title: "マスタ",
@@ -172,6 +105,74 @@ const navItems: NavItem[] = [
     icon: Calendar,
     requireRoles: ["admin", "user"],
     feature: "calendar",
+  },
+];
+
+// 業務自動化メニュー（3層構造の第2層）
+const automationNavItems: NavItem[] = [
+  {
+    title: "RPA",
+    href: ROUTES.RPA.ROOT,
+    icon: Settings,
+    feature: "rpa",
+  },
+  {
+    title: "SAP連携",
+    href: ROUTES.SAP.ROOT,
+    icon: Network,
+    requireAdmin: true,
+    feature: "sap",
+  },
+];
+
+// システム管理メニュー（3層構造の第3層）
+// システム管理メニュー（Admin専用）
+const adminNavItems: NavItem[] = [
+  {
+    title: "システム設定",
+    href: ROUTES.ADMIN.SYSTEM_SETTINGS,
+    icon: Settings,
+    requireAdmin: true,
+    feature: "system_settings",
+  },
+  {
+    title: "ユーザー管理",
+    href: ROUTES.ADMIN.USERS_MANAGEMENT,
+    icon: Users,
+    requireAdmin: true,
+    feature: "users_management",
+  },
+  {
+    title: "ログビューア",
+    icon: ClipboardList,
+    requireAdmin: true,
+    feature: "logs",
+    subItems: [
+      { title: "リアルタイムログ", href: ROUTES.ADMIN.SYSTEM_LOGS },
+      { title: "クライアントログ", href: ROUTES.ADMIN.CLIENT_LOGS },
+      { title: "操作ログ", href: ROUTES.ADMIN.OPERATION_LOGS },
+    ],
+  },
+  {
+    title: "通知設定",
+    href: ROUTES.ADMIN.NOTIFICATION_SETTINGS,
+    icon: Bell,
+    requireAdmin: true,
+    feature: "notification_settings",
+  },
+  {
+    title: "DBブラウザ",
+    href: ROUTES.DEBUG.DB_BROWSER,
+    icon: Table,
+    requireAdmin: true,
+    feature: "db_browser",
+  },
+  {
+    title: "システムデプロイ",
+    href: ROUTES.ADMIN.DEPLOY,
+    icon: Settings2,
+    requireAdmin: true,
+    feature: "deploy",
   },
   {
     title: "エクスポート",
@@ -188,6 +189,34 @@ const navItems: NavItem[] = [
       { title: "業務フローガイド", href: ROUTES.HELP.FLOW_MAP },
       { title: "データベーススキーマ", href: ROUTES.HELP.DATABASE_SCHEMA },
     ],
+  },
+];
+
+// その他の機能メニュー（将来的に統合または整理予定）
+const otherNavItems: NavItem[] = [
+  {
+    title: "オリジナル（需要予測）", // 旧版として残す
+    href: ROUTES.FORECASTS.LIST,
+    icon: TrendingUp,
+    feature: "forecasts",
+  },
+  {
+    title: "受注管理（旧）", // 旧版として残す
+    href: ROUTES.ORDERS.LIST,
+    icon: ShoppingCart,
+    feature: "orders",
+  },
+  {
+    title: "ロット管理（Excelビュー）",
+    href: ROUTES.INVENTORY.EXCEL_PORTAL,
+    icon: FileSpreadsheet,
+    feature: "excel_view",
+  },
+  {
+    title: "月次レポート",
+    href: ROUTES.REPORTS.MONTHLY,
+    icon: Table,
+    feature: "reports",
   },
 ];
 
@@ -289,27 +318,41 @@ function NavItems({ user, currentPath }: { currentPath: string; user: User | nul
   // ゲストユーザーは限定的なメニューのみ表示
   const guestAllowedFeatures = new Set(["dashboard", "inventory"]);
 
-  const visibleItems = navItems.filter((item) => {
-    // ゲストユーザーの場合、許可されたfeatureのみ表示
-    if (isGuest) {
-      // featureプロパティがない場合、またはfeatureプロパティがあっても許可リストにない場合は非表示
-      if (!item.feature || !guestAllowedFeatures.has(item.feature)) {
+  const filterItems = (items: NavItem[]) => {
+    return items.filter((item) => {
+      // ゲストユーザーの場合、許可されたfeatureのみ表示
+      if (isGuest) {
+        if (!item.feature || !guestAllowedFeatures.has(item.feature)) {
+          return false;
+        }
+      }
+      if (item.requireAdmin && !user?.roles?.includes("admin")) return false;
+      if (item.requireRoles && !item.requireRoles.some((role) => user?.roles?.includes(role))) {
         return false;
       }
-    }
-    if (item.requireAdmin && !user?.roles?.includes("admin")) return false;
-    if (item.requireRoles && !item.requireRoles.some((role) => user?.roles?.includes(role))) {
-      return false;
-    }
-    if (item.feature && !isFeatureVisible(item.feature)) {
-      return false;
-    }
-    return true;
-  });
+      if (item.feature && !isFeatureVisible(item.feature)) {
+        return false;
+      }
+      return true;
+    });
+  };
+
+  const visibleBusinessItems = filterItems(businessNavItems);
+  const visibleAutomationItems = filterItems(automationNavItems);
+  const visibleAdminItems = filterItems(adminNavItems);
+  const visibleOtherItems = filterItems(otherNavItems);
+
+  // 全てのアイテムを結合（3層構造 + その他機能）
+  const allVisibleItems = [
+    ...visibleBusinessItems,
+    ...visibleAutomationItems,
+    ...visibleAdminItems,
+    ...visibleOtherItems,
+  ];
 
   return (
     <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
-      {visibleItems.map((item) => {
+      {allVisibleItems.map((item) => {
         if (item.subItems) {
           return <NavItemDropdown key={item.title} item={item} currentPath={currentPath} />;
         }

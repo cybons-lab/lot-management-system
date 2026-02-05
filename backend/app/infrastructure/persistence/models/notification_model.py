@@ -17,6 +17,12 @@ class Notification(Base):
     type = Column(String(50), nullable=False, default="info")  # info, success, error, warning
     is_read = Column(Boolean, default=False)
     link = Column(String(512), nullable=True)
+    display_strategy = Column(
+        String(20),
+        nullable=False,
+        default="immediate",
+        comment="Toast display strategy: immediate=toast+center, deferred=center only, persistent=toast(long)+center",
+    )
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

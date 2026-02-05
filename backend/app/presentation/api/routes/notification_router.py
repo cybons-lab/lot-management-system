@@ -72,9 +72,9 @@ def create_notification(
     """
     # 他のユーザーへの通知作成を防ぐ（admin権限がない限り）
     if notification_data.user_id != current_user.id:
-        # admin権限チェック（将来的に実装）
-        # 現時点では自分宛のみ作成可能
-        if "admin" not in getattr(current_user, "roles", []):
+        # admin権限チェック
+        roles = [ur.role.role_code for ur in current_user.user_roles]
+        if "admin" not in roles:
             raise HTTPException(status_code=403, detail="他のユーザーへの通知は作成できません")
 
     notification = service.create_notification(notification_data)

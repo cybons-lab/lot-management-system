@@ -16,6 +16,7 @@ class NotificationRepository:
             message=notification.message,
             type=notification.type,
             link=notification.link,
+            display_strategy=notification.display_strategy,
             is_read=False,
         )
         self.db.add(db_notification)

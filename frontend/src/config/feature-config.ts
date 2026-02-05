@@ -47,6 +47,10 @@ export const FEATURE_CONFIG: Record<string, FeatureDefinition> = {
     id: "material_order_forecasts",
     label: "材料発注フォーキャスト",
   },
+  inbound_plans: {
+    id: "inbound_plans",
+    label: "入荷予定",
+  },
   reports: {
     id: "reports",
     label: "レポート",
@@ -58,7 +62,7 @@ export const FEATURE_CONFIG: Record<string, FeatureDefinition> = {
   },
   ocr: {
     id: "ocr",
-    label: "OCR結果",
+    label: "受注管理",
   },
   rpa: {
     id: "rpa",
@@ -112,10 +116,42 @@ export const FEATURE_CONFIG: Record<string, FeatureDefinition> = {
       { id: "history", label: "連携履歴" },
     ],
   },
-  admin: {
-    id: "admin",
-    label: "システム管理",
-    subFeatures: [{ id: "deploy", label: "システムデプロイ" }],
+  // システム管理関連
+  system_settings: {
+    id: "system_settings",
+    label: "システム設定",
+    subFeatures: [
+      { id: "security", label: "セキュリティ・アクセス制御" },
+      { id: "features", label: "機能表示設定" },
+      { id: "basic", label: "基本設定" },
+    ],
+  },
+  users_management: {
+    id: "users_management",
+    label: "ユーザー管理",
+    subFeatures: [
+      { id: "users", label: "ユーザー一覧" },
+      { id: "roles", label: "ロール管理" },
+      { id: "invitation", label: "招待・登録" },
+    ],
+  },
+  logs: {
+    id: "logs",
+    label: "ログビューア",
+    subFeatures: [
+      { id: "realtime", label: "リアルタイムログ" },
+      { id: "client", label: "クライアントログ" },
+      { id: "operation", label: "操作ログ" },
+    ],
+  },
+  notification_settings: {
+    id: "notification_settings",
+    label: "通知設定",
+    subFeatures: [
+      { id: "rules", label: "通知ルール" },
+      { id: "email", label: "メール通知設定" },
+      { id: "slack", label: "Slack連携" },
+    ],
   },
   db_browser: {
     id: "db_browser",
@@ -127,20 +163,25 @@ export const FEATURE_CONFIG: Record<string, FeatureDefinition> = {
       { id: "relations", label: "リレーション" },
     ],
   },
-  logs: {
-    id: "logs",
-    label: "システムログ",
-  },
-  operation_logs: {
-    id: "operation_logs",
-    label: "操作ログ",
+  deploy: {
+    id: "deploy",
+    label: "システムデプロイ",
   },
   export: {
     id: "export",
     label: "エクスポート",
   },
-  deploy: {
-    id: "deploy",
-    label: "システムデプロイ",
+  // Legacy
+  admin: {
+    id: "admin",
+    label: "システム管理（旧）",
+  },
+  operation_logs: {
+    id: "operation_logs",
+    label: "操作ログ（旧）",
+  },
+  excel_view: {
+    id: "excel_view",
+    label: "ロット管理（Excelビュー）",
   },
 };

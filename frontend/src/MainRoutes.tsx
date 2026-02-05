@@ -13,8 +13,10 @@ import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { BulkExportPage } from "@/features/admin/pages/BulkExportPage";
 import { DeployPage } from "@/features/admin/pages/DeployPage";
 import { MasterChangeLogsPage } from "@/features/admin/pages/MasterChangeLogsPage";
+import { NotificationSettingsPage } from "@/features/admin/pages/NotificationSettingsPage";
 import { SeedSnapshotsPage } from "@/features/admin/pages/SeedSnapshotsPage";
 import { SystemSettingsPage } from "@/features/admin/pages/SystemSettingsPage";
+import { UsersManagementPage } from "@/features/admin/pages/UsersManagementPage";
 import { SupplierAssignmentsPage } from "@/features/assignments/pages/SupplierAssignmentsPage";
 import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
 import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
@@ -316,6 +318,22 @@ function AdminRoutes() {
         element={
           <AdminGuard>
             <SystemSettingsPage />
+          </AdminGuard>
+        }
+      />
+      <Route
+        path={ROUTES.ADMIN.USERS_MANAGEMENT}
+        element={
+          <AdminGuard>
+            <UsersManagementPage />
+          </AdminGuard>
+        }
+      />
+      <Route
+        path={ROUTES.ADMIN.NOTIFICATION_SETTINGS}
+        element={
+          <AdminGuard>
+            <NotificationSettingsPage />
           </AdminGuard>
         }
       />

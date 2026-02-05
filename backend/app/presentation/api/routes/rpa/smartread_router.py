@@ -357,6 +357,7 @@ async def _run_simple_sync_background(
                         title="SmartRead処理失敗",
                         message=f"ファイルの処理中にエラーが発生しました: {filename}\n{str(e)}",
                         type="error",
+                        display_strategy="immediate",  # エラーは即座に確認が必要
                     )
                 )
                 error_uow.session.commit()
