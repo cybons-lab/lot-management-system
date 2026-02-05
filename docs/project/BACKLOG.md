@@ -1,6 +1,6 @@
 # タスクバックログ (統合版)
 
-**最終更新:** 2025-02-05
+**最終更新:** 2026-02-05
 
 ---
 
@@ -64,30 +64,6 @@ Phase 4の調査により、SmartReadのOCR編集機能で**高リスクの競�
 
 ---
 
-### ✅ 1-1. SmartRead横持ちCSVフォーマット検証の確認
-
-**優先度:** 高（最優先タスク）
-**作成:** 2026-02-02
-**カテゴリ:** RPA・データ処理
-
-**背景:**
-SmartReadでダウンロードする横持ちデータ（CSV）について、決まったフォーマットでないとエラーが出るのか、または縦持ち変換に必要なカラムさえあればエラーにならないのかを確認する必要がある。
-
-**確認項目:**
-1. 横持ちCSVの必須カラムの特定
-2. 任意カラムの存在可否
-3. カラム順序の柔軟性
-4. エラーハンドリングの現状確認
-
-**期待される結果:**
-- 縦持ち変換に必要なカラムが存在すれば、他のカラムの有無に関わらずエラーにならない仕様であることを確認
-- または、厳密なフォーマット要件があればドキュメント化
-
-**関連ファイル:**
-- `backend/app/application/services/smartread/`
-- `backend/app/domain/smartread/transform.py`
-
----
 
 ### 1-1. FastAPI + Vite テスト環境デプロイ実装
 
@@ -348,29 +324,6 @@ Phase 4調査により、OCR結果編集機能の競合リスクが指摘され�
 ---
 
 
-### 2-7. ライブラリのメジャーアップデート対応
-
-**優先度**: 中
-**作成**: 2026-01-31
-**カテゴリ**: メンテナンス・技術債
-
-**背景:**
-2026-01-31の定期アップデート確認において、以下のライブラリでメジャーバージョンの更新が確認された。これらは破壊的変更を含む可能性があるため、個別にテストと検証を行いつつ適用する必要がある。
-
-**検討中のアップデート:**
-- `pandas`: 2.3.3 -> 3.0.0
-- `websockets`: 15.0.1 -> 16.0
-- `pycparser`: 2.23 -> 3.0
-
-**タスク内容:**
-1. 各ライブラリのリリースノート（破壊的変更）の確認。
-2. 開発環境でのアップグレード適用。
-3. 既存機能（特にデータ分析、WebSocket通信）の回帰テスト実施。
-4. 問題なければ本番環境へ適用。
-
-**元:** `backlog.md::8-2` (2026-01-18) & `next_reviews_ja.md` (日付なし)
-
----
 
 ### 2-8. 在庫詳細の仕入先固定
 
@@ -1646,3 +1599,41 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 - 2026-01-26: Excelビュー機能タスク追加 (セクション10)、仕入先表示・forecast_period表示修正完了
 - 2026-02-01: ロットアーカイブ時の 401 Unauthorized エラーの修正、認証ロジックの統合を完了
 - 2026-02-02: E2Eテスト並列実行の安定化完了タスクをARCHIVE.mdに移動、認証・認可システム再設計提案を追加
+
+---
+
+## 11. 未完了プロジェクト・設計ドキュメントに基づくタスク (優先度: 低 - 後回し)
+
+本セクションのタスクは、詳細な設計ドキュメントが存在しますが、現在は「後回し」として扱います。
+
+### 11-1. 通知システム表示戦略の高度化 (Phase 1)
+- **内容**: `display_strategy` (immediate/deferred/persistent) によるトースト表示の出し分け。
+- **優先度**: 低 (後回し)
+- **関連ドキュメント**: [PHASE1-4_IMPLEMENTATION_PLAN.md](file:///Users/kazuya/dev/projects/lot-management-system/docs/project/PHASE1-4_IMPLEMENTATION_PLAN.md)
+
+### 11-2. 受注管理ナビゲーションとOCR取込の統合 (Phase 2)
+- **内容**: 受注管理ページへのOCR取込UI統合、3層ナビゲーションの完全適用。
+- **優先度**: 低 (後回し)
+- **関連ドキュメント**: [PHASE1-4_IMPLEMENTATION_PLAN.md](file:///Users/kazuya/dev/projects/lot-management-system/docs/project/PHASE1-4_IMPLEMENTATION_PLAN.md)
+
+### 11-3. システム管理メニューの完全分割 (Phase 3)
+- **内容**: ユーザー管理、ログビューア、通知設定の完全な独立メニュー化とUI整理。
+- **優先度**: 低 (後回し)
+- **関連ドキュメント**: [PHASE1-4_IMPLEMENTATION_PLAN.md](file:///Users/kazuya/dev/projects/lot-management-system/docs/project/PHASE1-4_IMPLEMENTATION_PLAN.md)
+
+### 11-4. Excel View 付随機能の導入 (Phase 9)
+- **内容**: ページレベルメモUI、セル別コメント編集ダイアログ、手動出荷日設定機能の実装。
+- **優先度**: 低 (後回し)
+- **関連ドキュメント**: [PHASE9_NEXT_SESSION.md](file:///Users/kazuya/dev/projects/lot-management-system/docs/project/PHASE9_NEXT_SESSION.md)
+
+### 11-5. 倉庫の自動特定機能 (Excel View 関連拡張)
+- **内容**: 「先方品番×メーカー品番×仕入先」による倉庫の自動特定ロジックの実装。
+- **優先度**: 低 (後回し)
+- **関連ドキュメント**: [PHASE9_NEXT_SESSION.md](file:///Users/kazuya/dev/projects/lot-management-system/docs/project/PHASE9_NEXT_SESSION.md)
+
+### 11-6. 担当仕入先フィルタ (`SupplierFilterSet`) の水平展開
+- **内容**: 在庫一覧、受注一覧、入荷予定一覧など、全ページへの共通フィルタコンポーネントの適用。
+- **優先度**: 低 (後回し)
+- **関連ドキュメント**: [supplier-filter-set-implementation-plan.md](file:///Users/kazuya/dev/projects/lot-management-system/docs/project/supplier-filter-set-implementation-plan.md)
+
+---
