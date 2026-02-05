@@ -20,6 +20,7 @@ from .test_data.masters import (
     generate_suppliers,
     generate_warehouses,
 )
+from .test_data.material_order_forecasts import generate_material_order_forecasts
 from .test_data.orders import generate_orders
 from .test_data.reports import generate_monthly_report_samples
 from .test_data.rpa_material_delivery import generate_rpa_material_delivery_data
@@ -53,6 +54,7 @@ __all__ = [
     "generate_rpa_material_delivery_data",
     "generate_sap_data",
     "generate_system_config",
+    "generate_material_order_forecasts",
 ]
 
 logger = logging.getLogger(__name__)
@@ -152,8 +154,13 @@ def generate_all_test_data(db: Session, options: object = None, progress_callbac
 
         # Step 10: Initialize system configuration
         if progress_callback:
-            progress_callback(99, "Initializing System Configuration...")
+            progress_callback(97, "Initializing System Configuration...")
         generate_system_config(db)
+
+        # Step 11: Generate Material Order Forecasts (CSV import test data)
+        if progress_callback:
+            progress_callback(99, "Generating Material Order Forecasts...")
+        generate_material_order_forecasts(db)
 
         db.commit()
 

@@ -59,6 +59,8 @@ def clear_data(db: Session):
         "order_register_rows",
         # System
         "sap_material_cache",
+        # Material Order Forecasts
+        "material_order_forecasts",
     ]
 
     for table in tables:
