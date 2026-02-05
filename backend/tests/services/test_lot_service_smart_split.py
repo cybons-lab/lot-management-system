@@ -219,17 +219,36 @@ class TestLotServiceSmartSplit:
         db.add(lot)
         db.flush()
 
+        # Add matching allocation suggestion to DB first
+        allocation = AllocationSuggestion(
+            lot_id=lot.id,
+            delivery_place_id=data["delivery_place"].id,
+            customer_id=data["customer"].id,
+            supplier_item_id=prod.id,
+            forecast_period="2026-02-10",
+            quantity=Decimal("200"),  # Actual in DB
+            allocation_type="soft",
+            source="test",
+        )
+        db.add(allocation)
+        db.flush()
+
+        # Update lot current quantity to be less than allocation (e.g. 150)
+        lot.received_quantity = Decimal("150")
+        db.flush()
+
         allocation_transfers = [
             {
                 "lot_id": lot.id,
                 "delivery_place_id": data["delivery_place"].id,
                 "customer_id": data["customer"].id,
                 "forecast_period": "2026-02-10",
-                "quantity": Decimal("200"),  # Exceeds 100
+                "quantity": Decimal("200"),
                 "target_lot_index": 1,
             },
         ]
 
+        # Now 200 > 150 should raise "を超えています"
         with pytest.raises(ValueError, match="を超えています"):
             service.smart_split_lot_with_allocations(
                 lot_receipt_id=lot.id,
@@ -269,10 +288,74 @@ class TestLotServiceSmartSplit:
         db.add(lot)
         db.flush()
 
-        # Only original lot index (0) will have quantity if no allocations for index 1
-        allocation_transfers = []
+        # Send one transfer, but split into 3.
+        # Index 0 gets remaining, Index 1 gets 50, Index 2 gets 0 -> Error
+        allocation = AllocationSuggestion(
+            lot_id=lot.id,
+            delivery_place_id=data["delivery_place"].id,
+            customer_id=data["customer"].id,
+            supplier_item_id=prod.id,
+            forecast_period="2026-02-10",
+            quantity=Decimal("50"),
+            allocation_type="soft",
+            source="test",
+        )
+        db.add(allocation)
+        db.flush()
+
+        allocation_transfers = [
+            {
+                "lot_id": lot.id,
+                "delivery_place_id": data["delivery_place"].id,
+                "customer_id": data["customer"].id,
+                "forecast_period": "2026-02-10",
+                "quantity": Decimal("50"),
+                "target_lot_index": 1,
+            },
+        ]
 
         with pytest.raises(ValueError, match="すべての分割ロットに数量を割り当ててください"):
+            service.smart_split_lot_with_allocations(
+                lot_receipt_id=lot.id,
+                split_count=3,
+                allocation_transfers=allocation_transfers,
+                user_id=user.id,
+            )
+
+    def test_smart_split_no_allocations_error(self, db, master_data):
+        """Test error when no allocations are provided for smart split."""
+        service = LotService(db)
+        data = master_data
+        user = data["user"]
+        prod = data["product1"]
+        wh = data["warehouse"]
+        sup = data["supplier"]
+
+        from app.infrastructure.persistence.models import LotReceipt
+        from app.infrastructure.persistence.models.lot_master_model import LotMaster
+
+        lm = LotMaster(
+            supplier_item_id=prod.id, supplier_id=sup.id, lot_number="TEST-SMART-SPLIT-NONE"
+        )
+        db.add(lm)
+        db.flush()
+
+        lot = LotReceipt(
+            lot_master_id=lm.id,
+            warehouse_id=wh.id,
+            supplier_id=sup.id,
+            supplier_item_id=prod.id,
+            received_date=date.today(),
+            received_quantity=Decimal("100"),
+            unit="EA",
+            origin_type="order",
+        )
+        db.add(lot)
+        db.flush()
+
+        allocation_transfers = []
+
+        with pytest.raises(ValueError, match="割り当てがないためスマート分割できません"):
             service.smart_split_lot_with_allocations(
                 lot_receipt_id=lot.id,
                 split_count=2,
