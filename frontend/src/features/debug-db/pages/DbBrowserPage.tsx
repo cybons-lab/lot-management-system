@@ -65,8 +65,8 @@ export function DbBrowserPage() {
   });
 
   // Check if feature is disabled (403 Forbidden)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const isForbidden = (error as any)?.response?.status === 403;
+  const isForbidden =
+    (error as { response?: { status?: number } } | null | undefined)?.response?.status === 403;
 
   if (isForbidden) {
     return <ForbiddenView />;

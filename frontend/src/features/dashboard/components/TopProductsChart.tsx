@@ -36,9 +36,14 @@ const TOOLTIP_STYLE = {
   fontSize: "12px",
 } as const;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const formatTooltipValue = (value: any) =>
-  [value?.toLocaleString("ja-JP") ?? "0", "在庫数"] as const;
+const formatTooltipValue = (value: number | string | null | undefined) =>
+  [Number(value ?? 0).toLocaleString("ja-JP"), "在庫数"] as const;
+
+type BarChartClickEvent = {
+  activePayload?: Array<{
+    payload?: ChartData;
+  }>;
+};
 
 export function TopProductsChart() {
   const navigate = useNavigate();
@@ -60,10 +65,10 @@ export function TopProductsChart() {
     }));
   }, [data]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleBarClick = (data: any) => {
-    if (data && data.activePayload && data.activePayload.length > 0) {
-      const payload = data.activePayload[0].payload as ChartData;
+  const handleBarClick = (event: unknown) => {
+    const data = event as BarChartClickEvent | null;
+    const payload = data?.activePayload?.[0]?.payload;
+    if (payload) {
       navigate(`/inventory?supplier_item_id=${payload.id}`);
     }
   };

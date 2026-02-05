@@ -62,7 +62,7 @@ export function SupplierProductForm({
   isSubmitting = false,
   isEdit = false,
 }: SupplierProductFormProps) {
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       supplier_id: initialData?.supplier_id || 0,
@@ -78,15 +78,12 @@ export function SupplierProductForm({
     onSubmit(values);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const control = form.control as any;
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         {/* 仕入先 (編集時は変更不可) - Phase1で最初に移動 */}
         <FormField
-          control={control}
+          control={form.control}
           name="supplier_id"
           render={({ field }) => (
             <FormItem>
@@ -118,7 +115,7 @@ export function SupplierProductForm({
 
         {/* メーカー品番 - 必須フィールド */}
         <FormField
-          control={control}
+          control={form.control}
           name="maker_part_no"
           render={({ field }) => (
             <FormItem>
@@ -138,7 +135,7 @@ export function SupplierProductForm({
 
         {/* 製品名 - 必須フィールド */}
         <FormField
-          control={control}
+          control={form.control}
           name="display_name"
           render={({ field }) => (
             <FormItem>
@@ -156,7 +153,7 @@ export function SupplierProductForm({
 
         {/* 基本単位 - 必須フィールド */}
         <FormField
-          control={control}
+          control={form.control}
           name="base_unit"
           render={({ field }) => (
             <FormItem>
@@ -176,7 +173,7 @@ export function SupplierProductForm({
 
         {/* リードタイム */}
         <FormField
-          control={control}
+          control={form.control}
           name="lead_time_days"
           render={({ field }) => (
             <FormItem>
@@ -199,7 +196,7 @@ export function SupplierProductForm({
 
         {/* 備考 (オプション) */}
         <FormField
-          control={control}
+          control={form.control}
           name="notes"
           render={({ field }) => (
             <FormItem>

@@ -153,7 +153,6 @@ export function useLotActions(options?: LotActionsOptions) {
           )
         ) {
           setSelectedLot(lot);
-          // @ts-expect-error Status update is supported by backend but missing in frontend type definition
           await updateLotMutation.mutateAsync({ status: "active" });
         }
       },
