@@ -55,7 +55,8 @@ vi.mock("@/components/ui", () => {
     DialogTitle: ({ children }: any) => <div>{children}</div>,
     DialogDescription: ({ children }: any) => <div>{children}</div>,
     DialogFooter: ({ children }: any) => <div>{children}</div>,
-    Label: (props: any) => <span {...props} />,
+    // eslint-disable-next-line jsx-a11y/label-has-associated-control
+    Label: (props: any) => <label {...props} />,
     Textarea: (props: any) => <textarea {...props} />,
     Select: (props: any) => <div>{props.children}</div>,
     SelectTrigger: (props: any) => <button>{props.children}</button>,

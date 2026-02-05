@@ -123,7 +123,8 @@ describe("ErrorBoundary", () => {
   });
 
   it("reload button triggers page reload", () => {
-    const reloadMock = vi.spyOn(window.location, "reload").mockImplementation(() => {});
+    const reloadMock = vi.fn();
+    vi.stubGlobal("location", { reload: reloadMock });
 
     render(
       <ErrorBoundary>
@@ -135,7 +136,7 @@ describe("ErrorBoundary", () => {
     fireEvent.click(reloadButton);
 
     expect(reloadMock).toHaveBeenCalledTimes(1);
-    reloadMock.mockRestore();
+    vi.unstubAllGlobals();
   });
 
   it("does not show error details in production mode", () => {

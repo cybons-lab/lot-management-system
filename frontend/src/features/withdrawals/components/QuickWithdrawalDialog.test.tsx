@@ -35,7 +35,8 @@ vi.mock("@/components/ui", () => {
   return {
     Button: (props: any) => <button {...props} />,
     Input: (props: any) => <input {...props} />,
-    Label: (props: any) => <span {...props} />,
+    // eslint-disable-next-line jsx-a11y/label-has-associated-control
+    Label: (props: any) => <label {...props} />,
     Dialog: ({ children, open }: any) => (open ? <div data-testid="dialog">{children}</div> : null),
     DialogContent: ({ children }: any) => <div>{children}</div>,
     DialogHeader: ({ children }: any) => <div>{children}</div>,

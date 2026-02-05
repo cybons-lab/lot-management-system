@@ -4,7 +4,7 @@
  * IndexedDB-based caching for export results to reduce server load
  */
 
-import { openDB, type IDBPDatabase, type IDBPCursorWithValue } from "idb";
+import { openDB, type IDBPDatabase } from "idb";
 
 import { logger } from "../utils/logger";
 
@@ -41,7 +41,12 @@ class ExportCacheService {
     if (!this.dbPromise) {
       logger.debug("IndexedDB接続開始");
       this.dbPromise = openDB(DB_NAME, DB_VERSION, {
-        upgrade(db: IDBPDatabase, oldVersion: number, _newVersion: number | null, transaction) {
+        async upgrade(
+          db: IDBPDatabase,
+          oldVersion: number,
+          _newVersion: number | null,
+          transaction,
+        ) {
           if (!db.objectStoreNames.contains(STORE_NAME)) {
             logger.debug("オブジェクトストア作成");
             const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
@@ -51,31 +56,27 @@ class ExportCacheService {
           }
           if (oldVersion < 2) {
             const store = transaction.objectStore(STORE_NAME);
-            store.openCursor().then(function updateCursor(
-              cursor: IDBPCursorWithValue | null,
-            ): Promise<void> {
-              if (!cursor) return Promise.resolve();
+            let cursor = await store.openCursor();
+            while (cursor) {
               const value = cursor.value as CachedExport;
               if (value.saved_to_db === undefined) {
                 value.saved_to_db = false;
-                cursor.update(value);
+                await cursor.update(value);
               }
-              return cursor.continue().then(updateCursor);
-            });
+              cursor = await cursor.continue();
+            }
           }
           if (oldVersion < 3) {
             const store = transaction.objectStore(STORE_NAME);
-            store.openCursor().then(function updateCursor(
-              cursor: IDBPCursorWithValue | null,
-            ): Promise<void> {
-              if (!cursor) return Promise.resolve();
+            let cursor = await store.openCursor();
+            while (cursor) {
               const value = cursor.value as CachedExport;
               if (value.data_version === undefined) {
                 value.data_version = 1;
-                cursor.update(value);
+                await cursor.update(value);
               }
-              return cursor.continue().then(updateCursor);
-            });
+              cursor = await cursor.continue();
+            }
           }
         },
       });

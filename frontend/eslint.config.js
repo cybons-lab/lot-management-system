@@ -224,6 +224,7 @@ export default [
 
   // Temporary overrides for function length/complexity
   // TODO: Refactor these files to split into smaller components/hooks
+  // 現在: 116ファイル | 目標(2026-Q1): 60ファイル以下 | 進捗: docs/project/BACKLOG.md参照
   {
     files: [
       // Core components
@@ -365,7 +366,7 @@ export default [
   {
     files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}", "src/test/**/*.{ts,tsx}"],
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "warn", // テストでも型安全性を推奨（error → warn）
       "max-lines-per-function": "off",
       "max-lines": "off",
       complexity: "off",

@@ -7,6 +7,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 import { PIE_CHART_COLORS } from "./chartColors";
 import { ChartContainer } from "./ChartContainer";
@@ -39,6 +40,10 @@ export function WarehouseDistributionChart() {
   }, [data]);
 
   const totalQuantity = chartData.reduce((sum, item) => sum + item.value, 0);
+
+  const formatTooltipValue = (value: ValueType | undefined, _name?: NameType): [string, string] => {
+    return [Number(value ?? 0).toLocaleString("ja-JP"), "在庫数"];
+  };
 
   const handlePieClick = (event: unknown) => {
     const data = event as PieChartClickEvent | null;
@@ -95,10 +100,7 @@ export function WarehouseDistributionChart() {
                 borderRadius: "0.5rem",
                 fontSize: "12px",
               }}
-              formatter={(value: number | string | null | undefined) => [
-                Number(value ?? 0).toLocaleString("ja-JP"),
-                "在庫数",
-              ]}
+              formatter={formatTooltipValue}
             />
             <Legend wrapperStyle={{ fontSize: "11px" }} iconType="circle" />
           </PieChart>
