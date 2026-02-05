@@ -1296,6 +1296,10 @@ class LotService:
         if not reason or not reason.strip():
             raise ValueError("調整理由は必須です")
 
+        # Validate new quantity
+        if new_quantity < 0:
+            raise ValueError("入庫数は0以上の値を指定してください")
+
         # Get lot receipt
         lot_receipt = self.repository.find_by_id(lot_receipt_id)
         if not lot_receipt:
