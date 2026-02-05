@@ -113,8 +113,7 @@ export function DeleteDialog({
       setEndDate(today);
       setConfirmInput("");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
-  }, [open]);
+  }, [open, today]);
 
   // ========================================
   // Computed values

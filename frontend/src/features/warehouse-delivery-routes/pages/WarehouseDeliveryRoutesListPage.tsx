@@ -117,10 +117,11 @@ export function WarehouseDeliveryRoutesListPage() {
     return result;
   }, [routes, searchQuery, showInactive]);
 
+  const { setPage } = table;
+
   useEffect(() => {
-    table.setPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
-  }, [searchQuery, showInactive]);
+    setPage(1);
+  }, [searchQuery, setPage, showInactive]);
 
   // Sort
   const sortedRoutes = useMemo(() => {

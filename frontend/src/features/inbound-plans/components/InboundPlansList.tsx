@@ -231,11 +231,11 @@ export function InboundPlansList({
   }, [filteredPlans, sort]);
 
   const paginatedPlans = table.paginateData(sortedPlans);
+  const { setPage } = table;
 
   useEffect(() => {
-    table.setPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
-  }, [filters, searchQuery]);
+    setPage(1);
+  }, [filters, searchQuery, setPage]);
 
   // 列定義
   const columns = useMemo<Column<InboundPlan>[]>(

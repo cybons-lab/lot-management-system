@@ -187,7 +187,10 @@ export function QuickWithdrawalDialog({
 
     if (!customerId) {
       setDeliveryPlaces([]);
-      updateField("delivery_place_id", 0);
+      setFormState((prev) =>
+        prev.delivery_place_id === 0 ? prev : { ...prev, delivery_place_id: 0 },
+      );
+      clearFieldError("delivery_place_id");
       return;
     }
 
@@ -206,7 +209,10 @@ export function QuickWithdrawalDialog({
           setDeliveryPlaces(places);
           // 既存の選択が新しいリストに含まれていない場合のみリセット
           if (!places.some((p) => p.id === deliveryPlaceIdRef.current)) {
-            updateField("delivery_place_id", 0);
+            setFormState((prev) =>
+              prev.delivery_place_id === 0 ? prev : { ...prev, delivery_place_id: 0 },
+            );
+            clearFieldError("delivery_place_id");
           }
         }
       })
@@ -228,8 +234,7 @@ export function QuickWithdrawalDialog({
     return () => {
       abortController.abort();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
-  }, [formState.customer_id]);
+  }, [clearFieldError, formState.customer_id, isLatestDeliveryPlaceRequest]);
 
   // フィールド更新
   const updateField = useCallback(

@@ -297,21 +297,22 @@ export function EditableTextCell({
   const isActive = activeCell?.rowId === row.id && activeCell?.field === field;
   const inputRef = useRef<HTMLInputElement>(null);
   const initialValueRef = useRef(value);
+  const wasActiveRef = useRef(false);
   const [isComposing, setIsComposing] = useState(false);
   const [hasError, setHasError] = useState(false);
   const isSecondary = resolveIsSecondary(field);
 
   useEffect(() => {
-    if (isActive) {
-      initialValueRef.current = value;
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-        inputRef.current?.select();
-        inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
-  }, [isActive]);
+    const becameActive = isActive && !wasActiveRef.current;
+    wasActiveRef.current = isActive;
+    if (!becameActive) return;
+    initialValueRef.current = value;
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+      inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
+  }, [isActive, value]);
 
   const isDisabled = row.status === "processing" || isReadOnly;
 
@@ -480,20 +481,21 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
   const isActive = activeCell?.rowId === row.id && activeCell?.field === field;
   const inputRef = useRef<HTMLInputElement>(null);
   const initialValueRef = useRef(value);
+  const wasActiveRef = useRef(false);
   const [isComposing, setIsComposing] = useState(false);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    if (isActive) {
-      initialValueRef.current = value;
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-        inputRef.current?.select();
-        inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
-  }, [isActive]);
+    const becameActive = isActive && !wasActiveRef.current;
+    wasActiveRef.current = isActive;
+    if (!becameActive) return;
+    initialValueRef.current = value;
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+      inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
+  }, [isActive, value]);
 
   const isDisabled = row.status === "processing" || isReadOnly;
 
@@ -639,6 +641,7 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
     text: input.shippingSlipText,
     edited: input.shippingSlipTextEdited,
   });
+  const wasActiveRef = useRef(false);
 
   const isDisabled = row.status === "processing" || isReadOnly;
 
@@ -654,20 +657,20 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (isActive) {
-      initialStateRef.current = {
-        text: input.shippingSlipText,
-        edited: input.shippingSlipTextEdited,
-      };
-      setDraft(displayText || "");
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-        inputRef.current?.select();
-        inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 意図したタイミングでのみ副作用を実行するため
-  }, [isActive]);
+    const becameActive = isActive && !wasActiveRef.current;
+    wasActiveRef.current = isActive;
+    if (!becameActive) return;
+    initialStateRef.current = {
+      text: input.shippingSlipText,
+      edited: input.shippingSlipTextEdited,
+    };
+    setDraft(displayText || "");
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+      inputRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
+  }, [displayText, input.shippingSlipText, input.shippingSlipTextEdited, isActive]);
 
   const handleNavigate = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (isComposing) return;

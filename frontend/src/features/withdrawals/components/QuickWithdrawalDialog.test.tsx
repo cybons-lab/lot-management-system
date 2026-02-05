@@ -8,6 +8,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import * as withdrawalApi from "../api";
@@ -30,13 +31,11 @@ vi.mock("@/hooks/api/useMastersQuery", () => ({
 }));
 
 // Mock UI Components to bypass alias resolution issues and complex DOM structures
-/* eslint-disable @typescript-eslint/no-require-imports, jsx-a11y/label-has-associated-control, jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus -- 行クリック操作をUI仕様として優先するため */
 vi.mock("@/components/ui", () => {
-  const React = require("react");
   return {
     Button: (props: any) => <button {...props} />,
     Input: (props: any) => <input {...props} />,
-    Label: (props: any) => <label {...props} />,
+    Label: (props: any) => <span {...props} />,
     Dialog: ({ children, open }: any) => (open ? <div data-testid="dialog">{children}</div> : null),
     DialogContent: ({ children }: any) => <div>{children}</div>,
     DialogHeader: ({ children }: any) => <div>{children}</div>,
@@ -49,11 +48,7 @@ vi.mock("@/components/ui", () => {
       return (
         <div data-testid="select">
           {/* Trigger Area */}
-          <div
-            role="button"
-            onClick={() => !disabled && setIsOpen(!isOpen)}
-            data-disabled={disabled}
-          >
+          <button type="button" onClick={() => !disabled && setIsOpen(!isOpen)} disabled={disabled}>
             {/* Pass down props to children mostly for SelectValue to show placeholder */}
             {React.Children.map(children, (child: any) => {
               if (child.type.name === "SelectTrigger") {
@@ -61,7 +56,7 @@ vi.mock("@/components/ui", () => {
               }
               return null;
             })}
-          </div>
+          </button>
 
           {/* Content Area - only show when open */}
           {isOpen && (

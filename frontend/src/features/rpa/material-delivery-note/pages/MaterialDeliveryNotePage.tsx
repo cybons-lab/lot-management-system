@@ -2,7 +2,7 @@
  * MaterialDeliveryNotePage
  * 素材納品書発行のメニューページ - Step1/Step2/履歴へのナビゲーション
  */
-/* eslint-disable max-lines-per-function, complexity, react-hooks/exhaustive-deps -- 論理的な画面単位を維持 */
+/* eslint-disable max-lines-per-function, complexity -- 論理的な画面単位を維持 */
 
 import { CheckSquare, Download, FileText, History, ListTree, Play, Settings } from "lucide-react";
 import { useMemo } from "react";
@@ -69,7 +69,7 @@ export function MaterialDeliveryNotePage() {
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes("admin");
   const { data: runsData } = useRuns(0, 50);
-  const runs = runsData?.runs ?? [];
+  const runs = useMemo(() => runsData?.runs ?? [], [runsData]);
   const latestRun = runs[0];
   const { data: latestFetch } = useStep1LatestResult();
 
