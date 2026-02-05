@@ -7,6 +7,7 @@ export * from "./display";
 
 // Allocation components
 export * from "./allocation";
+export { AllocationDialog } from "./AllocationDialog";
 
 // Warehouse components
 export * from "./warehouse";
@@ -14,5 +15,7 @@ export * from "./warehouse";
 // Filter components
 export * from "./filters";
 
-// OrderLineCard (already a subdirectory)
+// Order components
 export { OrderLineCard } from "./OrderLineCard";
+export { OrderLinesTable } from "./OrderLinesTable";
+export { OrderLockBanner } from "./OrderLockBanner";

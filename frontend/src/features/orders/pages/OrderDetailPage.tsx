@@ -3,33 +3,14 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { useOrderLineAllocation } from "../hooks/useOrderLineAllocation";
 import { useOrderLock } from "../hooks/useOrderLock";
 
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LotAllocationPanel } from "@/features/allocations/components/lots/LotAllocationPanel";
 import { useAuth } from "@/features/auth/AuthContext";
 import * as ordersApi from "@/features/orders/api";
-import { OrderLockBanner } from "@/features/orders/components/OrderLockBanner";
+import { AllocationDialog, OrderLinesTable, OrderLockBanner } from "@/features/orders/components";
 import { OrderStatusBadge } from "@/shared/components/data/StatusBadge";
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
-import { formatQuantity } from "@/shared/utils/formatQuantity";
 import { formatOrderCode } from "@/shared/utils/order";
 
 // --- Sub-components ---
@@ -81,105 +62,8 @@ function OrderDetailHeader({
   );
 }
 
-// eslint-disable-next-line max-lines-per-function -- Table component with multiple columns
-function OrderLinesTable({
-  order,
-  onSelectLine,
-}: {
-  order: OrderWithLinesResponse;
-  onSelectLine: (line: OrderLine) => void;
-}) {
-  return (
-    <div className="rounded-lg border bg-white shadow-sm">
-      <div className="border-b px-6 py-4">
-        <h2 className="font-semibold text-slate-900">受注明細</h2>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>行No</TableHead>
-            <TableHead>商品</TableHead>
-            <TableHead>納入先</TableHead>
-            <TableHead>得意先受注No</TableHead>
-            <TableHead>SAP受注No</TableHead>
-            <TableHead>数量</TableHead>
-            <TableHead>納期</TableHead>
-            <TableHead>ステータス</TableHead>
-            <TableHead className="text-right">引当済</TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {order.lines?.map((line, index) => (
-            <TableRow key={line.id}>
-              <TableCell>{index + 1}</TableCell>
-              <TableCell>
-                <div className="font-medium">{line.product_name}</div>
-                <div className="text-xs text-slate-500">{line.product_code}</div>
-                {line.shipping_document_text && (
-                  <div className="mt-1 text-xs text-slate-600">
-                    <span className="font-medium">出荷表:</span> {line.shipping_document_text}
-                  </div>
-                )}
-              </TableCell>
-              <TableCell>{line.delivery_place_name}</TableCell>
-              <TableCell>
-                {line.customer_order_no ? (
-                  <div>
-                    <span className="font-medium">{line.customer_order_no}</span>
-                    {line.customer_order_line_no && (
-                      <span className="text-xs text-slate-500">-{line.customer_order_line_no}</span>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-slate-400">-</span>
-                )}
-              </TableCell>
-              <TableCell>
-                {line.sap_order_no ? (
-                  <div>
-                    <span className="font-medium">{line.sap_order_no}</span>
-                    {line.sap_order_item_no && (
-                      <span className="text-xs text-slate-500">/{line.sap_order_item_no}</span>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-slate-400">-</span>
-                )}
-              </TableCell>
-              <TableCell>
-                {formatQuantity(Number(line.order_quantity), line.unit)} {line.unit}
-              </TableCell>
-              <TableCell>{formatDate(line.delivery_date)}</TableCell>
-              <TableCell>
-                <OrderStatusBadge status={line.status} />
-              </TableCell>
-              <TableCell className="text-right font-medium">
-                {formatQuantity(Number(line.allocated_quantity ?? 0), line.unit)}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="outline" size="sm" onClick={() => onSelectLine(line)}>
-                  引当操作
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-          {(!order.lines || order.lines.length === 0) && (
-            <TableRow>
-              <TableCell colSpan={10} className="h-24 text-center text-slate-500">
-                明細がありません
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-
 // --- Main Component ---
 
-// 受注詳細ページのUIを一箇所にまとめるため分割しない
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const id = Number(orderId);
@@ -225,92 +109,15 @@ export function OrderDetailPage() {
 
       <OrderLinesTable order={order} onSelectLine={setSelectedLine} />
 
-      {/* Allocation Dialog */}
+      {/* Allocation Dialog (Shared component) */}
       <AllocationDialog
-        open={!!selectedLine}
-        onOpenChange={(open) => !open && setSelectedLine(null)}
         line={selectedLine}
-        order={order}
+        onClose={() => setSelectedLine(null)}
         onSuccess={() => {
           setSelectedLine(null);
           refetch();
         }}
       />
     </div>
-  );
-}
-
-function AllocationDialog({
-  open,
-  onOpenChange,
-  line,
-  order,
-  onSuccess,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  line: OrderLine | null;
-  order: OrderWithLinesResponse;
-  onSuccess: () => void;
-}) {
-  const {
-    candidateLots,
-    lotAllocations,
-    hardAllocated,
-    softAllocated,
-    hasUnsavedChanges,
-    allocationState,
-    isLoadingCandidates,
-    isSaving,
-    changeAllocation,
-    clearAllocations,
-    autoAllocate,
-    saveAllocations,
-    saveAndConfirmAllocations,
-    confirmAllocations,
-    cancelAllAllocations,
-  } = useOrderLineAllocation({
-    orderLine: line,
-    onSuccess: () => {
-      onSuccess();
-    },
-  });
-
-  if (!line) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl p-0">
-        <DialogHeader className="px-6 py-4">
-          <DialogTitle>ロット引当</DialogTitle>
-          <DialogDescription className="sr-only">
-            受注明細に対するロット引当を行います。
-          </DialogDescription>
-        </DialogHeader>
-        <div className="p-6 pt-0">
-          <LotAllocationPanel
-            order={order}
-            orderLine={line}
-            candidateLots={candidateLots}
-            lotAllocations={lotAllocations}
-            onLotAllocationChange={changeAllocation}
-            onAutoAllocate={autoAllocate}
-            onClearAllocations={clearAllocations}
-            onSaveAllocations={saveAllocations}
-            onSaveAndConfirm={saveAndConfirmAllocations}
-            onConfirmHard={confirmAllocations}
-            onCancelAllocations={cancelAllAllocations}
-            isLoading={isLoadingCandidates}
-            isSaving={isSaving}
-            canSave={Object.keys(lotAllocations).length > 0}
-            isActive={true}
-            hardAllocated={hardAllocated}
-            softAllocated={softAllocated}
-            hasUnsavedChanges={hasUnsavedChanges}
-            allocationState={allocationState}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
