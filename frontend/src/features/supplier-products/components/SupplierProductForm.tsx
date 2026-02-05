@@ -42,11 +42,12 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
+type SupplierProductEditInput = Omit<SupplierProductUpdate, "version">;
 
 interface SupplierProductFormProps {
   initialData?: SupplierProduct;
   suppliers: Supplier[];
-  onSubmit: (data: SupplierProductCreate | SupplierProductUpdate) => void;
+  onSubmit: (data: SupplierProductCreate | SupplierProductEditInput) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
   isEdit?: boolean;

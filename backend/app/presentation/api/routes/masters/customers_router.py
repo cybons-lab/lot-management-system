@@ -161,24 +161,31 @@ def update_customer(
 def delete_customer(
     customer_code: str,
     end_date: date | None = Query(None, description="End date for soft delete"),
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Soft delete customer (set valid_to to end_date or today)."""
     service = CustomerService(db)
-    service.delete_by_code(customer_code, end_date=end_date, user_id=current_user.id)
+    service.delete_by_code(
+        customer_code,
+        end_date=end_date,
+        expected_version=version,
+        user_id=current_user.id,
+    )
     return None
 
 
 @router.delete("/{customer_code}/permanent", status_code=204)
 def permanent_delete_customer(
     customer_code: str,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
     """Permanently delete customer (admin only)."""
     service = CustomerService(db)
-    service.hard_delete_by_code(customer_code, user_id=current_user.id)
+    service.hard_delete_by_code(customer_code, expected_version=version, user_id=current_user.id)
     return None
 
 

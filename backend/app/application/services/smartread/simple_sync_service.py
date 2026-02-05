@@ -407,6 +407,12 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             transformer = SmartReadCsvTransformer()
             transform_result = transformer.transform_to_long(wide_data, skip_empty=True)
 
+            self.get_or_create_task(
+                config_id=config_id,
+                task_id=task_id,
+                task_date=date.today(),
+            )
+
             # 9. DB保存
             self._save_wide_and_long_data(
                 config_id=config_id,
@@ -417,6 +423,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                 long_data=transform_result.long_data,
                 filename=filename,
             )
+            data_version = self.bump_data_version(task_id)
             self.session.commit()
 
             logger.info(
@@ -460,6 +467,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                     for e in transform_result.errors
                 ],
                 "filename": filename,
+                "data_version": data_version,
             }
 
         except Exception:
@@ -584,6 +592,12 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
             transformer = SmartReadCsvTransformer()
             transform_result = transformer.transform_to_long(wide_data, skip_empty=True)
 
+            self.get_or_create_task(
+                config_id=config_id,
+                task_id=task_id,
+                task_date=date.today(),
+            )
+
             self._save_wide_and_long_data(
                 config_id=config_id,
                 task_id=task_id,
@@ -593,6 +607,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                 long_data=transform_result.long_data,
                 filename="watch_dir_batch",
             )
+            data_version = self.bump_data_version(task_id)
             self.session.commit()
 
             logger.info(
@@ -616,6 +631,7 @@ class SmartReadSimpleSyncService(SmartReadBaseService):
                     for e in transform_result.errors
                 ],
                 "requests": request_states,
+                "data_version": data_version,
             }
         except Exception:
             logger.exception("[SimpleSync] Watch dir failed")

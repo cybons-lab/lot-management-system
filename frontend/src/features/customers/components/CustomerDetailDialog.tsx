@@ -48,7 +48,7 @@ export function CustomerDetailDialog({
 
   const handleUpdate = useCallback(
     (data: { customer_code: string; customer_name: string }) => {
-      if (!customerCode) return;
+      if (!customerCode || !customer) return;
 
       // コード変更時は再取得を停止してからAPI呼び出し
       const isChangingCode = data.customer_code !== customerCode;
@@ -59,6 +59,7 @@ export function CustomerDetailDialog({
       const updateData: CustomerUpdate = {
         customer_code: data.customer_code,
         customer_name: data.customer_name,
+        version: customer.version,
       };
       updateCustomer(
         { id: customerCode, data: updateData },
@@ -78,12 +79,12 @@ export function CustomerDetailDialog({
         },
       );
     },
-    [customerCode, updateCustomer, handleClose],
+    [customer, customerCode, updateCustomer, handleClose],
   );
 
   const handleConfirmDelete = useCallback(
     (endDate?: string | null) => {
-      if (!customerCode) return;
+      if (!customerCode || !customer) return;
 
       const onSuccess = () => {
         setIsDeleteDialogOpen(false);
@@ -91,12 +92,15 @@ export function CustomerDetailDialog({
       };
 
       if (deleteType === "soft") {
-        softDelete({ id: customerCode, endDate: endDate || undefined }, { onSuccess });
+        softDelete(
+          { id: customerCode, version: customer.version, endDate: endDate || undefined },
+          { onSuccess },
+        );
       } else {
-        permanentDelete(customerCode, { onSuccess });
+        permanentDelete({ id: customerCode, version: customer.version }, { onSuccess });
       }
     },
-    [customerCode, deleteType, softDelete, permanentDelete, handleClose],
+    [customer, customerCode, deleteType, softDelete, permanentDelete, handleClose],
   );
 
   if (!customerCode && !open) return null;

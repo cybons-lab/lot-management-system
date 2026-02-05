@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
+import { toast } from "sonner";
 
 import { httpAuth, httpPublic } from "@/shared/api/http-client";
 import { hasAuthToken } from "@/shared/auth/token";
@@ -25,6 +27,17 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
   queryKey: string,
 ) {
   const queryClient = useQueryClient();
+
+  const isConflictError = (error: unknown): boolean =>
+    error instanceof HTTPError && error.response?.status === 409;
+
+  const handleConflict = (id?: string | number) => {
+    toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+    queryClient.invalidateQueries({ queryKey: [queryKey] });
+    if (id !== undefined) {
+      queryClient.invalidateQueries({ queryKey: [queryKey, id] });
+    }
+  };
 
   // List (with optional include_inactive parameter)
   const useList = (includeInactive = false) =>
@@ -65,36 +78,71 @@ export function useMasterApi<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
       },
+      onError: (error, variables) => {
+        if (isConflictError(error)) {
+          handleConflict(variables.id);
+        }
+      },
     });
 
   // Delete (backward compatible - simple id parameter)
   // Note: For master data with soft delete support, this performs soft delete
   const useDelete = () =>
     useMutation({
-      mutationFn: (id: string | number) => httpAuth.deleteVoid(`${resourcePath}/${id}`),
+      mutationFn: ({ id, version }: { id: string | number; version: number }) =>
+        httpAuth.deleteVoid(`${resourcePath}/${id}?version=${version}`),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
+      },
+      onError: (error, variables) => {
+        if (isConflictError(error)) {
+          handleConflict(variables.id);
+        }
       },
     });
 
   // Soft Delete with optional end_date
   const useSoftDelete = () =>
     useMutation({
-      mutationFn: ({ id, endDate }: { id: string | number; endDate?: string }) => {
-        const url = endDate ? `${resourcePath}/${id}?end_date=${endDate}` : `${resourcePath}/${id}`;
+      mutationFn: ({
+        id,
+        version,
+        endDate,
+      }: {
+        id: string | number;
+        version: number;
+        endDate?: string;
+      }) => {
+        const params = new URLSearchParams();
+        if (endDate) {
+          params.set("end_date", endDate);
+        }
+        params.set("version", String(version));
+        const url = `${resourcePath}/${id}?${params.toString()}`;
         return httpAuth.deleteVoid(url);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
+      },
+      onError: (error, variables) => {
+        if (isConflictError(error)) {
+          handleConflict(variables.id);
+        }
       },
     });
 
   // Permanent Delete (physical delete - admin only)
   const usePermanentDelete = () =>
     useMutation({
-      mutationFn: (id: string | number) => httpAuth.deleteVoid(`${resourcePath}/${id}/permanent`),
+      mutationFn: ({ id, version }: { id: string | number; version: number }) =>
+        httpAuth.deleteVoid(`${resourcePath}/${id}/permanent?version=${version}`),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
+      },
+      onError: (error, variables) => {
+        if (isConflictError(error)) {
+          handleConflict(variables.id);
+        }
       },
     });
 

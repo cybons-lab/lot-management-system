@@ -26,6 +26,7 @@ class UserSupplierAssignmentCreate(UserSupplierAssignmentBase):
 class UserSupplierAssignmentUpdate(BaseModel):
     """Schema for updating a user-supplier assignment."""
 
+    version: int
     is_primary: bool | None = None
 
 
@@ -38,6 +39,7 @@ class UserSupplierAssignmentResponse(UserSupplierAssignmentBase):
     assigned_at: datetime
     created_at: datetime
     updated_at: datetime
+    version: int
     # Optional expanded fields
     username: str | None = None
     user_display_name: str | None = None

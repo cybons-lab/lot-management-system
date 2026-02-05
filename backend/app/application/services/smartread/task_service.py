@@ -9,7 +9,7 @@ import logging
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.application.services.smartread.base import SmartReadBaseService
 from app.infrastructure.persistence.models.smartread_models import (
@@ -91,6 +91,26 @@ class SmartReadTaskService(SmartReadBaseService):
             task.synced_at = datetime.now()
             self.session.flush()
             logger.debug(f"タスク同期日時更新完了: task_id={task_id}")
+
+    def bump_data_version(self, task_id: str, expected_version: int | None = None) -> int | None:
+        """タスクデータのバージョンを更新.
+
+        Args:
+            task_id: タスクID
+            expected_version: 期待する現行バージョン（指定時は一致した場合のみ更新）
+
+        Returns:
+            更新後のバージョン。更新できなかった場合はNone。
+        """
+        stmt = update(SmartReadTask).where(SmartReadTask.task_id == task_id)
+        if expected_version is not None:
+            stmt = stmt.where(SmartReadTask.data_version == expected_version)
+
+        stmt = stmt.values(data_version=SmartReadTask.data_version + 1).returning(
+            SmartReadTask.data_version
+        )
+        result = self.session.execute(stmt)
+        return result.scalar_one_or_none()
 
     def get_task_by_date(self, config_id: int, task_date: date) -> SmartReadTask | None:
         """日付でタスクを取得.

@@ -168,6 +168,9 @@ class SmartReadCsvDataResponse(BaseModel):
 
     wide_data: list[dict[str, Any]] = Field(..., description="横持ちデータ（OCR結果）")
     long_data: list[dict[str, Any]] = Field(..., description="縦持ちデータ（変換後）")
+    data_version: int | None = Field(
+        default=None, description="タスクデータのバージョン（楽観的ロック用）"
+    )
     errors: list[SmartReadValidationError] = Field(
         default_factory=list, description="バリデーションエラー"
     )
@@ -197,6 +200,7 @@ class SmartReadTaskDetailResponse(BaseModel):
     synced_at: str | None
     skip_today: bool
     created_at: str
+    data_version: int
 
     model_config = {"from_attributes": True}
 
@@ -279,6 +283,7 @@ class SmartReadLongDataResponse(BaseModel):
     status: str  # PENDING | IMPORTED | ERROR
     error_reason: str | None
     created_at: str
+    version: int
 
     model_config = {"from_attributes": True}
 
@@ -296,6 +301,7 @@ class SmartReadSaveLongDataRequest(BaseModel):
     config_id: int = Field(..., description="設定ID")
     task_id: str = Field(..., description="タスクID")
     task_date: str = Field(..., description="タスク日付 (YYYY-MM-DD)")
+    data_version: int = Field(..., description="タスクデータのバージョン（楽観的ロック用）")
     wide_data: list[dict[str, Any]] = Field(..., description="横持ちデータ")
     long_data: list[dict[str, Any]] = Field(..., description="縦持ちデータ")
     filename: str | None = Field(default=None, description="ファイル名")
@@ -308,6 +314,7 @@ class SmartReadSaveLongDataResponse(BaseModel):
     saved_wide_count: int = Field(..., description="保存した横持ちデータ件数")
     saved_long_count: int = Field(..., description="保存した縦持ちデータ件数")
     message: str = Field(..., description="メッセージ")
+    data_version: int = Field(..., description="更新後のタスクデータバージョン")
 
 
 class SmartReadResetResponse(BaseModel):

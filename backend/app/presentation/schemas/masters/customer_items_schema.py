@@ -47,6 +47,7 @@ class CustomerItemCreate(CustomerItemBase):
 class CustomerItemUpdate(BaseSchema):
     """Schema for updating a customer item mapping."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     customer_part_no: str | None = Field(None, max_length=100, description="得意先品番")
     supplier_item_id: int | None = Field(
         None,
@@ -95,6 +96,7 @@ class CustomerItemResponse(BaseSchema):
     created_at: datetime
     updated_at: datetime
     valid_to: date
+    version: int
 
     class Config:
         """Pydantic config."""

@@ -149,23 +149,25 @@ def update_warehouse(
 def delete_warehouse(
     warehouse_code: str,
     end_date: date | None = Query(None, description="End date for soft delete"),
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
 ):
     """Soft delete warehouse."""
     service = WarehouseService(db)
-    service.delete_by_code(warehouse_code, end_date=end_date)
+    service.delete_by_code(warehouse_code, end_date=end_date, expected_version=version)
     return None
 
 
 @router.delete("/{warehouse_code}/permanent", status_code=204)
 def permanent_delete_warehouse(
     warehouse_code: str,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
     """Permanently delete warehouse (admin only)."""
     service = WarehouseService(db)
-    service.hard_delete_by_code(warehouse_code)
+    service.hard_delete_by_code(warehouse_code, expected_version=version)
     return None
 
 

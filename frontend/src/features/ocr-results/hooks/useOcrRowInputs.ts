@@ -92,6 +92,22 @@ export function useOcrRowInputs(viewMode: "current" | "completed", dataItems: Oc
     };
   }, [saveTimersRef]);
 
+  useEffect(() => {
+    if (viewMode === "completed") return;
+    setRowInputs((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const row of dataItems) {
+        const existing = prev[row.id];
+        if (existing && existing.version !== row.manual_version) {
+          next[row.id] = { ...existing, version: row.manual_version ?? 0 };
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [dataItems, viewMode]);
+
   return {
     rowInputs,
     getInputs,

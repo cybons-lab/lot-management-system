@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 import { toast } from "sonner";
 
 import { makersApi, type MakerCreateRequest, type MakerUpdateRequest } from "../api";
@@ -45,6 +46,8 @@ export const useCreateMaker = () => {
 
 export const useUpdateMaker = () => {
   const queryClient = useQueryClient();
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: MakerUpdateRequest }) =>
@@ -55,6 +58,11 @@ export const useUpdateMaker = () => {
       toast.success("メーカーを更新しました");
     },
     onError: (error: Error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: makerKeys.lists() });
+        return;
+      }
       const message = error.message || "メーカーの更新に失敗しました";
       toast.error(message);
     },
@@ -63,14 +71,22 @@ export const useUpdateMaker = () => {
 
 export const useDeleteMaker = () => {
   const queryClient = useQueryClient();
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
 
   return useMutation({
-    mutationFn: (id: number) => makersApi.deleteMaker(id),
+    mutationFn: ({ id, version }: { id: number; version: number }) =>
+      makersApi.deleteMaker(id, version),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: makerKeys.lists() });
       toast.success("メーカーを削除しました");
     },
     onError: (error: Error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: makerKeys.lists() });
+        return;
+      }
       const message = error.message || "メーカーの削除に失敗しました";
       toast.error(message);
     },

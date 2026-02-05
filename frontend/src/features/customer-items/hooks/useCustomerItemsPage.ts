@@ -112,9 +112,9 @@ export function useCustomerItemsPage() {
 
   // Soft Delete Handler (ID-based)
   const handleSoftDelete = useCallback(
-    (id: number, endDate?: string) => {
+    (id: number, version: number, endDate?: string) => {
       softDelete(
-        { id, endDate },
+        { id, version, endDate },
         {
           onSuccess: () => toast.success("得意先品番マッピングを削除しました"),
           onError: () => toast.error("削除に失敗しました"),
@@ -126,9 +126,9 @@ export function useCustomerItemsPage() {
 
   // Permanent Delete Handler (ID-based)
   const handlePermanentDelete = useCallback(
-    (id: number) => {
+    (id: number, version: number) => {
       permanentDeleteAsync(
-        { id },
+        { id, version },
         {
           onSuccess: () => toast.success("完全に削除しました"),
           onError: () => toast.error("完全削除に失敗しました"),
@@ -140,13 +140,13 @@ export function useCustomerItemsPage() {
 
   // Bulk Permanent Delete Handler (ID-based)
   const handleBulkPermanentDelete = useCallback(
-    async (items: { id: number }[]) => {
+    async (items: { id: number; version: number }[]) => {
       if (items.length === 0) return;
 
       setIsBulkDeleting(true);
       try {
         const results = await Promise.allSettled(
-          items.map((item) => permanentDeleteAsync({ id: item.id })),
+          items.map((item) => permanentDeleteAsync({ id: item.id, version: item.version })),
         );
 
         const succeeded = results.filter((r) => r.status === "fulfilled").length;
@@ -168,13 +168,13 @@ export function useCustomerItemsPage() {
 
   // Bulk Soft Delete Handler (ID-based)
   const handleBulkSoftDelete = useCallback(
-    async (items: { id: number }[], endDate?: string) => {
+    async (items: { id: number; version: number }[], endDate?: string) => {
       if (items.length === 0) return;
 
       setIsBulkDeleting(true);
       try {
         const results = await Promise.allSettled(
-          items.map((item) => softDeleteAsync({ id: item.id, endDate })),
+          items.map((item) => softDeleteAsync({ id: item.id, version: item.version, endDate })),
         );
 
         const succeeded = results.filter((r) => r.status === "fulfilled").length;

@@ -18,12 +18,14 @@ interface ResultData {
   longData: Record<string, unknown>[];
   transformErrors: SmartReadValidationError[];
   filename: string | null;
+  dataVersion: number | null;
   isInitialLoading: boolean;
   loadError: string | null;
   setWideData: (data: Record<string, unknown>[]) => void;
   setLongData: (data: Record<string, unknown>[]) => void;
   setTransformErrors: (errors: SmartReadValidationError[]) => void;
   setFilename: (filename: string | null) => void;
+  setDataVersion: (version: number | null) => void;
 }
 
 interface LoadDataResult {
@@ -31,6 +33,7 @@ interface LoadDataResult {
   longData: Record<string, unknown>[];
   errors: SmartReadValidationError[];
   filename: string | null;
+  dataVersion: number | null;
   taskDate?: string;
   cacheId?: string;
   savedToDb?: boolean;
@@ -56,6 +59,7 @@ async function loadFromCache(configId: number, taskId: string): Promise<LoadData
         longData: cached.long_data,
         errors: cached.errors,
         filename: cached.filename,
+        dataVersion: cached.data_version ?? null,
         taskDate: cached.task_date,
         cacheId: cached.id,
         savedToDb: cached.saved_to_db,
@@ -79,9 +83,10 @@ async function saveCacheToDatabase(params: {
   longData: Record<string, unknown>[];
   filename: string | null;
   taskDate?: string;
+  dataVersion: number | null;
   cacheId: string;
 }) {
-  const { configId, taskId, wideData, longData, filename, taskDate, cacheId } = params;
+  const { configId, taskId, wideData, longData, filename, taskDate, dataVersion, cacheId } = params;
   const { exportCache } = await import("../db/export-cache");
   try {
     const dateToUse = taskDate || new Date().toISOString().split("T")[0];
@@ -89,6 +94,7 @@ async function saveCacheToDatabase(params: {
       config_id: configId,
       task_id: taskId,
       task_date: dateToUse,
+      data_version: dataVersion ?? 1,
       wide_data: wideData,
       long_data: longData,
       filename,
@@ -115,6 +121,7 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
   const [longData, setLongData] = useState<Record<string, unknown>[]>([]);
   const [transformErrors, setTransformErrors] = useState<SmartReadValidationError[]>([]);
   const [filename, setFilename] = useState<string | null>(null);
+  const [dataVersion, setDataVersion] = useState<number | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -123,6 +130,7 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
       try {
         setIsInitialLoading(true);
         setLoadError(null);
+        setDataVersion(null);
 
         // タスク選択時はキャッシュのみ表示、自動APIコールはしない
         const cached = await loadFromCache(configId, taskId);
@@ -131,6 +139,7 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
           setLongData(cached.longData);
           setTransformErrors(cached.errors);
           setFilename(cached.filename);
+          setDataVersion(cached.dataVersion);
           if (cached.cacheId && cached.savedToDb === false) {
             void saveCacheToDatabase({
               configId,
@@ -139,6 +148,7 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
               longData: cached.longData,
               filename: cached.filename,
               taskDate: cached.taskDate,
+              dataVersion: cached.dataVersion,
               cacheId: cached.cacheId,
             });
           }
@@ -166,11 +176,13 @@ export function useResultDataLoader({ configId, taskId }: UseResultDataLoaderPar
     longData,
     transformErrors,
     filename,
+    dataVersion,
     isInitialLoading,
     loadError,
     setWideData,
     setLongData,
     setTransformErrors,
     setFilename,
+    setDataVersion,
   };
 }

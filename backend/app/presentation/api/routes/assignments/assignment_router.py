@@ -1,6 +1,6 @@
 """Assignment management API routes."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -64,6 +64,7 @@ def get_all_assignments(
             user_display_name=a.user.display_name if a.user else None,
             supplier_code=a.supplier.supplier_code if a.supplier else None,
             supplier_name=a.supplier.supplier_name if a.supplier else None,
+            version=a.version,
         )
         for a in assignments
     ]
@@ -88,6 +89,7 @@ def get_user_suppliers(
             assigned_at=a.assigned_at,
             created_at=a.created_at,
             updated_at=a.updated_at,
+            version=a.version,
             supplier_code=a.supplier.supplier_code,
             supplier_name=a.supplier.supplier_name,
         )
@@ -114,6 +116,7 @@ def get_supplier_users(
             assigned_at=a.assigned_at,
             created_at=a.created_at,
             updated_at=a.updated_at,
+            version=a.version,
             username=a.user.username,
             user_display_name=a.user.display_name,
         )
@@ -138,6 +141,7 @@ def create_assignment(
             assigned_at=assignment.assigned_at,
             created_at=assignment.created_at,
             updated_at=assignment.updated_at,
+            version=assignment.version,
         )
     except Exception as e:
         from app.domain.order import OrderValidationError
@@ -163,6 +167,7 @@ def update_assignment(
             assigned_at=assignment.assigned_at,
             created_at=assignment.created_at,
             updated_at=assignment.updated_at,
+            version=assignment.version,
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
@@ -175,12 +180,13 @@ def update_assignment(
 @router.delete("/{assignment_id}")
 def delete_assignment(
     assignment_id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
 ) -> dict:
     """担当割り当てを削除."""
     service = UserSupplierAssignmentService(db)
     try:
-        service.delete_assignment(assignment_id)
+        service.delete_assignment(assignment_id, expected_version=version)
         return {"message": "Assignment deleted successfully"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e

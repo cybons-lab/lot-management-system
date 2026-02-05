@@ -202,6 +202,9 @@ class Warehouse(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
+    )
 
     __table_args__ = (
         UniqueConstraint("warehouse_code", name="uq_warehouses_warehouse_code"),
@@ -249,6 +252,9 @@ class Supplier(SoftDeleteMixin, Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
     )
 
     __table_args__ = (
@@ -304,6 +310,9 @@ class Customer(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
+    )
 
     __table_args__ = (
         UniqueConstraint("customer_code", name="uq_customers_customer_code"),
@@ -358,6 +367,9 @@ class DeliveryPlace(SoftDeleteMixin, Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
     )
 
     __table_args__ = (
@@ -438,6 +450,9 @@ class CustomerItem(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
+    )
 
     __table_args__ = (
         # ビジネスキーの一意制約
@@ -513,6 +528,9 @@ class ProductMapping(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
+    )
 
     __table_args__ = (
         UniqueConstraint(
@@ -560,6 +578,9 @@ class ProductUomConversion(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
+    )
 
     __table_args__ = (
         UniqueConstraint(
@@ -596,6 +617,9 @@ class CustomerItemJikuMapping(Base):
     is_default: Mapped[bool | None] = mapped_column(Boolean, server_default="FALSE", nullable=True)
     created_at: Mapped[datetime | None] = mapped_column(
         DateTime, server_default=func.current_timestamp(), nullable=True
+    )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
     )
 
     __table_args__ = (
@@ -666,6 +690,9 @@ class CustomerItemDeliverySetting(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
+    )
 
     __table_args__ = (
         UniqueConstraint(
@@ -731,6 +758,9 @@ class WarehouseDeliveryRoute(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
     )
 
     __table_args__ = (

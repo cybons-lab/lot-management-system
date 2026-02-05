@@ -34,6 +34,7 @@ class CustomerItemDeliverySettingCreate(CustomerItemDeliverySettingBase):
 class CustomerItemDeliverySettingUpdate(BaseSchema):
     """Schema for updating a CustomerItemDeliverySetting."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     delivery_place_id: int | None = None
     jiku_code: str | None = None
     shipment_text: str | None = None
@@ -52,6 +53,7 @@ class CustomerItemDeliverySettingResponse(CustomerItemDeliverySettingBase):
     created_at: datetime
     updated_at: datetime
     delivery_place_name: str | None = None
+    version: int
 
     class Config:
         """Pydantic config."""

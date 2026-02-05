@@ -51,6 +51,6 @@ export async function updateAssignment(
 /**
  * 担当割り当てを削除
  */
-export async function deleteAssignment(assignmentId: number): Promise<void> {
-  return fetchApi.delete(`assignments/${assignmentId}`);
+export async function deleteAssignment(assignmentId: number, version: number): Promise<void> {
+  return fetchApi.delete(`assignments/${assignmentId}?version=${version}`);
 }

@@ -85,6 +85,7 @@ class MakerResponse(BaseModel):
     notes: str | None = None
     created_at: datetime
     updated_at: datetime
+    version: int
 
     model_config = {"from_attributes": True}
 
@@ -102,6 +103,7 @@ class MakerCreateRequest(BaseModel):
 class MakerUpdateRequest(BaseModel):
     """Maker update request schema."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     maker_name: str | None = Field(None, min_length=1, max_length=200)
     display_name: str | None = Field(None, max_length=200)
     short_name: str | None = Field(None, max_length=50)

@@ -39,6 +39,7 @@ def list_uom_conversions(
         ProductUomConversion.supplier_item_id,
         ProductUomConversion.external_unit,
         ProductUomConversion.factor,
+        ProductUomConversion.version,
         SupplierItem.maker_part_no,
         SupplierItem.display_name,
         ProductUomConversion.valid_to,
@@ -63,6 +64,7 @@ def list_uom_conversions(
             "product_code": r.maker_part_no,
             "product_name": r.display_name,
             "valid_to": r.valid_to,
+            "version": r.version,
         }
         for r in results
     ]
@@ -145,6 +147,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
         "product_code": product.maker_part_no,
         "product_name": product.display_name,
         "valid_to": new_conversion.valid_to,
+        "version": new_conversion.version,
     }
 
 
@@ -188,6 +191,7 @@ def update_uom_conversion(
 def delete_uom_conversion(
     conversion_id: int,
     end_date: date | None = Query(None),
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
 ):
     """Delete a UOM conversion by ID.
@@ -195,16 +199,18 @@ def delete_uom_conversion(
     Args:
         conversion_id: ID of the conversion to delete
         end_date: Optional end date for validity
+        version: Version for optimistic lock check
         db: Database session
     """
     service = UomConversionService(db)
-    service.delete_by_id(conversion_id, end_date)
+    service.delete_by_id(conversion_id, end_date, expected_version=version)
     return None
 
 
 @router.delete("/{conversion_id}/permanent", status_code=204)
 def permanent_delete_uom_conversion(
     conversion_id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
@@ -213,10 +219,11 @@ def permanent_delete_uom_conversion(
     Args:
         conversion_id: ID of the conversion to delete
         current_user: Authenticated admin user
+        version: Version for optimistic lock check
         db: Database session
     """
     service = UomConversionService(db)
-    service.permanent_delete_by_id(conversion_id)
+    service.permanent_delete_by_id(conversion_id, expected_version=version)
     return None
 
 

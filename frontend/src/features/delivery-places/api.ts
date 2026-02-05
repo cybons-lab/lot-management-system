@@ -36,17 +36,23 @@ export async function updateDeliveryPlace(
   return http.put<DeliveryPlace>(`${BASE_PATH}/${id}`, data);
 }
 
-export async function deleteDeliveryPlace(id: number): Promise<void> {
-  return http.deleteVoid(`${BASE_PATH}/${id}`);
+export async function deleteDeliveryPlace(id: number, version: number): Promise<void> {
+  return http.deleteVoid(`${BASE_PATH}/${id}?version=${version}`);
 }
 
-export async function softDeleteDeliveryPlace(id: number, endDate?: string): Promise<void> {
-  const query = endDate ? `?end_date=${endDate}` : "";
-  return http.deleteVoid(`${BASE_PATH}/${id}${query}`);
+export async function softDeleteDeliveryPlace(
+  id: number,
+  version: number,
+  endDate?: string,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.set("version", String(version));
+  if (endDate) params.set("end_date", endDate);
+  return http.deleteVoid(`${BASE_PATH}/${id}?${params.toString()}`);
 }
 
-export async function permanentDeleteDeliveryPlace(id: number): Promise<void> {
-  return http.deleteVoid(`${BASE_PATH}/${id}/permanent`);
+export async function permanentDeleteDeliveryPlace(id: number, version: number): Promise<void> {
+  return http.deleteVoid(`${BASE_PATH}/${id}/permanent?version=${version}`);
 }
 
 export async function restoreDeliveryPlace(id: number): Promise<void> {

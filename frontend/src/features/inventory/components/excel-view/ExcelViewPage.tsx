@@ -362,7 +362,7 @@ export function ExcelViewPage() {
 
   // Phase 9: Page notes save handler
   const handlePageNotesBlur = useCallback(async () => {
-    if (!data?.deliverySettingId) {
+    if (!data?.deliverySettingId || data?.deliverySettingVersion == null) {
       toast.error("納入先設定IDが見つかりません");
       return;
     }
@@ -375,6 +375,7 @@ export function ExcelViewPage() {
     try {
       await updateDeliverySetting(data.deliverySettingId, {
         notes: localPageNotes || null,
+        version: data.deliverySettingVersion,
       });
       toast.success("ページメモを保存しました");
       // Invalidate queries to reflect the change
@@ -382,7 +383,13 @@ export function ExcelViewPage() {
     } catch {
       toast.error("ページメモの保存に失敗しました");
     }
-  }, [data?.deliverySettingId, data?.pageNotes, localPageNotes, queryClient]);
+  }, [
+    data?.deliverySettingId,
+    data?.deliverySettingVersion,
+    data?.pageNotes,
+    localPageNotes,
+    queryClient,
+  ]);
 
   // Phase 9.2: Cell-level comment handler
   const handleCommentChange = useCallback(

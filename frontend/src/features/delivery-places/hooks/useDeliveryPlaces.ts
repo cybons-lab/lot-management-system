@@ -2,6 +2,7 @@
  * Delivery Places Hooks
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 import { toast } from "sonner";
 
 import {
@@ -43,6 +44,14 @@ export function useCreateDeliveryPlace() {
 
 export function useUpdateDeliveryPlace() {
   const queryClient = useQueryClient();
+  const handleConflict = (error: unknown) => {
+    if (error instanceof HTTPError && error.response?.status === 409) {
+      toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      return true;
+    }
+    return false;
+  };
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: DeliveryPlaceUpdate }) =>
@@ -51,42 +60,80 @@ export function useUpdateDeliveryPlace() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast.success("納入先を更新しました");
     },
+    onError: (error) => {
+      handleConflict(error);
+    },
   });
 }
 
 export function useDeleteDeliveryPlace() {
   const queryClient = useQueryClient();
+  const handleConflict = (error: unknown) => {
+    if (error instanceof HTTPError && error.response?.status === 409) {
+      toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      return true;
+    }
+    return false;
+  };
 
   return useMutation({
-    mutationFn: (id: number) => deleteDeliveryPlace(id),
+    mutationFn: ({ id, version }: { id: number; version: number }) =>
+      deleteDeliveryPlace(id, version),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast.success("納入先を削除しました");
+    },
+    onError: (error) => {
+      handleConflict(error);
     },
   });
 }
 
 export function useSoftDeleteDeliveryPlace() {
   const queryClient = useQueryClient();
+  const handleConflict = (error: unknown) => {
+    if (error instanceof HTTPError && error.response?.status === 409) {
+      toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      return true;
+    }
+    return false;
+  };
 
   return useMutation({
-    mutationFn: ({ id, endDate }: { id: number; endDate?: string }) =>
-      softDeleteDeliveryPlace(id, endDate),
+    mutationFn: ({ id, version, endDate }: { id: number; version: number; endDate?: string }) =>
+      softDeleteDeliveryPlace(id, version, endDate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast.success("納入先を無効化しました");
+    },
+    onError: (error) => {
+      handleConflict(error);
     },
   });
 }
 
 export function usePermanentDeleteDeliveryPlace() {
   const queryClient = useQueryClient();
+  const handleConflict = (error: unknown) => {
+    if (error instanceof HTTPError && error.response?.status === 409) {
+      toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      return true;
+    }
+    return false;
+  };
 
   return useMutation({
-    mutationFn: (id: number) => permanentDeleteDeliveryPlace(id),
+    mutationFn: ({ id, version }: { id: number; version: number }) =>
+      permanentDeleteDeliveryPlace(id, version),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast.success("納入先を完全に削除しました");
+    },
+    onError: (error) => {
+      handleConflict(error);
     },
   });
 }

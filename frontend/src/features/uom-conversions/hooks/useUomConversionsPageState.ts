@@ -158,7 +158,11 @@ export function useUomConversionsPageState() {
     (endDate: string | null) => {
       if (!dialogState.deletingItem) return;
       softDeleteMutation.mutate(
-        { id: dialogState.deletingItem.conversion_id, endDate: endDate || undefined },
+        {
+          id: dialogState.deletingItem.conversion_id,
+          version: dialogState.deletingItem.version,
+          endDate: endDate || undefined,
+        },
         { onSuccess: closeDeleteDialog },
       );
     },
@@ -167,9 +171,12 @@ export function useUomConversionsPageState() {
 
   const handlePermanentDelete = useCallback(() => {
     if (!dialogState.deletingItem) return;
-    permanentDeleteMutation.mutate(dialogState.deletingItem.conversion_id, {
-      onSuccess: closeDeleteDialog,
-    });
+    permanentDeleteMutation.mutate(
+      { id: dialogState.deletingItem.conversion_id, version: dialogState.deletingItem.version },
+      {
+        onSuccess: closeDeleteDialog,
+      },
+    );
   }, [dialogState.deletingItem, permanentDeleteMutation, closeDeleteDialog]);
 
   const handleRestore = useCallback(() => {

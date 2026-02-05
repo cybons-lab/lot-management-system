@@ -10,6 +10,7 @@ export type MakerCreateRequest =
   paths["/api/makers"]["post"]["requestBody"]["content"]["application/json"];
 export type MakerUpdateRequest =
   paths["/api/makers/{maker_id}"]["put"]["requestBody"]["content"]["application/json"];
+export type MakerUpdateInput = Omit<MakerUpdateRequest, "version">;
 
 export const makersApi = {
   getMakers: async (params?: { limit?: number; offset?: number }): Promise<Maker[]> => {
@@ -28,7 +29,7 @@ export const makersApi = {
     return apiClient.put(`makers/${id}`, { json: data }).json();
   },
 
-  deleteMaker: async (id: number): Promise<void> => {
-    await apiClient.delete(`makers/${id}`);
+  deleteMaker: async (id: number, version: number): Promise<void> => {
+    await apiClient.delete(`makers/${id}?version=${version}`);
   },
 };

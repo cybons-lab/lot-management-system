@@ -11,7 +11,7 @@ import { openDB, type IDBPDatabase } from "idb";
 import { logger } from "../utils/logger";
 
 const DB_NAME = "smartread-export-cache";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = "exports";
 
 export interface CachedExport {
@@ -29,6 +29,7 @@ export interface CachedExport {
   }>;
   filename: string | null;
   task_date?: string;
+  data_version?: number;
   cached_at: number; // timestamp
   saved_to_db: boolean;
 }
@@ -55,6 +56,18 @@ class ExportCacheService {
               const value = cursor.value as CachedExport;
               if (value.saved_to_db === undefined) {
                 value.saved_to_db = false;
+                cursor.update(value);
+              }
+              return cursor.continue().then(updateCursor);
+            });
+          }
+          if (oldVersion < 3) {
+            const store = transaction.objectStore(STORE_NAME);
+            store.openCursor().then(function updateCursor(cursor: any): any {
+              if (!cursor) return;
+              const value = cursor.value as CachedExport;
+              if (value.data_version === undefined) {
+                value.data_version = 1;
                 cursor.update(value);
               }
               return cursor.continue().then(updateCursor);
@@ -135,6 +148,7 @@ class ExportCacheService {
     errors: Array<any>;
     filename: string | null;
     task_date?: string;
+    data_version?: number;
     saved_to_db?: boolean;
   }): Promise<void> {
     const {
@@ -146,6 +160,7 @@ class ExportCacheService {
       errors,
       filename,
       task_date,
+      data_version,
       saved_to_db = false,
     } = params;
 
@@ -163,6 +178,7 @@ class ExportCacheService {
         errors,
         filename,
         task_date,
+        data_version,
         cached_at: Date.now(),
         saved_to_db,
       };

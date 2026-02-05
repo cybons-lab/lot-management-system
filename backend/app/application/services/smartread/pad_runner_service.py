@@ -681,6 +681,11 @@ class SmartReadPadRunnerService:
 
         # SmartReadService の _save_wide_and_long_data を利用
         service = SmartReadService(self.session)
+        service.get_or_create_task(
+            config_id=config_id,
+            task_id=task_id,
+            task_date=date.today(),
+        )
         service._save_wide_and_long_data(
             config_id=config_id,
             task_id=task_id,
@@ -690,3 +695,4 @@ class SmartReadPadRunnerService:
             long_data=long_data,
             filename=f"pad_run_{run.run_id}",
         )
+        service.bump_data_version(task_id)

@@ -9,6 +9,7 @@ export const buildPayload = (input: RowInputState): OcrResultEditPayload => {
   };
 
   const payload: Partial<OcrResultEditPayload> = {
+    version: input.version,
     shipping_slip_text_edited: input.shippingSlipTextEdited,
     error_flags: input.errorFlags || {},
   };
@@ -56,6 +57,7 @@ export const buildPayload = (input: RowInputState): OcrResultEditPayload => {
  * 循環依存を避けるため、ocr-utils.ts で定義
  */
 export type RowInputState = {
+  version: number;
   lotNo1: string;
   quantity1: string;
   lotNo2: string;

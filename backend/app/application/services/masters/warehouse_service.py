@@ -5,6 +5,11 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    soft_delete_with_version,
+    update_with_version,
+)
 from app.infrastructure.persistence.models.masters_models import Warehouse
 from app.presentation.schemas.masters.masters_schema import (
     BulkUpsertResponse,
@@ -39,22 +44,47 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
         return warehouse
 
     def update_by_code(self, code: str, payload: WarehouseUpdate) -> Warehouse:
-        """Update warehouse by warehouse_code."""
-        warehouse = self.get_by_code(code)
-        assert warehouse is not None  # raise_404=True ensures this
-        return self.update(warehouse.id, payload)
-
-    def delete_by_code(self, code: str, *, end_date: date | None = None) -> None:
-        """Soft delete warehouse by warehouse_code."""
+        """Update warehouse by warehouse_code with optimistic lock."""
         warehouse = self.get_by_code(code)
         assert warehouse is not None
-        self.delete(warehouse.id, end_date=end_date)
+        update_data = payload.model_dump(exclude_unset=True, exclude={"version"})
+        updated = update_with_version(
+            self.db,
+            Warehouse,
+            filters=[Warehouse.id == warehouse.id],
+            update_values=update_data,
+            expected_version=payload.version,
+            not_found_detail="倉庫が見つかりません",
+        )
+        return updated
 
-    def hard_delete_by_code(self, code: str) -> None:
-        """Permanently delete warehouse by warehouse_code."""
+    def delete_by_code(
+        self, code: str, *, end_date: date | None = None, expected_version: int
+    ) -> None:
+        """Soft delete warehouse by warehouse_code with optimistic lock."""
         warehouse = self.get_by_code(code)
         assert warehouse is not None
-        self.hard_delete(warehouse.id)
+        soft_delete_with_version(
+            self.db,
+            Warehouse,
+            filters=[Warehouse.id == warehouse.id],
+            expected_version=expected_version,
+            end_date=end_date,
+            not_found_detail="倉庫が見つかりません",
+        )
+
+    def hard_delete_by_code(self, code: str, *, expected_version: int) -> None:
+        """Permanently delete warehouse by warehouse_code with optimistic lock."""
+        warehouse = self.get_by_code(code)
+        assert warehouse is not None
+        hard_delete_with_version(
+            self.db,
+            Warehouse,
+            filters=[Warehouse.id == warehouse.id],
+            expected_version=expected_version,
+            not_found_detail="倉庫が見つかりません",
+            conflict_detail="この倉庫は他のデータから参照されているため削除できません",
+        )
 
     def restore_by_code(self, code: str) -> Warehouse:
         """Restore a soft-deleted warehouse by warehouse_code."""

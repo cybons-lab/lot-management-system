@@ -32,6 +32,7 @@ const getShippingDate = (r: OcrResultItem) =>
   formatDateForInput(r.manual_shipping_date || r.calculated_shipping_date);
 
 export const buildRowDefaults = (row: OcrResultItem): RowInputState => ({
+  version: row.manual_version ?? 0,
   lotNo1: getLot1(row),
   quantity1: row.manual_quantity_1 || orEmpty(row.quantity_1),
   lotNo2: row.manual_lot_no_2 || orEmpty(row.lot_no_2),

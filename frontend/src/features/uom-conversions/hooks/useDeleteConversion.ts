@@ -15,15 +15,18 @@ export function useDeleteConversion() {
 
   const handleDelete = () => {
     if (!deleteTarget) return;
-    deleteConversion(deleteTarget.conversion_id, {
-      onSuccess: () => {
-        toast.success("単位換算を削除しました");
-        setDeleteTarget(null);
+    deleteConversion(
+      { id: deleteTarget.conversion_id, version: deleteTarget.version },
+      {
+        onSuccess: () => {
+          toast.success("単位換算を削除しました");
+          setDeleteTarget(null);
+        },
+        onError: () => {
+          toast.error("削除に失敗しました");
+        },
       },
-      onError: () => {
-        toast.error("削除に失敗しました");
-      },
-    });
+    );
   };
 
   return {

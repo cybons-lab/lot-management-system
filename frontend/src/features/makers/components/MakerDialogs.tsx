@@ -1,4 +1,4 @@
-import { type Maker, type MakerCreateRequest, type MakerUpdateRequest } from "../api";
+import { type Maker, type MakerCreateRequest, type MakerUpdateInput } from "../api";
 
 import { MakerForm } from "./MakerForm";
 
@@ -13,7 +13,7 @@ interface MakerDialogsProps {
   deletingMaker: Maker | null;
   setDeletingMaker: (maker: Maker | null) => void;
   onCreate: (data: MakerCreateRequest) => void;
-  onUpdate: (data: MakerUpdateRequest) => void;
+  onUpdate: (data: MakerUpdateInput) => void;
   onDelete: () => void;
   isCreatePending: boolean;
   isUpdatePending: boolean;

@@ -214,7 +214,7 @@ def test_permanent_delete_requires_admin(
     if get_response.status_code == 200:
         current = get_response.json()
         path = f"{path}?version={current['version']}"
-    
+
     response = client.delete(path, headers=normal_user_token_headers)
 
     assert response.status_code == 403
@@ -235,7 +235,7 @@ def test_permanent_delete_allows_admin(
     if get_response.status_code == 200:
         current = get_response.json()
         path = f"{path}?version={current['version']}"
-    
+
     response = client.delete(path, headers=superuser_token_headers)
 
     assert response.status_code == 204

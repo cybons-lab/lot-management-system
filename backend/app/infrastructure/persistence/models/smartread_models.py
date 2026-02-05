@@ -87,6 +87,9 @@ class SmartReadTask(Base):
     state: Mapped[str | None] = mapped_column(String(50), nullable=True)
     synced_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     skip_today: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    data_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, server_default=text("1")
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
@@ -120,6 +123,9 @@ class SmartReadWideData(Base):
     row_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[dict] = mapped_column(JSONB, nullable=False)
     row_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, server_default=text("1")
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
@@ -189,6 +195,9 @@ class SmartReadLongData(Base):
     )
     sap_order_no: Mapped[str | None] = mapped_column(String(50), nullable=True)
     verification_result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, server_default=text("1")
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
@@ -399,6 +408,9 @@ class OcrResultEdit(Base):
     # バリデーションエラーフラグ: {"master_not_found": true, ...}
     error_flags: Mapped[dict] = mapped_column(
         JSONB, nullable=False, default=dict, server_default=text("'{}'")
+    )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, server_default=text("1")
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False

@@ -42,10 +42,13 @@ export function SupplierAssignmentEditDialog({
   onOpenChange,
 }: SupplierAssignmentEditDialogProps) {
   const { deleteAssignment, isDeleting } = useAssignmentMutations();
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: number;
+    version: number;
+  } | null>(null);
 
   const handleDelete = async () => {
-    if (deleteTarget === null) return;
+    if (!deleteTarget) return;
     try {
       await deleteAssignment(deleteTarget);
       setDeleteTarget(null);
@@ -85,7 +88,9 @@ export function SupplierAssignmentEditDialog({
                       size="sm"
                       variant="ghost"
                       className="text-red-500 hover:bg-red-50 hover:text-red-600"
-                      onClick={() => setDeleteTarget(assignment.id)}
+                      onClick={() =>
+                        setDeleteTarget({ id: assignment.id, version: assignment.version })
+                      }
                       disabled={isPending}
                     >
                       <Trash2 className="h-4 w-4" />

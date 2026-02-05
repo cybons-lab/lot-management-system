@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 
-import { type Maker, type MakerCreateRequest, type MakerUpdateRequest } from "../api";
+import { type Maker, type MakerCreateRequest, type MakerUpdateInput } from "../api";
 import { createMakerColumns } from "../components/MakerColumns";
 import { MakerDialogs } from "../components/MakerDialogs";
 import { MakerStats } from "../components/MakerStats";
@@ -60,10 +60,10 @@ export default function MakersPage() {
   );
 
   const handleUpdate = useCallback(
-    (data: MakerUpdateRequest) =>
+    (data: MakerUpdateInput) =>
       editingMaker &&
       updateMutation.mutate(
-        { id: editingMaker.id, data },
+        { id: editingMaker.id, data: { ...data, version: editingMaker.version } },
         { onSuccess: () => setEditingMaker(null) },
       ),
     [updateMutation, editingMaker],
@@ -72,7 +72,10 @@ export default function MakersPage() {
   const handleDelete = useCallback(
     () =>
       deletingMaker &&
-      deleteMutation.mutate(deletingMaker.id, { onSuccess: () => setDeletingMaker(null) }),
+      deleteMutation.mutate(
+        { id: deletingMaker.id, version: deletingMaker.version },
+        { onSuccess: () => setDeletingMaker(null) },
+      ),
     [deleteMutation, deletingMaker],
   );
 

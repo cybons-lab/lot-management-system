@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    update_with_version,
+)
 from app.infrastructure.persistence.models import CustomerItemDeliverySetting
 from app.infrastructure.persistence.repositories.customer_item_delivery_setting_repository import (
     CustomerItemDeliverySettingRepository,
@@ -128,20 +132,24 @@ class CustomerItemDeliverySettingService:
         if not setting:
             return None
 
-        update_data = data.model_dump(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(setting, key, value)
+        update_data = data.model_dump(exclude_unset=True, exclude={"version"})
+        updated = update_with_version(
+            self.db,
+            CustomerItemDeliverySetting,
+            filters=[CustomerItemDeliverySetting.id == setting_id],
+            update_values=update_data,
+            expected_version=data.version,
+            not_found_detail="Customer item delivery setting not found",
+        )
+        return CustomerItemDeliverySettingResponse.model_validate(updated)
 
-        self.db.commit()
-        self.db.refresh(setting)
-        return CustomerItemDeliverySettingResponse.model_validate(setting)
-
-    def delete(self, setting_id: int) -> bool:
-        """Delete a delivery setting."""
-        setting = self.repository.find_by_id(setting_id)
-        if not setting:
-            return False
-
-        self.repository.delete(setting)
-        self.db.commit()
+    def delete(self, setting_id: int, expected_version: int) -> bool:
+        """Delete a delivery setting with optimistic lock."""
+        hard_delete_with_version(
+            self.db,
+            CustomerItemDeliverySetting,
+            filters=[CustomerItemDeliverySetting.id == setting_id],
+            expected_version=expected_version,
+            not_found_detail="Customer item delivery setting not found",
+        )
         return True

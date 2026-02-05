@@ -5,6 +5,7 @@
  * Updated: customer_item_id ベースに移行
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 import { toast } from "sonner";
 
 import type {
@@ -24,6 +25,8 @@ const QUERY_KEY = "customer-item-delivery-settings";
 export function useDeliverySettings(customerItemId: number) {
   const queryClient = useQueryClient();
   const queryKey = [QUERY_KEY, customerItemId];
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
 
   const {
     data: settings = [],
@@ -55,18 +58,29 @@ export function useDeliverySettings(customerItemId: number) {
       queryClient.invalidateQueries({ queryKey });
       toast.success("納入先別設定を更新しました");
     },
-    onError: () => {
+    onError: (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey });
+        return;
+      }
       toast.error("納入先別設定の更新に失敗しました");
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteDeliverySetting(id),
+    mutationFn: ({ id, version }: { id: number; version: number }) =>
+      deleteDeliverySetting(id, version),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
       toast.success("納入先別設定を削除しました");
     },
-    onError: () => {
+    onError: (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey });
+        return;
+      }
       toast.error("納入先別設定の削除に失敗しました");
     },
   });

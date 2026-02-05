@@ -124,7 +124,7 @@ def test_update_warehouse_success(db: Session, client: TestClient):
     # Get current version
     get_response = client.get("/api/masters/warehouses/UPD-001")
     current = get_response.json()
-    
+
     update_data = {"warehouse_name": "Updated Name", "version": current["version"]}
     response = client.put("/api/masters/warehouses/UPD-001", json=update_data)
     assert response.status_code == 200
@@ -152,7 +152,7 @@ def test_update_warehouse_code_change_success(db: Session, client: TestClient):
     # Get current version
     get_response = client.get("/api/masters/warehouses/OLD-WH-CODE")
     current = get_response.json()
-    
+
     update_data = {
         "warehouse_code": "NEW-WH-CODE",
         "warehouse_name": "Updated Warehouse",
@@ -192,7 +192,7 @@ def test_update_warehouse_code_change_duplicate_returns_409(db: Session, client:
     # Get current version
     get_response = client.get("/api/masters/warehouses/TO-CHANGE-WH")
     current = get_response.json()
-    
+
     update_data = {
         "warehouse_code": "EXISTING-WH",  # Duplicate
         "version": current["version"],
@@ -219,7 +219,7 @@ def test_delete_warehouse_success(db: Session, client: TestClient):
     # Get current version
     get_response = client.get("/api/masters/warehouses/DEL-001")
     current = get_response.json()
-    
+
     response = client.delete(f"/api/masters/warehouses/DEL-001?version={current['version']}")
     assert response.status_code == 204
 

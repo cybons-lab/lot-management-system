@@ -11,7 +11,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    soft_delete_with_version,
+    update_with_version,
+)
 from app.core.database import get_db
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.masters_models import Supplier
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
@@ -67,6 +73,7 @@ def list_supplier_items(
         SupplierItem.capacity,
         SupplierItem.warranty_period_days,
         SupplierItem.notes,
+        SupplierItem.version,
         Supplier.supplier_code,
         Supplier.supplier_name,
         SupplierItem.valid_to,
@@ -97,6 +104,7 @@ def list_supplier_items(
             "capacity": r.capacity,
             "warranty_period_days": r.warranty_period_days,
             "notes": r.notes,
+            "version": r.version,
             "supplier_code": r.supplier_code,
             "supplier_name": r.supplier_name,
             "valid_to": r.valid_to,
@@ -204,6 +212,7 @@ def get_supplier_item(id: int, db: Session = Depends(get_db)):
         "created_at": si.created_at,
         "updated_at": si.updated_at,
         "valid_to": si.valid_to,
+        "version": si.version,
     }
 
 
@@ -309,6 +318,8 @@ def update_supplier_item(
         raise HTTPException(status_code=404, detail="Supplier item not found")
 
     update_data = data.model_dump(exclude_unset=True)
+    update_data.pop("version", None)
+    update_data["updated_at"] = utcnow()
 
     # maker_part_no 変更時のチェック
     if "maker_part_no" in update_data and update_data["maker_part_no"] != si.maker_part_no:
@@ -340,32 +351,36 @@ def update_supplier_item(
                 detail=f"メーカー品番 '{update_data['maker_part_no']}' は既に存在します。",
             )
 
-    for field, value in update_data.items():
-        setattr(si, field, value)
-
-    db.commit()
-    db.refresh(si)
+    updated = update_with_version(
+        db,
+        SupplierItem,
+        filters=[SupplierItem.id == id],
+        update_values=update_data,
+        expected_version=data.version,
+        not_found_detail="Supplier item not found",
+    )
 
     return {
-        "id": si.id,
-        "supplier_id": si.supplier_id,
-        "maker_part_no": si.maker_part_no,
-        "display_name": si.display_name,
-        "base_unit": si.base_unit,
-        "internal_unit": si.internal_unit,
-        "external_unit": si.external_unit,
-        "qty_per_internal_unit": si.qty_per_internal_unit,
-        "consumption_limit_days": si.consumption_limit_days,
-        "requires_lot_number": si.requires_lot_number,
-        "lead_time_days": si.lead_time_days,
-        "capacity": si.capacity,
-        "warranty_period_days": si.warranty_period_days,
-        "notes": si.notes,
-        "supplier_code": si.supplier.supplier_code,
-        "supplier_name": si.supplier.supplier_name,
-        "created_at": si.created_at,
-        "updated_at": si.updated_at,
-        "valid_to": si.valid_to,
+        "id": updated.id,
+        "supplier_id": updated.supplier_id,
+        "maker_part_no": updated.maker_part_no,
+        "display_name": updated.display_name,
+        "base_unit": updated.base_unit,
+        "internal_unit": updated.internal_unit,
+        "external_unit": updated.external_unit,
+        "qty_per_internal_unit": updated.qty_per_internal_unit,
+        "consumption_limit_days": updated.consumption_limit_days,
+        "requires_lot_number": updated.requires_lot_number,
+        "lead_time_days": updated.lead_time_days,
+        "capacity": updated.capacity,
+        "warranty_period_days": updated.warranty_period_days,
+        "notes": updated.notes,
+        "supplier_code": updated.supplier.supplier_code,
+        "supplier_name": updated.supplier.supplier_name,
+        "created_at": updated.created_at,
+        "updated_at": updated.updated_at,
+        "valid_to": updated.valid_to,
+        "version": updated.version,
     }
 
 
@@ -373,6 +388,7 @@ def update_supplier_item(
 def delete_supplier_item(
     id: int,
     end_date: date | None = Query(None),
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
 ):
     """仕入先品目を論理削除（無効化）.
@@ -380,6 +396,7 @@ def delete_supplier_item(
     Args:
         id: 仕入先品目ID
         end_date: 終了日（省略時は今日の日付）
+        version: Version for optimistic lock check
         db: データベースセッション
 
     Returns:
@@ -388,18 +405,21 @@ def delete_supplier_item(
     Raises:
         HTTPException: レコードが見つからない場合は404
     """
-    si = db.query(SupplierItem).filter(SupplierItem.id == id).first()
-    if not si:
-        raise HTTPException(status_code=404, detail="Supplier item not found")
-
-    si.soft_delete(end_date)
-    db.commit()
+    soft_delete_with_version(
+        db,
+        SupplierItem,
+        filters=[SupplierItem.id == id],
+        expected_version=version,
+        end_date=end_date,
+        not_found_detail="Supplier item not found",
+    )
     return None
 
 
 @router.delete("/{id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
 def permanent_delete_supplier_item(
     id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
@@ -407,6 +427,7 @@ def permanent_delete_supplier_item(
 
     Args:
         id: 仕入先品目ID
+        version: Version for optimistic lock check
         current_user: 認証済み管理者ユーザー
         db: データベースセッション
 
@@ -416,12 +437,13 @@ def permanent_delete_supplier_item(
     Raises:
         HTTPException: レコードが見つからない場合は404
     """
-    si = db.query(SupplierItem).filter(SupplierItem.id == id).first()
-    if not si:
-        raise HTTPException(status_code=404, detail="Supplier item not found")
-
-    db.delete(si)
-    db.commit()
+    hard_delete_with_version(
+        db,
+        SupplierItem,
+        filters=[SupplierItem.id == id],
+        expected_version=version,
+        not_found_detail="Supplier item not found",
+    )
     return None
 
 

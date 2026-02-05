@@ -243,14 +243,21 @@ export function SuppliersListPage() {
   const handleSoftDelete = (endDate: string | null) => {
     if (!deletingItem) return;
     softDelete(
-      { id: deletingItem.supplier_code, endDate: endDate || undefined },
+      {
+        id: deletingItem.supplier_code,
+        version: deletingItem.version,
+        endDate: endDate || undefined,
+      },
       { onSuccess: close },
     );
   };
 
   const handlePermanentDelete = () => {
     if (!deletingItem) return;
-    permanentDelete(deletingItem.supplier_code, { onSuccess: close });
+    permanentDelete(
+      { id: deletingItem.supplier_code, version: deletingItem.version },
+      { onSuccess: close },
+    );
   };
 
   const handleRestore = () => {
@@ -263,8 +270,17 @@ export function SuppliersListPage() {
     if (selectedIds.length === 0) return;
     setIsBulkDeleting(true);
     try {
+      const versionMap = new Map(
+        suppliers.map((supplier) => [supplier.supplier_code, supplier.version]),
+      );
       const results = await Promise.allSettled(
-        selectedIds.map((id) => permanentDeleteAsync(id as string)),
+        selectedIds.map((id) => {
+          const version = versionMap.get(id as string);
+          if (version == null) {
+            return Promise.reject(new Error("version not found"));
+          }
+          return permanentDeleteAsync({ id: id as string, version });
+        }),
       );
       const succeeded = results.filter((r) => r.status === "fulfilled").length;
       const failed = results.filter((r) => r.status === "rejected").length;
@@ -287,10 +303,21 @@ export function SuppliersListPage() {
     if (selectedIds.length === 0) return;
     setIsBulkDeleting(true);
     try {
+      const versionMap = new Map(
+        suppliers.map((supplier) => [supplier.supplier_code, supplier.version]),
+      );
       const results = await Promise.allSettled(
-        selectedIds.map((id) =>
-          softDeleteAsync({ id: id as string, endDate: endDate ?? undefined }),
-        ),
+        selectedIds.map((id) => {
+          const version = versionMap.get(id as string);
+          if (version == null) {
+            return Promise.reject(new Error("version not found"));
+          }
+          return softDeleteAsync({
+            id: id as string,
+            version,
+            endDate: endDate ?? undefined,
+          });
+        }),
       );
       const succeeded = results.filter((r) => r.status === "fulfilled").length;
       const failed = results.filter((r) => r.status === "rejected").length;

@@ -30,6 +30,7 @@ class UomConversionCreate(UomConversionBase):
 class UomConversionUpdate(BaseSchema):
     """Schema for updating a UOM conversion."""
 
+    version: int = Field(..., description="楽観的ロック用バージョン")
     factor: Decimal | None = Field(None, description="換算係数")
 
 
@@ -40,6 +41,7 @@ class UomConversionResponse(UomConversionBase):
     created_at: datetime
     updated_at: datetime
     valid_to: date
+    version: int
 
     class Config:
         """Pydantic config."""

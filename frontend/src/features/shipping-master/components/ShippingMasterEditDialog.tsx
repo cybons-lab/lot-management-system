@@ -4,6 +4,7 @@
 
 /* eslint-disable max-lines-per-function, complexity, max-lines */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -187,9 +188,10 @@ export function ShippingMasterEditDialog({
       queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
       onOpenChange(false);
     },
-    onError: (error: Error & { response?: { status?: number } }) => {
+    onError: (error: Error) => {
+      const isConflict = error instanceof HTTPError && error.response?.status === 409;
       // 409 Conflict エラー（同時編集競合）を特別に処理
-      if (error?.response?.status === 409 || error?.message?.includes("他のユーザーによって更新")) {
+      if (isConflict || error?.message?.includes("他のユーザーによって更新")) {
         toast.error(
           "他のユーザーがこのデータを更新しました。ページを再読み込みして最新のデータを取得してください。",
           {
@@ -225,7 +227,7 @@ export function ShippingMasterEditDialog({
         transport_lt_days: data.transport_lt_days ? parseInt(data.transport_lt_days, 10) : null,
         has_order: data.has_order,
         remarks: data.remarks || null,
-        expected_updated_at: item.updated_at, // 楽観的ロック用
+        version: item.version,
       };
       updateMutation.mutate({ id: item.id, data: updateData });
     } else {

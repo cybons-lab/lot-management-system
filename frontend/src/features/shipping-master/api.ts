@@ -69,8 +69,8 @@ export const shippingMasterApi = {
   /**
    * 出荷用マスタ削除
    */
-  delete: async (id: number): Promise<void> => {
-    await httpClient.delete(`shipping-masters/${id}`);
+  delete: async (id: number, version: number): Promise<void> => {
+    await httpClient.delete(`shipping-masters/${id}?version=${version}`);
   },
 
   /**

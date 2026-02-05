@@ -6,6 +6,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.application.services.common.optimistic_lock import (
+    soft_delete_with_version,
+    update_with_version,
+)
 from app.application.services.material_order_forecast_service import (
     MaterialOrderForecastService,
 )
@@ -194,43 +198,36 @@ def update_maker(
     _current_user=Depends(get_current_user),
 ):
     """メーカーマスタ更新."""
-    maker = db.query(Maker).filter(Maker.id == maker_id).first()
-    if not maker:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="メーカーが見つかりません"
-        )
+    update_data = request.model_dump(exclude_unset=True, exclude={"version"})
+    updated = update_with_version(
+        db,
+        Maker,
+        filters=[Maker.id == maker_id],
+        update_values=update_data,
+        expected_version=request.version,
+        not_found_detail="メーカーが見つかりません",
+    )
 
-    if request.maker_name is not None:
-        maker.maker_name = request.maker_name
-    if request.display_name is not None:
-        maker.display_name = request.display_name
-    if request.short_name is not None:
-        maker.short_name = request.short_name
-    if request.notes is not None:
-        maker.notes = request.notes
-
-    db.commit()
-    db.refresh(maker)
-
-    logger.info(f"Maker updated: {maker.maker_code}")
-    return MakerResponse.model_validate(maker)
+    logger.info(f"Maker updated: {updated.maker_code}")
+    return MakerResponse.model_validate(updated)
 
 
 @maker_router.delete("/{maker_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_maker(
     maker_id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
     _current_user=Depends(get_current_user),
 ):
     """メーカーマスタ削除（論理削除）."""
-    maker = db.query(Maker).filter(Maker.id == maker_id).first()
-    if not maker:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="メーカーが見つかりません"
-        )
+    soft_delete_with_version(
+        db,
+        Maker,
+        filters=[Maker.id == maker_id],
+        expected_version=version,
+        end_date=None,
+        not_found_detail="メーカーが見つかりません",
+    )
 
-    maker.soft_delete()
-    db.commit()
-
-    logger.info(f"Maker soft-deleted: {maker.maker_code}")
+    logger.info(f"Maker soft-deleted: {maker_id}")
     return None

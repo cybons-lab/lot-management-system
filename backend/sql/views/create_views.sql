@@ -562,6 +562,7 @@ SELECT
     oe.delivery_quantity AS manual_delivery_quantity,
     oe.delivery_date AS manual_delivery_date,
     oe.updated_at AS manual_updated_at,
+    COALESCE(oe.version, 0) AS manual_version,
     -- 処理ステータス: pending/downloaded/sap_linked/completed
     COALESCE(oe.process_status, 'pending') AS process_status,
     -- バリデーションエラーフラグ（DB保存分）

@@ -10,6 +10,7 @@ import { http } from "@/shared/api/http-client";
 // Types
 export interface CustomerItemDeliverySetting {
   id: number;
+  version: number;
   customer_item_id: number;
   delivery_place_id: number | null;
   jiku_code: string | null;
@@ -47,6 +48,7 @@ export interface UpdateDeliverySettingRequest {
   notes?: string | null; // Phase 9: Page-level notes
   valid_from?: string | null;
   valid_to?: string | null;
+  version: number;
 }
 
 // API functions
@@ -73,6 +75,6 @@ export async function updateDeliverySetting(
   return http.put<CustomerItemDeliverySetting>(`${BASE_PATH}/${id}`, data);
 }
 
-export async function deleteDeliverySetting(id: number): Promise<void> {
-  return http.delete<void>(`${BASE_PATH}/${id}`);
+export async function deleteDeliverySetting(id: number, version: number): Promise<void> {
+  return http.delete<void>(`${BASE_PATH}/${id}?version=${version}`);
 }

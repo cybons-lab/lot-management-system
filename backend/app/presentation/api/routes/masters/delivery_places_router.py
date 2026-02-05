@@ -10,6 +10,11 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    soft_delete_with_version,
+    update_with_version,
+)
 from app.core.database import get_db
 from app.infrastructure.persistence.models import Customer, DeliveryPlace
 from app.infrastructure.persistence.models.auth_models import User
@@ -180,7 +185,7 @@ def update_delivery_place(
     if not place:
         raise HTTPException(status_code=404, detail="Delivery place not found")
 
-    update_data = data.model_dump(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True, exclude={"version"})
 
     # If updating customer_id, verify customer exists
     if "customer_id" in update_data and update_data["customer_id"]:
@@ -188,13 +193,16 @@ def update_delivery_place(
         if not customer:
             raise HTTPException(status_code=400, detail="Customer not found")
 
-    for field, value in update_data.items():
-        setattr(place, field, value)
-
     try:
-        db.commit()
-        db.refresh(place)
-        return place
+        updated = update_with_version(
+            db,
+            DeliveryPlace,
+            filters=[DeliveryPlace.id == delivery_place_id],
+            update_values=update_data,
+            expected_version=data.version,
+            not_found_detail="Delivery place not found",
+        )
+        return updated
     except Exception as e:
         db.rollback()
         # Basic check for unique constraint violation
@@ -207,6 +215,7 @@ def update_delivery_place(
 def delete_delivery_place(
     delivery_place_id: int,
     end_date: date | None = Query(None, description="Valid until date (defaults to yesterday)"),
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     db: Session = Depends(get_db),
 ):
     """納入先を論理削除（valid_toを設定して無効化）.
@@ -214,6 +223,7 @@ def delete_delivery_place(
     Args:
         delivery_place_id: 納入先ID
         end_date: 有効終了日（省略時は昨日）
+        version: Version for optimistic lock check
         db: データベースセッション
 
     Returns:
@@ -222,19 +232,21 @@ def delete_delivery_place(
     Raises:
         HTTPException: 納入先が見つからない場合は404
     """
-    place = db.query(DeliveryPlace).filter(DeliveryPlace.id == delivery_place_id).first()
-    if not place:
-        raise HTTPException(status_code=404, detail="Delivery place not found")
-
-    # Use SoftDeleteMixin method
-    place.soft_delete(end_date)
-    db.commit()
+    soft_delete_with_version(
+        db,
+        DeliveryPlace,
+        filters=[DeliveryPlace.id == delivery_place_id],
+        expected_version=version,
+        end_date=end_date,
+        not_found_detail="Delivery place not found",
+    )
     return None
 
 
 @router.delete("/{delivery_place_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
 def permanent_delete_delivery_place(
     delivery_place_id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
     current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
@@ -244,6 +256,7 @@ def permanent_delete_delivery_place(
 
     Args:
         delivery_place_id: 納入先ID
+        version: Version for optimistic lock check
         current_user: 認証済み管理者ユーザー
         db: データベースセッション
 
@@ -255,21 +268,14 @@ def permanent_delete_delivery_place(
         HTTPException: 他のデータから参照されている場合は409
 
     """
-    place = db.query(DeliveryPlace).filter(DeliveryPlace.id == delivery_place_id).first()
-    if not place:
-        raise HTTPException(status_code=404, detail="Delivery place not found")
-
-    # Check for references in forecast_current, customer_items, etc.
-    # This would fail on FK constraint if references exist
-    try:
-        db.delete(place)
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="この納入先は他のデータから参照されているため削除できません",
-        )
+    hard_delete_with_version(
+        db,
+        DeliveryPlace,
+        filters=[DeliveryPlace.id == delivery_place_id],
+        expected_version=version,
+        not_found_detail="Delivery place not found",
+        conflict_detail="この納入先は他のデータから参照されているため削除できません",
+    )
     return None
 
 

@@ -7,6 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 import { toast } from "sonner";
 
 import type {
@@ -95,6 +96,8 @@ export const useCreateCustomerItem = () => {
  */
 export const useUpdateCustomerItem = () => {
   const queryClient = useQueryClient();
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateCustomerItemRequest }) =>
@@ -104,6 +107,12 @@ export const useUpdateCustomerItem = () => {
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
       toast.success("得意先品番マッピングを更新しました");
     },
+    onError: (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
+      }
+    },
   });
 };
 
@@ -112,14 +121,22 @@ export const useUpdateCustomerItem = () => {
  */
 export const useDeleteCustomerItem = () => {
   const queryClient = useQueryClient();
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
 
   return useMutation({
-    mutationFn: ({ id, endDate }: { id: number; endDate?: string }) =>
-      deleteCustomerItem(id, endDate),
+    mutationFn: ({ id, version, endDate }: { id: number; version: number; endDate?: string }) =>
+      deleteCustomerItem(id, version, endDate),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
       toast.success("得意先品番マッピングを無効化しました");
+    },
+    onError: (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
+      }
     },
   });
 };
@@ -129,13 +146,22 @@ export const useDeleteCustomerItem = () => {
  */
 export const usePermanentDeleteCustomerItem = () => {
   const queryClient = useQueryClient();
+  const isConflictError = (error: unknown) =>
+    error instanceof HTTPError && error.response?.status === 409;
 
   return useMutation({
-    mutationFn: ({ id }: { id: number }) => permanentDeleteCustomerItem(id),
+    mutationFn: ({ id, version }: { id: number; version: number }) =>
+      permanentDeleteCustomerItem(id, version),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
       toast.success("得意先品番マッピングを削除しました");
+    },
+    onError: (error) => {
+      if (isConflictError(error)) {
+        toast.error("他のユーザーが更新しました。最新データを取得して再度お試しください。");
+        queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
+      }
     },
   });
 };

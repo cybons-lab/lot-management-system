@@ -48,7 +48,7 @@ export function SupplierDetailDialog({
 
   const handleUpdate = useCallback(
     (data: { supplier_code: string; supplier_name: string }) => {
-      if (!supplierCode) return;
+      if (!supplierCode || !supplier) return;
 
       // コード変更時は再取得を停止してからAPI呼び出し
       const isChangingCode = data.supplier_code !== supplierCode;
@@ -59,6 +59,7 @@ export function SupplierDetailDialog({
       const updateData: SupplierUpdate = {
         supplier_code: data.supplier_code,
         supplier_name: data.supplier_name,
+        version: supplier.version,
       };
       updateSupplier(
         { id: supplierCode, data: updateData },
@@ -78,12 +79,12 @@ export function SupplierDetailDialog({
         },
       );
     },
-    [supplierCode, updateSupplier, handleClose],
+    [supplier, supplierCode, updateSupplier, handleClose],
   );
 
   const handleConfirmDelete = useCallback(
     (endDate?: string | null) => {
-      if (!supplierCode) return;
+      if (!supplierCode || !supplier) return;
 
       const onSuccess = () => {
         setIsDeleteDialogOpen(false);
@@ -91,12 +92,15 @@ export function SupplierDetailDialog({
       };
 
       if (deleteType === "soft") {
-        softDelete({ id: supplierCode, endDate: endDate || undefined }, { onSuccess });
+        softDelete(
+          { id: supplierCode, version: supplier.version, endDate: endDate || undefined },
+          { onSuccess },
+        );
       } else {
-        permanentDelete(supplierCode, { onSuccess });
+        permanentDelete({ id: supplierCode, version: supplier.version }, { onSuccess });
       }
     },
-    [supplierCode, deleteType, softDelete, permanentDelete, handleClose],
+    [supplier, supplierCode, deleteType, softDelete, permanentDelete, handleClose],
   );
 
   if (!supplierCode && !open) return null;

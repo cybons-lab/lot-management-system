@@ -7,6 +7,11 @@ from typing import cast
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    soft_delete_with_version,
+    update_with_version,
+)
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.masters_models import ProductUomConversion
 from app.infrastructure.persistence.models.supplier_item_model import SupplierItem
@@ -70,57 +75,57 @@ class UomConversionService(
                 detail=f"UOM conversion with ID {conversion_id} not found",
             )
 
-        update_data = data.model_dump(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(conversion, key, value)
+        update_data = data.model_dump(exclude_unset=True, exclude={"version"})
+        update_data["updated_at"] = utcnow()
+        updated = update_with_version(
+            self.db,
+            ProductUomConversion,
+            filters=[ProductUomConversion.conversion_id == conversion_id],
+            update_values=update_data,
+            expected_version=data.version,
+            not_found_detail=f"UOM conversion with ID {conversion_id} not found",
+        )
+        return updated
 
-        conversion.updated_at = utcnow()
-        self.db.commit()
-        self.db.refresh(conversion)
-        return conversion
-
-    def delete_by_id(self, conversion_id: int, end_date: date | None = None) -> None:
+    def delete_by_id(
+        self, conversion_id: int, end_date: date | None, expected_version: int
+    ) -> None:
         """Soft delete UOM conversion by ID.
 
         Args:
             conversion_id: ID of the conversion to delete
             end_date: Optional end date for validity
+            expected_version: Expected version for optimistic lock check
 
         Raises:
             HTTPException: If conversion not found
         """
-        from fastapi import HTTPException, status
+        soft_delete_with_version(
+            self.db,
+            ProductUomConversion,
+            filters=[ProductUomConversion.conversion_id == conversion_id],
+            expected_version=expected_version,
+            end_date=end_date,
+            not_found_detail=f"UOM conversion with ID {conversion_id} not found",
+        )
 
-        conversion = self.get_by_id(conversion_id)
-        if not conversion:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"UOM conversion with ID {conversion_id} not found",
-            )
-
-        conversion.soft_delete(end_date)
-        self.db.commit()
-
-    def permanent_delete_by_id(self, conversion_id: int) -> None:
+    def permanent_delete_by_id(self, conversion_id: int, expected_version: int) -> None:
         """Permanently delete UOM conversion by ID.
 
         Args:
             conversion_id: ID of the conversion to delete
 
+            expected_version: Expected version for optimistic lock check
         Raises:
             HTTPException: If conversion not found
         """
-        from fastapi import HTTPException, status
-
-        conversion = self.get_by_id(conversion_id)
-        if not conversion:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"UOM conversion with ID {conversion_id} not found",
-            )
-
-        self.db.delete(conversion)
-        self.db.commit()
+        hard_delete_with_version(
+            self.db,
+            ProductUomConversion,
+            filters=[ProductUomConversion.conversion_id == conversion_id],
+            expected_version=expected_version,
+            not_found_detail=f"UOM conversion with ID {conversion_id} not found",
+        )
 
     def restore_by_id(self, conversion_id: int) -> ProductUomConversion:
         """Restore soft-deleted UOM conversion.

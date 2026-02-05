@@ -167,6 +167,9 @@ class SupplierItem(SoftDeleteMixin, Base):
         default=utcnow,
         onupdate=utcnow,
     )
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), comment="楽観的ロック用バージョン"
+    )
 
     __table_args__ = (
         # Business key: supplier_id + maker_part_no でユニーク

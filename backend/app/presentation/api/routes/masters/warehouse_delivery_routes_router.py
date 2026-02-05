@@ -7,6 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    update_with_version,
+)
 from app.core.database import get_db
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.masters_models import (
@@ -38,6 +42,7 @@ def _build_response(route: WarehouseDeliveryRoute) -> dict:
         "notes": route.notes,
         "created_at": route.created_at,
         "updated_at": route.updated_at,
+        "version": route.version,
         "warehouse_code": route.warehouse.warehouse_code if route.warehouse else None,
         "warehouse_name": route.warehouse.warehouse_name if route.warehouse else None,
         "delivery_place_code": (
@@ -267,7 +272,7 @@ def update_route(
     # exclude_unset=True: フィールドが送信されなかった場合は除外
     # さらに、NOT NULLカラム (transport_lead_time_days, is_active) に
     # null が明示的に送られた場合も除外し、500エラーを防止
-    update_data = data.model_dump(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True, exclude={"version"})
 
     # transport_lead_time_days と is_active は NOT NULL カラムなのでNoneをスキップ
     if update_data.get("transport_lead_time_days") is None:
@@ -275,31 +280,32 @@ def update_route(
     if update_data.get("is_active") is None:
         update_data.pop("is_active", None)
 
-    for field, value in update_data.items():
-        setattr(route, field, value)
+    update_data["updated_at"] = utcnow()
+    updated = update_with_version(
+        db,
+        WarehouseDeliveryRoute,
+        filters=[WarehouseDeliveryRoute.id == route_id],
+        update_values=update_data,
+        expected_version=data.version,
+        not_found_detail=f"Route with id {route_id} not found",
+    )
 
-    route.updated_at = utcnow()
-
-    db.commit()
-    db.refresh(route)
-
-    return _build_response(route)
+    return _build_response(updated)
 
 
 @router.delete("/{route_id}", status_code=204)
-def delete_route(route_id: int, db: Session = Depends(get_db)):
+def delete_route(
+    route_id: int,
+    version: int = Query(..., description="楽観的ロック用バージョン"),
+    db: Session = Depends(get_db),
+):
     """Delete warehouse delivery route."""
-    route = db.execute(
-        select(WarehouseDeliveryRoute).where(WarehouseDeliveryRoute.id == route_id)
-    ).scalar_one_or_none()
-
-    if not route:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Route with id {route_id} not found",
-        )
-
-    db.delete(route)
-    db.commit()
+    hard_delete_with_version(
+        db,
+        WarehouseDeliveryRoute,
+        filters=[WarehouseDeliveryRoute.id == route_id],
+        expected_version=version,
+        not_found_detail=f"Route with id {route_id} not found",
+    )
 
     return None

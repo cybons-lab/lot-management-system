@@ -25,8 +25,8 @@ export async function updateWarehouse(code: string, data: WarehouseUpdate): Prom
   return http.put<Warehouse>(`${BASE_PATH}/${code}`, data);
 }
 
-export async function deleteWarehouse(code: string): Promise<void> {
-  return http.delete(`${BASE_PATH}/${code}`);
+export async function deleteWarehouse(code: string, version: number): Promise<void> {
+  return http.delete(`${BASE_PATH}/${code}?version=${version}`);
 }
 
 // ============================================

@@ -162,17 +162,20 @@ export function useSupplierProductsPageState() {
 
   // CRUD handlers
   const handleCreate = useCallback(
-    (data: SupplierProductCreate | SupplierProductUpdate) => {
+    (data: SupplierProductCreate | Omit<SupplierProductUpdate, "version">) => {
       create(data as SupplierProductCreate, { onSuccess: closeCreateDialog });
     },
     [create, closeCreateDialog],
   );
 
   const handleUpdate = useCallback(
-    (data: SupplierProductCreate | SupplierProductUpdate) => {
+    (data: SupplierProductCreate | Omit<SupplierProductUpdate, "version">) => {
       if (!dialogState.editingItem) return;
       update(
-        { id: dialogState.editingItem.id, data: data as SupplierProductUpdate },
+        {
+          id: dialogState.editingItem.id,
+          data: { ...(data as SupplierProductUpdate), version: dialogState.editingItem.version },
+        },
         { onSuccess: closeEditDialog },
       );
     },
@@ -183,7 +186,11 @@ export function useSupplierProductsPageState() {
     (endDate: string | null) => {
       if (!dialogState.deletingItem) return;
       softDelete(
-        { id: dialogState.deletingItem.id, endDate: endDate || undefined },
+        {
+          id: dialogState.deletingItem.id,
+          version: dialogState.deletingItem.version,
+          endDate: endDate || undefined,
+        },
         { onSuccess: closeDeleteDialog },
       );
     },
@@ -192,7 +199,10 @@ export function useSupplierProductsPageState() {
 
   const handlePermanentDelete = useCallback(() => {
     if (!dialogState.deletingItem) return;
-    permanentDelete(dialogState.deletingItem.id, { onSuccess: closeDeleteDialog });
+    permanentDelete(
+      { id: dialogState.deletingItem.id, version: dialogState.deletingItem.version },
+      { onSuccess: closeDeleteDialog },
+    );
   }, [dialogState.deletingItem, permanentDelete, closeDeleteDialog]);
 
   const handleRestore = useCallback(() => {

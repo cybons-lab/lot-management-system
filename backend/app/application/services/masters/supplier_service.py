@@ -6,6 +6,11 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.application.services.common.optimistic_lock import (
+    hard_delete_with_version,
+    soft_delete_with_version,
+    update_with_version,
+)
 from app.infrastructure.persistence.models.masters_models import Supplier
 from app.presentation.schemas.masters.masters_schema import (
     BulkUpsertResponse,
@@ -80,21 +85,43 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, int]
                     detail=f"仕入先コード '{payload.supplier_code}' は既に存在します。",
                 )
 
-        return self.update(supplier.id, payload)
+        update_data = payload.model_dump(exclude_unset=True, exclude={"version"})
+        updated = update_with_version(
+            self.db,
+            Supplier,
+            filters=[Supplier.id == supplier.id],
+            update_values=update_data,
+            expected_version=payload.version,
+            not_found_detail="仕入先が見つかりません",
+        )
+        return updated
 
-    def delete_by_code(self, code: str, *, end_date: date | None = None) -> None:
+    def delete_by_code(
+        self, code: str, *, end_date: date | None = None, expected_version: int
+    ) -> None:
         """Soft delete supplier by supplier_code.
 
         Args:
+            code: Supplier code
+            end_date: End date for validity. Defaults to today.
+            expected_version: Expected version for optimistic lock check
+            expected_version: Expected version for optimistic lock check
             code: Supplier code
             end_date: End date for validity. Defaults to today.
         """
         supplier = self.get_by_code(code)
         if supplier is None or supplier.id is None:
             raise ValueError("Supplier not found or has no ID")
-        self.delete(supplier.id, end_date=end_date)
+        soft_delete_with_version(
+            self.db,
+            Supplier,
+            filters=[Supplier.id == supplier.id],
+            expected_version=expected_version,
+            end_date=end_date,
+            not_found_detail="仕入先が見つかりません",
+        )
 
-    def hard_delete_by_code(self, code: str) -> None:
+    def hard_delete_by_code(self, code: str, *, expected_version: int) -> None:
         """Permanently delete supplier by supplier_code.
 
         This physically removes the supplier from the database.
@@ -103,7 +130,14 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, int]
         supplier = self.get_by_code(code)
         if supplier is None or supplier.id is None:
             raise ValueError("Supplier not found or has no ID")
-        self.hard_delete(supplier.id)
+        hard_delete_with_version(
+            self.db,
+            Supplier,
+            filters=[Supplier.id == supplier.id],
+            expected_version=expected_version,
+            not_found_detail="仕入先が見つかりません",
+            conflict_detail="この仕入先は他のデータから参照されているため削除できません",
+        )
 
     def restore_by_code(self, code: str) -> Supplier:
         """Restore a soft-deleted supplier by supplier_code.

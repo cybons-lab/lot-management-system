@@ -74,7 +74,11 @@ export function DeliverySettingsSection({
           納入先別設定がありません
         </div>
       ) : (
-        <SettingsTable settings={settings} onDelete={remove} isDeleting={isDeleting} />
+        <SettingsTable
+          settings={settings}
+          onDelete={(setting) => remove({ id: setting.id, version: setting.version })}
+          isDeleting={isDeleting}
+        />
       )}
 
       <AddSettingDialog
@@ -94,7 +98,7 @@ export function DeliverySettingsSection({
 
 interface SettingsTableProps {
   settings: CustomerItemDeliverySetting[];
-  onDelete: (id: number) => void;
+  onDelete: (setting: CustomerItemDeliverySetting) => void;
   isDeleting: boolean;
 }
 
@@ -137,7 +141,7 @@ function SettingsTable({ settings, onDelete, isDeleting }: SettingsTableProps) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => onDelete(setting.id)}
+                  onClick={() => onDelete(setting)}
                   disabled={isDeleting}
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />
