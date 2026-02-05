@@ -159,16 +159,14 @@ function useDataTableColumns<T>({
           />
         ),
         cell: ({ row }) => (
-          // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 行クリック操作をUI仕様として優先するため
-          <div onClick={(e) => e.stopPropagation()}>
-            <Checkbox
-              checked={row.getIsSelected()}
-              onCheckedChange={(value) => row.toggleSelected(!!value)}
-              disabled={!row.getCanSelect()}
-              aria-label="行を選択"
-              data-testid="select-row-checkbox"
-            />
-          </div>
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            onClick={(e) => e.stopPropagation()}
+            disabled={!row.getCanSelect()}
+            aria-label="行を選択"
+            data-testid="select-row-checkbox"
+          />
         ),
         size: 48,
         enableResizing: false,
@@ -244,8 +242,7 @@ function useDataTableColumns<T>({
         id: "__actions",
         header: "アクション",
         cell: ({ row }) => (
-          // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 行クリック操作をUI仕様として優先するため
-          <div onClick={(e) => e.stopPropagation()}>{rowActions(row.original)}</div>
+          <div onClickCapture={(e) => e.stopPropagation()}>{rowActions(row.original)}</div>
         ),
         size: 180,
         enableResizing: false,
@@ -583,11 +580,15 @@ export function DataTable<T = never>({
                         )}
                       </div>
                       {header.column.getCanResize() && (
-                        // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- 行クリック操作をUI仕様として優先するため
                         <div
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
-                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            header.getResizeHandler()(e);
+                          }}
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                            header.getResizeHandler()(e);
+                          }}
                           className={cn(
                             "absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none",
                             "transition-all duration-200 select-none",
