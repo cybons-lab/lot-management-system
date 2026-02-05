@@ -93,8 +93,9 @@ def batch_update_suggestions(self, updates: list[dict]):
 
 #### 🟢 P2: その他の残タスク
 
-1. **Phase 10.2**: ロット分割（分納）API & ダイアログ実装
-2. **Phase 11**: 理由付き在庫調整（入庫数編集時の理由入力ダイアログ）
+1. ✅ **Phase 10.2**: ロット分割（分納）API & ダイアログ実装（完了 - 2026-02-05）
+2. ✅ **Phase 10.3**: スマート分割（割付転送機能付き）実装（完了 - 2026-02-05）
+3. ✅ **Phase 11**: 理由付き在庫調整（入庫数編集時の理由入力ダイアログ）（完了 - 2026-02-05）
 
 ---
 
@@ -433,3 +434,151 @@ e899d9bc fix(excel-view): DateGridに右ボーダーを追加
 ---
 
 **Phase 9永続化は完了、UI微調整が残っています。レビュー時に実際の動作をご確認ください！**
+
+---
+
+## 📝 Phase 10-11 実装完了記録（2026-02-05）
+
+### ✅ Phase 10.2: 基本的なロット分割機能（完了）
+
+**実装内容**:
+- バックエンドスキーマ: `backend/app/presentation/schemas/inventory/lot_split_schema.py`
+- サービスメソッド: `LotService.split_lot_receipt()`
+- APIエンドポイント: `POST /api/lots/{lot_id}/split`
+- フロントエンドダイアログ: `LotSplitDialog.tsx`
+- API関数: `splitLotReceipt()`
+
+**機能**:
+- ロットを複数の新しいロットに分割
+- 各分割ロットの数量を手動入力
+- 合計が元の入庫数と一致することをバリデーション
+
+---
+
+### ✅ Phase 10.3: スマート分割（割付転送機能）（完了）
+
+**実装内容**:
+- バックエンドスキーマ: `backend/app/presentation/schemas/inventory/smart_split_schema.py`
+  - `AllocationTransfer`: 割り当て転送指示
+  - `SmartSplitRequest`: スマート分割リクエスト
+- サービスメソッド: `LotService.smart_split_lot_with_allocations()`
+- APIエンドポイント: `POST /api/lots/{lot_id}/smart-split`
+- フロントエンドダイアログ: `SmartLotSplitDialog.tsx`（3ステップウィザード）
+- ExcelViewPage統合: state/mutation/handler実装完了
+
+**機能**:
+1. **ステップ1**: 分割数を選択（2分割または3分割）
+2. **ステップ2**: 既存の納品予定を各ロットに振り分け
+   - ドロップダウンで納品予定ごとに移動先ロットを選択
+   - `ロット1（元）`, `ロット2（新規1）`, `ロット3（新規2）`
+3. **ステップ3**: プレビューと確認
+   - 各ロットの入庫数と割り当て内容を表示
+   - 未割り当て数量を警告表示
+
+**技術的特徴**:
+- 既存の `allocation_suggestions` を新しいロットに転送
+- `allocation_suggestions.lot_id` を自動更新
+- `comment`, `coa_issue_date`, `manual_shipment_date` も一緒に移動
+- キャッシュ無効化により即座にUI反映
+
+**UX改善ポイント**:
+- 元々のPhase 10.2では手動で数量を入力する方式だったが、ユーザーフィードバックにより
+  「既存の納品予定を基に分割したい」というニーズに対応
+- 実際の業務フローに即した設計
+
+---
+
+### ✅ Phase 11: 理由付き入庫数調整機能（完了）
+
+**実装内容**:
+- バックエンドスキーマ: `backend/app/presentation/schemas/inventory/adjustment_reason_schema.py`
+  - `LotReceiptQuantityUpdateRequest`: 数量更新リクエスト
+  - `LotReceiptQuantityUpdateResponse`: 数量更新レスポンス
+- サービスメソッド: `LotService.update_lot_receipt_quantity_with_reason()`
+- APIエンドポイント: `PUT /api/lots/{lot_id}/quantity`
+- フロントエンドダイアログ: `LotQuantityUpdateDialog.tsx`
+- ExcelViewPage統合: state/mutation/handler実装完了
+
+**機能**:
+- 入庫数を変更する際に理由を必須入力
+- 変更前後の数量と差分を表示
+- `Adjustment` テーブルに監査証跡を記録
+- ロット情報とキャッシュを自動更新
+
+**監査機能**:
+- すべての入庫数変更が `adjustments` テーブルに記録される
+- 変更理由、変更者、変更日時を永続化
+- 将来的な監査対応に備えた設計
+
+---
+
+### 🎯 実装完了状況サマリ
+
+| フェーズ | 機能 | バックエンド | フロントエンド | 統合 | 状態 |
+|---------|------|------------|--------------|------|-----|
+| Phase 9.1 | ロット備考 | ✅ | ✅ | ✅ | 完了 |
+| Phase 9.2 | 数量別コメント | ✅ | ✅ | ✅ | 完了 |
+| Phase 9.3 | 手動出荷日 | ✅ | ✅ | ✅ | 完了 |
+| Phase 9.4 | ページメモ | ✅ | ✅ | ✅ | 完了 |
+| Phase 10.2 | 基本分割 | ✅ | ✅ | N/A | 完了（Phase 10.3に統合） |
+| Phase 10.3 | スマート分割 | ✅ | ✅ | ✅ | 完了 |
+| Phase 11 | 理由付き調整 | ✅ | ✅ | ✅ | 完了 |
+
+---
+
+### 📦 関連コミット（Phase 10-11）
+
+```bash
+# Phase 10.2: 基本分割
+- feat(inventory): Add lot split API and schema
+- feat(excel-view): Add LotSplitDialog component
+
+# Phase 10.3: スマート分割
+- feat(inventory): Add smart lot split with allocation transfer
+- feat(excel-view): Add SmartLotSplitDialog with 3-step wizard
+- feat(excel-view): Integrate smart split into ExcelViewPage
+- fix(smart-split): Use native HTML elements instead of Radix UI
+
+# Phase 11: 理由付き調整
+- feat(inventory): Add lot quantity update with reason
+- feat(excel-view): Add LotQuantityUpdateDialog component
+- feat(excel-view): Phase 11 入庫数量更新ダイアログを統合
+```
+
+---
+
+### 🧪 品質チェック結果（Phase 10-11実装後）
+
+- **バックエンドテスト**: 552 passed, 1 xfailed ✅
+- **TypeScript型チェック**: 0 errors ✅
+- **ESLint**: 0 errors ✅
+- **Prettier**: Formatted ✅
+
+---
+
+### 🚀 使用方法
+
+#### スマート分割の使い方:
+1. ExcelViewページでロットの右上にある分割ボタン（Split icon）をクリック
+2. または、ロット上で右クリック → コンテキストメニューから「ロットを分割」を選択
+3. 3ステップウィザードに従って操作:
+   - 分割数を選択
+   - 各納品予定の移動先を選択
+   - プレビューを確認して実行
+
+#### 入庫数調整の使い方:
+1. ロット上で右クリック → コンテキストメニューから「入庫数を調整」を選択
+2. 新しい入庫数を入力
+3. 理由を入力（必須、最大500文字）
+4. 確認して実行
+
+---
+
+### 📌 残タスク
+
+- ⚠️ P1: 罫線バグ修正（納入先5件以下での右端縦線の揃い）
+  - ユーザーからスキップ指示あり（優先度低）
+- 🎨 P2: コメント三角形の角度調整（右上 → 左上）
+  - ユーザーからスキップ指示あり（優先度低）
+
+**Phase 10-11のすべての機能実装は完了しました！🎉**
