@@ -11148,6 +11148,8 @@ export interface components {
       order_line_id: number;
       /** Supplier Item Id */
       supplier_item_id: number;
+      /** Product Code */
+      product_code?: string | null;
       /**
        * Order Quantity
        * @description 受注数量
@@ -11161,6 +11163,8 @@ export interface components {
       already_allocated_quantity: string;
       /** Allocations */
       allocations?: components["schemas"]["FefoLotAllocation"][];
+      /** Next Div */
+      next_div?: string | null;
       /** Warnings */
       warnings?: string[];
     };

@@ -17,14 +17,22 @@ Usage:
     )
 """
 
+import calendar
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from random import Random
 
-from dateutil.relativedelta import relativedelta  # type: ignore
-
 from app.infrastructure.persistence.models import SupplierItem
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
+
+
+def _add_months(target: date, months: int) -> date:
+    """Return date shifted by N months while preserving valid day-of-month."""
+    month_index = (target.month - 1) + months
+    year = target.year + (month_index // 12)
+    month = (month_index % 12) + 1
+    day = min(target.day, calendar.monthrange(year, month)[1])
+    return date(year, month, day)
 
 
 def create_daily_forecasts(
@@ -175,7 +183,7 @@ def create_jyun_forecasts_from_daily(
     """
     entries = []
     # Jyun forecast_period is next month
-    next_month = target_month + relativedelta(months=1)
+    next_month = _add_months(target_month, 1)
     forecast_period = next_month.strftime("%Y-%m")
 
     # Define jyun periods with their corresponding keys
@@ -256,7 +264,7 @@ def create_monthly_forecasts_from_daily(
     """
     entries = []
     # Monthly forecast_period is 2 months after target_month
-    two_months_later = target_month + relativedelta(months=2)
+    two_months_later = _add_months(target_month, 2)
     forecast_period = two_months_later.strftime("%Y-%m")
 
     forecast_date = target_month.replace(day=1)

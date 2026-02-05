@@ -1,5 +1,7 @@
 """管理機能関連のPydanticスキーマ."""
 
+from __future__ import annotations
+
 from pydantic import BaseModel
 
 from app.presentation.schemas.inventory.inventory_schema import LotCreate
@@ -13,6 +15,13 @@ class FullSampleDataRequest(BaseModel):
     """
 
     lots: list[LotCreate] | None = None
+    orders: list[FullSampleOrderRequest] | None = None
+
+
+class FullSampleOrderRequest(BaseModel):
+    """一括サンプルデータ投入時の受注簡易入力."""
+
+    customer_code: str | None = None
 
 
 class DashboardStatsResponse(BaseModel):

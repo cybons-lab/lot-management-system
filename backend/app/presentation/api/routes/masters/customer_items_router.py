@@ -58,7 +58,7 @@ def list_customer_items(
         得意先品番マッピングのリスト
     """
     service = CustomerItemsService(db)
-    return service.get_all(
+    return service.list_enriched(
         skip=skip,
         limit=limit,
         customer_id=customer_id,
@@ -80,7 +80,7 @@ def export_customer_items(format: str = "csv", db: Session = Depends(get_db)):
         Excel形式またはCSV形式のファイルレスポンス
     """
     service = CustomerItemsService(db)
-    items = service.get_all()
+    items = service.list_enriched()
 
     if format == "xlsx":
         return ExportService.export_to_excel(items, "customer_items")
@@ -150,7 +150,7 @@ def create_customer_item(item: CustomerItemCreate, db: Session = Depends(get_db)
             detail="Customer item mapping already exists",
         )
 
-    return service.create(item)
+    return service.create_enriched(item)
 
 
 @router.put("/{id}", response_model=CustomerItemResponse)

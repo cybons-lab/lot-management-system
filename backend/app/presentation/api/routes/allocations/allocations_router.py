@@ -138,6 +138,7 @@ from app.application.services.allocations.schemas import (
 )
 from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.core.database import get_db
+from app.core.time_utils import utcnow
 from app.infrastructure.external.sap_gateway import MockSapGateway, get_sap_gateway
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.routes.auth.auth_router import (
@@ -378,7 +379,7 @@ def confirm_allocation(
             allocated_quantity=confirmed_res.reserved_qty,
             allocation_type="hard" if status_str == "confirmed" else "soft",
             status="allocated",
-            confirmed_at=confirmed_res.confirmed_at or confirmed_res.updated_at,  # type: ignore[arg-type]
+            confirmed_at=confirmed_res.confirmed_at or confirmed_res.updated_at or utcnow(),
             confirmed_by=confirmed_res.confirmed_by,
         )
     except ValueError as e:

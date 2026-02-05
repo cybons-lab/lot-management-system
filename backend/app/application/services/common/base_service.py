@@ -175,7 +175,7 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         self.db = db
         self.model = model
         # Check if model supports soft delete
-        self._supports_soft_delete = hasattr(model, "__soft_delete__") and model.__soft_delete__  # type: ignore[attr-defined]
+        self._supports_soft_delete = bool(getattr(model, "__soft_delete__", False))
 
     def _has_soft_delete_mixin(self) -> bool:
         """Check if the model supports soft delete."""
@@ -198,7 +198,9 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
 
         # Filter out soft-deleted records by default
         if self._has_soft_delete_mixin() and not include_inactive:
-            query = query.filter(self.model.valid_to > func.current_date())  # type: ignore[attr-defined]
+            valid_to = getattr(self.model, "valid_to", None)
+            if valid_to is not None:
+                query = query.filter(valid_to > func.current_date())
 
         result = query.offset(skip).limit(limit).all()
         return cast(list[ModelType], result)
@@ -215,7 +217,9 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         query = self.db.query(self.model)
 
         if self._has_soft_delete_mixin() and not include_inactive:
-            query = query.filter(self.model.valid_to > func.current_date())  # type: ignore[attr-defined]
+            valid_to = getattr(self.model, "valid_to", None)
+            if valid_to is not None:
+                query = query.filter(valid_to > func.current_date())
 
         return query.count()
 

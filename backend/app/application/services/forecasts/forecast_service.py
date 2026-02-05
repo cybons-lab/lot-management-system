@@ -455,7 +455,10 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             if product_code:
                 self._regenerate_allocation_suggestions(product_code)
 
-        return self.get_forecast_by_id(db_forecast.id)  # type: ignore[return-value]
+        created = self.get_forecast_by_id(db_forecast.id)
+        if created is None:
+            raise RuntimeError(f"Created forecast disappeared: {db_forecast.id}")
+        return created
 
     def update_forecast(self, forecast_id: int, data: ForecastUpdate) -> ForecastResponse | None:
         """Update a forecast entry and sync provisional order."""

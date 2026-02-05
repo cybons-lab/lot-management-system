@@ -26,7 +26,10 @@ from app.presentation.api.routes.auth.auth_router import (
 from app.presentation.schemas.admin.admin_schema import (
     FullSampleDataRequest,
 )
-from app.presentation.schemas.allocations.allocations_schema import CandidateLotsResponse
+from app.presentation.schemas.allocations.allocations_schema import (
+    CandidateLotItem,
+    CandidateLotsResponse,
+)
 from app.presentation.schemas.common.base import ResponseBase
 from app.presentation.schemas.system.users_schema import UserCreate
 
@@ -223,8 +226,8 @@ def _collect_warehouse_codes(data: FullSampleDataRequest) -> set[str]:
 
 def _collect_customer_codes(data: FullSampleDataRequest) -> set[str]:
     codes: set[str] = set()
-    if data.orders:  # type: ignore[attr-defined]
-        codes.update(order.customer_code for order in data.orders if order.customer_code)  # type: ignore[attr-defined]
+    if data.orders:
+        codes.update(order.customer_code for order in data.orders if order.customer_code)
     return codes
 
 
@@ -299,24 +302,21 @@ def get_allocatable_lots(
         rows = result.fetchall()
 
         items = [
-            {
-                "lot_id": row.lot_id,
-                "lot_number": row.lot_number,
-                "supplier_item_id": row.supplier_item_id,
-                "product_code": row.product_code,
-                "warehouse_id": row.warehouse_id,
-                "warehouse_code": row.warehouse_code,
-                "free_qty": float(row.free_qty),
-                "current_quantity": float(row.current_quantity),
-                "allocated_qty": float(row.allocated_quantity),
-                "expiry_date": row.expiry_date,
-                "is_locked": row.is_locked or False,
-                "last_updated": row.last_updated.isoformat() if row.last_updated else None,
-            }
+            CandidateLotItem(
+                lot_id=row.lot_id,
+                lot_number=row.lot_number,
+                current_quantity=row.current_quantity,
+                allocated_quantity=row.allocated_quantity,
+                available_quantity=row.free_qty,
+                supplier_item_id=row.supplier_item_id,
+                warehouse_id=row.warehouse_id,
+                warehouse_code=row.warehouse_code,
+                expiry_date=row.expiry_date,
+            )
             for row in rows
         ]
 
-        return CandidateLotsResponse(items=items, total=len(items))  # type: ignore[arg-type]
+        return CandidateLotsResponse(items=items, total=len(items))
 
     except Exception as e:
         logger.exception(f"診断API実行エラー: {e}")

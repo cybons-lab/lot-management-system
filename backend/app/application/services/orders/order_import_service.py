@@ -37,7 +37,7 @@ class OrderLineInput:
 class OrderGroupImportResult:
     """受注グループインポート結果."""
 
-    order_group: OrderGroup
+    order_group: OrderGroup | None
     created_lines: list[OrderLine]
     skipped_lines: list[str]  # 既存だったためスキップされた行の customer_order_no
     errors: list[str]
@@ -90,7 +90,7 @@ class OrderImportService:
         customer = self.db.query(Customer).filter(Customer.customer_code == customer_code).first()
         if not customer:
             return OrderGroupImportResult(
-                order_group=None,  # type: ignore[arg-type]
+                order_group=None,
                 created_lines=[],
                 skipped_lines=[],
                 errors=[f"得意先が見つかりません: {customer_code}"],
@@ -99,7 +99,7 @@ class OrderImportService:
         product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
         if not product:
             return OrderGroupImportResult(
-                order_group=None,  # type: ignore[arg-type]
+                order_group=None,
                 created_lines=[],
                 skipped_lines=[],
                 errors=[f"製品が見つかりません: {product_code}"],

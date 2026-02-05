@@ -37,7 +37,9 @@ def list_business_rules(
         業務ルールのリスト
     """
     service = BusinessRuleService(db)
-    rules, total = service.get_all(skip=skip, limit=limit, rule_type=rule_type, is_active=is_active)
+    rules, total = service.list_with_count(
+        skip=skip, limit=limit, rule_type=rule_type, is_active=is_active
+    )
 
     return BusinessRuleListResponse(
         rules=[BusinessRuleResponse.model_validate(rule) for rule in rules],

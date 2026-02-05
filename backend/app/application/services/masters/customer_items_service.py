@@ -80,12 +80,12 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "version": item.version,
         }
 
-    def create(self, item: CustomerItemCreate) -> dict:  # type: ignore[override]
+    def create_enriched(self, item: CustomerItemCreate) -> dict:
         """Create a new customer item mapping and return enriched data."""
         created_item = super().create(item)
         return self._enrich_item(created_item)
 
-    def get_all(  # type: ignore[override]
+    def list_enriched(
         self,
         skip: int = 0,
         limit: int = 100,
@@ -175,7 +175,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
     def get_by_customer(self, customer_id: int) -> list[dict]:
         """Get all customer item mappings for a specific customer."""
-        return self.get_all(customer_id=customer_id)
+        return self.list_enriched(customer_id=customer_id)
 
     # ============================================================
     # ID-based operations (new primary interface)

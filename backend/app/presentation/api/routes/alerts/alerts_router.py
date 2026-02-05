@@ -4,6 +4,7 @@
 """
 
 import logging
+from typing import cast
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -52,21 +53,21 @@ def list_alerts(
     severity_filter: list[AlertSeverity] | None = None
     if severity:
         valid_severities: set[AlertSeverity] = {"critical", "warning", "info"}
-        severity_filter = [
-            s.strip()  # type: ignore[misc]
-            for s in severity.split(",")
-            if s.strip() in valid_severities
-        ]
+        severity_filter = []
+        for raw in severity.split(","):
+            item = raw.strip()
+            if item in valid_severities:
+                severity_filter.append(cast(AlertSeverity, item))
 
     # Parse category filter
     category_filter: list[AlertCategory] | None = None
     if category:
         valid_categories: set[AlertCategory] = {"order", "inventory", "lot", "forecast"}
-        category_filter = [
-            c.strip()  # type: ignore[misc]
-            for c in category.split(",")
-            if c.strip() in valid_categories
-        ]
+        category_filter = []
+        for raw in category.split(","):
+            item = raw.strip()
+            if item in valid_categories:
+                category_filter.append(cast(AlertCategory, item))
 
     alerts = service.collect_all_alerts(
         severity_filter=severity_filter, category_filter=category_filter, limit=limit

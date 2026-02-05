@@ -779,3 +779,4 @@ class WarehouseDeliveryRoute(Base):
     # Relationships
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="delivery_routes")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
+    supplier_item: Mapped[SupplierItem | None] = relationship("SupplierItem")

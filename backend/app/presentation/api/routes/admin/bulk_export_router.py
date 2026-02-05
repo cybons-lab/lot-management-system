@@ -146,7 +146,7 @@ def _get_export_data(db: Session, target: str) -> tuple[list[dict[str, Any]], st
 
     if target == "customer_items":
         ci_service = CustomerItemsService(db)
-        customer_item_list = ci_service.get_all(limit=10000)
+        customer_item_list = ci_service.list_enriched(limit=10000)
         # CustomerItem is SQLAlchemy model, need schema validation
         from app.presentation.schemas.masters.customer_items_schema import CustomerItemResponse
 

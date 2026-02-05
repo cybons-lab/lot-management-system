@@ -470,7 +470,10 @@ class WithdrawalService:
 
         # べき等性: 既に取消済みの場合はそのまま返す
         if withdrawal.cancelled_at is not None:
-            return self.get_withdrawal_by_id(withdrawal_id)  # type: ignore
+            existing = self.get_withdrawal_by_id(withdrawal_id)
+            if existing is None:
+                raise ValueError(f"出庫（ID={withdrawal_id}）が見つかりません")
+            return existing
 
         # ロットを取得（ロック付き）
         lot = (

@@ -4,8 +4,10 @@
 v3.0: Allocation を廃止し、LotReservation のみを使用。
 """
 
+from __future__ import annotations
+
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
@@ -17,6 +19,12 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
     ReservationSourceType,
     ReservationStatus,
 )
+
+
+if TYPE_CHECKING:
+    from app.application.services.inventory.lot_reservation_history_service import (
+        LotReservationHistoryService,
+    )
 
 
 logger = logging.getLogger(__name__)
@@ -126,10 +134,10 @@ class ReservationRepository:
     def __init__(self, db: Session, enable_history: bool = True):
         self.db = db
         self._enable_history = enable_history
-        self._history_service = None
+        self._history_service: LotReservationHistoryService | None = None
 
     @property
-    def history_service(self):
+    def history_service(self) -> LotReservationHistoryService | None:
         """Lazy load history service.
 
         【設計意図】なぜ遅延ロード（Lazy Loading）なのか:
@@ -153,7 +161,7 @@ class ReservationRepository:
                 LotReservationHistoryService,
             )
 
-            self._history_service = LotReservationHistoryService(self.db)  # type: ignore[assignment]
+            self._history_service = LotReservationHistoryService(self.db)
         return self._history_service
 
     def find_by_id(self, reservation_id: int) -> LotReservation | None:
@@ -168,7 +176,7 @@ class ReservationRepository:
         logger.debug("Finding reservation by ID", extra={"reservation_id": reservation_id})
         stmt = (
             select(LotReservation)
-            .options(joinedload(LotReservation.lot))  # type: ignore[attr-defined]
+            .options(joinedload(LotReservation.lot_receipt))
             .where(LotReservation.id == reservation_id)
         )
         result = cast(LotReservation | None, self.db.execute(stmt).scalar_one_or_none())

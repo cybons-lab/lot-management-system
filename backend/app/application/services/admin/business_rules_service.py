@@ -29,7 +29,7 @@ class BusinessRuleService(BaseService[BusinessRule, BusinessRuleCreate, Business
         """Initialize service with database session."""
         super().__init__(db=db, model=BusinessRule)
 
-    def get_all(  # type: ignore[override]
+    def list_with_count(
         self,
         skip: int = 0,
         limit: int = 100,

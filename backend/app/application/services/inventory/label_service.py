@@ -6,7 +6,7 @@ from reportlab.pdfgen import canvas
 from sqlalchemy.orm import Session
 
 from app.application.services.inventory.lot_service import LotService
-from app.presentation.schemas.inventory.inventory_schema import LotResponse
+from app.presentation.schemas.inventory.inventory_schema import LotResponse, LotStatus
 
 
 class LabelService:
@@ -47,6 +47,9 @@ class LabelService:
                     id=lot_entity.id,
                     lot_number=lot_entity.lot_number or "",
                     supplier_item_id=lot_entity.supplier_item_id or 0,
+                    maker_part_no=lot_entity.supplier_item.maker_part_no
+                    if lot_entity.supplier_item
+                    else None,
                     product_code=lot_entity.supplier_item.maker_part_no
                     if lot_entity.supplier_item
                     else "",
@@ -70,10 +73,9 @@ class LabelService:
                     unit=lot_entity.unit,
                     received_date=lot_entity.received_date,
                     expiry_date=lot_entity.expiry_date,
-                    status=lot_entity.status,  # type: ignore
+                    status=LotStatus(lot_entity.status),
                     created_at=lot_entity.created_at,
                     updated_at=lot_entity.updated_at,
-                    last_updated=lot_entity.updated_at,
                     is_assigned_supplier=False,
                 )
                 label_lots.append(lot_res)

@@ -750,7 +750,7 @@ class LotService:
                 self.db.query(LotMaster)
                 .filter(
                     LotMaster.lot_number == lot_payload["lot_number"],
-                    LotMaster.supplier_item_id == lot_create.supplier_item_id,  # type: ignore[attr-defined]
+                    LotMaster.supplier_item_id == lot_create.supplier_item_id,
                     LotMaster.supplier_id == (supplier.id if supplier else None),
                 )
                 .first()
