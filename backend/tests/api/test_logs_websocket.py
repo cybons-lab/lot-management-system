@@ -26,7 +26,7 @@ def admin_user(db: Session):
     db.add(user)
     db.flush()
 
-    db.add(UserRole(user_id=user.id, role_id=admin_role.id))
+    db.add(UserRole(user=user, role=admin_role))
     db.commit()
     db.refresh(user)
     return user
@@ -51,7 +51,7 @@ def normal_user(db: Session):
     db.add(user)
     db.flush()
 
-    db.add(UserRole(user_id=user.id, role_id=user_role.id))
+    db.add(UserRole(user=user, role=user_role))
     db.commit()
     db.refresh(user)
     return user
