@@ -29,6 +29,7 @@ const createLot = (overrides: Partial<LotUI>): LotUI => ({
   inspection_cert_number: overrides.inspection_cert_number ?? null,
   origin_type: overrides.origin_type ?? "adhoc",
   origin_reference: overrides.origin_reference ?? null,
+  order_no: overrides.order_no ?? null,
   shipping_date: overrides.shipping_date ?? null,
   cost_price: overrides.cost_price ?? null,
   sales_price: overrides.sales_price ?? null,

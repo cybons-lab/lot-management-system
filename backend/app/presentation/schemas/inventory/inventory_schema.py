@@ -65,6 +65,7 @@ class LotBase(BaseSchema):
     """Shared attributes for lot payloads."""
 
     lot_number: str | None = None
+    order_no: str | None = None
     supplier_item_id: int = Field(
         ...,
         description="仕入先品目ID",
@@ -139,6 +140,7 @@ class LotUpdate(BaseSchema):
 
     # Allow updating lot_number (for converting temporary to official)
     lot_number: str | None = None
+    order_no: str | None = None
 
     supplier_id: int | None = None
     expected_lot_id: int | None = None
@@ -333,6 +335,8 @@ class InventoryItemResponse(BaseSchema):
     # Joined fields from master tables
     product_name: str | None = None
     product_code: str | None = None
+    capacity: Decimal | None = None
+    warranty_period_days: int | None = None
     warehouse_name: str | None = None
     warehouse_code: str | None = None
 

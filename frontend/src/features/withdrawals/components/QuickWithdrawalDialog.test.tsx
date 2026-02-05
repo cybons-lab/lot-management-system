@@ -159,6 +159,7 @@ describe("QuickWithdrawalDialog", () => {
     inspection_cert_number: null,
     origin_type: "adhoc",
     origin_reference: null,
+    order_no: null,
     shipping_date: null,
     cost_price: null,
     selling_price: null,

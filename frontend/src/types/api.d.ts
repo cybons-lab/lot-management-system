@@ -12057,6 +12057,10 @@ export interface components {
       product_name?: string | null;
       /** Product Code */
       product_code?: string | null;
+      /** Capacity */
+      capacity?: string | null;
+      /** Warranty Period Days */
+      warranty_period_days?: number | null;
       /** Warehouse Name */
       warehouse_name?: string | null;
       /** Warehouse Code */
@@ -12274,6 +12278,8 @@ export interface components {
        * @default
        */
       lot_number: string;
+      /** Order No */
+      order_no?: string | null;
       /**
        * Supplier Item Id
        * @description 仕入先品目ID
@@ -12429,6 +12435,8 @@ export interface components {
       updated_at?: string | null;
       /** Lot Number */
       lot_number?: string | null;
+      /** Order No */
+      order_no?: string | null;
       /** Supplier Item Id */
       supplier_item_id: number;
       /** Warehouse Id */
@@ -12615,6 +12623,8 @@ export interface components {
     LotUpdate: {
       /** Lot Number */
       lot_number?: string | null;
+      /** Order No */
+      order_no?: string | null;
       /** Supplier Id */
       supplier_id?: number | null;
       /** Expected Lot Id */
@@ -17359,6 +17369,16 @@ export interface components {
        */
       requires_lot_number: boolean;
       /**
+       * Capacity
+       * @description 収容数
+       */
+      capacity?: number | string | null;
+      /**
+       * Warranty Period Days
+       * @description 保証期間（日）
+       */
+      warranty_period_days?: number | null;
+      /**
        * Lead Time Days
        * @description リードタイム（日）
        */
@@ -17394,6 +17414,10 @@ export interface components {
       consumption_limit_days: number | null;
       /** Requires Lot Number */
       requires_lot_number: boolean;
+      /** Capacity */
+      capacity: string | null;
+      /** Warranty Period Days */
+      warranty_period_days: number | null;
       /** Lead Time Days */
       lead_time_days: number | null;
       /** Notes */
@@ -17469,6 +17493,16 @@ export interface components {
        * @description ロット番号管理が必要
        */
       requires_lot_number?: boolean | null;
+      /**
+       * Capacity
+       * @description 収容数
+       */
+      capacity?: number | string | null;
+      /**
+       * Warranty Period Days
+       * @description 保証期間（日）
+       */
+      warranty_period_days?: number | null;
       /**
        * Lead Time Days
        * @description リードタイム（日）

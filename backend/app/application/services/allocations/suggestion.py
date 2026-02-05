@@ -279,7 +279,12 @@ class AllocationSuggestionService(AllocationSuggestionBase):
                             if item.id != target.id:
                                 self.db.delete(item)
                     count += len(items)
-                elif quantity > 0 or coa_date is not None:
+                elif (
+                    quantity > 0
+                    or coa_date is not None
+                    or comment is not None
+                    or manual_shipment_date is not None
+                ):
                     # 対応するフォーキャストを取得（任意で紐付け）
                     forecast = (
                         self.db.query(ForecastCurrent)

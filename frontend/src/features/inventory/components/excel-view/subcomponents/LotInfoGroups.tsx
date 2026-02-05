@@ -123,13 +123,13 @@ function ValueColumn({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, field?: string, value?: string) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       setEditingField(null);
-    } else if (e.key === "Enter") {
-      if (field && value !== undefined) {
-        onChange(field, value);
+      if (e.currentTarget instanceof HTMLElement) {
+        e.currentTarget.blur();
       }
+    } else if (e.key === "Enter") {
       setEditingField(null);
       if (e.currentTarget instanceof HTMLElement) {
         e.currentTarget.blur();
@@ -138,6 +138,22 @@ function ValueColumn({
   };
 
   const isFieldEditing = (field: string) => isEditing || editingField === field;
+  const normalizeValue = (value?: string) => (value ?? "").trim();
+  const normalizePlaceholder = (value?: string) => {
+    const trimmed = normalizeValue(value);
+    return trimmed === "-" ? "" : trimmed;
+  };
+  const commitIfChanged = (
+    field: string,
+    value: string,
+    currentValue?: string,
+    normalize: (value?: string) => string = normalizeValue,
+  ) => {
+    const next = normalize(value);
+    const current = normalize(currentValue);
+    if (next === current) return;
+    onChange(field, next);
+  };
 
   return (
     <div className="w-36 flex flex-col">
@@ -163,11 +179,9 @@ function ValueColumn({
             type="date"
             value={lotInfo.inboundDate}
             onChange={(e) => onChange("received_date", e.target.value)}
-            onKeyDown={(e) =>
-              handleKeyDown(e, "received_date", (e.target as HTMLInputElement).value)
-            }
+            onKeyDown={handleKeyDown}
             onBlur={(e) => {
-              onChange("received_date", e.target.value);
+              commitIfChanged("received_date", e.target.value, lotInfo.inboundDate);
               setEditingField(null);
             }}
             className="h-8 text-sm"
@@ -189,9 +203,10 @@ function ValueColumn({
             type="text"
             value={localLotNo}
             onChange={(e) => setLocalLotNo(e.target.value)}
-            onKeyDown={(e) => handleKeyDown(e, "lot_number", localLotNo)}
+            onKeyDown={handleKeyDown}
             onBlur={() => {
-              onChange("lot_number", localLotNo);
+              const currentLotNo = isTmpLot ? "" : lotInfo.lotNo || "";
+              commitIfChanged("lot_number", localLotNo, currentLotNo);
               setEditingField(null);
             }}
             placeholder=""
@@ -212,8 +227,15 @@ function ValueColumn({
           type="text"
           value={localInboundNo}
           onChange={(e) => setLocalInboundNo(e.target.value)}
-          onBlur={() => onChange("origin_reference", localInboundNo)}
-          onKeyDown={(e) => handleKeyDown(e, "origin_reference", localInboundNo)}
+          onBlur={() =>
+            commitIfChanged(
+              "origin_reference",
+              localInboundNo,
+              lotInfo.inboundNo || "",
+              normalizePlaceholder,
+            )
+          }
+          onKeyDown={handleKeyDown}
           placeholder="-"
           className="h-8 text-xs font-mono bg-transparent border-0 hover:bg-slate-50 focus:bg-blue-50"
         />
@@ -223,8 +245,10 @@ function ValueColumn({
           type="text"
           value={localOrderNo}
           onChange={(e) => setLocalOrderNo(e.target.value)}
-          onBlur={() => onChange("order_no", localOrderNo)}
-          onKeyDown={(e) => handleKeyDown(e, "order_no", localOrderNo)}
+          onBlur={() =>
+            commitIfChanged("order_no", localOrderNo, lotInfo.orderNo || "", normalizePlaceholder)
+          }
+          onKeyDown={handleKeyDown}
           placeholder="-"
           className="h-8 text-xs font-mono bg-transparent border-0 hover:bg-slate-50 focus:bg-blue-50"
         />
@@ -236,9 +260,10 @@ function ValueColumn({
             type="date"
             value={lotInfo.expiryDate !== "期限なし" ? lotInfo.expiryDate : ""}
             onChange={(e) => onChange("expiry_date", e.target.value)}
-            onKeyDown={(e) => handleKeyDown(e, "expiry_date", (e.target as HTMLInputElement).value)}
+            onKeyDown={handleKeyDown}
             onBlur={(e) => {
-              onChange("expiry_date", e.target.value);
+              const currentExpiry = lotInfo.expiryDate !== "期限なし" ? lotInfo.expiryDate : "";
+              commitIfChanged("expiry_date", e.target.value, currentExpiry);
               setEditingField(null);
             }}
             className="h-8 text-xs"

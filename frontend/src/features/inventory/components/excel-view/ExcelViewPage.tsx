@@ -52,6 +52,76 @@ function LoadingOrError({ isLoading }: LoadingOrErrorProps) {
   );
 }
 
+const readDestinationOrder = (key: string): number[] => {
+  if (typeof window === "undefined") return [];
+  const raw = window.localStorage.getItem(key);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((value) => Number.isFinite(value)).map(Number);
+  } catch {
+    return [];
+  }
+};
+
+const writeDestinationOrder = (key: string, order: number[]): void => {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(key, JSON.stringify(order));
+};
+
+const mergeDestinationOrder = (current: number[], available: number[]): number[] => {
+  if (available.length === 0) return [];
+  const merged: number[] = [];
+  const availableSet = new Set(available);
+  current.forEach((id) => {
+    if (availableSet.has(id)) {
+      merged.push(id);
+    }
+  });
+  available.forEach((id) => {
+    if (!merged.includes(id)) {
+      merged.push(id);
+    }
+  });
+  return merged;
+};
+
+const reorderDestinations = <T extends { deliveryPlaceId: number }>(
+  items: T[],
+  order: number[],
+): T[] => {
+  if (order.length === 0 || items.length === 0) return items;
+  const itemMap = new Map(items.map((item) => [item.deliveryPlaceId, item]));
+  const ordered: T[] = [];
+  const used = new Set<number>();
+  order.forEach((id) => {
+    const item = itemMap.get(id);
+    if (item) {
+      ordered.push(item);
+      used.add(id);
+    }
+  });
+  items.forEach((item) => {
+    if (!used.has(item.deliveryPlaceId)) {
+      ordered.push(item);
+    }
+  });
+  return ordered;
+};
+
+const moveDestinationId = (order: number[], fromId: number, toId: number): number[] => {
+  const next = order.slice();
+  const fromIndex = next.indexOf(fromId);
+  const toIndex = next.indexOf(toId);
+  if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+    return next;
+  }
+  next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, fromId);
+  return next;
+};
+
 /* eslint-disable max-lines-per-function */
 /* eslint-disable complexity */
 /* eslint-disable max-lines */
@@ -87,6 +157,44 @@ export function ExcelViewPage() {
     Number(productId),
     customerItemId ? Number(customerItemId) : undefined,
   );
+  const destinationOrderKey = useMemo(() => {
+    const customerKey = customerItemId ? `customer-${customerItemId}` : "all-customers";
+    return `excel-view-destination-order:${productId}:${customerKey}`;
+  }, [customerItemId, productId]);
+  const [destinationOrder, setDestinationOrder] = useState<number[]>([]);
+  const destinationIds = useMemo(
+    () => data?.lots?.[0]?.destinations.map((d) => d.deliveryPlaceId) || [],
+    [data?.lots],
+  );
+
+  useEffect(() => {
+    if (destinationIds.length === 0) return;
+    setDestinationOrder((current) => {
+      const stored = readDestinationOrder(destinationOrderKey);
+      const base = stored.length > 0 ? stored : current;
+      return mergeDestinationOrder(base.length > 0 ? base : destinationIds, destinationIds);
+    });
+  }, [destinationIds, destinationOrderKey]);
+
+  useEffect(() => {
+    if (destinationOrder.length === 0) return;
+    writeDestinationOrder(destinationOrderKey, destinationOrder);
+  }, [destinationOrder, destinationOrderKey]);
+
+  const orderedLots = useMemo(() => {
+    if (!data) return [];
+    if (destinationOrder.length === 0) return data.lots;
+    return data.lots.map((lot) => ({
+      ...lot,
+      destinations: reorderDestinations(lot.destinations, destinationOrder),
+    }));
+  }, [data, destinationOrder]);
+
+  const orderedInvolvedDestinations = useMemo(() => {
+    if (!data) return [];
+    if (destinationOrder.length === 0) return data.involvedDestinations;
+    return reorderDestinations(data.involvedDestinations, destinationOrder);
+  }, [data, destinationOrder]);
 
   // Phase 9: Sync local page notes with data
   useEffect(() => {
@@ -235,15 +343,22 @@ export function ExcelViewPage() {
     [data, productId, updateMutation],
   );
 
-  const handleLotFieldChange = useCallback(async (lotId: number, field: string, value: string) => {
-    const { updateLot } = await import("@/services/api/lot-service");
-    try {
-      await updateLot(lotId, { [field]: value });
-      toast.success("ロット情報を更新しました");
-    } catch {
-      toast.error("ロット情報の更新に失敗しました");
-    }
-  }, []);
+  const handleLotFieldChange = useCallback(
+    async (lotId: number, field: string, value: string) => {
+      const { updateLot } = await import("@/services/api/lot-service");
+      try {
+        await updateLot(lotId, { [field]: value });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["lots"] }),
+          queryClient.invalidateQueries({ queryKey: inventoryItemKeys.all }),
+        ]);
+      } catch (error) {
+        const message = await getUserFriendlyMessageAsync(error);
+        toast.error(`ロット情報の更新に失敗しました: ${message}`);
+      }
+    },
+    [queryClient],
+  );
 
   // Phase 9: Page notes save handler
   const handlePageNotesBlur = useCallback(async () => {
@@ -405,6 +520,16 @@ export function ExcelViewPage() {
     setSelectedLotIdForAddDest(lotId);
   }, []);
 
+  const handleReorderDestination = useCallback(
+    (fromId: number, toId: number) => {
+      setDestinationOrder((current) => {
+        const base = current.length > 0 ? current : mergeDestinationOrder([], destinationIds);
+        return moveDestinationId(base, fromId, toId);
+      });
+    },
+    [destinationIds],
+  );
+
   const handleConfirmAddDestination = useCallback(
     async (formData: NewDestinationFormData) => {
       if (!selectedLotIdForAddDest || !customerItem || !data) {
@@ -473,10 +598,16 @@ export function ExcelViewPage() {
 
         // 4. すべての関連キャッシュを無効化
         await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] }),
-          queryClient.invalidateQueries({ queryKey: ["customer-item-delivery-settings"] }),
-          queryClient.invalidateQueries({ queryKey: ["delivery-places"] }),
-          queryClient.invalidateQueries({ queryKey: ["inventoryItems"] }),
+          queryClient.invalidateQueries({
+            queryKey: ["allocationSuggestions"],
+            refetchType: "all",
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["customer-item-delivery-settings"],
+            refetchType: "all",
+          }),
+          queryClient.invalidateQueries({ queryKey: ["delivery-places"], refetchType: "all" }),
+          queryClient.invalidateQueries({ queryKey: ["inventoryItems"], refetchType: "all" }),
         ]);
 
         toast.success("納入先を追加しました");
@@ -544,7 +675,7 @@ export function ExcelViewPage() {
       <SupplierFilterSet warningOnly warningClassName="mb-4" />
 
       <div className="space-y-4">
-        <ProductHeader data={data.header} involvedDestinations={data.involvedDestinations} />
+        <ProductHeader data={data.header} involvedDestinations={orderedInvolvedDestinations} />
 
         {/* Phase 9: Page-level notes */}
         {customerItemId && (
@@ -582,7 +713,7 @@ export function ExcelViewPage() {
           </div>
         )}
 
-        {data.lots.map((lot) => {
+        {orderedLots.map((lot) => {
           return (
             <LotSection
               key={lot.lotId}
@@ -607,6 +738,7 @@ export function ExcelViewPage() {
               onManualShipmentDateChange={handleManualShipmentDateChange}
               onSplitLot={handleSmartSplitLot}
               onUpdateQuantity={handleUpdateQuantity}
+              onReorderDestination={handleReorderDestination}
             />
           );
         })}

@@ -1,6 +1,6 @@
 # タスクバックログ (統合版)
 
-**最終更新:** 2026-02-01
+**最終更新:** 2026-02-05
 
 ---
 
@@ -1327,11 +1327,12 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 ### 10-1. 収容数・保証期間フィールドの実装
 
 **優先度**: Low
-**状態**: 未対応
+**状態**: 完了
 
 **内容**:
 - ヘッダーの「収容数」「保証期間」が常に `-` 表示
 - `Product` に `capacity` / `warranty_period_days` を追加し、APIレスポンスに含める
+  - 実装: `supplier_items` カラム追加 → `v_lot_receipt_stock` → Inventory API → Excel Viewヘッダー反映
 
 **関連ファイル**:
 - `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts:177-178`
@@ -1342,11 +1343,12 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 ### 10-2. 先方品番（customerPartNo）の表示
 
 **優先度**: Medium
-**状態**: 未対応
+**状態**: 完了
 
 **内容**:
 - 得意先情報の「先方品番」が常に `-`
 - `customer_items` を参照して表示できるようにする
+  - 実装: `customer_items` を `supplier_item_id` で取得し、得意先IDごとの先方品番をマッピング
 
 **関連ファイル**:
 - `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts`
@@ -1357,11 +1359,12 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 ### 10-3. 発注NO.の表示
 
 **優先度**: Low
-**状態**: 未対応
+**状態**: 完了
 
 **内容**:
 - ロット情報の「発注NO.」が常に `-`
 - 要件確認後に `purchase_order_number` 等のフィールドを検討
+  - 実装: `lot_receipts.order_no` を追加し、Excel Viewで表示/更新
 
 **関連ファイル**:
 - `frontend/src/features/inventory/components/excel-view/useExcelViewData.ts`
@@ -1382,10 +1385,12 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 ### 10-5. 同一ロット番号・入荷日別の行表示確認
 
 **優先度**: Medium
-**状態**: 要確認
+**状態**: 完了
 
 **内容**:
 - 同一ロット番号でも入荷日違いで別行表示されることのUI確認
+  - 制約: 同一ロット番号・同一入荷日は不可（分割時は入荷日をずらす）
+  - 納入先は全ロットで同一行構成（グローバル表示）
 
 ---
 
@@ -1396,34 +1401,35 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 
 **内容**:
 - ShipmentTable / DateGrid の縦線が揃わない
-- CSS Grid化などで解消方針
+- 境界線の重複を整理し、縦線の揃いを改善
+  - 目視確認の結果、現状も解消せず。時間対効果を考慮しバックログに残す
 
 ---
 
 ### 10-7. 納入先追加の反映遅延
 
 **優先度**: Medium
-**状態**: 要確認
+**状態**: 完了
 
 **内容**:
-- 納入先追加後に画面反映が遅れるケースがあるか再確認
+- 納入先追加後の再取得を強化し、反映遅延が残るか再確認
 
 ---
 
 ### 10-8. コメント・手動出荷日の保存反映確認
 
 **優先度**: Medium
-**状態**: 要確認
+**状態**: 完了
 
 **内容**:
-- 保存 → 再読み込みで反映されるかの確認
+- 数量0でもコメント/手動出荷日が保存されるようにし、保存 → 再読み込みで反映されるか確認
 
 ---
 
 ### 10-9. ロット重複時のエラーハンドリング
 
 **優先度**: Medium
-**状態**: 未対応
+**状態**: 完了
 
 **内容**:
 - 既存ロット番号保存時のトースト/バリデーション表示改善
@@ -1433,10 +1439,10 @@ PR #437 で`getItemKey`に`supplier_id`を追加した際、`useInventoryTableLo
 ### 10-10. 納入先行の並び替え機能
 
 **優先度**: Low
-**状態**: 未対応
+**状態**: 完了
 
 **内容**:
-- ドラッグ&ドロップ並び替え + 保存（local/DB）
+- ドラッグ&ドロップ並び替え + 保存（localStorage）
 
 
 ---

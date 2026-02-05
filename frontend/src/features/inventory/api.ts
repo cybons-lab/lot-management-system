@@ -54,6 +54,8 @@ export type InventoryItem =
     // Aggregated suppliers (for product_warehouse grouping with multiple suppliers)
     suppliers_summary?: SuppliersSummary;
     is_assigned_supplier?: boolean;
+    capacity?: string | null;
+    warranty_period_days?: number | null;
   };
 
 export type InventoryListResponse = {

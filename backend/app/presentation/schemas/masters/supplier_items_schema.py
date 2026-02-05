@@ -32,6 +32,8 @@ class SupplierItemBase(BaseModel):
     # Product attributes
     consumption_limit_days: int | None = Field(None, description="消費期限日数")
     requires_lot_number: bool = Field(True, description="ロット番号管理が必要")
+    capacity: Decimal | None = Field(None, description="収容数")
+    warranty_period_days: int | None = Field(None, description="保証期間（日）")
     lead_time_days: int | None = Field(None, description="リードタイム（日）")
     notes: str | None = Field(None, description="備考")
 
@@ -57,6 +59,8 @@ class SupplierItemUpdate(BaseModel):
     qty_per_internal_unit: Decimal | None = Field(None, description="内部単位あたりの数量")
     consumption_limit_days: int | None = Field(None, description="消費期限日数")
     requires_lot_number: bool | None = Field(None, description="ロット番号管理が必要")
+    capacity: Decimal | None = Field(None, description="収容数")
+    warranty_period_days: int | None = Field(None, description="保証期間（日）")
     lead_time_days: int | None = Field(None, description="リードタイム（日）")
     notes: str | None = Field(None, description="備考")
 
@@ -74,6 +78,8 @@ class SupplierItemResponse(ORMModel):
     qty_per_internal_unit: Decimal | None
     consumption_limit_days: int | None
     requires_lot_number: bool
+    capacity: Decimal | None
+    warranty_period_days: int | None
     lead_time_days: int | None
     notes: str | None
     # Enriched from relationships
@@ -97,6 +103,8 @@ class SupplierItemListItem(BaseModel):
     qty_per_internal_unit: Decimal | None = None
     consumption_limit_days: int | None = None
     requires_lot_number: bool = True
+    capacity: Decimal | None = None
+    warranty_period_days: int | None = None
     lead_time_days: int | None = None
     notes: str | None = None
     supplier_code: str | None = None

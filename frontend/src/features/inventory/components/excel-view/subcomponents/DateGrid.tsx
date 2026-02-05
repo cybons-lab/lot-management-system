@@ -331,10 +331,10 @@ export function DateGrid({
         </div>
 
         {/* Rows */}
-        <div className="flex-1 flex flex-col divide-y divide-slate-100">
-          {destinations.map((dest, i) => (
+        <div className="flex-1 flex flex-col">
+          {destinations.map((dest) => (
             <div
-              key={i}
+              key={dest.deliveryPlaceId}
               className={`${hRow} flex divide-x divide-slate-100 hover:bg-slate-50 border-b border-slate-100`}
             >
               {dateColumns.map((date) => (
@@ -353,7 +353,7 @@ export function DateGrid({
                 />
               ))}
               {/* Spacer for add column button (prevent row misalignment) */}
-              <div className="w-10 bg-slate-50/10 border-l border-slate-200" />
+              <div className="w-10 bg-slate-50/10" />
             </div>
           ))}
           {destinations.length < MAX_VISIBLE_ROWS &&
@@ -365,7 +365,7 @@ export function DateGrid({
                 {dateColumns.map((d) => (
                   <div key={d} className="w-16 bg-slate-50/5"></div>
                 ))}
-                <div className="w-10 bg-slate-50/10 border-l border-slate-200"></div>
+                <div className="w-10 bg-slate-50/10"></div>
               </div>
             ))}
         </div>

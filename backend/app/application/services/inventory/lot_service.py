@@ -132,7 +132,7 @@ v2.2: lot_current_stock 依存を削除。Lot モデルを直接使用。
 from __future__ import annotations
 
 import logging
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from fastapi import HTTPException
@@ -234,6 +234,7 @@ class LotService:
         return LotResponse(
             id=lot_view.lot_id,
             lot_number=lot_view.lot_number,
+            order_no=getattr(lot_view, "order_no", None),
             supplier_item_id=lot_view.supplier_item_id or 0,
             product_code=lot_view.maker_part_no or "",
             product_name=lot_view.display_name,
@@ -490,6 +491,7 @@ class LotService:
             response = LotResponse(
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number or "",
+                order_no=getattr(lot_view, "order_no", None),
                 supplier_item_id=lot_view.supplier_item_id or 0,
                 product_code=lot_view.maker_part_no or "",
                 product_name=lot_view.display_name,
@@ -618,6 +620,7 @@ class LotService:
             response = LotResponse(
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number,
+                order_no=getattr(lot_view, "order_no", None),
                 supplier_item_id=lot_view.supplier_item_id or 0,
                 product_code=lot_view.maker_part_no or "",
                 product_name=lot_view.display_name,
@@ -762,6 +765,21 @@ class LotService:
             self.db.add(lot_master)
             self.db.flush()  # Generate ID
 
+        # Enforce unique (lot_master_id, received_date)
+        if lot_master and lot_payload.get("received_date"):
+            conflict = (
+                self.db.query(LotReceipt.id)
+                .filter(
+                    LotReceipt.lot_master_id == lot_master.id,
+                    LotReceipt.received_date == lot_payload["received_date"],
+                )
+                .first()
+            )
+            if conflict:
+                raise LotValidationError(
+                    "同一ロット番号・同一入荷日のロットは作成できません。入荷日を変更してください。"
+                )
+
         lot_payload["lot_master_id"] = lot_master.id
 
         # Remove lot_number from payload as it is now a read-only property in Lot (LotReceipt)
@@ -867,6 +885,7 @@ class LotService:
             raise LotNotFoundError(lot_id)
 
         updates = lot_update.model_dump(exclude_unset=True)
+        received_date_update = updates.get("received_date")
 
         if "warehouse_id" in updates:
             warehouse = (
@@ -890,6 +909,22 @@ class LotService:
         if "lot_number" in updates:
             db_lot.lot_master.lot_number = updates.pop("lot_number")
 
+        # Enforce unique (lot_master_id, received_date)
+        if received_date_update is not None and db_lot.lot_master_id:
+            conflict = (
+                self.db.query(LotReceipt.id)
+                .filter(
+                    LotReceipt.lot_master_id == db_lot.lot_master_id,
+                    LotReceipt.received_date == received_date_update,
+                    LotReceipt.id != db_lot.id,
+                )
+                .first()
+            )
+            if conflict:
+                raise LotValidationError(
+                    "同一ロット番号・同一入荷日のロットは作成できません。入荷日を変更してください。"
+                )
+
         # Compatibility: Map current_quantity to received_quantity
         if "current_quantity" in updates:
             updates["received_quantity"] = updates.pop("current_quantity")
@@ -897,7 +932,9 @@ class LotService:
         for key, value in updates.items():
             setattr(db_lot, key, value)
 
-        db_lot.updated_at = utcnow()
+        # Touch lot_receipts only when its columns are updated.
+        if updates:
+            db_lot.updated_at = utcnow()
 
         try:
             self.db.commit()
@@ -1105,6 +1142,7 @@ class LotService:
                 joinedload(LotReceipt.supplier_item),
                 joinedload(LotReceipt.warehouse),
                 joinedload(LotReceipt.supplier),
+                joinedload(LotReceipt.lot_master),
             )
             .filter(LotReceipt.id == lot_id)
             .first()
@@ -1159,6 +1197,7 @@ class LotService:
         return LotResponse(
             id=db_lot.id,
             lot_number=db_lot.lot_number or "",
+            order_no=db_lot.order_no,
             supplier_item_id=db_lot.supplier_item_id or 0,
             warehouse_id=db_lot.warehouse_id,
             supplier_id=db_lot.supplier_id,
@@ -1240,15 +1279,24 @@ class LotService:
 
         # Create new lot receipts for remaining splits
         new_lot_ids = [original_lot.id]
+        next_dates: list[date] = []
+        if original_lot.lot_master_id and len(split_quantities) > 1:
+            next_dates = self._get_next_available_received_dates(
+                original_lot.lot_master_id,
+                original_lot.received_date,
+                len(split_quantities) - 1,
+            )
 
-        for quantity in split_quantities[1:]:
+        for idx, quantity in enumerate(split_quantities[1:]):
             # Create new lot receipt with same attributes
             new_lot = LotReceipt(
                 lot_master_id=original_lot.lot_master_id,
                 warehouse_id=original_lot.warehouse_id,
                 supplier_id=original_lot.supplier_id,
                 supplier_item_id=original_lot.supplier_item_id,
-                received_date=original_lot.received_date,
+                received_date=next_dates[idx]
+                if idx < len(next_dates)
+                else original_lot.received_date,
                 expiry_date=original_lot.expiry_date,
                 received_quantity=quantity,
                 consumed_quantity=Decimal("0"),
@@ -1257,6 +1305,7 @@ class LotService:
                 inspection_status=original_lot.inspection_status,
                 origin_type=original_lot.origin_type,
                 remarks=original_lot.remarks,
+                order_no=original_lot.order_no,
             )
             self.db.add(new_lot)
             self.db.flush()
@@ -1524,6 +1573,13 @@ class LotService:
 
             # Create new lot receipts for remaining splits
             new_lot_ids = [original_lot.id]
+            next_dates: list[date] = []
+            if original_lot.lot_master_id and split_count > 1:
+                next_dates = self._get_next_available_received_dates(
+                    original_lot.lot_master_id,
+                    original_lot.received_date,
+                    split_count - 1,
+                )
 
             for i in range(1, split_count):
                 new_lot = LotReceipt(
@@ -1531,7 +1587,9 @@ class LotService:
                     warehouse_id=original_lot.warehouse_id,
                     supplier_id=original_lot.supplier_id,
                     supplier_item_id=original_lot.supplier_item_id,
-                    received_date=original_lot.received_date,
+                    received_date=next_dates[i - 1]
+                    if (i - 1) < len(next_dates)
+                    else original_lot.received_date,
                     expiry_date=original_lot.expiry_date,
                     received_quantity=split_quantities[i],
                     consumed_quantity=Decimal("0"),
@@ -1540,6 +1598,7 @@ class LotService:
                     inspection_status=original_lot.inspection_status,
                     origin_type=original_lot.origin_type,
                     remarks=original_lot.remarks,
+                    order_no=original_lot.order_no,
                 )
                 self.db.add(new_lot)
                 self.db.flush()
@@ -1615,3 +1674,22 @@ class LotService:
             raise
 
         return new_lot_ids, split_quantities, transferred_count
+
+    def _get_next_available_received_dates(
+        self, lot_master_id: int, base_date: date, count: int
+    ) -> list[date]:
+        existing_dates = {
+            row.received_date
+            for row in self.db.query(LotReceipt.received_date)
+            .filter(LotReceipt.lot_master_id == lot_master_id)
+            .all()
+            if row.received_date
+        }
+        dates: list[date] = []
+        candidate = base_date
+        while len(dates) < count:
+            candidate = candidate + timedelta(days=1)
+            if candidate in existing_dates or candidate in dates:
+                continue
+            dates.append(candidate)
+        return dates

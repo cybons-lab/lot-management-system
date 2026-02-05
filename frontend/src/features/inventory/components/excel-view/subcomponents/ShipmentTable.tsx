@@ -1,6 +1,7 @@
 import { format, isValid, parseISO } from "date-fns";
 import { ja } from "date-fns/locale";
-import { Calendar as CalendarIcon, Plus } from "lucide-react";
+import { Calendar as CalendarIcon, GripVertical, Plus } from "lucide-react";
+import { useState, type DragEvent } from "react";
 
 import { type DestinationRowData } from "../types";
 
@@ -19,6 +20,7 @@ interface Props {
   lotId: number;
   onCoaDateChange?: (lotId: number, dpId: number, date: string, coaDate: string | null) => void;
   onAddDestination?: () => void;
+  onReorderDestination?: (fromId: number, toId: number) => void;
 }
 
 /* eslint-disable max-lines-per-function */
@@ -29,16 +31,54 @@ export function ShipmentTable({
   lotId,
   onCoaDateChange,
   onAddDestination,
+  onReorderDestination,
 }: Props) {
   const defaultDate = dateColumns[0] || "2026-02"; // Fallback if no columns
   const emptyRows = Math.max(0, MAX_VISIBLE_ROWS - destinations.length);
   const hasEmptyRows = emptyRows > 0;
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
 
   const formatCoaDate = (value?: string) => {
     if (!value) return "";
     const parsed = parseISO(value);
     if (!isValid(parsed)) return "";
     return format(parsed, "MM/dd");
+  };
+
+  const handleDragStart = (event: DragEvent, id: number) => {
+    if (!onReorderDestination) return;
+    event.dataTransfer.setData("text/plain", String(id));
+    event.dataTransfer.effectAllowed = "move";
+    setDraggingId(id);
+  };
+
+  const handleDragOver = (event: DragEvent, id: number) => {
+    if (!onReorderDestination) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    if (dragOverId !== id) {
+      setDragOverId(id);
+    }
+  };
+
+  const handleDrop = (event: DragEvent, id: number) => {
+    if (!onReorderDestination) return;
+    event.preventDefault();
+    const fromId = Number(event.dataTransfer.getData("text/plain"));
+    if (!Number.isFinite(fromId) || fromId === id) {
+      setDraggingId(null);
+      setDragOverId(null);
+      return;
+    }
+    onReorderDestination(fromId, id);
+    setDraggingId(null);
+    setDragOverId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setDragOverId(null);
   };
 
   return (
@@ -53,15 +93,35 @@ export function ShipmentTable({
       </div>
 
       {/* Rows */}
-      <div className="flex-1 flex flex-col divide-y divide-slate-100">
-        {destinations.map((dest, i) => (
+      <div className="flex-1 flex flex-col">
+        {destinations.map((dest) => (
           <div
-            key={i}
-            className={`${hRow} flex items-center hover:bg-slate-50 relative group border-b border-slate-100`}
+            key={dest.deliveryPlaceId}
+            className={`${hRow} flex items-center hover:bg-slate-50 relative group border-b border-slate-100 ${
+              dragOverId === dest.deliveryPlaceId ? "bg-blue-50/70" : ""
+            } ${draggingId === dest.deliveryPlaceId ? "opacity-70" : ""}`}
+            onDragOver={(event) => handleDragOver(event, dest.deliveryPlaceId)}
+            onDragLeave={() => {
+              if (dragOverId === dest.deliveryPlaceId) {
+                setDragOverId(null);
+              }
+            }}
+            onDrop={(event) => handleDrop(event, dest.deliveryPlaceId)}
           >
             <div className="w-40 px-3 border-r border-slate-200 truncate h-full flex flex-col justify-center">
-              <div className="font-medium text-slate-900 leading-tight">
-                {dest.destination.deliveryPlaceName}
+              <div className="flex items-center gap-1 font-medium text-slate-900 leading-tight">
+                {onReorderDestination && (
+                  <span
+                    className="cursor-grab text-slate-300 hover:text-slate-500 active:cursor-grabbing"
+                    draggable
+                    onDragStart={(event) => handleDragStart(event, dest.deliveryPlaceId)}
+                    onDragEnd={handleDragEnd}
+                    title="ドラッグで並び替え"
+                  >
+                    <GripVertical className="h-3 w-3" />
+                  </span>
+                )}
+                <span className="truncate">{dest.destination.deliveryPlaceName}</span>
               </div>
             </div>
 

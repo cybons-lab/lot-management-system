@@ -15,6 +15,7 @@ export interface ProductHeaderInfo {
 }
 
 export interface DestinationInfo {
+  deliveryPlaceId: number;
   customerCode: string;
   customerName: string;
   deliveryPlaceName: string;

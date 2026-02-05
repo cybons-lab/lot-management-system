@@ -7,6 +7,7 @@ Legacy fields have been removed.
 from __future__ import annotations
 
 from datetime import date, datetime
+from decimal import Decimal
 
 from pydantic import Field
 
@@ -350,6 +351,8 @@ class SupplierItemBase(BaseSchema):
     maker_part_no: str = Field(..., min_length=1, max_length=100, description="メーカー品番")
     is_primary: bool = Field(False)
     lead_time_days: int | None = Field(None, ge=0)
+    capacity: Decimal | None = Field(None, description="収容数")
+    warranty_period_days: int | None = Field(None, description="保証期間（日）")
     display_name: str | None = Field(None, max_length=200, description="表示名")
     notes: str | None = Field(None, description="備考")
 
@@ -370,6 +373,8 @@ class SupplierItemUpdate(BaseSchema):
     maker_part_no: str | None = Field(None, min_length=1, max_length=100)
     is_primary: bool | None = None
     lead_time_days: int | None = Field(None, ge=0)
+    capacity: Decimal | None = Field(None, description="収容数")
+    warranty_period_days: int | None = Field(None, description="保証期間（日）")
     display_name: str | None = Field(None, max_length=200)
     notes: str | None = None
 

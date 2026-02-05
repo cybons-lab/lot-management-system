@@ -55,6 +55,7 @@ def test_list_lots_maps_computed_fields():
     mock_lot_view.updated_at = datetime(2025, 1, 1, 10, 0, 0)
     mock_lot_view.status = "active"
     mock_lot_view.origin_type = "order"
+    mock_lot_view.order_no = "ORD-001"
 
     # 2. DBクエリのMock
     service = LotService(db_session)

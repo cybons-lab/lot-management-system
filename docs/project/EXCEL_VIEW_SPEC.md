@@ -13,6 +13,8 @@
   - 入庫数/在庫数（BigStatColumn）
   - 納入先テーブル（ShipmentTable）
   - 日付グリッド（DateGrid）
+  - ヘッダー: 収容数・保証期間・先方品番（customer_items参照）
+  - ロット情報: 発注NOは `lot_receipts.order_no`（手入力）
 
 ---
 
@@ -78,6 +80,8 @@
 ## 4. 重要なバリデーション/制約
 
 - **分割**: `consumed_quantity > 0` のロットは分割不可
+- **分割後の入荷日**: 同一ロット番号・同一入荷日のロットは作成不可  
+  → 分割時は新規ロットに別入荷日を自動付与（翌日以降）
 - **スマート分割**:
   - `target_lot_index` は 0..(split_count-1)
   - 指定数量はDB上の割当数量と一致必須
@@ -100,4 +104,3 @@
 ## 6. レビュー結果
 
 - 詳細は `docs/project/COMPLETE_EXCEL_VIEW_REVIEW.md` を参照
-

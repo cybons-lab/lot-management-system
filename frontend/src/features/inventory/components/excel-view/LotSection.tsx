@@ -72,6 +72,8 @@ interface Props {
   onSplitLot?: (lotId: number) => void;
   // Phase 11: Quantity update with reason
   onUpdateQuantity?: (lotId: number) => void;
+  // Phase 10.10: Destination row ordering
+  onReorderDestination?: (fromId: number, toId: number) => void;
 }
 
 /* eslint-disable max-lines-per-function */
@@ -93,6 +95,7 @@ export function LotSection({
   onManualShipmentDateChange,
   onSplitLot,
   onUpdateQuantity,
+  onReorderDestination,
 }: Props) {
   const {
     lotId,
@@ -223,6 +226,7 @@ export function LotSection({
                 lotId={lotId}
                 onCoaDateChange={onCoaDateChange}
                 onAddDestination={() => onAddDestination?.(lotId)}
+                onReorderDestination={onReorderDestination}
               />
 
               {/* 4. Current Stock (Big Vertical) */}

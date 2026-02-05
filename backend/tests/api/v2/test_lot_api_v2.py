@@ -223,7 +223,8 @@ def test_create_lot_validation_error(client: TestClient, setup_lot_data):
 def test_create_lot_duplicate(client: TestClient, setup_lot_data):
     """
     Test duplicate lot creation logic.
-    Note: Current logic allows duplicate lot_number (multiple receipts for same lot_number).
+    Note: Current logic allows duplicate lot_number (multiple receipts for same lot_number)
+    BUT requires different received_date (Phase 10 constraint).
     It should NOT error, but create a new Lot entry linked to same LotMaster.
     """
     product = setup_lot_data["product"]
@@ -242,8 +243,10 @@ def test_create_lot_duplicate(client: TestClient, setup_lot_data):
     response1 = client.post("/api/v2/lot/", json=payload)
     assert response1.status_code == 201
 
-    # Second creation (same lot_number)
-    response2 = client.post("/api/v2/lot/", json=payload)
+    # Second creation (same lot_number, different received_date)
+    payload2 = payload.copy()
+    payload2["received_date"] = (date.today() + timedelta(days=1)).isoformat()
+    response2 = client.post("/api/v2/lot/", json=payload2)
     assert response2.status_code == 201
 
     data1 = response1.json()
