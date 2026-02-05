@@ -20,7 +20,9 @@ import {
   updateDeliverySetting,
 } from "@/features/customer-items/delivery-settings/api";
 import { createDeliveryPlace } from "@/features/delivery-places/api";
+import { smartSplitLot, type AllocationTransfer } from "@/features/inventory/api";
 import { QuickLotIntakeDialog } from "@/features/inventory/components/QuickLotIntakeDialog";
+import { SmartLotSplitDialog } from "@/features/inventory/components/SmartLotSplitDialog";
 import { inventoryItemKeys } from "@/features/inventory/hooks";
 import { useDeleteLot } from "@/hooks/mutations";
 import { archiveLot } from "@/services/api/lot-service";
@@ -61,6 +63,13 @@ export function ExcelViewPage() {
   // Phase 9: Page-level notes state
   const [pageNotesExpanded, setPageNotesExpanded] = useState(false);
   const [localPageNotes, setLocalPageNotes] = useState("");
+  // Phase 10.3: Smart split dialog state
+  const [smartSplitDialogOpen, setSmartSplitDialogOpen] = useState(false);
+  const [selectedLotForSmartSplit, setSelectedLotForSmartSplit] = useState<{
+    lotId: number;
+    lotNumber: string;
+    currentQuantity: number;
+  } | null>(null);
 
   const { data, isLoading, supplierId, customerItem } = useExcelViewData(
     Number(productId),
@@ -97,6 +106,27 @@ export function ExcelViewPage() {
       void (async () => {
         const message = await getUserFriendlyMessageAsync(error);
         toast.error(`ロットのアーカイブに失敗しました: ${message}`);
+      })();
+    },
+  });
+
+  // Phase 10.3: Smart split mutation
+  const smartSplitMutation = useMutation({
+    mutationFn: ({ lotId, transfers }: { lotId: number; transfers: AllocationTransfer[] }) =>
+      smartSplitLot(lotId, {
+        split_count: Math.max(...transfers.map((t) => t.target_lot_index)) + 1,
+        allocation_transfers: transfers,
+      }),
+    onSuccess: (result) => {
+      toast.success(result.message || "ロットを分割しました");
+      queryClient.invalidateQueries({ queryKey: ["lots"] });
+      queryClient.invalidateQueries({ queryKey: inventoryItemKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["allocationSuggestions"] });
+    },
+    onError: (error: unknown) => {
+      void (async () => {
+        const message = await getUserFriendlyMessageAsync(error);
+        toast.error(`ロット分割に失敗しました: ${message}`);
       })();
     },
   });
@@ -292,6 +322,22 @@ export function ExcelViewPage() {
       await archiveMutation.mutateAsync({ id: lotId, lotNumber });
     },
     [archiveMutation],
+  );
+
+  // Phase 10.3: Smart split handler
+  const handleSmartSplitLot = useCallback(
+    (lotId: number) => {
+      const lot = data?.lots.find((l) => l.lotId === lotId);
+      if (!lot) return;
+
+      setSelectedLotForSmartSplit({
+        lotId,
+        lotNumber: lot.lotNumber || `ロット${lotId}`,
+        currentQuantity: lot.totalStock,
+      });
+      setSmartSplitDialogOpen(true);
+    },
+    [data],
   );
 
   const handleAddDestination = useCallback((lotId: number) => {
@@ -498,6 +544,7 @@ export function ExcelViewPage() {
               isArchiving={archiveMutation.isPending}
               onCommentChange={handleCommentChange}
               onManualShipmentDateChange={handleManualShipmentDateChange}
+              onSplitLot={handleSmartSplitLot}
             />
           );
         })}
@@ -522,6 +569,67 @@ export function ExcelViewPage() {
         initialProductId={Number(productId)}
         initialSupplierId={supplierId}
       />
+
+      {/* Phase 10.3: Smart Split Dialog */}
+      {selectedLotForSmartSplit && (
+        <SmartLotSplitDialog
+          open={smartSplitDialogOpen}
+          onOpenChange={setSmartSplitDialogOpen}
+          lotNumber={selectedLotForSmartSplit.lotNumber}
+          currentQuantity={selectedLotForSmartSplit.currentQuantity}
+          allocations={
+            data?.lots
+              .find((l) => l.lotId === selectedLotForSmartSplit.lotId)
+              ?.destinations.flatMap((dest) =>
+                Object.entries(dest.shipmentQtyByDate)
+                  .filter(([_, qty]) => qty > 0)
+                  .map(([date, qty]) => ({
+                    destinationId: dest.deliveryPlaceId,
+                    destinationName: `${dest.destination.customerName} - ${dest.destination.deliveryPlaceName}`,
+                    date,
+                    quantity: qty,
+                    key: `${dest.deliveryPlaceId}-${date}`,
+                  })),
+              ) || []
+          }
+          onConfirm={async (splitTargets) => {
+            // Build allocation transfers
+            const transfers: AllocationTransfer[] = [];
+
+            splitTargets.forEach((target) => {
+              target.allocations.forEach((alloc) => {
+                const lot = data?.lots.find((l) => l.lotId === selectedLotForSmartSplit.lotId);
+                const dest = lot?.destinations.find(
+                  (d) => d.deliveryPlaceId === alloc.destinationId,
+                );
+
+                if (dest) {
+                  transfers.push({
+                    lot_id: selectedLotForSmartSplit.lotId,
+                    delivery_place_id: alloc.destinationId,
+                    customer_id: dest.customerId,
+                    forecast_period: alloc.date,
+                    quantity: alloc.quantity,
+                    target_lot_index: target.index,
+                    coa_issue_date: dest.coaIssueDate || null,
+                    comment: dest.commentByDate?.[alloc.date] || null,
+                    manual_shipment_date: dest.manualShipmentDateByDate?.[alloc.date] || null,
+                  });
+                }
+              });
+            });
+
+            await smartSplitMutation.mutateAsync({
+              lotId: selectedLotForSmartSplit.lotId,
+              transfers,
+            });
+
+            setSmartSplitDialogOpen(false);
+            setSelectedLotForSmartSplit(null);
+          }}
+          isLoading={smartSplitMutation.isPending}
+        />
+      )}
     </PageContainer>
   );
 }
