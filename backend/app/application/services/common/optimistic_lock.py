@@ -1,21 +1,27 @@
-"""Optimistic lock helpers for versioned updates/deletes."""
-
 from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
 from datetime import date, timedelta
-from typing import Any, TypeVar
+from typing import Any, Protocol, TypeVar, cast, runtime_checkable
 
 from fastapi import HTTPException, status
-from sqlalchemy import delete, update
+from sqlalchemy import CursorResult, Result, delete, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T")
+
+@runtime_checkable
+class VersionedModel(Protocol):
+    """Protocol for models that support optimistic locking via 'version' column."""
+
+    version: Any
+
+
+T = TypeVar("T", bound=VersionedModel)
 
 DEFAULT_CONFLICT_MESSAGE = "他のユーザーが更新しました。最新データを取得してください。"
 
@@ -35,7 +41,7 @@ def _ensure_filters(filters: Sequence) -> Sequence:
     return filters
 
 
-def update_with_version(  # noqa: UP047
+def update_with_version(
     db: Session,
     model: type[T],
     *,
@@ -47,14 +53,19 @@ def update_with_version(  # noqa: UP047
     """Update a row with optimistic lock check (UPDATE ... WHERE version=expected)."""
     _ensure_filters(filters)
 
+    # Use getattr to avoid Mypy's attr-defined on dynamically generated SQLAlchemy columns
+    model_version = model.version
     stmt = (
         update(model)
-        .where(*filters, model.version == expected_version)  # type: ignore[attr-defined]
-        .values(**update_values, version=model.version + 1)  # type: ignore[attr-defined]
+        .where(*filters, model_version == expected_version)
+        .values(**update_values, version=model_version + 1)
     )
-    result = db.execute(stmt)
+    result: Result = db.execute(stmt)
+    # Result itself doesn't have rowcount in type stubs, but CursorResult does.
+    # We cast to CursorResult to satisfy Mypy for rowcount access.
+    rowcount = cast(CursorResult, result).rowcount
 
-    if result.rowcount == 0:  # type: ignore[attr-defined]
+    if rowcount == 0:
         current = db.query(model).filter(*filters).first()
         if current is None:
             logger.warning(
@@ -67,12 +78,12 @@ def update_with_version(  # noqa: UP047
             extra={
                 "model": model.__name__,
                 "expected_version": expected_version,
-                "current_version": current.version,  # type: ignore[attr-defined]
+                "current_version": current.version,
             },
         )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=_build_conflict_detail(expected_version, current.version),  # type: ignore[attr-defined]
+            detail=_build_conflict_detail(expected_version, current.version),
         )
 
     db.commit()
@@ -84,7 +95,7 @@ def update_with_version(  # noqa: UP047
 
 def soft_delete_with_version(
     db: Session,
-    model: type[Any],
+    model: type[T],
     *,
     filters: Sequence,
     expected_version: int,
@@ -95,15 +106,17 @@ def soft_delete_with_version(
     _ensure_filters(filters)
 
     delete_date = end_date if end_date is not None else date.today() - timedelta(days=1)
+    model_version = model.version
 
     stmt = (
         update(model)
-        .where(*filters, model.version == expected_version)  # type: ignore[attr-defined]
-        .values(valid_to=delete_date, version=model.version + 1)  # type: ignore[attr-defined]
+        .where(*filters, model_version == expected_version)
+        .values(valid_to=delete_date, version=model_version + 1)
     )
-    result = db.execute(stmt)
+    result: Result = db.execute(stmt)
+    rowcount = cast(CursorResult, result).rowcount
 
-    if result.rowcount == 0:  # type: ignore[attr-defined]
+    if rowcount == 0:
         current = db.query(model).filter(*filters).first()
         if current is None:
             logger.warning(
@@ -116,12 +129,12 @@ def soft_delete_with_version(
             extra={
                 "model": model.__name__,
                 "expected_version": expected_version,
-                "current_version": current.version,  # type: ignore[attr-defined]
+                "current_version": current.version,
             },
         )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=_build_conflict_detail(expected_version, current.version),  # type: ignore[attr-defined]
+            detail=_build_conflict_detail(expected_version, current.version),
         )
 
     db.commit()
@@ -129,7 +142,7 @@ def soft_delete_with_version(
 
 def hard_delete_with_version(
     db: Session,
-    model: type[Any],
+    model: type[T],
     *,
     filters: Sequence,
     expected_version: int,
@@ -139,11 +152,13 @@ def hard_delete_with_version(
     """Hard delete a row with optimistic lock check."""
     _ensure_filters(filters)
 
-    stmt = delete(model).where(*filters, model.version == expected_version)  # type: ignore[attr-defined]
+    model_version = model.version
+    stmt = delete(model).where(*filters, model_version == expected_version)
 
     try:
-        result = db.execute(stmt)
-        if result.rowcount == 0:  # type: ignore[attr-defined]
+        result: Result = db.execute(stmt)
+        rowcount = cast(CursorResult, result).rowcount
+        if rowcount == 0:
             current = db.query(model).filter(*filters).first()
             if current is None:
                 logger.warning(
@@ -156,12 +171,12 @@ def hard_delete_with_version(
                 extra={
                     "model": model.__name__,
                     "expected_version": expected_version,
-                    "current_version": current.version,  # type: ignore[attr-defined]
+                    "current_version": current.version,
                 },
             )
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=_build_conflict_detail(expected_version, current.version),  # type: ignore[attr-defined]
+                detail=_build_conflict_detail(expected_version, current.version),
             )
 
         db.commit()

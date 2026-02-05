@@ -102,7 +102,7 @@ async def list_connections(
 
     stmt = select(SapConnection)
     if active_only:
-        stmt = stmt.where(SapConnection.is_active == True)  # noqa: E712
+        stmt = stmt.where(SapConnection.is_active.is_(True))
     stmt = stmt.order_by(SapConnection.id)
 
     connections = list(db.execute(stmt).scalars().all())

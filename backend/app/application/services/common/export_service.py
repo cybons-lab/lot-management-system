@@ -1,7 +1,7 @@
 """Export service for converting data to file formats."""
 
 import io
-from typing import Any
+from typing import Any, cast
 
 from fastapi.responses import StreamingResponse
 
@@ -101,11 +101,11 @@ class ExportService:
 
         # If first item is a dict, return as is
         if isinstance(data[0], dict):
-            return data  # type: ignore
+            return cast(list[dict[str, Any]], data)
 
         # If first item has model_dump, assume all are Pydantic models
         if hasattr(data[0], "model_dump"):
-            return [item.model_dump() for item in data]  # type: ignore[union-attr]
+            return [cast(Any, item).model_dump() for item in data]
 
         # If it's a list of SQLAlchemy rows or objects
         result = []

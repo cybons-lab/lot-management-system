@@ -128,7 +128,7 @@ def get_default_destination(
     delivery_query = select(CustomerItemDeliverySetting).where(
         and_(
             CustomerItemDeliverySetting.customer_item_id == customer_item.id,
-            CustomerItemDeliverySetting.is_default == True,  # noqa: E712
+            CustomerItemDeliverySetting.is_default.is_(True),
         )
     )
     delivery_setting = db.execute(delivery_query).scalars().first()

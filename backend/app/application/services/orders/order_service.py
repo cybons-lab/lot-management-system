@@ -134,7 +134,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import cast
+from typing import Any, cast
 
 from sqlalchemy import case, exists, select
 from sqlalchemy.orm import Session, selectinload
@@ -231,8 +231,11 @@ class OrderService:
         Returns:
             list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）
         """
-        stmt = select(Order).options(  # type: ignore[assignment]
-            selectinload(Order.order_lines).selectinload(OrderLine.supplier_item)
+        stmt = cast(
+            Any,
+            select(Order).options(
+                selectinload(Order.order_lines).selectinload(OrderLine.supplier_item)
+            ),
         )
 
         if customer_code:
@@ -364,13 +367,16 @@ class OrderService:
 
     def get_order_detail(self, order_id: int) -> OrderWithLinesResponse:
         # Load order with related data (DDL v2.2 compliant)
-        stmt = (  # type: ignore[assignment]
-            select(Order)
-            .options(
-                selectinload(Order.order_lines).selectinload(OrderLine.supplier_item),
-                selectinload(Order.customer),
-            )
-            .where(Order.id == order_id)
+        stmt = cast(
+            Any,
+            (
+                select(Order)
+                .options(
+                    selectinload(Order.order_lines).selectinload(OrderLine.supplier_item),
+                    selectinload(Order.customer),
+                )
+                .where(Order.id == order_id)
+            ),
         )
         order = self.db.execute(stmt).scalar_one_or_none()
         if not order:
