@@ -42,88 +42,94 @@ make dev-setup
 
 ## 開発ワークフロー（Docker統一）
 
-**すべての開発コマンドはDocker経由で実行します。** Makefileを使用して統一されたワークフローを実現しています。
+**すべての開発コマンドはDocker経由で実行します。** npm scriptsを使用することでクロスプラットフォーム（Windows/Mac/Linux）で統一されたワークフローを実現しています。
+
+📚 **詳細ガイド:** [Poe Migration Guide](docs/project/POE_MIGRATION_GUIDE.md)
 
 ### 基本コマンド
 
 ```bash
 # サービス起動/停止
-make up          # すべてのサービスを起動
-make down        # すべてのサービスを停止
-make restart     # すべてのサービスを再起動
-make logs        # すべてのログを表示
+npm run up          # すべてのサービスを起動
+npm run down        # すべてのサービスを停止
+npm run restart     # すべてのサービスを再起動
+npm run logs        # すべてのログを表示
 
 # 開発環境セットアップ
-make dev-setup   # 起動 + サンプルデータ投入
+npm run dev:setup   # 起動 + サンプルデータ投入
 ```
 
 ### コード品質チェック
 
 ```bash
 # 全体の品質チェック（コミット前に推奨）
-make quality-check        # Lint修正 + Format + Type check + Test (5分)
-make quality-check-full   # 上記 + Smoke E2E (10分)
+npm run quality        # Lint修正 + Format + Type check + Test (5分)
+npm run quality:full   # 上記 + Smoke E2E (10分)
 
 # テスト実行
-make test-smoke          # スモークテスト（30秒）- 最速
-make test-critical       # クリティカルパステスト（10分）
-make test                # Unit + Integration
+npm run test:smoke     # スモークテスト（30秒）- 最速
+npm run test           # Unit + Integration
 
 # CI相当のチェック（自動修正なし）
-make ci                  # 標準CI
-make ci-smoke            # CI + Smoke（最速）
+npm run ci             # 標準CI
+npm run ci:smoke       # CI + Smoke（最速）
 
 # 個別実行
-make lint            # 全体Lint
-make lint-fix        # 全体Lint自動修正
-make format          # 全体フォーマット
-make typecheck       # 全体型チェック
+npm run lint           # 全体Lint
+npm run lint:fix       # 全体Lint自動修正
+npm run format         # 全体フォーマット
+npm run typecheck      # 全体型チェック
 ```
 
 **推奨ワークフロー:**
-- **毎回のコミット前**: `make quality-check` (5分)
-- **PR作成時**: `make quality-check-full` (10分)
-- **リリース前**: `make ci` + E2E全体 (30分)
+- **毎回のコミット前**: `npm run quality` (5分)
+- **PR作成時**: `npm run quality:full` (10分)
+- **リリース前**: `npm run ci` + E2E全体 (30分)
 
 詳細: [Testing Quick Start Guide](docs/project/TESTING_QUICKSTART.md)
 
 ### Backend (Python)
 
 ```bash
-# 品質チェック
-make backend-lint           # Lintチェック
-make backend-lint-fix       # Lint自動修正
-make backend-format         # コードフォーマット
-make backend-test           # テスト実行
+# 品質チェック（一括）
+npm run be:quality          # Lint修正 + Format + Type check + Test
 
-# または docker compose 直接
-docker compose exec backend ruff check app/
-docker compose exec backend ruff format app/
-docker compose exec backend pytest -v
+# 個別実行
+npm run be:lint             # Lintチェック
+npm run be:lint:fix         # Lint自動修正
+npm run be:format           # コードフォーマット
+npm run be:typecheck        # 型チェック
+npm run be:test             # テスト実行
+npm run be:test:integration # 統合テスト
+
+# または poe (backend/ 内で実行)
+cd backend && poe docker:lint
 ```
 
 ### Frontend (TypeScript)
 
 ```bash
-# 品質チェック
-make frontend-lint          # Lintチェック
-make frontend-lint-fix      # Lint自動修正
-make frontend-format        # コードフォーマット
-make frontend-typecheck     # 型チェック
-make frontend-typegen       # OpenAPI型定義を再生成
+# 品質チェック（一括）
+npm run fe:quality          # Lint修正 + Format + Type check + Test
 
-# または docker compose 直接
-docker compose exec -T frontend npm run lint
-docker compose exec -T frontend npm run typecheck
-docker compose exec -T frontend npm run typegen:curl
+# 個別実行
+npm run fe:lint             # Lintチェック
+npm run fe:lint:fix         # Lint自動修正
+npm run fe:format           # コードフォーマット
+npm run fe:typecheck        # 型チェック
+npm run fe:typegen          # OpenAPI型定義を再生成 ✨自動
+npm run fe:test:e2e:smoke   # E2Eスモークテスト
 ```
 
 ### データベース操作
 
 ```bash
-make db-reset          # データベースをリセット
-make db-init-sample    # サンプルデータを投入
-make alembic-upgrade   # マイグレーション実行
+npm run db:reset        # データベースをリセット
+npm run db:init         # サンプルデータを投入
+npm run db:shell        # 開発DBに接続 ✨一発接続
+npm run db:shell:test   # テストDBに接続 ✨NEW
+npm run db:info         # DB接続情報を表示 ✨NEW
+npm run alembic:upgrade # マイグレーション実行
 ```
 
 ### デプロイパッケージのビルド
