@@ -3,7 +3,35 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "../api";
-// import { type Notification } from "../types";
+import { type Notification } from "../types";
+
+type NotificationCursor = {
+  createdAt: number;
+  id: number;
+};
+
+const getNotificationCursor = (notification: Notification): NotificationCursor => {
+  const createdAt = new Date(notification.created_at).getTime();
+  return {
+    createdAt: Number.isNaN(createdAt) ? 0 : createdAt,
+    id: notification.id,
+  };
+};
+
+const isNewerCursor = (candidate: NotificationCursor, reference: NotificationCursor) => {
+  if (candidate.createdAt !== reference.createdAt) {
+    return candidate.createdAt > reference.createdAt;
+  }
+  return candidate.id > reference.id;
+};
+
+const getLatestCursor = (notifications: Notification[]): NotificationCursor | null => {
+  if (notifications.length === 0) return null;
+  return notifications.reduce((latest, notification) => {
+    const cursor = getNotificationCursor(notification);
+    return isNewerCursor(cursor, latest) ? cursor : latest;
+  }, getNotificationCursor(notifications[0]));
+};
 
 // eslint-disable-next-line max-lines-per-function -- 通知表示ロジックは論理的なまとまりとして1つのフックにあるべき
 export function useNotifications() {
@@ -32,29 +60,40 @@ export function useNotifications() {
   });
 
   // Check for new notifications to show toast
-  const lastProcessedIdRef = useRef<number | null>(null);
+  const lastProcessedCursorRef = useRef<NotificationCursor | null>(null);
 
   useEffect(() => {
     if (notifications.length === 0) return;
 
+    const latestCursor = getLatestCursor(notifications);
+    if (!latestCursor) return;
+
     // 初回読み込み時はIDを記録するだけ
-    if (lastProcessedIdRef.current === null) {
-      lastProcessedIdRef.current = notifications[0].id;
+    if (lastProcessedCursorRef.current === null) {
+      lastProcessedCursorRef.current = latestCursor;
       return;
     }
 
     // 新着通知を全て取得
-    // API契約の前提: GET /api/notifications は id DESC または created_at DESC でソート済み
-    // → notifications[0] が最新、`id > lastProcessedId` で新着を検出可能
-    const newNotifications = notifications.filter((n) => n.id > lastProcessedIdRef.current!);
+    // APIは created_at DESC (id DESCで安定化) を想定し、(created_at, id) で新着を判定する
+    const newNotifications = notifications.filter((n) =>
+      isNewerCursor(getNotificationCursor(n), lastProcessedCursorRef.current!),
+    );
 
     if (newNotifications.length === 0) return;
 
-    // IDを更新（最新の通知ID）
-    lastProcessedIdRef.current = notifications[0].id;
+    // 最新カーソルを更新
+    lastProcessedCursorRef.current = latestCursor;
 
     // 古い順にソート（時系列順に表示）
-    const sortedNew = [...newNotifications].reverse();
+    const sortedNew = [...newNotifications].sort((a, b) => {
+      const aCursor = getNotificationCursor(a);
+      const bCursor = getNotificationCursor(b);
+      if (aCursor.createdAt !== bCursor.createdAt) {
+        return aCursor.createdAt - bCursor.createdAt;
+      }
+      return aCursor.id - bCursor.id;
+    });
 
     // トースト表示対象をフィルタ（immediate または persistent のみ）
     const toastTargets = sortedNew.filter(
@@ -99,7 +138,7 @@ export function useNotifications() {
       window.Notification?.permission === "granted"
     ) {
       // 最新1件のみブラウザ通知
-      const latest = persistentNotifications[0];
+      const latest = persistentNotifications[persistentNotifications.length - 1];
       new window.Notification(latest.title, {
         body: latest.message,
       });
@@ -129,7 +168,7 @@ export function useNotifications() {
   };
 
   // Note: ブラウザ通知の権限要求は自動的に行わない（UX配慮）
-  // システム設定ページに「ブラウザ通知を有効化」ボタンを追加することを推奨
+  // 通知設定ページの「ブラウザ通知を有効化」からユーザー操作で許可を取得する
 
   return {
     notifications,

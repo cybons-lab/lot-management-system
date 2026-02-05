@@ -28,7 +28,7 @@ class NotificationRepository:
         return (
             self.db.query(Notification)
             .filter(Notification.user_id == user_id)
-            .order_by(desc(Notification.created_at))
+            .order_by(desc(Notification.created_at), desc(Notification.id))
             .offset(skip)
             .limit(limit)
             .all()
