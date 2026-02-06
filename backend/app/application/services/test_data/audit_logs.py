@@ -2,6 +2,7 @@
 
 import random
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
@@ -32,6 +33,8 @@ def generate_lot_reservation_history(db: Session) -> None:
     if not reservations or not users:
         return
 
+    statuses = ["active", "confirmed", "released"]
+
     # Generate history for 50% of reservations
     for reservation in random.sample(reservations, len(reservations) // 2):
         # Create 2-5 history records per reservation
@@ -40,47 +43,49 @@ def generate_lot_reservation_history(db: Session) -> None:
 
         for i in range(num_records):
             changed_at = base_date + timedelta(days=i * (30 // num_records))
+            user_name = random.choice(users).username if users else None
 
             if i == 0:
-                # INSERT operation
-                operation = HistoryOperation.INSERT
-                old_values = None
-                new_values = {
-                    "lot_id": reservation.lot_id,
-                    "reserved_qty": str(reservation.reserved_qty),
-                    "status": reservation.status,
-                }
+                # INSERT operation: new values only
+                history = LotReservationHistory(
+                    reservation_id=reservation.id,
+                    operation=HistoryOperation.INSERT,
+                    lot_id=reservation.lot_id,
+                    source_type=reservation.source_type,
+                    source_id=reservation.source_id,
+                    reserved_qty=reservation.reserved_qty,
+                    status=reservation.status,
+                    changed_at=changed_at,
+                    changed_by=user_name,
+                )
             elif i == num_records - 1 and random.random() < 0.3:
-                # DELETE operation (30% chance on last record)
-                operation = HistoryOperation.DELETE
-                old_values = {
-                    "lot_id": reservation.lot_id,
-                    "reserved_qty": str(reservation.reserved_qty),
-                    "status": reservation.status,
-                }
-                new_values = None
+                # DELETE operation: old values only
+                history = LotReservationHistory(
+                    reservation_id=reservation.id,
+                    operation=HistoryOperation.DELETE,
+                    old_lot_id=reservation.lot_id,
+                    old_source_type=reservation.source_type,
+                    old_source_id=reservation.source_id,
+                    old_reserved_qty=reservation.reserved_qty,
+                    old_status=reservation.status,
+                    changed_at=changed_at,
+                    changed_by=user_name,
+                )
             else:
-                # UPDATE operation
-                operation = HistoryOperation.UPDATE
+                # UPDATE operation: both old and new values
                 old_qty = float(reservation.reserved_qty) * random.uniform(0.8, 1.2)
-                old_values = {
-                    "reserved_qty": f"{old_qty:.2f}",
-                    "status": random.choice(["active", "confirmed", "cancelled"]),
-                }
-                new_values = {
-                    "reserved_qty": str(reservation.reserved_qty),
-                    "status": reservation.status,
-                }
-
-            history = LotReservationHistory(
-                reservation_id=reservation.id,
-                lot_id=reservation.lot_id,
-                operation=operation,
-                old_values=old_values,
-                new_values=new_values,
-                changed_at=changed_at,
-                changed_by=random.choice(users).id if users else None,
-            )
+                history = LotReservationHistory(
+                    reservation_id=reservation.id,
+                    operation=HistoryOperation.UPDATE,
+                    lot_id=reservation.lot_id,
+                    reserved_qty=reservation.reserved_qty,
+                    status=reservation.status,
+                    old_lot_id=reservation.lot_id,
+                    old_reserved_qty=round(Decimal(old_qty), 3),
+                    old_status=random.choice(statuses),
+                    changed_at=changed_at,
+                    changed_by=user_name,
+                )
             db.add(history)
 
     # Edge case: Many operations on same reservation (10+ records)
@@ -90,12 +95,15 @@ def generate_lot_reservation_history(db: Session) -> None:
         for i in range(12):
             history = LotReservationHistory(
                 reservation_id=busy_reservation.id,
-                lot_id=busy_reservation.lot_id,
                 operation=HistoryOperation.UPDATE,
-                old_values={"reserved_qty": str(100 + i * 10), "status": "active"},
-                new_values={"reserved_qty": str(100 + (i + 1) * 10), "status": "active"},
+                lot_id=busy_reservation.lot_id,
+                reserved_qty=Decimal(100 + (i + 1) * 10),
+                status="active",
+                old_lot_id=busy_reservation.lot_id,
+                old_reserved_qty=Decimal(100 + i * 10),
+                old_status="active",
                 changed_at=base_date + timedelta(hours=i * 2),
-                changed_by=random.choice(users).id if users else None,
+                changed_by=random.choice(users).username if users else None,
             )
             db.add(history)
 
