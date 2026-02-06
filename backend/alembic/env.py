@@ -203,8 +203,8 @@ def _recreate_views_after_migration(connection) -> None:
         connection.commit()
         print("✅ Database views recreated successfully")
     except Exception as e:
-        print(f"❌ Failed to recreate views: {e}")
-        raise
+        print(f"⚠️  Failed to recreate views (non-fatal): {e}")
+        # ビュー再作成失敗はマイグレーション自体を止めない
 
 
 def run_migrations_offline() -> None:

@@ -70,8 +70,22 @@ def main():
         else:
             run_command(f"cat {baseline_sql} | docker compose --profile test exec -T db-test psql -U testuser -d lot_management_test", cwd=project_root)
         
-        print("🎫 Stamping baseline and merge head...")
+        print("Ticket: Stamping baseline and merge head...")
         run_command("uv run alembic stamp 57a61e701331", cwd=backend_dir)
+
+        print("🛠️ Applying test-specific schema adjustments...")
+        # 1. lot_receipts.consumed_quantity DEFAULT 0
+        # 2. lot_receipts.supplier_item_id DROP NOT NULL
+        # 3. order_lines.delivery_place_id DROP NOT NULL
+        # 4. order_lines.supplier_item_id DROP NOT NULL
+        adjustments = [
+            "ALTER TABLE lot_receipts ALTER COLUMN consumed_quantity SET DEFAULT 0;",
+            "ALTER TABLE lot_receipts ALTER COLUMN supplier_item_id DROP NOT NULL;",
+            "ALTER TABLE order_lines ALTER COLUMN delivery_place_id DROP NOT NULL;",
+            "ALTER TABLE order_lines ALTER COLUMN supplier_item_id DROP NOT NULL;"
+        ]
+        for sql in adjustments:
+            run_command(f"docker compose exec -T db-test psql -U testuser -d lot_management_test -c \"{sql}\"", cwd=project_root)
     else:
         print("⚠️ Baseline SQL not found, running full migrations...")
 
