@@ -16,6 +16,13 @@ interface ForecastTableProps {
  */
 const getMetaColumns = (): Column<MaterialOrderForecast>[] => [
   {
+    id: "target_month",
+    header: "対象年月",
+    cell: (row) => <span className="font-medium text-sm">{row.target_month}</span>,
+    width: "110px",
+    sticky: "left",
+  },
+  {
     id: "material_code",
     header: "材質コード",
     cell: (row) => <span className="font-mono text-sm">{row.material_code}</span>,

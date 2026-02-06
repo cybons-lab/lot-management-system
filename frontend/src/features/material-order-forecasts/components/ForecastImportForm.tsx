@@ -3,8 +3,6 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Input, Label } from "@/components/ui";
 
 interface ForecastImportFormProps {
-  targetMonth: string;
-  setTargetMonth: (val: string) => void;
   setFile: (file: File | null) => void;
   isPending: boolean;
   isError: boolean;
@@ -13,8 +11,6 @@ interface ForecastImportFormProps {
 }
 
 export function ForecastImportForm({
-  targetMonth,
-  setTargetMonth,
   setFile,
   isPending,
   isError,
@@ -24,22 +20,8 @@ export function ForecastImportForm({
   return (
     <div className="grid gap-4 py-4">
       <div className="grid gap-2">
-        <Label htmlFor="target-month">
-          対象月
-          <Input
-            id="target-month"
-            type="month"
-            value={targetMonth}
-            onChange={(e) => setTargetMonth(e.target.value)}
-            disabled={isPending}
-            className="mt-1"
-          />
-        </Label>
-      </div>
-
-      <div className="grid gap-2">
         <Label htmlFor="csv-file">
-          CSVファイル (ヘッダーなし)
+          CSVファイル (ヘッダーなし、対象月はCSV列から自動判定)
           <Input
             id="csv-file"
             type="file"

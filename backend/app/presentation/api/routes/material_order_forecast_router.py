@@ -49,7 +49,7 @@ async def import_forecast_csv(
 
     Args:
         file: CSV file (ヘッダーなし、1行目からデータ、60列)
-        target_month: 対象月（YYYY-MM、省略時はCSV A列から自動取得）
+        target_month: 対象月（YYYY-MM、互換入力用。実際はCSV列から自動取得）
         db: Database session
         current_user: Current authenticated user
 
@@ -80,6 +80,40 @@ async def import_forecast_csv(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="CSVインポート中にエラーが発生しました",
         )
+
+
+@router.delete("/{forecast_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_forecast(
+    forecast_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(get_current_user),
+):
+    """フォーキャストデータ削除."""
+    service = MaterialOrderForecastService(db)
+    deleted = service.delete_forecast(forecast_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="フォーキャストが見つかりません",
+        )
+    return None
+
+
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+def delete_forecasts_by_target_month(
+    target_month: str = Query(..., description="対象月（YYYY-MM）"),
+    db: Session = Depends(get_db),
+    _current_user=Depends(get_current_user),
+):
+    """対象月のフォーキャストデータを一括削除."""
+    service = MaterialOrderForecastService(db)
+    deleted_count = service.delete_forecasts_by_target_month(target_month)
+    if deleted_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="削除対象のフォーキャストが見つかりません",
+        )
+    return None
 
 
 @router.get("", response_model=MaterialOrderForecastListResponse)

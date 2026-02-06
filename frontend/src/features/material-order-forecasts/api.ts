@@ -26,15 +26,19 @@ export const materialOrderForecastsApi = {
       .json();
   },
 
-  importCsv: async (
-    file: File,
-    targetMonth?: string,
-  ): Promise<MaterialOrderForecastImportResponse> => {
+  importCsv: async (file: File): Promise<MaterialOrderForecastImportResponse> => {
     const formData = new FormData();
     formData.append("file", file);
-    if (targetMonth) {
-      formData.append("target_month", targetMonth);
-    }
     return apiClient.post("material-order-forecasts/import", { body: formData }).json();
+  },
+
+  deleteForecast: async (id: number): Promise<void> => {
+    await apiClient.delete(`material-order-forecasts/${id}`);
+  },
+
+  deleteForecastsByTargetMonth: async (targetMonth: string): Promise<void> => {
+    await apiClient.delete("material-order-forecasts", {
+      searchParams: { target_month: targetMonth },
+    });
   },
 };
