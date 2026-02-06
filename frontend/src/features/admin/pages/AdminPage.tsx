@@ -36,6 +36,20 @@ interface InventorySyncResult {
   };
 }
 
+type TestDataGenerateResponse =
+  | {
+      job_id: string;
+    }
+  | {
+      success?: boolean;
+      message?: string;
+      options?: object;
+    };
+
+function hasJobId(response: TestDataGenerateResponse): response is { job_id: string } {
+  return "job_id" in response && typeof response.job_id === "string" && response.job_id.length > 0;
+}
+
 export function AdminPage() {
   const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -88,9 +102,19 @@ export function AdminPage() {
     setProgressMessage("リクエスト送信中...");
 
     try {
-      const res = await http.post<{ job_id: string }>("admin/test-data/generate", {
+      const res = await http.post<TestDataGenerateResponse>("admin/test-data/generate", {
         preset_id: selectedPresetId,
       });
+
+      if (!hasJobId(res)) {
+        // Current backend completes synchronously and does not return job_id.
+        setProgress(100);
+        setProgressMessage("完了");
+        toast.success(res.message || "テストデータを生成しました");
+        setIsGenerating(false);
+        setShowGenerateConfirm(false);
+        return;
+      }
 
       const jobId = res.job_id;
 
