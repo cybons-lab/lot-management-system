@@ -3,13 +3,13 @@
  */
 
 import { Settings2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { type DbObject, type DbObjectType } from "../api";
 import { DbObjectDetail } from "../components/DbObjectDetail";
 import { DbObjectList } from "../components/DbObjectList";
-import { useDbObjects, useDbSchema, useDbDefinition, useDbRelations, useDbRows } from "../hooks";
+import { useDbDefinition, useDbObjects, useDbRelations, useDbRows, useDbSchema } from "../hooks";
 import { useDbObjectFilter } from "../useDbObjectFilter";
 
 import { type SortConfig } from "@/shared/components/data/DataTable";
@@ -17,11 +17,10 @@ import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 type ActiveTab = "schema" | "rows" | "definition" | "relations";
 
-// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
-export function DbBrowserPage() {
+function useDbBrowserViewState() {
   const { tab = "schema" } = useParams<{ tab: ActiveTab }>();
   const navigate = useNavigate();
-  const activeTab = tab as ActiveTab;
+
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<DbObjectType | "all">("all");
   const [selected, setSelected] = useState<DbObject | null>(null);
@@ -30,19 +29,75 @@ export function DbBrowserPage() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const rowQueryParams = useMemo(
+    () => ({
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+      order_by: sort?.column,
+      order_dir: sort?.direction,
+      q: searchQuery || undefined,
+    }),
+    [page, pageSize, searchQuery, sort?.column, sort?.direction],
+  );
+
+  const handleSelectObject = useCallback((obj: DbObject) => {
+    setSelected(obj);
+    setPage(1);
+    setSort(undefined);
+  }, []);
+
+  const handleTabChange = useCallback(
+    (nextTab: ActiveTab) => {
+      navigate(`../${nextTab}`);
+    },
+    [navigate],
+  );
+
+  const handleSearchQueryChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    setPage(1);
+  }, []);
+
+  const handlePageSizeChange = useCallback((size: number) => {
+    setPageSize(size);
+    setPage(1);
+  }, []);
+
+  return {
+    activeTab: tab as ActiveTab,
+    selected,
+    search,
+    setSearch,
+    typeFilter,
+    setTypeFilter,
+    searchQuery,
+    handleSearchQueryChange,
+    page,
+    setPage,
+    pageSize,
+    handlePageSizeChange,
+    sort,
+    setSort,
+    handleSelectObject,
+    handleTabChange,
+    rowQueryParams,
+  };
+}
+
+function useDbBrowserPageModel() {
+  const view = useDbBrowserViewState();
+  const { selected, search, typeFilter, rowQueryParams, handleSelectObject } = view;
   const { data: objects = [], isLoading: isObjectsLoading, error } = useDbObjects();
 
   useEffect(() => {
     if (!selected && objects.length > 0) {
-      setSelected(objects[0]);
+      handleSelectObject(objects[0]);
     }
-  }, [objects, selected]);
+  }, [handleSelectObject, objects, selected]);
 
   const filteredObjects = useDbObjectFilter(objects, search, typeFilter);
-
   const selectedSchema = selected?.schema_name;
   const selectedName = selected?.object_name;
-
   const { data: schemaInfo, isLoading: isSchemaLoading } = useDbSchema(
     selectedSchema,
     selectedName,
@@ -55,20 +110,33 @@ export function DbBrowserPage() {
     shouldFetchDefinition,
   );
   const { data: relationsInfo } = useDbRelations(selectedSchema, selectedName);
-
-  const { data: rowsInfo, isLoading: isRowsLoading } = useDbRows(selectedSchema, selectedName, {
-    limit: pageSize,
-    offset: (page - 1) * pageSize,
-    order_by: sort?.column,
-    order_dir: sort?.direction,
-    q: searchQuery || undefined,
-  });
-
-  // Check if feature is disabled (403 Forbidden)
+  const { data: rowsInfo, isLoading: isRowsLoading } = useDbRows(
+    selectedSchema,
+    selectedName,
+    rowQueryParams,
+  );
   const isForbidden =
     (error as { response?: { status?: number } } | null | undefined)?.response?.status === 403;
 
-  if (isForbidden) {
+  return {
+    ...view,
+    objects,
+    isObjectsLoading,
+    filteredObjects,
+    schemaInfo,
+    isSchemaLoading,
+    rowsInfo,
+    isRowsLoading,
+    definitionInfo,
+    relationsInfo,
+    isForbidden,
+  };
+}
+
+export function DbBrowserPage() {
+  const model = useDbBrowserPageModel();
+
+  if (model.isForbidden) {
     return <ForbiddenView />;
   }
 
@@ -81,45 +149,35 @@ export function DbBrowserPage() {
 
       <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         <DbObjectList
-          objects={objects}
-          isLoading={isObjectsLoading}
-          selected={selected}
-          onSelect={(obj) => {
-            setSelected(obj);
-            setPage(1);
-            setSort(undefined);
-          }}
-          search={search}
-          onSearchChange={setSearch}
-          typeFilter={typeFilter}
-          onTypeFilterChange={setTypeFilter}
-          filteredObjects={filteredObjects}
+          objects={model.objects}
+          isLoading={model.isObjectsLoading}
+          selected={model.selected}
+          onSelect={model.handleSelectObject}
+          search={model.search}
+          onSearchChange={model.setSearch}
+          typeFilter={model.typeFilter}
+          onTypeFilterChange={model.setTypeFilter}
+          filteredObjects={model.filteredObjects}
         />
 
         <DbObjectDetail
-          selected={selected}
-          activeTab={activeTab}
-          onTabChange={(tab) => navigate(`../${tab}`)}
-          isSchemaLoading={isSchemaLoading}
-          schemaInfo={schemaInfo}
-          isRowsLoading={isRowsLoading}
-          rowsInfo={rowsInfo}
-          definitionInfo={definitionInfo}
-          relationsInfo={relationsInfo}
-          searchQuery={searchQuery}
-          onSearchQueryChange={(query) => {
-            setSearchQuery(query);
-            setPage(1);
-          }}
-          page={page}
-          onPageChange={setPage}
-          pageSize={pageSize}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
-          sort={sort}
-          onSortChange={setSort}
+          selected={model.selected}
+          activeTab={model.activeTab}
+          onTabChange={model.handleTabChange}
+          isSchemaLoading={model.isSchemaLoading}
+          schemaInfo={model.schemaInfo}
+          isRowsLoading={model.isRowsLoading}
+          rowsInfo={model.rowsInfo}
+          definitionInfo={model.definitionInfo}
+          relationsInfo={model.relationsInfo}
+          searchQuery={model.searchQuery}
+          onSearchQueryChange={model.handleSearchQueryChange}
+          page={model.page}
+          onPageChange={model.setPage}
+          pageSize={model.pageSize}
+          onPageSizeChange={model.handlePageSizeChange}
+          sort={model.sort}
+          onSortChange={model.setSort}
         />
       </div>
     </PageContainer>
@@ -133,9 +191,9 @@ function ForbiddenView() {
         title="DB Browser"
         subtitle="PostgreSQL のテーブル/ビューを確認する開発用ツール"
       />
-      <div className="bg-card rounded-lg border p-12 flex flex-col items-center justify-center text-center space-y-4">
-        <div className="bg-muted p-4 rounded-full">
-          <Settings2 className="h-10 w-10 text-muted-foreground" />
+      <div className="bg-card flex flex-col items-center justify-center space-y-4 rounded-lg border p-12 text-center">
+        <div className="bg-muted rounded-full p-4">
+          <Settings2 className="text-muted-foreground h-10 w-10" />
         </div>
         <div className="space-y-2">
           <h3 className="text-xl font-bold">この機能は現在無効化されています</h3>
