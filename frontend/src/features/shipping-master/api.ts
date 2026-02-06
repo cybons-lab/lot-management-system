@@ -106,4 +106,19 @@ export const shippingMasterApi = {
     const response = await httpClient.post(`shipping-masters/sync?policy=${policy}`, {});
     return response.json();
   },
+
+  /**
+   * SAPキャッシュから得意先名・仕入先名を補完
+   */
+  prefillSapNames: async (
+    ids?: number[],
+  ): Promise<{
+    updated_count: number;
+    warnings: string[];
+  }> => {
+    const response = await httpClient.post("shipping-masters/prefill-sap-names", {
+      json: ids || null,
+    });
+    return response.json();
+  },
 };

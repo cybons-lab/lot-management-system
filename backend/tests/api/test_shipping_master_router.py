@@ -285,3 +285,55 @@ def test_import_with_auto_sync_runs_prefill(client: TestClient, db):
     assert curated.customer_name == "得意先Auto"
     assert curated.supplier_code == "S_AUTO_PREFILL"
     assert curated.supplier_name == "SAP仕入先Auto"
+
+
+def test_prefill_sap_names(client: TestClient, db):
+    """手動のSAP名補完APIが期待通り動作すること."""
+    # 1. SAPキャッシュの準備
+    conn = SapConnection(
+        name="test-manual",
+        environment="test",
+        ashost="localhost",
+        sysnr="00",
+        client="100",
+        user_name="dummy",
+        passwd_encrypted="dummy",
+        is_active=True,
+    )
+    db.add(conn)
+    db.flush()
+    db.add(
+        SapMaterialCache(
+            connection_id=conn.id,
+            zkdmat_b="M_MANUAL",
+            kunnr="C_MANUAL",
+            raw_data={
+                "ZKUNNR_NAME": "SAP得意先Manual",
+                "ZLIFNR_H": "S_MANUAL",
+                "ZLIFNR_NAME": "SAP仕入先Manual",
+            },
+        )
+    )
+    db.commit()
+
+    # 2. 出荷用マスタの準備 (名前なし)
+    curated = ShippingMasterCurated(
+        customer_code="C_MANUAL",
+        material_code="M_MANUAL",
+        jiku_code="J_MANUAL",
+        customer_name=None,
+        supplier_code="S_MANUAL",
+        supplier_name=None,
+    )
+    db.add(curated)
+    db.commit()
+
+    # 3. API実行
+    response = client.post("/api/shipping-masters/prefill-sap-names")
+    assert response.status_code == 200
+    assert response.json()["updated_count"] == 1
+
+    # 4. 検証
+    db.refresh(curated)
+    assert curated.customer_name == "SAP得意先Manual"
+    assert curated.supplier_name == "SAP仕入先Manual"

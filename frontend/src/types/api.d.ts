@@ -8386,6 +8386,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/shipping-masters/prefill-sap-names": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Prefill Sap Names
+     * @description SAPキャッシュから得意先名・仕入先名を補足する.
+     */
+    post: operations["prefill_sap_names_api_shipping_masters_prefill_sap_names_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/shipping-masters/import": {
     parameters: {
       query?: never;
@@ -31500,6 +31520,39 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  prefill_sap_names_api_shipping_masters_prefill_sap_names_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": number[] | null;
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {

@@ -257,9 +257,21 @@ class ShippingMasterService:
             for key in (
                 "ZLIFNR_NAME",
                 "ZLIFNR_TXT",
-                "NAME1",
                 "LIFNR_NAME",
+                "NAME1",
                 "supplier_name",
+            ):
+                value = raw_data.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+            return None
+
+        def _extract_customer_name(raw_data: dict[str, Any]) -> str | None:
+            for key in (
+                "ZKUNNR_NAME",
+                "NAME1",
+                "KUNNR_NAME",
+                "customer_name",
             ):
                 value = raw_data.get(key)
                 if isinstance(value, str) and value.strip():
@@ -343,6 +355,89 @@ class ShippingMasterService:
             self.session.flush()
 
         return {"updated_count": updated_count, "warnings": warnings}
+
+    def prefill_names_from_sap(self, curated_ids: list[int] | None = None) -> dict[str, Any]:
+        """SAPキャッシュから得意先名・仕入先名を補完する (コードのみをキーとする)."""
+        stmt = select(ShippingMasterCurated)
+        if curated_ids:
+            stmt = stmt.where(ShippingMasterCurated.id.in_(curated_ids))
+        curated_rows = list(self.session.execute(stmt).scalars().all())
+        if not curated_rows:
+            return {"updated_count": 0, "warnings": []}
+
+        def is_blank(value: str | None) -> bool:
+            return value is None or value.strip() == ""
+
+        # 対象のコードを抽出
+        customer_codes = {r.customer_code for r in curated_rows if r.customer_code}
+
+        # SAPキャッシュから名前マッピングを構築
+        # 注意: zkdmat_bに依存せず、kunnrやraw_data内の仕入先コードで検索
+        sap_stmt = select(SapMaterialCache).where(SapMaterialCache.kunnr.in_(customer_codes))
+        sap_records = list(self.session.execute(sap_stmt).scalars().all())
+
+        sap_customer_name_map: dict[str, str] = {}
+        sap_supplier_name_map: dict[str, str] = {}
+
+        # ヘルパー関数の呼び出し用
+        # 抽出ロジック（prefill_curated_for_sync内のものと同様）
+        def _get_cust_name(raw: dict) -> str | None:
+            for key in ("ZKUNNR_NAME", "NAME1", "KUNNR_NAME"):
+                v = raw.get(key)
+                if isinstance(v, str) and v.strip():
+                    return v.strip()
+            return None
+
+        def _get_supp_name(raw: dict) -> str | None:
+            for key in ("ZLIFNR_NAME", "ZLIFNR_TXT", "LIFNR_NAME", "NAME1"):
+                v = raw.get(key)
+                if isinstance(v, str) and v.strip():
+                    return v.strip()
+            return None
+
+        def _get_supp_code(raw: dict) -> str | None:
+            for key in ("ZLIFNR_H", "LIFNR"):
+                v = raw.get(key)
+                if isinstance(v, str) and v.strip():
+                    return v.strip()
+            return None
+
+        for rec in sap_records:
+            raw = rec.raw_data or {}
+            # 得意先名
+            if rec.kunnr and rec.kunnr not in sap_customer_name_map:
+                name = _get_cust_name(raw)
+                if name:
+                    sap_customer_name_map[rec.kunnr] = name
+            # 仕入先名
+            s_code = _get_supp_code(raw)
+            if s_code and s_code not in sap_supplier_name_map:
+                name = _get_supp_name(raw)
+                if name:
+                    sap_supplier_name_map[s_code] = name
+
+        updated_count = 0
+        for row in curated_rows:
+            changed = False
+            # 得意先名補完
+            if (
+                is_blank(row.customer_name) or row.customer_name == row.customer_code
+            ) and row.customer_code in sap_customer_name_map:
+                row.customer_name = sap_customer_name_map[row.customer_code]
+                changed = True
+
+            # 仕入先名補完
+            if (
+                is_blank(row.supplier_name) or row.supplier_name == row.supplier_code
+            ) and row.supplier_code in sap_supplier_name_map:
+                row.supplier_name = sap_supplier_name_map[row.supplier_code]
+                changed = True
+
+            if changed:
+                updated_count += 1
+
+        self.session.flush()
+        return {"updated_count": updated_count, "warnings": []}
 
     # ==================== CRUD ====================
 

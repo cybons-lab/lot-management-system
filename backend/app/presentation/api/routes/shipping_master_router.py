@@ -155,6 +155,16 @@ async def sync_shipping_masters(
     return result
 
 
+@router.post("/prefill-sap-names")
+async def prefill_sap_names(
+    curated_ids: list[int] | None = None,
+    service: ShippingMasterService = Depends(get_service),
+):
+    """SAPキャッシュから得意先名・仕入先名を補足する."""
+    result = service.prefill_names_from_sap(curated_ids=curated_ids)
+    return result
+
+
 @router.post("/import", response_model=ShippingMasterImportResponse)
 async def import_shipping_masters_file(
     file: Annotated[UploadFile, File(description="Excel file (.xlsx)")],
