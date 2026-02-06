@@ -385,14 +385,10 @@ def generate_warehouse_delivery_routes(
         # Lead time: 0-7 days (0 = same-day delivery)
         lead_time = random.choices([0, 1, 2, 3, 5, 7], weights=[5, 30, 30, 20, 10, 5], k=1)[0]
 
-        # Cost: 1000-10000 yen
-        cost = random.randint(1000, 10000)
-
         route = WarehouseDeliveryRoute(
             warehouse_id=warehouse.id,
             delivery_place_id=delivery_place.id,
             transport_lead_time_days=lead_time,
-            transport_cost=cost,
         )
         db.add(route)
 
