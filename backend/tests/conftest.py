@@ -219,12 +219,10 @@ def client(db) -> Generator[TestClient]:
         if existing_user:
             return existing_user
 
-        # Create or get admin role
+        # Get admin role from baseline
         admin_role = db.query(Role).filter(Role.role_code == "admin").first()
         if not admin_role:
-            admin_role = Role(role_code="admin", role_name="Administrator")
-            db.add(admin_role)
-            db.flush()
+            raise RuntimeError("Admin role not found in baseline data")
 
         # Create admin user (email, display_name are required NOT NULL)
         user = User(
@@ -406,16 +404,12 @@ def master_data(db, supplier):
     )
     db.add(delivery_place)
 
-    # Create Roles if not exist
+    # Get roles from baseline
     admin_role = db.query(Role).filter(Role.role_code == "admin").first()
-    if not admin_role:
-        admin_role = Role(role_code="admin", role_name="Administrator")
-        db.add(admin_role)
-
     user_role = db.query(Role).filter(Role.role_code == "user").first()
-    if not user_role:
-        user_role = Role(role_code="user", role_name="User")
-        db.add(user_role)
+
+    if not admin_role or not user_role:
+        raise RuntimeError("Required roles ('admin' or 'user') not found in baseline data")
 
     db.flush()
 
@@ -461,12 +455,10 @@ def normal_user(db):
     """Create a normal test user."""
     from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
 
-    # Ensure user role exists
+    # Ensure user role exists in baseline
     user_role = db.query(Role).filter(Role.role_code == "user").first()
     if not user_role:
-        user_role = Role(role_code="user", role_name="User")
-        db.add(user_role)
-        db.flush()
+        raise RuntimeError("User role 'user' not found in baseline data")
 
     user = User(
         username="test_user_normal",
@@ -492,12 +484,10 @@ def superuser(db):
     """Create a superuser for testing."""
     from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
 
-    # Ensure admin role exists
+    # Ensure admin role exists in baseline
     admin_role = db.query(Role).filter(Role.role_code == "admin").first()
     if not admin_role:
-        admin_role = Role(role_code="admin", role_name="Administrator")
-        db.add(admin_role)
-        db.flush()
+        raise RuntimeError("Admin role 'admin' not found in baseline data")
 
     user = User(
         username="test_superuser",

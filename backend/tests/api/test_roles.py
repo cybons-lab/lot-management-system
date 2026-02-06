@@ -12,9 +12,9 @@ def test_list_roles_success(
 ):
     """Test listing roles."""
 
-    # Create roles
-    r1 = Role(role_code="ADMIN", role_name="Administrator")
-    r2 = Role(role_code="USER", role_name="User")
+    # Create roles with unique test codes
+    r1 = Role(role_code="ADMIN_TEST", role_name="Administrator Test")
+    r2 = Role(role_code="USER_TEST", role_name="User Test")
     db.add_all([r1, r2])
     db.commit()
 
@@ -22,8 +22,8 @@ def test_list_roles_success(
     assert response.status_code == 200
     data = response.json()
     codes = [r["role_code"] for r in data]
-    assert "ADMIN" in codes
-    assert "USER" in codes
+    assert "ADMIN_TEST" in codes
+    assert "USER_TEST" in codes
 
 
 # ===== GET /api/roles/{role_id} Tests =====
