@@ -8,7 +8,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { SmartReadAnalyzeResponse } from "../api";
-import { getWatchDirFiles, processWatchDirFiles, analyzeFile, transformCsv } from "../api";
+import {
+  getWatchDirFiles,
+  processWatchDirFiles,
+  analyzeFile,
+  transformCsv,
+  adminUploadHybrid,
+} from "../api";
 
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
@@ -84,6 +90,23 @@ export function useTransformCsv() {
     onError: async (error: Error) => {
       const message = await getUserFriendlyMessageAsync(error);
       toast.error(`変換に失敗しました: ${message}`);
+    },
+  });
+}
+
+/**
+ * 管理者用ハイブリッドアップロード
+ */
+export function useSmartReadAdminUpload() {
+  return useMutation({
+    mutationFn: ({ configId, files }: { configId: number; files: File[] }) =>
+      adminUploadHybrid(configId, files),
+    onSuccess: () => {
+      toast.success("アップロード処理を開始しました。ZIPの作成をお待ちください。");
+    },
+    onError: async (error: Error) => {
+      const message = await getUserFriendlyMessageAsync(error);
+      toast.error(`アップロードに失敗しました: ${message}`);
     },
   });
 }

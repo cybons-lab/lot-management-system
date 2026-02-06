@@ -83,6 +83,7 @@ from app.presentation.api.routes.rpa import (
     material_delivery_simple_router,
     rpa_router,
     sap_orders_router,
+    smartread_admin_router,
     smartread_router,
 )
 from app.presentation.api.routes.schema_router import router as schema_router
@@ -185,6 +186,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(cloud_flow_router, prefix=prefix)
     app.include_router(layer_code_router, prefix=prefix)
     app.include_router(smartread_router, prefix=prefix)
+    app.include_router(smartread_admin_router, prefix=prefix)
     app.include_router(sap_orders_router, prefix=prefix)
 
     app.include_router(status_router, prefix=masters_prefix)

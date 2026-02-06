@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.application.services.smartread.admin_upload_service import SmartReadAdminUploadService
 from app.application.services.smartread.analyze_service import SmartReadAnalyzeService
 from app.application.services.smartread.base import SmartReadBaseService
 from app.application.services.smartread.client_service import SmartReadClientService
@@ -31,6 +32,7 @@ class SmartReadService(
     SmartReadClientService,
     SmartReadExportService,
     SmartReadRequestService,
+    SmartReadAdminUploadService,
     SmartReadSimpleSyncService,
     SmartReadBaseService,
 ):

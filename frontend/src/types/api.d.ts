@@ -8116,6 +8116,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/smartread/admin/upload-hybrid": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Admin Upload Hybrid
+     * @description 管理者用ハイブリッドアップロード.
+     *
+     *     複数のファイルをアップロードし、CSVと詳細JSONをセットにしたZIPを返します。
+     *     常に新規タスクを作成します。
+     */
+    post: operations["admin_upload_hybrid_api_rpa_smartread_admin_upload_hybrid_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/rpa/sap/orders/start": {
     parameters: {
       query?: never;
@@ -31205,6 +31228,42 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SmartReadPadRunRetryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  admin_upload_hybrid_api_rpa_smartread_admin_upload_hybrid_post: {
+    parameters: {
+      query: {
+        /** @description 使用する設定のID */
+        config_id: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": string[];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */

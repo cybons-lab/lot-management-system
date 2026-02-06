@@ -392,3 +392,16 @@ export async function retryPadRun(
     throw error;
   }
 }
+/**
+ * 管理者用ハイブリッドアップロード
+ */
+export async function adminUploadHybrid(configId: number, files: File[]): Promise<Blob> {
+  const formData = new FormData();
+  files.forEach((file) => formData.append("files", file));
+
+  return http.postFormData<Blob>(
+    `rpa/smartread/admin/upload-hybrid?config_id=${configId}`,
+    formData,
+    { responseType: "blob" },
+  );
+}
