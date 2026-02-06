@@ -17,10 +17,69 @@ interface OrdersFiltersProps {
   onToggleFilter: (enabled: boolean) => void;
 }
 
+const ORDER_TYPE_OPTIONS = [
+  { value: "all", label: "すべて" },
+  { value: "FORECAST_LINKED", label: "FC連携" },
+  { value: "KANBAN", label: "かんばん" },
+  { value: "SPOT", label: "スポット" },
+  { value: "ORDER", label: "通常受注" },
+] as const;
+
+function FilterCheckbox({
+  id,
+  label,
+  checked,
+  onChange,
+  className,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  className: string;
+}) {
+  return (
+    <div className="flex items-center space-x-2">
+      <input
+        type="checkbox"
+        id={id}
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className={className}
+      />
+      <label htmlFor={id} className="text-sm font-medium text-slate-700">
+        {label}
+      </label>
+    </div>
+  );
+}
+
+function OrderTypeFilterButtons({ filters }: { filters: ReturnType<typeof useFilters> }) {
+  const currentValue = (filters.values.order_type as string) || "all";
+
+  return (
+    <div className="flex flex-wrap gap-2" role="group" aria-labelledby="order-type-filter-label">
+      {ORDER_TYPE_OPTIONS.map((option) => {
+        const isActive = currentValue === option.value;
+        return (
+          <Button
+            key={option.value}
+            variant={isActive ? "default" : "outline"}
+            size="sm"
+            onClick={() => filters.set("order_type", option.value)}
+            className={isActive ? "" : "text-slate-600"}
+          >
+            {option.label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
 /**
  * 受注管理画面のフィルターUI（FilterContainer使用版）
  */
-// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function OrdersFilters({ filters, filterEnabled, onToggleFilter }: OrdersFiltersProps) {
   return (
     <SimpleFilterContainer
@@ -46,33 +105,7 @@ export function OrdersFilters({ filters, filterEnabled, onToggleFilter }: Orders
           <span id="order-type-filter-label" className="text-sm font-medium text-slate-700">
             需要種別
           </span>
-          <div
-            className="flex flex-wrap gap-2"
-            role="group"
-            aria-labelledby="order-type-filter-label"
-          >
-            {[
-              { value: "all", label: "すべて" },
-              { value: "FORECAST_LINKED", label: "FC連携" },
-              { value: "KANBAN", label: "かんばん" },
-              { value: "SPOT", label: "スポット" },
-              { value: "ORDER", label: "通常受注" },
-            ].map((option) => {
-              const currentValue = (filters.values.order_type as string) || "all";
-              const isActive = currentValue === option.value;
-              return (
-                <Button
-                  key={option.value}
-                  variant={isActive ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => filters.set("order_type", option.value)}
-                  className={isActive ? "" : "text-slate-600"}
-                >
-                  {option.label}
-                </Button>
-              );
-            })}
-          </div>
+          <OrderTypeFilterButtons filters={filters} />
         </div>
 
         <div className="space-y-2">
@@ -97,31 +130,21 @@ export function OrdersFilters({ filters, filterEnabled, onToggleFilter }: Orders
         </div>
 
         <div className="flex flex-wrap items-end gap-2 pb-2">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="unallocatedOnly"
-              checked={!!filters.values.unallocatedOnly}
-              onChange={(e) => filters.set("unallocatedOnly", e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-            />
-            <label htmlFor="unallocatedOnly" className="text-sm font-medium text-slate-700">
-              未引当のみ表示
-            </label>
-          </div>
+          <FilterCheckbox
+            id="unallocatedOnly"
+            label="未引当のみ表示"
+            checked={!!filters.values.unallocatedOnly}
+            onChange={(checked) => filters.set("unallocatedOnly", checked)}
+            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+          />
           <SupplierFilterCheckbox enabled={filterEnabled} onToggle={onToggleFilter} />
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="showInactiveCustomers"
-              checked={!!filters.values.showInactiveCustomers}
-              onChange={(e) => filters.set("showInactiveCustomers", e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-slate-500"
-            />
-            <label htmlFor="showInactiveCustomers" className="text-sm font-medium text-slate-700">
-              無効な得意先を表示
-            </label>
-          </div>
+          <FilterCheckbox
+            id="showInactiveCustomers"
+            label="無効な得意先を表示"
+            checked={!!filters.values.showInactiveCustomers}
+            onChange={(checked) => filters.set("showInactiveCustomers", checked)}
+            className="h-4 w-4 rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-slate-500"
+          />
         </div>
       </div>
     </SimpleFilterContainer>

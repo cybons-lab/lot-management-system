@@ -11,7 +11,47 @@ import {
 
 import { useOcrEditPersistence } from "./useOcrEditPersistence";
 
-// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
+function buildNextInputState(
+  row: OcrResultItem,
+  current: RowInputState,
+  patch: Partial<RowInputState>,
+): RowInputState {
+  let next = { ...current, ...patch };
+
+  if ("deliveryDate" in patch) {
+    if (patch.deliveryDate) {
+      const newShippingDate = computeShippingDate(patch.deliveryDate, row.transport_lt_days);
+      if (newShippingDate) next = { ...next, shippingDate: newShippingDate };
+    } else {
+      next = { ...next, shippingDate: "" };
+    }
+  }
+
+  if (!next.shippingSlipTextEdited) {
+    next.shippingSlipText = computeShippingSlipText(row.shipping_slip_text, next);
+  }
+
+  return next;
+}
+
+function syncInputVersionsWithRows(
+  prev: Record<number, RowInputState>,
+  dataItems: OcrResultItem[],
+): Record<number, RowInputState> {
+  let changed = false;
+  const next = { ...prev };
+
+  for (const row of dataItems) {
+    const existing = prev[row.id];
+    if (existing && existing.version !== row.manual_version) {
+      next[row.id] = { ...existing, version: row.manual_version ?? 0 };
+      changed = true;
+    }
+  }
+
+  return changed ? next : prev;
+}
+
 export function useOcrRowInputs(viewMode: "current" | "completed", dataItems: OcrResultItem[]) {
   const [rowInputs, setRowInputs] = useState<Record<number, RowInputState>>({});
   const { saveEditMutation, scheduleSave, saveTimersRef, refreshMasterRef } =
@@ -23,27 +63,10 @@ export function useOcrRowInputs(viewMode: "current" | "completed", dataItems: Oc
       if ("materialCode" in patch || "jikuCode" in patch) {
         refreshMasterRef.current.add(row.id);
       }
+
       setRowInputs((prev) => {
         const current = prev[row.id] ?? buildRowDefaults(row);
-        let next = { ...current, ...patch };
-
-        // 納期が変更された場合、出荷日を再計算する
-        if ("deliveryDate" in patch) {
-          if (patch.deliveryDate) {
-            const newShippingDate = computeShippingDate(patch.deliveryDate, row.transport_lt_days);
-            if (newShippingDate) {
-              next = { ...next, shippingDate: newShippingDate };
-            }
-          } else {
-            // 納期が空欄になった場合は、出荷日も連動してクリアする
-            next = { ...next, shippingDate: "" };
-          }
-        }
-
-        // 手動編集フラグが立っていない場合、依存フィールドの変更に合わせてテキストを再計算して保存対象に入れる
-        if (!next.shippingSlipTextEdited) {
-          next.shippingSlipText = computeShippingSlipText(row.shipping_slip_text, next);
-        }
+        const next = buildNextInputState(row, current, patch);
 
         scheduleSave(row, next);
         return { ...prev, [row.id]: next };
@@ -95,18 +118,7 @@ export function useOcrRowInputs(viewMode: "current" | "completed", dataItems: Oc
 
   useEffect(() => {
     if (viewMode === "completed") return;
-    setRowInputs((prev) => {
-      let changed = false;
-      const next = { ...prev };
-      for (const row of dataItems) {
-        const existing = prev[row.id];
-        if (existing && existing.version !== row.manual_version) {
-          next[row.id] = { ...existing, version: row.manual_version ?? 0 };
-          changed = true;
-        }
-      }
-      return changed ? next : prev;
-    });
+    setRowInputs((prev) => syncInputVersionsWithRows(prev, dataItems));
   }, [dataItems, viewMode]);
 
   return {
