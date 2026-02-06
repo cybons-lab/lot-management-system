@@ -163,6 +163,9 @@ class ShippingMasterService:
         self.session.commit()
 
         if auto_sync and curated_ids:
+            prefill_result = self.prefill_curated_for_sync(curated_ids=curated_ids)
+            for warn in prefill_result["warnings"]:
+                warnings.append(f"補完警告: {warn}")
             sync_service = ShippingMasterSyncService(self.session)
             summary = sync_service.sync_batch(curated_ids=curated_ids, policy=sync_policy)
             for err in summary.errors:
@@ -291,11 +294,14 @@ class ShippingMasterService:
             changed = False
             row_customer_code = (row.customer_code or "").strip()
             row_material_code = (row.material_code or "").strip()
+            row_customer_name = (row.customer_name or "").strip()
             key = (row_customer_code, row_material_code)
 
-            if is_blank(row.customer_name) and row_customer_code:
+            if (
+                is_blank(row.customer_name) or row_customer_name == row_customer_code
+            ) and row_customer_code:
                 customer_name = customer_name_map.get(row_customer_code)
-                if customer_name:
+                if customer_name and customer_name.strip() != row_customer_code:
                     row.customer_name = customer_name
                     changed = True
 
@@ -309,13 +315,18 @@ class ShippingMasterService:
                     if supplier and supplier.supplier_name:
                         supplier_name_map[supplier.supplier_code] = supplier.supplier_name
 
-            if is_blank(row.supplier_name):
+            current_supplier_code = (row.supplier_code or "").strip()
+            if is_blank(row.supplier_name) or (
+                current_supplier_code
+                and row.supplier_name
+                and row.supplier_name.strip() == current_supplier_code
+            ):
                 supplier_name = None
-                if row.supplier_code:
-                    supplier_name = supplier_name_map.get(row.supplier_code.strip())
+                if current_supplier_code:
+                    supplier_name = supplier_name_map.get(current_supplier_code)
                 if not supplier_name:
                     supplier_name = sap_supplier_name_map.get(key)
-                if supplier_name:
+                if supplier_name and supplier_name.strip() != current_supplier_code:
                     row.supplier_name = supplier_name
                     changed = True
 

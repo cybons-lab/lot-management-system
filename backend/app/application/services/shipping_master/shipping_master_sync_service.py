@@ -204,6 +204,13 @@ class ShippingMasterSyncService:
                 updated = True
         return updated
 
+    @staticmethod
+    def _is_code_placeholder(name: str | None, code: str | None) -> bool:
+        """名称がコード埋め（未解決）かどうか判定."""
+        if name is None or code is None:
+            return False
+        return name.strip() != "" and name.strip() == code.strip()
+
     def _sync_customer(
         self, curated: ShippingMasterCurated, policy: SyncPolicy, summary: SyncSummary
     ) -> int | None:
@@ -230,7 +237,20 @@ class ShippingMasterSyncService:
             data["customer_name"] = curated.customer_name
             data["display_name"] = curated.customer_name
 
-        if self._apply_update(customer, data, policy):
+        forced_update = False
+        if (
+            curated.customer_name
+            and not self._is_code_placeholder(curated.customer_name, curated.customer_code)
+            and (
+                self._is_code_placeholder(customer.customer_name, customer.customer_code)
+                or self._is_code_placeholder(customer.display_name, customer.customer_code)
+            )
+        ):
+            customer.customer_name = curated.customer_name
+            customer.display_name = curated.customer_name
+            forced_update = True
+
+        if forced_update or self._apply_update(customer, data, policy):
             summary.updated_count += 1
             self.session.flush()
 
@@ -262,7 +282,20 @@ class ShippingMasterSyncService:
             data["supplier_name"] = curated.supplier_name
             data["display_name"] = curated.supplier_name
 
-        if self._apply_update(supplier, data, policy):
+        forced_update = False
+        if (
+            curated.supplier_name
+            and not self._is_code_placeholder(curated.supplier_name, curated.supplier_code)
+            and (
+                self._is_code_placeholder(supplier.supplier_name, supplier.supplier_code)
+                or self._is_code_placeholder(supplier.display_name, supplier.supplier_code)
+            )
+        ):
+            supplier.supplier_name = curated.supplier_name
+            supplier.display_name = curated.supplier_name
+            forced_update = True
+
+        if forced_update or self._apply_update(supplier, data, policy):
             summary.updated_count += 1
             self.session.flush()
 

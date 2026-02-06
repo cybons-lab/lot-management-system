@@ -216,3 +216,72 @@ def test_sync_shipping_masters_prefill_before_sync(client: TestClient, db):
     assert refreshed.customer_name == "得意先A"
     assert refreshed.supplier_code == "S_PREFILL"
     assert refreshed.supplier_name == "SAP仕入先"
+
+
+def test_import_with_auto_sync_runs_prefill(client: TestClient, db):
+    """auto_sync=true でも同期前補完が実行されること."""
+    import io
+
+    import openpyxl
+
+    customer = Customer(
+        customer_code="C_AUTO_PREFILL",
+        customer_name="得意先Auto",
+        display_name="得意先Auto",
+    )
+    db.add(customer)
+
+    conn = SapConnection(
+        name="test-auto",
+        environment="test",
+        ashost="localhost",
+        sysnr="00",
+        client="100",
+        user_name="dummy",
+        passwd_encrypted="dummy",
+        is_active=True,
+        is_default=False,
+    )
+    db.add(conn)
+    db.flush()
+    db.add(
+        SapMaterialCache(
+            connection_id=conn.id,
+            zkdmat_b="M_AUTO_PREFILL",
+            kunnr="C_AUTO_PREFILL",
+            raw_data={"ZLIFNR_H": "S_AUTO_PREFILL", "NAME1": "SAP仕入先Auto"},
+        )
+    )
+    db.commit()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.append(["得意先コード", "材質コード", "次区", "素材納品書記載製品名", "メーカー品番"])
+    ws.append(["C_AUTO_PREFILL", "M_AUTO_PREFILL", "J_AUTO_PREFILL", "Prod", "MPN_AUTO_PREFILL"])
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+
+    files = {
+        "file": (
+            "test_auto_prefill.xlsx",
+            stream,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+    }
+    response = client.post(
+        "/api/shipping-masters/import?auto_sync=true&sync_policy=create-only",
+        files=files,
+    )
+    assert response.status_code == 200
+
+    curated = db.execute(
+        select(ShippingMasterCurated).where(
+            ShippingMasterCurated.customer_code == "C_AUTO_PREFILL",
+            ShippingMasterCurated.material_code == "M_AUTO_PREFILL",
+            ShippingMasterCurated.jiku_code == "J_AUTO_PREFILL",
+        )
+    ).scalar_one()
+    assert curated.customer_name == "得意先Auto"
+    assert curated.supplier_code == "S_AUTO_PREFILL"
+    assert curated.supplier_name == "SAP仕入先Auto"
