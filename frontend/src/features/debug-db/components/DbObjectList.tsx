@@ -2,7 +2,6 @@ import { Database, Table } from "lucide-react";
 
 import type { DbObject, DbObjectType } from "../api";
 
-import { Badge } from "@/components/ui/display/badge";
 import { Input } from "@/components/ui/form/input";
 import {
   Select,
@@ -112,12 +111,14 @@ function DbObjectListItem({
             {obj.schema_name}.{obj.object_name}
           </span>
         </div>
-        <Badge
-          variant="outline"
-          className={cn("shrink-0 font-normal", TYPE_BADGE_STYLE[obj.object_type])}
+        <span
+          className={cn(
+            "inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+            TYPE_BADGE_STYLE[obj.object_type],
+          )}
         >
           {TYPE_LABELS[obj.object_type]}
-        </Badge>
+        </span>
       </div>
       <div className="text-xs text-gray-500">{obj.comment || "コメントなし"}</div>
       <div className="text-xs text-gray-400">
