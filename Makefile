@@ -44,8 +44,10 @@ db-init-sample: ## サンプルデータを投入
 	@for i in 1 2 3 4 5 6 7 8 9 10; do \
 		curl -s http://localhost:8000/api/health > /dev/null 2>&1 && break || sleep 2; \
 	done
-	@echo "サンプルデータを投入中..."
-	curl -X POST http://localhost:8000/api/admin/init-sample-data
+	@echo "データベースを初期化中（管理者ユーザー作成）..."
+	curl -X POST http://localhost:8000/api/admin/reset-database
+	@echo "サンプルデータを生成中..."
+	curl -X POST http://localhost:8000/api/admin/test-data/generate
 
 db-shell: ## PostgreSQLシェルに接続
 	docker compose exec db psql -U admin -d lot_management
