@@ -3,7 +3,7 @@
  * Inbound plans list page
  */
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -12,7 +12,7 @@ import {
   type InboundPlansFilters,
   type InboundPlan,
 } from "../components/InboundPlansList";
-import { useInboundPlans, useDeleteInboundPlan, useSyncFromSAP } from "../hooks";
+import { useDeleteInboundPlan, useInboundPlans, useSyncFromSAP } from "../hooks";
 
 import { PermanentDeleteDialog } from "@/components/common";
 import { Button } from "@/components/ui";
@@ -22,33 +22,25 @@ import { useSupplierFilter } from "@/features/assignments/hooks";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
-export function InboundPlansListPage() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
-  // 担当仕入先フィルターロジック（共通フック）
-  const { filterEnabled, toggleFilter } = useSupplierFilter();
-
-  const [filters, setFilters] = useState<InboundPlansFilters>({
-    supplier_id: searchParams.get("supplier_id") || "",
-    supplier_item_id: searchParams.get("supplier_item_id") || "",
+function buildInitialFilters(
+  searchParams: URLSearchParams,
+  filterEnabled: boolean,
+): InboundPlansFilters {
+  const getOrEmpty = (key: string) => searchParams.get(key) || "";
+  return {
+    supplier_id: getOrEmpty("supplier_id"),
+    supplier_item_id: getOrEmpty("supplier_item_id"),
     status: (searchParams.get("status") as InboundPlansFilters["status"]) || "",
-    date_from: searchParams.get("date_from") || "",
-    date_to: searchParams.get("date_to") || "",
+    date_from: getOrEmpty("date_from"),
+    date_to: getOrEmpty("date_to"),
     prioritize_assigned: searchParams.get("prioritize_assigned") === "true" || filterEnabled,
-  });
+  };
+}
 
-  // 削除ダイアログの状態
-  const [deletingItem, setDeletingItem] = useState<InboundPlan | null>(null);
-
-  // 共通フックのfilterEnabledとfiltersのprioritize_assignedを同期
-  useEffect(() => {
-    setFilters((prev) => ({ ...prev, prioritize_assigned: filterEnabled }));
-  }, [filterEnabled]);
-
-  // Build query params
-  const queryParams = {
+function buildInboundPlanQueryParams(
+  filters: InboundPlansFilters,
+): Parameters<typeof useInboundPlans>[0] {
+  return {
     supplier_id: filters.supplier_id ? Number(filters.supplier_id) : undefined,
     supplier_item_id: filters.supplier_item_id ? Number(filters.supplier_item_id) : undefined,
     status: filters.status || undefined,
@@ -56,28 +48,47 @@ export function InboundPlansListPage() {
     date_to: filters.date_to || undefined,
     prioritize_assigned: filters.prioritize_assigned || undefined,
   };
+}
 
-  // Fetch inbound plans
+function useInboundPlansListPageState(params: {
+  navigate: ReturnType<typeof useNavigate>;
+  searchParams: URLSearchParams;
+  filterEnabled: boolean;
+}) {
+  const { navigate, searchParams, filterEnabled } = params;
+
+  const [filters, setFilters] = useState<InboundPlansFilters>(() =>
+    buildInitialFilters(searchParams, filterEnabled),
+  );
+  const [deletingItem, setDeletingItem] = useState<InboundPlan | null>(null);
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, prioritize_assigned: filterEnabled }));
+  }, [filterEnabled]);
+
+  const queryParams = useMemo(() => buildInboundPlanQueryParams(filters), [filters]);
   const { data: plans, isLoading, isError, error, refetch } = useInboundPlans(queryParams);
 
-  if (isError) {
-    console.error("[InboundPlans] List fetch error:", error);
-  }
+  useEffect(() => {
+    if (isError) {
+      console.error("[InboundPlans] List fetch error:", error);
+    }
+  }, [isError, error]);
 
-  // Delete mutation
   const deleteMutation = useDeleteInboundPlan();
-
-  // SAP sync mutation
   const syncMutation = useSyncFromSAP();
 
-  const handleDeleteClick = (id: number) => {
-    const plan = plans?.find((p) => p.id === id);
-    if (plan) {
-      setDeletingItem(plan);
-    }
-  };
+  const handleDeleteClick = useCallback(
+    (id: number) => {
+      const plan = plans?.find((item) => item.id === id);
+      if (plan) {
+        setDeletingItem(plan);
+      }
+    },
+    [plans],
+  );
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!deletingItem) return;
 
     try {
@@ -88,13 +99,16 @@ export function InboundPlansListPage() {
       console.error("Delete failed:", error);
       toast.error("削除に失敗しました");
     }
-  };
+  }, [deleteMutation, deletingItem, refetch]);
 
-  const handleViewDetail = (id: number) => {
-    navigate(ROUTES.INBOUND_PLANS.DETAIL(id));
-  };
+  const handleViewDetail = useCallback(
+    (id: number) => {
+      navigate(ROUTES.INBOUND_PLANS.DETAIL(id));
+    },
+    [navigate],
+  );
 
-  const handleSyncFromSAP = async () => {
+  const handleSyncFromSAP = useCallback(async () => {
     try {
       const result = await syncMutation.mutateAsync();
       toast.success(result.message);
@@ -103,7 +117,35 @@ export function InboundPlansListPage() {
       console.error("SAP sync failed:", error);
       toast.error("SAP同期に失敗しました");
     }
+  }, [refetch, syncMutation]);
+
+  return {
+    filters,
+    setFilters,
+    plans,
+    isLoading,
+    isError,
+    deletingItem,
+    setDeletingItem,
+    deleteMutation,
+    syncMutation,
+    handleDeleteClick,
+    handleConfirmDelete,
+    handleViewDetail,
+    handleSyncFromSAP,
   };
+}
+
+export function InboundPlansListPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { filterEnabled, toggleFilter } = useSupplierFilter();
+
+  const model = useInboundPlansListPageState({
+    navigate,
+    searchParams,
+    filterEnabled,
+  });
 
   return (
     <PageContainer>
@@ -111,8 +153,8 @@ export function InboundPlansListPage() {
         title="入荷予定一覧"
         subtitle="入荷予定管理（ロット自動生成対応）"
         actions={
-          <Button onClick={handleSyncFromSAP} disabled={syncMutation.isPending}>
-            {syncMutation.isPending ? "同期中..." : "SAPから取得"}
+          <Button onClick={model.handleSyncFromSAP} disabled={model.syncMutation.isPending}>
+            {model.syncMutation.isPending ? "同期中..." : "SAPから取得"}
           </Button>
         }
       />
@@ -120,26 +162,26 @@ export function InboundPlansListPage() {
       <SupplierAssignmentWarning />
 
       <InboundPlansList
-        plans={plans}
-        isLoading={isLoading}
-        isError={isError}
-        filters={filters}
-        onFilterChange={setFilters}
-        onDelete={handleDeleteClick}
-        onViewDetail={handleViewDetail}
-        isDeleting={deleteMutation.isPending}
+        plans={model.plans}
+        isLoading={model.isLoading}
+        isError={model.isError}
+        filters={model.filters}
+        onFilterChange={model.setFilters}
+        onDelete={model.handleDeleteClick}
+        onViewDetail={model.handleViewDetail}
+        isDeleting={model.deleteMutation.isPending}
         filterEnabled={filterEnabled}
         onToggleFilter={toggleFilter}
       />
 
       <PermanentDeleteDialog
-        open={!!deletingItem}
-        onOpenChange={(open) => !open && setDeletingItem(null)}
-        onConfirm={handleConfirmDelete}
-        isPending={deleteMutation.isPending}
+        open={!!model.deletingItem}
+        onOpenChange={(open) => !open && model.setDeletingItem(null)}
+        onConfirm={model.handleConfirmDelete}
+        isPending={model.deleteMutation.isPending}
         title="入荷予定を削除しますか？"
-        description={`入荷予定番号 ${deletingItem?.plan_number} を削除します。この操作は取り消せません。`}
-        confirmationPhrase={deletingItem?.plan_number || "delete"}
+        description={`入荷予定番号 ${model.deletingItem?.plan_number} を削除します。この操作は取り消せません。`}
+        confirmationPhrase={model.deletingItem?.plan_number || "delete"}
       />
     </PageContainer>
   );
