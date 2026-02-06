@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 import { AlertCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -31,6 +30,146 @@ interface OcrResultsTableProps {
   onCloseEditModal: () => void;
 }
 
+interface ActiveCellState {
+  rowId: number;
+  field: EditableFieldKey;
+}
+
+function buildEditableFieldOrder(
+  columns: Column<OcrResultItem>[],
+  isReadOnly: boolean,
+): EditableFieldKey[] {
+  if (isReadOnly) return [];
+
+  const columnIds = new Set(columns.map((column) => column.id));
+  const order: EditableFieldKey[] = [];
+
+  if (columnIds.has("lot_no") || columnIds.has("inbound_no") || columnIds.has("quantity")) {
+    order.push("lotNo1", "inboundNo1", "quantity1", "lotNo2", "inboundNo2", "quantity2");
+  }
+  if (columnIds.has("shipping_date_input")) {
+    order.push("shippingDate");
+  }
+  if (columnIds.has("shipping_slip_text_input")) {
+    order.push("shippingSlipText");
+  }
+  if (columnIds.has("material_code")) {
+    order.push("materialCode");
+  }
+  if (columnIds.has("jiku_code")) {
+    order.push("jikuCode");
+  }
+  if (columnIds.has("delivery_date")) {
+    order.push("deliveryDate");
+  }
+  if (columnIds.has("delivery_quantity")) {
+    order.push("deliveryQuantity");
+  }
+
+  return order;
+}
+
+function CompletedModeBanner() {
+  return (
+    <div className="flex items-center gap-2 rounded-t-xl border border-b-0 border-[hsl(var(--border))] bg-[hsl(var(--surface-2))] px-5 py-3">
+      <AlertCircle className="h-4 w-4 text-slate-500" />
+      <span className="text-sm font-medium text-slate-700">アーカイブデータ閲覧中</span>
+    </div>
+  );
+}
+
+function ErrorPanel({ error }: { error: Error | null }) {
+  return (
+    <div className="rounded-xl border bg-white p-8 text-center text-destructive">
+      エラーが発生しました: {error instanceof Error ? error.message : "不明なエラー"}
+    </div>
+  );
+}
+
+interface OcrTableContentProps {
+  data: OcrResultItem[];
+  columns: Column<OcrResultItem>[];
+  isLoading: boolean;
+  selectedIds: (string | number)[];
+  onSelectionChange: (ids: (string | number)[]) => void;
+  contextValue: {
+    getInputs: (row: OcrResultItem) => RowInputState;
+    updateInputs: (row: OcrResultItem, patch: Partial<RowInputState>) => void;
+  };
+  activeCell: ActiveCellState | null;
+  setActiveCell: (next: ActiveCellState | null) => void;
+  editableFieldOrder: EditableFieldKey[];
+  rowIds: number[];
+  rowMap: Map<number, OcrResultItem>;
+  isReadOnly: boolean;
+  editingRow: OcrResultItem | null;
+  onCloseEditModal: () => void;
+}
+
+function OcrTableContent({
+  data,
+  columns,
+  isLoading,
+  selectedIds,
+  onSelectionChange,
+  contextValue,
+  activeCell,
+  setActiveCell,
+  editableFieldOrder,
+  rowIds,
+  rowMap,
+  isReadOnly,
+  editingRow,
+  onCloseEditModal,
+}: OcrTableContentProps) {
+  return (
+    <OcrInputsContext.Provider value={contextValue}>
+      <OcrCellEditingContext.Provider
+        value={{
+          activeCell,
+          setActiveCell,
+          editableFieldOrder,
+          rowIds,
+          isReadOnly,
+          getRowById: (rowId) => rowMap.get(rowId),
+        }}
+      >
+        <DataTable
+          data={data}
+          columns={columns}
+          isLoading={isLoading}
+          emptyMessage="OCR結果データがありません"
+          enableVirtualization
+          getRowClassName={getRowClassName}
+          selectable={true}
+          selectedIds={selectedIds}
+          onSelectionChange={onSelectionChange}
+          isRowSelectable={(row) => row.status !== "processing"}
+          dense={true}
+          striped={true}
+        />
+        <OcrResultEditModal row={editingRow} isOpen={!!editingRow} onClose={onCloseEditModal} />
+      </OcrCellEditingContext.Provider>
+    </OcrInputsContext.Provider>
+  );
+}
+
+function useActiveCellGuard(params: {
+  activeCell: ActiveCellState | null;
+  isReadOnly: boolean;
+  rowMap: Map<number, OcrResultItem>;
+  setActiveCell: (next: ActiveCellState | null) => void;
+}) {
+  const { activeCell, isReadOnly, rowMap, setActiveCell } = params;
+
+  useEffect(() => {
+    if (!activeCell) return;
+    if (isReadOnly || !rowMap.has(activeCell.rowId)) {
+      setActiveCell(null);
+    }
+  }, [activeCell, isReadOnly, rowMap, setActiveCell]);
+}
+
 export function OcrResultsTable({
   viewMode,
   data,
@@ -43,101 +182,43 @@ export function OcrResultsTable({
   editingRow,
   onCloseEditModal,
 }: OcrResultsTableProps) {
-  const [activeCell, setActiveCell] = useState<{
-    rowId: number;
-    field: EditableFieldKey;
-  } | null>(null);
+  const [activeCell, setActiveCell] = useState<ActiveCellState | null>(null);
 
   const rowIds = data.map((row) => row.id);
   const rowMap = useMemo(() => new Map(data.map((row) => [row.id, row])), [data]);
   const isReadOnly = viewMode === "completed";
+  const editableFieldOrder = useMemo(
+    () => buildEditableFieldOrder(columns, isReadOnly),
+    [columns, isReadOnly],
+  );
 
-  const editableFieldOrder = useMemo<EditableFieldKey[]>(() => {
-    if (isReadOnly) return [];
-    const columnIds = new Set(columns.map((col) => col.id));
-    const order: EditableFieldKey[] = [];
-    // ユーザー指定の順序: ロット1 -> 入庫1 -> 数量1 -> ロット2 -> 入庫2 -> 数量2
-    if (columnIds.has("lot_no") || columnIds.has("inbound_no") || columnIds.has("quantity")) {
-      order.push("lotNo1", "inboundNo1", "quantity1", "lotNo2", "inboundNo2", "quantity2");
-    }
-    if (columnIds.has("shipping_date_input")) {
-      order.push("shippingDate");
-    }
-    if (columnIds.has("shipping_slip_text_input")) {
-      order.push("shippingSlipText");
-    }
-    if (columnIds.has("material_code")) {
-      order.push("materialCode");
-    }
-    if (columnIds.has("jiku_code")) {
-      order.push("jikuCode");
-    }
-    if (columnIds.has("delivery_date")) {
-      order.push("deliveryDate");
-    }
-    if (columnIds.has("delivery_quantity")) {
-      order.push("deliveryQuantity");
-    }
-    return order;
-  }, [columns, isReadOnly]);
-
-  useEffect(() => {
-    if (!activeCell) return;
-    if (isReadOnly) {
-      setActiveCell(null);
-      return;
-    }
-    if (!rowMap.has(activeCell.rowId)) {
-      setActiveCell(null);
-      return;
-    }
-  }, [activeCell, isReadOnly, rowMap]);
+  useActiveCellGuard({ activeCell, isReadOnly, rowMap, setActiveCell });
 
   return (
     <div className="space-y-4">
-      {viewMode === "completed" && (
-        <div className="px-5 py-3 border border-b-0 border-[hsl(var(--border))] rounded-t-xl bg-[hsl(var(--surface-2))] flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-slate-500" />
-          <span className="text-sm font-medium text-slate-700">アーカイブデータ閲覧中</span>
-        </div>
-      )}
+      {viewMode === "completed" && <CompletedModeBanner />}
 
       {error ? (
-        <div className="p-8 text-center text-destructive border rounded-xl bg-white">
-          エラーが発生しました: {error instanceof Error ? error.message : "不明なエラー"}
-        </div>
+        <ErrorPanel error={error} />
       ) : (
-        <OcrInputsContext.Provider value={contextValue}>
-          <OcrCellEditingContext.Provider
-            value={{
-              activeCell,
-              setActiveCell,
-              editableFieldOrder,
-              rowIds,
-              isReadOnly,
-              getRowById: (rowId) => rowMap.get(rowId),
-            }}
-          >
-            <DataTable
-              data={data}
-              columns={columns}
-              isLoading={isLoading}
-              emptyMessage="OCR結果データがありません"
-              enableVirtualization
-              getRowClassName={getRowClassName}
-              selectable={true}
-              selectedIds={selectedIds}
-              onSelectionChange={onSelectionChange}
-              isRowSelectable={(row) => row.status !== "processing"}
-              dense={true}
-              striped={true}
-            />
-            <OcrResultEditModal row={editingRow} isOpen={!!editingRow} onClose={onCloseEditModal} />
-          </OcrCellEditingContext.Provider>
-        </OcrInputsContext.Provider>
+        <OcrTableContent
+          data={data}
+          columns={columns}
+          isLoading={isLoading}
+          selectedIds={selectedIds}
+          onSelectionChange={onSelectionChange}
+          contextValue={contextValue}
+          activeCell={activeCell}
+          setActiveCell={setActiveCell}
+          editableFieldOrder={editableFieldOrder}
+          rowIds={rowIds}
+          rowMap={rowMap}
+          isReadOnly={isReadOnly}
+          editingRow={editingRow}
+          onCloseEditModal={onCloseEditModal}
+        />
       )}
 
-      {/* ステータス凡例をテーブル下に配置 */}
       {viewMode === "current" && <StatusLegend />}
     </div>
   );
