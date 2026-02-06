@@ -86,7 +86,7 @@ export function SupplierProductForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {/* 仕入先 (編集時は変更不可) - Phase1で最初に移動 */}
-        <FormField<FormValues, "supplier_id">
+        <FormField
           control={form.control}
           name="supplier_id"
           render={({ field }) => (
@@ -118,7 +118,7 @@ export function SupplierProductForm({
         />
 
         {/* メーカー品番 - 必須フィールド */}
-        <FormField<FormValues, "maker_part_no">
+        <FormField
           control={form.control}
           name="maker_part_no"
           render={({ field }) => (
@@ -138,7 +138,7 @@ export function SupplierProductForm({
         />
 
         {/* 製品名 - 必須フィールド */}
-        <FormField<FormValues, "display_name">
+        <FormField
           control={form.control}
           name="display_name"
           render={({ field }) => (
@@ -156,7 +156,7 @@ export function SupplierProductForm({
         />
 
         {/* 基本単位 - 必須フィールド */}
-        <FormField<FormValues, "base_unit">
+        <FormField
           control={form.control}
           name="base_unit"
           render={({ field }) => (
@@ -176,7 +176,7 @@ export function SupplierProductForm({
         />
 
         {/* リードタイム */}
-        <FormField<FormValues, "lead_time_days">
+        <FormField
           control={form.control}
           name="lead_time_days"
           render={({ field }) => (
@@ -199,7 +199,7 @@ export function SupplierProductForm({
         />
 
         {/* 備考 (オプション) */}
-        <FormField<FormValues, "notes">
+        <FormField
           control={form.control}
           name="notes"
           render={({ field }) => (

@@ -87,12 +87,10 @@ function useInitializeAllocationState(
         if (!reservations.length || next[line.id]) return;
 
         const lineAllocations: Record<number, number> = {};
-        reservations.forEach(
-          (allocation: { lot_id?: number | null; reserved_qty?: number | string | null }) => {
-            if (!allocation.lot_id) return;
-            lineAllocations[allocation.lot_id] = Number(allocation.reserved_qty ?? 0);
-          },
-        );
+        reservations.forEach((allocation) => {
+          if (!allocation.lot_id) return;
+          lineAllocations[allocation.lot_id] = Number(allocation.reserved_qty ?? 0);
+        });
         next[line.id] = lineAllocations;
         hasChanges = true;
       });
@@ -132,11 +130,12 @@ function useCandidateLotsPrefetch(allLines: OrderLine[]) {
           strategy: "fefo",
           limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
         }),
+      enabled: !!line.id,
       staleTime: 1000 * 60,
     })),
   });
 
-  return candidateQueries.some((query: { isLoading: boolean }) => query.isLoading);
+  return candidateQueries.some((query) => query.isLoading);
 }
 
 function buildNameMap<T extends { id: number }>(

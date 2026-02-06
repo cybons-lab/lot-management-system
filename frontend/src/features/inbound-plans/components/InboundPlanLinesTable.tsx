@@ -93,9 +93,9 @@ function InboundPlanRowActions({
           <FileBarChart className="mr-2 h-4 w-4" />
           需要予測を確認
         </DropdownMenuItem>
-        {line.warehouse_id !== undefined && (
+        {line.warehouse_id !== undefined && line.warehouse_id !== null && (
           <DropdownMenuItem
-            onClick={() => onOpenInventory(line.supplier_item_id, line.warehouse_id!)}
+            onClick={() => onOpenInventory(line.supplier_item_id, line.warehouse_id as number)}
           >
             <Package className="mr-2 h-4 w-4" />
             在庫を確認
