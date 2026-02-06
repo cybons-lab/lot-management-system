@@ -728,6 +728,42 @@ async def start_pad_run_from_upload(
 - `backend/app/application/services/smartread/csv_transformer.py`
 - `docs/smartread_csv_validation_report.md`
 
+### 2-15. RPA Status Enum のレガシーエイリアス削除
+
+**優先度:** 低（RPA機能改修時にまとめて対応）
+**作成:** 2026-02-06
+**カテゴリ:** コード品質・リファクタリング
+**工数:** 0.5日
+
+**背景:**
+後方互換エイリアス一掃（`32bc1943`）で大半のエイリアスを削除したが、`RpaRunStatus` の旧ステータス名エイリアス（8個）は使用箇所が38箇所・7ファイルに及ぶため見送った。
+
+**対象:** `backend/app/infrastructure/persistence/models/rpa_models.py` L176-184
+```python
+# Legacy aliases for backward compatibility
+DOWNLOADED = "step1_done"
+DRAFT = "step1_done"
+READY_FOR_STEP2 = "step2_confirmed"
+STEP2_RUNNING = "step3_running"
+STEP3_DONE_WAITING_EXTERNAL = "step3_done"
+READY_FOR_STEP4_CHECK = "step4_checking"
+STEP4_CHECK_RUNNING = "step4_checking"
+READY_FOR_STEP4_REVIEW = "step4_review"
+```
+
+**対象ファイル（書き換え必要）:**
+- `app/application/services/rpa/orchestrator.py` (11箇所)
+- `app/domain/rpa/state_manager.py` (6箇所)
+- `app/application/services/test_data/rpa_material_delivery.py` (5箇所)
+- `tests/unit/test_material_delivery_orchestrator.py` (8箇所)
+- `tests/api/test_rpa_material_delivery.py` (6箇所)
+- `scripts/seed_rpa.py` (2箇所)
+
+**実施内容:**
+1. 旧エイリアス名を正式なステップベース名（`STEP1_DONE`, `STEP2_CONFIRMED` 等）に統一
+2. 全38箇所の使用箇所を書き換え
+3. レガシーエイリアス定義を削除
+
 ---
 
 ## 3. DB/UI整合性・データ表示改善
