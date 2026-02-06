@@ -97,17 +97,17 @@ describe("useLotAllocation", () => {
     vi.mocked(ordersHook.useOrdersForAllocation).mockReturnValue({
       data: mockOrders,
       isLoading: false,
-    } as any);
+    } as unknown as ReturnType<typeof ordersHook.useOrdersForAllocation>);
 
     vi.mocked(mastersHook.useCustomersQuery).mockReturnValue({
       data: [],
       isLoading: false,
-    } as any);
+    } as unknown as ReturnType<typeof mastersHook.useCustomersQuery>);
 
     vi.mocked(mastersHook.useProductsQuery).mockReturnValue({
       data: [],
       isLoading: false,
-    } as any);
+    } as unknown as ReturnType<typeof mastersHook.useProductsQuery>);
 
     vi.mocked(api.getAllocationCandidates).mockResolvedValue(mockCandidates);
     vi.mocked(api.saveManualAllocations).mockResolvedValue({

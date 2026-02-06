@@ -6,6 +6,8 @@ import * as hooks from "../hooks";
 
 import { SmartReadSettingsModal } from "./SmartReadSettingsModal";
 
+import type * as UiComponents from "@/components/ui";
+
 // Mock the hooks
 vi.mock("../hooks", () => ({
   useSmartReadConfigs: vi.fn(),
@@ -16,33 +18,59 @@ vi.mock("../hooks", () => ({
 
 // Mock Select components for easier testing
 vi.mock("@/components/ui", async () => {
-  const actual = await vi.importActual("@/components/ui");
+  const actual = await vi.importActual<typeof UiComponents>("@/components/ui");
+
+  type SelectRootProps = {
+    children?: React.ReactNode;
+    onValueChange?: (value: string) => void;
+    value?: string;
+  };
+
+  type SelectTriggerProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
+    children?: React.ReactNode;
+    onValueChange?: (value: string) => void;
+    value?: string;
+  };
+
+  type SelectValueProps = {
+    placeholder?: string;
+  };
+
+  type SelectContentProps = {
+    children?: React.ReactNode;
+  };
+
+  type SelectItemProps = {
+    children?: React.ReactNode;
+    value?: string;
+  };
+
   return {
     ...actual,
-    Select: ({ children, onValueChange, value }: any) => {
+    Select: ({ children, onValueChange, value }: SelectRootProps) => {
       return (
         <div data-testid="select-root">
           {React.Children.map(children, (child) => {
-            if (React.isValidElement(child)) {
-              return React.cloneElement(child as any, { onValueChange, value });
+            if (React.isValidElement<SelectTriggerProps>(child)) {
+              return React.cloneElement(child, { onValueChange, value });
             }
             return child;
           })}
         </div>
       );
     },
-    SelectTrigger: ({ children, onValueChange, value, ...props }: any) => (
+    SelectTrigger: ({ children, onValueChange, value, ...props }: SelectTriggerProps) => (
       <select {...props} value={value || ""} onChange={(e) => onValueChange?.(e.target.value)}>
         {children}
       </select>
     ),
-    SelectValue: ({ placeholder }: any) => (
+    SelectValue: ({ placeholder }: SelectValueProps) => (
       <option value="" disabled>
         {placeholder}
       </option>
     ),
-    SelectContent: ({ children }: any) => <>{children}</>,
-    SelectItem: ({ children, value }: any) => <option value={value}>{children}</option>,
+    SelectContent: ({ children }: SelectContentProps) => <>{children}</>,
+    SelectItem: ({ children, value }: SelectItemProps) => <option value={value}>{children}</option>,
     // Removed FormControl mock to allow shadcn's FormControl to add id to Select
   };
 });
@@ -77,25 +105,25 @@ describe("SmartReadSettingsModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (hooks.useSmartReadConfigs as any).mockReturnValue({
+    vi.mocked(hooks.useSmartReadConfigs).mockReturnValue({
       data: mockConfigs,
       isLoading: false,
-    });
+    } as unknown as ReturnType<typeof hooks.useSmartReadConfigs>);
 
-    (hooks.useCreateSmartReadConfig as any).mockReturnValue({
+    vi.mocked(hooks.useCreateSmartReadConfig).mockReturnValue({
       mutateAsync: mockCreateMutate,
       isPending: false,
-    });
+    } as unknown as ReturnType<typeof hooks.useCreateSmartReadConfig>);
 
-    (hooks.useUpdateSmartReadConfig as any).mockReturnValue({
+    vi.mocked(hooks.useUpdateSmartReadConfig).mockReturnValue({
       mutateAsync: mockUpdateMutate,
       isPending: false,
-    });
+    } as unknown as ReturnType<typeof hooks.useUpdateSmartReadConfig>);
 
-    (hooks.useDeleteSmartReadConfig as any).mockReturnValue({
+    vi.mocked(hooks.useDeleteSmartReadConfig).mockReturnValue({
       mutateAsync: mockDeleteMutate,
       isPending: false,
-    });
+    } as unknown as ReturnType<typeof hooks.useDeleteSmartReadConfig>);
   });
 
   it("renders the modal and list of configs", () => {

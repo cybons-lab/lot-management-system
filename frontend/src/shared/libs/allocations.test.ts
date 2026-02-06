@@ -103,7 +103,9 @@ describe("coerceAllocatedLots", () => {
     });
 
     it("returns empty array for non-array input", () => {
-      expect(coerceAllocatedLots("not an array" as any)).toEqual([]);
+      expect(
+        coerceAllocatedLots("not an array" as unknown as Parameters<typeof coerceAllocatedLots>[0]),
+      ).toEqual([]);
     });
   });
 
@@ -131,7 +133,9 @@ describe("coerceAllocatedLots", () => {
         { lot_id: 2, allocated_quantity: "75" },
       ];
 
-      const result = coerceAllocatedLots(input as any);
+      const result = coerceAllocatedLots(
+        input as unknown as Parameters<typeof coerceAllocatedLots>[0],
+      );
 
       expect(result).toHaveLength(2);
     });
@@ -143,7 +147,9 @@ describe("coerceAllocatedLots", () => {
         { lot_id: 2, allocated_quantity: "75" },
       ];
 
-      const result = coerceAllocatedLots(input as any);
+      const result = coerceAllocatedLots(
+        input as unknown as Parameters<typeof coerceAllocatedLots>[0],
+      );
 
       expect(result).toHaveLength(2);
     });

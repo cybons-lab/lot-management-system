@@ -19,7 +19,13 @@ vi.mock("@/features/allocations/components", () => ({
 
 vi.mock("@/features/orders/components", () => ({
   ForecastSection: () => <div data-testid="forecast-section">Forecast</div>,
-  LotListWithAllocation: ({ onAllocate, onCancelAllocation }: any) => (
+  LotListWithAllocation: ({
+    onAllocate,
+    onCancelAllocation,
+  }: {
+    onAllocate: (lotId: number, quantity: number) => void;
+    onCancelAllocation: (allocationId: number) => void;
+  }) => (
     <div data-testid="lot-list">
       <button onClick={() => onAllocate(1, 10)}>Allocate</button>
       <button onClick={() => onCancelAllocation(100)}>Cancel</button>
@@ -54,16 +60,24 @@ describe("OrderLineCard", () => {
       plannedShipDate: "2025-01-09",
       shippingLeadTime: "1 day",
       ids: { orderId: 1, lineId: 1 },
-    } as any);
+    } as unknown as ReturnType<typeof hooks.useOrderLineComputed>);
 
     // Mock useAllocationActions
     vi.spyOn(allocHooks, "useAllocationActions").mockReturnValue({
-      candidatesQ: { data: { items: [], warnings: [] }, isLoading: false } as any,
-      createAlloc: mockCreateAlloc as any,
-      cancelAlloc: mockCancelAlloc as any,
-      saveWareAlloc: { mutate: vi.fn() } as any,
+      candidatesQ: { data: { items: [], warnings: [] }, isLoading: false } as unknown as ReturnType<
+        typeof allocHooks.useAllocationActions
+      >["candidatesQ"],
+      createAlloc: mockCreateAlloc as unknown as ReturnType<
+        typeof allocHooks.useAllocationActions
+      >["createAlloc"],
+      cancelAlloc: mockCancelAlloc as unknown as ReturnType<
+        typeof allocHooks.useAllocationActions
+      >["cancelAlloc"],
+      saveWareAlloc: { mutate: vi.fn() } as unknown as ReturnType<
+        typeof allocHooks.useAllocationActions
+      >["saveWareAlloc"],
       enabled: true,
-    });
+    } as ReturnType<typeof allocHooks.useAllocationActions>);
   });
 
   it("renders order information correctly", () => {

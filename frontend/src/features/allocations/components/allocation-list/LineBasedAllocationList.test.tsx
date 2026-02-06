@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import type { AllocationListProps, GroupedOrder, LineWithOrderInfo } from "./line-based/types";
 import * as useLineDataHook from "./line-based/useLineData";
 import { LineBasedAllocationList } from "./LineBasedAllocationList";
 
@@ -17,7 +18,13 @@ vi.mock("@tanstack/react-virtual", () => ({
 }));
 
 vi.mock("./line-based/LineItem", () => ({
-  LineItem: ({ item, onCheckChange }: any) => (
+  LineItem: ({
+    item,
+    onCheckChange,
+  }: {
+    item: { id: number; product_name: string };
+    onCheckChange: (lineId: number, checked: boolean) => void;
+  }) => (
     <div data-testid="line-item">
       {item.product_name}
       <input
@@ -31,11 +38,19 @@ vi.mock("./line-based/LineItem", () => ({
 }));
 
 vi.mock("./line-based/OrderGroup", () => ({
-  OrderGroup: ({ group }: any) => <div data-testid="order-group">{group.order_id}</div>,
+  OrderGroup: ({ group }: { group: { order_id: number } }) => (
+    <div data-testid="order-group">{group.order_id}</div>
+  ),
 }));
 
 vi.mock("./line-based/BulkActionsHeader", () => ({
-  BulkActionsHeader: ({ onSelectAll, onBulkSave }: any) => (
+  BulkActionsHeader: ({
+    onSelectAll,
+    onBulkSave,
+  }: {
+    onSelectAll: () => void;
+    onBulkSave: () => void;
+  }) => (
     <div data-testid="bulk-actions">
       <button onClick={onSelectAll}>Select All</button>
       <button onClick={onBulkSave}>Bulk Save</button>
@@ -44,7 +59,7 @@ vi.mock("./line-based/BulkActionsHeader", () => ({
 }));
 
 vi.mock("./line-based/FilterBar", () => ({
-  FilterBar: ({ onViewModeToggle }: any) => (
+  FilterBar: ({ onViewModeToggle }: { onViewModeToggle: () => void }) => (
     <div data-testid="filter-bar">
       <button onClick={onViewModeToggle}>Toggle View</button>
     </div>
@@ -56,8 +71,8 @@ vi.mock("./line-based/JumpButtons", () => ({
 }));
 
 describe("LineBasedAllocationList", () => {
-  const mockProps = {
-    orders: [{ id: 1, lines: [] }] as any,
+  const mockProps: AllocationListProps = {
+    orders: [{ id: 1, lines: [] }] as unknown as AllocationListProps["orders"],
     isLoading: false,
     onSaveAllocations: vi.fn(),
     customerMap: {},
@@ -79,15 +94,15 @@ describe("LineBasedAllocationList", () => {
       allFlatLines: [
         { id: 1, product_name: "Product A" },
         { id: 2, product_name: "Product B" },
-      ] as any,
+      ] as unknown as LineWithOrderInfo[],
       sortedLines: [
         { id: 1, product_name: "Product A" },
         { id: 2, product_name: "Product B" },
-      ] as any,
+      ] as unknown as LineWithOrderInfo[],
       groupedOrders: [
         { order_id: 101, lines: [] },
         { order_id: 102, lines: [] },
-      ] as any,
+      ] as unknown as GroupedOrder[],
       firstCheckedIndex: -1,
     });
   });

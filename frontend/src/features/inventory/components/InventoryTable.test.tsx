@@ -1,4 +1,5 @@
 import { render, within } from "@testing-library/react";
+import type React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -30,7 +31,7 @@ vi.mock("@/features/inventory/hooks/useInventoryTableLogic", () => ({
 vi.mock("@/features/inventory/components/InventoryTableComponents", () => ({
   LoadingState: () => <div>Loading...</div>,
   EmptyState: () => <div>Empty</div>,
-  InventoryRow: ({ columnWidths }: { columnWidths: any }) => (
+  InventoryRow: ({ columnWidths }: { columnWidths?: Record<string, string | number> }) => (
     <tr>
       <td data-testid="product-cell" style={{ width: columnWidths?.product }}>
         Product
@@ -57,7 +58,7 @@ vi.mock("@/features/withdrawals/components", () => ({
 }));
 
 vi.mock("@/shared/components/form", () => ({
-  FormDialog: ({ children }: any) => <div>{children}</div>,
+  FormDialog: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 
 const mockData: InventoryItem[] = [
