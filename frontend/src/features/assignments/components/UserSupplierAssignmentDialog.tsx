@@ -4,7 +4,7 @@
  */
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Control } from "react-hook-form";
 import { toast } from "sonner";
 
 import { useAssignmentMutations } from "../hooks/useAssignments";
@@ -41,7 +41,51 @@ interface FormValues {
   supplierId: string;
 }
 
-// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
+function DefaultTrigger() {
+  return (
+    <Button size="sm">
+      <Plus className="mr-2 h-4 w-4" />
+      担当追加
+    </Button>
+  );
+}
+
+function SupplierSelectField({
+  control,
+  options,
+}: {
+  control: Control<FormValues>;
+  options: Array<{ value: string; label: string }>;
+}) {
+  return (
+    <FormField
+      control={control}
+      name="supplierId"
+      rules={{ required: "仕入先を選択してください" }}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>仕入先</FormLabel>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="仕入先を選択" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
 export function UserSupplierAssignmentDialog({
   userId,
   trigger,
@@ -74,16 +118,14 @@ export function UserSupplierAssignmentDialog({
     }
   };
 
+  const supplierOptions = suppliers.map((supplier) => ({
+    value: String(supplier.id),
+    label: `${supplier.supplier_name} (${supplier.supplier_code})`,
+  }));
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            担当追加
-          </Button>
-        )}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger || <DefaultTrigger />}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>担当仕入先の追加</DialogTitle>
@@ -92,31 +134,7 @@ export function UserSupplierAssignmentDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-            <FormField
-              control={form.control}
-              name="supplierId"
-              rules={{ required: "仕入先を選択してください" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>仕入先</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="仕入先を選択" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier.id} value={String(supplier.id)}>
-                          {supplier.supplier_name} ({supplier.supplier_code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <SupplierSelectField control={form.control} options={supplierOptions} />
 
             <div className="flex justify-end space-x-2">
               <Button variant="outline" type="button" onClick={() => setOpen(false)}>
