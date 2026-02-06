@@ -50,7 +50,7 @@ vi.mock("../hooks/mutations", () => ({
     // For now, let's mock the return value.
     if (options?.onSuccess) {
       mockCancelMutation.mutate.mockImplementation((_args: unknown) => {
-        options.onSuccess({ lot_number: "LOT-001" });
+        options.onSuccess?.({ lot_number: "LOT-001" });
       });
     }
     return mockCancelMutation;

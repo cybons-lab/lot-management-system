@@ -127,6 +127,7 @@ export interface InboundPlansListParams {
   date_from?: string;
   date_to?: string;
   prioritize_primary?: boolean;
+  prioritize_assigned?: boolean;
 }
 
 // ===== API Functions =====
@@ -147,6 +148,9 @@ export const getInboundPlans = async (params?: InboundPlansListParams) => {
   if (params?.date_to) searchParams.append("date_to", params.date_to);
   if (params?.prioritize_primary !== undefined) {
     searchParams.append("prioritize_primary", params.prioritize_primary.toString());
+  }
+  if (params?.prioritize_assigned !== undefined) {
+    searchParams.append("prioritize_assigned", params.prioritize_assigned.toString());
   }
 
   const queryString = searchParams.toString();

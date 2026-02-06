@@ -47,7 +47,7 @@ function useDbBrowserViewState() {
   }, []);
 
   const handleTabChange = useCallback(
-    (nextTab: ActiveTab) => {
+    (nextTab: string) => {
       navigate(`../${nextTab}`);
     },
     [navigate],

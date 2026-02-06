@@ -50,14 +50,12 @@ import type { AllocationToastState, LineStatus } from "../types";
 import { allocationCandidatesKeys } from "./api/useAllocationCandidates";
 import { useOrdersForAllocation } from "./api/useOrdersForAllocation";
 
+import { type Customer } from "@/features/customers/validators/customer-schema";
+import { type SupplierProduct } from "@/features/supplier-products/api";
 import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
+import { type OrderLine } from "@/shared/types/aliases";
 
 type AllocationsByLine = Record<number, Record<number, number>>;
-type AllocationLine = {
-  id: number;
-  supplier_item_id?: number | string | null;
-  reservations?: Array<{ lot_id?: number | null; reserved_qty?: number | string | null }> | null;
-};
 
 function useToastAutoClear(
   setToast: Dispatch<SetStateAction<AllocationToastState>>,
@@ -73,7 +71,7 @@ function useToastAutoClear(
 
 function useInitializeAllocationState(
   isOrdersLoading: boolean,
-  allLines: AllocationLine[],
+  allLines: OrderLine[],
   setAllocationsByLine: Dispatch<SetStateAction<AllocationsByLine>>,
   setLineStatuses: Dispatch<SetStateAction<Record<number, LineStatus>>>,
 ) {
@@ -89,10 +87,12 @@ function useInitializeAllocationState(
         if (!reservations.length || next[line.id]) return;
 
         const lineAllocations: Record<number, number> = {};
-        reservations.forEach((allocation) => {
-          if (!allocation.lot_id) return;
-          lineAllocations[allocation.lot_id] = Number(allocation.reserved_qty ?? 0);
-        });
+        reservations.forEach(
+          (allocation: { lot_id?: number | null; reserved_qty?: number | string | null }) => {
+            if (!allocation.lot_id) return;
+            lineAllocations[allocation.lot_id] = Number(allocation.reserved_qty ?? 0);
+          },
+        );
         next[line.id] = lineAllocations;
         hasChanges = true;
       });
@@ -116,7 +116,7 @@ function useInitializeAllocationState(
   }, [allLines, isOrdersLoading, setAllocationsByLine, setLineStatuses]);
 }
 
-function useCandidateLotsPrefetch(allLines: AllocationLine[]) {
+function useCandidateLotsPrefetch(allLines: OrderLine[]) {
   const candidateQueries = useQueries({
     queries: allLines.map((line) => ({
       queryKey: allocationCandidatesKeys.list({
@@ -132,12 +132,11 @@ function useCandidateLotsPrefetch(allLines: AllocationLine[]) {
           strategy: "fefo",
           limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
         }),
-      enabled: !!line.id,
       staleTime: 1000 * 60,
     })),
   });
 
-  return candidateQueries.some((query) => query.isLoading);
+  return candidateQueries.some((query: { isLoading: boolean }) => query.isLoading);
 }
 
 function buildNameMap<T extends { id: number }>(
@@ -161,7 +160,7 @@ export function useLotAllocationLogic() {
   const ordersQuery = useOrdersForAllocation();
   const orders = useMemo(() => ordersQuery.data ?? [], [ordersQuery.data]);
   const allLines = useMemo(
-    () => orders.flatMap((order) => order.lines ?? []) as AllocationLine[],
+    () => orders.flatMap((order) => order.lines ?? []) as OrderLine[],
     [orders],
   );
 
@@ -182,11 +181,11 @@ export function useLotAllocationLogic() {
   });
 
   const customerMap = useMemo(
-    () => buildNameMap(customersQuery.data, (customer) => customer.customer_name),
+    () => buildNameMap<Customer>(customersQuery.data, (customer) => customer.customer_name),
     [customersQuery.data],
   );
   const productMap = useMemo(
-    () => buildNameMap(productsQuery.data, (product) => product.display_name),
+    () => buildNameMap<SupplierProduct>(productsQuery.data, (product) => product.display_name),
     [productsQuery.data],
   );
 

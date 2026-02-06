@@ -49,7 +49,7 @@ function AllocationErrorDialog({
           <DialogDescription className="sr-only">データの取得に失敗しました</DialogDescription>
         </DialogHeader>
         <QueryErrorFallback
-          error={error}
+          error={error instanceof Error ? error : null}
           resetError={refetch}
           title="受注データの取得に失敗しました"
         />

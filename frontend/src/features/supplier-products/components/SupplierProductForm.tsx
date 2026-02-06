@@ -82,15 +82,11 @@ export function SupplierProductForm({
     },
   });
 
-  const handleSubmit = (values: FormValues) => {
-    onSubmit(values);
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {/* 仕入先 (編集時は変更不可) - Phase1で最初に移動 */}
-        <FormField
+        <FormField<FormValues, "supplier_id">
           control={form.control}
           name="supplier_id"
           render={({ field }) => (
@@ -122,7 +118,7 @@ export function SupplierProductForm({
         />
 
         {/* メーカー品番 - 必須フィールド */}
-        <FormField
+        <FormField<FormValues, "maker_part_no">
           control={form.control}
           name="maker_part_no"
           render={({ field }) => (
@@ -142,7 +138,7 @@ export function SupplierProductForm({
         />
 
         {/* 製品名 - 必須フィールド */}
-        <FormField
+        <FormField<FormValues, "display_name">
           control={form.control}
           name="display_name"
           render={({ field }) => (
@@ -160,7 +156,7 @@ export function SupplierProductForm({
         />
 
         {/* 基本単位 - 必須フィールド */}
-        <FormField
+        <FormField<FormValues, "base_unit">
           control={form.control}
           name="base_unit"
           render={({ field }) => (
@@ -180,7 +176,7 @@ export function SupplierProductForm({
         />
 
         {/* リードタイム */}
-        <FormField
+        <FormField<FormValues, "lead_time_days">
           control={form.control}
           name="lead_time_days"
           render={({ field }) => (
@@ -203,7 +199,7 @@ export function SupplierProductForm({
         />
 
         {/* 備考 (オプション) */}
-        <FormField
+        <FormField<FormValues, "notes">
           control={form.control}
           name="notes"
           render={({ field }) => (

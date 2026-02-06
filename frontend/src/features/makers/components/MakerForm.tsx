@@ -52,14 +52,12 @@ function MakerInputField({
   label,
   placeholder,
   disabled,
-  normalizeNullable = false,
 }: {
   control: Control<MakerFormValues>;
   name: "maker_code" | "maker_name" | "display_name" | "short_name";
   label: string;
   placeholder?: string;
   disabled?: boolean;
-  normalizeNullable?: boolean;
 }) {
   return (
     <FormField
@@ -71,7 +69,7 @@ function MakerInputField({
           <FormControl>
             <Input
               {...field}
-              value={normalizeNullable ? field.value || "" : field.value}
+              value={field.value ?? ""}
               disabled={disabled}
               placeholder={placeholder}
             />
@@ -140,7 +138,6 @@ export function MakerForm({ initialData, onSubmit, onCancel, isSubmitting }: Mak
             name="display_name"
             label="表示名"
             disabled={isSubmitting}
-            normalizeNullable
           />
 
           <MakerInputField
@@ -148,7 +145,6 @@ export function MakerForm({ initialData, onSubmit, onCancel, isSubmitting }: Mak
             name="short_name"
             label="略称"
             disabled={isSubmitting}
-            normalizeNullable
           />
         </div>
 

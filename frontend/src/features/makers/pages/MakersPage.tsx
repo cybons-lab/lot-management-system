@@ -113,10 +113,11 @@ function useMakersPageModel() {
 }
 
 function MakersErrorView({ error, refetch }: { error: unknown; refetch: () => unknown }) {
+  const errorObj = error instanceof Error ? error : null;
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
       <PageHeader {...makersPageHeader} />
-      <QueryErrorFallback error={error} resetError={refetch} />
+      <QueryErrorFallback error={errorObj} resetError={refetch} />
     </div>
   );
 }
