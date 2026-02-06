@@ -14,7 +14,70 @@ interface WithdrawalHistoryListProps {
   warehouseId: number;
 }
 
-/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
+function DestinationCell({ row }: { row: WithdrawalResponse }) {
+  if (row.customer_name) {
+    return (
+      <div className="flex flex-col">
+        <span className="text-sm font-medium">{row.customer_name}</span>
+        {row.delivery_place_name && (
+          <span className="text-xs text-slate-500">{row.delivery_place_name}</span>
+        )}
+      </div>
+    );
+  }
+  return <span className="text-sm text-slate-600">{row.reason || "-"}</span>;
+}
+
+const WITHDRAWAL_HISTORY_COLUMNS: Column<WithdrawalResponse>[] = [
+  {
+    id: "ship_date",
+    header: "出庫日",
+    cell: (row) => format(new Date(row.ship_date), "yyyy/MM/dd"),
+    sortable: true,
+  },
+  {
+    id: "quantity",
+    header: "数量",
+    cell: (row) => <span className="font-medium">{fmt(row.quantity)}</span>,
+    sortable: true,
+    align: "right",
+  },
+  {
+    id: "type",
+    header: "区分",
+    cell: (row) => (
+      <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+        {row.withdrawal_type_label}
+      </span>
+    ),
+  },
+  {
+    id: "destination",
+    header: "出庫先 / 理由",
+    cell: (row) => <DestinationCell row={row} />,
+  },
+  {
+    id: "lot_number",
+    header: "ロット番号",
+    cell: (row) => <span className="font-mono text-xs">{row.lot_number}</span>,
+  },
+  {
+    id: "user",
+    header: "担当者",
+    cell: (row) => row.withdrawn_by_name || "-",
+    align: "center",
+  },
+];
+
+function deduplicateWithdrawals(withdrawals: WithdrawalResponse[]) {
+  const seen = new Set<number>();
+  return withdrawals.filter((item) => {
+    if (seen.has(item.withdrawal_id)) return false;
+    seen.add(item.withdrawal_id);
+    return true;
+  });
+}
+
 export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHistoryListProps) {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["withdrawals", "list", { productId, warehouseId }],
@@ -22,71 +85,12 @@ export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHist
       getWithdrawals({
         supplier_item_id: productId,
         warehouse_id: warehouseId,
-        limit: 100, // 直近100件を表示
+        limit: 100,
       }),
   });
 
-  const columns: Column<WithdrawalResponse>[] = [
-    {
-      id: "ship_date",
-      header: "出庫日",
-      cell: (row) => format(new Date(row.ship_date), "yyyy/MM/dd"),
-      sortable: true,
-    },
-    {
-      id: "quantity",
-      header: "数量",
-      cell: (row) => <span className="font-medium">{fmt(row.quantity)}</span>,
-      sortable: true,
-      align: "right",
-    },
-    {
-      id: "type",
-      header: "区分",
-      cell: (row) => (
-        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-          {row.withdrawal_type_label}
-        </span>
-      ),
-    },
-    {
-      id: "destination",
-      header: "出庫先 / 理由",
-      cell: (row) => {
-        if (row.customer_name) {
-          return (
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">{row.customer_name}</span>
-              {row.delivery_place_name && (
-                <span className="text-xs text-slate-500">{row.delivery_place_name}</span>
-              )}
-            </div>
-          );
-        }
-        return <span className="text-sm text-slate-600">{row.reason || "-"}</span>;
-      },
-    },
-    {
-      id: "lot_number",
-      header: "ロット番号",
-      cell: (row) => <span className="font-mono text-xs">{row.lot_number}</span>,
-    },
-    {
-      id: "user",
-      header: "担当者",
-      cell: (row) => row.withdrawn_by_name || "-",
-      align: "center",
-    },
-  ];
-
-  // Deduplicate data
   const uniqueData = useMemo(() => {
-    const seen = new Set();
-    return (data?.withdrawals || []).filter((item) => {
-      if (seen.has(item.withdrawal_id)) return false;
-      seen.add(item.withdrawal_id);
-      return true;
-    });
+    return deduplicateWithdrawals(data?.withdrawals ?? []);
   }, [data?.withdrawals]);
 
   if (isLoading) {
@@ -107,7 +111,7 @@ export function WithdrawalHistoryList({ productId, warehouseId }: WithdrawalHist
     <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <DataTable
         data={uniqueData}
-        columns={columns}
+        columns={WITHDRAWAL_HISTORY_COLUMNS}
         getRowId={(row) => row.withdrawal_id}
         isLoading={isLoading}
         emptyMessage="出庫履歴はありません"
