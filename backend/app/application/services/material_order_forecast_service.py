@@ -5,6 +5,7 @@
 
 import json
 import logging
+from collections.abc import Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -15,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import (
     CustomerItem,
+    DeliveryPlace,
     Maker,
     MaterialOrderForecast,
     Warehouse,
@@ -22,6 +24,18 @@ from app.infrastructure.persistence.models import (
 
 
 logger = logging.getLogger(__name__)
+
+# 生CSV（materialOrderOriginal）→ 取込フォーマット60列への列マッピング
+# None は空列を意味する（次区/メーカー名の補完用）
+RAW_COL_INDEX_SPEC: list[int | None] = (
+    [1, 8, 9, 11, 12, None]
+    + list(range(13, 16))
+    + [None]
+    + list(range(16, 20))
+    + [22, 24, 56]
+    + list(range(25, 56))
+    + list(range(57, 69))
+)
 
 
 class MaterialOrderForecastService:
@@ -59,17 +73,22 @@ class MaterialOrderForecastService:
 
         try:
             # Step 1: CSV読み込み（ヘッダーなし）
-            df = pd.read_csv(
-                BytesIO(file.read()) if isinstance(file, BytesIO) else file,
-                header=None,
-                dtype=str,
-                keep_default_na=False,
-            )
+            df, detected_encoding = self._read_csv_with_encoding_fallback(file)
 
             if df.empty:
                 raise ValueError("CSVファイルが空です")
 
-            logger.info(f"CSV loaded: {len(df)} rows, {len(df.columns)} columns")
+            # 生CSV/旧フォーマットを正規化して、以降は60列前提で処理する
+            df, normalize_warnings = self._normalize_input_columns(df)
+
+            logger.info(
+                f"CSV loaded: {len(df)} rows, {len(df.columns)} columns (encoding={detected_encoding})"
+            )
+
+            if len(df.columns) < 60:
+                raise ValueError(
+                    f"CSV列数が不足しています（期待: 60列以上、実際: {len(df.columns)}列）"
+                )
 
             # Step 2: 対象月を決定（YYYYMM → YYYY-MM）
             if target_month:
@@ -87,6 +106,9 @@ class MaterialOrderForecastService:
 
             logger.info(f"Target month: {target_month}")
 
+            # Step 2.4: 欠損しうる次区/メーカー名をマスタから補完
+            df, master_fill_warnings = self._fill_missing_from_master(df)
+
             # Step 2.5: 次区コードの必須チェック（E列）
             if len(df.columns) <= 4:
                 raise ValueError("CSV列数が不足しています（次区コード列が存在しません）")
@@ -95,11 +117,10 @@ class MaterialOrderForecastService:
             jiku_series = df.iloc[:, 4].fillna("").astype(str).str.strip()
             missing_jiku = jiku_series == ""
             if missing_jiku.any():
-                # Convert boolean series to index and find where true
                 row_indices = df.index[missing_jiku].tolist()
                 row_numbers = [int(idx) + 1 for idx in row_indices]
                 sample_rows = ", ".join(str(num) for num in row_numbers[:5])
-                raise ValueError(f"次区コードが空の行があります（行: {sample_rows}）")
+                normalize_warnings.append(f"次区コードが空の行があります（行: {sample_rows}）")
 
             # Step 3: 数量列を数値化（L-Q列のうちO列は除外 + R-AX列）
             # O列（担当者名）は文字列なので数値化しない
@@ -114,6 +135,7 @@ class MaterialOrderForecastService:
 
             # Step 5: 既存マスタ引当
             df, warnings = self._enrich_with_masters(df)
+            warnings = [*normalize_warnings, *master_fill_warnings, *warnings]
 
             # Step 6: DB保存
             imported_count = self._save_to_db(df, target_month, user_id, filename)
@@ -135,6 +157,146 @@ class MaterialOrderForecastService:
         except Exception as e:
             logger.exception("CSV import failed", extra={"error": str(e)})
             raise
+
+    @staticmethod
+    def _read_csv_with_encoding_fallback(file: BinaryIO) -> tuple[pd.DataFrame, str]:
+        """CSVを複数エンコーディングで読み込み（UTF-8/Shift_JIS系に対応）."""
+        raw_bytes = file.read()
+        if not raw_bytes:
+            raise ValueError("CSVファイルが空です")
+
+        # 実運用で混在しやすい順に試行
+        candidate_encodings = ["utf-8-sig", "utf-8", "cp932", "shift_jis"]
+        last_error: Exception | None = None
+
+        for encoding in candidate_encodings:
+            try:
+                df = pd.read_csv(
+                    BytesIO(raw_bytes),
+                    header=None,
+                    dtype=str,
+                    keep_default_na=False,
+                    encoding=encoding,
+                )
+                return df, encoding
+            except UnicodeDecodeError as e:
+                last_error = e
+                continue
+
+        if last_error is not None:
+            raise ValueError(
+                "CSVの文字コードを判定できませんでした。UTF-8 または Shift_JIS（CP932）で保存してください。"
+            ) from last_error
+
+        raise ValueError("CSV読み込みに失敗しました")
+
+    @staticmethod
+    def _normalize_input_columns(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+        """入力CSV列を正規化して60列フォーマットに揃える."""
+        warnings: list[str] = []
+        col_count = len(df.columns)
+        if col_count == 60:
+            return df, warnings
+
+        # 旧フォーマット想定: 次区(E列)とメーカー名(J列)が欠落した58列
+        if col_count == 58:
+            normalized = df.copy()
+            normalized.insert(4, "__jiku_placeholder__", "")
+            normalized.insert(9, "__maker_name_placeholder__", "")
+            warnings.append("58列CSVを検出したため、次区とメーカー名の列を補完して処理しました。")
+            return normalized, warnings
+
+        # 生CSV（materialOrderOriginal）: 列再配置で60列に変換
+        if col_count >= 69:
+            transformed = MaterialOrderForecastService._transform_raw_csv_to_import_format(df)
+            if transformed is not None:
+                warnings.append("生CSV形式を検出し、取込フォーマットへ自動変換しました。")
+                return transformed, warnings
+
+        # 余剰列がある場合は先頭60列のみ採用（末尾にメモ列等が付いたケースを許容）
+        if col_count > 60:
+            warnings.append(
+                f"60列超のCSVを検出したため、先頭60列のみを取込対象として処理しました（実際: {col_count}列）。"
+            )
+            return df.iloc[:, :60].copy(), warnings
+
+        return df, warnings
+
+    @staticmethod
+    def _transform_raw_csv_to_import_format(df: pd.DataFrame) -> pd.DataFrame | None:
+        """生CSVを列マッピング仕様で60列取込フォーマットに変換."""
+        spec: Sequence[int | None] = RAW_COL_INDEX_SPEC
+        if len(spec) != 60:
+            return None
+        non_null_idx = [i for i in spec if i is not None]
+        if not non_null_idx:
+            return None
+        needed = max(non_null_idx) + 1
+        if len(df.columns) < needed:
+            return None
+
+        selected = df.iloc[:, non_null_idx]
+        cols = []
+        take_ptr = 0
+        for idx in spec:
+            if idx is None:
+                cols.append(pd.Series("", index=df.index))
+            else:
+                cols.append(selected.iloc[:, take_ptr])
+                take_ptr += 1
+
+        out = pd.concat(cols, axis=1)
+        out.columns = list(range(60))
+        return out
+
+    def _fill_missing_from_master(self, df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+        """次区(E列)とメーカー名(J列)の欠損をDBマスタから補完."""
+        out = df.copy()
+        warnings: list[str] = []
+
+        # 納入先(F列) -> 次区(E列)
+        delivery_to_jiku = {
+            dp.delivery_place_code: dp.jiku_code
+            for dp in self.db.query(DeliveryPlace).filter(DeliveryPlace.valid_to >= date.today())
+        }
+        if delivery_to_jiku:
+            jiku_col = out.iloc[:, 4].fillna("").astype(str).str.strip()
+            delivery_col = out.iloc[:, 5].fillna("").astype(str).str.strip()
+            jiku_missing_mask = jiku_col == ""
+            out.loc[jiku_missing_mask, out.columns[4]] = (
+                delivery_col[jiku_missing_mask].map(delivery_to_jiku).fillna("")
+            )
+
+        unresolved_jiku = (out.iloc[:, 4].fillna("").astype(str).str.strip() == "") & (
+            out.iloc[:, 5].fillna("").astype(str).str.strip() != ""
+        )
+        if unresolved_jiku.any():
+            sample = out.loc[unresolved_jiku, out.columns[5]].astype(str).unique()[:5]
+            warnings.append(f"納入先から次区を補完できないデータがあります: {', '.join(sample)}")
+
+        # メーカー(I列) -> メーカー名(J列)
+        maker_code_to_name = {
+            m.maker_code: m.maker_name
+            for m in self.db.query(Maker).filter(Maker.valid_to >= date.today())
+        }
+        if maker_code_to_name:
+            maker_name_col = out.iloc[:, 9].fillna("").astype(str).str.strip()
+            maker_code_col = out.iloc[:, 8].fillna("").astype(str).str.strip()
+            maker_name_missing_mask = maker_name_col == ""
+            out.loc[maker_name_missing_mask, out.columns[9]] = (
+                maker_code_col[maker_name_missing_mask].map(maker_code_to_name).fillna("")
+            )
+
+        unresolved_maker_name = (out.iloc[:, 9].fillna("").astype(str).str.strip() == "") & (
+            out.iloc[:, 8].fillna("").astype(str).str.strip() != ""
+        )
+        if unresolved_maker_name.any():
+            sample = out.loc[unresolved_maker_name, out.columns[8]].astype(str).unique()[:5]
+            warnings.append(
+                f"メーカーコードからメーカー名を補完できないデータがあります: {', '.join(sample)}"
+            )
+
+        return out, warnings
 
     def _create_quantity_json(self, df: pd.DataFrame) -> pd.DataFrame:
         """日別・期間別数量をJSON化."""

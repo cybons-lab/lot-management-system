@@ -81,3 +81,113 @@ def test_material_order_forecast_import_and_get(
     assert float(forecast["daily_quantities"]["1"]) == 10.0
     assert float(forecast["daily_quantities"]["31"]) == 10.0
     assert float(forecast["delivery_lot"]) == 100.0
+
+
+def test_material_order_forecast_import_accepts_cp932(
+    client: TestClient, db_session: Session, superuser_token_headers: dict
+):
+    maker_data = {
+        "maker_code": "M002",
+        "maker_name": "テストメーカー",
+        "display_name": "TM2",
+        "short_name": "TM2",
+        "notes": "cp932 test",
+    }
+    response = client.post("/api/makers", json=maker_data, headers=superuser_token_headers)
+    assert response.status_code == 201
+
+    row = [
+        "202405",
+        "MAT002",
+        "PC",
+        "WH01",
+        "J01",
+        "DP01",
+        "SUP01",
+        "TYPE1",
+        "M002",
+        "テストメーカー",
+        "材質A",
+    ]
+    row += ["100", "200", "300", "担当A", "400", "500"]
+    row += ["10"] * 31
+    row += ["5"] * 12
+
+    csv_line = ",".join(row)
+    csv_content = csv_line + "\n"
+    csv_file = io.BytesIO(csv_content.encode("cp932"))
+
+    files = {"file": ("cp932.csv", csv_file, "text/csv")}
+    response = client.post(
+        "/api/material-order-forecasts/import", files=files, headers=superuser_token_headers
+    )
+    assert response.status_code == 200
+    result = response.json()
+    assert result["success"] is True
+    assert result["imported_count"] == 1
+
+
+def test_material_order_forecast_import_rejects_short_columns(
+    client: TestClient, superuser_token_headers: dict
+):
+    short_row = ["202405", "MAT001", "PC", "WH01", "J01", "DP01"]
+    csv_content = ",".join(short_row) + "\n"
+    csv_file = io.BytesIO(csv_content.encode("utf-8"))
+    files = {"file": ("short.csv", csv_file, "text/csv")}
+
+    response = client.post(
+        "/api/material-order-forecasts/import", files=files, headers=superuser_token_headers
+    )
+    assert response.status_code == 400
+    assert "CSV列数が不足" in response.json()["detail"]
+
+
+def test_material_order_forecast_import_58cols_warns_but_imports(
+    client: TestClient, db_session: Session, superuser_token_headers: dict
+):
+    maker_data = {
+        "maker_code": "M058",
+        "maker_name": "Maker58",
+        "display_name": "M58",
+        "short_name": "M58",
+        "notes": "58col test",
+    }
+    response = client.post("/api/makers", json=maker_data, headers=superuser_token_headers)
+    assert response.status_code == 201
+
+    canonical_60 = [
+        "202405",  # A 対象月
+        "MAT058",  # B 材質コード
+        "PC",  # C 単位
+        "WH01",  # D 倉庫
+        "",  # E 次区（欠損）
+        "DP58",  # F 納入先
+        "SUP01",  # G 支給先
+        "TYPE1",  # H 支購
+        "M058",  # I メーカー
+        "",  # J メーカー名（欠損）
+        "Material58",  # K 材質
+    ]
+    canonical_60 += ["100", "200", "300", "Admin", "400", "500"]  # L-Q
+    canonical_60 += ["10"] * 31  # R-AL
+    canonical_60 += ["5"] * 12  # AM-AX
+    assert len(canonical_60) == 60
+
+    # 58列版（E:次区 と J:メーカー名を除外）
+    row_58 = canonical_60[:]
+    del row_58[9]  # J
+    del row_58[4]  # E
+    assert len(row_58) == 58
+
+    csv_content = ",".join(row_58) + "\n"
+    csv_file = io.BytesIO(csv_content.encode("utf-8"))
+    files = {"file": ("58cols.csv", csv_file, "text/csv")}
+
+    response = client.post(
+        "/api/material-order-forecasts/import", files=files, headers=superuser_token_headers
+    )
+    assert response.status_code == 200
+    result = response.json()
+    assert result["success"] is True
+    assert result["imported_count"] == 1
+    assert result["warnings"]
