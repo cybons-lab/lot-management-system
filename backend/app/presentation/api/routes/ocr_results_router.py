@@ -380,8 +380,11 @@ async def list_ocr_results(
     elif has_error is False:
         query += " AND has_error = false"
 
-    # 並び順
-    query += " ORDER BY task_date DESC, row_index ASC"
+    # 並び順（OCR取込順: 新しい取込バッチ -> 行番号）
+    query += (
+        " ORDER BY task_date DESC, COALESCE(request_id_ref, 0) DESC, "
+        "task_id DESC, row_index ASC, id ASC"
+    )
 
     # ページネーション
     query += " LIMIT :limit OFFSET :offset"
@@ -487,7 +490,11 @@ async def list_completed_ocr_results(
 
     # Base query for completed items
     stmt = select(SmartReadLongDataCompleted).order_by(
-        SmartReadLongDataCompleted.task_date.desc(), SmartReadLongDataCompleted.row_index.asc()
+        SmartReadLongDataCompleted.task_date.desc(),
+        func.coalesce(SmartReadLongDataCompleted.request_id_ref, 0).desc(),
+        SmartReadLongDataCompleted.task_id.desc(),
+        SmartReadLongDataCompleted.row_index.asc(),
+        SmartReadLongDataCompleted.id.asc(),
     )
 
     # Filters
@@ -654,7 +661,10 @@ async def export_ocr_results(
         elif has_error is False:
             query += " AND has_error = false"
 
-    query += " ORDER BY task_date DESC, row_index ASC"
+    query += (
+        " ORDER BY task_date DESC, COALESCE(request_id_ref, 0) DESC, "
+        "task_id DESC, row_index ASC, id ASC"
+    )
 
     rows = db.execute(text(query), params).mappings().all()
 
