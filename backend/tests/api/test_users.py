@@ -25,7 +25,7 @@ def test_create_user_success(
 ):
     """Test creating a new user."""
     user_data = {
-        "username": "testuser",
+        "username": "user_api_create",
         "email": "test@example.com",
         "password": "password123",
         "display_name": "Test User",
@@ -45,7 +45,7 @@ def test_create_user_duplicate_username(
 ):
     """Test creating a user with duplicate username."""
     user_data = {
-        "username": "testuser",
+        "username": "user_api_dupe",
         "email": "test@example.com",
         "password": "password123",
         "display_name": "Test User",
@@ -64,14 +64,14 @@ def test_get_user_success(db: Session, client: TestClient, superuser_token_heade
 
     # Create user directly in DB
     user = User(
-        username="testuser",
+        username="user_api_get",
         email="test@example.com",
         password_hash="hashed_password",
         display_name="Test User",
         is_active=True,
     )
     db.add(user)
-    db.commit()
+    db.flush()
     db.refresh(user)
 
     response = client.get(f"/api/users/{user.id}", headers=superuser_token_headers)
@@ -87,14 +87,14 @@ def test_update_user_success(
     """Test updating user details."""
 
     user = User(
-        username="testuser",
+        username="user_api_update",
         email="test@example.com",
         password_hash="hashed_password",
         display_name="Test User",
         is_active=True,
     )
     db.add(user)
-    db.commit()
+    db.flush()
     db.refresh(user)
 
     update_data = {"display_name": "Updated Name"}
@@ -111,13 +111,13 @@ def test_delete_user_success(
     """Test deleting a user."""
 
     user = User(
-        username="testuser",
+        username="user_api_delete",
         email="test@example.com",
         password_hash="hashed_password",
         display_name="Test User",
     )
     db.add(user)
-    db.commit()
+    db.flush()
     db.refresh(user)
 
     response = client.delete(f"/api/users/{user.id}", headers=superuser_token_headers)
@@ -135,12 +135,13 @@ def test_assign_user_roles(
 
     # Create user
     user = User(
-        username="testuser",
-        email="test@example.com",
+        username="user_api_role",
+        email="test_role@example.com",
         password_hash="hashed_password",
-        display_name="Test User",
+        display_name="Test Role User",
     )
     db.add(user)
+    db.flush()
 
     # Create roles
     role1 = Role(role_code="admin_test", role_name="Administrator Test")

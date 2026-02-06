@@ -194,7 +194,7 @@ class TestOrderAPI:
         db_session.expire_all()
         updated_order = db_session.query(Order).filter(Order.id == order_id).first()
         assert updated_order is not None
-        assert updated_order.status == "cancelled"
+        assert updated_order.status == "closed"
 
 
 class TestOrderStateMachine:

@@ -826,6 +826,30 @@ READY_FOR_STEP4_REVIEW = "step4_review"
 
 ---
 
+### 2-16. 本番環境の不足インデックス追加 (idx_lot_receipts_fefo_allocation)
+
+**優先度:** 中
+**作成:** 2026-02-07
+**カテゴリ:** パフォーマンス・データベース
+**工数:** 0.5日
+
+**背景:**
+- `LotReceipt` モデルには `idx_lot_receipts_fefo_allocation` が定義されているが、マイグレーションファイルが存在しない。
+- テスト環境では `scripts/setup_test_db.py` で手動作成しているが、本番環境には適用されていない。
+- FEFO引き当て処理のパフォーマンスに影響する可能性がある。
+
+**タスク内容:**
+1. Alembicマイグレーションファイルを生成 (`uv run alembic revision --autogenerate`)
+2. 生成されたファイルを確認し、インデックス作成が含まれていることを検証
+3. PR作成とマージ
+4. (オプション) `scripts/setup_test_db.py` の手動作成処理を削除（マイグレーション適用に任せる）
+
+**関連ファイル:**
+- `backend/app/infrastructure/persistence/models/lot_receipt_models.py`
+- `backend/alembic/baseline_2026_02_06.sql`
+
+---
+
 ## 3. DB/UI整合性・データ表示改善
 
 ---

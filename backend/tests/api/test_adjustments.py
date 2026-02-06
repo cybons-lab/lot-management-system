@@ -27,7 +27,7 @@ def sample_lot(db: Session, supplier):
         raise RuntimeError("Admin role 'admin' not found in baseline data")
 
     user = User(
-        username="testuser",
+        username="adj_test_user",
         email="test@example.com",
         password_hash="fake_hash",
         display_name="Test User",

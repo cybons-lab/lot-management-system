@@ -11,7 +11,9 @@ description: バックエンドテストを実行（テストDB起動含む）
 ### 1. テストDBを起動
 // turbo
 ```bash
-docker compose -f docker-compose.test.yml up -d
+docker compose --profile test -f docker-compose.test.yml up -d
+# Note: Since docker-compose.test.yml might not exist, use compatible profile command:
+# docker compose --profile test up -d
 ```
 
 ### 2. DBの起動を待機（5秒）
@@ -28,7 +30,7 @@ cd backend && python -m pytest tests/ -v --tb=short
 ### 4. （オプション）テストDB停止
 テスト完了後、DBを停止する場合：
 ```bash
-docker compose -f docker-compose.test.yml down
+docker compose --profile test down
 ```
 
 ## 注意事項

@@ -14,6 +14,15 @@ def admin_user(db: Session):
     if not admin_role:
         raise RuntimeError("Admin role 'admin' not found in baseline data")
 
+    existing_user = db.query(User).filter(User.email == "admin@example.com").first()
+    if existing_user:
+        # Ensure role is assigned
+        if not existing_user.user_roles:
+            db.add(UserRole(user=existing_user, role=admin_role))
+            db.commit()
+        db.refresh(existing_user)
+        return existing_user
+
     user = User(
         username="admin_test",
         email="admin@example.com",
@@ -36,6 +45,14 @@ def normal_user(db: Session):
     user_role = db.query(Role).filter(Role.role_code == "user").first()
     if not user_role:
         raise RuntimeError("User role 'user' not found in baseline data")
+
+    existing_user = db.query(User).filter(User.email == "user@example.com").first()
+    if existing_user:
+        if not existing_user.user_roles:
+            db.add(UserRole(user=existing_user, role=user_role))
+            db.commit()
+        db.refresh(existing_user)
+        return existing_user
 
     user = User(
         username="user_test",

@@ -22,7 +22,6 @@ def test_create_order_success(db: Session, service_master_data):
     delivery_place = service_master_data["delivery_place"]
 
     order_data = OrderCreate(
-        order_number="ORD-SVC-001",
         customer_id=customer.id,
         order_date=date.today(),
         lines=[
@@ -109,17 +108,17 @@ def test_get_orders_filtering(db: Session, service_master_data):
     customer = service_master_data["customer"]
 
     # Create test orders
-    order1 = Order(customer_id=customer.id, order_date=date.today(), status="draft")
+    order1 = Order(customer_id=customer.id, order_date=date.today(), status="open")
     order2 = Order(
         customer_id=customer.id,
         order_date=date.today() - timedelta(days=1),
-        status="confirmed",
+        status="allocated",
     )
     db.add_all([order1, order2])
     db.flush()
 
     # Test status filter
-    results = service.get_orders(status="draft")
+    results = service.get_orders(status="open")
     assert len(results) >= 1
     assert any(o.id == order1.id for o in results)
     assert not any(o.id == order2.id for o in results)
@@ -156,7 +155,7 @@ def test_cancel_order_success(db: Session, service_master_data):
     customer = service_master_data["customer"]
     product = service_master_data["product1"]
 
-    order = Order(customer_id=customer.id, order_date=date.today(), status="draft")
+    order = Order(customer_id=customer.id, order_date=date.today(), status="open")
     db.add(order)
     db.flush()
 
@@ -176,7 +175,7 @@ def test_cancel_order_success(db: Session, service_master_data):
 
     db.refresh(order)
     db.refresh(line)
-    assert order.status == "cancelled"
+    assert order.status == "closed"
     assert line.status == "cancelled"
 
 
@@ -189,7 +188,7 @@ def test_cancel_order_shipped_error(db: Session, service_master_data):
     order = Order(
         customer_id=customer.id,
         order_date=date.today(),
-        status="confirmed",
+        status="open",
     )
     db.add(order)
     db.flush()

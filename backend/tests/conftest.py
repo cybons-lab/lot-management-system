@@ -106,6 +106,27 @@ engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+def _seed_baseline_roles() -> None:
+    """Seed required auth roles for tests.
+
+    Tests and dependency overrides assume admin/user/guest roles exist.
+    The test DB is built from ORM metadata only, so baseline INSERTs are not applied.
+    """
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                INSERT INTO roles (role_code, role_name, description)
+                VALUES
+                    ('admin', '管理者', NULL),
+                    ('user', '一般ユーザー', NULL),
+                    ('guest', 'Guest', 'Guest user with read-only access')
+                ON CONFLICT (role_code) DO NOTHING
+                """
+            )
+        )
+
+
 @pytest.fixture(scope="session")
 def db_engine():
     """Create database engine."""
@@ -129,6 +150,7 @@ def db_engine():
         conn.commit()
 
     create_core_tables(engine)
+    _seed_baseline_roles()
 
     # Create views using the same SQL file as production
     # This ensures test DB views are in sync with production
@@ -215,8 +237,15 @@ def client(db) -> Generator[TestClient]:
         from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
 
         # Check if admin user already exists
-        existing_user = db.query(User).filter(User.username == "test_admin").first()
+        existing_user = db.query(User).filter(User.email == "test_admin@example.com").first()
         if existing_user:
+            # Check if role is assigned
+            if not existing_user.user_roles:
+                admin_role = db.query(Role).filter(Role.role_code == "admin").first()
+                if admin_role:
+                    user_role = UserRole(user=existing_user, role=admin_role)
+                    db.add(user_role)
+                    db.flush()
             return existing_user
 
         # Get admin role from baseline
@@ -455,6 +484,13 @@ def normal_user(db):
     """Create a normal test user."""
     from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
 
+    # Check if user already exists
+    user = db.query(User).filter(User.email == "normal@example.com").first()
+    if user:
+        db.refresh(user)
+        yield user
+        return
+
     # Ensure user role exists in baseline
     user_role = db.query(Role).filter(Role.role_code == "user").first()
     if not user_role:
@@ -484,6 +520,13 @@ def superuser(db):
     """Create a superuser for testing."""
     from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
 
+    # Check if user already exists
+    user = db.query(User).filter(User.email == "super@example.com").first()
+    if user:
+        db.refresh(user)
+        yield user
+        return
+
     # Ensure admin role exists in baseline
     admin_role = db.query(Role).filter(Role.role_code == "admin").first()
     if not admin_role:
@@ -506,8 +549,8 @@ def superuser(db):
     db.refresh(user)
     yield user
     # Cleanup
-    db.delete(user)
-    db.commit()
+    # db.delete(user) # Don't delete if we want to reuse or if it persists from baseline
+    # db.commit()
 
 
 @pytest.fixture

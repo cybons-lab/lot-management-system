@@ -44,7 +44,7 @@ def order_filtering_data(db: Session, supplier):
     order1 = Order(
         customer_id=customer.id,
         order_date=date.today(),
-        status="pending",
+        status="open",
     )
     db.add(order1)
     db.flush()
@@ -65,7 +65,7 @@ def order_filtering_data(db: Session, supplier):
     order2 = Order(
         customer_id=customer.id,
         order_date=date.today(),
-        status="pending",
+        status="open",
     )
     db.add(order2)
     db.flush()

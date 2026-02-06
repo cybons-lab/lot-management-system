@@ -100,13 +100,12 @@ logger = logging.getLogger(__name__)
 class OrderStatus(Enum):
     """受注ステータス."""
 
-    DRAFT = "draft"  # 下書き
     OPEN = "open"  # 新規受注（引当可能）
     PART_ALLOCATED = "part_allocated"  # 部分引当済み
     ALLOCATED = "allocated"  # 完全引当済み
     SHIPPED = "shipped"  # 出荷済み
+    ON_HOLD = "on_hold"  # 保留
     CLOSED = "closed"  # 完了
-    CANCELLED = "cancelled"  # キャンセル
 
     @classmethod
     def from_str(cls, status: str) -> "OrderStatus":
@@ -157,26 +156,31 @@ class OrderStateMachine:
     """
 
     TRANSITIONS: dict[OrderStatus, set[OrderStatus]] = {
-        OrderStatus.DRAFT: {OrderStatus.OPEN, OrderStatus.CANCELLED},
         OrderStatus.OPEN: {
             OrderStatus.PART_ALLOCATED,
             OrderStatus.ALLOCATED,
-            OrderStatus.CANCELLED,
+            OrderStatus.ON_HOLD,
+            OrderStatus.CLOSED,
         },
         OrderStatus.PART_ALLOCATED: {
             OrderStatus.OPEN,
             OrderStatus.ALLOCATED,
-            OrderStatus.CANCELLED,
+            OrderStatus.ON_HOLD,
+            OrderStatus.CLOSED,
         },
         OrderStatus.ALLOCATED: {
             OrderStatus.SHIPPED,
             OrderStatus.PART_ALLOCATED,
             OrderStatus.OPEN,
-            OrderStatus.CANCELLED,
+            OrderStatus.ON_HOLD,
         },
-        OrderStatus.SHIPPED: {OrderStatus.CLOSED},
+        OrderStatus.SHIPPED: {OrderStatus.CLOSED, OrderStatus.ON_HOLD},
+        OrderStatus.ON_HOLD: {
+            OrderStatus.OPEN,
+            OrderStatus.PART_ALLOCATED,
+            OrderStatus.CLOSED,
+        },
         OrderStatus.CLOSED: set(),  # 終端状態
-        OrderStatus.CANCELLED: set(),  # 終端状態
     }
 
     @classmethod
@@ -239,8 +243,8 @@ class OrderStateMachine:
 
     @classmethod
     def can_cancel(cls, status: str | OrderStatus) -> bool:
-        """キャンセル可能かチェック."""
-        return cls.can_transition(status, OrderStatus.CANCELLED)
+        """キャンセル可能かチェック（運用上はclose遷移で表現）."""
+        return cls.can_transition(status, OrderStatus.CLOSED)
 
     @classmethod
     def can_ship(cls, status: str | OrderStatus) -> bool:

@@ -82,7 +82,9 @@ def main():
             "ALTER TABLE lot_receipts ALTER COLUMN consumed_quantity SET DEFAULT 0;",
             "ALTER TABLE lot_receipts ALTER COLUMN supplier_item_id DROP NOT NULL;",
             "ALTER TABLE order_lines ALTER COLUMN delivery_place_id DROP NOT NULL;",
-            "ALTER TABLE order_lines ALTER COLUMN supplier_item_id DROP NOT NULL;"
+            "ALTER TABLE order_lines ALTER COLUMN supplier_item_id DROP NOT NULL;",
+            # Add missing index for FEFO (defined in model but missing in migrations)
+            "CREATE INDEX IF NOT EXISTS idx_lot_receipts_fefo_allocation ON lot_receipts (supplier_item_id, warehouse_id, expiry_date, received_date, id) WHERE status = 'active' AND inspection_status IN ('not_required', 'passed');"
         ]
         for sql in adjustments:
             run_command(f"docker compose exec -T db-test psql -U testuser -d lot_management_test -c \"{sql}\"", cwd=project_root)
