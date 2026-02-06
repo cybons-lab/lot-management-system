@@ -515,9 +515,9 @@ COMMENT ON VIEW public.v_customer_item_jiku_mappings IS '顧客商品-次区マ�
 CREATE VIEW public.v_material_order_forecasts AS
 WITH dp_one AS (
     SELECT
-        delivery_place_code,
         jiku_code,
-        ROW_NUMBER() OVER (PARTITION BY delivery_place_code ORDER BY id) AS rn
+        delivery_place_name,
+        ROW_NUMBER() OVER (PARTITION BY jiku_code ORDER BY id) AS rn
     FROM public.delivery_places
     WHERE valid_to >= CURRENT_DATE
 ),
@@ -539,7 +539,7 @@ SELECT
     mof.unit,
     mof.warehouse_code,
     COALESCE(NULLIF(mof.jiku_code, ''), dp.jiku_code, '') AS jiku_code,
-    mof.delivery_place,
+    COALESCE(NULLIF(mof.delivery_place, ''), dp.delivery_place_name) AS delivery_place,
     mof.support_division,
     mof.procurement_type,
     mof.maker_code,
@@ -560,7 +560,7 @@ SELECT
     mof.updated_at
 FROM public.material_order_forecasts mof
 LEFT JOIN dp_one dp
-    ON mof.delivery_place = dp.delivery_place_code
+    ON NULLIF(mof.jiku_code, '') = dp.jiku_code
     AND dp.rn = 1
 LEFT JOIN mk_one mk
     ON mof.maker_code = mk.maker_code
