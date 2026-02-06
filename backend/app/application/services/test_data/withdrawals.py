@@ -6,6 +6,7 @@ from typing import cast
 from sqlalchemy.orm import Session
 
 from app.core.time_utils import utcnow
+from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.inventory_models import LotReceipt
 from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace
 from app.infrastructure.persistence.models.withdrawal_line_model import WithdrawalLine
@@ -133,8 +134,9 @@ def generate_withdrawals(
             cancel_reason = None
 
             if is_cancelled:
+                admin_user = db.query(User).first()
                 cancelled_at = utcnow()
-                cancelled_by = 1  # Admin
+                cancelled_by = admin_user.id if admin_user else None
                 cancel_reason = "Test data cancellation"
 
             withdrawal = Withdrawal(

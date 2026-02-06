@@ -24,8 +24,13 @@ from .db_utils import (
 
 # SQL Profiler fixture
 @pytest.fixture(autouse=True)
-def check_n_plus_one(caplog, db_engine):
+def check_n_plus_one(request, caplog, db_engine):
     """全てのテスト実行中にN+1警告が出ていないか監視する."""
+
+    # skip_n_plus_one マーカーが付いている場合はスキップ
+    if request.node.get_closest_marker("skip_n_plus_one"):
+        yield
+        return
 
     from app.core.config import settings
     from app.infrastructure.monitoring.sql_profiler import register_sql_profiler

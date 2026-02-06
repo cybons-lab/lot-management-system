@@ -511,7 +511,6 @@ class ProductMapping(SoftDeleteMixin, Base):
         nullable=False,
     )
     supplier_item_id: Mapped[int] = mapped_column(
-        "supplier_item_id",
         BigInteger,
         ForeignKey("supplier_items.id", ondelete="RESTRICT"),
         nullable=False,

@@ -46,62 +46,77 @@ def generate_material_order_forecasts(
     if not customer_items or not warehouses:
         return
 
-    # Generate 50-100 forecast records
-    num_records = random.randint(50, 100)
+    jiku_codes = ["A", "B", "C", "D"]
 
-    for _ in range(num_records):
-        # 80% link to existing masters, 20% standalone (to test LEFT JOIN)
-        if random.random() < 0.8 and customer_items and warehouses:
-            customer_item = random.choice(customer_items)
-            warehouse = random.choice(warehouses)
-            maker = random.choice(makers) if makers else None
+    # Track used unique keys: (target_month, material_code, jiku_code, maker_code)
+    used_keys: set[tuple[str, str, str, str | None]] = set()
+
+    # Generate records by iterating over unique combinations
+    # to avoid UniqueViolation on ux_mof_unique constraint
+    records_created = 0
+    max_records = random.randint(30, 50)
+
+    for customer_item in customer_items:
+        if records_created >= max_records:
+            break
+
+        for jiku_code in jiku_codes:
+            if records_created >= max_records:
+                break
+
+            # Pick a maker (80% linked, 20% standalone)
+            if random.random() < 0.8 and makers:
+                maker = random.choice(makers)
+                maker_code = maker.maker_code
+                maker_name = maker.maker_name
+                maker_id = maker.id
+            else:
+                maker_code = f"MK-{random.randint(1000, 9999)}"
+                maker_name = f"未登録メーカー{random.randint(1, 10)}"
+                maker_id = None
 
             material_code = customer_item.customer_part_no
-            warehouse_code = warehouse.warehouse_code
-            maker_code = maker.maker_code if maker else None
-            maker_name = maker.maker_name if maker else None
-        else:
-            # Standalone record (no master linkage)
-            customer_item = None
-            warehouse = None
-            maker = None
+            unique_key = (target_month, material_code, jiku_code, maker_code)
 
-            material_code = f"UNMAPPED-{random.randint(1000, 9999)}"
-            warehouse_code = f"WH-{random.randint(100, 999)}"
-            maker_code = f"MK-{random.randint(100, 999)}"
-            maker_name = f"未登録メーカー{random.randint(1, 10)}"
+            if unique_key in used_keys:
+                continue
+            used_keys.add(unique_key)
 
-        # Generate quantities
-        delivery_lot = Decimal(random.randint(50, 500))
-        order_quantity = Decimal(random.randint(100, 1000))
-        month_start = Decimal(random.randint(50, 300))
-        joujun = Decimal(random.randint(100, 400))
-        chuujun = Decimal(random.randint(100, 400))
-        gejun = Decimal(random.randint(100, 400))
+            warehouse = random.choice(warehouses)
 
-        forecast = MaterialOrderForecast(
-            target_month=target_month,
-            customer_item_id=customer_item.id if customer_item else None,
-            warehouse_id=warehouse.id if warehouse else None,
-            maker_id=maker.id if maker else None,
-            material_code=material_code,
-            unit=random.choice(["kg", "pcs", "m"]),
-            warehouse_code=warehouse_code,
-            jiku_code=random.choice(["A", "B", "C", "D"]),
-            delivery_place=f"納入先{random.randint(1, 5)}",
-            support_division=random.choice(["支給", "購入", None]),
-            procurement_type=random.choice(["支", "購", None]),
-            maker_code=maker_code,
-            maker_name=maker_name,
-            material_name=f"材料名{random.randint(1, 20)}",
-            delivery_lot=delivery_lot,
-            order_quantity=order_quantity,
-            month_start_instruction=month_start,
-            joujun_instruction=joujun,
-            chuujun_instruction=chuujun,
-            gejun_instruction=gejun,
-            inventory_required=random.choice([True, False, None]),
-        )
-        db.add(forecast)
+            # Generate quantities
+            delivery_lot = Decimal(random.randint(50, 500))
+            order_quantity = Decimal(random.randint(100, 1000))
+            month_start = Decimal(random.randint(50, 300))
+            joujun = Decimal(random.randint(100, 400))
+            chuujun = Decimal(random.randint(100, 400))
+            gejun = Decimal(random.randint(100, 400))
+
+            forecast = MaterialOrderForecast(
+                target_month=target_month,
+                customer_item_id=customer_item.id,
+                warehouse_id=warehouse.id,
+                maker_id=maker_id,
+                material_code=material_code,
+                unit=random.choice(["kg", "pcs", "m"]),
+                warehouse_code=warehouse.warehouse_code,
+                jiku_code=jiku_code,
+                delivery_place=f"納入先{random.randint(1, 5)}",
+                support_division=random.choice(["支給", "購入", None]),
+                procurement_type=random.choice(["支", "購", None]),
+                maker_code=maker_code,
+                maker_name=maker_name,
+                material_name=f"材料名{random.randint(1, 20)}",
+                delivery_lot=delivery_lot,
+                order_quantity=order_quantity,
+                month_start_instruction=month_start,
+                period_quantities={
+                    "上旬": float(joujun),
+                    "中旬": float(chuujun),
+                    "下旬": float(gejun),
+                },
+            )
+            db.add(forecast)
+            records_created += 1
 
     db.commit()
