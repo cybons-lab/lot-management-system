@@ -11,7 +11,7 @@
    → available_quantity（利用可能数量）のチェックが正確に実行される
    TOCTOU脆弱性の回避: ロック取得後に在庫チェック
 
-2. StockHistory への記録（L207-217）
+2. StockMovement への記録（L207-217）
    理由: 在庫変動の監査証跡を完全に保持
    → 誰が、いつ、どのロットから、何個出庫したか
    → 不変（Immutable）なレコードとして保存
@@ -72,7 +72,7 @@ from app.infrastructure.persistence.models import (
     DeliveryPlace,
     LotMaster,
     LotReceipt,
-    StockHistory,
+    StockMovement,
     StockTransactionType,
     SupplierItem,
     WithdrawalLine,
@@ -340,7 +340,7 @@ class WithdrawalService:
             lot.status = "depleted"
 
         # stock_historyに記録（イベントログとして残す）
-        stock_history = StockHistory(
+        stock_history = StockMovement(
             lot_id=lot.id,
             transaction_type=StockTransactionType.WITHDRAWAL,
             quantity_change=-data.quantity,  # 出庫はマイナス
@@ -509,7 +509,7 @@ class WithdrawalService:
             lot.status = "active"
 
         # stock_historyにRETURNトランザクションを記録（反対仕訳・イベントログ）
-        stock_history = StockHistory(
+        stock_history = StockMovement(
             lot_id=lot.id,
             transaction_type=StockTransactionType.RETURN,
             quantity_change=+(withdrawal.quantity or Decimal("0")),  # 戻りはプラス

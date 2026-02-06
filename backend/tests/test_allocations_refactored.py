@@ -24,7 +24,6 @@ from app.infrastructure.persistence.models import (
     Warehouse,
 )
 from app.main import app
-from app.presentation.api.deps import get_db
 
 
 @pytest.fixture
@@ -50,10 +49,15 @@ def client(db_session):
         is_active=True,
     )
 
-    app.dependency_overrides[get_db] = override_get_db
+    from app.core import database as core_database
+    from app.presentation.api import deps as api_deps
+
+    app.dependency_overrides[api_deps.get_db] = override_get_db
+    app.dependency_overrides[core_database.get_db] = override_get_db
     app.dependency_overrides[AuthService.get_current_user] = lambda: mock_user
     app.dependency_overrides[get_current_user] = lambda: mock_user
-    yield TestClient(app)
+    with TestClient(app) as client:
+        yield client
     app.dependency_overrides.clear()
 
 

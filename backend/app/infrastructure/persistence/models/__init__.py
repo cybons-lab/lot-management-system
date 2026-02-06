@@ -15,7 +15,7 @@ from .auth_models import Role, User, UserRole
 from .base_model import Base
 from .calendar_models import CompanyCalendar, HolidayCalendar, OriginalDeliveryCalendar
 from .cloud_flow_models import CloudFlowConfig, CloudFlowJob, CloudFlowJobStatus
-from .forecast_models import Forecast, ForecastCurrent, ForecastHistory
+from .forecast_models import ForecastCurrent, ForecastHistory
 from .inbound_models import ExpectedLot, InboundPlan, InboundPlanLine, InboundPlanStatus
 from .inventory_models import (
     Adjustment,
@@ -23,9 +23,7 @@ from .inventory_models import (
     AllocationSuggestion,
     AllocationTrace,
     LotOriginType,
-    StockHistory,  # Backward compatibility alias
     StockMovement,
-    StockMovementReason,  # Backward compatibility alias
     StockTransactionType,
 )
 from .layer_code_models import LayerCodeMapping
@@ -71,12 +69,10 @@ from .seed_snapshot_model import SeedSnapshot
 from .shipping_master_models import OrderRegisterRow, ShippingMasterCurated, ShippingMasterRaw
 from .smartread_models import OcrResultEdit, SmartReadConfig, SmartReadPadRun
 from .soft_delete_mixin import INFINITE_VALID_TO, SoftDeleteMixin
-from .supplier_item_model import ProductSupplier, SupplierItem
+from .supplier_item_model import SupplierItem
 from .system_config_model import SystemConfig
 from .system_models import ClientLog
 from .views_models import (
-    LotCurrentStock,
-    LotDetails,
     VCandidateLotsByOrderLine,
     VCustomerCodeToId,
     VCustomerDailyProduct,
@@ -86,24 +82,13 @@ from .views_models import (
     VLotAvailableQty,
     VLotCurrentStock,
     VLotDetails,
+    VMaterialOrderForecast,
     VOrderLineContext,
     VProductCodeToId,
 )
 from .withdrawal_line_model import WithdrawalLine
 from .withdrawal_models import Withdrawal, WithdrawalCancelReason, WithdrawalType
 
-
-# TEMPORARY: Backward compatibility aliases for Product/ProductGroup
-# These should be removed once all code is updated to use SupplierItem directly
-Product = SupplierItem
-ProductGroup = SupplierItem
-
-# Export all models
-__all__ = [
-    # ... existing exports ...
-    "Maker",
-    "MaterialOrderForecast",
-]
 
 __all__ = [
     # Base
@@ -116,26 +101,30 @@ __all__ = [
     "Supplier",
     "Customer",
     "DeliveryPlace",
-    "Product",  # TEMPORARY: Backward compatibility alias for SupplierItem
-    "ProductGroup",  # TEMPORARY: Backward compatibility alias for SupplierItem
+    "SupplierItem",
     "ProductUomConversion",
     "CustomerItem",
     "CustomerItemDeliverySetting",
+    "CustomerItemJikuMapping",
     "ProductMapping",
     "WarehouseDeliveryRoute",
+    "Maker",
+    "MaterialOrderForecast",
     # Inventory
+    "LotMaster",
     "LotReceipt",
     "LotOriginType",
     "StockMovement",
-    "StockHistory",
     "StockTransactionType",
     "Adjustment",
     "AdjustmentType",
     "AllocationSuggestion",
     "AllocationTrace",
+    "ProductWarehouse",
     "Withdrawal",
     "WithdrawalType",
     "WithdrawalCancelReason",
+    "WithdrawalLine",
     # Reservations
     "LotReservation",
     "ReservationSourceType",
@@ -151,7 +140,6 @@ __all__ = [
     # Forecast
     "ForecastCurrent",
     "ForecastHistory",
-    "Forecast",  # Backward compatibility alias
     # Inbound
     "InboundPlan",
     "InboundPlanLine",
@@ -162,13 +150,10 @@ __all__ = [
     "Role",
     "UserRole",
     "UserSupplierAssignment",
+    # Calendar
     "HolidayCalendar",
     "CompanyCalendar",
     "OriginalDeliveryCalendar",
-    "SupplierItem",
-    "ProductSupplier",  # Backward compatibility alias
-    "ProductWarehouse",
-    "CustomerItemJikuMapping",
     # Logs
     "OperationLog",
     "ServerLog",
@@ -184,18 +169,14 @@ __all__ = [
     "VOrderLineContext",
     "VCandidateLotsByOrderLine",
     "VLotDetails",
-    "LotDetails",  # Deprecated alias
     "VLotCurrentStock",
-    "LotCurrentStock",  # Deprecated alias
     "VCustomerDailyProduct",
     "VCustomerCodeToId",
     "VDeliveryPlaceCodeToId",
     "VForecastOrderPair",
     "VProductCodeToId",
     "VInventorySummary",
-    # Backward compatibility aliases
-    "StockHistory",
-    "StockMovementReason",
+    "VMaterialOrderForecast",
     # RPA
     "RpaRun",
     "RpaRunGroup",
@@ -214,10 +195,7 @@ __all__ = [
     "SmartReadConfig",
     "SmartReadPadRun",
     "OcrResultEdit",
-    # B-Plan models
-    "LotMaster",
-    "LotReceipt",
-    "WithdrawalLine",
+    # Missing Mapping
     "MissingMappingEvent",
     # Shipping Master (OCR受注登録)
     "ShippingMasterRaw",

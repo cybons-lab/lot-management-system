@@ -61,14 +61,29 @@ export function ShippingMasterListPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
     },
-    onError: (error: Error) => {
-      const isConflict = error instanceof HTTPError && error.response?.status === 409;
-      if (isConflict) {
+    onError: (error: unknown) => {
+      if (error instanceof HTTPError && error.response.status === 409) {
         alert("他のユーザーが更新しました。最新データを取得して再度お試しください。");
         queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
       }
     },
   });
+
+  /* 名称補完機能の一時停止
+  const prefillSapMutation = useMutation({
+    mutationFn: async () => {
+      return await shippingMasterApi.prefillSapNames();
+    },
+    onSuccess: (data: { updated_count: number }) => {
+      alert(`${data.updated_count}件の名前を補完しました。`);
+      queryClient.invalidateQueries({ queryKey: ["shipping-masters"] });
+    },
+    onError: (error: unknown) => {
+      console.error("Prefill failed:", error);
+      alert("SAP名補完に失敗しました。");
+    },
+  });
+  */
 
   const handleReset = () => {
     if (window.confirm("全ての出荷用マスタデータを削除します。よろしいですか？")) {
@@ -142,6 +157,17 @@ export function ShippingMasterListPage() {
             <RefreshCw className="mr-2 h-4 w-4" />
             マスタ同期
           </Button>
+          {/* 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => prefillSapMutation.mutate()}
+            disabled={prefillSapMutation.isPending}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${prefillSapMutation.isPending ? "animate-spin" : ""}`} />
+            SAPから名前を補完
+          </Button>
+          */}
           <ShippingMasterImportDialog />
           <Button size="sm" onClick={handleCreateNew}>
             <Plus className="mr-2 h-4 w-4" />

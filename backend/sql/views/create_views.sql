@@ -21,6 +21,7 @@ DROP VIEW IF EXISTS public.v_lot_details CASCADE;
 DROP VIEW IF EXISTS public.v_lot_allocations CASCADE;
 DROP VIEW IF EXISTS public.v_lot_active_reservations CASCADE;
 DROP VIEW IF EXISTS public.v_lot_receipt_stock CASCADE;
+DROP VIEW IF EXISTS public.v_material_order_forecasts CASCADE;
 -- 追加ビュー
 DROP VIEW IF EXISTS public.v_supplier_code_to_id CASCADE;
 DROP VIEW IF EXISTS public.v_warehouse_code_to_id CASCADE;
@@ -509,6 +510,63 @@ LEFT JOIN public.customers c ON ci.customer_id = c.id
 LEFT JOIN public.delivery_places dp ON cijm.delivery_place_id = dp.id;
 
 COMMENT ON VIEW public.v_customer_item_jiku_mappings IS '顧客商品-次区マッピングビュー（soft-delete対応）';
+
+-- 材料発注フォーキャストビュー（マスタ動的補完）
+CREATE VIEW public.v_material_order_forecasts AS
+WITH dp_one AS (
+    SELECT
+        jiku_code,
+        delivery_place_name,
+        ROW_NUMBER() OVER (PARTITION BY jiku_code ORDER BY id) AS rn
+    FROM public.delivery_places
+    WHERE valid_to >= CURRENT_DATE
+),
+mk_one AS (
+    SELECT
+        maker_code,
+        maker_name,
+        ROW_NUMBER() OVER (PARTITION BY maker_code ORDER BY id) AS rn
+    FROM public.makers
+    WHERE valid_to >= CURRENT_DATE
+)
+SELECT
+    mof.id,
+    mof.target_month,
+    mof.customer_item_id,
+    mof.warehouse_id,
+    mof.maker_id,
+    mof.material_code,
+    mof.unit,
+    mof.warehouse_code,
+    COALESCE(NULLIF(mof.jiku_code, ''), dp.jiku_code, '') AS jiku_code,
+    COALESCE(NULLIF(mof.delivery_place, ''), dp.delivery_place_name) AS delivery_place,
+    mof.support_division,
+    mof.procurement_type,
+    mof.maker_code,
+    COALESCE(NULLIF(mof.maker_name, ''), mk.maker_name) AS maker_name,
+    mof.material_name,
+    mof.delivery_lot,
+    mof.order_quantity,
+    mof.month_start_instruction,
+    mof.manager_name,
+    mof.monthly_instruction_quantity,
+    mof.next_month_notice,
+    mof.daily_quantities,
+    mof.period_quantities,
+    mof.snapshot_at,
+    mof.imported_by,
+    mof.source_file_name,
+    mof.created_at,
+    mof.updated_at
+FROM public.material_order_forecasts mof
+LEFT JOIN dp_one dp
+    ON NULLIF(mof.jiku_code, '') = dp.jiku_code
+    AND dp.rn = 1
+LEFT JOIN mk_one mk
+    ON mof.maker_code = mk.maker_code
+    AND mk.rn = 1;
+
+COMMENT ON VIEW public.v_material_order_forecasts IS '材料発注フォーキャスト（納入先/メーカーマスタ動的補完）';
 
 -- ============================================================
 -- OCR結果ビュー（SmartRead縦持ちデータ + 出荷用マスタ）

@@ -107,7 +107,7 @@ from typing import Any, cast
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Product
+from app.infrastructure.persistence.models import SupplierItem
 
 
 class ProductRepository:
@@ -116,46 +116,51 @@ class ProductRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def list(self, page: int, per_page: int, q: str | None) -> tuple[list[Product], int]:
+    def list(self, page: int, per_page: int, q: str | None) -> tuple[list[SupplierItem], int]:
         """Return products with pagination and optional search."""
         filters: list[Any] = []
         if q:
             pattern = f"%{q}%"
             filters.append(
                 or_(
-                    Product.maker_part_no.ilike(pattern),
-                    Product.display_name.ilike(pattern),
+                    SupplierItem.maker_part_no.ilike(pattern),
+                    SupplierItem.display_name.ilike(pattern),
                 )
             )
 
-        total_stmt = select(func.count(Product.id)).select_from(Product)
+        total_stmt = select(func.count(SupplierItem.id)).select_from(SupplierItem)
         if filters:
             total_stmt = total_stmt.where(*filters)
         total = self.session.execute(total_stmt).scalar_one()
 
-        stmt = select(Product).order_by(Product.id).offset((page - 1) * per_page).limit(per_page)
+        stmt = (
+            select(SupplierItem)
+            .order_by(SupplierItem.id)
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+        )
         if filters:
             stmt = stmt.where(*filters)
 
-        items = cast(list[Product], self.session.execute(stmt).scalars().all())
+        items = cast(list[SupplierItem], self.session.execute(stmt).scalars().all())
         return items, total
 
-    def get(self, supplier_item_id: int) -> Product | None:
+    def get(self, supplier_item_id: int) -> SupplierItem | None:
         """Fetch a product by id."""
-        return cast(Product | None, self.session.get(Product, supplier_item_id))
+        return cast(SupplierItem | None, self.session.get(SupplierItem, supplier_item_id))
 
-    def create(self, product: Product) -> Product:
+    def create(self, product: SupplierItem) -> SupplierItem:
         """Persist a new product."""
         self.session.add(product)
         self.session.flush()
         return product
 
-    def update(self, product: Product) -> Product:
+    def update(self, product: SupplierItem) -> SupplierItem:
         """Flush changes for an existing product."""
         self.session.flush()
         return product
 
-    def delete(self, product: Product) -> None:
+    def delete(self, product: SupplierItem) -> None:
         """Delete a product."""
         self.session.delete(product)
         self.session.flush()

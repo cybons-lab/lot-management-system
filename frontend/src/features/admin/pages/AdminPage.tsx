@@ -36,6 +36,20 @@ interface InventorySyncResult {
   };
 }
 
+type TestDataGenerateResponse =
+  | {
+      job_id: string;
+    }
+  | {
+      success?: boolean;
+      message?: string;
+      options?: object;
+    };
+
+function hasJobId(response: TestDataGenerateResponse): response is { job_id: string } {
+  return "job_id" in response && typeof response.job_id === "string" && response.job_id.length > 0;
+}
+
 export function AdminPage() {
   const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -88,9 +102,19 @@ export function AdminPage() {
     setProgressMessage("リクエスト送信中...");
 
     try {
-      const res = await http.post<{ job_id: string }>("admin/test-data/generate", {
+      const res = await http.post<TestDataGenerateResponse>("admin/test-data/generate", {
         preset_id: selectedPresetId,
       });
+
+      if (!hasJobId(res)) {
+        // Current backend completes synchronously and does not return job_id.
+        setProgress(100);
+        setProgressMessage("完了");
+        toast.success(res.message || "テストデータを生成しました");
+        setIsGenerating(false);
+        setShowGenerateConfirm(false);
+        return;
+      }
 
       const jobId = res.job_id;
 
@@ -286,14 +310,11 @@ export function AdminPage() {
         }}
       >
         <AlertDialogContent
-          onEscapeKeyDown={(e) => {
+          onEscapeKeyDown={() => {
             if (isGenerating) {
-              // Allow closing even during generation
-              e.preventDefault();
               setIsGenerating(false);
               setProgress(0);
               setProgressMessage("");
-              setShowGenerateConfirm(false);
             }
           }}
         >
@@ -343,16 +364,27 @@ export function AdminPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isGenerating}>キャンセル</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e: React.MouseEvent) => {
-                e.preventDefault();
-                handleGenerateTestData();
+            <AlertDialogCancel
+              onClick={() => {
+                if (isGenerating) {
+                  setIsGenerating(false);
+                  setProgress(0);
+                  setProgressMessage("");
+                }
               }}
-              disabled={isGenerating}
             >
-              {isGenerating ? "生成中..." : "実行する"}
-            </AlertDialogAction>
+              キャンセル
+            </AlertDialogCancel>
+            {!isGenerating && (
+              <AlertDialogAction
+                onClick={(e: React.MouseEvent) => {
+                  e.preventDefault();
+                  handleGenerateTestData();
+                }}
+              >
+                実行する
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

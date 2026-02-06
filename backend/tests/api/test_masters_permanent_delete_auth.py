@@ -10,7 +10,6 @@ from app.infrastructure.persistence.models import (
     Customer,
     CustomerItem,
     DeliveryPlace,
-    ProductSupplier,
     ProductUomConversion,
     Supplier,
     SupplierItem,
@@ -168,7 +167,7 @@ def _setup_supplier_product(db: Session):
     )
     db.add(product)
     db.flush()
-    sp = ProductSupplier(
+    sp = SupplierItem(
         supplier_item_id=product.id,
         supplier_id=supplier.id,
         maker_part_no="M-PART-SP",
@@ -179,7 +178,7 @@ def _setup_supplier_product(db: Session):
     db.flush()
     return (
         f"/api/masters/supplier-items/{sp.id}/permanent",
-        lambda session: session.query(ProductSupplier).filter(ProductSupplier.id == sp.id).first(),
+        lambda session: session.query(SupplierItem).filter(SupplierItem.id == sp.id).first(),
     )
 
 
@@ -191,7 +190,7 @@ PERMANENT_DELETE_CASES = [
     _setup_delivery_place,
     _setup_customer_item,
     _setup_uom_conversion,
-    # _setup_supplier_product removed - ProductSupplier deprecated in Phase 2
+    # _setup_supplier_product removed - SupplierItem deprecated in Phase 2
 ]
 
 

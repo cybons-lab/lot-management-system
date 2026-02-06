@@ -242,6 +242,40 @@ Phase 4調査により、部分的失敗処理とロック期限切れ管理の�
 
 ## 2. 優先度: 中 (UI/UX・不整合修正)
 
+### 2-0. マスタ表示名の短縮名運用統一（得意先・仕入先・倉庫・納入先）
+
+**優先度:** 中
+**作成:** 2026-02-06
+**カテゴリ:** UI/UX・マスタ運用整備
+**工数:** 2-4日
+
+**背景:**
+- 得意先名・仕入先名・倉庫名・納入先名の実名称が長く、画面表示で可読性が低い。
+- `display_name` と `short_name` の使い分けが画面/APIで統一されていない。
+- 出荷用マスタ運用では「メーカー名 = 仕入先名」の業務ルールがある。
+
+**要件:**
+1. 画面表示は短縮名優先（`short_name` → `display_name` → 正式名称の順でフォールバック）
+2. 対象マスタ:
+   - 得意先（customers）
+   - 仕入先（suppliers）
+   - 倉庫（warehouses）
+   - 納入先（delivery_places）
+3. メーカー連携:
+   - メーカー名を仕入先名として扱う運用を明確化し、同期時の表示名ルールを定義
+4. 手入力運用:
+   - 得意先/倉庫/納入先の短縮名は運用側で任意入力できること
+
+**実装候補:**
+- 共通表示ヘルパーの導入（表示名選択ロジックを集約）
+- 一覧API/CSV出力での表示名列の統一
+- 出荷用マスタ同期時の `display_name` / `short_name` 更新ポリシー整理
+
+**受け入れ条件:**
+- 主要一覧画面で長い正式名称が減り、短縮名優先表示になる
+- 既存データ（短縮名未設定）でも表示崩れせず、フォールバックで表示できる
+- 同期・インポート後も表示名運用が一貫する
+
 ### 2-1. Phase 4-C: OCR結果編集機能の競合対策
 
 **優先度:** 中（Phase 4-A完了後、詳細確認が必要）
@@ -727,6 +761,42 @@ async def start_pad_run_from_upload(
 **関連ファイル:**
 - `backend/app/application/services/smartread/csv_transformer.py`
 - `docs/smartread_csv_validation_report.md`
+
+### 2-15. RPA Status Enum のレガシーエイリアス削除
+
+**優先度:** 低（RPA機能改修時にまとめて対応）
+**作成:** 2026-02-06
+**カテゴリ:** コード品質・リファクタリング
+**工数:** 0.5日
+
+**背景:**
+後方互換エイリアス一掃（`32bc1943`）で大半のエイリアスを削除したが、`RpaRunStatus` の旧ステータス名エイリアス（8個）は使用箇所が38箇所・7ファイルに及ぶため見送った。
+
+**対象:** `backend/app/infrastructure/persistence/models/rpa_models.py` L176-184
+```python
+# Legacy aliases for backward compatibility
+DOWNLOADED = "step1_done"
+DRAFT = "step1_done"
+READY_FOR_STEP2 = "step2_confirmed"
+STEP2_RUNNING = "step3_running"
+STEP3_DONE_WAITING_EXTERNAL = "step3_done"
+READY_FOR_STEP4_CHECK = "step4_checking"
+STEP4_CHECK_RUNNING = "step4_checking"
+READY_FOR_STEP4_REVIEW = "step4_review"
+```
+
+**対象ファイル（書き換え必要）:**
+- `app/application/services/rpa/orchestrator.py` (11箇所)
+- `app/domain/rpa/state_manager.py` (6箇所)
+- `app/application/services/test_data/rpa_material_delivery.py` (5箇所)
+- `tests/unit/test_material_delivery_orchestrator.py` (8箇所)
+- `tests/api/test_rpa_material_delivery.py` (6箇所)
+- `scripts/seed_rpa.py` (2箇所)
+
+**実施内容:**
+1. 旧エイリアス名を正式なステップベース名（`STEP1_DONE`, `STEP2_CONFIRMED` 等）に統一
+2. 全38箇所の使用箇所を書き換え
+3. レガシーエイリアス定義を削除
 
 ---
 

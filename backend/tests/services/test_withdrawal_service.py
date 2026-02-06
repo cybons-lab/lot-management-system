@@ -4,7 +4,7 @@ from decimal import Decimal
 import pytest
 
 from app.application.services.inventory.withdrawal_service import WithdrawalService
-from app.infrastructure.persistence.models.inventory_models import StockHistory
+from app.infrastructure.persistence.models.inventory_models import StockMovement
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
 from app.infrastructure.persistence.models.withdrawal_models import Withdrawal
@@ -83,7 +83,7 @@ def test_create_withdrawal_with_ship_date(db, master_data, normal_user, cleanup_
     assert record.due_date == date.today() + timedelta(days=1)
 
     # Verify stock history
-    history = db.query(StockHistory).filter(StockHistory.reference_id == record.id).first()
+    history = db.query(StockMovement).filter(StockMovement.reference_id == record.id).first()
     assert history is not None
     assert history.quantity_change == Decimal("-10")
 

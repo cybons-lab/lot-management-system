@@ -12,7 +12,7 @@ from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.inventory_models import (
     Adjustment,
     LotReceipt,
-    StockHistory,
+    StockMovement,
     StockTransactionType,
 )
 from app.presentation.schemas.inventory.inventory_schema import (
@@ -217,7 +217,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
             lot.status = "depleted"
 
         # Create stock history record (immutable audit trail)
-        stock_history = StockHistory(
+        stock_history = StockMovement(
             lot_id=lot.id,
             transaction_type=StockTransactionType.ADJUSTMENT,
             quantity_change=adjustment.adjusted_quantity,

@@ -258,6 +258,10 @@ async def analyze_file(
     assert db is not None
     result = await service.analyze_file(config_id, file_content, filename)
 
+    if not result.success and result.error_message == "設定が見つかりません":
+        logger.warning("SmartRead analyze failed: Config not found", extra={"config_id": config_id})
+        raise HTTPException(status_code=404, detail=result.error_message)
+
     return SmartReadAnalyzeResponse(
         success=result.success,
         filename=result.filename,

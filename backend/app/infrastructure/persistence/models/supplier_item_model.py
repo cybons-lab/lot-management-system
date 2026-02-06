@@ -236,7 +236,3 @@ class SupplierItem(SoftDeleteMixin, Base):
             f"<SupplierItem(id={self.id}, supplier_id={self.supplier_id}, "
             f"maker_part_no={self.maker_part_no}, display_name={self.display_name})>"
         )
-
-
-# Backward compatibility alias
-ProductSupplier = SupplierItem

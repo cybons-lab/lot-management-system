@@ -78,34 +78,51 @@ def _safe_identifier(value: str) -> str:
 
 @router.get("/objects")
 def list_db_objects(
+    column_q: str | None = Query(None, description="Filter by column name"),
     db: Session = Depends(get_db),
     _current_admin=Depends(get_current_admin),
 ) -> list[dict[str, Any]]:
-    logger.info("Listing DB objects")
+    logger.info("Listing DB objects", extra={"column_q": column_q})
     _ensure_enabled(db)
     allowed_schemas = _get_allowed_schemas(db)
-    rows = db.execute(
-        text(
+
+    where_clauses = ["n.nspname = ANY(:schemas)", "c.relkind IN ('r', 'v', 'm')"]
+    params: dict[str, Any] = {"schemas": allowed_schemas}
+
+    if column_q:
+        where_clauses.append(
             """
-            SELECT
-              n.nspname AS schema_name,
-              c.relname AS object_name,
-              CASE c.relkind
-                WHEN 'r' THEN 'table'
-                WHEN 'v' THEN 'view'
-                WHEN 'm' THEN 'materialized_view'
-              END AS object_type,
-              obj_description(c.oid, 'pg_class') AS comment,
-              c.reltuples::bigint AS row_estimate
-            FROM pg_class c
-            JOIN pg_namespace n ON n.oid = c.relnamespace
-            WHERE n.nspname = ANY(:schemas)
-              AND c.relkind IN ('r', 'v', 'm')
-            ORDER BY n.nspname, c.relname
+            EXISTS (
+                SELECT 1 FROM pg_attribute a
+                WHERE a.attrelid = c.oid
+                  AND a.attname ILIKE :column_q_pattern
+                  AND a.attnum > 0
+                  AND NOT a.attisdropped
+            )
             """
-        ),
-        {"schemas": allowed_schemas},
-    ).fetchall()
+        )
+        params["column_q_pattern"] = f"%{column_q}%"
+
+    where_sql = " AND ".join(where_clauses)
+
+    sql = f"""
+        SELECT
+          n.nspname AS schema_name,
+          c.relname AS object_name,
+          CASE c.relkind
+            WHEN 'r' THEN 'table'
+            WHEN 'v' THEN 'view'
+            WHEN 'm' THEN 'materialized_view'
+          END AS object_type,
+          obj_description(c.oid, 'pg_class') AS comment,
+          c.reltuples::bigint AS row_estimate
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE {where_sql}
+        ORDER BY n.nspname, c.relname
+    """
+
+    rows = db.execute(text(sql), params).fetchall()
     return [dict(row._mapping) for row in rows]
 
 

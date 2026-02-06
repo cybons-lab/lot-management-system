@@ -8386,6 +8386,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/shipping-masters/prefill-sap-names": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Prefill Sap Names
+     * @description SAPキャッシュから得意先名・仕入先名を補足する.
+     */
+    post: operations["prefill_sap_names_api_shipping_masters_prefill_sap_names_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/shipping-masters/import": {
     parameters: {
       query?: never;
@@ -31521,6 +31541,39 @@ export interface operations {
       };
     };
   };
+  prefill_sap_names_api_shipping_masters_prefill_sap_names_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": number[] | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   import_shipping_masters_file_api_shipping_masters_import_post: {
     parameters: {
       query?: {
@@ -31834,7 +31887,10 @@ export interface operations {
   };
   list_db_objects_api_debug_db_objects_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Filter by column name */
+        column_q?: string | null;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -31850,6 +31906,15 @@ export interface operations {
           "application/json": {
             [key: string]: unknown;
           }[];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

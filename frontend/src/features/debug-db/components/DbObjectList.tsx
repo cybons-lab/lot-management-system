@@ -2,15 +2,14 @@ import { Database, Table } from "lucide-react";
 
 import type { DbObject, DbObjectType } from "../api";
 
+import { Input } from "@/components/ui/form/input";
 import {
-  Badge,
-  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui";
+} from "@/components/ui/form/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/shared/libs/utils";
 
@@ -33,6 +32,8 @@ interface DbObjectListProps {
   onSelect: (obj: DbObject) => void;
   search: string;
   onSearchChange: (value: string) => void;
+  columnSearch: string;
+  onColumnSearchChange: (value: string) => void;
   typeFilter: DbObjectType | "all";
   onTypeFilterChange: (value: DbObjectType | "all") => void;
   filteredObjects: DbObject[];
@@ -41,11 +42,15 @@ interface DbObjectListProps {
 function DbObjectFilters({
   search,
   onSearchChange,
+  columnSearch,
+  onColumnSearchChange,
   typeFilter,
   onTypeFilterChange,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
+  columnSearch: string;
+  onColumnSearchChange: (value: string) => void;
   typeFilter: DbObjectType | "all";
   onTypeFilterChange: (value: DbObjectType | "all") => void;
 }) {
@@ -58,7 +63,12 @@ function DbObjectFilters({
       <Input
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder="検索 (schema / name)"
+        placeholder="オブジェクト名で検索 (schema / name)"
+      />
+      <Input
+        value={columnSearch}
+        onChange={(event) => onColumnSearchChange(event.target.value)}
+        placeholder="フィールド名で検索 (column_name)"
       />
       <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
         <SelectTrigger>
@@ -95,18 +105,20 @@ function DbObjectListItem({
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-col gap-1.5 overflow-hidden">
+        <div className="flex flex-row items-center gap-1.5 overflow-hidden">
           <Table className="h-4 w-4 text-gray-400" />
           <span className="truncate text-sm font-semibold text-gray-900">
             {obj.schema_name}.{obj.object_name}
           </span>
         </div>
-        <Badge
-          variant="outline"
-          className={cn("shrink-0 font-normal", TYPE_BADGE_STYLE[obj.object_type])}
+        <span
+          className={cn(
+            "inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+            TYPE_BADGE_STYLE[obj.object_type],
+          )}
         >
           {TYPE_LABELS[obj.object_type]}
-        </Badge>
+        </span>
       </div>
       <div className="text-xs text-gray-500">{obj.comment || "コメントなし"}</div>
       <div className="text-xs text-gray-400">
@@ -128,7 +140,7 @@ function DbObjectListBody({
   onSelect: (obj: DbObject) => void;
 }) {
   return (
-    <ScrollArea className="h-[calc(100vh-280px)] min-h-[400px]">
+    <ScrollArea className="h-[calc(100vh-320px)] min-h-[400px]">
       <div className="divide-y divide-gray-100">
         {isLoading && <div className="p-4 text-sm text-gray-500">読み込み中...</div>}
         {!isLoading && filteredObjects.length === 0 && (
@@ -155,6 +167,8 @@ export function DbObjectList({
   onSelect,
   search,
   onSearchChange,
+  columnSearch,
+  onColumnSearchChange,
   typeFilter,
   onTypeFilterChange,
   filteredObjects,
@@ -169,6 +183,8 @@ export function DbObjectList({
         <DbObjectFilters
           search={search}
           onSearchChange={onSearchChange}
+          columnSearch={columnSearch}
+          onColumnSearchChange={onColumnSearchChange}
           typeFilter={typeFilter}
           onTypeFilterChange={onTypeFilterChange}
         />

@@ -131,7 +131,7 @@ from app.application.services.allocations.utils import (
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
     OrderLine,
-    StockHistory,
+    StockMovement,
     StockTransactionType,
 )
 from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
@@ -396,7 +396,7 @@ def cancel_confirmed_reservation(
 
     # CONFIRMED予約の場合、stock_historyに反対仕訳を記録
     if reservation.status == ReservationStatus.CONFIRMED and lot:
-        stock_history = StockHistory(
+        stock_history = StockMovement(
             lot_id=lot.id,
             transaction_type=StockTransactionType.ALLOCATION_RELEASE,
             quantity_change=+reservation.reserved_qty,  # 予約解放はプラス表記

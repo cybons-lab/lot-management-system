@@ -2,6 +2,7 @@
 
 import random
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
@@ -32,6 +33,8 @@ def generate_lot_reservation_history(db: Session) -> None:
     if not reservations or not users:
         return
 
+    statuses = ["active", "confirmed", "released"]
+
     # Generate history for 50% of reservations
     for reservation in random.sample(reservations, len(reservations) // 2):
         # Create 2-5 history records per reservation
@@ -40,47 +43,49 @@ def generate_lot_reservation_history(db: Session) -> None:
 
         for i in range(num_records):
             changed_at = base_date + timedelta(days=i * (30 // num_records))
+            user_name = random.choice(users).username if users else None
 
             if i == 0:
-                # INSERT operation
-                operation = HistoryOperation.INSERT
-                old_values = None
-                new_values = {
-                    "lot_id": reservation.lot_id,
-                    "reserved_qty": str(reservation.reserved_qty),
-                    "status": reservation.status,
-                }
+                # INSERT operation: new values only
+                history = LotReservationHistory(
+                    reservation_id=reservation.id,
+                    operation=HistoryOperation.INSERT,
+                    lot_id=reservation.lot_id,
+                    source_type=reservation.source_type,
+                    source_id=reservation.source_id,
+                    reserved_qty=reservation.reserved_qty,
+                    status=reservation.status,
+                    changed_at=changed_at,
+                    changed_by=user_name,
+                )
             elif i == num_records - 1 and random.random() < 0.3:
-                # DELETE operation (30% chance on last record)
-                operation = HistoryOperation.DELETE
-                old_values = {
-                    "lot_id": reservation.lot_id,
-                    "reserved_qty": str(reservation.reserved_qty),
-                    "status": reservation.status,
-                }
-                new_values = None
+                # DELETE operation: old values only
+                history = LotReservationHistory(
+                    reservation_id=reservation.id,
+                    operation=HistoryOperation.DELETE,
+                    old_lot_id=reservation.lot_id,
+                    old_source_type=reservation.source_type,
+                    old_source_id=reservation.source_id,
+                    old_reserved_qty=reservation.reserved_qty,
+                    old_status=reservation.status,
+                    changed_at=changed_at,
+                    changed_by=user_name,
+                )
             else:
-                # UPDATE operation
-                operation = HistoryOperation.UPDATE
+                # UPDATE operation: both old and new values
                 old_qty = float(reservation.reserved_qty) * random.uniform(0.8, 1.2)
-                old_values = {
-                    "reserved_qty": f"{old_qty:.2f}",
-                    "status": random.choice(["active", "confirmed", "cancelled"]),
-                }
-                new_values = {
-                    "reserved_qty": str(reservation.reserved_qty),
-                    "status": reservation.status,
-                }
-
-            history = LotReservationHistory(
-                reservation_id=reservation.id,
-                lot_id=reservation.lot_id,
-                operation=operation,
-                old_values=old_values,
-                new_values=new_values,
-                changed_at=changed_at,
-                changed_by=random.choice(users).id if users else None,
-            )
+                history = LotReservationHistory(
+                    reservation_id=reservation.id,
+                    operation=HistoryOperation.UPDATE,
+                    lot_id=reservation.lot_id,
+                    reserved_qty=reservation.reserved_qty,
+                    status=reservation.status,
+                    old_lot_id=reservation.lot_id,
+                    old_reserved_qty=round(Decimal(old_qty), 3),
+                    old_status=random.choice(statuses),
+                    changed_at=changed_at,
+                    changed_by=user_name,
+                )
             db.add(history)
 
     # Edge case: Many operations on same reservation (10+ records)
@@ -90,12 +95,15 @@ def generate_lot_reservation_history(db: Session) -> None:
         for i in range(12):
             history = LotReservationHistory(
                 reservation_id=busy_reservation.id,
-                lot_id=busy_reservation.lot_id,
                 operation=HistoryOperation.UPDATE,
-                old_values={"reserved_qty": str(100 + i * 10), "status": "active"},
-                new_values={"reserved_qty": str(100 + (i + 1) * 10), "status": "active"},
+                lot_id=busy_reservation.lot_id,
+                reserved_qty=Decimal(100 + (i + 1) * 10),
+                status="active",
+                old_lot_id=busy_reservation.lot_id,
+                old_reserved_qty=Decimal(100 + i * 10),
+                old_status="active",
                 changed_at=base_date + timedelta(hours=i * 2),
-                changed_by=random.choice(users).id if users else None,
+                changed_by=random.choice(users).username if users else None,
             )
             db.add(history)
 
@@ -129,10 +137,13 @@ def generate_operation_logs(db: Session) -> None:
         # Timestamp within last 90 days
         timestamp = datetime.now(UTC) - timedelta(days=random.randint(0, 90))
 
-        target_table = (
-            random.choice(target_tables) if operation in ["create", "update", "delete"] else None
-        )
-        target_id = random.randint(1, 1000) if target_table else None
+        # target_table is NOT NULL, so always provide a value
+        if operation in ["create", "update", "delete"]:
+            target_table = random.choice(target_tables)
+        else:
+            target_table = "sessions"  # login/logout/export use 'sessions'
+
+        target_id = random.randint(1, 1000) if operation in ["create", "update", "delete"] else None
 
         changes = None
         if operation in ["create", "update"]:
@@ -143,12 +154,12 @@ def generate_operation_logs(db: Session) -> None:
 
         log = OperationLog(
             user_id=user.id,
-            operation=operation,
+            operation_type=operation,
             target_table=target_table,
             target_id=target_id,
             changes=changes,
             ip_address=f"192.168.{random.randint(1, 255)}.{random.randint(1, 255)}",
-            timestamp=timestamp,
+            created_at=timestamp,
         )
         db.add(log)
 
@@ -158,10 +169,10 @@ def generate_operation_logs(db: Session) -> None:
         for i in range(120):
             log = OperationLog(
                 user_id=power_user.id,
-                operation=random.choice(operations),
+                operation_type=random.choice(operations),
                 target_table=random.choice(target_tables),
                 target_id=i,
-                timestamp=datetime.now(UTC) - timedelta(hours=i),
+                created_at=datetime.now(UTC) - timedelta(hours=i),
                 ip_address="192.168.1.100",
             )
             db.add(log)
@@ -218,36 +229,32 @@ def generate_business_rules(db: Session) -> None:
     """Generate BusinessRule test data."""
     rules = [
         {
-            "code": "allocation_fefo_strict",
-            "name": "FEFO厳格モード",
+            "rule_code": "allocation_fefo_strict",
+            "rule_name": "FEFO厳格モード",
             "rule_type": "allocation",
             "is_active": True,
-            "parameters": {"strict_expiry": True, "allow_partial": False},
-            "description": "期限切れ優先引当（厳格モード）",
+            "rule_parameters": {"strict_expiry": True, "allow_partial": False},
         },
         {
-            "code": "expiry_warning_30days",
-            "name": "期限切れ警告（30日前）",
+            "rule_code": "expiry_warning_30days",
+            "rule_name": "期限切れ警告（30日前）",
             "rule_type": "expiry_warning",
             "is_active": True,
-            "parameters": {"warning_days": 30, "alert_users": True},
-            "description": "期限切れ30日前に警告通知",
+            "rule_parameters": {"warning_days": 30, "alert_users": True},
         },
         {
-            "code": "kanban_auto_replenish",
-            "name": "かんばん自動発注",
+            "rule_code": "kanban_auto_replenish",
+            "rule_name": "かんばん自動発注",
             "rule_type": "kanban",
             "is_active": False,
-            "parameters": {"trigger_qty": 100, "order_qty": 500},
-            "description": "在庫が100を下回ったら500発注",
+            "rule_parameters": {"trigger_qty": 100, "order_qty": 500},
         },
         {
-            "code": "inventory_sync_alert",
-            "name": "在庫同期アラート",
+            "rule_code": "inventory_sync_alert",
+            "rule_name": "在庫同期アラート",
             "rule_type": "inventory_sync_alert",
             "is_active": True,
-            "parameters": {"threshold_hours": 24, "alert_admin": True},
-            "description": "24時間同期されていない場合アラート",
+            "rule_parameters": {"threshold_hours": 24, "alert_admin": True},
         },
     ]
 
@@ -257,11 +264,11 @@ def generate_business_rules(db: Session) -> None:
 
     # Edge case: Rule with complex parameters
     rule = BusinessRule(
-        code="allocation_complex",
-        name="複雑な引当ルール",
+        rule_code="allocation_complex",
+        rule_name="複雑な引当ルール",
         rule_type="allocation",
         is_active=True,
-        parameters={
+        rule_parameters={
             "mode": "hybrid",
             "fefo_weight": 0.7,
             "fifo_weight": 0.3,
@@ -270,11 +277,20 @@ def generate_business_rules(db: Session) -> None:
             "partial_allocation_threshold": 0.8,
             "reservation_hold_hours": 48,
         },
-        description="FEFOとFIFOを組み合わせた複雑な引当ルール",
     )
     db.add(rule)
 
     db.commit()
+
+
+# Map job_type to readable job_name
+JOB_NAME_MAP = {
+    "allocation_suggestion": "引当候補算出",
+    "allocation_finalize": "引当確定処理",
+    "inventory_sync": "在庫同期",
+    "data_import": "データインポート",
+    "report_generation": "レポート生成",
+}
 
 
 def generate_batch_jobs(db: Session) -> None:
@@ -282,13 +298,13 @@ def generate_batch_jobs(db: Session) -> None:
     # Generate 20-40 batch jobs
     num_jobs = random.randint(20, 40)
 
+    # Only use job_types that pass the CHECK constraint
     job_types = [
         "allocation_suggestion",
         "allocation_finalize",
         "inventory_sync",
         "data_import",
         "report_generation",
-        "forecast_calculation",
     ]
 
     for _ in range(num_jobs):
@@ -296,12 +312,7 @@ def generate_batch_jobs(db: Session) -> None:
 
         # 40% pending, 30% completed, 20% failed, 10% running
         status = random.choices(
-            [
-                "pending",
-                "running",
-                "completed",
-                "failed",
-            ],
+            ["pending", "running", "completed", "failed"],
             weights=[40, 10, 30, 20],
             k=1,
         )[0]
@@ -310,7 +321,6 @@ def generate_batch_jobs(db: Session) -> None:
 
         started_at = None
         completed_at = None
-        error_message = None
         result_message = None
 
         if status in ["running", "completed", "failed"]:
@@ -322,7 +332,7 @@ def generate_batch_jobs(db: Session) -> None:
         if status == "completed":
             result_message = f"Successfully processed {random.randint(100, 5000)} records"
         elif status == "failed":
-            error_message = random.choice(
+            result_message = random.choice(
                 [
                     "Database connection timeout",
                     "Invalid data format in row 123",
@@ -332,6 +342,7 @@ def generate_batch_jobs(db: Session) -> None:
             )
 
         job = BatchJob(
+            job_name=JOB_NAME_MAP.get(job_type, job_type),
             job_type=job_type,
             status=status,
             parameters={"mode": "auto", "scope": "all"},
@@ -339,12 +350,12 @@ def generate_batch_jobs(db: Session) -> None:
             started_at=started_at,
             completed_at=completed_at,
             result_message=result_message,
-            error_message=error_message,
         )
         db.add(job)
 
     # Edge case: Long-running job (hours)
     long_job = BatchJob(
+        job_name="レポート生成（年次）",
         job_type="report_generation",
         status="running",
         parameters={"report_type": "annual", "year": 2025},
@@ -355,6 +366,7 @@ def generate_batch_jobs(db: Session) -> None:
 
     # Edge case: Job with large result message
     large_result_job = BatchJob(
+        job_name="大量データインポート",
         job_type="data_import",
         status="completed",
         parameters={"file": "large_import.csv"},

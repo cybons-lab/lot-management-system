@@ -222,8 +222,8 @@ def generate_forecast_history(db: Session) -> None:
                 # Subsequent revisions: ±20% variance
                 old_quantity = Decimal(int(float(current_quantity) * random.uniform(0.8, 1.2)))
 
-            # Changed timestamp: spread across 30 days
-            changed_at = base_date + timedelta(days=rev_num * (30 // num_revisions))
+            # Snapshot timestamp: spread across 30 days
+            snapshot_at = base_date + timedelta(days=rev_num * (30 // num_revisions))
 
             history = ForecastHistory(
                 customer_id=fc.customer_id,
@@ -233,10 +233,10 @@ def generate_forecast_history(db: Session) -> None:
                 forecast_quantity=old_quantity,
                 unit=fc.unit,
                 forecast_period=fc.forecast_period,
-                changed_at=changed_at,
-                change_reason=random.choice(
-                    ["数量変更", "納期調整", "需要予測更新", "発注調整", "その他"]
-                ),
+                snapshot_at=snapshot_at,
+                archived_at=snapshot_at + timedelta(days=1),
+                created_at=snapshot_at,
+                updated_at=snapshot_at,
             )
             db.add(history)
 
@@ -247,7 +247,7 @@ def generate_forecast_history(db: Session) -> None:
 
         for i in range(12):
             old_quantity = Decimal(random.randint(50, 500))
-            changed_at = base_date + timedelta(hours=i * 12)
+            snapshot_at = base_date + timedelta(hours=i * 12)
 
             history = ForecastHistory(
                 customer_id=volatile_forecast.customer_id,
@@ -257,8 +257,10 @@ def generate_forecast_history(db: Session) -> None:
                 forecast_quantity=old_quantity,
                 unit=volatile_forecast.unit,
                 forecast_period=volatile_forecast.forecast_period,
-                changed_at=changed_at,
-                change_reason="頻繁な変更 (Edge case)",
+                snapshot_at=snapshot_at,
+                archived_at=snapshot_at + timedelta(hours=12),
+                created_at=snapshot_at,
+                updated_at=snapshot_at,
             )
             db.add(history)
 

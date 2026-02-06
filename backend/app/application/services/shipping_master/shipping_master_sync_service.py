@@ -13,6 +13,7 @@ from app.infrastructure.persistence.models.assignments.assignment_models import 
     UserSupplierAssignment,
 )
 from app.infrastructure.persistence.models.auth_models import User
+from app.infrastructure.persistence.models.maker_models import Maker
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
     CustomerItem,
@@ -132,6 +133,7 @@ class ShippingMasterSyncService:
         customer_id = self._sync_customer(curated, policy, summary)
         supplier_id = self._sync_supplier(curated, policy, summary)
         warehouse_id = self._sync_warehouse(curated, policy, summary)
+        self._sync_maker(curated, policy, summary)
 
         # 2. Dependent masters
         dp_id = None
@@ -202,6 +204,13 @@ class ShippingMasterSyncService:
                 updated = True
         return updated
 
+    @staticmethod
+    def _is_code_placeholder(name: str | None, code: str | None) -> bool:
+        """名称がコード埋め（未解決）かどうか判定."""
+        if name is None or code is None:
+            return False
+        return name.strip() != "" and name.strip() == code.strip()
+
     def _sync_customer(
         self, curated: ShippingMasterCurated, policy: SyncPolicy, summary: SyncSummary
     ) -> int | None:
@@ -228,7 +237,20 @@ class ShippingMasterSyncService:
             data["customer_name"] = curated.customer_name
             data["display_name"] = curated.customer_name
 
-        if self._apply_update(customer, data, policy):
+        forced_update = False
+        if (
+            curated.customer_name
+            and not self._is_code_placeholder(curated.customer_name, curated.customer_code)
+            and (
+                self._is_code_placeholder(customer.customer_name, customer.customer_code)
+                or self._is_code_placeholder(customer.display_name, customer.customer_code)
+            )
+        ):
+            customer.customer_name = curated.customer_name
+            customer.display_name = curated.customer_name
+            forced_update = True
+
+        if forced_update or self._apply_update(customer, data, policy):
             summary.updated_count += 1
             self.session.flush()
 
@@ -260,7 +282,20 @@ class ShippingMasterSyncService:
             data["supplier_name"] = curated.supplier_name
             data["display_name"] = curated.supplier_name
 
-        if self._apply_update(supplier, data, policy):
+        forced_update = False
+        if (
+            curated.supplier_name
+            and not self._is_code_placeholder(curated.supplier_name, curated.supplier_code)
+            and (
+                self._is_code_placeholder(supplier.supplier_name, supplier.supplier_code)
+                or self._is_code_placeholder(supplier.display_name, supplier.supplier_code)
+            )
+        ):
+            supplier.supplier_name = curated.supplier_name
+            supplier.display_name = curated.supplier_name
+            forced_update = True
+
+        if forced_update or self._apply_update(supplier, data, policy):
             summary.updated_count += 1
             self.session.flush()
 
@@ -299,6 +334,39 @@ class ShippingMasterSyncService:
 
         return warehouse.id
 
+    def _sync_maker(
+        self, curated: ShippingMasterCurated, policy: SyncPolicy, summary: SyncSummary
+    ) -> int | None:
+        """メーカーコード・メーカー名を makers マスタに同期."""
+        if not curated.maker_code:
+            return None
+
+        stmt = select(Maker).where(Maker.maker_code == curated.maker_code)
+        maker = self.session.execute(stmt).scalar_one_or_none()
+
+        if not maker:
+            name = curated.maker_name or curated.maker_code
+            maker = Maker(
+                maker_code=curated.maker_code,
+                maker_name=name,
+                display_name=name,
+            )
+            self.session.add(maker)
+            self.session.flush()
+            summary.created_count += 1
+            return maker.id
+
+        data: dict[str, Any] = {}
+        if curated.maker_name:
+            data["maker_name"] = curated.maker_name
+            data["display_name"] = curated.maker_name
+
+        if self._apply_update(maker, data, policy):
+            summary.updated_count += 1
+            self.session.flush()
+
+        return maker.id
+
     def _sync_delivery_place(
         self,
         curated: ShippingMasterCurated,
@@ -309,12 +377,20 @@ class ShippingMasterSyncService:
         if not curated.delivery_place_code:
             return None
 
-        # (jiku_code, delivery_place_code) のペアで検索
+        # 納入先コード同士で同期する（code-to-code）。
+        # 顧客ごとのコードを優先して既存レコードを検索する。
         stmt = select(DeliveryPlace).where(
-            DeliveryPlace.jiku_code == curated.jiku_code,
+            DeliveryPlace.customer_id == customer_id,
             DeliveryPlace.delivery_place_code == curated.delivery_place_code,
         )
         dp = self.session.execute(stmt).scalar_one_or_none()
+
+        # 旧データ互換: 顧客一致で見つからない場合、コードのみで検索して再利用可能か確認
+        if not dp:
+            fallback_stmt = select(DeliveryPlace).where(
+                DeliveryPlace.delivery_place_code == curated.delivery_place_code
+            )
+            dp = self.session.execute(fallback_stmt).scalar_one_or_none()
 
         if not dp:
             name = curated.delivery_place_name or curated.delivery_place_code
@@ -332,11 +408,13 @@ class ShippingMasterSyncService:
         if dp.customer_id != customer_id:
             raise SkipRow(
                 "DeliveryPlace conflict: "
-                f"code={curated.delivery_place_code}, jiku={curated.jiku_code}, "
+                f"code={curated.delivery_place_code}, "
                 f"existing_customer_id={dp.customer_id}, target_customer_id={customer_id}"
             )
 
         data: dict[str, Any] = {}
+        if curated.jiku_code:
+            data["jiku_code"] = curated.jiku_code
         if curated.delivery_place_name:
             data["delivery_place_name"] = curated.delivery_place_name
         if curated.delivery_place_abbr:

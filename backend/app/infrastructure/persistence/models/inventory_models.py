@@ -162,7 +162,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
 from .lot_receipt_models import LotReceipt
@@ -334,8 +334,6 @@ class AllocationSuggestion(Base):
         ForeignKey("supplier_items.id", ondelete="CASCADE"),
         nullable=False,
     )
-    product_group_id = synonym("supplier_item_id")  # Alias for backward compatibility
-
     # ロット側キー
     lot_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("lot_receipts.id", ondelete="CASCADE"), nullable=False
@@ -373,7 +371,6 @@ class AllocationSuggestion(Base):
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
     supplier_item: Mapped[SupplierItem] = relationship("SupplierItem")
-    product_group = synonym("supplier_item")  # Alias
     lot: Mapped[LotReceipt] = relationship("LotReceipt")
     forecast: Mapped[ForecastCurrent | None] = relationship("ForecastCurrent")
 
@@ -424,11 +421,3 @@ class AllocationTrace(Base):
         Index("idx_allocation_traces_lot", "lot_id"),
         Index("idx_allocation_traces_created_at", "created_at"),
     )
-
-
-# Backward compatibility alias (read model naming)
-StockHistory = StockMovement
-StockMovementReason = StockTransactionType
-
-# LotCurrentStock alias for backward compatibility if needed, though InventoryItem is preferred.
-# LotCurrentStock = InventoryItem

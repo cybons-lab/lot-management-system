@@ -130,7 +130,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.infrastructure.persistence.models import (
     Order,
     OrderLine,
-    Product,
+    SupplierItem,
 )
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
@@ -183,12 +183,12 @@ def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> tuple[str |
     """Resolve next_div value and generate warning if missing."""
     product = getattr(line, "product", None)
     if product is None and getattr(line, "supplier_item_id", None):
-        stmt = select(Product).where(Product.id == line.supplier_item_id)
+        stmt = select(SupplierItem).where(SupplierItem.id == line.supplier_item_id)
         product = db.execute(stmt).scalar_one_or_none()
     if product is None:
         product_code = getattr(line, "product_code", None)
         if product_code:
-            stmt = select(Product).where(Product.maker_part_no == product_code)
+            stmt = select(SupplierItem).where(SupplierItem.maker_part_no == product_code)
             product = db.execute(stmt).scalar_one_or_none()
     next_div = getattr(product, "next_div", None) if product else None
     if next_div:

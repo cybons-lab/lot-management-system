@@ -155,7 +155,6 @@ from app.infrastructure.persistence.models import (
     Customer,
     Order,
     OrderLine,
-    Product,
     SupplierItem,
 )
 from app.presentation.schemas.orders.orders_schema import (
@@ -325,8 +324,8 @@ class OrderService:
             )
 
         if product_code:
-            stmt = stmt.join(Product, OrderLine.supplier_item_id == Product.id).where(
-                Product.maker_part_no == product_code
+            stmt = stmt.join(SupplierItem, OrderLine.supplier_item_id == SupplierItem.id).where(
+                SupplierItem.maker_part_no == product_code
             )
 
         if status:
@@ -407,7 +406,7 @@ class OrderService:
         # Create order lines
         for line_data in order_data.lines:
             # Validate supplier_item_id exists
-            product_stmt = select(Product).where(Product.id == line_data.supplier_item_id)
+            product_stmt = select(SupplierItem).where(SupplierItem.id == line_data.supplier_item_id)
             product = self.db.execute(product_stmt).scalar_one_or_none()
             if not product:
                 raise ProductNotFoundError(str(line_data.supplier_item_id))

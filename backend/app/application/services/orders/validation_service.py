@@ -133,12 +133,12 @@ class OrderValidationService:
         """Validate that all demanded lines can be fulfilled by inventory."""
         from sqlalchemy import select
 
-        from app.infrastructure.persistence.models import Product, Warehouse
+        from app.infrastructure.persistence.models import SupplierItem, Warehouse
 
         for line in lines:
             # Resolve IDs from codes
             supplier_item_id = self._db.execute(
-                select(Product.id).where(Product.maker_part_no == line.product_code)
+                select(SupplierItem.id).where(SupplierItem.maker_part_no == line.product_code)
             ).scalar_one_or_none()
 
             warehouse_id = self._db.execute(

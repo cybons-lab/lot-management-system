@@ -117,7 +117,12 @@ export interface DbRowsParams {
   filters?: string[];
 }
 
-export const getDbObjects = () => http.get<DbObject[]>("debug/db/objects");
+export const getDbObjects = (columnQ?: string) => {
+  const params = new URLSearchParams();
+  if (columnQ) params.set("column_q", columnQ);
+  const query = params.toString();
+  return http.get<DbObject[]>(`debug/db/objects${query ? `?${query}` : ""}`);
+};
 
 export const getDbSchema = (schema: string, name: string) =>
   http.get<DbSchemaResponse>(`debug/db/objects/${schema}/${name}/schema`);

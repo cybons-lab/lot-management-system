@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.application.services.inventory.adjustment_service import AdjustmentService
 from app.application.services.inventory.stock_calculation import get_available_quantity
-from app.infrastructure.persistence.models.inventory_models import LotReceipt, StockHistory
+from app.infrastructure.persistence.models.inventory_models import LotReceipt, StockMovement
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
 from app.presentation.schemas.inventory.inventory_schema import AdjustmentCreate
 
@@ -55,11 +55,11 @@ def test_create_adjustment_increase(db: Session, service_master_data):
 
     # Verify stock history created
     history = (
-        db.query(StockHistory)
+        db.query(StockMovement)
         .filter(
-            StockHistory.lot_id == lot.id,
-            StockHistory.reference_type == "adjustment",
-            StockHistory.reference_id == result.id,
+            StockMovement.lot_id == lot.id,
+            StockMovement.reference_type == "adjustment",
+            StockMovement.reference_id == result.id,
         )
         .first()
     )

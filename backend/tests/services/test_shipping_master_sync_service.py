@@ -6,6 +6,7 @@ from sqlalchemy import select
 from app.application.services.shipping_master.shipping_master_sync_service import (
     ShippingMasterSyncService,
 )
+from app.infrastructure.persistence.models.maker_models import Maker
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
     DeliveryPlace,
@@ -75,8 +76,8 @@ def test_sync_batch_create_only(db, sync_service):
     assert si.display_name == "Product 1"
 
 
-def test_sync_delivery_place_composite_uniqueness(db, sync_service):
-    """納入先コードが同じでも次区が違えば別レコードとして作成されること."""
+def test_sync_delivery_place_code_based_sync(db, sync_service):
+    """納入先コード同士で同期され、同一コードは1レコードに集約されること."""
     # 1件目: J1-DP1
     c1 = ShippingMasterCurated(
         customer_code="C1",
@@ -104,15 +105,14 @@ def test_sync_delivery_place_composite_uniqueness(db, sync_service):
 
     sync_service.sync_batch()
 
-    # 検証
+    # 検証: DP1 は1件に集約され、次区は後続データで更新される（create-only なので初回値維持）
     dps = (
         db.execute(select(DeliveryPlace).where(DeliveryPlace.delivery_place_code == "DP1"))
         .scalars()
         .all()
     )
-    assert len(dps) == 2
-    jikus = {dp.jiku_code for dp in dps}
-    assert jikus == {"J1", "J2"}
+    assert len(dps) == 1
+    assert dps[0].jiku_code == "J1"
 
 
 def test_sync_update_if_empty(db, sync_service):
@@ -159,3 +159,26 @@ def test_sync_skip_missing_product_name(db, sync_service):
         select(SupplierItem).where(SupplierItem.maker_part_no == "P1")
     ).scalar_one_or_none()
     assert si is None
+
+
+def test_sync_creates_maker_master(db, sync_service):
+    """出荷用マスタのメーカー情報が makers に同期されること."""
+    curated = ShippingMasterCurated(
+        customer_code="C_MK",
+        material_code="M_MK",
+        jiku_code="J_MK",
+        supplier_code="S_MK",
+        maker_part_no="P_MK",
+        delivery_note_product_name="Prod MK",
+        maker_code="MK_SYNC",
+        maker_name="同期メーカー",
+    )
+    db.add(curated)
+    db.flush()
+
+    summary = sync_service.sync_batch(policy="create-only")
+    assert summary.errors == []
+
+    maker = db.execute(select(Maker).where(Maker.maker_code == "MK_SYNC")).scalar_one_or_none()
+    assert maker is not None
+    assert maker.maker_name == "同期メーカー"

@@ -10,7 +10,7 @@ from app.infrastructure.persistence.models.inbound_models import (
     InboundPlan,
     InboundPlanLine,
 )
-from app.infrastructure.persistence.models.inventory_models import LotReceipt, StockHistory
+from app.infrastructure.persistence.models.inventory_models import LotReceipt, StockMovement
 from app.presentation.schemas.inventory.inbound_schema import InboundPlanReceiveRequest
 
 
@@ -67,7 +67,7 @@ def test_receive_inbound_plan_with_expected_lots(db: Session, service_master_dat
         assert lot.status == "active"
 
         # Verify stock history
-        history = db.query(StockHistory).filter(StockHistory.lot_id == lot.id).first()
+        history = db.query(StockMovement).filter(StockMovement.lot_id == lot.id).first()
         assert history.transaction_type == "inbound"
         assert history.quantity_change == 100
 

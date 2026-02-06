@@ -14,7 +14,7 @@ from app.application.services.masters.product_mappings_service import (
     ProductMappingsService,
 )
 from app.core.database import get_db
-from app.infrastructure.persistence.models import Customer, Product, ProductMapping, Supplier
+from app.infrastructure.persistence.models import Customer, ProductMapping, Supplier, SupplierItem
 from app.presentation.schemas.masters.masters_schema import (
     ProductMappingCreate,
     ProductMappingResponse,
@@ -129,7 +129,7 @@ def create_product_mapping(data: ProductMappingCreate, db: Session = Depends(get
         raise HTTPException(status_code=400, detail="Supplier not found")
 
     # Check product exists
-    product = db.query(Product).filter(Product.id == data.supplier_item_id).first()
+    product = db.query(SupplierItem).filter(SupplierItem.id == data.supplier_item_id).first()
     if not product:
         raise HTTPException(status_code=400, detail="Product not found")
 
@@ -179,7 +179,11 @@ def update_product_mapping(
             raise HTTPException(status_code=400, detail="Supplier not found")
 
     if "supplier_item_id" in update_data and update_data["supplier_item_id"]:
-        product = db.query(Product).filter(Product.id == update_data["supplier_item_id"]).first()
+        product = (
+            db.query(SupplierItem)
+            .filter(SupplierItem.id == update_data["supplier_item_id"])
+            .first()
+        )
         if not product:
             raise HTTPException(status_code=400, detail="Product not found")
 

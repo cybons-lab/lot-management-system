@@ -1,14 +1,14 @@
 """Inventory adjustment test data generator."""
 
 import random
-from datetime import date, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
+from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.inventory_models import Adjustment
 from app.infrastructure.persistence.models.lot_receipt_models import LotReceipt
-from app.infrastructure.persistence.models.masters_models import Warehouse
 
 
 def generate_adjustments(db: Session) -> None:
@@ -18,67 +18,55 @@ def generate_adjustments(db: Session) -> None:
     - Positive: Found inventory (棚卸差異プラス)
     - Negative: Damage, expiry, loss (破損・期限切れ廃棄)
     """
-    # Get existing lots for adjustment
     lot_receipts = db.query(LotReceipt).limit(20).all()
-    warehouses = db.query(Warehouse).all()
+    users = db.query(User).all()
 
-    if not lot_receipts or not warehouses:
+    if not lot_receipts or not users:
         return
 
-    # Generate 10-30 adjustments
     num_adjustments = random.randint(10, 30)
 
     for _ in range(num_adjustments):
         lot_receipt = random.choice(lot_receipts)
-        warehouse = random.choice(warehouses)
+        user = random.choice(users)
 
-        # 60% negative (loss), 30% positive (found), 10% zero (confirmation)
+        # 60% negative (loss), 30% positive (found), 10% physical_count
         adjustment_type = random.choices(
-            ["negative", "positive", "zero"], weights=[60, 30, 10], k=1
+            ["damage", "found", "physical_count"], weights=[60, 30, 10], k=1
         )[0]
 
-        if adjustment_type == "negative":
-            # Loss: 1-50 units or 10-50% of current quantity
+        if adjustment_type == "damage":
             max_qty = min(50, int(float(lot_receipt.received_quantity) * 0.5))
             quantity = Decimal(-random.randint(1, max(1, max_qty)))
-            reason = random.choice(["damage", "expiry", "loss"])
-        elif adjustment_type == "positive":
-            # Found: 1-30 units
+            reason = "破損による廃棄"
+        elif adjustment_type == "found":
             quantity = Decimal(random.randint(1, 30))
-            reason = "inventory_count"
+            reason = "棚卸しで発見"
         else:
-            # Zero adjustment (confirmation record)
             quantity = Decimal(0)
-            reason = "inventory_count"
+            reason = "棚卸確認"
 
-        # Adjustment date: within last 90 days
-        adjustment_date = date.today() - timedelta(days=random.randint(0, 90))
-
-        # Notes for some adjustments
-        notes = None
-        if random.random() < 0.4:
-            notes = f"{reason}による調整 ({adjustment_date})"
+        adjusted_at = datetime.now(UTC) - timedelta(days=random.randint(0, 90))
 
         adjustment = Adjustment(
-            lot_receipt_id=lot_receipt.id,
-            warehouse_id=warehouse.id,
+            lot_id=lot_receipt.id,
+            adjustment_type=adjustment_type,
             adjusted_quantity=quantity,
             reason=reason,
-            notes=notes,
-            adjustment_date=adjustment_date,
+            adjusted_by=user.id,
+            adjusted_at=adjusted_at,
         )
         db.add(adjustment)
 
-    # Edge cases
-    # Large adjustment
-    if lot_receipts:
+    # Edge case: Large adjustment
+    if lot_receipts and users:
         large_adjustment = Adjustment(
-            lot_receipt_id=lot_receipts[0].id,
-            warehouse_id=warehouses[0].id,
+            lot_id=lot_receipts[0].id,
+            adjustment_type="damage",
             adjusted_quantity=Decimal(-500),
-            reason="damage",
-            notes="大量破損による廃棄 (Edge case: large quantity)",
-            adjustment_date=date.today(),
+            reason="大量破損による廃棄 (Edge case: large quantity)",
+            adjusted_by=users[0].id,
+            adjusted_at=datetime.now(UTC),
         )
         db.add(large_adjustment)
 

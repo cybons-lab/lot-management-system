@@ -1,7 +1,7 @@
 """Intake history service layer.
 
 入庫履歴のビジネスロジック。
-StockHistoryテーブルからINBOUNDトランザクションを取得し、
+StockMovementテーブルからINBOUNDトランザクションを取得し、
 関連するロット、製品、仕入先、倉庫情報を結合して返す。
 """
 
@@ -24,10 +24,10 @@ from app.infrastructure.persistence.models import (
     InboundPlanLine,
     LotMaster,
     LotReceipt,
-    Product,
-    StockHistory,
+    StockMovement,
     StockTransactionType,
     Supplier,
+    SupplierItem,
     Warehouse,
 )
 from app.presentation.schemas.inventory.intake_history_schema import (
@@ -75,13 +75,13 @@ class IntakeHistoryService:
             入庫履歴一覧
         """
         query = (
-            self.db.query(StockHistory)
-            .filter(StockHistory.transaction_type == StockTransactionType.INBOUND)
+            self.db.query(StockMovement)
+            .filter(StockMovement.transaction_type == StockTransactionType.INBOUND)
             .options(
-                joinedload(StockHistory.lot).joinedload(LotReceipt.supplier_item),
-                joinedload(StockHistory.lot).joinedload(LotReceipt.warehouse),
-                joinedload(StockHistory.lot).joinedload(LotReceipt.supplier),
-                joinedload(StockHistory.lot)
+                joinedload(StockMovement.lot).joinedload(LotReceipt.supplier_item),
+                joinedload(StockMovement.lot).joinedload(LotReceipt.warehouse),
+                joinedload(StockMovement.lot).joinedload(LotReceipt.supplier),
+                joinedload(StockMovement.lot)
                 .joinedload(LotReceipt.expected_lot)
                 .joinedload(ExpectedLot.inbound_plan_line)
                 .joinedload(InboundPlanLine.inbound_plan),
@@ -90,7 +90,7 @@ class IntakeHistoryService:
 
         # Lot結合が必要なフィルタ
         if supplier_id is not None or warehouse_id is not None or supplier_item_id is not None:
-            query = query.join(StockHistory.lot)
+            query = query.join(StockMovement.lot)
             if supplier_id is not None:
                 query = query.filter(LotReceipt.supplier_id == supplier_id)
             if warehouse_id is not None:
@@ -102,7 +102,7 @@ class IntakeHistoryService:
             term = f"%{search_query}%"
             # 検索に必要なテーブルを結合
             if supplier_id is None and warehouse_id is None and supplier_item_id is None:
-                query = query.join(StockHistory.lot)
+                query = query.join(StockMovement.lot)
             query = query.join(LotReceipt.supplier_item)
             query = query.outerjoin(LotReceipt.supplier)
             query = query.outerjoin(LotReceipt.warehouse)
@@ -113,24 +113,24 @@ class IntakeHistoryService:
             query = query.filter(
                 or_(
                     LotMaster.lot_number.ilike(term),
-                    Product.maker_part_no.ilike(term),
-                    Product.display_name.ilike(term),
+                    SupplierItem.maker_part_no.ilike(term),
+                    SupplierItem.display_name.ilike(term),
                     Supplier.supplier_name.ilike(term),
                     Warehouse.warehouse_name.ilike(term),
                 )
             )
 
         if start_date is not None:
-            query = query.filter(func.date(StockHistory.transaction_date) >= start_date)
+            query = query.filter(func.date(StockMovement.transaction_date) >= start_date)
 
         if end_date is not None:
-            query = query.filter(func.date(StockHistory.transaction_date) <= end_date)
+            query = query.filter(func.date(StockMovement.transaction_date) <= end_date)
 
         # 全件数を取得
         total = query.count()
 
         # ページング＋ソート
-        query = query.order_by(StockHistory.transaction_date.desc())
+        query = query.order_by(StockMovement.transaction_date.desc())
         records = query.offset(skip).limit(limit).all()
 
         return IntakeHistoryListResponse(
@@ -144,20 +144,20 @@ class IntakeHistoryService:
         """入庫履歴詳細を取得.
 
         Args:
-            intake_id: StockHistory ID
+            intake_id: StockMovement ID
 
         Returns:
             入庫履歴詳細、またはNone
         """
         record = (
-            self.db.query(StockHistory)
-            .filter(StockHistory.id == intake_id)
-            .filter(StockHistory.transaction_type == StockTransactionType.INBOUND)
+            self.db.query(StockMovement)
+            .filter(StockMovement.id == intake_id)
+            .filter(StockMovement.transaction_type == StockTransactionType.INBOUND)
             .options(
-                joinedload(StockHistory.lot).joinedload(LotReceipt.supplier_item),
-                joinedload(StockHistory.lot).joinedload(LotReceipt.warehouse),
-                joinedload(StockHistory.lot).joinedload(LotReceipt.supplier),
-                joinedload(StockHistory.lot)
+                joinedload(StockMovement.lot).joinedload(LotReceipt.supplier_item),
+                joinedload(StockMovement.lot).joinedload(LotReceipt.warehouse),
+                joinedload(StockMovement.lot).joinedload(LotReceipt.supplier),
+                joinedload(StockMovement.lot)
                 .joinedload(LotReceipt.expected_lot)
                 .joinedload(ExpectedLot.inbound_plan_line)
                 .joinedload(InboundPlanLine.inbound_plan),
@@ -170,7 +170,7 @@ class IntakeHistoryService:
 
         return self._to_response(record)
 
-    def _to_response(self, record: StockHistory) -> IntakeHistoryResponse:
+    def _to_response(self, record: StockMovement) -> IntakeHistoryResponse:
         """モデルをレスポンススキーマに変換."""
         lot = record.lot
         product = lot.supplier_item if lot else None
@@ -240,14 +240,14 @@ class IntakeHistoryService:
 
         stmt = (
             select(
-                func.date(StockHistory.transaction_date).label("intake_date"),
-                func.count(StockHistory.id).label("intake_count"),
-                func.sum(StockHistory.quantity_change).label("total_quantity"),
+                func.date(StockMovement.transaction_date).label("intake_date"),
+                func.count(StockMovement.id).label("intake_count"),
+                func.sum(StockMovement.quantity_change).label("total_quantity"),
             )
-            .join(LotReceipt, StockHistory.lot_id == LotReceipt.id)
-            .where(StockHistory.transaction_type == StockTransactionType.INBOUND)
-            .where(func.date(StockHistory.transaction_date) >= start_date)
-            .where(func.date(StockHistory.transaction_date) <= end_date)
+            .join(LotReceipt, StockMovement.lot_id == LotReceipt.id)
+            .where(StockMovement.transaction_type == StockTransactionType.INBOUND)
+            .where(func.date(StockMovement.transaction_date) >= start_date)
+            .where(func.date(StockMovement.transaction_date) <= end_date)
         )
 
         if warehouse_id:
@@ -257,8 +257,8 @@ class IntakeHistoryService:
         if supplier_id:
             stmt = stmt.where(LotReceipt.supplier_id == supplier_id)
 
-        stmt = stmt.group_by(func.date(StockHistory.transaction_date)).order_by(
-            func.date(StockHistory.transaction_date)
+        stmt = stmt.group_by(func.date(StockMovement.transaction_date)).order_by(
+            func.date(StockMovement.transaction_date)
         )
 
         rows = self.db.execute(stmt).all()

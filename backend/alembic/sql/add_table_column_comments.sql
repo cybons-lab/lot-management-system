@@ -427,7 +427,7 @@ COMMENT ON COLUMN operation_logs.created_at IS '作成日時';
 -- order_groups
 COMMENT ON COLUMN order_groups.id IS 'ID（主キー）';
 COMMENT ON COLUMN order_groups.customer_id IS '顧客ID';
-COMMENT ON COLUMN order_groups.product_group_id IS '仕入先品目ID（メーカー品番への参照）';
+COMMENT ON COLUMN order_groups.supplier_item_id IS '仕入先品目ID（メーカー品番への参照）';
 COMMENT ON COLUMN order_groups.order_date IS '受注日';
 COMMENT ON COLUMN order_groups.source_file_name IS '取り込み元ファイル名';
 COMMENT ON COLUMN order_groups.created_at IS '作成日時';
@@ -491,7 +491,7 @@ COMMENT ON COLUMN product_mappings.id IS 'ID（主キー）';
 COMMENT ON COLUMN product_mappings.customer_id IS '顧客ID';
 COMMENT ON COLUMN product_mappings.customer_part_code IS '得意先品番コード';
 COMMENT ON COLUMN product_mappings.supplier_id IS '仕入先ID';
-COMMENT ON COLUMN product_mappings.product_group_id IS '仕入先品目ID（メーカー品番への参照）';
+COMMENT ON COLUMN product_mappings.supplier_item_id IS '仕入先品目ID（メーカー品番への参照）';
 COMMENT ON COLUMN product_mappings.base_unit IS '基本単位';
 COMMENT ON COLUMN product_mappings.pack_unit IS '梱包単位';
 COMMENT ON COLUMN product_mappings.pack_quantity IS '梱包数量';

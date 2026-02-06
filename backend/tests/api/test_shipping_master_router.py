@@ -1,7 +1,10 @@
 """Shipping Master Routerのテスト."""
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
+from app.infrastructure.persistence.models.masters_models import Customer
+from app.infrastructure.persistence.models.sap_models import SapConnection, SapMaterialCache
 from app.infrastructure.persistence.models.shipping_master_models import ShippingMasterCurated
 
 
@@ -156,3 +159,181 @@ def test_sync_shipping_masters(client: TestClient, db):
     ).scalar_one_or_none()
     assert supp is not None
     assert supp.supplier_name == "Sync Supplier"
+
+
+def test_sync_shipping_masters_prefill_before_sync(client: TestClient, db):
+    """同期前補完フックで空欄が埋まること."""
+    customer = Customer(
+        customer_code="C_PREFILL",
+        customer_name="得意先A",
+        display_name="得意先A",
+    )
+    db.add(customer)
+
+    conn = SapConnection(
+        name="test",
+        environment="test",
+        ashost="localhost",
+        sysnr="00",
+        client="100",
+        user_name="dummy",
+        passwd_encrypted="dummy",
+        is_active=True,
+        is_default=False,
+    )
+    db.add(conn)
+    db.flush()
+
+    sap_cache = SapMaterialCache(
+        connection_id=conn.id,
+        zkdmat_b="M_PREFILL",
+        kunnr="C_PREFILL",
+        raw_data={"ZLIFNR_H": "S_PREFILL", "NAME1": "SAP仕入先"},
+    )
+    db.add(sap_cache)
+
+    curated = ShippingMasterCurated(
+        customer_code="C_PREFILL",
+        customer_name=None,
+        material_code="M_PREFILL",
+        jiku_code="J_PREFILL",
+        supplier_code=None,
+        supplier_name=None,
+        maker_part_no="MPN_PREFILL",
+        delivery_note_product_name="Prefill Product",
+    )
+    db.add(curated)
+    db.commit()
+
+    response = client.post("/api/shipping-masters/sync?policy=create-only")
+    assert response.status_code == 200
+    body = response.json()
+    assert body.get("prefill_updated_count", 0) >= 1
+
+    refreshed = db.execute(
+        select(ShippingMasterCurated).where(ShippingMasterCurated.id == curated.id)
+    ).scalar_one()
+    assert refreshed.customer_name == "得意先A"
+    assert refreshed.supplier_code == "S_PREFILL"
+    assert refreshed.supplier_name == "SAP仕入先"
+
+
+def test_import_with_auto_sync_runs_prefill(client: TestClient, db):
+    """auto_sync=true でも同期前補完が実行されること."""
+    import io
+
+    import openpyxl
+
+    customer = Customer(
+        customer_code="C_AUTO_PREFILL",
+        customer_name="得意先Auto",
+        display_name="得意先Auto",
+    )
+    db.add(customer)
+
+    conn = SapConnection(
+        name="test-auto",
+        environment="test",
+        ashost="localhost",
+        sysnr="00",
+        client="100",
+        user_name="dummy",
+        passwd_encrypted="dummy",
+        is_active=True,
+        is_default=False,
+    )
+    db.add(conn)
+    db.flush()
+    db.add(
+        SapMaterialCache(
+            connection_id=conn.id,
+            zkdmat_b="M_AUTO_PREFILL",
+            kunnr="C_AUTO_PREFILL",
+            raw_data={"ZLIFNR_H": "S_AUTO_PREFILL", "NAME1": "SAP仕入先Auto"},
+        )
+    )
+    db.commit()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.append(["得意先コード", "材質コード", "次区", "素材納品書記載製品名", "メーカー品番"])
+    ws.append(["C_AUTO_PREFILL", "M_AUTO_PREFILL", "J_AUTO_PREFILL", "Prod", "MPN_AUTO_PREFILL"])
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+
+    files = {
+        "file": (
+            "test_auto_prefill.xlsx",
+            stream,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+    }
+    response = client.post(
+        "/api/shipping-masters/import?auto_sync=true&sync_policy=create-only",
+        files=files,
+    )
+    assert response.status_code == 200
+
+    curated = db.execute(
+        select(ShippingMasterCurated).where(
+            ShippingMasterCurated.customer_code == "C_AUTO_PREFILL",
+            ShippingMasterCurated.material_code == "M_AUTO_PREFILL",
+            ShippingMasterCurated.jiku_code == "J_AUTO_PREFILL",
+        )
+    ).scalar_one()
+    assert curated.customer_name == "得意先Auto"
+    assert curated.supplier_code == "S_AUTO_PREFILL"
+    assert curated.supplier_name == "SAP仕入先Auto"
+
+
+def test_prefill_sap_names(client: TestClient, db):
+    """手動のSAP名補完APIが期待通り動作すること."""
+    # 1. SAPキャッシュの準備
+    conn = SapConnection(
+        name="test-manual",
+        environment="test",
+        ashost="localhost",
+        sysnr="00",
+        client="100",
+        user_name="dummy",
+        passwd_encrypted="dummy",
+        is_active=True,
+    )
+    db.add(conn)
+    db.flush()
+    db.add(
+        SapMaterialCache(
+            connection_id=conn.id,
+            zkdmat_b="M_MANUAL",
+            kunnr="C_MANUAL",
+            raw_data={
+                "ZKUNNR_NAME": "SAP得意先Manual",
+                "ZLIFNR_H": "S_MANUAL",
+                "ZLIFNR_NAME": "SAP仕入先Manual",
+            },
+        )
+    )
+    db.commit()
+
+    # 2. 出荷用マスタの準備 (名前なし)
+    curated = ShippingMasterCurated(
+        customer_code="C_MANUAL",
+        material_code="M_MANUAL",
+        jiku_code="J_MANUAL",
+        customer_name=None,
+        supplier_code="S_MANUAL",
+        supplier_name=None,
+    )
+    db.add(curated)
+    db.commit()
+
+    # 3. API実行
+    response = client.post("/api/shipping-masters/prefill-sap-names")
+    assert response.status_code == 200
+    assert response.json()["updated_count"] == 1
+
+    # 4. 検証
+    db.refresh(curated)
+    assert curated.customer_name == "SAP得意先Manual"
+    assert curated.supplier_name == "SAP仕入先Manual"

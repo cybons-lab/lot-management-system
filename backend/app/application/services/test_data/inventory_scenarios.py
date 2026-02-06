@@ -15,9 +15,9 @@ from app.infrastructure.persistence.models import (
     LotMaster,
     LotReceipt,
     LotReservation,
-    Product,
     ProductWarehouse,
     Supplier,
+    SupplierItem,
     Warehouse,
 )
 from app.infrastructure.persistence.models.lot_reservations_model import ReservationStatus
@@ -212,14 +212,14 @@ def _get_or_create_supplier(db: Session) -> Supplier:
     return supplier
 
 
-def _get_or_create_product(db: Session, scenario: InventoryScenario) -> Product:
+def _get_or_create_product(db: Session, scenario: InventoryScenario) -> SupplierItem:
     maker_part_code = f"TEST-INV-{scenario.key}"
-    product = db.query(Product).filter(Product.maker_part_no == maker_part_code).first()
+    product = db.query(SupplierItem).filter(SupplierItem.maker_part_no == maker_part_code).first()
     if product:
         return product
 
     supplier = _get_or_create_supplier(db)
-    product = Product(
+    product = SupplierItem(
         supplier_id=supplier.id,
         maker_part_no=maker_part_code,
         display_name=f"Inventory Scenario {scenario.key}",
@@ -235,7 +235,7 @@ def _get_or_create_product(db: Session, scenario: InventoryScenario) -> Product:
 
 def _get_or_create_lot_master(
     db: Session,
-    product: Product,
+    product: SupplierItem,
     supplier: Supplier,
     scenario: InventoryScenario,
 ) -> LotMaster:
@@ -260,7 +260,7 @@ def _get_or_create_lot_master(
     return lot_master
 
 
-def _ensure_product_warehouse(db: Session, product: Product, warehouse: Warehouse) -> None:
+def _ensure_product_warehouse(db: Session, product: SupplierItem, warehouse: Warehouse) -> None:
     exists = (
         db.query(ProductWarehouse)
         .filter(
@@ -278,7 +278,7 @@ def _ensure_product_warehouse(db: Session, product: Product, warehouse: Warehous
 def _upsert_lot_receipt(
     db: Session,
     lot_master: LotMaster,
-    product: Product,
+    product: SupplierItem,
     warehouse: Warehouse,
     supplier: Supplier,
     scenario: InventoryScenario,
