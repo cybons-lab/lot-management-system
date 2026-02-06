@@ -14,7 +14,6 @@ import type { SupplierProductBulkRow } from "../types/bulk-operation";
  * @param csvText - CSV file content as string
  * @returns Parsed rows and errors
  */
-/* eslint-disable complexity -- 業務分岐を明示的に維持するため */
 export function parseSupplierProductCsv(csvText: string): {
   rows: SupplierProductBulkRow[];
   errors: string[];
@@ -34,54 +33,73 @@ export function parseSupplierProductCsv(csvText: string): {
     const line = lines[i].trim();
     if (!line) continue;
 
-    try {
-      const cols = parseCSVLine(line);
-
-      if (cols.length < 6) {
-        errors.push(`行${i + 1}: 必須列が不足しています`);
-        continue;
-      }
-
-      const [
-        operation,
-        supplier_code,
-        supplier_name,
-        maker_part_no,
-        display_name,
-        base_unit,
-        lead_time_days_str,
-        notes,
-      ] = cols;
-
-      // Validate operation
-      if (!["ADD", "UPD", "DEL"].includes(operation)) {
-        errors.push(`行${i + 1}: 無効なOPERATION値 (${operation})`);
-        continue;
-      }
-
-      const lead_time_days = lead_time_days_str ? parseInt(lead_time_days_str, 10) : undefined;
-      if (lead_time_days_str && isNaN(lead_time_days!)) {
-        errors.push(`行${i + 1}: リードタイムは数値である必要があります`);
-        continue;
-      }
-
-      rows.push({
-        OPERATION: operation as "ADD" | "UPD" | "DEL",
-        supplier_code: supplier_code.trim(),
-        supplier_name: supplier_name.trim(),
-        maker_part_no: maker_part_no.trim(),
-        display_name: display_name.trim(),
-        base_unit: base_unit.trim(),
-        lead_time_days,
-        notes: notes?.trim() || undefined,
-        _rowNumber: i + 1,
-      });
-    } catch (e) {
-      errors.push(`行${i + 1}: 解析エラー - ${e instanceof Error ? e.message : String(e)}`);
+    const parsed = parseSupplierProductRow(parseCSVLine(line), i + 1);
+    if ("error" in parsed) {
+      errors.push(parsed.error);
+      continue;
     }
+    rows.push(parsed.row);
   }
 
   return { rows, errors };
+}
+
+type ParseSupplierProductRowResult = { row: SupplierProductBulkRow } | { error: string };
+
+function parseSupplierProductRow(cols: string[], rowNumber: number): ParseSupplierProductRowResult {
+  if (cols.length < 6) {
+    return { error: `行${rowNumber}: 必須列が不足しています` };
+  }
+
+  const [
+    operation,
+    supplier_code,
+    supplier_name,
+    maker_part_no,
+    display_name,
+    base_unit,
+    lead_time_days_str,
+    notes,
+  ] = cols;
+
+  if (!isSupplierProductOperation(operation)) {
+    return { error: `行${rowNumber}: 無効なOPERATION値 (${operation})` };
+  }
+
+  const leadTimeDays = parseLeadTimeDays(lead_time_days_str, rowNumber);
+  if ("error" in leadTimeDays) {
+    return leadTimeDays;
+  }
+
+  return {
+    row: {
+      OPERATION: operation,
+      supplier_code: supplier_code.trim(),
+      supplier_name: supplier_name.trim(),
+      maker_part_no: maker_part_no.trim(),
+      display_name: display_name.trim(),
+      base_unit: base_unit.trim(),
+      lead_time_days: leadTimeDays.value,
+      notes: notes?.trim() || undefined,
+      _rowNumber: rowNumber,
+    },
+  };
+}
+
+function parseLeadTimeDays(
+  value: string | undefined,
+  rowNumber: number,
+): { value: number | undefined } | { error: string } {
+  if (!value) return { value: undefined };
+  const parsed = parseInt(value, 10);
+  if (Number.isNaN(parsed)) {
+    return { error: `行${rowNumber}: リードタイムは数値である必要があります` };
+  }
+  return { value: parsed };
+}
+
+function isSupplierProductOperation(value: string): value is SupplierProductBulkRow["OPERATION"] {
+  return value === "ADD" || value === "UPD" || value === "DEL";
 }
 
 /**
