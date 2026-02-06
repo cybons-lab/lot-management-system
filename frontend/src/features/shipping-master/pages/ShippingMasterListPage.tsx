@@ -69,6 +69,7 @@ export function ShippingMasterListPage() {
     },
   });
 
+  /* 名称補完機能の一時停止
   const prefillSapMutation = useMutation({
     mutationFn: async () => {
       return await shippingMasterApi.prefillSapNames();
@@ -82,6 +83,7 @@ export function ShippingMasterListPage() {
       alert("SAP名補完に失敗しました。");
     },
   });
+  */
 
   const handleReset = () => {
     if (window.confirm("全ての出荷用マスタデータを削除します。よろしいですか？")) {
@@ -155,17 +157,17 @@ export function ShippingMasterListPage() {
             <RefreshCw className="mr-2 h-4 w-4" />
             マスタ同期
           </Button>
+          {/* 
           <Button
             variant="outline"
             size="sm"
             onClick={() => prefillSapMutation.mutate()}
             disabled={prefillSapMutation.isPending}
           >
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${prefillSapMutation.isPending ? "animate-spin" : ""}`}
-            />
+            <RefreshCw className={`mr-2 h-4 w-4 ${prefillSapMutation.isPending ? "animate-spin" : ""}`} />
             SAPから名前を補完
           </Button>
+          */}
           <ShippingMasterImportDialog />
           <Button size="sm" onClick={handleCreateNew}>
             <Plus className="mr-2 h-4 w-4" />
