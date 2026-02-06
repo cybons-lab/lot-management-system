@@ -3,9 +3,9 @@ services:
   # ========================================
   # PostgreSQL (Development)
   # ========================================
-  db-postgres:
+  db:
     image: postgres:15-alpine
-    container_name: lot-db-postgres
+    container_name: lot-db
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-lot_management}
       POSTGRES_USER: ${POSTGRES_USER:-admin}
@@ -30,10 +30,10 @@ services:
   # ========================================
   # PostgreSQL (Test)
   # ========================================
-  db-postgres-test:
+  db-test:
     image: postgres:15-alpine
-    container_name: lot-db-postgres-test
-    profiles: [ "e2e" ] # E2E実行時のみ起動
+    container_name: lot-db-test
+    profiles: [ "e2e", "test" ] # E2Eやテスト実行時のみ起動
     environment:
       POSTGRES_DB: lot_management_test
       POSTGRES_USER: testuser
@@ -68,9 +68,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
       # psycopg2 のままなら postgresql://
-      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-dev_password}@db-postgres:5432/${POSTGRES_DB:-lot_management}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-dev_password}@db:5432/${POSTGRES_DB:-lot_management}
       # テスト用DB接続URL（Docker内からアクセス）
-      TEST_DATABASE_URL: postgresql+psycopg2://testuser:testpass@db-postgres-test:5432/lot_management_test
+      TEST_DATABASE_URL: postgresql+psycopg2://testuser:testpass@db-test:5432/lot_management_test
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
       TZ: Asia/Tokyo
       # 監視が弱い環境（Win/Mac+DockerDesktop）での安定化
@@ -78,7 +78,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      db-postgres:
+      db:
         condition: service_healthy
     volumes:
       # アプリ本体だけをコンテナへ同期（依存はイメージに保持）
@@ -113,14 +113,14 @@ services:
       POSTGRES_DB: lot_management_test
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
-      DATABASE_URL: postgresql://testuser:testpass@db-postgres-test:5432/lot_management_test
-      TEST_DATABASE_URL: postgresql+psycopg2://testuser:testpass@db-postgres-test:5432/lot_management_test
+      DATABASE_URL: postgresql://testuser:testpass@db-test:5432/lot_management_test
+      TEST_DATABASE_URL: postgresql+psycopg2://testuser:testpass@db-test:5432/lot_management_test
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
       TZ: Asia/Tokyo
     ports:
       - "18000:8000" # テスト用ポート
     depends_on:
-      db-postgres-test:
+      db-test:
         condition: service_healthy
     volumes:
       - ./backend:/app:cached
@@ -192,7 +192,7 @@ services:
     volumes:
       - pgadmin-data:/var/lib/pgadmin
     depends_on:
-      db-postgres:
+      db:
         condition: service_started
     networks:
       - lot-network

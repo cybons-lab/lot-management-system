@@ -7,14 +7,18 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 
-# Set dummy DATABASE_URL if not set, to pass Pydantic validation during imports
-# This will be overridden later with the actual test database URL
+# Set database URL before any app imports to ensure settings use the correct URL
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql+psycopg2://testuser:testpass@db-test:5432/lot_management_test",
+)
+os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
 os.environ.setdefault("ENABLE_DB_BROWSER", "true")
 
-from app.infrastructure.persistence.models.base_model import Base
-from app.main import application
+from app.infrastructure.persistence.models.base_model import Base  # noqa: E402
+from app.main import application  # noqa: E402
 
-from .db_utils import (
+from .db_utils import (  # noqa: E402
     apply_views_sql,
     create_core_tables,
     drop_known_view_relations,
@@ -86,17 +90,13 @@ except ImportError:
     pass
 
 
-# Use PostgreSQL test database (docker-compose.test.yml)
-# Can be overridden with TEST_DATABASE_URL environment variable
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL",
-    "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
-)
+# Already set at the top
+from app.core.config import settings  # noqa: E402
 
-# CRITICAL: Force DATABASE_URL to be the same as test database URL
-# This ensures that the application (which uses settings.DATABASE_URL)
-# connects to the same database as the test fixtures.
-os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
+
+# Force update settings if it was somehow already initialized
+if settings.DATABASE_URL != SQLALCHEMY_DATABASE_URL:
+    settings.DATABASE_URL = SQLALCHEMY_DATABASE_URL
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,

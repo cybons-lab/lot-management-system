@@ -36,7 +36,7 @@ clean: ## すべてのボリュームを削除してクリーンアップ
 
 db-reset: ## データベースをリセット（ボリューム削除 + 再起動）
 	docker compose down -v
-	docker compose up -d db-postgres
+	docker compose up -d db
 	@echo "データベースをリセットしました。バックエンドが自動でマイグレーションを実行します。"
 
 db-init-sample: ## サンプルデータを投入
@@ -48,7 +48,7 @@ db-init-sample: ## サンプルデータを投入
 	curl -X POST http://localhost:8000/api/admin/init-sample-data
 
 db-shell: ## PostgreSQLシェルに接続
-	docker compose exec db-postgres psql -U admin -d lot_management
+	docker compose exec db psql -U admin -d lot_management
 
 alembic-upgrade: ## マイグレーションを最新に更新
 	docker compose exec backend alembic upgrade head
@@ -184,6 +184,9 @@ deploy-clean: build-clean ## デプロイパッケージを作成（クリーン
 
 dev-setup: up db-init-sample ## 開発環境のセットアップ（起動＋サンプルデータ）
 	@echo "開発環境のセットアップが完了しました！"
+
+test-db-setup: ## テスト用データベースをセットアップ
+	python scripts/setup_test_db.py
 	@echo "フロントエンド: http://localhost:5173"
 	@echo "バックエンドAPI: http://localhost:8000"
 	@echo "API Docs: http://localhost:8000/api/docs"

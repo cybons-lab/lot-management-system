@@ -995,10 +995,13 @@ psycopg2.OperationalError: could not translate host name "db-postgres-test" to a
 **原因:**
 `backend` コンテナと `test-db` コンテナが同一Dockerネットワーク上にあるが、テスト設定が `db-postgres-test` というホスト名を参照している。`backend-test` コンテナからは接続できるが、`backend` コンテナからは解決できない。
 
-**対応案:**
-1. `docker-compose.yml` で `test-db` サービスに `hostname: db-postgres-test` を追加する
-2. または `backend` コンテナのテスト設定で `test-db` ホスト名（実際のサービス名）を使用する
-3. テスト実行を `backend-test` コンテナ経由に統一する
+**対応:**
+1. `docker-compose.yml` でサービス名を `db`, `db-test` に簡略化・統一。
+2. `docker-compose.test.yml` を廃止し、メインの構成ファイルに統合。
+3. `scripts/setup_test_db.py` を導入し、クロスプラットフォーム対応。
+4. `backend` から `db-test` への接続を確認。
+
+✅ 完了: 2026-02-06
 
 ---
 

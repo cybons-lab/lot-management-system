@@ -2,13 +2,28 @@ import pytest
 from sqlalchemy import BigInteger, Column, Date, DateTime, Integer, String, func, text
 from sqlalchemy.orm import Session
 
-from app.application.services.admin.data_integrity_service import REPAIR_RULES, DataIntegrityService
+from app.application.services.admin.data_integrity_service import (
+    EXCLUDED_TABLES,
+    REPAIR_RULES,
+    DataIntegrityService,
+)
 from app.infrastructure.persistence.models.base_model import Base
 
 
-# Test model for data integrity
+# テスト専用テーブル名。他テストの scan_all() で WARNING が出ないよう
+# EXCLUDED_TABLES に登録しておく（このテストファイルの fixture 内でのみ除外解除する）。
+TEST_TABLE_NAME = "integrity_test_table"
+EXCLUDED_TABLES.add(TEST_TABLE_NAME)
+
+
 class IntegrityTestModel(Base):
-    __tablename__ = "integrity_test_table"
+    """scan_all() のテスト用モデル.
+
+    Base を継承して Base.metadata に登録する必要がある
+    （DataIntegrityService が Base.metadata.tables を走査するため）。
+    """
+
+    __tablename__ = TEST_TABLE_NAME
     id = Column(BigInteger, primary_key=True)
     not_null_col = Column(String(100), nullable=False)
     nullable_col = Column(String(100), nullable=True)
@@ -20,21 +35,27 @@ class IntegrityTestModel(Base):
 
 @pytest.fixture
 def setup_test_db(db: Session):
-    db.execute(text("DROP TABLE IF EXISTS integrity_test_table CASCADE"))
+    """テスト用テーブルを作成し、スキャン対象に含める."""
+    db.execute(text(f"DROP TABLE IF EXISTS {TEST_TABLE_NAME} CASCADE"))
     Base.metadata.create_all(bind=db.get_bind(), tables=[IntegrityTestModel.__table__])
     db.commit()
+
+    # スキャン対象にするため一時的に EXCLUDED_TABLES から除外
+    EXCLUDED_TABLES.discard(TEST_TABLE_NAME)
     yield db
+    EXCLUDED_TABLES.add(TEST_TABLE_NAME)
 
 
 def test_scan_all_finds_not_null_violation(setup_test_db: Session):
-    # To test detection, we need NULLs in a NOT NULL column.
-    # We must temporarily drop the constraint to insert the bad data.
+    """NOT NULL 違反を自動検出できること."""
     setup_test_db.execute(
-        text("ALTER TABLE integrity_test_table ALTER COLUMN not_null_col DROP NOT NULL")
+        text(f"ALTER TABLE {TEST_TABLE_NAME} ALTER COLUMN not_null_col DROP NOT NULL")
     )
     setup_test_db.execute(
         text(
-            "INSERT INTO integrity_test_table (id, not_null_col, valid_to, created_at, updated_at, version) VALUES (1, NULL, '9999-12-31', NOW(), NOW(), 1)"
+            f"INSERT INTO {TEST_TABLE_NAME} "
+            "(id, not_null_col, valid_to, created_at, updated_at, version) "
+            "VALUES (1, NULL, '9999-12-31', NOW(), NOW(), 1)"
         )
     )
     setup_test_db.commit()
@@ -43,9 +64,7 @@ def test_scan_all_finds_not_null_violation(setup_test_db: Session):
     violations = service.scan_all()
 
     target = [
-        v
-        for v in violations
-        if v.table_name == "integrity_test_table" and v.column_name == "not_null_col"
+        v for v in violations if v.table_name == TEST_TABLE_NAME and v.column_name == "not_null_col"
     ]
     assert len(target) == 1
     assert target[0].violation_count == 1
@@ -53,11 +72,14 @@ def test_scan_all_finds_not_null_violation(setup_test_db: Session):
 
 
 def test_scan_all_finds_rule_violation(setup_test_db: Session, monkeypatch):
-    monkeypatch.setitem(REPAIR_RULES, ("integrity_test_table", "nullable_col"), "default_val")
+    """REPAIR_RULES に定義された nullable カラムの NULL 違反を検出できること."""
+    monkeypatch.setitem(REPAIR_RULES, (TEST_TABLE_NAME, "nullable_col"), "default_val")
 
     setup_test_db.execute(
         text(
-            "INSERT INTO integrity_test_table (id, not_null_col, nullable_col, valid_to, created_at, updated_at, version) VALUES (2, 'ok', NULL, '9999-12-31', NOW(), NOW(), 1)"
+            f"INSERT INTO {TEST_TABLE_NAME} "
+            "(id, not_null_col, nullable_col, valid_to, created_at, updated_at, version) "
+            "VALUES (2, 'ok', NULL, '9999-12-31', NOW(), NOW(), 1)"
         )
     )
     setup_test_db.commit()
@@ -66,9 +88,7 @@ def test_scan_all_finds_rule_violation(setup_test_db: Session, monkeypatch):
     violations = service.scan_all()
 
     target = [
-        v
-        for v in violations
-        if v.table_name == "integrity_test_table" and v.column_name == "nullable_col"
+        v for v in violations if v.table_name == TEST_TABLE_NAME and v.column_name == "nullable_col"
     ]
     assert len(target) == 1
     assert target[0].fixable is True
@@ -76,41 +96,46 @@ def test_scan_all_finds_rule_violation(setup_test_db: Session, monkeypatch):
 
 
 def test_fix_violations_applies_fix(setup_test_db: Session, monkeypatch):
-    monkeypatch.setitem(REPAIR_RULES, ("integrity_test_table", "not_null_col"), "fixed_val")
+    """REPAIR_RULES に基づき NULL を修正できること."""
+    monkeypatch.setitem(REPAIR_RULES, (TEST_TABLE_NAME, "not_null_col"), "fixed_val")
 
-    # Drop constraint to allow seeding NULL
     setup_test_db.execute(
-        text("ALTER TABLE integrity_test_table ALTER COLUMN not_null_col DROP NOT NULL")
+        text(f"ALTER TABLE {TEST_TABLE_NAME} ALTER COLUMN not_null_col DROP NOT NULL")
     )
     setup_test_db.execute(
         text(
-            "INSERT INTO integrity_test_table (id, not_null_col, valid_to, created_at, updated_at, version) VALUES (3, NULL, '9999-12-31', NOW(), NOW(), 1)"
+            f"INSERT INTO {TEST_TABLE_NAME} "
+            "(id, not_null_col, valid_to, created_at, updated_at, version) "
+            "VALUES (3, NULL, '9999-12-31', NOW(), NOW(), 1)"
         )
     )
     setup_test_db.commit()
 
     service = DataIntegrityService(setup_test_db)
-    result = service.fix_violations(table_name="integrity_test_table", column_name="not_null_col")
+    result = service.fix_violations(table_name=TEST_TABLE_NAME, column_name="not_null_col")
 
     assert len(result["fixed"]) == 1
     val = setup_test_db.execute(
-        text("SELECT not_null_col FROM integrity_test_table WHERE id = 3")
+        text(f"SELECT not_null_col FROM {TEST_TABLE_NAME} WHERE id = 3")
     ).scalar()
     assert val == "fixed_val"
 
 
 def test_fix_violations_skips_clean_items(setup_test_db: Session, monkeypatch):
-    monkeypatch.setitem(REPAIR_RULES, ("integrity_test_table", "not_null_col"), "fixed_val")
+    """NULL がない場合はスキップされること."""
+    monkeypatch.setitem(REPAIR_RULES, (TEST_TABLE_NAME, "not_null_col"), "fixed_val")
 
     setup_test_db.execute(
         text(
-            "INSERT INTO integrity_test_table (id, not_null_col, valid_to, created_at, updated_at, version) VALUES (4, 'original', '9999-12-31', NOW(), NOW(), 1)"
+            f"INSERT INTO {TEST_TABLE_NAME} "
+            "(id, not_null_col, valid_to, created_at, updated_at, version) "
+            "VALUES (4, 'original', '9999-12-31', NOW(), NOW(), 1)"
         )
     )
     setup_test_db.commit()
 
     service = DataIntegrityService(setup_test_db)
-    result = service.fix_violations(table_name="integrity_test_table", column_name="not_null_col")
+    result = service.fix_violations(table_name=TEST_TABLE_NAME, column_name="not_null_col")
 
     assert len(result["fixed"]) == 0
     assert len(result["skipped"]) == 1

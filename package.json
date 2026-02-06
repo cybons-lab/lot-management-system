@@ -12,26 +12,23 @@
     "logs:backend": "docker compose logs -f backend",
     "logs:frontend": "docker compose logs -f frontend",
     "clean": "docker compose down -v",
-
     "// === Database ===": "",
-    "db:reset": "docker compose down -v && docker compose up -d db-postgres",
+    "db:reset": "docker compose down -v && docker compose up -d db",
     "db:init": "curl -X POST http://localhost:8000/api/admin/init-sample-data",
-    "db:shell": "docker compose exec db-postgres psql -U lot_user -d lot_management",
-    "db:shell:test": "docker compose exec db-postgres-test psql -U lot_user_test -d lot_management_test",
+    "db:shell": "docker compose exec db psql -U admin -d lot_management",
+    "db:shell:test": "docker compose exec db-test psql -U testuser -d lot_management_test",
     "db:info": "python scripts/db-helper.py info",
-
     "// === Backend (Python) ===": "",
     "be:lint": "docker compose exec -T backend ruff check app/",
     "be:lint:fix": "docker compose exec -T backend ruff check app/ --fix",
     "be:format": "docker compose exec -T backend ruff format app/",
     "be:typecheck": "docker compose exec -T backend mypy app/",
-    "be:test": "docker compose exec -T backend pytest -v",
+    "be:test": "docker compose exec -e TEST_DB_PRE_INITIALIZED=true -T backend uv run pytest -v",
     "be:test:quick": "docker compose exec -T backend pytest -q",
     "be:test:integration": "docker compose exec -T backend pytest tests/integration -v",
     "be:shell": "docker compose exec backend bash",
     "be:quality": "npm run be:lint:fix && npm run be:format && npm run be:typecheck && npm run be:test:quick",
     "be:ci": "npm run be:lint && npm run be:format && npm run be:typecheck && npm run be:test",
-
     "// === Frontend (TypeScript) ===": "",
     "fe:lint": "docker compose exec -T frontend npm run lint",
     "fe:lint:fix": "docker compose exec -T frontend npm run lint:fix",
@@ -45,13 +42,11 @@
     "fe:shell": "docker compose exec frontend sh",
     "fe:quality": "npm run fe:lint:fix && npm run fe:format && npm run fe:typecheck && npm run fe:test",
     "fe:ci": "npm run fe:lint && npm run fe:format:check && npm run fe:typecheck && npm run fe:test",
-
     "// === Alembic Migrations ===": "",
     "alembic:upgrade": "docker compose exec -T backend alembic upgrade head",
     "alembic:downgrade": "docker compose exec -T backend alembic downgrade -1",
     "alembic:history": "docker compose exec -T backend alembic history",
     "alembic:current": "docker compose exec -T backend alembic current",
-
     "// === Quality Checks (Full Stack) ===": "",
     "lint": "npm run be:lint && npm run fe:lint",
     "lint:fix": "npm run be:lint:fix && npm run fe:lint:fix",
@@ -64,9 +59,9 @@
     "quality:full": "npm run quality && npm run test:smoke",
     "ci": "npm run lint && npm run format && npm run typecheck && npm run test",
     "ci:smoke": "npm run ci && npm run test:smoke",
-
     "// === Development Workflow ===": "",
     "dev:setup": "npm run up && sleep 10 && npm run db:init",
+    "dev:setup:test": "python scripts/setup_test_db.py",
     "dev:reset": "npm run db:reset && sleep 5 && npm run alembic:upgrade && npm run db:init"
   },
   "engines": {
