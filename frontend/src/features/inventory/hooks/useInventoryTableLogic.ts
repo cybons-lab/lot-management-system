@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -7,15 +6,39 @@ import { getLots } from "@/features/inventory/api";
 import { useLotActions } from "@/features/inventory/hooks/useLotActions";
 import { normalizeLot, type LotUI } from "@/shared/libs/normalize";
 
-/**
- * InventoryTable のビジネスロジックを管理するカスタムフック
- */
-export function useInventoryTableLogic() {
-  const navigate = useNavigate();
+const buildRowKey = (productId: number, warehouseId: number) => `${productId}-${warehouseId}`;
 
-  // 展開状態管理（製品ID-倉庫IDのキー）
+function parseRowKey(key: string): [number, number] | null {
+  const [productId, warehouseId] = key.split("-").map(Number);
+  if (Number.isNaN(productId) || Number.isNaN(warehouseId)) {
+    return null;
+  }
+  return [productId, warehouseId];
+}
+
+function useExpandedRowsState() {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
+  const toggleRow = useCallback((productId: number, warehouseId: number) => {
+    const key = buildRowKey(productId, warehouseId);
+    setExpandedRows((prev) => {
+      if (prev.has(key)) {
+        return new Set();
+      }
+      return new Set([key]);
+    });
+  }, []);
+
+  const isRowExpanded = useCallback(
+    (productId: number, warehouseId: number) =>
+      expandedRows.has(buildRowKey(productId, warehouseId)),
+    [expandedRows],
+  );
+
+  return { expandedRows, setExpandedRows, toggleRow, isRowExpanded };
+}
+
+function useLotsCacheState() {
   const [lotsCache, setLotsCache] = useState<Map<string, LotUI[]>>(new Map());
   const [loadingLots, setLoadingLots] = useState<Set<string>>(new Set());
 
@@ -27,7 +50,7 @@ export function useInventoryTableLogic() {
         force?: boolean;
       },
     ) => {
-      const key = `${productId}-${warehouseId}`;
+      const key = buildRowKey(productId, warehouseId);
 
       if (!options?.force) {
         if (lotsCache.has(key)) return lotsCache.get(key) ?? [];
@@ -41,7 +64,6 @@ export function useInventoryTableLogic() {
           supplier_item_id: productId,
           warehouse_id: warehouseId,
           with_stock: false,
-          // Show all lot statuses (active, depleted, expired, locked)
         });
 
         const normalizedLots = (response ?? [])
@@ -74,52 +96,46 @@ export function useInventoryTableLogic() {
     [lotsCache, loadingLots],
   );
 
-  const refetchLots = useCallback(() => {
-    setLotsCache(new Map());
-
-    expandedRows.forEach((key) => {
-      const [productId, warehouseId] = key.split("-").map(Number);
-      if (!Number.isNaN(productId) && !Number.isNaN(warehouseId)) {
-        void fetchLotsForItem(productId, warehouseId, { force: true });
-      }
-    });
-  }, [expandedRows, fetchLotsForItem]);
-
-  // ロット操作ロジック（編集、ロック、ロック解除）
-  const lotActions = useLotActions({ onLotsChanged: refetchLots });
-
-  const toggleRow = useCallback((productId: number, warehouseId: number) => {
-    const key = `${productId}-${warehouseId}`;
-    setExpandedRows((prev) => {
-      // If clicking on the already expanded row, close it
-      if (prev.has(key)) {
-        return new Set();
-      }
-      // Otherwise, close all others and open this one (single mode)
-      return new Set([key]);
-    });
-  }, []);
-
-  const isRowExpanded = useCallback(
-    (productId: number, warehouseId: number) => {
-      return expandedRows.has(`${productId}-${warehouseId}`);
-    },
-    [expandedRows],
-  );
-
   const getLotsForItem = useCallback(
-    (productId: number, warehouseId: number) => {
-      return lotsCache.get(`${productId}-${warehouseId}`) ?? [];
-    },
+    (productId: number, warehouseId: number) =>
+      lotsCache.get(buildRowKey(productId, warehouseId)) ?? [],
     [lotsCache],
   );
 
   const isLotsLoading = useCallback(
-    (productId: number, warehouseId: number) => {
-      return loadingLots.has(`${productId}-${warehouseId}`);
-    },
+    (productId: number, warehouseId: number) =>
+      loadingLots.has(buildRowKey(productId, warehouseId)),
     [loadingLots],
   );
+
+  return {
+    setLotsCache,
+    fetchLotsForItem,
+    getLotsForItem,
+    isLotsLoading,
+  };
+}
+
+/**
+ * InventoryTable のビジネスロジックを管理するカスタムフック
+ */
+export function useInventoryTableLogic() {
+  const navigate = useNavigate();
+  const { expandedRows, setExpandedRows, toggleRow, isRowExpanded } = useExpandedRowsState();
+  const { setLotsCache, fetchLotsForItem, getLotsForItem, isLotsLoading } = useLotsCacheState();
+
+  const refetchLots = useCallback(() => {
+    setLotsCache(new Map());
+
+    expandedRows.forEach((key) => {
+      const parsedKey = parseRowKey(key);
+      if (!parsedKey) return;
+      const [productId, warehouseId] = parsedKey;
+      void fetchLotsForItem(productId, warehouseId, { force: true });
+    });
+  }, [expandedRows, fetchLotsForItem, setLotsCache]);
+
+  const lotActions = useLotActions({ onLotsChanged: refetchLots });
 
   const handleViewDetail = useCallback(
     (productId: number, warehouseId: number) => {
