@@ -11041,7 +11041,7 @@ export interface components {
        * Jiku Code
        * @description 次区コード(SAP連携用)
        */
-      jiku_code: string;
+      jiku_code?: string | null;
       /**
        * Jiku Match Pattern
        * @description 次区マッチングルール（例: 2***）
@@ -11092,6 +11092,8 @@ export interface components {
       delivery_place_code?: string | null;
       /** Jiku Code */
       jiku_code?: string | null;
+      /** Jiku Match Pattern */
+      jiku_match_pattern?: string | null;
       /** Delivery Place Name */
       delivery_place_name?: string | null;
       /**
