@@ -52,3 +52,19 @@ export const useDeleteMaterialOrderForecast = () => {
     },
   });
 };
+
+export const useDeleteMaterialOrderForecastsByMonth = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (targetMonth: string) =>
+      materialOrderForecastsApi.deleteForecastsByTargetMonth(targetMonth),
+    onSuccess: (_, targetMonth) => {
+      queryClient.invalidateQueries({ queryKey: forecastKeys.all });
+      toast.success(`${targetMonth} のフォーキャストを削除しました`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "対象月データの削除に失敗しました");
+    },
+  });
+};

@@ -1,12 +1,11 @@
 import { FileDown, Upload } from "lucide-react";
 import { useState, useMemo } from "react";
 
-import { type MaterialOrderForecast } from "../api";
 import { ForecastFilterBar } from "../components/ForecastFilterBar";
 import { ForecastImportDialog } from "../components/ForecastImportDialog";
 import { ForecastTable } from "../components/ForecastTable";
 import {
-  useDeleteMaterialOrderForecast,
+  useDeleteMaterialOrderForecastsByMonth,
   useMaterialOrderForecasts,
 } from "../hooks/useMaterialOrderForecasts";
 
@@ -31,26 +30,51 @@ function PageActions({ onOpenImport }: { onOpenImport: () => void }) {
   );
 }
 
-function DeleteForecastDialog({
-  target,
+function DeleteMonthDialog({
+  targetMonth,
   isPending,
   onOpenChange,
   onConfirm,
 }: {
-  target: MaterialOrderForecast | null;
+  targetMonth: string;
   isPending: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }) {
   return (
     <ConfirmDialog
-      open={Boolean(target)}
+      open
       onOpenChange={onOpenChange}
       onConfirm={onConfirm}
-      title="フォーキャストを削除しますか？"
-      description={`対象年月 ${target?.target_month ?? "-"} / 材質コード ${target?.material_code ?? "-"} のデータを削除します。`}
+      title="対象月データを削除しますか？"
+      description={`対象年月 ${targetMonth} のフォーキャストをすべて削除します。`}
       confirmLabel={isPending ? "削除中..." : "削除"}
     />
+  );
+}
+
+function TargetMonthBanner({
+  displayTargetMonth,
+  isDeleting,
+  onDeleteClick,
+}: {
+  displayTargetMonth: string;
+  isDeleting: boolean;
+  onDeleteClick: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-2 text-sm text-blue-900">
+      現在表示中のデータ: <span className="font-semibold">{displayTargetMonth}</span>
+      <Button
+        variant="destructive"
+        size="sm"
+        className="ml-4"
+        onClick={onDeleteClick}
+        disabled={isDeleting}
+      >
+        {displayTargetMonth}を全削除
+      </Button>
+    </div>
   );
 }
 
@@ -60,13 +84,13 @@ export default function MaterialOrderForecastsPage() {
   const [makerCode, setMakerCode] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<MaterialOrderForecast | null>(null);
+  const [isDeleteMonthOpen, setIsDeleteMonthOpen] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useMaterialOrderForecasts({
     target_month: targetMonth,
     maker_code: makerCode === "all" ? undefined : makerCode,
   });
-  const deleteMutation = useDeleteMaterialOrderForecast();
+  const deleteMonthMutation = useDeleteMaterialOrderForecastsByMonth();
 
   const { data: makers = [] } = useMakers();
   const displayTargetMonth = useMemo(
@@ -79,7 +103,7 @@ export default function MaterialOrderForecastsPage() {
     if (!searchQuery.trim()) return forecasts;
     const q = searchQuery.toLowerCase();
     return forecasts.filter(
-      (f: MaterialOrderForecast) =>
+      (f) =>
         (f.material_code ?? "").toLowerCase().includes(q) ||
         (f.material_name ?? "").toLowerCase().includes(q),
     );
@@ -112,35 +136,30 @@ export default function MaterialOrderForecastsPage() {
         setSearchQuery={setSearchQuery}
       />
 
-      <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-2 text-sm text-blue-900">
-        現在表示中のデータ: <span className="font-semibold">{displayTargetMonth}</span>
-      </div>
+      <TargetMonthBanner
+        displayTargetMonth={displayTargetMonth}
+        isDeleting={deleteMonthMutation.isPending}
+        onDeleteClick={() => setIsDeleteMonthOpen(true)}
+      />
 
       <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
-        <ForecastTable
-          data={filteredForecasts}
-          isLoading={isLoading}
-          targetMonth={targetMonth}
-          deletingId={deleteMutation.isPending ? deleteMutation.variables : null}
-          onDelete={setDeleteTarget}
-        />
+        <ForecastTable data={filteredForecasts} isLoading={isLoading} targetMonth={targetMonth} />
       </div>
 
       <ForecastImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
 
-      <DeleteForecastDialog
-        target={deleteTarget}
-        isPending={deleteMutation.isPending}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-        onConfirm={() => {
-          if (!deleteTarget) return;
-          deleteMutation.mutate(deleteTarget.id, {
-            onSuccess: () => setDeleteTarget(null),
-          });
-        }}
-      />
+      {isDeleteMonthOpen && (
+        <DeleteMonthDialog
+          targetMonth={targetMonth}
+          isPending={deleteMonthMutation.isPending}
+          onOpenChange={setIsDeleteMonthOpen}
+          onConfirm={() => {
+            deleteMonthMutation.mutate(targetMonth, {
+              onSuccess: () => setIsDeleteMonthOpen(false),
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

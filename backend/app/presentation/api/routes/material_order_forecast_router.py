@@ -99,6 +99,23 @@ def delete_forecast(
     return None
 
 
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+def delete_forecasts_by_target_month(
+    target_month: str = Query(..., description="対象月（YYYY-MM）"),
+    db: Session = Depends(get_db),
+    _current_user=Depends(get_current_user),
+):
+    """対象月のフォーキャストデータを一括削除."""
+    service = MaterialOrderForecastService(db)
+    deleted_count = service.delete_forecasts_by_target_month(target_month)
+    if deleted_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="削除対象のフォーキャストが見つかりません",
+        )
+    return None
+
+
 @router.get("", response_model=MaterialOrderForecastListResponse)
 def get_forecasts(
     target_month: str | None = Query(None, description="対象月（YYYY-MM）"),

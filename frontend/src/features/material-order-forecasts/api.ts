@@ -35,4 +35,10 @@ export const materialOrderForecastsApi = {
   deleteForecast: async (id: number): Promise<void> => {
     await apiClient.delete(`material-order-forecasts/${id}`);
   },
+
+  deleteForecastsByTargetMonth: async (targetMonth: string): Promise<void> => {
+    await apiClient.delete("material-order-forecasts", {
+      searchParams: { target_month: targetMonth },
+    });
+  },
 };

@@ -1633,7 +1633,11 @@ export interface paths {
     get: operations["get_forecasts_api_material_order_forecasts_get"];
     put?: never;
     post?: never;
-    delete?: never;
+    /**
+     * Delete Forecasts By Target Month
+     * @description 対象月のフォーキャストデータを一括削除.
+     */
+    delete: operations["delete_forecasts_by_target_month_api_material_order_forecasts_delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -21058,6 +21062,36 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["MaterialOrderForecastListResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_forecasts_by_target_month_api_material_order_forecasts_delete: {
+    parameters: {
+      query: {
+        /** @description 対象月（YYYY-MM） */
+        target_month: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

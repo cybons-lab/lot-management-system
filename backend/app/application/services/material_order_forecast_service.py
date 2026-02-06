@@ -494,3 +494,13 @@ class MaterialOrderForecastService:
             return False
         self.db.commit()
         return True
+
+    def delete_forecasts_by_target_month(self, target_month: str) -> int:
+        """指定対象月のフォーキャストを一括削除."""
+        deleted_count = (
+            self.db.query(MaterialOrderForecast)
+            .filter(MaterialOrderForecast.target_month == target_month)
+            .delete()
+        )
+        self.db.commit()
+        return deleted_count
