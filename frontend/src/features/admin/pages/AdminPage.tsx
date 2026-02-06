@@ -286,14 +286,11 @@ export function AdminPage() {
         }}
       >
         <AlertDialogContent
-          onEscapeKeyDown={(e) => {
+          onEscapeKeyDown={() => {
             if (isGenerating) {
-              // Allow closing even during generation
-              e.preventDefault();
               setIsGenerating(false);
               setProgress(0);
               setProgressMessage("");
-              setShowGenerateConfirm(false);
             }
           }}
         >
@@ -343,16 +340,27 @@ export function AdminPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isGenerating}>キャンセル</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e: React.MouseEvent) => {
-                e.preventDefault();
-                handleGenerateTestData();
+            <AlertDialogCancel
+              onClick={() => {
+                if (isGenerating) {
+                  setIsGenerating(false);
+                  setProgress(0);
+                  setProgressMessage("");
+                }
               }}
-              disabled={isGenerating}
             >
-              {isGenerating ? "生成中..." : "実行する"}
-            </AlertDialogAction>
+              キャンセル
+            </AlertDialogCancel>
+            {!isGenerating && (
+              <AlertDialogAction
+                onClick={(e: React.MouseEvent) => {
+                  e.preventDefault();
+                  handleGenerateTestData();
+                }}
+              >
+                実行する
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -64,7 +64,7 @@ def generate_notifications(db: Session) -> None:
 
         # Display strategy distribution
         display_strategy = random.choices(
-            ["IMMEDIATE", "DEFERRED", "PERSISTENT"],
+            ["immediate", "deferred", "persistent"],
             weights=[50, 30, 20],
             k=1,
         )[0]
@@ -110,7 +110,7 @@ def generate_notifications(db: Session) -> None:
                     month=f"2026-{(i % 12) + 1:02d}",
                 ),
                 is_read=random.random() < 0.5,
-                display_strategy="IMMEDIATE",
+                display_strategy="immediate",
                 created_at=datetime.now(UTC) - timedelta(hours=i),
             )
             db.add(notification)
@@ -127,7 +127,7 @@ def generate_notifications(db: Session) -> None:
             title="長文メッセージテスト",
             message=long_message,
             is_read=False,
-            display_strategy="PERSISTENT",
+            display_strategy="persistent",
             created_at=datetime.now(UTC),
         )
         db.add(notification)
@@ -139,7 +139,7 @@ def generate_notifications(db: Session) -> None:
         title="システムメンテナンス通知",
         message="2026-02-10 02:00-04:00 にシステムメンテナンスを実施します。",
         is_read=False,
-        display_strategy="PERSISTENT",
+        display_strategy="persistent",
         created_at=datetime.now(UTC),
     )
     db.add(notification)
