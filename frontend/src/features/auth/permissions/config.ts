@@ -372,6 +372,7 @@ export const routePermissions: RoutePermission[] = [
   { routeKey: "ADMIN.SEED_SNAPSHOTS", path: "/admin/seed-snapshots", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.EXPORT", path: "/admin/export", allowedRoles: ["admin"] },
   { routeKey: "ADMIN.DEPLOY", path: "/admin/deploy*", allowedRoles: ["admin"] },
+  { routeKey: "ADMIN.DATA_MAINTENANCE", path: "/admin/data-maintenance", allowedRoles: ["admin"] },
   { routeKey: "DEBUG.DB_BROWSER", path: "/debug/db*", allowedRoles: ["admin"] },
   { routeKey: "SAP.ROOT", path: "/sap*", allowedRoles: ["admin"] },
 ];

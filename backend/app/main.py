@@ -167,6 +167,80 @@ def _mask_database_url(db_url: str) -> str:
         return "****"
 
 
+def _check_data_integrity_on_startup() -> None:
+    """起動時データ整合性チェック: 違反があれば管理者に通知する."""
+    try:
+        from app.application.services.admin.data_integrity_service import DataIntegrityService
+        from app.application.services.notification_service import NotificationService
+        from app.core.database import SessionLocal
+        from app.infrastructure.persistence.models.auth_models import Role, UserRole
+        from app.infrastructure.persistence.models.notification_model import Notification
+        from app.presentation.schemas.notification_schema import NotificationCreate
+
+        db = SessionLocal()
+        try:
+            service = DataIntegrityService(db)
+            violations = service.scan_all()
+
+            if not violations:
+                logger.info("✅ データ整合性チェック: 違反なし")
+                return
+
+            total_rows = sum(v.violation_count for v in violations)
+            tables = sorted({v.table_name for v in violations})
+            logger.warning(
+                "⚠️ データ整合性違反を検出",
+                extra={
+                    "violation_count": len(violations),
+                    "affected_rows": total_rows,
+                    "tables": tables,
+                },
+            )
+
+            # 冪等性: 同タイトルの未読通知があればスキップ
+            title = "データ整合性エラー検出"
+            existing = (
+                db.query(Notification)
+                .filter(Notification.title == title, Notification.is_read.is_(False))
+                .first()
+            )
+            if existing:
+                logger.info("ℹ️ 既に未読の整合性通知が存在するためスキップ")
+                return
+
+            # 全 admin ユーザーに通知
+            admin_role = db.query(Role).filter(Role.role_code == "admin").first()
+            if not admin_role:
+                return
+
+            admin_ids = [
+                ur.user_id
+                for ur in db.query(UserRole).filter(UserRole.role_id == admin_role.id).all()
+            ]
+
+            notif_service = NotificationService(db)
+            table_list = ", ".join(tables[:5])
+            for uid in admin_ids:
+                notif_service.create_notification(
+                    NotificationCreate(
+                        user_id=uid,
+                        title=title,
+                        message=(
+                            f"{len(violations)}件のNOT NULL違反を検出 "
+                            f"({total_rows}行、テーブル: {table_list})"
+                        ),
+                        type="warning",
+                        link="/admin/data-maintenance",
+                        display_strategy="persistent",
+                    )
+                )
+            logger.info(f"📨 {len(admin_ids)}名の管理者に整合性通知を送信")
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"❌ データ整合性チェック失敗: {e}", exc_info=True)
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """アプリケーションのライフサイクル管理."""
@@ -221,6 +295,9 @@ async def lifespan(_app: FastAPI):
 
     except Exception as e:
         logger.error(f"❌ Error during system config loading: {e}")
+
+    # --- データ整合性チェック（起動時） ---
+    _check_data_integrity_on_startup()
 
     auto_sync_runner = None
     if settings.SMARTREAD_AUTO_SYNC_ENABLED:

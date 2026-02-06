@@ -11,6 +11,7 @@ import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCre
 import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { BulkExportPage } from "@/features/admin/pages/BulkExportPage";
+import { DataMaintenancePage } from "@/features/admin/pages/DataMaintenancePage";
 import { DeployPage } from "@/features/admin/pages/DeployPage";
 import { MasterChangeLogsPage } from "@/features/admin/pages/MasterChangeLogsPage";
 import { NotificationSettingsPage } from "@/features/admin/pages/NotificationSettingsPage";
@@ -384,6 +385,14 @@ function AdminRoutes() {
         element={
           <AdminGuard>
             <LogViewer />
+          </AdminGuard>
+        }
+      />
+      <Route
+        path={ROUTES.ADMIN.DATA_MAINTENANCE}
+        element={
+          <AdminGuard>
+            <DataMaintenancePage />
           </AdminGuard>
         }
       />

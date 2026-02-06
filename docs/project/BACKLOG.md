@@ -979,6 +979,29 @@ def get_product_name(product: Optional[HasProductName], default: str = "") -> st
 - [Testing Strategy](./TESTING_STRATEGY.md) - 詳細なテスト戦略とテストピラミッド
 - [Testing Quick Start Guide](./TESTING_QUICKSTART.md) - 今すぐ使えるテスト実行ガイド
 
+### 5-0. テスト用DBコンテナのネットワーク接続問題
+
+**優先度**: 高
+**作成**: 2026-02-06
+**カテゴリ**: テスト基盤・インフラ
+
+**現象:**
+`npm run be:test` で `backend` コンテナ内からテストを実行すると、テスト用DBホスト名 `db-postgres-test` が名前解決できず全テストが失敗する。
+
+```
+psycopg2.OperationalError: could not translate host name "db-postgres-test" to address: Name or service not known
+```
+
+**原因:**
+`backend` コンテナと `test-db` コンテナが同一Dockerネットワーク上にあるが、テスト設定が `db-postgres-test` というホスト名を参照している。`backend-test` コンテナからは接続できるが、`backend` コンテナからは解決できない。
+
+**対応案:**
+1. `docker-compose.yml` で `test-db` サービスに `hostname: db-postgres-test` を追加する
+2. または `backend` コンテナのテスト設定で `test-db` ホスト名（実際のサービス名）を使用する
+3. テスト実行を `backend-test` コンテナ経由に統一する
+
+---
+
 ### 5-1. 統合テスト・E2Eテストの拡充
 
 **優先度**: High
