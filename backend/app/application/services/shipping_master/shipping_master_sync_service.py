@@ -316,7 +316,7 @@ class ShippingMasterSyncService:
                 warehouse_code=curated.warehouse_code,
                 warehouse_name=name,
                 display_name=name,
-                warehouse_type=None,
+                warehouse_type="external",
             )
             self.session.add(warehouse)
             self.session.flush()
