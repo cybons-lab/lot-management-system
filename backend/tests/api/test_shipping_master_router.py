@@ -1,7 +1,10 @@
 """Shipping Master Routerのテスト."""
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
+from app.infrastructure.persistence.models.masters_models import Customer
+from app.infrastructure.persistence.models.sap_models import SapConnection, SapMaterialCache
 from app.infrastructure.persistence.models.shipping_master_models import ShippingMasterCurated
 
 
@@ -156,3 +159,60 @@ def test_sync_shipping_masters(client: TestClient, db):
     ).scalar_one_or_none()
     assert supp is not None
     assert supp.supplier_name == "Sync Supplier"
+
+
+def test_sync_shipping_masters_prefill_before_sync(client: TestClient, db):
+    """同期前補完フックで空欄が埋まること."""
+    customer = Customer(
+        customer_code="C_PREFILL",
+        customer_name="得意先A",
+        display_name="得意先A",
+    )
+    db.add(customer)
+
+    conn = SapConnection(
+        name="test",
+        environment="test",
+        ashost="localhost",
+        sysnr="00",
+        client="100",
+        user_name="dummy",
+        passwd_encrypted="dummy",
+        is_active=True,
+        is_default=False,
+    )
+    db.add(conn)
+    db.flush()
+
+    sap_cache = SapMaterialCache(
+        connection_id=conn.id,
+        zkdmat_b="M_PREFILL",
+        kunnr="C_PREFILL",
+        raw_data={"ZLIFNR_H": "S_PREFILL", "NAME1": "SAP仕入先"},
+    )
+    db.add(sap_cache)
+
+    curated = ShippingMasterCurated(
+        customer_code="C_PREFILL",
+        customer_name=None,
+        material_code="M_PREFILL",
+        jiku_code="J_PREFILL",
+        supplier_code=None,
+        supplier_name=None,
+        maker_part_no="MPN_PREFILL",
+        delivery_note_product_name="Prefill Product",
+    )
+    db.add(curated)
+    db.commit()
+
+    response = client.post("/api/shipping-masters/sync?policy=create-only")
+    assert response.status_code == 200
+    body = response.json()
+    assert body.get("prefill_updated_count", 0) >= 1
+
+    refreshed = db.execute(
+        select(ShippingMasterCurated).where(ShippingMasterCurated.id == curated.id)
+    ).scalar_one()
+    assert refreshed.customer_name == "得意先A"
+    assert refreshed.supplier_code == "S_PREFILL"
+    assert refreshed.supplier_name == "SAP仕入先"

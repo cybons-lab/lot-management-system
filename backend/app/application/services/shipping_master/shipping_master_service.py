@@ -13,6 +13,8 @@ from app.application.services.shipping_master.shipping_master_sync_service impor
     ShippingMasterSyncService,
     SyncPolicy,
 )
+from app.infrastructure.persistence.models.masters_models import Customer, Supplier
+from app.infrastructure.persistence.models.sap_models import SapMaterialCache
 from app.infrastructure.persistence.models.shipping_master_models import (
     ShippingMasterCurated,
     ShippingMasterRaw,
@@ -174,6 +176,7 @@ class ShippingMasterService:
         self, curated_ids: list[int] | None = None, policy: SyncPolicy = "create-only"
     ) -> dict[str, Any]:
         """各種マスタへの同期を手動実行."""
+        prefill_result = self.prefill_curated_for_sync(curated_ids=curated_ids)
         sync_service = ShippingMasterSyncService(self.session)
         summary = sync_service.sync_batch(curated_ids=curated_ids, policy=policy)
         return {
@@ -182,12 +185,153 @@ class ShippingMasterService:
             "updated_count": summary.updated_count,
             "skipped_count": summary.skipped_count,
             "errors": summary.errors,
-            "warnings": summary.warnings,
+            "warnings": [*prefill_result["warnings"], *summary.warnings],
+            "prefill_updated_count": prefill_result["updated_count"],
             "processed": summary.processed_count,
             "created": summary.created_count,
             "updated": summary.updated_count,
             "skipped": summary.skipped_count,
         }
+
+    def prefill_curated_for_sync(self, curated_ids: list[int] | None = None) -> dict[str, Any]:
+        """同期前に出荷用マスタ空欄を補完する.
+
+        - customer_name: customers から補完
+        - supplier_code: SAPキャッシュ(customer_code + material_code)から補完
+        - supplier_name: suppliers / SAPキャッシュから補完
+        """
+        stmt = select(ShippingMasterCurated)
+        if curated_ids:
+            stmt = stmt.where(ShippingMasterCurated.id.in_(curated_ids))
+        curated_rows = list(self.session.execute(stmt).scalars().all())
+        if not curated_rows:
+            return {"updated_count": 0, "warnings": []}
+
+        def is_blank(value: str | None) -> bool:
+            return value is None or value.strip() == ""
+
+        customer_code_set = {r.customer_code for r in curated_rows if r.customer_code}
+        supplier_code_set = {
+            r.supplier_code for r in curated_rows if r.supplier_code and r.supplier_code.strip()
+        }
+        key_set = {
+            (r.customer_code.strip(), r.material_code.strip())
+            for r in curated_rows
+            if r.customer_code
+            and r.material_code
+            and r.customer_code.strip()
+            and r.material_code.strip()
+        }
+
+        customer_name_map = {
+            c.customer_code: c.customer_name
+            for c in self.session.execute(
+                select(Customer).where(Customer.customer_code.in_(customer_code_set))
+            )
+            .scalars()
+            .all()
+            if c.customer_code and c.customer_name
+        }
+
+        supplier_name_map = {
+            s.supplier_code: s.supplier_name
+            for s in self.session.execute(
+                select(Supplier).where(Supplier.supplier_code.in_(supplier_code_set))
+            )
+            .scalars()
+            .all()
+            if s.supplier_code and s.supplier_name
+        }
+
+        def _extract_supplier_code(raw_data: dict[str, Any]) -> str | None:
+            for key in ("ZLIFNR_H", "LIFNR", "supplier_code"):
+                value = raw_data.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+            return None
+
+        def _extract_supplier_name(raw_data: dict[str, Any]) -> str | None:
+            for key in (
+                "ZLIFNR_NAME",
+                "ZLIFNR_TXT",
+                "NAME1",
+                "LIFNR_NAME",
+                "supplier_name",
+            ):
+                value = raw_data.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+            return None
+
+        sap_stmt = select(SapMaterialCache).where(SapMaterialCache.kunnr.in_(customer_code_set))
+        sap_records = list(self.session.execute(sap_stmt).scalars().all())
+        sap_supplier_code_map: dict[tuple[str, str], str] = {}
+        sap_supplier_name_map: dict[tuple[str, str], str] = {}
+        for rec in sap_records:
+            customer_code = (rec.kunnr or "").strip()
+            material_code = (rec.zkdmat_b or "").strip()
+            if not customer_code or not material_code:
+                continue
+            key = (customer_code, material_code)
+            if key not in key_set:
+                continue
+            raw_data = rec.raw_data or {}
+            if key not in sap_supplier_code_map:
+                supplier_code = _extract_supplier_code(raw_data)
+                if supplier_code:
+                    sap_supplier_code_map[key] = supplier_code
+            if key not in sap_supplier_name_map:
+                supplier_name = _extract_supplier_name(raw_data)
+                if supplier_name:
+                    sap_supplier_name_map[key] = supplier_name
+
+        updated_count = 0
+        warnings: list[str] = []
+        for row in curated_rows:
+            changed = False
+            row_customer_code = (row.customer_code or "").strip()
+            row_material_code = (row.material_code or "").strip()
+            key = (row_customer_code, row_material_code)
+
+            if is_blank(row.customer_name) and row_customer_code:
+                customer_name = customer_name_map.get(row_customer_code)
+                if customer_name:
+                    row.customer_name = customer_name
+                    changed = True
+
+            if is_blank(row.supplier_code) and key in sap_supplier_code_map:
+                row.supplier_code = sap_supplier_code_map[key]
+                changed = True
+                if row.supplier_code and row.supplier_code not in supplier_name_map:
+                    supplier = self.session.execute(
+                        select(Supplier).where(Supplier.supplier_code == row.supplier_code)
+                    ).scalar_one_or_none()
+                    if supplier and supplier.supplier_name:
+                        supplier_name_map[supplier.supplier_code] = supplier.supplier_name
+
+            if is_blank(row.supplier_name):
+                supplier_name = None
+                if row.supplier_code:
+                    supplier_name = supplier_name_map.get(row.supplier_code.strip())
+                if not supplier_name:
+                    supplier_name = sap_supplier_name_map.get(key)
+                if supplier_name:
+                    row.supplier_name = supplier_name
+                    changed = True
+
+            if changed:
+                updated_count += 1
+
+            if is_blank(row.supplier_code) and row_customer_code and row_material_code:
+                warnings.append(
+                    f"ID {row.id}: 仕入先コードを補完できませんでした "
+                    f"(得意先={row_customer_code}, 材質コード={row_material_code})"
+                )
+
+        if updated_count > 0:
+            self.session.flush()
+
+        return {"updated_count": updated_count, "warnings": warnings}
 
     # ==================== CRUD ====================
 
