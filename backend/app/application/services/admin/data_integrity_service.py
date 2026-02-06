@@ -176,31 +176,41 @@ class DataIntegrityService:
             targets = dict(REPAIR_RULES)
 
         for (tbl, col), default_value in targets.items():
-            result = self.db.execute(
-                text(f"UPDATE {tbl} SET {col} = :val WHERE {col} IS NULL"),  # noqa: S608
-                {"val": default_value},
-            )
-            rows_affected: int = result.rowcount  # type: ignore[attr-defined]
-            if rows_affected > 0:
-                fixed.append(
-                    {
-                        "table": tbl,
-                        "column": col,
-                        "rows_fixed": rows_affected,
-                        "value_applied": str(default_value),
-                    }
+            try:
+                result = self.db.execute(
+                    text(f"UPDATE {tbl} SET {col} = :val WHERE {col} IS NULL"),  # noqa: S608
+                    {"val": default_value},
                 )
-                logger.info(
-                    "Data integrity fix applied",
-                    extra={
-                        "table": tbl,
-                        "column": col,
-                        "rows_fixed": rows_affected,
-                        "value": str(default_value),
-                    },
+                rows_affected: int = result.rowcount  # type: ignore[attr-defined]
+                if rows_affected > 0:
+                    fixed.append(
+                        {
+                            "table": tbl,
+                            "column": col,
+                            "rows_fixed": rows_affected,
+                            "value_applied": str(default_value),
+                        }
+                    )
+                    logger.info(
+                        f"Data integrity fix applied: {tbl}.{col}",
+                        extra={
+                            "table": tbl,
+                            "column": col,
+                            "rows_fixed": rows_affected,
+                            "value": str(default_value),
+                        },
+                    )
+                else:
+                    skipped.append({"table": tbl, "column": col})
+                    logger.debug(f"Data integrity fix skipped (already clean): {tbl}.{col}")
+            except Exception as e:
+                logger.error(
+                    f"Failed to fix data integrity violation: {tbl}.{col}",
+                    extra={"table": tbl, "column": col, "error": str(e)},
+                    exc_info=True,
                 )
-            else:
-                skipped.append({"table": tbl, "column": col})
+                self.db.rollback()
+                return {"fixed": fixed, "skipped": skipped, "error": str(e)}
 
         self.db.commit()
         return {"fixed": fixed, "skipped": skipped}
@@ -241,10 +251,10 @@ class DataIntegrityService:
                 default_value=str(REPAIR_RULES[rule_key]) if rule_key in REPAIR_RULES else None,
                 source=source,
             )
-        except Exception:
+        except Exception as e:
             logger.warning(
-                "Column check failed",
-                extra={"table": table_name, "column": column_name},
+                f"Column check failed: {table_name}.{column_name}",
+                extra={"table": table_name, "column": column_name, "error": str(e)},
                 exc_info=True,
             )
             return None

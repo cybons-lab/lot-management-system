@@ -5,8 +5,10 @@ import {
   Database,
   CheckCircle2,
   AlertCircle,
+  Wrench,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { SystemSettingItem } from "../components/SystemSettingItem";
@@ -84,6 +86,7 @@ const SETTING_CONFIGS: Record<string, SettingConfig> = {
 
 /* eslint-disable max-lines, max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため */
 export function SystemSettingsPage() {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState<string | null>(null);
@@ -539,6 +542,31 @@ export function SystemSettingsPage() {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+
+            {/* Data Integrity Check (Maintenance) */}
+            <div className="border-t pt-6">
+              <div className="flex items-start gap-3">
+                <Wrench className="h-5 w-5 text-orange-500 mt-0.5" />
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <h4 className="font-medium">データ整合性チェック・修正（パッチ適用）</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      各テーブルの NOT NULL
+                      違反をスキャンし、定義済みルールに基づいて一括修正（パッチ適用）を行います。
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate("/admin/data-maintenance")}
+                    >
+                      詳細・修正ページへ
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
