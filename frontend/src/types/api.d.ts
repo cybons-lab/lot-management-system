@@ -18410,13 +18410,8 @@ export interface components {
     /**
      * WarehouseResponse
      * @description Warehouse response (DDL: warehouses).
-     *
-     *     WarehouseBaseを継承しない: DB上warehouse_typeはNULL許容
-     *     （出荷マスタ同期で自動作成された倉庫）のためResponseでは別定義。
      */
     WarehouseResponse: {
-      /** Id */
-      id: number;
       /** Warehouse Code */
       warehouse_code: string;
       /** Warehouse Name */
@@ -18425,7 +18420,7 @@ export interface components {
        * Warehouse Type
        * @description internal/external/supplier
        */
-      warehouse_type?: string | null;
+      warehouse_type: string;
       /**
        * Default Transport Lead Time Days
        * @description デフォルト輸送リードタイム（日）
@@ -18436,6 +18431,8 @@ export interface components {
        * @description 短縮表示名
        */
       short_name?: string | null;
+      /** Id */
+      id: number;
       /**
        * Created At
        * Format: date-time
