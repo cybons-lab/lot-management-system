@@ -65,10 +65,10 @@ def generate_missing_mapping_events(db: Session) -> None:
             }
 
         resolved_at = None
-        resolution_notes = None
+        resolution_note = None
         if is_resolved:
             resolved_at = occurred_at + timedelta(days=random.randint(1, 30))
-            resolution_notes = random.choice(
+            resolution_note = random.choice(
                 [
                     "マスタ登録により解決",
                     "マッピング追加により解決",
@@ -80,10 +80,10 @@ def generate_missing_mapping_events(db: Session) -> None:
 
         event = MissingMappingEvent(
             event_type=event_type,
-            context=context,
+            context_json=context,
             occurred_at=occurred_at,
             resolved_at=resolved_at,
-            resolution_notes=resolution_notes,
+            resolution_note=resolution_note,
         )
         db.add(event)
 
@@ -93,14 +93,14 @@ def generate_missing_mapping_events(db: Session) -> None:
         event_date = base_date + timedelta(days=i * 15)
         event = MissingMappingEvent(
             event_type="delivery_place_not_found",
-            context={
+            context_json={
                 "customer_code": "CUST-HISTORICAL",
                 "delivery_place_code": f"DP-HIST-{i}",
                 "source": "historical_import",
             },
             occurred_at=event_date,
             resolved_at=event_date + timedelta(days=7) if random.random() < 0.5 else None,
-            resolution_notes="Historical data issue" if random.random() < 0.5 else None,
+            resolution_note="Historical data issue" if random.random() < 0.5 else None,
         )
         db.add(event)
 
@@ -109,21 +109,21 @@ def generate_missing_mapping_events(db: Session) -> None:
     for i in range(5):
         event = MissingMappingEvent(
             event_type="jiku_mapping_not_found",
-            context={
+            context_json={
                 "customer_code": "CUST-BULK",
                 "jiku_code": f"J{i}",
                 "source": "bulk_import",
             },
             occurred_at=resolution_date - timedelta(days=5),
             resolved_at=resolution_date,
-            resolution_notes="一括マッピング追加により解決",
+            resolution_note="一括マッピング追加により解決",
         )
         db.add(event)
 
     # Edge case: Very detailed context JSON
     event = MissingMappingEvent(
         event_type="supplier_mapping_not_found",
-        context={
+        context_json={
             "maker_part_no": "COMPLEX-PART-001",
             "supplier_code": "SUP-999",
             "source": "complex_import",

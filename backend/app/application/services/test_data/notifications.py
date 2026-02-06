@@ -132,9 +132,9 @@ def generate_notifications(db: Session) -> None:
         )
         db.add(notification)
 
-    # Edge case: System notification (NULL user)
+    # System notification (broadcast to first user)
     notification = Notification(
-        user_id=None,
+        user_id=users[0].id,
         type="INFO",
         title="システムメンテナンス通知",
         message="2026-02-10 02:00-04:00 にシステムメンテナンスを実施します。",
