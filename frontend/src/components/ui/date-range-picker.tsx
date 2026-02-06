@@ -17,51 +17,174 @@ interface DatePickerWithRangeProps {
   setDate: (date?: DateRange) => void;
 }
 
-/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
-export function DatePickerWithRange({ className, date, setDate }: DatePickerWithRangeProps) {
-  // Local state for time inputs
-  // Initialize from props if available
+function parseTimeValue(timeValue: string) {
+  const [hours, minutes] = timeValue.split(":").map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  return { hours, minutes };
+}
+
+function normalizeDateRange(date?: DateRange): DateRange | undefined {
+  if (!date) return undefined;
+  return {
+    from: date.from ? new Date(date.from.toDateString()) : undefined,
+    to: date.to ? new Date(date.to.toDateString()) : undefined,
+  };
+}
+
+function DateRangeButtonLabel({ date }: { date?: DateRange }) {
+  if (!date?.from) return <span>期間を選択</span>;
+  if (!date.to) return format(date.from, "yyyy/MM/dd HH:mm", { locale: ja });
+  return (
+    <>
+      {format(date.from, "yyyy/MM/dd HH:mm", { locale: ja })} -{" "}
+      {format(date.to, "yyyy/MM/dd HH:mm", { locale: ja })}
+    </>
+  );
+}
+
+function DateRangeSummary({ date }: { date?: DateRange }) {
+  if (!date?.from) return <span className="text-muted-foreground">期間を選択してください</span>;
+  if (!date.to) return <>{format(date.from, "yyyy/MM/dd", { locale: ja })}</>;
+  return (
+    <>
+      {format(date.from, "yyyy/MM/dd", { locale: ja })} -{" "}
+      {format(date.to, "yyyy/MM/dd", { locale: ja })}
+    </>
+  );
+}
+
+function TimeInputField({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <Label htmlFor={id} className="text-xs">
+        {label}
+      </Label>
+      <div className="flex items-center">
+        <Clock className="text-muted-foreground mr-2 h-4 w-4" />
+        <Input
+          id={id}
+          type="time"
+          className="h-8 w-[110px]"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function useDateRangeTimeState(date: DateRange | undefined, setDate: (date?: DateRange) => void) {
   const [startTime, setStartTime] = React.useState("00:00");
   const [endTime, setEndTime] = React.useState("23:59");
 
-  // Sync local time state when date changes externally (reset defaults if new date selected? optional)
-  // For now, let's just use simple inputs that update the Date objects on change.
+  React.useEffect(() => {
+    if (date?.from) setStartTime(format(date.from, "HH:mm"));
+    if (date?.to) setEndTime(format(date.to, "HH:mm"));
+  }, [date]);
 
   const handleTimeChange = (type: "start" | "end", timeValue: string) => {
     if (type === "start") setStartTime(timeValue);
     else setEndTime(timeValue);
 
     if (!date?.from) return;
-
-    const [hours, minutes] = timeValue.split(":").map(Number);
-    if (isNaN(hours) || isNaN(minutes)) return;
+    const parsed = parseTimeValue(timeValue);
+    if (!parsed) return;
 
     const newDateRange = { ...date };
-
     if (type === "start" && newDateRange.from) {
       const newFrom = new Date(newDateRange.from);
-      newFrom.setHours(hours, minutes);
+      newFrom.setHours(parsed.hours, parsed.minutes);
       newDateRange.from = newFrom;
     }
-
     if (type === "end" && newDateRange.to) {
       const newTo = new Date(newDateRange.to);
-      newTo.setHours(hours, minutes);
+      newTo.setHours(parsed.hours, parsed.minutes);
       newDateRange.to = newTo;
     }
-
     setDate(newDateRange);
   };
 
-  // Update time inputs when date prop updates (e.g. initial load)
-  React.useEffect(() => {
-    if (date?.from) {
-      setStartTime(format(date.from, "HH:mm"));
+  const handleSelectDate = (newDate: DateRange | undefined) => {
+    if (!newDate) {
+      setDate(undefined);
+      return;
     }
-    if (date?.to) {
-      setEndTime(format(date.to, "HH:mm"));
-    }
-  }, [date]);
+    const start = parseTimeValue(startTime);
+    const end = parseTimeValue(endTime);
+    if (newDate.from && start) newDate.from.setHours(start.hours, start.minutes);
+    if (newDate.to && end) newDate.to.setHours(end.hours, end.minutes);
+    setDate(newDate);
+  };
+
+  return {
+    startTime,
+    endTime,
+    handleTimeChange,
+    handleSelectDate,
+  };
+}
+
+function DateRangePopoverContent({
+  date,
+  startTime,
+  endTime,
+  onTimeChange,
+  onSelectDate,
+}: {
+  date?: DateRange;
+  startTime: string;
+  endTime: string;
+  onTimeChange: (type: "start" | "end", value: string) => void;
+  onSelectDate: (date: DateRange | undefined) => void;
+}) {
+  return (
+    <PopoverContent className="w-auto p-0" align="start">
+      <Calendar
+        initialFocus
+        mode="range"
+        defaultMonth={date?.from}
+        selected={normalizeDateRange(date)}
+        onSelect={onSelectDate}
+        numberOfMonths={2}
+      />
+      <div className="border-t p-3">
+        <div className="mb-4 flex items-center justify-center text-sm font-medium">
+          <DateRangeSummary date={date} />
+        </div>
+        <div className="flex items-center gap-4">
+          <TimeInputField
+            id="start-time"
+            label="開始時間"
+            value={startTime}
+            onChange={(value) => onTimeChange("start", value)}
+          />
+          <TimeInputField
+            id="end-time"
+            label="終了時間"
+            value={endTime}
+            onChange={(value) => onTimeChange("end", value)}
+          />
+        </div>
+      </div>
+    </PopoverContent>
+  );
+}
+
+export function DatePickerWithRange({ className, date, setDate }: DatePickerWithRangeProps) {
+  const { startTime, endTime, handleTimeChange, handleSelectDate } = useDateRangeTimeState(
+    date,
+    setDate,
+  );
 
   return (
     <div className={cn("grid gap-2", className)}>
@@ -69,105 +192,23 @@ export function DatePickerWithRange({ className, date, setDate }: DatePickerWith
         <PopoverTrigger asChild>
           <Button
             id="date"
-            variant={"outline"}
+            variant="outline"
             className={cn(
               "w-[300px] justify-start text-left font-normal",
               !date && "text-muted-foreground",
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, "yyyy/MM/dd HH:mm", { locale: ja })} -{" "}
-                  {format(date.to, "yyyy/MM/dd HH:mm", { locale: ja })}
-                </>
-              ) : (
-                format(date.from, "yyyy/MM/dd HH:mm", { locale: ja })
-              )
-            ) : (
-              <span>期間を選択</span>
-            )}
+            <DateRangeButtonLabel date={date} />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            // Pass normalized dates (time stripped) to Calendar to ensure highlighting works based on date part only
-            selected={
-              date
-                ? {
-                    from: date.from ? new Date(date.from.toDateString()) : undefined,
-                    to: date.to ? new Date(date.to.toDateString()) : undefined,
-                  }
-                : undefined
-            }
-            onSelect={(newDate) => {
-              // Preserve times when dates change
-              const updatedDate = newDate;
-              if (updatedDate?.from) {
-                const [h, m] = startTime.split(":").map(Number);
-                updatedDate.from.setHours(h, m);
-              }
-              if (updatedDate?.to) {
-                const [h, m] = endTime.split(":").map(Number);
-                updatedDate.to.setHours(h, m);
-              }
-              setDate(updatedDate);
-            }}
-            numberOfMonths={2}
-          />
-          <div className="border-t p-3">
-            <div className="mb-4 flex items-center justify-center text-sm font-medium">
-              {date?.from ? (
-                date.to ? (
-                  <>
-                    {format(date.from, "yyyy/MM/dd", { locale: ja })} -{" "}
-                    {format(date.to, "yyyy/MM/dd", { locale: ja })}
-                  </>
-                ) : (
-                  format(date.from, "yyyy/MM/dd", { locale: ja })
-                )
-              ) : (
-                <span className="text-muted-foreground">期間を選択してください</span>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="grid gap-1.5">
-                <Label htmlFor="start-time" className="text-xs">
-                  開始時間
-                </Label>
-                <div className="flex items-center">
-                  <Clock className="text-muted-foreground mr-2 h-4 w-4" />
-                  <Input
-                    id="start-time"
-                    type="time"
-                    className="h-8 w-[110px]"
-                    value={startTime}
-                    onChange={(e) => handleTimeChange("start", e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="end-time" className="text-xs">
-                  終了時間
-                </Label>
-                <div className="flex items-center">
-                  <Clock className="text-muted-foreground mr-2 h-4 w-4" />
-                  <Input
-                    id="end-time"
-                    type="time"
-                    className="h-8 w-[110px]"
-                    value={endTime}
-                    onChange={(e) => handleTimeChange("end", e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </PopoverContent>
+        <DateRangePopoverContent
+          date={date}
+          startTime={startTime}
+          endTime={endTime}
+          onTimeChange={handleTimeChange}
+          onSelectDate={handleSelectDate}
+        />
       </Popover>
     </div>
   );

@@ -7,7 +7,7 @@
 
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Control } from "react-hook-form";
 
 import { useAssignmentMutations } from "../hooks/useAssignments";
 
@@ -44,8 +44,61 @@ interface FormValues {
   supplierId: string;
 }
 
-// ダイアログのフォームとUIを一箇所にまとめるため分割しない
-// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
+interface AssignmentSelectFieldProps {
+  control: Control<FormValues>;
+  name: "userId" | "supplierId";
+  label: string;
+  placeholder: string;
+  requiredMessage: string;
+  options: Array<{ value: string; label: string }>;
+}
+
+function AssignmentSelectField({
+  control,
+  name,
+  label,
+  placeholder,
+  requiredMessage,
+  options,
+}: AssignmentSelectFieldProps) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      rules={{ required: requiredMessage }}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function DefaultTrigger() {
+  return (
+    <Button>
+      <Plus className="mr-2 h-4 w-4" />
+      担当追加
+    </Button>
+  );
+}
+
 export function AddAssignmentDialog({ trigger, onSuccess }: AddAssignmentDialogProps) {
   const [open, setOpen] = useState(false);
   const { useList: useSupplierList } = useSuppliers();
@@ -75,16 +128,18 @@ export function AddAssignmentDialog({ trigger, onSuccess }: AddAssignmentDialogP
     }
   };
 
+  const userOptions = users.map((user) => ({
+    value: String(user.user_id),
+    label: user.display_name || user.username,
+  }));
+  const supplierOptions = suppliers.map((supplier) => ({
+    value: String(supplier.id),
+    label: `${supplier.supplier_name} (${supplier.supplier_code})`,
+  }));
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            担当追加
-          </Button>
-        )}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger || <DefaultTrigger />}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>担当割り当ての追加</DialogTitle>
@@ -93,56 +148,22 @@ export function AddAssignmentDialog({ trigger, onSuccess }: AddAssignmentDialogP
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
+            <AssignmentSelectField
               control={form.control}
               name="userId"
-              rules={{ required: "ユーザーを選択してください" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ユーザー</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="ユーザーを選択" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.user_id} value={String(user.user_id)}>
-                          {user.display_name || user.username}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="ユーザー"
+              placeholder="ユーザーを選択"
+              requiredMessage="ユーザーを選択してください"
+              options={userOptions}
             />
 
-            <FormField
+            <AssignmentSelectField
               control={form.control}
               name="supplierId"
-              rules={{ required: "仕入先を選択してください" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>仕入先</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="仕入先を選択" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier.id} value={String(supplier.id)}>
-                          {supplier.supplier_name} ({supplier.supplier_code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="仕入先"
+              placeholder="仕入先を選択"
+              requiredMessage="仕入先を選択してください"
+              options={supplierOptions}
             />
 
             <div className="flex justify-end space-x-2">
