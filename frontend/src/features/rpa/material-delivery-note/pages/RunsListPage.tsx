@@ -3,7 +3,6 @@
  * 素材納品書発行 履歴一覧
  */
 
-/* eslint-disable max-lines-per-function -- 論理的な画面単位を維持 */
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Eye, Loader2 } from "lucide-react";
@@ -25,6 +24,8 @@ import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
+type RunItem = NonNullable<ReturnType<typeof useRuns>["data"]>["runs"][number];
+
 const STATUS_MAP: Record<
   string,
   { label: string; variant: "default" | "secondary" | "outline" | "destructive" | "success" }
@@ -40,26 +41,17 @@ const STATUS_MAP: Record<
   cancelled: { label: "キャンセル", variant: "destructive" },
 };
 
+function formatDate(dateText: string) {
+  return format(new Date(dateText), "yyyy/MM/dd HH:mm", { locale: ja });
+}
+
 function StatusBadge({ status }: { status: string }) {
   const config = STATUS_MAP[status] || { label: status, variant: "outline" };
-  const getBadgeVariant = (variant: string) => {
-    switch (variant) {
-      case "default":
-        return "default";
-      case "secondary":
-        return "secondary";
-      case "outline":
-        return "outline";
-      case "destructive":
-        return "destructive";
-      default:
-        return "default"; // success is not a standard variant, map to default or add custom style
-    }
-  };
+  const badgeVariant = config.variant === "success" ? "default" : config.variant;
 
   return (
     <Badge
-      variant={getBadgeVariant(config.variant)}
+      variant={badgeVariant}
       className={config.variant === "success" ? "bg-green-600 hover:bg-green-700" : ""}
     >
       {config.label}
@@ -67,23 +59,69 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function LoadingView() {
+  return (
+    <div className="flex h-screen items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+    </div>
+  );
+}
+
+function ErrorView({ message }: { message: string }) {
+  return <div className="flex h-screen items-center justify-center text-red-500">{message}</div>;
+}
+
+function RunsTable({ runs }: { runs: RunItem[] }) {
+  if (runs.length === 0) {
+    return (
+      <TableBody>
+        <TableRow>
+          <TableCell colSpan={7} className="text-center text-gray-500">
+            履歴はありません
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    );
+  }
+
+  return (
+    <TableBody>
+      {runs.map((run) => (
+        <TableRow key={run.id}>
+          <TableCell>{run.id}</TableCell>
+          <TableCell>
+            <StatusBadge status={run.status} />
+          </TableCell>
+          <TableCell>{formatDate(run.created_at)}</TableCell>
+          <TableCell>{run.started_by_username || "-"}</TableCell>
+          <TableCell>
+            {run.complete_count} / {run.item_count}
+            {run.all_items_complete && <span className="ml-2 text-green-600">✓</span>}
+          </TableCell>
+          <TableCell>{run.step2_executed_at ? formatDate(run.step2_executed_at) : "-"}</TableCell>
+          <TableCell className="text-right">
+            <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_MONITOR(run.id)}>
+              <Button variant="ghost" size="sm">
+                <Eye className="mr-2 h-4 w-4" />
+                監視
+              </Button>
+            </Link>
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  );
+}
+
 export function RunsListPage() {
   const { data, isLoading, error } = useRuns();
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-      </div>
-    );
+    return <LoadingView />;
   }
 
   if (error) {
-    return (
-      <div className="flex h-screen items-center justify-center text-red-500">
-        エラーが発生しました: {error.message}
-      </div>
-    );
+    return <ErrorView message={`エラーが発生しました: ${error.message}`} />;
   }
 
   return (
@@ -110,49 +148,7 @@ export function RunsListPage() {
                 <TableHead className="text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {data?.runs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-gray-500">
-                    履歴はありません
-                  </TableCell>
-                </TableRow>
-              ) : (
-                data?.runs.map((run) => (
-                  <TableRow key={run.id}>
-                    <TableCell>{run.id}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={run.status} />
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(run.created_at), "yyyy/MM/dd HH:mm", {
-                        locale: ja,
-                      })}
-                    </TableCell>
-                    <TableCell>{run.started_by_username || "-"}</TableCell>
-                    <TableCell>
-                      {run.complete_count} / {run.item_count}
-                      {run.all_items_complete && <span className="ml-2 text-green-600">✓</span>}
-                    </TableCell>
-                    <TableCell>
-                      {run.step2_executed_at
-                        ? format(new Date(run.step2_executed_at), "yyyy/MM/dd HH:mm", {
-                            locale: ja,
-                          })
-                        : "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_MONITOR(run.id)}>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="mr-2 h-4 w-4" />
-                          監視
-                        </Button>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
+            <RunsTable runs={data?.runs ?? []} />
           </Table>
         </div>
       </div>
