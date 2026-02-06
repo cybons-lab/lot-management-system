@@ -397,6 +397,7 @@ class ShippingMasterSyncService:
             dp = DeliveryPlace(
                 customer_id=customer_id,
                 jiku_code=curated.jiku_code,
+                jiku_match_pattern=curated.jiku_match_pattern,
                 delivery_place_code=curated.delivery_place_code,
                 delivery_place_name=name,
                 display_name=curated.delivery_place_abbr or name,
@@ -415,6 +416,8 @@ class ShippingMasterSyncService:
         data: dict[str, Any] = {}
         if curated.jiku_code:
             data["jiku_code"] = curated.jiku_code
+        if curated.jiku_match_pattern:
+            data["jiku_match_pattern"] = curated.jiku_match_pattern
         if curated.delivery_place_name:
             data["delivery_place_name"] = curated.delivery_place_name
         if curated.delivery_place_abbr:

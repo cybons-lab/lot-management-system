@@ -14,6 +14,9 @@ class ShippingMasterCuratedBase(BaseModel):
     customer_code: str = Field(..., max_length=50, description="得意先コード")
     material_code: str = Field(..., max_length=50, description="材質コード")
     jiku_code: str = Field(..., max_length=50, description="次区（出荷先区分）")
+    jiku_match_pattern: str | None = Field(
+        default=None, max_length=100, description="次区マッチングルール（例: 2***）"
+    )
     warehouse_code: str | None = Field(default=None, max_length=50, description="倉庫コード")
     customer_name: str | None = Field(default=None, max_length=100, description="得意先名")
     delivery_note_product_name: str | None = Field(default=None, description="素材納品書記載製品名")
@@ -50,6 +53,7 @@ class ShippingMasterCuratedUpdate(BaseModel):
     """出荷用マスタ更新リクエスト."""
 
     version: int = Field(..., description="楽観的ロック用バージョン")
+    jiku_match_pattern: str | None = None
     warehouse_code: str | None = None
     customer_name: str | None = None
     delivery_note_product_name: str | None = None

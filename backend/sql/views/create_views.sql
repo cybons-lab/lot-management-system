@@ -591,7 +591,17 @@ SELECT
     -- OCR由来（contentから抽出）+ 得意先コード補間 + 手入力補間
     COALESCE(ld.content->>'得意先コード', '100427105') AS customer_code,
     COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') AS material_code,
-    COALESCE(oe.jiku_code, ld.content->>'次区') AS jiku_code,
+    COALESCE(oe.jiku_code, ld.content->>'次区') AS input_jiku_code,
+    COALESCE(
+        m_exact.jiku_code,
+        m_pattern.jiku_code,
+        COALESCE(oe.jiku_code, ld.content->>'次区')
+    ) AS jiku_code,
+    CASE
+        WHEN m_exact.id IS NOT NULL THEN 'exact'
+        WHEN m_pattern.id IS NOT NULL THEN 'pattern'
+        ELSE 'input'
+    END AS jiku_match_type,
     COALESCE(oe.delivery_date, ld.content->>'納期', ld.content->>'納入日') AS delivery_date,
     COALESCE(oe.delivery_quantity, ld.content->>'納入量') AS delivery_quantity,
     COALESCE(ld.content->>'アイテムNo', ld.content->>'アイテム') AS item_no,
@@ -627,20 +637,20 @@ SELECT
     COALESCE(oe.error_flags, '{}'::jsonb) AS error_flags,
 
     -- マスタ由来（LEFT JOIN）
-    m.id AS master_id,
-    m.customer_name,
-    m.supplier_code,
+    COALESCE(m_exact.id, m_pattern.id) AS master_id,
+    COALESCE(m_exact.customer_name, m_pattern.customer_name) AS customer_name,
+    COALESCE(m_exact.supplier_code, m_pattern.supplier_code) AS supplier_code,
     -- 仕入先名称はmaker_name（メーカー名）から取得
-    m.maker_name AS supplier_name,
-    m.delivery_place_code,
-    m.delivery_place_name,
-    m.warehouse_code AS shipping_warehouse_code,
-    m.shipping_warehouse AS shipping_warehouse_name,
-    m.shipping_slip_text,
-    m.transport_lt_days,
-    m.customer_part_no,
-    m.maker_part_no,
-    m.has_order,
+    COALESCE(m_exact.maker_name, m_pattern.maker_name) AS supplier_name,
+    COALESCE(m_exact.delivery_place_code, m_pattern.delivery_place_code) AS delivery_place_code,
+    COALESCE(m_exact.delivery_place_name, m_pattern.delivery_place_name) AS delivery_place_name,
+    COALESCE(m_exact.warehouse_code, m_pattern.warehouse_code) AS shipping_warehouse_code,
+    COALESCE(m_exact.shipping_warehouse, m_pattern.shipping_warehouse) AS shipping_warehouse_name,
+    COALESCE(m_exact.shipping_slip_text, m_pattern.shipping_slip_text) AS shipping_slip_text,
+    COALESCE(m_exact.transport_lt_days, m_pattern.transport_lt_days) AS transport_lt_days,
+    COALESCE(m_exact.customer_part_no, m_pattern.customer_part_no) AS customer_part_no,
+    COALESCE(m_exact.maker_part_no, m_pattern.maker_part_no) AS maker_part_no,
+    COALESCE(m_exact.has_order, m_pattern.has_order, false) AS has_order,
 
     -- SAP突合ステータス
     CASE
@@ -654,7 +664,7 @@ SELECT
     COALESCE(sap_exact.raw_data, sap_prefix.raw_data) AS sap_raw_data,
 
     -- エラーフラグ: マスタ未登録
-    CASE WHEN m.id IS NULL THEN true ELSE false END AS master_not_found,
+    CASE WHEN COALESCE(m_exact.id, m_pattern.id) IS NULL THEN true ELSE false END AS master_not_found,
 
     -- エラーフラグ: SAP未登録
     CASE
@@ -664,8 +674,16 @@ SELECT
 
     -- バリデーションエラー: 次区フォーマット（アルファベット+数字）
     CASE
-        WHEN COALESCE(oe.jiku_code, ld.content->>'次区') IS NOT NULL
-             AND COALESCE(oe.jiku_code, ld.content->>'次区') !~ '^[A-Za-z][0-9]+$'
+        WHEN COALESCE(
+                m_exact.jiku_code,
+                m_pattern.jiku_code,
+                COALESCE(oe.jiku_code, ld.content->>'次区')
+             ) IS NOT NULL
+             AND COALESCE(
+                m_exact.jiku_code,
+                m_pattern.jiku_code,
+                COALESCE(oe.jiku_code, ld.content->>'次区')
+             ) !~ '^[A-Za-z][0-9]+$'
         THEN true
         ELSE false
     END AS jiku_format_error,
@@ -681,8 +699,9 @@ SELECT
     -- 総合エラーフラグ（従来互換）
     CASE
         WHEN ld.status = 'ERROR' THEN true
-        WHEN m.id IS NULL THEN true
-        WHEN COALESCE(oe.jiku_code, ld.content->>'次区') IS NOT NULL AND COALESCE(oe.jiku_code, ld.content->>'次区') !~ '^[A-Za-z][0-9]+$' THEN true
+        WHEN COALESCE(m_exact.id, m_pattern.id) IS NULL THEN true
+        WHEN COALESCE(m_exact.jiku_code, m_pattern.jiku_code, COALESCE(oe.jiku_code, ld.content->>'次区')) IS NOT NULL
+             AND COALESCE(m_exact.jiku_code, m_pattern.jiku_code, COALESCE(oe.jiku_code, ld.content->>'次区')) !~ '^[A-Za-z][0-9]+$' THEN true
         WHEN COALESCE(oe.delivery_date, ld.content->>'納期') IS NOT NULL AND COALESCE(oe.delivery_date, ld.content->>'納期') !~ '^\d{4}[-/]\d{1,2}[-/]\d{1,2}$' THEN true
         ELSE false
     END AS has_error,
@@ -690,11 +709,11 @@ SELECT
     -- 総合突合ステータス（SAP + マスタ）
     CASE
         WHEN ld.status = 'ERROR' THEN 'error'
-        WHEN m.id IS NULL THEN 'error'
+        WHEN COALESCE(m_exact.id, m_pattern.id) IS NULL THEN 'error'
         WHEN sap_exact.id IS NULL AND sap_prefix.id IS NULL THEN 'error'
         WHEN sap_prefix.id IS NOT NULL AND sap_exact.id IS NULL THEN 'warning'
-        WHEN COALESCE(oe.jiku_code, ld.content->>'次区') IS NOT NULL
-             AND COALESCE(oe.jiku_code, ld.content->>'次区') !~ '^[A-Za-z][0-9]+$' THEN 'error'
+        WHEN COALESCE(m_exact.jiku_code, m_pattern.jiku_code, COALESCE(oe.jiku_code, ld.content->>'次区')) IS NOT NULL
+             AND COALESCE(m_exact.jiku_code, m_pattern.jiku_code, COALESCE(oe.jiku_code, ld.content->>'次区')) !~ '^[A-Za-z][0-9]+$' THEN 'error'
         WHEN COALESCE(oe.delivery_date, ld.content->>'納期') IS NOT NULL
              AND COALESCE(oe.delivery_date, ld.content->>'納期') !~ '^\d{4}[-/]\d{1,2}[-/]\d{1,2}$' THEN 'warning'
         ELSE 'ok'
@@ -703,10 +722,38 @@ SELECT
 FROM public.smartread_long_data ld
 LEFT JOIN public.ocr_result_edits oe
     ON oe.smartread_long_data_id = ld.id
-LEFT JOIN public.shipping_master_curated m
-    ON COALESCE(ld.content->>'得意先コード', '100427105') = m.customer_code
-    AND COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') = m.material_code
-    AND COALESCE(oe.jiku_code, ld.content->>'次区') = m.jiku_code
+LEFT JOIN public.shipping_master_curated m_exact
+    ON COALESCE(ld.content->>'得意先コード', '100427105') = m_exact.customer_code
+    AND COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') = m_exact.material_code
+    AND COALESCE(oe.jiku_code, ld.content->>'次区') = m_exact.jiku_code
+LEFT JOIN LATERAL (
+    SELECT
+        m.id,
+        m.customer_name,
+        m.supplier_code,
+        m.maker_name,
+        m.delivery_place_code,
+        m.delivery_place_name,
+        m.warehouse_code,
+        m.shipping_warehouse,
+        m.shipping_slip_text,
+        m.transport_lt_days,
+        m.customer_part_no,
+        m.maker_part_no,
+        m.has_order,
+        m.jiku_code
+    FROM public.shipping_master_curated m
+    WHERE m_exact.id IS NULL
+      AND COALESCE(ld.content->>'得意先コード', '100427105') = m.customer_code
+      AND COALESCE(oe.material_code, ld.content->>'材質コード', ld.content->>'材料コード') = m.material_code
+      AND m.jiku_match_pattern IS NOT NULL
+      AND COALESCE(oe.jiku_code, ld.content->>'次区') LIKE REPLACE(m.jiku_match_pattern, '*', '%')
+    ORDER BY
+      LENGTH(REPLACE(m.jiku_match_pattern, '*', '')) DESC,
+      LENGTH(m.jiku_match_pattern) DESC,
+      m.id ASC
+    LIMIT 1
+) m_pattern ON true
 -- SAP完全一致: 材質コード == ZKDMAT_B
 LEFT JOIN public.sap_material_cache sap_exact
     ON sap_exact.kunnr = COALESCE(ld.content->>'得意先コード', '100427105')

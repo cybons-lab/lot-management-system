@@ -336,14 +336,14 @@ export class SmartReadCsvTransformer {
   ): [SmartReadRow, ValidationError[]] {
     const errors: ValidationError[] = [];
 
-    // Validate 次区 (first character must be alphabet)
+    // Validate 次区 (alphanumeric only)
     if ("次区" in detail) {
       const jiku = this.normalizeValue(detail["次区"]);
-      if (jiku && !/^[A-Za-z]/.test(jiku)) {
+      if (jiku && !/^[A-Za-z0-9]+$/.test(jiku)) {
         errors.push({
           row: rowIdx,
           field: `次区(明細${detailIdx})`,
-          message: "次区は先頭がアルファベットである必要があります",
+          message: "次区は英数字である必要があります",
           value: jiku || null,
         });
         detail["エラー_次区形式"] = 1;

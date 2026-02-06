@@ -346,6 +346,9 @@ class DeliveryPlace(SoftDeleteMixin, Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     jiku_code: Mapped[str] = mapped_column(String(50), nullable=False, server_default="")
+    jiku_match_pattern: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="次区マッチングルール（例: 2***）"
+    )
     delivery_place_code: Mapped[str] = mapped_column(String(50), nullable=False)
     delivery_place_name: Mapped[str] = mapped_column(String(200), nullable=False)
     display_name: Mapped[str | None] = mapped_column(

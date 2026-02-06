@@ -32,7 +32,12 @@ const schema = z.object({
     .optional()
     .or(z.literal("")),
   customer_id: z.coerce.number().min(1, "得意先を選択してください"),
-  jiku_code: z.string().optional(),
+  jiku_code: z.string().min(1, "次区コードは必須です"),
+  jiku_match_pattern: z
+    .string()
+    .max(100, "次区マッチングルールは100文字以内で入力してください")
+    .optional()
+    .or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -44,9 +49,10 @@ interface DeliveryPlaceFormProps {
     short_name?: string | null;
     customer_id?: number;
     jiku_code?: string | null;
+    jiku_match_pattern?: string | null;
   };
   customers: Array<{ id: number; customer_name: string; customer_code: string }>;
-  onSubmit: (data: FormValues & { jiku_code: string }) => void;
+  onSubmit: (data: FormValues & { jiku_code: string; jiku_match_pattern?: string }) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
   isEdit?: boolean;
@@ -69,6 +75,7 @@ export function DeliveryPlaceForm({
       short_name: initialData?.short_name ?? "",
       customer_id: initialData?.customer_id ?? 0,
       jiku_code: initialData?.jiku_code ?? "",
+      jiku_match_pattern: initialData?.jiku_match_pattern ?? "",
     },
   });
 
@@ -76,6 +83,7 @@ export function DeliveryPlaceForm({
     onSubmit({
       ...data,
       jiku_code: data.jiku_code ?? "",
+      jiku_match_pattern: data.jiku_match_pattern || undefined,
     });
   };
 
@@ -157,9 +165,23 @@ export function DeliveryPlaceForm({
           name="jiku_code"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>次区コード（任意）</FormLabel>
+              <FormLabel>次区コード *</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="SAP連携用" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="jiku_match_pattern"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>次区マッチングルール（任意）</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="例: 2***" />
               </FormControl>
               <FormMessage />
             </FormItem>

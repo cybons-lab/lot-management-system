@@ -40,6 +40,7 @@ type FormData = {
   customer_code: string;
   material_code: string;
   jiku_code: string;
+  jiku_match_pattern: string;
   warehouse_code: string;
   customer_name: string;
   delivery_note_product_name: string;
@@ -60,6 +61,7 @@ type FormData = {
 
 // フィールドラベルマップ
 const FIELD_LABELS: Record<string, string> = {
+  jiku_match_pattern: "次区マッチングルール",
   warehouse_code: "倉庫コード",
   customer_name: "得意先名",
   delivery_note_product_name: "素材納品書記載製品名",
@@ -99,6 +101,7 @@ export function ShippingMasterEditDialog({
       customer_code: "",
       material_code: "",
       jiku_code: "",
+      jiku_match_pattern: "",
       warehouse_code: "",
       customer_name: "",
       delivery_note_product_name: "",
@@ -124,6 +127,8 @@ export function ShippingMasterEditDialog({
         customer_code: item.customer_code || "",
         material_code: item.material_code || "",
         jiku_code: item.jiku_code || "",
+        jiku_match_pattern:
+          (item as { jiku_match_pattern?: string | null }).jiku_match_pattern || "",
         warehouse_code: item.warehouse_code || "",
         customer_name: item.customer_name || "",
         delivery_note_product_name: item.delivery_note_product_name || "",
@@ -211,6 +216,7 @@ export function ShippingMasterEditDialog({
     if (isEdit && item) {
       // 編集モード: 変更されたフィールドのみ送信 + 楽観的ロック用のupdated_at
       const updateData: ShippingMasterUpdate = {
+        jiku_match_pattern: data.jiku_match_pattern || null,
         warehouse_code: data.warehouse_code || null,
         customer_name: data.customer_name || null,
         delivery_note_product_name: data.delivery_note_product_name || null,
@@ -236,6 +242,7 @@ export function ShippingMasterEditDialog({
         customer_code: data.customer_code,
         material_code: data.material_code,
         jiku_code: data.jiku_code,
+        jiku_match_pattern: data.jiku_match_pattern || null,
         warehouse_code: data.warehouse_code || null,
         customer_name: data.customer_name || null,
         delivery_note_product_name: data.delivery_note_product_name || null,
@@ -303,6 +310,14 @@ export function ShippingMasterEditDialog({
                   className={errors.jiku_code ? "border-red-500" : ""}
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jiku_match_pattern">次区マッチングルール（任意）</Label>
+              <Input
+                id="jiku_match_pattern"
+                {...register("jiku_match_pattern")}
+                placeholder="例: 2***"
+              />
             </div>
           </div>
 

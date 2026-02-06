@@ -39,6 +39,9 @@ class ShippingMasterRaw(Base):
     customer_code: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 得意先コード
     material_code: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 材質コード
     jiku_code: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 次区（出荷先区分）
+    jiku_match_pattern: Mapped[str | None] = mapped_column(
+        String(100), nullable=True
+    )  # 次区マッチングルール（例: 2***）
     warehouse_code: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 倉庫コード
 
     # 製品情報
@@ -112,6 +115,9 @@ class ShippingMasterCurated(Base):
     customer_code: Mapped[str] = mapped_column(String(50), nullable=False)  # 得意先コード
     material_code: Mapped[str] = mapped_column(String(50), nullable=False)  # 材質コード
     jiku_code: Mapped[str] = mapped_column(String(50), nullable=False)  # 次区（出荷先区分）
+    jiku_match_pattern: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="次区マッチングルール（例: 2***）"
+    )
 
     # 拡張キー
     # warehouse_code は重複定義されていたため削除

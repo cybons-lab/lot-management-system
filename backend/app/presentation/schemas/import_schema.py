@@ -54,7 +54,10 @@ class DeliveryPlaceImportRow(BaseSchema):
 
     delivery_place_code: str = Field(..., description="Delivery place code")
     delivery_place_name: str = Field(..., description="Delivery place name")
-    jiku_code: str | None = Field(None, description="Jiku code (SAP)")
+    jiku_code: str = Field(..., min_length=1, description="Jiku code (SAP)")
+    jiku_match_pattern: str | None = Field(
+        None, description="Jiku match pattern (wildcard, e.g. 2***)"
+    )
 
 
 class CustomerItemImportRow(BaseSchema):

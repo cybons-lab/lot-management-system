@@ -380,8 +380,11 @@ async def list_ocr_results(
     elif has_error is False:
         query += " AND has_error = false"
 
-    # 並び順
-    query += " ORDER BY task_date DESC, row_index ASC"
+    # 並び順（OCR取込順: 新しい取込バッチ -> 行番号）
+    query += (
+        " ORDER BY task_date DESC, COALESCE(request_id_ref, 0) DESC, "
+        "task_id DESC, row_index ASC, id ASC"
+    )
 
     # ページネーション
     query += " LIMIT :limit OFFSET :offset"
@@ -487,7 +490,11 @@ async def list_completed_ocr_results(
 
     # Base query for completed items
     stmt = select(SmartReadLongDataCompleted).order_by(
-        SmartReadLongDataCompleted.task_date.desc(), SmartReadLongDataCompleted.row_index.asc()
+        SmartReadLongDataCompleted.task_date.desc(),
+        func.coalesce(SmartReadLongDataCompleted.request_id_ref, 0).desc(),
+        SmartReadLongDataCompleted.task_id.desc(),
+        SmartReadLongDataCompleted.row_index.asc(),
+        SmartReadLongDataCompleted.id.asc(),
     )
 
     # Filters
@@ -654,7 +661,10 @@ async def export_ocr_results(
         elif has_error is False:
             query += " AND has_error = false"
 
-    query += " ORDER BY task_date DESC, row_index ASC"
+    query += (
+        " ORDER BY task_date DESC, COALESCE(request_id_ref, 0) DESC, "
+        "task_id DESC, row_index ASC, id ASC"
+    )
 
     rows = db.execute(text(query), params).mappings().all()
 
@@ -953,23 +963,37 @@ async def save_ocr_result_edit(
         )
         jiku_code = edit.jiku_code or long_data.content.get("次区")
 
-        # マスタ登録確認
-        master_check_query = """
-            SELECT 1 FROM shipping_master_curated
-            WHERE customer_code = :cc AND material_code = :mc AND jiku_code = :jc
+        # マスタ登録確認（完全一致→パターン一致）
+        master_match_query = """
+            SELECT jiku_code
+            FROM shipping_master_curated
+            WHERE customer_code = :cc
+              AND material_code = :mc
+              AND (
+                jiku_code = :jc
+                OR (
+                    jiku_match_pattern IS NOT NULL
+                    AND :jc LIKE REPLACE(jiku_match_pattern, '*', '%')
+                )
+              )
+            ORDER BY
+              CASE WHEN jiku_code = :jc THEN 0 ELSE 1 END,
+              LENGTH(REPLACE(COALESCE(jiku_match_pattern, ''), '*', '')) DESC,
+              LENGTH(COALESCE(jiku_match_pattern, '')) DESC,
+              id ASC
+            LIMIT 1
         """
-        master_exists = (
-            db.execute(
-                text(master_check_query),
-                {"cc": customer_code, "mc": material_code, "jc": jiku_code},
-            ).first()
-            is not None
-        )
+        matched_jiku_code = db.execute(
+            text(master_match_query),
+            {"cc": customer_code, "mc": material_code, "jc": jiku_code},
+        ).scalar_one_or_none()
+        master_exists = matched_jiku_code is not None
 
-        # 次区フォーマットバリデーション
-        jiku_error = False
-        if jiku_code and not re.match(r"^[A-Za-z][0-9]+$", jiku_code):
-            jiku_error = True
+        # 次区フォーマットバリデーション（補完後の正規次区で判定）
+        effective_jiku_code = matched_jiku_code or jiku_code
+        jiku_error = bool(
+            effective_jiku_code and not re.match(r"^[A-Za-z][0-9]+$", effective_jiku_code)
+        )
 
         # 日付フォーマットバリデーション（納期）
         delivery_date = edit.delivery_date or long_data.content.get("納期")
