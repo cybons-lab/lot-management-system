@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.application.services.common.quantity_service import to_internal_qty
-from app.infrastructure.persistence.models import Product, ProductUomConversion
+from app.infrastructure.persistence.models import ProductUomConversion, SupplierItem
 
 
 async def main():
@@ -33,7 +33,7 @@ async def main():
 
         try:
             # 1. Create Test Product
-            product = Product(
+            product = SupplierItem(
                 maker_part_code="TEST-UOM-001",
                 product_name="Test UOM Product",
                 base_unit="PCS",

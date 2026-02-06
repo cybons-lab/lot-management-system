@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Customer, Order, OrderLine, Product
+from app.infrastructure.persistence.models import Customer, Order, OrderLine, SupplierItem
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -78,9 +78,9 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
             OrderLine.customer_order_no,
             Customer.id.label("customer_id"),
             Customer.customer_name,
-            Product.id.label("supplier_item_id"),
-            Product.maker_part_no.label("product_code"),
-            Product.display_name,
+            SupplierItem.id.label("supplier_item_id"),
+            SupplierItem.maker_part_no.label("product_code"),
+            SupplierItem.display_name,
             OrderLine.order_quantity,
             func.coalesce(res_subq.c.reserved_qty, 0).label("reserved_quantity"),
             OrderLine.unit,
@@ -89,7 +89,7 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
         )
         .join(Order, OrderLine.order_id == Order.id)
         .join(Customer, Order.customer_id == Customer.id)
-        .join(Product, OrderLine.supplier_item_id == Product.id)
+        .join(SupplierItem, OrderLine.supplier_item_id == SupplierItem.id)
         .outerjoin(res_subq, OrderLine.id == res_subq.c.order_line_id)
         .where(OrderLine.sap_order_no.is_(None))  # SAP未登録
         .where(

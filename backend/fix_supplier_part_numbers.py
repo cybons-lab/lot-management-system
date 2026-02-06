@@ -19,7 +19,7 @@ from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
-from app.infrastructure.persistence.models import Product, Supplier, SupplierItem
+from app.infrastructure.persistence.models import Supplier, SupplierItem
 
 
 # Supplier code prefixes for part number generation
@@ -100,9 +100,10 @@ def main():
         print("=" * 60)
 
         # Get all supplier items with products
+        # NOTE: Original code joined with Product (alias for SupplierItem) via product_id,
+        # but SupplierItem no longer has product_id. Selecting only SupplierItem + Supplier.
         stmt = (
-            select(SupplierItem, Product, Supplier)
-            .join(Product, SupplierItem.product_id == Product.id, isouter=True)
+            select(SupplierItem, Supplier)
             .join(Supplier, SupplierItem.supplier_id == Supplier.id)
             .order_by(Supplier.supplier_name, SupplierItem.id)
         )
@@ -116,7 +117,7 @@ def main():
         supplier_sequences = {}
         updates = []
 
-        for si, product, supplier in results:
+        for si, supplier in results:
             # Get or initialize sequence for this supplier
             if supplier.id not in supplier_sequences:
                 supplier_sequences[supplier.id] = 1
@@ -124,26 +125,16 @@ def main():
             old_part_no = si.maker_part_no
 
             # Generate new part number
-            if product:
-                new_part_no = generate_supplier_part_no(
-                    supplier.supplier_name,
-                    product.product_name,
-                    supplier_sequences[supplier.id],
-                )
-            else:
-                # Fallback for items without product linkage
-                new_part_no = generate_supplier_part_no(
-                    supplier.supplier_name,
-                    "GENERIC",
-                    supplier_sequences[supplier.id],
-                )
+            new_part_no = generate_supplier_part_no(
+                supplier.supplier_name,
+                si.display_name or "GENERIC",
+                supplier_sequences[supplier.id],
+            )
 
             supplier_sequences[supplier.id] += 1
 
             # Show change
-            product_info = (
-                f"{product.maker_part_code} ({product.product_name})" if product else "No product"
-            )
+            product_info = f"{si.maker_part_no} ({si.display_name})"
             print(f"SI #{si.id}: {supplier.supplier_name}")
             print(f"  Product: {product_info}")
             print(f"  Old: {old_part_no}")

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models.forecast_models import Forecast
+from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
 from app.infrastructure.persistence.models.inventory_models import LotReceipt, StockMovement
 from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
 from app.infrastructure.persistence.models.masters_models import (
@@ -37,7 +37,7 @@ def get_db_counts(db: Session = Depends(get_db)):
     counts["suppliers"] = db.scalar(select(func.count()).select_from(Supplier)) or 0
 
     # 需要予測テーブル
-    counts["forecasts"] = db.scalar(select(func.count()).select_from(Forecast)) or 0
+    counts["forecasts"] = db.scalar(select(func.count()).select_from(ForecastCurrent)) or 0
 
     # 在庫テーブル
     counts["lots"] = db.scalar(select(func.count()).select_from(LotReceipt)) or 0

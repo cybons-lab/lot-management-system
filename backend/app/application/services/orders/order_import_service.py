@@ -11,7 +11,7 @@ from app.infrastructure.persistence.models import (
     Customer,
     OrderGroup,
     OrderLine,
-    Product,
+    SupplierItem,
 )
 from app.infrastructure.persistence.repositories.order_group_repository import (
     OrderGroupRepository,
@@ -96,7 +96,9 @@ class OrderImportService:
                 errors=[f"得意先が見つかりません: {customer_code}"],
             )
 
-        product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
+        product = (
+            self.db.query(SupplierItem).filter(SupplierItem.maker_part_no == product_code).first()
+        )
         if not product:
             return OrderGroupImportResult(
                 order_group=None,

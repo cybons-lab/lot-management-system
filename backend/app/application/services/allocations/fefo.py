@@ -152,7 +152,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Order, OrderLine, Product
+from app.infrastructure.persistence.models import Order, OrderLine, SupplierItem
 
 from .schemas import FefoLinePlan, FefoLotPlan, FefoPreviewResult
 from .utils import (
@@ -248,7 +248,7 @@ def calculate_line_allocations(
     warehouse_code = None
 
     if supplier_item_id:
-        product = db.query(Product).filter(Product.id == supplier_item_id).first()
+        product = db.query(SupplierItem).filter(SupplierItem.id == supplier_item_id).first()
         if product:
             product_code = product.maker_part_no
 

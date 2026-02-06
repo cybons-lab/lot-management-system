@@ -14,7 +14,7 @@ from app.infrastructure.persistence.models.inbound_models import (
 )
 from app.infrastructure.persistence.models.inventory_models import (
     LotReceipt,
-    StockHistory,
+    StockMovement,
     StockTransactionType,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
@@ -109,7 +109,7 @@ class InboundReceivingService:
                     self.db.flush()
 
                     # Create stock history record
-                    stock_history = StockHistory(
+                    stock_history = StockMovement(
                         lot_id=db_lot.id,
                         transaction_type=StockTransactionType.INBOUND,
                         quantity_change=expected_lot.expected_quantity,
@@ -148,7 +148,7 @@ class InboundReceivingService:
                 self.db.flush()
 
                 # Create stock history record
-                stock_history = StockHistory(
+                stock_history = StockMovement(
                     lot_id=db_lot.id,
                     transaction_type=StockTransactionType.INBOUND,
                     quantity_change=line.planned_quantity,

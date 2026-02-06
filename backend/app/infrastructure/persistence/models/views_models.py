@@ -22,10 +22,6 @@ class VLotCurrentStock(Base):
     last_updated: Mapped[date | None] = mapped_column(Date)
 
 
-# Alias for backward compatibility
-LotCurrentStock = VLotCurrentStock
-
-
 class VCustomerDailyProduct(Base):
     """v_customer_daily_products ビュー."""
 
@@ -216,10 +212,6 @@ class VLotDetails(Base):
     supplier_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime)
     updated_at: Mapped[datetime] = mapped_column(DateTime)
-
-
-# Backward compatibility alias
-LotDetails = VLotDetails
 
 
 class VOrderLineDetails(Base):

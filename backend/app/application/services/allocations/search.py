@@ -254,9 +254,9 @@ def _enrich_product_units(db: Session, candidates: list[CandidateLotItem]) -> No
     if not supplier_item_ids:
         return
 
-    from app.infrastructure.persistence.models import Product
+    from app.infrastructure.persistence.models import SupplierItem
 
-    products = db.query(Product).filter(Product.id.in_(supplier_item_ids)).all()
+    products = db.query(SupplierItem).filter(SupplierItem.id.in_(supplier_item_ids)).all()
     product_map = {p.id: p for p in products}
 
     for candidate in candidates:

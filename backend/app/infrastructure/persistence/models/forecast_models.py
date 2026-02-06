@@ -101,15 +101,6 @@ tables.
    → 分析時の主要な検索軸
    → date や period はインデックス不要（全件スキャンで十分）
 
-10. なぜ Forecast = ForecastCurrent のエイリアスがあるのか（L123-124）
-    理由: 後方互換性の維持
-    背景:
-    - v2.3以前: Forecast テーブルのみ
-    - v2.4: ForecastCurrent + ForecastHistory に分割
-    → 既存コードが Forecast を参照している
-    解決:
-    - Forecast = ForecastCurrent のエイリアス
-    → 既存コードの修正不要（段階的な移行が可能）
 """
 
 from __future__ import annotations
@@ -230,7 +221,3 @@ class ForecastHistory(Base):
             "supplier_item_id",
         ),
     )
-
-
-# Backward compatibility alias
-Forecast = ForecastCurrent

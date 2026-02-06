@@ -5,7 +5,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
-from app.infrastructure.persistence.models import Customer, Product, ProductMapping, Supplier
+from app.infrastructure.persistence.models import Customer, ProductMapping, Supplier, SupplierItem
 from app.presentation.schemas.masters.masters_schema import (
     ProductMappingCreate,
     ProductMappingUpdate,
@@ -36,8 +36,8 @@ class ProductMappingsService(
                 ProductMapping.customer_part_code,
                 Supplier.supplier_code,
                 Supplier.supplier_name,
-                Product.maker_part_no.label("product_code"),
-                Product.display_name,
+                SupplierItem.maker_part_no.label("product_code"),
+                SupplierItem.display_name,
                 ProductMapping.base_unit,
                 ProductMapping.pack_unit,
                 ProductMapping.pack_quantity,
@@ -45,7 +45,7 @@ class ProductMappingsService(
             )
             .join(Customer, ProductMapping.customer_id == Customer.id)
             .join(Supplier, ProductMapping.supplier_id == Supplier.id)
-            .join(Product, ProductMapping.supplier_item_id == Product.id)
+            .join(SupplierItem, ProductMapping.supplier_item_id == SupplierItem.id)
         )
 
         results = query.all()

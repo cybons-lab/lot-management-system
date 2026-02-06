@@ -111,7 +111,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.persistence.models import Product, ProductUomConversion
+from app.infrastructure.persistence.models import ProductUomConversion, SupplierItem
 
 
 getcontext().prec = 28
@@ -141,7 +141,7 @@ def _to_decimal(value: NumberLike) -> Decimal:
 
 
 async def to_internal_qty(
-    db: AsyncSession, product: Product, qty_external: NumberLike, external_unit: str
+    db: AsyncSession, product: SupplierItem, qty_external: NumberLike, external_unit: str
 ) -> Decimal:
     """指定した製品の外部単位数量を内部単位数量へ変換する。."""
     external_unit_value = str(external_unit).strip()

@@ -159,10 +159,10 @@ from app.domain.lot import (
 from app.infrastructure.persistence.models import (
     LotMaster,
     LotReceipt,
-    Product,
     StockMovement,
     StockTransactionType,
     Supplier,
+    SupplierItem,
     VLotDetails,
     Warehouse,
 )
@@ -313,7 +313,9 @@ class LotService:
         from app.domain.allocation_policy import AllocationPolicy, LockMode
 
         # Resolve product_code to supplier_item_id
-        product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
+        product = (
+            self.db.query(SupplierItem).filter(SupplierItem.maker_part_no == product_code).first()
+        )
         if not product:
             return []
 
@@ -672,7 +674,11 @@ class LotService:
         if not lot_create.supplier_item_id:
             raise LotValidationError("supplier_item_id は必須です")
 
-        product = self.db.query(Product).filter(Product.id == lot_create.supplier_item_id).first()
+        product = (
+            self.db.query(SupplierItem)
+            .filter(SupplierItem.id == lot_create.supplier_item_id)
+            .first()
+        )
         if not product:
             raise LotProductNotFoundError(lot_create.supplier_item_id)
 

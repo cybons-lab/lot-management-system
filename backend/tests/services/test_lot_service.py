@@ -11,10 +11,10 @@ from sqlalchemy.orm import Session
 from app.application.services.inventory.lot_service import LotService
 from app.domain.lot import LotCandidate
 from app.infrastructure.persistence.models import (
-    LotCurrentStock,
     LotReceipt,
     Supplier,
     SupplierItem,
+    VLotCurrentStock,
     Warehouse,
 )
 from app.infrastructure.persistence.models.lot_master_model import LotMaster
@@ -24,7 +24,7 @@ from app.infrastructure.persistence.models.lot_master_model import LotMaster
 def setup_lot_test_data(db_session: Session, supplier):
     """ロットテスト用の基本データをセットアップ"""
     # 既存データをクリア
-    db_session.query(LotCurrentStock).delete()
+    db_session.query(VLotCurrentStock).delete()
     db_session.query(LotReceipt).delete()
     db_session.query(LotMaster).delete()
     db_session.query(SupplierItem).delete()
@@ -138,12 +138,12 @@ class TestCreateLot:
         """ロット作成テスト用のマスタデータをセットアップ"""
         # 既存データをクリア
         from app.infrastructure.persistence.models import (
-            LotCurrentStock,
-            StockHistory,
+            StockMovement,
+            VLotCurrentStock,
         )
 
-        db_session.query(StockHistory).delete()
-        db_session.query(LotCurrentStock).delete()
+        db_session.query(StockMovement).delete()
+        db_session.query(VLotCurrentStock).delete()
         db_session.query(LotReceipt).delete()
         db_session.query(LotMaster).delete()
         db_session.query(SupplierItem).delete()
@@ -490,7 +490,7 @@ class TestCreateLot:
         """ロット作成時にstock_historyレコードが作成されるテスト"""
         from decimal import Decimal
 
-        from app.infrastructure.persistence.models import StockHistory
+        from app.infrastructure.persistence.models import StockMovement
         from app.presentation.schemas.inventory.inventory_schema import LotCreate, LotOriginType
 
         data = lot_master_data
@@ -509,7 +509,7 @@ class TestCreateLot:
         result = svc.create_lot(lot_create)
 
         # stock_historyが作成されたことを確認
-        history = db_session.query(StockHistory).filter(StockHistory.lot_id == result.id).first()
+        history = db_session.query(StockMovement).filter(StockMovement.lot_id == result.id).first()
         assert history is not None
         assert history.transaction_type == "inbound"
         assert history.quantity_change == Decimal("100")

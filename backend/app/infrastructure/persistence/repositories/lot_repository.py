@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.infrastructure.persistence.models import (
     LotReceipt,
-    Product,
     Supplier,
+    SupplierItem,
     Warehouse,
 )
 
@@ -177,7 +177,9 @@ class LotRepository:
             },
         )
 
-        product = self.db.query(Product).filter(Product.maker_part_no == product_code).first()
+        product = (
+            self.db.query(SupplierItem).filter(SupplierItem.maker_part_no == product_code).first()
+        )
         if not product:
             logger.debug("Product not found", extra={"product_code": product_code})
             return []
@@ -241,13 +243,13 @@ class LotRepository:
                 "warehouse_id": warehouse_id,
             },
         )
-        product: Product | None = None
+        product: SupplierItem | None = None
         supplier: Supplier | None = None
         if supplier_code:
             supplier_stmt = select(Supplier).where(Supplier.supplier_code == supplier_code)
             supplier = self.db.execute(supplier_stmt).scalar_one_or_none()
         if product_code:
-            product_stmt = select(Product).where(Product.maker_part_no == product_code)
+            product_stmt = select(SupplierItem).where(SupplierItem.maker_part_no == product_code)
             product = self.db.execute(product_stmt).scalar_one_or_none()
 
         lot = LotReceipt(

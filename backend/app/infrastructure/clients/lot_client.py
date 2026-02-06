@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.application.services.inventory.lot_service import LotService
 from app.domain.lot import LotCandidate
-from app.infrastructure.persistence.models import LotMaster, LotReceipt, Product, Warehouse
+from app.infrastructure.persistence.models import LotMaster, LotReceipt, SupplierItem, Warehouse
 from app.presentation.schemas.inventory.inventory_schema import LotResponse
 
 
@@ -39,7 +39,7 @@ class InProcessLotClient(LotContextClient):
     async def get_available_lots(
         self, supplier_item_id: int, warehouse_id: int | None, min_quantity: Decimal
     ) -> list[LotCandidate]:
-        product = self.db.get(Product, supplier_item_id)
+        product = self.db.get(SupplierItem, supplier_item_id)
         if not product:
             return []
 
