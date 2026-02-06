@@ -1,10 +1,9 @@
-/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 /**
  * UomConversionForm - 単位換算登録フォーム
  */
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useMemo } from "react";
-import { useForm, type Resolver } from "react-hook-form";
+import { useForm, type Control, type Resolver } from "react-hook-form";
 import { z } from "zod";
 
 import {
@@ -47,6 +46,128 @@ interface UomConversionFormProps {
   isSubmitting?: boolean;
 }
 
+function SupplierFilterSection({
+  selectedSupplierId,
+  onSupplierChange,
+  suppliers,
+}: {
+  selectedSupplierId: string;
+  onSupplierChange: (value: string) => void;
+  suppliers: Array<{ id: number; supplier_name: string; supplier_code: string }>;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>仕入先で絞り込み</Label>
+      <Select value={selectedSupplierId} onValueChange={onSupplierChange}>
+        <SelectTrigger>
+          <SelectValue placeholder="仕入先を選択" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">すべての仕入先</SelectItem>
+          {suppliers.map((supplier) => (
+            <SelectItem key={supplier.id} value={String(supplier.id)}>
+              {supplier.supplier_code} - {supplier.supplier_name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function ProductField({
+  control,
+  filteredProducts,
+}: {
+  control: Control<FormValues>;
+  filteredProducts: UomConversionFormProps["products"];
+}) {
+  return (
+    <FormField
+      control={control}
+      name="supplier_item_id"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>商品</FormLabel>
+          <Select
+            value={field.value ? String(field.value) : ""}
+            onValueChange={(v) => field.onChange(Number(v))}
+          >
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="商品を選択" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {filteredProducts.map((product) => (
+                <SelectItem key={product.id} value={String(product.id)}>
+                  {product.product_code} - {product.product_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function ExternalUnitField({ control }: { control: Control<FormValues> }) {
+  return (
+    <FormField
+      control={control}
+      name="external_unit"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>外部単位</FormLabel>
+          <FormControl>
+            <Input {...field} placeholder="例: KG, BOX, PCS" />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function FactorField({ control }: { control: Control<FormValues> }) {
+  return (
+    <FormField
+      control={control}
+      name="factor"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>換算係数</FormLabel>
+          <FormControl>
+            <Input type="number" step="any" {...field} placeholder="例: 1.5" />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function SubmitButtons({
+  isSubmitting,
+  onCancel,
+}: {
+  isSubmitting: boolean;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="flex justify-end gap-2 pt-4">
+      <Button type="button" variant="outline" onClick={onCancel}>
+        キャンセル
+      </Button>
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "登録中..." : "登録"}
+      </Button>
+    </div>
+  );
+}
+
 export function UomConversionForm({
   products,
   suppliers = [],
@@ -70,85 +191,15 @@ export function UomConversionForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* 仕入先フィルタ */}
-        <div className="space-y-2">
-          <Label>仕入先で絞り込み</Label>
-          <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
-            <SelectTrigger>
-              <SelectValue placeholder="仕入先を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">すべての仕入先</SelectItem>
-              {suppliers.map((s) => (
-                <SelectItem key={s.id} value={String(s.id)}>
-                  {s.supplier_code} - {s.supplier_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <FormField
-          control={form.control}
-          name="supplier_item_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>商品</FormLabel>
-              <Select
-                value={field.value ? String(field.value) : ""}
-                onValueChange={(v) => field.onChange(Number(v))}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="商品を選択" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {filteredProducts.map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.product_code} - {p.product_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+        <SupplierFilterSection
+          selectedSupplierId={selectedSupplierId}
+          onSupplierChange={setSelectedSupplierId}
+          suppliers={suppliers}
         />
-        <FormField
-          control={form.control}
-          name="external_unit"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>外部単位</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="例: KG, BOX, PCS" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="factor"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>換算係数</FormLabel>
-              <FormControl>
-                <Input type="number" step="any" {...field} placeholder="例: 1.5" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            キャンセル
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "登録中..." : "登録"}
-          </Button>
-        </div>
+        <ProductField control={form.control} filteredProducts={filteredProducts} />
+        <ExternalUnitField control={form.control} />
+        <FactorField control={form.control} />
+        <SubmitButtons isSubmitting={isSubmitting} onCancel={onCancel} />
       </form>
     </Form>
   );
