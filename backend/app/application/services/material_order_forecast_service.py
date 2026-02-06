@@ -75,15 +75,13 @@ class MaterialOrderForecastService:
                     f"CSV列数が不足しています（期待: 60列以上、実際: {len(df.columns)}列）"
                 )
 
-            # Step 2: 対象月を決定（YYYYMM → YYYY-MM）
-            if not target_month:
-                target_month_raw = str(df.iloc[0, 0])
-                if len(target_month_raw) == 6 and target_month_raw.isdigit():
-                    target_month = f"{target_month_raw[:4]}-{target_month_raw[4:6]}"
-                else:
-                    raise ValueError(
-                        f"対象月の形式が不正です（期待: YYYYMM、実際: {target_month_raw}）"
-                    )
+            # Step 2: 対象月を決定（正規化後CSVの先頭列のみ）
+            detected_target_month = self._extract_target_month(df)
+            if target_month and target_month != detected_target_month:
+                normalize_warnings.append(
+                    f"指定された対象月({target_month})ではなくCSVの対象月({detected_target_month})を使用しました。"
+                )
+            target_month = detected_target_month
 
             logger.info(f"Target month: {target_month}")
 
@@ -225,6 +223,14 @@ class MaterialOrderForecastService:
         out = pd.concat(cols, axis=1)
         out.columns = list(range(60))
         return out
+
+    @staticmethod
+    def _extract_target_month(df: pd.DataFrame) -> str:
+        """対象月をCSVから抽出（正規化後の先頭列のみ）."""
+        value = str(df.iloc[0, 0]).strip()
+        if len(value) == 6 and value.isdigit():
+            return f"{value[:4]}-{value[4:6]}"
+        raise ValueError(f"対象月の形式が不正です（期待: YYYYMM、実際: {value or '空値'}）")
 
     def _build_master_reference_warnings(self, df: pd.DataFrame) -> list[str]:
         """次区/メーカー名の参照可否を警告として返す（データ補完はしない）."""
@@ -476,3 +482,15 @@ class MaterialOrderForecastService:
                 MaterialOrderForecast.material_code,
             )
             return query.limit(limit).offset(offset).all()
+
+    def delete_forecast(self, forecast_id: int) -> bool:
+        """フォーキャストを削除."""
+        deleted_count = (
+            self.db.query(MaterialOrderForecast)
+            .filter(MaterialOrderForecast.id == forecast_id)
+            .delete()
+        )
+        if deleted_count == 0:
+            return False
+        self.db.commit()
+        return True

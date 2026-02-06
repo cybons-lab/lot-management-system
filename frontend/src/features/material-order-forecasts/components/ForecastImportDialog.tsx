@@ -1,5 +1,5 @@
 import { Upload, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useImportMaterialOrderForecast } from "../hooks/useMaterialOrderForecasts";
 
@@ -17,23 +17,11 @@ import {
 interface ForecastImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultMonth?: string;
 }
 
-export function ForecastImportDialog({
-  open,
-  onOpenChange,
-  defaultMonth,
-}: ForecastImportDialogProps) {
+export function ForecastImportDialog({ open, onOpenChange }: ForecastImportDialogProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [targetMonth, setTargetMonth] = useState(
-    defaultMonth || new Date().toISOString().slice(0, 7),
-  );
   const importMutation = useImportMaterialOrderForecast();
-
-  useEffect(() => {
-    if (open) setTargetMonth(defaultMonth || new Date().toISOString().slice(0, 7));
-  }, [open, defaultMonth]);
 
   const handleOpenChange = (val: boolean) => {
     if (importMutation.isPending) return;
@@ -47,7 +35,7 @@ export function ForecastImportDialog({
   const handleImport = () => {
     if (!file) return;
     importMutation.mutate(
-      { file, targetMonth },
+      { file },
       {
         onSuccess: () => {
           setFile(null);
@@ -64,8 +52,6 @@ export function ForecastImportDialog({
           <DialogTitle>フォーキャストCSVインポート</DialogTitle>
         </DialogHeader>
         <ForecastImportForm
-          targetMonth={targetMonth}
-          setTargetMonth={setTargetMonth}
           setFile={setFile}
           isPending={importMutation.isPending}
           isError={importMutation.isError}
@@ -80,10 +66,7 @@ export function ForecastImportDialog({
           >
             キャンセル
           </Button>
-          <Button
-            onClick={handleImport}
-            disabled={!file || !targetMonth || importMutation.isPending}
-          >
+          <Button onClick={handleImport} disabled={!file || importMutation.isPending}>
             {importMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

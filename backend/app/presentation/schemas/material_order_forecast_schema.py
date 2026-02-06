@@ -61,7 +61,7 @@ class MaterialOrderForecastListResponse(BaseModel):
 class MaterialOrderForecastImportRequest(BaseModel):
     """Material Order Forecast import request."""
 
-    target_month: str | None = Field(None, description="対象月（YYYY-MM、省略時はCSV A列から取得）")
+    target_month: str | None = Field(None, description="対象月（YYYY-MM、互換入力用）")
 
 
 class MaterialOrderForecastImportResponse(BaseModel):

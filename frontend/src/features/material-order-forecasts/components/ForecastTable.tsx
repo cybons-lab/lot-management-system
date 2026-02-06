@@ -1,20 +1,31 @@
 import { parseISO, addMonths, lastDayOfMonth } from "date-fns";
+import { Trash2 } from "lucide-react";
 import { useMemo } from "react";
 
 import { type MaterialOrderForecast } from "../api";
 
+import { Button } from "@/components/ui";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 
 interface ForecastTableProps {
   data: MaterialOrderForecast[];
   isLoading?: boolean;
   targetMonth: string; // YYYY-MM
+  onDelete?: (row: MaterialOrderForecast) => void;
+  deletingId?: number | null;
 }
 
 /**
  * メタデータカラム（A-K列）の取得
  */
 const getMetaColumns = (): Column<MaterialOrderForecast>[] => [
+  {
+    id: "target_month",
+    header: "対象年月",
+    cell: (row) => <span className="font-medium text-sm">{row.target_month}</span>,
+    width: "110px",
+    sticky: "left",
+  },
   {
     id: "material_code",
     header: "材質コード",
@@ -193,7 +204,13 @@ const getPeriodColumns = (nextMonthNum: number): Column<MaterialOrderForecast>[]
   });
 };
 
-export function ForecastTable({ data, isLoading, targetMonth }: ForecastTableProps) {
+export function ForecastTable({
+  data,
+  isLoading,
+  targetMonth,
+  onDelete,
+  deletingId,
+}: ForecastTableProps) {
   const columns = useMemo(() => {
     const currentMonthDate = parseISO(`${targetMonth}-01`);
     const nextMonthDate = addMonths(currentMonthDate, 1);
@@ -216,6 +233,22 @@ export function ForecastTable({ data, isLoading, targetMonth }: ForecastTablePro
       columns={columns}
       isLoading={isLoading}
       getRowId={(row) => row.id.toString()}
+      rowActions={
+        onDelete
+          ? (row) => (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(row)}
+                disabled={deletingId === row.id}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="mr-1 h-4 w-4" />
+                {deletingId === row.id ? "削除中..." : "削除"}
+              </Button>
+            )
+          : undefined
+      }
       dense
       emptyMessage={`${targetMonth} のデータは見つかりませんでした`}
     />

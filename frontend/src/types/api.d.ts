@@ -1572,7 +1572,7 @@ export interface paths {
      *
      *     Args:
      *         file: CSV file (ヘッダーなし、1行目からデータ、60列)
-     *         target_month: 対象月（YYYY-MM、省略時はCSV A列から自動取得）
+     *         target_month: 対象月（YYYY-MM、互換入力用。実際はCSV列から自動取得）
      *         db: Database session
      *         current_user: Current authenticated user
      *
@@ -1581,6 +1581,26 @@ export interface paths {
      */
     post: operations["import_forecast_csv_api_material_order_forecasts_import_post"];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/material-order-forecasts/{forecast_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete Forecast
+     * @description フォーキャストデータ削除.
+     */
+    delete: operations["delete_forecast_api_material_order_forecasts__forecast_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -20969,6 +20989,35 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["MaterialOrderForecastImportResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_forecast_api_material_order_forecasts__forecast_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        forecast_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

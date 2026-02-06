@@ -20,8 +20,7 @@ export const useImportMaterialOrderForecast = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ file, targetMonth }: { file: File; targetMonth?: string }) =>
-      materialOrderForecastsApi.importCsv(file, targetMonth),
+    mutationFn: ({ file }: { file: File }) => materialOrderForecastsApi.importCsv(file),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: forecastKeys.all });
       if (data.warnings && data.warnings.length > 0) {
@@ -35,6 +34,21 @@ export const useImportMaterialOrderForecast = () => {
     onError: (error: Error) => {
       const message = error.message || "インポートに失敗しました";
       toast.error(message);
+    },
+  });
+};
+
+export const useDeleteMaterialOrderForecast = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => materialOrderForecastsApi.deleteForecast(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: forecastKeys.all });
+      toast.success("フォーキャストを削除しました");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "削除に失敗しました");
     },
   });
 };
