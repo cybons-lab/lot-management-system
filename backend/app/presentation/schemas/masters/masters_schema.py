@@ -59,10 +59,23 @@ class WarehouseUpdate(BaseSchema):
     short_name: str | None = Field(None, max_length=50, description="短縮表示名")
 
 
-class WarehouseResponse(WarehouseBase):
-    """Warehouse response (DDL: warehouses)."""
+class WarehouseResponse(BaseSchema):
+    """Warehouse response (DDL: warehouses).
+
+    WarehouseBaseを継承しない: DB上warehouse_typeはNULL許容
+    （出荷マスタ同期で自動作成された倉庫）のためResponseでは別定義。
+    """
 
     id: int
+    warehouse_code: str
+    warehouse_name: str
+    warehouse_type: str | None = Field(
+        None, pattern="^(internal|external|supplier)$", description="internal/external/supplier"
+    )
+    default_transport_lead_time_days: int | None = Field(
+        None, ge=0, description="デフォルト輸送リードタイム（日）"
+    )
+    short_name: str | None = Field(None, max_length=50, description="短縮表示名")
     created_at: datetime
     updated_at: datetime
     valid_to: date

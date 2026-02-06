@@ -43,6 +43,21 @@ def test_list_warehouses_with_pagination(db: Session, client: TestClient):
     assert len(data) >= 3
 
 
+def test_list_warehouses_allows_null_warehouse_type(db: Session, client: TestClient):
+    """List endpoint should not fail when warehouse_type is NULL in DB."""
+    w = Warehouse(
+        warehouse_code="NULL-TYPE-001", warehouse_name="Null Type Warehouse", warehouse_type=None
+    )
+    db.add(w)
+    db.flush()
+
+    response = client.get("/api/masters/warehouses")
+    assert response.status_code == 200
+    data = response.json()
+    target = next(item for item in data if item["warehouse_code"] == "NULL-TYPE-001")
+    assert target["warehouse_type"] is None
+
+
 # ===== GET /api/masters/warehouses/{code} Tests =====
 
 
