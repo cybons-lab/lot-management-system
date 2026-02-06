@@ -31834,7 +31834,10 @@ export interface operations {
   };
   list_db_objects_api_debug_db_objects_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Filter by column name */
+        column_q?: string | null;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -31850,6 +31853,15 @@ export interface operations {
           "application/json": {
             [key: string]: unknown;
           }[];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

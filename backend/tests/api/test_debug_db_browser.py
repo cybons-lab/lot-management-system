@@ -71,3 +71,35 @@ def test_db_browser_disabled_returns_404(
     assert response.json()["detail"] == "DB browser is disabled"
 
     # Re-enable will be handled by autouse fixture
+
+
+def test_db_browser_list_objects_column_filter(
+    client: TestClient,
+    db: Session,
+    superuser_token_headers: dict[str, str],
+):
+    # Ensure DB browser is enabled
+    from app.application.services.system_config_service import ConfigKeys, SystemConfigService
+
+    service = SystemConfigService(db)
+    service.set(ConfigKeys.ENABLE_DB_BROWSER, "true")
+    db.commit()
+
+    # 'username' カラムを持つテーブルを検索
+    response = client.get(
+        "/api/debug/db/objects?column_q=username",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    objects = response.json()
+
+    # 'users' テーブルが含まれていることを確認
+    assert any(obj["object_name"] == "users" for obj in objects)
+
+    # 存在しないカラム名で検索
+    response = client.get(
+        "/api/debug/db/objects?column_q=non_existent_column_xyz",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    assert len(response.json()) == 0

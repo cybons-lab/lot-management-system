@@ -9,7 +9,7 @@ import { getDbDefinition, getDbObjects, getDbRelations, getDbRows, getDbSchema }
 
 export const dbBrowserKeys = {
   all: ["db-browser"] as const,
-  objects: () => [...dbBrowserKeys.all, "objects"] as const,
+  objects: (columnQ?: string) => [...dbBrowserKeys.all, "objects", { columnQ }] as const,
   schema: (schema: string, name: string) => [...dbBrowserKeys.all, "schema", schema, name] as const,
   rows: (schema: string, name: string, params: DbRowsParams) =>
     [...dbBrowserKeys.all, "rows", schema, name, params] as const,
@@ -19,10 +19,10 @@ export const dbBrowserKeys = {
     [...dbBrowserKeys.all, "relations", schema, name] as const,
 };
 
-export const useDbObjects = () =>
+export const useDbObjects = (columnQ?: string) =>
   useQuery({
-    queryKey: dbBrowserKeys.objects(),
-    queryFn: getDbObjects,
+    queryKey: dbBrowserKeys.objects(columnQ),
+    queryFn: () => getDbObjects(columnQ),
     staleTime: 60 * 1000,
   });
 
@@ -42,7 +42,7 @@ export const useDbRows = (
     queryKey: schema && name ? dbBrowserKeys.rows(schema, name, params) : ["db-browser", "rows"],
     queryFn: () => getDbRows(schema!, name!, params),
     enabled: Boolean(schema && name),
-    placeholderData: (previousData) => previousData,
+    placeholderData: (previousData: unknown) => previousData,
   });
 
 export const useDbDefinition = (

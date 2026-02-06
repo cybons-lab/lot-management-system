@@ -210,7 +210,7 @@ class ForecastHistory(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     customer_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     delivery_place_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    supplier_item_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    supplier_item_id: Mapped[int] = mapped_column("product_id", BigInteger, nullable=False)
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -227,7 +227,7 @@ class ForecastHistory(Base):
             "ix_forecast_history_key",
             "customer_id",
             "delivery_place_id",
-            "supplier_item_id",
+            "product_id",
         ),
     )
 

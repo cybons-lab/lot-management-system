@@ -22,6 +22,7 @@ function useDbBrowserViewState() {
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
+  const [columnSearch, setColumnSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<DbObjectType | "all">("all");
   const [selected, setSelected] = useState<DbObject | null>(null);
   const [sort, setSort] = useState<SortConfig | undefined>(undefined);
@@ -68,6 +69,8 @@ function useDbBrowserViewState() {
     selected,
     search,
     setSearch,
+    columnSearch,
+    setColumnSearch,
     typeFilter,
     setTypeFilter,
     searchQuery,
@@ -86,8 +89,8 @@ function useDbBrowserViewState() {
 
 function useDbBrowserPageModel() {
   const view = useDbBrowserViewState();
-  const { selected, search, typeFilter, rowQueryParams, handleSelectObject } = view;
-  const { data: objects = [], isLoading: isObjectsLoading, error } = useDbObjects();
+  const { selected, search, columnSearch, typeFilter, rowQueryParams, handleSelectObject } = view;
+  const { data: objects = [], isLoading: isObjectsLoading, error } = useDbObjects(columnSearch);
 
   useEffect(() => {
     if (!selected && objects.length > 0) {
@@ -155,6 +158,8 @@ export function DbBrowserPage() {
           onSelect={model.handleSelectObject}
           search={model.search}
           onSearchChange={model.setSearch}
+          columnSearch={model.columnSearch}
+          onColumnSearchChange={model.setColumnSearch}
           typeFilter={model.typeFilter}
           onTypeFilterChange={model.setTypeFilter}
           filteredObjects={model.filteredObjects}
