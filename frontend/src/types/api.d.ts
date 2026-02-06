@@ -10988,7 +10988,12 @@ export interface components {
        * Jiku Code
        * @description 次区コード(SAP連携用)
        */
-      jiku_code?: string | null;
+      jiku_code: string;
+      /**
+       * Jiku Match Pattern
+       * @description 次区マッチングルール（例: 2***）
+       */
+      jiku_match_pattern?: string | null;
       /** Delivery Place Code */
       delivery_place_code: string;
       /** Delivery Place Name */
@@ -11020,7 +11025,12 @@ export interface components {
        * Jiku Code
        * @description Jiku code (SAP)
        */
-      jiku_code?: string | null;
+      jiku_code: string;
+      /**
+       * Jiku Match Pattern
+       * @description Jiku match pattern (wildcard, e.g. 2***)
+       */
+      jiku_match_pattern?: string | null;
     };
     /**
      * DeliveryPlaceResponse
@@ -11031,7 +11041,12 @@ export interface components {
        * Jiku Code
        * @description 次区コード(SAP連携用)
        */
-      jiku_code?: string | null;
+      jiku_code: string;
+      /**
+       * Jiku Match Pattern
+       * @description 次区マッチングルール（例: 2***）
+       */
+      jiku_match_pattern?: string | null;
       /** Delivery Place Code */
       delivery_place_code: string;
       /** Delivery Place Name */
@@ -16125,6 +16140,11 @@ export interface components {
        */
       jiku_code: string;
       /**
+       * Jiku Match Pattern
+       * @description 次区マッチングルール（例: 2***）
+       */
+      jiku_match_pattern?: string | null;
+      /**
        * Warehouse Code
        * @description 倉庫コード
        */
@@ -16256,6 +16276,11 @@ export interface components {
        * @description 次区（出荷先区分）
        */
       jiku_code: string;
+      /**
+       * Jiku Match Pattern
+       * @description 次区マッチングルール（例: 2***）
+       */
+      jiku_match_pattern?: string | null;
       /**
        * Warehouse Code
        * @description 倉庫コード
@@ -16389,6 +16414,8 @@ export interface components {
        * @description 楽観的ロック用バージョン
        */
       version: number;
+      /** Jiku Match Pattern */
+      jiku_match_pattern?: string | null;
       /** Warehouse Code */
       warehouse_code?: string | null;
       /** Customer Name */

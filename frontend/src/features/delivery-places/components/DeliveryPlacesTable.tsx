@@ -90,6 +90,11 @@ export function DeliveryPlacesTable({
         cell: (row) => row.jiku_code || "-",
       },
       {
+        id: "jiku_match_pattern",
+        header: "次区マッチングルール",
+        cell: (row) => (row as { jiku_match_pattern?: string | null }).jiku_match_pattern || "-",
+      },
+      {
         id: "actions",
         header: "操作",
         cell: (row) => {

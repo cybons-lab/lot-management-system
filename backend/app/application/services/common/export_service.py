@@ -48,6 +48,7 @@ TEMPLATE_DEFINITIONS = {
             "delivery_place_code",
             "delivery_place_name",
             "jiku_code",
+            "jiku_match_pattern",
         ],
         "sample_row": [
             "CUST-001",
@@ -55,6 +56,7 @@ TEMPLATE_DEFINITIONS = {
             "DP-001",
             "サンプル納入先",
             "J-001",
+            "2***",
         ],
         "description": "納入先マスタ インポート用テンプレート",
     },

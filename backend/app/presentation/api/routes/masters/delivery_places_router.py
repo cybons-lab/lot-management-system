@@ -144,7 +144,7 @@ def create_delivery_place(data: DeliveryPlaceCreate, db: Session = Depends(get_d
         raise HTTPException(status_code=400, detail="Customer not found")
 
     # Check unique (jiku_code, delivery_place_code)
-    jiku_code = data.jiku_code or ""
+    jiku_code = data.jiku_code.strip()
     existing = (
         db.query(DeliveryPlace)
         .filter(DeliveryPlace.jiku_code == jiku_code)

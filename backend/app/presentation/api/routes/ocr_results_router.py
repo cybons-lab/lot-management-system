@@ -953,23 +953,37 @@ async def save_ocr_result_edit(
         )
         jiku_code = edit.jiku_code or long_data.content.get("次区")
 
-        # マスタ登録確認
-        master_check_query = """
-            SELECT 1 FROM shipping_master_curated
-            WHERE customer_code = :cc AND material_code = :mc AND jiku_code = :jc
+        # マスタ登録確認（完全一致→パターン一致）
+        master_match_query = """
+            SELECT jiku_code
+            FROM shipping_master_curated
+            WHERE customer_code = :cc
+              AND material_code = :mc
+              AND (
+                jiku_code = :jc
+                OR (
+                    jiku_match_pattern IS NOT NULL
+                    AND :jc LIKE REPLACE(jiku_match_pattern, '*', '%')
+                )
+              )
+            ORDER BY
+              CASE WHEN jiku_code = :jc THEN 0 ELSE 1 END,
+              LENGTH(REPLACE(COALESCE(jiku_match_pattern, ''), '*', '')) DESC,
+              LENGTH(COALESCE(jiku_match_pattern, '')) DESC,
+              id ASC
+            LIMIT 1
         """
-        master_exists = (
-            db.execute(
-                text(master_check_query),
-                {"cc": customer_code, "mc": material_code, "jc": jiku_code},
-            ).first()
-            is not None
-        )
+        matched_jiku_code = db.execute(
+            text(master_match_query),
+            {"cc": customer_code, "mc": material_code, "jc": jiku_code},
+        ).scalar_one_or_none()
+        master_exists = matched_jiku_code is not None
 
-        # 次区フォーマットバリデーション
-        jiku_error = False
-        if jiku_code and not re.match(r"^[A-Za-z][0-9]+$", jiku_code):
-            jiku_error = True
+        # 次区フォーマットバリデーション（補完後の正規次区で判定）
+        effective_jiku_code = matched_jiku_code or jiku_code
+        jiku_error = bool(
+            effective_jiku_code and not re.match(r"^[A-Za-z][0-9]+$", effective_jiku_code)
+        )
 
         # 日付フォーマットバリデーション（納期）
         delivery_date = edit.delivery_date or long_data.content.get("納期")

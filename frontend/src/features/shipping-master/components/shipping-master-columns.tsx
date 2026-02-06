@@ -51,6 +51,12 @@ export function createShippingMasterColumns(
       minWidth: 100,
     },
     {
+      id: "jiku_match_pattern",
+      header: "次区マッチングルール",
+      accessor: (row) => (row as { jiku_match_pattern?: string | null }).jiku_match_pattern || "-",
+      minWidth: 160,
+    },
+    {
       id: "warehouse_code",
       header: "倉庫コード",
       accessor: (row) => row.warehouse_code || "-",

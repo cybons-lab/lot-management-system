@@ -211,7 +211,10 @@ class CustomerBulkUpsertRequest(BaseSchema):
 class DeliveryPlaceBase(BaseSchema):
     """Base delivery place schema (DDL: delivery_places)."""
 
-    jiku_code: str | None = Field(None, max_length=50, description="次区コード(SAP連携用)")
+    jiku_code: str = Field(..., min_length=1, max_length=50, description="次区コード(SAP連携用)")
+    jiku_match_pattern: str | None = Field(
+        None, max_length=100, description="次区マッチングルール（例: 2***）"
+    )
     delivery_place_code: str = Field(..., min_length=1, max_length=50)
     delivery_place_name: str = Field(..., min_length=1, max_length=200)
     short_name: str | None = Field(None, max_length=50, description="短縮表示名")

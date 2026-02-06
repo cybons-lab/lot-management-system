@@ -346,15 +346,15 @@ class SmartReadCsvTransformer:
         """明細項目のバリデーション."""
         errors: list[ValidationError] = []
 
-        # 次区のバリデーション（先頭がアルファベット）
+        # 次区のバリデーション（英数字のみ）
         if "次区" in detail:
             jiku = detail["次区"]
-            if jiku and not re.match(r"^[A-Za-z]", jiku):
+            if jiku and not re.match(r"^[A-Za-z0-9]+$", jiku):
                 errors.append(
                     ValidationError(
                         row=row_idx,
                         field=f"次区(明細{detail_idx})",
-                        message="次区は先頭がアルファベットである必要があります",
+                        message="次区は英数字である必要があります",
                         value=jiku,
                     )
                 )
