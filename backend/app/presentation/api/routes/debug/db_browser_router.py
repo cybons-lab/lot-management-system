@@ -31,7 +31,7 @@ def _ensure_enabled(db: Session) -> None:
 
     if not is_enabled:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="DB browser is disabled",
         )
 

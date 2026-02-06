@@ -4,7 +4,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import type { DbRowsParams } from "./api";
+import type { DbRowsParams, DbRowsResponse } from "./api";
 import { getDbDefinition, getDbObjects, getDbRelations, getDbRows, getDbSchema } from "./api";
 
 export const dbBrowserKeys = {
@@ -42,7 +42,7 @@ export const useDbRows = (
     queryKey: schema && name ? dbBrowserKeys.rows(schema, name, params) : ["db-browser", "rows"],
     queryFn: () => getDbRows(schema!, name!, params),
     enabled: Boolean(schema && name),
-    placeholderData: (previousData: unknown) => previousData,
+    placeholderData: (previousData: DbRowsResponse | undefined) => previousData,
   });
 
 export const useDbDefinition = (
