@@ -4,6 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base_model import Base
@@ -295,3 +296,43 @@ class VInventorySummary(Base):
     available_with_provisional: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     last_updated: Mapped[datetime | None] = mapped_column(DateTime)
     inventory_state: Mapped[str] = mapped_column(String(20), default="no_lots")
+
+
+class VMaterialOrderForecast(Base):
+    """v_material_order_forecasts ビュー（読み取り専用）.
+
+    material_order_forecasts と makers/delivery_places を結合し、
+    次区コード・メーカー名を動的に解決する。
+    """
+
+    __tablename__ = "v_material_order_forecasts"
+    __table_args__ = {"info": {"is_view": True}}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    target_month: Mapped[str] = mapped_column(String(7))
+    customer_item_id: Mapped[int | None] = mapped_column(BigInteger)
+    warehouse_id: Mapped[int | None] = mapped_column(BigInteger)
+    maker_id: Mapped[int | None] = mapped_column(BigInteger)
+    material_code: Mapped[str | None] = mapped_column(String(50))
+    unit: Mapped[str | None] = mapped_column(String(20))
+    warehouse_code: Mapped[str | None] = mapped_column(String(50))
+    jiku_code: Mapped[str] = mapped_column(String(50))
+    delivery_place: Mapped[str | None] = mapped_column(String(50))
+    support_division: Mapped[str | None] = mapped_column(String(50))
+    procurement_type: Mapped[str | None] = mapped_column(String(50))
+    maker_code: Mapped[str | None] = mapped_column(String(50))
+    maker_name: Mapped[str | None] = mapped_column(String(200))
+    material_name: Mapped[str | None] = mapped_column(String(500))
+    delivery_lot: Mapped[Decimal | None] = mapped_column(Numeric(15, 3))
+    order_quantity: Mapped[Decimal | None] = mapped_column(Numeric(15, 3))
+    month_start_instruction: Mapped[Decimal | None] = mapped_column(Numeric(15, 3))
+    manager_name: Mapped[str | None] = mapped_column(String(100))
+    monthly_instruction_quantity: Mapped[Decimal | None] = mapped_column(Numeric(15, 3))
+    next_month_notice: Mapped[Decimal | None] = mapped_column(Numeric(15, 3))
+    daily_quantities: Mapped[dict | None] = mapped_column(JSONB)
+    period_quantities: Mapped[dict | None] = mapped_column(JSONB)
+    snapshot_at: Mapped[datetime] = mapped_column(DateTime)
+    imported_by: Mapped[int | None] = mapped_column(BigInteger)
+    source_file_name: Mapped[str | None] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+    updated_at: Mapped[datetime] = mapped_column(DateTime)

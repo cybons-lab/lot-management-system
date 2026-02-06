@@ -82,6 +82,7 @@ from .views_models import (
     VLotAvailableQty,
     VLotCurrentStock,
     VLotDetails,
+    VMaterialOrderForecast,
     VOrderLineContext,
     VProductCodeToId,
 )
@@ -175,6 +176,7 @@ __all__ = [
     "VForecastOrderPair",
     "VProductCodeToId",
     "VInventorySummary",
+    "VMaterialOrderForecast",
     # RPA
     "RpaRun",
     "RpaRunGroup",

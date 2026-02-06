@@ -19,6 +19,8 @@ from app.infrastructure.persistence.models import (
     DeliveryPlace,
     Maker,
     MaterialOrderForecast,
+    SupplierItem,
+    VMaterialOrderForecast,
     Warehouse,
 )
 
@@ -51,24 +53,7 @@ class MaterialOrderForecastService:
         user_id: int | None = None,
         filename: str | None = None,
     ) -> dict:
-        """
-        CSVファイルをインポートして material_order_forecasts に保存.
-
-        Args:
-            file: CSV file (ヘッダーなし、1行目からデータ)
-            target_month: 対象月（YYYY-MM形式、省略時はCSV A列から取得）
-            user_id: インポート実行ユーザーID
-            filename: 元ファイル名
-
-        Returns:
-            {
-                "success": True,
-                "imported_count": 150,
-                "target_month": "2026-02",
-                "snapshot_at": "2026-02-04T23:00:00",
-                "warnings": ["メーカーコード 'XYZ' がマスタに見つかりません"]
-            }
-        """
+        """CSVファイルをインポートして material_order_forecasts に保存."""
         logger.info("Starting CSV import", extra={"source_file": filename, "user_id": user_id})
 
         try:
@@ -91,12 +76,8 @@ class MaterialOrderForecastService:
                 )
 
             # Step 2: 対象月を決定（YYYYMM → YYYY-MM）
-            if target_month:
-                # 手動指定
-                pass
-            else:
-                # CSV A列から取得
-                target_month_raw = str(df.iloc[0, 0])  # A列の先頭行
+            if not target_month:
+                target_month_raw = str(df.iloc[0, 0])
                 if len(target_month_raw) == 6 and target_month_raw.isdigit():
                     target_month = f"{target_month_raw[:4]}-{target_month_raw[4:6]}"
                 else:
@@ -106,14 +87,10 @@ class MaterialOrderForecastService:
 
             logger.info(f"Target month: {target_month}")
 
-            # Step 2.4: 欠損しうる次区/メーカー名をマスタから補完
-            df, master_fill_warnings = self._fill_missing_from_master(df)
+            # Step 2.4: 参照マスタの未解決を警告化（保存値の補完はしない）
+            master_reference_warnings = self._build_master_reference_warnings(df)
 
-            # Step 2.5: 次区コードの必須チェック（E列）
-            if len(df.columns) <= 4:
-                raise ValueError("CSV列数が不足しています（次区コード列が存在しません）")
-
-            # Pandas index 4 is Column E
+            # Step 2.5: 次区コード空行は警告のみ（ビュー参照で解決できるため）
             jiku_series = df.iloc[:, 4].fillna("").astype(str).str.strip()
             missing_jiku = jiku_series == ""
             if missing_jiku.any():
@@ -123,7 +100,6 @@ class MaterialOrderForecastService:
                 normalize_warnings.append(f"次区コードが空の行があります（行: {sample_rows}）")
 
             # Step 3: 数量列を数値化（L-Q列のうちO列は除外 + R-AX列）
-            # O列（担当者名）は文字列なので数値化しない
             qty_col_indices = [11, 12, 13, 15, 16] + list(range(17, 60))
             for col_idx in qty_col_indices:
                 if col_idx < len(df.columns):
@@ -133,9 +109,9 @@ class MaterialOrderForecastService:
             # Step 4: 日別・期間別数量をJSON化
             df = self._create_quantity_json(df)
 
-            # Step 5: 既存マスタ引当
+            # Step 5: 既存マスタ引当（FKのみ）
             df, warnings = self._enrich_with_masters(df)
-            warnings = [*normalize_warnings, *master_fill_warnings, *warnings]
+            warnings = [*normalize_warnings, *master_reference_warnings, *warnings]
 
             # Step 6: DB保存
             imported_count = self._save_to_db(df, target_month, user_id, filename)
@@ -165,7 +141,6 @@ class MaterialOrderForecastService:
         if not raw_bytes:
             raise ValueError("CSVファイルが空です")
 
-        # 実運用で混在しやすい順に試行
         candidate_encodings = ["utf-8-sig", "utf-8", "cp932", "shift_jis"]
         last_error: Exception | None = None
 
@@ -198,7 +173,7 @@ class MaterialOrderForecastService:
         if col_count == 60:
             return df, warnings
 
-        # 旧フォーマット想定: 次区(E列)とメーカー名(J列)が欠落した58列
+        # 旧フォーマット: 次区(E列)とメーカー名(J列)が欠落した58列
         if col_count == 58:
             normalized = df.copy()
             normalized.insert(4, "__jiku_placeholder__", "")
@@ -213,7 +188,7 @@ class MaterialOrderForecastService:
                 warnings.append("生CSV形式を検出し、取込フォーマットへ自動変換しました。")
                 return transformed, warnings
 
-        # 余剰列がある場合は先頭60列のみ採用（末尾にメモ列等が付いたケースを許容）
+        # 余剰列がある場合は先頭60列のみ採用
         if col_count > 60:
             warnings.append(
                 f"60列超のCSVを検出したため、先頭60列のみを取込対象として処理しました（実際: {col_count}列）。"
@@ -228,9 +203,11 @@ class MaterialOrderForecastService:
         spec: Sequence[int | None] = RAW_COL_INDEX_SPEC
         if len(spec) != 60:
             return None
+
         non_null_idx = [i for i in spec if i is not None]
         if not non_null_idx:
             return None
+
         needed = max(non_null_idx) + 1
         if len(df.columns) < needed:
             return None
@@ -249,54 +226,51 @@ class MaterialOrderForecastService:
         out.columns = list(range(60))
         return out
 
-    def _fill_missing_from_master(self, df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
-        """次区(E列)とメーカー名(J列)の欠損をDBマスタから補完."""
-        out = df.copy()
+    def _build_master_reference_warnings(self, df: pd.DataFrame) -> list[str]:
+        """次区/メーカー名の参照可否を警告として返す（データ補完はしない）."""
         warnings: list[str] = []
 
-        # 納入先(F列) -> 次区(E列)
         delivery_to_jiku = {
-            dp.delivery_place_code: dp.jiku_code
+            (dp.delivery_place_code or "").strip(): dp.jiku_code
             for dp in self.db.query(DeliveryPlace).filter(DeliveryPlace.valid_to >= date.today())
+            if (dp.delivery_place_code or "").strip()
         }
-        if delivery_to_jiku:
-            jiku_col = out.iloc[:, 4].fillna("").astype(str).str.strip()
-            delivery_col = out.iloc[:, 5].fillna("").astype(str).str.strip()
-            jiku_missing_mask = jiku_col == ""
-            out.loc[jiku_missing_mask, out.columns[4]] = (
-                delivery_col[jiku_missing_mask].map(delivery_to_jiku).fillna("")
-            )
-
-        unresolved_jiku = (out.iloc[:, 4].fillna("").astype(str).str.strip() == "") & (
-            out.iloc[:, 5].fillna("").astype(str).str.strip() != ""
+        jiku_col = df.iloc[:, 4].fillna("").astype(str).str.strip()
+        delivery_col = df.iloc[:, 5].fillna("").astype(str).str.strip()
+        unresolved_jiku = (
+            (jiku_col == "") & (delivery_col != "") & (~delivery_col.isin(delivery_to_jiku))
         )
         if unresolved_jiku.any():
-            sample = out.loc[unresolved_jiku, out.columns[5]].astype(str).unique()[:5]
-            warnings.append(f"納入先から次区を補完できないデータがあります: {', '.join(sample)}")
-
-        # メーカー(I列) -> メーカー名(J列)
-        maker_code_to_name = {
-            m.maker_code: m.maker_name
-            for m in self.db.query(Maker).filter(Maker.valid_to >= date.today())
-        }
-        if maker_code_to_name:
-            maker_name_col = out.iloc[:, 9].fillna("").astype(str).str.strip()
-            maker_code_col = out.iloc[:, 8].fillna("").astype(str).str.strip()
-            maker_name_missing_mask = maker_name_col == ""
-            out.loc[maker_name_missing_mask, out.columns[9]] = (
-                maker_code_col[maker_name_missing_mask].map(maker_code_to_name).fillna("")
+            sample = df.loc[unresolved_jiku, df.columns[5]].astype(str).unique()[:5]
+            warnings.append(
+                f"納入先コードから次区を解決できないデータがあります: {', '.join(sample)}"
             )
 
-        unresolved_maker_name = (out.iloc[:, 9].fillna("").astype(str).str.strip() == "") & (
-            out.iloc[:, 8].fillna("").astype(str).str.strip() != ""
+        maker_code_to_name = {
+            (m.maker_code or "").strip(): (m.maker_name or "").strip()
+            for m in self.db.query(Maker).filter(Maker.valid_to >= date.today())
+            if (m.maker_code or "").strip() and (m.maker_name or "").strip()
+        }
+        for si in self.db.query(SupplierItem).all():
+            code = (si.maker_code or "").strip()
+            name = (si.maker_name or "").strip()
+            if code and name and code not in maker_code_to_name:
+                maker_code_to_name[code] = name
+
+        maker_name_col = df.iloc[:, 9].fillna("").astype(str).str.strip()
+        maker_code_col = df.iloc[:, 8].fillna("").astype(str).str.strip()
+        unresolved_maker_name = (
+            (maker_name_col == "")
+            & (maker_code_col != "")
+            & (~maker_code_col.isin(maker_code_to_name))
         )
         if unresolved_maker_name.any():
-            sample = out.loc[unresolved_maker_name, out.columns[8]].astype(str).unique()[:5]
+            sample = df.loc[unresolved_maker_name, df.columns[8]].astype(str).unique()[:5]
             warnings.append(
-                f"メーカーコードからメーカー名を補完できないデータがあります: {', '.join(sample)}"
+                f"メーカーコードからメーカー名を解決できないデータがあります: {', '.join(sample)}"
             )
 
-        return out, warnings
+        return warnings
 
     def _create_quantity_json(self, df: pd.DataFrame) -> pd.DataFrame:
         """日別・期間別数量をJSON化."""
@@ -304,10 +278,9 @@ class MaterialOrderForecastService:
         period_quantities_list = []
 
         for _, row in df.iterrows():
-            # 日別数量（R-AL列 = 17-47、1-31日）
             daily = {}
             for day in range(1, 32):
-                col_idx = 17 + day - 1  # R列(17)から
+                col_idx = 17 + day - 1
                 if col_idx < len(row):
                     val = row.iloc[col_idx]
                     if pd.notna(val) and val != "":
@@ -317,11 +290,10 @@ class MaterialOrderForecastService:
                             pass
             daily_quantities_list.append(json.dumps(daily) if daily else None)
 
-            # 期間別数量（AM-AX列 = 48-59、1-10 + 中旬 + 下旬）
             period = {}
             period_labels = [str(i) for i in range(1, 11)] + ["中旬", "下旬"]
             for i, label in enumerate(period_labels):
-                col_idx = 48 + i  # AM列(48)から
+                col_idx = 48 + i
                 if col_idx < len(row):
                     val = row.iloc[col_idx]
                     if pd.notna(val) and val != "":
@@ -333,19 +305,17 @@ class MaterialOrderForecastService:
 
         df["daily_quantities_json"] = pd.Series(daily_quantities_list, dtype=object)
         df["period_quantities_json"] = pd.Series(period_quantities_list, dtype=object)
-
         return df
 
     def _enrich_with_masters(self, df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
         """既存マスタ引当（LEFT JOIN用）."""
         warnings = []
 
-        # 1. 得意先品番マスタ引当（customer_items）
         customer_item_map = {
             ci.customer_part_no: ci.id
             for ci in self.db.query(CustomerItem).filter(CustomerItem.valid_to >= date.today())
         }
-        df["customer_item_id"] = df.iloc[:, 1].map(customer_item_map)  # B列（材質コード）
+        df["customer_item_id"] = df.iloc[:, 1].map(customer_item_map)
 
         missing_material = df[df["customer_item_id"].isna()].iloc[:, 1].unique()
         if len(missing_material) > 0:
@@ -353,11 +323,10 @@ class MaterialOrderForecastService:
                 f"得意先品番マスタに見つからないコード: {', '.join(str(x) for x in missing_material[:5])}"
             )
 
-        # 2. メーカーマスタ引当（makers）
         maker_map = {
             m.maker_code: m.id for m in self.db.query(Maker).filter(Maker.valid_to >= date.today())
         }
-        df["maker_id"] = df.iloc[:, 8].map(maker_map)  # I列（メーカーコード）
+        df["maker_id"] = df.iloc[:, 8].map(maker_map)
 
         missing_makers = df[df["maker_id"].isna()].iloc[:, 8].unique()
         if len(missing_makers) > 0:
@@ -365,12 +334,11 @@ class MaterialOrderForecastService:
                 f"メーカーマスタに見つからないコード: {', '.join(str(x) for x in missing_makers[:5])}"
             )
 
-        # 3. 倉庫マスタ引当（warehouses）
         warehouse_map = {
             w.warehouse_code: w.id
             for w in self.db.query(Warehouse).filter(Warehouse.valid_to >= date.today())
         }
-        df["warehouse_id"] = df.iloc[:, 3].map(warehouse_map)  # D列（倉庫）
+        df["warehouse_id"] = df.iloc[:, 3].map(warehouse_map)
 
         missing_warehouses = df[df["warehouse_id"].isna()].iloc[:, 3].unique()
         if len(missing_warehouses) > 0:
@@ -387,7 +355,6 @@ class MaterialOrderForecastService:
         """DataFrameをDBに保存."""
         imported_count = 0
 
-        # IDカラムのクレンジング用ヘルパー
         def clean_id(val):
             if pd.isna(val) or val == "":
                 return None
@@ -395,7 +362,6 @@ class MaterialOrderForecastService:
 
         for idx, row in df.iterrows():
             try:
-                # 既存レコードを削除（UPSERT）
                 material_code = str(row.iloc[1]) if pd.notna(row.iloc[1]) else None
                 jiku_code = str(row.iloc[4]).strip() if pd.notna(row.iloc[4]) else ""
                 maker_code = str(row.iloc[8]) if pd.notna(row.iloc[8]) else None
@@ -407,45 +373,38 @@ class MaterialOrderForecastService:
                     MaterialOrderForecast.maker_code == maker_code,
                 ).delete()
 
-                # 新規レコード作成
                 forecast = MaterialOrderForecast(
                     target_month=target_month,
-                    # FK（LEFT JOIN結果）
                     customer_item_id=clean_id(row.get("customer_item_id")),
                     warehouse_id=clean_id(row.get("warehouse_id")),
                     maker_id=clean_id(row.get("maker_id")),
-                    # CSV生データ
                     material_code=material_code,
-                    unit=row.iloc[2] or None,  # C列
-                    warehouse_code=row.iloc[3] or None,  # D列
-                    jiku_code=jiku_code,  # E列（必須）
-                    delivery_place=row.iloc[5] or None,  # F列
-                    support_division=row.iloc[6] or None,  # G列
-                    procurement_type=row.iloc[7] or None,  # H列
-                    maker_code=maker_code,  # I列
-                    maker_name=row.iloc[9] or None,  # J列
-                    material_name=row.iloc[10] or None,  # K列
-                    # 数量データ
-                    delivery_lot=self._to_decimal(row.iloc[11]),  # L列
-                    order_quantity=self._to_decimal(row.iloc[12]),  # M列
-                    month_start_instruction=self._to_decimal(row.iloc[13]),  # N列
-                    manager_name=row.iloc[14] or None,  # O列
-                    monthly_instruction_quantity=self._to_decimal(row.iloc[15]),  # P列
-                    next_month_notice=self._to_decimal(row.iloc[16]),  # Q列
-                    # JSON数量
+                    unit=row.iloc[2] or None,
+                    warehouse_code=row.iloc[3] or None,
+                    jiku_code=jiku_code,
+                    delivery_place=row.iloc[5] or None,
+                    support_division=row.iloc[6] or None,
+                    procurement_type=row.iloc[7] or None,
+                    maker_code=maker_code,
+                    maker_name=row.iloc[9] or None,
+                    material_name=row.iloc[10] or None,
+                    delivery_lot=self._to_decimal(row.iloc[11]),
+                    order_quantity=self._to_decimal(row.iloc[12]),
+                    month_start_instruction=self._to_decimal(row.iloc[13]),
+                    manager_name=row.iloc[14] or None,
+                    monthly_instruction_quantity=self._to_decimal(row.iloc[15]),
+                    next_month_notice=self._to_decimal(row.iloc[16]),
                     daily_quantities=json.loads(row["daily_quantities_json"])
                     if row["daily_quantities_json"]
                     else None,
                     period_quantities=json.loads(row["period_quantities_json"])
                     if row["period_quantities_json"]
                     else None,
-                    # メタ情報
                     imported_by=user_id,
                     source_file_name=filename,
                 )
                 self.db.add(forecast)
                 imported_count += 1
-
             except Exception as e:
                 logger.error(
                     f"Failed to save row {idx}",
@@ -475,22 +434,45 @@ class MaterialOrderForecastService:
         jiku_code: str | None = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> list[MaterialOrderForecast]:
-        """フォーキャストデータを取得（フィルタリング付き）."""
-        query = self.db.query(MaterialOrderForecast)
+    ) -> Sequence[VMaterialOrderForecast | MaterialOrderForecast]:
+        """フォーキャストデータをビュー経由で取得（マスタ補完を動的反映）."""
+        try:
+            query = self.db.query(VMaterialOrderForecast)
 
-        if target_month:
-            query = query.filter(MaterialOrderForecast.target_month == target_month)
-        if material_code:
-            query = query.filter(MaterialOrderForecast.material_code.ilike(f"%{material_code}%"))
-        if maker_code:
-            query = query.filter(MaterialOrderForecast.maker_code == maker_code)
-        if jiku_code:
-            query = query.filter(MaterialOrderForecast.jiku_code == jiku_code)
+            if target_month:
+                query = query.filter(VMaterialOrderForecast.target_month == target_month)
+            if material_code:
+                query = query.filter(
+                    VMaterialOrderForecast.material_code.ilike(f"%{material_code}%")
+                )
+            if maker_code:
+                query = query.filter(VMaterialOrderForecast.maker_code == maker_code)
+            if jiku_code:
+                query = query.filter(VMaterialOrderForecast.jiku_code == jiku_code)
 
-        query = query.order_by(
-            MaterialOrderForecast.target_month.desc(),
-            MaterialOrderForecast.material_code,
-        )
-
-        return query.limit(limit).offset(offset).all()
+            query = query.order_by(
+                VMaterialOrderForecast.target_month.desc(),
+                VMaterialOrderForecast.material_code,
+            )
+            return query.limit(limit).offset(offset).all()
+        except Exception as e:
+            logger.warning(
+                "v_material_order_forecasts is unavailable. Falling back to base table query.",
+                extra={"error": str(e)},
+            )
+            query = self.db.query(MaterialOrderForecast)
+            if target_month:
+                query = query.filter(MaterialOrderForecast.target_month == target_month)
+            if material_code:
+                query = query.filter(
+                    MaterialOrderForecast.material_code.ilike(f"%{material_code}%")
+                )
+            if maker_code:
+                query = query.filter(MaterialOrderForecast.maker_code == maker_code)
+            if jiku_code:
+                query = query.filter(MaterialOrderForecast.jiku_code == jiku_code)
+            query = query.order_by(
+                MaterialOrderForecast.target_month.desc(),
+                MaterialOrderForecast.material_code,
+            )
+            return query.limit(limit).offset(offset).all()
