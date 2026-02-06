@@ -8,6 +8,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { type WithdrawalResponse } from "../api";
@@ -18,6 +19,21 @@ import { WithdrawalCancelDialog } from "./WithdrawalCancelDialog";
 const mockCancelMutation = {
   mutateAsync: vi.fn(),
   isPending: false,
+};
+
+type DialogProps = {
+  open?: boolean;
+  children?: React.ReactNode;
+};
+
+type ChildrenProps = {
+  children?: React.ReactNode;
+};
+
+type SelectItemProps = {
+  children?: React.ReactNode;
+  value?: string;
+  onSelect?: (value: string) => void;
 };
 
 vi.mock("../hooks", () => ({
@@ -37,29 +53,28 @@ vi.mock("sonner", () => ({
 // Mock UI components
 vi.mock("@/components/ui", () => {
   return {
-    Button: (props: any) => <button {...props} />,
-    Dialog: ({ children, open }: any) => (open ? <div>{children}</div> : null),
-    DialogContent: ({ children }: any) => <div>{children}</div>,
-    DialogHeader: ({ children }: any) => <div>{children}</div>,
-    DialogTitle: ({ children }: any) => <div>{children}</div>,
-    DialogDescription: ({ children }: any) => <div>{children}</div>,
-    DialogFooter: ({ children }: any) => <div>{children}</div>,
-    // eslint-disable-next-line jsx-a11y/label-has-associated-control
-    Label: (props: any) => <label {...props} />,
-    Textarea: (props: any) => <textarea {...props} />,
-    Select: (props: any) => <div>{props.children}</div>,
-    SelectTrigger: (props: any) => <button>{props.children}</button>,
+    Button: (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} />,
+    Dialog: ({ children, open }: DialogProps) => (open ? <div>{children}</div> : null),
+    DialogContent: ({ children }: ChildrenProps) => <div>{children}</div>,
+    DialogHeader: ({ children }: ChildrenProps) => <div>{children}</div>,
+    DialogTitle: ({ children }: ChildrenProps) => <div>{children}</div>,
+    DialogDescription: ({ children }: ChildrenProps) => <div>{children}</div>,
+    DialogFooter: ({ children }: ChildrenProps) => <div>{children}</div>,
+    Label: (props: React.HTMLAttributes<HTMLSpanElement>) => <span {...props} />,
+    Textarea: (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea {...props} />,
+    Select: ({ children }: ChildrenProps) => <div>{children}</div>,
+    SelectTrigger: ({ children }: ChildrenProps) => <button>{children}</button>,
     SelectValue: () => <span>Select Value</span>,
-    SelectContent: (props: any) => <div>{props.children}</div>,
-    SelectItem: (props: any) => (
+    SelectContent: ({ children }: ChildrenProps) => <div>{children}</div>,
+    SelectItem: ({ children, onSelect, value }: SelectItemProps) => (
       <div
         role="option"
-        onClick={() => props.onSelect && props.onSelect(props.value)}
-        onKeyDown={(e) => e.key === "Enter" && props.onSelect && props.onSelect(props.value)}
+        onClick={() => onSelect?.(value ?? "")}
+        onKeyDown={(event) => event.key === "Enter" && onSelect?.(value ?? "")}
         tabIndex={0}
         aria-selected={false}
       >
-        {props.children}
+        {children}
       </div>
     ),
   };

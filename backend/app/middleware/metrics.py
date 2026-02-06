@@ -145,13 +145,12 @@ APIパフォーマンスメトリクスを収集。
 import logging
 import time
 from collections import defaultdict
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from statistics import StatisticsError, median, quantiles
 from threading import Lock
 
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
@@ -357,7 +356,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.collector = MetricsCollector()
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """リクエストを処理し、メトリクスを記録.
 
         Args:
@@ -383,4 +382,4 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             status_code=response.status_code,
         )
 
-        return response  # type: ignore[no-any-return]
+        return response

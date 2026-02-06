@@ -2,7 +2,7 @@
  * QuickWithdrawalDialog
  * 在庫アイテム詳細画面からの簡易出庫ダイアログ
  */
-/* eslint-disable max-lines-per-function, complexity, max-lines */
+/* eslint-disable max-lines-per-function, complexity, max-lines -- 関連する画面ロジックを1箇所で管理するため */
 import { Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
@@ -187,7 +187,10 @@ export function QuickWithdrawalDialog({
 
     if (!customerId) {
       setDeliveryPlaces([]);
-      updateField("delivery_place_id", 0);
+      setFormState((prev) =>
+        prev.delivery_place_id === 0 ? prev : { ...prev, delivery_place_id: 0 },
+      );
+      clearFieldError("delivery_place_id");
       return;
     }
 
@@ -206,7 +209,10 @@ export function QuickWithdrawalDialog({
           setDeliveryPlaces(places);
           // 既存の選択が新しいリストに含まれていない場合のみリセット
           if (!places.some((p) => p.id === deliveryPlaceIdRef.current)) {
-            updateField("delivery_place_id", 0);
+            setFormState((prev) =>
+              prev.delivery_place_id === 0 ? prev : { ...prev, delivery_place_id: 0 },
+            );
+            clearFieldError("delivery_place_id");
           }
         }
       })
@@ -228,8 +234,7 @@ export function QuickWithdrawalDialog({
     return () => {
       abortController.abort();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formState.customer_id]);
+  }, [clearFieldError, formState.customer_id, isLatestDeliveryPlaceRequest]);
 
   // フィールド更新
   const updateField = useCallback(

@@ -62,11 +62,11 @@ export function AdjustmentsListPage() {
     );
   }, [adjustments, searchQuery]);
   const paginatedAdjustments = table.paginateData(filteredAdjustments);
+  const { setPage } = table;
 
   useEffect(() => {
-    table.setPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, searchQuery]);
+    setPage(1);
+  }, [filters, searchQuery, setPage]);
 
   const handleCreateNew = () => {
     navigate(ROUTES.INVENTORY.ADJUSTMENTS.NEW);

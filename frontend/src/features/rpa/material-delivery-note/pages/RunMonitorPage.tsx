@@ -3,7 +3,7 @@
  * 素材納品書発行 Step5 - Run監視・制御
  */
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 論理的な画面単位を維持 */
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { AlertTriangle, ArrowLeft, Clock, PauseCircle, PlayCircle, StopCircle } from "lucide-react";

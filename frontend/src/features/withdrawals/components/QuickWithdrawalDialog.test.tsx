@@ -8,6 +8,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import * as withdrawalApi from "../api";
@@ -17,6 +18,46 @@ import { QuickWithdrawalDialog } from "./QuickWithdrawalDialog";
 import * as mastersHook from "@/hooks/api/useMastersQuery";
 import { http } from "@/shared/api/http-client";
 import type { LotUI } from "@/shared/libs/normalize";
+
+type ChildrenProps = {
+  children?: React.ReactNode;
+};
+
+type DialogProps = {
+  open?: boolean;
+  children?: React.ReactNode;
+};
+
+type SelectRootProps = {
+  children?: React.ReactNode;
+  value?: string;
+  onValueChange?: (value: string) => void;
+  disabled?: boolean;
+};
+
+type SelectTriggerProps = {
+  children?: React.ReactNode;
+  value?: string;
+};
+
+type SelectValueProps = {
+  placeholder?: string;
+};
+
+type SelectContentProps = {
+  children?: React.ReactNode;
+  onSelect?: (value: string) => void;
+};
+
+type SelectItemProps = {
+  children?: React.ReactNode;
+  value?: string;
+  onSelect?: (value: string) => void;
+};
+
+function isNamedElement(node: React.ReactNode, name: string): node is React.ReactElement {
+  return React.isValidElement(node) && typeof node.type !== "string" && node.type.name === name;
+}
 
 // Mock API
 vi.mock("../api", () => ({
@@ -30,47 +71,44 @@ vi.mock("@/hooks/api/useMastersQuery", () => ({
 }));
 
 // Mock UI Components to bypass alias resolution issues and complex DOM structures
-/* eslint-disable @typescript-eslint/no-require-imports, jsx-a11y/label-has-associated-control, jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus */
 vi.mock("@/components/ui", () => {
-  const React = require("react");
   return {
-    Button: (props: any) => <button {...props} />,
-    Input: (props: any) => <input {...props} />,
-    Label: (props: any) => <label {...props} />,
-    Dialog: ({ children, open }: any) => (open ? <div data-testid="dialog">{children}</div> : null),
-    DialogContent: ({ children }: any) => <div>{children}</div>,
-    DialogHeader: ({ children }: any) => <div>{children}</div>,
-    DialogTitle: ({ children }: any) => <div>{children}</div>,
-    DialogDescription: ({ children }: any) => <div>{children}</div>,
-    DialogFooter: ({ children }: any) => <div>{children}</div>,
+    Button: (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} />,
+    Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
+    Label: (props: React.HTMLAttributes<HTMLSpanElement>) => <span {...props} />,
+    Dialog: ({ children, open }: DialogProps) =>
+      open ? <div data-testid="dialog">{children}</div> : null,
+    DialogContent: ({ children }: ChildrenProps) => <div>{children}</div>,
+    DialogHeader: ({ children }: ChildrenProps) => <div>{children}</div>,
+    DialogTitle: ({ children }: ChildrenProps) => <div>{children}</div>,
+    DialogDescription: ({ children }: ChildrenProps) => <div>{children}</div>,
+    DialogFooter: ({ children }: ChildrenProps) => <div>{children}</div>,
     // Detailed Select Mock to simulate user interaction
-    Select: ({ children, value, onValueChange, disabled }: any) => {
+    Select: ({ children, value, onValueChange, disabled }: SelectRootProps) => {
       const [isOpen, setIsOpen] = React.useState(false);
       return (
         <div data-testid="select">
           {/* Trigger Area */}
-          <div
-            role="button"
-            onClick={() => !disabled && setIsOpen(!isOpen)}
-            data-disabled={disabled}
-          >
+          <button type="button" onClick={() => !disabled && setIsOpen(!isOpen)} disabled={disabled}>
             {/* Pass down props to children mostly for SelectValue to show placeholder */}
-            {React.Children.map(children, (child: any) => {
-              if (child.type.name === "SelectTrigger") {
-                return React.cloneElement(child, { value });
+            {React.Children.map(children, (child) => {
+              if (isNamedElement(child, "SelectTrigger")) {
+                return React.cloneElement(child as React.ReactElement<SelectTriggerProps>, {
+                  value,
+                });
               }
               return null;
             })}
-          </div>
+          </button>
 
           {/* Content Area - only show when open */}
           {isOpen && (
             <div role="listbox">
-              {React.Children.map(children, (child: any) => {
-                if (child.type.name === "SelectContent") {
-                  return React.cloneElement(child, {
+              {React.Children.map(children, (child) => {
+                if (isNamedElement(child, "SelectContent")) {
+                  return React.cloneElement(child as React.ReactElement<SelectContentProps>, {
                     onSelect: (val: string) => {
-                      onValueChange(val);
+                      onValueChange?.(val);
                       setIsOpen(false);
                     },
                   });
@@ -82,18 +120,23 @@ vi.mock("@/components/ui", () => {
         </div>
       );
     },
-    SelectTrigger: ({ children }: any) => <div>{children}</div>,
-    SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
-    SelectContent: ({ children, onSelect }: any) => (
+    SelectTrigger: ({ children }: SelectTriggerProps) => <div>{children}</div>,
+    SelectValue: ({ placeholder }: SelectValueProps) => <span>{placeholder}</span>,
+    SelectContent: ({ children, onSelect }: SelectContentProps) => (
       <div>
-        {React.Children.map(children, (child: any) => React.cloneElement(child, { onSelect }))}
+        {React.Children.map(children, (child) => {
+          if (React.isValidElement<SelectItemProps>(child)) {
+            return React.cloneElement(child, { onSelect });
+          }
+          return child;
+        })}
       </div>
     ),
-    SelectItem: ({ children, value, onSelect }: any) => (
+    SelectItem: ({ children, value, onSelect }: SelectItemProps) => (
       <div
         role="option"
-        onClick={() => onSelect(value)}
-        onKeyDown={(e) => e.key === "Enter" && onSelect(value)}
+        onClick={() => onSelect?.(value ?? "")}
+        onKeyDown={(event) => event.key === "Enter" && onSelect?.(value ?? "")}
         tabIndex={0}
         aria-selected={false}
       >

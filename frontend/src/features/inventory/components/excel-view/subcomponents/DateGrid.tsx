@@ -85,8 +85,8 @@ interface CellProps extends React.HTMLAttributes<HTMLDivElement> {
   ) => void;
 }
 
-/* eslint-disable max-lines-per-function */
-/* eslint-disable complexity */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
+/* eslint-disable complexity -- 業務分岐を明示的に維持するため */
 function DateCell({
   date,
   lotId,
@@ -264,7 +264,7 @@ function DateCell({
   );
 }
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 
 export function DateGrid({
   dateColumns,

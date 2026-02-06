@@ -5,7 +5,7 @@
  * - ID-based operations
  * - customer_part_no for filtering
  */
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 

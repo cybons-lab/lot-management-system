@@ -119,8 +119,19 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 
-from app.domain.errors import DomainError, InsufficientStockError  # noqa: F401
+from app.domain.errors import DomainError, InsufficientStockError
 from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
+
+
+__all__ = [
+    "FefoLotPlan",
+    "FefoLinePlan",
+    "FefoPreviewResult",
+    "FefoCommitResult",
+    "AllocationCommitError",
+    "AllocationNotFoundError",
+    "InsufficientStockError",
+]
 
 
 @dataclass

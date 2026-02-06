@@ -24,7 +24,7 @@ interface AddForecastDialogProps {
   onSuccess?: () => void;
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function AddForecastDialog({ open, onOpenChange, onSuccess }: AddForecastDialogProps) {
   const [customerId, setCustomerId] = useState<string>("");
   const [deliveryPlaceId, setDeliveryPlaceId] = useState<string>("");

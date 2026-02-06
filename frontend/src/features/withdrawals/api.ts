@@ -149,7 +149,7 @@ const BASE_PATH = "withdrawals";
 /**
  * 出庫履歴一覧を取得
  */
-// eslint-disable-next-line complexity
+// eslint-disable-next-line complexity -- 業務分岐を明示的に維持するため
 export async function getWithdrawals(
   params?: WithdrawalListParams,
 ): Promise<WithdrawalListResponse> {

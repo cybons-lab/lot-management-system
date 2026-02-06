@@ -40,7 +40,10 @@ def get_file_extension(filename: str) -> str:
 def parse_json(content: bytes) -> dict:
     """Parse JSON content."""
     try:
-        return json.loads(content.decode("utf-8"))  # type: ignore[no-any-return]
+        parsed = json.loads(content.decode("utf-8"))
+        if not isinstance(parsed, dict):
+            raise FileParseError("JSON root must be an object")
+        return parsed
     except json.JSONDecodeError as e:
         raise FileParseError(f"Invalid JSON: {e}")
     except UnicodeDecodeError as e:
@@ -50,7 +53,10 @@ def parse_json(content: bytes) -> dict:
 def parse_yaml(content: bytes) -> dict:
     """Parse YAML content."""
     try:
-        return yaml.safe_load(content.decode("utf-8"))  # type: ignore[no-any-return]
+        parsed = yaml.safe_load(content.decode("utf-8"))
+        if not isinstance(parsed, dict):
+            raise FileParseError("YAML root must be a mapping")
+        return parsed
     except yaml.YAMLError as e:
         raise FileParseError(f"Invalid YAML: {e}")
     except UnicodeDecodeError as e:

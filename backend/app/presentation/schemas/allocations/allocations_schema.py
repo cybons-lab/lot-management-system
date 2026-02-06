@@ -41,11 +41,13 @@ class FefoLineAllocation(BaseSchema):
 
     order_line_id: int
     supplier_item_id: int
+    product_code: str | None = None
     order_quantity: Decimal = Field(..., decimal_places=3, description="受注数量")
     already_allocated_quantity: Decimal = Field(
         default=Decimal("0"), decimal_places=3, description="既存引当数量"
     )
     allocations: list[FefoLotAllocation] = Field(default_factory=list)
+    next_div: str | None = None
     warnings: list[str] = Field(default_factory=list)
 
 

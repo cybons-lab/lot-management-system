@@ -1,7 +1,7 @@
 import csv
 import io
 from datetime import date, datetime
-from typing import Any
+from typing import Any, TypeVar, cast
 
 import httpx
 from fastapi import HTTPException, status
@@ -22,6 +22,9 @@ from app.presentation.schemas.calendar.calendar_schemas import (
     OriginalDeliveryCalendarCreate,
     OriginalDeliveryCalendarUpdate,
 )
+
+
+_ModelT = TypeVar("_ModelT")
 
 
 class CalendarService:
@@ -67,7 +70,7 @@ class CalendarService:
             setattr(holiday, key, value)
         self._commit_or_raise()
         self.db.refresh(holiday)
-        return holiday  # type: ignore
+        return holiday
 
     def delete_holiday(self, holiday_id: int) -> None:
         holiday = self._get_or_404(HolidayCalendar, holiday_id, "祝日が見つかりません")
@@ -115,7 +118,7 @@ class CalendarService:
             setattr(company_date, key, value)
         self._commit_or_raise()
         self.db.refresh(company_date)
-        return company_date  # type: ignore
+        return company_date
 
     def delete_company_calendar(self, company_calendar_id: int) -> None:
         company_date = self._get_or_404(
@@ -173,7 +176,7 @@ class CalendarService:
             setattr(delivery_date, key, value)
         self._commit_or_raise()
         self.db.refresh(delivery_date)
-        return delivery_date  # type: ignore
+        return delivery_date
 
     def delete_original_delivery_calendar(self, delivery_calendar_id: int) -> None:
         delivery_date = self._get_or_404(
@@ -306,8 +309,8 @@ class CalendarService:
 
         return current
 
-    def _get_or_404(self, model: Any, record_id: int, message: str) -> Any:
-        record = self.db.query(model).filter(model.id == record_id).first()
+    def _get_or_404(self, model: type[_ModelT], record_id: int, message: str) -> _ModelT:
+        record = self.db.query(model).filter(cast(Any, model).id == record_id).first()
         if not record:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
         return record

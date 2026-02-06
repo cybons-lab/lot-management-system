@@ -169,7 +169,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from app.domain.events.base import DomainEvent
 
@@ -212,7 +212,8 @@ class EventDispatcher:
         """
 
         def decorator(handler: EventHandler[T]) -> EventHandler[T]:
-            cls._handlers[event_type].append(handler)  # type: ignore[arg-type]
+            handlers = cast(list[EventHandler[T]], cls._handlers[event_type])
+            handlers.append(handler)
             logger.debug(f"Registered handler {handler.__name__} for {event_type.__name__}")
             return handler
 
@@ -226,7 +227,8 @@ class EventDispatcher:
             event_type: イベントタイプ
             handler: ハンドラー関数
         """
-        cls._handlers[event_type].append(handler)  # type: ignore[arg-type]
+        handlers = cast(list[EventHandler[T]], cls._handlers[event_type])
+        handlers.append(handler)
         logger.debug(f"Registered handler {handler.__name__} for {event_type.__name__}")
 
     @classmethod

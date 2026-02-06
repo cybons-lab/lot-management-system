@@ -7,6 +7,7 @@
 import { FileJson } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import type { OperationLogsListParams } from "../api";
 import { useOperationLogFilters, useOperationLogs } from "../hooks";
 
 import {
@@ -89,8 +90,7 @@ export function OperationLogsPage() {
 
   // Build query params
   const queryParams = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const params: any = {
+    const params: OperationLogsListParams = {
       user_id: filters.user_id ? Number(filters.user_id) : undefined,
       operation_type: filters.operation_type || undefined,
       target_table: filters.target_table || undefined,

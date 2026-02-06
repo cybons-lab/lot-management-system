@@ -23,7 +23,7 @@ import { TablePagination } from "@/shared/components/data/TablePagination";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 
-// eslint-disable-next-line max-lines-per-function, complexity
+// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
 export function UsersListPage() {
   // navigate removed
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);

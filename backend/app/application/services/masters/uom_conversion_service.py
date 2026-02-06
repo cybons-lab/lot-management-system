@@ -44,17 +44,24 @@ class UomConversionService(
             .first(),
         )
 
-    def get_by_id(self, conversion_id: int) -> ProductUomConversion | None:  # type: ignore[override]
+    def get_by_id(self, id: int, *, raise_404: bool = True) -> ProductUomConversion | None:
         """Get UOM conversion by ID."""
+        from fastapi import HTTPException, status
         from sqlalchemy.orm import joinedload
 
-        return cast(
+        conversion = cast(
             ProductUomConversion | None,
             self.db.query(ProductUomConversion)
             .options(joinedload(ProductUomConversion.supplier_item))
-            .filter(ProductUomConversion.conversion_id == conversion_id)
+            .filter(ProductUomConversion.conversion_id == id)
             .first(),
         )
+        if conversion is None and raise_404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"UOM conversion with ID {id} not found",
+            )
+        return conversion
 
     def update_by_id(self, conversion_id: int, data: UomConversionUpdate) -> ProductUomConversion:
         """Update UOM conversion by ID.
@@ -71,7 +78,7 @@ class UomConversionService(
         """
         from fastapi import HTTPException, status
 
-        conversion = self.get_by_id(conversion_id)
+        conversion = self.get_by_id(conversion_id, raise_404=False)
         if not conversion:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -145,7 +152,7 @@ class UomConversionService(
         """
         from fastapi import HTTPException, status
 
-        conversion = self.get_by_id(conversion_id)
+        conversion = self.get_by_id(conversion_id, raise_404=False)
         if not conversion:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

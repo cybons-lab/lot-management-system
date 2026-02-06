@@ -214,7 +214,10 @@ docker compose exec -T frontend npm run format
 
 **CRITICAL: すべての開発コマンドはDocker経由で実行してください。npm scriptsを使用することでクロスプラットフォーム（Windows/Mac/Linux）で統一されたワークフローを実現します。**
 
-📚 **詳細ガイド:** [Poe Migration Guide](docs/project/POE_MIGRATION_GUIDE.md)
+📚 **重要ドキュメント:**
+- [Git Workflow](docs/project/GIT_WORKFLOW.md) - **必読**: コミットルール・PR作成手順
+- [Code Standards](docs/project/CODE_STANDARDS.md) - コード品質基準
+- [Poe Migration Guide](docs/project/POE_MIGRATION_GUIDE.md) - タスクランナー移行ガイド
 
 ### クイックスタート
 
@@ -339,12 +342,28 @@ npm run fe:test             # フロントエンドのみ
 
 ### Git Workflow
 
-```bash
-# Create feature branch
-git checkout -b feature/xxx
+**📖 詳細は [Git Workflow Guide](docs/project/GIT_WORKFLOW.md) 参照**
 
-# Main branch direct commit is blocked
-# Use PR workflow
+**重要ルール:**
+1. **main ブランチへの直接コミット禁止** - 必ず機能ブランチ経由
+2. **コミットメッセージ形式**: `type: 日本語タイトル` (typeは英語、タイトル・本文は日本語)
+3. **バックエンド変更時は typegen 必須**: `npm run fe:typegen`
+4. **PR作成前の品質チェック必須**: `npm run quality`
+5. **Co-Authored-By 必須**: Claude コミット時は必ず含める
+
+```bash
+# 推奨ワークフロー
+git checkout -b feature/xxx
+# ... 開発 ...
+npm run fe:typegen  # バックエンド変更時
+npm run quality     # 品質チェック
+git commit -m "feat: 機能追加
+
+詳細説明
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+git push -u origin feature/xxx
+gh pr create
 ```
 
 ---

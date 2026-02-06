@@ -4,8 +4,6 @@
  * エクスポート関連のフック。
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -16,6 +14,8 @@ import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
 import { authAwareRefetchInterval } from "@/shared/libs/query-utils";
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
+
+type SmartReadRow = Record<string, unknown>;
 
 /**
  * エクスポートを作成
@@ -135,7 +135,7 @@ export function useExportCsvData(options: {
       });
 
       // 3. Transform wide to long on client side
-      const wideData = serverData.wide_data as Array<Record<string, any>>;
+      const wideData: SmartReadRow[] = serverData.wide_data;
       const { SmartReadCsvTransformer } = await import("../utils/csv-transformer");
       const transformer = new SmartReadCsvTransformer();
       const transformResult = transformer.transformToLong(wideData, true);
@@ -147,7 +147,7 @@ export function useExportCsvData(options: {
           config_id: configId,
           task_id: taskId,
           export_id: exportId,
-          wide_data: serverData.wide_data as Array<Record<string, any>>,
+          wide_data: serverData.wide_data,
           long_data: transformResult.long_data,
           errors: transformResult.errors,
           filename: serverData.filename,

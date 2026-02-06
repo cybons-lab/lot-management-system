@@ -203,7 +203,7 @@ class SupplierItem(SoftDeleteMixin, Base):
         foreign_keys="[LotReceipt.supplier_item_id]",
         back_populates="supplier_item",
     )
-    uom_conversions: Mapped[list[ProductUomConversion]] = relationship(  # noqa: F821  # type: ignore[name-defined]
+    uom_conversions: Mapped[list[ProductUomConversion]] = relationship(
         "ProductUomConversion",
         foreign_keys="[ProductUomConversion.supplier_item_id]",
         back_populates="supplier_item",

@@ -42,7 +42,7 @@ interface ProductOption {
   display_name: string;
 }
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため */
 export function WarehouseDeliveryRoutesListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "warehouse_code", direction: "asc" });
@@ -117,10 +117,11 @@ export function WarehouseDeliveryRoutesListPage() {
     return result;
   }, [routes, searchQuery, showInactive]);
 
+  const { setPage } = table;
+
   useEffect(() => {
-    table.setPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, showInactive]);
+    setPage(1);
+  }, [searchQuery, setPage, showInactive]);
 
   // Sort
   const sortedRoutes = useMemo(() => {

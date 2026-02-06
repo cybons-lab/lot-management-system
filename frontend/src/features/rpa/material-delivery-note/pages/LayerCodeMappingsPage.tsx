@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 論理的な画面単位を維持 */
 import { Plus, Trash2, Edit2, Check, X, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";

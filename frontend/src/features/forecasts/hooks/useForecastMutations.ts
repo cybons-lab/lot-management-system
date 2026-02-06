@@ -4,7 +4,7 @@
  * フォーキャスト関連のmutations（自動引当、更新、作成）を集約したカスタムフック
  * クエリ無効化処理を一箇所にまとめて重複を排除
  */
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

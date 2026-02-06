@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, type Control } from "react-hook-form";
 import * as z from "zod";
 
 import { type Maker } from "../api";
@@ -32,100 +32,130 @@ interface MakerFormProps {
   isSubmitting?: boolean;
 }
 
-// eslint-disable-next-line max-lines-per-function
+function buildMakerDefaultValues(initialData?: Maker): MakerFormValues {
+  return {
+    maker_code: initialData?.maker_code ?? "",
+    maker_name: initialData?.maker_name ?? "",
+    display_name: initialData?.display_name ?? "",
+    short_name: initialData?.short_name ?? "",
+    notes: initialData?.notes ?? "",
+  };
+}
+
+function getSubmitLabel(initialData?: Maker) {
+  return initialData ? "更新" : "作成";
+}
+
+function MakerInputField({
+  control,
+  name,
+  label,
+  placeholder,
+  disabled,
+}: {
+  control: Control<MakerFormValues>;
+  name: "maker_code" | "maker_name" | "display_name" | "short_name";
+  label: string;
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Input
+              {...field}
+              value={field.value ?? ""}
+              disabled={disabled}
+              placeholder={placeholder}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function MakerNotesField({
+  control,
+  disabled,
+}: {
+  control: Control<MakerFormValues>;
+  disabled?: boolean;
+}) {
+  return (
+    <FormField
+      control={control}
+      name="notes"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>備考</FormLabel>
+          <FormControl>
+            <Textarea {...field} value={field.value || ""} disabled={disabled} rows={3} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
 export function MakerForm({ initialData, onSubmit, onCancel, isSubmitting }: MakerFormProps) {
   const form = useForm<MakerFormValues>({
     resolver: zodResolver(makerSchema),
-    defaultValues: {
-      maker_code: initialData?.maker_code || "",
-      maker_name: initialData?.maker_name || "",
-      display_name: initialData?.display_name || "",
-      short_name: initialData?.short_name || "",
-      notes: initialData?.notes || "",
-    },
+    defaultValues: buildMakerDefaultValues(initialData),
   });
+  const isCodeDisabled = Boolean(initialData) || Boolean(isSubmitting);
+  const submitLabel = getSubmitLabel(initialData);
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
+        <MakerInputField
           control={form.control}
           name="maker_code"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>メーカーコード (層別コード)</FormLabel>
-              <FormControl>
-                <Input {...field} disabled={!!initialData || isSubmitting} placeholder="M001" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="メーカーコード (層別コード)"
+          placeholder="M001"
+          disabled={isCodeDisabled}
         />
 
-        <FormField
+        <MakerInputField
           control={form.control}
           name="maker_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>メーカー名</FormLabel>
-              <FormControl>
-                <Input {...field} disabled={isSubmitting} placeholder="株式会社サンプル" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="メーカー名"
+          placeholder="株式会社サンプル"
+          disabled={isSubmitting}
         />
 
         <div className="grid grid-cols-2 gap-4">
-          <FormField
+          <MakerInputField
             control={form.control}
             name="display_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>表示名</FormLabel>
-                <FormControl>
-                  <Input {...field} value={field.value || ""} disabled={isSubmitting} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="表示名"
+            disabled={isSubmitting}
           />
 
-          <FormField
+          <MakerInputField
             control={form.control}
             name="short_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>略称</FormLabel>
-                <FormControl>
-                  <Input {...field} value={field.value || ""} disabled={isSubmitting} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="略称"
+            disabled={isSubmitting}
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>備考</FormLabel>
-              <FormControl>
-                <Textarea {...field} value={field.value || ""} disabled={isSubmitting} rows={3} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <MakerNotesField control={form.control} disabled={isSubmitting} />
 
         <div className="flex justify-end space-x-2 pt-2">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             キャンセル
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {initialData ? "更新" : "作成"}
+            {submitLabel}
           </Button>
         </div>
       </form>

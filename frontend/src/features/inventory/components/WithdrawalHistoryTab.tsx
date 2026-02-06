@@ -38,7 +38,7 @@ import { useWithdrawals } from "@/features/withdrawals/hooks";
 
 const PAGE_SIZE = 20;
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function WithdrawalHistoryTab() {
   const [withdrawalPage, setWithdrawalPage] = useState(1);
   const [filterType, setFilterType] = useState<"all" | WithdrawalType>("all");

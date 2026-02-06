@@ -61,7 +61,9 @@ describe("useOrders Hooks", () => {
 
   describe("useOrdersList", () => {
     it("fetches and normalizes orders list", async () => {
-      vi.mocked(ordersApi.getOrders).mockResolvedValue([mockOrderResponse] as any);
+      vi.mocked(ordersApi.getOrders).mockResolvedValue([mockOrderResponse] as unknown as Awaited<
+        ReturnType<typeof ordersApi.getOrders>
+      >);
 
       const { result } = renderHook(() => useOrdersList({}), { wrapper });
 
@@ -88,7 +90,9 @@ describe("useOrders Hooks", () => {
 
   describe("useOrderDetail", () => {
     it("fetches and normalizes order detail", async () => {
-      vi.mocked(ordersApi.getOrder).mockResolvedValue(mockOrderResponse as any);
+      vi.mocked(ordersApi.getOrder).mockResolvedValue(
+        mockOrderResponse as unknown as Awaited<ReturnType<typeof ordersApi.getOrder>>,
+      );
 
       const { result } = renderHook(() => useOrderDetail(1), { wrapper });
 
@@ -112,7 +116,9 @@ describe("useOrders Hooks", () => {
 
   describe("useUpdateOrderStatus", () => {
     it("updates status and invalidates queries", async () => {
-      vi.mocked(ordersApi.updateOrderStatus).mockResolvedValue({ success: true } as any);
+      vi.mocked(ordersApi.updateOrderStatus).mockResolvedValue({
+        success: true,
+      } as unknown as Awaited<ReturnType<typeof ordersApi.updateOrderStatus>>);
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
       const { result } = renderHook(() => useUpdateOrderStatus(1), { wrapper });

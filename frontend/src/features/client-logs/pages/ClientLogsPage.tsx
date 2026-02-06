@@ -73,7 +73,7 @@ function LogEntryComponent({ log }: { log: ClientLog }) {
   );
 }
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため */
 export function ClientLogsPage() {
   // Filter states
   const [selectedLevel, setSelectedLevel] = useState<"all" | "error" | "warning" | "info">("all");

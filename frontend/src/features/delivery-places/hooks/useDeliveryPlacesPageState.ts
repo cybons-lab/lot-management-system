@@ -8,7 +8,7 @@
  * - Data filtering and sorting logic
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import type { DeliveryPlaceCreate, DeliveryPlaceUpdate } from "../api";
 import type { DeliveryPlaceWithValidTo } from "../components/DeliveryPlacesTable";
@@ -34,127 +34,141 @@ interface DialogState {
   restoringItem: DeliveryPlaceWithValidTo | null;
 }
 
-// eslint-disable-next-line max-lines-per-function
-export function useDeliveryPlacesPageState() {
-  // Filter and sort state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sort, setSort] = useState<SortConfig>({
-    column: "delivery_place_code",
-    direction: "asc",
+const INITIAL_DIALOG_STATE: DialogState = {
+  isCreateDialogOpen: false,
+  editingItem: null,
+  deletingItem: null,
+  deleteMode: "soft",
+  restoringItem: null,
+};
+
+type CreateDeliveryPlaceMutate = ReturnType<typeof useCreateDeliveryPlace>["mutate"];
+type UpdateDeliveryPlaceMutate = ReturnType<typeof useUpdateDeliveryPlace>["mutate"];
+type SoftDeleteDeliveryPlaceMutate = ReturnType<typeof useSoftDeleteDeliveryPlace>["mutate"];
+type PermanentDeleteDeliveryPlaceMutate = ReturnType<
+  typeof usePermanentDeleteDeliveryPlace
+>["mutate"];
+type RestoreDeliveryPlaceMutate = ReturnType<typeof useRestoreDeliveryPlace>["mutate"];
+
+function filterDeliveryPlaces(
+  items: DeliveryPlaceWithValidTo[],
+  searchQuery: string,
+): DeliveryPlaceWithValidTo[] {
+  if (!searchQuery.trim()) return items;
+  const query = searchQuery.toLowerCase();
+  return items.filter(
+    (item) =>
+      item.delivery_place_code.toLowerCase().includes(query) ||
+      item.delivery_place_name.toLowerCase().includes(query),
+  );
+}
+
+function sortDeliveryPlaces(
+  items: DeliveryPlaceWithValidTo[],
+  sort: SortConfig,
+): DeliveryPlaceWithValidTo[] {
+  return [...items].sort((a, b) => {
+    const aVal = a[sort.column as keyof DeliveryPlaceWithValidTo];
+    const bVal = b[sort.column as keyof DeliveryPlaceWithValidTo];
+    if (aVal === undefined || bVal === undefined) return 0;
+    const cmp = String(aVal).localeCompare(String(bVal), "ja");
+    return sort.direction === "asc" ? cmp : -cmp;
   });
-  const [showInactive, setShowInactive] = useState(false);
-  const table = useTable({ initialPageSize: 25 });
+}
 
-  // Dialog state
-  const [dialogState, setDialogState] = useState<DialogState>({
-    isCreateDialogOpen: false,
-    editingItem: null,
-    deletingItem: null,
-    deleteMode: "soft",
-    restoringItem: null,
-  });
+function useDeliveryPlaceDialogState() {
+  const [dialogState, setDialogState] = useState<DialogState>(INITIAL_DIALOG_STATE);
+  const updateDialogState = useCallback(
+    (patch: Partial<DialogState>) => setDialogState((prev) => ({ ...prev, ...patch })),
+    [],
+  );
 
-  // Data hooks
-  const {
-    data: deliveryPlaces = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useDeliveryPlaces({ includeInactive: showInactive });
+  const openCreateDialog = useCallback(
+    () => updateDialogState({ isCreateDialogOpen: true }),
+    [updateDialogState],
+  );
+  const closeCreateDialog = useCallback(
+    () => updateDialogState({ isCreateDialogOpen: false }),
+    [updateDialogState],
+  );
+  const openEditDialog = useCallback(
+    (item: DeliveryPlaceWithValidTo) => updateDialogState({ editingItem: item }),
+    [updateDialogState],
+  );
+  const closeEditDialog = useCallback(
+    () => updateDialogState({ editingItem: null }),
+    [updateDialogState],
+  );
+  const openSoftDeleteDialog = useCallback(
+    (item: DeliveryPlaceWithValidTo) =>
+      updateDialogState({ deletingItem: item, deleteMode: "soft" }),
+    [updateDialogState],
+  );
+  const openPermanentDeleteDialog = useCallback(
+    (item: DeliveryPlaceWithValidTo) =>
+      updateDialogState({ deletingItem: item, deleteMode: "permanent" }),
+    [updateDialogState],
+  );
+  const closeDeleteDialog = useCallback(
+    () => updateDialogState({ deletingItem: null, deleteMode: "soft" }),
+    [updateDialogState],
+  );
+  const switchToPermanentDelete = useCallback(
+    () => updateDialogState({ deleteMode: "permanent" }),
+    [updateDialogState],
+  );
+  const openRestoreDialog = useCallback(
+    (item: DeliveryPlaceWithValidTo) => updateDialogState({ restoringItem: item }),
+    [updateDialogState],
+  );
+  const closeRestoreDialog = useCallback(
+    () => updateDialogState({ restoringItem: null }),
+    [updateDialogState],
+  );
 
-  const { useList } = useCustomers();
-  const { data: customers = [] } = useList(true);
+  return {
+    dialogState,
+    openCreateDialog,
+    closeCreateDialog,
+    openEditDialog,
+    closeEditDialog,
+    openSoftDeleteDialog,
+    openPermanentDeleteDialog,
+    closeDeleteDialog,
+    switchToPermanentDelete,
+    openRestoreDialog,
+    closeRestoreDialog,
+  };
+}
 
-  // Mutations
-  const { mutate: create, isPending: isCreating } = useCreateDeliveryPlace();
-  const { mutate: update, isPending: isUpdating } = useUpdateDeliveryPlace();
-  const {
-    mutate: softDelete,
-    mutateAsync: softDeleteAsync,
-    isPending: isSoftDeleting,
-  } = useSoftDeleteDeliveryPlace();
-  const {
-    mutate: permanentDelete,
-    mutateAsync: permanentDeleteAsync,
-    isPending: isPermanentDeleting,
-  } = usePermanentDeleteDeliveryPlace();
-  const { mutate: restore, isPending: isRestoring } = useRestoreDeliveryPlace();
+interface DeliveryPlaceCrudHandlerDependencies {
+  dialogState: DialogState;
+  create: CreateDeliveryPlaceMutate;
+  update: UpdateDeliveryPlaceMutate;
+  softDelete: SoftDeleteDeliveryPlaceMutate;
+  permanentDelete: PermanentDeleteDeliveryPlaceMutate;
+  restore: RestoreDeliveryPlaceMutate;
+  closeCreateDialog: () => void;
+  closeEditDialog: () => void;
+  closeDeleteDialog: () => void;
+  closeRestoreDialog: () => void;
+}
 
-  // Filtered data
-  const filteredData = useMemo(() => {
-    if (!searchQuery.trim()) return deliveryPlaces;
-    const query = searchQuery.toLowerCase();
-    return deliveryPlaces.filter(
-      (d) =>
-        d.delivery_place_code.toLowerCase().includes(query) ||
-        d.delivery_place_name.toLowerCase().includes(query),
-    );
-  }, [deliveryPlaces, searchQuery]);
-
-  // Sorted data
-  const sortedData = useMemo(() => {
-    const sorted = [...filteredData];
-    sorted.sort((a, b) => {
-      const aVal = a[sort.column as keyof DeliveryPlaceWithValidTo];
-      const bVal = b[sort.column as keyof DeliveryPlaceWithValidTo];
-      if (aVal === undefined || bVal === undefined) return 0;
-      const cmp = String(aVal).localeCompare(String(bVal), "ja");
-      return sort.direction === "asc" ? cmp : -cmp;
-    });
-    return sorted;
-  }, [filteredData, sort]);
-
-  // Paginated data
-  const paginatedData = table.paginateData(sortedData);
-
-  // Dialog handlers
-  const openCreateDialog = useCallback(() => {
-    setDialogState((prev) => ({ ...prev, isCreateDialogOpen: true }));
-  }, []);
-
-  const closeCreateDialog = useCallback(() => {
-    setDialogState((prev) => ({ ...prev, isCreateDialogOpen: false }));
-  }, []);
-
-  const openEditDialog = useCallback((item: DeliveryPlaceWithValidTo) => {
-    setDialogState((prev) => ({ ...prev, editingItem: item }));
-  }, []);
-
-  const closeEditDialog = useCallback(() => {
-    setDialogState((prev) => ({ ...prev, editingItem: null }));
-  }, []);
-
-  const openSoftDeleteDialog = useCallback((item: DeliveryPlaceWithValidTo) => {
-    setDialogState((prev) => ({ ...prev, deletingItem: item, deleteMode: "soft" }));
-  }, []);
-
-  const openPermanentDeleteDialog = useCallback((item: DeliveryPlaceWithValidTo) => {
-    setDialogState((prev) => ({ ...prev, deletingItem: item, deleteMode: "permanent" }));
-  }, []);
-
-  const closeDeleteDialog = useCallback(() => {
-    setDialogState((prev) => ({ ...prev, deletingItem: null, deleteMode: "soft" }));
-  }, []);
-
-  const switchToPermanentDelete = useCallback(() => {
-    setDialogState((prev) => ({ ...prev, deleteMode: "permanent" }));
-  }, []);
-
-  const openRestoreDialog = useCallback((item: DeliveryPlaceWithValidTo) => {
-    setDialogState((prev) => ({ ...prev, restoringItem: item }));
-  }, []);
-
-  const closeRestoreDialog = useCallback(() => {
-    setDialogState((prev) => ({ ...prev, restoringItem: null }));
-  }, []);
-
-  // CRUD handlers
+function useDeliveryPlaceCrudHandlers({
+  dialogState,
+  create,
+  update,
+  softDelete,
+  permanentDelete,
+  restore,
+  closeCreateDialog,
+  closeEditDialog,
+  closeDeleteDialog,
+  closeRestoreDialog,
+}: DeliveryPlaceCrudHandlerDependencies) {
   const handleCreate = useCallback(
-    (data: DeliveryPlaceCreate) => {
-      create(data, { onSuccess: closeCreateDialog });
-    },
-    [create, closeCreateDialog],
+    (data: DeliveryPlaceCreate) => create(data, { onSuccess: closeCreateDialog }),
+    [closeCreateDialog, create],
   );
 
   const handleUpdate = useCallback(
@@ -168,7 +182,7 @@ export function useDeliveryPlacesPageState() {
         { onSuccess: closeEditDialog },
       );
     },
-    [dialogState.editingItem, update, closeEditDialog],
+    [closeEditDialog, dialogState.editingItem, update],
   );
 
   const handleSoftDelete = useCallback(
@@ -183,7 +197,7 @@ export function useDeliveryPlacesPageState() {
         { onSuccess: closeDeleteDialog },
       );
     },
-    [dialogState.deletingItem, softDelete, closeDeleteDialog],
+    [closeDeleteDialog, dialogState.deletingItem, softDelete],
   );
 
   const handlePermanentDelete = useCallback(() => {
@@ -192,15 +206,109 @@ export function useDeliveryPlacesPageState() {
       { id: dialogState.deletingItem.id, version: dialogState.deletingItem.version },
       { onSuccess: closeDeleteDialog },
     );
-  }, [dialogState.deletingItem, permanentDelete, closeDeleteDialog]);
+  }, [closeDeleteDialog, dialogState.deletingItem, permanentDelete]);
 
   const handleRestore = useCallback(() => {
     if (!dialogState.restoringItem) return;
     restore(dialogState.restoringItem.id, { onSuccess: closeRestoreDialog });
-  }, [dialogState.restoringItem, restore, closeRestoreDialog]);
+  }, [closeRestoreDialog, dialogState.restoringItem, restore]);
 
   return {
-    // Data
+    handleCreate,
+    handleUpdate,
+    handleSoftDelete,
+    handlePermanentDelete,
+    handleRestore,
+  };
+}
+
+function useDeliveryPlacesData(showInactive: boolean) {
+  const {
+    data: deliveryPlaces = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useDeliveryPlaces({
+    includeInactive: showInactive,
+  });
+  const { useList } = useCustomers();
+  const { data: customers = [] } = useList(true);
+  return { deliveryPlaces, customers, isLoading, isError, error, refetch };
+}
+
+function useDeliveryPlaceMutations() {
+  const { mutate: create, isPending: isCreating } = useCreateDeliveryPlace();
+  const { mutate: update, isPending: isUpdating } = useUpdateDeliveryPlace();
+  const {
+    mutate: softDelete,
+    mutateAsync: softDeleteAsync,
+    isPending: isSoftDeleting,
+  } = useSoftDeleteDeliveryPlace();
+  const {
+    mutate: permanentDelete,
+    mutateAsync: permanentDeleteAsync,
+    isPending: isPermanentDeleting,
+  } = usePermanentDeleteDeliveryPlace();
+  const { mutate: restore, isPending: isRestoring } = useRestoreDeliveryPlace();
+  return {
+    create,
+    update,
+    softDelete,
+    permanentDelete,
+    restore,
+    softDeleteAsync,
+    permanentDeleteAsync,
+    isCreating,
+    isUpdating,
+    isSoftDeleting,
+    isPermanentDeleting,
+    isRestoring,
+  };
+}
+
+export function useDeliveryPlacesPageState() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSort] = useState<SortConfig>({ column: "delivery_place_code", direction: "asc" });
+  const [showInactive, setShowInactive] = useState(false);
+  const table = useTable({ initialPageSize: 25 });
+
+  const dialog = useDeliveryPlaceDialogState();
+
+  const { deliveryPlaces, customers, isLoading, isError, error, refetch } =
+    useDeliveryPlacesData(showInactive);
+  const mutations = useDeliveryPlaceMutations();
+
+  const filteredData = useMemo(
+    () => filterDeliveryPlaces(deliveryPlaces, searchQuery),
+    [deliveryPlaces, searchQuery],
+  );
+  const sortedData = useMemo(() => sortDeliveryPlaces(filteredData, sort), [filteredData, sort]);
+  const paginatedData = table.paginateData(sortedData);
+
+  const { handleCreate, handleUpdate, handleSoftDelete, handlePermanentDelete, handleRestore } =
+    useDeliveryPlaceCrudHandlers({
+      dialogState: dialog.dialogState,
+      create: mutations.create,
+      update: mutations.update,
+      softDelete: mutations.softDelete,
+      permanentDelete: mutations.permanentDelete,
+      restore: mutations.restore,
+      closeCreateDialog: dialog.closeCreateDialog,
+      closeEditDialog: dialog.closeEditDialog,
+      closeDeleteDialog: dialog.closeDeleteDialog,
+      closeRestoreDialog: dialog.closeRestoreDialog,
+    });
+  const { dialogState, ...dialogHandlers } = dialog;
+  const mutationStates = {
+    isCreating: mutations.isCreating,
+    isUpdating: mutations.isUpdating,
+    isSoftDeleting: mutations.isSoftDeleting,
+    isPermanentDeleting: mutations.isPermanentDeleting,
+    isRestoring: mutations.isRestoring,
+  };
+
+  return {
     deliveryPlaces,
     customers,
     sortedData,
@@ -208,49 +316,24 @@ export function useDeliveryPlacesPageState() {
     isError,
     error,
     refetch,
-
-    // Filter/sort state
     searchQuery,
     setSearchQuery,
     sort,
     setSort,
     showInactive,
     setShowInactive,
-
-    // Pagination
     table,
     paginatedData,
     totalCount: sortedData.length,
-
-    // Dialog state
     ...dialogState,
-    openCreateDialog,
-    closeCreateDialog,
-    openEditDialog,
-    closeEditDialog,
-    openSoftDeleteDialog,
-    openPermanentDeleteDialog,
-    closeDeleteDialog,
-    switchToPermanentDelete,
-    openRestoreDialog,
-    closeRestoreDialog,
-
-    // CRUD handlers
+    ...dialogHandlers,
     handleCreate,
     handleUpdate,
     handleSoftDelete,
     handlePermanentDelete,
     handleRestore,
-
-    // Mutation states
-    isCreating,
-    isUpdating,
-    isSoftDeleting,
-    isPermanentDeleting,
-    isRestoring,
-
-    // 一抬削除用のAsync関数
-    softDeleteAsync,
-    permanentDeleteAsync,
+    ...mutationStates,
+    softDeleteAsync: mutations.softDeleteAsync,
+    permanentDeleteAsync: mutations.permanentDeleteAsync,
   };
 }

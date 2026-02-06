@@ -5,9 +5,9 @@
  * Transforms wide (horizontal) CSV data to long (vertical) format
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { logger } from "./logger";
+
+type SmartReadRow = Record<string, unknown>;
 
 export interface ValidationError {
   row: number;
@@ -17,7 +17,7 @@ export interface ValidationError {
 }
 
 export interface TransformResult {
-  long_data: Array<Record<string, any>>;
+  long_data: SmartReadRow[];
   errors: ValidationError[];
 }
 
@@ -55,16 +55,13 @@ export class SmartReadCsvTransformer {
    * Converts data where multiple details are in one row (horizontal)
    * to data where each detail is a separate row (vertical)
    */
-  transformToLong(
-    wideData: Array<Record<string, any>>,
-    skipEmpty: boolean = true,
-  ): TransformResult {
+  transformToLong(wideData: SmartReadRow[], skipEmpty: boolean = true): TransformResult {
     logger.info("CSV変換開始", { wideRowCount: wideData.length });
     if (wideData.length > 0) {
       logger.debug("横持ちデータキー", { keys: Object.keys(wideData[0]).slice(0, 20) });
     }
 
-    const longData: Array<Record<string, any>> = [];
+    const longData: SmartReadRow[] = [];
     const errors: ValidationError[] = [];
 
     for (let rowIdx = 0; rowIdx < wideData.length; rowIdx++) {
@@ -119,8 +116,8 @@ export class SmartReadCsvTransformer {
     };
   }
 
-  private extractCommonFields(row: Record<string, any>): Record<string, any> {
-    const common: Record<string, any> = {};
+  private extractCommonFields(row: SmartReadRow): SmartReadRow {
+    const common: SmartReadRow = {};
     for (const fieldName of COMMON_FIELDS) {
       if (fieldName in row) {
         common[fieldName] = this.normalizeValue(row[fieldName]);
@@ -129,8 +126,8 @@ export class SmartReadCsvTransformer {
     return common;
   }
 
-  private extractDetails(row: Record<string, any>): Array<Record<string, any>> {
-    const details: Array<Record<string, any>> = [];
+  private extractDetails(row: SmartReadRow): SmartReadRow[] {
+    const details: SmartReadRow[] = [];
 
     logger.debug("明細抽出開始", { columnCount: Object.keys(row).length });
 
@@ -152,8 +149,8 @@ export class SmartReadCsvTransformer {
     return details;
   }
 
-  private extractSingleDetail(row: Record<string, any>, n: number): Record<string, any> {
-    const detail: Record<string, any> = {};
+  private extractSingleDetail(row: SmartReadRow, n: number): SmartReadRow {
+    const detail: SmartReadRow = {};
 
     // Normalize row keys (全角数字→半角数字) to match patterns
     const normalizedRow = this.createNormalizedRow(row);
@@ -167,8 +164,8 @@ export class SmartReadCsvTransformer {
     return detail;
   }
 
-  private createNormalizedRow(row: Record<string, any>): Record<string, any> {
-    const normalizedRow: Record<string, any> = {};
+  private createNormalizedRow(row: SmartReadRow): SmartReadRow {
+    const normalizedRow: SmartReadRow = {};
     for (const [key, value] of Object.entries(row)) {
       const normalizedKey = this.normalizeKey(key);
       normalizedRow[normalizedKey] = value;
@@ -176,11 +173,7 @@ export class SmartReadCsvTransformer {
     return normalizedRow;
   }
 
-  private extractDetailFields(
-    detail: Record<string, any>,
-    normalizedRow: Record<string, any>,
-    n: number,
-  ): void {
+  private extractDetailFields(detail: SmartReadRow, normalizedRow: SmartReadRow, n: number): void {
     for (const fieldName of DETAIL_FIELDS) {
       const keysToTry = [`${fieldName}${n}`, `${fieldName} ${n}`];
       if (n === 1) {
@@ -209,8 +202,8 @@ export class SmartReadCsvTransformer {
   }
 
   private extractSubDetailFields(
-    detail: Record<string, any>,
-    normalizedRow: Record<string, any>,
+    detail: SmartReadRow,
+    normalizedRow: SmartReadRow,
     n: number,
   ): void {
     for (const subField of SUB_DETAIL_FIELDS) {
@@ -247,11 +240,11 @@ export class SmartReadCsvTransformer {
     return result;
   }
 
-  private isVerticalFormat(row: Record<string, any>): boolean {
+  private isVerticalFormat(row: SmartReadRow): boolean {
     return DETAIL_FIELDS.some((f) => !(f + "1" in row) && !(f + " 1" in row) && f in row);
   }
 
-  private isEmptyDetail(detail: Record<string, any>): boolean {
+  private isEmptyDetail(detail: SmartReadRow): boolean {
     // Check if ALL detail fields are empty
     // If ANY field has a value, it is NOT empty
 
@@ -260,7 +253,7 @@ export class SmartReadCsvTransformer {
     for (const key of detailKeys) {
       if (key.startsWith("エラー_")) continue; // Ignore error flags
       const value = detail[key];
-      const trimmedValue = value ? String(value).trim() : "";
+      const trimmedValue = this.normalizeValue(value);
 
       if (trimmedValue !== "") {
         return false;
@@ -270,7 +263,7 @@ export class SmartReadCsvTransformer {
     return true;
   }
 
-  private normalizeValue(value: any): string {
+  private normalizeValue(value: unknown): string {
     if (value === null || value === undefined) {
       return "";
     }
@@ -292,14 +285,14 @@ export class SmartReadCsvTransformer {
   }
 
   private validateCommonFields(
-    common: Record<string, any>,
+    common: SmartReadRow,
     rowIdx: number,
-  ): [Record<string, any>, ValidationError[]] {
+  ): [SmartReadRow, ValidationError[]] {
     const errors: ValidationError[] = [];
 
     // Validate 発行日 (issue date)
     if ("発行日" in common) {
-      const original = common["発行日"];
+      const original = this.normalizeValue(common["発行日"]);
       const [parsed, hasError] = this.parseDate(original);
       if (hasError) {
         errors.push({
@@ -317,7 +310,7 @@ export class SmartReadCsvTransformer {
 
     // Validate 納入日 (delivery date)
     if ("納入日" in common) {
-      const original = common["納入日"];
+      const original = this.normalizeValue(common["納入日"]);
       const [parsed, hasError] = this.parseDate(original);
       if (hasError) {
         errors.push({
@@ -337,15 +330,15 @@ export class SmartReadCsvTransformer {
   }
 
   private validateDetail(
-    detail: Record<string, any>,
+    detail: SmartReadRow,
     rowIdx: number,
     detailIdx: number,
-  ): [Record<string, any>, ValidationError[]] {
+  ): [SmartReadRow, ValidationError[]] {
     const errors: ValidationError[] = [];
 
     // Validate 次区 (first character must be alphabet)
     if ("次区" in detail) {
-      const jiku = detail["次区"];
+      const jiku = this.normalizeValue(detail["次区"]);
       if (jiku && !/^[A-Za-z]/.test(jiku)) {
         errors.push({
           row: rowIdx,
@@ -361,7 +354,7 @@ export class SmartReadCsvTransformer {
 
     // Validate 納入量 (quantity must be non-negative number)
     if ("納入量" in detail) {
-      const quantity = detail["納入量"];
+      const quantity = this.normalizeValue(detail["納入量"]);
       const [parsed, hasError] = this.parseQuantity(quantity);
       if (hasError) {
         errors.push({

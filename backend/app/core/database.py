@@ -63,6 +63,7 @@
 
 import logging
 from collections.abc import Generator
+from importlib import import_module
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
@@ -100,7 +101,7 @@ def init_db() -> None:
 
     現在は SQL / ダンプでスキーマを復元するため、ここでは何もしない。
     """
-    import app.infrastructure.persistence.models  # noqa: F401
+    import_module("app.infrastructure.persistence.models")
 
     logger.info("⏭️ init_db: skipping Alembic migrations (handled manually via SQL)")
     return

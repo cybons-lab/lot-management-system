@@ -113,6 +113,8 @@
 
 import logging
 from contextlib import asynccontextmanager
+from importlib import import_module
+from typing import Any, cast
 
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
@@ -122,8 +124,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-# ドメインイベントハンドラを登録（インポート時に自動登録）
-import app.domain.events.handlers  # noqa: F401
 from app.application.services.smartread.auto_sync_runner import SmartReadAutoSyncRunner
 from app.core import errors
 from app.core.config import settings
@@ -136,6 +136,10 @@ from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.metrics import MetricsMiddleware
 from app.presentation.api.middleware.maintenance_middleware import MaintenanceMiddleware
 from app.presentation.api.routes import register_all_routers
+
+
+# ドメインイベントハンドラを登録（インポート時に自動登録）
+import_module("app.domain.events.handlers")
 
 
 logger = logging.getLogger(__name__)
@@ -164,7 +168,7 @@ def _mask_database_url(db_url: str) -> str:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     """アプリケーションのライフサイクル管理."""
     logger.info(f"🚀 {settings.APP_NAME} v{settings.APP_VERSION} を起動しています...")
     logger.info(f"📦 環境: {settings.ENVIRONMENT}")
@@ -243,10 +247,11 @@ application = FastAPI(
 # 例外ハンドラ登録
 # ========================================
 # 登録順序: HTTP例外 → バリデーションエラー → ドメイン例外 → 汎用例外
-# Note: type: ignore is needed due to FastAPI/Starlette type signature mismatch
-application.add_exception_handler(StarletteHTTPException, errors.http_exception_handler)  # type: ignore[arg-type]
-application.add_exception_handler(RequestValidationError, errors.validation_exception_handler)  # type: ignore[arg-type]
-application.add_exception_handler(DomainError, errors.domain_exception_handler)  # type: ignore[arg-type]
+application.add_exception_handler(StarletteHTTPException, cast(Any, errors.http_exception_handler))
+application.add_exception_handler(
+    RequestValidationError, cast(Any, errors.validation_exception_handler)
+)
+application.add_exception_handler(DomainError, cast(Any, errors.domain_exception_handler))
 application.add_exception_handler(Exception, errors.generic_exception_handler)
 
 # ========================================
@@ -332,4 +337,4 @@ else:
 
 
 # For backward compatibility and testing
-app: FastAPI = application  # type: ignore[assignment, no-redef]
+app: FastAPI = application

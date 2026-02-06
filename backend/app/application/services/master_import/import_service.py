@@ -85,7 +85,6 @@ class MasterImportService:
 
         # Determine overall status
         total_failed = sum(r.failed for r in results)
-        total_success = sum(r.created + r.updated for r in results)  # noqa: F841
 
         if global_errors or total_failed == sum(r.created + r.updated + r.failed for r in results):
             status = "failed"

@@ -34,7 +34,7 @@ interface HistoryTableProps {
   onConfigError: () => void;
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function HistoryTable({ historyQuery, onConfigError }: HistoryTableProps) {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);

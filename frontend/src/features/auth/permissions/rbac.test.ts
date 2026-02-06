@@ -66,7 +66,12 @@ describe("RBAC Permissions Logic", () => {
 
   describe("Dynamic Visibility Logic (Inheritance)", () => {
     // These tests mock the logic inside SystemSettingsContext's isFeatureVisible
-    const isVisibleMock = (feature: string, settings: any) => {
+    const isVisibleMock = (
+      feature: string,
+      settings: {
+        page_visibility?: Record<string, { user?: boolean }>;
+      },
+    ) => {
       if (feature.includes(":")) {
         const parent = feature.split(":")[0];
         if (isVisibleMock(parent, settings)) return true;

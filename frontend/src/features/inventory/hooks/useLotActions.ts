@@ -14,7 +14,7 @@ interface LotActionsOptions {
   onLotsChanged?: () => void;
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function useLotActions(options?: LotActionsOptions) {
   const editDialog = useDialog();
   const lockDialog = useDialog();
@@ -153,7 +153,6 @@ export function useLotActions(options?: LotActionsOptions) {
           )
         ) {
           setSelectedLot(lot);
-          // @ts-expect-error Status update is supported by backend but missing in frontend type definition
           await updateLotMutation.mutateAsync({ status: "active" });
         }
       },

@@ -1,3 +1,3 @@
 """Admin schemas subpackage."""
 
-from app.presentation.schemas.admin.admin_schema import *  # noqa: F403
+from app.presentation.schemas.admin.admin_schema import *  # noqa: F403 - package re-export

@@ -168,10 +168,9 @@ r"""リクエストロギングミドルウェア.
 import json
 import logging
 import time
-from collections.abc import Callable
 
 from asgi_correlation_id import correlation_id
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
@@ -213,7 +212,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         self.log_request_body = log_request_body
         self.max_body_length = max_body_length
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """リクエストを処理し、ログを記録.
 
         Args:
@@ -324,7 +323,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             },
         )
 
-        return response  # type: ignore[no-any-return]
+        return response
 
     def _filter_headers(self, headers: dict[str, str]) -> dict[str, str]:
         """センシティブなヘッダーをフィルタリング.

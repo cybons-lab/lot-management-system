@@ -1,7 +1,7 @@
 """SQLAlchemy models for the Lot Management System.
 
-All models strictly follow the DDL v2.2
-(lot_management_ddl_v2_2_id.sql). Legacy models have been removed.
+All models strictly follow the actual PostgreSQL tables as the single source of truth.
+Schema can be verified with: docker compose exec db-postgres pg_dump -U admin -d lot_management --schema-only
 
 B-Plan additions:
 - LotMaster: Lot number consolidation master

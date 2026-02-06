@@ -7,10 +7,16 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from importlib import import_module
+from typing import TYPE_CHECKING
 
 from pydantic import Field
 
 from app.presentation.schemas.common.base import BaseSchema
+
+
+if TYPE_CHECKING:
+    from app.presentation.schemas.orders.orders_schema import OrderLineResponse
 
 
 class OrderGroupBase(BaseSchema):
@@ -54,10 +60,7 @@ class OrderGroupWithLinesResponse(OrderGroupResponse):
     lines: list[OrderLineResponse] = Field(default_factory=list)
 
 
-# Forward reference for type checking
-from app.presentation.schemas.orders.orders_schema import (  # noqa: E402
-    OrderLineResponse,
+_orders_schema = import_module("app.presentation.schemas.orders.orders_schema")
+OrderGroupWithLinesResponse.model_rebuild(
+    _types_namespace={"OrderLineResponse": _orders_schema.OrderLineResponse}
 )
-
-
-OrderGroupWithLinesResponse.model_rebuild()

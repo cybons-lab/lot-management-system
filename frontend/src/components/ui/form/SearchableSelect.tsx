@@ -130,7 +130,63 @@ function SearchInput({
   );
 }
 
-// eslint-disable-next-line complexity -- 複雑性13で1つ超過、サブコンポーネント分離済み
+function SearchableSelectTrigger({
+  isOpen,
+  disabled,
+  value,
+  selectedOptionLabel,
+  placeholder,
+  inputRef,
+  searchTerm,
+  setSearchTerm,
+  onOpen,
+  onClear,
+}: {
+  isOpen: boolean;
+  disabled: boolean;
+  value?: string;
+  selectedOptionLabel?: string;
+  placeholder: string;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  searchTerm: string;
+  setSearchTerm: (v: string) => void;
+  onOpen: () => void;
+  onClear: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        "flex h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-sm",
+        "focus-within:border-primary focus-within:ring-primary focus-within:ring-1",
+        disabled && "cursor-not-allowed opacity-50",
+        isOpen && "border-primary ring-primary ring-1",
+      )}
+      onClick={onOpen}
+      disabled={disabled}
+    >
+      {isOpen ? (
+        <SearchInput
+          inputRef={inputRef}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          placeholder={placeholder}
+        />
+      ) : (
+        <span className={cn("truncate", !selectedOptionLabel && "text-slate-400")}>
+          {selectedOptionLabel || placeholder}
+        </span>
+      )}
+      <div className="flex items-center gap-1">
+        {value && !isOpen && <ClearButton onClick={onClear} />}
+        <ChevronDown
+          className={cn("h-4 w-4 text-slate-400 transition-transform", isOpen && "rotate-180")}
+        />
+      </div>
+    </button>
+  );
+}
+
 export function SearchableSelect({
   options,
   value,
@@ -166,37 +222,18 @@ export function SearchableSelect({
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      <button
-        type="button"
-        className={cn(
-          "flex h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-sm",
-          "focus-within:border-primary focus-within:ring-primary focus-within:ring-1",
-          disabled && "cursor-not-allowed opacity-50",
-          isOpen && "border-primary ring-primary ring-1",
-        )}
-        onClick={handleOpen}
+      <SearchableSelectTrigger
+        isOpen={isOpen}
         disabled={disabled}
-      >
-        {isOpen ? (
-          <SearchInput
-            inputRef={inputRef}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            placeholder={placeholder}
-          />
-        ) : (
-          <span className={cn("truncate", !selectedOption && "text-slate-400")}>
-            {selectedOption?.label || placeholder}
-          </span>
-        )}
-
-        <div className="flex items-center gap-1">
-          {value && !isOpen && <ClearButton onClick={handleClear} />}
-          <ChevronDown
-            className={cn("h-4 w-4 text-slate-400 transition-transform", isOpen && "rotate-180")}
-          />
-        </div>
-      </button>
+        value={value}
+        selectedOptionLabel={selectedOption?.label}
+        placeholder={placeholder}
+        inputRef={inputRef}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        onOpen={handleOpen}
+        onClear={handleClear}
+      />
 
       {isOpen && (
         <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">

@@ -3,7 +3,7 @@
  * 素材納品書発行 Step3 実行画面
  */
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 論理的な画面単位を維持 */
 import { format } from "date-fns";
 import { FileText, Play } from "lucide-react";
 import { useState } from "react";

@@ -4,12 +4,11 @@
  * タスク同期・データ取得関連のフック。
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { syncTaskResults, getLongData, processFilesAuto } from "../api";
+import type { SmartReadCsvDataResponse, SmartReadValidationError } from "../types";
 
 import { SMARTREAD_QUERY_KEYS } from "./query-keys";
 
@@ -19,10 +18,12 @@ import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 // Types
 // ============================================
 
+type SmartReadRow = Record<string, unknown>;
+
 interface SyncResult {
-  wide_data: Array<Record<string, any>>;
-  long_data: Array<Record<string, any>>;
-  errors: Array<any>;
+  wide_data: SmartReadRow[];
+  long_data: SmartReadRow[];
+  errors: SmartReadValidationError[];
   filename: string | null;
   data_version?: number | null;
   source: "cache" | "server";
@@ -39,6 +40,66 @@ interface SyncResult {
 // ============================================
 // Helper Functions
 // ============================================
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function getBodyMessage(body: unknown): string | undefined {
+  if (!isObject(body)) return undefined;
+  return typeof body.message === "string" ? body.message : undefined;
+}
+
+function getBodyState(body: unknown): string | undefined {
+  if (!isObject(body)) return undefined;
+  return typeof body.state === "string" ? body.state : undefined;
+}
+
+function getBodyDataVersion(body: unknown): number | null | undefined {
+  if (!isObject(body) || !("data_version" in body)) return undefined;
+  const value = body.data_version;
+  if (typeof value === "number") return value;
+  if (value === null) return null;
+  return undefined;
+}
+
+function isValidationError(value: unknown): value is SmartReadValidationError {
+  if (!isObject(value)) return false;
+  return (
+    typeof value.row === "number" &&
+    typeof value.field === "string" &&
+    typeof value.message === "string" &&
+    (typeof value.value === "string" || value.value === null)
+  );
+}
+
+function getBodyValidationErrors(body: unknown): SmartReadValidationError[] {
+  if (!isObject(body) || !Array.isArray(body.errors)) return [];
+  return body.errors.filter(isValidationError);
+}
+
+function getBodyRequestStatus(body: unknown): SyncResult["requests_status"] | undefined {
+  if (!isObject(body) || !isObject(body.requests_status)) return undefined;
+  const status = body.requests_status;
+  if (
+    typeof status.total === "number" &&
+    typeof status.completed === "number" &&
+    typeof status.running === "number" &&
+    typeof status.failed === "number"
+  ) {
+    return {
+      total: status.total,
+      completed: status.completed,
+      running: status.running,
+      failed: status.failed,
+    };
+  }
+  return undefined;
+}
+
+function isResponseLike(value: unknown): value is { status: number; json: () => Promise<unknown> } {
+  return isObject(value) && typeof value.status === "number" && typeof value.json === "function";
+}
 
 async function checkIdbCache(
   configId: number,
@@ -67,14 +128,7 @@ async function checkIdbCache(
 async function cacheToIdb(
   configId: number,
   taskId: string,
-  res: {
-    wide_data: unknown[];
-    long_data: unknown[];
-    errors: unknown[];
-    filename: string | null;
-    task_date?: string;
-    data_version?: number | null;
-  },
+  res: SmartReadCsvDataResponse & { task_date?: string },
 ) {
   if (res.wide_data.length === 0) return;
   try {
@@ -83,9 +137,9 @@ async function cacheToIdb(
       config_id: configId,
       task_id: taskId,
       export_id: `sync_${Date.now()}`,
-      wide_data: res.wide_data as Array<Record<string, any>>,
-      long_data: res.long_data as Array<Record<string, any>>,
-      errors: res.errors as Array<any>,
+      wide_data: res.wide_data,
+      long_data: res.long_data,
+      errors: res.errors,
       filename: res.filename,
       task_date: res.task_date,
       data_version: res.data_version ?? undefined,
@@ -97,8 +151,8 @@ async function cacheToIdb(
 }
 
 async function tryFrontendTransform(
-  wideData: Array<Record<string, any>>,
-): Promise<{ long_data: Array<Record<string, any>>; errors: Array<any> } | null> {
+  wideData: SmartReadRow[],
+): Promise<{ long_data: SmartReadRow[]; errors: SmartReadValidationError[] } | null> {
   if (wideData.length === 0) return null;
 
   try {
@@ -114,12 +168,12 @@ async function tryFrontendTransform(
   return null;
 }
 
-async function parseHttpError(error: unknown): Promise<{ status: number; body: any } | null> {
-  if (error && typeof error === "object" && "response" in error) {
-    const httpError = error as { response: Response };
+async function parseHttpError(error: unknown): Promise<{ status: number; body: unknown } | null> {
+  if (isObject(error) && "response" in error && isResponseLike(error.response)) {
+    const httpError = error.response;
     try {
-      const body = await httpError.response.json();
-      return { status: httpError.response.status, body };
+      const body = await httpError.json();
+      return { status: httpError.status, body };
     } catch {
       return null;
     }
@@ -131,7 +185,7 @@ async function parseHttpError(error: unknown): Promise<{ status: number; body: a
 // Hooks
 // ============================================
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 論理的な画面単位を維持 */
 /**
  * タスクの結果を強制的に同期
  */
@@ -162,7 +216,7 @@ export function useSyncTaskResults() {
 
         // If server returned 0 long rows, try frontend transformation
         if (res.wide_data.length > 0 && res.long_data.length === 0) {
-          const frontendResult = await tryFrontendTransform(res.wide_data as any[]);
+          const frontendResult = await tryFrontendTransform(res.wide_data);
           if (frontendResult) {
             res.long_data = frontendResult.long_data;
             res.errors = frontendResult.errors;
@@ -188,8 +242,8 @@ export function useSyncTaskResults() {
               data_version: null,
               source: "server" as const,
               state: "PENDING" as const,
-              message: body.message || "OCR処理中です...",
-              requests_status: body.requests_status,
+              message: getBodyMessage(body) || "OCR処理中です...",
+              requests_status: getBodyRequestStatus(body),
             };
           }
 
@@ -198,26 +252,26 @@ export function useSyncTaskResults() {
             return {
               wide_data: [],
               long_data: [],
-              errors: body.errors || [],
+              errors: getBodyValidationErrors(body),
               filename: null,
               data_version: null,
               source: "server" as const,
               state: "FAILED" as const,
-              message: body.message || "処理に失敗しました",
+              message: getBodyMessage(body) || "処理に失敗しました",
             };
           }
 
           // 200 with EMPTY state
-          if (status === 200 && body.state === "EMPTY") {
+          if (status === 200 && getBodyState(body) === "EMPTY") {
             return {
               wide_data: [],
               long_data: [],
               errors: [],
               filename: null,
-              data_version: body.data_version ?? null,
+              data_version: getBodyDataVersion(body) ?? null,
               source: "server" as const,
               state: "EMPTY" as const,
-              message: body.message || "データがありません",
+              message: getBodyMessage(body) || "データがありません",
             };
           }
         }

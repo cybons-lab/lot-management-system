@@ -30,66 +30,47 @@ interface AllocationDialogProps {
   onSuccess?: () => void;
 }
 
-/* eslint-disable max-lines-per-function */
-export function AllocationDialog({ line, onClose, onSuccess }: AllocationDialogProps) {
-  // 親受注の情報を取得（LotAllocationPanel に必要）
-  const {
-    data: order,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["order", line?.order_id],
-    queryFn: () => ordersApi.getOrder(line!.order_id),
-    enabled: !!line?.order_id,
-  });
-
-  const {
-    candidateLots,
-    lotAllocations,
-    hardAllocated,
-    softAllocated,
-    hasUnsavedChanges,
-    allocationState,
-    isLoadingCandidates,
-    isSaving,
-    changeAllocation,
-    clearAllocations,
-    autoAllocate,
-    saveAllocations,
-    saveAndConfirmAllocations,
-    confirmAllocations,
-    cancelAllAllocations,
-  } = useOrderLineAllocation({
-    orderLine: line,
-    onSuccess: () => {
-      onSuccess?.();
-      onClose();
-    },
-  });
-
-  if (!line) return null;
-
-  if (isError) {
-    return (
-      <Dialog open={!!line} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>エラー</DialogTitle>
-            <DialogDescription className="sr-only">データの取得に失敗しました</DialogDescription>
-          </DialogHeader>
-          <QueryErrorFallback
-            error={error}
-            resetError={refetch}
-            title="受注データの取得に失敗しました"
-          />
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
+function AllocationErrorDialog({
+  open,
+  onClose,
+  error,
+  refetch,
+}: {
+  open: boolean;
+  onClose: () => void;
+  error: unknown;
+  refetch: () => void;
+}) {
   return (
-    <Dialog open={!!line} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>エラー</DialogTitle>
+          <DialogDescription className="sr-only">データの取得に失敗しました</DialogDescription>
+        </DialogHeader>
+        <QueryErrorFallback
+          error={error instanceof Error ? error : null}
+          resetError={refetch}
+          title="受注データの取得に失敗しました"
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AllocationContentDialog({
+  line,
+  order,
+  onClose,
+  allocation,
+}: {
+  line: OrderLine;
+  order: OrderWithLinesResponse | undefined;
+  onClose: () => void;
+  allocation: ReturnType<typeof useOrderLineAllocation>;
+}) {
+  return (
+    <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-5xl p-0">
         <DialogHeader className="px-6 py-4">
           <DialogTitle>ロット引当</DialogTitle>
@@ -101,26 +82,56 @@ export function AllocationDialog({ line, onClose, onSuccess }: AllocationDialogP
           <LotAllocationPanel
             order={order as OrderWithLinesResponse}
             orderLine={line}
-            candidateLots={candidateLots}
-            lotAllocations={lotAllocations}
-            onLotAllocationChange={changeAllocation}
-            onAutoAllocate={autoAllocate}
-            onClearAllocations={clearAllocations}
-            onSaveAllocations={saveAllocations}
-            onSaveAndConfirm={saveAndConfirmAllocations}
-            onConfirmHard={confirmAllocations}
-            onCancelAllocations={cancelAllAllocations}
-            isLoading={isLoadingCandidates}
-            isSaving={isSaving}
-            canSave={Object.keys(lotAllocations).length > 0}
-            isActive={true}
-            hardAllocated={hardAllocated}
-            softAllocated={softAllocated}
-            hasUnsavedChanges={hasUnsavedChanges}
-            allocationState={allocationState}
+            candidateLots={allocation.candidateLots}
+            lotAllocations={allocation.lotAllocations}
+            onLotAllocationChange={allocation.changeAllocation}
+            onAutoAllocate={allocation.autoAllocate}
+            onClearAllocations={allocation.clearAllocations}
+            onSaveAllocations={allocation.saveAllocations}
+            onSaveAndConfirm={allocation.saveAndConfirmAllocations}
+            onConfirmHard={allocation.confirmAllocations}
+            onCancelAllocations={allocation.cancelAllAllocations}
+            isLoading={allocation.isLoadingCandidates}
+            isSaving={allocation.isSaving}
+            canSave={Object.keys(allocation.lotAllocations).length > 0}
+            isActive
+            hardAllocated={allocation.hardAllocated}
+            softAllocated={allocation.softAllocated}
+            hasUnsavedChanges={allocation.hasUnsavedChanges}
+            allocationState={allocation.allocationState}
           />
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function AllocationDialog({ line, onClose, onSuccess }: AllocationDialogProps) {
+  const {
+    data: order,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["order", line?.order_id],
+    queryFn: () => ordersApi.getOrder(line!.order_id),
+    enabled: !!line?.order_id,
+  });
+
+  const allocation = useOrderLineAllocation({
+    orderLine: line,
+    onSuccess: () => {
+      onSuccess?.();
+      onClose();
+    },
+  });
+
+  if (!line) return null;
+  if (isError)
+    return (
+      <AllocationErrorDialog open={!!line} onClose={onClose} error={error} refetch={refetch} />
+    );
+  return (
+    <AllocationContentDialog line={line} order={order} onClose={onClose} allocation={allocation} />
   );
 }

@@ -4,8 +4,6 @@
  * IndexedDB-based caching for export results to reduce server load
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { openDB, type IDBPDatabase } from "idb";
 
 import { logger } from "../utils/logger";
@@ -13,20 +11,22 @@ import { logger } from "../utils/logger";
 const DB_NAME = "smartread-export-cache";
 const DB_VERSION = 3;
 const STORE_NAME = "exports";
+type SmartReadRow = Record<string, unknown>;
+type TransformError = {
+  row: number;
+  field: string;
+  message: string;
+  value: string | null;
+};
 
 export interface CachedExport {
   id: string; // {config_id}_{task_id}_{export_id}
   config_id: number;
   task_id: string;
   export_id: string;
-  wide_data: Array<Record<string, any>>;
-  long_data: Array<Record<string, any>>;
-  errors: Array<{
-    row: number;
-    field: string;
-    message: string;
-    value: string | null;
-  }>;
+  wide_data: SmartReadRow[];
+  long_data: SmartReadRow[];
+  errors: TransformError[];
   filename: string | null;
   task_date?: string;
   data_version?: number;
@@ -41,7 +41,12 @@ class ExportCacheService {
     if (!this.dbPromise) {
       logger.debug("IndexedDB接続開始");
       this.dbPromise = openDB(DB_NAME, DB_VERSION, {
-        upgrade(db: IDBPDatabase, oldVersion: number, _newVersion: number | null, transaction) {
+        async upgrade(
+          db: IDBPDatabase,
+          oldVersion: number,
+          _newVersion: number | null,
+          transaction,
+        ) {
           if (!db.objectStoreNames.contains(STORE_NAME)) {
             logger.debug("オブジェクトストア作成");
             const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
@@ -51,27 +56,27 @@ class ExportCacheService {
           }
           if (oldVersion < 2) {
             const store = transaction.objectStore(STORE_NAME);
-            store.openCursor().then(function updateCursor(cursor: any): any {
-              if (!cursor) return;
+            let cursor = await store.openCursor();
+            while (cursor) {
               const value = cursor.value as CachedExport;
               if (value.saved_to_db === undefined) {
                 value.saved_to_db = false;
-                cursor.update(value);
+                await cursor.update(value);
               }
-              return cursor.continue().then(updateCursor);
-            });
+              cursor = await cursor.continue();
+            }
           }
           if (oldVersion < 3) {
             const store = transaction.objectStore(STORE_NAME);
-            store.openCursor().then(function updateCursor(cursor: any): any {
-              if (!cursor) return;
+            let cursor = await store.openCursor();
+            while (cursor) {
               const value = cursor.value as CachedExport;
               if (value.data_version === undefined) {
                 value.data_version = 1;
-                cursor.update(value);
+                await cursor.update(value);
               }
-              return cursor.continue().then(updateCursor);
-            });
+              cursor = await cursor.continue();
+            }
           }
         },
       });
@@ -143,9 +148,9 @@ class ExportCacheService {
     config_id: number;
     task_id: string;
     export_id: string;
-    wide_data: Array<Record<string, any>>;
-    long_data: Array<Record<string, any>>;
-    errors: Array<any>;
+    wide_data: SmartReadRow[];
+    long_data: SmartReadRow[];
+    errors: TransformError[];
     filename: string | null;
     task_date?: string;
     data_version?: number;

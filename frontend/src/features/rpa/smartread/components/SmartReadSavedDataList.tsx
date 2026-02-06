@@ -103,7 +103,7 @@ function useLongDataColumns(longDataList: SmartReadLongData[] | undefined) {
   }, [longDataList]);
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 論理的な画面単位を維持
 export function SmartReadSavedDataList({ configId }: SmartReadSavedDataListProps) {
   const queryClient = useQueryClient();
   const { data: longDataList, isLoading, refetch, isRefetching } = useSmartReadLongData(configId);

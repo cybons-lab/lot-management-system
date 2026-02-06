@@ -3,7 +3,7 @@
  *
  * 既存ロットへの追加入庫 or 新規ロット作成を1つのダイアログで行う簡易登録フォーム。
  */
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";

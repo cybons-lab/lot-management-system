@@ -148,10 +148,11 @@ class ExportService:
     ) -> StreamingResponse:
         """Export data to Excel (xlsx)."""
         try:
-            import openpyxl  # noqa: F401
+            import openpyxl
             import pandas as pd
         except ImportError:
             raise ImportError("pandas and openpyxl are required for export. Please install them.")
+        _openpyxl = openpyxl
 
         processed_data = ExportService._prepare_data(data)
         df = pd.DataFrame(processed_data)

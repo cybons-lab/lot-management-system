@@ -450,7 +450,7 @@ class RpaRepository:
             "error_code_counts": [
                 {
                     "error_code": row.error_code,
-                    "count": row[1] if len(row) > 1 else 0,  # type: ignore[index]
+                    "count": int(row._mapping.get("count", 0) or 0),
                 }
                 for row in error_code_counts
             ],

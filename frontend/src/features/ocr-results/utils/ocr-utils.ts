@@ -8,7 +8,7 @@ export const buildPayload = (input: RowInputState): OcrResultEditPayload => {
     return d.replace(/\//g, "-");
   };
 
-  const payload: Partial<OcrResultEditPayload> = {
+  const payload: Partial<Record<keyof OcrResultEditPayload, unknown>> = {
     version: input.version,
     shipping_slip_text_edited: input.shippingSlipTextEdited,
     error_flags: input.errorFlags || {},
@@ -37,11 +37,9 @@ export const buildPayload = (input: RowInputState): OcrResultEditPayload => {
       if (dest === "shipping_date" || dest === "delivery_date") {
         finalVal = formatToIso(val);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (payload as any)[dest] = finalVal;
+      payload[dest] = finalVal;
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (payload as any)[dest] = val;
+      payload[dest] = val;
     }
   });
 

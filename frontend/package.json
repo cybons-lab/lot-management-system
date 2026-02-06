@@ -15,6 +15,7 @@
     "typegen": "openapi-typescript ../backend/openapi.json -o src/types/api.d.ts && prettier --write src/types/api.d.ts",
     "typegen:docker": "curl -s http://backend:8000/api/openapi.json -o /tmp/openapi.json && openapi-typescript /tmp/openapi.json -o src/types/api.d.ts && prettier --write src/types/api.d.ts",
     "typegen:curl": "curl -s http://localhost:8000/api/openapi.json -o ../backend/openapi.json && npm run typegen",
+    "typegen:full": "cd ../backend && uv run python scripts/export_openapi.py && cd ../frontend && npm run typegen",
     "doc:fe": "typedoc --options typedoc.json",
     "doc": "npm run typegen && npm run doc:fe",
     "capture:screens": "node capture-screens.mjs",

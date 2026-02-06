@@ -202,17 +202,15 @@ class RelationCheckService:
         if lot_count > 0:
             return True
 
-        # 出庫チェック
-        try:
-            withdrawal_count = (
-                self.db.query(func.count(Withdrawal.id))
-                .filter(Withdrawal.warehouse_id == warehouse_id)  # type: ignore[attr-defined]
-                .scalar()
-            )
-            if withdrawal_count > 0:
-                return True
-        except AttributeError:
-            pass
+        # 出庫チェック（withdrawals は warehouse_id を持たないため lot 経由で判定）
+        withdrawal_count = (
+            self.db.query(func.count(Withdrawal.id))
+            .join(LotReceipt, Withdrawal.lot_id == LotReceipt.id)
+            .filter(LotReceipt.warehouse_id == warehouse_id)
+            .scalar()
+        )
+        if withdrawal_count > 0:
+            return True
 
         return False
 

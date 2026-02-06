@@ -1,5 +1,5 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable complexity */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
+/* eslint-disable complexity -- 業務分岐を明示的に維持するため */
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Box, ChevronRight, Search, Truck } from "lucide-react";
 import { useMemo, useState } from "react";

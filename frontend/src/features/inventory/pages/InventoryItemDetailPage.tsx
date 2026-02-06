@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines -- 画面全体の構成を分割せず把握できるようにするため */
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -35,7 +35,7 @@ import { calculateAvailable } from "@/shared/utils/decimal";
 import { fmt } from "@/shared/utils/number";
 import { getLotStatuses } from "@/shared/utils/status";
 
-// eslint-disable-next-line max-lines-per-function, complexity
+// eslint-disable-next-line max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため
 export function InventoryItemDetailPage() {
   const {
     productId,

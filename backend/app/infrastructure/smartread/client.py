@@ -258,14 +258,14 @@ class SmartReadClient:
 
         # requestTypeは 'templateMatching' 固定 (v3仕様)
         # ユーザー指示: "requestTypeはtemplateMatchingを入れる必要がある"
-        payload = {
+        payload: dict[str, Any] = {
             "name": "Analyze Task",
             "requestType": "templateMatching",  # Fixed as per requirement
         }
 
         # テンプレートID指定がある場合
         if self.template_ids:
-            payload["templateIds"] = self.template_ids  # type: ignore[assignment]
+            payload["templateIds"] = self.template_ids
 
         headers = self._get_headers()
         response = await client.post(url, json=payload, headers=headers)
@@ -981,12 +981,12 @@ class SmartReadClient:
                 url = self._build_api_url("/v3/task")
                 headers = self._get_headers()
 
-                payload = {
+                payload: dict[str, Any] = {
                     "name": task_name,
                     "requestType": "templateMatching",
                 }
                 if self.template_ids:
-                    payload["templateIds"] = self.template_ids  # type: ignore[assignment]
+                    payload["templateIds"] = self.template_ids
 
                 response = await client.post(url, json=payload, headers=headers)
                 response.raise_for_status()

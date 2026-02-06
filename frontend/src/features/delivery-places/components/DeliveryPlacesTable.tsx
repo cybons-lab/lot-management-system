@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 import { Pencil, Trash2, RotateCcw } from "lucide-react";
 import { useMemo } from "react";
 

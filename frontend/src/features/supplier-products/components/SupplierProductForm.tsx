@@ -1,7 +1,7 @@
 /**
  * SupplierProductForm - 仕入先商品登録・編集フォーム
  */
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -38,10 +38,17 @@ const schema = z.object({
   display_name: z.string().min(1, "製品名を入力してください"),
   base_unit: z.string().min(1, "基本単位を入力してください"),
   lead_time_days: z.number().nullable(),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+interface FormValues {
+  supplier_id: number;
+  maker_part_no: string;
+  display_name: string;
+  base_unit: string;
+  lead_time_days: number | null;
+  notes: string | null;
+}
 type SupplierProductEditInput = Omit<SupplierProductUpdate, "version">;
 
 interface SupplierProductFormProps {
@@ -62,7 +69,8 @@ export function SupplierProductForm({
   isSubmitting = false,
   isEdit = false,
 }: SupplierProductFormProps) {
-  const form = useForm({
+  const form = useForm<FormValues>({
+    // @ts-expect-error - compatibility issue between zod and react-hook-form versions
     resolver: zodResolver(schema),
     defaultValues: {
       supplier_id: initialData?.supplier_id || 0,
@@ -74,19 +82,12 @@ export function SupplierProductForm({
     },
   });
 
-  const handleSubmit = (values: FormValues) => {
-    onSubmit(values);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const control = form.control as any;
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {/* 仕入先 (編集時は変更不可) - Phase1で最初に移動 */}
         <FormField
-          control={control}
+          control={form.control}
           name="supplier_id"
           render={({ field }) => (
             <FormItem>
@@ -118,7 +119,7 @@ export function SupplierProductForm({
 
         {/* メーカー品番 - 必須フィールド */}
         <FormField
-          control={control}
+          control={form.control}
           name="maker_part_no"
           render={({ field }) => (
             <FormItem>
@@ -138,7 +139,7 @@ export function SupplierProductForm({
 
         {/* 製品名 - 必須フィールド */}
         <FormField
-          control={control}
+          control={form.control}
           name="display_name"
           render={({ field }) => (
             <FormItem>
@@ -156,7 +157,7 @@ export function SupplierProductForm({
 
         {/* 基本単位 - 必須フィールド */}
         <FormField
-          control={control}
+          control={form.control}
           name="base_unit"
           render={({ field }) => (
             <FormItem>
@@ -176,7 +177,7 @@ export function SupplierProductForm({
 
         {/* リードタイム */}
         <FormField
-          control={control}
+          control={form.control}
           name="lead_time_days"
           render={({ field }) => (
             <FormItem>
@@ -199,13 +200,13 @@ export function SupplierProductForm({
 
         {/* 備考 (オプション) */}
         <FormField
-          control={control}
+          control={form.control}
           name="notes"
           render={({ field }) => (
             <FormItem>
               <FormLabel>備考</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="特記事項があれば入力" />
+                <Input {...field} value={field.value ?? ""} placeholder="特記事項があれば入力" />
               </FormControl>
               <FormMessage />
             </FormItem>

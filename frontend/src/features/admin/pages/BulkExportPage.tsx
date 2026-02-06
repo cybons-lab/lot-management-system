@@ -5,7 +5,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Download, Loader2, Database } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { getExportTargets, downloadBulkExport, type ExportTarget } from "../api/bulk-export";
@@ -144,40 +144,24 @@ function DownloadSettings({
   );
 }
 
-// --- Main Component ---
-
-// eslint-disable-next-line max-lines-per-function
-export function BulkExportPage() {
+function useBulkExportSelection(targets: ExportTarget[]) {
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [format, setFormat] = useState<"xlsx" | "csv">("xlsx");
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const {
-    data: targets = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["bulk-export-targets"],
-    queryFn: getExportTargets,
-  });
-
-  const handleToggle = (key: string) => {
+  const handleToggle = useCallback((key: string) => {
     setSelectedTargets((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+      prev.includes(key) ? prev.filter((value) => value !== key) : [...prev, key],
     );
-  };
+  }, []);
 
-  const handleSelectAll = () => {
-    if (selectedTargets.length === targets.length) {
-      setSelectedTargets([]);
-    } else {
-      setSelectedTargets(targets.map((t) => t.key));
-    }
-  };
+  const handleSelectAll = useCallback(() => {
+    setSelectedTargets((prev) =>
+      prev.length === targets.length ? [] : targets.map((target) => target.key),
+    );
+  }, [targets]);
 
-  const handleDownload = async () => {
+  const handleDownload = useCallback(async () => {
     if (selectedTargets.length === 0) {
       toast.error("エクスポート対象を選択してください");
       return;
@@ -193,7 +177,42 @@ export function BulkExportPage() {
     } finally {
       setIsDownloading(false);
     }
+  }, [format, selectedTargets]);
+
+  return {
+    selectedTargets,
+    format,
+    setFormat,
+    isDownloading,
+    handleToggle,
+    handleSelectAll,
+    handleDownload,
   };
+}
+
+// --- Main Component ---
+
+export function BulkExportPage() {
+  const {
+    data: targets = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["bulk-export-targets"],
+    queryFn: getExportTargets,
+  });
+
+  const {
+    selectedTargets,
+    format,
+    setFormat,
+    isDownloading,
+    handleToggle,
+    handleSelectAll,
+    handleDownload,
+  } = useBulkExportSelection(targets);
 
   if (isLoading) {
     return (

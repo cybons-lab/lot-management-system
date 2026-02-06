@@ -56,7 +56,7 @@ def _to_preview_response(service_result) -> FefoPreviewResponse:
             for alloc in line.allocations
         ]
         lines.append(
-            FefoLineAllocation(  # type: ignore[call-arg]
+            FefoLineAllocation(
                 order_line_id=line.order_line_id,
                 supplier_item_id=line.supplier_item_id,
                 product_code=line.product_code,

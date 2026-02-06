@@ -33,7 +33,7 @@ interface TableProps {
 }
 
 /** UOM conversions table component */
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function UomConversionsTable({
   conversions,
   editingId,
@@ -49,7 +49,7 @@ export function UomConversionsTable({
 }: TableProps) {
   // 列定義
   const columns = useMemo<Column<UomConversionResponse>[]>(
-    // eslint-disable-next-line max-lines-per-function
+    // eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
     () => [
       {
         id: "product_code",

@@ -15,7 +15,7 @@ import type { DayCellProps } from "./types";
 import { cn } from "@/shared/libs/utils";
 import { formatDateKey } from "@/shared/utils/date";
 
-/* eslint-disable max-lines-per-function, complexity */
+/* eslint-disable max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため */
 
 /**
  * Render a single day cell for the grid

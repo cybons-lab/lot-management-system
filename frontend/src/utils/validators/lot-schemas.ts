@@ -34,6 +34,7 @@ export const lotUpdateSchema = z.object({
     .nullable()
     .optional(),
   delivery_place_code: z.string().nullable().optional(),
+  status: z.enum(["active", "depleted", "expired", "quarantine", "locked", "archived"]).optional(),
 });
 
 /**

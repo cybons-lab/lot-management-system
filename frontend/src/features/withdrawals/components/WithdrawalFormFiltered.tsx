@@ -35,7 +35,6 @@ interface WithdrawalFormFilteredProps {
 /**
  * フィルタ連動型出庫登録フォーム
  */
-// eslint-disable-next-line max-lines-per-function
 export function WithdrawalFormFiltered({
   preselectedLot,
   lots,
@@ -44,84 +43,57 @@ export function WithdrawalFormFiltered({
   onCancel,
   isSubmitting = false,
 }: WithdrawalFormFilteredProps) {
-  const {
-    // Master data
-    suppliers,
-    customers,
-    products,
-    deliveryPlaces,
-    isLoadingSuppliers,
-    isLoadingCustomers,
-    isLoadingProducts,
-    isLoadingDeliveryPlaces,
-
-    // Filter state
-    filters,
-    updateFilter,
-
-    // Form state
-    formData,
-    updateFormData,
-    errors,
-
-    // Computed values
-    filteredLots,
-    filteredProducts,
-    availableQuantity,
-
-    // Handlers
-    handleCustomerChange,
-    handleDeliveryPlaceChange,
-    handleSubmit,
-  } = useWithdrawalFormState({
+  const state = useWithdrawalFormState({
     preselectedLot,
     lots,
     onSubmit,
   });
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={state.handleSubmit} className="space-y-6">
       {/* Filter section */}
       <LotFilterSection
-        suppliers={suppliers}
-        products={products}
-        filteredProducts={filteredProducts}
-        isLoadingSuppliers={isLoadingSuppliers}
-        isLoadingProducts={isLoadingProducts}
-        filteredLotsCount={filteredLots.length}
-        filters={filters}
-        onSupplierChange={(id) => updateFilter("supplier_id", id)}
-        onProductChange={(id) => updateFilter("supplier_item_id", id)}
+        suppliers={state.suppliers}
+        products={state.products}
+        filteredProducts={state.filteredProducts}
+        isLoadingSuppliers={state.isLoadingSuppliers}
+        isLoadingProducts={state.isLoadingProducts}
+        filteredLotsCount={state.filteredLots.length}
+        filters={state.filters}
+        onSupplierChange={(id) => state.updateFilter("supplier_id", id)}
+        onProductChange={(id) => state.updateFilter("supplier_item_id", id)}
       />
 
       {/* Lot selector */}
       <LotSelector
         preselectedLot={preselectedLot}
-        filteredLots={filteredLots}
-        selectedLotId={formData.lot_id}
-        availableQuantity={availableQuantity}
+        filteredLots={state.filteredLots}
+        selectedLotId={state.formData.lot_id}
+        availableQuantity={state.availableQuantity}
         isLoading={isLoadingLots}
-        error={errors.lot_id}
-        onLotChange={(id) => updateFormData("lot_id", id)}
+        error={state.errors.lot_id}
+        onLotChange={(id) => state.updateFormData("lot_id", id)}
       />
 
       {/* Withdrawal info section */}
       <WithdrawalInfoSection
-        formData={formData}
-        errors={errors}
-        customers={customers}
-        deliveryPlaces={deliveryPlaces}
-        availableQuantity={availableQuantity}
-        isLoadingCustomers={isLoadingCustomers}
-        isLoadingDeliveryPlaces={isLoadingDeliveryPlaces}
+        formData={state.formData}
+        errors={state.errors}
+        customers={state.customers}
+        deliveryPlaces={state.deliveryPlaces}
+        availableQuantity={state.availableQuantity}
+        isLoadingCustomers={state.isLoadingCustomers}
+        isLoadingDeliveryPlaces={state.isLoadingDeliveryPlaces}
         isSubmitting={isSubmitting}
-        onWithdrawalTypeChange={(type) => updateFormData("withdrawal_type", type as WithdrawalType)}
-        onCustomerChange={handleCustomerChange}
-        onDeliveryPlaceChange={handleDeliveryPlaceChange}
-        onShipDateChange={(date) => updateFormData("ship_date", date)}
-        onQuantityChange={(qty) => updateFormData("quantity", qty)}
-        onReferenceNumberChange={(ref) => updateFormData("reference_number", ref)}
-        onReasonChange={(reason) => updateFormData("reason", reason)}
+        onWithdrawalTypeChange={(type) =>
+          state.updateFormData("withdrawal_type", type as WithdrawalType)
+        }
+        onCustomerChange={state.handleCustomerChange}
+        onDeliveryPlaceChange={state.handleDeliveryPlaceChange}
+        onShipDateChange={(date) => state.updateFormData("ship_date", date)}
+        onQuantityChange={(qty) => state.updateFormData("quantity", qty)}
+        onReferenceNumberChange={(ref) => state.updateFormData("reference_number", ref)}
+        onReasonChange={(reason) => state.updateFormData("reason", reason)}
       />
 
       {/* Buttons */}

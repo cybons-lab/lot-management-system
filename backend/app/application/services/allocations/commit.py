@@ -126,6 +126,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
+from typing import Any, cast
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -204,8 +205,9 @@ def persist_reservation_entities(
     if not line:
         raise AllocationCommitError(f"OrderLine {line_plan.order_line_id} not found")
 
-    if line_plan.next_div and not getattr(line, "next_div", None):
-        line.next_div = line_plan.next_div  # type: ignore[attr-defined]
+    line_model = cast(Any, line)
+    if line_plan.next_div and not getattr(line_model, "next_div", None):
+        line_model.next_div = line_plan.next_div
 
     now = utcnow()
 

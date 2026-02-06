@@ -14,7 +14,60 @@ interface UseLotCandidateRowProps {
   onSave: () => void;
 }
 
-// eslint-disable-next-line max-lines-per-function -- 83行で3行超過、分割すると可読性低下
+interface InputChangeResult {
+  nextQty?: number;
+  toastType?: "error" | "warning";
+  toastMessage?: string;
+  shouldShake?: boolean;
+}
+
+function resolveInputChange(value: string, limit: number, freeQty: number): InputChangeResult {
+  if (value === "") return { nextQty: 0 };
+
+  const numValue = Number(value);
+  if (Number.isNaN(numValue)) return {};
+  if (numValue < 0) {
+    return {
+      nextQty: 0,
+      shouldShake: true,
+      toastType: "error",
+      toastMessage: "マイナスの数量は入力できません",
+    };
+  }
+  if (numValue > limit) {
+    return {
+      nextQty: limit,
+      shouldShake: true,
+      toastType: "warning",
+      toastMessage: `在庫数量(${freeQty})を超えています`,
+    };
+  }
+  return { nextQty: numValue };
+}
+
+function calculateFillQty(
+  allocatedTotal: number,
+  currentQty: number,
+  requiredQty: number,
+  freeQty: number,
+) {
+  const otherAllocated = allocatedTotal - currentQty;
+  const needed = Math.max(0, requiredQty - otherAllocated);
+  return { fillQty: Math.min(freeQty, needed), needed };
+}
+
+function useAutoResetShake() {
+  const [isShaking, setIsShaking] = useState(false);
+
+  useEffect(() => {
+    if (!isShaking) return;
+    const timer = setTimeout(() => setIsShaking(false), 500);
+    return () => clearTimeout(timer);
+  }, [isShaking]);
+
+  return { isShaking, triggerShake: () => setIsShaking(true) };
+}
+
 export function useLotCandidateRow({
   lot,
   line,
@@ -24,15 +77,8 @@ export function useLotCandidateRow({
   onChangeAllocation,
   onSave,
 }: UseLotCandidateRowProps) {
-  const [isShaking, setIsShaking] = useState(false);
+  const { isShaking, triggerShake } = useAutoResetShake();
   const [isConfirmed, setIsConfirmed] = useState(false);
-
-  useEffect(() => {
-    if (isShaking) {
-      const timer = setTimeout(() => setIsShaking(false), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isShaking]);
 
   const freeQty = Number(lot.available_quantity ?? 0);
   const remainingInLot = Math.max(0, freeQty - currentQty);
@@ -43,38 +89,18 @@ export function useLotCandidateRow({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    const numValue = Number(value);
-
-    if (value === "" || isNaN(numValue)) {
-      if (value === "") onChangeAllocation(line.id, lot.lot_id, 0);
-      setIsConfirmed(false);
-      return;
+    const result = resolveInputChange(value, limit, freeQty);
+    if (result.shouldShake) triggerShake();
+    if (result.toastType === "error" && result.toastMessage) toast.error(result.toastMessage);
+    if (result.toastType === "warning" && result.toastMessage) toast.warning(result.toastMessage);
+    if (result.nextQty !== undefined) {
+      onChangeAllocation(line.id, lot.lot_id, result.nextQty);
     }
-
-    if (numValue < 0) {
-      setIsShaking(true);
-      toast.error("マイナスの数量は入力できません");
-      onChangeAllocation(line.id, lot.lot_id, 0);
-      setIsConfirmed(false);
-      return;
-    }
-
-    if (numValue > limit) {
-      setIsShaking(true);
-      toast.warning(`在庫数量(${freeQty})を超えています`);
-      onChangeAllocation(line.id, lot.lot_id, limit);
-      setIsConfirmed(false);
-      return;
-    }
-
-    onChangeAllocation(line.id, lot.lot_id, numValue);
     setIsConfirmed(false);
   };
 
   const handleFull = () => {
-    const otherAllocated = allocatedTotal - currentQty;
-    const needed = Math.max(0, requiredQty - otherAllocated);
-    const fillQty = Math.min(freeQty, needed);
+    const { fillQty, needed } = calculateFillQty(allocatedTotal, currentQty, requiredQty, freeQty);
 
     if (fillQty === 0 && needed === 0) {
       toast.info("既に必要数を満たしています");

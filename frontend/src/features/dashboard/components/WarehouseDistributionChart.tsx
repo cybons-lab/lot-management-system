@@ -7,6 +7,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 import { PIE_CHART_COLORS } from "./chartColors";
 import { ChartContainer } from "./ChartContainer";
@@ -19,6 +20,10 @@ interface ChartData {
   value: number;
   [key: string]: string | number;
 }
+
+type PieChartClickEvent = ChartData & {
+  payload?: ChartData;
+};
 
 export function WarehouseDistributionChart() {
   const navigate = useNavigate();
@@ -36,12 +41,16 @@ export function WarehouseDistributionChart() {
 
   const totalQuantity = chartData.reduce((sum, item) => sum + item.value, 0);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handlePieClick = (data: any) => {
+  const formatTooltipValue = (value: ValueType | undefined, _name?: NameType): [string, string] => {
+    return [Number(value ?? 0).toLocaleString("ja-JP"), "在庫数"];
+  };
+
+  const handlePieClick = (event: unknown) => {
+    const data = event as PieChartClickEvent | null;
     // Recharts Pie onClick passes the data object directly (or via payload)
-    if (data && data.id) {
+    if (data?.id) {
       navigate(`/inventory?warehouse_id=${data.id}`);
-    } else if (data && data.payload && data.payload.id) {
+    } else if (data?.payload?.id) {
       navigate(`/inventory?warehouse_id=${data.payload.id}`);
     }
   };
@@ -91,8 +100,7 @@ export function WarehouseDistributionChart() {
                 borderRadius: "0.5rem",
                 fontSize: "12px",
               }}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={(value: any) => [value?.toLocaleString("ja-JP") ?? "0", "在庫数"]}
+              formatter={formatTooltipValue}
             />
             <Legend wrapperStyle={{ fontSize: "11px" }} iconType="circle" />
           </PieChart>

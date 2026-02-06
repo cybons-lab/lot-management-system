@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { AdhocLotCreateForm } from "./AdhocLotCreateForm";
@@ -37,13 +38,27 @@ global.ResizeObserver = class ResizeObserver {
 
 // Mock Radix Select to bypass JSDOM interaction issues
 // We hardcode options needed for the test to ensure we can simulate selection
+type MockSelectProps = {
+  onValueChange?: (value: string) => void;
+  value?: string;
+  children?: React.ReactNode;
+};
+
+type ChildrenProps = {
+  children?: React.ReactNode;
+};
+
+type SelectValueProps = {
+  placeholder?: string;
+};
+
 vi.mock("@/components/ui/form/select", () => ({
-  Select: ({ onValueChange, value, children }: any) => (
+  Select: ({ onValueChange, value, children }: MockSelectProps) => (
     <div data-testid="mock-select-container">
       <select
         data-testid="mock-select"
         value={value || ""}
-        onChange={(e) => onValueChange(e.target.value)}
+        onChange={(event) => onValueChange?.(event.target.value)}
       >
         <option value="">Select...</option>
         {/* Warehouse Options */}
@@ -57,8 +72,10 @@ vi.mock("@/components/ui/form/select", () => ({
       <div style={{ display: "none" }}>{children}</div>
     </div>
   ),
-  SelectTrigger: ({ children }: any) => <div data-testid="mock-select-trigger">{children}</div>,
-  SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
+  SelectTrigger: ({ children }: ChildrenProps) => (
+    <div data-testid="mock-select-trigger">{children}</div>
+  ),
+  SelectValue: ({ placeholder }: SelectValueProps) => <span>{placeholder}</span>,
   SelectContent: () => null,
   SelectItem: () => null,
 }));

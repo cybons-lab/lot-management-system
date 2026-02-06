@@ -1,4 +1,4 @@
-import { http } from "@/shared/api/http-client";
+import { apiClientAuth, http } from "@/shared/api/http-client";
 import type { paths } from "@/types/api";
 
 // ===== Lots Types (v2) =====
@@ -228,18 +228,13 @@ export const searchLots = (params: LotSearchParams) => {
  * ロットラベルPDFダウンロード (v2)
  */
 export const downloadLotLabels = async (lotIds: number[]) => {
-  const response = await http.post<Blob>(
-    "v2/lot/labels/download",
-    { lot_ids: lotIds },
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // @ts-expect-error http client might not support responseType directly in types but underlying fetch/axios does
-      responseType: "blob",
+  const response = await apiClientAuth.post("v2/lot/labels/download", {
+    json: { lot_ids: lotIds },
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
-  return response as unknown as Blob;
+  });
+  return response.blob();
 };
 
 // ===== Inventory Items API Functions =====

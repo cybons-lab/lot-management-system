@@ -1,7 +1,7 @@
 /**
  * InventoryTable - Main inventory table with expandable lot details.
  */
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 import { useMemo } from "react";
 
 import { RowActions } from "./InventoryTableRowActions";

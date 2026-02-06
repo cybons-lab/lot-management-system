@@ -24,7 +24,95 @@ import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 const STEP1_CONFIG_KEY = "MATERIAL_DELIVERY_STEP1_URL";
 
-// eslint-disable-next-line max-lines-per-function
+interface Step1ConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  startDate: string;
+  endDate: string;
+  onConfirm: () => void;
+}
+
+function Step1ConfirmDialog({
+  open,
+  onOpenChange,
+  startDate,
+  endDate,
+  onConfirm,
+}: Step1ConfirmDialogProps) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Step1 実行確認</AlertDialogTitle>
+          <AlertDialogDescription>
+            Step1を実行しますか？
+            <br />
+            期間: {startDate} 〜 {endDate}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>キャンセル</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>実行する</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+interface Step1ExecutePanelProps {
+  startDate: string;
+  endDate: string;
+  canExecute: boolean;
+  isPending: boolean;
+  onStartDateChange: (value: string) => void;
+  onEndDateChange: (value: string) => void;
+  onExecuteClick: () => void;
+}
+
+function Step1ExecutePanel({
+  startDate,
+  endDate,
+  canExecute,
+  isPending,
+  onStartDateChange,
+  onEndDateChange,
+  onExecuteClick,
+}: Step1ExecutePanelProps) {
+  return (
+    <div className="space-y-4 rounded-lg border bg-card p-6">
+      <div className="flex items-center gap-2 text-sm font-semibold">
+        <CalendarDays className="h-4 w-4" />
+        Step1 実行
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="start-date">開始日</Label>
+          <Input
+            id="start-date"
+            type="date"
+            value={startDate}
+            onChange={(event) => onStartDateChange(event.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="end-date">終了日</Label>
+          <Input
+            id="end-date"
+            type="date"
+            value={endDate}
+            onChange={(event) => onEndDateChange(event.target.value)}
+          />
+        </div>
+        <div className="flex items-end">
+          <Button onClick={onExecuteClick} disabled={!canExecute}>
+            {isPending ? "実行中..." : "Step1 実行"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function MaterialDeliverySimplePage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -34,10 +122,9 @@ export function MaterialDeliverySimplePage() {
   const queryClient = useQueryClient();
   const step1Mutation = useExecuteMaterialDeliveryStep1();
   const historyQuery = useMaterialDeliverySimpleHistory(50, 0);
-
   const canExecuteStep1 = useMemo(
     () => Boolean(startDate && endDate && !step1Mutation.isPending),
-    [startDate, endDate, step1Mutation.isPending],
+    [endDate, startDate, step1Mutation.isPending],
   );
 
   const handleConfirmClick = () => {
@@ -52,19 +139,16 @@ export function MaterialDeliverySimplePage() {
     if (!startDate || !endDate) return;
 
     try {
-      // 設定チェック
       const config = await queryClient.fetchQuery({
         queryKey: ["rpa", "config", STEP1_CONFIG_KEY],
         queryFn: () => getCloudFlowConfigOptional(STEP1_CONFIG_KEY),
         staleTime: 0,
       });
-
       if (!config) {
         toast.error("URL設定が見つかりません。右上の設定ボタンから設定してください。");
         setConfigOpen(true);
         return;
       }
-
       await step1Mutation.mutateAsync({ start_date: startDate, end_date: endDate });
       toast.success("Step1を実行しました");
       historyQuery.refetch();
@@ -86,54 +170,23 @@ export function MaterialDeliverySimplePage() {
 
       <ConfigDialog open={configOpen} onOpenChange={setConfigOpen} />
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Step1 実行確認</AlertDialogTitle>
-            <AlertDialogDescription>
-              Step1を実行しますか？
-              <br />
-              期間: {startDate} 〜 {endDate}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleExecuteStep1}>実行する</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Step1ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        startDate={startDate}
+        endDate={endDate}
+        onConfirm={handleExecuteStep1}
+      />
 
-      <div className="rounded-lg border bg-card p-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <CalendarDays className="h-4 w-4" />
-          Step1 実行
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="start-date">開始日</Label>
-            <Input
-              id="start-date"
-              type="date"
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="end-date">終了日</Label>
-            <Input
-              id="end-date"
-              type="date"
-              value={endDate}
-              onChange={(event) => setEndDate(event.target.value)}
-            />
-          </div>
-          <div className="flex items-end">
-            <Button onClick={handleConfirmClick} disabled={!canExecuteStep1}>
-              {step1Mutation.isPending ? "実行中..." : "Step1 実行"}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <Step1ExecutePanel
+        startDate={startDate}
+        endDate={endDate}
+        canExecute={canExecuteStep1}
+        isPending={step1Mutation.isPending}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onExecuteClick={handleConfirmClick}
+      />
 
       <HistoryTable historyQuery={historyQuery} onConfigError={() => setConfigOpen(true)} />
 

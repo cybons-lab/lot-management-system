@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため */
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";

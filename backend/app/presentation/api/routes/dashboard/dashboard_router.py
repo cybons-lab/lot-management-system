@@ -54,11 +54,11 @@ def get_dashboard_stats(
                 )
             )
         )
-        total_stock = total_stock_result.scalar_one()
+        total_stock = float(total_stock_result.scalar_one() or 0.0)
     except SQLAlchemyError as e:
         logger.warning("在庫集計に失敗したため 0 扱いにします: %s", e)
         db.rollback()
-        total_stock = 0.0  # type: ignore[assignment]
+        total_stock = 0.0
 
     total_orders = db.query(func.count(Order.id)).scalar() or 0
 

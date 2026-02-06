@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines -- 画面全体の構成を分割せず把握できるようにするため */
 /**
  * RBAC 権限設定（静的定義）
  *

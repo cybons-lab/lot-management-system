@@ -1,6 +1,6 @@
-/* eslint-disable complexity */
-/* eslint-disable max-lines-per-function */
-/* eslint-disable max-lines */
+/* eslint-disable complexity -- 論理的な画面単位を維持 */
+/* eslint-disable max-lines-per-function -- 論理的な画面単位を維持 */
+/* eslint-disable max-lines -- 論理的な画面単位を維持 */
 /**
  * RunDetailPage - Step2専用ページ
  *

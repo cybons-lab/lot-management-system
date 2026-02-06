@@ -12,93 +12,104 @@ interface OrderInfoColumnsProps {
   allocationRate: number;
 }
 
-// eslint-disable-next-line max-lines-per-function
+function InfoColumn({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <div className="text-xs font-medium text-slate-500">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function AllocationRateColumn({ allocationRate }: { allocationRate: number }) {
+  const progressClass =
+    allocationRate === 100 ? "bg-green-500" : allocationRate > 0 ? "bg-blue-500" : "bg-slate-300";
+
+  return (
+    <InfoColumn title="引当状況" className="w-[200px]">
+      <div className="flex items-center gap-3">
+        <div className="h-2.5 w-32 overflow-hidden rounded-full bg-slate-200">
+          <div
+            className={`h-full rounded-full transition-all ${progressClass}`}
+            style={{ width: `${allocationRate}%` }}
+          />
+        </div>
+        <span className="text-sm font-medium text-slate-700">{allocationRate.toFixed(0)}%</span>
+      </div>
+    </InfoColumn>
+  );
+}
+
+function OrderActions({ order }: { order: OrderUI }) {
+  const openAllocation = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    window.location.href = `/allocation?selected=${order.id}`;
+  };
+
+  const sendSap = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    toast.success("SAP連携データを送信しました(Mock)");
+  };
+
+  return (
+    <div className="flex w-[140px] items-center justify-end gap-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={openAllocation}
+        className="h-8 w-8 p-0"
+        title="引当画面へ"
+      >
+        <ExternalLink className="h-4 w-4" />
+      </Button>
+      {order.status === "allocated" && (
+        <Button variant="outline" size="sm" onClick={sendSap} className="text-xs">
+          SAP送信
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function OrderInfoColumns({ order, lines, allocationRate }: OrderInfoColumnsProps) {
   return (
     <div className="flex flex-1 items-center gap-6">
-      {/* 受注番号 */}
-      <div className="w-[150px]">
-        <div className="text-xs font-medium text-slate-500">受注番号</div>
+      <InfoColumn title="受注番号" className="w-[150px]">
         <div className="font-semibold text-slate-900">{order.order_no}</div>
-      </div>
+      </InfoColumn>
 
-      {/* 得意先 */}
-      <div className="w-[180px]">
-        <div className="text-xs font-medium text-slate-500">得意先</div>
+      <InfoColumn title="得意先" className="w-[180px]">
         <div className="font-semibold text-slate-900">{order.customer_code}</div>
         {order.customer_name && (
           <div className="truncate text-xs text-slate-600" title={order.customer_name}>
             {order.customer_name}
           </div>
         )}
-      </div>
+      </InfoColumn>
 
-      {/* 受注日 */}
-      <div className="w-[120px]">
-        <div className="text-xs font-medium text-slate-500">受注日</div>
+      <InfoColumn title="受注日" className="w-[120px]">
         <div className="font-semibold text-slate-900">{formatDate(order.order_date)}</div>
-      </div>
+      </InfoColumn>
 
-      {/* 明細数 */}
-      <div className="w-[80px] text-right">
-        <div className="text-xs font-medium text-slate-500">明細数</div>
+      <InfoColumn title="明細数" className="w-[80px] text-right">
         <div className="font-semibold text-slate-900">{lines.length}</div>
-      </div>
+      </InfoColumn>
 
-      {/* 引当状況 */}
-      <div className="w-[200px]">
-        <div className="text-xs font-medium text-slate-500">引当状況</div>
-        <div className="flex items-center gap-3">
-          <div className="h-2.5 w-32 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className={`h-full rounded-full transition-all ${
-                allocationRate === 100
-                  ? "bg-green-500"
-                  : allocationRate > 0
-                    ? "bg-blue-500"
-                    : "bg-slate-300"
-              }`}
-              style={{ width: `${allocationRate}%` }}
-            />
-          </div>
-          <span className="text-sm font-medium text-slate-700">{allocationRate.toFixed(0)}%</span>
-        </div>
-      </div>
+      <AllocationRateColumn allocationRate={allocationRate} />
 
-      {/* ステータス */}
-      <div className="w-[100px]">
-        <div className="text-xs font-medium text-slate-500">ステータス</div>
+      <InfoColumn title="ステータス" className="w-[100px]">
         <OrderStatusBadge status={order.status} />
-      </div>
+      </InfoColumn>
 
-      {/* アクション */}
-      <div className="flex w-[140px] items-center justify-end gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            window.location.href = `/allocation?selected=${order.id}`;
-          }}
-          className="h-8 w-8 p-0"
-          title="引当画面へ"
-        >
-          <ExternalLink className="h-4 w-4" />
-        </Button>
-        {order.status === "allocated" && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              toast.success("SAP連携データを送信しました(Mock)");
-            }}
-            className="text-xs"
-          >
-            SAP送信
-          </Button>
-        )}
-      </div>
+      <OrderActions order={order} />
     </div>
   );
 }

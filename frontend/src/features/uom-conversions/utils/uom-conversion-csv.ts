@@ -1,11 +1,64 @@
 /**
  * UOM Conversion CSV Utilities
  */
-// CSVパース処理で複数のバリデーション分岐があるため抑制
-/* eslint-disable complexity */
 import type { UomConversionBulkRow } from "../types/bulk-operation";
 
 export const CSV_HEADERS = ["product_code", "external_unit", "factor"] as const;
+const REQUIRED_HEADERS = [...CSV_HEADERS];
+
+function validateCsvHeaders(headers: string[]): string | null {
+  const missingHeaders = REQUIRED_HEADERS.filter((header) => !headers.includes(header));
+  if (missingHeaders.length === 0) return null;
+  return `必須ヘッダーが見つかりません: ${missingHeaders.join(", ")}`;
+}
+
+function buildRowData(headers: string[], values: string[]): Record<string, string> {
+  const rowData: Record<string, string> = {};
+  headers.forEach((header, idx) => {
+    rowData[header] = values[idx] ?? "";
+  });
+  return rowData;
+}
+
+function validateRowData(
+  rowData: Record<string, string>,
+  rowNumber: number,
+): { error?: string; factor?: number } {
+  if (!rowData["product_code"]) return { error: `行${rowNumber}: product_codeは必須です` };
+  if (!rowData["external_unit"]) return { error: `行${rowNumber}: external_unitは必須です` };
+  if (!rowData["factor"]) return { error: `行${rowNumber}: factorは必須です` };
+
+  const factorValue = Number(rowData["factor"]);
+  if (Number.isNaN(factorValue)) {
+    return { error: `行${rowNumber}: factorは数値である必要があります` };
+  }
+  return { factor: factorValue };
+}
+
+function parseCsvLine(
+  line: string,
+  headers: string[],
+  rowNumber: number,
+): { row?: UomConversionBulkRow; error?: string } {
+  const values = line.split(",").map((value) => value.trim());
+  if (values.length !== headers.length) {
+    return { error: `行${rowNumber}: 列数が一致しません` };
+  }
+
+  const rowData = buildRowData(headers, values);
+  const { error, factor } = validateRowData(rowData, rowNumber);
+  if (error || factor === undefined) return { error };
+
+  return {
+    row: {
+      OPERATION: "UPD",
+      product_code: rowData["product_code"] ?? "",
+      external_unit: rowData["external_unit"] ?? "",
+      factor,
+      _rowNumber: rowNumber,
+    },
+  };
+}
 
 export async function parseUomConversionCsv(
   file: File,
@@ -20,12 +73,8 @@ export async function parseUomConversionCsv(
   const headerLine = lines[0];
   if (!headerLine) return { rows: [], errors: ["ヘッダー行が見つかりません"] };
   const headers = headerLine.split(",").map((h) => h.trim());
-
-  const requiredHeaders = ["product_code", "external_unit", "factor"];
-  const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h));
-  if (missingHeaders.length > 0) {
-    return { rows: [], errors: [`必須ヘッダーが見つかりません: ${missingHeaders.join(", ")}`] };
-  }
+  const headerError = validateCsvHeaders(headers);
+  if (headerError) return { rows: [], errors: [headerError] };
 
   const rows: UomConversionBulkRow[] = [];
   const errors: string[] = [];
@@ -33,43 +82,13 @@ export async function parseUomConversionCsv(
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line) continue;
-    const values = line.split(",").map((v) => v.trim());
     const rowNumber = i + 1;
-
-    if (values.length !== headers.length) {
-      errors.push(`行${rowNumber}: 列数が一致しません`);
+    const { row, error } = parseCsvLine(line, headers, rowNumber);
+    if (error) {
+      errors.push(error);
       continue;
     }
-
-    const rowData: Record<string, string> = {};
-    headers.forEach((header, idx) => {
-      rowData[header] = values[idx] ?? "";
-    });
-
-    if (!rowData["product_code"]) {
-      errors.push(`行${rowNumber}: product_codeは必須です`);
-      continue;
-    }
-    if (!rowData["external_unit"]) {
-      errors.push(`行${rowNumber}: external_unitは必須です`);
-      continue;
-    }
-    if (!rowData["factor"]) {
-      errors.push(`行${rowNumber}: factorは必須です`);
-      continue;
-    }
-    if (isNaN(Number(rowData["factor"]))) {
-      errors.push(`行${rowNumber}: factorは数値である必要があります`);
-      continue;
-    }
-
-    rows.push({
-      OPERATION: "UPD",
-      product_code: rowData["product_code"] ?? "",
-      external_unit: rowData["external_unit"] ?? "",
-      factor: Number(rowData["factor"]),
-      _rowNumber: rowNumber,
-    });
+    if (row) rows.push(row);
   }
 
   return { rows, errors };

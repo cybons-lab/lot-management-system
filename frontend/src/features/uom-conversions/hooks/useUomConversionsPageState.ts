@@ -26,7 +26,7 @@ interface DialogState {
   restoringItem: UomConversionResponse | null;
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 関連する画面ロジックを1箇所で管理するため
 export function useUomConversionsPageState() {
   // 担当仕入先フィルターロジック（共通フック）
   const { assignedSupplierIds } = useSupplierFilter();

@@ -16,6 +16,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 import { CHART_COLORS } from "./chartColors";
 import { ChartContainer } from "./ChartContainer";
@@ -36,9 +37,15 @@ const TOOLTIP_STYLE = {
   fontSize: "12px",
 } as const;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const formatTooltipValue = (value: any) =>
-  [value?.toLocaleString("ja-JP") ?? "0", "在庫数"] as const;
+const formatTooltipValue = (value: ValueType | undefined, _name?: NameType): [string, string] => {
+  return [Number(value ?? 0).toLocaleString("ja-JP"), "在庫数"];
+};
+
+type BarChartClickEvent = {
+  activePayload?: Array<{
+    payload?: ChartData;
+  }>;
+};
 
 export function TopProductsChart() {
   const navigate = useNavigate();
@@ -60,10 +67,10 @@ export function TopProductsChart() {
     }));
   }, [data]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleBarClick = (data: any) => {
-    if (data && data.activePayload && data.activePayload.length > 0) {
-      const payload = data.activePayload[0].payload as ChartData;
+  const handleBarClick = (event: unknown) => {
+    const data = event as BarChartClickEvent | null;
+    const payload = data?.activePayload?.[0]?.payload;
+    if (payload) {
       navigate(`/inventory?supplier_item_id=${payload.id}`);
     }
   };
@@ -104,7 +111,7 @@ export function TopProductsChart() {
               stroke="#6b7280"
             />
             <Tooltip contentStyle={TOOLTIP_STYLE} formatter={formatTooltipValue} />
-            <Bar dataKey="quantity" radius={[0, 4, 4, 0]}>
+            <Bar dataKey="quantity" name="在庫数" radius={[0, 4, 4, 0]}>
               {chartData.map((_, index) => (
                 <Cell
                   key={`cell-${index}`}

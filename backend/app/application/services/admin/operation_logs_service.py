@@ -67,7 +67,7 @@ class OperationLogService:
         """Get operation log by ID."""
         return cast(
             OperationLog | None,
-            self.db.query(OperationLog).filter(OperationLog.log_id == log_id).first(),  # type: ignore[attr-defined]
+            self.db.query(OperationLog).filter(OperationLog.id == log_id).first(),
         )
 
     def log_operation(
@@ -103,7 +103,7 @@ class OperationLogService:
         stmt_users = (
             select(OperationLog.user_id).where(OperationLog.user_id.is_not(None)).distinct()
         )
-        user_ids = [row[0] for row in self.db.execute(stmt_users).all()]  # type: ignore[misc]
+        user_ids = [cast(int, user_id) for user_id in self.db.scalars(stmt_users).all()]
 
         from app.infrastructure.persistence.models.auth_models import User
 
@@ -117,14 +117,14 @@ class OperationLogService:
         stmt_ops = (
             select(OperationLog.operation_type).distinct().order_by(OperationLog.operation_type)
         )
-        ops = [row[0] for row in self.db.execute(stmt_ops).all()]  # type: ignore[misc]
+        ops = [str(op) for op in self.db.scalars(stmt_ops).all()]
         operation_types = [{"label": op, "value": op} for op in ops]
 
         # 3. Target Tables
         stmt_tables = (
             select(OperationLog.target_table).distinct().order_by(OperationLog.target_table)
         )
-        tables = [row[0] for row in self.db.execute(stmt_tables).all()]  # type: ignore[misc]
+        tables = [str(table) for table in self.db.scalars(stmt_tables).all()]
 
         # Simple JP mapping (could be shared, but hardcoded here for now)
         table_map = {
@@ -203,9 +203,7 @@ class MasterChangeLogService:
         """Get master change log by ID."""
         return cast(
             MasterChangeLog | None,
-            self.db.query(MasterChangeLog)
-            .filter(MasterChangeLog.change_log_id == change_log_id)  # type: ignore[attr-defined]
-            .first(),
+            self.db.query(MasterChangeLog).filter(MasterChangeLog.id == change_log_id).first(),
         )
 
     def get_by_record(self, table_name: str, record_id: int) -> list[MasterChangeLog]:
