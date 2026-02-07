@@ -5,7 +5,7 @@
 - Docker Desktop (Mac/Windows) または Docker Engine (Linux)
 - Git
 - Node.js 20.x 以上（ローカル開発時）
-- Python 3.13 以上（ローカル開発時）
+- Python 3.12 (SAP RFC要件)
 
 ## 1. クイックスタート（Docker推奨）
 
