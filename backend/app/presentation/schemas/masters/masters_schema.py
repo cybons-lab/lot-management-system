@@ -211,7 +211,7 @@ class CustomerBulkUpsertRequest(BaseSchema):
 class DeliveryPlaceBase(BaseSchema):
     """Base delivery place schema (DDL: delivery_places)."""
 
-    jiku_code: str | None = Field(None, max_length=50, description="次区コード(SAP連携用)")
+    jiku_code: str = Field(..., min_length=1, max_length=50, description="次区コード(SAP連携用)")
     jiku_match_pattern: str | None = Field(
         None, max_length=100, description="次区マッチングルール（例: 2***）"
     )
@@ -227,8 +227,6 @@ class DeliveryPlaceCreate(DeliveryPlaceBase):
     Inherits all fields from DeliveryPlaceBase without additional fields.
     Exists for type distinction and API schema generation.
     """
-
-    jiku_code: str = Field(..., min_length=1, max_length=50, description="次区コード(SAP連携用)")
 
 
 class DeliveryPlaceUpdate(BaseSchema):
@@ -246,7 +244,6 @@ class DeliveryPlaceUpdate(BaseSchema):
 class DeliveryPlaceResponse(DeliveryPlaceBase):
     """Delivery place response (DDL: delivery_places)."""
 
-    jiku_code: str | None = Field(None, max_length=50, description="次区コード(SAP連携用)")
     id: int
     created_at: datetime
     updated_at: datetime

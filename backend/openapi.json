@@ -28531,15 +28531,9 @@
       "DeliveryPlaceResponse": {
         "properties": {
           "jiku_code": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 50
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
             "title": "Jiku Code",
             "description": "次区コード(SAP連携用)"
           },
@@ -28612,6 +28606,7 @@
         },
         "type": "object",
         "required": [
+          "jiku_code",
           "delivery_place_code",
           "delivery_place_name",
           "customer_id",
