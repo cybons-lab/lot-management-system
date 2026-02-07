@@ -4,8 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
-import { PageNotes } from "@/shared/components/data/PageNotes";
-
 import { LotSection } from "./LotSection";
 import { ProductHeader } from "./ProductHeader";
 import {
@@ -33,6 +31,7 @@ import { SmartLotSplitDialog } from "@/features/inventory/components/SmartLotSpl
 import { inventoryItemKeys } from "@/features/inventory/hooks";
 import { useDeleteLot } from "@/hooks/mutations";
 import { archiveLot } from "@/services/api/lot-service";
+import { PageNotes } from "@/shared/components/data/PageNotes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
 
@@ -195,7 +194,6 @@ export function ExcelViewPage() {
     return reorderDestinations(data.involvedDestinations, destinationOrder);
   }, [data, destinationOrder]);
 
-
   const updateMutation = useUpdateAllocationSuggestionsBatch();
   const deleteLotMutation = useDeleteLot({
     onSuccess: () => {
@@ -349,7 +347,6 @@ export function ExcelViewPage() {
     [queryClient],
   );
 
-
   // Phase 9.2: Cell-level comment handler
   const handleCommentChange = useCallback(
     async (lotId: number, dpId: number, date: string, comment: string | null) => {
@@ -449,7 +446,7 @@ export function ExcelViewPage() {
     async (lotId: number, lotNumber?: string) => {
       await archiveMutation.mutateAsync({
         id: lotId,
-        ...(lotNumber !== undefined ? { lotNumber } : {})
+        ...(lotNumber !== undefined ? { lotNumber } : {}),
       });
     },
     [archiveMutation],

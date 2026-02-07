@@ -1,15 +1,15 @@
-/* eslint-disable max-lines, max-lines-per-function, complexity, max-params -- 関連する画面ロジックを1箇所で管理するため */
+/* eslint-disable max-lines, max-lines-per-function, complexity -- 関連する画面ロジックを1箇所で管理するため */
 import { AlertCircle, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { type KeyboardEvent, createContext, useContext, useRef, useState, useEffect } from "react";
 
 import type { OcrResultItem } from "../api";
 import { computeShippingSlipText, type RowInputState } from "../utils/ocr-utils";
 
-import { cn } from "@/shared/libs/utils";
 import {
   EditableTextCell as GenericTextCell,
   EditableDateCell as GenericDateCell,
 } from "@/shared/components/data/EditableCells";
+import { cn } from "@/shared/libs/utils";
 import { resolveEnterTarget, resolveTabTarget } from "@/shared/utils/keyboard-navigation";
 
 // ============================================
@@ -287,7 +287,14 @@ export function EditableTextCell({
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget(row.id, field, direction, rowIds, getRowById, isSkipableRow);
+      const target = resolveEnterTarget(
+        row.id,
+        field,
+        direction,
+        rowIds,
+        getRowById,
+        isSkipableRow,
+      );
       if (target) {
         setHasError(false);
         setActiveCell(target);
@@ -379,7 +386,14 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         return;
       }
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget(row.id, field, direction, rowIds, getRowById, isSkipableRow);
+      const target = resolveEnterTarget(
+        row.id,
+        field,
+        direction,
+        rowIds,
+        getRowById,
+        isSkipableRow,
+      );
       if (target) {
         setHasError(false);
         setActiveCell(target);
@@ -414,7 +428,10 @@ export function EditableDateCell({ row, field }: { row: OcrResultItem; field: Ed
         isCalculated && !isActive && !hasDateError && "border-blue-300",
       )}
       inputClassName={cn(
-        isCalculated && !hasDateError && !hasError && "border-blue-300 focus:border-blue-400 focus:ring-blue-200",
+        isCalculated &&
+          !hasDateError &&
+          !hasError &&
+          "border-blue-300 focus:border-blue-400 focus:ring-blue-200",
       )}
     />
   );
@@ -498,7 +515,13 @@ export function EditableShippingSlipCell({ row }: { row: OcrResultItem }) {
       event.preventDefault();
       commit();
       const direction = event.shiftKey ? -1 : 1;
-      const target = resolveEnterTarget<number, EditableFieldKey, OcrResultItem>(row.id, "shippingSlipText", direction, rowIds, getRowById);
+      const target = resolveEnterTarget<number, EditableFieldKey, OcrResultItem>(
+        row.id,
+        "shippingSlipText",
+        direction,
+        rowIds,
+        getRowById,
+      );
       if (target) {
         setActiveCell(target);
       }

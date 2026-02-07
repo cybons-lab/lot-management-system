@@ -109,8 +109,9 @@ export function QuickLotIntakeDialog({
     () =>
       lots.map((lot) => ({
         value: String(lot.id),
-        label: `${lot.lot_number} / ${lot.product_code ?? "-"} ${lot.product_name ?? ""
-          } / ${lot.warehouse_name ?? lot.warehouse_code ?? "-"}`,
+        label: `${lot.lot_number} / ${lot.product_code ?? "-"} ${
+          lot.product_name ?? ""
+        } / ${lot.warehouse_name ?? lot.warehouse_code ?? "-"}`,
       })),
     [lots],
   );
