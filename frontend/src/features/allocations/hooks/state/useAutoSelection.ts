@@ -7,13 +7,40 @@ import type { SetURLSearchParams } from "react-router-dom";
 
 import type { Order, OrderCardData } from "../../types";
 
-export function useAutoSelection(
-  orderCards: OrderCardData[],
-  selectedOrderId: number | null,
-  orderDetailData: Order | undefined,
-  selectedLineId: number | null,
-  setSearchParams: SetURLSearchParams,
-) {
+interface UseAutoSelectionParams {
+  orderCards: OrderCardData[];
+  selectedOrderId: number | null;
+  orderDetailData: Order | undefined;
+  selectedLineId: number | null;
+  setSearchParams: SetURLSearchParams;
+}
+
+/**
+ * 適切なフォールバック明細を取得する
+ */
+function getFallbackLine(lines: any[]): any | undefined {
+  if (lines.length === 0) return undefined;
+
+  // 有効な明細を選択: 製品コードがあり、数量が0より大きい明細を優先
+  // DDL v2.2: prefer order_quantity, fallback to quantity
+  return (
+    lines.find((line) => {
+      const hasProduct = line.supplier_item_id || line.product_code;
+      const qty = Number(line.order_quantity ?? line.quantity ?? 0);
+      return hasProduct && qty > 0;
+    }) ??
+    lines.find((line) => !!(line.supplier_item_id || line.product_code)) ??
+    lines[0]
+  );
+}
+
+export function useAutoSelection({
+  orderCards,
+  selectedOrderId,
+  orderDetailData,
+  selectedLineId,
+  setSearchParams,
+}: UseAutoSelectionParams) {
   // 初回マウント時のフラグ
   const isInitialMount = useRef(true);
 
@@ -23,21 +50,18 @@ export function useAutoSelection(
     if (!isInitialMount.current) return;
     if (orderCards.length === 0) return;
 
-    // 受注が選択されていない場合、最初の受注を選択
-    if (!selectedOrderId) {
+    // 受注が選択されていない場合、または選択中の受注がリストに存在しない場合
+    const existsInList = selectedOrderId
+      ? orderCards.some((order) => order.id === selectedOrderId)
+      : false;
+
+    if (!selectedOrderId || !existsInList) {
       isInitialMount.current = false;
       setSearchParams({ selected: String(orderCards[0].id) });
       return;
     }
 
-    // 選択中の受注がリストに存在するかチェック
-    const existsInList = orderCards.some((order) => order.id === selectedOrderId);
-    if (!existsInList) {
-      isInitialMount.current = false;
-      setSearchParams({ selected: String(orderCards[0].id) });
-    } else {
-      isInitialMount.current = false;
-    }
+    isInitialMount.current = false;
   }, [orderCards, selectedOrderId, setSearchParams]);
 
   // 受注詳細が読み込まれたとき、有効な明細が選択されていない場合は最初の有効な明細を選択
@@ -58,17 +82,7 @@ export function useAutoSelection(
       lines.some((line) => Number(line.id) === normalizedSelectedLineId);
 
     if (!hasSelected) {
-      // 有効な明細を選択: 製品コードがあり、数量が0より大きい明細を優先
-      // DDL v2.2: prefer order_quantity, fallback to quantity
-      const fallbackLine =
-        lines.find((line) => {
-          const hasProduct = line.supplier_item_id || line.product_code;
-          const qty = Number(line.order_quantity ?? line.quantity ?? 0);
-          return hasProduct && qty > 0;
-        }) ??
-        lines.find((line) => !!(line.supplier_item_id || line.product_code)) ??
-        lines[0];
-
+      const fallbackLine = getFallbackLine(lines);
       if (!fallbackLine || fallbackLine.id == null) return;
 
       const fallbackId = Number(fallbackLine.id);
