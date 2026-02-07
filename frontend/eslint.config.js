@@ -305,7 +305,6 @@ export default [
 
       // Suppliers
       "src/features/suppliers/components/SupplierBulkImportDialog.tsx",
-      "src/features/suppliers/pages/SuppliersListPage.tsx",
       "src/features/suppliers/utils/supplier-csv.ts",
 
       // Users
