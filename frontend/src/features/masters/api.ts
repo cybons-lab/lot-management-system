@@ -19,7 +19,7 @@ const BASE_PATH = "admin/master-import";
  */
 export async function uploadMasterImport(
   file: File,
-  dryRun: boolean = false,
+  dryRun = false,
 ): Promise<MasterImportResponse> {
   const formData = new FormData();
   formData.append("file", file);

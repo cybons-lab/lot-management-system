@@ -3,11 +3,11 @@ import { formatCodeAndName } from "@/shared/libs/utils";
 import type { OrderWithLinesResponse } from "@/shared/types/legacy";
 import { formatOrderCode } from "@/shared/utils/order";
 
-type Props = {
+interface Props {
   order: OrderWithLinesResponse;
   onSelectLine?: (orderLineId: number) => void;
   onReMatch?: () => void;
-};
+}
 
 /**
  * Get the best display code for an order, checking lines for business keys.

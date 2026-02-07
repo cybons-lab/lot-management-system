@@ -5,12 +5,12 @@ import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 
-export type ForecastFileUploadCardProps = {
+export interface ForecastFileUploadCardProps {
   /** ファイル選択後のハンドラ */
   onUpload?: (file: File) => void;
   /** 追加のクラス名 */
   className?: string;
-};
+}
 
 export function ForecastFileUploadCard({ onUpload, className }: ForecastFileUploadCardProps) {
   const inputId = useId();

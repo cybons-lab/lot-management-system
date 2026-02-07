@@ -36,7 +36,7 @@ interface ShippingMasterEditDialogProps {
   item?: ShippingMasterCurated | null;
 }
 
-type FormData = {
+interface FormData {
   customer_code: string;
   material_code: string;
   jiku_code: string;
@@ -57,7 +57,7 @@ type FormData = {
   transport_lt_days: string;
   has_order: boolean;
   remarks: string;
-};
+}
 
 // フィールドラベルマップ
 const FIELD_LABELS: Record<string, string> = {

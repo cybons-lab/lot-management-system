@@ -1,30 +1,30 @@
-export type FilterCandidateOption = {
+export interface FilterCandidateOption {
   value: string;
   label: string;
-};
+}
 
 export type FilterField = "product" | "supplier" | "warehouse";
 
-type CandidateFilters = {
+interface CandidateFilters {
   supplier_item_id: string;
   supplier_id: string;
   warehouse_id: string;
-};
+}
 
-type CandidateOptions = {
+interface CandidateOptions {
   productOptions: FilterCandidateOption[];
   supplierOptions: FilterCandidateOption[];
   warehouseOptions: FilterCandidateOption[];
-};
+}
 
 const hasOption = (options: FilterCandidateOption[], value: string) =>
   options.some((option) => option.value === value);
 
-type ValidationResult = {
+interface ValidationResult {
   productValid: boolean;
   supplierValid: boolean;
   warehouseValid: boolean;
-};
+}
 
 const validateFilters = (
   filters: CandidateFilters,

@@ -14,11 +14,11 @@ export interface OrderLine {
   quantity: number;
   unit: string;
   allocated_qty?: number;
-  allocations?: Array<{
+  allocations?: {
     id: number;
     lot_id: number;
     allocated_qty: number;
-  }>;
+  }[];
 }
 
 // 受注詳細の型定義

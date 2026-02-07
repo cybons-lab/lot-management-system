@@ -5,12 +5,12 @@ import { useState } from "react";
 import { cn } from "@/shared/libs/utils";
 import type { OrdersListParams } from "@/shared/types/legacy";
 
-type Props = {
+interface Props {
   value: OrdersListParams;
   onChange: (params: OrdersListParams) => void;
   onSearch: () => void;
   onReset: () => void;
-};
+}
 
 function MobileFilterToggle({
   isExpanded,

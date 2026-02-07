@@ -38,19 +38,19 @@ global.ResizeObserver = class ResizeObserver {
 
 // Mock Radix Select to bypass JSDOM interaction issues
 // We hardcode options needed for the test to ensure we can simulate selection
-type MockSelectProps = {
+interface MockSelectProps {
   onValueChange?: (value: string) => void;
   value?: string;
   children?: React.ReactNode;
-};
+}
 
-type ChildrenProps = {
+interface ChildrenProps {
   children?: React.ReactNode;
-};
+}
 
-type SelectValueProps = {
+interface SelectValueProps {
   placeholder?: string;
-};
+}
 
 vi.mock("@/components/ui/form/select", () => ({
   Select: ({ onValueChange, value, children }: MockSelectProps) => (

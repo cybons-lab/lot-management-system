@@ -23,18 +23,18 @@ import { useEffect, useState, useCallback } from "react";
 
 import httpClient from "@/shared/api/http-client";
 
-type TableData = {
+interface TableData {
   name: string;
   comment: string;
-  columns: Array<{
+  columns: {
     name: string;
     type: string;
     nullable: boolean;
     primary_key: boolean;
     foreign_key: { table: string; column: string } | null;
     comment: string;
-  }>;
-};
+  }[];
+}
 
 // --- Custom Table Node Component ---
 
@@ -206,10 +206,10 @@ function createNodesAndEdges(
 
 // --- Main Component ---
 
-type DynamicERDiagramProps = {
+interface DynamicERDiagramProps {
   className?: string;
   targetTable?: string;
-};
+}
 
 export function DynamicERDiagram({ className, targetTable }: DynamicERDiagramProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);

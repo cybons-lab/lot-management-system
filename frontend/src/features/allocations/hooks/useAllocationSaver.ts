@@ -51,7 +51,7 @@ interface SaveAllocationsVariables {
   orderLineId: number;
   productId: number;
   orderId: number | null;
-  allocations: Array<{ lot_id: number; quantity: number }>;
+  allocations: { lot_id: number; quantity: number }[];
 }
 
 /**

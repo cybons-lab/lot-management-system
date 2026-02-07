@@ -45,7 +45,7 @@ const SUB_DETAIL_FIELDS = ["Lot No", "梱包数"];
 export class SmartReadCsvTransformer {
   private maxDetails: number;
 
-  constructor(maxDetails: number = 20) {
+  constructor(maxDetails = 20) {
     this.maxDetails = maxDetails;
   }
 
@@ -55,7 +55,7 @@ export class SmartReadCsvTransformer {
    * Converts data where multiple details are in one row (horizontal)
    * to data where each detail is a separate row (vertical)
    */
-  transformToLong(wideData: SmartReadRow[], skipEmpty: boolean = true): TransformResult {
+  transformToLong(wideData: SmartReadRow[], skipEmpty = true): TransformResult {
     logger.info("CSV変換開始", { wideRowCount: wideData.length });
     if (wideData.length > 0) {
       logger.debug("横持ちデータキー", { keys: Object.keys(wideData[0]).slice(0, 20) });

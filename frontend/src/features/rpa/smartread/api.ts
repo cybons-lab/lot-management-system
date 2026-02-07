@@ -147,7 +147,7 @@ export async function getManagedTasks(configId: number): Promise<SmartReadTaskDe
 export async function createExport(
   configId: number,
   taskId: string,
-  exportType: string = "csv",
+  exportType = "csv",
 ): Promise<SmartReadExport> {
   return http.post<SmartReadExport>(`rpa/smartread/tasks/${taskId}/export?config_id=${configId}`, {
     export_type: exportType,
@@ -195,7 +195,7 @@ export async function getExportCsvData(options: {
  */
 export async function transformCsv(
   wideData: Record<string, unknown>[],
-  skipEmpty: boolean = true,
+  skipEmpty = true,
 ): Promise<SmartReadTransformResponse> {
   return http.post<SmartReadTransformResponse>("rpa/smartread/transform", {
     wide_data: wideData,
@@ -211,7 +211,7 @@ export async function transformCsv(
 export async function syncTaskResults(
   configId: number,
   taskId: string,
-  force: boolean = false,
+  force = false,
 ): Promise<SmartReadCsvDataResponse> {
   logger.info("タスク同期開始", { taskId, configId, force });
   const params = new URLSearchParams({
@@ -262,7 +262,7 @@ export async function processFilesAuto(
 export async function getRequests(
   configId: number,
   state?: string,
-  limit: number = 100,
+  limit = 100,
 ): Promise<SmartReadRequestListResponse> {
   const searchParams: Record<string, string | number> = { limit };
   if (state) {
@@ -279,7 +279,7 @@ export async function getRequests(
 export async function getLongData(
   configId: number,
   taskId?: string,
-  limit: number = 100,
+  limit = 100,
 ): Promise<SmartReadLongDataListResponse> {
   const searchParams: Record<string, string | number> = { limit };
   if (taskId) {
@@ -302,7 +302,7 @@ export async function resetSmartReadData(configId: number): Promise<SmartReadRes
  */
 export const getSmartReadLongDataList = async (
   configId: number,
-  limit: number = 1000,
+  limit = 1000,
 ): Promise<SmartReadLongData[]> => {
   const res = await getLongData(configId, undefined, limit);
   return res.data;
@@ -351,7 +351,7 @@ export async function startPadRun(
 export async function getPadRuns(
   configId: number,
   statusFilter?: string,
-  limit: number = 20,
+  limit = 20,
 ): Promise<SmartReadPadRunListResponse> {
   const params: Record<string, string | number> = { limit };
   if (statusFilter) {

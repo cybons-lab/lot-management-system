@@ -16,12 +16,12 @@ export const supplierSchema = z.object({
   email: z.string().email("有効なメールアドレスを入力してください").optional(),
 });
 
-export type Supplier = {
+export interface Supplier {
   id: number;
   supplier_code: string;
   supplier_name: string;
   address?: string | null;
-};
+}
 
 /**
  * 型推論

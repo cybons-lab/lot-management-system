@@ -34,13 +34,13 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 interface UomConversionFormProps {
-  products: Array<{
+  products: {
     id: number;
     product_name: string;
     product_code: string;
     supplier_ids?: number[];
-  }>;
-  suppliers?: Array<{ id: number; supplier_name: string; supplier_code: string }>;
+  }[];
+  suppliers?: { id: number; supplier_name: string; supplier_code: string }[];
   onSubmit: (data: FormValues) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -53,7 +53,7 @@ function SupplierFilterSection({
 }: {
   selectedSupplierId: string;
   onSupplierChange: (value: string) => void;
-  suppliers: Array<{ id: number; supplier_name: string; supplier_code: string }>;
+  suppliers: { id: number; supplier_name: string; supplier_code: string }[];
 }) {
   return (
     <div className="space-y-2">

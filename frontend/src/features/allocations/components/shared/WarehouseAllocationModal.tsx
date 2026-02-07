@@ -26,7 +26,7 @@ interface WarehouseAllocationModalProps {
   totalQuantity: number;
   unit: string;
   initialAllocations?: WarehouseAllocation[];
-  availableWarehouses: Array<{ code: string; name: string }>;
+  availableWarehouses: { code: string; name: string }[];
 }
 
 export function WarehouseAllocationModal({

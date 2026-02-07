@@ -13,9 +13,7 @@
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
-interface LogContext {
-  [key: string]: unknown;
-}
+type LogContext = Record<string, unknown>;
 
 const LOG_PREFIX = "[SmartRead]";
 

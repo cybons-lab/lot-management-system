@@ -6,14 +6,17 @@ import { formatCodeAndName } from "@/shared/libs/utils";
 import type { LotCandidate, AllocatedLot } from "@/shared/types/legacy";
 
 // lotが `lot_id` / `id` のどちらでも来るケースに対応するためのキー型とヘルパ
-type LotKey = { lot_id?: number; id?: number };
+interface LotKey {
+  lot_id?: number;
+  id?: number;
+}
 const getLotId = (lot: LotKey): number | null => {
   if (typeof lot.lot_id === "number") return lot.lot_id;
   if (typeof lot.id === "number") return lot.id;
   return null;
 };
 
-type Props = {
+interface Props {
   /** 引当候補ロット */
   candidates: LotCandidate[];
   /** 引当済みロット */
@@ -26,7 +29,7 @@ type Props = {
   unit: string;
   /** ローディング中 */
   isLoading?: boolean;
-};
+}
 
 export function LotListWithAllocation({
   candidates,

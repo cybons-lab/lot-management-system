@@ -61,7 +61,7 @@ export function isMeasurableUnit(unit: string): boolean {
 export function formatQuantity(
   value: number | string | null | undefined,
   unit: string,
-  includeUnit: boolean = false,
+  includeUnit = false,
 ): string {
   const numValue = Number(value ?? 0);
 

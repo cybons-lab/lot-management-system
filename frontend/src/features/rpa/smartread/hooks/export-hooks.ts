@@ -45,7 +45,7 @@ export function useExportStatus(
   configId: number | null,
   taskId: string | null,
   exportId: string | null,
-  enabled: boolean = true,
+  enabled = true,
 ) {
   const queryKey =
     configId && taskId && exportId

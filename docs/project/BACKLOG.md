@@ -798,6 +798,59 @@ async def start_pad_run_from_upload(
 **背景:**
 後方互換エイリアス一掃（`32bc1943`）で大半のエイリアスを削除したが、`RpaRunStatus` の旧ステータス名エイリアス（8個）は使用箇所が38箇所・7ファイルに及ぶため見送った。
 
+---
+
+### 2-16. フロントエンド厳格Lint対応の残存課題解消 (ESLint v10)
+
+**優先度:** 中（長期的に解消）
+**作成:** 2026-02-07
+**カテゴリ:** コード品質・リファクタリング
+
+**背景:**
+ESLint v10へのアップグレード時に、厳格なルール（`no-explicit-any`, `no-non-null-assertion` 等）を導入したが、既存コードの修正コストが高いため、一時的に `eslint.config.js` で特定のルールを `off` にして対応した。
+真の厳格さを達成するためには、コード側を修正してこれらの無効化設定を削除する必要がある。
+
+**対象ルール (eslint.config.js で off になっているもの):**
+- `@typescript-eslint/no-non-null-assertion`
+- `@typescript-eslint/no-explicit-any`
+- `@typescript-eslint/no-empty-function`
+- `@typescript-eslint/no-invalid-void-type`
+- `@typescript-eslint/no-extraneous-class`
+- `no-useless-assignment`
+- `@typescript-eslint/prefer-for-of`
+- `@typescript-eslint/no-dynamic-delete`
+- `preserve-caught-error` (e2e)
+
+**タスク内容:**
+1. 各ルール違反箇所の修正（コード修正、型定義の改善）
+2. `eslint.config.js` から該当ルールの `off` 設定を削除
+3. CIでリントエラーが出ないことを確認
+
+**備考:**
+`e2e` ディレクトリについてはテストコード特有の事情で一部許容しても良いが、`src` 配下は原則解消すべき。
+
+---
+
+### 2-17. jsdom v28 アップグレード (WebSocket回帰対応待ち)
+
+**優先度:** 低（回帰バグ修正待ち）
+**作成:** 2026-02-07
+**カテゴリ:** 依存関係・テスト環境
+
+**背景:**
+jsdom v28.0.0 で WebSocket の接続制限に関する既知の退行（Regression）が報告されている（nodejs/undici に起因）。
+本プロジェクトでは `LogViewer.tsx` (frontend) および `backend/tests/api/test_logs_websocket.py` (backend test, though running in python) で WebSocket を使用しており、フロントエンドのテスト(`vitest`)環境として `jsdom` を採用しているため、影響を受ける可能性がある。
+
+**タスク内容:**
+1. jsdom v28 以降の新しいパッチリリースで当該バグが修正されたか確認
+2. 修正確認後、`jsdom` を v28.0.0+ にアップグレード
+3. WebSocketを使用するコンポーネントのテストが正常に動作することを確認
+
+**参照:**
+- jsdom v28.0.0 リリースノート: "Known Regression: WebSocket connection limits bug"
+
+
+
 **対象:** `backend/app/infrastructure/persistence/models/rpa_models.py` L176-184
 ```python
 # Legacy aliases for backward compatibility

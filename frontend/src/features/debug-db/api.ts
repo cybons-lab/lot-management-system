@@ -84,28 +84,28 @@ export interface DbGraphResponse {
 }
 
 export interface DbRelationsResponse {
-  outgoing_fks: Array<{
+  outgoing_fks: {
     constraint_name: string;
     from: string;
     to: string;
     columns: [string, string][];
-  }>;
-  incoming_fks: Array<{
+  }[];
+  incoming_fks: {
     constraint_name: string;
     from: string;
     to: string;
     columns: [string, string][];
-  }>;
-  view_dependencies: Array<{
+  }[];
+  view_dependencies: {
     from: string;
     to: string;
     ref_type: "table" | "view";
-  }>;
-  view_dependents: Array<{
+  }[];
+  view_dependents: {
     from: string;
     to: string;
     ref_type: "table" | "view";
-  }>;
+  }[];
 }
 
 export interface DbRowsParams {

@@ -37,12 +37,12 @@ interface WithdrawalCalendarProps {
 interface DailyStat {
   count: number;
   quantity: number;
-  withdrawals: Array<{
+  withdrawals: {
     withdrawal_id: number;
     quantity: string;
     customer_name: string;
     delivery_place_name?: string;
-  }>;
+  }[];
 }
 
 interface CalendarDayProps {

@@ -55,16 +55,16 @@ interface AdhocLotCreateFormProps {
   onCancel: () => void;
   isSubmitting: boolean;
   /** 製品リスト */
-  products: Array<{
+  products: {
     id: number;
     product_code: string;
     product_name: string;
     supplier_ids?: number[];
-  }>;
+  }[];
   /** 倉庫リスト */
-  warehouses: Array<{ id: number; warehouse_code: string; warehouse_name: string }>;
+  warehouses: { id: number; warehouse_code: string; warehouse_name: string }[];
   /** 仕入先リスト */
-  suppliers: Array<{ id: number; supplier_code: string; supplier_name: string }>;
+  suppliers: { id: number; supplier_code: string; supplier_name: string }[];
 }
 
 /**

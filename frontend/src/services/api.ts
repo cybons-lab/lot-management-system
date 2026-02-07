@@ -11,12 +11,12 @@ import { http } from "@/shared/api/http-client";
 // 型定義
 // ========================================
 
-export type DashboardStats = {
+export interface DashboardStats {
   total_stock: number;
   total_orders: number;
   unallocated_orders: number;
   allocation_rate: number;
-};
+}
 
 // ========================================
 // APIクライアント

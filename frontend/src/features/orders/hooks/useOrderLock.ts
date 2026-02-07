@@ -13,7 +13,7 @@ function isAuthenticated(): boolean {
   return hasAuthToken();
 }
 
-export function useOrderLock(orderId: number, enabled: boolean = true) {
+export function useOrderLock(orderId: number, enabled = true) {
   const queryClient = useQueryClient();
   const [hasLock, setHasLock] = useState(false);
 

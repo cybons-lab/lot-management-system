@@ -1,9 +1,9 @@
-type Props = {
+interface Props {
   productName?: string;
   productCode?: string;
   status?: string;
   orderDate?: string;
-};
+}
 
 const statusColors: Record<string, string> = {
   open: "bg-gray-100 text-gray-700",

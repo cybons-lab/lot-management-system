@@ -15,13 +15,13 @@ export const warehouseSchema = z.object({
   is_active: z.number().int().min(0).max(1),
 });
 
-export type Warehouse = {
+export interface Warehouse {
   id: number;
   warehouse_code: string;
   warehouse_name: string;
   address?: string | null;
   is_active?: boolean;
-};
+}
 
 /**
  * 型推論

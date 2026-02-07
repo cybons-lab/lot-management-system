@@ -92,7 +92,7 @@ export interface OrderCardData extends Order {
  *
  * 倉庫ごとの在庫集計情報を表現します。
  */
-export type WarehouseSummary = {
+export interface WarehouseSummary {
   /** 一意キー */
   key: string;
   /** 倉庫ID */
@@ -103,7 +103,7 @@ export type WarehouseSummary = {
   warehouseName?: string | null;
   /** 合計在庫数 */
   totalStock: number;
-};
+}
 
 // ===== Consolidated Types from useLotAllocation =====
 
@@ -155,9 +155,7 @@ export interface LineStockStatus {
 /**
  * Function type for fetching candidate lots from cache
  */
-export interface CandidateLotFetcher {
-  (lineId: number, productId: number): CandidateLotItem[];
-}
+export type CandidateLotFetcher = (lineId: number, productId: number) => CandidateLotItem[];
 
 /**
  * Reservation information for cancellation dialog

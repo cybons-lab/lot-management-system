@@ -167,7 +167,7 @@ export interface InventorySyncExecuteResponse {
  * Get inventory sync alerts
  * @endpoint GET /batch-jobs/inventory-sync/alerts
  */
-export const getInventorySyncAlerts = (activeOnly: boolean = true) => {
+export const getInventorySyncAlerts = (activeOnly = true) => {
   return http.get<InventorySyncAlertsResponse>(
     `batch-jobs/inventory-sync/alerts?active_only=${activeOnly}`,
   );

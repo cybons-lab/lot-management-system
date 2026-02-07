@@ -22,7 +22,9 @@ interface VisibilityRowProps {
   disabled: boolean;
 }
 
-type VisibilityEntry = { user: boolean };
+interface VisibilityEntry {
+  user: boolean;
+}
 
 function normalizeVisibilityEntry(value: unknown): VisibilityEntry {
   if (typeof value === "boolean") {

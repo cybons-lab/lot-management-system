@@ -123,7 +123,7 @@ export const inventorySyncKeys = {
 /**
  * Get inventory sync alerts
  */
-export const useInventorySyncAlerts = (activeOnly: boolean = true) => {
+export const useInventorySyncAlerts = (activeOnly = true) => {
   return useQuery({
     queryKey: inventorySyncKeys.alerts(activeOnly),
     queryFn: () => getInventorySyncAlerts(activeOnly),

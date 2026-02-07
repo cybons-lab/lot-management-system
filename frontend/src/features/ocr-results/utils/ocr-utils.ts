@@ -14,7 +14,7 @@ export const buildPayload = (input: RowInputState): OcrResultEditPayload => {
     error_flags: input.errorFlags || {},
   };
 
-  const mapping: Array<[keyof RowInputState, keyof OcrResultEditPayload]> = [
+  const mapping: [keyof RowInputState, keyof OcrResultEditPayload][] = [
     ["lotNo1", "lot_no_1"],
     ["quantity1", "quantity_1"],
     ["lotNo2", "lot_no_2"],
@@ -54,7 +54,7 @@ export const buildPayload = (input: RowInputState): OcrResultEditPayload => {
  * OCR結果行の入力状態を表す型
  * 循環依存を避けるため、ocr-utils.ts で定義
  */
-export type RowInputState = {
+export interface RowInputState {
   version: number;
   lotNo1: string;
   quantity1: string;
@@ -71,7 +71,7 @@ export type RowInputState = {
   deliveryDate: string;
   processStatus: string;
   errorFlags: Record<string, boolean>;
-};
+}
 
 const buildLotWithQuantity = (
   lot: string | null | undefined,

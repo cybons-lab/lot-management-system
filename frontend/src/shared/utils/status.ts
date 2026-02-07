@@ -54,13 +54,13 @@ const LOT_STATUS_PRIORITY: LotStatus[] = [
 /**
  * Lot オブジェクトから判定に必要な最小限のフィールド
  */
-type LotLike = {
+interface LotLike {
   status?: string;
   current_quantity?: number | string | null;
   inspection_status?: string;
   expiry_date?: string | null;
   received_date?: string | null;
-};
+}
 
 /**
  * 未入荷判定ヘルパー

@@ -4,11 +4,11 @@ import * as React from "react";
 import { getForecasts, type ForecastListResponse, type Forecast } from "@/features/forecasts/api";
 import { formatDate } from "@/shared/utils/date";
 
-type Props = {
+interface Props {
   productGroupId?: number;
   customerId?: number;
   fullWidth?: boolean;
-};
+}
 
 export function ForecastSection({ productGroupId, customerId, fullWidth = false }: Props) {
   const [isOpen, setIsOpen] = React.useState(false);

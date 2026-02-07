@@ -51,7 +51,7 @@ export const lotSearchSchema = z.object({
 });
 
 // Minimal lot schema type shims for compile
-export type LotCreate = {
+export interface LotCreate {
   supplier_code: string;
   product_code: string;
   lot_number: string;
@@ -59,17 +59,17 @@ export type LotCreate = {
   delivery_place_code?: string | null;
   expiry_date?: string | null;
   quantity?: number;
-};
+}
 
 export type LotUpdate = Partial<LotCreate>;
 
-export type LotWithStock = {
+export interface LotWithStock {
   id: number;
   product_code: string;
   lot_number: string;
   current_quantity?: number | null;
   status?: string | null;
-};
+}
 
 /**
  * 型推論

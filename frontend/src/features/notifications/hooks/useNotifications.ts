@@ -5,10 +5,10 @@ import { toast } from "sonner";
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "../api";
 import { type Notification } from "../types";
 
-type NotificationCursor = {
+interface NotificationCursor {
   createdAt: number;
   id: number;
-};
+}
 
 const getNotificationCursor = (notification: Notification): NotificationCursor => {
   const createdAt = new Date(notification.created_at).getTime();

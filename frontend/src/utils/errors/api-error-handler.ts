@@ -17,11 +17,11 @@ export interface ProblemJSON {
   detail: string;
   instance?: string;
   error_code?: string;
-  errors?: Array<{
+  errors?: {
     loc: (string | number)[];
     msg: string;
     type: string;
-  }>;
+  }[];
   details?: Record<string, unknown>;
 }
 

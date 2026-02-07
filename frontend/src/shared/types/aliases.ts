@@ -16,7 +16,7 @@ import type { components } from "@/types/api";
  *
  * システムで管理される製品の基本情報を表現します。
  */
-export type Product = {
+export interface Product {
   /** 製品コード */
   product_code: string;
   /** 製品名 */
@@ -33,14 +33,14 @@ export type Product = {
   maker_part_no?: string | null;
   /** ロット番号必須フラグ */
   requires_lot_number?: boolean | null;
-};
+}
 
 /**
  * サプライヤーマスタ
  *
  * 仕入先・供給元の情報を表現します。
  */
-export type Supplier = {
+export interface Supplier {
   /** サプライヤーコード */
   supplier_code: string;
   /** サプライヤー名 */
@@ -49,28 +49,28 @@ export type Supplier = {
   address?: string | null;
   /** 担当者名（工場等で使用） */
   contact_name?: string | null;
-};
+}
 
 /**
  * 顧客マスタ
  *
  * 得意先・顧客の情報を表現します。
  */
-export type Customer = {
+export interface Customer {
   /** 顧客コード */
   customer_code: string;
   /** 顧客名 */
   customer_name?: string | null;
   /** 住所 */
   address?: string | null;
-};
+}
 
 /**
  * 倉庫マスタ
  *
  * 在庫保管場所としての倉庫情報を表現します。
  */
-export type Warehouse = {
+export interface Warehouse {
   /** 倉庫コード */
   warehouse_code: string;
   /** 倉庫名 */
@@ -79,7 +79,7 @@ export type Warehouse = {
   address?: string | null;
   /** 有効フラグ */
   is_active?: boolean | null;
-};
+}
 
 /** 旧Warehouse型名の後方互換性エイリアス */
 export type OldWarehouse = Warehouse;
@@ -106,7 +106,7 @@ export type LotWithStock = LotResponse;
 // Re-export for backward compatibility
 export type { AllocatedLot } from "./allocation-types";
 
-export type LotCandidate = {
+export interface LotCandidate {
   id?: number;
   lot_id?: number;
   lot_code?: string;
@@ -122,11 +122,14 @@ export type LotCandidate = {
   receipt_date?: string | null;
   available_qty?: number | null;
   allocate_qty?: number | null;
-};
-export type LotCandidateResponse = { items: LotCandidate[]; warnings?: string[] };
+}
+export interface LotCandidateResponse {
+  items: LotCandidate[];
+  warnings?: string[];
+}
 
 // CandidateLotItem (バックエンドのCandidateLotItemスキーマに対応)
-export type CandidateLotItem = {
+export interface CandidateLotItem {
   lot_id: number;
   lot_number: string;
   free_qty: number;
@@ -140,31 +143,31 @@ export type CandidateLotItem = {
   delivery_place_name?: string | null;
   expiry_date?: string | null;
   last_updated?: string | null;
-};
+}
 
-export type CandidateLotsResponse = {
+export interface CandidateLotsResponse {
   items: CandidateLotItem[];
   total: number;
-};
+}
 
-export type DeliveryPlaceAlloc = {
+export interface DeliveryPlaceAlloc {
   qty: number;
   delivery_place_id: number;
   delivery_place_code: string;
   delivery_place_name?: string;
   lot_id: number;
   quantity: number;
-};
+}
 
 // Backwards compatibility alias
 export type WarehouseAlloc = DeliveryPlaceAlloc;
 
-export type LotAllocationRequest = {
+export interface LotAllocationRequest {
   allocations: { lot_id: number; qty: number }[]; // API実シグネチャに合わせる
-};
-export type AllocationCancelRequest = {
+}
+export interface AllocationCancelRequest {
   allocation_ids: number[];
-};
+}
 
 // ---- Orders ----
 /**
@@ -267,7 +270,7 @@ export type OrderWithLinesResponse = Omit<ApiOrderWithLinesResponse, "lines"> & 
 };
 
 // ---- Computed (UI-only) ----
-export type OrderLineComputed = {
+export interface OrderLineComputed {
   ids: {
     lineId?: number;
     orderId?: number;
@@ -293,9 +296,9 @@ export type OrderLineComputed = {
   customerId?: number | null;
   deliveryPlaces: string[]; // warehouse → deliveryPlace に変更
   shippingLeadTime?: string; // 任意表示
-};
+}
 
-export type OrderLineCreate = {
+export interface OrderLineCreate {
   id?: number;
   orderId?: number;
   line_number?: number;
@@ -303,9 +306,9 @@ export type OrderLineCreate = {
   quantity: number;
   unit?: string;
   allocated_qty?: number;
-};
+}
 
-export type FefoLotAllocation = {
+export interface FefoLotAllocation {
   lot_id: number;
   lot_code?: string;
   lot_number?: string;
@@ -319,15 +322,15 @@ export type FefoLotAllocation = {
   expiry_date?: string | null;
   receipt_date?: string | null;
   available_qty?: number | null;
-};
+}
 
-export type getLotCandidates = {
+export interface getLotCandidates {
   items: FefoLotAllocation[];
   warnings?: string[];
-};
+}
 
 // ---- Query params ----
-export type OrdersListParams = {
+export interface OrdersListParams {
   skip?: number;
   limit?: number;
   status?: string | null;
@@ -336,4 +339,4 @@ export type OrdersListParams = {
   date_from?: string | null;
   date_to?: string | null;
   unallocatedOnly?: boolean | null;
-};
+}

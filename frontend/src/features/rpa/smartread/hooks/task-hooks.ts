@@ -19,7 +19,7 @@ import { getUserFriendlyMessageAsync } from "@/utils/errors/api-error-handler";
  * タスク一覧を取得 (SmartRead API)
  * NOTE: 主に "Sync" ボタンから手動で呼び出されることを想定
  */
-export function useSmartReadTasks(configId: number | null, enabled: boolean = false) {
+export function useSmartReadTasks(configId: number | null, enabled = false) {
   return useQuery({
     queryKey: SMARTREAD_QUERY_KEYS.tasks(configId ?? 0),
     queryFn: async () => {
@@ -35,7 +35,7 @@ export function useSmartReadTasks(configId: number | null, enabled: boolean = fa
  * 管理タスク一覧を取得 (DB)
  * NOTE: メインのタスク一覧表示に使用
  */
-export function useManagedTasks(configId: number | null, enabled: boolean = true) {
+export function useManagedTasks(configId: number | null, enabled = true) {
   return useQuery({
     queryKey: SMARTREAD_QUERY_KEYS.managedTasks(configId ?? 0),
     queryFn: async () => {
@@ -73,7 +73,7 @@ export function useUpdateSkipToday() {
 /**
  * リクエスト一覧を取得 (Polling support)
  */
-export function useSmartReadRequests(configId: number | null, limit: number = 100) {
+export function useSmartReadRequests(configId: number | null, limit = 100) {
   return useQuery({
     queryKey: SMARTREAD_QUERY_KEYS.requests(configId ?? 0),
     queryFn: async (): Promise<SmartReadRequestListResponse> => {

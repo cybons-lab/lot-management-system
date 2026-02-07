@@ -55,9 +55,7 @@ interface InboundReceiveDialogProps {
   inboundPlan: InboundPlan;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onReceive: (data: {
-    lots: Array<{ expected_lot_id: number; lot_number: string }>;
-  }) => Promise<void>;
+  onReceive: (data: { lots: { expected_lot_id: number; lot_number: string }[] }) => Promise<void>;
 }
 
 export function InboundReceiveDialog({

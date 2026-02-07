@@ -7,7 +7,10 @@ import { getAllocationQueryKeys } from "@/services/api/query-keys";
 import type { CandidateLotItem, ManualAllocationSavePayload } from "@/shared/types/schema";
 
 // Temporary alias for missing type
-type AllocationCancelRequest = { order_line_id?: number; allocation_ids?: number[] };
+interface AllocationCancelRequest {
+  order_line_id?: number;
+  allocation_ids?: number[];
+}
 const keyCandidates = (orderLineId: number) =>
   ["orders", "line", orderLineId, "candidates"] as const;
 
@@ -16,10 +19,10 @@ const keyCandidates = (orderLineId: number) =>
  * 識別キー: customer_code + product_code (+ delivery_place_code optional)
  */
 // UI用の型定義
-type LotCandidateResult = {
+interface LotCandidateResult {
   items: CandidateLotItem[];
   warnings: string[];
-};
+}
 
 /**
  * ロット候補を取得（supplier_item_id基準）
