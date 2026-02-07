@@ -59,22 +59,27 @@ export interface OperationLogsListParams {
 // ===== API Functions =====
 
 /**
+ * クエリパラメータを構築するヘルパー
+ */
+function buildQueryParams(params: Record<string, any>): string {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.append(key, value.toString());
+    }
+  });
+  const queryString = searchParams.toString();
+  return queryString ? "?" + queryString : "";
+}
+
+/**
  * Get operation logs list
  * @endpoint GET /operation-logs
  */
 export const getOperationLogs = (params?: OperationLogsListParams) => {
-  const searchParams = new URLSearchParams();
-  if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
-  if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
-  if (params?.user_id) searchParams.append("user_id", params.user_id.toString());
-  if (params?.operation_type) searchParams.append("operation_type", params.operation_type);
-  if (params?.target_table) searchParams.append("target_table", params.target_table);
-  if (params?.start_date) searchParams.append("start_date", params.start_date);
-  if (params?.end_date) searchParams.append("end_date", params.end_date);
-
-  const queryString = searchParams.toString();
+  const queryString = buildQueryParams(params ?? {});
   return http.get<OperationLogListResponse>(
-    `operation-logs${queryString ? "?" + queryString : ""}`,
+    `operation-logs${queryString}`,
   );
 };
 

@@ -12,48 +12,33 @@ import type {
 export * from "./types";
 
 /**
+ * クエリパラメータを構築するヘルパー
+ */
+function buildQueryParams(params: Record<string, any>): string {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.append(key, value.toString());
+    }
+  });
+  const queryString = searchParams.toString();
+  return queryString ? "?" + queryString : "";
+}
+
+/**
  * 受注一覧取得
- *
- * 利用可能なパラメータ:
- * - skip, limit: ページネーション
- * - status: ステータスフィルタ
- * - customer_code: 得意先コードフィルタ
- * - date_from, date_to: 日付範囲フィルタ
- * - prioritize_assigned: 担当仕入先を優先表示
  */
 export const getOrders = (params?: OrdersListParams & { prioritize_assigned?: boolean }) => {
-  const searchParams = new URLSearchParams();
-  if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
-  if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
-  if (params?.status) searchParams.append("status", params.status);
-  if (params?.customer_code) searchParams.append("customer_code", params.customer_code);
-  if (params?.date_from) searchParams.append("date_from", params.date_from);
-  if (params?.date_to) searchParams.append("date_to", params.date_to);
-  if (params?.prioritize_assigned !== undefined)
-    searchParams.append("prioritize_assigned", params.prioritize_assigned.toString());
-
-  const queryString = searchParams.toString();
-  return http.get<OrderResponse[]>(`orders${queryString ? "?" + queryString : ""}`);
+  const queryString = buildQueryParams(params ?? {});
+  return http.get<OrderResponse[]>(`orders${queryString}`);
 };
 
 export const getOrderLines = (
   params?: OrdersListParams & { product_code?: string; prioritize_assigned?: boolean },
 ) => {
-  const searchParams = new URLSearchParams();
-  if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
-  if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
-  if (params?.status) searchParams.append("status", params.status);
-  if (params?.customer_code) searchParams.append("customer_code", params.customer_code);
-  if (params?.product_code) searchParams.append("product_code", params.product_code);
-  if (params?.order_type) searchParams.append("order_type", params.order_type);
-  if (params?.date_from) searchParams.append("date_from", params.date_from);
-  if (params?.date_to) searchParams.append("date_to", params.date_to);
-  if (params?.prioritize_assigned !== undefined)
-    searchParams.append("prioritize_assigned", params.prioritize_assigned.toString());
-
-  const queryString = searchParams.toString();
+  const queryString = buildQueryParams(params ?? {});
   // Note: OrderLineResponse[] is returned, but we use OrderLine[] alias in frontend
-  return http.get<OrderLine[]>(`orders/lines${queryString ? "?" + queryString : ""}`);
+  return http.get<OrderLine[]>(`orders/lines${queryString}`);
 };
 
 /**

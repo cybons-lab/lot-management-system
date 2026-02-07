@@ -1,22 +1,19 @@
 import { useMemo } from "react";
 
-import { CustomerActionDialogs } from "../components/CustomerActionDialogs";
-import { CustomerBulkActionBar } from "../components/CustomerBulkActionBar";
-import { CustomerBulkDialogs } from "../components/CustomerBulkDialogs";
-import { CustomerCreateImportDialogs } from "../components/CustomerCreateImportDialogs";
-import { CustomerDetailDialog } from "../components/CustomerDetailDialog";
-import { CustomerListFilters } from "../components/CustomerListFilters";
+import { CustomerDialogContainer } from "../components/CustomerDialogContainer";
 import { CustomerListPageHeader } from "../components/CustomerListPageHeader";
 import { CustomerListStats } from "../components/CustomerListStats";
 import { createColumns, type CustomerWithValidTo } from "../components/CustomerTableColumns";
+import { CustomerTableSection } from "../components/CustomerTableSection";
 import { useCustomerListPage } from "../hooks/useCustomerListPage";
 
 import * as styles from "./styles";
 
-import { DataTable } from "@/shared/components/data/DataTable";
-import { TablePagination } from "@/shared/components/data/TablePagination";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 
+/**
+ * 得意先マスタ一覧ページ
+ */
 export function CustomersListPage() {
   const p = useCustomerListPage();
   const { dlgs, setSelectedCustomerCode } = p;
@@ -31,15 +28,19 @@ export function CustomersListPage() {
     [dlgs, setSelectedCustomerCode],
   );
 
+  const header = (
+    <CustomerListPageHeader
+      showInactive={p.showInactive}
+      isLoading={p.isLoading}
+      onImportClick={p.dlgs.openImport}
+      onCreateClick={p.dlgs.openCreate}
+    />
+  );
+
   if (p.isError)
     return (
       <div className={styles.root}>
-        <CustomerListPageHeader
-          showInactive={p.showInactive}
-          isLoading={p.isLoading}
-          onImportClick={p.dlgs.openImport}
-          onCreateClick={p.dlgs.openCreate}
-        />
+        {header}
         <QueryErrorFallback error={p.error} resetError={p.refetch} />
       </div>
     );
@@ -49,82 +50,10 @@ export function CustomersListPage() {
 
   return (
     <div className={styles.root}>
-      <CustomerListPageHeader
-        showInactive={p.showInactive}
-        isLoading={p.isLoading}
-        onImportClick={p.dlgs.openImport}
-        onCreateClick={p.dlgs.openCreate}
-      />
+      {header}
       <CustomerListStats total={p.stats.total} />
-      <div className={styles.tableContainer}>
-        <CustomerListFilters
-          showInactive={p.showInactive}
-          setShowInactive={p.setShowInactive}
-          searchQuery={p.searchQuery}
-          setSearchQuery={p.setSearchQuery}
-        />
-        <CustomerBulkActionBar
-          selectedCount={p.selectedIds.length}
-          isAdmin={p.isAdmin}
-          onOpenBulkDelete={() => p.setIsBulkOpen(true)}
-        />
-        <DataTable
-          data={paginated}
-          columns={cols}
-          sort={p.sort}
-          onSortChange={p.setSort}
-          getRowId={(r) => r.customer_code}
-          onRowClick={p.handleRowClick}
-          isLoading={p.isLoading}
-          emptyMessage="なし"
-          selectable
-          selectedIds={p.selectedIds}
-          onSelectionChange={p.setSelectedIds}
-        />
-        {p.sorted.length > 0 && (
-          <TablePagination
-            currentPage={pageInfo.page || 1}
-            pageSize={pageInfo.pageSize || 25}
-            totalCount={p.sorted.length}
-            onPageChange={p.table.setPage}
-            onPageSizeChange={p.table.setPageSize}
-            pageSizeOptions={[25, 50, 100]}
-          />
-        )}
-      </div>
-      <CustomerCreateImportDialogs
-        isCreateOpen={p.dlgs.isCreateOpen}
-        isImportOpen={p.dlgs.isImportOpen}
-        isCreating={p.create.isPending}
-        close={p.dlgs.close}
-        handleCreate={p.handleCreate}
-      />
-      <CustomerActionDialogs
-        dlgs={p.dlgs}
-        isSDeleting={p.softDel.isPending}
-        isPDeleting={p.permDel.isPending}
-        isRestoring={p.rest.isPending}
-        handlers={p}
-      />
-      <CustomerBulkDialogs
-        isAdmin={p.isAdmin}
-        isOpen={p.isBulkOpen}
-        onOpenChange={p.setIsBulkOpen}
-        count={p.selectedIds.length}
-        isPending={p.isBulkDeleting}
-        onConfirmP={() => p.executeBulk(p.permDel.mutateAsync, "完全削除")}
-        onConfirmS={(e: any) =>
-          p.executeBulk(
-            (d: any) => p.softDel.mutateAsync({ ...d, endDate: e || undefined }),
-            "無効化",
-          )
-        }
-      />
-      <CustomerDetailDialog
-        customerCode={p.selectedCustomerCode}
-        open={!!p.selectedCustomerCode}
-        onOpenChange={(o) => !o && p.setSelectedCustomerCode(null)}
-      />
+      <CustomerTableSection p={p} cols={cols} paginated={paginated} pageInfo={pageInfo} />
+      <CustomerDialogContainer p={p} />
     </div>
   );
 }

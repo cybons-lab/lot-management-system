@@ -286,19 +286,15 @@ export default [
       // Inventory
       "src/features/inventory/pages/InventoryPage.tsx",
 
-      "src/features/inbound-plans/api.ts",
       "src/features/inbound-plans/components/InboundPlansList.tsx",
       "src/features/inbound-plans/components/ReceiveModal.tsx",
 
-      "src/features/operation-logs/api.ts",
       "src/features/operation-logs/pages/OperationLogsPage.tsx",
 
       // Orders
-      "src/features/orders/api.ts",
       "src/features/orders/components/allocation/ForecastSection.tsx",
       "src/features/orders/components/allocation/LotListWithAllocation.tsx",
       "src/features/orders/components/OrderLineCard/index.tsx",
-      "src/features/orders/hooks/useOrderLineComputed.ts",
       "src/features/orders/pages/OrderPage.tsx",
       "src/features/orders/pages/OrdersListPage.tsx",
       "src/features/orders/pages/OrdersListPage/columns.tsx",
